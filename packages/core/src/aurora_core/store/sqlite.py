@@ -249,18 +249,47 @@ class SQLiteStore(Store):
         """
         Deserialize a chunk from database row.
 
-        This is a placeholder that will be completed when Chunk classes
-        are fully implemented.
-
         Args:
             row_data: Dictionary containing chunk data from database
 
         Returns:
             Deserialized Chunk object or None
+
+        Raises:
+            StorageError: If deserialization fails
         """
-        # TODO: Implement proper deserialization based on chunk type
-        # For now, return None as chunks aren't fully implemented yet
-        return None
+        from aurora_core.chunks import CodeChunk, ReasoningChunk
+
+        try:
+            # Parse JSON fields
+            content = json.loads(row_data['content'])
+            metadata = json.loads(row_data['metadata'])
+
+            # Reconstruct full JSON structure for from_json()
+            full_data = {
+                'id': row_data['id'],
+                'type': row_data['type'],
+                'content': content,
+                'metadata': metadata
+            }
+
+            # Deserialize based on chunk type
+            chunk_type = row_data['type']
+            if chunk_type == 'code':
+                return CodeChunk.from_json(full_data)
+            elif chunk_type == 'reasoning':
+                return ReasoningChunk.from_json(full_data)
+            else:
+                raise StorageError(
+                    f"Unknown chunk type: {chunk_type}",
+                    details=f"Cannot deserialize chunk {row_data['id']}"
+                )
+
+        except (KeyError, json.JSONDecodeError, ValueError) as e:
+            raise StorageError(
+                f"Failed to deserialize chunk: {row_data.get('id', 'unknown')}",
+                details=str(e)
+            )
 
     def update_activation(self, chunk_id: ChunkID, delta: float) -> None:
         """

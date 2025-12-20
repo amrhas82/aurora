@@ -38,10 +38,10 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `packages/core/src/aurora_core/store/migrations.py` - Schema migration utilities
 
 #### Chunk Types
-- `packages/core/src/aurora_core/chunks/__init__.py` - Chunks module exports
-- `packages/core/src/aurora_core/chunks/base.py` - Abstract Chunk base class
-- `packages/core/src/aurora_core/chunks/code_chunk.py` - CodeChunk implementation
-- `packages/core/src/aurora_core/chunks/reasoning_chunk.py` - ReasoningChunk stub
+- `packages/core/src/aurora_core/chunks/__init__.py` - Chunks module exports (exports Chunk, CodeChunk, ReasoningChunk)
+- `packages/core/src/aurora_core/chunks/base.py` - Abstract Chunk base class with to_json/from_json/validate
+- `packages/core/src/aurora_core/chunks/code_chunk.py` - CodeChunk implementation with full validation and serialization
+- `packages/core/src/aurora_core/chunks/reasoning_chunk.py` - ReasoningChunk stub for Phase 2
 
 #### Context Management
 - `packages/core/src/aurora_core/context/__init__.py` - Context module exports
@@ -78,8 +78,9 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `tests/unit/core/test_store_base.py` - Store interface tests
 - `tests/unit/core/test_store_sqlite.py` - SQLite store tests
 - `tests/unit/core/test_store_memory.py` - Memory store tests
-- `tests/unit/core/test_chunk_base.py` - Base chunk tests
-- `tests/unit/core/test_chunk_code.py` - CodeChunk tests
+- `tests/unit/core/test_chunk_base.py` - Base chunk tests (15 tests, all passing)
+- `tests/unit/core/test_chunk_code.py` - CodeChunk tests (31 tests, all passing)
+- `tests/unit/core/test_chunk_store_integration.py` - Chunk-Store integration tests (13 tests, all passing)
 - `tests/unit/core/test_context_provider.py` - Context provider tests
 - `tests/unit/core/test_config_loader.py` - Configuration loader tests
 - `tests/unit/context_code/test_parser_base.py` - Parser interface tests
@@ -161,16 +162,16 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
   - [x] 2.12 Create performance benchmarks for storage operations (tests/performance/test_storage_benchmarks.py)
   - [x] 2.13 Verify storage performance targets met (write/read <50ms, cold start <200ms)
 
-- [ ] 3.0 Chunk Types & Validation
-  - [ ] 3.1 Define abstract Chunk base class in packages/core/src/aurora_core/chunks/base.py with to_json/from_json
-  - [ ] 3.2 Implement CodeChunk in packages/core/src/aurora_core/chunks/code_chunk.py with all required fields
-  - [ ] 3.3 Add JSON serialization methods to CodeChunk following PRD schema (Section 4.2.2)
-  - [ ] 3.4 Implement validation logic in CodeChunk (line numbers, file paths, complexity range)
-  - [ ] 3.5 Create ReasoningChunk stub in packages/core/src/aurora_core/chunks/reasoning_chunk.py for Phase 2
-  - [ ] 3.6 Write unit tests for abstract Chunk interface (tests/unit/core/test_chunk_base.py)
-  - [ ] 3.7 Write unit tests for CodeChunk (tests/unit/core/test_chunk_code.py) covering serialization and validation
-  - [ ] 3.8 Test edge cases (invalid line numbers, malformed paths, out-of-range complexity)
-  - [ ] 3.9 Verify chunks integrate with Store (save/retrieve round-trip test)
+- [x] 3.0 Chunk Types & Validation
+  - [x] 3.1 Define abstract Chunk base class in packages/core/src/aurora_core/chunks/base.py with to_json/from_json
+  - [x] 3.2 Implement CodeChunk in packages/core/src/aurora_core/chunks/code_chunk.py with all required fields
+  - [x] 3.3 Add JSON serialization methods to CodeChunk following PRD schema (Section 4.2.2)
+  - [x] 3.4 Implement validation logic in CodeChunk (line numbers, file paths, complexity range)
+  - [x] 3.5 Create ReasoningChunk stub in packages/core/src/aurora_core/chunks/reasoning_chunk.py for Phase 2
+  - [x] 3.6 Write unit tests for abstract Chunk interface (tests/unit/core/test_chunk_base.py)
+  - [x] 3.7 Write unit tests for CodeChunk (tests/unit/core/test_chunk_code.py) covering serialization and validation
+  - [x] 3.8 Test edge cases (invalid line numbers, malformed paths, out-of-range complexity)
+  - [x] 3.9 Verify chunks integrate with Store (save/retrieve round-trip test)
 
 - [ ] 4.0 Code Context Provider (Python Parser)
   - [ ] 4.1 Define abstract CodeParser interface in packages/context-code/src/aurora_context_code/parser.py

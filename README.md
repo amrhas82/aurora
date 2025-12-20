@@ -5,6 +5,16 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+---
+
+**🎉 Phase 1 Complete!** Version v1.0.0-phase1 released on December 20, 2025
+
+**Status**: Production-ready foundation with 243 passing tests (88.76% coverage)
+
+See [RELEASE_NOTES_v1.0.0-phase1.md](RELEASE_NOTES_v1.0.0-phase1.md) for details | [Phase 1 Archive](PHASE1_ARCHIVE.md)
+
+---
+
 ## Overview
 
 AURORA is a cognitive architecture framework that provides intelligent context management, reasoning, and agent orchestration capabilities for AI systems. Built on principles inspired by cognitive science research (SOAR, ACT-R), AURORA enables AI agents to maintain persistent memory, learn from experience, and efficiently coordinate complex tasks.

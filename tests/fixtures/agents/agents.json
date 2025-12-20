@@ -1,0 +1,38 @@
+{
+  "agents": [
+    {
+      "id": "code-analyzer",
+      "name": "Code Analyzer",
+      "description": "Analyzes code structure and provides insights",
+      "capabilities": ["code-analysis", "static-analysis", "complexity-metrics"],
+      "type": "local",
+      "config": {
+        "max_complexity": 10,
+        "languages": ["python", "javascript"]
+      }
+    },
+    {
+      "id": "documentation-generator",
+      "name": "Documentation Generator",
+      "description": "Generates documentation from code",
+      "capabilities": ["documentation", "code-to-docs"],
+      "type": "local",
+      "config": {
+        "format": "markdown",
+        "include_examples": true
+      }
+    },
+    {
+      "id": "remote-llm",
+      "name": "Remote LLM Agent",
+      "description": "Remote language model for general reasoning",
+      "capabilities": ["reasoning", "text-generation", "code-completion"],
+      "type": "remote",
+      "config": {
+        "endpoint": "https://api.example.com/v1/llm",
+        "model": "gpt-4",
+        "timeout": 30
+      }
+    }
+  ]
+}

@@ -66,8 +66,8 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 ### SOAR Package (`packages/soar/`)
 - `packages/soar/pyproject.toml` - SOAR package configuration with hatchling build backend
 - `packages/soar/README.md` - Package documentation
-- `packages/soar/src/aurora_soar/__init__.py` - Package initialization
-- `packages/soar/src/aurora_soar/agent_registry.py` - AgentRegistry implementation
+- `packages/soar/src/aurora_soar/__init__.py` - Package initialization with AgentInfo and AgentRegistry exports
+- `packages/soar/src/aurora_soar/agent_registry.py` - AgentInfo dataclass and AgentRegistry implementation with discovery, validation, and capability queries
 
 ### Testing Package (`packages/testing/`)
 - `packages/testing/pyproject.toml` - Testing utilities package configuration with hatchling build backend
@@ -89,7 +89,7 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `tests/unit/context_code/test_parser_base.py` - Parser interface tests (10 tests, all passing)
 - `tests/unit/context_code/test_python_parser.py` - Python parser tests (21 tests, all passing)
 - `tests/unit/context_code/test_parser_registry.py` - Parser registry tests (23 tests, all passing)
-- `tests/unit/soar/test_agent_registry.py` - Agent registry tests
+- `tests/unit/soar/test_agent_registry.py` - Agent registry tests (29 tests, all passing, 86.49% coverage)
 - `tests/integration/test_parse_and_store.py` - Parse → Store → Retrieve flow
 - `tests/integration/test_context_retrieval.py` - End-to-end context retrieval (10 tests: 7 flow tests + 3 edge cases - all passing)
 - `tests/integration/test_config_integration.py` - Configuration integration
@@ -99,6 +99,7 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `tests/fixtures/sample_python_files/medium.py` - Medium complexity file with class and methods
 - `tests/fixtures/sample_python_files/complex.py` - Complex file with nested classes and high complexity
 - `tests/fixtures/sample_python_files/broken.py` - File with syntax errors for error handling tests
+- `tests/fixtures/agents/agents.json` - Sample agent configuration with 3 agents (local/remote types, various capabilities)
 
 ### Root Files
 - `pyproject.toml` - Root project configuration (workspace)
@@ -212,19 +213,19 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
   - [x] 5.11 Test caching behavior (verify cache hit/miss, invalidation on file change)
   - [x] 5.12 Verify retrieval returns relevant results for sample queries
 
-- [ ] 6.0 Agent Registry & Discovery
-  - [ ] 6.1 Define AgentInfo dataclass in packages/soar/src/aurora_soar/agent_registry.py
-  - [ ] 6.2 Implement AgentRegistry class with discovery paths and agent storage
-  - [ ] 6.3 Add JSON parsing for agent configuration files (validate schema, handle errors)
-  - [ ] 6.4 Implement agent validation (required fields, valid types, path/endpoint checks)
-  - [ ] 6.5 Add capability-based query methods (find_by_capability, filter by domain)
-  - [ ] 6.6 Implement fallback agent creation (default llm-executor if no agents found)
-  - [ ] 6.7 Add refresh() method to re-scan config files (check mtime for changes)
-  - [ ] 6.8 Create sample agent configuration files for testing (tests/fixtures/agents.json)
-  - [ ] 6.9 Write unit tests for AgentRegistry (tests/unit/soar/test_agent_registry.py)
-  - [ ] 6.10 Test discovery from multiple config paths (project, global, MCP)
-  - [ ] 6.11 Test validation catches invalid agent configurations
-  - [ ] 6.12 Verify capability queries return correct agents
+- [x] 6.0 Agent Registry & Discovery
+  - [x] 6.1 Define AgentInfo dataclass in packages/soar/src/aurora_soar/agent_registry.py
+  - [x] 6.2 Implement AgentRegistry class with discovery paths and agent storage
+  - [x] 6.3 Add JSON parsing for agent configuration files (validate schema, handle errors)
+  - [x] 6.4 Implement agent validation (required fields, valid types, path/endpoint checks)
+  - [x] 6.5 Add capability-based query methods (find_by_capability, filter by domain)
+  - [x] 6.6 Implement fallback agent creation (default llm-executor if no agents found)
+  - [x] 6.7 Add refresh() method to re-scan config files (check mtime for changes)
+  - [x] 6.8 Create sample agent configuration files for testing (tests/fixtures/agents.json)
+  - [x] 6.9 Write unit tests for AgentRegistry (tests/unit/soar/test_agent_registry.py)
+  - [x] 6.10 Test discovery from multiple config paths (project, global, MCP)
+  - [x] 6.11 Test validation catches invalid agent configurations
+  - [x] 6.12 Verify capability queries return correct agents
 
 - [ ] 7.0 Configuration System
   - [ ] 7.1 Define JSON schema for configuration in packages/core/src/aurora_core/config/schema.py

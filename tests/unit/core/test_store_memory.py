@@ -7,12 +7,12 @@ These tests verify in-memory storage functionality including:
 - No file I/O dependencies
 """
 
-import pytest
-from datetime import datetime
 
+import pytest
+
+from aurora_core.exceptions import StorageError
 from aurora_core.store.memory import MemoryStore
 from aurora_core.types import ChunkID
-from aurora_core.exceptions import StorageError, ChunkNotFoundError
 from tests.unit.core.test_store_base import StoreContractTests, TestChunk
 
 

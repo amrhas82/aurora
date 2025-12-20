@@ -72,10 +72,10 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 ### Testing Package (`packages/testing/`)
 - `packages/testing/pyproject.toml` - Testing utilities package configuration with hatchling build backend
 - `packages/testing/README.md` - Package documentation
-- `packages/testing/src/aurora_testing/__init__.py` - Package initialization
-- `packages/testing/src/aurora_testing/fixtures.py` - Reusable pytest fixtures
-- `packages/testing/src/aurora_testing/mocks.py` - Mock implementations (LLM, agents)
-- `packages/testing/src/aurora_testing/benchmarks.py` - Performance testing utilities
+- `packages/testing/src/aurora_testing/__init__.py` - Package initialization with fixtures, mocks, benchmarks exports
+- `packages/testing/src/aurora_testing/fixtures.py` - Comprehensive pytest fixtures (stores, chunks, parsers, files, configs)
+- `packages/testing/src/aurora_testing/mocks.py` - Mock implementations (MockLLM with rules, MockAgent, MockParser, MockStore)
+- `packages/testing/src/aurora_testing/benchmarks.py` - Performance utilities (PerformanceBenchmark, MemoryProfiler, BenchmarkSuite)
 
 ### Test Files
 - `tests/unit/core/test_store_base.py` - Store interface tests
@@ -90,11 +90,11 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `tests/unit/context_code/test_python_parser.py` - Python parser tests (21 tests, all passing)
 - `tests/unit/context_code/test_parser_registry.py` - Parser registry tests (23 tests, all passing)
 - `tests/unit/soar/test_agent_registry.py` - Agent registry tests (29 tests, all passing, 86.49% coverage)
-- `tests/integration/test_parse_and_store.py` - Parse → Store → Retrieve flow
+- `tests/integration/test_parse_and_store.py` - Parse → Store → Retrieve flow (33 tests: parse/store/retrieve, metadata preservation, multi-file, updates, persistence - all passing)
 - `tests/integration/test_context_retrieval.py` - End-to-end context retrieval (10 tests: 7 flow tests + 3 edge cases - all passing)
 - `tests/integration/test_config_integration.py` - Configuration integration (12 tests: full workflow, multi-file, env vars, CLI overrides, components - all passing)
-- `tests/performance/test_parser_benchmarks.py` - Parser performance tests (passes at ~260ms for 1000 lines)
-- `tests/performance/test_storage_benchmarks.py` - Storage performance tests
+- `tests/performance/test_parser_benchmarks.py` - Parser performance tests (27 tests: small/medium/large files, scaling, memory, cold start - all passing at ~420ms for 1000 lines)
+- `tests/performance/test_storage_benchmarks.py` - Storage performance tests (12 tests: read/write, bulk ops, activation, relationships - all passing, meeting <50ms targets)
 - `tests/fixtures/sample_python_files/simple.py` - Simple test file with 2 functions
 - `tests/fixtures/sample_python_files/medium.py` - Medium complexity file with class and methods
 - `tests/fixtures/sample_python_files/complex.py` - Complex file with nested classes and high complexity
@@ -104,11 +104,16 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 ### Root Files
 - `pyproject.toml` - Root project configuration (workspace)
 - `Makefile` - Common development commands
-- `README.md` - Project documentation and quick start
+- `README.md` - Project documentation and quick start (updated with architecture diagrams and comprehensive usage examples)
 - `.github/workflows/ci.yml` - CI/CD pipeline configuration
 - `pytest.ini` - Pytest configuration
 - `ruff.toml` - Ruff linting configuration
 - `mypy.ini` - MyPy type checking configuration
+
+### Documentation Files
+- `docs/EXTENSION_GUIDE.md` - Guide for creating custom parsers, storage backends, context providers, and agents
+- `docs/TROUBLESHOOTING.md` - Common errors and solutions for installation, storage, parsing, configuration, and performance issues
+- `docs/PHASE2_CONTRACTS.md` - Stable interfaces and dependency contracts for Phase 2 developers
 
 ---
 
@@ -242,28 +247,28 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
   - [x] 7.12 Test validation catches invalid configurations
   - [x] 7.13 Create integration tests for config system (tests/integration/test_config_integration.py)
 
-- [ ] 8.0 Testing Framework & Utilities
-  - [ ] 8.1 Create pytest fixtures in packages/testing/src/aurora_testing/fixtures.py (stores, chunks, parsers)
-  - [ ] 8.2 Implement MockLLM in packages/testing/src/aurora_testing/mocks.py for predictable testing
-  - [ ] 8.3 Create PerformanceBenchmark utility in packages/testing/src/aurora_testing/benchmarks.py
-  - [ ] 8.4 Add memory profiling utilities for tracking memory usage in tests
-  - [ ] 8.5 Write integration test for parse → store → retrieve flow (tests/integration/test_parse_and_store.py)
-  - [ ] 8.6 Create integration test for full context retrieval (tests/integration/test_context_retrieval.py)
-  - [ ] 8.7 Verify all unit tests pass with ≥85% coverage for core packages
-  - [ ] 8.8 Verify all integration tests pass
-  - [ ] 8.9 Verify all performance benchmarks meet targets
+- [x] 8.0 Testing Framework & Utilities
+  - [x] 8.1 Create pytest fixtures in packages/testing/src/aurora_testing/fixtures.py (stores, chunks, parsers)
+  - [x] 8.2 Implement MockLLM in packages/testing/src/aurora_testing/mocks.py for predictable testing
+  - [x] 8.3 Create PerformanceBenchmark utility in packages/testing/src/aurora_testing/benchmarks.py
+  - [x] 8.4 Add memory profiling utilities for tracking memory usage in tests
+  - [x] 8.5 Write integration test for parse → store → retrieve flow (tests/integration/test_parse_and_store.py)
+  - [x] 8.6 Create integration test for full context retrieval (tests/integration/test_context_retrieval.py)
+  - [x] 8.7 Verify all unit tests pass with ≥85% coverage for core packages
+  - [x] 8.8 Verify all integration tests pass
+  - [x] 8.9 Verify all performance benchmarks meet targets
 
-- [ ] 9.0 Documentation & Quality Assurance
-  - [ ] 9.1 Add docstrings to all public classes and methods (following Google style)
-  - [ ] 9.2 Run mypy in strict mode and fix all type errors
-  - [ ] 9.3 Run ruff linting and fix all critical issues (warnings acceptable if documented)
-  - [ ] 9.4 Run bandit security scanning and address high/critical vulnerabilities
-  - [ ] 9.5 Generate test coverage report and address gaps below 85%
-  - [ ] 9.6 Update README.md with architecture diagrams and usage examples
-  - [ ] 9.7 Create extension guide for custom parsers and storage backends
-  - [ ] 9.8 Create troubleshooting guide for common errors
-  - [ ] 9.9 Document inter-phase dependency contracts for Phase 2 developers
-  - [ ] 9.10 Run full test suite and verify completion in <5 minutes
+- [x] 9.0 Documentation & Quality Assurance
+  - [x] 9.1 Add docstrings to all public classes and methods (following Google style)
+  - [x] 9.2 Run mypy in strict mode and fix all type errors
+  - [x] 9.3 Run ruff linting and fix all critical issues (warnings acceptable if documented)
+  - [x] 9.4 Run bandit security scanning and address high/critical vulnerabilities
+  - [x] 9.5 Generate test coverage report and address gaps below 85%
+  - [x] 9.6 Update README.md with architecture diagrams and usage examples
+  - [x] 9.7 Create extension guide for custom parsers and storage backends
+  - [x] 9.8 Create troubleshooting guide for common errors
+  - [x] 9.9 Document inter-phase dependency contracts for Phase 2 developers
+  - [x] 9.10 Run full test suite and verify completion in <5 minutes
 
 - [ ] 10.0 Phase 1 Completion & Handoff
   - [ ] 10.1 Verify all functional requirements from PRD Section 4 are implemented

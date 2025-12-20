@@ -5,16 +5,15 @@ This module provides the PythonParser class for extracting code elements
 (functions, classes, methods) from Python source files.
 """
 
+import hashlib
 import logging
 from pathlib import Path
-from typing import List, Optional, Set
-import hashlib
 
 import tree_sitter
 import tree_sitter_python
 
-from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_context_code.parser import CodeParser
+from aurora_core.chunks.code_chunk import CodeChunk
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +36,7 @@ class PythonParser(CodeParser):
     # Supported file extensions
     EXTENSIONS = {'.py', '.pyi'}
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Python parser with tree-sitter grammar."""
         super().__init__(language="python")
 
@@ -60,7 +59,7 @@ class PythonParser(CodeParser):
         """
         return file_path.suffix in self.EXTENSIONS
 
-    def parse(self, file_path: Path) -> List[CodeChunk]:
+    def parse(self, file_path: Path) -> list[CodeChunk]:
         """
         Parse a Python source file and extract code elements.
 
@@ -99,7 +98,7 @@ class PythonParser(CodeParser):
                 logger.warning(f"Parse errors in {file_path}, extracting partial results")
 
             # Extract all code elements
-            chunks: List[CodeChunk] = []
+            chunks: list[CodeChunk] = []
 
             # Extract functions
             function_chunks = self._extract_functions(
@@ -130,7 +129,7 @@ class PythonParser(CodeParser):
 
     def _extract_functions(
         self, root_node: tree_sitter.Node, file_path: Path, source_code: str
-    ) -> List[CodeChunk]:
+    ) -> list[CodeChunk]:
         """
         Extract function definitions from the AST.
 
@@ -142,7 +141,7 @@ class PythonParser(CodeParser):
         Returns:
             List of CodeChunk instances for functions
         """
-        chunks: List[CodeChunk] = []
+        chunks: list[CodeChunk] = []
 
         # Query for function definitions at module level
         # (Class methods will be handled separately in task 4.5)
@@ -204,7 +203,7 @@ class PythonParser(CodeParser):
 
     def _extract_classes_and_methods(
         self, root_node: tree_sitter.Node, file_path: Path, source_code: str
-    ) -> List[CodeChunk]:
+    ) -> list[CodeChunk]:
         """
         Extract class definitions and their methods from the AST.
 
@@ -216,7 +215,7 @@ class PythonParser(CodeParser):
         Returns:
             List of CodeChunk instances for classes and methods
         """
-        chunks: List[CodeChunk] = []
+        chunks: list[CodeChunk] = []
 
         # Find all class definitions
         for class_node in self._find_nodes_by_type(root_node, "class_definition"):
@@ -285,7 +284,7 @@ class PythonParser(CodeParser):
         class_name: str,
         file_path: Path,
         source_code: str,
-    ) -> List[CodeChunk]:
+    ) -> list[CodeChunk]:
         """
         Extract methods from a class body.
 
@@ -298,7 +297,7 @@ class PythonParser(CodeParser):
         Returns:
             List of CodeChunk instances for methods
         """
-        chunks: List[CodeChunk] = []
+        chunks: list[CodeChunk] = []
 
         # Find function definitions in the class body
         for method_node in self._find_nodes_by_type(class_body_node, "function_definition"):
@@ -358,7 +357,7 @@ class PythonParser(CodeParser):
 
     def _find_nodes_by_type(
         self, node: tree_sitter.Node, node_type: str
-    ) -> List[tree_sitter.Node]:
+    ) -> list[tree_sitter.Node]:
         """
         Find all nodes of a given type in the tree.
 
@@ -369,9 +368,9 @@ class PythonParser(CodeParser):
         Returns:
             List of matching nodes
         """
-        results: List[tree_sitter.Node] = []
+        results: list[tree_sitter.Node] = []
 
-        def traverse(n: tree_sitter.Node):
+        def traverse(n: tree_sitter.Node) -> None:
             if n.type == node_type:
                 results.append(n)
             for child in n.children:
@@ -397,7 +396,7 @@ class PythonParser(CodeParser):
             current = current.parent
         return False
 
-    def _extract_docstring(self, node: tree_sitter.Node, source_code: str) -> Optional[str]:
+    def _extract_docstring(self, node: tree_sitter.Node, source_code: str) -> str | None:
         """
         Extract docstring from a function or class definition.
 
@@ -439,7 +438,7 @@ class PythonParser(CodeParser):
             logger.debug(f"Failed to extract docstring: {e}")
             return None
 
-    def _clean_docstring(self, raw_string: str) -> Optional[str]:
+    def _clean_docstring(self, raw_string: str) -> str | None:
         """
         Clean a raw docstring by removing quotes and normalizing whitespace.
 
@@ -498,7 +497,7 @@ class PythonParser(CodeParser):
 
         branch_count = 0
 
-        def count_branches(n: tree_sitter.Node):
+        def count_branches(n: tree_sitter.Node) -> None:
             nonlocal branch_count
             if n.type in branch_types:
                 branch_count += 1
@@ -521,7 +520,7 @@ class PythonParser(CodeParser):
         complexity_score = branch_count / (branch_count + 10)
         return min(complexity_score, 1.0)  # Ensure it doesn't exceed 1.0
 
-    def _extract_imports(self, root_node: tree_sitter.Node, source_code: str) -> Set[str]:
+    def _extract_imports(self, root_node: tree_sitter.Node, source_code: str) -> set[str]:
         """
         Extract all imported names from the module.
 
@@ -532,7 +531,7 @@ class PythonParser(CodeParser):
         Returns:
             Set of imported names (modules, functions, classes)
         """
-        imports: Set[str] = set()
+        imports: set[str] = set()
 
         # Find import_statement and import_from_statement nodes
         for node in self._find_nodes_by_type(root_node, "import_statement"):
@@ -562,8 +561,8 @@ class PythonParser(CodeParser):
         return imports
 
     def _identify_dependencies(
-        self, chunk: CodeChunk, imports: Set[str], all_chunks: List[CodeChunk]
-    ) -> List[str]:
+        self, chunk: CodeChunk, imports: set[str], all_chunks: list[CodeChunk]
+    ) -> list[str]:
         """
         Identify dependencies for a code chunk.
 

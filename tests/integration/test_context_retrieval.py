@@ -4,14 +4,13 @@ Integration tests for end-to-end context retrieval flow.
 Tests the complete flow: Parse → Store → Retrieve
 """
 
-import pytest
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
+import pytest
+
+from aurora_context_code.registry import get_global_registry
+from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.context.code_provider import CodeContextProvider
 from aurora_core.store.memory import MemoryStore
-from aurora_core.chunks.code_chunk import CodeChunk
-from aurora_context_code.registry import ParserRegistry, get_global_registry
 
 
 class TestContextRetrievalFlow:

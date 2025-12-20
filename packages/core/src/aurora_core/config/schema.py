@@ -5,8 +5,11 @@ Defines the JSON Schema Draft 7 specification for validating
 configuration files according to PRD Section 4.6.
 """
 
+from typing import Any
+
+
 # JSON Schema Draft 7 for AURORA Configuration
-CONFIG_SCHEMA = {
+CONFIG_SCHEMA: dict[str, Any] = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "AURORA Configuration",
     "description": "Configuration schema for AURORA agent system",
@@ -201,7 +204,7 @@ CONFIG_SCHEMA = {
 }
 
 
-def get_schema() -> dict:
+def get_schema() -> dict[str, Any]:
     """
     Get the JSON schema for configuration validation.
 

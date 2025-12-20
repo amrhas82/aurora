@@ -63,7 +63,7 @@ format:
 	ruff format packages/ tests/
 
 type-check:
-	mypy packages/core/src packages/context-code/src packages/soar/src packages/testing/src
+	mypy -p aurora_core -p aurora_context_code -p aurora_soar
 
 quality-check: lint type-check test
 

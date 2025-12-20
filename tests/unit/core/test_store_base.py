@@ -5,14 +5,15 @@ These tests verify that any Store implementation follows the expected
 interface contract and behavior patterns.
 """
 
-import pytest
 from abc import ABC
-from typing import Dict, Any
+from typing import Any
 
-from aurora_core.store.base import Store
+import pytest
+
 from aurora_core.chunks.base import Chunk
+from aurora_core.exceptions import ChunkNotFoundError
+from aurora_core.store.base import Store
 from aurora_core.types import ChunkID
-from aurora_core.exceptions import StorageError, ChunkNotFoundError
 
 
 # Test Chunk implementation for testing
@@ -23,7 +24,7 @@ class TestChunk(Chunk):
         super().__init__(chunk_id, "test")
         self.content = content
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "type": self.type,
@@ -32,7 +33,7 @@ class TestChunk(Chunk):
         }
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> 'TestChunk':
+    def from_json(cls, data: dict[str, Any]) -> 'TestChunk':
         chunk_id = data["id"]
         content = data.get("content", {}).get("data", "test")
         return cls(chunk_id, content)

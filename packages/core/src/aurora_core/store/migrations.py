@@ -6,11 +6,11 @@ ensuring smooth transitions between versions without data loss.
 """
 
 import sqlite3
-from typing import List, Callable, Optional
+from collections.abc import Callable
 from pathlib import Path
 
-from aurora_core.store.schema import SCHEMA_VERSION
 from aurora_core.exceptions import StorageError
+from aurora_core.store.schema import SCHEMA_VERSION
 
 
 class Migration:
@@ -65,9 +65,9 @@ class MigrationManager:
     upgrade a database from an older schema version to the current version.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize migration manager."""
-        self._migrations: List[Migration] = []
+        self._migrations: list[Migration] = []
         self._register_migrations()
 
     def _register_migrations(self) -> None:
@@ -191,8 +191,8 @@ class MigrationManager:
             # Can't backup in-memory database
             return ":memory:"
 
-        from datetime import datetime
         import shutil
+        from datetime import datetime
 
         path = Path(db_path)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -210,8 +210,8 @@ class MigrationManager:
     def migrate_with_backup(
         self,
         conn: sqlite3.Connection,
-        db_path: Optional[str] = None
-    ) -> Optional[str]:
+        db_path: str | None = None
+    ) -> str | None:
         """
         Migrate database with automatic backup.
 
@@ -234,7 +234,7 @@ class MigrationManager:
         try:
             self.migrate(conn)
             return backup_path
-        except Exception as e:
+        except Exception:
             if backup_path and backup_path != ":memory:":
                 print(f"Migration failed. Restore from backup: {backup_path}")
             raise

@@ -8,7 +8,8 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +31,11 @@ class AgentInfo:
     id: str
     name: str
     description: str
-    capabilities: List[str]
+    capabilities: list[str]
     agent_type: str
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate agent info after initialization."""
         if not self.id:
             raise ValueError("Agent ID cannot be empty")
@@ -59,16 +60,16 @@ class AgentRegistry:
 
     VALID_AGENT_TYPES = {"local", "remote", "mcp"}
 
-    def __init__(self, discovery_paths: Optional[List[Path]] = None):
+    def __init__(self, discovery_paths: list[Path] | None = None):
         """
         Initialize the agent registry.
 
         Args:
             discovery_paths: Optional list of directories to scan for agent configs
         """
-        self.agents: Dict[str, AgentInfo] = {}
-        self.discovery_paths: List[Path] = discovery_paths or []
-        self._file_mtimes: Dict[Path, float] = {}
+        self.agents: dict[str, AgentInfo] = {}
+        self.discovery_paths: list[Path] = discovery_paths or []
+        self._file_mtimes: dict[Path, float] = {}
 
     def register(self, agent: AgentInfo) -> None:
         """
@@ -83,7 +84,7 @@ class AgentRegistry:
         self.agents[agent.id] = agent
         logger.info(f"Registered agent: {agent.id} ({agent.name})")
 
-    def get(self, agent_id: str) -> Optional[AgentInfo]:
+    def get(self, agent_id: str) -> AgentInfo | None:
         """
         Retrieve an agent by ID.
 
@@ -95,7 +96,7 @@ class AgentRegistry:
         """
         return self.agents.get(agent_id)
 
-    def list_all(self) -> List[AgentInfo]:
+    def list_all(self) -> list[AgentInfo]:
         """
         List all registered agents.
 
@@ -104,7 +105,7 @@ class AgentRegistry:
         """
         return list(self.agents.values())
 
-    def find_by_capability(self, capability: str) -> List[AgentInfo]:
+    def find_by_capability(self, capability: str) -> list[AgentInfo]:
         """
         Find agents that have a specific capability.
 
@@ -120,7 +121,7 @@ class AgentRegistry:
             if capability in agent.capabilities
         ]
 
-    def find_by_capabilities(self, capabilities: List[str]) -> List[AgentInfo]:
+    def find_by_capabilities(self, capabilities: list[str]) -> list[AgentInfo]:
         """
         Find agents that have ALL specified capabilities.
 
@@ -136,7 +137,7 @@ class AgentRegistry:
             if all(cap in agent.capabilities for cap in capabilities)
         ]
 
-    def filter_by_type(self, agent_type: str) -> List[AgentInfo]:
+    def filter_by_type(self, agent_type: str) -> list[AgentInfo]:
         """
         Filter agents by type.
 
@@ -152,7 +153,7 @@ class AgentRegistry:
             if agent.agent_type == agent_type
         ]
 
-    def validate_agent_data(self, agent_data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    def validate_agent_data(self, agent_data: dict[str, Any]) -> tuple[bool, str | None]:
         """
         Validate agent configuration data.
 
@@ -165,9 +166,9 @@ class AgentRegistry:
         required_fields = ["id", "name", "description", "capabilities", "type"]
 
         # Check required fields
-        for field in required_fields:
-            if field not in agent_data:
-                return False, f"Missing required field: {field}"
+        for field_name in required_fields:
+            if field_name not in agent_data:
+                return False, f"Missing required field: {field_name}"
 
         # Validate agent type
         agent_type = agent_data.get("type")
@@ -226,7 +227,7 @@ class AgentRegistry:
             config_file: Path to agent configuration JSON file
         """
         try:
-            with open(config_file, "r") as f:
+            with open(config_file) as f:
                 data = json.load(f)
 
             # Track file modification time for refresh

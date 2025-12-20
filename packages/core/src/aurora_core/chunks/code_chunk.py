@@ -6,9 +6,9 @@ and methods parsed from source code files.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 from aurora_core.chunks.base import Chunk
 
@@ -39,9 +39,9 @@ class CodeChunk(Chunk):
     name: str
     line_start: int
     line_end: int
-    signature: Optional[str] = None
-    docstring: Optional[str] = None
-    dependencies: List[str] = field(default_factory=list)
+    signature: str | None = None
+    docstring: str | None = None
+    dependencies: list[str] = field(default_factory=list)
     complexity_score: float = 0.0
     language: str = "python"
 
@@ -53,9 +53,9 @@ class CodeChunk(Chunk):
         name: str,
         line_start: int,
         line_end: int,
-        signature: Optional[str] = None,
-        docstring: Optional[str] = None,
-        dependencies: Optional[List[str]] = None,
+        signature: str | None = None,
+        docstring: str | None = None,
+        dependencies: list[str] | None = None,
         complexity_score: float = 0.0,
         language: str = "python",
     ):
@@ -96,7 +96,7 @@ class CodeChunk(Chunk):
         # Validate on construction
         self.validate()
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """
         Serialize chunk to JSON-compatible dict.
 
@@ -129,7 +129,7 @@ class CodeChunk(Chunk):
         }
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> 'CodeChunk':
+    def from_json(cls, data: dict[str, Any]) -> 'CodeChunk':
         """
         Deserialize chunk from JSON dict.
 

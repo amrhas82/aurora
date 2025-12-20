@@ -5,7 +5,6 @@ This module defines all custom exceptions used throughout AURORA, organized
 in a clear hierarchy for proper error handling and user-friendly messaging.
 """
 
-from typing import Optional
 
 
 class AuroraError(Exception):
@@ -16,7 +15,7 @@ class AuroraError(Exception):
     allowing for catch-all error handling when needed.
     """
 
-    def __init__(self, message: str, details: Optional[str] = None):
+    def __init__(self, message: str, details: str | None = None):
         """
         Initialize an AURORA error.
 
@@ -118,7 +117,7 @@ class FatalError(AuroraError):
     These errors should fail fast with recovery instructions.
     """
 
-    def __init__(self, message: str, recovery_hint: Optional[str] = None):
+    def __init__(self, message: str, recovery_hint: str | None = None):
         """
         Initialize a fatal error.
 

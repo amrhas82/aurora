@@ -4,13 +4,11 @@ Unit tests for ParserRegistry.
 Tests registration, discovery, and multi-language support.
 """
 
-import pytest
 from pathlib import Path
-from typing import List
 
-from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_context_code.parser import CodeParser
 from aurora_context_code.registry import ParserRegistry, get_global_registry
+from aurora_core.chunks.code_chunk import CodeChunk
 
 
 class MockParser(CodeParser):
@@ -21,7 +19,7 @@ class MockParser(CodeParser):
         super().__init__(language)
         self.extensions = extensions
 
-    def parse(self, file_path: Path) -> List[CodeChunk]:
+    def parse(self, file_path: Path) -> list[CodeChunk]:
         """Mock parse method."""
         return []
 

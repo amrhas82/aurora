@@ -5,10 +5,8 @@ Tests agent discovery, registration, validation, and capability-based queries.
 """
 
 import json
-import pytest
-from pathlib import Path
-from typing import List, Dict, Any
 from dataclasses import asdict
+from pathlib import Path
 
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 

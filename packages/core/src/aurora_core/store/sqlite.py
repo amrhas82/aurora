@@ -8,25 +8,27 @@ This module provides a production-ready storage backend using SQLite with:
 - Relationship graph traversal for spreading activation
 """
 
-import sqlite3
 import json
+import sqlite3
 import threading
-from pathlib import Path
-from typing import List, Optional, Dict, Any
-from datetime import datetime
+from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import datetime
+from pathlib import Path
 
+# Forward reference for type checking
+from typing import TYPE_CHECKING, Any, Optional, cast
+
+from aurora_core.exceptions import (
+    ChunkNotFoundError,
+    StorageError,
+    ValidationError,
+)
 from aurora_core.store.base import Store
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
-from aurora_core.exceptions import (
-    StorageError,
-    ChunkNotFoundError,
-    ValidationError,
-)
 
-# Forward reference for type checking
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -100,7 +102,7 @@ class SQLiteStore(Store):
                     details=str(e)
                 )
 
-        return self._local.connection
+        return cast(sqlite3.Connection, self._local.connection)
 
     def _init_schema(self) -> None:
         """Initialize database schema if not exists."""
@@ -116,7 +118,7 @@ class SQLiteStore(Store):
             )
 
     @contextmanager
-    def _transaction(self):
+    def _transaction(self) -> Iterator[sqlite3.Connection]:
         """
         Context manager for database transactions with automatic rollback.
 
@@ -124,11 +126,22 @@ class SQLiteStore(Store):
             with store._transaction():
                 # Database operations here
                 pass
+
+        Yields:
+            SQLite connection with transaction support
         """
         conn = self._get_connection()
         try:
             yield conn
             conn.commit()
+        except ChunkNotFoundError:
+            # Re-raise domain exceptions without wrapping
+            conn.rollback()
+            raise
+        except ValidationError:
+            # Re-raise domain exceptions without wrapping
+            conn.rollback()
+            raise
         except Exception as e:
             conn.rollback()
             raise StorageError(
@@ -245,7 +258,7 @@ class SQLiteStore(Store):
                 details=str(e)
             )
 
-    def _deserialize_chunk(self, row_data: Dict[str, Any]) -> Optional['Chunk']:
+    def _deserialize_chunk(self, row_data: dict[str, Any]) -> Optional['Chunk']:
         """
         Deserialize a chunk from database row.
 
@@ -277,13 +290,12 @@ class SQLiteStore(Store):
             chunk_type = row_data['type']
             if chunk_type == 'code':
                 return CodeChunk.from_json(full_data)
-            elif chunk_type == 'reasoning':
+            if chunk_type == 'reasoning':
                 return ReasoningChunk.from_json(full_data)
-            else:
-                raise StorageError(
-                    f"Unknown chunk type: {chunk_type}",
-                    details=f"Cannot deserialize chunk {row_data['id']}"
-                )
+            raise StorageError(
+                f"Unknown chunk type: {chunk_type}",
+                details=f"Cannot deserialize chunk {row_data['id']}"
+            )
 
         except (KeyError, json.JSONDecodeError, ValueError) as e:
             raise StorageError(
@@ -330,7 +342,7 @@ class SQLiteStore(Store):
         self,
         min_activation: float,
         limit: int
-    ) -> List['Chunk']:
+    ) -> list['Chunk']:
         """
         Retrieve chunks by activation threshold.
 
@@ -429,7 +441,7 @@ class SQLiteStore(Store):
         self,
         chunk_id: ChunkID,
         max_depth: int = 2
-    ) -> List['Chunk']:
+    ) -> list['Chunk']:
         """
         Get related chunks via relationship graph traversal.
 
@@ -445,6 +457,17 @@ class SQLiteStore(Store):
             ChunkNotFoundError: If starting chunk doesn't exist
         """
         conn = self._get_connection()
+
+        # First check if the starting chunk exists
+        try:
+            cursor = conn.execute("SELECT id FROM chunks WHERE id = ?", (chunk_id,))
+            if cursor.fetchone() is None:
+                raise ChunkNotFoundError(str(chunk_id))
+        except sqlite3.Error as e:
+            raise StorageError(
+                f"Failed to verify chunk existence: {chunk_id}",
+                details=str(e)
+            )
 
         # Use recursive CTE for graph traversal
         query = """

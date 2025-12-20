@@ -7,7 +7,6 @@ code parsers for different programming languages.
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional, List
 
 from aurora_context_code.parser import CodeParser
 
@@ -30,9 +29,9 @@ class ParserRegistry:
         >>> parser = registry.get_parser_for_file(Path("example.py"))
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize empty parser registry."""
-        self._parsers: Dict[str, CodeParser] = {}
+        self._parsers: dict[str, CodeParser] = {}
         logger.debug("ParserRegistry initialized")
 
     def register(self, parser: CodeParser) -> None:
@@ -54,7 +53,7 @@ class ParserRegistry:
         self._parsers[parser.language] = parser
         logger.debug(f"Registered parser: {parser}")
 
-    def get_parser(self, language: str) -> Optional[CodeParser]:
+    def get_parser(self, language: str) -> CodeParser | None:
         """
         Get parser for a specific language.
 
@@ -66,7 +65,7 @@ class ParserRegistry:
         """
         return self._parsers.get(language)
 
-    def get_parser_for_file(self, file_path: Path) -> Optional[CodeParser]:
+    def get_parser_for_file(self, file_path: Path) -> CodeParser | None:
         """
         Get appropriate parser for a given file.
 
@@ -86,7 +85,7 @@ class ParserRegistry:
         logger.debug(f"No parser found for file {file_path}")
         return None
 
-    def list_languages(self) -> List[str]:
+    def list_languages(self) -> list[str]:
         """
         List all registered languages.
 
@@ -123,7 +122,7 @@ class ParserRegistry:
 
 
 # Global registry instance
-_global_registry: Optional[ParserRegistry] = None
+_global_registry: ParserRegistry | None = None
 
 
 def get_global_registry() -> ParserRegistry:

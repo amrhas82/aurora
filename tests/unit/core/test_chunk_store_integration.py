@@ -4,10 +4,10 @@ Integration tests for Chunk types with Store implementations.
 Tests that chunks can be properly saved and retrieved from storage.
 """
 
-import pytest
 import tempfile
-import json
 from pathlib import Path
+
+import pytest
 
 from aurora_core.chunks import CodeChunk, ReasoningChunk
 from aurora_core.store import MemoryStore, SQLiteStore

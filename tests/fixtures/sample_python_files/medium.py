@@ -3,7 +3,6 @@ Medium complexity Python file for testing class and method extraction.
 """
 
 import os
-from typing import Optional
 
 
 class Calculator:
@@ -28,7 +27,7 @@ class Calculator:
         self.value *= x
         return self.value
 
-    def divide(self, x: float) -> Optional[float]:
+    def divide(self, x: float) -> float | None:
         """
         Divide the current value by a number.
 
@@ -47,7 +46,7 @@ class Calculator:
 def process_file(path: str) -> bool:
     """Process a file if it exists."""
     if os.path.exists(path):
-        with open(path, 'r') as f:
+        with open(path) as f:
             content = f.read()
             return len(content) > 0
     return False

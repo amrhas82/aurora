@@ -4,12 +4,10 @@ Unit tests for the CodeParser abstract interface.
 Tests the contract that all parser implementations must follow.
 """
 
-import pytest
 from pathlib import Path
-from typing import List
 
-from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_context_code.parser import CodeParser
+from aurora_core.chunks.code_chunk import CodeChunk
 
 
 class MockParser(CodeParser):
@@ -22,7 +20,7 @@ class MockParser(CodeParser):
         self.parse_called = False
         self.can_parse_called = False
 
-    def parse(self, file_path: Path) -> List[CodeChunk]:
+    def parse(self, file_path: Path) -> list[CodeChunk]:
         """Mock parse implementation."""
         self.parse_called = True
         return []

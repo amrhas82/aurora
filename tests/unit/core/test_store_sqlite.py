@@ -8,14 +8,27 @@ These tests verify SQLite-specific functionality including:
 - Schema creation
 """
 
-import pytest
-import tempfile
 from pathlib import Path
 
+import pytest
+
+from aurora_core.chunks.code_chunk import CodeChunk
+from aurora_core.exceptions import ValidationError
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
-from aurora_core.exceptions import StorageError, ValidationError
-from tests.unit.core.test_store_base import StoreContractTests, TestChunk
+from tests.unit.core.test_store_base import StoreContractTests
+
+
+def create_test_code_chunk(chunk_id: str, name: str = "test_func") -> CodeChunk:
+    """Helper to create CodeChunk for testing."""
+    return CodeChunk(
+        chunk_id=chunk_id,
+        file_path="/test/file.py",
+        element_type="function",
+        name=name,
+        line_start=1,
+        line_end=10,
+    )
 
 
 class TestSQLiteStore(StoreContractTests):
@@ -35,6 +48,48 @@ class TestSQLiteStore(StoreContractTests):
         store = SQLiteStore(db_path=str(db_path))
         yield store
         store.close()
+
+    @pytest.fixture
+    def sample_chunk(self):
+        """Create a sample CodeChunk for testing (SQLite only supports CodeChunk/ReasoningChunk)."""
+        return CodeChunk(
+            chunk_id="test:chunk:1",
+            file_path="/test/file.py",
+            element_type="function",
+            name="test_function",
+            line_start=1,
+            line_end=10,
+        )
+
+    @pytest.fixture
+    def sample_chunks(self):
+        """Create multiple sample CodeChunks for testing."""
+        return [
+            CodeChunk(
+                chunk_id="test:chunk:1",
+                file_path="/test/file1.py",
+                element_type="function",
+                name="func1",
+                line_start=1,
+                line_end=10,
+            ),
+            CodeChunk(
+                chunk_id="test:chunk:2",
+                file_path="/test/file2.py",
+                element_type="function",
+                name="func2",
+                line_start=1,
+                line_end=10,
+            ),
+            CodeChunk(
+                chunk_id="test:chunk:3",
+                file_path="/test/file3.py",
+                element_type="function",
+                name="func3",
+                line_start=1,
+                line_end=10,
+            ),
+        ]
 
     def test_initialize_with_file_path(self, tmp_path):
         """Test initializing SQLiteStore with file path."""
@@ -84,15 +139,21 @@ class TestSQLiteStore(StoreContractTests):
 
     def test_save_chunk_validation_error(self, store):
         """Test that invalid chunks are rejected."""
-        # Create an invalid chunk
-        invalid_chunk = TestChunk("", "test")  # Empty ID
-
-        with pytest.raises(ValidationError):
+        # Create an invalid chunk with invalid line numbers
+        with pytest.raises((ValidationError, ValueError)):
+            invalid_chunk = CodeChunk(
+                chunk_id="test:chunk:1",
+                file_path="/test/file.py",
+                element_type="function",
+                name="test",
+                line_start=10,
+                line_end=5,  # End before start - invalid
+            )
             store.save_chunk(invalid_chunk)
 
     def test_save_chunk_updates_timestamp(self, store):
         """Test that saving a chunk updates the updated_at timestamp."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
         store.save_chunk(chunk)
 
         conn = store._get_connection()
@@ -106,7 +167,7 @@ class TestSQLiteStore(StoreContractTests):
 
     def test_transaction_rollback_on_error(self, store):
         """Test that transactions are rolled back on errors."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
         store.save_chunk(chunk)
 
         # Try to add a relationship with non-existent target (should fail)
@@ -125,8 +186,8 @@ class TestSQLiteStore(StoreContractTests):
 
     def test_concurrent_connections(self, file_store):
         """Test that multiple connections can be used (thread-safety simulation)."""
-        chunk1 = TestChunk("test:chunk:1", "content1")
-        chunk2 = TestChunk("test:chunk:2", "content2")
+        chunk1 = create_test_code_chunk("test:chunk:1", "func1")
+        chunk2 = create_test_code_chunk("test:chunk:2", "func2")
 
         # Save from different "simulated threads" (same thread but different operations)
         file_store.save_chunk(chunk1)
@@ -141,8 +202,8 @@ class TestSQLiteStore(StoreContractTests):
 
     def test_relationship_cascade_delete(self, store):
         """Test that relationships are cascade deleted when chunks are removed."""
-        chunk1 = TestChunk("test:chunk:1", "content1")
-        chunk2 = TestChunk("test:chunk:2", "content2")
+        chunk1 = create_test_code_chunk("test:chunk:1", "func1")
+        chunk2 = create_test_code_chunk("test:chunk:2", "func2")
 
         store.save_chunk(chunk1)
         store.save_chunk(chunk2)
@@ -163,7 +224,7 @@ class TestSQLiteStore(StoreContractTests):
 
     def test_activation_initialization(self, store):
         """Test that activation records are initialized when saving chunks."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
         store.save_chunk(chunk)
 
         conn = store._get_connection()
@@ -179,7 +240,7 @@ class TestSQLiteStore(StoreContractTests):
 
     def test_update_activation_increments_count(self, store):
         """Test that updating activation increments access count."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
         store.save_chunk(chunk)
 
         # Update activation multiple times
@@ -197,9 +258,9 @@ class TestSQLiteStore(StoreContractTests):
     def test_retrieve_by_activation_ordering(self, store):
         """Test that results are ordered by activation (highest first)."""
         chunks = [
-            TestChunk("test:chunk:1", "content1"),
-            TestChunk("test:chunk:2", "content2"),
-            TestChunk("test:chunk:3", "content3"),
+            create_test_code_chunk("test:chunk:1", "func1"),
+            create_test_code_chunk("test:chunk:2", "func2"),
+            create_test_code_chunk("test:chunk:3", "func3"),
         ]
 
         # Save and set different activations
@@ -226,7 +287,7 @@ class TestSQLiteStore(StoreContractTests):
     def test_get_related_chunks_depth_limit(self, store):
         """Test that relationship traversal respects max_depth."""
         # Create a chain: chunk1 -> chunk2 -> chunk3 -> chunk4
-        chunks = [TestChunk(f"test:chunk:{i}", f"content{i}") for i in range(1, 5)]
+        chunks = [create_test_code_chunk(f"test:chunk:{i}", f"func{i}") for i in range(1, 5)]
 
         for chunk in chunks:
             store.save_chunk(chunk)
@@ -248,7 +309,7 @@ class TestSQLiteStore(StoreContractTests):
 
     def test_close_connection(self, store):
         """Test that close() properly closes the connection."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
         store.save_chunk(chunk)
 
         # Close the store
@@ -260,7 +321,7 @@ class TestSQLiteStore(StoreContractTests):
     def test_persistence_across_instances(self, tmp_path):
         """Test that data persists across store instances."""
         db_path = tmp_path / "persistent.db"
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
 
         # Save in first instance
         store1 = SQLiteStore(db_path=str(db_path))

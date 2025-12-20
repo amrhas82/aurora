@@ -6,20 +6,20 @@ dictionaries for testing purposes. No file I/O is performed, making it
 ideal for unit tests and CI/CD environments.
 """
 
-from typing import List, Optional, Dict, Any, Set
 from datetime import datetime
-from collections import defaultdict
-
-from aurora_core.store.base import Store
-from aurora_core.types import ChunkID
-from aurora_core.exceptions import (
-    StorageError,
-    ChunkNotFoundError,
-    ValidationError,
-)
 
 # Forward reference for type checking
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
+
+from aurora_core.exceptions import (
+    ChunkNotFoundError,
+    StorageError,
+    ValidationError,
+)
+from aurora_core.store.base import Store
+from aurora_core.types import ChunkID
+
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -42,12 +42,12 @@ class MemoryStore(Store):
     in single-threaded test environments.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize in-memory storage structures."""
         # Core storage
-        self._chunks: Dict[str, 'Chunk'] = {}
-        self._activations: Dict[str, Dict[str, Any]] = {}
-        self._relationships: List[Dict[str, Any]] = []
+        self._chunks: dict[str, Chunk] = {}
+        self._activations: dict[str, dict[str, Any]] = {}
+        self._relationships: list[dict[str, Any]] = []
 
         # Track if store is closed
         self._closed = False
@@ -155,7 +155,7 @@ class MemoryStore(Store):
         self,
         min_activation: float,
         limit: int
-    ) -> List['Chunk']:
+    ) -> list['Chunk']:
         """
         Retrieve chunks by activation threshold.
 
@@ -231,7 +231,7 @@ class MemoryStore(Store):
         self,
         chunk_id: ChunkID,
         max_depth: int = 2
-    ) -> List['Chunk']:
+    ) -> list['Chunk']:
         """
         Get related chunks via relationship graph traversal.
 
@@ -253,7 +253,7 @@ class MemoryStore(Store):
             raise ChunkNotFoundError(chunk_id_str)
 
         # BFS traversal of relationship graph
-        visited: Set[str] = set()
+        visited: set[str] = set()
         current_level = {chunk_id_str}
         depth = 0
 

@@ -7,10 +7,11 @@ future storage backends.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
 
 # Forward reference to avoid circular imports - Chunk will be defined in chunks module
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -84,7 +85,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def retrieve_by_activation(self, min_activation: float, limit: int) -> List['Chunk']:
+    def retrieve_by_activation(self, min_activation: float, limit: int) -> list['Chunk']:
         """
         Retrieve top N chunks above an activation threshold.
 
@@ -136,7 +137,7 @@ class Store(ABC):
         self,
         chunk_id: ChunkID,
         max_depth: int = 2
-    ) -> List['Chunk']:
+    ) -> list['Chunk']:
         """
         Get related chunks via relationships (for spreading activation).
 

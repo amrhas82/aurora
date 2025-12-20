@@ -11,10 +11,7 @@ Tests cover:
 """
 
 import json
-import os
-import tempfile
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 

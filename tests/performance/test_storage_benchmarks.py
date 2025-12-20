@@ -8,16 +8,14 @@ performance targets specified in the PRD:
 - Cold start: < 200ms
 """
 
-import pytest
 import time
-import tempfile
-from pathlib import Path
-from typing import List
 
-from aurora_core.store.sqlite import SQLiteStore
+import pytest
+
+from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.store.memory import MemoryStore
+from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
-from tests.unit.core.test_store_base import TestChunk
 
 
 # Performance targets from PRD
@@ -56,10 +54,17 @@ class TestStoragePerformance:
         store.close()
 
     @pytest.fixture
-    def sample_chunks(self) -> List[TestChunk]:
+    def sample_chunks(self) -> list[CodeChunk]:
         """Create sample chunks for benchmarking."""
         return [
-            TestChunk(f"test:chunk:{i}", f"Content for chunk {i}")
+            CodeChunk(
+                chunk_id=f"test:chunk:{i}",
+                file_path="/test/benchmark.py",
+                element_type="function",
+                name=f"func_{i}",
+                line_start=(i * 10) + 1,  # line_start must be > 0
+                line_end=(i * 10) + 5,
+            )
             for i in range(100)
         ]
 
@@ -278,7 +283,14 @@ class TestStoragePerformance:
 
         # Create 1000 chunks
         chunks = [
-            TestChunk(f"test:chunk:{i}", f"Content {i}")
+            CodeChunk(
+                chunk_id=f"test:chunk:{i}",
+                file_path="/test/large.py",
+                element_type="function",
+                name=f"func_{i}",
+                line_start=(i * 10) + 1,  # line_start must be > 0
+                line_end=(i * 10) + 5,
+            )
             for i in range(1000)
         ]
 

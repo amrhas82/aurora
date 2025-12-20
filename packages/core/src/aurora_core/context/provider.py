@@ -6,7 +6,6 @@ to supply relevant chunks based on queries.
 """
 
 from abc import ABC, abstractmethod
-from typing import List
 
 from aurora_core.chunks.base import Chunk
 from aurora_core.types import ChunkID
@@ -29,7 +28,7 @@ class ContextProvider(ABC):
     """
 
     @abstractmethod
-    def retrieve(self, query: str, limit: int = 10) -> List[Chunk]:
+    def retrieve(self, query: str, limit: int = 10) -> list[Chunk]:
         """
         Retrieve relevant chunks matching the query.
 

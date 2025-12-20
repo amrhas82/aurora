@@ -14,7 +14,7 @@ import json
 import os
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, cast
 
 import jsonschema
 
@@ -45,7 +45,7 @@ class Config:
     - Schema-based validation
     """
 
-    def __init__(self, data: Dict[str, Any]) -> None:
+    def __init__(self, data: dict[str, Any]) -> None:
         """
         Initialize configuration with validated data.
 
@@ -56,8 +56,8 @@ class Config:
 
     @staticmethod
     def load(
-        project_path: Optional[Path] = None,
-        cli_overrides: Optional[Dict[str, Any]] = None
+        project_path: Path | None = None,
+        cli_overrides: dict[str, Any] | None = None
     ) -> 'Config':
         """
         Load configuration with override hierarchy.
@@ -152,7 +152,7 @@ class Config:
             raise ConfigurationError("storage.path not configured")
         return Path(path)
 
-    def llm_config(self) -> Dict[str, Any]:
+    def llm_config(self) -> dict[str, Any]:
         """
         Get complete LLM configuration.
 
@@ -162,7 +162,7 @@ class Config:
         llm_config = self.get("llm", {})
         if not llm_config:
             raise ConfigurationError("llm configuration not found")
-        return llm_config
+        return cast(dict[str, Any], llm_config)
 
     def validate(self) -> bool:
         """
@@ -178,13 +178,13 @@ class Config:
         return True
 
     @staticmethod
-    def _load_defaults() -> Dict[str, Any]:
+    def _load_defaults() -> dict[str, Any]:
         """Load default configuration from package."""
         defaults_path = Path(__file__).parent / "defaults.json"
         return Config._load_json_file(defaults_path)
 
     @staticmethod
-    def _load_json_file(path: Path) -> Dict[str, Any]:
+    def _load_json_file(path: Path) -> dict[str, Any]:
         """
         Load and parse JSON configuration file.
 
@@ -198,19 +198,19 @@ class Config:
             ConfigurationError: If file cannot be loaded or parsed
         """
         try:
-            with open(path, 'r') as f:
-                return json.load(f)
+            with open(path) as f:
+                return cast(dict[str, Any], json.load(f))
         except json.JSONDecodeError as e:
             raise ConfigurationError(
                 f"Failed to parse JSON configuration at {path}: {e}"
             )
-        except IOError as e:
+        except OSError as e:
             raise ConfigurationError(
                 f"Failed to read configuration file at {path}: {e}"
             )
 
     @staticmethod
-    def _load_env_vars() -> Dict[str, Any]:
+    def _load_env_vars() -> dict[str, Any]:
         """
         Load configuration overrides from environment variables.
 
@@ -225,7 +225,7 @@ class Config:
         return overrides
 
     @staticmethod
-    def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
         """
         Deep merge two configuration dictionaries.
 
@@ -247,7 +247,7 @@ class Config:
         return result
 
     @staticmethod
-    def _merge_overrides(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_overrides(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
         """
         Merge dot-notation overrides into configuration.
 
@@ -276,7 +276,7 @@ class Config:
         return result
 
     @staticmethod
-    def _validate_schema(config: Dict[str, Any]) -> None:
+    def _validate_schema(config: dict[str, Any]) -> None:
         """
         Validate configuration against JSON schema.
 
@@ -300,7 +300,7 @@ class Config:
             raise ConfigurationError(f"Invalid configuration schema: {e.message}")
 
     @staticmethod
-    def _check_secrets(config: Dict[str, Any]) -> None:
+    def _check_secrets(config: dict[str, Any]) -> None:
         """
         Check that no secrets are directly in configuration.
 
@@ -319,7 +319,7 @@ class Config:
                 )
 
     @staticmethod
-    def _expand_paths(config: Dict[str, Any], project_path: Optional[Path] = None) -> Dict[str, Any]:
+    def _expand_paths(config: dict[str, Any], project_path: Path | None = None) -> dict[str, Any]:
         """
         Expand paths in configuration (~ and relative paths).
 
@@ -354,7 +354,7 @@ class Config:
         return result
 
     @staticmethod
-    def _expand_path(path: str, project_path: Optional[Path] = None) -> Path:
+    def _expand_path(path: str, project_path: Path | None = None) -> Path:
         """
         Expand a single path (tilde and relative).
 

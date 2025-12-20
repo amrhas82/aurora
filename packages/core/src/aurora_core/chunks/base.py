@@ -6,8 +6,8 @@ types must implement.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
 from datetime import datetime
+from typing import Any
 
 
 class Chunk(ABC):
@@ -36,7 +36,7 @@ class Chunk(ABC):
         self.updated_at = datetime.utcnow()
 
     @abstractmethod
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """
         Serialize chunk to JSON-compatible dict.
 
@@ -47,7 +47,7 @@ class Chunk(ABC):
 
     @classmethod
     @abstractmethod
-    def from_json(cls, data: Dict[str, Any]) -> 'Chunk':
+    def from_json(cls, data: dict[str, Any]) -> 'Chunk':
         """
         Deserialize chunk from JSON dict.
 

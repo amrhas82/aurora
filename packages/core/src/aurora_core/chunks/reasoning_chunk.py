@@ -5,8 +5,8 @@ This module provides a minimal ReasoningChunk interface that will be
 fully implemented in Phase 2 (SOAR Pipeline).
 """
 
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
+from typing import Any
 
 from aurora_core.chunks.base import Chunk
 
@@ -29,19 +29,19 @@ class ReasoningChunk(Chunk):
     """
 
     pattern_type: str = "generic"
-    premise: Optional[str] = None
-    conclusion: Optional[str] = None
+    premise: str | None = None
+    conclusion: str | None = None
     confidence: float = 0.0
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
 
     def __init__(
         self,
         chunk_id: str,
         pattern_type: str = "generic",
-        premise: Optional[str] = None,
-        conclusion: Optional[str] = None,
+        premise: str | None = None,
+        conclusion: str | None = None,
         confidence: float = 0.0,
-        evidence: Optional[List[str]] = None,
+        evidence: list[str] | None = None,
     ):
         """
         Initialize a ReasoningChunk (stub).
@@ -65,7 +65,7 @@ class ReasoningChunk(Chunk):
         # Validate on construction
         self.validate()
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """
         Serialize chunk to JSON-compatible dict (stub).
 
@@ -91,7 +91,7 @@ class ReasoningChunk(Chunk):
         }
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> 'ReasoningChunk':
+    def from_json(cls, data: dict[str, Any]) -> 'ReasoningChunk':
         """
         Deserialize chunk from JSON dict (stub).
 

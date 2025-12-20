@@ -8,7 +8,6 @@ programming languages.
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Protocol
 
 from aurora_core.chunks.code_chunk import CodeChunk
 
@@ -41,7 +40,7 @@ class CodeParser(ABC):
         self.language = language
 
     @abstractmethod
-    def parse(self, file_path: Path) -> List[CodeChunk]:
+    def parse(self, file_path: Path) -> list[CodeChunk]:
         """
         Parse a source file and extract code elements.
 

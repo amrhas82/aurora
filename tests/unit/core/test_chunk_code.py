@@ -4,10 +4,10 @@ Unit tests for CodeChunk implementation.
 Tests serialization, validation, and edge cases for code chunks.
 """
 
-import pytest
 from datetime import datetime
 from pathlib import Path
-import tempfile
+
+import pytest
 
 from aurora_core.chunks.code_chunk import CodeChunk
 

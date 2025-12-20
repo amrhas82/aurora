@@ -4,9 +4,10 @@ Unit tests for the abstract Chunk base class.
 Tests the Chunk interface contract that all concrete chunk types must implement.
 """
 
-import pytest
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any
+
+import pytest
 
 from aurora_core.chunks.base import Chunk
 
@@ -18,7 +19,7 @@ class ConcreteChunk(Chunk):
         super().__init__(chunk_id, chunk_type)
         self.data = data
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "type": self.type,
@@ -28,7 +29,7 @@ class ConcreteChunk(Chunk):
         }
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> 'ConcreteChunk':
+    def from_json(cls, data: dict[str, Any]) -> 'ConcreteChunk':
         chunk = cls(data["id"], data["type"], data.get("data", "test"))
         if "created_at" in data:
             chunk.created_at = datetime.fromisoformat(data["created_at"])
@@ -193,7 +194,7 @@ class TestChunkAbstractMethods:
 class InvalidChunk(Chunk):
     """Chunk implementation missing required methods."""
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {}
 
     # Missing from_json and validate implementations

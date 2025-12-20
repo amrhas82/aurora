@@ -6,16 +6,17 @@ retrieves relevant code chunks based on keyword queries.
 """
 
 import logging
-from typing import List, Dict, Set
 from pathlib import Path
-
-from aurora_core.context.provider import ContextProvider
-from aurora_core.chunks.base import Chunk
-from aurora_core.store.base import Store
-from aurora_core.types import ChunkID
 
 # Import ParserRegistry with TYPE_CHECKING to avoid circular dependency
 from typing import TYPE_CHECKING
+
+from aurora_core.chunks.base import Chunk
+from aurora_core.context.provider import ContextProvider
+from aurora_core.store.base import Store
+from aurora_core.types import ChunkID
+
+
 if TYPE_CHECKING:
     from aurora_context_code.registry import ParserRegistry
 
@@ -56,7 +57,7 @@ class CodeContextProvider(ContextProvider):
     }
 
     @staticmethod
-    def _parse_query(query: str) -> List[str]:
+    def _parse_query(query: str) -> list[str]:
         """
         Parse query into keywords.
 
@@ -94,7 +95,7 @@ class CodeContextProvider(ContextProvider):
         return keywords
 
     @staticmethod
-    def _score_chunk(chunk: Chunk, keywords: List[str]) -> float:
+    def _score_chunk(chunk: Chunk, keywords: list[str]) -> float:
         """
         Score a chunk based on keyword matches.
 
@@ -150,10 +151,10 @@ class CodeContextProvider(ContextProvider):
         """
         self._store = store
         self._parser_registry = parser_registry
-        self._file_mtimes: Dict[Path, float] = {}
+        self._file_mtimes: dict[Path, float] = {}
         logger.debug("CodeContextProvider initialized")
 
-    def retrieve(self, query: str, limit: int = 10) -> List[Chunk]:
+    def retrieve(self, query: str, limit: int = 10) -> list[Chunk]:
         """
         Retrieve relevant code chunks based on query.
 

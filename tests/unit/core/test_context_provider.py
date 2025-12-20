@@ -5,14 +5,13 @@ Tests the abstract ContextProvider interface and ensures concrete
 implementations follow the contract.
 """
 
-import pytest
 from pathlib import Path
-from datetime import datetime
-from typing import List
 
-from aurora_core.context.provider import ContextProvider
+import pytest
+
 from aurora_core.chunks.base import Chunk
 from aurora_core.chunks.code_chunk import CodeChunk
+from aurora_core.context.provider import ContextProvider
 from aurora_core.types import ChunkID
 
 
@@ -24,7 +23,7 @@ class MockContextProvider(ContextProvider):
         self.updates = []
         self.refresh_count = 0
 
-    def retrieve(self, query: str, limit: int = 10) -> List[Chunk]:
+    def retrieve(self, query: str, limit: int = 10) -> list[Chunk]:
         """Track queries and return empty list."""
         self.queries.append((query, limit))
         return []

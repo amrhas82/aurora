@@ -10,8 +10,9 @@ Tests all extraction features:
 - Error handling
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from aurora_context_code.languages.python import PythonParser
 

@@ -9,5 +9,6 @@ Provides agent registry and orchestration capabilities:
 
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 
+
 __version__ = "0.1.0"
 __all__ = ["AgentInfo", "AgentRegistry"]

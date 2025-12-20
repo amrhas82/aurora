@@ -5,8 +5,9 @@ This module provides type aliases and base types used throughout the AURORA
 framework for consistency and type safety.
 """
 
-from typing import NewType, Dict, Any
 from datetime import datetime
+from typing import Any, NewType
+
 
 # Type aliases for improved readability and type safety
 ChunkID = NewType('ChunkID', str)
@@ -16,7 +17,7 @@ Activation = float
 """Activation score for a chunk, representing its relevance/importance (0.0-1.0)"""
 
 # Base type for serializable chunk data
-ChunkData = Dict[str, Any]
+ChunkData = dict[str, Any]
 """JSON-compatible dictionary representing serialized chunk data"""
 
 # Type alias for timestamps

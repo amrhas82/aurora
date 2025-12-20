@@ -6,9 +6,8 @@ Complex Python file for testing advanced features:
 - High cyclomatic complexity
 """
 
-from typing import List, Dict, Any, Optional
-import json
 import logging
+from typing import Any
 
 
 logger = logging.getLogger(__name__)
@@ -42,13 +41,13 @@ class DataProcessor(BaseProcessor, DataValidator):
     Combines processing and validation capabilities.
     """
 
-    def __init__(self, name: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, name: str, config: dict[str, Any] | None = None):
         """Initialize processor with configuration."""
         super().__init__(name)
         self.config = config or {}
-        self.cache: Dict[str, Any] = {}
+        self.cache: dict[str, Any] = {}
 
-    def process(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def process(self, data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Process a list of data items with complex logic.
 
@@ -110,36 +109,36 @@ class DataProcessor(BaseProcessor, DataValidator):
 
         return results
 
-    def _process_text(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_text(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process text items."""
         return {"type": "text", "value": str(item.get("value", ""))}
 
-    def _process_number(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_number(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process number items."""
         value = item.get("value", 0)
         return {"type": "number", "value": float(value)}
 
-    def _process_list(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_list(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process list items."""
         value = item.get("value", [])
         return {"type": "list", "value": list(value)}
 
-    def _process_dict(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_dict(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process dictionary items."""
         value = item.get("value", {})
         return {"type": "dict", "value": dict(value)}
 
-    def _process_unknown(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_unknown(self, item: dict[str, Any]) -> dict[str, Any]:
         """Process unknown item types."""
         return {"type": "unknown", "value": item}
 
-    def _apply_uppercase(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _apply_uppercase(self, item: dict[str, Any]) -> dict[str, Any]:
         """Apply uppercase transformation."""
         if item["type"] == "text":
             item["value"] = item["value"].upper()
         return item
 
-    def _apply_trim(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def _apply_trim(self, item: dict[str, Any]) -> dict[str, Any]:
         """Apply trim transformation."""
         if item["type"] == "text":
             item["value"] = item["value"].strip()
@@ -168,7 +167,7 @@ class DataProcessor(BaseProcessor, DataValidator):
                 self.parent.cache = dict(items[-max_size:])
 
 
-def analyze_complexity(code: str) -> Dict[str, int]:
+def analyze_complexity(code: str) -> dict[str, int]:
     """
     Analyze code complexity metrics.
 

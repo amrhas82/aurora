@@ -10,7 +10,6 @@ Tests end-to-end configuration loading scenarios including:
 
 import json
 import os
-import tempfile
 from pathlib import Path
 
 import pytest

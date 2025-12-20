@@ -44,9 +44,9 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `packages/core/src/aurora_core/chunks/reasoning_chunk.py` - ReasoningChunk stub for Phase 2
 
 #### Context Management
-- `packages/core/src/aurora_core/context/__init__.py` - Context module exports
-- `packages/core/src/aurora_core/context/provider.py` - Abstract ContextProvider interface
-- `packages/core/src/aurora_core/context/code_provider.py` - CodeContextProvider implementation
+- `packages/core/src/aurora_core/context/__init__.py` - Context module exports (exports ContextProvider, CodeContextProvider)
+- `packages/core/src/aurora_core/context/provider.py` - Abstract ContextProvider interface with retrieve/update/refresh methods
+- `packages/core/src/aurora_core/context/code_provider.py` - CodeContextProvider with query parsing, chunk scoring, and retrieval logic
 
 #### Configuration
 - `packages/core/src/aurora_core/config/__init__.py` - Config module exports
@@ -55,7 +55,8 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `packages/core/src/aurora_core/config/defaults.json` - Default configuration values
 
 ### Context-Code Package (`packages/context-code/`)
-- `packages/context-code/pyproject.toml` - Context-code package configuration with tree-sitter dependencies
+- `packages/context-code/pyproject.toml` - Context-code package configuration with tree-sitter dependencies and hatchling build backend
+- `packages/context-code/README.md` - Package documentation
 - `packages/context-code/src/aurora_context_code/__init__.py` - Package initialization
 - `packages/context-code/src/aurora_context_code/parser.py` - Abstract CodeParser interface with parse() and can_parse() methods
 - `packages/context-code/src/aurora_context_code/registry.py` - ParserRegistry implementation with auto-registration
@@ -63,12 +64,14 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `packages/context-code/src/aurora_context_code/languages/python.py` - PythonParser with function/class/method extraction, docstrings, complexity calculation
 
 ### SOAR Package (`packages/soar/`)
-- `packages/soar/pyproject.toml` - SOAR package configuration
+- `packages/soar/pyproject.toml` - SOAR package configuration with hatchling build backend
+- `packages/soar/README.md` - Package documentation
 - `packages/soar/src/aurora_soar/__init__.py` - Package initialization
 - `packages/soar/src/aurora_soar/agent_registry.py` - AgentRegistry implementation
 
 ### Testing Package (`packages/testing/`)
-- `packages/testing/pyproject.toml` - Testing utilities package configuration
+- `packages/testing/pyproject.toml` - Testing utilities package configuration with hatchling build backend
+- `packages/testing/README.md` - Package documentation
 - `packages/testing/src/aurora_testing/__init__.py` - Package initialization
 - `packages/testing/src/aurora_testing/fixtures.py` - Reusable pytest fixtures
 - `packages/testing/src/aurora_testing/mocks.py` - Mock implementations (LLM, agents)
@@ -81,14 +84,14 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `tests/unit/core/test_chunk_base.py` - Base chunk tests (15 tests, all passing)
 - `tests/unit/core/test_chunk_code.py` - CodeChunk tests (31 tests, all passing)
 - `tests/unit/core/test_chunk_store_integration.py` - Chunk-Store integration tests (13 tests, all passing)
-- `tests/unit/core/test_context_provider.py` - Context provider tests
+- `tests/unit/core/test_context_provider.py` - Context provider tests (31 tests: 9 interface + 9 CodeContextProvider + 7 query parsing + 7 chunk scoring - all passing)
 - `tests/unit/core/test_config_loader.py` - Configuration loader tests
 - `tests/unit/context_code/test_parser_base.py` - Parser interface tests (10 tests, all passing)
 - `tests/unit/context_code/test_python_parser.py` - Python parser tests (21 tests, all passing)
 - `tests/unit/context_code/test_parser_registry.py` - Parser registry tests (23 tests, all passing)
 - `tests/unit/soar/test_agent_registry.py` - Agent registry tests
 - `tests/integration/test_parse_and_store.py` - Parse → Store → Retrieve flow
-- `tests/integration/test_context_retrieval.py` - End-to-end context retrieval
+- `tests/integration/test_context_retrieval.py` - End-to-end context retrieval (10 tests: 7 flow tests + 3 edge cases - all passing)
 - `tests/integration/test_config_integration.py` - Configuration integration
 - `tests/performance/test_parser_benchmarks.py` - Parser performance tests (passes at ~260ms for 1000 lines)
 - `tests/performance/test_storage_benchmarks.py` - Storage performance tests
@@ -195,19 +198,19 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
   - [x] 4.16 Create performance benchmarks for parser (tests/performance/test_parser_benchmarks.py)
   - [x] 4.17 Verify parser performance target (<200ms for 1000-line file) and optimize if needed
 
-- [ ] 5.0 Context Management & Retrieval
-  - [ ] 5.1 Define abstract ContextProvider interface in packages/core/src/aurora_core/context/provider.py
-  - [ ] 5.2 Implement CodeContextProvider skeleton in packages/core/src/aurora_core/context/code_provider.py
-  - [ ] 5.3 Add keyword-based query parsing (lowercase, split on whitespace, remove stopwords)
-  - [ ] 5.4 Implement chunk scoring algorithm (keyword_matches / total_keywords)
-  - [ ] 5.5 Add retrieval logic with ranking (retrieve from store, score, sort, return top N)
-  - [ ] 5.6 Implement caching strategy (check file mtime, invalidate if modified)
-  - [ ] 5.7 Add update() method to track usage and update activation timestamps
-  - [ ] 5.8 Integrate CodeContextProvider with Store and ParserRegistry
-  - [ ] 5.9 Write unit tests for ContextProvider interface (tests/unit/core/test_context_provider.py)
-  - [ ] 5.10 Write integration tests for context retrieval flow (tests/integration/test_context_retrieval.py)
-  - [ ] 5.11 Test caching behavior (verify cache hit/miss, invalidation on file change)
-  - [ ] 5.12 Verify retrieval returns relevant results for sample queries
+- [x] 5.0 Context Management & Retrieval
+  - [x] 5.1 Define abstract ContextProvider interface in packages/core/src/aurora_core/context/provider.py
+  - [x] 5.2 Implement CodeContextProvider skeleton in packages/core/src/aurora_core/context/code_provider.py
+  - [x] 5.3 Add keyword-based query parsing (lowercase, split on whitespace, remove stopwords)
+  - [x] 5.4 Implement chunk scoring algorithm (keyword_matches / total_keywords)
+  - [x] 5.5 Add retrieval logic with ranking (retrieve from store, score, sort, return top N)
+  - [x] 5.6 Implement caching strategy (check file mtime, invalidate if modified)
+  - [x] 5.7 Add update() method to track usage and update activation timestamps
+  - [x] 5.8 Integrate CodeContextProvider with Store and ParserRegistry
+  - [x] 5.9 Write unit tests for ContextProvider interface (tests/unit/core/test_context_provider.py)
+  - [x] 5.10 Write integration tests for context retrieval flow (tests/integration/test_context_retrieval.py)
+  - [x] 5.11 Test caching behavior (verify cache hit/miss, invalidation on file change)
+  - [x] 5.12 Verify retrieval returns relevant results for sample queries
 
 - [ ] 6.0 Agent Registry & Discovery
   - [ ] 6.1 Define AgentInfo dataclass in packages/soar/src/aurora_soar/agent_registry.py

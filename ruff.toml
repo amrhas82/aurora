@@ -1,0 +1,47 @@
+# Ruff configuration for AURORA project
+target-version = "py310"
+line-length = 100
+indent-width = 4
+
+[lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+    "RET",   # flake8-return
+    "ARG",   # flake8-unused-arguments
+    "PTH",   # flake8-use-pathlib
+    "ERA",   # eradicate (commented-out code)
+    "PL",    # pylint
+    "PERF",  # perflint
+]
+
+ignore = [
+    "E501",    # line too long (handled by formatter)
+    "PLR0913", # too many arguments to function call
+    "PLR2004", # magic value used in comparison
+]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]  # unused imports
+"tests/**/*.py" = ["S101", "ARG", "PLR2004"]  # assert, unused args, magic values ok in tests
+
+[lint.isort]
+known-first-party = ["aurora_core", "aurora_context_code", "aurora_soar", "aurora_testing"]
+force-single-line = false
+lines-after-imports = 2
+
+[lint.mccabe]
+max-complexity = 10
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

@@ -135,16 +135,16 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 
 ## Tasks
 
-- [ ] 1.0 Project Foundation & Setup
-  - [ ] 1.1 Create monorepo package structure with base directories and __init__.py files
-  - [ ] 1.2 Create pyproject.toml for each package (core, context-code, soar, testing) with dependencies
-  - [ ] 1.3 Create root pyproject.toml with workspace configuration and development dependencies
-  - [ ] 1.4 Set up pytest configuration (pytest.ini) with coverage settings and test discovery
-  - [ ] 1.5 Configure code quality tools (ruff.toml, mypy.ini) with strict settings
-  - [ ] 1.6 Create Makefile with common commands (install, test, lint, format, benchmark)
-  - [ ] 1.7 Set up GitHub Actions CI/CD pipeline (.github/workflows/ci.yml) with test, lint, type-check jobs
-  - [ ] 1.8 Create README.md with project overview, quick start, and architecture documentation
-  - [ ] 1.9 Verify all packages install correctly and tests can be discovered (smoke test)
+- [x] 1.0 Project Foundation & Setup
+  - [x] 1.1 Create monorepo package structure with base directories and __init__.py files
+  - [x] 1.2 Create pyproject.toml for each package (core, context-code, soar, testing) with dependencies
+  - [x] 1.3 Create root pyproject.toml with workspace configuration and development dependencies
+  - [x] 1.4 Set up pytest configuration (pytest.ini) with coverage settings and test discovery
+  - [x] 1.5 Configure code quality tools (ruff.toml, mypy.ini) with strict settings
+  - [x] 1.6 Create Makefile with common commands (install, test, lint, format, benchmark)
+  - [x] 1.7 Set up GitHub Actions CI/CD pipeline (.github/workflows/ci.yml) with test, lint, type-check jobs
+  - [x] 1.8 Create README.md with project overview, quick start, and architecture documentation
+  - [x] 1.9 Verify all packages install correctly and tests can be discovered (smoke test)
 
 - [ ] 2.0 Core Storage Layer Implementation
   - [ ] 2.1 Define shared types in packages/core/src/aurora_core/types.py (ChunkID, Activation typehints)

@@ -49,10 +49,10 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `packages/core/src/aurora_core/context/code_provider.py` - CodeContextProvider with query parsing, chunk scoring, and retrieval logic
 
 #### Configuration
-- `packages/core/src/aurora_core/config/__init__.py` - Config module exports
-- `packages/core/src/aurora_core/config/loader.py` - ConfigLoader implementation
-- `packages/core/src/aurora_core/config/schema.py` - JSON schema validation
-- `packages/core/src/aurora_core/config/defaults.json` - Default configuration values
+- `packages/core/src/aurora_core/config/__init__.py` - Config module exports (Config, get_schema)
+- `packages/core/src/aurora_core/config/loader.py` - Config class with typed access, override hierarchy, validation
+- `packages/core/src/aurora_core/config/schema.py` - JSON Schema Draft 7 specification for configuration validation
+- `packages/core/src/aurora_core/config/defaults.json` - Default configuration values (version 1.0)
 
 ### Context-Code Package (`packages/context-code/`)
 - `packages/context-code/pyproject.toml` - Context-code package configuration with tree-sitter dependencies and hatchling build backend
@@ -85,14 +85,14 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `tests/unit/core/test_chunk_code.py` - CodeChunk tests (31 tests, all passing)
 - `tests/unit/core/test_chunk_store_integration.py` - Chunk-Store integration tests (13 tests, all passing)
 - `tests/unit/core/test_context_provider.py` - Context provider tests (31 tests: 9 interface + 9 CodeContextProvider + 7 query parsing + 7 chunk scoring - all passing)
-- `tests/unit/core/test_config_loader.py` - Configuration loader tests
+- `tests/unit/core/test_config_loader.py` - Configuration loader tests (23 tests: typed access, loading hierarchy, env vars, path expansion, validation, secrets - all passing)
 - `tests/unit/context_code/test_parser_base.py` - Parser interface tests (10 tests, all passing)
 - `tests/unit/context_code/test_python_parser.py` - Python parser tests (21 tests, all passing)
 - `tests/unit/context_code/test_parser_registry.py` - Parser registry tests (23 tests, all passing)
 - `tests/unit/soar/test_agent_registry.py` - Agent registry tests (29 tests, all passing, 86.49% coverage)
 - `tests/integration/test_parse_and_store.py` - Parse → Store → Retrieve flow
 - `tests/integration/test_context_retrieval.py` - End-to-end context retrieval (10 tests: 7 flow tests + 3 edge cases - all passing)
-- `tests/integration/test_config_integration.py` - Configuration integration
+- `tests/integration/test_config_integration.py` - Configuration integration (12 tests: full workflow, multi-file, env vars, CLI overrides, components - all passing)
 - `tests/performance/test_parser_benchmarks.py` - Parser performance tests (passes at ~260ms for 1000 lines)
 - `tests/performance/test_storage_benchmarks.py` - Storage performance tests
 - `tests/fixtures/sample_python_files/simple.py` - Simple test file with 2 functions
@@ -227,20 +227,20 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
   - [x] 6.11 Test validation catches invalid agent configurations
   - [x] 6.12 Verify capability queries return correct agents
 
-- [ ] 7.0 Configuration System
-  - [ ] 7.1 Define JSON schema for configuration in packages/core/src/aurora_core/config/schema.py
-  - [ ] 7.2 Create default configuration in packages/core/src/aurora_core/config/defaults.json
-  - [ ] 7.3 Implement Config class in packages/core/src/aurora_core/config/loader.py with typed access methods
-  - [ ] 7.4 Add configuration loading with override hierarchy (defaults → global → project → env → CLI)
-  - [ ] 7.5 Implement environment variable mapping (AURORA_* variables to config keys)
-  - [ ] 7.6 Add path expansion (tilde to home directory, relative to absolute)
-  - [ ] 7.7 Implement validation against JSON schema (raise ConfigurationError with clear messages)
-  - [ ] 7.8 Add secrets handling (API keys from environment only, never from files)
-  - [ ] 7.9 Write unit tests for ConfigLoader (tests/unit/core/test_config_loader.py)
-  - [ ] 7.10 Test override hierarchy (verify correct precedence order)
-  - [ ] 7.11 Test environment variable overrides work correctly
-  - [ ] 7.12 Test validation catches invalid configurations
-  - [ ] 7.13 Create integration tests for config system (tests/integration/test_config_integration.py)
+- [x] 7.0 Configuration System
+  - [x] 7.1 Define JSON schema for configuration in packages/core/src/aurora_core/config/schema.py
+  - [x] 7.2 Create default configuration in packages/core/src/aurora_core/config/defaults.json
+  - [x] 7.3 Implement Config class in packages/core/src/aurora_core/config/loader.py with typed access methods
+  - [x] 7.4 Add configuration loading with override hierarchy (defaults → global → project → env → CLI)
+  - [x] 7.5 Implement environment variable mapping (AURORA_* variables to config keys)
+  - [x] 7.6 Add path expansion (tilde to home directory, relative to absolute)
+  - [x] 7.7 Implement validation against JSON schema (raise ConfigurationError with clear messages)
+  - [x] 7.8 Add secrets handling (API keys from environment only, never from files)
+  - [x] 7.9 Write unit tests for ConfigLoader (tests/unit/core/test_config_loader.py)
+  - [x] 7.10 Test override hierarchy (verify correct precedence order)
+  - [x] 7.11 Test environment variable overrides work correctly
+  - [x] 7.12 Test validation catches invalid configurations
+  - [x] 7.13 Create integration tests for config system (tests/integration/test_config_integration.py)
 
 - [ ] 8.0 Testing Framework & Utilities
   - [ ] 8.1 Create pytest fixtures in packages/testing/src/aurora_testing/fixtures.py (stores, chunks, parsers)

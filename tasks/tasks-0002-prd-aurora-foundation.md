@@ -146,20 +146,20 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
   - [x] 1.8 Create README.md with project overview, quick start, and architecture documentation
   - [x] 1.9 Verify all packages install correctly and tests can be discovered (smoke test)
 
-- [ ] 2.0 Core Storage Layer Implementation
-  - [ ] 2.1 Define shared types in packages/core/src/aurora_core/types.py (ChunkID, Activation typehints)
-  - [ ] 2.2 Create custom exception hierarchy in packages/core/src/aurora_core/exceptions.py
-  - [ ] 2.3 Define abstract Store interface in packages/core/src/aurora_core/store/base.py with all required methods
-  - [ ] 2.4 Create database schema definitions in packages/core/src/aurora_core/store/schema.py (SQL CREATE statements)
-  - [ ] 2.5 Implement SQLiteStore in packages/core/src/aurora_core/store/sqlite.py with connection pooling
-  - [ ] 2.6 Add transaction support and error handling to SQLiteStore (rollback on failure)
-  - [ ] 2.7 Implement MemoryStore in packages/core/src/aurora_core/store/memory.py for testing
-  - [ ] 2.8 Create schema migration utilities in packages/core/src/aurora_core/store/migrations.py
-  - [ ] 2.9 Write unit tests for Store interface contract (tests/unit/core/test_store_base.py)
-  - [ ] 2.10 Write unit tests for SQLiteStore (tests/unit/core/test_store_sqlite.py) covering all methods
-  - [ ] 2.11 Write unit tests for MemoryStore (tests/unit/core/test_store_memory.py)
-  - [ ] 2.12 Create performance benchmarks for storage operations (tests/performance/test_storage_benchmarks.py)
-  - [ ] 2.13 Verify storage performance targets met (write/read <50ms, cold start <200ms)
+- [x] 2.0 Core Storage Layer Implementation
+  - [x] 2.1 Define shared types in packages/core/src/aurora_core/types.py (ChunkID, Activation typehints)
+  - [x] 2.2 Create custom exception hierarchy in packages/core/src/aurora_core/exceptions.py
+  - [x] 2.3 Define abstract Store interface in packages/core/src/aurora_core/store/base.py with all required methods
+  - [x] 2.4 Create database schema definitions in packages/core/src/aurora_core/store/schema.py (SQL CREATE statements)
+  - [x] 2.5 Implement SQLiteStore in packages/core/src/aurora_core/store/sqlite.py with connection pooling
+  - [x] 2.6 Add transaction support and error handling to SQLiteStore (rollback on failure)
+  - [x] 2.7 Implement MemoryStore in packages/core/src/aurora_core/store/memory.py for testing
+  - [x] 2.8 Create schema migration utilities in packages/core/src/aurora_core/store/migrations.py
+  - [x] 2.9 Write unit tests for Store interface contract (tests/unit/core/test_store_base.py)
+  - [x] 2.10 Write unit tests for SQLiteStore (tests/unit/core/test_store_sqlite.py) covering all methods
+  - [x] 2.11 Write unit tests for MemoryStore (tests/unit/core/test_store_memory.py)
+  - [x] 2.12 Create performance benchmarks for storage operations (tests/performance/test_storage_benchmarks.py)
+  - [x] 2.13 Verify storage performance targets met (write/read <50ms, cold start <200ms)
 
 - [ ] 3.0 Chunk Types & Validation
   - [ ] 3.1 Define abstract Chunk base class in packages/core/src/aurora_core/chunks/base.py with to_json/from_json

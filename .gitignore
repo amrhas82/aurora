@@ -67,3 +67,6 @@ htmlcov/
 # Build artifacts
 *.whl
 *.tar.gz
+.coverage
+coverage.xml
+htmlcov/

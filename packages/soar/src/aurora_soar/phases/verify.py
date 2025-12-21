@@ -246,8 +246,8 @@ def _generate_retry_feedback(
 
     # Generate feedback (plain text response, not JSON)
     response = llm_client.generate(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
+        prompt=user_prompt,
+        system=system_prompt,
         temperature=0.3,  # Some creativity for feedback generation
     )
 

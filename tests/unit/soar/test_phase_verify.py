@@ -111,7 +111,7 @@ class TestGenerateRetryFeedback:
         )
 
         call_args = mock_llm_client.generate.call_args
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "Attempt 2" in user_prompt
         assert "0.6" in user_prompt  # Score
 
@@ -147,7 +147,7 @@ class TestVerifyPhaseResult:
         assert len(data["all_attempts"]) == 1
 
 
-@patch("aurora_soar.phases.verify.reasoning_verify")
+@patch("aurora_reasoning.verify.verify_decomposition")
 class TestVerifyDecomposition:
     """Tests for verify_decomposition function."""
 
@@ -218,9 +218,9 @@ class TestVerifyDecomposition:
             option_used=VerificationOption.ADVERSARIAL,
         )
 
-    def test_pass_on_first_attempt(self, mock_reasoning_verify, mock_llm_client, sample_decomposition, passing_verification):
+    def test_pass_on_first_attempt(self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification):
         """Test verification passes on first attempt."""
-        mock_reasoning_verify.return_value = passing_verification
+        mock_verify_decomposition.return_value = passing_verification
 
         result = verify_decomposition(
             decomposition=sample_decomposition,
@@ -235,11 +235,11 @@ class TestVerifyDecomposition:
         assert result.verification.verdict == VerificationVerdict.PASS
 
         # Verify reasoning function was called once
-        mock_reasoning_verify.assert_called_once()
+        mock_verify_decomposition.assert_called_once()
 
-    def test_fail_on_first_attempt(self, mock_reasoning_verify, mock_llm_client, sample_decomposition, failing_verification):
+    def test_fail_on_first_attempt(self, mock_verify_decomposition, mock_llm_client, sample_decomposition, failing_verification):
         """Test verification fails on first attempt."""
-        mock_reasoning_verify.return_value = failing_verification
+        mock_verify_decomposition.return_value = failing_verification
 
         result = verify_decomposition(
             decomposition=sample_decomposition,
@@ -253,13 +253,13 @@ class TestVerifyDecomposition:
         assert len(result.all_attempts) == 1
         assert result.verification.verdict == VerificationVerdict.FAIL
 
-    @patch("aurora_soar.phases.verify.phase_decompose")
+    @patch("aurora_soar.phases.decompose.decompose_query")
     @patch("aurora_soar.phases.verify._generate_retry_feedback")
     def test_retry_then_pass(
         self,
         mock_generate_feedback,
         mock_phase_decompose,
-        mock_reasoning_verify,
+        mock_verify_decomposition,
         mock_llm_client,
         sample_decomposition,
         retry_verification,
@@ -269,7 +269,7 @@ class TestVerifyDecomposition:
         from aurora_soar.phases.decompose import DecomposePhaseResult
 
         # First verification returns RETRY, second returns PASS
-        mock_reasoning_verify.side_effect = [retry_verification, passing_verification]
+        mock_verify_decomposition.side_effect = [retry_verification, passing_verification]
         mock_generate_feedback.return_value = "Fix these issues"
         mock_phase_decompose.return_value = DecomposePhaseResult(
             decomposition=sample_decomposition,
@@ -298,13 +298,13 @@ class TestVerifyDecomposition:
         assert call_args.kwargs["retry_feedback"] == "Fix these issues"
         assert call_args.kwargs["use_cache"] is False
 
-    @patch("aurora_soar.phases.verify.phase_decompose")
+    @patch("aurora_soar.phases.decompose.decompose_query")
     @patch("aurora_soar.phases.verify._generate_retry_feedback")
     def test_max_retries_exhausted(
         self,
         mock_generate_feedback,
         mock_phase_decompose,
-        mock_reasoning_verify,
+        mock_verify_decomposition,
         mock_llm_client,
         sample_decomposition,
         retry_verification,
@@ -313,7 +313,7 @@ class TestVerifyDecomposition:
         from aurora_soar.phases.decompose import DecomposePhaseResult
 
         # Always return RETRY
-        mock_reasoning_verify.return_value = retry_verification
+        mock_verify_decomposition.return_value = retry_verification
         mock_generate_feedback.return_value = "Fix these issues"
         mock_phase_decompose.return_value = DecomposePhaseResult(
             decomposition=sample_decomposition,
@@ -335,9 +335,9 @@ class TestVerifyDecomposition:
         assert result.retry_count == 2
         assert len(result.all_attempts) == 3  # Initial + 2 retries
 
-    def test_medium_uses_self_verification(self, mock_reasoning_verify, mock_llm_client, sample_decomposition, passing_verification):
+    def test_medium_uses_self_verification(self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification):
         """Test MEDIUM complexity uses self-verification."""
-        mock_reasoning_verify.return_value = passing_verification
+        mock_verify_decomposition.return_value = passing_verification
 
         result = verify_decomposition(
             decomposition=sample_decomposition,
@@ -347,12 +347,12 @@ class TestVerifyDecomposition:
         )
 
         # Verify reasoning function was called with SELF option
-        call_args = mock_reasoning_verify.call_args
+        call_args = mock_verify_decomposition.call_args
         assert call_args.kwargs["option"] == VerificationOption.SELF
 
-    def test_complex_uses_adversarial_verification(self, mock_reasoning_verify, mock_llm_client, sample_decomposition, passing_verification):
+    def test_complex_uses_adversarial_verification(self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification):
         """Test COMPLEX complexity uses adversarial verification."""
-        mock_reasoning_verify.return_value = passing_verification
+        mock_verify_decomposition.return_value = passing_verification
 
         result = verify_decomposition(
             decomposition=sample_decomposition,
@@ -362,12 +362,12 @@ class TestVerifyDecomposition:
         )
 
         # Verify reasoning function was called with ADVERSARIAL option
-        call_args = mock_reasoning_verify.call_args
+        call_args = mock_verify_decomposition.call_args
         assert call_args.kwargs["option"] == VerificationOption.ADVERSARIAL
 
-    def test_context_summary_passed(self, mock_reasoning_verify, mock_llm_client, sample_decomposition, passing_verification):
+    def test_context_summary_passed(self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification):
         """Test context summary is passed through."""
-        mock_reasoning_verify.return_value = passing_verification
+        mock_verify_decomposition.return_value = passing_verification
 
         result = verify_decomposition(
             decomposition=sample_decomposition,
@@ -377,12 +377,12 @@ class TestVerifyDecomposition:
             context_summary="Available: 5 code chunks",
         )
 
-        call_args = mock_reasoning_verify.call_args
+        call_args = mock_verify_decomposition.call_args
         assert call_args.kwargs["context_summary"] == "Available: 5 code chunks"
 
-    def test_available_agents_passed(self, mock_reasoning_verify, mock_llm_client, sample_decomposition, passing_verification):
+    def test_available_agents_passed(self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification):
         """Test available agents are passed through."""
-        mock_reasoning_verify.return_value = passing_verification
+        mock_verify_decomposition.return_value = passing_verification
         agents = ["code-analyzer", "test-runner"]
 
         result = verify_decomposition(
@@ -393,12 +393,12 @@ class TestVerifyDecomposition:
             available_agents=agents,
         )
 
-        call_args = mock_reasoning_verify.call_args
+        call_args = mock_verify_decomposition.call_args
         assert call_args.kwargs["available_agents"] == agents
 
-    def test_timing_recorded(self, mock_reasoning_verify, mock_llm_client, sample_decomposition, passing_verification):
+    def test_timing_recorded(self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification):
         """Test that timing is recorded."""
-        mock_reasoning_verify.return_value = passing_verification
+        mock_verify_decomposition.return_value = passing_verification
 
         result = verify_decomposition(
             decomposition=sample_decomposition,

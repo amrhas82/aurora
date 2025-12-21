@@ -429,9 +429,10 @@ class E2ETestFramework:
             input_tokens=200,
             output_tokens=50,
         )
-        # Match on multiple possible patterns in assessment prompts
-        self.mock_llm.configure_response("complexity", response)
-        self.mock_llm.configure_response("assess", response)
+        # Match on more specific patterns to avoid conflicts with synthesis verification
+        # Use patterns that appear in assessment prompts but not in synthesis verification
+        self.mock_llm.configure_response("query complexity analyzer", response)
+        self.mock_llm.configure_response("classify user queries", response)
 
     def configure_decomposition_response(
         self, subgoals: list[dict[str, Any]]
@@ -498,23 +499,57 @@ class E2ETestFramework:
             input_tokens=400,
             output_tokens=150,
         )
-        # Match on multiple possible patterns in verification prompts
-        self.mock_llm.configure_response("completeness", response)
-        self.mock_llm.configure_response("verify", response)
+        # Match on unique patterns for decomposition verification (not synthesis verification)
+        self.mock_llm.configure_response("CONSISTENCY", response)
+        self.mock_llm.configure_response("GROUNDEDNESS", response)
+        self.mock_llm.configure_response("ROUTABILITY", response)
 
     def configure_synthesis_response(
-        self, answer: str, confidence: float = 0.9
+        self, answer: str, confidence: float = 0.9, agent_name: str | None = None
     ) -> None:
         """Configure mock response for synthesis.
 
         Args:
             answer: Synthesized answer
             confidence: Synthesis confidence
+            agent_name: Optional agent name to reference for traceability.
+                       If not provided, uses first registered agent or "mock-agent".
         """
+        # Auto-detect agent name from registered agents if not provided
+        if agent_name is None:
+            if self._mock_agents:
+                # Use first registered agent
+                agent_name = list(self._mock_agents.keys())[0]
+            else:
+                agent_name = "mock-agent"
+
+        # Format response according to synthesis phase requirements
+        # Include agent reference for traceability validation
+        answer_with_citation = f"{answer} (Agent: {agent_name})"
+        content = f"ANSWER: {answer_with_citation}\nCONFIDENCE: {confidence}"
         response = MockLLMResponse(
-            content=answer, input_tokens=600, output_tokens=300
+            content=content, input_tokens=600, output_tokens=300
         )
-        self.mock_llm.configure_response("synthesize", response)
+        # Multiple patterns for synthesis text generation (avoid patterns that appear in verification)
+        self.mock_llm.configure_response("synthesizing information", response)
+        self.mock_llm.configure_response("combine the agent outputs", response)
+
+        # Also configure synthesis verification response (called after synthesis)
+        verification_response = MockLLMResponse(
+            content=json.dumps({
+                "coherence": 0.9,
+                "completeness": 0.9,
+                "factuality": 0.9,
+                "overall_score": 0.9,
+            }),
+            input_tokens=200,
+            output_tokens=50,
+        )
+        # Match on verification-specific patterns (case-insensitive)
+        self.mock_llm.configure_response("COHERENCE", verification_response)
+        self.mock_llm.configure_response("COMPLETENESS", verification_response)
+        self.mock_llm.configure_response("FACTUALITY", verification_response)
+        self.mock_llm.configure_response("quality verifier", verification_response)
 
     def assert_phase_executed(
         self, response: dict[str, Any], phase_name: str

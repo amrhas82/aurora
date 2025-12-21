@@ -106,7 +106,7 @@ class TestDecomposePhaseResult:
         assert data["timing_ms"] == 150.5
 
 
-@patch("aurora_soar.phases.decompose.reasoning_decompose")
+@patch("aurora_reasoning.decompose.decompose_query")
 class TestDecomposeQuery:
     """Tests for decompose_query function."""
 

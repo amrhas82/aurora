@@ -84,6 +84,8 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `packages/core/src/aurora_core/logging/conversation_logger.py` - ConversationLogger with markdown formatting, async writing, and log rotation
 
 ### Test Files
+- `tests/integration/test_e2e_framework.py` - E2E test framework with mock LLM client and helpers
+- `tests/integration/test_simple_query_e2e.py` - Simple query end-to-end integration tests
 - `tests/unit/soar/test_phase_assess.py` - Phase 1 assessment tests (keyword + LLM)
 - `tests/unit/soar/test_phase_retrieve.py` - Phase 2 retrieval tests with budget verification
 - `tests/unit/reasoning/test_llm_client.py` - LLM client tests
@@ -354,11 +356,11 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 8.2 Add phase execution tracking (capture phase outputs, timing, errors)
   - [x] 8.3 Implement error handling and graceful degradation at orchestrator level
   - [x] 8.4 Add orchestrator unit tests (tests/unit/soar/test_orchestrator.py) with mocked phases
-  - [ ] 8.5 Create simple query E2E test (tests/integration/test_simple_query_e2e.py)
-  - [ ] 8.6 Test simple query bypasses decomposition (verify assess → retrieve → solve → respond path)
-  - [ ] 8.7 Verify simple query latency <2s
-  - [ ] 8.8 Create complex query E2E test (tests/integration/test_complex_query_e2e.py)
-  - [ ] 8.9 Test complex query uses full pipeline (verify all 9 phases execute)
+  - [x] 8.5 Create simple query E2E test (tests/integration/test_simple_query_e2e.py)
+  - [x] 8.6 Test simple query bypasses decomposition (verify assess → retrieve → solve → respond path)
+  - [x] 8.7 Verify simple query latency <2s
+  - [x] 8.8 Create complex query E2E test (tests/integration/test_complex_query_e2e.py)
+  - [x] 8.9 Test complex query uses full pipeline (verify all 9 phases execute)
   - [ ] 8.10 Verify complex query uses adversarial verification (Option B)
   - [ ] 8.11 Verify complex query latency <10s
   - [ ] 8.12 Create verification retry test (tests/integration/test_verification_retry.py)

@@ -25,6 +25,7 @@ The orchestrator manages:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from typing import TYPE_CHECKING, Any
@@ -32,6 +33,7 @@ from typing import TYPE_CHECKING, Any
 from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.logging import ConversationLogger, VerbosityLevel
+from aurora_reasoning.decompose import DecompositionResult
 from aurora_soar.phases import (
     assess,
     collect,
@@ -230,16 +232,16 @@ class SOAROrchestrator:
             phase7_result = self._phase7_synthesize(
                 phase6_result, query, phase3_result
             )
-            self._phase_metadata["phase7_synthesize"] = phase7_result
+            self._phase_metadata["phase7_synthesize"] = phase7_result.to_dict()
 
             # Phase 8: Record pattern
             phase8_result = self._phase8_record(
-                query, phase3_result, phase6_result, phase7_result
+                query, phase1_result["complexity"], phase3_result, phase6_result, phase7_result
             )
-            self._phase_metadata["phase8_record"] = phase8_result
+            self._phase_metadata["phase8_record"] = phase8_result.to_dict()
 
             # Phase 9: Format response
-            return self._phase9_respond(phase7_result, verbosity)
+            return self._phase9_respond(phase7_result, phase8_result, verbosity)
 
         except Exception as e:
             logger.exception(f"SOAR execution failed: {e}")
@@ -288,7 +290,18 @@ class SOAROrchestrator:
         logger.info("Phase 3: Decomposing query")
         start_time = time.time()
         try:
-            result = decompose.decompose_query(query, context, complexity)
+            # Get available agents from registry
+            agents = self.agent_registry.list_all()
+            available_agents = [agent.id for agent in agents]
+
+            phase_result = decompose.decompose_query(
+                query=query,
+                context=context,
+                complexity=complexity,
+                llm_client=self.reasoning_llm,
+                available_agents=available_agents,
+            )
+            result = phase_result.to_dict()
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             return result
@@ -302,15 +315,28 @@ class SOAROrchestrator:
             }
 
     def _phase4_verify(
-        self, decomposition: dict, query: str, complexity: str
+        self, decomposition_dict: dict, query: str, complexity: str
     ) -> dict[str, Any]:
         """Execute Phase 4: Decomposition Verification."""
         logger.info("Phase 4: Verifying decomposition")
         start_time = time.time()
         try:
-            # Select verification option based on complexity
-            option = "A" if complexity == "MEDIUM" else "B"
-            result = verify.verify_decomposition(decomposition, query, option)
+            # Get available agents from registry
+            agents = self.agent_registry.list_all()
+            available_agents = [agent.id for agent in agents]
+
+            # Convert decomposition dict to DecompositionResult object
+            # The dict contains a nested "decomposition" key from phase 3
+            decomposition_data = decomposition_dict.get("decomposition", decomposition_dict)
+            decomposition = DecompositionResult.from_dict(decomposition_data)
+
+            result = verify.verify_decomposition(
+                decomposition=decomposition,
+                complexity=complexity,
+                llm_client=self.reasoning_llm,
+                query=query,
+                available_agents=available_agents,
+            )
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             return result
@@ -347,7 +373,8 @@ class SOAROrchestrator:
         logger.info("Phase 6: Executing agents")
         start_time = time.time()
         try:
-            result = collect.execute_agents(routing, context)
+            # Execute agents asynchronously
+            result = asyncio.run(collect.execute_agents(routing, context))
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             return result
@@ -360,64 +387,88 @@ class SOAROrchestrator:
             }
 
     def _phase7_synthesize(
-        self, execution: dict, query: str, decomposition: dict
-    ) -> dict[str, Any]:
+        self, collect_result: collect.CollectResult, query: str, decomposition: dict
+    ) -> synthesize.SynthesisResult:
         """Execute Phase 7: Result Synthesis."""
         logger.info("Phase 7: Synthesizing results")
         start_time = time.time()
         try:
-            agent_outputs = execution.get("agent_outputs", [])
-            result = synthesize.synthesize_results(agent_outputs, query, decomposition)
-            result["_timing_ms"] = (time.time() - start_time) * 1000
-            result["_error"] = None
+            result = synthesize.synthesize_results(
+                llm_client=self.solving_llm,
+                query=query,
+                collect_result=collect_result,
+                decomposition=decomposition,
+            )
+            # Track timing
+            self._track_llm_cost(
+                self.solving_llm.default_model,
+                result.timing.get("input_tokens", 0),
+                result.timing.get("output_tokens", 0),
+                "synthesize",
+            )
             return result
         except Exception as e:
             logger.error(f"Phase 7 failed: {e}")
-            return {
-                "answer": f"Synthesis failed: {str(e)}",
-                "confidence": 0.0,
-                "_timing_ms": (time.time() - start_time) * 1000,
-                "_error": str(e),
-            }
+            # Return error synthesis result
+            return synthesize.SynthesisResult(
+                answer=f"Synthesis failed: {str(e)}",
+                confidence=0.0,
+                traceability=[],
+                metadata={"error": str(e)},
+                timing={"synthesis_ms": (time.time() - start_time) * 1000},
+            )
 
     def _phase8_record(
         self,
         query: str,
+        complexity: str,
         decomposition: dict,
-        execution: dict,
-        synthesis: dict,
-    ) -> dict[str, Any]:
+        collect_result: collect.CollectResult,
+        synthesis_result: synthesize.SynthesisResult,
+    ) -> record.RecordResult:
         """Execute Phase 8: Pattern Recording."""
         logger.info("Phase 8: Recording pattern")
         start_time = time.time()
         try:
             result = record.record_pattern(
-                query, decomposition, execution, synthesis, self.store
+                store=self.store,
+                query=query,
+                complexity=complexity,
+                decomposition=decomposition,
+                collect_result=collect_result,
+                synthesis_result=synthesis_result,
             )
-            result["_timing_ms"] = (time.time() - start_time) * 1000
-            result["_error"] = None
             return result
         except Exception as e:
             logger.error(f"Phase 8 failed: {e}")
-            return {
-                "cached": False,
-                "_timing_ms": (time.time() - start_time) * 1000,
-                "_error": str(e),
-            }
+            return record.RecordResult(
+                cached=False,
+                reasoning_chunk_id=None,
+                pattern_marked=False,
+                activation_update=0.0,
+                timing={"record_ms": (time.time() - start_time) * 1000, "error": str(e)},
+            )
 
     def _phase9_respond(
-        self, synthesis: dict, verbosity: str
+        self, synthesis_result: synthesize.SynthesisResult, record_result: record.RecordResult, verbosity: str
     ) -> dict[str, Any]:
         """Execute Phase 9: Response Formatting."""
         logger.info("Phase 9: Formatting response")
+
+        # Add phase 9 metadata
+        self._phase_metadata["phase9_respond"] = {
+            "verbosity": verbosity,
+            "formatted": True,
+        }
+
         metadata = self._build_metadata()
-        response = respond.format_response(synthesis, metadata, verbosity)
+        response = respond.format_response(synthesis_result, record_result, metadata, verbosity)
 
         # Log conversation (async, non-blocking)
         execution_summary = {
             "duration_ms": metadata.get("total_duration_ms", 0),
-            "overall_score": synthesis.get("confidence", 0.0),
-            "cached": metadata.get("phases", {}).get("phase8_record", {}).get("cached", False),
+            "overall_score": synthesis_result.confidence,
+            "cached": record_result.cached,
             "cost_usd": metadata.get("total_cost_usd", 0.0),
             "tokens_used": metadata.get("tokens_used", {}),
         }
@@ -430,7 +481,7 @@ class SOAROrchestrator:
             metadata=metadata,
         )
 
-        return response
+        return response.to_dict()
 
     def _execute_simple_path(
         self, query: str, context: dict, verbosity: str
@@ -450,15 +501,27 @@ class SOAROrchestrator:
         # For SIMPLE queries, we skip decomposition and call solving LLM directly
         # This will be implemented in Phase 3-4
         # For now, return a placeholder
+        from aurora_soar.phases.synthesize import SynthesisResult
+        from aurora_soar.phases.record import RecordResult
 
-        synthesis = {
-            "answer": "SIMPLE query placeholder - direct LLM call will be implemented",
-            "confidence": 0.9,
-            "traceability": [],
-        }
+        synthesis = SynthesisResult(
+            answer="SIMPLE query placeholder - direct LLM call will be implemented",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={"synthesis_ms": 0},
+        )
 
-        metadata = self._build_metadata()
-        return respond.format_response(synthesis, metadata, verbosity)
+        record = RecordResult(
+            cached=False,
+            reasoning_chunk_id=None,
+            pattern_marked=False,
+            activation_update=0.0,
+            timing={"record_ms": 0},
+        )
+
+        # Use phase 9 to format response properly
+        return self._phase9_respond(synthesis, record, verbosity)
 
     def _handle_verification_failure(
         self, query: str, verification: dict, verbosity: str
@@ -474,19 +537,32 @@ class SOAROrchestrator:
             Error response with partial results
         """
         logger.error("Returning partial results due to verification failure")
+        from aurora_soar.phases.synthesize import SynthesisResult
+        from aurora_soar.phases.record import RecordResult
 
-        synthesis = {
-            "answer": "Unable to decompose query successfully. Please rephrase or simplify.",
-            "confidence": 0.0,
-            "traceability": [],
-            "error": "verification_failed",
-            "feedback": verification.get("feedback", ""),
-        }
+        synthesis = SynthesisResult(
+            answer="Unable to decompose query successfully. Please rephrase or simplify.",
+            confidence=0.0,
+            traceability=[],
+            metadata={
+                "error": "verification_failed",
+                "feedback": verification.get("feedback", ""),
+            },
+            timing={"synthesis_ms": 0},
+        )
 
-        metadata = self._build_metadata()
-        metadata["verification_failure"] = verification
+        record = RecordResult(
+            cached=False,
+            reasoning_chunk_id=None,
+            pattern_marked=False,
+            activation_update=0.0,
+            timing={"record_ms": 0},
+        )
 
-        return respond.format_response(synthesis, metadata, verbosity)
+        # Add verification failure to phase metadata before response formatting
+        self._phase_metadata["verification_failure"] = verification
+
+        return self._phase9_respond(synthesis, record, verbosity)
 
     def _handle_execution_error(
         self, error: Exception, verbosity: str
@@ -501,18 +577,29 @@ class SOAROrchestrator:
             Error response
         """
         logger.error(f"Handling execution error: {error}")
+        from aurora_soar.phases.synthesize import SynthesisResult
+        from aurora_soar.phases.record import RecordResult
 
-        synthesis = {
-            "answer": f"An error occurred during query processing: {str(error)}",
-            "confidence": 0.0,
-            "traceability": [],
-            "error": error.__class__.__name__,
-        }
+        synthesis = SynthesisResult(
+            answer=f"An error occurred during query processing: {str(error)}",
+            confidence=0.0,
+            traceability=[],
+            metadata={"error": error.__class__.__name__},
+            timing={"synthesis_ms": 0},
+        )
 
-        metadata = self._build_metadata()
-        metadata["error_details"] = str(error)
+        record = RecordResult(
+            cached=False,
+            reasoning_chunk_id=None,
+            pattern_marked=False,
+            activation_update=0.0,
+            timing={"record_ms": 0},
+        )
 
-        return respond.format_response(synthesis, metadata, verbosity)
+        # Add error details to phase metadata
+        self._phase_metadata["error_details"] = str(error)
+
+        return self._phase9_respond(synthesis, record, verbosity)
 
     def _track_llm_cost(
         self,

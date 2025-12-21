@@ -49,10 +49,27 @@ class MockLLMClient(LLMClient):
         Args:
             default_model: Default model identifier
         """
-        self.default_model = default_model
+        self._default_model = default_model
         self._responses: dict[str, list[MockLLMResponse]] = {}
         self._calls: list[dict[str, Any]] = []
         self._call_count: int = 0
+
+    @property
+    def default_model(self) -> str:
+        """Get default model identifier."""
+        return self._default_model
+
+    def count_tokens(self, text: str) -> int:
+        """Count tokens in text (mock implementation).
+
+        Args:
+            text: Text to count tokens for
+
+        Returns:
+            Approximate token count
+        """
+        # Simple approximation: 1 token per 4 characters
+        return len(text) // 4
 
     def configure_response(
         self, pattern: str, response: MockLLMResponse
@@ -118,7 +135,7 @@ class MockLLMClient(LLMClient):
         Returns:
             Generated text
         """
-        model = model or self.default_model
+        model = model or self._default_model
         self._call_count += 1
 
         # Find matching response
@@ -169,7 +186,7 @@ class MockLLMClient(LLMClient):
         Returns:
             Parsed JSON object
         """
-        model = model or self.default_model
+        model = model or self._default_model
         self._call_count += 1
 
         # Find matching response
@@ -295,7 +312,10 @@ class E2ETestFramework:
         self.store = self._create_test_store()
         self.agent_registry = AgentRegistry()
         self.mock_llm = MockLLMClient()
-        self.cost_tracker = CostTracker(monthly_limit_usd=100.0)
+        # Use unique tracker file for tests to avoid persistence issues
+        from pathlib import Path
+        tracker_path = Path(temp_dir) / "test_budget_tracker.json"
+        self.cost_tracker = CostTracker(monthly_limit_usd=1000.0, tracker_path=tracker_path)  # High limit for tests
         self.conversation_logger = ConversationLogger(enabled=False)
 
         # Track mock agents
@@ -307,8 +327,7 @@ class E2ETestFramework:
         Returns:
             Test configuration
         """
-        config = Config()
-        config._config = {
+        config_data = {
             "budget": {"monthly_limit_usd": 100.0},
             "logging": {"conversation_logging_enabled": False},
             "soar": {
@@ -316,7 +335,7 @@ class E2ETestFramework:
                 "max_retries": 2,
             },
         }
-        return config
+        return Config(data=config_data)
 
     def _create_test_store(self) -> SQLiteStore:
         """Create test store in temp directory.
@@ -351,12 +370,18 @@ class E2ETestFramework:
         Args:
             agent: Mock agent to register
         """
+        from aurora_soar.agent_registry import AgentInfo
+
         self._mock_agents[agent.agent_id] = agent
-        self.agent_registry.register(
-            agent_id=agent.agent_id,
-            capabilities=agent.capabilities,
+        agent_info = AgentInfo(
+            id=agent.agent_id,
+            name=agent.agent_id.replace("-", " ").title(),
             description=f"Mock agent: {agent.agent_id}",
+            capabilities=agent.capabilities,
+            agent_type="local",
+            config={},
         )
+        self.agent_registry.register(agent_info)
 
     def configure_assessment_response(
         self, complexity: str, confidence: float = 0.9

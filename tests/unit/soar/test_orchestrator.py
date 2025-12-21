@@ -21,9 +21,15 @@ from aurora_core.config.loader import Config
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.logging import ConversationLogger
 from aurora_core.store.sqlite import SQLiteStore
+from aurora_reasoning.decompose import DecompositionResult
 from aurora_reasoning.llm_client import LLMClient
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
+from aurora_soar.phases.collect import CollectResult
+from aurora_soar.phases.decompose import DecomposePhaseResult
+from aurora_soar.phases.record import RecordResult
+from aurora_soar.phases.respond import ResponseResult
+from aurora_soar.phases.synthesize import SynthesisResult
 
 
 @pytest.fixture
@@ -121,10 +127,16 @@ def test_simple_query_path(
         "_timing_ms": 100.0,
         "_error": None,
     }
-    mock_respond.return_value = {
-        "answer": "Simple answer",
-        "confidence": 0.9,
-    }
+    mock_respond.return_value = ResponseResult(
+        formatted_output="Simple answer",
+        raw_data={
+            "answer": "Simple answer",
+            "confidence": 0.9,
+            "overall_score": 0.9,
+            "reasoning_trace": {},
+            "metadata": {},
+        },
+    )
 
     # Execute
     result = test_orchestrator.execute(
@@ -176,12 +188,18 @@ def test_complex_query_full_pipeline(
         "_timing_ms": 100.0,
         "_error": None,
     }
-    mock_decompose.return_value = {
-        "goal": "Complex goal",
-        "subgoals": [{"id": "sg1", "description": "Subgoal 1"}],
-        "_timing_ms": 200.0,
-        "_error": None,
-    }
+    decomposition = DecompositionResult(
+        goal="Complex goal",
+        subgoals=[{"id": "sg1", "description": "Subgoal 1", "agent_type": "test", "criticality": "MEDIUM", "dependencies": [], "inputs": {}}],
+        execution_order=[0],
+        expected_tools=["test"],
+    )
+    mock_decompose.return_value = DecomposePhaseResult(
+        decomposition=decomposition,
+        cached=False,
+        query_hash="",
+        timing_ms=200.0,
+    )
     mock_verify.return_value = {
         "verdict": "PASS",
         "overall_score": 0.85,
@@ -193,26 +211,34 @@ def test_complex_query_full_pipeline(
         "_timing_ms": 50.0,
         "_error": None,
     }
-    mock_collect.return_value = {
-        "agent_outputs": [{"summary": "Result 1"}],
-        "_timing_ms": 300.0,
-        "_error": None,
-    }
-    mock_synthesize.return_value = {
-        "answer": "Complex answer",
-        "confidence": 0.9,
-        "_timing_ms": 200.0,
-        "_error": None,
-    }
-    mock_record.return_value = {
-        "cached": True,
-        "_timing_ms": 50.0,
-        "_error": None,
-    }
-    mock_respond.return_value = {
-        "answer": "Complex answer",
-        "confidence": 0.9,
-    }
+    mock_collect.return_value = CollectResult(
+        agent_outputs=[],
+        execution_metadata={"_timing_ms": 300.0, "_error": None},
+    )
+    mock_synthesize.return_value = SynthesisResult(
+        answer="Complex answer",
+        confidence=0.9,
+        traceability=[],
+        metadata={},
+        timing={"_timing_ms": 200.0, "_error": None},
+    )
+    mock_record.return_value = RecordResult(
+        cached=True,
+        reasoning_chunk_id=None,
+        pattern_marked=False,
+        activation_update=0.0,
+        timing={"_timing_ms": 50.0, "_error": None},
+    )
+    mock_respond.return_value = ResponseResult(
+        formatted_output="Complex answer",
+        raw_data={
+            "answer": "Complex answer",
+            "confidence": 0.9,
+            "overall_score": 0.9,
+            "reasoning_trace": {},
+            "metadata": {},
+        },
+    )
 
     # Execute
     result = test_orchestrator.execute(
@@ -262,12 +288,18 @@ def test_verification_failure_handling(
         "_timing_ms": 100.0,
         "_error": None,
     }
-    mock_decompose.return_value = {
-        "goal": "Test goal",
-        "subgoals": [],
-        "_timing_ms": 200.0,
-        "_error": None,
-    }
+    decomposition = DecompositionResult(
+        goal="Test goal",
+        subgoals=[],
+        execution_order=[],
+        expected_tools=[],
+    )
+    mock_decompose.return_value = DecomposePhaseResult(
+        decomposition=decomposition,
+        cached=False,
+        query_hash="",
+        timing_ms=200.0,
+    )
     mock_verify.return_value = {
         "verdict": "FAIL",
         "overall_score": 0.3,
@@ -275,10 +307,16 @@ def test_verification_failure_handling(
         "_timing_ms": 150.0,
         "_error": None,
     }
-    mock_respond.return_value = {
-        "answer": "Unable to decompose query successfully. Please rephrase or simplify.",
-        "confidence": 0.0,
-    }
+    mock_respond.return_value = ResponseResult(
+        formatted_output="Unable to decompose query successfully. Please rephrase or simplify.",
+        raw_data={
+            "answer": "Unable to decompose query successfully. Please rephrase or simplify.",
+            "confidence": 0.0,
+            "overall_score": 0.0,
+            "reasoning_trace": {},
+            "metadata": {},
+        },
+    )
 
     # Execute
     result = test_orchestrator.execute(
@@ -301,11 +339,16 @@ def test_phase_error_handling(mock_respond, mock_assess, test_orchestrator):
     """Test phase errors are caught and tracked."""
     # Configure mock to raise error
     mock_assess.side_effect = RuntimeError("Mock error")
-    mock_respond.return_value = {
-        "answer": "An error occurred during query processing: Mock error",
-        "confidence": 0.0,
-        "error": "RuntimeError",
-    }
+    mock_respond.return_value = ResponseResult(
+        formatted_output="An error occurred during query processing: Mock error",
+        raw_data={
+            "answer": "An error occurred during query processing: Mock error",
+            "confidence": 0.0,
+            "overall_score": 0.0,
+            "reasoning_trace": {},
+            "metadata": {"error": "RuntimeError"},
+        },
+    )
 
     # Execute
     result = test_orchestrator.execute(
@@ -314,8 +357,9 @@ def test_phase_error_handling(mock_respond, mock_assess, test_orchestrator):
 
     # Verify error handled gracefully
     assert "answer" in result
-    assert "error" in result
-    assert result["error"] == "RuntimeError"
+    assert "metadata" in result
+    assert "error" in result["metadata"]
+    assert result["metadata"]["error"] == "RuntimeError"
 
 
 # Budget Enforcement Tests
@@ -362,12 +406,17 @@ def test_budget_tracking_during_execution(
     }
 
     # Mock respond to return the metadata that orchestrator builds
-    def mock_format_response(synthesis, metadata, verbosity):
-        return {
-            "answer": "Test answer",
-            "confidence": 0.9,
-            "metadata": metadata,
-        }
+    def mock_format_response(synthesis, record, metadata, verbosity):
+        return ResponseResult(
+            formatted_output="Test answer",
+            raw_data={
+                "answer": "Test answer",
+                "confidence": 0.9,
+                "overall_score": 0.9,
+                "reasoning_trace": {},
+                "metadata": metadata,
+            },
+        )
     mock_respond.side_effect = mock_format_response
 
     # Execute
@@ -409,12 +458,17 @@ def test_metadata_aggregation(
     }
 
     # Mock respond to return the metadata that orchestrator builds
-    def mock_format_response(synthesis, metadata, verbosity):
-        return {
-            "answer": "Test answer",
-            "confidence": 0.9,
-            "metadata": metadata,
-        }
+    def mock_format_response(synthesis, record, metadata, verbosity):
+        return ResponseResult(
+            formatted_output="Test answer",
+            raw_data={
+                "answer": "Test answer",
+                "confidence": 0.9,
+                "overall_score": 0.9,
+                "reasoning_trace": {},
+                "metadata": metadata,
+            },
+        )
     mock_respond.side_effect = mock_format_response
 
     # Execute
@@ -452,12 +506,17 @@ def test_timing_tracking(
         "_error": None,
     }
     # Mock respond to return the metadata that orchestrator builds
-    def mock_format_response(synthesis, metadata, verbosity):
-        return {
-            "answer": "Test answer",
-            "confidence": 0.9,
-            "metadata": metadata,
-        }
+    def mock_format_response(synthesis, record, metadata, verbosity):
+        return ResponseResult(
+            formatted_output="Test answer",
+            raw_data={
+                "answer": "Test answer",
+                "confidence": 0.9,
+                "overall_score": 0.9,
+                "reasoning_trace": {},
+                "metadata": metadata,
+            },
+        )
     mock_respond.side_effect = mock_format_response
 
     # Execute
@@ -494,10 +553,16 @@ def test_quiet_verbosity(
         "_timing_ms": 100.0,
         "_error": None,
     }
-    mock_respond.return_value = {
-        "answer": "Test answer",
-        "confidence": 0.9,
-    }
+    mock_respond.return_value = ResponseResult(
+        formatted_output="Test answer",
+        raw_data={
+            "answer": "Test answer",
+            "confidence": 0.9,
+            "overall_score": 0.9,
+            "reasoning_trace": {},
+            "metadata": {},
+        },
+    )
 
     # Execute with QUIET
     result = test_orchestrator.execute(
@@ -529,13 +594,18 @@ def test_verbose_mode(
         "_timing_ms": 100.0,
         "_error": None,
     }
-    mock_respond.return_value = {
-        "answer": "Test answer",
-        "confidence": 0.9,
-        "metadata": {
-            "phases": {},
+    mock_respond.return_value = ResponseResult(
+        formatted_output="Test answer",
+        raw_data={
+            "answer": "Test answer",
+            "confidence": 0.9,
+            "overall_score": 0.9,
+            "reasoning_trace": {},
+            "metadata": {
+                "phases": {},
+            },
         },
-    }
+    )
 
     # Execute with VERBOSE
     result = test_orchestrator.execute(
@@ -575,12 +645,17 @@ def test_conversation_logging_integration(
     }
 
     # Mock respond to return something
-    def mock_format_response(synthesis, metadata, verbosity):
-        return {
-            "answer": "Test answer",
-            "confidence": 0.9,
-            "metadata": metadata,
-        }
+    def mock_format_response(synthesis, record, metadata, verbosity):
+        return ResponseResult(
+            formatted_output="Test answer",
+            raw_data={
+                "answer": "Test answer",
+                "confidence": 0.9,
+                "overall_score": 0.9,
+                "reasoning_trace": {},
+                "metadata": metadata,
+            },
+        )
     mock_respond.side_effect = mock_format_response
 
     # Execute and check logger was called

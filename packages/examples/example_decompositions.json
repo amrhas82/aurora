@@ -1,0 +1,260 @@
+[
+  {
+    "complexity": "MEDIUM",
+    "query": "How does the authentication system work?",
+    "decomposition": {
+      "goal": "Understand authentication system architecture and flow",
+      "subgoals": [
+        {
+          "id": "sg1",
+          "description": "Identify authentication entry points and middleware",
+          "agent_type": "code-analysis",
+          "criticality": "HIGH",
+          "dependencies": [],
+          "inputs": {}
+        },
+        {
+          "id": "sg2",
+          "description": "Trace authentication flow from request to response",
+          "agent_type": "code-analysis",
+          "criticality": "HIGH",
+          "dependencies": ["sg1"],
+          "inputs": {}
+        }
+      ],
+      "execution_order": [0, 1],
+      "expected_tools": ["code-analysis"]
+    }
+  },
+  {
+    "complexity": "MEDIUM",
+    "query": "What database queries are slow?",
+    "decomposition": {
+      "goal": "Identify and analyze slow database queries",
+      "subgoals": [
+        {
+          "id": "sg1",
+          "description": "Find all database query locations in codebase",
+          "agent_type": "code-search",
+          "criticality": "MEDIUM",
+          "dependencies": [],
+          "inputs": {}
+        },
+        {
+          "id": "sg2",
+          "description": "Analyze query complexity and identify missing indexes",
+          "agent_type": "performance-analysis",
+          "criticality": "HIGH",
+          "dependencies": ["sg1"],
+          "inputs": {}
+        }
+      ],
+      "execution_order": [0, 1],
+      "expected_tools": ["code-search", "performance-analysis"]
+    }
+  },
+  {
+    "complexity": "COMPLEX",
+    "query": "How can we improve the performance of the data processing pipeline?",
+    "decomposition": {
+      "goal": "Analyze and optimize data processing pipeline performance",
+      "subgoals": [
+        {
+          "id": "sg1",
+          "description": "Profile current pipeline execution and identify bottlenecks",
+          "agent_type": "performance-analysis",
+          "criticality": "HIGH",
+          "dependencies": [],
+          "inputs": {}
+        },
+        {
+          "id": "sg2",
+          "description": "Analyze data flow and transformation logic",
+          "agent_type": "code-analysis",
+          "criticality": "HIGH",
+          "dependencies": [],
+          "inputs": {}
+        },
+        {
+          "id": "sg3",
+          "description": "Review database query patterns and indexes",
+          "agent_type": "database-optimization",
+          "criticality": "MEDIUM",
+          "dependencies": ["sg2"],
+          "inputs": {}
+        },
+        {
+          "id": "sg4",
+          "description": "Synthesize optimization recommendations",
+          "agent_type": "llm-executor",
+          "criticality": "MEDIUM",
+          "dependencies": ["sg1", "sg2", "sg3"],
+          "inputs": {}
+        }
+      ],
+      "execution_order": [0, 1, 2, 3],
+      "expected_tools": ["performance-analysis", "code-analysis", "database-optimization", "llm-executor"]
+    }
+  },
+  {
+    "complexity": "COMPLEX",
+    "query": "Design a new caching layer for the API",
+    "decomposition": {
+      "goal": "Design comprehensive caching strategy for API",
+      "subgoals": [
+        {
+          "id": "sg1",
+          "description": "Analyze current API endpoints and their access patterns",
+          "agent_type": "code-analysis",
+          "criticality": "HIGH",
+          "dependencies": [],
+          "inputs": {}
+        },
+        {
+          "id": "sg2",
+          "description": "Identify cacheable endpoints and data staleness requirements",
+          "agent_type": "llm-executor",
+          "criticality": "HIGH",
+          "dependencies": ["sg1"],
+          "inputs": {}
+        },
+        {
+          "id": "sg3",
+          "description": "Design cache key strategy and invalidation rules",
+          "agent_type": "system-design",
+          "criticality": "HIGH",
+          "dependencies": ["sg2"],
+          "inputs": {}
+        },
+        {
+          "id": "sg4",
+          "description": "Recommend caching technology and implementation approach",
+          "agent_type": "llm-executor",
+          "criticality": "MEDIUM",
+          "dependencies": ["sg3"],
+          "inputs": {}
+        }
+      ],
+      "execution_order": [0, 1, 2, 3],
+      "expected_tools": ["code-analysis", "llm-executor", "system-design"]
+    }
+  },
+  {
+    "complexity": "CRITICAL",
+    "query": "Implement a distributed tracing system across all microservices",
+    "decomposition": {
+      "goal": "Design and implement comprehensive distributed tracing",
+      "subgoals": [
+        {
+          "id": "sg1",
+          "description": "Inventory all microservices and their communication patterns",
+          "agent_type": "system-discovery",
+          "criticality": "HIGH",
+          "dependencies": [],
+          "inputs": {}
+        },
+        {
+          "id": "sg2",
+          "description": "Select tracing technology (OpenTelemetry, Jaeger, etc.)",
+          "agent_type": "technology-evaluation",
+          "criticality": "HIGH",
+          "dependencies": ["sg1"],
+          "inputs": {}
+        },
+        {
+          "id": "sg3",
+          "description": "Design trace context propagation strategy",
+          "agent_type": "system-design",
+          "criticality": "HIGH",
+          "dependencies": ["sg2"],
+          "inputs": {}
+        },
+        {
+          "id": "sg4",
+          "description": "Plan instrumentation points in each service",
+          "agent_type": "code-analysis",
+          "criticality": "HIGH",
+          "dependencies": ["sg1", "sg3"],
+          "inputs": {}
+        },
+        {
+          "id": "sg5",
+          "description": "Design trace storage and query infrastructure",
+          "agent_type": "infrastructure-design",
+          "criticality": "MEDIUM",
+          "dependencies": ["sg2"],
+          "inputs": {}
+        },
+        {
+          "id": "sg6",
+          "description": "Create implementation plan with rollout strategy",
+          "agent_type": "project-planning",
+          "criticality": "MEDIUM",
+          "dependencies": ["sg3", "sg4", "sg5"],
+          "inputs": {}
+        }
+      ],
+      "execution_order": [0, 1, 2, 3, 4, 5],
+      "expected_tools": ["system-discovery", "technology-evaluation", "system-design", "code-analysis", "infrastructure-design", "project-planning"]
+    }
+  },
+  {
+    "complexity": "CRITICAL",
+    "query": "Migrate the monolith to microservices architecture",
+    "decomposition": {
+      "goal": "Plan and execute monolith to microservices migration",
+      "subgoals": [
+        {
+          "id": "sg1",
+          "description": "Analyze monolith codebase and identify bounded contexts",
+          "agent_type": "code-analysis",
+          "criticality": "HIGH",
+          "dependencies": [],
+          "inputs": {}
+        },
+        {
+          "id": "sg2",
+          "description": "Map dependencies between domains",
+          "agent_type": "dependency-analysis",
+          "criticality": "HIGH",
+          "dependencies": ["sg1"],
+          "inputs": {}
+        },
+        {
+          "id": "sg3",
+          "description": "Design microservice boundaries and contracts",
+          "agent_type": "system-design",
+          "criticality": "HIGH",
+          "dependencies": ["sg1", "sg2"],
+          "inputs": {}
+        },
+        {
+          "id": "sg4",
+          "description": "Plan data migration and database decomposition strategy",
+          "agent_type": "database-architecture",
+          "criticality": "HIGH",
+          "dependencies": ["sg3"],
+          "inputs": {}
+        },
+        {
+          "id": "sg5",
+          "description": "Design service communication patterns (sync/async)",
+          "agent_type": "system-design",
+          "criticality": "HIGH",
+          "dependencies": ["sg3"],
+          "inputs": {}
+        },
+        {
+          "id": "sg6",
+          "description": "Create phased migration plan with risk mitigation",
+          "agent_type": "project-planning",
+          "criticality": "MEDIUM",
+          "dependencies": ["sg3", "sg4", "sg5"],
+          "inputs": {}
+        }
+      ],
+      "execution_order": [0, 1, 2, 3, 4, 5],
+      "expected_tools": ["code-analysis", "dependency-analysis", "system-design", "database-architecture", "project-planning"]
+    }
+  }
+]

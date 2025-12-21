@@ -100,6 +100,7 @@ This task list breaks down PRD 0002 (AURORA Foundation & Infrastructure) into ac
 - `tests/fixtures/sample_python_files/complex.py` - Complex file with nested classes and high complexity
 - `tests/fixtures/sample_python_files/broken.py` - File with syntax errors for error handling tests
 - `tests/fixtures/agents/agents.json` - Sample agent configuration with 3 agents (local/remote types, various capabilities)
+- `tests/fault_injection/test_bad_decomposition.py` - Fault injection tests for bad decompositions (incomplete subgoals, missing/circular dependencies, retry exhaustion)
 
 ### Root Files
 - `pyproject.toml` - Root project configuration (workspace)

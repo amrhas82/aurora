@@ -232,7 +232,7 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 3.21 Write unit tests for verify phase (tests/unit/soar/test_phase_verify.py)
   - [x] 3.22 Test retry loop behavior (mock low scores, verify retry with feedback, verify max 2 retries)
   - [x] 3.23 Test verdict logic (verify correct pass/retry/fail decisions)
-  - [ ] 3.24 Create fault injection test for bad decomposition (tests/fault_injection/test_bad_decomposition.py)
+  - [x] 3.24 Create fault injection test for bad decomposition (tests/fault_injection/test_bad_decomposition.py)
 
 - [x] 4.0 SOAR Orchestrator - Phase 5-6 (Route & Collect)
   - [x] 4.1 Implement routing logic in packages/soar/src/aurora_soar/phases/route.py (_route_subgoals)

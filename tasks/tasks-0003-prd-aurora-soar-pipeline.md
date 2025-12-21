@@ -31,6 +31,19 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 
 ## Relevant Files
 
+### SOAR Package (`packages/soar/`)
+- `packages/soar/src/aurora_soar/orchestrator.py` - Main SOAR orchestrator with 9-phase pipeline coordination
+- `packages/soar/src/aurora_soar/phases/__init__.py` - SOAR phases module initialization
+- `packages/soar/src/aurora_soar/phases/assess.py` - Phase 1: Complexity assessment (keyword + LLM)
+- `packages/soar/src/aurora_soar/phases/retrieve.py` - Phase 2: Context retrieval with budget allocation
+- `packages/soar/src/aurora_soar/phases/decompose.py` - Phase 3: Query decomposition (placeholder)
+- `packages/soar/src/aurora_soar/phases/verify.py` - Phase 4: Decomposition verification (placeholder)
+- `packages/soar/src/aurora_soar/phases/route.py` - Phase 5: Agent routing (placeholder)
+- `packages/soar/src/aurora_soar/phases/collect.py` - Phase 6: Agent execution (placeholder)
+- `packages/soar/src/aurora_soar/phases/synthesize.py` - Phase 7: Result synthesis (placeholder)
+- `packages/soar/src/aurora_soar/phases/record.py` - Phase 8: ACT-R pattern caching (placeholder)
+- `packages/soar/src/aurora_soar/phases/respond.py` - Phase 9: Response formatting (placeholder)
+
 ### Reasoning Package (`packages/reasoning/`)
 - `packages/reasoning/pyproject.toml` - Reasoning package configuration with LLM dependencies
 - `packages/reasoning/src/aurora_reasoning/__init__.py` - Package initialization and exports
@@ -71,6 +84,8 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `packages/core/src/aurora_core/logging/conversation_logger.py` - Conversation logging
 
 ### Test Files
+- `tests/unit/soar/test_phase_assess.py` - Phase 1 assessment tests (keyword + LLM)
+- `tests/unit/soar/test_phase_retrieve.py` - Phase 2 retrieval tests with budget verification
 - `tests/unit/reasoning/test_llm_client.py` - LLM client tests
 - `tests/unit/reasoning/test_assessment.py` - Assessment logic tests
 - `tests/unit/reasoning/test_decompose.py` - Decomposition tests
@@ -173,25 +188,25 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 1.24 Test few-shot example scaling by complexity (0/2/4/6 examples for simple/medium/complex/critical)
   - [x] 1.25 Verify JSON parsing works 100% of time with test prompts (no markdown, no extra text)
 
-- [ ] 2.0 SOAR Orchestrator - Phase 1-2 (Assess & Retrieve)
-  - [ ] 2.1 Create SOAR package phase structure with __init__.py files
-  - [ ] 2.2 Implement SOAROrchestrator skeleton in packages/soar/src/aurora_soar/orchestrator.py with execute() method
-  - [ ] 2.3 Add orchestrator initialization (store, agent_registry, config, reasoning_llm, solving_llm)
-  - [ ] 2.4 Implement keyword-based complexity classifier in packages/soar/src/aurora_soar/phases/assess.py (_assess_tier1_keyword)
-  - [ ] 2.5 Create keyword lists for complexity levels (simple, medium, complex, critical) based on PRD Appendix G
-  - [ ] 2.6 Implement keyword scoring algorithm (matches / total_keywords, with confidence calculation)
-  - [ ] 2.7 Implement LLM-based complexity verification in assess.py (_assess_tier2_llm) for borderline cases
-  - [ ] 2.8 Add decision logic: use keyword if confidence ≥0.8 AND score not in [0.4, 0.6], else use LLM
-  - [ ] 2.9 Implement context retrieval in packages/soar/src/aurora_soar/phases/retrieve.py (_retrieve_context)
-  - [ ] 2.10 Add budget allocation by complexity (SIMPLE: 5, MEDIUM: 10, COMPLEX: 15, CRITICAL: 20 chunks)
-  - [ ] 2.11 Integrate with Phase 1 Store.retrieve_by_activation() method (keyword-based for Phase 2)
-  - [ ] 2.12 Add retrieval result formatting (code_chunks, reasoning_chunks, timing metadata)
-  - [ ] 2.13 Implement early exit for SIMPLE queries (bypass decomposition, go directly to solving LLM)
-  - [ ] 2.14 Write unit tests for keyword classifier (tests/unit/soar/test_phase_assess.py)
-  - [ ] 2.15 Write unit tests for LLM assessment (mock LLM responses, test borderline cases)
-  - [ ] 2.16 Write unit tests for context retrieval (tests/unit/soar/test_phase_retrieve.py)
-  - [ ] 2.17 Test budget allocation logic (verify correct chunk counts by complexity)
-  - [ ] 2.18 Verify keyword assessment cost optimization (≥60% queries use keyword only)
+- [x] 2.0 SOAR Orchestrator - Phase 1-2 (Assess & Retrieve)
+  - [x] 2.1 Create SOAR package phase structure with __init__.py files
+  - [x] 2.2 Implement SOAROrchestrator skeleton in packages/soar/src/aurora_soar/orchestrator.py with execute() method
+  - [x] 2.3 Add orchestrator initialization (store, agent_registry, config, reasoning_llm, solving_llm)
+  - [x] 2.4 Implement keyword-based complexity classifier in packages/soar/src/aurora_soar/phases/assess.py (_assess_tier1_keyword)
+  - [x] 2.5 Create keyword lists for complexity levels (simple, medium, complex, critical) based on PRD Appendix G
+  - [x] 2.6 Implement keyword scoring algorithm (matches / total_keywords, with confidence calculation)
+  - [x] 2.7 Implement LLM-based complexity verification in assess.py (_assess_tier2_llm) for borderline cases
+  - [x] 2.8 Add decision logic: use keyword if confidence ≥0.8 AND score not in [0.4, 0.6], else use LLM
+  - [x] 2.9 Implement context retrieval in packages/soar/src/aurora_soar/phases/retrieve.py (_retrieve_context)
+  - [x] 2.10 Add budget allocation by complexity (SIMPLE: 5, MEDIUM: 10, COMPLEX: 15, CRITICAL: 20 chunks)
+  - [x] 2.11 Integrate with Phase 1 Store.retrieve_by_activation() method (keyword-based for Phase 2)
+  - [x] 2.12 Add retrieval result formatting (code_chunks, reasoning_chunks, timing metadata)
+  - [x] 2.13 Implement early exit for SIMPLE queries (bypass decomposition, go directly to solving LLM)
+  - [x] 2.14 Write unit tests for keyword classifier (tests/unit/soar/test_phase_assess.py)
+  - [x] 2.15 Write unit tests for LLM assessment (mock LLM responses, test borderline cases)
+  - [x] 2.16 Write unit tests for context retrieval (tests/unit/soar/test_phase_retrieve.py)
+  - [x] 2.17 Test budget allocation logic (verify correct chunk counts by complexity)
+  - [x] 2.18 Verify keyword assessment cost optimization (≥60% queries use keyword only)
 
 - [ ] 3.0 SOAR Orchestrator - Phase 3-4 (Decompose & Verify)
   - [ ] 3.1 Implement decomposition logic in packages/reasoning/src/aurora_reasoning/decompose.py

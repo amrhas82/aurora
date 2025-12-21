@@ -208,7 +208,7 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 2.17 Test budget allocation logic (verify correct chunk counts by complexity)
   - [x] 2.18 Verify keyword assessment cost optimization (≥60% queries use keyword only)
 
-- [ ] 3.0 SOAR Orchestrator - Phase 3-4 (Decompose & Verify)
+- [x] 3.0 SOAR Orchestrator - Phase 3-4 (Decompose & Verify)
   - [x] 3.1 Implement decomposition logic in packages/reasoning/src/aurora_reasoning/decompose.py
   - [x] 3.2 Create decomposition method that calls reasoning LLM with decompose prompt template
   - [x] 3.3 Add context injection (retrieved chunks, available agents from registry)

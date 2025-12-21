@@ -150,7 +150,7 @@ class TestSimpleQueryE2E:
 
         # Verify minimal context retrieval (SIMPLE budget: 5 chunks)
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
-        assert retrieve_meta["budget_limit"] == 5, (
+        assert retrieve_meta["budget"] == 5, (
             "SIMPLE queries should have budget of 5 chunks"
         )
 
@@ -312,8 +312,8 @@ class TestSimpleQueryE2E:
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
 
         # Verify context was retrieved
-        assert "chunks_retrieved" in retrieve_meta
-        assert retrieve_meta["budget_limit"] == 5
+        assert "total_retrieved" in retrieve_meta
+        assert retrieve_meta["budget"] == 5
 
         # Verify response completed
         assert "answer" in response
@@ -441,12 +441,12 @@ class TestSimpleQueryEdgeCases:
             input_tokens=50,
             output_tokens=5,
         )
-        e2e_framework.mock_llm.configure_response("why", solving_response)
+        e2e_framework.mock_llm.configure_response("status", solving_response)
 
         orchestrator = e2e_framework.create_orchestrator()
 
-        # Very short query
-        query = "Why?"
+        # Very short query that has SIMPLE keywords
+        query = "Show status"
         response = orchestrator.execute(query, verbosity="NORMAL")
 
         # Should handle gracefully

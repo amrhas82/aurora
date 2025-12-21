@@ -501,21 +501,81 @@ class SOAROrchestrator:
             Formatted response
         """
         logger.info("Executing SIMPLE query path")
+        start_time = time.time()
 
         # For SIMPLE queries, we skip decomposition and call solving LLM directly
-        # This will be implemented in Phase 3-4
-        # For now, return a placeholder
         from aurora_soar.phases.synthesize import SynthesisResult
         from aurora_soar.phases.record import RecordResult
 
-        synthesis = SynthesisResult(
-            answer="SIMPLE query placeholder - direct LLM call will be implemented",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={"synthesis_ms": 0},
-        )
+        try:
+            # Build prompt with context
+            prompt_parts = [f"Query: {query}"]
 
+            # Add retrieved context if available
+            code_chunks = context.get("code_chunks", [])
+            reasoning_chunks = context.get("reasoning_chunks", [])
+
+            if code_chunks:
+                prompt_parts.append("\nRelevant Code:")
+                for chunk in code_chunks[:5]:  # Limit to top 5
+                    content = chunk.content if hasattr(chunk, 'content') else chunk.get('content', '')
+                    prompt_parts.append(f"- {content[:200]}...")  # Truncate long chunks
+
+            if reasoning_chunks:
+                prompt_parts.append("\nRelevant Context:")
+                for chunk in reasoning_chunks[:3]:  # Limit to top 3
+                    pattern = chunk.pattern if hasattr(chunk, 'pattern') else chunk.get('pattern', '')
+                    prompt_parts.append(f"- {pattern}")
+
+            prompt_parts.append("\nPlease provide a clear, concise answer:")
+            prompt = "\n".join(prompt_parts)
+
+            # Call solving LLM
+            logger.info("Calling solving LLM for SIMPLE query")
+            response = self.solving_llm.generate(
+                prompt=prompt,
+                max_tokens=1024,
+                temperature=0.7,
+            )
+
+            # Track cost
+            self._track_llm_cost(
+                model=response.model,
+                input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens,
+                operation="simple_query_solving",
+            )
+
+            # Create synthesis result
+            synthesis = SynthesisResult(
+                answer=response.content,
+                confidence=0.9,  # High confidence for direct LLM response
+                traceability=[],
+                metadata={
+                    "simple_path": True,
+                    "context_used": {
+                        "code_chunks": len(code_chunks),
+                        "reasoning_chunks": len(reasoning_chunks),
+                    }
+                },
+                timing={
+                    "synthesis_ms": (time.time() - start_time) * 1000,
+                    "input_tokens": response.input_tokens,
+                    "output_tokens": response.output_tokens,
+                },
+            )
+
+        except Exception as e:
+            logger.error(f"SIMPLE query path failed: {e}")
+            synthesis = SynthesisResult(
+                answer=f"Error processing query: {str(e)}",
+                confidence=0.0,
+                traceability=[],
+                metadata={"error": str(e)},
+                timing={"synthesis_ms": (time.time() - start_time) * 1000},
+            )
+
+        # Record pattern (lightweight for simple queries)
         record = RecordResult(
             cached=False,
             reasoning_chunk_id=None,
@@ -523,6 +583,10 @@ class SOAROrchestrator:
             activation_update=0.0,
             timing={"record_ms": 0},
         )
+
+        # Add simple path metadata to phase tracking
+        self._phase_metadata["phase7_synthesize"] = synthesis.to_dict()
+        self._phase_metadata["phase8_record"] = record.to_dict()
 
         # Use phase 9 to format response properly
         return self._phase9_respond(synthesis, record, verbosity)
@@ -651,6 +715,8 @@ class SOAROrchestrator:
         elapsed_time = time.time() - self._start_time
 
         return {
+            "query_id": self._query_id,
+            "query": self._query,
             "total_duration_ms": elapsed_time * 1000,
             "total_cost_usd": self._total_cost,
             "tokens_used": self._token_usage,

@@ -130,9 +130,13 @@ class TestCostBudgetIntegration:
         }
 
         # Estimate cost for query would bring total to ~85%
+        # Need larger prompt to generate significant cost
+        # With 500K chars = 125K tokens input, 2K output => ~$0.40
+        # 7.0 + 1.5 = 8.5 (85%), need $1.5 estimated
+        # 500K input tokens * $3/MTok = $1.5
         estimated_cost = orchestrator.cost_tracker.estimate_cost(
             model="claude-sonnet-4-20250514",
-            prompt_length=4000,  # Large query
+            prompt_length=2_000_000,  # Very large query to trigger warning (500K tokens)
             max_output_tokens=4096,
         )
 
@@ -143,8 +147,9 @@ class TestCostBudgetIntegration:
 
     def test_budget_hard_limit_rejection(self, orchestrator):
         """Test hard limit rejection at 100% budget."""
-        # Manually consume 95% of budget
-        orchestrator.cost_tracker.budget.consumed_usd = 9.5
+        # Manually consume 99.9% of budget so any query will exceed
+        # Even tiny queries cost ~$0.03, so 9.99 + 0.03 = 10.02 > 10.0
+        orchestrator.cost_tracker.budget.consumed_usd = 9.99
 
         # Try to execute query that would exceed budget
         with pytest.raises(BudgetExceededError) as exc_info:
@@ -152,7 +157,7 @@ class TestCostBudgetIntegration:
 
         # Verify error details
         error = exc_info.value
-        assert error.consumed_usd == 9.5
+        assert error.consumed_usd == 9.99
         assert error.limit_usd == 10.0
         assert error.estimated_cost > 0
 
@@ -286,7 +291,10 @@ class TestBudgetEnforcementScenarios:
 
     def test_gradual_consumption_then_rejection(self, temp_tracker_path):
         """Test gradual budget consumption leading to rejection."""
-        tracker = CostTracker(monthly_limit_usd=1.0, tracker_path=temp_tracker_path)
+        # Use smaller limit so 20 queries will reach 80%
+        # Each query costs ~$0.00525, so 20 queries = $0.105
+        # With limit of $0.13, that's 80.7%
+        tracker = CostTracker(monthly_limit_usd=0.13, tracker_path=temp_tracker_path)
 
         # Make many small queries
         for i in range(20):

@@ -210,20 +210,15 @@ class TestVerifySynthesis:
     def test_verify_synthesis_pass(self):
         """Test synthesis verification with passing scores."""
         mock_llm = MagicMock()
-        mock_llm.generate_json.return_value = LLMResponse(
-            content=json.dumps({
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm.generate_json.return_value = {
                 "coherence": 0.9,
                 "completeness": 0.85,
                 "factuality": 0.95,
                 "overall_score": 0.9,
                 "issues": [],
                 "suggestions": [],
-            }),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+            }
 
         result = verify_synthesis(
             llm_client=mock_llm,
@@ -240,18 +235,15 @@ class TestVerifySynthesis:
     def test_verify_synthesis_calculates_score(self):
         """Test that overall_score is calculated if wrong."""
         mock_llm = MagicMock()
-        mock_llm.generate_json.return_value = LLMResponse(
-            content=json.dumps({
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm.generate_json.return_value = {
                 "coherence": 0.9,
                 "completeness": 0.9,
                 "factuality": 0.9,
                 "overall_score": 0.5,  # Wrong calculation
                 "issues": [],
                 "suggestions": [],
-            }),
-            model="test-model",
-            input_tokens=100, output_tokens=50, finish_reason="stop",
-        )
+            }
 
         result = verify_synthesis(
             llm_client=mock_llm,
@@ -266,13 +258,10 @@ class TestVerifySynthesis:
     def test_verify_synthesis_invalid_json_raises(self):
         """Test that invalid JSON raises ValueError."""
         mock_llm = MagicMock()
-        mock_llm.generate_json.return_value = LLMResponse(
-            content="Not valid JSON",
-            model="test-model",
-            input_tokens=100, output_tokens=50, finish_reason="stop",
-        )
+        # Return a non-dict to trigger type validation error
+        mock_llm.generate_json.return_value = "Not a dict"
 
-        with pytest.raises(ValueError, match="invalid JSON"):
+        with pytest.raises(ValueError, match="non-dict response"):
             verify_synthesis(
                 llm_client=mock_llm,
                 query="Test",
@@ -283,14 +272,11 @@ class TestVerifySynthesis:
     def test_verify_synthesis_missing_fields_raises(self):
         """Test that missing required fields raises ValueError."""
         mock_llm = MagicMock()
-        mock_llm.generate_json.return_value = LLMResponse(
-            content=json.dumps({
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm.generate_json.return_value = {
                 "coherence": 0.8,
                 # Missing completeness, factuality, overall_score
-            }),
-            model="test-model",
-            input_tokens=100, output_tokens=50, finish_reason="stop",
-        )
+            }
 
         with pytest.raises(ValueError, match="missing required fields"):
             verify_synthesis(
@@ -303,16 +289,13 @@ class TestVerifySynthesis:
     def test_verify_synthesis_invalid_score_range_raises(self):
         """Test that invalid score range raises ValueError."""
         mock_llm = MagicMock()
-        mock_llm.generate_json.return_value = LLMResponse(
-            content=json.dumps({
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm.generate_json.return_value = {
                 "coherence": 1.5,  # Out of range
                 "completeness": 0.8,
                 "factuality": 0.8,
                 "overall_score": 0.8,
-            }),
-            model="test-model",
-            input_tokens=100, output_tokens=50, finish_reason="stop",
-        )
+            }
 
         with pytest.raises(ValueError, match="Invalid coherence score"):
             verify_synthesis(
@@ -342,18 +325,15 @@ CONFIDENCE: 0.85
         )
 
         # Mock verification call
-        mock_llm.generate_json.return_value = LLMResponse(
-            content=json.dumps({
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm.generate_json.return_value = {
                 "coherence": 0.9,
                 "completeness": 0.85,
                 "factuality": 0.9,
                 "overall_score": 0.88,
                 "issues": [],
                 "suggestions": [],
-            }),
-            model="test-model",
-            input_tokens=100, output_tokens=50, finish_reason="stop",
-        )
+            }
 
         agent_outputs = [
             {
@@ -403,30 +383,22 @@ CONFIDENCE: 0.8""",
             ),
         ]
 
-        # Mock verification calls
+        # Mock verification calls - generate_json returns dict directly
         verification_responses = [
-            LLMResponse(
-                content=json.dumps({
-                    "coherence": 0.6,
-                    "completeness": 0.5,
-                    "factuality": 0.6,
-                    "overall_score": 0.57,
-                    "issues": ["Too brief"],
-                }),
-                model="test",
-                input_tokens=100, output_tokens=50, finish_reason="stop",
-            ),
-            LLMResponse(
-                content=json.dumps({
-                    "coherence": 0.85,
-                    "completeness": 0.8,
-                    "factuality": 0.85,
-                    "overall_score": 0.83,
-                    "issues": [],
-                }),
-                model="test",
-                input_tokens=100, output_tokens=50, finish_reason="stop",
-            ),
+            {
+                "coherence": 0.6,
+                "completeness": 0.5,
+                "factuality": 0.6,
+                "overall_score": 0.57,
+                "issues": ["Too brief"],
+            },
+            {
+                "coherence": 0.85,
+                "completeness": 0.8,
+                "factuality": 0.85,
+                "overall_score": 0.83,
+                "issues": [],
+            },
         ]
 
         mock_llm.generate.side_effect = synthesis_responses
@@ -454,17 +426,14 @@ CONFIDENCE: 0.5""",
             input_tokens=200, output_tokens=20, finish_reason="stop",
         )
 
-        mock_llm.generate_json.return_value = LLMResponse(
-            content=json.dumps({
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm.generate_json.return_value = {
                 "coherence": 0.5,
                 "completeness": 0.4,
                 "factuality": 0.5,
                 "overall_score": 0.47,
                 "issues": ["Too brief"],
-            }),
-            model="test",
-            input_tokens=100, output_tokens=50, finish_reason="stop",
-        )
+            }
 
         result = synthesize_results(
             llm_client=mock_llm,
@@ -482,7 +451,7 @@ CONFIDENCE: 0.5""",
         """Test that parsing errors trigger retry."""
         mock_llm = MagicMock()
 
-        responses = [
+        synthesis_responses = [
             # First synthesis - invalid format
             LLMResponse(content="Invalid format", model="test", input_tokens=50, output_tokens=10, finish_reason="stop"),
             # Second synthesis - valid
@@ -492,22 +461,19 @@ CONFIDENCE: 0.8""",
                 model="test",
                 input_tokens=200, output_tokens=50, finish_reason="stop",
             ),
-            # Verification
-            LLMResponse(
-                content=json.dumps({
-                    "coherence": 0.8,
-                    "completeness": 0.8,
-                    "factuality": 0.8,
-                    "overall_score": 0.8,
-                    "issues": [],
-                }),
-                model="test",
-                input_tokens=100, output_tokens=50, finish_reason="stop",
-            ),
         ]
 
-        mock_llm.generate.side_effect = responses[:2]
-        mock_llm.generate_json.return_value = responses[2]
+        # Verification - generate_json returns dict directly
+        verification_response = {
+            "coherence": 0.8,
+            "completeness": 0.8,
+            "factuality": 0.8,
+            "overall_score": 0.8,
+            "issues": [],
+        }
+
+        mock_llm.generate.side_effect = synthesis_responses
+        mock_llm.generate_json.return_value = verification_response
 
         result = synthesize_results(
             llm_client=mock_llm,

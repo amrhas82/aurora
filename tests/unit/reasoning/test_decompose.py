@@ -1,6 +1,5 @@
 """Unit tests for decomposition logic."""
 
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,7 +8,6 @@ from aurora_reasoning.decompose import (
     DecompositionResult,
     decompose_query,
 )
-from aurora_reasoning.llm_client import LLMResponse
 from aurora_reasoning.prompts.examples import Complexity
 
 
@@ -78,13 +76,8 @@ class TestDecomposeQuery:
 
     def test_simple_query_no_examples(self, mock_llm_client, valid_decomposition_response):
         """Test SIMPLE query gets 0 examples."""
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(valid_decomposition_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = valid_decomposition_response
 
         result = decompose_query(
             llm_client=mock_llm_client,
@@ -98,12 +91,12 @@ class TestDecomposeQuery:
         # Verify LLM was called with JSON generation
         mock_llm_client.generate_json.assert_called_once()
         call_args = mock_llm_client.generate_json.call_args
-        assert "system_prompt" in call_args.kwargs
-        assert "user_prompt" in call_args.kwargs
+        assert "system" in call_args.kwargs
+        assert "prompt" in call_args.kwargs
         assert call_args.kwargs["temperature"] == 0.2
 
         # Verify no examples in user prompt for SIMPLE
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "Here are some examples:" not in user_prompt
 
     @patch("aurora_reasoning.decompose.get_loader")
@@ -124,13 +117,8 @@ class TestDecomposeQuery:
         ]
         mock_get_loader.return_value = mock_loader
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(valid_decomposition_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = valid_decomposition_response
 
         result = decompose_query(
             llm_client=mock_llm_client,
@@ -148,20 +136,15 @@ class TestDecomposeQuery:
 
         # Verify examples in user prompt
         call_args = mock_llm_client.generate_json.call_args
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "Here are some examples:" in user_prompt
         assert "Example 1" in user_prompt
         assert "Example 2" in user_prompt
 
     def test_context_summary_injection(self, mock_llm_client, valid_decomposition_response):
         """Test context summary is injected into prompt."""
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(valid_decomposition_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = valid_decomposition_response
 
         result = decompose_query(
             llm_client=mock_llm_client,
@@ -171,18 +154,13 @@ class TestDecomposeQuery:
         )
 
         call_args = mock_llm_client.generate_json.call_args
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "Available: 5 code chunks" in user_prompt
 
     def test_available_agents_injection(self, mock_llm_client, valid_decomposition_response):
         """Test available agents are injected into prompt."""
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(valid_decomposition_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = valid_decomposition_response
 
         result = decompose_query(
             llm_client=mock_llm_client,
@@ -192,19 +170,14 @@ class TestDecomposeQuery:
         )
 
         call_args = mock_llm_client.generate_json.call_args
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "code-analyzer" in user_prompt
         assert "test-runner" in user_prompt
 
     def test_retry_feedback_injection(self, mock_llm_client, valid_decomposition_response):
         """Test retry feedback is injected into prompt."""
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(valid_decomposition_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = valid_decomposition_response
 
         result = decompose_query(
             llm_client=mock_llm_client,
@@ -214,21 +187,16 @@ class TestDecomposeQuery:
         )
 
         call_args = mock_llm_client.generate_json.call_args
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "Previous attempt was incomplete" in user_prompt
         assert "Add error handling" in user_prompt
 
     def test_invalid_json_response(self, mock_llm_client):
         """Test handling of invalid JSON response."""
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content="This is not JSON",
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # Return a non-dict to trigger type validation error
+        mock_llm_client.generate_json.return_value = "Not a dict"
 
-        with pytest.raises(ValueError, match="LLM returned invalid JSON"):
+        with pytest.raises(ValueError, match="non-dict response"):
             decompose_query(
                 llm_client=mock_llm_client,
                 query="Test query",
@@ -242,13 +210,8 @@ class TestDecomposeQuery:
             # Missing subgoals, execution_order, expected_tools
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(incomplete_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = incomplete_response
 
         with pytest.raises(ValueError, match="missing required fields"):
             decompose_query(
@@ -266,13 +229,8 @@ class TestDecomposeQuery:
             "expected_tools": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(invalid_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = invalid_response
 
         with pytest.raises(ValueError, match="'subgoals' must be a list"):
             decompose_query(
@@ -295,13 +253,8 @@ class TestDecomposeQuery:
             "expected_tools": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(invalid_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = invalid_response
 
         with pytest.raises(ValueError, match="Subgoal .* missing required fields"):
             decompose_query(
@@ -321,13 +274,8 @@ class TestDecomposeQuery:
             "expected_tools": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(invalid_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = invalid_response
 
         with pytest.raises(ValueError, match="'execution_order' must be a list"):
             decompose_query(
@@ -352,13 +300,8 @@ class TestDecomposeQuery:
             "expected_tools": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(invalid_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = invalid_response
 
         with pytest.raises(ValueError, match="missing 'phase' field"):
             decompose_query(

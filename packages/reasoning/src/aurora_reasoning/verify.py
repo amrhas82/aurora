@@ -136,6 +136,7 @@ def verify_decomposition(
         RuntimeError: If LLM call fails after retries
     """
     # Select prompt template based on option
+    prompt_template: VerifySelfPromptTemplate | VerifyAdversarialPromptTemplate
     if option == VerificationOption.SELF:
         prompt_template = VerifySelfPromptTemplate()
     else:  # ADVERSARIAL
@@ -151,20 +152,18 @@ def verify_decomposition(
     )
 
     # Call LLM with JSON output requirement
-    response = llm_client.generate_json(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
+    verification = llm_client.generate_json(
+        prompt=user_prompt,
+        system=system_prompt,
         temperature=0.1,  # Very low temperature for consistent scoring
     )
 
-    # Parse and validate response
-    try:
-        verification = json.loads(response.content)
-    except json.JSONDecodeError as e:
+    # Validate response is a dict (generate_json already parses JSON)
+    if not isinstance(verification, dict):
         raise ValueError(
-            f"LLM returned invalid JSON: {e}\n"
-            f"Response: {response.content[:500]}"
-        ) from e
+            f"LLM returned non-dict response: {type(verification)}\n"
+            f"Response: {str(verification)[:500]}"
+        )
 
     # Validate required fields
     required_fields = [
@@ -231,7 +230,7 @@ def verify_decomposition(
         issues=issues,
         suggestions=suggestions,
         option_used=option,
-        raw_response=response.content,
+        raw_response=json.dumps(verification),
     )
 
 

@@ -125,20 +125,18 @@ def decompose_query(
         user_prompt = f"Here are some examples:\n\n{examples_text}\n\n---\n\n{user_prompt}"
 
     # Call LLM with JSON output requirement
-    response = llm_client.generate_json(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
+    decomposition = llm_client.generate_json(
+        prompt=user_prompt,
+        system=system_prompt,
         temperature=0.2,  # Low temperature for structured output
     )
 
-    # Parse and validate response
-    try:
-        decomposition = json.loads(response.content)
-    except json.JSONDecodeError as e:
+    # Validate response is a dict (generate_json already parses JSON)
+    if not isinstance(decomposition, dict):
         raise ValueError(
-            f"LLM returned invalid JSON: {e}\n"
-            f"Response: {response.content[:500]}"
-        ) from e
+            f"LLM returned non-dict response: {type(decomposition)}\n"
+            f"Response: {str(decomposition)[:500]}"
+        )
 
     # Validate required fields
     required_fields = ["goal", "subgoals", "execution_order", "expected_tools"]
@@ -184,6 +182,6 @@ def decompose_query(
         subgoals=decomposition["subgoals"],
         execution_order=decomposition["execution_order"],
         expected_tools=decomposition.get("expected_tools", []),
-        raw_response=response.content,
+        raw_response=json.dumps(decomposition),
         prompt_used=full_prompt,
     )

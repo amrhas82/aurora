@@ -123,8 +123,8 @@ def synthesize_results(
 
         # Call LLM for natural language synthesis (NOT JSON)
         response = llm_client.generate(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
+            prompt=user_prompt,
+            system=system_prompt,
             temperature=0.3,  # Low-medium temperature for coherent synthesis
         )
 
@@ -242,20 +242,18 @@ def verify_synthesis(
     )
 
     # Call LLM with JSON output requirement
-    response = llm_client.generate_json(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
+    verification = llm_client.generate_json(
+        prompt=user_prompt,
+        system=system_prompt,
         temperature=0.1,  # Very low temperature for consistent scoring
     )
 
-    # Parse and validate response
-    try:
-        verification = json.loads(response.content)
-    except json.JSONDecodeError as e:
+    # Validate response is a dict (generate_json already parses JSON)
+    if not isinstance(verification, dict):
         raise ValueError(
-            f"LLM returned invalid JSON: {e}\n"
-            f"Response: {response.content[:500]}"
-        ) from e
+            f"LLM returned non-dict response: {type(verification)}\n"
+            f"Response: {str(verification)[:500]}"
+        )
 
     # Validate required fields
     required_fields = ["coherence", "completeness", "factuality", "overall_score"]

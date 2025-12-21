@@ -212,7 +212,7 @@ class SOAROrchestrator:
             self._phase_metadata["phase4_verify"] = phase4_result
 
             # Check verification verdict
-            if phase4_result["verdict"] == "FAIL":
+            if phase4_result["final_verdict"] == "FAIL":
                 logger.error("Decomposition verification failed")
                 return self._handle_verification_failure(
                     query, phase4_result, verbosity
@@ -243,6 +243,9 @@ class SOAROrchestrator:
             # Phase 9: Format response
             return self._phase9_respond(phase7_result, phase8_result, verbosity)
 
+        except BudgetExceededError:
+            # Re-raise budget errors without handling - caller should handle budget limits
+            raise
         except Exception as e:
             logger.exception(f"SOAR execution failed: {e}")
             return self._handle_execution_error(e, verbosity)

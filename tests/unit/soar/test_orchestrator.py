@@ -23,6 +23,7 @@ from aurora_core.logging import ConversationLogger
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_reasoning.decompose import DecompositionResult
 from aurora_reasoning.llm_client import LLMClient
+from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 from aurora_soar.phases.collect import CollectResult
@@ -30,6 +31,7 @@ from aurora_soar.phases.decompose import DecomposePhaseResult
 from aurora_soar.phases.record import RecordResult
 from aurora_soar.phases.respond import ResponseResult
 from aurora_soar.phases.synthesize import SynthesisResult
+from aurora_soar.phases.verify import VerifyPhaseResult
 
 
 @pytest.fixture
@@ -200,12 +202,25 @@ def test_complex_query_full_pipeline(
         query_hash="",
         timing_ms=200.0,
     )
-    mock_verify.return_value = {
-        "verdict": "PASS",
-        "overall_score": 0.85,
-        "_timing_ms": 150.0,
-        "_error": None,
-    }
+    verification_result = VerificationResult(
+        completeness=0.9,
+        consistency=0.85,
+        groundedness=0.8,
+        routability=0.85,
+        overall_score=0.85,
+        verdict=VerificationVerdict.PASS,
+        issues=[],
+        suggestions=[],
+        option_used=VerificationOption.ADVERSARIAL,
+    )
+    mock_verify.return_value = VerifyPhaseResult(
+        verification=verification_result,
+        retry_count=0,
+        all_attempts=[verification_result],
+        final_verdict="PASS",
+        timing_ms=150.0,
+        method="adversarial",
+    )
     mock_route.return_value = {
         "routed_subgoals": [{"id": "sg1", "agent_id": "test-agent"}],
         "_timing_ms": 50.0,
@@ -300,13 +315,25 @@ def test_verification_failure_handling(
         query_hash="",
         timing_ms=200.0,
     )
-    mock_verify.return_value = {
-        "verdict": "FAIL",
-        "overall_score": 0.3,
-        "feedback": "Decomposition incomplete",
-        "_timing_ms": 150.0,
-        "_error": None,
-    }
+    verification_result_fail = VerificationResult(
+        completeness=0.3,
+        consistency=0.4,
+        groundedness=0.2,
+        routability=0.3,
+        overall_score=0.3,
+        verdict=VerificationVerdict.FAIL,
+        issues=["Decomposition incomplete"],
+        suggestions=[],
+        option_used=VerificationOption.SELF,
+    )
+    mock_verify.return_value = VerifyPhaseResult(
+        verification=verification_result_fail,
+        retry_count=0,
+        all_attempts=[verification_result_fail],
+        final_verdict="FAIL",
+        timing_ms=150.0,
+        method="self",
+    )
     mock_respond.return_value = ResponseResult(
         formatted_output="Unable to decompose query successfully. Please rephrase or simplify.",
         raw_data={
@@ -368,10 +395,14 @@ def test_phase_error_handling(mock_respond, mock_assess, test_orchestrator):
 def test_budget_check_before_execution(test_orchestrator):
     """Test budget check rejects query if limit exceeded."""
     # Exhaust budget by recording a large cost
+    # With DEFAULT_PRICING ($3/M input, $15/M output), this costs:
+    # Input: (10M / 1M) * $3 = $30
+    # Output: (5M / 1M) * $15 = $75
+    # Total: $105 (exceeds $100 limit)
     test_orchestrator.cost_tracker.record_cost(
         model="mock-model",
-        input_tokens=1000000,
-        output_tokens=1000000,
+        input_tokens=10_000_000,
+        output_tokens=5_000_000,
         operation="test",
     )
 

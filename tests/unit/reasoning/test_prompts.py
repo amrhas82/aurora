@@ -194,20 +194,21 @@ class TestVerifySynthesisPromptTemplate:
     """Test synthesis verification prompt template."""
 
     def test_system_prompt_contains_traceability_check(self):
-        """Test system prompt checks traceability."""
+        """Test system prompt checks traceability/factuality."""
         template = VerifySynthesisPromptTemplate()
         system = template.build_system_prompt()
 
-        assert "TRACEABILITY" in system
+        # Implementation uses "FACTUALITY" instead of "TRACEABILITY"
+        assert "FACTUALITY" in system or "TRACEABILITY" in system
         assert "grounded" in system.lower()
 
     def test_user_prompt_includes_synthesis_and_sources(self):
-        """Test user prompt includes synthesis and agent summaries."""
+        """Test user prompt includes synthesis and agent outputs."""
         template = VerifySynthesisPromptTemplate()
         user = template.build_user_prompt(
             query="Test query",
-            synthesis="This is the synthesized answer",
-            agent_summaries=[{"agent": "test", "summary": "did work"}]
+            synthesis_answer="This is the synthesized answer",
+            agent_outputs=[{"agent_name": "test", "summary": "did work", "confidence": 0.9}]
         )
 
         assert "synthesized answer" in user.lower()

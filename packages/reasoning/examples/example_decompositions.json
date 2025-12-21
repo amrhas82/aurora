@@ -1,0 +1,273 @@
+[
+  {
+    "complexity": "SIMPLE",
+    "query": "What does the calculate_total function in utils.py do?",
+    "decomposition": {
+      "goal": "Understand the calculate_total function's purpose and behavior",
+      "subgoals": [
+        {
+          "description": "Locate and read calculate_total function in utils.py",
+          "suggested_agent": "code-analyzer",
+          "is_critical": true,
+          "depends_on": []
+        }
+      ],
+      "execution_order": [
+        {
+          "phase": 1,
+          "parallelizable": [0],
+          "sequential": []
+        }
+      ],
+      "expected_tools": ["code_reader", "ast_parser"]
+    }
+  },
+  {
+    "complexity": "MEDIUM",
+    "query": "Add a new feature to validate email addresses in the user registration flow",
+    "decomposition": {
+      "goal": "Implement email validation in user registration with proper error handling",
+      "subgoals": [
+        {
+          "description": "Analyze existing user registration flow and identify integration points",
+          "suggested_agent": "code-analyzer",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Create email validation function with regex pattern and domain checks",
+          "suggested_agent": "code-analyzer",
+          "is_critical": true,
+          "depends_on": [0]
+        },
+        {
+          "description": "Write unit tests for email validation function",
+          "suggested_agent": "test-runner",
+          "is_critical": true,
+          "depends_on": [1]
+        },
+        {
+          "description": "Integrate validation into registration form with user-friendly error messages",
+          "suggested_agent": "refactoring-engine",
+          "is_critical": true,
+          "depends_on": [1, 2]
+        }
+      ],
+      "execution_order": [
+        {
+          "phase": 1,
+          "parallelizable": [0],
+          "sequential": []
+        },
+        {
+          "phase": 2,
+          "parallelizable": [1],
+          "sequential": []
+        },
+        {
+          "phase": 3,
+          "parallelizable": [2],
+          "sequential": []
+        },
+        {
+          "phase": 4,
+          "parallelizable": [3],
+          "sequential": []
+        }
+      ],
+      "expected_tools": ["code_reader", "code_writer", "test_runner", "file_editor"]
+    }
+  },
+  {
+    "complexity": "COMPLEX",
+    "query": "Refactor the payment processing system to support multiple payment providers with retry logic and proper error handling",
+    "decomposition": {
+      "goal": "Design and implement a flexible payment provider abstraction layer with resilience features",
+      "subgoals": [
+        {
+          "description": "Analyze current payment processing implementation and identify tight coupling issues",
+          "suggested_agent": "code-analyzer",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Audit payment-related security concerns and compliance requirements",
+          "suggested_agent": "security-scanner",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Design payment provider interface with abstract base class and provider implementations",
+          "suggested_agent": "llm-executor",
+          "is_critical": true,
+          "depends_on": [0, 1]
+        },
+        {
+          "description": "Implement retry logic with exponential backoff and circuit breaker pattern",
+          "suggested_agent": "code-analyzer",
+          "is_critical": true,
+          "depends_on": [2]
+        },
+        {
+          "description": "Create comprehensive error handling with specific exception types and recovery strategies",
+          "suggested_agent": "code-analyzer",
+          "is_critical": true,
+          "depends_on": [2]
+        },
+        {
+          "description": "Update existing code to use new provider abstraction layer",
+          "suggested_agent": "refactoring-engine",
+          "is_critical": true,
+          "depends_on": [3, 4]
+        },
+        {
+          "description": "Write integration tests for each payment provider with mocked responses",
+          "suggested_agent": "test-runner",
+          "is_critical": true,
+          "depends_on": [5]
+        },
+        {
+          "description": "Update API documentation with new payment flow and error codes",
+          "suggested_agent": "documentation-generator",
+          "is_critical": false,
+          "depends_on": [5]
+        }
+      ],
+      "execution_order": [
+        {
+          "phase": 1,
+          "parallelizable": [0, 1],
+          "sequential": []
+        },
+        {
+          "phase": 2,
+          "parallelizable": [2],
+          "sequential": []
+        },
+        {
+          "phase": 3,
+          "parallelizable": [3, 4],
+          "sequential": []
+        },
+        {
+          "phase": 4,
+          "parallelizable": [5],
+          "sequential": []
+        },
+        {
+          "phase": 5,
+          "parallelizable": [6, 7],
+          "sequential": []
+        }
+      ],
+      "expected_tools": ["code_reader", "code_writer", "ast_parser", "test_runner", "security_audit", "doc_generator"]
+    }
+  },
+  {
+    "complexity": "CRITICAL",
+    "query": "Migrate the entire application from monolithic architecture to microservices with minimal downtime",
+    "decomposition": {
+      "goal": "Execute phased microservices migration with zero-downtime deployment and rollback capability",
+      "subgoals": [
+        {
+          "description": "Perform comprehensive dependency analysis of current monolith to identify service boundaries",
+          "suggested_agent": "dependency-tracker",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Audit data flow and database dependencies to plan data migration strategy",
+          "suggested_agent": "code-analyzer",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Security assessment of API boundaries and authentication/authorization requirements",
+          "suggested_agent": "security-scanner",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Design microservices architecture with service contracts and communication patterns",
+          "suggested_agent": "llm-executor",
+          "is_critical": true,
+          "depends_on": [0, 1, 2]
+        },
+        {
+          "description": "Create deployment pipeline and infrastructure-as-code for each microservice",
+          "suggested_agent": "llm-executor",
+          "is_critical": true,
+          "depends_on": [3]
+        },
+        {
+          "description": "Implement strangler fig pattern to gradually replace monolith components",
+          "suggested_agent": "refactoring-engine",
+          "is_critical": true,
+          "depends_on": [4]
+        },
+        {
+          "description": "Build comprehensive monitoring and observability with distributed tracing",
+          "suggested_agent": "llm-executor",
+          "is_critical": true,
+          "depends_on": [5]
+        },
+        {
+          "description": "Create rollback procedures and disaster recovery plan",
+          "suggested_agent": "documentation-generator",
+          "is_critical": true,
+          "depends_on": [5, 6]
+        },
+        {
+          "description": "Execute phased migration with canary deployments and traffic shifting",
+          "suggested_agent": "llm-executor",
+          "is_critical": true,
+          "depends_on": [6, 7]
+        },
+        {
+          "description": "Validate system performance and conduct load testing for each phase",
+          "suggested_agent": "test-runner",
+          "is_critical": true,
+          "depends_on": [8]
+        }
+      ],
+      "execution_order": [
+        {
+          "phase": 1,
+          "parallelizable": [0, 1, 2],
+          "sequential": []
+        },
+        {
+          "phase": 2,
+          "parallelizable": [3],
+          "sequential": []
+        },
+        {
+          "phase": 3,
+          "parallelizable": [4],
+          "sequential": []
+        },
+        {
+          "phase": 4,
+          "parallelizable": [5],
+          "sequential": []
+        },
+        {
+          "phase": 5,
+          "parallelizable": [6, 7],
+          "sequential": []
+        },
+        {
+          "phase": 6,
+          "parallelizable": [8],
+          "sequential": []
+        },
+        {
+          "phase": 7,
+          "parallelizable": [9],
+          "sequential": []
+        }
+      ],
+      "expected_tools": ["dependency_analyzer", "code_reader", "security_audit", "infrastructure_provisioner", "deployment_manager", "test_runner", "monitoring_setup"]
+    }
+  }
+]

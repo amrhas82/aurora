@@ -146,32 +146,32 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 
 ## Tasks
 
-- [ ] 1.0 Reasoning Package - LLM Integration & Prompt System
-  - [ ] 1.1 Create reasoning package structure with pyproject.toml and dependencies (anthropic, openai, ollama-python)
-  - [ ] 1.2 Define abstract LLMClient interface in packages/reasoning/src/aurora_reasoning/llm_client.py (generate, generate_json methods)
-  - [ ] 1.3 Implement AnthropicClient with API key from environment, error handling, and rate limiting
-  - [ ] 1.4 Implement OpenAIClient with API key from environment, error handling, and rate limiting
-  - [ ] 1.5 Implement OllamaClient for local model support with configurable endpoint
-  - [ ] 1.6 Add LLM response parsing and JSON extraction (handle markdown code blocks, extract JSON from text)
-  - [ ] 1.7 Implement retry logic with exponential backoff (100ms, 200ms, 400ms) for transient API errors
-  - [ ] 1.8 Add token counting and cost tracking hooks in each LLM client (track input/output tokens)
-  - [ ] 1.9 Create prompt template base class in packages/reasoning/src/aurora_reasoning/prompts/__init__.py
-  - [ ] 1.10 Implement few-shot examples loader in packages/reasoning/src/aurora_reasoning/prompts/examples.py
-  - [ ] 1.11 Create assess prompt template in packages/reasoning/src/aurora_reasoning/prompts/assess.py (Tier 2 LLM verification)
-  - [ ] 1.12 Create decompose prompt template in packages/reasoning/src/aurora_reasoning/prompts/decompose.py (with JSON schema)
-  - [ ] 1.13 Create verify_self prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_self.py (Option A)
-  - [ ] 1.14 Create verify_adversarial prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_adversarial.py (Option B)
-  - [ ] 1.15 Create verify_agent_output prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_agent_output.py
-  - [ ] 1.16 Create verify_synthesis prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_synthesis.py
-  - [ ] 1.17 Create retry_feedback prompt template in packages/reasoning/src/aurora_reasoning/prompts/retry_feedback.py
-  - [ ] 1.18 Add JSON schema enforcement to all prompts (explicit instructions for JSON-only output, no markdown)
-  - [ ] 1.19 Create example decompositions in packages/reasoning/examples/example_decompositions.json (simple, medium, complex)
-  - [ ] 1.20 Create calibration examples in packages/reasoning/examples/example_verifications.json for score calibration
-  - [ ] 1.21 Write unit tests for LLMClient interface (tests/unit/reasoning/test_llm_client.py)
-  - [ ] 1.22 Write unit tests for each LLM provider (mock API responses, test error handling)
-  - [ ] 1.23 Write unit tests for prompt templates (tests/unit/reasoning/test_prompts.py) with example rendering
-  - [ ] 1.24 Test few-shot example scaling by complexity (0/2/4/6 examples for simple/medium/complex/critical)
-  - [ ] 1.25 Verify JSON parsing works 100% of time with test prompts (no markdown, no extra text)
+- [x] 1.0 Reasoning Package - LLM Integration & Prompt System
+  - [x] 1.1 Create reasoning package structure with pyproject.toml and dependencies (anthropic, openai, ollama-python)
+  - [x] 1.2 Define abstract LLMClient interface in packages/reasoning/src/aurora_reasoning/llm_client.py (generate, generate_json methods)
+  - [x] 1.3 Implement AnthropicClient with API key from environment, error handling, and rate limiting
+  - [x] 1.4 Implement OpenAIClient with API key from environment, error handling, and rate limiting
+  - [x] 1.5 Implement OllamaClient for local model support with configurable endpoint
+  - [x] 1.6 Add LLM response parsing and JSON extraction (handle markdown code blocks, extract JSON from text)
+  - [x] 1.7 Implement retry logic with exponential backoff (100ms, 200ms, 400ms) for transient API errors
+  - [x] 1.8 Add token counting and cost tracking hooks in each LLM client (track input/output tokens)
+  - [x] 1.9 Create prompt template base class in packages/reasoning/src/aurora_reasoning/prompts/__init__.py
+  - [x] 1.10 Implement few-shot examples loader in packages/reasoning/src/aurora_reasoning/prompts/examples.py
+  - [x] 1.11 Create assess prompt template in packages/reasoning/src/aurora_reasoning/prompts/assess.py (Tier 2 LLM verification)
+  - [x] 1.12 Create decompose prompt template in packages/reasoning/src/aurora_reasoning/prompts/decompose.py (with JSON schema)
+  - [x] 1.13 Create verify_self prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_self.py (Option A)
+  - [x] 1.14 Create verify_adversarial prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_adversarial.py (Option B)
+  - [x] 1.15 Create verify_agent_output prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_agent_output.py
+  - [x] 1.16 Create verify_synthesis prompt template in packages/reasoning/src/aurora_reasoning/prompts/verify_synthesis.py
+  - [x] 1.17 Create retry_feedback prompt template in packages/reasoning/src/aurora_reasoning/prompts/retry_feedback.py
+  - [x] 1.18 Add JSON schema enforcement to all prompts (explicit instructions for JSON-only output, no markdown)
+  - [x] 1.19 Create example decompositions in packages/reasoning/examples/example_decompositions.json (simple, medium, complex)
+  - [x] 1.20 Create calibration examples in packages/reasoning/examples/example_verifications.json for score calibration
+  - [x] 1.21 Write unit tests for LLMClient interface (tests/unit/reasoning/test_llm_client.py)
+  - [x] 1.22 Write unit tests for each LLM provider (mock API responses, test error handling)
+  - [x] 1.23 Write unit tests for prompt templates (tests/unit/reasoning/test_prompts.py) with example rendering
+  - [x] 1.24 Test few-shot example scaling by complexity (0/2/4/6 examples for simple/medium/complex/critical)
+  - [x] 1.25 Verify JSON parsing works 100% of time with test prompts (no markdown, no extra text)
 
 - [ ] 2.0 SOAR Orchestrator - Phase 1-2 (Assess & Retrieve)
   - [ ] 2.1 Create SOAR package phase structure with __init__.py files

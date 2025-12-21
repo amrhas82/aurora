@@ -1,0 +1,199 @@
+[
+  {
+    "query": "What does the calculate_total function do?",
+    "decomposition_quality": "high",
+    "verification": {
+      "completeness": 1.0,
+      "consistency": 1.0,
+      "groundedness": 1.0,
+      "routability": 1.0,
+      "overall_score": 1.0,
+      "verdict": "PASS",
+      "issues": [],
+      "suggestions": []
+    },
+    "tags": ["simple", "pass", "perfect"]
+  },
+  {
+    "query": "Add email validation to registration",
+    "decomposition_quality": "good",
+    "verification": {
+      "completeness": 0.9,
+      "consistency": 0.9,
+      "groundedness": 0.85,
+      "routability": 0.9,
+      "overall_score": 0.89,
+      "verdict": "PASS",
+      "issues": [
+        "Could consider internationalization for error messages"
+      ],
+      "suggestions": [
+        "Add subgoal for i18n support in error messages"
+      ]
+    },
+    "tags": ["medium", "pass", "good"]
+  },
+  {
+    "query": "Refactor payment system for multiple providers",
+    "decomposition_quality": "acceptable",
+    "verification": {
+      "completeness": 0.75,
+      "consistency": 0.8,
+      "groundedness": 0.7,
+      "routability": 0.75,
+      "overall_score": 0.75,
+      "verdict": "PASS",
+      "issues": [
+        "Missing consideration for transaction logging",
+        "No mention of PCI compliance validation"
+      ],
+      "suggestions": [
+        "Add subgoal for transaction audit logging",
+        "Include PCI compliance verification step"
+      ]
+    },
+    "tags": ["complex", "pass", "acceptable"]
+  },
+  {
+    "query": "Optimize database queries across the application",
+    "decomposition_quality": "needs_revision",
+    "verification": {
+      "completeness": 0.6,
+      "consistency": 0.65,
+      "groundedness": 0.6,
+      "routability": 0.7,
+      "overall_score": 0.61,
+      "verdict": "RETRY",
+      "issues": [
+        "Incomplete: doesn't identify which specific queries need optimization",
+        "Missing baseline performance metrics collection step",
+        "No testing strategy for validating optimizations",
+        "Unclear how to prioritize optimization efforts"
+      ],
+      "suggestions": [
+        "Add subgoal: Identify slow queries using APM tools",
+        "Add subgoal: Collect baseline performance metrics",
+        "Add subgoal: Create performance regression tests",
+        "Specify priority order based on impact analysis"
+      ]
+    },
+    "tags": ["medium", "retry", "incomplete"]
+  },
+  {
+    "query": "Implement real-time notifications",
+    "decomposition_quality": "incomplete",
+    "verification": {
+      "completeness": 0.5,
+      "consistency": 0.55,
+      "groundedness": 0.45,
+      "routability": 0.6,
+      "overall_score": 0.51,
+      "verdict": "RETRY",
+      "issues": [
+        "Missing technology selection (WebSockets vs SSE vs polling)",
+        "No consideration for scalability (how many concurrent users?)",
+        "Missing fallback strategy for connection failures",
+        "No mention of notification persistence or delivery guarantees"
+      ],
+      "suggestions": [
+        "Add subgoal: Evaluate WebSocket vs SSE vs polling approaches",
+        "Add subgoal: Design scalable pub/sub architecture",
+        "Add subgoal: Implement connection retry and fallback logic",
+        "Add subgoal: Add notification queue with delivery guarantees"
+      ]
+    },
+    "tags": ["complex", "retry", "missing_details"]
+  },
+  {
+    "query": "Make the application faster",
+    "decomposition_quality": "poor",
+    "verification": {
+      "completeness": 0.3,
+      "consistency": 0.4,
+      "groundedness": 0.25,
+      "routability": 0.5,
+      "overall_score": 0.31,
+      "verdict": "FAIL",
+      "critical_issues": [
+        "Query is too vague - 'faster' is not measurable",
+        "No specific performance targets defined",
+        "Decomposition doesn't identify actual bottlenecks",
+        "Missing profiling and measurement steps"
+      ],
+      "minor_issues": [
+        "No baseline metrics established",
+        "No prioritization of optimization efforts"
+      ],
+      "edge_cases": [],
+      "suggestions": [
+        "Ask user for specific performance targets (latency? throughput?)",
+        "Add profiling phase to identify actual bottlenecks",
+        "Define measurable success criteria",
+        "Consider different optimization strategies based on bottleneck type"
+      ]
+    },
+    "tags": ["vague", "fail", "unmeasurable"]
+  },
+  {
+    "query": "Migrate to microservices",
+    "decomposition_quality": "risky",
+    "verification": {
+      "completeness": 0.4,
+      "consistency": 0.5,
+      "groundedness": 0.35,
+      "routability": 0.45,
+      "overall_score": 0.42,
+      "verdict": "FAIL",
+      "critical_issues": [
+        "Missing risk assessment and rollback strategy",
+        "No consideration for data consistency during migration",
+        "Unclear about deployment order and dependencies",
+        "Missing observability and monitoring setup"
+      ],
+      "minor_issues": [
+        "No mention of team training on microservices patterns",
+        "Missing cost analysis for infrastructure changes"
+      ],
+      "edge_cases": [
+        "What happens if a service fails mid-migration?",
+        "How to handle transactions spanning multiple services?",
+        "Database migration and data synchronization strategy unclear"
+      ],
+      "suggestions": [
+        "Add comprehensive risk assessment with mitigation strategies",
+        "Design rollback procedures for each phase",
+        "Add distributed transaction handling strategy",
+        "Include monitoring and observability setup as critical subgoal",
+        "Add data migration and synchronization strategy"
+      ]
+    },
+    "tags": ["critical", "fail", "high_risk"]
+  },
+  {
+    "query": "Fix the login bug",
+    "decomposition_quality": "underspecified",
+    "verification": {
+      "completeness": 0.25,
+      "consistency": 0.4,
+      "groundedness": 0.3,
+      "routability": 0.5,
+      "overall_score": 0.31,
+      "verdict": "FAIL",
+      "critical_issues": [
+        "Bug is not described - what specific issue needs fixing?",
+        "No reproduction steps or error details provided",
+        "Cannot create meaningful subgoals without bug details",
+        "Missing investigation/diagnosis phase"
+      ],
+      "minor_issues": [],
+      "edge_cases": [],
+      "suggestions": [
+        "Request detailed bug description from user",
+        "Add investigation phase to reproduce and diagnose issue",
+        "Include root cause analysis before proposing fix",
+        "Add regression testing to prevent recurrence"
+      ]
+    },
+    "tags": ["underspecified", "fail", "missing_context"]
+  }
+]

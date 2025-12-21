@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
+from aurora_core.logging import ConversationLogger, VerbosityLevel
 from aurora_soar.phases import (
     assess,
     collect,
@@ -76,6 +77,7 @@ class SOAROrchestrator:
         reasoning_llm: LLMClient,
         solving_llm: LLMClient,
         cost_tracker: CostTracker | None = None,
+        conversation_logger: ConversationLogger | None = None,
     ):
         """Initialize SOAR orchestrator.
 
@@ -86,6 +88,7 @@ class SOAROrchestrator:
             reasoning_llm: LLM client for reasoning tasks (Tier 2 model: Sonnet/GPT-4)
             solving_llm: LLM client for solving tasks (Tier 1 model: Haiku/GPT-3.5)
             cost_tracker: Optional cost tracker (creates default if not provided)
+            conversation_logger: Optional conversation logger (creates default if not provided)
         """
         self.store = store
         self.agent_registry = agent_registry
@@ -99,11 +102,19 @@ class SOAROrchestrator:
             cost_tracker = CostTracker(monthly_limit_usd=monthly_limit)
         self.cost_tracker = cost_tracker
 
+        # Initialize conversation logger
+        if conversation_logger is None:
+            logging_enabled = config.get("logging", {}).get("conversation_logging_enabled", True)
+            conversation_logger = ConversationLogger(enabled=logging_enabled)
+        self.conversation_logger = conversation_logger
+
         # Initialize phase-level metadata tracking
         self._phase_metadata: dict[str, Any] = {}
         self._total_cost: float = 0.0
         self._token_usage: dict[str, int] = {"input": 0, "output": 0}
         self._start_time: float = 0.0
+        self._query_id: str = ""
+        self._query: str = ""
 
         logger.info("SOAR orchestrator initialized")
 
@@ -141,6 +152,8 @@ class SOAROrchestrator:
         self._phase_metadata = {}
         self._total_cost = 0.0
         self._token_usage = {"input": 0, "output": 0}
+        self._query = query
+        self._query_id = f"soar-{int(time.time() * 1000)}"
 
         logger.info(f"Starting SOAR execution for query: {query[:100]}...")
 
@@ -297,7 +310,26 @@ class SOAROrchestrator:
         """Execute Phase 9: Response Formatting."""
         logger.info("Phase 9: Formatting response")
         metadata = self._build_metadata()
-        return respond.format_response(synthesis, metadata, verbosity)
+        response = respond.format_response(synthesis, metadata, verbosity)
+
+        # Log conversation (async, non-blocking)
+        execution_summary = {
+            "duration_ms": metadata.get("total_duration_ms", 0),
+            "overall_score": synthesis.get("confidence", 0.0),
+            "cached": metadata.get("phases", {}).get("phase8_record", {}).get("cached", False),
+            "cost_usd": metadata.get("total_cost_usd", 0.0),
+            "tokens_used": metadata.get("tokens_used", {}),
+        }
+
+        self.conversation_logger.log_interaction(
+            query=self._query,
+            query_id=self._query_id,
+            phase_data=metadata.get("phases", {}),
+            execution_summary=execution_summary,
+            metadata=metadata,
+        )
+
+        return response
 
     def _execute_simple_path(
         self, query: str, context: dict, verbosity: str

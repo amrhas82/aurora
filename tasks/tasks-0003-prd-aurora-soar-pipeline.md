@@ -32,7 +32,7 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 ## Relevant Files
 
 ### SOAR Package (`packages/soar/`)
-- `packages/soar/src/aurora_soar/orchestrator.py` - Main SOAR orchestrator with 9-phase pipeline coordination and cost tracking
+- `packages/soar/src/aurora_soar/orchestrator.py` - Main SOAR orchestrator with 9-phase pipeline coordination, cost tracking, and conversation logging
 - `packages/soar/src/aurora_soar/phases/__init__.py` - SOAR phases module initialization
 - `packages/soar/src/aurora_soar/phases/assess.py` - Phase 1: Complexity assessment (keyword + LLM)
 - `packages/soar/src/aurora_soar/phases/retrieve.py` - Phase 2: Context retrieval with budget allocation
@@ -80,8 +80,8 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `packages/core/src/aurora_core/budget/__init__.py` - Budget tracking module with CostTracker exports
 - `packages/core/src/aurora_core/budget/tracker.py` - CostTracker with provider-specific pricing and budget enforcement
 - `packages/core/src/aurora_core/exceptions.py` - Added BudgetExceededError exception
-- `packages/core/src/aurora_core/logging/__init__.py` - Logging module
-- `packages/core/src/aurora_core/logging/conversation_logger.py` - Conversation logging
+- `packages/core/src/aurora_core/logging/__init__.py` - Logging module with ConversationLogger and VerbosityLevel exports
+- `packages/core/src/aurora_core/logging/conversation_logger.py` - ConversationLogger with markdown formatting, async writing, and log rotation
 
 ### Test Files
 - `tests/unit/soar/test_phase_assess.py` - Phase 1 assessment tests (keyword + LLM)
@@ -105,7 +105,7 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `tests/unit/core/test_reasoning_chunk.py` - ReasoningChunk tests (44 comprehensive tests)
 - `tests/integration/test_reasoning_chunk_store.py` - ReasoningChunk storage integration tests (17 tests)
 - `tests/unit/core/test_cost_tracker.py` - Cost tracker and budget enforcement tests (46 comprehensive tests, 96% coverage)
-- `tests/unit/core/test_conversation_logger.py` - Conversation logger tests
+- `tests/unit/core/test_conversation_logger.py` - Conversation logger tests (31 comprehensive tests, 96% coverage)
 - `tests/integration/test_cost_budget.py` - Cost tracking and budget enforcement integration tests
 - `tests/fault_injection/test_budget_exceeded.py` - Budget exceeded fault injection tests
 - `tests/integration/test_simple_query_e2e.py` - Simple query end-to-end test
@@ -324,30 +324,30 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 6.25 Create integration test for cost budget flow (tests/integration/test_cost_budget.py)
   - [x] 6.26 Create fault injection test for budget exceeded (tests/fault_injection/test_budget_exceeded.py)
 
-- [ ] 7.0 Conversation Logging & Verbosity System
-  - [ ] 7.1 Create logging module in packages/core/src/aurora_core/logging/__init__.py
-  - [ ] 7.2 Implement ConversationLogger class in packages/core/src/aurora_core/logging/conversation_logger.py
-  - [ ] 7.3 Add log path configuration (~/.aurora/logs/conversations/YYYY/MM/)
-  - [ ] 7.4 Implement directory creation (ensure year/month directories exist)
-  - [ ] 7.5 Add keyword extraction for filename generation (extract 2 keywords from query)
-  - [ ] 7.6 Implement filename generation (keyword1-keyword2-YYYY-MM-DD.md format)
-  - [ ] 7.7 Add duplicate filename handling (append -2, -3, etc. if file exists)
-  - [ ] 7.8 Implement markdown log formatting (_format_log method)
-  - [ ] 7.9 Add front matter with query ID, timestamp, and user query
-  - [ ] 7.10 Add phase sections (Phase 1-9 with JSON blocks for phase data)
-  - [ ] 7.11 Add execution summary section (duration, score, cached status)
-  - [ ] 7.12 Implement log_interaction method (write full SOAR interaction to file)
-  - [ ] 7.13 Add async/background writing (don't block response on log write)
-  - [ ] 7.14 Implement error handling for log writes (log to stderr if file write fails)
-  - [ ] 7.15 Add log rotation (optional: limit log files per month, archive old logs)
-  - [ ] 7.16 Integrate conversation logging into orchestrator respond phase
-  - [ ] 7.17 Add config option to enable/disable conversation logging
-  - [ ] 7.18 Add verbosity level configuration (default: QUIET, configurable via CLI/config)
-  - [ ] 7.19 Write unit tests for ConversationLogger (tests/unit/core/test_conversation_logger.py)
-  - [ ] 7.20 Test filename generation (verify keyword extraction, duplicate handling)
-  - [ ] 7.21 Test markdown formatting (verify all sections present, valid JSON blocks)
-  - [ ] 7.22 Test async writing (verify non-blocking behavior)
-  - [ ] 7.23 Verify conversation logs can be re-parsed (JSON blocks valid, markdown well-formed)
+- [x] 7.0 Conversation Logging & Verbosity System
+  - [x] 7.1 Create logging module in packages/core/src/aurora_core/logging/__init__.py
+  - [x] 7.2 Implement ConversationLogger class in packages/core/src/aurora_core/logging/conversation_logger.py
+  - [x] 7.3 Add log path configuration (~/.aurora/logs/conversations/YYYY/MM/)
+  - [x] 7.4 Implement directory creation (ensure year/month directories exist)
+  - [x] 7.5 Add keyword extraction for filename generation (extract 2 keywords from query)
+  - [x] 7.6 Implement filename generation (keyword1-keyword2-YYYY-MM-DD.md format)
+  - [x] 7.7 Add duplicate filename handling (append -2, -3, etc. if file exists)
+  - [x] 7.8 Implement markdown log formatting (_format_log method)
+  - [x] 7.9 Add front matter with query ID, timestamp, and user query
+  - [x] 7.10 Add phase sections (Phase 1-9 with JSON blocks for phase data)
+  - [x] 7.11 Add execution summary section (duration, score, cached status)
+  - [x] 7.12 Implement log_interaction method (write full SOAR interaction to file)
+  - [x] 7.13 Add async/background writing (don't block response on log write)
+  - [x] 7.14 Implement error handling for log writes (log to stderr if file write fails)
+  - [x] 7.15 Add log rotation (optional: limit log files per month, archive old logs)
+  - [x] 7.16 Integrate conversation logging into orchestrator respond phase
+  - [x] 7.17 Add config option to enable/disable conversation logging
+  - [x] 7.18 Add verbosity level configuration (default: QUIET, configurable via CLI/config)
+  - [x] 7.19 Write unit tests for ConversationLogger (tests/unit/core/test_conversation_logger.py)
+  - [x] 7.20 Test filename generation (verify keyword extraction, duplicate handling)
+  - [x] 7.21 Test markdown formatting (verify all sections present, valid JSON blocks)
+  - [x] 7.22 Test async writing (verify non-blocking behavior)
+  - [x] 7.23 Verify conversation logs can be re-parsed (JSON blocks valid, markdown well-formed)
 
 - [ ] 8.0 End-to-End Integration & Testing
   - [ ] 8.1 Implement orchestrator execute() main flow (tie together all 9 phases)

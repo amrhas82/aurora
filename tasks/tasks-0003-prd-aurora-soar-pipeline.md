@@ -36,8 +36,8 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `packages/soar/src/aurora_soar/phases/__init__.py` - SOAR phases module initialization
 - `packages/soar/src/aurora_soar/phases/assess.py` - Phase 1: Complexity assessment (keyword + LLM)
 - `packages/soar/src/aurora_soar/phases/retrieve.py` - Phase 2: Context retrieval with budget allocation
-- `packages/soar/src/aurora_soar/phases/decompose.py` - Phase 3: Query decomposition (placeholder)
-- `packages/soar/src/aurora_soar/phases/verify.py` - Phase 4: Decomposition verification (placeholder)
+- `packages/soar/src/aurora_soar/phases/decompose.py` - Phase 3: Query decomposition with LLM and caching
+- `packages/soar/src/aurora_soar/phases/verify.py` - Phase 4: Decomposition verification with retry loop
 - `packages/soar/src/aurora_soar/phases/route.py` - Phase 5: Agent routing (placeholder)
 - `packages/soar/src/aurora_soar/phases/collect.py` - Phase 6: Agent execution (placeholder)
 - `packages/soar/src/aurora_soar/phases/synthesize.py` - Phase 7: Result synthesis (placeholder)
@@ -49,8 +49,8 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `packages/reasoning/src/aurora_reasoning/__init__.py` - Package initialization and exports
 - `packages/reasoning/src/aurora_reasoning/llm_client.py` - Abstract LLM client interface and implementations
 - `packages/reasoning/src/aurora_reasoning/assessment.py` - Complexity assessment logic
-- `packages/reasoning/src/aurora_reasoning/decompose.py` - Decomposition logic
-- `packages/reasoning/src/aurora_reasoning/verify.py` - Verification logic (Options A/B)
+- `packages/reasoning/src/aurora_reasoning/decompose.py` - Decomposition logic with JSON validation
+- `packages/reasoning/src/aurora_reasoning/verify.py` - Verification logic (Options A/B) with scoring
 - `packages/reasoning/src/aurora_reasoning/synthesize.py` - Synthesis logic
 - `packages/reasoning/src/aurora_reasoning/prompts/__init__.py` - Prompt templates module
 - `packages/reasoning/src/aurora_reasoning/prompts/assess.py` - Complexity assessment prompt
@@ -209,29 +209,29 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 2.18 Verify keyword assessment cost optimization (≥60% queries use keyword only)
 
 - [ ] 3.0 SOAR Orchestrator - Phase 3-4 (Decompose & Verify)
-  - [ ] 3.1 Implement decomposition logic in packages/reasoning/src/aurora_reasoning/decompose.py
-  - [ ] 3.2 Create decomposition method that calls reasoning LLM with decompose prompt template
-  - [ ] 3.3 Add context injection (retrieved chunks, available agents from registry)
-  - [ ] 3.4 Implement few-shot example selection by complexity (0/2/4/6 examples)
-  - [ ] 3.5 Add JSON schema validation for decomposition output (verify all required fields present)
-  - [ ] 3.6 Implement decompose phase wrapper in packages/soar/src/aurora_soar/phases/decompose.py
-  - [ ] 3.7 Add decomposition result caching (cache by query hash to avoid re-decomposing identical queries)
-  - [ ] 3.8 Implement verification logic in packages/reasoning/src/aurora_reasoning/verify.py
-  - [ ] 3.9 Create verify_decomposition method with Option A (self-verification) support
-  - [ ] 3.10 Create verify_decomposition method with Option B (adversarial verification) support
-  - [ ] 3.11 Implement scoring calculation: 0.4*completeness + 0.2*consistency + 0.2*groundedness + 0.2*routability
-  - [ ] 3.12 Implement verdict logic (PASS: ≥0.7, RETRY: 0.5-0.7 & retry_count<2, FAIL: <0.5 or retry_count≥2)
-  - [ ] 3.13 Implement retry loop in packages/soar/src/aurora_soar/phases/verify.py with feedback generation
-  - [ ] 3.14 Add retry feedback generation using retry_feedback prompt template
-  - [ ] 3.15 Inject retry feedback into decomposition prompt for next attempt
-  - [ ] 3.16 Implement verification phase wrapper that calls reasoning.verify() with selected option
-  - [ ] 3.17 Add verification option selection logic (MEDIUM→Option A, COMPLEX→Option B)
-  - [ ] 3.18 Write unit tests for decomposition logic (tests/unit/reasoning/test_decompose.py)
-  - [ ] 3.19 Write unit tests for verification logic (tests/unit/reasoning/test_verify.py) with Options A and B
-  - [ ] 3.20 Write unit tests for decompose phase (tests/unit/soar/test_phase_decompose.py)
-  - [ ] 3.21 Write unit tests for verify phase (tests/unit/soar/test_phase_verify.py)
-  - [ ] 3.22 Test retry loop behavior (mock low scores, verify retry with feedback, verify max 2 retries)
-  - [ ] 3.23 Test verdict logic (verify correct pass/retry/fail decisions)
+  - [x] 3.1 Implement decomposition logic in packages/reasoning/src/aurora_reasoning/decompose.py
+  - [x] 3.2 Create decomposition method that calls reasoning LLM with decompose prompt template
+  - [x] 3.3 Add context injection (retrieved chunks, available agents from registry)
+  - [x] 3.4 Implement few-shot example selection by complexity (0/2/4/6 examples)
+  - [x] 3.5 Add JSON schema validation for decomposition output (verify all required fields present)
+  - [x] 3.6 Implement decompose phase wrapper in packages/soar/src/aurora_soar/phases/decompose.py
+  - [x] 3.7 Add decomposition result caching (cache by query hash to avoid re-decomposing identical queries)
+  - [x] 3.8 Implement verification logic in packages/reasoning/src/aurora_reasoning/verify.py
+  - [x] 3.9 Create verify_decomposition method with Option A (self-verification) support
+  - [x] 3.10 Create verify_decomposition method with Option B (adversarial verification) support
+  - [x] 3.11 Implement scoring calculation: 0.4*completeness + 0.2*consistency + 0.2*groundedness + 0.2*routability
+  - [x] 3.12 Implement verdict logic (PASS: ≥0.7, RETRY: 0.5-0.7 & retry_count<2, FAIL: <0.5 or retry_count≥2)
+  - [x] 3.13 Implement retry loop in packages/soar/src/aurora_soar/phases/verify.py with feedback generation
+  - [x] 3.14 Add retry feedback generation using retry_feedback prompt template
+  - [x] 3.15 Inject retry feedback into decomposition prompt for next attempt
+  - [x] 3.16 Implement verification phase wrapper that calls reasoning.verify() with selected option
+  - [x] 3.17 Add verification option selection logic (MEDIUM→Option A, COMPLEX→Option B)
+  - [x] 3.18 Write unit tests for decomposition logic (tests/unit/reasoning/test_decompose.py)
+  - [x] 3.19 Write unit tests for verification logic (tests/unit/reasoning/test_verify.py) with Options A and B
+  - [x] 3.20 Write unit tests for decompose phase (tests/unit/soar/test_phase_decompose.py)
+  - [x] 3.21 Write unit tests for verify phase (tests/unit/soar/test_phase_verify.py)
+  - [x] 3.22 Test retry loop behavior (mock low scores, verify retry with feedback, verify max 2 retries)
+  - [x] 3.23 Test verdict logic (verify correct pass/retry/fail decisions)
   - [ ] 3.24 Create fault injection test for bad decomposition (tests/fault_injection/test_bad_decomposition.py)
 
 - [ ] 4.0 SOAR Orchestrator - Phase 5-6 (Route & Collect)

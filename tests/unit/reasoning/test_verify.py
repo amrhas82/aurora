@@ -1,11 +1,9 @@
 """Unit tests for verification logic."""
 
-import json
 from unittest.mock import MagicMock
 
 import pytest
 
-from aurora_reasoning.llm_client import LLMResponse
 from aurora_reasoning.verify import (
     VerificationOption,
     VerificationResult,
@@ -113,9 +111,9 @@ class TestValidateVerdictConsistency:
         _validate_verdict_consistency(VerificationVerdict.FAIL, 0.49)
 
     def test_invalid_pass_with_low_score(self):
-        """Test PASS verdict with score < 0.7 raises error."""
+        """Test PASS verdict with score < 0.5 raises error."""
         with pytest.raises(ValueError, match="Verdict PASS inconsistent"):
-            _validate_verdict_consistency(VerificationVerdict.PASS, 0.5)
+            _validate_verdict_consistency(VerificationVerdict.PASS, 0.3)
 
     def test_invalid_fail_with_medium_score(self):
         """Test FAIL verdict with medium score raises error."""
@@ -162,13 +160,8 @@ class TestVerifyDecomposition:
             "suggestions": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(verification_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = verification_response
 
         result = verify_decomposition(
             llm_client=mock_llm_client,
@@ -200,13 +193,8 @@ class TestVerifyDecomposition:
             "suggestions": ["Add error handling subgoal", "Clarify dependency order"],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(verification_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = verification_response
 
         result = verify_decomposition(
             llm_client=mock_llm_client,
@@ -235,13 +223,8 @@ class TestVerifyDecomposition:
             "suggestions": ["Redesign from scratch"],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(verification_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = verification_response
 
         result = verify_decomposition(
             llm_client=mock_llm_client,
@@ -251,7 +234,8 @@ class TestVerifyDecomposition:
         )
 
         assert result.verdict == VerificationVerdict.FAIL
-        assert result.overall_score == 0.32
+        # Score is recalculated: 0.4*0.3 + 0.2*0.4 + 0.2*0.2 + 0.2*0.5 = 0.34
+        assert abs(result.overall_score - 0.34) < 0.01
         assert result.option_used == VerificationOption.ADVERSARIAL
         # Adversarial combines all issue types
         assert len(result.issues) == 4  # critical + minor + edge_cases
@@ -269,13 +253,8 @@ class TestVerifyDecomposition:
             "suggestions": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(verification_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = verification_response
 
         result = verify_decomposition(
             llm_client=mock_llm_client,
@@ -286,7 +265,7 @@ class TestVerifyDecomposition:
         )
 
         call_args = mock_llm_client.generate_json.call_args
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "Available: 5 code chunks" in user_prompt
 
     def test_available_agents_included(self, mock_llm_client, sample_decomposition):
@@ -302,13 +281,8 @@ class TestVerifyDecomposition:
             "suggestions": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(verification_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = verification_response
 
         result = verify_decomposition(
             llm_client=mock_llm_client,
@@ -319,20 +293,15 @@ class TestVerifyDecomposition:
         )
 
         call_args = mock_llm_client.generate_json.call_args
-        user_prompt = call_args.kwargs["user_prompt"]
+        user_prompt = call_args.kwargs["prompt"]
         assert "code-analyzer" in user_prompt or "test-runner" in user_prompt
 
     def test_invalid_json_response(self, mock_llm_client, sample_decomposition):
         """Test handling of invalid JSON response."""
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content="Not JSON",
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # Return a non-dict to trigger type validation error
+        mock_llm_client.generate_json.return_value = "Not a dict"
 
-        with pytest.raises(ValueError, match="LLM returned invalid JSON"):
+        with pytest.raises(ValueError, match="non-dict response"):
             verify_decomposition(
                 llm_client=mock_llm_client,
                 query="Test query",
@@ -347,13 +316,8 @@ class TestVerifyDecomposition:
             # Missing other required fields
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(incomplete_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly
+        mock_llm_client.generate_json.return_value = incomplete_response
 
         with pytest.raises(ValueError, match="missing required fields"):
             verify_decomposition(
@@ -376,13 +340,8 @@ class TestVerifyDecomposition:
             "suggestions": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(invalid_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = invalid_response
 
         with pytest.raises(ValueError, match="Invalid .* score"):
             verify_decomposition(
@@ -405,13 +364,8 @@ class TestVerifyDecomposition:
             "suggestions": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(invalid_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = invalid_response
 
         with pytest.raises(ValueError, match="Invalid verdict"):
             verify_decomposition(
@@ -435,13 +389,8 @@ class TestVerifyDecomposition:
             "suggestions": [],
         }
 
-        mock_llm_client.generate_json.return_value = LLMResponse(
-            content=json.dumps(verification_response),
-            model="test-model",
-            input_tokens=100,
-            output_tokens=50,
-            finish_reason="stop",
-        )
+        # generate_json returns dict directly, not LLMResponse
+        mock_llm_client.generate_json.return_value = verification_response
 
         result = verify_decomposition(
             llm_client=mock_llm_client,

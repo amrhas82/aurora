@@ -350,10 +350,10 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 7.23 Verify conversation logs can be re-parsed (JSON blocks valid, markdown well-formed)
 
 - [ ] 8.0 End-to-End Integration & Testing
-  - [ ] 8.1 Implement orchestrator execute() main flow (tie together all 9 phases)
-  - [ ] 8.2 Add phase execution tracking (capture phase outputs, timing, errors)
-  - [ ] 8.3 Implement error handling and graceful degradation at orchestrator level
-  - [ ] 8.4 Add orchestrator unit tests (tests/unit/soar/test_orchestrator.py) with mocked phases
+  - [x] 8.1 Implement orchestrator execute() main flow (tie together all 9 phases)
+  - [x] 8.2 Add phase execution tracking (capture phase outputs, timing, errors)
+  - [x] 8.3 Implement error handling and graceful degradation at orchestrator level
+  - [x] 8.4 Add orchestrator unit tests (tests/unit/soar/test_orchestrator.py) with mocked phases
   - [ ] 8.5 Create simple query E2E test (tests/integration/test_simple_query_e2e.py)
   - [ ] 8.6 Test simple query bypasses decomposition (verify assess → retrieve → solve → respond path)
   - [ ] 8.7 Verify simple query latency <2s

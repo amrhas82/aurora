@@ -248,48 +248,137 @@ class SOAROrchestrator:
     def _phase1_assess(self, query: str) -> dict[str, Any]:
         """Execute Phase 1: Complexity Assessment."""
         logger.info("Phase 1: Assessing complexity")
-        return assess.assess_complexity(query, llm_client=self.reasoning_llm)
+        start_time = time.time()
+        try:
+            result = assess.assess_complexity(query, llm_client=self.reasoning_llm)
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 1 failed: {e}")
+            return {
+                "complexity": "MEDIUM",
+                "confidence": 0.0,
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase2_retrieve(self, query: str, complexity: str) -> dict[str, Any]:
         """Execute Phase 2: Context Retrieval."""
         logger.info("Phase 2: Retrieving context")
-        return retrieve.retrieve_context(query, complexity, self.store)
+        start_time = time.time()
+        try:
+            result = retrieve.retrieve_context(query, complexity, self.store)
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 2 failed: {e}")
+            return {
+                "code_chunks": [],
+                "reasoning_chunks": [],
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase3_decompose(
         self, query: str, context: dict, complexity: str
     ) -> dict[str, Any]:
         """Execute Phase 3: Query Decomposition."""
         logger.info("Phase 3: Decomposing query")
-        return decompose.decompose_query(query, context, complexity)
+        start_time = time.time()
+        try:
+            result = decompose.decompose_query(query, context, complexity)
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 3 failed: {e}")
+            return {
+                "goal": query,
+                "subgoals": [],
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase4_verify(
         self, decomposition: dict, query: str, complexity: str
     ) -> dict[str, Any]:
         """Execute Phase 4: Decomposition Verification."""
         logger.info("Phase 4: Verifying decomposition")
-        # Select verification option based on complexity
-        option = "A" if complexity == "MEDIUM" else "B"
-        return verify.verify_decomposition(decomposition, query, option)
+        start_time = time.time()
+        try:
+            # Select verification option based on complexity
+            option = "A" if complexity == "MEDIUM" else "B"
+            result = verify.verify_decomposition(decomposition, query, option)
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 4 failed: {e}")
+            return {
+                "verdict": "FAIL",
+                "overall_score": 0.0,
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase5_route(self, decomposition: dict) -> dict[str, Any]:
         """Execute Phase 5: Agent Routing."""
         logger.info("Phase 5: Routing to agents")
-        return route.route_subgoals(decomposition, self.agent_registry)
+        start_time = time.time()
+        try:
+            result = route.route_subgoals(decomposition, self.agent_registry)
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 5 failed: {e}")
+            return {
+                "routed_subgoals": [],
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase6_collect(
         self, routing: dict, context: dict
     ) -> dict[str, Any]:
         """Execute Phase 6: Agent Execution."""
         logger.info("Phase 6: Executing agents")
-        return collect.execute_agents(routing, context)
+        start_time = time.time()
+        try:
+            result = collect.execute_agents(routing, context)
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 6 failed: {e}")
+            return {
+                "agent_outputs": [],
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase7_synthesize(
         self, execution: dict, query: str, decomposition: dict
     ) -> dict[str, Any]:
         """Execute Phase 7: Result Synthesis."""
         logger.info("Phase 7: Synthesizing results")
-        agent_outputs = execution.get("agent_outputs", [])
-        return synthesize.synthesize_results(agent_outputs, query, decomposition)
+        start_time = time.time()
+        try:
+            agent_outputs = execution.get("agent_outputs", [])
+            result = synthesize.synthesize_results(agent_outputs, query, decomposition)
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 7 failed: {e}")
+            return {
+                "answer": f"Synthesis failed: {str(e)}",
+                "confidence": 0.0,
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase8_record(
         self,
@@ -300,9 +389,21 @@ class SOAROrchestrator:
     ) -> dict[str, Any]:
         """Execute Phase 8: Pattern Recording."""
         logger.info("Phase 8: Recording pattern")
-        return record.record_pattern(
-            query, decomposition, execution, synthesis, self.store
-        )
+        start_time = time.time()
+        try:
+            result = record.record_pattern(
+                query, decomposition, execution, synthesis, self.store
+            )
+            result["_timing_ms"] = (time.time() - start_time) * 1000
+            result["_error"] = None
+            return result
+        except Exception as e:
+            logger.error(f"Phase 8 failed: {e}")
+            return {
+                "cached": False,
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
 
     def _phase9_respond(
         self, synthesis: dict, verbosity: str

@@ -474,9 +474,10 @@ class TestBudgetEnforcement:
         assert can_proceed is True  # Still allowed
         assert "Budget warning" in message  # Should warn at 85%
 
-    def test_gradual_budget_consumption(self):
+    def test_gradual_budget_consumption(self, tmp_path):
         """Test gradual budget consumption over many queries."""
-        tracker = CostTracker(monthly_limit_usd=10.0)
+        tracker_path = tmp_path / "budget_tracker.json"
+        tracker = CostTracker(monthly_limit_usd=10.0, tracker_path=tracker_path)
 
         # Make many small queries
         for i in range(50):

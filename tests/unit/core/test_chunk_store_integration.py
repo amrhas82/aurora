@@ -205,11 +205,11 @@ class TestReasoningChunkWithStore:
 
         chunk = ReasoningChunk(
             chunk_id="reasoning:pattern1",
-            pattern_type="inference",
-            premise="Input data",
-            conclusion="Output result",
-            confidence=0.85,
-            evidence=["code:test.py:func1"],
+            pattern="implement feature X",
+            complexity="MEDIUM",
+            subgoals=[{"description": "subgoal1", "suggested_agent": "test"}],
+            tools_used=["code_reader", "code_writer"],
+            success_score=0.85,
         )
 
         # Save
@@ -220,8 +220,8 @@ class TestReasoningChunkWithStore:
         retrieved = store.get_chunk("reasoning:pattern1")
         assert retrieved is not None
         assert isinstance(retrieved, ReasoningChunk)
-        assert retrieved.pattern_type == "inference"
-        assert retrieved.confidence == 0.85
+        assert retrieved.pattern == "implement feature X"
+        assert retrieved.success_score == 0.85
 
 
 class TestMixedChunkTypes:
@@ -243,8 +243,9 @@ class TestMixedChunkTypes:
 
         reasoning_chunk = ReasoningChunk(
             chunk_id="reasoning:pattern1",
-            pattern_type="inference",
-            confidence=0.9,
+            pattern="inference pattern",
+            complexity="SIMPLE",
+            success_score=0.9,
         )
 
         # Save both
@@ -273,7 +274,8 @@ class TestMixedChunkTypes:
             ),
             ReasoningChunk(
                 chunk_id="reasoning:r1",
-                pattern_type="deduction",
+                pattern="deduction pattern",
+                complexity="SIMPLE",
             ),
         ]
 
@@ -372,11 +374,17 @@ class TestChunkRoundTripIntegrity:
 
         original = ReasoningChunk(
             chunk_id="reasoning:complete",
-            pattern_type="deductive",
-            premise="Given conditions",
-            conclusion="Derived result",
-            confidence=0.95,
-            evidence=["code:a.py:func", "code:b.py:helper"],
+            pattern="deductive reasoning pattern",
+            complexity="COMPLEX",
+            subgoals=[
+                {"description": "subgoal1", "suggested_agent": "test"},
+                {"description": "subgoal2", "suggested_agent": "test"},
+            ],
+            execution_order=[{"phase": 1, "parallelizable": [0, 1], "sequential": []}],
+            tools_used=["code_reader", "code_writer"],
+            tool_sequence=[{"tool": "code_reader", "timestamp": "2024-01-01"}],
+            success_score=0.95,
+            metadata={"test_key": "test_value"},
         )
 
         # Round trip
@@ -386,8 +394,11 @@ class TestChunkRoundTripIntegrity:
         # Verify all fields
         assert retrieved.id == original.id
         assert retrieved.type == original.type
-        assert retrieved.pattern_type == original.pattern_type
-        assert retrieved.premise == original.premise
-        assert retrieved.conclusion == original.conclusion
-        assert retrieved.confidence == original.confidence
-        assert retrieved.evidence == original.evidence
+        assert retrieved.pattern == original.pattern
+        assert retrieved.complexity == original.complexity
+        assert retrieved.subgoals == original.subgoals
+        assert retrieved.execution_order == original.execution_order
+        assert retrieved.tools_used == original.tools_used
+        assert retrieved.tool_sequence == original.tool_sequence
+        assert retrieved.success_score == original.success_score
+        assert retrieved.metadata == original.metadata

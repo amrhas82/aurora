@@ -38,8 +38,8 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `packages/soar/src/aurora_soar/phases/retrieve.py` - Phase 2: Context retrieval with budget allocation
 - `packages/soar/src/aurora_soar/phases/decompose.py` - Phase 3: Query decomposition with LLM and caching
 - `packages/soar/src/aurora_soar/phases/verify.py` - Phase 4: Decomposition verification with retry loop
-- `packages/soar/src/aurora_soar/phases/route.py` - Phase 5: Agent routing (placeholder)
-- `packages/soar/src/aurora_soar/phases/collect.py` - Phase 6: Agent execution (placeholder)
+- `packages/soar/src/aurora_soar/phases/route.py` - Phase 5: Agent routing with registry lookup and fallback
+- `packages/soar/src/aurora_soar/phases/collect.py` - Phase 6: Agent execution with parallel/sequential support and retries
 - `packages/soar/src/aurora_soar/phases/synthesize.py` - Phase 7: Result synthesis (placeholder)
 - `packages/soar/src/aurora_soar/phases/record.py` - Phase 8: ACT-R pattern caching (placeholder)
 - `packages/soar/src/aurora_soar/phases/respond.py` - Phase 9: Response formatting (placeholder)
@@ -234,33 +234,33 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 3.23 Test verdict logic (verify correct pass/retry/fail decisions)
   - [ ] 3.24 Create fault injection test for bad decomposition (tests/fault_injection/test_bad_decomposition.py)
 
-- [ ] 4.0 SOAR Orchestrator - Phase 5-6 (Route & Collect)
-  - [ ] 4.1 Implement routing logic in packages/soar/src/aurora_soar/phases/route.py (_route_subgoals)
-  - [ ] 4.2 Add agent lookup from registry (check if suggested agent exists)
-  - [ ] 4.3 Implement capability-based agent search if suggested agent not found
-  - [ ] 4.4 Add fallback to llm-executor agent if no suitable agent found (with warning log)
-  - [ ] 4.5 Implement routing validation (verify all subgoals assigned, no circular dependencies)
-  - [ ] 4.6 Add execution order parsing from decomposition (execution_order, parallelizable arrays)
-  - [ ] 4.7 Implement agent execution in packages/soar/src/aurora_soar/phases/collect.py (_execute_agents)
-  - [ ] 4.8 Add sequential execution logic (wait for dependencies before starting subgoal)
-  - [ ] 4.9 Implement parallel execution using asyncio for parallelizable subgoals
-  - [ ] 4.10 Add per-agent timeout handling (default 60s, configurable)
-  - [ ] 4.11 Add overall query timeout handling (default 5 minutes, configurable)
-  - [ ] 4.12 Implement agent response format validation (verify summary, data, confidence fields present)
-  - [ ] 4.13 Add agent output verification (call reasoning.verify_agent_output for each response)
-  - [ ] 4.14 Implement retry logic for failed agent outputs (max 2 retries, try different agent if available)
-  - [ ] 4.15 Add user interaction tracking (capture agent questions and user responses in metadata)
-  - [ ] 4.16 Implement graceful degradation (mark subgoal as partial success if agent fails after retries)
-  - [ ] 4.17 Add critical subgoal detection (abort entire query if critical subgoal fails)
-  - [ ] 4.18 Implement agent execution metadata collection (tools_used, duration_ms, model_used)
-  - [ ] 4.19 Write unit tests for routing logic (tests/unit/soar/test_phase_route.py)
-  - [ ] 4.20 Test agent lookup and fallback behavior (verify fallback to llm-executor)
-  - [ ] 4.21 Write unit tests for agent execution (tests/unit/soar/test_phase_collect.py)
-  - [ ] 4.22 Test parallel execution (verify concurrent execution, measure speedup vs sequential)
-  - [ ] 4.23 Test timeout handling (simulate agent timeout, verify graceful cancellation)
-  - [ ] 4.24 Test agent output verification (mock low scores, verify retry logic)
-  - [ ] 4.25 Create fault injection test for agent failure (tests/fault_injection/test_agent_failure.py)
-  - [ ] 4.26 Create integration test for agent execution flow (tests/integration/test_agent_execution.py)
+- [x] 4.0 SOAR Orchestrator - Phase 5-6 (Route & Collect)
+  - [x] 4.1 Implement routing logic in packages/soar/src/aurora_soar/phases/route.py (_route_subgoals)
+  - [x] 4.2 Add agent lookup from registry (check if suggested agent exists)
+  - [x] 4.3 Implement capability-based agent search if suggested agent not found
+  - [x] 4.4 Add fallback to llm-executor agent if no suitable agent found (with warning log)
+  - [x] 4.5 Implement routing validation (verify all subgoals assigned, no circular dependencies)
+  - [x] 4.6 Add execution order parsing from decomposition (execution_order, parallelizable arrays)
+  - [x] 4.7 Implement agent execution in packages/soar/src/aurora_soar/phases/collect.py (_execute_agents)
+  - [x] 4.8 Add sequential execution logic (wait for dependencies before starting subgoal)
+  - [x] 4.9 Implement parallel execution using asyncio for parallelizable subgoals
+  - [x] 4.10 Add per-agent timeout handling (default 60s, configurable)
+  - [x] 4.11 Add overall query timeout handling (default 5 minutes, configurable)
+  - [x] 4.12 Implement agent response format validation (verify summary, data, confidence fields present)
+  - [x] 4.13 Add agent output verification (call reasoning.verify_agent_output for each response)
+  - [x] 4.14 Implement retry logic for failed agent outputs (max 2 retries, try different agent if available)
+  - [x] 4.15 Add user interaction tracking (capture agent questions and user responses in metadata)
+  - [x] 4.16 Implement graceful degradation (mark subgoal as partial success if agent fails after retries)
+  - [x] 4.17 Add critical subgoal detection (abort entire query if critical subgoal fails)
+  - [x] 4.18 Implement agent execution metadata collection (tools_used, duration_ms, model_used)
+  - [x] 4.19 Write unit tests for routing logic (tests/unit/soar/test_phase_route.py)
+  - [x] 4.20 Test agent lookup and fallback behavior (verify fallback to llm-executor)
+  - [x] 4.21 Write unit tests for agent execution (tests/unit/soar/test_phase_collect.py)
+  - [x] 4.22 Test parallel execution (verify concurrent execution, measure speedup vs sequential)
+  - [x] 4.23 Test timeout handling (simulate agent timeout, verify graceful cancellation)
+  - [x] 4.24 Test agent output verification (mock low scores, verify retry logic)
+  - [x] 4.25 Create fault injection test for agent failure (tests/fault_injection/test_agent_failure.py)
+  - [x] 4.26 Create integration test for agent execution flow (tests/integration/test_agent_execution.py)
 
 - [ ] 5.0 SOAR Orchestrator - Phase 7-9 (Synthesize, Record, Respond)
   - [ ] 5.1 Implement synthesis logic in packages/reasoning/src/aurora_reasoning/synthesize.py

@@ -124,7 +124,7 @@ def record_pattern(
     tools_used = set()
     tool_sequence = []
 
-    for output in collect_result.outputs:
+    for output in collect_result.agent_outputs:
         if output.execution_metadata and "tools_used" in output.execution_metadata:
             for tool in output.execution_metadata["tools_used"]:
                 tools_used.add(tool)

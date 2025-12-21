@@ -100,9 +100,10 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `tests/unit/soar/test_phase_route.py` - Route phase tests
 - `tests/unit/soar/test_phase_collect.py` - Collect phase tests
 - `tests/unit/soar/test_phase_synthesize.py` - Synthesize phase tests
-- `tests/unit/soar/test_phase_record.py` - Record phase tests
-- `tests/unit/soar/test_phase_respond.py` - Respond phase tests
-- `tests/unit/core/test_reasoning_chunk.py` - ReasoningChunk tests
+- `tests/unit/soar/test_phase_record.py` - Record phase tests (25 tests for pattern caching)
+- `tests/unit/soar/test_phase_respond.py` - Respond phase tests (22 tests for all verbosity levels)
+- `tests/unit/core/test_reasoning_chunk.py` - ReasoningChunk tests (44 comprehensive tests)
+- `tests/integration/test_reasoning_chunk_store.py` - ReasoningChunk storage integration tests (17 tests)
 - `tests/unit/core/test_cost_estimator.py` - Cost estimator tests
 - `tests/unit/core/test_budget_tracker.py` - Budget tracker tests
 - `tests/unit/core/test_conversation_logger.py` - Conversation logger tests
@@ -262,7 +263,7 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 4.25 Create fault injection test for agent failure (tests/fault_injection/test_agent_failure.py)
   - [x] 4.26 Create integration test for agent execution flow (tests/integration/test_agent_execution.py)
 
-- [ ] 5.0 SOAR Orchestrator - Phase 7-9 (Synthesize, Record, Respond)
+- [x] 5.0 SOAR Orchestrator - Phase 7-9 (Synthesize, Record, Respond)
   - [x] 5.1 Implement synthesis logic in packages/reasoning/src/aurora_reasoning/synthesize.py
   - [x] 5.2 Create synthesis method that gathers all agent output.summary fields
   - [x] 5.3 Add synthesis prompt building (original query, agent summaries, decomposition goal)
@@ -287,12 +288,12 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 5.22 Add JSON verbosity output (structured JSON logs for each phase)
   - [x] 5.23 Implement response structure (answer, confidence, overall_score, reasoning_trace, metadata)
   - [x] 5.24 Write unit tests for synthesis logic (tests/unit/reasoning/test_synthesize.py)
-  - [ ] 5.25 Write unit tests for ReasoningChunk (tests/unit/core/test_reasoning_chunk.py)
-  - [ ] 5.26 Write unit tests for record phase (tests/unit/soar/test_phase_record.py)
-  - [ ] 5.27 Write unit tests for respond phase (tests/unit/soar/test_phase_respond.py)
-  - [ ] 5.28 Test all verbosity levels (verify correct output format for quiet/normal/verbose/JSON)
-  - [ ] 5.29 Test pattern caching logic (verify caching thresholds, verify learning updates)
-  - [ ] 5.30 Verify ReasoningChunk integrates with Store (save/retrieve round-trip test)
+  - [x] 5.25 Write unit tests for ReasoningChunk (tests/unit/core/test_reasoning_chunk.py)
+  - [x] 5.26 Write unit tests for record phase (tests/unit/soar/test_phase_record.py)
+  - [x] 5.27 Write unit tests for respond phase (tests/unit/soar/test_phase_respond.py)
+  - [x] 5.28 Test all verbosity levels (verify correct output format for quiet/normal/verbose/JSON)
+  - [x] 5.29 Test pattern caching logic (verify caching thresholds, verify learning updates)
+  - [x] 5.30 Verify ReasoningChunk integrates with Store (save/retrieve round-trip test)
 
 - [ ] 6.0 Cost Tracking & Budget Enforcement
   - [ ] 6.1 Create budget module in packages/core/src/aurora_core/budget/__init__.py

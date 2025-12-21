@@ -120,27 +120,34 @@ class MockLLMClient(LLMClient):
     def generate(
         self,
         prompt: str,
+        system: str = "",
         max_tokens: int = 4096,
         temperature: float = 0.7,
         model: str | None = None,
-    ) -> str:
+        **kwargs
+    ):
         """Generate text response (mock).
 
         Args:
             prompt: Input prompt
+            system: System prompt
             max_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             model: Model to use (optional)
+            **kwargs: Additional arguments (ignored)
 
         Returns:
-            Generated text
+            LLMResponse object
         """
+        from aurora_reasoning.llm_client import LLMResponse
+
         model = model or self._default_model
         self._call_count += 1
 
-        # Find matching response
+        # Find matching response (check both prompt and system)
+        combined_text = f"{prompt} {system}".lower()
         for pattern, responses in self._responses.items():
-            if pattern in prompt and responses:
+            if pattern.lower() in combined_text and responses:
                 response = responses.pop(0)
                 self._calls.append(
                     {
@@ -152,36 +159,54 @@ class MockLLMClient(LLMClient):
                         "output_tokens": response.output_tokens,
                     }
                 )
-                return response.content
+                return LLMResponse(
+                    content=response.content,
+                    model=model,
+                    input_tokens=response.input_tokens,
+                    output_tokens=response.output_tokens,
+                    finish_reason="stop"
+                )
 
         # No matching response - return default
-        default_response = "Mock LLM response"
+        default_content = "Mock LLM response"
         self._calls.append(
             {
                 "type": "generate",
                 "prompt": prompt,
                 "model": model,
-                "response": default_response,
+                "response": default_content,
                 "input_tokens": 100,
                 "output_tokens": 50,
             }
         )
-        return default_response
+        return LLMResponse(
+            content=default_content,
+            model=model,
+            input_tokens=100,
+            output_tokens=50,
+            finish_reason="stop"
+        )
 
     def generate_json(
         self,
         prompt: str,
+        system: str = "",
+        schema: dict | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
         model: str | None = None,
+        **kwargs
     ) -> dict[str, Any]:
         """Generate JSON response (mock).
 
         Args:
             prompt: Input prompt
+            system: System prompt
+            schema: JSON schema (optional)
             max_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             model: Model to use (optional)
+            **kwargs: Additional arguments (ignored)
 
         Returns:
             Parsed JSON object
@@ -189,9 +214,10 @@ class MockLLMClient(LLMClient):
         model = model or self._default_model
         self._call_count += 1
 
-        # Find matching response
+        # Find matching response (check both prompt and system)
+        combined_text = f"{prompt} {system}".lower()
         for pattern, responses in self._responses.items():
-            if pattern in prompt and responses:
+            if pattern.lower() in combined_text and responses:
                 response = responses.pop(0)
                 self._calls.append(
                     {
@@ -403,6 +429,8 @@ class E2ETestFramework:
             input_tokens=200,
             output_tokens=50,
         )
+        # Match on multiple possible patterns in assessment prompts
+        self.mock_llm.configure_response("complexity", response)
         self.mock_llm.configure_response("assess", response)
 
     def configure_decomposition_response(
@@ -411,21 +439,38 @@ class E2ETestFramework:
         """Configure mock response for query decomposition.
 
         Args:
-            subgoals: List of subgoal dictionaries
+            subgoals: List of subgoal dictionaries with proper Phase 2 format
         """
+        # Convert subgoals to proper format if needed
+        formatted_subgoals = []
+        for i, sg in enumerate(subgoals):
+            formatted_sg = {
+                "description": sg.get("description", f"Subgoal {i+1}"),
+                "suggested_agent": sg.get("agent_type", sg.get("suggested_agent", "mock-agent")),
+                "is_critical": sg.get("is_critical", True),
+                "depends_on": sg.get("dependencies", sg.get("depends_on", []))
+            }
+            formatted_subgoals.append(formatted_sg)
+
+        # Create proper execution_order structure
+        execution_order = [{"phase": 1, "parallelizable": list(range(len(subgoals))), "sequential": []}]
+
         response = MockLLMResponse(
             content=json.dumps(
                 {
                     "goal": "Mock goal",
-                    "subgoals": subgoals,
-                    "execution_order": list(range(len(subgoals))),
-                    "parallelizable": [list(range(len(subgoals)))],
+                    "subgoals": formatted_subgoals,
+                    "execution_order": execution_order,
+                    "expected_tools": ["mock-tool"]
                 }
             ),
             input_tokens=500,
             output_tokens=200,
         )
+        # Match on multiple possible patterns in decomposition prompts
+        self.mock_llm.configure_response("subgoal", response)
         self.mock_llm.configure_response("decompose", response)
+        self.mock_llm.configure_response("break down", response)
 
     def configure_verification_response(
         self, verdict: str, score: float, feedback: str = ""
@@ -440,18 +485,21 @@ class E2ETestFramework:
         response = MockLLMResponse(
             content=json.dumps(
                 {
-                    "verdict": verdict,
-                    "overall_score": score,
                     "completeness": score,
                     "consistency": score,
                     "groundedness": score,
                     "routability": score,
-                    "feedback": feedback,
+                    "overall_score": score,
+                    "verdict": verdict,
+                    "issues": [feedback] if feedback else [],
+                    "suggestions": []
                 }
             ),
             input_tokens=400,
             output_tokens=150,
         )
+        # Match on multiple possible patterns in verification prompts
+        self.mock_llm.configure_response("completeness", response)
         self.mock_llm.configure_response("verify", response)
 
     def configure_synthesis_response(

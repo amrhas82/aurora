@@ -29,6 +29,8 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+from aurora_core.budget import CostTracker
+from aurora_core.exceptions import BudgetExceededError
 from aurora_soar.phases import (
     assess,
     collect,
@@ -73,6 +75,7 @@ class SOAROrchestrator:
         config: Config,
         reasoning_llm: LLMClient,
         solving_llm: LLMClient,
+        cost_tracker: CostTracker | None = None,
     ):
         """Initialize SOAR orchestrator.
 
@@ -82,6 +85,7 @@ class SOAROrchestrator:
             config: System configuration
             reasoning_llm: LLM client for reasoning tasks (Tier 2 model: Sonnet/GPT-4)
             solving_llm: LLM client for solving tasks (Tier 1 model: Haiku/GPT-3.5)
+            cost_tracker: Optional cost tracker (creates default if not provided)
         """
         self.store = store
         self.agent_registry = agent_registry
@@ -89,9 +93,16 @@ class SOAROrchestrator:
         self.reasoning_llm = reasoning_llm
         self.solving_llm = solving_llm
 
+        # Initialize cost tracker
+        if cost_tracker is None:
+            monthly_limit = config.get("budget", {}).get("monthly_limit_usd", 100.0)
+            cost_tracker = CostTracker(monthly_limit_usd=monthly_limit)
+        self.cost_tracker = cost_tracker
+
         # Initialize phase-level metadata tracking
         self._phase_metadata: dict[str, Any] = {}
         self._total_cost: float = 0.0
+        self._token_usage: dict[str, int] = {"input": 0, "output": 0}
         self._start_time: float = 0.0
 
         logger.info("SOAR orchestrator initialized")
@@ -129,10 +140,34 @@ class SOAROrchestrator:
         self._start_time = time.time()
         self._phase_metadata = {}
         self._total_cost = 0.0
+        self._token_usage = {"input": 0, "output": 0}
 
         logger.info(f"Starting SOAR execution for query: {query[:100]}...")
 
         try:
+            # Budget check before execution
+            estimated_cost = self.cost_tracker.estimate_cost(
+                model=self.reasoning_llm.default_model,
+                prompt_length=len(query),
+                max_output_tokens=4096,
+            )
+
+            can_proceed, budget_message = self.cost_tracker.check_budget(estimated_cost)
+
+            if not can_proceed:
+                # Hard limit exceeded - reject query
+                status = self.cost_tracker.get_status()
+                raise BudgetExceededError(
+                    message=budget_message,
+                    consumed_usd=status["consumed_usd"],
+                    limit_usd=status["limit_usd"],
+                    estimated_cost=estimated_cost,
+                )
+
+            if budget_message:
+                # Soft limit warning
+                logger.warning(budget_message)
+
             # Phase 1: Assess complexity
             phase1_result = self._phase1_assess(query)
             self._phase_metadata["phase1_assess"] = phase1_result
@@ -346,6 +381,43 @@ class SOAROrchestrator:
 
         return respond.format_response(synthesis, metadata, verbosity)
 
+    def _track_llm_cost(
+        self,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        operation: str,
+    ) -> float:
+        """Track cost of an LLM call.
+
+        Args:
+            model: Model identifier
+            input_tokens: Input tokens used
+            output_tokens: Output tokens generated
+            operation: Operation name (e.g., "assess", "decompose")
+
+        Returns:
+            Cost in USD
+        """
+        cost = self.cost_tracker.record_cost(
+            model=model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            operation=operation,
+        )
+
+        # Accumulate totals
+        self._total_cost += cost
+        self._token_usage["input"] += input_tokens
+        self._token_usage["output"] += output_tokens
+
+        logger.debug(
+            f"LLM cost tracked: ${cost:.6f} for {operation} "
+            f"({input_tokens} in, {output_tokens} out)"
+        )
+
+        return cost
+
     def _build_metadata(self) -> dict[str, Any]:
         """Build aggregated metadata from all phases.
 
@@ -357,6 +429,8 @@ class SOAROrchestrator:
         return {
             "total_duration_ms": elapsed_time * 1000,
             "total_cost_usd": self._total_cost,
+            "tokens_used": self._token_usage,
+            "budget_status": self.cost_tracker.get_status(),
             "phases": self._phase_metadata,
             "timestamp": time.time(),
         }

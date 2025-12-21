@@ -130,6 +130,40 @@ class FatalError(AuroraError):
         self.recovery_hint = recovery_hint
 
 
+class BudgetExceededError(AuroraError):
+    """
+    Raised when a query would exceed budget limits.
+
+    Examples:
+        - Monthly budget limit reached
+        - Single query exceeds cost threshold
+        - Cost estimation indicates budget overrun
+
+    These errors allow the system to gracefully reject expensive queries.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        consumed_usd: float,
+        limit_usd: float,
+        estimated_cost: float,
+    ):
+        """
+        Initialize a budget exceeded error.
+
+        Args:
+            message: User-friendly error message
+            consumed_usd: Amount of budget already consumed
+            limit_usd: Budget limit
+            estimated_cost: Estimated cost of the rejected query
+        """
+        super().__init__(message)
+        self.consumed_usd = consumed_usd
+        self.limit_usd = limit_usd
+        self.estimated_cost = estimated_cost
+
+
 __all__ = [
     'AuroraError',
     'StorageError',
@@ -138,4 +172,5 @@ __all__ = [
     'ValidationError',
     'ChunkNotFoundError',
     'FatalError',
+    'BudgetExceededError',
 ]

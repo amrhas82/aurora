@@ -32,7 +32,7 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 ## Relevant Files
 
 ### SOAR Package (`packages/soar/`)
-- `packages/soar/src/aurora_soar/orchestrator.py` - Main SOAR orchestrator with 9-phase pipeline coordination
+- `packages/soar/src/aurora_soar/orchestrator.py` - Main SOAR orchestrator with 9-phase pipeline coordination and cost tracking
 - `packages/soar/src/aurora_soar/phases/__init__.py` - SOAR phases module initialization
 - `packages/soar/src/aurora_soar/phases/assess.py` - Phase 1: Complexity assessment (keyword + LLM)
 - `packages/soar/src/aurora_soar/phases/retrieve.py` - Phase 2: Context retrieval with budget allocation
@@ -77,9 +77,9 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 
 ### Core Package Updates (`packages/core/`)
 - `packages/core/src/aurora_core/chunks/reasoning_chunk.py` - Full ReasoningChunk implementation
-- `packages/core/src/aurora_core/budget/__init__.py` - Budget tracking module
-- `packages/core/src/aurora_core/budget/estimator.py` - Cost estimation
-- `packages/core/src/aurora_core/budget/tracker.py` - Budget enforcement
+- `packages/core/src/aurora_core/budget/__init__.py` - Budget tracking module with CostTracker exports
+- `packages/core/src/aurora_core/budget/tracker.py` - CostTracker with provider-specific pricing and budget enforcement
+- `packages/core/src/aurora_core/exceptions.py` - Added BudgetExceededError exception
 - `packages/core/src/aurora_core/logging/__init__.py` - Logging module
 - `packages/core/src/aurora_core/logging/conversation_logger.py` - Conversation logging
 
@@ -104,9 +104,10 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
 - `tests/unit/soar/test_phase_respond.py` - Respond phase tests (22 tests for all verbosity levels)
 - `tests/unit/core/test_reasoning_chunk.py` - ReasoningChunk tests (44 comprehensive tests)
 - `tests/integration/test_reasoning_chunk_store.py` - ReasoningChunk storage integration tests (17 tests)
-- `tests/unit/core/test_cost_estimator.py` - Cost estimator tests
-- `tests/unit/core/test_budget_tracker.py` - Budget tracker tests
+- `tests/unit/core/test_cost_tracker.py` - Cost tracker and budget enforcement tests (46 comprehensive tests, 96% coverage)
 - `tests/unit/core/test_conversation_logger.py` - Conversation logger tests
+- `tests/integration/test_cost_budget.py` - Cost tracking and budget enforcement integration tests
+- `tests/fault_injection/test_budget_exceeded.py` - Budget exceeded fault injection tests
 - `tests/integration/test_simple_query_e2e.py` - Simple query end-to-end test
 - `tests/integration/test_complex_query_e2e.py` - Complex query end-to-end test
 - `tests/integration/test_verification_retry.py` - Verification retry flow test
@@ -295,33 +296,33 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 5.29 Test pattern caching logic (verify caching thresholds, verify learning updates)
   - [x] 5.30 Verify ReasoningChunk integrates with Store (save/retrieve round-trip test)
 
-- [ ] 6.0 Cost Tracking & Budget Enforcement
-  - [ ] 6.1 Create budget module in packages/core/src/aurora_core/budget/__init__.py
-  - [ ] 6.2 Implement CostEstimator class in packages/core/src/aurora_core/budget/estimator.py
-  - [ ] 6.3 Add base cost constants (SIMPLE: $0.001 Haiku, MEDIUM: $0.05 Sonnet, COMPLEX: $0.50 Opus)
-  - [ ] 6.4 Add complexity multipliers (SIMPLE: 1.0, MEDIUM: 3.0, COMPLEX: 5.0)
-  - [ ] 6.5 Implement estimate_query_cost method (base_cost × complexity_multiplier × token_factor)
-  - [ ] 6.6 Add token estimation (approximate tokens from query length, context size)
-  - [ ] 6.7 Implement BudgetTracker class in packages/core/src/aurora_core/budget/tracker.py
-  - [ ] 6.8 Add budget tracker file structure (~/.aurora/budget_tracker.json)
-  - [ ] 6.9 Implement budget loading and initialization (create if not exists, load if exists)
-  - [ ] 6.10 Add period management (monthly periods, auto-reset on new month)
-  - [ ] 6.11 Implement check_budget method (pre-query budget check before expensive operations)
-  - [ ] 6.12 Add soft limit warning at 80% (log warning, allow query)
-  - [ ] 6.13 Add hard limit blocking at 100% (reject query, return budget status message)
-  - [ ] 6.14 Implement record_cost method (track actual cost after query execution)
-  - [ ] 6.15 Add get_status method (return current budget state with consumed/remaining/limit)
-  - [ ] 6.16 Integrate budget checks into orchestrator execute() method (check before Phase 1)
-  - [ ] 6.17 Add cost tracking hooks at each LLM call site (track tokens, calculate cost)
-  - [ ] 6.18 Implement cost aggregation in orchestrator (sum all LLM calls for total query cost)
-  - [ ] 6.19 Add cost metadata to response (estimated_cost_usd, actual_cost_usd, tokens_used breakdown)
-  - [ ] 6.20 Write unit tests for CostEstimator (tests/unit/core/test_cost_estimator.py)
-  - [ ] 6.21 Test cost estimation for different query complexities and lengths
-  - [ ] 6.22 Write unit tests for BudgetTracker (tests/unit/core/test_budget_tracker.py)
-  - [ ] 6.23 Test budget enforcement (verify soft limit warning, hard limit blocking)
-  - [ ] 6.24 Test period management (verify monthly reset, carry-over handling)
-  - [ ] 6.25 Create integration test for cost budget flow (tests/integration/test_cost_budget.py)
-  - [ ] 6.26 Create fault injection test for budget exceeded (tests/fault_injection/test_budget_exceeded.py)
+- [x] 6.0 Cost Tracking & Budget Enforcement
+  - [x] 6.1 Create budget module in packages/core/src/aurora_core/budget/__init__.py
+  - [x] 6.2 Implement CostEstimator class in packages/core/src/aurora_core/budget/estimator.py
+  - [x] 6.3 Add base cost constants (SIMPLE: $0.001 Haiku, MEDIUM: $0.05 Sonnet, COMPLEX: $0.50 Opus)
+  - [x] 6.4 Add complexity multipliers (SIMPLE: 1.0, MEDIUM: 3.0, COMPLEX: 5.0)
+  - [x] 6.5 Implement estimate_query_cost method (base_cost × complexity_multiplier × token_factor)
+  - [x] 6.6 Add token estimation (approximate tokens from query length, context size)
+  - [x] 6.7 Implement BudgetTracker class in packages/core/src/aurora_core/budget/tracker.py
+  - [x] 6.8 Add budget tracker file structure (~/.aurora/budget_tracker.json)
+  - [x] 6.9 Implement budget loading and initialization (create if not exists, load if exists)
+  - [x] 6.10 Add period management (monthly periods, auto-reset on new month)
+  - [x] 6.11 Implement check_budget method (pre-query budget check before expensive operations)
+  - [x] 6.12 Add soft limit warning at 80% (log warning, allow query)
+  - [x] 6.13 Add hard limit blocking at 100% (reject query, return budget status message)
+  - [x] 6.14 Implement record_cost method (track actual cost after query execution)
+  - [x] 6.15 Add get_status method (return current budget state with consumed/remaining/limit)
+  - [x] 6.16 Integrate budget checks into orchestrator execute() method (check before Phase 1)
+  - [x] 6.17 Add cost tracking hooks at each LLM call site (track tokens, calculate cost)
+  - [x] 6.18 Implement cost aggregation in orchestrator (sum all LLM calls for total query cost)
+  - [x] 6.19 Add cost metadata to response (estimated_cost_usd, actual_cost_usd, tokens_used breakdown)
+  - [x] 6.20 Write unit tests for CostEstimator (tests/unit/core/test_cost_estimator.py)
+  - [x] 6.21 Test cost estimation for different query complexities and lengths
+  - [x] 6.22 Write unit tests for BudgetTracker (tests/unit/core/test_budget_tracker.py)
+  - [x] 6.23 Test budget enforcement (verify soft limit warning, hard limit blocking)
+  - [x] 6.24 Test period management (verify monthly reset, carry-over handling)
+  - [x] 6.25 Create integration test for cost budget flow (tests/integration/test_cost_budget.py)
+  - [x] 6.26 Create fault injection test for budget exceeded (tests/fault_injection/test_budget_exceeded.py)
 
 - [ ] 7.0 Conversation Logging & Verbosity System
   - [ ] 7.1 Create logging module in packages/core/src/aurora_core/logging/__init__.py

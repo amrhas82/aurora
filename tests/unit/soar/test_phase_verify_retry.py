@@ -6,21 +6,25 @@ Tests the retry loop when decompositions fail verification.
 
 import pytest
 
-from aurora_reasoning import verify
+from aurora_reasoning.decompose import DecompositionResult
 from aurora_reasoning.llm_client import LLMClient
+from aurora_soar.phases.verify import verify_decomposition
 
 
 class MockRetryLLMClient(LLMClient):
     """Mock LLM for testing retry scenarios."""
 
-    def __init__(self, fail_first: bool = True):
+    def __init__(self, fail_first: bool = True, always_retry: bool = False):
         """Initialize mock.
 
         Args:
             fail_first: If True, first verification fails, second passes
+            always_retry: If True, all verifications return RETRY (for max retry test)
         """
         self.fail_first = fail_first
+        self.always_retry = always_retry
         self.call_count = 0
+        self.verification_call_count = 0
 
     @property
     def default_model(self) -> str:
@@ -31,50 +35,80 @@ class MockRetryLLMClient(LLMClient):
         """Count tokens."""
         return 10
 
-    def generate(self, prompt: str, system: str = "", **kwargs) -> str:
-        """Generate verification response."""
-        self.call_count += 1
+    def generate(self, prompt: str, system: str = "", **kwargs):
+        """Generate text response."""
+        from aurora_reasoning.llm_client import LLMResponse
 
-        if "verify" in prompt.lower() or "score" in prompt.lower():
-            if self.fail_first and self.call_count == 1:
-                # First attempt fails
-                return """
-{
-  "completeness": 0.5,
-  "consistency": 0.7,
-  "groundedness": 0.8,
-  "routability": 0.6,
-  "overall_score": 0.6,
-  "verdict": "RETRY",
-  "issues": ["Incomplete decomposition"]
-}
-"""
-            else:
-                # Subsequent attempts pass
-                return """
-{
-  "completeness": 0.9,
-  "consistency": 0.9,
-  "groundedness": 0.9,
-  "routability": 0.9,
-  "overall_score": 0.9,
-  "verdict": "PASS",
-  "issues": []
-}
-"""
-
-        # Decomposition request
-        return """
-{
-  "subgoals": [{"id": "sg1", "description": "Test", "suggested_agent": "test"}],
-  "execution_order": ["sg1"]
-}
-"""
+        # For feedback generation (returns LLMResponse)
+        return LLMResponse(
+            content="Fix the issues",
+            model="mock",
+            input_tokens=10,
+            output_tokens=5,
+            finish_reason="stop"
+        )
 
     def generate_json(self, prompt: str, system: str = "", schema: dict | None = None, **kwargs) -> dict:
-        """Generate JSON."""
-        import json
-        return json.loads(self.generate(prompt, system, **kwargs))
+        """Generate JSON response."""
+        self.call_count += 1
+
+        # Check if this is a verification request (has "completeness" in system prompt or prompt contains verification keywords)
+        # or a decomposition request (has "goal" and "subgoals" keywords)
+        is_verification = "completeness" in system.lower() or "groundedness" in system.lower()
+
+        if is_verification:
+            # Track verification calls separately
+            self.verification_call_count += 1
+
+            if self.always_retry:
+                # Always return RETRY (for max retry test)
+                return {
+                    "completeness": 0.5,
+                    "consistency": 0.6,
+                    "groundedness": 0.7,
+                    "routability": 0.5,
+                    "overall_score": 0.575,
+                    "verdict": "RETRY",
+                    "issues": ["Still incomplete"],
+                    "suggestions": []
+                }
+            elif self.fail_first and self.verification_call_count == 1:
+                # First verification attempt fails with RETRY verdict
+                return {
+                    "completeness": 0.5,
+                    "consistency": 0.7,
+                    "groundedness": 0.8,
+                    "routability": 0.6,
+                    "overall_score": 0.6,
+                    "verdict": "RETRY",
+                    "issues": ["Incomplete decomposition"],
+                    "suggestions": []
+                }
+            else:
+                # Pass on subsequent attempts or if not failing first
+                return {
+                    "completeness": 0.9,
+                    "consistency": 0.9,
+                    "groundedness": 0.9,
+                    "routability": 0.9,
+                    "overall_score": 0.9,
+                    "verdict": "PASS",
+                    "issues": [],
+                    "suggestions": []
+                }
+        else:
+            # Decomposition request (for retry loop)
+            return {
+                "goal": "Test goal",
+                "subgoals": [{
+                    "description": "Test refined",
+                    "suggested_agent": "test",
+                    "is_critical": True,
+                    "depends_on": []
+                }],
+                "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
+                "expected_tools": ["test-tool"]
+            }
 
 
 class TestVerificationRetry:
@@ -84,16 +118,22 @@ class TestVerificationRetry:
         """Test that retry is triggered when score is below threshold."""
         llm_client = MockRetryLLMClient(fail_first=True)
 
-        decomposition = {
-            "subgoals": [{"id": "sg1", "description": "Test", "suggested_agent": "test"}],
-            "execution_order": ["sg1"]
-        }
+        decomposition = DecompositionResult(
+            goal="Test goal",
+            subgoals=[{
+                "description": "Test",
+                "suggested_agent": "test",
+                "is_critical": True,
+                "depends_on": []
+            }],
+            execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
+            expected_tools=["test-tool"]
+        )
 
         # Verify with retry
-        result = verify.verify_decomposition(
+        result = verify_decomposition(
             query="Test query",
             decomposition=decomposition,
-            chunks=[],
             llm_client=llm_client,
             complexity="COMPLEX",
             max_retries=2,
@@ -108,16 +148,22 @@ class TestVerificationRetry:
         """Test that no retry occurs when first attempt passes."""
         llm_client = MockRetryLLMClient(fail_first=False)
 
-        decomposition = {
-            "subgoals": [{"id": "sg1", "description": "Test", "suggested_agent": "test"}],
-            "execution_order": ["sg1"]
-        }
+        decomposition = DecompositionResult(
+            goal="Test goal",
+            subgoals=[{
+                "description": "Test",
+                "suggested_agent": "test",
+                "is_critical": True,
+                "depends_on": []
+            }],
+            execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
+            expected_tools=["test-tool"]
+        )
 
         # Verify without retry needed
-        result = verify.verify_decomposition(
+        result = verify_decomposition(
             query="Test query",
             decomposition=decomposition,
-            chunks=[],
             llm_client=llm_client,
             complexity="COMPLEX",
             max_retries=2,
@@ -130,20 +176,24 @@ class TestVerificationRetry:
 
     def test_max_retries_respected(self):
         """Test that max retries limit is respected."""
-        llm_client = MockRetryLLMClient(fail_first=True)
-        # Force all attempts to fail
-        llm_client.fail_first = True
+        llm_client = MockRetryLLMClient(fail_first=True, always_retry=True)
 
-        decomposition = {
-            "subgoals": [{"id": "sg1", "description": "Test", "suggested_agent": "test"}],
-            "execution_order": ["sg1"]
-        }
+        decomposition = DecompositionResult(
+            goal="Test goal",
+            subgoals=[{
+                "description": "Test",
+                "suggested_agent": "test",
+                "is_critical": True,
+                "depends_on": []
+            }],
+            execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
+            expected_tools=["test-tool"]
+        )
 
         # Verify with max retries
-        result = verify.verify_decomposition(
+        result = verify_decomposition(
             query="Test query",
             decomposition=decomposition,
-            chunks=[],
             llm_client=llm_client,
             complexity="CRITICAL",
             max_retries=2,

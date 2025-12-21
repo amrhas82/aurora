@@ -21,22 +21,20 @@ class VerifySynthesisPromptTemplate(PromptTemplate):
 
 Your task is to verify that a synthesis meets quality standards:
 
-1. COMPLETENESS: Does it address all aspects of the original query?
-2. ACCURACY: Are all claims properly grounded in agent outputs?
-3. COHERENCE: Is the synthesis well-structured and clear?
-4. TRACEABILITY: Can each claim be traced back to specific agent outputs?
+1. COHERENCE: Is the synthesis well-structured, logical, and clear?
+2. COMPLETENESS: Does it address all aspects of the original query?
+3. FACTUALITY: Are all claims properly grounded in agent outputs?
 
-Provide an overall quality score (0.0-1.0) and verdict:
-- PASS: score ≥ 0.7 (high quality synthesis)
-- RETRY: score < 0.7 (needs revision)
+Score each dimension from 0.0 to 1.0, then calculate overall_score as the average.
 
 You MUST respond with valid JSON only. Use this exact format:
 {
-  "quality_score": 0.0-1.0,
-  "verdict": "PASS|RETRY",
-  "ungrounded_claims": ["claims", "without", "source"],
-  "missing_aspects": ["query", "aspects", "not", "addressed"],
-  "suggestions": ["improvements", "to", "make"]
+  "coherence": 0.0-1.0,
+  "completeness": 0.0-1.0,
+  "factuality": 0.0-1.0,
+  "overall_score": 0.0-1.0,
+  "issues": ["list", "of", "issues"],
+  "suggestions": ["list", "of", "improvements"]
 }"""
 
     def build_user_prompt(self, **kwargs: Any) -> str:
@@ -44,22 +42,30 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Args:
             query: Original user query
-            synthesis: The synthesized response
-            agent_summaries: List of agent output summaries
+            synthesis_answer: The synthesized answer text
+            agent_outputs: List of agent execution results
 
         Returns:
             User prompt string
         """
         query = kwargs.get("query", "")
-        synthesis = kwargs.get("synthesis", "")
-        agent_summaries = kwargs.get("agent_summaries", [])
+        synthesis_answer = kwargs.get("synthesis_answer", "")
+        agent_outputs = kwargs.get("agent_outputs", [])
 
         prompt_parts = [
             f"Original Query: {query}",
-            f"\nSynthesized Response:\n{synthesis}",
-            f"\nAgent Summaries:\n{json.dumps(agent_summaries, indent=2)}",
-            "\nVerify this synthesis and provide quality assessment in JSON format."
+            f"\nSynthesized Answer:\n{synthesis_answer}",
+            "\nAgent Outputs:"
         ]
+
+        for i, output in enumerate(agent_outputs):
+            prompt_parts.append(
+                f"\nAgent {i} ({output.get('agent_name', 'unknown')}):"
+                f"\nSummary: {output.get('summary', '')}"
+                f"\nConfidence: {output.get('confidence', 0.0)}"
+            )
+
+        prompt_parts.append("\n\nVerify this synthesis and provide quality assessment in JSON format.")
 
         return "\n".join(prompt_parts)
 

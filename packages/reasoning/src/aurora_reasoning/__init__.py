@@ -10,6 +10,7 @@ from .llm_client import (
     OllamaClient,
     extract_json_from_text,
 )
+from .synthesize import SynthesisResult, synthesize_results, verify_synthesis
 
 __all__ = [
     "LLMClient",
@@ -18,4 +19,7 @@ __all__ = [
     "OpenAIClient",
     "OllamaClient",
     "extract_json_from_text",
+    "SynthesisResult",
+    "synthesize_results",
+    "verify_synthesis",
 ]

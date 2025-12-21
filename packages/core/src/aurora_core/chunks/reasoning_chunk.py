@@ -1,8 +1,8 @@
 """
-ReasoningChunk stub for Phase 2 implementation.
+ReasoningChunk implementation for Phase 2 (SOAR Pipeline).
 
-This module provides a minimal ReasoningChunk interface that will be
-fully implemented in Phase 2 (SOAR Pipeline).
+This module provides the full ReasoningChunk implementation for storing
+reasoning patterns, decompositions, and execution traces in ACT-R memory.
 """
 
 from dataclasses import dataclass, field
@@ -14,60 +14,71 @@ from aurora_core.chunks.base import Chunk
 @dataclass
 class ReasoningChunk(Chunk):
     """
-    Represents a reasoning pattern or decision trace (Phase 2).
+    Represents a reasoning pattern or decision trace.
 
-    This is a stub implementation. Full functionality will be implemented
-    in Phase 2 when the SOAR pipeline is built.
-
-    Planned attributes (Phase 2):
-        pattern_type: Type of reasoning pattern
-        premise: Input conditions/context
-        conclusion: Reasoning outcome
-        confidence: Confidence score [0.0, 1.0]
-        evidence: Supporting evidence chunks
-        reasoning_steps: Step-by-step reasoning trace
+    Attributes:
+        pattern: Query pattern that triggered this reasoning (e.g., "implement feature X")
+        complexity: Query complexity level (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
+        subgoals: List of subgoals in the decomposition
+        execution_order: Execution order with parallelizable/sequential groups
+        tools_used: List of tool types used during execution
+        tool_sequence: Ordered list of tool invocations
+        success_score: Overall success score [0.0, 1.0]
+        metadata: Additional metadata (timing, agent info, etc.)
     """
 
-    pattern_type: str = "generic"
-    premise: str | None = None
-    conclusion: str | None = None
-    confidence: float = 0.0
-    evidence: list[str] = field(default_factory=list)
+    pattern: str = ""
+    complexity: str = "SIMPLE"
+    subgoals: list[dict[str, Any]] = field(default_factory=list)
+    execution_order: list[dict[str, Any]] = field(default_factory=list)
+    tools_used: list[str] = field(default_factory=list)
+    tool_sequence: list[dict[str, Any]] = field(default_factory=list)
+    success_score: float = 0.0
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __init__(
         self,
         chunk_id: str,
-        pattern_type: str = "generic",
-        premise: str | None = None,
-        conclusion: str | None = None,
-        confidence: float = 0.0,
-        evidence: list[str] | None = None,
+        pattern: str,
+        complexity: str = "SIMPLE",
+        subgoals: list[dict[str, Any]] | None = None,
+        execution_order: list[dict[str, Any]] | None = None,
+        tools_used: list[str] | None = None,
+        tool_sequence: list[dict[str, Any]] | None = None,
+        success_score: float = 0.0,
+        metadata: dict[str, Any] | None = None,
     ):
         """
-        Initialize a ReasoningChunk (stub).
+        Initialize a ReasoningChunk.
 
         Args:
             chunk_id: Unique identifier for this chunk
-            pattern_type: Type of reasoning pattern
-            premise: Input conditions
-            conclusion: Reasoning outcome
-            confidence: Confidence score [0.0, 1.0]
-            evidence: Supporting evidence chunk IDs
+            pattern: Query pattern that triggered this reasoning
+            complexity: Query complexity level (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
+            subgoals: List of subgoals in the decomposition
+            execution_order: Execution order with parallelizable/sequential groups
+            tools_used: List of tool types used
+            tool_sequence: Ordered list of tool invocations
+            success_score: Overall success score [0.0, 1.0]
+            metadata: Additional metadata
         """
         super().__init__(chunk_id=chunk_id, chunk_type="reasoning")
 
-        self.pattern_type = pattern_type
-        self.premise = premise
-        self.conclusion = conclusion
-        self.confidence = confidence
-        self.evidence = evidence if evidence is not None else []
+        self.pattern = pattern
+        self.complexity = complexity
+        self.subgoals = subgoals if subgoals is not None else []
+        self.execution_order = execution_order if execution_order is not None else []
+        self.tools_used = tools_used if tools_used is not None else []
+        self.tool_sequence = tool_sequence if tool_sequence is not None else []
+        self.success_score = success_score
+        self.metadata = metadata if metadata is not None else {}
 
         # Validate on construction
         self.validate()
 
     def to_json(self) -> dict[str, Any]:
         """
-        Serialize chunk to JSON-compatible dict (stub).
+        Serialize chunk to JSON-compatible dict.
 
         Returns:
             Dictionary in the format expected by the storage layer
@@ -76,24 +87,25 @@ class ReasoningChunk(Chunk):
             "id": self.id,
             "type": "reasoning",
             "content": {
-                "pattern_type": self.pattern_type,
-                "premise": self.premise,
-                "conclusion": self.conclusion,
-                "confidence": self.confidence,
-                "evidence": self.evidence,
+                "pattern": self.pattern,
+                "complexity": self.complexity,
+                "subgoals": self.subgoals,
+                "execution_order": self.execution_order,
+                "tools_used": self.tools_used,
+                "tool_sequence": self.tool_sequence,
+                "success_score": self.success_score,
             },
             "metadata": {
                 "created_at": self.created_at.isoformat(),
                 "last_modified": self.updated_at.isoformat(),
-                "phase": "stub",
-                "note": "Full implementation in Phase 2"
+                **self.metadata,  # Include custom metadata
             }
         }
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> 'ReasoningChunk':
         """
-        Deserialize chunk from JSON dict (stub).
+        Deserialize chunk from JSON dict.
 
         Args:
             data: Dictionary containing chunk data
@@ -106,14 +118,24 @@ class ReasoningChunk(Chunk):
         """
         try:
             content = data["content"]
+            metadata_dict = data.get("metadata", {})
+
+            # Extract custom metadata (exclude standard fields)
+            custom_metadata = {
+                k: v for k, v in metadata_dict.items()
+                if k not in ["created_at", "last_modified"]
+            }
 
             chunk = cls(
                 chunk_id=data["id"],
-                pattern_type=content.get("pattern_type", "generic"),
-                premise=content.get("premise"),
-                conclusion=content.get("conclusion"),
-                confidence=content.get("confidence", 0.0),
-                evidence=content.get("evidence", []),
+                pattern=content.get("pattern", ""),
+                complexity=content.get("complexity", "SIMPLE"),
+                subgoals=content.get("subgoals", []),
+                execution_order=content.get("execution_order", []),
+                tools_used=content.get("tools_used", []),
+                tool_sequence=content.get("tool_sequence", []),
+                success_score=content.get("success_score", 0.0),
+                metadata=custom_metadata,
             )
 
             return chunk
@@ -125,10 +147,7 @@ class ReasoningChunk(Chunk):
 
     def validate(self) -> bool:
         """
-        Validate chunk structure (stub).
-
-        Basic validation for stub implementation. Full validation
-        will be added in Phase 2.
+        Validate chunk structure.
 
         Returns:
             True if valid
@@ -136,23 +155,51 @@ class ReasoningChunk(Chunk):
         Raises:
             ValueError: If validation fails
         """
-        # Validate confidence score range
-        if not (0.0 <= self.confidence <= 1.0):
+        # Validate success_score range
+        if not (0.0 <= self.success_score <= 1.0):
             raise ValueError(
-                f"confidence must be in [0.0, 1.0], got {self.confidence}"
+                f"success_score must be in [0.0, 1.0], got {self.success_score}"
             )
 
-        # Validate pattern_type is not empty
-        if not self.pattern_type or not self.pattern_type.strip():
-            raise ValueError("pattern_type must not be empty")
+        # Validate pattern is not empty
+        if not self.pattern or not self.pattern.strip():
+            raise ValueError("pattern must not be empty")
+
+        # Validate complexity level
+        valid_complexities = ["SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL"]
+        if self.complexity not in valid_complexities:
+            raise ValueError(
+                f"complexity must be one of {valid_complexities}, got {self.complexity}"
+            )
+
+        # Validate subgoals structure
+        if not isinstance(self.subgoals, list):
+            raise ValueError(f"subgoals must be a list, got {type(self.subgoals)}")
+
+        # Validate execution_order structure
+        if not isinstance(self.execution_order, list):
+            raise ValueError(
+                f"execution_order must be a list, got {type(self.execution_order)}"
+            )
+
+        # Validate tools_used is a list
+        if not isinstance(self.tools_used, list):
+            raise ValueError(f"tools_used must be a list, got {type(self.tools_used)}")
+
+        # Validate tool_sequence is a list
+        if not isinstance(self.tool_sequence, list):
+            raise ValueError(
+                f"tool_sequence must be a list, got {type(self.tool_sequence)}"
+            )
 
         return True
 
     def __repr__(self) -> str:
         """Return string representation."""
         return (
-            f"ReasoningChunk(id={self.id}, pattern={self.pattern_type}, "
-            f"confidence={self.confidence:.2f}) [STUB - Phase 2]"
+            f"ReasoningChunk(id={self.id}, pattern='{self.pattern[:50]}...', "
+            f"complexity={self.complexity}, success_score={self.success_score:.2f}, "
+            f"subgoals={len(self.subgoals)}, tools={len(self.tools_used)})"
         )
 
 

@@ -150,8 +150,8 @@ class TestComplexQueryE2E:
         assert phases["phase3_decompose"]["subgoals_total"] == 3
 
         # Verify verification passed
-        assert phases["phase4_verify"]["verdict"] == "PASS"
-        assert phases["phase4_verify"]["score"] >= 0.7
+        assert phases["phase4_verify"]["final_verdict"] == "PASS"
+        assert phases["phase4_verify"]["verification"]["overall_score"] >= 0.7
 
         # Verify agents were executed
         assert phases["phase6_collect"]["agents_executed"] >= 2
@@ -228,15 +228,13 @@ class TestComplexQueryE2E:
         verify_meta = response["metadata"]["phases"]["phase4_verify"]
 
         # For COMPLEX queries, should use Option B (adversarial)
-        # Check verification method if available in metadata
-        if "method" in verify_meta:
-            assert verify_meta["method"] == "adversarial", (
-                "COMPLEX queries should use adversarial verification (Option B)"
-            )
+        assert verify_meta["method"] == "adversarial", (
+            "COMPLEX queries should use adversarial verification (Option B)"
+        )
 
         # Verify verification passed
-        assert verify_meta["verdict"] == "PASS"
-        assert verify_meta["score"] >= 0.7
+        assert verify_meta["final_verdict"] == "PASS"
+        assert verify_meta["verification"]["overall_score"] >= 0.7
 
     def test_complex_query_performance(self, e2e_framework):
         """Test that COMPLEX queries complete in <10s."""
@@ -810,11 +808,10 @@ class TestComplexQueryEdgeCases:
 
         # Verify verification eventually passed
         verify_meta = response["metadata"]["phases"]["phase4_verify"]
-        assert verify_meta["verdict"] == "PASS"
+        assert verify_meta["final_verdict"] == "PASS"
 
-        # Check if retry occurred (if retry_count tracked)
-        if "retry_count" in verify_meta:
-            assert verify_meta["retry_count"] >= 1
+        # Check if retry occurred (retry_count should be tracked)
+        assert verify_meta["retry_count"] >= 1
 
     def test_complex_query_agent_not_found_fallback(self, e2e_framework):
         """Test fallback when suggested agent not found."""

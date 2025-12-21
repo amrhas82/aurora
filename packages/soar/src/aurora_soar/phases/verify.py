@@ -25,6 +25,7 @@ class VerifyPhaseResult:
         all_attempts: List of all verification attempts
         final_verdict: Final verdict (PASS or FAIL)
         timing_ms: Time taken in milliseconds
+        method: Verification method used (self or adversarial)
     """
 
     def __init__(
@@ -34,12 +35,14 @@ class VerifyPhaseResult:
         all_attempts: Optional[List[VerificationResult]] = None,
         final_verdict: str = "PASS",
         timing_ms: float = 0.0,
+        method: str = "self",
     ):
         self.verification = verification
         self.retry_count = retry_count
         self.all_attempts = all_attempts or [verification]
         self.final_verdict = final_verdict
         self.timing_ms = timing_ms
+        self.method = method
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
@@ -49,6 +52,7 @@ class VerifyPhaseResult:
             "all_attempts": [v.to_dict() for v in self.all_attempts],
             "final_verdict": self.final_verdict,
             "timing_ms": self.timing_ms,
+            "method": self.method,
         }
 
 
@@ -97,6 +101,9 @@ def verify_decomposition(
 
     # Select verification option based on complexity
     verification_option = _select_verification_option(complexity)
+
+    # Track verification method for metadata
+    verification_method = "adversarial" if verification_option == VerificationOption.ADVERSARIAL else "self"
 
     # Track all attempts
     all_attempts: List[VerificationResult] = []
@@ -172,6 +179,7 @@ def verify_decomposition(
         all_attempts=all_attempts,
         final_verdict=final_verdict,
         timing_ms=timing_ms,
+        method=verification_method,
     )
 
 

@@ -330,13 +330,14 @@ class SOAROrchestrator:
             decomposition_data = decomposition_dict.get("decomposition", decomposition_dict)
             decomposition = DecompositionResult.from_dict(decomposition_data)
 
-            result = verify.verify_decomposition(
+            phase_result = verify.verify_decomposition(
                 decomposition=decomposition,
                 complexity=complexity,
                 llm_client=self.reasoning_llm,
                 query=query,
                 available_agents=available_agents,
             )
+            result = phase_result.to_dict()
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             return result

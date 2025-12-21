@@ -12,7 +12,7 @@ class VerifyAgentOutputPromptTemplate(PromptTemplate):
     Verifies that agent responses meet quality standards before synthesis.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(name="verify_agent_output", version="1.0")
 
     def build_system_prompt(self, **kwargs: Any) -> str:

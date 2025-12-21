@@ -13,7 +13,7 @@ class VerifySelfPromptTemplate(PromptTemplate):
     against quality criteria.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(name="verify_self", version="1.0")
 
     def build_system_prompt(self, **kwargs: Any) -> str:

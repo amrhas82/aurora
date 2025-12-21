@@ -12,7 +12,7 @@ class RetryFeedbackPromptTemplate(PromptTemplate):
     Converts verification results into actionable feedback for retry attempts.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(name="retry_feedback", version="1.0")
 
     def build_system_prompt(self, **kwargs: Any) -> str:

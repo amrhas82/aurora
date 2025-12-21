@@ -13,7 +13,7 @@ class VerifyAdversarialPromptTemplate(PromptTemplate):
     for flaws in the decomposition.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(name="verify_adversarial", version="1.0")
 
     def build_system_prompt(self, **kwargs: Any) -> str:

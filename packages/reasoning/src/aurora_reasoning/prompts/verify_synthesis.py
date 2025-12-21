@@ -12,7 +12,7 @@ class VerifySynthesisPromptTemplate(PromptTemplate):
     Ensures synthesis is complete, accurate, and properly traces back to agent outputs.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(name="verify_synthesis", version="1.0")
 
     def build_system_prompt(self, **kwargs: Any) -> str:

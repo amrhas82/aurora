@@ -13,7 +13,7 @@ class DecomposePromptTemplate(PromptTemplate):
     and execution order.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(name="decompose", version="1.0")
 
     def build_system_prompt(self, **kwargs: Any) -> str:

@@ -286,7 +286,7 @@ This task list breaks down PRD 0003 (AURORA SOAR Pipeline & Verification) into a
   - [x] 5.21 Add VERBOSE verbosity output (full trace with detailed metadata)
   - [x] 5.22 Add JSON verbosity output (structured JSON logs for each phase)
   - [x] 5.23 Implement response structure (answer, confidence, overall_score, reasoning_trace, metadata)
-  - [ ] 5.24 Write unit tests for synthesis logic (tests/unit/reasoning/test_synthesize.py)
+  - [x] 5.24 Write unit tests for synthesis logic (tests/unit/reasoning/test_synthesize.py)
   - [ ] 5.25 Write unit tests for ReasoningChunk (tests/unit/core/test_reasoning_chunk.py)
   - [ ] 5.26 Write unit tests for record phase (tests/unit/soar/test_phase_record.py)
   - [ ] 5.27 Write unit tests for respond phase (tests/unit/soar/test_phase_respond.py)

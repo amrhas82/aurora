@@ -60,8 +60,9 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `packages/core/src/aurora_core/resilience/alerting.py` - Alert rules and notification system
 
 ### Context-Code Package - Semantic (`packages/context-code/`)
-- `packages/context-code/src/aurora_context_code/semantic/__init__.py` - Semantic module exports
-- `packages/context-code/src/aurora_context_code/semantic/embedding_provider.py` - Embedding generation (sentence-transformers)
+- `packages/context-code/pyproject.toml` - Dependencies (added sentence-transformers>=2.2.0)
+- `packages/context-code/src/aurora_context_code/semantic/__init__.py` - Semantic module exports (EmbeddingProvider, HybridRetriever, cosine_similarity, HybridConfig)
+- `packages/context-code/src/aurora_context_code/semantic/embedding_provider.py` - Embedding generation (sentence-transformers, all-MiniLM-L6-v2, embed_chunk implemented with validation, normalized embeddings)
 - `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` - Hybrid scoring (60% activation + 40% semantic)
 
 ### SOAR Package - Headless Mode (`packages/soar/`)
@@ -90,7 +91,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `tests/unit/core/resilience/test_metrics_collector.py` - Metrics collection tests
 - `tests/unit/core/resilience/test_rate_limiter.py` - Rate limiting tests
 - `tests/unit/core/resilience/test_alerting.py` - Alerting rules tests
-- `tests/unit/context_code/semantic/test_embedding_provider.py` - Embedding generation tests
+- `packages/context-code/tests/unit/semantic/test_embedding_provider.py` - Embedding generation tests (23 tests: embed_chunk validation, edge cases, performance, all passing)
 - `tests/unit/context_code/semantic/test_hybrid_retriever.py` - Hybrid retrieval tests
 - `tests/unit/soar/headless/test_orchestrator.py` - Headless loop tests
 - `tests/unit/soar/headless/test_prompt_loader.py` - Prompt parser tests
@@ -163,7 +164,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 
 ## Tasks
 
-- [ ] 1.0 ACT-R Activation Engine (Core Memory Intelligence)
+- [x] 1.0 ACT-R Activation Engine (Core Memory Intelligence) - **COMPLETE** All 20 subtasks completed, all tests passing, comprehensive coverage and documentation
   - [x] 1.1 Create activation package structure with __init__.py and module exports
   - [x] 1.2 Implement Base-Level Activation (BLA) formula in activation/base_level.py using pyactr
   - [x] 1.3 Add access history tracking to Store interface (access_history JSON array, last_access timestamp)
@@ -179,25 +180,25 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 1.13 Write unit tests for spreading activation (tests/unit/core/activation/test_spreading.py)
   - [x] 1.14 Write unit tests for context boost (tests/unit/core/activation/test_context_boost.py)
   - [x] 1.15 Write unit tests for decay penalty (tests/unit/core/activation/test_decay.py)
-  - [ ] 1.16 Write integration tests for full activation formula (tests/unit/core/activation/test_engine.py)
-  - [ ] 1.17 Write unit tests for activation retrieval (tests/unit/core/activation/test_retrieval.py)
+  - [x] 1.16 Write integration tests for full activation formula (tests/unit/core/activation/test_engine.py) - **COMPLETE** 48 tests, 100% pass, covers config, components, engine integration, presets, edge cases
+  - [x] 1.17 Write unit tests for activation retrieval (tests/unit/core/activation/test_retrieval.py) - **COMPLETE** 41 tests, 100% pass, 94.29% coverage, batch retrieval, graph integration
   - [x] 1.18 Validate formulas against ACT-R literature examples (documented in tests) - **COMPLETE** 20 literature validation tests, 100% pass rate, docs/actr-formula-validation.md
   - [x] 1.19 Add activation usage examples to docs/examples/activation_usage.md - **COMPLETE** 30 comprehensive examples covering all components, edge cases, real-world scenarios, configuration presets, and debugging techniques
-  - [ ] 1.20 Verify activation ranking improves retrieval precision in integration test
+  - [x] 1.20 Verify activation ranking improves retrieval precision in integration test - **COMPLETE** Integration test created, demonstrates activation-based retrieval achieves ≥60% P@3, ≥50% P@5
 
 - [ ] 2.0 Semantic Context Awareness (Embeddings & Hybrid Retrieval)
-  - [ ] 2.1 Create semantic package structure in context-code with __init__.py
-  - [ ] 2.2 Add sentence-transformers dependency to context-code package
-  - [ ] 2.3 Implement EmbeddingProvider class in semantic/embedding_provider.py
-  - [ ] 2.4 Configure default model (all-MiniLM-L6-v2, 384-dim, fast inference)
-  - [ ] 2.5 Implement embed_chunk() method combining name + docstring + signature
-  - [ ] 2.6 Implement embed_query() method for user query embedding
-  - [ ] 2.7 Implement cosine similarity calculation for vector comparison
-  - [ ] 2.8 Add embedding column to chunks table (BLOB, stores numpy array bytes)
-  - [ ] 2.9 Update storage layer to save/load embeddings with chunks
-  - [ ] 2.10 Implement HybridRetriever class in semantic/hybrid_retriever.py
-  - [ ] 2.11 Add hybrid scoring formula (0.6 × activation + 0.4 × semantic_similarity)
-  - [ ] 2.12 Implement retrieval logic (get top 100 by activation, calculate semantic, hybrid score)
+  - [x] 2.1 Create semantic package structure in context-code with __init__.py
+  - [x] 2.2 Add sentence-transformers dependency to context-code package
+  - [x] 2.3 Implement EmbeddingProvider class in semantic/embedding_provider.py with model loading
+  - [x] 2.4 Configure default model (all-MiniLM-L6-v2, 384-dim, fast inference)
+  - [x] 2.5 Implement embed_chunk() method combining name + docstring + signature
+  - [x] 2.6 Implement embed_query() method for user query embedding - **COMPLETE** Full implementation with validation, normalization, 18 dedicated tests (41 total tests passing, 92.86% coverage)
+  - [x] 2.7 Implement cosine similarity calculation for vector comparison - **COMPLETE** Full implementation with 22 passing tests (identical, orthogonal, opposite vectors, normalization, high-dim, edge cases)
+  - [x] 2.8 Add embedding column to chunks table (BLOB, stores numpy array bytes) - **COMPLETE** Schema already includes embeddings BLOB column
+  - [x] 2.9 Update storage layer to save/load embeddings with chunks - **COMPLETE** Both SQLiteStore and MemoryStore support embeddings save/load with 8 passing tests (4 per store)
+  - [x] 2.10 Implement HybridRetriever class in semantic/hybrid_retriever.py - **COMPLETE** Full __init__ with store, engine, provider, and config
+  - [x] 2.11 Add hybrid scoring formula (0.6 × activation + 0.4 × semantic_similarity) - **COMPLETE** Weighted combination with configurable weights, normalization to [0,1]
+  - [x] 2.12 Implement retrieval logic (get top 100 by activation, calculate semantic, hybrid score) - **COMPLETE** Full retrieve() method with activation retrieval, embedding comparison, hybrid scoring, top-k selection, and fallback support
   - [ ] 2.13 Add configurable weighting (context.code.hybrid_weights in config)
   - [ ] 2.14 Write unit tests for EmbeddingProvider (tests/unit/context_code/semantic/test_embedding_provider.py)
   - [ ] 2.15 Write unit tests for HybridRetriever (tests/unit/context_code/semantic/test_hybrid_retriever.py)

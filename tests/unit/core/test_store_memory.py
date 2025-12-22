@@ -300,5 +300,77 @@ class TestMemoryStore(StoreContractTests):
         # If we got here without errors, no file I/O was attempted
         assert True, "MemoryStore should work without file I/O"
 
+    def test_save_chunk_with_embeddings(self, store):
+        """Test saving a chunk with embeddings attribute."""
+        chunk = TestChunk("test:chunk:1", "content")
+
+        # Add embeddings as bytes (simulating numpy array serialization)
+        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        chunk.embeddings = test_embeddings
+
+        # Save chunk
+        store.save_chunk(chunk)
+
+        # Verify embeddings were preserved in memory
+        assert chunk.id in store._chunks
+        stored_chunk = store._chunks[chunk.id]
+        assert hasattr(stored_chunk, 'embeddings'), "Stored chunk should have embeddings attribute"
+        assert stored_chunk.embeddings == test_embeddings, "Embeddings should be preserved"
+
+    def test_get_chunk_with_embeddings(self, store):
+        """Test retrieving a chunk with embeddings."""
+        chunk = TestChunk("test:chunk:1", "content")
+
+        # Add embeddings
+        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        chunk.embeddings = test_embeddings
+
+        # Save and retrieve
+        store.save_chunk(chunk)
+        retrieved = store.get_chunk(ChunkID(chunk.id))
+
+        assert retrieved is not None, "Chunk should be retrieved"
+        assert hasattr(retrieved, 'embeddings'), "Retrieved chunk should have embeddings attribute"
+        assert retrieved.embeddings == test_embeddings, "Embeddings should be preserved"
+        assert retrieved is chunk, "MemoryStore should return the same instance"
+
+    def test_save_chunk_without_embeddings(self, store):
+        """Test saving a chunk without embeddings (optional field)."""
+        chunk = TestChunk("test:chunk:1", "content")
+
+        # Don't set embeddings - should work fine
+        store.save_chunk(chunk)
+
+        # Verify chunk was saved
+        assert chunk.id in store._chunks
+        stored_chunk = store._chunks[chunk.id]
+        # Embeddings attribute may not exist or be None
+        assert not hasattr(stored_chunk, 'embeddings') or stored_chunk.embeddings is None
+
+    def test_retrieve_by_activation_with_embeddings(self, store):
+        """Test that retrieve_by_activation preserves embeddings."""
+        chunk1 = TestChunk("test:chunk:1", "content1")
+        chunk2 = TestChunk("test:chunk:2", "content2")
+
+        # Add embeddings to both chunks
+        chunk1.embeddings = b'\x00\x01\x02\x03'
+        chunk2.embeddings = b'\x04\x05\x06\x07'
+
+        # Save chunks and set activations
+        store.save_chunk(chunk1)
+        store.save_chunk(chunk2)
+        store.update_activation(ChunkID(chunk1.id), 2.0)
+        store.update_activation(ChunkID(chunk2.id), 1.0)
+
+        # Retrieve by activation
+        chunks = store.retrieve_by_activation(min_activation=0.5, limit=10)
+
+        assert len(chunks) == 2, "Should retrieve both chunks"
+        # Find chunk1 in results
+        chunk1_retrieved = next((c for c in chunks if c.id == chunk1.id), None)
+        assert chunk1_retrieved is not None, "chunk1 should be in results"
+        assert hasattr(chunk1_retrieved, 'embeddings'), "Retrieved chunk should have embeddings"
+        assert chunk1_retrieved.embeddings == b'\x00\x01\x02\x03', "Embeddings should be preserved"
+
 
 __all__ = ['TestMemoryStore']

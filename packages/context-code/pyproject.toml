@@ -25,6 +25,7 @@ dependencies = [
     "tree-sitter>=0.20.0",
     "tree-sitter-python>=0.20.0",
     "aurora-core",
+    "sentence-transformers>=2.2.0",
 ]
 
 [project.optional-dependencies]

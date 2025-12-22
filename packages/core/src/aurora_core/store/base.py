@@ -7,9 +7,10 @@ future storage backends.
 """
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 # Forward reference to avoid circular imports - Chunk will be defined in chunks module
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 
 if TYPE_CHECKING:
@@ -150,6 +151,78 @@ class Store(ABC):
 
         Returns:
             List of chunks related to chunk_id within max_depth hops
+
+        Raises:
+            StorageError: If storage operation fails
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        pass
+
+    @abstractmethod
+    def record_access(
+        self,
+        chunk_id: ChunkID,
+        access_time: Optional[datetime] = None,
+        context: Optional[str] = None
+    ) -> None:
+        """
+        Record an access to a chunk for ACT-R activation tracking.
+
+        This method updates the chunk's access history, which is used to calculate
+        Base-Level Activation (BLA) based on frequency and recency of access.
+
+        Args:
+            chunk_id: The chunk that was accessed
+            access_time: Timestamp of access (defaults to current time)
+            context: Optional context information (e.g., query keywords)
+
+        Raises:
+            StorageError: If storage operation fails
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        pass
+
+    @abstractmethod
+    def get_access_history(
+        self,
+        chunk_id: ChunkID,
+        limit: Optional[int] = None
+    ) -> List[dict]:
+        """
+        Retrieve access history for a chunk.
+
+        Returns a list of access records, most recent first.
+
+        Args:
+            chunk_id: The chunk whose history to retrieve
+            limit: Maximum number of records to return (None = all)
+
+        Returns:
+            List of access records with 'timestamp' and optional 'context' keys
+
+        Raises:
+            StorageError: If storage operation fails
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        pass
+
+    @abstractmethod
+    def get_access_stats(self, chunk_id: ChunkID) -> dict:
+        """
+        Get access statistics for a chunk.
+
+        Provides quick access to summary statistics without retrieving
+        the full access history.
+
+        Args:
+            chunk_id: The chunk to get statistics for
+
+        Returns:
+            Dictionary with keys:
+                - access_count: Total number of accesses
+                - last_access: Timestamp of most recent access
+                - first_access: Timestamp of first access
+                - created_at: Timestamp of chunk creation
 
         Raises:
             StorageError: If storage operation fails

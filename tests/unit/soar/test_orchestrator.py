@@ -30,6 +30,7 @@ from aurora_soar.phases.collect import CollectResult
 from aurora_soar.phases.decompose import DecomposePhaseResult
 from aurora_soar.phases.record import RecordResult
 from aurora_soar.phases.respond import ResponseResult
+from aurora_soar.phases.route import RouteResult
 from aurora_soar.phases.synthesize import SynthesisResult
 from aurora_soar.phases.verify import VerifyPhaseResult
 
@@ -221,11 +222,20 @@ def test_complex_query_full_pipeline(
         timing_ms=150.0,
         method="adversarial",
     )
-    mock_route.return_value = {
-        "routed_subgoals": [{"id": "sg1", "agent_id": "test-agent"}],
-        "_timing_ms": 50.0,
-        "_error": None,
-    }
+    # Create mock agent for routing
+    mock_agent = AgentInfo(
+        id="test-agent",
+        name="Test Agent",
+        description="Test agent for routing",
+        agent_type="local",
+        capabilities=["test"],
+        config={}
+    )
+    mock_route.return_value = RouteResult(
+        agent_assignments=[(0, mock_agent)],
+        execution_plan=[{"phase": 1, "parallelizable": [0], "sequential": []}],
+        routing_metadata={"_timing_ms": 50.0, "_error": None}
+    )
     mock_collect.return_value = CollectResult(
         agent_outputs=[],
         execution_metadata={"_timing_ms": 300.0, "_error": None},

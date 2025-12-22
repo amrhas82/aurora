@@ -59,18 +59,16 @@ class TestMediumQueryE2E:
         # Phase 3: Decomposition - 2 subgoals (simpler than complex)
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Extract user data from database",
-                "agent_type": "database-query",
-                "inputs": {},
-                "dependencies": [],
+                "suggested_agent": "database-query",
+                "is_critical": True,
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Format data for display",
-                "agent_type": "formatter",
-                "inputs": {},
-                "dependencies": ["subgoal_1"],
+                "suggested_agent": "formatter",
+                "is_critical": True,
+                "depends_on": [0],  # Depends on first subgoal (integer index)
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -160,18 +158,16 @@ class TestMediumQueryE2E:
         # Decomposition
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Validate input parameters",
-                "agent_type": "validator",
-                "inputs": {},
-                "dependencies": [],
+                "suggested_agent": "validator",
+                "is_critical": True,
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Process request",
-                "agent_type": "processor",
-                "inputs": {},
-                "dependencies": ["subgoal_1"],
+                "suggested_agent": "processor",
+                "is_critical": True,
+                "depends_on": [0],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -236,11 +232,10 @@ class TestMediumQueryE2E:
         # Simple decomposition to keep test fast
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Fetch data",
-                "agent_type": "fetcher",
-                "inputs": {},
-                "dependencies": [],
+                "suggested_agent": "fetcher",
+                "is_critical": True,
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -293,11 +288,13 @@ class TestMediumQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Analyze data",
-                "agent_type": "analyzer",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "analyzer",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -329,7 +326,7 @@ class TestMediumQueryE2E:
 
         # Verify MEDIUM budget allocation (10 chunks)
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
-        assert retrieve_meta["budget_limit"] == 10, (
+        assert retrieve_meta["budget"] == 10, (
             "MEDIUM queries should have budget of 10 chunks"
         )
 
@@ -343,34 +340,19 @@ class TestMediumQueryE2E:
         # Two independent subgoals (can run in parallel)
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Task A",
-                "agent_type": "worker-a",
-                "inputs": {},
-                "dependencies": [],
+                "suggested_agent": "worker-a",
+                "is_critical": True,
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Task B",
-                "agent_type": "worker-b",
-                "inputs": {},
-                "dependencies": [],
+                "suggested_agent": "worker-b",
+                "is_critical": True,
+                "depends_on": [],
             },
         ]
-        decomposition = {
-            "goal": "Parallel medium tasks",
-            "subgoals": subgoals,
-            "execution_order": [0, 1],
-            "parallelizable": [[0, 1]],  # Both can run in parallel
-        }
-        e2e_framework.mock_llm.configure_response(
-            "decompose",
-            MockLLMResponse(
-                content=json.dumps(decomposition),
-                input_tokens=400,
-                output_tokens=150,
-            ),
-        )
+        e2e_framework.configure_decomposition_response(subgoals)
 
         e2e_framework.configure_verification_response(
             verdict="PASS", score=0.81, feedback=""
@@ -424,11 +406,13 @@ class TestMediumQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Cost test",
-                "agent_type": "cost-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "cost-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -485,11 +469,13 @@ class TestMediumQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Metadata test",
-                "agent_type": "meta-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "meta-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -566,11 +552,13 @@ class TestMediumQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Analyze calculate function",
-                "agent_type": "calc-analyzer",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "calc-analyzer",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -605,7 +593,7 @@ class TestMediumQueryE2E:
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
 
         # Verify MEDIUM budget (10 chunks)
-        assert retrieve_meta["budget_limit"] == 10
+        assert retrieve_meta["budget"] == 10
 
         # Verify response completed
         assert "answer" in response
@@ -619,11 +607,10 @@ class TestMediumQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Verbosity test",
-                "agent_type": "verb-agent",
-                "inputs": {},
-                "dependencies": [],
+                "suggested_agent": "verb-agent",
+                "is_critical": True,
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -658,24 +645,10 @@ class TestMediumQueryE2E:
         assert "metadata" in response_quiet
 
         # Reset mocks for next calls
-        e2e_framework.mock_llm.configure_response(
-            "decompose",
-            MockLLMResponse(
-                content=json.dumps(
-                    {
-                        "goal": "Test",
-                        "subgoals": subgoals,
-                        "execution_order": [0],
-                        "parallelizable": [[0]],
-                    }
-                ),
-                input_tokens=400,
-                output_tokens=150,
-            ),
-        )
         e2e_framework.configure_assessment_response(
             complexity="MEDIUM", confidence=0.87
         )
+        e2e_framework.configure_decomposition_response(subgoals)
         e2e_framework.configure_verification_response(
             verdict="PASS", score=0.80, feedback=""
         )
@@ -691,21 +664,7 @@ class TestMediumQueryE2E:
         assert "phases" in response_normal["metadata"]
 
         # Reset mocks
-        e2e_framework.mock_llm.configure_response(
-            "decompose",
-            MockLLMResponse(
-                content=json.dumps(
-                    {
-                        "goal": "Test",
-                        "subgoals": subgoals,
-                        "execution_order": [0],
-                        "parallelizable": [[0]],
-                    }
-                ),
-                input_tokens=400,
-                output_tokens=150,
-            ),
-        )
+        e2e_framework.configure_decomposition_response(subgoals)
         e2e_framework.configure_assessment_response(
             complexity="MEDIUM", confidence=0.87
         )
@@ -737,11 +696,13 @@ class TestMediumQueryEdgeCases:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Borderline task",
-                "agent_type": "border-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "border-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -786,11 +747,13 @@ class TestMediumQueryEdgeCases:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Process without context",
-                "agent_type": "ctx-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "ctx-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -838,34 +801,19 @@ class TestMediumQueryEdgeCases:
         # Sequential subgoals with dependencies
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Step 1",
-                "agent_type": "step-agent",
-                "inputs": {},
-                "dependencies": [],
+                "suggested_agent": "step-agent",
+                "is_critical": True,
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Step 2",
-                "agent_type": "step-agent",
-                "inputs": {},
-                "dependencies": ["subgoal_1"],
+                "suggested_agent": "step-agent",
+                "is_critical": True,
+                "depends_on": [0],  # Depends on first subgoal
             },
         ]
-        decomposition = {
-            "goal": "Sequential medium tasks",
-            "subgoals": subgoals,
-            "execution_order": [0, 1],
-            "parallelizable": [[0], [1]],  # Each must run separately
-        }
-        e2e_framework.mock_llm.configure_response(
-            "decompose",
-            MockLLMResponse(
-                content=json.dumps(decomposition),
-                input_tokens=400,
-                output_tokens=150,
-            ),
-        )
+        e2e_framework.configure_decomposition_response(subgoals)
 
         e2e_framework.configure_verification_response(
             verdict="PASS", score=0.79, feedback=""

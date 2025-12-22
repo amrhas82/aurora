@@ -96,11 +96,11 @@ def synthesize_results(
     """
     start_time = time.time()
 
-    logger.info(f"Starting synthesis for {len(collect_result.outputs)} agent outputs")
+    logger.info(f"Starting synthesis for {len(collect_result.agent_outputs)} agent outputs")
 
     # Prepare agent outputs for synthesis
     agent_outputs = []
-    for output in collect_result.outputs:
+    for output in collect_result.agent_outputs:
         agent_outputs.append({
             "subgoal_index": output.subgoal_index,
             "agent_name": output.agent_id,
@@ -117,7 +117,7 @@ def synthesize_results(
     subgoals_partial = 0
     subgoals_failed = 0
 
-    for output in collect_result.outputs:
+    for output in collect_result.agent_outputs:
         if output.success:
             subgoals_completed += 1
         elif output.execution_metadata and output.execution_metadata.get("partial_success"):
@@ -164,6 +164,12 @@ def synthesize_results(
         "user_interactions_count": user_interactions_count,
     })
 
+    # Estimate token counts for cost tracking
+    # Use rough approximation: 1 token ≈ 4 characters for English text
+    prompt_text = f"{query} {decomposition.get('goal', '')} {len(agent_outputs)} outputs"
+    input_tokens = len(prompt_text) // 4
+    output_tokens = len(synthesis_result.answer) // 4
+
     return SynthesisResult(
         answer=synthesis_result.answer,
         confidence=synthesis_result.confidence,
@@ -173,5 +179,7 @@ def synthesize_results(
             "duration_ms": duration_ms,
             "started_at": start_time,
             "completed_at": end_time,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
         },
     )

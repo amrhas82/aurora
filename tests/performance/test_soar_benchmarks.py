@@ -39,30 +39,66 @@ class MockLLMClientFast(LLMClient):
         """Count tokens (minimal)."""
         return 1
 
-    def generate(self, prompt: str, system: str = "", **kwargs) -> str:
+    def generate(self, prompt: str, system: str = "", **kwargs):
         """Generate fast mock response."""
-        if "complexity" in prompt.lower() or "assess" in prompt.lower():
-            return '{"complexity": "SIMPLE", "confidence": 0.9, "reasoning": "test"}'
-        if "decompose" in prompt.lower():
-            return '{"subgoals": [{"id": "sg1", "description": "test", "suggested_agent": "test-agent"}], "execution_order": ["sg1"]}'
-        if "verify" in prompt.lower() or "score" in prompt.lower():
-            return '{"completeness": 0.9, "consistency": 0.9, "groundedness": 0.9, "routability": 0.9, "overall_score": 0.9, "verdict": "PASS", "issues": []}'
-        if "synthesize" in prompt.lower():
-            return "Test answer\\n\\nBased on: agent test-agent"
-        return "mock response"
+        from aurora_reasoning.llm_client import LLMResponse
+
+        content = ""
+        prompt_lower = prompt.lower()
+        system_lower = system.lower()
+        combined = prompt_lower + " " + system_lower
+
+        # Debug: print first 200 chars to see what we're matching
+        # if "verify" in combined or "validate" in combined:
+        #     print(f"DEBUG VERIFY: keywords in combined...")
+
+        # Order matters - check more specific patterns first
+        # Check synthesis verification BEFORE decomposition verification
+        if ("verify" in combined or "validate" in combined) and ("coherence" in combined or "factuality" in combined or "synthesis" in combined):
+            # Verification of synthesis - has coherence and factuality
+            content = '{"coherence": 0.9, "completeness": 0.9, "factuality": 0.9, "overall_score": 0.9}'
+        elif ("verify" in combined or "validate" in combined) and ("verdict" in combined or "score" in combined):
+            # Verification of decomposition - has verdict and issues
+            content = '{"completeness": 0.9, "consistency": 0.9, "groundedness": 0.9, "routability": 0.9, "overall_score": 0.9, "verdict": "PASS", "issues": []}'
+        elif "decompose" in combined or "break down" in combined:
+            content = '{"goal": "test goal", "subgoals": [{"id": "sg1", "description": "test", "suggested_agent": "test-agent", "is_critical": true, "depends_on": []}], "execution_order": [{"phase": "sg1", "sequential": true}], "expected_tools": []}'
+        elif "complexity" in combined or "assess" in combined:
+            content = '{"complexity": "SIMPLE", "confidence": 0.9, "reasoning": "test"}'
+        else:
+            # Default to synthesis response for all other cases
+            # (synthesize prompts are generic so this is the catch-all)
+            # Agent name must match what's in the decomposition/agent_outputs
+            content = "ANSWER: Test answer based on test-agent output\n\nCONFIDENCE: 0.9"
+
+        return LLMResponse(
+            content=content,
+            model="mock-fast",
+            input_tokens=1,
+            output_tokens=1,
+            finish_reason="stop"
+        )
 
     def generate_json(self, prompt: str, system: str = "", schema: dict | None = None, **kwargs) -> dict:
         """Generate JSON response."""
         import json
-        return json.loads(self.generate(prompt, system, **kwargs))
+        response = self.generate(prompt, system, **kwargs)
+        return json.loads(response.content)
 
 
 class NoOpCostTracker(CostTracker):
     """Cost tracker that doesn't track anything (for performance testing)."""
 
     def __init__(self):
-        """Initialize no-op tracker."""
-        super().__init__(monthly_limit_usd=999999.0)
+        """Initialize no-op tracker with isolated temp file."""
+        from pathlib import Path
+        import tempfile
+        temp_dir = tempfile.mkdtemp()
+        tracker_path = Path(temp_dir) / "perf_budget_tracker.json"
+        super().__init__(monthly_limit_usd=999999.0, tracker_path=tracker_path)
+
+    def check_budget(self, estimated_cost: float) -> tuple[bool, str]:
+        """Always allow."""
+        return True, "OK"
 
     def can_proceed(self) -> tuple[bool, str]:
         """Always allow."""
@@ -179,11 +215,13 @@ class TestSOARPerformance:
 
         llm_client = MockLLMClientFast()
         decomposition = {
+            "goal": "Test query for verification timing",
             "subgoals": [
                 {"id": "sg1", "description": "Test 1", "suggested_agent": "test-agent"},
                 {"id": "sg2", "description": "Test 2", "suggested_agent": "test-agent"},
             ],
             "execution_order": ["sg1", "sg2"],
+            "expected_tools": [],
         }
 
         start = time.perf_counter()
@@ -282,7 +320,7 @@ class TestPhasePerformance:
             llm_client=llm_client,
             query="Test query for decomposition timing",
             complexity="COMPLEX",
-            context_chunks=[],
+            context_summary="Test context summary",
         )
         end = time.perf_counter()
 
@@ -302,14 +340,21 @@ class TestPhasePerformance:
         result = synthesize.synthesize_results(
             llm_client=llm_client,
             query="Test query",
-            subgoals_results=[
+            agent_outputs=[
                 {
                     "subgoal_id": "sg1",
                     "description": "Test subgoal",
+                    "agent_name": "test-agent",
                     "agent_output": "Test output",
                     "status": "completed",
                 }
             ],
+            decomposition={
+                "goal": "Test query",
+                "subgoals": [{"id": "sg1", "description": "Test subgoal", "suggested_agent": "test-agent"}],
+                "execution_order": ["sg1"],
+                "expected_tools": [],
+            },
         )
         end = time.perf_counter()
 

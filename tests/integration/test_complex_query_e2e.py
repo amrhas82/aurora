@@ -60,25 +60,31 @@ class TestComplexQueryE2E:
         # Phase 3: Decomposition - 3 subgoals
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Analyze authentication flow",
-                "agent_type": "code-analyzer",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "code-analyzer",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Review security patterns",
-                "agent_type": "security-checker",
-                "inputs": {},
-                "dependencies": ["subgoal_1"],
+
+                "suggested_agent": "security-checker",
+
+                "is_critical": True,
+
+                "depends_on": [0],
             },
             {
-                "id": "subgoal_3",
                 "description": "Generate recommendations",
-                "agent_type": "code-analyzer",
-                "inputs": {},
-                "dependencies": ["subgoal_1", "subgoal_2"],
+
+                "suggested_agent": "code-analyzer",
+
+                "is_critical": True,
+
+                "depends_on": [0, 1],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -170,18 +176,22 @@ class TestComplexQueryE2E:
         # Decomposition
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Parse configuration files",
-                "agent_type": "file-parser",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "file-parser",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Validate configuration schema",
-                "agent_type": "validator",
-                "inputs": {},
-                "dependencies": ["subgoal_1"],
+
+                "suggested_agent": "validator",
+
+                "is_critical": True,
+
+                "depends_on": [0],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -246,11 +256,13 @@ class TestComplexQueryE2E:
         # Simple decomposition to keep test fast
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Analyze code structure",
-                "agent_type": "analyzer",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "analyzer",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -303,11 +315,13 @@ class TestComplexQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Process data",
-                "agent_type": "processor",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "processor",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -339,7 +353,7 @@ class TestComplexQueryE2E:
 
         # Verify COMPLEX budget allocation (15 chunks)
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
-        assert retrieve_meta["budget_limit"] == 15, (
+        assert retrieve_meta["budget"] == 15, (
             "COMPLEX queries should have budget of 15 chunks"
         )
 
@@ -353,32 +367,40 @@ class TestComplexQueryE2E:
         # Three independent subgoals (can run in parallel)
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Task A",
-                "agent_type": "worker-a",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "worker-a",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Task B",
-                "agent_type": "worker-b",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "worker-b",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
             {
-                "id": "subgoal_3",
                 "description": "Task C",
-                "agent_type": "worker-c",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "worker-c",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         decomposition = {
             "goal": "Parallel tasks",
             "subgoals": subgoals,
-            "execution_order": [0, 1, 2],
-            "parallelizable": [[0, 1, 2]],  # All three can run in parallel
+            "execution_order": [
+                {"phase": 1, "parallelizable": [0, 1, 2], "sequential": []}
+            ],
+            "expected_tools": ["worker"],
         }
         e2e_framework.mock_llm.configure_response(
             "decompose",
@@ -442,32 +464,42 @@ class TestComplexQueryE2E:
         # Sequential subgoals with dependencies
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Step 1",
-                "agent_type": "step-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "step-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
             {
-                "id": "subgoal_2",
                 "description": "Step 2",
-                "agent_type": "step-agent",
-                "inputs": {},
-                "dependencies": ["subgoal_1"],
+
+                "suggested_agent": "step-agent",
+
+                "is_critical": True,
+
+                "depends_on": [0],
             },
             {
-                "id": "subgoal_3",
                 "description": "Step 3",
-                "agent_type": "step-agent",
-                "inputs": {},
-                "dependencies": ["subgoal_2"],
+
+                "suggested_agent": "step-agent",
+
+                "is_critical": True,
+
+                "depends_on": [1],
             },
         ]
         decomposition = {
             "goal": "Sequential tasks",
             "subgoals": subgoals,
-            "execution_order": [0, 1, 2],
-            "parallelizable": [[0], [1], [2]],  # Each must run separately
+            "execution_order": [
+                {"phase": 1, "parallelizable": [0], "sequential": []},
+                {"phase": 2, "parallelizable": [1], "sequential": []},
+                {"phase": 3, "parallelizable": [2], "sequential": []},
+            ],
+            "expected_tools": ["step-tool"],
         }
         e2e_framework.mock_llm.configure_response(
             "decompose",
@@ -522,11 +554,13 @@ class TestComplexQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Cost test",
-                "agent_type": "cost-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "cost-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -583,11 +617,13 @@ class TestComplexQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Metadata test",
-                "agent_type": "meta-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "meta-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -664,11 +700,13 @@ class TestComplexQueryE2E:
 
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Analyze auth service",
-                "agent_type": "auth-analyzer",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "auth-analyzer",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
@@ -703,7 +741,7 @@ class TestComplexQueryE2E:
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
 
         # Verify COMPLEX budget (15 chunks)
-        assert retrieve_meta["budget_limit"] == 15
+        assert retrieve_meta["budget"] == 15
 
         # Verify response completed
         assert "answer" in response
@@ -720,13 +758,36 @@ class TestComplexQueryEdgeCases:
             complexity="COMPLEX", confidence=0.92
         )
 
+        # Configure agent
+        agent = MockAgent(
+            agent_id="retry-agent",
+            capabilities=["retry"],
+            response={
+                "summary": "Retry test complete.",
+                "data": {},
+                "confidence": 0.90,
+            },
+        )
+        e2e_framework.register_mock_agent(agent)
+
+        # Manually configure synthesis response without verification to avoid pattern conflicts
+        synthesis_response = MockLLMResponse(
+            content="ANSWER: Retry mechanism works. (Agent: retry-agent)\nCONFIDENCE: 0.88",
+            input_tokens=600,
+            output_tokens=300
+        )
+        e2e_framework.mock_llm.configure_response("synthesizing information", synthesis_response)
+        e2e_framework.mock_llm.configure_response("combine the agent outputs", synthesis_response)
+
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Test retry",
-                "agent_type": "retry-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "retry-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
 
@@ -764,8 +825,9 @@ class TestComplexQueryEdgeCases:
         )
 
         # Configure multiple responses for verification (retry pattern)
+        # Use pattern specific to adversarial decomposition verification
         e2e_framework.mock_llm.configure_responses(
-            "verify", [retry_response, pass_response]
+            "RED TEAM adversarial verifier", [retry_response, pass_response]
         )
 
         # Need two decomposition responses (initial + retry)
@@ -774,8 +836,10 @@ class TestComplexQueryEdgeCases:
                 {
                     "goal": "Retry test",
                     "subgoals": subgoals,
-                    "execution_order": [0],
-                    "parallelizable": [[0]],
+                    "execution_order": [
+                        {"phase": 1, "parallelizable": [0], "sequential": []}
+                    ],
+                    "expected_tools": ["retry-tool"],
                 }
             ),
             input_tokens=500,
@@ -783,22 +847,6 @@ class TestComplexQueryEdgeCases:
         )
         e2e_framework.mock_llm.configure_responses(
             "decompose", [decomp_response, decomp_response]
-        )
-
-        agent = MockAgent(
-            agent_id="retry-agent",
-            capabilities=["retry"],
-            response={
-                "summary": "Retry test complete.",
-                "data": {},
-                "confidence": 0.90,
-            },
-        )
-        e2e_framework.register_mock_agent(agent)
-
-        e2e_framework.configure_synthesis_response(
-            answer="Retry mechanism works.",
-            confidence=0.88,
         )
 
         orchestrator = e2e_framework.create_orchestrator()
@@ -822,11 +870,13 @@ class TestComplexQueryEdgeCases:
         # Decomposition suggests non-existent agent
         subgoals = [
             {
-                "id": "subgoal_1",
                 "description": "Task requiring non-existent agent",
-                "agent_type": "non-existent-agent",
-                "inputs": {},
-                "dependencies": [],
+
+                "suggested_agent": "non-existent-agent",
+
+                "is_critical": True,
+
+                "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)

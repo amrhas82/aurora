@@ -219,29 +219,48 @@ class SOAROrchestrator:
                 )
 
             # Phase 5: Route to agents
-            phase5_result = self._phase5_route(phase3_result)
-            self._phase_metadata["phase5_route"] = phase5_result
+            # Extract the decomposition dict from the phase wrapper
+            decomposition_dict = phase3_result.get("decomposition", phase3_result)
+            phase5_result_obj = self._phase5_route(decomposition_dict)
+            # Store dict version in metadata, keep object for phase 6
+            phase5_dict = phase5_result_obj.to_dict()
+            phase5_dict["_timing_ms"] = 0  # Timing handled internally
+            phase5_dict["_error"] = None
+            self._phase_metadata["phase5_route"] = phase5_dict
 
-            # Phase 6: Execute agents
-            phase6_result = self._phase6_collect(
-                phase5_result, phase2_result
+            # Phase 6: Execute agents (needs RouteResult object)
+            phase6_result_obj = self._phase6_collect(
+                phase5_result_obj, phase2_result
             )
-            self._phase_metadata["phase6_collect"] = phase6_result
+            # Store dict version in metadata, keep object for phase 7
+            phase6_dict = phase6_result_obj.to_dict()
+            phase6_dict["_timing_ms"] = 0  # Timing handled internally
+            phase6_dict["_error"] = None
+            phase6_dict["agents_executed"] = len(phase6_result_obj.agent_outputs)
+            self._phase_metadata["phase6_collect"] = phase6_dict
 
-            # Phase 7: Synthesize results
-            phase7_result = self._phase7_synthesize(
-                phase6_result, query, phase3_result
+            # Phase 7: Synthesize results (needs CollectResult object)
+            decomposition_dict = phase3_result.get("decomposition", phase3_result)
+            phase7_result_obj = self._phase7_synthesize(
+                phase6_result_obj, query, decomposition_dict
             )
-            self._phase_metadata["phase7_synthesize"] = phase7_result.to_dict()
+            # Store dict version in metadata
+            phase7_dict = phase7_result_obj.to_dict()
+            phase7_dict["_timing_ms"] = 0
+            phase7_dict["_error"] = None
+            self._phase_metadata["phase7_synthesize"] = phase7_dict
 
-            # Phase 8: Record pattern
+            # Phase 8: Record pattern (needs object versions)
             phase8_result = self._phase8_record(
-                query, phase1_result["complexity"], phase3_result, phase6_result, phase7_result
+                query, phase1_result["complexity"], decomposition_dict, phase6_result_obj, phase7_result_obj
             )
-            self._phase_metadata["phase8_record"] = phase8_result.to_dict()
+            phase8_dict = phase8_result.to_dict()
+            phase8_dict["_timing_ms"] = 0
+            phase8_dict["_error"] = None
+            self._phase_metadata["phase8_record"] = phase8_dict
 
-            # Phase 9: Format response
-            return self._phase9_respond(phase7_result, phase8_result, verbosity)
+            # Phase 9: Format response (needs object versions)
+            return self._phase9_respond(phase7_result_obj, phase8_result, verbosity)
 
         except BudgetExceededError:
             # Re-raise budget errors without handling - caller should handle budget limits
@@ -305,6 +324,8 @@ class SOAROrchestrator:
                 available_agents=available_agents,
             )
             result = phase_result.to_dict()
+            # Add convenience fields for E2E tests
+            result["subgoals_total"] = len(result["decomposition"]["subgoals"])
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             return result
@@ -347,48 +368,67 @@ class SOAROrchestrator:
         except Exception as e:
             logger.error(f"Phase 4 failed: {e}")
             return {
-                "verdict": "FAIL",
+                "final_verdict": "FAIL",
                 "overall_score": 0.0,
+                "verification": {
+                    "completeness": 0.0,
+                    "consistency": 0.0,
+                    "groundedness": 0.0,
+                    "routability": 0.0,
+                    "overall_score": 0.0,
+                    "verdict": "FAIL",
+                    "issues": [str(e)],
+                    "suggestions": [],
+                },
+                "retry_count": 0,
+                "all_attempts": [],
+                "method": "error",
                 "_timing_ms": (time.time() - start_time) * 1000,
                 "_error": str(e),
             }
 
-    def _phase5_route(self, decomposition: dict) -> dict[str, Any]:
-        """Execute Phase 5: Agent Routing."""
+    def _phase5_route(self, decomposition: dict) -> route.RouteResult:
+        """Execute Phase 5: Agent Routing.
+
+        Returns RouteResult object (not dict) for use by phase 6.
+        """
         logger.info("Phase 5: Routing to agents")
         start_time = time.time()
         try:
             result = route.route_subgoals(decomposition, self.agent_registry)
-            result["_timing_ms"] = (time.time() - start_time) * 1000
-            result["_error"] = None
             return result
         except Exception as e:
             logger.error(f"Phase 5 failed: {e}")
-            return {
-                "routed_subgoals": [],
-                "_timing_ms": (time.time() - start_time) * 1000,
-                "_error": str(e),
-            }
+            # Return empty RouteResult on failure
+            from aurora_soar.phases.route import RouteResult
+            return RouteResult(
+                agent_assignments=[],
+                execution_plan=[],
+                routing_metadata={"error": str(e)}
+            )
 
     def _phase6_collect(
-        self, routing: dict, context: dict
-    ) -> dict[str, Any]:
-        """Execute Phase 6: Agent Execution."""
+        self, routing: route.RouteResult, context: dict
+    ) -> collect.CollectResult:
+        """Execute Phase 6: Agent Execution.
+
+        Returns CollectResult object (not dict) for use by phase 7.
+        """
         logger.info("Phase 6: Executing agents")
         start_time = time.time()
         try:
             # Execute agents asynchronously
             result = asyncio.run(collect.execute_agents(routing, context))
-            result["_timing_ms"] = (time.time() - start_time) * 1000
-            result["_error"] = None
             return result
         except Exception as e:
             logger.error(f"Phase 6 failed: {e}")
-            return {
-                "agent_outputs": [],
-                "_timing_ms": (time.time() - start_time) * 1000,
-                "_error": str(e),
-            }
+            # Return empty CollectResult on failure
+            from aurora_soar.phases.collect import CollectResult
+            return CollectResult(
+                agent_outputs=[],
+                execution_metadata={"error": str(e)},
+                user_interactions=[]
+            )
 
     def _phase7_synthesize(
         self, collect_result: collect.CollectResult, query: str, decomposition: dict

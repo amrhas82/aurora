@@ -1160,3 +1160,526 @@ aur "complex query needing decomposition"
 ---
 
 **Note:** These 6 approved features should be documented as placeholders/integration points in the unified spec. Full implementation details to be extracted from existing docs where available, or marked as "new MVP addition" where not previously documented.
+
+---
+
+## FUTURE: Durable Workflows & Enterprise Governance
+
+### Context: Workflow Orchestration Discussion (December 2024)
+
+This section captures features discussed for **future enterprise/long-running use cases**. These are **NOT MVP features** but documented here for future reference.
+
+---
+
+### 13. Enhanced Logging & Governance (Near-term Future)
+
+**What:** Enhance Aurora's existing markdown logs with better observability and policy enforcement
+
+**Current State:**
+- ✅ Complete markdown logs with all phase data (`~/.aurora/logs/conversations/`)
+- ✅ JSON phase outputs, timing, cost tracking
+- ✅ Structured conversation logging
+
+**Enhancement Options (3-5 days total):**
+
+#### Option A: Better Log Viewer (1-2 days)
+```bash
+# Simple web viewer for existing logs
+aurora serve --logs-viewer
+
+# Opens http://localhost:8080 showing:
+# - All queries (today, week, month)
+# - Success/failure rates
+# - Cost breakdown by phase
+# - Phase timing charts
+# - Query search/filter
+```
+
+**Benefits:**
+- Instant observability without infrastructure
+- Works with existing log files
+- No new dependencies
+
+**Config Addition:**
+```json
+"log_viewer": {
+  "enabled": true,
+  "port": 8080,
+  "historical_days": 30,
+  "charts": ["cost", "timing", "success_rate"]
+}
+```
+
+---
+
+#### Option B: Policy Check Integration (2-3 days)
+Add governance checks to existing orchestrator phases:
+
+```python
+# Add to SOAROrchestrator (packages/soar/src/aurora_soar/orchestrator.py)
+class SOAROrchestrator:
+    def execute(self, query: str, ...) -> dict:
+        # Policy 1: Input validation (already in Guardrails #3)
+        if not self._validate_query_policy(query):
+            self.conversation_logger.log_policy_violation(
+                query=query,
+                policy="input_validation",
+                reason="Query contains prohibited content"
+            )
+            raise PolicyViolationError("Query violates input policy")
+
+        # Execute phases (already logged)
+        result = self._run_phases(query)
+
+        # Policy 2: Output filtering
+        if not self._check_output_policy(result):
+            self.conversation_logger.log_policy_violation(
+                query=query,
+                policy="output_filter",
+                reason="Response contains sensitive data"
+            )
+            result["answer"] = "[REDACTED]"
+
+        # Policy 3: Cost enforcement (already in Cost Budgets #4)
+        # Already handled in budget tracking
+
+        return result
+```
+
+**New logger methods needed:**
+```python
+# Add to packages/core/src/aurora_core/logging/conversation_logger.py
+class ConversationLogger:
+    def log_policy_violation(self, query: str, policy: str, reason: str):
+        """Log governance policy violations to separate file."""
+        violation_log = self.base_path / "violations" / "policies.jsonl"
+        # Append JSONL entry with timestamp, policy, reason
+
+    def log_retry_attempt(self, query_id: str, phase: str, attempt: int, error: str):
+        """Log retry attempts for debugging."""
+
+    def log_cost_alert(self, query_id: str, cost: float, threshold: float):
+        """Log budget warnings."""
+```
+
+**Benefits:**
+- Uses existing log infrastructure
+- Governance integrated into current flow
+- Audit trail for compliance
+
+**Config Addition:**
+```json
+"governance": {
+  "input_policies": {
+    "enabled": true,
+    "prohibited_patterns": ["^DROP TABLE", "rm -rf"],
+    "action": "reject"
+  },
+  "output_policies": {
+    "enabled": true,
+    "redact_patterns": ["api_key=", "password="],
+    "action": "redact"
+  },
+  "logging": {
+    "violations_file": "~/.aurora/logs/violations/policies.jsonl",
+    "alert_on_violation": true
+  }
+}
+```
+
+---
+
+#### Option C: Resume from Log Checkpoint (3-5 days)
+Add automatic resume from log files when crashes occur:
+
+```python
+# Add to SOAROrchestrator
+class SOAROrchestrator:
+    def execute_with_resume(self, query: str, resume_from: str = None) -> dict:
+        """Execute with optional resume from log file.
+
+        Args:
+            query: User query
+            resume_from: Path to log file to resume from
+        """
+
+        if resume_from:
+            # Read log file
+            log_data = self._read_log_checkpoint(resume_from)
+
+            # Skip completed phases
+            if "phase7_synthesize" in log_data:
+                logger.info("Resume: Phase 7 done, going to Phase 8")
+                return self._resume_from_phase8(log_data)
+            elif "phase3_decompose" in log_data:
+                logger.info("Resume: Phase 3 done, going to Phase 4")
+                return self._resume_from_phase4(log_data)
+            # ... etc for all phases
+
+        # Normal execution (already logs everything)
+        return self.execute(query)
+
+    def _read_log_checkpoint(self, log_path: str) -> dict:
+        """Parse log file and extract phase data."""
+        # Read markdown log
+        # Parse JSON blocks for each phase
+        # Return dict of completed phases
+```
+
+**CLI Usage:**
+```bash
+# First attempt - crashes at phase 5
+aurora query "What is Aurora architecture?"
+# Saves: ~/.aurora/logs/conversations/2024/12/aurora-architecture-2024-12-21.md
+
+# Resume from crash
+aurora query "What is Aurora architecture?" \
+  --resume ~/.aurora/logs/conversations/2024/12/aurora-architecture-2024-12-21.md
+
+# ✅ Reads log, skips phases 1-4, resumes at phase 5
+```
+
+**Benefits:**
+- Manual recovery after crashes
+- Re-use expensive LLM work (decomposition, verification)
+- Simple implementation (just parse existing logs)
+
+**Why sufficient for MVP:**
+- Aurora queries are fast (10-60 seconds)
+- Crashes are rare with modern infrastructure
+- If crash happens, user can manually resume
+- Cheaper than re-running entire query
+
+**When NOT sufficient (future):**
+- Queries taking 10+ minutes (expensive to re-run)
+- Frequent infrastructure issues
+- Multi-hour/multi-day workflows
+- → Then consider Temporal (see Feature #14)
+
+---
+
+### 14. Temporal Integration (Long-term Future - Enterprise Use Cases)
+
+**What:** Integrate Aurora as activity in Temporal workflow engine for durable, long-running business processes
+
+**When to Consider:**
+Aurora evolves to support use cases requiring:
+1. **Human-in-the-loop** - Wait hours/days for approvals
+2. **Multi-step pipelines** - Query → research → approval → report → publish
+3. **Long-running** - Processes running hours/days/weeks
+4. **High cost** - Re-running is expensive ($10+ per query)
+
+**Current Aurora Use Case:**
+- ❌ Short-lived (seconds to minutes)
+- ❌ Single query → single response
+- ❌ No human interaction
+- ❌ Can retry entire query cheaply
+- ✅ Logs provide sufficient audit trail
+
+**Verdict:** **NOT needed for current Aurora**
+
+---
+
+#### What Temporal Would Provide
+
+**Temporal** = Durable workflow orchestration platform
+
+**Example: Long-running approval workflow (NOT current Aurora)**
+```python
+from temporalio import workflow, activity
+from datetime import timedelta
+
+@workflow.defn
+class ResearchApprovalWorkflow:
+    @workflow.run
+    async def run(self, topic: str):
+        # Step 1: Aurora research (1 minute)
+        research = await workflow.execute_activity(
+            aurora_research,
+            topic,
+            start_to_close_timeout=timedelta(minutes=15)
+        )
+        # ✅ Temporal checkpoints here - server can crash/restart
+
+        # Step 2: Wait for manager approval (could be 2 days!)
+        approved = await workflow.wait_condition(
+            lambda: self.manager_approved,
+            timeout=timedelta(days=2)
+        )
+        # ✅ Workflow pauses, server can restart, resumes automatically
+
+        # Step 3: Generate report if approved (5 minutes)
+        if approved:
+            report = await workflow.execute_activity(
+                generate_report,
+                research
+            )
+
+            # Step 4: Wait for executive review (could be 1 week!)
+            exec_approved = await workflow.wait_condition(
+                lambda: self.exec_approved,
+                timeout=timedelta(days=7)
+            )
+
+            # Step 5: Publish (1 minute)
+            if exec_approved:
+                await workflow.execute_activity(publish_report, report)
+
+        return "Workflow complete"
+
+@activity.defn
+async def aurora_research(topic: str) -> dict:
+    """Aurora as Temporal activity."""
+    # Need serialization to work with Temporal (see below)
+    orchestrator = create_aurora_from_config(config)
+    return orchestrator.execute(topic, verbosity="JSON")
+```
+
+**What Temporal Does:**
+- ✅ Remembers progress if server crashes
+- ✅ Handles waits of days/weeks/months
+- ✅ Automatic retries with backoff
+- ✅ Complete audit trail
+- ✅ Human approval gates
+
+**What Aurora Logs Already Do:**
+- ✅ Audit trail (markdown logs)
+- ✅ Cost/timing tracking
+- ⚠️ Manual resume (read log, restart)
+- ❌ No automatic recovery
+- ❌ No multi-day waits
+- ❌ No human gates
+
+**Comparison:**
+
+| Need | Aurora Logs (Current) | Temporal (Future) | Winner for Aurora MVP |
+|------|----------------------|-------------------|----------------------|
+| Audit trail | ✅ Markdown logs | ✅ Event history | **Tie** |
+| Resume after crash | ⚠️ Manual | ✅ Automatic | Temporal (if needed) |
+| Cost | ✅ Free | ❌ Infrastructure | **Aurora** |
+| Complexity | ✅ Simple | ❌ 2-4 weeks setup | **Aurora** |
+| Human approvals | ❌ Not built-in | ✅ Native | Temporal (if needed) |
+| Multi-day workflows | ❌ Process must run | ✅ Pause/resume | Temporal (if needed) |
+| Current Aurora queries | ✅ Perfect fit | ❌ Overkill | **Aurora** |
+
+---
+
+#### Implementation Requirements (If/When Needed)
+
+**Effort:** 13-20 days (2-4 weeks)
+
+**Major Changes Required:**
+
+##### 1. Serialization Layer (Critical - 2-3 days)
+**Problem:** Temporal needs to checkpoint workflow state to disk. Current Aurora holds non-serializable objects.
+
+**Current (NOT serializable):**
+```python
+# orchestrator.py:84-95
+class SOAROrchestrator:
+    def __init__(
+        self,
+        store: Store,  # ❌ Active SQLite connection
+        llm_client: LLMClient,  # ❌ HTTP session, API keys
+        config: Config,  # ❓ Maybe OK
+        ...
+    ):
+```
+
+**Fixed (Serializable):**
+```python
+# All result objects need serialization
+class CollectResult:
+    def to_dict(self) -> dict: ...
+    @classmethod
+    def from_dict(cls, data: dict) -> CollectResult: ...
+
+class RouteResult:
+    def to_dict(self) -> dict: ...
+    @classmethod
+    def from_dict(cls, data: dict) -> RouteResult: ...
+
+# Store state must be serializable
+class Store(ABC):
+    @abstractmethod
+    def to_serializable_state(self) -> dict:
+        """Export state for workflow checkpointing."""
+
+    @classmethod
+    @abstractmethod
+    def from_serializable_state(cls, state: dict) -> Store:
+        """Restore from checkpoint."""
+```
+
+**Status:** SynthesisResult already has `to_dict()`/`from_dict()` ✅
+**Needed:** Add to all phase result objects, Store serialization
+
+---
+
+##### 2. Factory Pattern for Orchestrator (3-4 days)
+**Problem:** Can't serialize orchestrator with live connections
+
+**Solution:**
+```python
+class AuroraActivityFactory:
+    def create_orchestrator(self, config_dict: dict) -> SOAROrchestrator:
+        """Create orchestrator from serializable config."""
+        store = self._create_store(config_dict["store"])
+        llm = self._create_llm_client(config_dict["llm"])
+        return SOAROrchestrator(store, llm, ...)
+
+@activity.defn
+async def aurora_research_activity(
+    query: str,
+    config: dict,  # ✅ Serializable
+) -> dict:
+    factory = AuroraActivityFactory()
+    orchestrator = factory.create_orchestrator(config)
+    result = orchestrator.execute(query, verbosity="JSON")
+    return result  # ✅ Must be dict, not objects
+```
+
+---
+
+##### 3. LLM Client Serialization (2-3 days)
+**Problem:** LLM clients hold API keys, HTTP sessions
+
+**Solution:**
+```python
+@dataclass
+class LLMConfig:
+    provider: str  # "anthropic" | "openai"
+    model: str
+    api_key_env_var: str  # Name of env var, NOT the key itself
+
+    def create_client(self) -> LLMClient:
+        """Recreate client from config."""
+        api_key = os.getenv(self.api_key_env_var)
+        if self.provider == "anthropic":
+            return AnthropicClient(api_key, self.model)
+        ...
+
+# Activity reconstructs clients
+@activity.defn
+async def aurora_activity(query: str, llm_config_dict: dict):
+    llm_config = LLMConfig(**llm_config_dict)
+    llm_client = llm_config.create_client()
+    orchestrator = SOAROrchestrator(..., reasoning_llm=llm_client)
+```
+
+---
+
+##### 4. Temporal Activity Wrapper (1-2 days)
+New package: `packages/integrations/temporal/`
+
+```python
+# packages/integrations/temporal/activities.py
+from temporalio import activity
+from temporalio.exceptions import ApplicationError
+
+@activity.defn
+async def aurora_research(
+    query: str,
+    config: dict,
+    verbosity: str = "JSON",
+) -> dict:
+    """Temporal activity for Aurora research."""
+    try:
+        factory = AuroraActivityFactory()
+        orchestrator = factory.create_orchestrator(config)
+        result = orchestrator.execute(query, verbosity=verbosity)
+        return result
+
+    except BudgetExceededError as e:
+        # Non-retryable - user needs to increase budget
+        raise ApplicationError(
+            f"Budget exceeded: {e.message}",
+            non_retryable=True
+        )
+    except Exception as e:
+        # Retryable - transient failures
+        raise ApplicationError(f"Aurora failed: {e}")
+```
+
+---
+
+##### 5. Integration Tests (2-3 days)
+```python
+# tests/integration/test_temporal_integration.py
+from temporalio.testing import WorkflowEnvironment
+
+async def test_aurora_activity():
+    async with await WorkflowEnvironment.start_local() as env:
+        result = await env.client.execute_activity(
+            aurora_research,
+            args=["test query", test_config],
+        )
+        assert result["answer"]
+        assert 0 <= result["confidence"] <= 1
+```
+
+---
+
+#### When to Implement
+
+**Trigger Conditions (ANY of these):**
+1. Users requesting human approval gates
+2. Workflows running > 1 hour regularly
+3. Need to wait days/weeks between steps
+4. Re-run cost becomes prohibitive (> $10/query)
+5. Multiple Aurora queries in coordinated workflow
+
+**Not needed if:**
+- ✅ Queries complete in < 5 minutes
+- ✅ No human interaction required
+- ✅ Cheap to re-run if crash (< $1)
+- ✅ Single query → single answer pattern
+- ✅ Current logs provide sufficient audit
+
+**Current Aurora:** All "not needed" conditions met ✅
+
+---
+
+#### Configuration (Future)
+
+```json
+"temporal_integration": {
+  "enabled": false,  // Enable when use case demands it
+  "server_address": "localhost:7233",
+  "namespace": "aurora",
+  "task_queue": "aurora-research",
+  "activity_timeout_minutes": 15,
+  "retry_policy": {
+    "max_attempts": 3,
+    "backoff_coefficient": 2.0
+  }
+}
+```
+
+---
+
+### Recommendation
+
+**For MVP and Near-term:**
+- ✅ Use **Option A** (Log Viewer) - 1-2 days, instant observability
+- ✅ Use **Option B** (Policy Checks) - 2-3 days, governance without infrastructure
+- ⚠️ Consider **Option C** (Resume from Logs) - 3-5 days, manual crash recovery
+
+**Total: 6-10 days for enhanced governance using existing logs**
+
+**For Long-term Future (only if use case changes):**
+- ⏸️ Temporal integration when multi-day workflows needed
+- ⏸️ 2-4 weeks implementation when triggered
+
+**Why this approach:**
+- Aurora's existing logs already provide 80% of what Temporal does
+- Small teams/individuals don't need automatic recovery (queries are fast)
+- Can add Temporal later if use case evolves (non-breaking)
+- Saves 2-4 weeks of work that may never be needed
+
+---
+
+**Complexity (Option A+B):** Low-Medium (5-8 days total)
+**Complexity (Temporal):** High (13-20 days)
+**Priority:** Low (wait for use case to demand it)
+**Status:** FUTURE - Document for reference, implement when triggered

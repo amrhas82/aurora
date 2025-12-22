@@ -7,6 +7,7 @@ the final response with appropriate verbosity level (QUIET, NORMAL, VERBOSE, JSO
 from __future__ import annotations
 
 import json
+from dataclasses import asdict, is_dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -15,6 +16,26 @@ if TYPE_CHECKING:
     from aurora_soar.phases.synthesize import SynthesisResult
 
 __all__ = ["format_response", "Verbosity", "ResponseResult"]
+
+
+def _make_json_serializable(obj: Any) -> Any:
+    """Convert objects to JSON-serializable format.
+
+    Recursively converts dataclasses, lists, and dicts to JSON-compatible types.
+    """
+    if obj is None or isinstance(obj, (str, int, float, bool)):
+        return obj
+    elif is_dataclass(obj):
+        return asdict(obj)
+    elif isinstance(obj, dict):
+        return {k: _make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_make_json_serializable(item) for item in obj]
+    elif isinstance(obj, Enum):
+        return obj.value
+    else:
+        # For other types, try to convert to string
+        return str(obj)
 
 
 class Verbosity(str, Enum):
@@ -88,7 +109,9 @@ def format_response(
     elif verbosity == Verbosity.VERBOSE:
         formatted_output = _format_verbose(synthesis_result, record_result, phase_metadata)
     else:  # JSON
-        formatted_output = json.dumps(raw_data, indent=2)
+        # Convert any non-serializable objects (like dataclasses) to dicts
+        serializable_data = _make_json_serializable(raw_data)
+        formatted_output = json.dumps(serializable_data, indent=2)
 
     return ResponseResult(
         formatted_output=formatted_output,

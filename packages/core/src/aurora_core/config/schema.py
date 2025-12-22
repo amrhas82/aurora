@@ -134,6 +134,39 @@ CONFIG_SCHEMA: dict[str, Any] = {
                             "maximum": 168,
                             "default": 24,
                             "description": "Cache TTL in hours"
+                        },
+                        "hybrid_weights": {
+                            "type": "object",
+                            "properties": {
+                                "activation": {
+                                    "type": "number",
+                                    "minimum": 0.0,
+                                    "maximum": 1.0,
+                                    "default": 0.6,
+                                    "description": "Weight for activation-based scoring (0.0-1.0)"
+                                },
+                                "semantic": {
+                                    "type": "number",
+                                    "minimum": 0.0,
+                                    "maximum": 1.0,
+                                    "default": 0.4,
+                                    "description": "Weight for semantic similarity scoring (0.0-1.0)"
+                                },
+                                "top_k": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 1000,
+                                    "default": 100,
+                                    "description": "Number of top chunks to retrieve by activation before hybrid scoring"
+                                },
+                                "fallback_to_activation": {
+                                    "type": "boolean",
+                                    "default": True,
+                                    "description": "Fall back to activation-only if embeddings unavailable"
+                                }
+                            },
+                            "additionalProperties": False,
+                            "description": "Configuration for hybrid retrieval (activation + semantic)"
                         }
                     },
                     "additionalProperties": False

@@ -1,0 +1,455 @@
+"""Tests for HybridRetriever class.
+
+Tests include:
+- Configuration loading from AURORA Config object
+- Configuration precedence (explicit config > aurora_config > defaults)
+- Hybrid scoring with configurable weights
+- Validation of weight constraints (sum to 1.0, range [0, 1])
+- Fallback behavior when embeddings unavailable
+- Integration with activation engine and embedding provider
+"""
+
+import numpy as np
+import pytest
+from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
+
+
+# Mock classes for testing
+class MockChunk:
+    """Mock chunk for testing."""
+
+    def __init__(self, chunk_id, content, activation=0.5, embedding=None):
+        self.id = chunk_id
+        self.content = content
+        self.type = "code"
+        self.name = f"chunk_{chunk_id}"
+        self.file_path = f"/path/to/file_{chunk_id}.py"
+        self.activation = activation
+        self.embedding = embedding
+
+
+class MockStore:
+    """Mock storage backend."""
+
+    def __init__(self, chunks=None):
+        self.chunks = chunks or []
+
+    def retrieve_by_activation(self, min_activation=0.0, limit=100):
+        """Retrieve chunks by activation."""
+        return self.chunks[:limit]
+
+
+class MockActivationEngine:
+    """Mock activation engine."""
+
+    def __init__(self):
+        pass
+
+
+class MockConfig:
+    """Mock AURORA Config object."""
+
+    def __init__(self, config_data):
+        self._data = config_data
+
+    def get(self, key, default=None):
+        """Get configuration value by dot-notation key."""
+        keys = key.split(".")
+        value = self._data
+
+        for k in keys:
+            if isinstance(value, dict) and k in value:
+                value = value[k]
+            else:
+                return default
+
+        return value
+
+
+class TestHybridConfig:
+    """Test HybridConfig validation."""
+
+    def test_default_config(self):
+        """Test default configuration values."""
+        config = HybridConfig()
+
+        assert config.activation_weight == 0.6
+        assert config.semantic_weight == 0.4
+        assert config.activation_top_k == 100
+        assert config.fallback_to_activation is True
+
+    def test_custom_weights(self):
+        """Test custom weight configuration."""
+        config = HybridConfig(
+            activation_weight=0.7,
+            semantic_weight=0.3,
+        )
+
+        assert config.activation_weight == 0.7
+        assert config.semantic_weight == 0.3
+
+    def test_weights_must_sum_to_one(self):
+        """Test that weights must sum to 1.0."""
+        with pytest.raises(ValueError, match="Weights must sum to 1.0"):
+            HybridConfig(activation_weight=0.5, semantic_weight=0.6)
+
+    def test_weights_must_be_in_range(self):
+        """Test that weights must be in [0, 1]."""
+        with pytest.raises(ValueError, match="activation_weight must be in"):
+            HybridConfig(activation_weight=1.5, semantic_weight=-0.5)
+
+    def test_top_k_must_be_positive(self):
+        """Test that top_k must be >= 1."""
+        with pytest.raises(ValueError, match="activation_top_k must be >= 1"):
+            HybridConfig(activation_top_k=0)
+
+    def test_weights_close_to_one(self):
+        """Test that weights can have small floating point errors."""
+        # Should not raise (1e-9 tolerance)
+        config = HybridConfig(
+            activation_weight=0.6000000001,
+            semantic_weight=0.3999999999,
+        )
+        assert config.activation_weight == 0.6000000001
+
+
+class TestHybridRetrieverInit:
+    """Test HybridRetriever initialization and configuration loading."""
+
+    def test_default_initialization(self):
+        """Test initialization with default configuration."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        retriever = HybridRetriever(store, engine, provider)
+
+        assert retriever.config.activation_weight == 0.6
+        assert retriever.config.semantic_weight == 0.4
+        assert retriever.config.activation_top_k == 100
+
+    def test_explicit_config_initialization(self):
+        """Test initialization with explicit HybridConfig."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+        config = HybridConfig(
+            activation_weight=0.7,
+            semantic_weight=0.3,
+            activation_top_k=50,
+        )
+
+        retriever = HybridRetriever(store, engine, provider, config=config)
+
+        assert retriever.config.activation_weight == 0.7
+        assert retriever.config.semantic_weight == 0.3
+        assert retriever.config.activation_top_k == 50
+
+    def test_aurora_config_initialization(self):
+        """Test initialization with AURORA Config object."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        aurora_config = MockConfig({
+            "context": {
+                "code": {
+                    "hybrid_weights": {
+                        "activation": 0.8,
+                        "semantic": 0.2,
+                        "top_k": 75,
+                        "fallback_to_activation": False,
+                    }
+                }
+            }
+        })
+
+        retriever = HybridRetriever(
+            store, engine, provider, aurora_config=aurora_config
+        )
+
+        assert retriever.config.activation_weight == 0.8
+        assert retriever.config.semantic_weight == 0.2
+        assert retriever.config.activation_top_k == 75
+        assert retriever.config.fallback_to_activation is False
+
+    def test_config_precedence_explicit_over_aurora(self):
+        """Test that explicit config takes precedence over aurora_config."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        explicit_config = HybridConfig(
+            activation_weight=0.7,
+            semantic_weight=0.3,
+        )
+
+        aurora_config = MockConfig({
+            "context": {
+                "code": {
+                    "hybrid_weights": {
+                        "activation": 0.9,
+                        "semantic": 0.1,
+                    }
+                }
+            }
+        })
+
+        retriever = HybridRetriever(
+            store,
+            engine,
+            provider,
+            config=explicit_config,
+            aurora_config=aurora_config,
+        )
+
+        # Should use explicit_config values
+        assert retriever.config.activation_weight == 0.7
+        assert retriever.config.semantic_weight == 0.3
+
+    def test_aurora_config_with_defaults(self):
+        """Test aurora_config with partial configuration uses defaults."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        aurora_config = MockConfig({
+            "context": {
+                "code": {
+                    "hybrid_weights": {
+                        "activation": 0.75,
+                        "semantic": 0.25,
+                        # top_k and fallback_to_activation not specified
+                    }
+                }
+            }
+        })
+
+        retriever = HybridRetriever(
+            store, engine, provider, aurora_config=aurora_config
+        )
+
+        assert retriever.config.activation_weight == 0.75
+        assert retriever.config.semantic_weight == 0.25
+        assert retriever.config.activation_top_k == 100  # default
+        assert retriever.config.fallback_to_activation is True  # default
+
+    def test_aurora_config_missing_section(self):
+        """Test aurora_config with missing hybrid_weights section uses defaults."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        aurora_config = MockConfig({"context": {"code": {}}})
+
+        retriever = HybridRetriever(
+            store, engine, provider, aurora_config=aurora_config
+        )
+
+        # Should use all defaults
+        assert retriever.config.activation_weight == 0.6
+        assert retriever.config.semantic_weight == 0.4
+        assert retriever.config.activation_top_k == 100
+
+    def test_aurora_config_invalid_weights_raises_error(self):
+        """Test that invalid weights from aurora_config raise ValueError."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        aurora_config = MockConfig({
+            "context": {
+                "code": {
+                    "hybrid_weights": {
+                        "activation": 0.5,
+                        "semantic": 0.6,  # Sum > 1.0
+                    }
+                }
+            }
+        })
+
+        with pytest.raises(ValueError, match="Weights must sum to 1.0"):
+            HybridRetriever(store, engine, provider, aurora_config=aurora_config)
+
+
+class TestHybridRetrieverRetrieve:
+    """Test HybridRetriever retrieve() method."""
+
+    def test_retrieve_with_empty_store(self):
+        """Test retrieval with no chunks in store."""
+        store = MockStore(chunks=[])
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        retriever = HybridRetriever(store, engine, provider)
+        results = retriever.retrieve("test query", top_k=5)
+
+        assert results == []
+
+    def test_retrieve_validates_query(self):
+        """Test that retrieve validates query parameter."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        retriever = HybridRetriever(store, engine, provider)
+
+        with pytest.raises(ValueError, match="Query cannot be empty"):
+            retriever.retrieve("", top_k=5)
+
+        with pytest.raises(ValueError, match="Query cannot be empty"):
+            retriever.retrieve("   ", top_k=5)
+
+    def test_retrieve_validates_top_k(self):
+        """Test that retrieve validates top_k parameter."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        retriever = HybridRetriever(store, engine, provider)
+
+        with pytest.raises(ValueError, match="top_k must be >= 1"):
+            retriever.retrieve("test query", top_k=0)
+
+    def test_retrieve_with_custom_weights(self):
+        """Test retrieval uses custom weights from configuration."""
+        # Create chunks with known activations and embeddings
+        provider = EmbeddingProvider()
+
+        # Create embeddings for two chunks
+        chunk1_text = "calculate total price"
+        chunk2_text = "display user interface"
+
+        chunk1_embedding = provider.embed_chunk(chunk1_text)
+        chunk2_embedding = provider.embed_chunk(chunk2_text)
+
+        chunks = [
+            MockChunk("1", chunk1_text, activation=0.9, embedding=chunk1_embedding),
+            MockChunk("2", chunk2_text, activation=0.3, embedding=chunk2_embedding),
+        ]
+
+        store = MockStore(chunks=chunks)
+        engine = MockActivationEngine()
+
+        # Test with 100% activation weight
+        config_activation_only = HybridConfig(
+            activation_weight=1.0,
+            semantic_weight=0.0,
+        )
+        retriever = HybridRetriever(
+            store, engine, provider, config=config_activation_only
+        )
+
+        results = retriever.retrieve("calculate total", top_k=2)
+
+        # With 100% activation weight, chunk1 (0.9) should rank higher
+        assert len(results) == 2
+        assert results[0]["chunk_id"] == "1"  # Higher activation
+
+        # Test with 100% semantic weight
+        config_semantic_only = HybridConfig(
+            activation_weight=0.0,
+            semantic_weight=1.0,
+        )
+        retriever = HybridRetriever(
+            store, engine, provider, config=config_semantic_only
+        )
+
+        results = retriever.retrieve("calculate total", top_k=2)
+
+        # With 100% semantic weight, ranking depends on semantic similarity
+        assert len(results) == 2
+        # Chunk1 should still rank higher as query matches its content
+
+
+class TestHybridRetrieverNormalization:
+    """Test score normalization."""
+
+    def test_normalize_scores_basic(self):
+        """Test basic score normalization."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        retriever = HybridRetriever(store, engine, provider)
+
+        scores = [0.2, 0.5, 0.8, 1.0]
+        normalized = retriever._normalize_scores(scores)
+
+        assert len(normalized) == 4
+        assert min(normalized) == 0.0  # Min maps to 0
+        assert max(normalized) == 1.0  # Max maps to 1
+        assert all(0.0 <= s <= 1.0 for s in normalized)
+
+    def test_normalize_scores_equal(self):
+        """Test normalization with all equal scores."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        retriever = HybridRetriever(store, engine, provider)
+
+        scores = [0.5, 0.5, 0.5, 0.5]
+        normalized = retriever._normalize_scores(scores)
+
+        assert all(s == 1.0 for s in normalized)
+
+    def test_normalize_scores_empty(self):
+        """Test normalization with empty list."""
+        store = MockStore()
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        retriever = HybridRetriever(store, engine, provider)
+
+        normalized = retriever._normalize_scores([])
+        assert normalized == []
+
+
+class TestHybridRetrieverFallback:
+    """Test fallback behavior when embeddings unavailable."""
+
+    def test_fallback_when_embeddings_missing(self):
+        """Test fallback to activation-only when chunks lack embeddings."""
+        chunks = [
+            MockChunk("1", "chunk one", activation=0.9, embedding=None),
+            MockChunk("2", "chunk two", activation=0.7, embedding=None),
+        ]
+
+        store = MockStore(chunks=chunks)
+        engine = MockActivationEngine()
+        provider = EmbeddingProvider()
+
+        config = HybridConfig(fallback_to_activation=True)
+        retriever = HybridRetriever(store, engine, provider, config=config)
+
+        results = retriever.retrieve("test query", top_k=2)
+
+        # Should return results with activation scores only
+        # When all semantic scores are 0, they normalize to 1.0 (all equal)
+        assert len(results) == 2
+        assert results[0]["chunk_id"] == "1"  # Higher activation
+        assert results[1]["chunk_id"] == "2"  # Lower activation
+
+    def test_no_fallback_skips_chunks_without_embeddings(self):
+        """Test that chunks without embeddings are skipped when fallback disabled."""
+        provider = EmbeddingProvider()
+        chunk1_embedding = provider.embed_chunk("chunk one")
+
+        chunks = [
+            MockChunk("1", "chunk one", activation=0.9, embedding=chunk1_embedding),
+            MockChunk("2", "chunk two", activation=0.7, embedding=None),
+        ]
+
+        store = MockStore(chunks=chunks)
+        engine = MockActivationEngine()
+
+        config = HybridConfig(fallback_to_activation=False)
+        retriever = HybridRetriever(store, engine, provider, config=config)
+
+        results = retriever.retrieve("test query", top_k=2)
+
+        # Should only return chunk with embedding
+        assert len(results) == 1
+        assert results[0]["chunk_id"] == "1"

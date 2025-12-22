@@ -79,6 +79,7 @@ class HybridRetriever:
         activation_engine: Any,  # aurora_core.activation.ActivationEngine
         embedding_provider: Any,  # EmbeddingProvider
         config: Optional[HybridConfig] = None,
+        aurora_config: Optional[Any] = None,  # aurora_core.config.Config
     ):
         """Initialize hybrid retriever.
 
@@ -86,12 +87,24 @@ class HybridRetriever:
             store: Storage backend
             activation_engine: ACT-R activation engine
             embedding_provider: Embedding provider
-            config: Hybrid configuration (None = defaults)
+            config: Hybrid configuration (takes precedence if provided)
+            aurora_config: Global AURORA Config object (loads hybrid_weights from context.code.hybrid_weights)
+
+        Note:
+            If both config and aurora_config are provided, config takes precedence.
+            If neither is provided, uses default HybridConfig values.
         """
         self.store = store
         self.activation_engine = activation_engine
         self.embedding_provider = embedding_provider
-        self.config = config if config is not None else HybridConfig()
+
+        # Load configuration with precedence: explicit config > aurora_config > defaults
+        if config is not None:
+            self.config = config
+        elif aurora_config is not None:
+            self.config = self._load_from_aurora_config(aurora_config)
+        else:
+            self.config = HybridConfig()
 
     def retrieve(
         self,
@@ -288,3 +301,32 @@ class HybridRetriever:
             return [1.0] * len(scores)
 
         return [(s - min_score) / (max_score - min_score) for s in scores]
+
+    def _load_from_aurora_config(self, aurora_config: Any) -> HybridConfig:
+        """Load hybrid configuration from global AURORA Config.
+
+        Args:
+            aurora_config: AURORA Config object with context.code.hybrid_weights
+
+        Returns:
+            HybridConfig loaded from config
+
+        Raises:
+            ValueError: If config values are invalid
+        """
+        # Load from context.code.hybrid_weights section
+        weights = aurora_config.get("context.code.hybrid_weights", {})
+
+        # Extract values with fallback to defaults
+        activation_weight = weights.get("activation", 0.6)
+        semantic_weight = weights.get("semantic", 0.4)
+        activation_top_k = weights.get("top_k", 100)
+        fallback_to_activation = weights.get("fallback_to_activation", True)
+
+        # Create and validate HybridConfig (validation happens in __post_init__)
+        return HybridConfig(
+            activation_weight=activation_weight,
+            semantic_weight=semantic_weight,
+            activation_top_k=activation_top_k,
+            fallback_to_activation=fallback_to_activation,
+        )

@@ -101,7 +101,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `tests/unit/cli/test_headless_command.py` - Headless command tests
 - `tests/unit/cli/test_escalation.py` - Auto-escalation tests
 - `tests/integration/test_actr_retrieval.py` - ACT-R retrieval end-to-end
-- `tests/integration/test_semantic_retrieval.py` - Semantic retrieval end-to-end
+- `tests/integration/test_semantic_retrieval.py` - Semantic retrieval end-to-end (11 tests passing, hybrid scoring, precision comparison, fallback)
 - `tests/integration/test_headless_execution.py` - Headless mode end-to-end
 - `tests/integration/test_error_recovery.py` - Error recovery end-to-end
 - `tests/performance/test_activation_benchmarks.py` - Activation calculation benchmarks
@@ -199,10 +199,10 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 2.10 Implement HybridRetriever class in semantic/hybrid_retriever.py - **COMPLETE** Full __init__ with store, engine, provider, and config
   - [x] 2.11 Add hybrid scoring formula (0.6 × activation + 0.4 × semantic_similarity) - **COMPLETE** Weighted combination with configurable weights, normalization to [0,1]
   - [x] 2.12 Implement retrieval logic (get top 100 by activation, calculate semantic, hybrid score) - **COMPLETE** Full retrieve() method with activation retrieval, embedding comparison, hybrid scoring, top-k selection, and fallback support
-  - [ ] 2.13 Add configurable weighting (context.code.hybrid_weights in config)
-  - [ ] 2.14 Write unit tests for EmbeddingProvider (tests/unit/context_code/semantic/test_embedding_provider.py)
-  - [ ] 2.15 Write unit tests for HybridRetriever (tests/unit/context_code/semantic/test_hybrid_retriever.py)
-  - [ ] 2.16 Write integration test for semantic retrieval (tests/integration/test_semantic_retrieval.py)
+  - [x] 2.13 Add configurable weighting (context.code.hybrid_weights in config) - **COMPLETE** Schema, defaults, loader implemented; 13 tests for config loading, all passing
+  - [x] 2.14 Write unit tests for EmbeddingProvider (tests/unit/context_code/semantic/test_embedding_provider.py) - **COMPLETE** 63 tests passing, 94.23% coverage, comprehensive validation and edge cases
+  - [x] 2.15 Write unit tests for HybridRetriever (tests/unit/context_code/semantic/test_hybrid_retriever.py) - **COMPLETE** 22 tests passing, 87.23% coverage, config loading, retrieval, normalization, fallback
+  - [x] 2.16 Write integration test for semantic retrieval (tests/integration/test_semantic_retrieval.py) - **COMPLETE** 11 integration tests passing, end-to-end hybrid retrieval, precision comparison, fallback behavior, edge cases
   - [ ] 2.17 Test embedding generation performance (<50ms per chunk)
   - [ ] 2.18 Verify hybrid retrieval improves precision over keyword-only (≥85% target)
   - [ ] 2.19 Test fallback to keyword-only if embeddings unavailable

@@ -506,6 +506,196 @@ class SQLiteStore(Store):
                 details=str(e)
             )
 
+    def record_access(
+        self,
+        chunk_id: ChunkID,
+        access_time: Optional[datetime] = None,
+        context: Optional[str] = None
+    ) -> None:
+        """
+        Record an access to a chunk for ACT-R activation tracking.
+
+        This method updates the chunk's access history in the activations table,
+        which is used to calculate Base-Level Activation (BLA) based on frequency
+        and recency of access.
+
+        Args:
+            chunk_id: The chunk that was accessed
+            access_time: Timestamp of access (defaults to current time)
+            context: Optional context information (e.g., query keywords)
+
+        Raises:
+            StorageError: If storage operation fails
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        conn = self._get_connection()
+        if access_time is None:
+            access_time = datetime.now()
+
+        try:
+            # First check if chunk exists
+            cursor = conn.execute("SELECT id FROM chunks WHERE id = ?", (chunk_id,))
+            if cursor.fetchone() is None:
+                raise ChunkNotFoundError(str(chunk_id))
+
+            # Get current access history from activations table
+            cursor = conn.execute(
+                "SELECT access_history FROM activations WHERE chunk_id = ?",
+                (chunk_id,)
+            )
+            row = cursor.fetchone()
+
+            if row is None:
+                # First access - initialize activation record
+                access_history = [{"timestamp": access_time.isoformat(), "context": context}]
+                conn.execute(
+                    """INSERT INTO activations (chunk_id, base_level, last_access, access_count, access_history)
+                       VALUES (?, 0.0, ?, 1, ?)""",
+                    (chunk_id, access_time, json.dumps(access_history))
+                )
+            else:
+                # Subsequent access - update existing record
+                access_history = json.loads(row['access_history']) if row['access_history'] else []
+                access_history.append({"timestamp": access_time.isoformat(), "context": context})
+
+                # Update activations table
+                conn.execute(
+                    """UPDATE activations
+                       SET access_count = access_count + 1,
+                           last_access = ?,
+                           access_history = ?
+                       WHERE chunk_id = ?""",
+                    (access_time, json.dumps(access_history), chunk_id)
+                )
+
+            # Update chunks table timestamps
+            conn.execute(
+                """UPDATE chunks
+                   SET last_access = ?,
+                       first_access = COALESCE(first_access, ?)
+                   WHERE id = ?""",
+                (access_time, access_time, chunk_id)
+            )
+
+            conn.commit()
+
+        except sqlite3.Error as e:
+            conn.rollback()
+            raise StorageError(
+                f"Failed to record access for chunk: {chunk_id}",
+                details=str(e)
+            )
+
+    def get_access_history(
+        self,
+        chunk_id: ChunkID,
+        limit: Optional[int] = None
+    ) -> list[dict]:
+        """
+        Retrieve access history for a chunk.
+
+        Returns a list of access records, most recent first.
+
+        Args:
+            chunk_id: The chunk whose history to retrieve
+            limit: Maximum number of records to return (None = all)
+
+        Returns:
+            List of access records with 'timestamp' and optional 'context' keys
+
+        Raises:
+            StorageError: If storage operation fails
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        conn = self._get_connection()
+
+        try:
+            # First check if chunk exists
+            cursor = conn.execute("SELECT id FROM chunks WHERE id = ?", (chunk_id,))
+            if cursor.fetchone() is None:
+                raise ChunkNotFoundError(str(chunk_id))
+
+            # Get access history from activations table
+            cursor = conn.execute(
+                "SELECT access_history FROM activations WHERE chunk_id = ?",
+                (chunk_id,)
+            )
+            row = cursor.fetchone()
+
+            if row is None or not row['access_history']:
+                return []
+
+            access_history = json.loads(row['access_history'])
+
+            # Sort by timestamp, most recent first
+            access_history.sort(key=lambda x: x['timestamp'], reverse=True)
+
+            # Apply limit if specified
+            if limit is not None:
+                access_history = access_history[:limit]
+
+            return access_history
+
+        except sqlite3.Error as e:
+            raise StorageError(
+                f"Failed to retrieve access history for chunk: {chunk_id}",
+                details=str(e)
+            )
+
+    def get_access_stats(self, chunk_id: ChunkID) -> dict:
+        """
+        Get access statistics for a chunk.
+
+        Provides quick access to summary statistics without retrieving
+        the full access history.
+
+        Args:
+            chunk_id: The chunk to get statistics for
+
+        Returns:
+            Dictionary with keys:
+                - access_count: Total number of accesses
+                - last_access: Timestamp of most recent access (or None)
+                - first_access: Timestamp of first access (or None)
+                - created_at: Timestamp of chunk creation
+
+        Raises:
+            StorageError: If storage operation fails
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        conn = self._get_connection()
+
+        try:
+            # Get stats from both chunks and activations tables
+            cursor = conn.execute(
+                """SELECT
+                       c.created_at,
+                       c.first_access,
+                       c.last_access,
+                       COALESCE(a.access_count, 0) as access_count
+                   FROM chunks c
+                   LEFT JOIN activations a ON c.id = a.chunk_id
+                   WHERE c.id = ?""",
+                (chunk_id,)
+            )
+            row = cursor.fetchone()
+
+            if row is None:
+                raise ChunkNotFoundError(str(chunk_id))
+
+            return {
+                'access_count': row['access_count'],
+                'last_access': row['last_access'],
+                'first_access': row['first_access'],
+                'created_at': row['created_at']
+            }
+
+        except sqlite3.Error as e:
+            raise StorageError(
+                f"Failed to retrieve access stats for chunk: {chunk_id}",
+                details=str(e)
+            )
+
     def close(self) -> None:
         """
         Close database connection and cleanup.

@@ -274,6 +274,130 @@ class MemoryStore(Store):
         # Return chunks for all visited IDs
         return [self._chunks[cid] for cid in visited if cid in self._chunks]
 
+    def record_access(
+        self,
+        chunk_id: ChunkID,
+        access_time: Optional[datetime] = None,
+        context: Optional[str] = None
+    ) -> None:
+        """
+        Record an access to a chunk for ACT-R activation tracking.
+
+        Args:
+            chunk_id: The chunk that was accessed
+            access_time: Timestamp of access (defaults to current time)
+            context: Optional context information (e.g., query keywords)
+
+        Raises:
+            StorageError: If store is closed
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        self._check_closed()
+        chunk_id_str = str(chunk_id)
+
+        if chunk_id_str not in self._chunks:
+            raise ChunkNotFoundError(chunk_id_str)
+
+        if access_time is None:
+            access_time = datetime.now()
+
+        # Initialize or update activation record
+        if chunk_id_str not in self._activations:
+            self._activations[chunk_id_str] = {
+                'access_count': 1,
+                'first_access': access_time,
+                'last_access': access_time,
+                'access_history': [{'timestamp': access_time.isoformat(), 'context': context}]
+            }
+        else:
+            activation = self._activations[chunk_id_str]
+            activation['access_count'] += 1
+            activation['last_access'] = access_time
+            activation['access_history'].append({'timestamp': access_time.isoformat(), 'context': context})
+
+    def get_access_history(
+        self,
+        chunk_id: ChunkID,
+        limit: Optional[int] = None
+    ) -> list[dict]:
+        """
+        Retrieve access history for a chunk.
+
+        Returns a list of access records, most recent first.
+
+        Args:
+            chunk_id: The chunk whose history to retrieve
+            limit: Maximum number of records to return (None = all)
+
+        Returns:
+            List of access records with 'timestamp' and optional 'context' keys
+
+        Raises:
+            StorageError: If store is closed
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        self._check_closed()
+        chunk_id_str = str(chunk_id)
+
+        if chunk_id_str not in self._chunks:
+            raise ChunkNotFoundError(chunk_id_str)
+
+        if chunk_id_str not in self._activations:
+            return []
+
+        access_history = self._activations[chunk_id_str]['access_history']
+
+        # Sort by timestamp, most recent first
+        sorted_history = sorted(access_history, key=lambda x: x['timestamp'], reverse=True)
+
+        # Apply limit if specified
+        if limit is not None:
+            sorted_history = sorted_history[:limit]
+
+        return sorted_history
+
+    def get_access_stats(self, chunk_id: ChunkID) -> dict:
+        """
+        Get access statistics for a chunk.
+
+        Args:
+            chunk_id: The chunk to get statistics for
+
+        Returns:
+            Dictionary with keys:
+                - access_count: Total number of accesses
+                - last_access: Timestamp of most recent access (or None)
+                - first_access: Timestamp of first access (or None)
+                - created_at: Timestamp of chunk creation
+
+        Raises:
+            StorageError: If store is closed
+            ChunkNotFoundError: If chunk_id does not exist
+        """
+        self._check_closed()
+        chunk_id_str = str(chunk_id)
+
+        if chunk_id_str not in self._chunks:
+            raise ChunkNotFoundError(chunk_id_str)
+
+        chunk = self._chunks[chunk_id_str]
+
+        if chunk_id_str in self._activations:
+            activation = self._activations[chunk_id_str]
+            return {
+                'access_count': activation['access_count'],
+                'last_access': activation['last_access'],
+                'first_access': activation['first_access'],
+                'created_at': chunk.metadata.get('created_at') if hasattr(chunk, 'metadata') else None
+            }
+        else:
+            return {
+                'access_count': 0,
+                'last_access': None,
+                'first_access': None,
+                'created_at': chunk.metadata.get('created_at') if hasattr(chunk, 'metadata') else None
+            }
+
     def close(self) -> None:
         """
         Close the store and mark it as closed.

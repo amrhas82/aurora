@@ -32,13 +32,19 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 ## Relevant Files
 
 ### Core Package - Activation Engine (`packages/core/`)
-- `packages/core/src/aurora_core/activation/__init__.py` - Activation module exports
-- `packages/core/src/aurora_core/activation/engine.py` - Main ActivationEngine class
-- `packages/core/src/aurora_core/activation/base_level.py` - Base-level activation (BLA) formula
-- `packages/core/src/aurora_core/activation/spreading.py` - Spreading activation via relationships
-- `packages/core/src/aurora_core/activation/context_boost.py` - Context boost from keyword overlap
-- `packages/core/src/aurora_core/activation/decay.py` - Decay penalty calculation
-- `packages/core/src/aurora_core/activation/retrieval.py` - Activation-based retrieval with thresholds
+- `packages/core/src/aurora_core/activation/__init__.py` - Activation module exports (all components + engine + retrieval imported)
+- `packages/core/src/aurora_core/activation/base_level.py` - Base-level activation (BLA) formula (implemented, tested)
+- `packages/core/src/aurora_core/activation/spreading.py` - Spreading activation via relationships (implemented, BFS traversal)
+- `packages/core/src/aurora_core/activation/graph_cache.py` - Relationship graph caching (implemented, thread-safe, rebuild interval)
+- `packages/core/src/aurora_core/activation/context_boost.py` - Context boost from keyword overlap (implemented, stop words, programming terms)
+- `packages/core/src/aurora_core/activation/decay.py` - Decay penalty calculation (implemented, log10, grace period, profiles)
+- `packages/core/src/aurora_core/activation/engine.py` - Main ActivationEngine class (implemented, 5 preset configs, explain feature)
+- `packages/core/src/aurora_core/activation/retrieval.py` - Activation-based retrieval (implemented, threshold filtering, batch support, explain)
+
+### Core Package - Store Interface (`packages/core/`)
+- `packages/core/src/aurora_core/store/base.py` - Store interface (updated with record_access, get_access_history, get_access_stats)
+- `packages/core/src/aurora_core/store/schema.py` - Database schema (updated v2: access_history JSON, first/last_access columns)
+- `packages/core/src/aurora_core/store/migrations.py` - Schema migrations (added v1->v2 migration)
 
 ### Core Package - Optimization (`packages/core/`)
 - `packages/core/src/aurora_core/optimization/__init__.py` - Optimization module exports
@@ -71,9 +77,9 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `packages/cli/src/aurora_cli/escalation.py` - Auto-escalation handler (simple vs complex)
 
 ### Test Files
-- `tests/unit/core/activation/test_base_level.py` - BLA formula tests
-- `tests/unit/core/activation/test_spreading.py` - Spreading activation tests
-- `tests/unit/core/activation/test_context_boost.py` - Context boost tests
+- `tests/unit/core/activation/test_base_level.py` - BLA formula tests (implemented, 24 tests, 90.91% coverage)
+- `tests/unit/core/activation/test_spreading.py` - Spreading activation tests (implemented, 57 tests, 98.91% coverage)
+- `tests/unit/core/activation/test_context_boost.py` - Context boost tests (pending)
 - `tests/unit/core/activation/test_decay.py` - Decay penalty tests
 - `tests/unit/core/activation/test_engine.py` - Full activation formula integration
 - `tests/unit/core/activation/test_retrieval.py` - Activation-based retrieval tests
@@ -156,19 +162,19 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 ## Tasks
 
 - [ ] 1.0 ACT-R Activation Engine (Core Memory Intelligence)
-  - [ ] 1.1 Create activation package structure with __init__.py and module exports
-  - [ ] 1.2 Implement Base-Level Activation (BLA) formula in activation/base_level.py using pyactr
-  - [ ] 1.3 Add access history tracking to Store interface (access_history JSON array, last_access timestamp)
-  - [ ] 1.4 Create activations table schema with access_history, access_count, last_access columns
-  - [ ] 1.5 Implement Spreading Activation in activation/spreading.py with BFS path finding
-  - [ ] 1.6 Add relationship graph caching (rebuild every 100 retrievals, max 1000 edges)
-  - [ ] 1.7 Implement Context Boost in activation/context_boost.py with keyword extraction
-  - [ ] 1.8 Implement Decay calculation in activation/decay.py with log10 formula
-  - [ ] 1.9 Create ActivationEngine class in activation/engine.py integrating all formulas
-  - [ ] 1.10 Add configurable parameters (decay_rate=0.5, spread_factor=0.7, max_hops=3)
-  - [ ] 1.11 Implement activation-based retrieval in activation/retrieval.py with threshold filtering
-  - [ ] 1.12 Write unit tests for BLA formula (tests/unit/core/activation/test_base_level.py)
-  - [ ] 1.13 Write unit tests for spreading activation (tests/unit/core/activation/test_spreading.py)
+  - [x] 1.1 Create activation package structure with __init__.py and module exports
+  - [x] 1.2 Implement Base-Level Activation (BLA) formula in activation/base_level.py using pyactr
+  - [x] 1.3 Add access history tracking to Store interface (access_history JSON array, last_access timestamp)
+  - [x] 1.4 Create activations table schema with access_history, access_count, last_access columns
+  - [x] 1.5 Implement Spreading Activation in activation/spreading.py with BFS path finding
+  - [x] 1.6 Add relationship graph caching (rebuild every 100 retrievals, max 1000 edges)
+  - [x] 1.7 Implement Context Boost in activation/context_boost.py with keyword extraction
+  - [x] 1.8 Implement Decay calculation in activation/decay.py with log10 formula
+  - [x] 1.9 Create ActivationEngine class in activation/engine.py integrating all formulas
+  - [x] 1.10 Add configurable parameters (decay_rate=0.5, spread_factor=0.7, max_hops=3)
+  - [x] 1.11 Implement activation-based retrieval in activation/retrieval.py with threshold filtering
+  - [x] 1.12 Write unit tests for BLA formula (tests/unit/core/activation/test_base_level.py)
+  - [x] 1.13 Write unit tests for spreading activation (tests/unit/core/activation/test_spreading.py)
   - [ ] 1.14 Write unit tests for context boost (tests/unit/core/activation/test_context_boost.py)
   - [ ] 1.15 Write unit tests for decay penalty (tests/unit/core/activation/test_decay.py)
   - [ ] 1.16 Write integration tests for full activation formula (tests/unit/core/activation/test_engine.py)

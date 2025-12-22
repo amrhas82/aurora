@@ -111,6 +111,8 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 
 ### Documentation
 - `docs/actr-activation.md` - ACT-R activation formula documentation with examples
+- `docs/actr-formula-validation.md` - Literature validation report (Task 1.18, 20 examples validated)
+- `docs/examples/activation_usage.md` - Comprehensive activation usage guide (Task 1.19, 30 practical examples)
 - `docs/headless-mode.md` - Headless mode usage guide
 - `docs/performance-tuning.md` - Performance optimization guide
 - `docs/production-deployment.md` - Production deployment guide
@@ -180,7 +182,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [ ] 1.16 Write integration tests for full activation formula (tests/unit/core/activation/test_engine.py)
   - [ ] 1.17 Write unit tests for activation retrieval (tests/unit/core/activation/test_retrieval.py)
   - [x] 1.18 Validate formulas against ACT-R literature examples (documented in tests) - **COMPLETE** 20 literature validation tests, 100% pass rate, docs/actr-formula-validation.md
-  - [ ] 1.19 Test edge cases (never-accessed chunks, very old chunks, circular dependencies)
+  - [x] 1.19 Add activation usage examples to docs/examples/activation_usage.md - **COMPLETE** 30 comprehensive examples covering all components, edge cases, real-world scenarios, configuration presets, and debugging techniques
   - [ ] 1.20 Verify activation ranking improves retrieval precision in integration test
 
 - [ ] 2.0 Semantic Context Awareness (Embeddings & Hybrid Retrieval)

@@ -16,7 +16,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages" / "core" / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages" / "context-code" / "src"))
 
-from aurora_core.chunks import CodeChunk
+from aurora_core.chunks import CodeChunk, ReasoningChunk
 from aurora_core.store import MemoryStore, SQLiteStore
 
 
@@ -36,6 +36,52 @@ def generate_test_chunks(count: int) -> List[CodeChunk]:
             dependencies=[f"code:file{j}.py:func{j}:{j*10}-{j*10+20}" for j in range(max(0, i-3), i)],
             complexity_score=0.3 + (i % 7) * 0.1,
             language="python"
+        )
+        chunks.append(chunk)
+    return chunks
+
+
+def generate_test_reasoning_chunks(count: int) -> List[ReasoningChunk]:
+    """Generate test reasoning chunks for memory profiling."""
+    chunks = []
+    for i in range(count):
+        chunk = ReasoningChunk(
+            chunk_id=f"reasoning:pattern_{i}:{i}",
+            pattern=f"implement feature {i} with database access and API integration",
+            complexity=["SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL"][i % 4],
+            subgoals=[
+                {
+                    "id": f"subgoal_{i}_1",
+                    "description": f"Analyze requirements for feature {i}",
+                    "assigned_agent": "analyzer",
+                },
+                {
+                    "id": f"subgoal_{i}_2",
+                    "description": f"Implement feature {i}",
+                    "assigned_agent": "developer",
+                },
+                {
+                    "id": f"subgoal_{i}_3",
+                    "description": f"Test feature {i}",
+                    "assigned_agent": "tester",
+                },
+            ],
+            execution_order=[
+                {"phase": "sequential", "subgoals": [f"subgoal_{i}_1"]},
+                {"phase": "parallel", "subgoals": [f"subgoal_{i}_2", f"subgoal_{i}_3"]},
+            ],
+            tools_used=["file_reader", "code_analyzer", "test_runner"],
+            tool_sequence=[
+                {"tool": "file_reader", "timestamp": 1000 + i, "duration_ms": 100},
+                {"tool": "code_analyzer", "timestamp": 1100 + i, "duration_ms": 200},
+                {"tool": "test_runner", "timestamp": 1300 + i, "duration_ms": 500},
+            ],
+            success_score=0.5 + (i % 5) * 0.1,
+            metadata={
+                "total_duration_ms": 800,
+                "llm_calls": 3,
+                "tokens_used": 1500,
+            },
         )
         chunks.append(chunk)
     return chunks
@@ -231,6 +277,112 @@ class TestMemoryProfiling:
 
         assert leaked < stored * 0.3, f"Memory leak detected: {leaked:.2f} MB (stored {stored:.2f} MB)"
         print(f"✓ Memory properly released on close (leaked {leaked:.2f} MB / {stored:.2f} MB = {leaked/stored*100:.1f}%)")
+
+    def test_reasoning_chunk_10k_patterns_memory_usage(self):
+        """Test memory usage with 10K reasoning patterns.
+
+        PRD Requirement (Phase 2, Task 8.24): <100MB for 10K cached reasoning patterns
+        This test specifically validates ReasoningChunk memory efficiency.
+        """
+        # Force garbage collection before test
+        gc.collect()
+
+        # Start tracking memory
+        tracemalloc.start()
+
+        # Create store
+        store = MemoryStore()
+
+        # Measure baseline
+        baseline_mb = get_memory_usage_mb()
+        print(f"\nBaseline memory: {baseline_mb:.2f} MB")
+
+        # Generate and store 10K reasoning chunks
+        print("Generating 10,000 reasoning pattern chunks...")
+        chunks = generate_test_reasoning_chunks(10000)
+
+        after_generation_mb = get_memory_usage_mb()
+        print(f"After generation: {after_generation_mb:.2f} MB")
+        print(f"Generation delta: {after_generation_mb - baseline_mb:.2f} MB")
+
+        print("Storing reasoning patterns...")
+        for chunk in chunks:
+            store.save_chunk(chunk)
+
+        # Measure after storing
+        after_store_mb = get_memory_usage_mb()
+        print(f"After storing: {after_store_mb:.2f} MB")
+
+        # Calculate memory used by storage
+        storage_mb = after_store_mb - baseline_mb
+        print(f"Total memory used: {storage_mb:.2f} MB")
+
+        # Stop tracking
+        tracemalloc.stop()
+
+        # Cleanup
+        store.close()
+
+        # Verify target met
+        assert storage_mb < 100, f"Memory usage {storage_mb:.2f} MB exceeds 100 MB target"
+        print(f"✓ Reasoning pattern memory target met: {storage_mb:.2f} MB < 100 MB")
+
+    def test_reasoning_chunk_memory_overhead(self):
+        """Test memory overhead per reasoning chunk."""
+        gc.collect()
+        tracemalloc.start()
+
+        baseline_mb = get_memory_usage_mb()
+
+        # Create 1000 reasoning chunks to measure average
+        chunks = generate_test_reasoning_chunks(1000)
+
+        after_mb = get_memory_usage_mb()
+        total_mb = after_mb - baseline_mb
+        per_chunk_kb = (total_mb * 1024) / 1000
+
+        print(f"\n1000 reasoning chunks use {total_mb:.2f} MB")
+        print(f"Average per chunk: {per_chunk_kb:.2f} KB")
+
+        tracemalloc.stop()
+
+        # ReasoningChunks are more complex than CodeChunks, allow up to 20KB per chunk
+        assert per_chunk_kb < 20, f"Per-chunk memory {per_chunk_kb:.2f} KB too high"
+        print(f"✓ Efficient reasoning chunk storage: {per_chunk_kb:.2f} KB per chunk")
+
+    def test_mixed_chunk_types_memory_usage(self):
+        """Test memory usage with mixed CodeChunk and ReasoningChunk storage.
+
+        This tests the realistic scenario where both code and reasoning patterns
+        are stored in the same memory store.
+        """
+        gc.collect()
+        tracemalloc.start()
+
+        store = MemoryStore()
+        baseline_mb = get_memory_usage_mb()
+
+        print("\nGenerating 5000 code chunks + 5000 reasoning chunks...")
+        code_chunks = generate_test_chunks(5000)
+        reasoning_chunks = generate_test_reasoning_chunks(5000)
+
+        print("Storing mixed chunk types...")
+        for chunk in code_chunks:
+            store.save_chunk(chunk)
+        for chunk in reasoning_chunks:
+            store.save_chunk(chunk)
+
+        after_store_mb = get_memory_usage_mb()
+        storage_mb = after_store_mb - baseline_mb
+
+        print(f"Mixed storage memory used: {storage_mb:.2f} MB")
+
+        tracemalloc.stop()
+        store.close()
+
+        # Should still be well under 100MB
+        assert storage_mb < 100, f"Mixed storage memory {storage_mb:.2f} MB exceeds target"
+        print(f"✓ Mixed storage memory efficient: {storage_mb:.2f} MB < 100 MB")
 
 
 if __name__ == "__main__":

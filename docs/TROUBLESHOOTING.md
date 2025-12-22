@@ -12,6 +12,12 @@ This guide covers common issues, error messages, and solutions for AURORA.
 - [Agent Registry Problems](#agent-registry-problems)
 - [Performance Issues](#performance-issues)
 - [Testing Problems](#testing-problems)
+- [SOAR Pipeline Issues (Phase 2)](#soar-pipeline-issues-phase-2)
+  - [Verification Failures](#verification-failures)
+  - [Agent Timeouts](#agent-timeouts)
+  - [Budget Exceeded Errors](#budget-exceeded-errors)
+  - [LLM Client Issues](#llm-client-issues)
+  - [Synthesis Failures](#synthesis-failures)
 
 ---
 
@@ -764,9 +770,448 @@ print(f'Platform: {sys.platform}')
 
 ---
 
+## SOAR Pipeline Issues (Phase 2)
+
+### Verification Failures
+
+#### Error: `Decomposition verification failed with score 0.45`
+
+**Cause**: Decomposition quality below threshold (0.5).
+
+**Symptoms**:
+```json
+{
+  "error": "Decomposition verification failed",
+  "verdict": "FAIL",
+  "overall_score": 0.45,
+  "issues": [
+    "Missing key aspects: error handling, testing",
+    "Subgoal 2 and 4 have contradictory approaches"
+  ]
+}
+```
+
+**Solutions**:
+1. **Rephrase query more specifically**:
+   ```
+   Before: "Build authentication"
+   After: "Implement JWT-based authentication with token refresh and email verification"
+   ```
+
+2. **Break into smaller queries**:
+   ```
+   Query 1: "Analyze existing auth structure"
+   Query 2: "Implement JWT token generation"
+   Query 3: "Add token refresh endpoint"
+   ```
+
+3. **Provide more context**:
+   - Include relevant file paths
+   - Mention existing patterns ("similar to user-service auth")
+   - Specify constraints ("must use existing database schema")
+
+**Debug**:
+```bash
+# Check verification scores
+grep "verification" ~/.aurora/logs/conversations/*/your-query*.md
+
+# Review decomposition quality
+cat ~/.aurora/logs/conversations/*/your-query*.md | grep -A 20 "Phase 4: VERIFY"
+```
+
+#### Error: `Verification retry exhausted (2/2 attempts)`
+
+**Cause**: Decomposition still below threshold after 2 retries with feedback.
+
+**Symptoms**:
+- Score improves but stays in RETRY range (0.5-0.7)
+- Similar issues persist across retries
+
+**Solutions**:
+1. **Query too complex for automatic decomposition**:
+   - Break into multiple simpler queries
+   - Provide step-by-step breakdown manually
+
+2. **Domain too specialized**:
+   - Add domain context to query
+   - Reference similar completed work
+   - Consider manual decomposition
+
+3. **Contradictory requirements**:
+   - Clarify requirements
+   - Resolve contradictions in query
+   - Prioritize requirements explicitly
+
+**Example**:
+```
+Query: "Migrate to microservices and maintain monolith compatibility"
+Issue: Contradictory (cannot do both)
+
+Solution: Break into phases
+- Query 1: "Analyze monolith for service boundaries"
+- Query 2: "Extract user service while maintaining API compatibility"
+- Query 3: "Test extracted service with existing clients"
+```
+
+---
+
+### Agent Timeouts
+
+#### Error: `Agent execution timed out after 60s`
+
+**Cause**: Agent exceeded per-agent timeout (default: 60s).
+
+**Symptoms**:
+```json
+{
+  "subgoal_id": "sg3",
+  "summary": "Execution timed out after 60s. Partial results may be incomplete.",
+  "confidence": 0.3,
+  "metadata": {
+    "timeout": true,
+    "timeout_seconds": 60
+  }
+}
+```
+
+**Solutions**:
+1. **Increase timeout** (if subgoal is inherently slow):
+   ```python
+   config = {
+       "agent_timeout_seconds": 120  # 2 minutes
+   }
+   ```
+
+2. **Break subgoal into smaller pieces**:
+   ```
+   Before: "Run all integration tests"
+   After:
+     - "Run auth integration tests"
+     - "Run billing integration tests"
+     - "Run user integration tests"
+   ```
+
+3. **Optimize agent implementation**:
+   - Check for slow operations (database queries, file I/O)
+   - Use parallel operations where possible
+   - Cache expensive computations
+
+**Debug**:
+```bash
+# Check agent execution times
+grep "duration_ms" ~/.aurora/logs/conversations/*/your-query*.md
+
+# Identify slow agents
+grep -A 5 "timeout" ~/.aurora/logs/conversations/*/your-query*.md
+```
+
+#### Error: `Query timeout exceeded (300s)`
+
+**Cause**: Overall query exceeded 5-minute timeout.
+
+**Symptoms**:
+- Some subgoals incomplete
+- Partial synthesis returned
+- Multiple agent timeouts
+
+**Solutions**:
+1. **Reduce query complexity**:
+   - Break into multiple queries
+   - Reduce number of subgoals
+
+2. **Increase overall timeout**:
+   ```python
+   config = {
+       "query_timeout_seconds": 600  # 10 minutes
+   }
+   ```
+
+3. **Optimize execution order**:
+   - More parallelization
+   - Remove unnecessary dependencies
+   - Skip non-critical subgoals
+
+---
+
+### Budget Exceeded Errors
+
+#### Error: `BudgetExceededError: Monthly limit $100 exceeded`
+
+**Cause**: Estimated query cost would exceed monthly budget.
+
+**Symptoms**:
+```
+ERROR: Budget limit exceeded ($100 / $100)
+Estimated cost: $0.50
+Current usage: $99.60
+Query rejected to prevent overspending
+```
+
+**Solutions**:
+1. **Increase monthly limit**:
+   ```python
+   from aurora_core.budget import CostTracker
+   tracker = CostTracker()
+   tracker.set_monthly_limit(200.0)  # $200/month
+   ```
+
+2. **Wait for new period** (auto-resets monthly):
+   ```bash
+   # Check current period
+   cat ~/.aurora/budget_tracker.json | grep current_period
+   # Will reset on first day of next month
+   ```
+
+3. **Use local models** (free):
+   ```python
+   from aurora_reasoning import OllamaClient
+   llm_client = OllamaClient(model="llama3")
+   ```
+
+4. **Optimize query to reduce cost**:
+   - Use SIMPLE queries when possible (keyword assessment only)
+   - Avoid CRITICAL complexity (uses expensive Opus 4 model)
+   - Phrase queries clearly to reduce retry loops
+
+**Check budget status**:
+```python
+from aurora_core.budget import CostTracker
+tracker = CostTracker()
+status = tracker.get_status()
+print(f"Used: ${status['used']:.2f} / ${status['limit']:.2f} ({status['percentage']:.1f}%)")
+print(f"Remaining: ${status['remaining']:.2f}")
+```
+
+#### Warning: `Budget at 85%, approaching limit`
+
+**Cause**: Soft limit (80%) exceeded, approaching hard limit (100%).
+
+**Action**:
+- Monitor remaining queries
+- Increase limit if needed
+- Review high-cost queries
+
+**Analyze spending**:
+```python
+# Find expensive operations
+history = tracker.get_history("2025-01")
+expensive = sorted(history, key=lambda x: x.cost_usd, reverse=True)[:10]
+for entry in expensive:
+    print(f"{entry.operation}: ${entry.cost_usd:.4f} ({entry.model})")
+```
+
+---
+
+### LLM Client Issues
+
+#### Error: `AnthropicAPIError: Invalid API key`
+
+**Cause**: Missing or invalid Anthropic API key.
+
+**Solution**:
+```bash
+# Set API key in environment
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Or in .env file
+echo 'ANTHROPIC_API_KEY=sk-ant-...' >> .env
+
+# Verify
+python -c "import os; print('Key set:', bool(os.getenv('ANTHROPIC_API_KEY')))"
+```
+
+#### Error: `RateLimitError: Too many requests`
+
+**Cause**: Exceeded API rate limits.
+
+**Solutions**:
+1. **Add delay between requests** (automatic with tenacity retry):
+   - Default: exponential backoff (100ms, 200ms, 400ms)
+
+2. **Reduce concurrent queries**:
+   - Limit parallel agent execution
+   - Add queuing layer
+
+3. **Use local models for development**:
+   ```python
+   from aurora_reasoning import OllamaClient
+   llm = OllamaClient(model="llama3", base_url="http://localhost:11434")
+   ```
+
+#### Error: `TimeoutError: LLM call timed out after 30s`
+
+**Cause**: LLM response took too long.
+
+**Solutions**:
+1. **Increase LLM timeout**:
+   ```python
+   llm_client.generate(prompt, timeout=60)  # 60 seconds
+   ```
+
+2. **Reduce prompt size**:
+   - Fewer few-shot examples
+   - Trim context
+   - Simplify query
+
+3. **Check network connectivity**:
+   ```bash
+   curl -I https://api.anthropic.com
+   ```
+
+#### Error: `JSONDecodeError: Failed to parse LLM response`
+
+**Cause**: LLM didn't return valid JSON.
+
+**Symptoms**:
+```
+JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+Raw response: "Here is the decomposition:\n```json\n{...}\n```"
+```
+
+**Solutions**:
+1. **JSON extraction** (automatic with `generate_json()`):
+   - Extracts JSON from markdown code blocks
+   - Handles extra text before/after JSON
+
+2. **Improve prompt**:
+   ```python
+   prompt += "\n\nIMPORTANT: Return ONLY valid JSON, no markdown, no explanations."
+   ```
+
+3. **Validate response**:
+   ```python
+   response = llm_client.generate_json(prompt)
+   # Automatically validates and extracts JSON
+   ```
+
+---
+
+### Synthesis Failures
+
+#### Error: `Synthesis verification failed: Low traceability (0.55)`
+
+**Cause**: Synthesized answer contains claims not supported by agent outputs.
+
+**Symptoms**:
+```json
+{
+  "issues": [
+    "Claim 'all tests passing' not supported by any agent output",
+    "Reference to 'performance improvements' without agent evidence"
+  ]
+}
+```
+
+**Solutions**:
+1. **Retry with stricter constraints** (automatic, max 2 retries):
+   - Synthesis includes feedback
+   - Stronger traceability requirements
+
+2. **Check agent outputs**:
+   - Verify agents completed successfully
+   - Check confidence scores (low confidence = unreliable)
+   - Review agent summaries for missing information
+
+3. **Manual synthesis** (if retry fails):
+   - Review agent outputs directly
+   - Construct answer manually from evidence
+   - Use query logs to see what agents actually did
+
+**Debug**:
+```bash
+# Check synthesis traceability
+cat ~/.aurora/logs/conversations/*/your-query*.md | grep -A 30 "Phase 7: SYNTHESIZE"
+
+# Review agent outputs
+cat ~/.aurora/logs/conversations/*/your-query*.md | grep -A 20 "Phase 6: COLLECT"
+```
+
+#### Error: `No agent outputs available for synthesis`
+
+**Cause**: All agents failed or returned low confidence results.
+
+**Symptoms**:
+- Empty synthesis
+- Error: "Cannot synthesize with no inputs"
+
+**Solutions**:
+1. **Check agent failures**:
+   - Review Phase 6 (Collect) outputs
+   - Identify which agents failed and why
+   - Fix agent issues or retry
+
+2. **Lower confidence threshold** (if appropriate):
+   ```python
+   config = {
+       "min_confidence_for_synthesis": 0.5  # Default: 0.7
+   }
+   ```
+
+3. **Reduce subgoal count**:
+   - Simplify query
+   - Remove optional subgoals
+   - Focus on critical subgoals only
+
+---
+
+### Common Patterns and Quick Fixes
+
+#### Pattern: High Verification Retry Rate
+
+**Symptom**: Many queries require 2+ retries in Phase 4.
+
+**Root Cause**: Vague queries or poor few-shot examples.
+
+**Fix**:
+1. Improve query clarity
+2. Update few-shot examples in `packages/reasoning/examples/example_decompositions.json`
+3. Review verification prompts for clarity
+
+#### Pattern: Frequent Agent Timeouts
+
+**Symptom**: 10%+ of agent executions timeout.
+
+**Root Cause**: Unrealistic timeouts or slow agents.
+
+**Fix**:
+1. Profile agent execution times
+2. Increase timeout for slow agents
+3. Optimize agent implementations
+4. Break complex subgoals into smaller ones
+
+#### Pattern: Budget Exhausted Mid-Month
+
+**Symptom**: Hit budget limit before month end.
+
+**Root Cause**: Underestimated usage or high-cost queries.
+
+**Fix**:
+1. Increase monthly limit
+2. Analyze spending patterns (find expensive operations)
+3. Use keyword assessment (saves 70% on Phase 1)
+4. Switch to local models for development
+
+#### Pattern: Synthesis Quality Issues
+
+**Symptom**: Low traceability scores, contradictory answers.
+
+**Root Cause**: Poor agent outputs or synthesis prompt issues.
+
+**Fix**:
+1. Improve agent output quality (clearer summaries)
+2. Review synthesis prompt for clarity
+3. Add more synthesis examples to calibration
+4. Lower confidence threshold if accepting partial results
+
+---
+
 ## Additional Resources
 
 - [README](../README.md)
 - [Extension Guide](EXTENSION_GUIDE.md)
 - [Architecture Documentation](../README.md#architecture)
+- [SOAR Architecture](SOAR_ARCHITECTURE.md)
+- [Verification Checkpoints](VERIFICATION_CHECKPOINTS.md)
+- [Cost Tracking Guide](COST_TRACKING_GUIDE.md)
+- [Agent Integration Guide](AGENT_INTEGRATION.md)
 - [Contributing Guidelines](../CONTRIBUTING.md)

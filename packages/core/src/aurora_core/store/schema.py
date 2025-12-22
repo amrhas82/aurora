@@ -7,7 +7,7 @@ storage implementations.
 """
 
 # Schema version for migration tracking
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3  # Incremented for embeddings support
 
 # SQL statements for creating tables and indexes
 CREATE_CHUNKS_TABLE = """
@@ -16,8 +16,11 @@ CREATE TABLE IF NOT EXISTS chunks (
     type TEXT NOT NULL,               -- "code" | "reasoning" | "knowledge"
     content JSON NOT NULL,            -- Chunk-specific JSON structure
     metadata JSON,                    -- Optional metadata
+    embeddings BLOB,                  -- Embedding vector as serialized numpy array (for semantic retrieval)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    first_access TIMESTAMP,           -- First time chunk was accessed
+    last_access TIMESTAMP             -- Most recent access time
 );
 """
 
@@ -33,14 +36,19 @@ CREATE_ACTIVATIONS_TABLE = """
 CREATE TABLE IF NOT EXISTS activations (
     chunk_id TEXT PRIMARY KEY,
     base_level REAL NOT NULL,         -- Base-level activation (BLA)
-    last_access TIMESTAMP NOT NULL,
-    access_count INTEGER DEFAULT 1,
+    last_access TIMESTAMP NOT NULL,   -- Most recent access timestamp
+    access_count INTEGER DEFAULT 1,   -- Total number of accesses
+    access_history JSON,              -- Full access history as JSON array
     FOREIGN KEY (chunk_id) REFERENCES chunks(id) ON DELETE CASCADE
 );
 """
 
 CREATE_ACTIVATIONS_BASE_INDEX = """
 CREATE INDEX IF NOT EXISTS idx_activations_base ON activations(base_level DESC);
+"""
+
+CREATE_ACTIVATIONS_LAST_ACCESS_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_activations_last_access ON activations(last_access DESC);
 """
 
 CREATE_RELATIONSHIPS_TABLE = """
@@ -78,6 +86,7 @@ INIT_SCHEMA = [
     CREATE_CHUNKS_CREATED_INDEX,
     CREATE_ACTIVATIONS_TABLE,
     CREATE_ACTIVATIONS_BASE_INDEX,
+    CREATE_ACTIVATIONS_LAST_ACCESS_INDEX,
     CREATE_RELATIONSHIPS_TABLE,
     CREATE_RELATIONSHIPS_FROM_INDEX,
     CREATE_RELATIONSHIPS_TO_INDEX,

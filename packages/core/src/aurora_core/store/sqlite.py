@@ -183,17 +183,21 @@ class SQLiteStore(Store):
 
         with self._transaction() as conn:
             try:
+                # Get embeddings if available (optional field for semantic retrieval)
+                embeddings = getattr(chunk, 'embeddings', None)
+
                 # Insert or replace chunk
                 conn.execute(
                     """
-                    INSERT OR REPLACE INTO chunks (id, type, content, metadata, updated_at)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT OR REPLACE INTO chunks (id, type, content, metadata, embeddings, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     (
                         chunk.id,
                         chunk.type,
                         json.dumps(chunk_json.get('content', {})),
                         json.dumps(chunk_json.get('metadata', {})),
+                        embeddings,  # BLOB - numpy array bytes or None
                         datetime.utcnow().isoformat()
                     )
                 )
@@ -236,7 +240,7 @@ class SQLiteStore(Store):
         try:
             cursor = conn.execute(
                 """
-                SELECT id, type, content, metadata, created_at, updated_at
+                SELECT id, type, content, metadata, embeddings, created_at, updated_at
                 FROM chunks
                 WHERE id = ?
                 """,
@@ -289,13 +293,20 @@ class SQLiteStore(Store):
             # Deserialize based on chunk type
             chunk_type = row_data['type']
             if chunk_type == 'code':
-                return CodeChunk.from_json(full_data)
-            if chunk_type == 'reasoning':
-                return ReasoningChunk.from_json(full_data)
-            raise StorageError(
-                f"Unknown chunk type: {chunk_type}",
-                details=f"Cannot deserialize chunk {row_data['id']}"
-            )
+                chunk = CodeChunk.from_json(full_data)
+            elif chunk_type == 'reasoning':
+                chunk = ReasoningChunk.from_json(full_data)
+            else:
+                raise StorageError(
+                    f"Unknown chunk type: {chunk_type}",
+                    details=f"Cannot deserialize chunk {row_data['id']}"
+                )
+
+            # Restore embeddings if present (BLOB field for semantic retrieval)
+            if 'embeddings' in row_data and row_data['embeddings'] is not None:
+                chunk.embeddings = row_data['embeddings']
+
+            return chunk
 
         except (KeyError, json.JSONDecodeError, ValueError) as e:
             raise StorageError(
@@ -360,7 +371,7 @@ class SQLiteStore(Store):
         try:
             cursor = conn.execute(
                 """
-                SELECT c.id, c.type, c.content, c.metadata, c.created_at, c.updated_at
+                SELECT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at
                 FROM chunks c
                 JOIN activations a ON c.id = a.chunk_id
                 WHERE a.base_level >= ?
@@ -485,7 +496,7 @@ class SQLiteStore(Store):
             JOIN related rel ON r.from_chunk = rel.chunk_id
             WHERE rel.depth < ?
         )
-        SELECT DISTINCT c.id, c.type, c.content, c.metadata, c.created_at, c.updated_at
+        SELECT DISTINCT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at
         FROM chunks c
         JOIN related r ON c.id = r.chunk_id
         """

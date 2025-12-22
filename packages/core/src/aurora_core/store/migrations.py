@@ -76,16 +76,93 @@ class MigrationManager:
 
         Add new migrations here as the schema evolves.
         """
-        # Example: Migration from version 0 (no schema) to version 1
-        # This is handled by the initial schema creation in schema.py
-        # Future migrations would be registered here like:
-        # self.add_migration(Migration(
-        #     from_version=1,
-        #     to_version=2,
-        #     upgrade_fn=self._migrate_v1_to_v2,
-        #     description="Add new column to chunks table"
-        # ))
-        pass
+        # Migration v1 -> v2: Add access history tracking
+        self.add_migration(Migration(
+            from_version=1,
+            to_version=2,
+            upgrade_fn=self._migrate_v1_to_v2,
+            description="Add access history tracking (access_history JSON, first_access, last_access)"
+        ))
+
+        # Migration v2 -> v3: Add embeddings support
+        self.add_migration(Migration(
+            from_version=2,
+            to_version=3,
+            upgrade_fn=self._migrate_v2_to_v3,
+            description="Add embeddings column to chunks table for semantic retrieval"
+        ))
+
+    def _migrate_v1_to_v2(self, conn: sqlite3.Connection) -> None:
+        """
+        Migrate from schema v1 to v2: Add access history tracking.
+
+        Changes:
+        - Add access_history JSON column to activations table
+        - Add first_access and last_access columns to chunks table
+        - Initialize access_history from existing last_access data
+        """
+        cursor = conn.cursor()
+
+        # Add new columns to chunks table
+        try:
+            cursor.execute("ALTER TABLE chunks ADD COLUMN first_access TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass  # Column may already exist
+
+        try:
+            cursor.execute("ALTER TABLE chunks ADD COLUMN last_access TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass  # Column may already exist
+
+        # Add access_history column to activations table
+        try:
+            cursor.execute("ALTER TABLE activations ADD COLUMN access_history JSON")
+        except sqlite3.OperationalError:
+            pass  # Column may already exist
+
+        # Initialize access_history from existing last_access data
+        # For each chunk with activation data, create an initial history entry
+        cursor.execute("""
+            UPDATE activations
+            SET access_history = json_array(
+                json_object(
+                    'timestamp', last_access,
+                    'context', NULL
+                )
+            )
+            WHERE access_history IS NULL
+        """)
+
+        # Copy last_access from activations to chunks table for consistency
+        cursor.execute("""
+            UPDATE chunks
+            SET last_access = (
+                SELECT last_access FROM activations WHERE activations.chunk_id = chunks.id
+            ),
+            first_access = (
+                SELECT last_access FROM activations WHERE activations.chunk_id = chunks.id
+            )
+            WHERE id IN (SELECT chunk_id FROM activations)
+        """)
+
+        conn.commit()
+
+    def _migrate_v2_to_v3(self, conn: sqlite3.Connection) -> None:
+        """
+        Migrate from schema v2 to v3: Add embeddings support.
+
+        Changes:
+        - Add embeddings BLOB column to chunks table for storing embedding vectors
+        """
+        cursor = conn.cursor()
+
+        # Add embeddings column to chunks table
+        try:
+            cursor.execute("ALTER TABLE chunks ADD COLUMN embeddings BLOB")
+        except sqlite3.OperationalError:
+            pass  # Column may already exist
+
+        conn.commit()
 
     def add_migration(self, migration: Migration) -> None:
         """

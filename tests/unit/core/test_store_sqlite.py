@@ -334,5 +334,84 @@ class TestSQLiteStore(StoreContractTests):
         # Should not raise an error (actual retrieval depends on deserialization)
         store2.close()
 
+    def test_save_chunk_with_embeddings(self, store):
+        """Test saving a chunk with embeddings (BLOB field)."""
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
+
+        # Add embeddings as bytes (simulating numpy array serialization)
+        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        chunk.embeddings = test_embeddings
+
+        # Save chunk
+        store.save_chunk(chunk)
+
+        # Verify embeddings were saved to database
+        conn = store._get_connection()
+        cursor = conn.execute(
+            "SELECT embeddings FROM chunks WHERE id = ?",
+            (chunk.id,)
+        )
+        row = cursor.fetchone()
+        assert row is not None, "Chunk should be saved"
+        assert row[0] == test_embeddings, "Embeddings should be saved as BLOB"
+
+    def test_get_chunk_with_embeddings(self, store):
+        """Test retrieving a chunk with embeddings."""
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
+
+        # Add embeddings
+        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        chunk.embeddings = test_embeddings
+
+        # Save and retrieve
+        store.save_chunk(chunk)
+        retrieved = store.get_chunk(ChunkID(chunk.id))
+
+        assert retrieved is not None, "Chunk should be retrieved"
+        assert hasattr(retrieved, 'embeddings'), "Retrieved chunk should have embeddings attribute"
+        assert retrieved.embeddings == test_embeddings, "Embeddings should be preserved"
+
+    def test_save_chunk_without_embeddings(self, store):
+        """Test saving a chunk without embeddings (optional field)."""
+        chunk = create_test_code_chunk("test:chunk:1", "test_func")
+
+        # Don't set embeddings - should default to None
+        store.save_chunk(chunk)
+
+        # Verify embeddings column is NULL
+        conn = store._get_connection()
+        cursor = conn.execute(
+            "SELECT embeddings FROM chunks WHERE id = ?",
+            (chunk.id,)
+        )
+        row = cursor.fetchone()
+        assert row is not None, "Chunk should be saved"
+        assert row[0] is None, "Embeddings should be NULL when not set"
+
+    def test_retrieve_by_activation_with_embeddings(self, store):
+        """Test that retrieve_by_activation preserves embeddings."""
+        chunk1 = create_test_code_chunk("test:chunk:1", "func1")
+        chunk2 = create_test_code_chunk("test:chunk:2", "func2")
+
+        # Add embeddings to both chunks
+        chunk1.embeddings = b'\x00\x01\x02\x03'
+        chunk2.embeddings = b'\x04\x05\x06\x07'
+
+        # Save chunks and set activations
+        store.save_chunk(chunk1)
+        store.save_chunk(chunk2)
+        store.update_activation(ChunkID(chunk1.id), 2.0)
+        store.update_activation(ChunkID(chunk2.id), 1.0)
+
+        # Retrieve by activation
+        chunks = store.retrieve_by_activation(min_activation=0.5, limit=10)
+
+        assert len(chunks) == 2, "Should retrieve both chunks"
+        # Find chunk1 in results
+        chunk1_retrieved = next((c for c in chunks if c.id == chunk1.id), None)
+        assert chunk1_retrieved is not None, "Chunk1 should be in results"
+        assert hasattr(chunk1_retrieved, 'embeddings'), "Retrieved chunk should have embeddings"
+        assert chunk1_retrieved.embeddings == chunk1.embeddings, "Embeddings should be preserved"
+
 
 __all__ = ['TestSQLiteStore']

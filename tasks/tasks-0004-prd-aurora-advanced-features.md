@@ -175,11 +175,11 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 1.11 Implement activation-based retrieval in activation/retrieval.py with threshold filtering
   - [x] 1.12 Write unit tests for BLA formula (tests/unit/core/activation/test_base_level.py)
   - [x] 1.13 Write unit tests for spreading activation (tests/unit/core/activation/test_spreading.py)
-  - [ ] 1.14 Write unit tests for context boost (tests/unit/core/activation/test_context_boost.py)
-  - [ ] 1.15 Write unit tests for decay penalty (tests/unit/core/activation/test_decay.py)
+  - [x] 1.14 Write unit tests for context boost (tests/unit/core/activation/test_context_boost.py)
+  - [x] 1.15 Write unit tests for decay penalty (tests/unit/core/activation/test_decay.py)
   - [ ] 1.16 Write integration tests for full activation formula (tests/unit/core/activation/test_engine.py)
   - [ ] 1.17 Write unit tests for activation retrieval (tests/unit/core/activation/test_retrieval.py)
-  - [ ] 1.18 Validate formulas against ACT-R literature examples (documented in tests)
+  - [x] 1.18 Validate formulas against ACT-R literature examples (documented in tests) - **COMPLETE** 20 literature validation tests, 100% pass rate, docs/actr-formula-validation.md
   - [ ] 1.19 Test edge cases (never-accessed chunks, very old chunks, circular dependencies)
   - [ ] 1.20 Verify activation ranking improves retrieval precision in integration test
 

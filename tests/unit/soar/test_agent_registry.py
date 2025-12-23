@@ -496,7 +496,10 @@ class TestAgentRefresh:
 
         assert registry.agents["agent1"].description == "First version"
 
-        # Update config
+        # Update config (need delay for mtime to change)
+        import time
+
+        time.sleep(0.01)  # Ensure mtime changes
         config_data["agents"][0]["description"] = "Updated version"
         config_file.write_text(json.dumps(config_data))
 

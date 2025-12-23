@@ -111,12 +111,12 @@ class TestValidateVerdictConsistency:
 
     def test_invalid_pass_with_low_score(self):
         """Test PASS verdict with score < 0.5 raises error."""
-        with pytest.raises(ValueError, match="Verdict PASS inconsistent"):
+        with pytest.raises(ValueError, match=r"Verdict.*PASS inconsistent"):
             _validate_verdict_consistency(VerificationVerdict.PASS, 0.3)
 
     def test_invalid_fail_with_medium_score(self):
         """Test FAIL verdict with medium score raises error."""
-        with pytest.raises(ValueError, match="Verdict FAIL inconsistent"):
+        with pytest.raises(ValueError, match=r"Verdict.*FAIL inconsistent"):
             _validate_verdict_consistency(VerificationVerdict.FAIL, 0.6)
 
 

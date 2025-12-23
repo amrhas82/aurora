@@ -7,18 +7,19 @@
 
 ---
 
-**🎉 Phase 2 Nearly Complete!** SOAR Pipeline & Verification System (v0.2.0-rc1)
+**🚀 Phase 3 Complete!** ACT-R Activation, Semantic Embeddings & Headless Mode (v0.3.0)
 
-**Status**: 823/824 tests passing (99.88%), 87.96% coverage
+**Status**: 1,810 tests passing (100%), 88.41% coverage
 
-- ✅ 9-phase SOAR orchestrator with multi-stage verification
-- ✅ LLM abstraction layer (Anthropic, OpenAI, Ollama)
-- ✅ Cost tracking and budget enforcement
-- ✅ Conversation logging with markdown output
-- ✅ ReasoningChunk full implementation with pattern caching
-- ✅ Agent execution with parallel support
+**New in Phase 3:**
+- ✅ ACT-R activation engine with BLA, spreading, context boost, decay formulas
+- ✅ Semantic embeddings with hybrid retrieval (60% activation + 40% semantic)
+- ✅ Headless reasoning mode for autonomous experiments
+- ✅ Performance optimization (multi-tier caching, query optimization, <500ms for 10K chunks)
+- ✅ Production hardening (retry handler, rate limiting, metrics, alerting)
+- ✅ Memory commands (`aur mem`) with auto-escalation
 
-See [PHASE2_QUALITY_STATUS.md](PHASE2_QUALITY_STATUS.md) | [Phase 1 Archive](PHASE1_ARCHIVE.md)
+See [docs/](docs/) for comprehensive guides | [Phase 2 Archive](PHASE2_ARCHIVE.md) | [Phase 1 Archive](PHASE1_ARCHIVE.md)
 
 ---
 
@@ -44,6 +45,14 @@ AURORA is a cognitive architecture framework that provides intelligent context m
 - **ReasoningChunk System**: Full ACT-R pattern caching with success scoring and learning updates
 - **Conversation Logging**: Markdown formatted logs with full execution traces
 - **Performance**: Simple queries <2s, complex queries <10s, keyword-based optimization bypasses LLM for 60-70% of queries
+
+**Phase 3 Advanced Memory & Features:**
+- **ACT-R Activation Engine**: BLA (frequency/recency), spreading activation, context boost, decay penalty - cognitively-inspired memory retrieval
+- **Semantic Embeddings**: sentence-transformers integration, hybrid scoring (60% activation + 40% semantic similarity)
+- **Headless Reasoning Mode**: Autonomous goal-driven execution with safety (git branch enforcement, budget limits, iteration caps)
+- **Multi-Tier Caching**: Hot cache (LRU 1000 chunks) + persistent cache + activation scores cache (10min TTL) → 30%+ hit rate
+- **Query Optimization**: Type pre-filtering, threshold filtering, batch activation calculation → <500ms for 10K chunks
+- **Production Resilience**: Retry handler (exponential backoff), rate limiter (token bucket), metrics collector, alerting system → 95%+ recovery rate
 
 ## Quick Start
 

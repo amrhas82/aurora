@@ -387,13 +387,17 @@ class MemoryStore(Store):
         """
         Close the store and mark it as closed.
 
-        For MemoryStore, this just sets a flag. No actual cleanup is needed
-        since everything is in memory.
+        Clears all data structures to release memory. This ensures proper
+        cleanup, especially important in Python 3.12+ with improved GC.
 
         Raises:
             StorageError: Never (included for interface compatibility)
         """
         self._closed = True
+        # Clear all data structures to release memory
+        self._chunks.clear()
+        self._activations.clear()
+        self._relationships.clear()
 
     def __len__(self) -> int:
         """Return number of chunks in storage."""

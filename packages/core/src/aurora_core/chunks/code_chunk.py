@@ -6,7 +6,7 @@ and methods parsed from source code files.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -161,12 +161,12 @@ class CodeChunk(Chunk):
             if "created_at" in metadata:
                 chunk.created_at = datetime.fromisoformat(metadata["created_at"])
             else:
-                chunk.created_at = datetime.utcnow()
+                chunk.created_at = datetime.now(timezone.utc)
 
             if "last_modified" in metadata:
                 chunk.updated_at = datetime.fromisoformat(metadata["last_modified"])
             else:
-                chunk.updated_at = datetime.utcnow()
+                chunk.updated_at = datetime.now(timezone.utc)
 
             # Set CodeChunk-specific fields
             chunk.file_path = content["file"]

@@ -13,7 +13,7 @@ import sqlite3
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Forward reference for type checking
@@ -176,7 +176,7 @@ class SQLiteStore(Store):
                         json.dumps(chunk_json.get("content", {})),
                         json.dumps(chunk_json.get("metadata", {})),
                         embeddings,  # BLOB - numpy array bytes or None
-                        datetime.utcnow().isoformat(),
+                        datetime.now(timezone.utc).isoformat(),
                     ),
                 )
 
@@ -189,7 +189,7 @@ class SQLiteStore(Store):
                     (
                         chunk.id,
                         0.0,  # Initial activation
-                        datetime.utcnow().isoformat(),
+                        datetime.now(timezone.utc).isoformat(),
                         0,
                     ),
                 )
@@ -310,7 +310,7 @@ class SQLiteStore(Store):
                         access_count = access_count + 1
                     WHERE chunk_id = ?
                     """,
-                    (delta, datetime.utcnow().isoformat(), chunk_id),
+                    (delta, datetime.now(timezone.utc).isoformat(), chunk_id),
                 )
 
                 if cursor.rowcount == 0:

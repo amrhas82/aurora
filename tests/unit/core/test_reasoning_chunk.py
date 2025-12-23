@@ -69,7 +69,8 @@ class TestReasoningChunkInitialization:
         assert isinstance(chunk.created_at, datetime)
         assert isinstance(chunk.updated_at, datetime)
         # Timestamps should be within last 10 seconds (reasonable for test execution)
-        now = datetime.utcnow()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         time_diff = abs((now - chunk.created_at).total_seconds())
         assert time_diff < 10, f"Timestamp too old: {time_diff}s"
 

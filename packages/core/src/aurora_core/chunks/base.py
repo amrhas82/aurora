@@ -6,7 +6,7 @@ types must implement.
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -32,8 +32,8 @@ class Chunk(ABC):
         """
         self.id = chunk_id
         self.type = chunk_type
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
 
     @abstractmethod
     def to_json(self) -> dict[str, Any]:

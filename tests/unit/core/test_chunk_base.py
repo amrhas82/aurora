@@ -62,7 +62,8 @@ class TestChunkInterface:
         chunk = ConcreteChunk("test-id", "test-type")
 
         # Timestamps should be close to current UTC time
-        now = datetime.utcnow()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         assert abs((chunk.created_at - now).total_seconds()) < 1
         assert abs((chunk.updated_at - now).total_seconds()) < 1
 

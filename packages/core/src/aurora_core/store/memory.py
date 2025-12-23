@@ -6,7 +6,7 @@ dictionaries for testing purposes. No file I/O is performed, making it
 ideal for unit tests and CI/CD environments.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Forward reference for type checking
 from typing import TYPE_CHECKING, Any, Optional
@@ -96,7 +96,7 @@ class MemoryStore(Store):
         if chunk.id not in self._activations:
             self._activations[chunk.id] = {
                 "base_level": 0.0,
-                "last_access": datetime.utcnow(),
+                "last_access": datetime.now(timezone.utc),
                 "access_count": 0,
             }
 
@@ -139,13 +139,13 @@ class MemoryStore(Store):
         if chunk_id_str not in self._activations:
             self._activations[chunk_id_str] = {
                 "base_level": 0.0,
-                "last_access": datetime.utcnow(),
+                "last_access": datetime.now(timezone.utc),
                 "access_count": 0,
             }
 
         # Update activation
         self._activations[chunk_id_str]["base_level"] += delta
-        self._activations[chunk_id_str]["last_access"] = datetime.utcnow()
+        self._activations[chunk_id_str]["last_access"] = datetime.now(timezone.utc)
         self._activations[chunk_id_str]["access_count"] += 1
 
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:

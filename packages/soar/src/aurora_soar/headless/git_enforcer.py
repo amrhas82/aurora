@@ -30,7 +30,7 @@ Usage:
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class GitBranchError(Exception):
@@ -274,7 +274,7 @@ class GitEnforcer:
         # Could log success here if we had logging configured
         return
 
-    def get_validation_status(self) -> dict:
+    def get_validation_status(self) -> Dict[str, Any]:
         """
         Get detailed validation status without raising exceptions.
 

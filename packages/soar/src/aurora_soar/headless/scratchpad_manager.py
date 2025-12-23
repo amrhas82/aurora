@@ -57,7 +57,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class TerminationSignal(Enum):
@@ -552,7 +552,7 @@ class ScratchpadManager:
         except (FileNotFoundError, ValueError):
             return 0.0
 
-    def get_summary(self) -> dict:
+    def get_summary(self) -> Dict[str, Any]:
         """
         Get a summary of the scratchpad state.
 

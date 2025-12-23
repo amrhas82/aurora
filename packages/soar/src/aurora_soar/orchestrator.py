@@ -306,7 +306,7 @@ class SOAROrchestrator:
             }
 
     def _phase3_decompose(
-        self, query: str, context: dict, complexity: str
+        self, query: str, context: dict[str, Any], complexity: str
     ) -> dict[str, Any]:
         """Execute Phase 3: Query Decomposition."""
         logger.info("Phase 3: Decomposing query")
@@ -339,7 +339,7 @@ class SOAROrchestrator:
             }
 
     def _phase4_verify(
-        self, decomposition_dict: dict, query: str, complexity: str
+        self, decomposition_dict: dict[str, Any], query: str, complexity: str
     ) -> dict[str, Any]:
         """Execute Phase 4: Decomposition Verification."""
         logger.info("Phase 4: Verifying decomposition")
@@ -387,7 +387,7 @@ class SOAROrchestrator:
                 "_error": str(e),
             }
 
-    def _phase5_route(self, decomposition: dict) -> route.RouteResult:
+    def _phase5_route(self, decomposition: dict[str, Any]) -> route.RouteResult:
         """Execute Phase 5: Agent Routing.
 
         Returns RouteResult object (not dict) for use by phase 6.
@@ -408,7 +408,7 @@ class SOAROrchestrator:
             )
 
     def _phase6_collect(
-        self, routing: route.RouteResult, context: dict
+        self, routing: route.RouteResult, context: dict[str, Any]
     ) -> collect.CollectResult:
         """Execute Phase 6: Agent Execution.
 
@@ -431,7 +431,7 @@ class SOAROrchestrator:
             )
 
     def _phase7_synthesize(
-        self, collect_result: collect.CollectResult, query: str, decomposition: dict
+        self, collect_result: collect.CollectResult, query: str, decomposition: dict[str, Any]
     ) -> synthesize.SynthesisResult:
         """Execute Phase 7: Result Synthesis."""
         logger.info("Phase 7: Synthesizing results")
@@ -466,7 +466,7 @@ class SOAROrchestrator:
         self,
         query: str,
         complexity: str,
-        decomposition: dict,
+        decomposition: dict[str, Any],
         collect_result: collect.CollectResult,
         synthesis_result: synthesize.SynthesisResult,
     ) -> record.RecordResult:
@@ -528,7 +528,7 @@ class SOAROrchestrator:
         return response.to_dict()
 
     def _execute_simple_path(
-        self, query: str, context: dict, verbosity: str
+        self, query: str, context: dict[str, Any], verbosity: str
     ) -> dict[str, Any]:
         """Execute simplified path for SIMPLE queries (bypass decomposition).
 
@@ -632,7 +632,7 @@ class SOAROrchestrator:
         return self._phase9_respond(synthesis, record, verbosity)
 
     def _handle_verification_failure(
-        self, query: str, verification: dict, verbosity: str
+        self, query: str, verification: dict[str, Any], verbosity: str
     ) -> dict[str, Any]:
         """Handle decomposition verification failure.
 

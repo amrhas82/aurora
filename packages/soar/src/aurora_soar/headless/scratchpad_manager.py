@@ -572,7 +572,7 @@ class ScratchpadManager:
             >>> print(f"Iterations: {summary['iteration_count']}")
             >>> print(f"Cost: ${summary['total_cost']:.2f}")
         """
-        summary = {
+        summary: Dict[str, Any] = {
             "exists": self.exists(),
             "status": None,
             "iteration_count": 0,

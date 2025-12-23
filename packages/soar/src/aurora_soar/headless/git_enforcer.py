@@ -299,7 +299,7 @@ class GitEnforcer:
                 'error_message': "Cannot run headless mode on blocked branch 'main'..."
             }
         """
-        status = {
+        status: Dict[str, Any] = {
             "is_git_repo": False,
             "current_branch": None,
             "is_valid": False,

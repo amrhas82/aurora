@@ -124,7 +124,7 @@ def _assess_tier1_keyword(query: str) -> Tuple[str, float, float]:
         "CRITICAL": critical_score,
     }
 
-    complexity_level = max(scores, key=scores.get)
+    complexity_level = max(scores, key=lambda k: scores[k])
     raw_score = scores[complexity_level]
 
     # Normalize score to 0-1 range
@@ -252,7 +252,7 @@ def _assess_tier2_llm(
         }
 
 
-def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict:
+def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[str, Any]:
     """Assess query complexity using two-tier approach.
 
     This function first attempts fast keyword classification. If the keyword

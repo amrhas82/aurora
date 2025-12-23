@@ -54,7 +54,7 @@ class RouteResult:
 
 
 def route_subgoals(
-    decomposition: dict, agent_registry: "AgentRegistry"
+    decomposition: dict[str, Any], agent_registry: "AgentRegistry"
 ) -> RouteResult:
     """Route subgoals to agents based on suggested agents and capabilities.
 
@@ -115,7 +115,7 @@ def route_subgoals(
     )
 
 
-def _validate_decomposition(decomposition: dict) -> None:
+def _validate_decomposition(decomposition: dict[str, Any]) -> None:
     """Validate decomposition structure has required fields.
 
     Args:
@@ -328,7 +328,7 @@ def _parse_execution_plan(
     Returns:
         Enriched execution plan with subgoal descriptions
     """
-    parsed_plan = []
+    parsed_plan: list[dict[str, Any]] = []
 
     for phase_dict in execution_order:
         phase_num = phase_dict.get("phase", len(parsed_plan) + 1)

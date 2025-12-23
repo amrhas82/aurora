@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from .git_enforcer import GitBranchError, GitEnforcer, GitEnforcerConfig
 from .prompt_loader import PromptData, PromptLoader, PromptValidationError
@@ -196,7 +196,7 @@ class HeadlessOrchestrator:
         self,
         prompt_path: str | Path,
         scratchpad_path: str | Path,
-        soar_orchestrator,  # Type: SOAROrchestrator (avoiding circular import)
+        soar_orchestrator: Any,  # Type: SOAROrchestrator (avoiding circular import)
         config: Optional[HeadlessConfig] = None,
     ):
         """
@@ -342,7 +342,7 @@ class HeadlessOrchestrator:
             print(f"Warning: Goal evaluation failed: {e}")
             return "IN_PROGRESS"
 
-    def _execute_iteration(self, iteration: int) -> dict:
+    def _execute_iteration(self, iteration: int) -> Dict[str, Any]:
         """
         Execute a single SOAR iteration.
 
@@ -357,7 +357,7 @@ class HeadlessOrchestrator:
         query = self._build_iteration_query(iteration)
 
         # Execute SOAR pipeline
-        result = self.soar_orchestrator.execute(
+        result: Dict[str, Any] = self.soar_orchestrator.execute(
             query=query,
             verbosity="NORMAL",
             max_cost_usd=self.config.budget_limit - self.total_cost,

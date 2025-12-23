@@ -78,10 +78,10 @@ jobs:
           make install-dev
 
       - name: Run unit tests
-        run: pytest tests/unit/ --cov=packages --cov-report=xml
+        run: pytest tests/unit/ --cov=packages --cov-report=xml --ignore=tests/unit/context_code/semantic/
 
       - name: Run integration tests
-        run: pytest tests/integration/
+        run: pytest tests/integration/ --ignore=tests/integration/test_semantic_retrieval.py
 
       - name: Run fault injection tests
         run: pytest tests/fault_injection/ -v
@@ -115,7 +115,7 @@ jobs:
           make install-dev
 
       - name: Run performance benchmarks
-        run: pytest tests/performance/ -v
+        run: pytest tests/performance/ -v --ignore=tests/performance/test_embedding_benchmarks.py --ignore=tests/performance/test_hybrid_retrieval_precision.py
 
       - name: Check performance targets
         run: |

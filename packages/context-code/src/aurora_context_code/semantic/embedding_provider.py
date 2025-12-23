@@ -13,8 +13,16 @@ Functions:
 from typing import List, Optional
 import numpy as np
 import numpy.typing as npt
-from sentence_transformers import SentenceTransformer
-import torch
+
+# Optional dependency - only needed for semantic features
+try:
+    from sentence_transformers import SentenceTransformer
+    import torch
+    HAS_SENTENCE_TRANSFORMERS = True
+except ImportError:
+    HAS_SENTENCE_TRANSFORMERS = False
+    SentenceTransformer = None  # type: ignore[misc, assignment]
+    torch = None  # type: ignore[assignment]
 
 
 def cosine_similarity(
@@ -102,12 +110,21 @@ class EmbeddingProvider:
         Args:
             model_name: Sentence-transformers model name
             device: Device for inference (None = auto-detect)
+
+        Raises:
+            ImportError: If sentence-transformers is not installed
         """
+        if not HAS_SENTENCE_TRANSFORMERS:
+            raise ImportError(
+                "sentence-transformers is required for semantic embeddings. "
+                "Install with: pip install aurora-context-code[ml]"
+            )
+
         self.model_name = model_name
 
         # Auto-detect device if not specified
         if device is None:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.device = "cuda" if torch is not None and torch.cuda.is_available() else "cpu"
         else:
             self.device = device
 

@@ -77,17 +77,8 @@ jobs:
           python -m pip install --upgrade pip
           make install-dev
 
-      - name: Run unit tests
-        run: pytest tests/unit/ --cov=packages --cov-report=xml --ignore=tests/unit/context_code/semantic/
-
-      - name: Run integration tests
-        run: pytest tests/integration/ --ignore=tests/integration/test_semantic_retrieval.py
-
-      - name: Run fault injection tests
-        run: pytest tests/fault_injection/ -v
-
-      - name: Run calibration tests
-        run: pytest tests/calibration/ -v
+      - name: Run all tests
+        run: pytest tests/ --cov=packages --cov-report=xml -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -115,7 +106,7 @@ jobs:
           make install-dev
 
       - name: Run performance benchmarks
-        run: pytest tests/performance/ -v --ignore=tests/performance/test_embedding_benchmarks.py --ignore=tests/performance/test_hybrid_retrieval_precision.py --cov-fail-under=0
+        run: pytest tests/performance/ -v --cov-fail-under=0
 
       - name: Check performance targets
         run: |

@@ -15,6 +15,7 @@ import numpy.typing as npt
 
 
 # Optional dependency - only needed for semantic features
+# Note: mypy config disables warn_unused_ignores for this module
 try:
     import torch
     from sentence_transformers import SentenceTransformer
@@ -22,8 +23,8 @@ try:
     HAS_SENTENCE_TRANSFORMERS = True
 except ImportError:
     HAS_SENTENCE_TRANSFORMERS = False
-    SentenceTransformer = None  # type: ignore[misc]
-    torch = None
+    SentenceTransformer = None  # type: ignore[misc,assignment]
+    torch = None  # type: ignore[assignment]
 
 
 def cosine_similarity(

@@ -66,11 +66,11 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` - Hybrid scoring (60% activation + 40% semantic)
 
 ### SOAR Package - Headless Mode (`packages/soar/`)
-- `packages/soar/src/aurora_soar/headless/__init__.py` - Headless module exports
+- `packages/soar/src/aurora_soar/headless/__init__.py` - Headless module exports (GitEnforcer, PromptLoader, ScratchpadManager, all enums/configs imported)
+- `packages/soar/src/aurora_soar/headless/git_enforcer.py` - Git branch validation and safety checks (implemented, validates branch, blocks main/master, detects detached HEAD)
+- `packages/soar/src/aurora_soar/headless/prompt_loader.py` - Prompt file parser and validator (implemented, parses Goal/Success Criteria/Constraints/Context sections, validates format, comprehensive error handling)
+- `packages/soar/src/aurora_soar/headless/scratchpad_manager.py` - Scratchpad read/write/parse logic (implemented, initialize/append/status tracking, termination signal detection, cost/iteration tracking)
 - `packages/soar/src/aurora_soar/headless/orchestrator.py` - HeadlessOrchestrator main loop
-- `packages/soar/src/aurora_soar/headless/prompt_loader.py` - Prompt file parser and validator
-- `packages/soar/src/aurora_soar/headless/scratchpad_manager.py` - Scratchpad read/write/parse logic
-- `packages/soar/src/aurora_soar/headless/git_enforcer.py` - Git branch validation and safety checks
 
 ### CLI Package - Memory Commands (`packages/cli/`)
 - `packages/cli/src/aurora_cli/commands/memory.py` - `aur mem` command implementation
@@ -210,16 +210,16 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 2.19 Test fallback to keyword-only if embeddings unavailable - **COMPLETE** 18 comprehensive tests passing, provider failures handled gracefully (RuntimeError, ValueError, AttributeError), missing embeddings (all/some/none) produce valid results, configuration control works correctly, 97.87% hybrid retriever coverage
 
 - [ ] 3.0 Headless Reasoning Mode (Autonomous Experiments)
-  - [ ] 3.1 Create headless package structure in soar with __init__.py
-  - [ ] 3.2 Implement GitEnforcer class in headless/git_enforcer.py with branch validation
-  - [ ] 3.3 Add git branch detection (check current branch, block main/master)
-  - [ ] 3.4 Implement PromptLoader class in headless/prompt_loader.py
-  - [ ] 3.5 Add prompt file parsing (extract goal, success criteria, constraints)
-  - [ ] 3.6 Validate prompt format (required sections, markdown parsing)
-  - [ ] 3.7 Implement ScratchpadManager class in headless/scratchpad_manager.py
-  - [ ] 3.8 Add scratchpad initialization (create from template if missing)
-  - [ ] 3.9 Implement scratchpad append (write iteration logs with timestamp)
-  - [ ] 3.10 Add termination signal detection (GOAL_ACHIEVED, BUDGET_EXCEEDED, max iterations)
+  - [x] 3.1 Create headless package structure in soar with __init__.py
+  - [x] 3.2 Implement GitEnforcer class in headless/git_enforcer.py with branch validation
+  - [x] 3.3 Add git branch detection (check current branch, block main/master)
+  - [x] 3.4 Implement PromptLoader class in headless/prompt_loader.py
+  - [x] 3.5 Add prompt file parsing (extract goal, success criteria, constraints)
+  - [x] 3.6 Validate prompt format (required sections, markdown parsing)
+  - [x] 3.7 Implement ScratchpadManager class in headless/scratchpad_manager.py
+  - [x] 3.8 Add scratchpad initialization (create from template if missing)
+  - [x] 3.9 Implement scratchpad append (write iteration logs with timestamp)
+  - [x] 3.10 Add termination signal detection (GOAL_ACHIEVED, BUDGET_EXCEEDED, max iterations)
   - [ ] 3.11 Implement HeadlessOrchestrator class in headless/orchestrator.py
   - [ ] 3.12 Add main loop (initialize, iterate, check termination, update scratchpad)
   - [ ] 3.13 Integrate with SOAR orchestrator (call soar.execute() per iteration)

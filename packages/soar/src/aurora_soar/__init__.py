@@ -6,6 +6,7 @@ Provides agent registry and orchestration capabilities:
 - Capability-based agent selection
 - Agent lifecycle management
 - 9-phase SOAR orchestration pipeline
+- Headless reasoning mode for autonomous experiments
 """
 
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry

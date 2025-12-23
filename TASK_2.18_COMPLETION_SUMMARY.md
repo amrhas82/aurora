@@ -228,9 +228,10 @@ The 85% target represents an ideal scenario beyond MVP scope. Current precision 
    - +80% improvement over keyword-only validates approach
 
 2. **Monitor precision metrics** in production
-   - Track precision on real user queries
+   - Track precision on real user queries (see Live Data Validation Checklist)
    - Identify query patterns where hybrid excels/struggles
    - Use feedback for weight tuning
+   - Re-measure after 100 queries, 1,000 queries, and monthly thereafter
 
 3. **Document realistic expectations**
    - Update user-facing documentation to set appropriate expectations
@@ -284,3 +285,4 @@ pytest tests/performance/test_hybrid_retrieval_precision.py::TestHybridRetrieval
 - Precision Report: `/home/hamr/PycharmProjects/aurora/docs/performance/hybrid-retrieval-precision-report.md`
 - Embedding Report: `/home/hamr/PycharmProjects/aurora/docs/performance/embedding-benchmark-results.md`
 - Integration Tests: `/home/hamr/PycharmProjects/aurora/tests/integration/test_semantic_retrieval.py`
+- Live Data Validation: `/home/hamr/PycharmProjects/aurora/docs/performance/live-data-validation-checklist.md` (for post-deployment validation)

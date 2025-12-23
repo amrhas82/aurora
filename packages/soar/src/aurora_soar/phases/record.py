@@ -12,6 +12,7 @@ import uuid
 from typing import TYPE_CHECKING, Any
 
 from aurora_core.chunks import ReasoningChunk
+from aurora_core.types import ChunkID
 
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
@@ -168,7 +169,7 @@ def record_pattern(
 
     # Update activation
     try:
-        store.update_activation(chunk_id, activation_update)
+        store.update_activation(ChunkID(chunk_id), activation_update)
         logger.debug(f"Updated activation for {chunk_id}: +{activation_update}")
     except Exception as e:
         logger.warning(f"Failed to update activation: {e}")

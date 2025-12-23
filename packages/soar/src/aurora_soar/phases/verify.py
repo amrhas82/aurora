@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from aurora_reasoning.verify import VerificationOption
+
 if TYPE_CHECKING:
     from aurora_reasoning import LLMClient
     from aurora_reasoning.decompose import DecompositionResult
@@ -201,8 +203,6 @@ def _select_verification_option(complexity: str) -> VerificationOption:
     Raises:
         ValueError: If complexity is invalid
     """
-    from aurora_reasoning.verify import VerificationOption
-
     complexity_upper = complexity.upper()
 
     if complexity_upper == "SIMPLE":

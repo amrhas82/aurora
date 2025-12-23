@@ -246,7 +246,7 @@ async def _execute_parallel_subgoals(
     # Handle any exceptions
     results = []
     for i, output in enumerate(outputs):
-        if isinstance(output, Exception):
+        if isinstance(output, BaseException):
             subgoal = subgoals[i]
             idx = subgoal["subgoal_index"]
             logger.error(f"Subgoal {idx} raised exception: {output}")

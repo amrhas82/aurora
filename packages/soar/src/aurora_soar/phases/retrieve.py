@@ -87,7 +87,12 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
         reasoning_chunks = []
 
         for chunk in retrieved_chunks:
-            chunk_type = chunk.metadata.get("chunk_type", chunk.__class__.__name__)
+            # Get chunk type from metadata if available, otherwise use class name
+            if hasattr(chunk, 'metadata') and isinstance(chunk.metadata, dict):
+                chunk_type = chunk.metadata.get("chunk_type", chunk.__class__.__name__)
+            else:
+                chunk_type = chunk.__class__.__name__
+
             if "Code" in chunk_type:
                 code_chunks.append(chunk)
             elif "Reasoning" in chunk_type:

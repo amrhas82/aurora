@@ -25,7 +25,7 @@ def _make_json_serializable(obj: Any) -> Any:
     """
     if obj is None or isinstance(obj, (str, int, float, bool)):
         return obj
-    elif is_dataclass(obj):
+    elif is_dataclass(obj) and not isinstance(obj, type):
         return asdict(obj)
     elif isinstance(obj, dict):
         return {k: _make_json_serializable(v) for k, v in obj.items()}

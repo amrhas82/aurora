@@ -45,6 +45,7 @@ from aurora_soar.phases import (
     synthesize,
     verify,
 )
+from aurora_soar.phases.respond import Verbosity
 
 
 if TYPE_CHECKING:
@@ -506,7 +507,7 @@ class SOAROrchestrator:
         }
 
         metadata = self._build_metadata()
-        response = respond.format_response(synthesis_result, record_result, metadata, verbosity)
+        response = respond.format_response(synthesis_result, record_result, metadata, Verbosity(verbosity))
 
         # Log conversation (async, non-blocking)
         execution_summary = {

@@ -32,50 +32,142 @@ logger = logging.getLogger(__name__)
 # Keyword lists for complexity classification (based on software engineering patterns)
 SIMPLE_KEYWORDS = {
     # Informational queries
-    "what", "who", "where", "when", "which", "define", "explain", "describe",
-    "show", "display", "list", "find", "search", "lookup", "get", "retrieve",
+    "what",
+    "who",
+    "where",
+    "when",
+    "which",
+    "define",
+    "explain",
+    "describe",
+    "show",
+    "display",
+    "list",
+    "find",
+    "search",
+    "lookup",
+    "get",
+    "retrieve",
     # Simple operations
-    "read", "view", "see", "check", "status", "info", "information",
+    "read",
+    "view",
+    "see",
+    "check",
+    "status",
+    "info",
+    "information",
     # Single-step actions
-    "print", "log", "output", "format", "convert",
+    "print",
+    "log",
+    "output",
+    "format",
+    "convert",
 }
 
 MEDIUM_KEYWORDS = {
     # Multi-step actions
-    "create", "add", "update", "modify", "change", "edit", "refactor",
-    "fix", "debug", "resolve", "improve", "enhance", "optimize",
+    "create",
+    "add",
+    "update",
+    "modify",
+    "change",
+    "edit",
+    "refactor",
+    "fix",
+    "debug",
+    "resolve",
+    "improve",
+    "enhance",
+    "optimize",
     # Reasoning required
-    "analyze", "compare", "evaluate", "assess", "review", "validate",
-    "why", "how", "explain how", "walk through",
+    "analyze",
+    "compare",
+    "evaluate",
+    "assess",
+    "review",
+    "validate",
+    "why",
+    "how",
+    "explain how",
+    "walk through",
     # Code operations
-    "write", "implement", "develop", "build", "code",
-    "test", "unit test", "integration test",
+    "write",
+    "implement",
+    "develop",
+    "build",
+    "code",
+    "test",
+    "unit test",
+    "integration test",
 }
 
 COMPLEX_KEYWORDS = {
     # System-level work
-    "architect", "design system", "integrate", "coordinate", "orchestrate",
-    "migrate", "refactor system", "restructure", "reorganize",
+    "architect",
+    "design system",
+    "integrate",
+    "coordinate",
+    "orchestrate",
+    "migrate",
+    "refactor system",
+    "restructure",
+    "reorganize",
     # Multi-component work
-    "deploy", "configure", "setup", "install", "infrastructure",
-    "pipeline", "workflow", "automation", "ci/cd",
+    "deploy",
+    "configure",
+    "setup",
+    "install",
+    "infrastructure",
+    "pipeline",
+    "workflow",
+    "automation",
+    "ci/cd",
     # Deep analysis
-    "investigate", "diagnose", "troubleshoot", "root cause",
-    "performance", "scalability", "reliability",
+    "investigate",
+    "diagnose",
+    "troubleshoot",
+    "root cause",
+    "performance",
+    "scalability",
+    "reliability",
     # Multi-agent work
-    "research and implement", "design and build", "analyze and refactor",
+    "research and implement",
+    "design and build",
+    "analyze and refactor",
 }
 
 CRITICAL_KEYWORDS = {
     # Security and safety
-    "security", "vulnerability", "authentication", "authorization", "encrypt",
-    "secure", "protect", "audit", "compliance", "penetration",
+    "security",
+    "vulnerability",
+    "authentication",
+    "authorization",
+    "encrypt",
+    "secure",
+    "protect",
+    "audit",
+    "compliance",
+    "penetration",
     # High-stakes operations
-    "production", "critical", "emergency", "incident", "outage",
-    "data loss", "corruption", "breach", "exploit",
+    "production",
+    "critical",
+    "emergency",
+    "incident",
+    "outage",
+    "data loss",
+    "corruption",
+    "breach",
+    "exploit",
     # Financial/legal
-    "payment", "transaction", "billing", "financial", "legal",
-    "regulation", "gdpr", "hipaa", "pci",
+    "payment",
+    "transaction",
+    "billing",
+    "financial",
+    "legal",
+    "regulation",
+    "gdpr",
+    "hipaa",
+    "pci",
 }
 
 
@@ -97,7 +189,7 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     """
     # Normalize query
     query_lower = query.lower()
-    query_words = set(re.findall(r'\b\w+\b', query_lower))
+    query_words = set(re.findall(r"\b\w+\b", query_lower))
 
     # Count matches for each complexity level
     simple_matches = len(query_words & SIMPLE_KEYWORDS)
@@ -141,7 +233,7 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     coverage = min(total_matches / 3, 1.0)  # Expect at least 3 keyword matches for high confidence
 
     # Confidence is combination of separation and coverage
-    confidence = (separation * 0.6 + coverage * 0.4)
+    confidence = separation * 0.6 + coverage * 0.4
     confidence = min(max(confidence, 0.1), 1.0)  # Clamp to [0.1, 1.0]
 
     # Special case: If critical keywords detected, always flag as CRITICAL
@@ -189,10 +281,7 @@ def _assess_tier2_llm(
         # Build prompt
         prompt_template = AssessPromptTemplate()
         system_prompt = prompt_template.build_system_prompt()
-        user_prompt = prompt_template.build_user_prompt(
-            query=query,
-            keyword_result=keyword_result
-        )
+        user_prompt = prompt_template.build_user_prompt(query=query, keyword_result=keyword_result)
 
         logger.info(f"Calling LLM for complexity verification (query: {query[:50]}...)")
 

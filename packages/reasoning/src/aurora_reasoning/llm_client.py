@@ -50,7 +50,7 @@ class LLMClient(ABC):
         max_tokens: int = 4096,
         temperature: float = 0.7,
         system: str | None = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> LLMResponse:
         """Generate text completion from prompt.
 
@@ -80,7 +80,7 @@ class LLMClient(ABC):
         max_tokens: int = 4096,
         temperature: float = 0.7,
         system: str | None = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> dict[str, Any]:
         """Generate JSON-structured output from prompt.
 
@@ -203,6 +203,7 @@ class AnthropicClient(LLMClient):
         # Lazy import to avoid requiring anthropic if not used
         try:
             import anthropic
+
             self._anthropic = anthropic
             self._client = anthropic.Anthropic(api_key=self._api_key)
         except ImportError as e:
@@ -307,7 +308,10 @@ class AnthropicClient(LLMClient):
             RuntimeError: If API call fails after retries
         """
         # Enhance system prompt to enforce JSON output
-        json_system = (system or "") + "\n\nYou MUST respond with valid JSON only. Do not include markdown code blocks, explanations, or any text outside the JSON object."
+        json_system = (
+            (system or "")
+            + "\n\nYou MUST respond with valid JSON only. Do not include markdown code blocks, explanations, or any text outside the JSON object."
+        )
 
         response = self.generate(
             prompt=prompt,
@@ -381,12 +385,11 @@ class OpenAIClient(LLMClient):
         # Lazy import to avoid requiring openai if not used
         try:
             import openai
+
             self._openai = openai
             self._client = openai.OpenAI(api_key=self._api_key)
         except ImportError as e:
-            raise ImportError(
-                "openai package required. Install with: pip install openai"
-            ) from e
+            raise ImportError("openai package required. Install with: pip install openai") from e
 
     def _rate_limit(self) -> None:
         """Enforce minimum time between requests."""
@@ -490,7 +493,10 @@ class OpenAIClient(LLMClient):
             RuntimeError: If API call fails after retries
         """
         # Enhance system prompt to enforce JSON output
-        json_system = (system or "") + "\n\nYou MUST respond with valid JSON only. Do not include markdown code blocks, explanations, or any text outside the JSON object."
+        json_system = (
+            (system or "")
+            + "\n\nYou MUST respond with valid JSON only. Do not include markdown code blocks, explanations, or any text outside the JSON object."
+        )
 
         # OpenAI supports response_format for JSON mode
         if "response_format" not in kwargs:
@@ -559,12 +565,11 @@ class OllamaClient(LLMClient):
         # Lazy import to avoid requiring ollama if not used
         try:
             import ollama
+
             self._ollama = ollama
             self._client = ollama.Client(host=endpoint)
         except ImportError as e:
-            raise ImportError(
-                "ollama package required. Install with: pip install ollama"
-            ) from e
+            raise ImportError("ollama package required. Install with: pip install ollama") from e
 
     def _rate_limit(self) -> None:
         """Enforce minimum time between requests."""
@@ -679,7 +684,10 @@ class OllamaClient(LLMClient):
             RuntimeError: If API call fails after retries
         """
         # Enhance system prompt to enforce JSON output
-        json_system = (system or "") + "\n\nYou MUST respond with valid JSON only. Do not include markdown code blocks, explanations, or any text outside the JSON object."
+        json_system = (
+            (system or "")
+            + "\n\nYou MUST respond with valid JSON only. Do not include markdown code blocks, explanations, or any text outside the JSON object."
+        )
 
         response = self.generate(
             prompt=prompt,

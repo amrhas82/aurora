@@ -7,7 +7,6 @@ These tests verify in-memory storage functionality including:
 - No file I/O dependencies
 """
 
-
 import pytest
 
 from aurora_core.exceptions import StorageError
@@ -44,11 +43,7 @@ class TestMemoryStore(StoreContractTests):
             store.save_chunk(chunk)
             store.update_activation(ChunkID(chunk.id), 1.0)
 
-        store.add_relationship(
-            ChunkID(chunks[0].id),
-            ChunkID(chunks[1].id),
-            "depends_on"
-        )
+        store.add_relationship(ChunkID(chunks[0].id), ChunkID(chunks[1].id), "depends_on")
 
         # Reset
         store.reset()
@@ -100,11 +95,7 @@ class TestMemoryStore(StoreContractTests):
             store.retrieve_by_activation(0.5, 10)
 
         with pytest.raises(StorageError):
-            store.add_relationship(
-                ChunkID("test:1"),
-                ChunkID("test:2"),
-                "depends_on"
-            )
+            store.add_relationship(ChunkID("test:1"), ChunkID("test:2"), "depends_on")
 
         with pytest.raises(StorageError):
             store.get_related_chunks(ChunkID(chunk.id))
@@ -132,17 +123,18 @@ class TestMemoryStore(StoreContractTests):
         store.save_chunk(chunk)
 
         # Get initial timestamp
-        initial_access = store._activations[chunk.id]['last_access']
+        initial_access = store._activations[chunk.id]["last_access"]
 
         # Small delay to ensure timestamp difference
         import time
+
         time.sleep(0.01)
 
         # Update activation
         store.update_activation(ChunkID(chunk.id), 1.0)
 
         # Check timestamp was updated
-        new_access = store._activations[chunk.id]['last_access']
+        new_access = store._activations[chunk.id]["last_access"]
         assert new_access > initial_access, "last_access should be updated"
 
     def test_retrieve_by_activation_exact_match(self, store):
@@ -200,20 +192,15 @@ class TestMemoryStore(StoreContractTests):
         store.save_chunk(chunk1)
         store.save_chunk(chunk2)
 
-        store.add_relationship(
-            ChunkID(chunk1.id),
-            ChunkID(chunk2.id),
-            "depends_on",
-            weight=2.5
-        )
+        store.add_relationship(ChunkID(chunk1.id), ChunkID(chunk2.id), "depends_on", weight=2.5)
 
         # Check internal storage
         assert len(store._relationships) == 1
         rel = store._relationships[0]
-        assert rel['from_chunk'] == chunk1.id
-        assert rel['to_chunk'] == chunk2.id
-        assert rel['relationship_type'] == "depends_on"
-        assert rel['weight'] == 2.5
+        assert rel["from_chunk"] == chunk1.id
+        assert rel["to_chunk"] == chunk2.id
+        assert rel["relationship_type"] == "depends_on"
+        assert rel["weight"] == 2.5
 
     def test_get_related_chunks_single_hop(self, store):
         """Test getting related chunks with single hop."""
@@ -305,7 +292,7 @@ class TestMemoryStore(StoreContractTests):
         chunk = TestChunk("test:chunk:1", "content")
 
         # Add embeddings as bytes (simulating numpy array serialization)
-        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        test_embeddings = b"\x00\x01\x02\x03\x04\x05\x06\x07"
         chunk.embeddings = test_embeddings
 
         # Save chunk
@@ -314,7 +301,7 @@ class TestMemoryStore(StoreContractTests):
         # Verify embeddings were preserved in memory
         assert chunk.id in store._chunks
         stored_chunk = store._chunks[chunk.id]
-        assert hasattr(stored_chunk, 'embeddings'), "Stored chunk should have embeddings attribute"
+        assert hasattr(stored_chunk, "embeddings"), "Stored chunk should have embeddings attribute"
         assert stored_chunk.embeddings == test_embeddings, "Embeddings should be preserved"
 
     def test_get_chunk_with_embeddings(self, store):
@@ -322,7 +309,7 @@ class TestMemoryStore(StoreContractTests):
         chunk = TestChunk("test:chunk:1", "content")
 
         # Add embeddings
-        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        test_embeddings = b"\x00\x01\x02\x03\x04\x05\x06\x07"
         chunk.embeddings = test_embeddings
 
         # Save and retrieve
@@ -330,7 +317,7 @@ class TestMemoryStore(StoreContractTests):
         retrieved = store.get_chunk(ChunkID(chunk.id))
 
         assert retrieved is not None, "Chunk should be retrieved"
-        assert hasattr(retrieved, 'embeddings'), "Retrieved chunk should have embeddings attribute"
+        assert hasattr(retrieved, "embeddings"), "Retrieved chunk should have embeddings attribute"
         assert retrieved.embeddings == test_embeddings, "Embeddings should be preserved"
         assert retrieved is chunk, "MemoryStore should return the same instance"
 
@@ -345,7 +332,7 @@ class TestMemoryStore(StoreContractTests):
         assert chunk.id in store._chunks
         stored_chunk = store._chunks[chunk.id]
         # Embeddings attribute may not exist or be None
-        assert not hasattr(stored_chunk, 'embeddings') or stored_chunk.embeddings is None
+        assert not hasattr(stored_chunk, "embeddings") or stored_chunk.embeddings is None
 
     def test_retrieve_by_activation_with_embeddings(self, store):
         """Test that retrieve_by_activation preserves embeddings."""
@@ -353,8 +340,8 @@ class TestMemoryStore(StoreContractTests):
         chunk2 = TestChunk("test:chunk:2", "content2")
 
         # Add embeddings to both chunks
-        chunk1.embeddings = b'\x00\x01\x02\x03'
-        chunk2.embeddings = b'\x04\x05\x06\x07'
+        chunk1.embeddings = b"\x00\x01\x02\x03"
+        chunk2.embeddings = b"\x04\x05\x06\x07"
 
         # Save chunks and set activations
         store.save_chunk(chunk1)
@@ -369,8 +356,8 @@ class TestMemoryStore(StoreContractTests):
         # Find chunk1 in results
         chunk1_retrieved = next((c for c in chunks if c.id == chunk1.id), None)
         assert chunk1_retrieved is not None, "chunk1 should be in results"
-        assert hasattr(chunk1_retrieved, 'embeddings'), "Retrieved chunk should have embeddings"
-        assert chunk1_retrieved.embeddings == b'\x00\x01\x02\x03', "Embeddings should be preserved"
+        assert hasattr(chunk1_retrieved, "embeddings"), "Retrieved chunk should have embeddings"
+        assert chunk1_retrieved.embeddings == b"\x00\x01\x02\x03", "Embeddings should be preserved"
 
 
-__all__ = ['TestMemoryStore']
+__all__ = ["TestMemoryStore"]

@@ -73,17 +73,14 @@ __all__ = [
     "HeadlessConfig",
     "HeadlessResult",
     "TerminationReason",
-
     # Git enforcement
     "GitEnforcer",
     "GitEnforcerConfig",
     "GitBranchError",
-
     # Prompt handling
     "PromptLoader",
     "PromptData",
     "PromptValidationError",
-
     # Scratchpad management
     "ScratchpadManager",
     "ScratchpadEntry",

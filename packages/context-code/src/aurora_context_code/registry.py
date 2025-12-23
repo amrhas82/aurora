@@ -154,10 +154,11 @@ def _register_builtin_parsers(registry: ParserRegistry) -> None:
     """
     try:
         from aurora_context_code.languages.python import PythonParser
+
         registry.register(PythonParser())
         logger.debug("Auto-registered PythonParser")
     except Exception as e:
         logger.warning(f"Failed to auto-register PythonParser: {e}")
 
 
-__all__ = ['ParserRegistry', 'get_global_registry']
+__all__ = ["ParserRegistry", "get_global_registry"]

@@ -40,29 +40,26 @@ class DecayConfig(BaseModel):
         min_penalty: Minimum penalty value (most negative)
         grace_period_hours: Hours with no decay after creation (default 1)
     """
+
     decay_factor: float = Field(
         default=0.5,
         ge=0.0,
         le=2.0,
-        description="Decay rate multiplier (standard ACT-R value is 0.5)"
+        description="Decay rate multiplier (standard ACT-R value is 0.5)",
     )
     max_days: float = Field(
-        default=90.0,
-        ge=1.0,
-        description="Maximum days for decay calculation (caps extreme values)"
+        default=90.0, ge=1.0, description="Maximum days for decay calculation (caps extreme values)"
     )
     min_penalty: float = Field(
-        default=-2.0,
-        le=0.0,
-        description="Minimum penalty value (most negative)"
+        default=-2.0, le=0.0, description="Minimum penalty value (most negative)"
     )
     grace_period_hours: float = Field(
         default=1.0,
         ge=0.0,
-        description="Hours with no decay after creation (recently created chunks)"
+        description="Hours with no decay after creation (recently created chunks)",
     )
 
-    @field_validator('decay_factor')
+    @field_validator("decay_factor")
     @classmethod
     def validate_decay_factor(cls, v: float) -> float:
         """Ensure decay factor is non-negative."""
@@ -70,7 +67,7 @@ class DecayConfig(BaseModel):
             raise ValueError("Decay factor must be non-negative")
         return v
 
-    @field_validator('min_penalty')
+    @field_validator("min_penalty")
     @classmethod
     def validate_min_penalty(cls, v: float) -> float:
         """Ensure minimum penalty is non-positive."""
@@ -111,11 +108,7 @@ class DecayCalculator:
         """
         self.config = config or DecayConfig()
 
-    def calculate(
-        self,
-        last_access: datetime,
-        current_time: datetime | None = None
-    ) -> float:
+    def calculate(self, last_access: datetime, current_time: datetime | None = None) -> float:
         """Calculate decay penalty for a chunk.
 
         Args:
@@ -161,10 +154,7 @@ class DecayCalculator:
         # Clamp to minimum penalty
         return max(penalty, self.config.min_penalty)
 
-    def calculate_from_hours(
-        self,
-        hours_since_access: float
-    ) -> float:
+    def calculate_from_hours(self, hours_since_access: float) -> float:
         """Calculate decay penalty from hours since access.
 
         Convenience method that doesn't require datetime objects.
@@ -190,10 +180,7 @@ class DecayCalculator:
         # Clamp to minimum penalty
         return max(penalty, self.config.min_penalty)
 
-    def calculate_from_days(
-        self,
-        days_since_access: float
-    ) -> float:
+    def calculate_from_days(self, days_since_access: float) -> float:
         """Calculate decay penalty from days since access.
 
         Convenience method for direct day-based calculations.
@@ -208,9 +195,7 @@ class DecayCalculator:
         return self.calculate_from_hours(days_since_access * 24.0)
 
     def get_decay_curve(
-        self,
-        max_days: int | None = None,
-        num_points: int = 50
+        self, max_days: int | None = None, num_points: int = 50
     ) -> list[tuple[float, float]]:
         """Get decay curve data points for visualization.
 
@@ -239,9 +224,7 @@ class DecayCalculator:
         return points
 
     def explain_decay(
-        self,
-        last_access: datetime,
-        current_time: datetime | None = None
+        self, last_access: datetime, current_time: datetime | None = None
     ) -> dict[str, Any]:
         """Explain how decay was calculated.
 
@@ -276,15 +259,15 @@ class DecayCalculator:
         penalty = self.calculate(last_access, current_time)
 
         return {
-            'penalty': penalty,
-            'days_since_access': days_since_access,
-            'hours_since_access': hours_since_access,
-            'grace_period_applied': grace_period_applied,
-            'grace_period_hours': self.config.grace_period_hours,
-            'capped_at_max': capped_at_max,
-            'max_days': self.config.max_days,
-            'decay_factor': self.config.decay_factor,
-            'formula': f"-{self.config.decay_factor} × log10({min(days_since_access, self.config.max_days):.2f})",
+            "penalty": penalty,
+            "days_since_access": days_since_access,
+            "hours_since_access": hours_since_access,
+            "grace_period_applied": grace_period_applied,
+            "grace_period_hours": self.config.grace_period_hours,
+            "capped_at_max": capped_at_max,
+            "max_days": self.config.max_days,
+            "decay_factor": self.config.decay_factor,
+            "formula": f"-{self.config.decay_factor} × log10({min(days_since_access, self.config.max_days):.2f})",
         }
 
 
@@ -292,7 +275,7 @@ def calculate_decay(
     last_access: datetime,
     decay_factor: float = 0.5,
     max_days: float = 90.0,
-    current_time: datetime | None = None
+    current_time: datetime | None = None,
 ) -> float:
     """Convenience function for calculating decay penalty.
 
@@ -311,30 +294,18 @@ def calculate_decay(
 
 
 # Common decay profiles for different use cases
-AGGRESSIVE_DECAY = DecayConfig(
-    decay_factor=1.0,
-    max_days=30.0,
-    grace_period_hours=0.5
-)
+AGGRESSIVE_DECAY = DecayConfig(decay_factor=1.0, max_days=30.0, grace_period_hours=0.5)
 
-MODERATE_DECAY = DecayConfig(
-    decay_factor=0.5,
-    max_days=90.0,
-    grace_period_hours=1.0
-)
+MODERATE_DECAY = DecayConfig(decay_factor=0.5, max_days=90.0, grace_period_hours=1.0)
 
-GENTLE_DECAY = DecayConfig(
-    decay_factor=0.25,
-    max_days=180.0,
-    grace_period_hours=2.0
-)
+GENTLE_DECAY = DecayConfig(decay_factor=0.25, max_days=180.0, grace_period_hours=2.0)
 
 
 __all__ = [
-    'DecayConfig',
-    'DecayCalculator',
-    'calculate_decay',
-    'AGGRESSIVE_DECAY',
-    'MODERATE_DECAY',
-    'GENTLE_DECAY',
+    "DecayConfig",
+    "DecayCalculator",
+    "calculate_decay",
+    "AGGRESSIVE_DECAY",
+    "MODERATE_DECAY",
+    "GENTLE_DECAY",
 ]

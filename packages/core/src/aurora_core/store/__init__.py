@@ -16,12 +16,12 @@ from aurora_core.store.sqlite import SQLiteStore
 
 
 __all__ = [
-    'Store',
-    'SQLiteStore',
-    'MemoryStore',
-    'SCHEMA_VERSION',
-    'get_init_statements',
-    'Migration',
-    'MigrationManager',
-    'get_migration_manager',
+    "Store",
+    "SQLiteStore",
+    "MemoryStore",
+    "SCHEMA_VERSION",
+    "get_init_statements",
+    "Migration",
+    "MigrationManager",
+    "get_migration_manager",
 ]

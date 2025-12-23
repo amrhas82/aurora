@@ -30,6 +30,7 @@ class AgentPriority(Enum):
         NORMAL: Standard priority
         LOW: Optional, can be skipped on timeout
     """
+
     CRITICAL = 1
     HIGH = 2
     NORMAL = 3
@@ -48,6 +49,7 @@ class AgentTask:
         priority: Task priority level
         timeout_seconds: Maximum execution time
     """
+
     agent_id: str
     callable: Callable[..., Any]
     args: tuple[Any, ...] = ()
@@ -72,6 +74,7 @@ class AgentResult:
         execution_time_ms: Execution time in milliseconds
         priority: Agent priority level
     """
+
     agent_id: str
     success: bool
     result: Any = None
@@ -94,6 +97,7 @@ class ExecutionStats:
         concurrency_used: Maximum concurrency level used
         critical_failures: Number of critical agent failures
     """
+
     total_tasks: int = 0
     completed_tasks: int = 0
     failed_tasks: int = 0
@@ -215,8 +219,8 @@ class ParallelAgentExecutor:
 
         try:
             # Submit initial batch
-            initial_batch = sorted_tasks[:self.current_concurrency]
-            remaining_tasks = sorted_tasks[self.current_concurrency:]
+            initial_batch = sorted_tasks[: self.current_concurrency]
+            remaining_tasks = sorted_tasks[self.current_concurrency :]
 
             for task in initial_batch:
                 future = executor.submit(self._execute_task, task)
@@ -317,8 +321,8 @@ class ParallelAgentExecutor:
 
         try:
             # Submit initial batch
-            initial_batch = sorted_tasks[:self.current_concurrency]
-            remaining_tasks = sorted_tasks[self.current_concurrency:]
+            initial_batch = sorted_tasks[: self.current_concurrency]
+            remaining_tasks = sorted_tasks[self.current_concurrency :]
 
             for task in initial_batch:
                 future = executor.submit(self._execute_task, task)
@@ -343,9 +347,11 @@ class ParallelAgentExecutor:
                     self._update_response_times(result.execution_time_ms)
 
                     # Check for critical failure
-                    if (not result.success and
-                        task.priority == AgentPriority.CRITICAL and
-                        enable_early_termination):
+                    if (
+                        not result.success
+                        and task.priority == AgentPriority.CRITICAL
+                        and enable_early_termination
+                    ):
                         critical_failure = True
                         break
 
@@ -420,7 +426,7 @@ class ParallelAgentExecutor:
 
         # Keep only recent window
         if len(self.recent_response_times) > self.response_time_window:
-            self.recent_response_times = self.recent_response_times[-self.response_time_window:]
+            self.recent_response_times = self.recent_response_times[-self.response_time_window :]
 
     def _adjust_concurrency(self) -> None:
         """Adjust concurrency based on recent response times.
@@ -450,8 +456,7 @@ class ParallelAgentExecutor:
         # Apply adjustment with bounds
         new_concurrency = self.current_concurrency + adjustment
         self.current_concurrency = max(
-            self.min_concurrency,
-            min(self.max_concurrency, new_concurrency)
+            self.min_concurrency, min(self.max_concurrency, new_concurrency)
         )
 
     def reset_concurrency(self) -> None:
@@ -465,9 +470,9 @@ class ParallelAgentExecutor:
 
 
 __all__ = [
-    'ParallelAgentExecutor',
-    'AgentTask',
-    'AgentResult',
-    'AgentPriority',
-    'ExecutionStats',
+    "ParallelAgentExecutor",
+    "AgentTask",
+    "AgentResult",
+    "AgentPriority",
+    "ExecutionStats",
 ]

@@ -4,7 +4,6 @@ Integration tests for end-to-end context retrieval flow.
 Tests the complete flow: Parse → Store → Retrieve
 """
 
-
 import pytest
 
 from aurora_context_code.registry import get_global_registry
@@ -35,7 +34,7 @@ class TestContextRetrievalFlow:
                 signature="def parse_json_file(filepath: str) -> dict",
                 docstring="Parse JSON data from a file and return as dictionary",
                 complexity_score=0.3,
-                dependencies=[]
+                dependencies=[],
             ),
             CodeChunk(
                 chunk_id="code_xml_parser",
@@ -47,7 +46,7 @@ class TestContextRetrievalFlow:
                 signature="def parse_xml_file(filepath: str) -> ElementTree",
                 docstring="Parse XML data from a file and return element tree",
                 complexity_score=0.5,
-                dependencies=[]
+                dependencies=[],
             ),
             CodeChunk(
                 chunk_id="code_data_validator",
@@ -59,7 +58,7 @@ class TestContextRetrievalFlow:
                 signature="def validate_data(data: dict) -> bool",
                 docstring="Validate data structure matches schema requirements",
                 complexity_score=0.4,
-                dependencies=["code_json_parser"]
+                dependencies=["code_json_parser"],
             ),
             CodeChunk(
                 chunk_id="code_config_loader",
@@ -71,7 +70,7 @@ class TestContextRetrievalFlow:
                 signature="class ConfigLoader",
                 docstring="Load configuration from JSON files",
                 complexity_score=0.6,
-                dependencies=["code_json_parser"]
+                dependencies=["code_json_parser"],
             ),
         ]
 
@@ -141,6 +140,7 @@ class TestContextRetrievalFlow:
 
         # Update activation for the retrieved chunk
         from aurora_core.types import ChunkID
+
         chunk_id = ChunkID(results[0].id)
         provider.update(chunk_id, 0.5)
 
@@ -187,7 +187,7 @@ class TestContextRetrievalEdgeCases:
             line_end=5,
             docstring="Test function",
             complexity_score=0.1,
-            dependencies=[]
+            dependencies=[],
         )
         store.save_chunk(chunk)
 

@@ -1,6 +1,5 @@
 """Unit tests for Phase 1: Complexity Assessment."""
 
-
 from aurora_soar.phases.assess import (
     COMPLEX_KEYWORDS,
     CRITICAL_KEYWORDS,

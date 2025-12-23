@@ -228,7 +228,11 @@ class TestMissingDependencies:
         )
 
     def test_missing_dependencies_caught(
-        self, mock_phase_decompose, mock_reasoning_verify, mock_llm_client, missing_dependency_decomposition
+        self,
+        mock_phase_decompose,
+        mock_reasoning_verify,
+        mock_llm_client,
+        missing_dependency_decomposition,
     ):
         """Test that missing dependencies are caught by verification."""
         # Verification should detect consistency issues
@@ -309,7 +313,11 @@ class TestCircularDependencies:
         )
 
     def test_circular_dependencies_caught(
-        self, mock_phase_decompose, mock_reasoning_verify, mock_llm_client, circular_dependency_decomposition
+        self,
+        mock_phase_decompose,
+        mock_reasoning_verify,
+        mock_llm_client,
+        circular_dependency_decomposition,
     ):
         """Test that circular dependencies are caught by verification."""
         # Verification should detect routability issues

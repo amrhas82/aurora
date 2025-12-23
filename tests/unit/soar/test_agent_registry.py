@@ -22,7 +22,7 @@ class TestAgentInfo:
             description="A test agent for testing",
             capabilities=["capability1", "capability2"],
             agent_type="local",
-            config={"key": "value"}
+            config={"key": "value"},
         )
 
         assert agent.id == "test-agent"
@@ -39,7 +39,7 @@ class TestAgentInfo:
             name="Minimal Agent",
             description="Minimal description",
             capabilities=["test"],
-            agent_type="local"
+            agent_type="local",
         )
 
         assert agent.id == "minimal-agent"
@@ -53,7 +53,7 @@ class TestAgentInfo:
             description="Test description",
             capabilities=["cap1"],
             agent_type="local",
-            config={"setting": "value"}
+            config={"setting": "value"},
         )
 
         agent_dict = asdict(agent)
@@ -99,7 +99,7 @@ class TestAgentRegistration:
             name="Agent One",
             description="First agent",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
 
         registry.register(agent)
@@ -115,14 +115,14 @@ class TestAgentRegistration:
             name="Agent One",
             description="First agent",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
         agent2 = AgentInfo(
             id="agent2",
             name="Agent Two",
             description="Second agent",
             capabilities=["cap2"],
-            agent_type="remote"
+            agent_type="remote",
         )
 
         registry.register(agent1)
@@ -140,14 +140,14 @@ class TestAgentRegistration:
             name="Agent One",
             description="First version",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
         agent2 = AgentInfo(
             id="agent1",
             name="Agent One Updated",
             description="Second version",
             capabilities=["cap1", "cap2"],
-            agent_type="local"
+            agent_type="local",
         )
 
         registry.register(agent1)
@@ -169,7 +169,7 @@ class TestAgentValidation:
             "name": "Test Agent",
             "description": "Valid agent",
             "capabilities": ["cap1", "cap2"],
-            "type": "local"
+            "type": "local",
         }
 
         is_valid, error = registry.validate_agent_data(agent_data)
@@ -186,7 +186,7 @@ class TestAgentValidation:
             "name": "Test Agent",
             "description": "Missing ID",
             "capabilities": ["cap1"],
-            "type": "local"
+            "type": "local",
         }
 
         is_valid, error = registry.validate_agent_data(agent_data)
@@ -203,7 +203,7 @@ class TestAgentValidation:
             "name": "Test Agent",
             "description": "Invalid type",
             "capabilities": ["cap1"],
-            "type": "invalid_type"
+            "type": "invalid_type",
         }
 
         is_valid, error = registry.validate_agent_data(agent_data)
@@ -219,7 +219,7 @@ class TestAgentValidation:
             "name": "Test Agent",
             "description": "No capabilities",
             "capabilities": [],
-            "type": "local"
+            "type": "local",
         }
 
         is_valid, error = registry.validate_agent_data(agent_data)
@@ -241,7 +241,7 @@ class TestAgentDiscovery:
                     "name": "Agent One",
                     "description": "First agent",
                     "capabilities": ["cap1"],
-                    "type": "local"
+                    "type": "local",
                 }
             ]
         }
@@ -260,26 +260,38 @@ class TestAgentDiscovery:
         dir2.mkdir()
 
         config1 = dir1 / "agents.json"
-        config1.write_text(json.dumps({
-            "agents": [{
-                "id": "agent1",
-                "name": "Agent One",
-                "description": "First agent",
-                "capabilities": ["cap1"],
-                "type": "local"
-            }]
-        }))
+        config1.write_text(
+            json.dumps(
+                {
+                    "agents": [
+                        {
+                            "id": "agent1",
+                            "name": "Agent One",
+                            "description": "First agent",
+                            "capabilities": ["cap1"],
+                            "type": "local",
+                        }
+                    ]
+                }
+            )
+        )
 
         config2 = dir2 / "agents.json"
-        config2.write_text(json.dumps({
-            "agents": [{
-                "id": "agent2",
-                "name": "Agent Two",
-                "description": "Second agent",
-                "capabilities": ["cap2"],
-                "type": "remote"
-            }]
-        }))
+        config2.write_text(
+            json.dumps(
+                {
+                    "agents": [
+                        {
+                            "id": "agent2",
+                            "name": "Agent Two",
+                            "description": "Second agent",
+                            "capabilities": ["cap2"],
+                            "type": "remote",
+                        }
+                    ]
+                }
+            )
+        )
 
         registry = AgentRegistry(discovery_paths=[dir1, dir2])
         registry.discover()
@@ -320,21 +332,21 @@ class TestCapabilityQueries:
             name="Agent One",
             description="Has cap1",
             capabilities=["cap1", "cap2"],
-            agent_type="local"
+            agent_type="local",
         )
         agent2 = AgentInfo(
             id="agent2",
             name="Agent Two",
             description="Has cap2",
             capabilities=["cap2", "cap3"],
-            agent_type="local"
+            agent_type="local",
         )
         agent3 = AgentInfo(
             id="agent3",
             name="Agent Three",
             description="Has cap3",
             capabilities=["cap3"],
-            agent_type="local"
+            agent_type="local",
         )
 
         registry.register(agent1)
@@ -355,14 +367,14 @@ class TestCapabilityQueries:
             name="Agent One",
             description="Has cap1 and cap2",
             capabilities=["cap1", "cap2"],
-            agent_type="local"
+            agent_type="local",
         )
         agent2 = AgentInfo(
             id="agent2",
             name="Agent Two",
             description="Has only cap1",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
 
         registry.register(agent1)
@@ -383,7 +395,7 @@ class TestCapabilityQueries:
             name="Agent One",
             description="Has cap1",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
         registry.register(agent1)
 
@@ -400,14 +412,14 @@ class TestCapabilityQueries:
             name="Local Agent",
             description="Local agent",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
         remote_agent = AgentInfo(
             id="remote1",
             name="Remote Agent",
             description="Remote agent",
             capabilities=["cap1"],
-            agent_type="remote"
+            agent_type="remote",
         )
 
         registry.register(local_agent)
@@ -441,7 +453,7 @@ class TestFallbackAgent:
             name="Agent One",
             description="Existing agent",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
         registry.register(agent)
 
@@ -467,13 +479,15 @@ class TestAgentRefresh:
 
         # Initial config
         config_data = {
-            "agents": [{
-                "id": "agent1",
-                "name": "Agent One",
-                "description": "First version",
-                "capabilities": ["cap1"],
-                "type": "local"
-            }]
+            "agents": [
+                {
+                    "id": "agent1",
+                    "name": "Agent One",
+                    "description": "First version",
+                    "capabilities": ["cap1"],
+                    "type": "local",
+                }
+            ]
         }
         config_file.write_text(json.dumps(config_data))
 
@@ -495,13 +509,15 @@ class TestAgentRefresh:
         """Test refresh only reloads if file modified time changed."""
         config_file = tmp_path / "agents.json"
         config_data = {
-            "agents": [{
-                "id": "agent1",
-                "name": "Agent One",
-                "description": "First version",
-                "capabilities": ["cap1"],
-                "type": "local"
-            }]
+            "agents": [
+                {
+                    "id": "agent1",
+                    "name": "Agent One",
+                    "description": "First version",
+                    "capabilities": ["cap1"],
+                    "type": "local",
+                }
+            ]
         }
         config_file.write_text(json.dumps(config_data))
 
@@ -529,7 +545,7 @@ class TestAgentRetrieval:
             name="Agent One",
             description="Test agent",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
         registry.register(agent)
 
@@ -555,14 +571,14 @@ class TestAgentRetrieval:
             name="Agent One",
             description="First",
             capabilities=["cap1"],
-            agent_type="local"
+            agent_type="local",
         )
         agent2 = AgentInfo(
             id="agent2",
             name="Agent Two",
             description="Second",
             capabilities=["cap2"],
-            agent_type="local"
+            agent_type="local",
         )
 
         registry.register(agent1)

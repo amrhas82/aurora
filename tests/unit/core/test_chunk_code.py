@@ -344,14 +344,9 @@ class TestCodeChunkSerialization:
                 "function": "test_func",
                 "line_start": 10,
                 "line_end": 20,
-                "ast_summary": {
-                    "complexity": 0.5,
-                    "element_type": "function"
-                }
+                "ast_summary": {"complexity": 0.5, "element_type": "function"},
             },
-            "metadata": {
-                "language": "python"
-            }
+            "metadata": {"language": "python"},
         }
 
         chunk = CodeChunk.from_json(data)
@@ -379,16 +374,13 @@ class TestCodeChunkSerialization:
                 "signature": "def test_func() -> None",
                 "docstring": "Test docstring",
                 "dependencies": ["code:other.py:helper"],
-                "ast_summary": {
-                    "complexity": 0.8,
-                    "element_type": "function"
-                }
+                "ast_summary": {"complexity": 0.8, "element_type": "function"},
             },
             "metadata": {
                 "language": "python",
                 "created_at": "2025-01-01T00:00:00",
-                "last_modified": "2025-01-02T00:00:00"
-            }
+                "last_modified": "2025-01-02T00:00:00",
+            },
         }
 
         chunk = CodeChunk.from_json(data)
@@ -409,7 +401,7 @@ class TestCodeChunkSerialization:
                 # Missing "function" field
                 "line_start": 10,
                 "line_end": 20,
-            }
+            },
         }
 
         with pytest.raises(ValueError, match="Missing required field"):
@@ -426,7 +418,7 @@ class TestCodeChunkSerialization:
                 "line_start": 10,
                 "line_end": 20,
                 # No ast_summary, dependencies, etc.
-            }
+            },
         }
 
         chunk = CodeChunk.from_json(data)

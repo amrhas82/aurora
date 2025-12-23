@@ -49,8 +49,8 @@ class MockChunk:
         self.activation = activation
         self.embedding = embedding
         self.access_history = access_history or []
-        self.last_access = None if not access_history else max(
-            entry.timestamp for entry in access_history
+        self.last_access = (
+            None if not access_history else max(entry.timestamp for entry in access_history)
         )
 
     @property
@@ -74,11 +74,7 @@ class MockStore:
     ) -> list[MockChunk]:
         """Retrieve chunks sorted by activation."""
         # Filter by minimum activation
-        candidates = [
-            chunk
-            for chunk in self.chunks.values()
-            if chunk.activation >= min_activation
-        ]
+        candidates = [chunk for chunk in self.chunks.values() if chunk.activation >= min_activation]
 
         # Sort by activation (descending)
         candidates.sort(key=lambda c: c.activation, reverse=True)
@@ -319,18 +315,14 @@ class TestSemanticRetrievalIntegration:
             store, engine, embedding_provider, config=config_activation
         )
         results_activation = retriever_activation.retrieve(query, top_k=5)
-        precision_activation = calculate_precision_at_k(
-            results_activation, relevant_ids, k=5
-        )
+        precision_activation = calculate_precision_at_k(results_activation, relevant_ids, k=5)
 
         # 2. Hybrid retrieval (60% activation, 40% semantic)
         config_hybrid = HybridConfig(
             activation_weight=0.6,
             semantic_weight=0.4,
         )
-        retriever_hybrid = HybridRetriever(
-            store, engine, embedding_provider, config=config_hybrid
-        )
+        retriever_hybrid = HybridRetriever(store, engine, embedding_provider, config=config_hybrid)
         results_hybrid = retriever_hybrid.retrieve(query, top_k=5)
         precision_hybrid = calculate_precision_at_k(results_hybrid, relevant_ids, k=5)
 
@@ -343,9 +335,7 @@ class TestSemanticRetrievalIntegration:
             store, engine, embedding_provider, config=config_semantic
         )
         results_semantic = retriever_semantic.retrieve(query, top_k=5)
-        precision_semantic = calculate_precision_at_k(
-            results_semantic, relevant_ids, k=5
-        )
+        precision_semantic = calculate_precision_at_k(results_semantic, relevant_ids, k=5)
 
         # Print for debugging
         print("\nPrecision@5 comparison:")
@@ -355,9 +345,9 @@ class TestSemanticRetrievalIntegration:
 
         # Hybrid should be at least as good as the better of the two
         best_single_method = max(precision_activation, precision_semantic)
-        assert (
-            precision_hybrid >= best_single_method - 0.01
-        ), "Hybrid should not be worse than single methods"
+        assert precision_hybrid >= best_single_method - 0.01, (
+            "Hybrid should not be worse than single methods"
+        )
 
         # Hybrid should achieve target precision
         assert precision_hybrid >= 0.6, f"Hybrid precision {precision_hybrid:.2%} < 60% target"
@@ -389,9 +379,7 @@ class TestSemanticRetrievalIntegration:
         top_3_ids = {result["chunk_id"] for result in results[:3]}
         assert len(top_3_ids & relevant_ids) >= 1
 
-    def test_fallback_to_activation_when_embedding_fails(
-        self, embedding_provider, test_dataset
-    ):
+    def test_fallback_to_activation_when_embedding_fails(self, embedding_provider, test_dataset):
         """Test fallback behavior when embeddings are unavailable."""
         store, ground_truth = test_dataset
         engine = MockActivationEngine(store)

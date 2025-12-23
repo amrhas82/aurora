@@ -48,13 +48,39 @@ def extract_keywords(query: str) -> list[str]:
     """
     # Remove common stop words
     stop_words = {
-        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
-        "has", "he", "in", "is", "it", "its", "of", "on", "that", "the",
-        "to", "was", "will", "with", "how", "what", "when", "where", "why",
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "for",
+        "from",
+        "has",
+        "he",
+        "in",
+        "is",
+        "it",
+        "its",
+        "of",
+        "on",
+        "that",
+        "the",
+        "to",
+        "was",
+        "will",
+        "with",
+        "how",
+        "what",
+        "when",
+        "where",
+        "why",
     }
 
     # Extract words (alphanumeric sequences)
-    words = re.findall(r'\b\w+\b', query.lower())
+    words = re.findall(r"\b\w+\b", query.lower())
 
     # Filter stop words and short words
     keywords = [w for w in words if w not in stop_words and len(w) > 2]
@@ -186,7 +212,7 @@ def _truncate_path(path: str, max_length: int) -> str:
     filename = path_obj.name
 
     if len(filename) >= max_length:
-        return f"...{filename[:max_length-3]}"
+        return f"...{filename[: max_length - 3]}"
 
     # Keep as many parent dirs as possible
     remaining = max_length - len(filename) - 3  # 3 for "..."
@@ -217,7 +243,7 @@ def _truncate_content(content: str, max_length: int) -> str:
         return content
 
     # Try to break at word boundary
-    truncated = content[:max_length-3]
+    truncated = content[: max_length - 3]
     last_space = truncated.rfind(" ")
     if last_space > max_length * 0.8:  # If space is in last 20%
         truncated = truncated[:last_space]
@@ -298,7 +324,7 @@ def memory_command(
             console.print(
                 f"[bold red]Error:[/] Database not found at {db_path}\n"
                 f"Please initialize AURORA first or specify --db-path",
-                style="red"
+                style="red",
             )
             raise click.Abort()
 
@@ -320,35 +346,27 @@ def memory_command(
 
         # Filter by type if specified
         if chunk_type is not None:
-            results = [
-                r for r in results
-                if r["metadata"].get("type") == chunk_type
-            ]
+            results = [r for r in results if r["metadata"].get("type") == chunk_type]
 
         # Filter by minimum activation
         if min_activation > 0.0:
-            results = [
-                r for r in results
-                if r["activation_score"] >= min_activation
-            ]
+            results = [r for r in results if r["activation_score"] >= min_activation]
 
         # Display results
         if not results:
             console.print("\n[yellow]No results found.[/]")
-            console.print("Try:\n"
-                        "  - Broadening your search query\n"
-                        "  - Lowering --min-activation threshold\n"
-                        "  - Removing --type filter")
+            console.print(
+                "Try:\n"
+                "  - Broadening your search query\n"
+                "  - Lowering --min-activation threshold\n"
+                "  - Removing --type filter"
+            )
             return
 
         console.print(f"\n[bold green]Found {len(results)} results[/]\n")
 
         # Format and display table
-        table = format_memory_results(
-            results,
-            show_content=show_content,
-            max_content_length=200
-        )
+        table = format_memory_results(results, show_content=show_content, max_content_length=200)
         console.print(table)
 
         # Show summary statistics

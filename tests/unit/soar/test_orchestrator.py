@@ -111,9 +111,7 @@ def test_orchestrator(test_store, test_registry, test_config, mock_llm, test_cos
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
 @patch("aurora_soar.phases.respond.format_response")
-def test_simple_query_path(
-    mock_respond, mock_retrieve, mock_assess, test_orchestrator
-):
+def test_simple_query_path(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test SIMPLE query bypasses decomposition."""
     # Configure mocks for SIMPLE path
     mock_assess.return_value = {
@@ -140,9 +138,7 @@ def test_simple_query_path(
     )
 
     # Execute
-    result = test_orchestrator.execute(
-        query="What is 2+2?", verbosity="QUIET"
-    )
+    result = test_orchestrator.execute(query="What is 2+2?", verbosity="QUIET")
 
     # Verify SIMPLE path (no decomposition)
     assert mock_assess.called
@@ -191,7 +187,16 @@ def test_complex_query_full_pipeline(
     }
     decomposition = DecompositionResult(
         goal="Complex goal",
-        subgoals=[{"id": "sg1", "description": "Subgoal 1", "agent_type": "test", "criticality": "MEDIUM", "dependencies": [], "inputs": {}}],
+        subgoals=[
+            {
+                "id": "sg1",
+                "description": "Subgoal 1",
+                "agent_type": "test",
+                "criticality": "MEDIUM",
+                "dependencies": [],
+                "inputs": {},
+            }
+        ],
         execution_order=[0],
         expected_tools=["test"],
     )
@@ -227,12 +232,12 @@ def test_complex_query_full_pipeline(
         description="Test agent for routing",
         agent_type="local",
         capabilities=["test"],
-        config={}
+        config={},
     )
     mock_route.return_value = RouteResult(
         agent_assignments=[(0, mock_agent)],
         execution_plan=[{"phase": 1, "parallelizable": [0], "sequential": []}],
-        routing_metadata={"_timing_ms": 50.0, "_error": None}
+        routing_metadata={"_timing_ms": 50.0, "_error": None},
     )
     mock_collect.return_value = CollectResult(
         agent_outputs=[],
@@ -264,9 +269,7 @@ def test_complex_query_full_pipeline(
     )
 
     # Execute
-    result = test_orchestrator.execute(
-        query="Complex query", verbosity="NORMAL"
-    )
+    result = test_orchestrator.execute(query="Complex query", verbosity="NORMAL")
 
     # Verify all phases called
     assert mock_assess.called
@@ -354,9 +357,7 @@ def test_verification_failure_handling(
     )
 
     # Execute
-    result = test_orchestrator.execute(
-        query="Test query", verbosity="NORMAL"
-    )
+    result = test_orchestrator.execute(query="Test query", verbosity="NORMAL")
 
     # Verify graceful degradation
     assert mock_verify.called
@@ -386,9 +387,7 @@ def test_phase_error_handling(mock_respond, mock_assess, test_orchestrator):
     )
 
     # Execute
-    result = test_orchestrator.execute(
-        query="Test query", verbosity="NORMAL"
-    )
+    result = test_orchestrator.execute(query="Test query", verbosity="NORMAL")
 
     # Verify error handled gracefully
     assert "answer" in result
@@ -456,15 +455,12 @@ def test_budget_tracking_during_execution(
                 "metadata": metadata,
             },
         )
+
     mock_respond.side_effect = mock_format_response
 
     # Execute
-    test_orchestrator.cost_tracker.get_status()[
-        "consumed_usd"
-    ]
-    result = test_orchestrator.execute(
-        query="Test query", verbosity="NORMAL"
-    )
+    test_orchestrator.cost_tracker.get_status()["consumed_usd"]
+    result = test_orchestrator.execute(query="Test query", verbosity="NORMAL")
 
     # Verify budget tracking (cost should not change in mocked scenario)
     # In real execution, LLM calls would update budget
@@ -478,9 +474,7 @@ def test_budget_tracking_during_execution(
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
 @patch("aurora_soar.phases.respond.format_response")
-def test_metadata_aggregation(
-    mock_respond, mock_retrieve, mock_assess, test_orchestrator
-):
+def test_metadata_aggregation(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test metadata from all phases is aggregated."""
     # Configure mocks
     mock_assess.return_value = {
@@ -508,12 +502,11 @@ def test_metadata_aggregation(
                 "metadata": metadata,
             },
         )
+
     mock_respond.side_effect = mock_format_response
 
     # Execute
-    result = test_orchestrator.execute(
-        query="Test query", verbosity="NORMAL"
-    )
+    result = test_orchestrator.execute(query="Test query", verbosity="NORMAL")
 
     # Verify metadata structure
     assert "metadata" in result
@@ -527,9 +520,7 @@ def test_metadata_aggregation(
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
 @patch("aurora_soar.phases.respond.format_response")
-def test_timing_tracking(
-    mock_respond, mock_retrieve, mock_assess, test_orchestrator
-):
+def test_timing_tracking(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test execution timing is tracked."""
     # Configure mocks
     mock_assess.return_value = {
@@ -544,6 +535,7 @@ def test_timing_tracking(
         "_timing_ms": 100.0,
         "_error": None,
     }
+
     # Mock respond to return the metadata that orchestrator builds
     def mock_format_response(synthesis, record, metadata, verbosity):
         return ResponseResult(
@@ -556,12 +548,11 @@ def test_timing_tracking(
                 "metadata": metadata,
             },
         )
+
     mock_respond.side_effect = mock_format_response
 
     # Execute
-    result = test_orchestrator.execute(
-        query="Test query", verbosity="NORMAL"
-    )
+    result = test_orchestrator.execute(query="Test query", verbosity="NORMAL")
 
     # Verify timing
     assert "metadata" in result
@@ -575,9 +566,7 @@ def test_timing_tracking(
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
 @patch("aurora_soar.phases.respond.format_response")
-def test_quiet_verbosity(
-    mock_respond, mock_retrieve, mock_assess, test_orchestrator
-):
+def test_quiet_verbosity(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test QUIET verbosity mode."""
     # Configure mocks
     mock_assess.return_value = {
@@ -604,9 +593,7 @@ def test_quiet_verbosity(
     )
 
     # Execute with QUIET
-    result = test_orchestrator.execute(
-        query="Test query", verbosity="QUIET"
-    )
+    result = test_orchestrator.execute(query="Test query", verbosity="QUIET")
 
     # Verify minimal output
     assert "answer" in result
@@ -616,9 +603,7 @@ def test_quiet_verbosity(
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
 @patch("aurora_soar.phases.respond.format_response")
-def test_verbose_mode(
-    mock_respond, mock_retrieve, mock_assess, test_orchestrator
-):
+def test_verbose_mode(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test VERBOSE verbosity mode."""
     # Configure mocks
     mock_assess.return_value = {
@@ -647,9 +632,7 @@ def test_verbose_mode(
     )
 
     # Execute with VERBOSE
-    result = test_orchestrator.execute(
-        query="Test query", verbosity="VERBOSE"
-    )
+    result = test_orchestrator.execute(query="Test query", verbosity="VERBOSE")
 
     # Verify detailed output
     assert "answer" in result
@@ -695,15 +678,12 @@ def test_conversation_logging_integration(
                 "metadata": metadata,
             },
         )
+
     mock_respond.side_effect = mock_format_response
 
     # Execute and check logger was called
-    with patch.object(
-        test_orchestrator.conversation_logger, "log_interaction"
-    ):
-        result = test_orchestrator.execute(
-            query="Test query", verbosity="NORMAL"
-        )
+    with patch.object(test_orchestrator.conversation_logger, "log_interaction"):
+        result = test_orchestrator.execute(query="Test query", verbosity="NORMAL")
 
         # Verify logger called (note: SIMPLE query takes different path)
         # For SIMPLE queries, _execute_simple_path is used which calls respond but not logging

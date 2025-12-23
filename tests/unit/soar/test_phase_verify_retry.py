@@ -4,7 +4,6 @@ Unit tests for Phase 4 verification retry logic.
 Tests the retry loop when decompositions fail verification.
 """
 
-
 from aurora_reasoning.decompose import DecompositionResult
 from aurora_reasoning.llm_client import LLMClient
 
@@ -45,10 +44,12 @@ class MockRetryLLMClient(LLMClient):
             model="mock",
             input_tokens=10,
             output_tokens=5,
-            finish_reason="stop"
+            finish_reason="stop",
         )
 
-    def generate_json(self, prompt: str, system: str = "", schema: dict | None = None, **kwargs) -> dict:
+    def generate_json(
+        self, prompt: str, system: str = "", schema: dict | None = None, **kwargs
+    ) -> dict:
         """Generate JSON response."""
         self.call_count += 1
 
@@ -70,7 +71,7 @@ class MockRetryLLMClient(LLMClient):
                     "overall_score": 0.575,
                     "verdict": "RETRY",
                     "issues": ["Still incomplete"],
-                    "suggestions": []
+                    "suggestions": [],
                 }
             if self.fail_first and self.verification_call_count == 1:
                 # First verification attempt fails with RETRY verdict
@@ -82,7 +83,7 @@ class MockRetryLLMClient(LLMClient):
                     "overall_score": 0.6,
                     "verdict": "RETRY",
                     "issues": ["Incomplete decomposition"],
-                    "suggestions": []
+                    "suggestions": [],
                 }
             # Pass on subsequent attempts or if not failing first
             return {
@@ -93,19 +94,21 @@ class MockRetryLLMClient(LLMClient):
                 "overall_score": 0.9,
                 "verdict": "PASS",
                 "issues": [],
-                "suggestions": []
+                "suggestions": [],
             }
         # Decomposition request (for retry loop)
         return {
             "goal": "Test goal",
-            "subgoals": [{
-                "description": "Test refined",
-                "suggested_agent": "test",
-                "is_critical": True,
-                "depends_on": []
-            }],
+            "subgoals": [
+                {
+                    "description": "Test refined",
+                    "suggested_agent": "test",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
+            ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
-            "expected_tools": ["test-tool"]
+            "expected_tools": ["test-tool"],
         }
 
 
@@ -118,14 +121,16 @@ class TestVerificationRetry:
 
         decomposition = DecompositionResult(
             goal="Test goal",
-            subgoals=[{
-                "description": "Test",
-                "suggested_agent": "test",
-                "is_critical": True,
-                "depends_on": []
-            }],
+            subgoals=[
+                {
+                    "description": "Test",
+                    "suggested_agent": "test",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
+            ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
-            expected_tools=["test-tool"]
+            expected_tools=["test-tool"],
         )
 
         # Verify with retry
@@ -148,14 +153,16 @@ class TestVerificationRetry:
 
         decomposition = DecompositionResult(
             goal="Test goal",
-            subgoals=[{
-                "description": "Test",
-                "suggested_agent": "test",
-                "is_critical": True,
-                "depends_on": []
-            }],
+            subgoals=[
+                {
+                    "description": "Test",
+                    "suggested_agent": "test",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
+            ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
-            expected_tools=["test-tool"]
+            expected_tools=["test-tool"],
         )
 
         # Verify without retry needed
@@ -178,14 +185,16 @@ class TestVerificationRetry:
 
         decomposition = DecompositionResult(
             goal="Test goal",
-            subgoals=[{
-                "description": "Test",
-                "suggested_agent": "test",
-                "is_critical": True,
-                "depends_on": []
-            }],
+            subgoals=[
+                {
+                    "description": "Test",
+                    "suggested_agent": "test",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
+            ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
-            expected_tools=["test-tool"]
+            expected_tools=["test-tool"],
         )
 
         # Verify with max retries

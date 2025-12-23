@@ -83,26 +83,26 @@ class TestChunkTypeInference:
         """Test inference of function type from query."""
         query = "find the authenticate function"
         types = self.optimizer.infer_chunk_types(query)
-        assert 'function' in types
+        assert "function" in types
 
     def test_infer_class_type(self):
         """Test inference of class type from query."""
         query = "User class implementation"
         types = self.optimizer.infer_chunk_types(query)
-        assert 'class' in types
+        assert "class" in types
 
     def test_infer_test_type(self):
         """Test inference of test type from query."""
         query = "test cases for login"
         types = self.optimizer.infer_chunk_types(query)
-        assert 'test' in types
+        assert "test" in types
 
     def test_infer_multiple_types(self):
         """Test inference of multiple types from query."""
         query = "test the authenticate function"
         types = self.optimizer.infer_chunk_types(query)
-        assert 'test' in types
-        assert 'function' in types
+        assert "test" in types
+        assert "function" in types
 
     def test_infer_no_types(self):
         """Test query with no recognizable types."""
@@ -114,19 +114,19 @@ class TestChunkTypeInference:
         """Test that inference is case-insensitive."""
         query = "FIND THE FUNCTION"
         types = self.optimizer.infer_chunk_types(query)
-        assert 'function' in types
+        assert "function" in types
 
     def test_module_inference(self):
         """Test inference of module type."""
         query = "import statement in module"
         types = self.optimizer.infer_chunk_types(query)
-        assert 'module' in types
+        assert "module" in types
 
     def test_documentation_inference(self):
         """Test inference of documentation type."""
         query = "readme documentation guide"
         types = self.optimizer.infer_chunk_types(query)
-        assert 'documentation' in types
+        assert "documentation" in types
 
 
 class TestPreFiltering:
@@ -154,28 +154,22 @@ class TestPreFiltering:
 
     def test_filter_by_single_type(self):
         """Test filtering by a single chunk type."""
-        candidates = self.optimizer.pre_filter_candidates(
-            chunk_types=['function']
-        )
+        candidates = self.optimizer.pre_filter_candidates(chunk_types=["function"])
         assert len(candidates) == 2
-        assert all(c.type == 'function' for c in candidates)
+        assert all(c.type == "function" for c in candidates)
 
     def test_filter_by_multiple_types(self):
         """Test filtering by multiple chunk types."""
-        candidates = self.optimizer.pre_filter_candidates(
-            chunk_types=['function', 'class']
-        )
+        candidates = self.optimizer.pre_filter_candidates(chunk_types=["function", "class"])
         assert len(candidates) == 4
-        assert all(c.type in ['function', 'class'] for c in candidates)
+        assert all(c.type in ["function", "class"] for c in candidates)
 
     def test_filter_by_query_inference(self):
         """Test filtering using type inference from query."""
-        candidates = self.optimizer.pre_filter_candidates(
-            query="find function"
-        )
+        candidates = self.optimizer.pre_filter_candidates(query="find function")
         # Should infer 'function' type and filter
         assert len(candidates) == 2
-        assert all(c.type == 'function' for c in candidates)
+        assert all(c.type == "function" for c in candidates)
 
     def test_no_filtering_when_disabled(self):
         """Test that filtering is skipped when disabled."""
@@ -184,17 +178,13 @@ class TestPreFiltering:
             store=self.store,
             enable_type_filtering=False,
         )
-        candidates = optimizer.pre_filter_candidates(
-            query="find function"
-        )
+        candidates = optimizer.pre_filter_candidates(query="find function")
         # Should return all chunks
         assert len(candidates) == 6
 
     def test_no_filtering_when_no_types_inferred(self):
         """Test no filtering when query has no recognizable types."""
-        candidates = self.optimizer.pre_filter_candidates(
-            query="something random"
-        )
+        candidates = self.optimizer.pre_filter_candidates(query="something random")
         # Should return all chunks
         assert len(candidates) == 6
 
@@ -202,10 +192,10 @@ class TestPreFiltering:
         """Test that explicit types override query inference."""
         candidates = self.optimizer.pre_filter_candidates(
             query="find function",  # Would infer 'function'
-            chunk_types=['class']  # But we explicitly want 'class'
+            chunk_types=["class"],  # But we explicitly want 'class'
         )
         assert len(candidates) == 2
-        assert all(c.type == 'class' for c in candidates)
+        assert all(c.type == "class" for c in candidates)
 
 
 class TestActivationThresholdFiltering:
@@ -227,7 +217,7 @@ class TestActivationThresholdFiltering:
                     AccessHistoryEntry(timestamp=recent_time),
                 ],
                 last_access=recent_time,
-                keywords={'important', 'function'}
+                keywords={"important", "function"},
             ),
             # Medium activation - some recent accesses
             MockChunk(
@@ -236,7 +226,7 @@ class TestActivationThresholdFiltering:
                     AccessHistoryEntry(timestamp=recent_time),
                 ],
                 last_access=recent_time,
-                keywords={'function'}
+                keywords={"function"},
             ),
             # Low activation - old accesses
             MockChunk(
@@ -245,15 +235,10 @@ class TestActivationThresholdFiltering:
                     AccessHistoryEntry(timestamp=old_time),
                 ],
                 last_access=old_time,
-                keywords={'old'}
+                keywords={"old"},
             ),
             # Zero activation - no accesses
-            MockChunk(
-                "zero1",
-                access_history=[],
-                last_access=None,
-                keywords=set()
-            ),
+            MockChunk("zero1", access_history=[], last_access=None, keywords=set()),
         ]
 
         self.engine = ActivationEngine()
@@ -268,7 +253,7 @@ class TestActivationThresholdFiltering:
         """Test that chunks below threshold are filtered out."""
         activations = self.optimizer.calculate_activations_batch(
             candidates=self.chunks,
-            query_keywords={'function'},
+            query_keywords={"function"},
         )
 
         # Should only include chunks above threshold
@@ -286,15 +271,15 @@ class TestActivationThresholdFiltering:
 
         activations = optimizer.calculate_activations_batch(
             candidates=self.chunks,
-            query_keywords={'function', 'important'},
+            query_keywords={"function", "important"},
         )
 
         # All chunks with access history should be included
         assert len(activations) > 0
         # High activation chunk should be present
-        if 'high1' in activations:
+        if "high1" in activations:
             # Should have highest or near-highest activation
-            assert activations['high1'] >= min(activations.values())
+            assert activations["high1"] >= min(activations.values())
 
     def test_batch_processing(self):
         """Test that batch processing works correctly."""
@@ -331,7 +316,7 @@ class TestActivationThresholdFiltering:
         )
 
         # Zero activation chunk should not be included
-        assert 'zero1' not in activations
+        assert "zero1" not in activations
 
 
 class TestOptimizedRetrieval:
@@ -347,30 +332,30 @@ class TestOptimizedRetrieval:
             MockChunk(
                 "func1",
                 chunk_type="function",
-                keywords={'auth', 'login', 'user'},
+                keywords={"auth", "login", "user"},
                 access_history=[AccessHistoryEntry(timestamp=recent_time)] * 3,
-                last_access=recent_time
+                last_access=recent_time,
             ),
             MockChunk(
                 "func2",
                 chunk_type="function",
-                keywords={'database', 'query'},
+                keywords={"database", "query"},
                 access_history=[AccessHistoryEntry(timestamp=recent_time)] * 2,
-                last_access=recent_time
+                last_access=recent_time,
             ),
             MockChunk(
                 "class1",
                 chunk_type="class",
-                keywords={'user', 'model'},
+                keywords={"user", "model"},
                 access_history=[AccessHistoryEntry(timestamp=recent_time)],
-                last_access=recent_time
+                last_access=recent_time,
             ),
             MockChunk(
                 "test1",
                 chunk_type="test",
-                keywords={'test', 'auth'},
+                keywords={"test", "auth"},
                 access_history=[],
-                last_access=None
+                last_access=None,
             ),
         ]
 
@@ -402,7 +387,7 @@ class TestOptimizedRetrieval:
         )
 
         assert stats.type_filter_applied
-        assert 'function' in stats.inferred_types
+        assert "function" in stats.inferred_types
         # Filtered chunks should be less than total
         assert stats.filtered_chunks <= stats.total_chunks
 
@@ -455,7 +440,7 @@ class TestOptimizedRetrieval:
         """Test that explicit chunk types override inference."""
         results, stats = self.optimizer.retrieve_optimized(
             query="function",  # Would infer 'function'
-            chunk_types=['class'],  # But we want 'class'
+            chunk_types=["class"],  # But we want 'class'
             top_k=5,
         )
 
@@ -478,23 +463,23 @@ class TestKeywordExtraction:
     def test_extract_keywords(self):
         """Test basic keyword extraction."""
         keywords = self.optimizer._extract_keywords("find the function")
-        assert 'find' in keywords
-        assert 'function' in keywords
-        assert 'the' not in keywords  # Stop word
+        assert "find" in keywords
+        assert "function" in keywords
+        assert "the" not in keywords  # Stop word
 
     def test_extract_keywords_lowercase(self):
         """Test that keywords are lowercase."""
         keywords = self.optimizer._extract_keywords("FIND FUNCTION")
-        assert 'find' in keywords
-        assert 'function' in keywords
+        assert "find" in keywords
+        assert "function" in keywords
 
     def test_extract_removes_stop_words(self):
         """Test that stop words are removed."""
         keywords = self.optimizer._extract_keywords("the user is authenticated")
-        assert 'the' not in keywords
-        assert 'is' not in keywords
-        assert 'user' in keywords
-        assert 'authenticated' in keywords
+        assert "the" not in keywords
+        assert "is" not in keywords
+        assert "user" in keywords
+        assert "authenticated" in keywords
 
 
 class TestEdgeCases:
@@ -559,5 +544,5 @@ class TestEdgeCases:
         assert len(results) <= 3
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

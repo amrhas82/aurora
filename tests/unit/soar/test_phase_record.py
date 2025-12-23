@@ -29,9 +29,9 @@ class TestRecordPatternHighScore:
             "goal": "Implement feature X",
             "subgoals": [
                 {"id": "sg1", "description": "Step 1"},
-                {"id": "sg2", "description": "Step 2"}
+                {"id": "sg2", "description": "Step 2"},
             ],
-            "execution_order": [{"sequential": ["sg1", "sg2"]}]
+            "execution_order": [{"sequential": ["sg1", "sg2"]}],
         }
 
         # Agent outputs with tools metadata
@@ -44,8 +44,8 @@ class TestRecordPatternHighScore:
                 confidence=0.9,
                 execution_metadata={
                     "tools_used": ["parser", "analyzer"],
-                    "tool_sequence": [{"tool": "parser", "file": "test.py"}]
-                }
+                    "tool_sequence": [{"tool": "parser", "file": "test.py"}],
+                },
             ),
             AgentOutput(
                 subgoal_index=1,
@@ -55,14 +55,13 @@ class TestRecordPatternHighScore:
                 confidence=0.85,
                 execution_metadata={
                     "tools_used": ["editor"],
-                    "tool_sequence": [{"tool": "editor", "file": "test.py"}]
-                }
-            )
+                    "tool_sequence": [{"tool": "editor", "file": "test.py"}],
+                },
+            ),
         ]
 
         collect_result = CollectResult(
-            agent_outputs=agent_outputs,
-            execution_metadata={"total_duration_ms": 1500}
+            agent_outputs=agent_outputs, execution_metadata={"total_duration_ms": 1500}
         )
 
         synthesis_result = SynthesisResult(
@@ -73,9 +72,9 @@ class TestRecordPatternHighScore:
                 "subgoals_completed": 2,
                 "subgoals_partial": 0,
                 "subgoals_failed": 0,
-                "total_files_modified": 3
+                "total_files_modified": 3,
             },
-            timing={"duration_ms": 500}
+            timing={"duration_ms": 500},
         )
 
         # Execute
@@ -85,7 +84,7 @@ class TestRecordPatternHighScore:
             complexity=complexity,
             decomposition=decomposition,
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         # Verify
@@ -104,10 +103,7 @@ class TestRecordPatternHighScore:
         assert saved_chunk.success_score == 0.85
 
         # Verify store.update_activation was called
-        store.update_activation.assert_called_once_with(
-            result.reasoning_chunk_id,
-            0.2
-        )
+        store.update_activation.assert_called_once_with(result.reasoning_chunk_id, 0.2)
 
     def test_high_score_extracts_tools_correctly(self):
         """Test that tools are extracted correctly from agent outputs."""
@@ -122,9 +118,9 @@ class TestRecordPatternHighScore:
                     "tools_used": ["tool1", "tool2"],
                     "tool_sequence": [
                         {"tool": "tool1", "action": "parse"},
-                        {"tool": "tool2", "action": "analyze"}
-                    ]
-                }
+                        {"tool": "tool2", "action": "analyze"},
+                    ],
+                },
             ),
             AgentOutput(
                 subgoal_index=1,
@@ -134,23 +130,16 @@ class TestRecordPatternHighScore:
                     "tools_used": ["tool2", "tool3"],  # tool2 is duplicate
                     "tool_sequence": [
                         {"tool": "tool2", "action": "edit"},
-                        {"tool": "tool3", "action": "save"}
-                    ]
-                }
-            )
+                        {"tool": "tool3", "action": "save"},
+                    ],
+                },
+            ),
         ]
 
-        collect_result = CollectResult(
-            agent_outputs=agent_outputs,
-            execution_metadata={}
-        )
+        collect_result = CollectResult(agent_outputs=agent_outputs, execution_metadata={})
 
         synthesis_result = SynthesisResult(
-            answer="Done",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Done", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         record_pattern(
@@ -159,7 +148,7 @@ class TestRecordPatternHighScore:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         # Verify chunk has correct tools
@@ -174,14 +163,12 @@ class TestRecordPatternHighScore:
         decomposition = {
             "goal": "Test goal",
             "subgoals": [{"id": "sg1"}],
-            "execution_order": [{"sequential": ["sg1"]}]
+            "execution_order": [{"sequential": ["sg1"]}],
         }
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
@@ -192,9 +179,9 @@ class TestRecordPatternHighScore:
                 "subgoals_completed": 5,
                 "subgoals_partial": 2,
                 "subgoals_failed": 1,
-                "total_files_modified": 10
+                "total_files_modified": 10,
             },
-            timing={}
+            timing={},
         )
 
         record_pattern(
@@ -203,7 +190,7 @@ class TestRecordPatternHighScore:
             complexity="MEDIUM",
             decomposition=decomposition,
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         # Verify metadata
@@ -224,10 +211,8 @@ class TestRecordPatternMediumScore:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
@@ -235,7 +220,7 @@ class TestRecordPatternMediumScore:
             confidence=0.65,  # Medium score
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         result = record_pattern(
@@ -244,7 +229,7 @@ class TestRecordPatternMediumScore:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         # Verify
@@ -255,20 +240,15 @@ class TestRecordPatternMediumScore:
 
         # Verify store interactions
         store.save_chunk.assert_called_once()
-        store.update_activation.assert_called_once_with(
-            result.reasoning_chunk_id,
-            0.05
-        )
+        store.update_activation.assert_called_once_with(result.reasoning_chunk_id, 0.05)
 
     def test_medium_score_at_boundary_0_5(self):
         """Test that score exactly 0.5 is cached."""
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
@@ -276,7 +256,7 @@ class TestRecordPatternMediumScore:
             confidence=0.5,  # Exactly at threshold
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         result = record_pattern(
@@ -285,7 +265,7 @@ class TestRecordPatternMediumScore:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert result.cached is True
@@ -297,10 +277,8 @@ class TestRecordPatternMediumScore:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
@@ -308,7 +286,7 @@ class TestRecordPatternMediumScore:
             confidence=0.79,  # Just below 0.8
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         result = record_pattern(
@@ -317,7 +295,7 @@ class TestRecordPatternMediumScore:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert result.cached is True
@@ -333,10 +311,8 @@ class TestRecordPatternLowScore:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", False, error="Failed", execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", False, error="Failed", execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
@@ -344,7 +320,7 @@ class TestRecordPatternLowScore:
             confidence=0.3,  # Low score
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         result = record_pattern(
@@ -353,7 +329,7 @@ class TestRecordPatternLowScore:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         # Verify
@@ -372,10 +348,8 @@ class TestRecordPatternLowScore:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
@@ -383,7 +357,7 @@ class TestRecordPatternLowScore:
             confidence=0.49,  # Just below threshold
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         result = record_pattern(
@@ -392,7 +366,7 @@ class TestRecordPatternLowScore:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert result.cached is False
@@ -402,17 +376,10 @@ class TestRecordPatternLowScore:
         """Test that score 0.0 is not cached."""
         store = MagicMock(spec=Store)
 
-        collect_result = CollectResult(
-            agent_outputs=[],
-            execution_metadata={}
-        )
+        collect_result = CollectResult(agent_outputs=[], execution_metadata={})
 
         synthesis_result = SynthesisResult(
-            answer="Complete failure",
-            confidence=0.0,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Complete failure", confidence=0.0, traceability=[], metadata={}, timing={}
         )
 
         result = record_pattern(
@@ -421,7 +388,7 @@ class TestRecordPatternLowScore:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert result.cached is False
@@ -442,18 +409,14 @@ class TestRecordPatternEdgeCases:
                     0,
                     "agent1",
                     True,
-                    execution_metadata={}  # No tools_used or tool_sequence
+                    execution_metadata={},  # No tools_used or tool_sequence
                 )
             ],
-            execution_metadata={}
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         result = record_pattern(
@@ -462,7 +425,7 @@ class TestRecordPatternEdgeCases:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         # Should still work
@@ -481,18 +444,14 @@ class TestRecordPatternEdgeCases:
                     0,
                     "agent1",
                     True,
-                    execution_metadata=None  # Explicitly None
+                    execution_metadata=None,  # Explicitly None
                 )
             ],
-            execution_metadata={}
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.85,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.85, traceability=[], metadata={}, timing={}
         )
 
         result = record_pattern(
@@ -501,7 +460,7 @@ class TestRecordPatternEdgeCases:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert result.cached is True
@@ -514,18 +473,12 @@ class TestRecordPatternEdgeCases:
         decomposition = {}
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         record_pattern(
@@ -534,7 +487,7 @@ class TestRecordPatternEdgeCases:
             complexity="SIMPLE",
             decomposition=decomposition,
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         saved_chunk = store.save_chunk.call_args[0][0]
@@ -547,10 +500,8 @@ class TestRecordPatternEdgeCases:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         # Synthesis with empty metadata
@@ -559,7 +510,7 @@ class TestRecordPatternEdgeCases:
             confidence=0.85,
             traceability=[],
             metadata={},  # No subgoal counts or file counts
-            timing={}
+            timing={},
         )
 
         record_pattern(
@@ -568,7 +519,7 @@ class TestRecordPatternEdgeCases:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         saved_chunk = store.save_chunk.call_args[0][0]
@@ -583,18 +534,12 @@ class TestRecordPatternEdgeCases:
         store.save_chunk.side_effect = Exception("Database error")
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         with pytest.raises(RuntimeError, match="Failed to cache reasoning pattern"):
@@ -604,7 +549,7 @@ class TestRecordPatternEdgeCases:
                 complexity="SIMPLE",
                 decomposition={},
                 collect_result=collect_result,
-                synthesis_result=synthesis_result
+                synthesis_result=synthesis_result,
             )
 
     def test_store_update_activation_failure_logs_warning(self):
@@ -613,18 +558,12 @@ class TestRecordPatternEdgeCases:
         store.update_activation.side_effect = Exception("Activation update failed")
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         # Should not raise, just log warning
@@ -634,7 +573,7 @@ class TestRecordPatternEdgeCases:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert result.cached is True  # Still marked as cached
@@ -648,18 +587,12 @@ class TestRecordPatternChunkIdGeneration:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         result = record_pattern(
@@ -668,7 +601,7 @@ class TestRecordPatternChunkIdGeneration:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         # Verify format: reasoning_<16 hex chars>
@@ -682,18 +615,12 @@ class TestRecordPatternChunkIdGeneration:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         # Generate multiple IDs
@@ -705,7 +632,7 @@ class TestRecordPatternChunkIdGeneration:
                 complexity="SIMPLE",
                 decomposition={},
                 collect_result=collect_result,
-                synthesis_result=synthesis_result
+                synthesis_result=synthesis_result,
             )
             ids.add(result.reasoning_chunk_id)
 
@@ -721,18 +648,12 @@ class TestRecordResultTiming:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         result = record_pattern(
@@ -741,7 +662,7 @@ class TestRecordResultTiming:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert "duration_ms" in result.timing
@@ -754,17 +675,14 @@ class TestRecordResultTiming:
         """Test that timing is recorded even when caching is skipped."""
         store = MagicMock(spec=Store)
 
-        collect_result = CollectResult(
-            agent_outputs=[],
-            execution_metadata={}
-        )
+        collect_result = CollectResult(agent_outputs=[], execution_metadata={})
 
         synthesis_result = SynthesisResult(
             answer="Failed",
             confidence=0.2,  # Low score, won't cache
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         result = record_pattern(
@@ -773,7 +691,7 @@ class TestRecordResultTiming:
             complexity="SIMPLE",
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert "duration_ms" in result.timing
@@ -791,7 +709,7 @@ class TestRecordResultToDictConversion:
             reasoning_chunk_id="reasoning_abc123",
             pattern_marked=True,
             activation_update=0.2,
-            timing={"duration_ms": 100}
+            timing={"duration_ms": 100},
         )
 
         result_dict = result.to_dict()
@@ -809,7 +727,7 @@ class TestRecordResultToDictConversion:
             reasoning_chunk_id=None,
             pattern_marked=False,
             activation_update=-0.1,
-            timing={"duration_ms": 50}
+            timing={"duration_ms": 50},
         )
 
         result_dict = result.to_dict()
@@ -829,18 +747,12 @@ class TestRecordPatternComplexityLevels:
         store = MagicMock(spec=Store)
 
         collect_result = CollectResult(
-            agent_outputs=[
-                AgentOutput(0, "agent1", True, execution_metadata={})
-            ],
-            execution_metadata={}
+            agent_outputs=[AgentOutput(0, "agent1", True, execution_metadata={})],
+            execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success",
-            confidence=0.9,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
         )
 
         result = record_pattern(
@@ -849,7 +761,7 @@ class TestRecordPatternComplexityLevels:
             complexity=complexity,
             decomposition={},
             collect_result=collect_result,
-            synthesis_result=synthesis_result
+            synthesis_result=synthesis_result,
         )
 
         assert result.cached is True

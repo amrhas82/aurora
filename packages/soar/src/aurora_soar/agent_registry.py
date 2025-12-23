@@ -45,8 +45,7 @@ class AgentInfo:
             logger.warning(f"Agent {self.id} has no capabilities defined")
         if self.agent_type not in ["local", "remote", "mcp"]:
             raise ValueError(
-                f"Invalid agent type: {self.agent_type}. "
-                f"Must be one of: local, remote, mcp"
+                f"Invalid agent type: {self.agent_type}. Must be one of: local, remote, mcp"
             )
 
 
@@ -115,11 +114,7 @@ class AgentRegistry:
         Returns:
             List of agents that have the specified capability
         """
-        return [
-            agent
-            for agent in self.agents.values()
-            if capability in agent.capabilities
-        ]
+        return [agent for agent in self.agents.values() if capability in agent.capabilities]
 
     def find_by_capabilities(self, capabilities: list[str]) -> list[AgentInfo]:
         """
@@ -147,11 +142,7 @@ class AgentRegistry:
         Returns:
             List of agents matching the specified type
         """
-        return [
-            agent
-            for agent in self.agents.values()
-            if agent.agent_type == agent_type
-        ]
+        return [agent for agent in self.agents.values() if agent.agent_type == agent_type]
 
     def validate_agent_data(self, agent_data: dict[str, Any]) -> tuple[bool, str | None]:
         """
@@ -238,9 +229,7 @@ class AgentRegistry:
                 # Validate agent data
                 is_valid, error = self.validate_agent_data(agent_data)
                 if not is_valid:
-                    logger.error(
-                        f"Invalid agent config in {config_file}: {error}"
-                    )
+                    logger.error(f"Invalid agent config in {config_file}: {error}")
                     continue
 
                 # Create and register agent
@@ -251,13 +240,11 @@ class AgentRegistry:
                         description=agent_data["description"],
                         capabilities=agent_data["capabilities"],
                         agent_type=agent_data["type"],
-                        config=agent_data.get("config", {})
+                        config=agent_data.get("config", {}),
                     )
                     self.register(agent)
                 except Exception as e:
-                    logger.error(
-                        f"Failed to create agent from config in {config_file}: {e}"
-                    )
+                    logger.error(f"Failed to create agent from config in {config_file}: {e}")
 
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in {config_file}: {e}")
@@ -292,14 +279,9 @@ class AgentRegistry:
             id="llm-executor",
             name="Default LLM Executor",
             description="Fallback agent that executes tasks using a language model",
-            capabilities=[
-                "reasoning",
-                "code-generation",
-                "text-generation",
-                "general-purpose"
-            ],
+            capabilities=["reasoning", "code-generation", "text-generation", "general-purpose"],
             agent_type="local",
-            config={}
+            config={},
         )
 
     def get_or_fallback(self, agent_id: str) -> AgentInfo:
@@ -314,8 +296,6 @@ class AgentRegistry:
         """
         agent = self.get(agent_id)
         if agent is None:
-            logger.warning(
-                f"Agent {agent_id} not found, using fallback agent"
-            )
+            logger.warning(f"Agent {agent_id} not found, using fallback agent")
             return self.create_fallback_agent()
         return agent

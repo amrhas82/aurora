@@ -216,9 +216,7 @@ def headless_command(
 
                 soar = MockSOAROrchestrator()
             except ImportError:
-                console.print(
-                    "[yellow]Warning:[/] Could not import SOAROrchestrator, using mock"
-                )
+                console.print("[yellow]Warning:[/] Could not import SOAROrchestrator, using mock")
 
                 # Use the same class definition (avoid redefinition)
                 soar = MockSOAROrchestrator()
@@ -257,9 +255,7 @@ def headless_command(
                 f"[bold red]Error:[/] Could not import SOAROrchestrator: {e}",
                 style="red",
             )
-            console.print(
-                "[dim]Ensure aurora-soar package is installed and accessible[/]"
-            )
+            console.print("[dim]Ensure aurora-soar package is installed and accessible[/]")
             raise click.Abort()
 
         # Create orchestrator
@@ -287,9 +283,7 @@ def headless_command(
         results_table.add_row("Termination Reason", result.termination_reason.value)
         results_table.add_row("Iterations", str(result.iterations))
         results_table.add_row("Total Cost", f"${result.total_cost:.2f}")
-        results_table.add_row(
-            "Duration", f"{result.duration_seconds:.1f}s"
-        )
+        results_table.add_row("Duration", f"{result.duration_seconds:.1f}s")
         results_table.add_row("Scratchpad", result.scratchpad_path)
 
         if result.error_message:
@@ -313,14 +307,10 @@ def headless_command(
 
         # Exit status based on goal achievement
         if not result.goal_achieved:
-            console.print(
-                "\n[yellow]Goal not achieved. See scratchpad for details.[/]"
-            )
+            console.print("\n[yellow]Goal not achieved. See scratchpad for details.[/]")
             # Don't exit with error code - this is expected behavior
         else:
-            console.print(
-                "\n[bold green]✓ Goal achieved successfully![/]"
-            )
+            console.print("\n[bold green]✓ Goal achieved successfully![/]")
 
     except KeyboardInterrupt:
         console.print("\n\n[yellow]Interrupted by user. Exiting gracefully...[/]")

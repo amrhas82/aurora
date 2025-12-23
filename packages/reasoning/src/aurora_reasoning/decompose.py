@@ -101,10 +101,7 @@ def decompose_query(
     """
     # Load few-shot examples based on complexity
     examples_loader = get_loader()
-    examples = examples_loader.get_examples_by_complexity(
-        "example_decompositions.json",
-        complexity
-    )
+    examples = examples_loader.get_examples_by_complexity("example_decompositions.json", complexity)
 
     # Build prompt using template
     prompt_template = DecomposePromptTemplate()
@@ -120,9 +117,7 @@ def decompose_query(
 
     # Add few-shot examples if any
     if examples:
-        examples_text = "\n\n".join(
-            prompt_template._format_single_example(ex) for ex in examples
-        )
+        examples_text = "\n\n".join(prompt_template._format_single_example(ex) for ex in examples)
         user_prompt = f"Here are some examples:\n\n{examples_text}\n\n---\n\n{user_prompt}"
 
     # Call LLM with JSON output requirement
@@ -144,8 +139,7 @@ def decompose_query(
     missing = [f for f in required_fields if f not in decomposition]
     if missing:
         raise ValueError(
-            f"Decomposition missing required fields: {missing}\n"
-            f"Response: {decomposition}"
+            f"Decomposition missing required fields: {missing}\nResponse: {decomposition}"
         )
 
     # Validate subgoals structure
@@ -157,8 +151,7 @@ def decompose_query(
         missing_sg = [f for f in required_subgoal_fields if f not in subgoal]
         if missing_sg:
             raise ValueError(
-                f"Subgoal {i} missing required fields: {missing_sg}\n"
-                f"Subgoal: {subgoal}"
+                f"Subgoal {i} missing required fields: {missing_sg}\nSubgoal: {subgoal}"
             )
 
     # Validate execution_order structure

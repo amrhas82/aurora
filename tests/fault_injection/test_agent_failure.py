@@ -8,7 +8,6 @@ Tests how the system handles various agent failure scenarios:
 - Partial results with degraded functionality
 """
 
-
 import pytest
 
 from aurora_soar.agent_registry import AgentInfo
@@ -326,9 +325,7 @@ class TestQueryTimeout:
         # Note: With fast mock agents (0.1s), hard to trigger query timeout
         # This test validates the structure exists
         try:
-            await execute_agents(
-                routing, {}, agent_timeout=1.0, query_timeout=0.001
-            )
+            await execute_agents(routing, {}, agent_timeout=1.0, query_timeout=0.001)
             # May succeed if mock agent is very fast
         except TimeoutError:
             # Expected if query timeout triggers

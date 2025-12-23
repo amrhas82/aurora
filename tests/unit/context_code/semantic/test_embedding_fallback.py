@@ -65,9 +65,15 @@ class TestEmbeddingProviderFailures:
         """Test fallback when embed_query() raises an exception."""
         # Create chunks with valid embeddings and activations
         chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embedding=np.random.rand(384).astype(np.float32)),
-            MockChunk("2", "chunk two", activation=0.7, embedding=np.random.rand(384).astype(np.float32)),
-            MockChunk("3", "chunk three", activation=0.5, embedding=np.random.rand(384).astype(np.float32)),
+            MockChunk(
+                "1", "chunk one", activation=0.9, embedding=np.random.rand(384).astype(np.float32)
+            ),
+            MockChunk(
+                "2", "chunk two", activation=0.7, embedding=np.random.rand(384).astype(np.float32)
+            ),
+            MockChunk(
+                "3", "chunk three", activation=0.5, embedding=np.random.rand(384).astype(np.float32)
+            ),
         ]
 
         store = MockStore(chunks=chunks)
@@ -97,7 +103,9 @@ class TestEmbeddingProviderFailures:
     def test_no_fallback_raises_error_when_embedding_fails(self):
         """Test that errors propagate when fallback is disabled."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embedding=np.random.rand(384).astype(np.float32)),
+            MockChunk(
+                "1", "chunk one", activation=0.9, embedding=np.random.rand(384).astype(np.float32)
+            ),
         ]
 
         store = MockStore(chunks=chunks)
@@ -118,7 +126,9 @@ class TestEmbeddingProviderFailures:
     def test_fallback_on_value_error_from_provider(self):
         """Test fallback when provider raises ValueError (invalid input)."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.8, embedding=np.random.rand(384).astype(np.float32)),
+            MockChunk(
+                "1", "chunk one", activation=0.8, embedding=np.random.rand(384).astype(np.float32)
+            ),
         ]
 
         store = MockStore(chunks=chunks)
@@ -142,7 +152,9 @@ class TestEmbeddingProviderFailures:
     def test_fallback_on_attribute_error_from_provider(self):
         """Test fallback when provider has missing attributes."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.6, embedding=np.random.rand(384).astype(np.float32)),
+            MockChunk(
+                "1", "chunk one", activation=0.6, embedding=np.random.rand(384).astype(np.float32)
+            ),
         ]
 
         store = MockStore(chunks=chunks)
@@ -265,7 +277,9 @@ class TestChunksMissingEmbeddings:
 
         chunks = [
             MockChunk("1", "database query", activation=0.5, embedding=chunk1_embedding),
-            MockChunk("2", "file operations", activation=0.9, embedding=None),  # High activation, no embedding
+            MockChunk(
+                "2", "file operations", activation=0.9, embedding=None
+            ),  # High activation, no embedding
             MockChunk("3", "network request", activation=0.4, embedding=chunk3_embedding),
         ]
 

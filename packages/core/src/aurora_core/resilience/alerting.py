@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class AlertSeverity(Enum):
     """Alert severity levels."""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -34,6 +35,7 @@ class AlertRule:
         severity: Alert severity level
         description: Human-readable description of what the alert means
     """
+
     name: str
     metric_name: str
     threshold: float
@@ -77,6 +79,7 @@ class Alert:
         severity: Alert severity
         message: Human-readable alert message
     """
+
     rule_name: str
     metric_name: str
     metric_value: float
@@ -197,9 +200,7 @@ class Alerting:
             if rule.name not in self.rules:
                 self.rules[rule.name] = rule
 
-    def add_notification_handler(
-        self, handler: Callable[[Alert], None]
-    ) -> None:
+    def add_notification_handler(self, handler: Callable[[Alert], None]) -> None:
         """
         Add a notification handler for alerts.
 
@@ -248,7 +249,7 @@ class Alerting:
                     threshold=rule.threshold,
                     severity=rule.severity,
                     message=f"{rule.description}: {metric_value:.4f} "
-                           f"({rule.comparison} {rule.threshold})",
+                    f"({rule.comparison} {rule.threshold})",
                 )
                 alerts.append(alert)
                 self.fired_alerts.append(alert)
@@ -269,9 +270,7 @@ class Alerting:
         """
         # Always log the alert
         log_level = (
-            logging.CRITICAL
-            if alert.severity == AlertSeverity.CRITICAL
-            else logging.WARNING
+            logging.CRITICAL if alert.severity == AlertSeverity.CRITICAL else logging.WARNING
         )
         logger.log(log_level, f"ALERT [{alert.severity.value.upper()}]: {alert.message}")
 
@@ -282,9 +281,7 @@ class Alerting:
             except Exception as e:
                 logger.error(f"Error in notification handler: {e}", exc_info=True)
 
-    def get_fired_alerts(
-        self, severity: AlertSeverity | None = None
-    ) -> list[Alert]:
+    def get_fired_alerts(self, severity: AlertSeverity | None = None) -> list[Alert]:
         """
         Get list of all fired alerts, optionally filtered by severity.
 
@@ -316,17 +313,13 @@ class Alerting:
             }
         """
         alerts_by_severity = {
-            severity.value: sum(
-                1 for a in self.fired_alerts if a.severity == severity
-            )
+            severity.value: sum(1 for a in self.fired_alerts if a.severity == severity)
             for severity in AlertSeverity
         }
 
         alerts_by_rule: dict[str, int] = {}
         for alert in self.fired_alerts:
-            alerts_by_rule[alert.rule_name] = (
-                alerts_by_rule.get(alert.rule_name, 0) + 1
-            )
+            alerts_by_rule[alert.rule_name] = alerts_by_rule.get(alert.rule_name, 0) + 1
 
         return {
             "total_rules": len(self.rules),

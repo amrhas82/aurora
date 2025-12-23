@@ -35,15 +35,13 @@ class AccessHistoryEntry(BaseModel):
         timestamp: UTC timestamp when the chunk was accessed
         context: Optional context information (e.g., query terms)
     """
-    timestamp: datetime = Field(
-        description="UTC timestamp of the access"
-    )
+
+    timestamp: datetime = Field(description="UTC timestamp of the access")
     context: str | None = Field(
-        default=None,
-        description="Optional context information for this access"
+        default=None, description="Optional context information for this access"
     )
 
-    @field_validator('timestamp')
+    @field_validator("timestamp")
     @classmethod
     def validate_timestamp(cls, v: datetime) -> datetime:
         """Ensure timestamp is timezone-aware UTC."""
@@ -60,19 +58,16 @@ class BLAConfig(BaseModel):
         min_activation: Minimum activation value to return (prevents log(0))
         default_activation: Activation for chunks with no access history
     """
+
     decay_rate: float = Field(
         default=0.5,
         ge=0.0,
         le=1.0,
-        description="Decay rate in the power law (standard ACT-R value is 0.5)"
+        description="Decay rate in the power law (standard ACT-R value is 0.5)",
     )
-    min_activation: float = Field(
-        default=-10.0,
-        description="Minimum activation value (log space)"
-    )
+    min_activation: float = Field(default=-10.0, description="Minimum activation value (log space)")
     default_activation: float = Field(
-        default=-5.0,
-        description="Default activation for never-accessed chunks"
+        default=-5.0, description="Default activation for never-accessed chunks"
     )
 
 
@@ -103,9 +98,7 @@ class BaseLevelActivation:
         self.config = config or BLAConfig()
 
     def calculate(
-        self,
-        access_history: list[AccessHistoryEntry],
-        current_time: datetime | None = None
+        self, access_history: list[AccessHistoryEntry], current_time: datetime | None = None
     ) -> float:
         """Calculate Base-Level Activation for a chunk.
 
@@ -151,9 +144,7 @@ class BaseLevelActivation:
         return max(bla, self.config.min_activation)
 
     def calculate_from_timestamps(
-        self,
-        timestamps: list[datetime],
-        current_time: datetime | None = None
+        self, timestamps: list[datetime], current_time: datetime | None = None
     ) -> float:
         """Convenience method to calculate BLA from a list of timestamps.
 
@@ -172,7 +163,7 @@ class BaseLevelActivation:
         access_count: int,
         last_access: datetime,
         creation_time: datetime | None = None,
-        current_time: datetime | None = None
+        current_time: datetime | None = None,
     ) -> float:
         """Approximate BLA when only access count and last access are known.
 
@@ -199,6 +190,7 @@ class BaseLevelActivation:
         if creation_time is None:
             # Assume chunk was created 7 days before last access
             from datetime import timedelta
+
             creation_time = last_access - timedelta(days=7)
 
         # Generate synthetic access history with exponential spacing
@@ -217,6 +209,7 @@ class BaseLevelActivation:
                 offset_seconds = time_span * fraction
 
                 from datetime import timedelta
+
                 timestamp = creation_time + timedelta(seconds=offset_seconds)
                 history.append(AccessHistoryEntry(timestamp=timestamp))
 
@@ -226,7 +219,7 @@ class BaseLevelActivation:
 def calculate_bla(
     access_history: list[AccessHistoryEntry],
     decay_rate: float = 0.5,
-    current_time: datetime | None = None
+    current_time: datetime | None = None,
 ) -> float:
     """Convenience function for calculating BLA with default configuration.
 

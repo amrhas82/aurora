@@ -130,7 +130,9 @@ class TestDecomposeQuery:
             expected_tools=["code_reader"],
         )
 
-    def test_decompose_simple_query(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_decompose_simple_query(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test decomposing a simple query."""
         clear_cache()  # Clear cache before test
         mock_reasoning_decompose.return_value = sample_decomposition
@@ -157,7 +159,9 @@ class TestDecomposeQuery:
         assert call_args.kwargs["query"] == "Test query"
         assert call_args.kwargs["complexity"] == Complexity.SIMPLE
 
-    def test_decompose_with_caching(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_decompose_with_caching(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test that identical queries are cached."""
         clear_cache()
         mock_reasoning_decompose.return_value = sample_decomposition
@@ -184,7 +188,9 @@ class TestDecomposeQuery:
         assert result2.cached is True
         assert mock_reasoning_decompose.call_count == 1  # Not called again
 
-    def test_cache_disabled_with_retry_feedback(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_cache_disabled_with_retry_feedback(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test that cache is bypassed when retry feedback is provided."""
         clear_cache()
         mock_reasoning_decompose.return_value = sample_decomposition
@@ -211,7 +217,9 @@ class TestDecomposeQuery:
         assert result2.cached is False
         assert mock_reasoning_decompose.call_count == 2
 
-    def test_cache_disabled_by_parameter(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_cache_disabled_by_parameter(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test that cache can be disabled via parameter."""
         clear_cache()
         mock_reasoning_decompose.return_value = sample_decomposition
@@ -238,7 +246,9 @@ class TestDecomposeQuery:
         assert result2.cached is False
         assert mock_reasoning_decompose.call_count == 2
 
-    def test_context_summary_passed(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_context_summary_passed(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test that context summary is built and passed."""
         clear_cache()
         mock_reasoning_decompose.return_value = sample_decomposition
@@ -260,7 +270,9 @@ class TestDecomposeQuery:
         assert "2 code chunks" in context_summary
         assert "1 previous successful" in context_summary
 
-    def test_available_agents_passed(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_available_agents_passed(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test that available agents are passed through."""
         clear_cache()
         mock_reasoning_decompose.return_value = sample_decomposition
@@ -279,7 +291,9 @@ class TestDecomposeQuery:
         call_args = mock_reasoning_decompose.call_args
         assert call_args.kwargs["available_agents"] == agents
 
-    def test_retry_feedback_passed(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_retry_feedback_passed(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test that retry feedback is passed through."""
         clear_cache()
         mock_reasoning_decompose.return_value = sample_decomposition
@@ -298,7 +312,9 @@ class TestDecomposeQuery:
         call_args = mock_reasoning_decompose.call_args
         assert call_args.kwargs["retry_feedback"] == feedback
 
-    def test_invalid_complexity(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_invalid_complexity(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test handling of invalid complexity level."""
         clear_cache()
         context = {"code_chunks": [], "reasoning_chunks": []}
@@ -311,7 +327,9 @@ class TestDecomposeQuery:
                 llm_client=mock_llm_client,
             )
 
-    def test_clear_cache_function(self, mock_reasoning_decompose, mock_llm_client, sample_decomposition):
+    def test_clear_cache_function(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
         """Test that clear_cache() works."""
         clear_cache()
         mock_reasoning_decompose.return_value = sample_decomposition

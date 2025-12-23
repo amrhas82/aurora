@@ -19,13 +19,13 @@ CONFIG_SCHEMA: dict[str, Any] = {
         "version": {
             "type": "string",
             "pattern": "^[0-9]+\\.[0-9]+$",
-            "description": "Configuration schema version (e.g., '1.0')"
+            "description": "Configuration schema version (e.g., '1.0')",
         },
         "mode": {
             "type": "string",
             "enum": ["standalone", "mcp_integrated"],
             "default": "standalone",
-            "description": "Operating mode: standalone or integrated with MCP"
+            "description": "Operating mode: standalone or integrated with MCP",
         },
         "storage": {
             "type": "object",
@@ -34,28 +34,28 @@ CONFIG_SCHEMA: dict[str, Any] = {
                 "type": {
                     "type": "string",
                     "enum": ["sqlite", "memory"],
-                    "description": "Storage backend type"
+                    "description": "Storage backend type",
                 },
                 "path": {
                     "type": "string",
-                    "description": "Path to storage file (supports ~ expansion)"
+                    "description": "Path to storage file (supports ~ expansion)",
                 },
                 "max_connections": {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 100,
                     "default": 10,
-                    "description": "Maximum database connections"
+                    "description": "Maximum database connections",
                 },
                 "timeout_seconds": {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 300,
                     "default": 5,
-                    "description": "Database operation timeout in seconds"
-                }
+                    "description": "Database operation timeout in seconds",
+                },
             },
-            "additionalProperties": False
+            "additionalProperties": False,
         },
         "llm": {
             "type": "object",
@@ -64,41 +64,41 @@ CONFIG_SCHEMA: dict[str, Any] = {
                 "reasoning_provider": {
                     "type": "string",
                     "enum": ["anthropic", "openai", "custom"],
-                    "description": "LLM provider for reasoning operations"
+                    "description": "LLM provider for reasoning operations",
                 },
                 "reasoning_model": {
                     "type": "string",
                     "default": "claude-3-5-sonnet-20241022",
-                    "description": "Model name for reasoning"
+                    "description": "Model name for reasoning",
                 },
                 "solving_provider": {
                     "type": "string",
                     "enum": ["anthropic", "openai", "custom"],
-                    "description": "LLM provider for solving operations (optional)"
+                    "description": "LLM provider for solving operations (optional)",
                 },
                 "solving_model": {
                     "type": "string",
-                    "description": "Model name for solving (optional)"
+                    "description": "Model name for solving (optional)",
                 },
                 "api_key_env": {
                     "type": "string",
                     "pattern": "^[A-Z_][A-Z0-9_]*$",
-                    "description": "Environment variable name containing API key"
+                    "description": "Environment variable name containing API key",
                 },
                 "base_url": {
                     "type": ["string", "null"],
                     "format": "uri",
-                    "description": "Custom API base URL (optional)"
+                    "description": "Custom API base URL (optional)",
                 },
                 "timeout_seconds": {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 600,
                     "default": 30,
-                    "description": "LLM API timeout in seconds"
-                }
+                    "description": "LLM API timeout in seconds",
+                },
             },
-            "additionalProperties": False
+            "additionalProperties": False,
         },
         "context": {
             "type": "object",
@@ -109,31 +109,31 @@ CONFIG_SCHEMA: dict[str, Any] = {
                         "enabled": {
                             "type": "boolean",
                             "default": True,
-                            "description": "Enable code context provider"
+                            "description": "Enable code context provider",
                         },
                         "languages": {
                             "type": "array",
                             "items": {
                                 "type": "string",
-                                "enum": ["python", "javascript", "typescript", "go", "rust"]
+                                "enum": ["python", "javascript", "typescript", "go", "rust"],
                             },
                             "minItems": 1,
                             "default": ["python"],
-                            "description": "Supported programming languages"
+                            "description": "Supported programming languages",
                         },
                         "max_file_size_kb": {
                             "type": "integer",
                             "minimum": 1,
                             "maximum": 10000,
                             "default": 500,
-                            "description": "Maximum file size to parse in KB"
+                            "description": "Maximum file size to parse in KB",
                         },
                         "cache_ttl_hours": {
                             "type": "integer",
                             "minimum": 1,
                             "maximum": 168,
                             "default": 24,
-                            "description": "Cache TTL in hours"
+                            "description": "Cache TTL in hours",
                         },
                         "hybrid_weights": {
                             "type": "object",
@@ -143,63 +143,61 @@ CONFIG_SCHEMA: dict[str, Any] = {
                                     "minimum": 0.0,
                                     "maximum": 1.0,
                                     "default": 0.6,
-                                    "description": "Weight for activation-based scoring (0.0-1.0)"
+                                    "description": "Weight for activation-based scoring (0.0-1.0)",
                                 },
                                 "semantic": {
                                     "type": "number",
                                     "minimum": 0.0,
                                     "maximum": 1.0,
                                     "default": 0.4,
-                                    "description": "Weight for semantic similarity scoring (0.0-1.0)"
+                                    "description": "Weight for semantic similarity scoring (0.0-1.0)",
                                 },
                                 "top_k": {
                                     "type": "integer",
                                     "minimum": 1,
                                     "maximum": 1000,
                                     "default": 100,
-                                    "description": "Number of top chunks to retrieve by activation before hybrid scoring"
+                                    "description": "Number of top chunks to retrieve by activation before hybrid scoring",
                                 },
                                 "fallback_to_activation": {
                                     "type": "boolean",
                                     "default": True,
-                                    "description": "Fall back to activation-only if embeddings unavailable"
-                                }
+                                    "description": "Fall back to activation-only if embeddings unavailable",
+                                },
                             },
                             "additionalProperties": False,
-                            "description": "Configuration for hybrid retrieval (activation + semantic)"
-                        }
+                            "description": "Configuration for hybrid retrieval (activation + semantic)",
+                        },
                     },
-                    "additionalProperties": False
+                    "additionalProperties": False,
                 }
             },
-            "additionalProperties": False
+            "additionalProperties": False,
         },
         "agents": {
             "type": "object",
             "properties": {
                 "discovery_paths": {
                     "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
+                    "items": {"type": "string"},
                     "default": [".aurora/agents.json", "~/.aurora/agents.json"],
-                    "description": "Paths to search for agent configurations"
+                    "description": "Paths to search for agent configurations",
                 },
                 "refresh_interval_days": {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 365,
                     "default": 15,
-                    "description": "Days between agent registry refreshes"
+                    "description": "Days between agent registry refreshes",
                 },
                 "fallback_mode": {
                     "type": "string",
                     "enum": ["llm_only", "error", "none"],
                     "default": "llm_only",
-                    "description": "Behavior when no agents found"
-                }
+                    "description": "Behavior when no agents found",
+                },
             },
-            "additionalProperties": False
+            "additionalProperties": False,
         },
         "logging": {
             "type": "object",
@@ -208,32 +206,32 @@ CONFIG_SCHEMA: dict[str, Any] = {
                     "type": "string",
                     "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                     "default": "INFO",
-                    "description": "Logging level"
+                    "description": "Logging level",
                 },
                 "path": {
                     "type": "string",
                     "default": "~/.aurora/logs/",
-                    "description": "Log file directory"
+                    "description": "Log file directory",
                 },
                 "max_size_mb": {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 1000,
                     "default": 100,
-                    "description": "Maximum log file size in MB"
+                    "description": "Maximum log file size in MB",
                 },
                 "max_files": {
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 100,
                     "default": 10,
-                    "description": "Maximum number of log files to keep"
-                }
+                    "description": "Maximum number of log files to keep",
+                },
             },
-            "additionalProperties": False
-        }
+            "additionalProperties": False,
+        },
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 

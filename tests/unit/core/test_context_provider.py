@@ -110,6 +110,7 @@ class TestCodeContextProvider:
     def memory_store(self):
         """Create an in-memory store for testing."""
         from aurora_core.store.memory import MemoryStore
+
         return MemoryStore()
 
     @pytest.fixture
@@ -126,7 +127,7 @@ class TestCodeContextProvider:
                 signature="def calculate_sum(a, b)",
                 docstring="Add two numbers together",
                 complexity_score=0.1,
-                dependencies=[]
+                dependencies=[],
             ),
             CodeChunk(
                 chunk_id="code_func2",
@@ -138,7 +139,7 @@ class TestCodeContextProvider:
                 signature="def parse_query(text)",
                 docstring="Parse a query string into keywords",
                 complexity_score=0.2,
-                dependencies=[]
+                dependencies=[],
             ),
             CodeChunk(
                 chunk_id="code_class1",
@@ -149,7 +150,7 @@ class TestCodeContextProvider:
                 line_end=50,
                 docstring="Process and validate data",
                 complexity_score=0.5,
-                dependencies=[]
+                dependencies=[],
             ),
         ]
 
@@ -157,16 +158,15 @@ class TestCodeContextProvider:
     def parser_registry(self):
         """Create a parser registry for testing."""
         from aurora_context_code.registry import ParserRegistry
+
         return ParserRegistry()
 
     @pytest.fixture
     def code_provider(self, memory_store, parser_registry):
         """Create CodeContextProvider with test dependencies."""
         from aurora_core.context.code_provider import CodeContextProvider
-        return CodeContextProvider(
-            store=memory_store,
-            parser_registry=parser_registry
-        )
+
+        return CodeContextProvider(store=memory_store, parser_registry=parser_registry)
 
     def test_initialization(self, code_provider):
         """Test CodeContextProvider can be initialized."""
@@ -238,7 +238,7 @@ class TestCodeContextProvider:
             line_end=5,
             docstring="Parse JSON data",
             complexity_score=0.1,
-            dependencies=[]
+            dependencies=[],
         )
         low_relevance = CodeChunk(
             chunk_id="code_low",
@@ -249,7 +249,7 @@ class TestCodeContextProvider:
             line_end=5,
             docstring="Generic helper",
             complexity_score=0.1,
-            dependencies=[]
+            dependencies=[],
         )
 
         memory_store.save_chunk(high_relevance)
@@ -268,6 +268,7 @@ class TestQueryParsing:
     def test_parse_query_lowercases_text(self):
         """Test that query parsing converts to lowercase."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = CodeContextProvider._parse_query("Calculate SUM Function")
         assert "calculate" in keywords
         assert "sum" in keywords
@@ -276,6 +277,7 @@ class TestQueryParsing:
     def test_parse_query_splits_on_whitespace(self):
         """Test that query is split on whitespace."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = CodeContextProvider._parse_query("parse json data")
         assert len(keywords) == 3
         assert keywords == ["parse", "json", "data"]
@@ -283,6 +285,7 @@ class TestQueryParsing:
     def test_parse_query_removes_stopwords(self):
         """Test that common stopwords are filtered out."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = CodeContextProvider._parse_query("parse the json data and return it")
         # "the", "and", "it" should be removed as stopwords
         assert "the" not in keywords
@@ -296,18 +299,21 @@ class TestQueryParsing:
     def test_parse_query_handles_empty_string(self):
         """Test that empty query returns empty list."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = CodeContextProvider._parse_query("")
         assert keywords == []
 
     def test_parse_query_handles_only_stopwords(self):
         """Test query with only stopwords returns empty list."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = CodeContextProvider._parse_query("the and it is")
         assert keywords == []
 
     def test_parse_query_strips_punctuation(self):
         """Test that punctuation is handled correctly."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = CodeContextProvider._parse_query("parse, json! data?")
         assert "parse" in keywords or "parse," in keywords  # Either strip or keep
         assert "json" in keywords or "json!" in keywords
@@ -316,6 +322,7 @@ class TestQueryParsing:
     def test_parse_query_handles_multiple_spaces(self):
         """Test that multiple spaces are handled correctly."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = CodeContextProvider._parse_query("parse    json     data")
         assert len(keywords) == 3
         assert keywords == ["parse", "json", "data"]
@@ -337,12 +344,13 @@ class TestChunkScoring:
             signature="def parse_json_data(input_str)",
             docstring="Parse JSON data from string input",
             complexity_score=0.2,
-            dependencies=[]
+            dependencies=[],
         )
 
     def test_score_chunk_perfect_match(self, sample_chunk):
         """Test scoring with all keywords matching."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = ["parse", "json", "data"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
         # All 3 keywords match (in name and docstring)
@@ -351,6 +359,7 @@ class TestChunkScoring:
     def test_score_chunk_partial_match(self, sample_chunk):
         """Test scoring with some keywords matching."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = ["parse", "xml"]  # Only "parse" matches
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
         assert score == 0.5  # 1/2 = 0.5
@@ -358,6 +367,7 @@ class TestChunkScoring:
     def test_score_chunk_no_match(self, sample_chunk):
         """Test scoring with no keywords matching."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = ["calculate", "sum", "total"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
         assert score == 0.0  # 0/3 = 0.0
@@ -365,6 +375,7 @@ class TestChunkScoring:
     def test_score_chunk_empty_keywords(self, sample_chunk):
         """Test scoring with empty keyword list."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = []
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
         assert score == 0.0  # Avoid division by zero
@@ -372,6 +383,7 @@ class TestChunkScoring:
     def test_score_chunk_matches_in_name(self, sample_chunk):
         """Test that keywords match in chunk name."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = ["parse"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
         assert score > 0  # Should match "parse" in name
@@ -379,6 +391,7 @@ class TestChunkScoring:
     def test_score_chunk_matches_in_docstring(self, sample_chunk):
         """Test that keywords match in docstring."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         keywords = ["string", "input"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
         assert score > 0  # Should match "string" and "input" in docstring
@@ -386,6 +399,7 @@ class TestChunkScoring:
     def test_score_chunk_case_insensitive(self):
         """Test that scoring is case-insensitive."""
         from aurora_core.context.code_provider import CodeContextProvider
+
         chunk = CodeChunk(
             chunk_id="code_test",
             file_path="/test/calc.py",
@@ -395,7 +409,7 @@ class TestChunkScoring:
             line_end=5,
             docstring="Calculate the SUM of values",
             complexity_score=0.1,
-            dependencies=[]
+            dependencies=[],
         )
         keywords = ["calculate", "sum"]
         score = CodeContextProvider._score_chunk(chunk, keywords)

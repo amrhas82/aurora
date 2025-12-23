@@ -100,7 +100,7 @@ You MUST respond with valid JSON only. Use this exact schema:
             Formatted example string
         """
         decomposition = example.get("decomposition", {})
-        return f"""Query: {example['query']}
+        return f"""Query: {example["query"]}
 
 Decomposition: {json.dumps(decomposition, indent=2)}"""
 

@@ -26,7 +26,7 @@ class TestFormatResponseQuiet:
             confidence=0.85,
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -34,14 +34,14 @@ class TestFormatResponseQuiet:
             reasoning_chunk_id="reasoning_abc123",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.QUIET
+            verbosity=Verbosity.QUIET,
         )
 
         # Verify format
@@ -56,7 +56,7 @@ class TestFormatResponseQuiet:
             confidence=0.6,
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -64,14 +64,14 @@ class TestFormatResponseQuiet:
             reasoning_chunk_id="reasoning_xyz",
             pattern_marked=False,
             activation_update=0.05,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.QUIET
+            verbosity=Verbosity.QUIET,
         )
 
         # Verify format
@@ -85,7 +85,7 @@ class TestFormatResponseQuiet:
             confidence=0.3,
             traceability=[],
             metadata={},
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -93,14 +93,14 @@ class TestFormatResponseQuiet:
             reasoning_chunk_id=None,
             pattern_marked=False,
             activation_update=-0.1,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.QUIET
+            verbosity=Verbosity.QUIET,
         )
 
         # Verify format
@@ -112,11 +112,7 @@ class TestFormatResponseQuiet:
         long_answer = "A" * 200  # 200 character answer
 
         synthesis_result = SynthesisResult(
-            answer=long_answer,
-            confidence=0.8,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer=long_answer, confidence=0.8, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -124,14 +120,14 @@ class TestFormatResponseQuiet:
             reasoning_chunk_id="reasoning_test",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.QUIET
+            verbosity=Verbosity.QUIET,
         )
 
         # Verify truncation
@@ -152,9 +148,9 @@ class TestFormatResponseNormal:
                 "subgoals_completed": 3,
                 "subgoals_partial": 1,
                 "subgoals_failed": 0,
-                "total_files_modified": 5
+                "total_files_modified": 5,
             },
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -162,14 +158,14 @@ class TestFormatResponseNormal:
             reasoning_chunk_id="reasoning_normal",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         phase_metadata = {
             "phases": {
                 "assess": {"duration_ms": 50},
                 "retrieve": {"duration_ms": 100},
-                "decompose": {"duration_ms": 500}
+                "decompose": {"duration_ms": 500},
             }
         }
 
@@ -177,7 +173,7 @@ class TestFormatResponseNormal:
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata=phase_metadata,
-            verbosity=Verbosity.NORMAL
+            verbosity=Verbosity.NORMAL,
         )
 
         output = result.formatted_output
@@ -201,11 +197,7 @@ class TestFormatResponseNormal:
     def test_normal_format_cached_for_learning(self):
         """Test NORMAL format when pattern is cached but not marked."""
         synthesis_result = SynthesisResult(
-            answer="Partial success.",
-            confidence=0.65,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Partial success.", confidence=0.65, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -213,14 +205,14 @@ class TestFormatResponseNormal:
             reasoning_chunk_id="reasoning_learning",
             pattern_marked=False,  # Not marked as pattern
             activation_update=0.05,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.NORMAL
+            verbosity=Verbosity.NORMAL,
         )
 
         output = result.formatted_output
@@ -231,11 +223,7 @@ class TestFormatResponseNormal:
     def test_normal_format_not_cached(self):
         """Test NORMAL format when pattern is not cached."""
         synthesis_result = SynthesisResult(
-            answer="Low quality result.",
-            confidence=0.3,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Low quality result.", confidence=0.3, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -243,14 +231,14 @@ class TestFormatResponseNormal:
             reasoning_chunk_id=None,
             pattern_marked=False,
             activation_update=-0.1,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.NORMAL
+            verbosity=Verbosity.NORMAL,
         )
 
         output = result.formatted_output
@@ -264,7 +252,7 @@ class TestFormatResponseNormal:
             confidence=0.8,
             traceability=[],
             metadata={},  # Empty metadata
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -272,14 +260,14 @@ class TestFormatResponseNormal:
             reasoning_chunk_id="test",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.NORMAL
+            verbosity=Verbosity.NORMAL,
         )
 
         output = result.formatted_output
@@ -301,13 +289,13 @@ class TestFormatResponseVerbose:
                 {
                     "agent": "parser-agent",
                     "subgoal_id": "sg1",
-                    "subgoal_description": "Parse source files"
+                    "subgoal_description": "Parse source files",
                 },
                 {
                     "agent": "editor-agent",
                     "subgoal_id": "sg2",
-                    "subgoal_description": "Modify files"
-                }
+                    "subgoal_description": "Modify files",
+                },
             ],
             metadata={
                 "verification_score": 0.88,
@@ -318,9 +306,9 @@ class TestFormatResponseVerbose:
                 "subgoals_partial": 2,
                 "subgoals_failed": 1,
                 "total_files_modified": 10,
-                "user_interactions_count": 3
+                "user_interactions_count": 3,
             },
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -328,7 +316,7 @@ class TestFormatResponseVerbose:
             reasoning_chunk_id="reasoning_verbose",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         phase_metadata = {
@@ -336,24 +324,20 @@ class TestFormatResponseVerbose:
                 "assess": {"duration_ms": 50},
                 "retrieve": {"duration_ms": 100},
                 "decompose": {"duration_ms": 500},
-                "verify": {"duration_ms": 800}
+                "verify": {"duration_ms": 800},
             },
             "cost": {
                 "estimated_usd": 0.0125,
                 "actual_usd": 0.0138,
-                "tokens_used": {
-                    "input": 2500,
-                    "output": 1200,
-                    "total": 3700
-                }
-            }
+                "tokens_used": {"input": 2500, "output": 1200, "total": 3700},
+            },
         }
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata=phase_metadata,
-            verbosity=Verbosity.VERBOSE
+            verbosity=Verbosity.VERBOSE,
         )
 
         output = result.formatted_output
@@ -395,7 +379,7 @@ class TestFormatResponseVerbose:
             confidence=0.8,
             traceability=[],  # No traceability
             metadata={},
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -403,14 +387,14 @@ class TestFormatResponseVerbose:
             reasoning_chunk_id="test",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.VERBOSE
+            verbosity=Verbosity.VERBOSE,
         )
 
         output = result.formatted_output
@@ -421,11 +405,7 @@ class TestFormatResponseVerbose:
     def test_verbose_format_not_cached(self):
         """Test VERBOSE format when pattern is not cached."""
         synthesis_result = SynthesisResult(
-            answer="Low quality.",
-            confidence=0.3,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Low quality.", confidence=0.3, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -433,14 +413,14 @@ class TestFormatResponseVerbose:
             reasoning_chunk_id=None,
             pattern_marked=False,
             activation_update=-0.1,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.VERBOSE
+            verbosity=Verbosity.VERBOSE,
         )
 
         output = result.formatted_output
@@ -451,11 +431,7 @@ class TestFormatResponseVerbose:
     def test_verbose_format_cached_not_pattern(self):
         """Test VERBOSE format when cached but not marked as pattern."""
         synthesis_result = SynthesisResult(
-            answer="Medium quality.",
-            confidence=0.65,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Medium quality.", confidence=0.65, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -463,14 +439,14 @@ class TestFormatResponseVerbose:
             reasoning_chunk_id="reasoning_cache",
             pattern_marked=False,
             activation_update=0.05,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.VERBOSE
+            verbosity=Verbosity.VERBOSE,
         )
 
         output = result.formatted_output
@@ -490,7 +466,7 @@ class TestFormatResponseJSON:
             confidence=0.85,
             traceability=[{"agent": "test-agent", "subgoal_id": "sg1"}],
             metadata={"key": "value"},
-            timing={"duration_ms": 100}
+            timing={"duration_ms": 100},
         )
 
         record_result = RecordResult(
@@ -498,7 +474,7 @@ class TestFormatResponseJSON:
             reasoning_chunk_id="reasoning_json",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         phase_metadata = {"phase": "data"}
@@ -507,7 +483,7 @@ class TestFormatResponseJSON:
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata=phase_metadata,
-            verbosity=Verbosity.JSON
+            verbosity=Verbosity.JSON,
         )
 
         # Verify output is valid JSON
@@ -521,7 +497,7 @@ class TestFormatResponseJSON:
             confidence=0.88,
             traceability=[{"trace": "data"}],
             metadata={"synthesis": "metadata"},
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -529,7 +505,7 @@ class TestFormatResponseJSON:
             reasoning_chunk_id="reasoning_complete",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         phase_metadata = {"custom": "metadata", "phase_count": 9}
@@ -538,7 +514,7 @@ class TestFormatResponseJSON:
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata=phase_metadata,
-            verbosity=Verbosity.JSON
+            verbosity=Verbosity.JSON,
         )
 
         parsed = json.loads(result.formatted_output)
@@ -560,11 +536,7 @@ class TestFormatResponseJSON:
     def test_json_format_with_none_chunk_id(self):
         """Test JSON format when reasoning_chunk_id is None (not cached)."""
         synthesis_result = SynthesisResult(
-            answer="Low quality.",
-            confidence=0.3,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Low quality.", confidence=0.3, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -572,14 +544,14 @@ class TestFormatResponseJSON:
             reasoning_chunk_id=None,
             pattern_marked=False,
             activation_update=-0.1,
-            timing={}
+            timing={},
         )
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata={},
-            verbosity=Verbosity.JSON
+            verbosity=Verbosity.JSON,
         )
 
         parsed = json.loads(result.formatted_output)
@@ -594,16 +566,9 @@ class TestResponseResultClass:
 
     def test_response_result_initialization(self):
         """Test ResponseResult initialization."""
-        raw_data = {
-            "answer": "test",
-            "confidence": 0.9,
-            "metadata": {}
-        }
+        raw_data = {"answer": "test", "confidence": 0.9, "metadata": {}}
 
-        result = ResponseResult(
-            formatted_output="formatted test",
-            raw_data=raw_data
-        )
+        result = ResponseResult(formatted_output="formatted test", raw_data=raw_data)
 
         assert result.formatted_output == "formatted test"
         assert result.raw_data == raw_data
@@ -614,13 +579,10 @@ class TestResponseResultClass:
             "answer": "test answer",
             "confidence": 0.85,
             "overall_score": 0.85,
-            "metadata": {"key": "value"}
+            "metadata": {"key": "value"},
         }
 
-        result = ResponseResult(
-            formatted_output="formatted",
-            raw_data=raw_data
-        )
+        result = ResponseResult(formatted_output="formatted", raw_data=raw_data)
 
         result_dict = result.to_dict()
 
@@ -652,11 +614,7 @@ class TestFormatResponseDefaultVerbosity:
     def test_default_verbosity_is_normal(self):
         """Test that default verbosity is NORMAL."""
         synthesis_result = SynthesisResult(
-            answer="Test.",
-            confidence=0.8,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Test.", confidence=0.8, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -664,14 +622,12 @@ class TestFormatResponseDefaultVerbosity:
             reasoning_chunk_id="test",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         # Call without verbosity parameter
         result = format_response(
-            synthesis_result=synthesis_result,
-            record_result=record_result,
-            phase_metadata={}
+            synthesis_result=synthesis_result, record_result=record_result, phase_metadata={}
         )
 
         # Should produce NORMAL format
@@ -688,14 +644,10 @@ class TestFormatResponseRawData:
             answer="Test answer.",
             confidence=0.85,
             traceability=[
-                {
-                    "agent": "test-agent",
-                    "subgoal_id": "sg1",
-                    "subgoal_description": "Test subgoal"
-                }
+                {"agent": "test-agent", "subgoal_id": "sg1", "subgoal_description": "Test subgoal"}
             ],
             metadata={"meta": "data"},
-            timing={}
+            timing={},
         )
 
         record_result = RecordResult(
@@ -703,7 +655,7 @@ class TestFormatResponseRawData:
             reasoning_chunk_id="reasoning_test",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         phase_metadata = {"phase": "metadata"}
@@ -714,7 +666,7 @@ class TestFormatResponseRawData:
                 synthesis_result=synthesis_result,
                 record_result=record_result,
                 phase_metadata=phase_metadata,
-                verbosity=verbosity
+                verbosity=verbosity,
             )
 
             # Verify raw_data structure is the same
@@ -729,11 +681,7 @@ class TestFormatResponseRawData:
     def test_raw_data_includes_phase_metadata(self):
         """Test that raw_data includes phase_metadata fields."""
         synthesis_result = SynthesisResult(
-            answer="Test.",
-            confidence=0.8,
-            traceability=[],
-            metadata={},
-            timing={}
+            answer="Test.", confidence=0.8, traceability=[], metadata={}, timing={}
         )
 
         record_result = RecordResult(
@@ -741,20 +689,20 @@ class TestFormatResponseRawData:
             reasoning_chunk_id="test",
             pattern_marked=True,
             activation_update=0.2,
-            timing={}
+            timing={},
         )
 
         phase_metadata = {
             "total_duration_ms": 5000,
             "llm_calls": 10,
-            "custom_field": "custom_value"
+            "custom_field": "custom_value",
         }
 
         result = format_response(
             synthesis_result=synthesis_result,
             record_result=record_result,
             phase_metadata=phase_metadata,
-            verbosity=Verbosity.QUIET
+            verbosity=Verbosity.QUIET,
         )
 
         # Phase metadata should be merged into result metadata

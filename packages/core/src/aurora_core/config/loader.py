@@ -56,9 +56,8 @@ class Config:
 
     @staticmethod
     def load(
-        project_path: Path | None = None,
-        cli_overrides: dict[str, Any] | None = None
-    ) -> 'Config':
+        project_path: Path | None = None, cli_overrides: dict[str, Any] | None = None
+    ) -> "Config":
         """
         Load configuration with override hierarchy.
 
@@ -201,13 +200,9 @@ class Config:
             with open(path) as f:
                 return cast(dict[str, Any], json.load(f))
         except json.JSONDecodeError as e:
-            raise ConfigurationError(
-                f"Failed to parse JSON configuration at {path}: {e}"
-            )
+            raise ConfigurationError(f"Failed to parse JSON configuration at {path}: {e}")
         except OSError as e:
-            raise ConfigurationError(
-                f"Failed to read configuration file at {path}: {e}"
-            )
+            raise ConfigurationError(f"Failed to read configuration file at {path}: {e}")
 
     @staticmethod
     def _load_env_vars() -> dict[str, Any]:
@@ -293,9 +288,7 @@ class Config:
         except jsonschema.ValidationError as e:
             # Extract useful error information
             path = " → ".join(str(p) for p in e.path) if e.path else "root"
-            raise ConfigurationError(
-                f"Configuration validation failed at '{path}': {e.message}"
-            )
+            raise ConfigurationError(f"Configuration validation failed at '{path}': {e.message}")
         except jsonschema.SchemaError as e:
             raise ConfigurationError(f"Invalid configuration schema: {e.message}")
 

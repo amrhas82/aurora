@@ -29,7 +29,7 @@ class ConcreteChunk(Chunk):
         }
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> 'ConcreteChunk':
+    def from_json(cls, data: dict[str, Any]) -> "ConcreteChunk":
         chunk = cls(data["id"], data["type"], data.get("data", "test"))
         if "created_at" in data:
             chunk.created_at = datetime.fromisoformat(data["created_at"])
@@ -78,11 +78,7 @@ class TestChunkInterface:
 
     def test_chunk_from_json_must_be_implemented(self):
         """Test that from_json() must be implemented by subclasses."""
-        data = {
-            "id": "test-id",
-            "type": "test-type",
-            "data": "test-data"
-        }
+        data = {"id": "test-id", "type": "test-type", "data": "test-data"}
         chunk = ConcreteChunk.from_json(data)
 
         assert isinstance(chunk, ConcreteChunk)

@@ -17,10 +17,7 @@ class TestReasoningChunkInitialization:
 
     def test_minimal_initialization(self):
         """Test creating chunk with minimal required fields."""
-        chunk = ReasoningChunk(
-            chunk_id="test-reasoning-1",
-            pattern="implement feature X"
-        )
+        chunk = ReasoningChunk(chunk_id="test-reasoning-1", pattern="implement feature X")
 
         assert chunk.id == "test-reasoning-1"
         assert chunk.type == "reasoning"
@@ -35,16 +32,10 @@ class TestReasoningChunkInitialization:
 
     def test_full_initialization(self):
         """Test creating chunk with all fields populated."""
-        subgoals = [
-            {"id": "sg1", "description": "Parse file", "agent": "parser"}
-        ]
-        execution_order = [
-            {"sequential": ["sg1"]}
-        ]
+        subgoals = [{"id": "sg1", "description": "Parse file", "agent": "parser"}]
+        execution_order = [{"sequential": ["sg1"]}]
         tools_used = ["parser", "editor"]
-        tool_sequence = [
-            {"tool": "parser", "file": "test.py"}
-        ]
+        tool_sequence = [{"tool": "parser", "file": "test.py"}]
         metadata = {"query_id": "q123", "duration_ms": 1500}
 
         chunk = ReasoningChunk(
@@ -56,7 +47,7 @@ class TestReasoningChunkInitialization:
             tools_used=tools_used,
             tool_sequence=tool_sequence,
             success_score=0.85,
-            metadata=metadata
+            metadata=metadata,
         )
 
         assert chunk.id == "test-reasoning-2"
@@ -72,10 +63,7 @@ class TestReasoningChunkInitialization:
 
     def test_timestamps_auto_created(self):
         """Test that created_at and updated_at are auto-populated."""
-        chunk = ReasoningChunk(
-            chunk_id="test-reasoning-3",
-            pattern="test pattern"
-        )
+        chunk = ReasoningChunk(chunk_id="test-reasoning-3", pattern="test pattern")
 
         # Verify timestamps are datetime objects and recent (use UTC)
         assert isinstance(chunk.created_at, datetime)
@@ -92,10 +80,7 @@ class TestReasoningChunkValidation:
     def test_valid_chunk_passes_validation(self):
         """Test that valid chunk passes validation."""
         chunk = ReasoningChunk(
-            chunk_id="test-valid",
-            pattern="valid pattern",
-            complexity="MEDIUM",
-            success_score=0.5
+            chunk_id="test-valid", pattern="valid pattern", complexity="MEDIUM", success_score=0.5
         )
         # Should not raise
         assert chunk.validate() is True
@@ -103,50 +88,32 @@ class TestReasoningChunkValidation:
     def test_empty_pattern_fails_validation(self):
         """Test that empty pattern fails validation."""
         with pytest.raises(ValueError, match="pattern must not be empty"):
-            ReasoningChunk(
-                chunk_id="test-empty-pattern",
-                pattern=""
-            )
+            ReasoningChunk(chunk_id="test-empty-pattern", pattern="")
 
     def test_whitespace_only_pattern_fails_validation(self):
         """Test that whitespace-only pattern fails validation."""
         with pytest.raises(ValueError, match="pattern must not be empty"):
-            ReasoningChunk(
-                chunk_id="test-whitespace-pattern",
-                pattern="   "
-            )
+            ReasoningChunk(chunk_id="test-whitespace-pattern", pattern="   ")
 
     def test_success_score_below_range_fails(self):
         """Test that success_score below 0.0 fails validation."""
         with pytest.raises(ValueError, match="success_score must be in"):
-            ReasoningChunk(
-                chunk_id="test-low-score",
-                pattern="test pattern",
-                success_score=-0.1
-            )
+            ReasoningChunk(chunk_id="test-low-score", pattern="test pattern", success_score=-0.1)
 
     def test_success_score_above_range_fails(self):
         """Test that success_score above 1.0 fails validation."""
         with pytest.raises(ValueError, match="success_score must be in"):
-            ReasoningChunk(
-                chunk_id="test-high-score",
-                pattern="test pattern",
-                success_score=1.1
-            )
+            ReasoningChunk(chunk_id="test-high-score", pattern="test pattern", success_score=1.1)
 
     def test_success_score_at_boundaries_passes(self):
         """Test that success_score at 0.0 and 1.0 passes validation."""
         chunk1 = ReasoningChunk(
-            chunk_id="test-score-zero",
-            pattern="test pattern",
-            success_score=0.0
+            chunk_id="test-score-zero", pattern="test pattern", success_score=0.0
         )
         assert chunk1.success_score == 0.0
 
         chunk2 = ReasoningChunk(
-            chunk_id="test-score-one",
-            pattern="test pattern",
-            success_score=1.0
+            chunk_id="test-score-one", pattern="test pattern", success_score=1.0
         )
         assert chunk2.success_score == 1.0
 
@@ -154,18 +121,14 @@ class TestReasoningChunkValidation:
         """Test that invalid complexity level fails validation."""
         with pytest.raises(ValueError, match="complexity must be one of"):
             ReasoningChunk(
-                chunk_id="test-invalid-complexity",
-                pattern="test pattern",
-                complexity="INVALID"
+                chunk_id="test-invalid-complexity", pattern="test pattern", complexity="INVALID"
             )
 
     def test_valid_complexity_levels_pass(self):
         """Test that all valid complexity levels pass validation."""
         for complexity in ["SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL"]:
             chunk = ReasoningChunk(
-                chunk_id=f"test-{complexity.lower()}",
-                pattern="test pattern",
-                complexity=complexity
+                chunk_id=f"test-{complexity.lower()}", pattern="test pattern", complexity=complexity
             )
             assert chunk.complexity == complexity
 
@@ -175,7 +138,7 @@ class TestReasoningChunkValidation:
             ReasoningChunk(
                 chunk_id="test-invalid-subgoals",
                 pattern="test pattern",
-                subgoals="not a list"  # type: ignore
+                subgoals="not a list",  # type: ignore
             )
 
     def test_non_list_execution_order_fails(self):
@@ -184,7 +147,7 @@ class TestReasoningChunkValidation:
             ReasoningChunk(
                 chunk_id="test-invalid-order",
                 pattern="test pattern",
-                execution_order="not a list"  # type: ignore
+                execution_order="not a list",  # type: ignore
             )
 
     def test_non_list_tools_used_fails(self):
@@ -193,7 +156,7 @@ class TestReasoningChunkValidation:
             ReasoningChunk(
                 chunk_id="test-invalid-tools",
                 pattern="test pattern",
-                tools_used="not a list"  # type: ignore
+                tools_used="not a list",  # type: ignore
             )
 
     def test_non_list_tool_sequence_fails(self):
@@ -202,7 +165,7 @@ class TestReasoningChunkValidation:
             ReasoningChunk(
                 chunk_id="test-invalid-sequence",
                 pattern="test pattern",
-                tool_sequence="not a list"  # type: ignore
+                tool_sequence="not a list",  # type: ignore
             )
 
 
@@ -211,10 +174,7 @@ class TestReasoningChunkSerialization:
 
     def test_to_json_minimal(self):
         """Test serialization with minimal fields."""
-        chunk = ReasoningChunk(
-            chunk_id="test-json-1",
-            pattern="test pattern"
-        )
+        chunk = ReasoningChunk(chunk_id="test-json-1", pattern="test pattern")
 
         json_data = chunk.to_json()
 
@@ -232,24 +192,15 @@ class TestReasoningChunkSerialization:
 
     def test_to_json_full(self):
         """Test serialization with all fields populated."""
-        subgoals = [
-            {"id": "sg1", "description": "Step 1"},
-            {"id": "sg2", "description": "Step 2"}
-        ]
-        execution_order = [
-            {"sequential": ["sg1", "sg2"]}
-        ]
+        subgoals = [{"id": "sg1", "description": "Step 1"}, {"id": "sg2", "description": "Step 2"}]
+        execution_order = [{"sequential": ["sg1", "sg2"]}]
         tools_used = ["parser", "editor", "analyzer"]
         tool_sequence = [
             {"tool": "parser", "target": "file1.py"},
             {"tool": "editor", "target": "file1.py"},
-            {"tool": "analyzer", "target": "file1.py"}
+            {"tool": "analyzer", "target": "file1.py"},
         ]
-        metadata = {
-            "query_id": "q456",
-            "duration_ms": 2500,
-            "agent_count": 3
-        }
+        metadata = {"query_id": "q456", "duration_ms": 2500, "agent_count": 3}
 
         chunk = ReasoningChunk(
             chunk_id="test-json-2",
@@ -260,7 +211,7 @@ class TestReasoningChunkSerialization:
             tools_used=tools_used,
             tool_sequence=tool_sequence,
             success_score=0.92,
-            metadata=metadata
+            metadata=metadata,
         )
 
         json_data = chunk.to_json()
@@ -282,10 +233,7 @@ class TestReasoningChunkSerialization:
 
     def test_to_json_timestamps_are_iso_format(self):
         """Test that timestamps are serialized in ISO format."""
-        chunk = ReasoningChunk(
-            chunk_id="test-json-timestamps",
-            pattern="test pattern"
-        )
+        chunk = ReasoningChunk(chunk_id="test-json-timestamps", pattern="test pattern")
 
         json_data = chunk.to_json()
 
@@ -312,12 +260,12 @@ class TestReasoningChunkDeserialization:
                 "execution_order": [],
                 "tools_used": [],
                 "tool_sequence": [],
-                "success_score": 0.0
+                "success_score": 0.0,
             },
             "metadata": {
                 "created_at": "2025-01-01T12:00:00",
-                "last_modified": "2025-01-01T12:00:00"
-            }
+                "last_modified": "2025-01-01T12:00:00",
+            },
         }
 
         chunk = ReasoningChunk.from_json(json_data)
@@ -344,14 +292,14 @@ class TestReasoningChunkDeserialization:
                 "execution_order": [{"sequential": ["sg1"]}],
                 "tools_used": ["parser", "editor"],
                 "tool_sequence": [{"tool": "parser", "file": "test.py"}],
-                "success_score": 0.85
+                "success_score": 0.85,
             },
             "metadata": {
                 "created_at": "2025-01-01T12:00:00",
                 "last_modified": "2025-01-01T12:30:00",
                 "query_id": "q789",
-                "duration_ms": 3000
-            }
+                "duration_ms": 3000,
+            },
         }
 
         chunk = ReasoningChunk.from_json(json_data)
@@ -371,24 +319,14 @@ class TestReasoningChunkDeserialization:
 
     def test_from_json_missing_content_raises(self):
         """Test that missing content field raises ValueError."""
-        json_data = {
-            "id": "test-missing-content",
-            "type": "reasoning",
-            "metadata": {}
-        }
+        json_data = {"id": "test-missing-content", "type": "reasoning", "metadata": {}}
 
         with pytest.raises(ValueError, match="Missing required field"):
             ReasoningChunk.from_json(json_data)
 
     def test_from_json_missing_id_raises(self):
         """Test that missing id field raises ValueError."""
-        json_data = {
-            "type": "reasoning",
-            "content": {
-                "pattern": "test"
-            },
-            "metadata": {}
-        }
+        json_data = {"type": "reasoning", "content": {"pattern": "test"}, "metadata": {}}
 
         with pytest.raises(ValueError, match="Missing required field"):
             ReasoningChunk.from_json(json_data)
@@ -398,10 +336,8 @@ class TestReasoningChunkDeserialization:
         json_data = {
             "id": "test-defaults",
             "type": "reasoning",
-            "content": {
-                "pattern": "minimal pattern"
-            },
-            "metadata": {}
+            "content": {"pattern": "minimal pattern"},
+            "metadata": {},
         }
 
         chunk = ReasoningChunk.from_json(json_data)
@@ -419,14 +355,12 @@ class TestReasoningChunkDeserialization:
         json_data = {
             "id": "test-metadata-exclusion",
             "type": "reasoning",
-            "content": {
-                "pattern": "test pattern"
-            },
+            "content": {"pattern": "test pattern"},
             "metadata": {
                 "created_at": "2025-01-01T12:00:00",
                 "last_modified": "2025-01-01T12:00:00",
-                "custom_field": "custom_value"
-            }
+                "custom_field": "custom_value",
+            },
         }
 
         chunk = ReasoningChunk.from_json(json_data)
@@ -451,7 +385,7 @@ class TestReasoningChunkRoundTrip:
             tools_used=["tool1", "tool2"],
             tool_sequence=[{"tool": "tool1", "action": "parse"}],
             success_score=0.75,
-            metadata={"custom": "value"}
+            metadata={"custom": "value"},
         )
 
         json_data = original.to_json()
@@ -474,7 +408,7 @@ class TestReasoningChunkRoundTrip:
             chunk_id="test-stability",
             pattern="stability test",
             complexity="COMPLEX",
-            success_score=0.88
+            success_score=0.88,
         )
 
         # First round-trip
@@ -505,7 +439,7 @@ class TestReasoningChunkRepresentation:
             complexity="MEDIUM",
             subgoals=[{"id": "sg1"}, {"id": "sg2"}],
             tools_used=["tool1", "tool2", "tool3"],
-            success_score=0.65
+            success_score=0.65,
         )
 
         repr_str = repr(chunk)
@@ -521,10 +455,7 @@ class TestReasoningChunkRepresentation:
     def test_repr_short_pattern_not_truncated(self):
         """Test that short patterns are not truncated."""
         chunk = ReasoningChunk(
-            chunk_id="test-short-repr",
-            pattern="short",
-            complexity="SIMPLE",
-            success_score=0.5
+            chunk_id="test-short-repr", pattern="short", complexity="SIMPLE", success_score=0.5
         )
 
         repr_str = repr(chunk)
@@ -543,7 +474,7 @@ class TestReasoningChunkEdgeCases:
             subgoals=[],
             execution_order=[],
             tools_used=[],
-            tool_sequence=[]
+            tool_sequence=[],
         )
 
         assert chunk.subgoals == []
@@ -559,7 +490,7 @@ class TestReasoningChunkEdgeCases:
             subgoals=None,
             execution_order=None,
             tools_used=None,
-            tool_sequence=None
+            tool_sequence=None,
         )
 
         assert chunk.subgoals == []
@@ -569,21 +500,13 @@ class TestReasoningChunkEdgeCases:
 
     def test_empty_metadata_allowed(self):
         """Test that empty metadata dict is allowed."""
-        chunk = ReasoningChunk(
-            chunk_id="test-empty-metadata",
-            pattern="test pattern",
-            metadata={}
-        )
+        chunk = ReasoningChunk(chunk_id="test-empty-metadata", pattern="test pattern", metadata={})
 
         assert chunk.metadata == {}
 
     def test_none_metadata_converted_to_empty_dict(self):
         """Test that None metadata is converted to empty dict."""
-        chunk = ReasoningChunk(
-            chunk_id="test-none-metadata",
-            pattern="test pattern",
-            metadata=None
-        )
+        chunk = ReasoningChunk(chunk_id="test-none-metadata", pattern="test pattern", metadata=None)
 
         assert chunk.metadata == {}
 
@@ -597,27 +520,19 @@ class TestReasoningChunkEdgeCases:
                     "id": "sg1",
                     "description": "Complex subgoal",
                     "dependencies": ["sg2", "sg3"],
-                    "metadata": {
-                        "priority": 1,
-                        "tags": ["critical", "frontend"]
-                    }
+                    "metadata": {"priority": 1, "tags": ["critical", "frontend"]},
                 },
                 {
                     "id": "sg2",
                     "description": "Another subgoal",
                     "dependencies": [],
-                    "metadata": {"priority": 2}
-                }
+                    "metadata": {"priority": 2},
+                },
             ],
             execution_order=[
-                {
-                    "parallel": [
-                        {"sequential": ["sg2", "sg3"]},
-                        {"sequential": ["sg4"]}
-                    ]
-                },
-                {"sequential": ["sg1"]}
-            ]
+                {"parallel": [{"sequential": ["sg2", "sg3"]}, {"sequential": ["sg4"]}]},
+                {"sequential": ["sg1"]},
+            ],
         )
 
         # Verify complex structures are preserved
@@ -635,8 +550,7 @@ class TestReasoningChunkEdgeCases:
     def test_unicode_in_pattern(self):
         """Test that unicode characters in pattern are handled correctly."""
         chunk = ReasoningChunk(
-            chunk_id="test-unicode",
-            pattern="Implement feature with émojis 🚀 and spëcial çhars"
+            chunk_id="test-unicode", pattern="Implement feature with émojis 🚀 and spëcial çhars"
         )
 
         assert "émojis" in chunk.pattern
@@ -651,17 +565,14 @@ class TestReasoningChunkEdgeCases:
 
     def test_very_long_lists(self):
         """Test handling of very long lists."""
-        large_subgoals = [
-            {"id": f"sg{i}", "description": f"Subgoal {i}"}
-            for i in range(100)
-        ]
+        large_subgoals = [{"id": f"sg{i}", "description": f"Subgoal {i}"} for i in range(100)]
         large_tools = [f"tool{i}" for i in range(50)]
 
         chunk = ReasoningChunk(
             chunk_id="test-large-lists",
             pattern="large lists test",
             subgoals=large_subgoals,
-            tools_used=large_tools
+            tools_used=large_tools,
         )
 
         assert len(chunk.subgoals) == 100
@@ -677,9 +588,7 @@ class TestReasoningChunkEdgeCases:
     def test_float_precision_in_success_score(self):
         """Test that float precision is preserved for success_score."""
         chunk = ReasoningChunk(
-            chunk_id="test-float-precision",
-            pattern="test pattern",
-            success_score=0.123456789
+            chunk_id="test-float-precision", pattern="test pattern", success_score=0.123456789
         )
 
         assert chunk.success_score == 0.123456789
@@ -696,30 +605,20 @@ class TestReasoningChunkComplexityLevels:
 
     def test_simple_complexity(self):
         """Test SIMPLE complexity level."""
-        chunk = ReasoningChunk(
-            chunk_id="test-simple",
-            pattern="simple query",
-            complexity="SIMPLE"
-        )
+        chunk = ReasoningChunk(chunk_id="test-simple", pattern="simple query", complexity="SIMPLE")
 
         assert chunk.complexity == "SIMPLE"
 
     def test_medium_complexity(self):
         """Test MEDIUM complexity level."""
-        chunk = ReasoningChunk(
-            chunk_id="test-medium",
-            pattern="medium query",
-            complexity="MEDIUM"
-        )
+        chunk = ReasoningChunk(chunk_id="test-medium", pattern="medium query", complexity="MEDIUM")
 
         assert chunk.complexity == "MEDIUM"
 
     def test_complex_complexity(self):
         """Test COMPLEX complexity level."""
         chunk = ReasoningChunk(
-            chunk_id="test-complex",
-            pattern="complex query",
-            complexity="COMPLEX"
+            chunk_id="test-complex", pattern="complex query", complexity="COMPLEX"
         )
 
         assert chunk.complexity == "COMPLEX"
@@ -727,9 +626,7 @@ class TestReasoningChunkComplexityLevels:
     def test_critical_complexity(self):
         """Test CRITICAL complexity level."""
         chunk = ReasoningChunk(
-            chunk_id="test-critical",
-            pattern="critical query",
-            complexity="CRITICAL"
+            chunk_id="test-critical", pattern="critical query", complexity="CRITICAL"
         )
 
         assert chunk.complexity == "CRITICAL"
@@ -741,9 +638,7 @@ class TestReasoningChunkSuccessScores:
     def test_zero_success_score(self):
         """Test success_score of 0.0 (complete failure)."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-zero",
-            pattern="failed pattern",
-            success_score=0.0
+            chunk_id="test-score-zero", pattern="failed pattern", success_score=0.0
         )
 
         assert chunk.success_score == 0.0
@@ -751,9 +646,7 @@ class TestReasoningChunkSuccessScores:
     def test_partial_success_score(self):
         """Test success_score between 0.0 and 1.0."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-partial",
-            pattern="partial success",
-            success_score=0.5
+            chunk_id="test-score-partial", pattern="partial success", success_score=0.5
         )
 
         assert chunk.success_score == 0.5
@@ -761,9 +654,7 @@ class TestReasoningChunkSuccessScores:
     def test_high_success_score(self):
         """Test success_score close to 1.0."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-high",
-            pattern="high success",
-            success_score=0.95
+            chunk_id="test-score-high", pattern="high success", success_score=0.95
         )
 
         assert chunk.success_score == 0.95
@@ -771,9 +662,7 @@ class TestReasoningChunkSuccessScores:
     def test_perfect_success_score(self):
         """Test success_score of 1.0 (perfect success)."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-perfect",
-            pattern="perfect pattern",
-            success_score=1.0
+            chunk_id="test-score-perfect", pattern="perfect pattern", success_score=1.0
         )
 
         assert chunk.success_score == 1.0

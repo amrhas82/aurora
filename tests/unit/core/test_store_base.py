@@ -33,7 +33,7 @@ class TestChunk(Chunk):
         }
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> 'TestChunk':
+    def from_json(cls, data: dict[str, Any]) -> "TestChunk":
         chunk_id = data["id"]
         content = data.get("content", {}).get("data", "test")
         return cls(chunk_id, content)
@@ -55,13 +55,13 @@ class TestStoreInterface:
     def test_store_has_required_methods(self):
         """Verify Store defines all required abstract methods."""
         required_methods = [
-            'save_chunk',
-            'get_chunk',
-            'update_activation',
-            'retrieve_by_activation',
-            'add_relationship',
-            'get_related_chunks',
-            'close',
+            "save_chunk",
+            "get_chunk",
+            "update_activation",
+            "retrieve_by_activation",
+            "add_relationship",
+            "get_related_chunks",
+            "close",
         ]
 
         for method_name in required_methods:
@@ -169,21 +169,14 @@ class StoreContractTests(ABC):
 
         # Add relationship
         result = store.add_relationship(
-            ChunkID(chunk1.id),
-            ChunkID(chunk2.id),
-            "depends_on",
-            weight=1.0
+            ChunkID(chunk1.id), ChunkID(chunk2.id), "depends_on", weight=1.0
         )
         assert result is True, "add_relationship should return True on success"
 
     def test_add_relationship_nonexistent_chunks(self, store):
         """Test adding relationship with non-existent chunks raises error."""
         with pytest.raises(ChunkNotFoundError):
-            store.add_relationship(
-                ChunkID("nonexistent:1"),
-                ChunkID("nonexistent:2"),
-                "depends_on"
-            )
+            store.add_relationship(ChunkID("nonexistent:1"), ChunkID("nonexistent:2"), "depends_on")
 
     def test_get_related_chunks_empty(self, store, sample_chunk):
         """Test getting related chunks when none exist."""
@@ -204,4 +197,4 @@ class StoreContractTests(ABC):
         store.close()
 
 
-__all__ = ['TestStoreInterface', 'StoreContractTests', 'TestChunk']
+__all__ = ["TestStoreInterface", "StoreContractTests", "TestChunk"]

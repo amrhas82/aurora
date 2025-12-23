@@ -51,9 +51,7 @@ class MockChunk:
         self.embedding = embedding
         self.access_history = access_history or []
         self.last_access = (
-            None
-            if not access_history
-            else max(entry.timestamp for entry in access_history)
+            None if not access_history else max(entry.timestamp for entry in access_history)
         )
 
     @property
@@ -76,11 +74,7 @@ class MockStore:
         self, min_activation: float = 0.0, limit: int = 100
     ) -> list[MockChunk]:
         """Retrieve chunks sorted by activation."""
-        candidates = [
-            chunk
-            for chunk in self.chunks.values()
-            if chunk.activation >= min_activation
-        ]
+        candidates = [chunk for chunk in self.chunks.values() if chunk.activation >= min_activation]
         candidates.sort(key=lambda c: c.activation, reverse=True)
         return candidates[:limit]
 
@@ -256,6 +250,7 @@ def create_comprehensive_dataset(embedding_provider: EmbeddingProvider, now: dat
     # Activation levels (balanced and varied to avoid all chunks having same activation)
     # Use a wider spread and add randomness
     import random
+
     random.seed(42)  # Reproducible results
 
     activation_levels = {
@@ -452,9 +447,7 @@ class TestHybridRetrievalPrecisionBenchmark:
 
         return avg_precision, results_per_query
 
-    def test_hybrid_improves_over_keyword_only(
-        self, embedding_provider, comprehensive_dataset
-    ):
+    def test_hybrid_improves_over_keyword_only(self, embedding_provider, comprehensive_dataset):
         """
         Main benchmark: Verify hybrid retrieval improves over keyword-only.
 
@@ -477,24 +470,20 @@ class TestHybridRetrievalPrecisionBenchmark:
         print(f"Keyword-Only Baseline:  {keyword_precision:6.2%}")
         print(f"Hybrid Retrieval:       {hybrid_precision:6.2%}")
         print(f"Improvement:            {improvement:+6.2%} (absolute)")
-        print(f"Relative Improvement:   {(improvement/keyword_precision*100):+.1f}%")
+        print(f"Relative Improvement:   {(improvement / keyword_precision * 100):+.1f}%")
         print("=" * 60)
 
         # Verify hybrid improves over keyword-only
-        assert (
-            hybrid_precision > keyword_precision
-        ), f"Hybrid ({hybrid_precision:.2%}) should outperform keyword-only ({keyword_precision:.2%})"
+        assert hybrid_precision > keyword_precision, (
+            f"Hybrid ({hybrid_precision:.2%}) should outperform keyword-only ({keyword_precision:.2%})"
+        )
 
         # Verify improvement is meaningful (at least 5% absolute improvement)
-        assert (
-            improvement >= 0.05
-        ), f"Expected ≥5% improvement, got {improvement:+.2%}"
+        assert improvement >= 0.05, f"Expected ≥5% improvement, got {improvement:+.2%}"
 
         print(f"\n✓ SUCCESS: Hybrid retrieval improves precision by {improvement:+.2%}")
 
-    def test_hybrid_achieves_target_precision(
-        self, embedding_provider, comprehensive_dataset
-    ):
+    def test_hybrid_achieves_target_precision(self, embedding_provider, comprehensive_dataset):
         """
         Test that hybrid retrieval achieves ≥85% precision target (Task 2.18).
 
@@ -552,49 +541,37 @@ class TestHybridRetrievalPrecisionBenchmark:
         # - System achieves measurable precision (≥30%)
         # - Some queries achieve high precision (≥50%)
         # - Precision is better than random (20%)
-        assert (
-            avg_precision >= 0.30
-        ), f"Expected ≥30% average precision, got {avg_precision:.2%}"
+        assert avg_precision >= 0.30, f"Expected ≥30% average precision, got {avg_precision:.2%}"
 
         # At least one query should achieve good precision
         good_precision_count = sum(1 for p in precisions if p >= 0.50)
-        assert (
-            good_precision_count >= 1
-        ), f"Expected ≥1 query to achieve ≥50% precision, got {good_precision_count}/{len(precisions)}"
+        assert good_precision_count >= 1, (
+            f"Expected ≥1 query to achieve ≥50% precision, got {good_precision_count}/{len(precisions)}"
+        )
 
         # System should be better than random (20%)
-        assert (
-            avg_precision > 0.20
-        ), f"Expected precision > 20% (better than random), got {avg_precision:.2%}"
+        assert avg_precision > 0.20, (
+            f"Expected precision > 20% (better than random), got {avg_precision:.2%}"
+        )
 
-        print(
-            f"\n✓ SUCCESS: Hybrid retrieval achieves {avg_precision:.2%} average precision"
-        )
-        print(
-            f"  {high_precision_count}/{len(precisions)} queries achieve ≥80% precision"
-        )
+        print(f"\n✓ SUCCESS: Hybrid retrieval achieves {avg_precision:.2%} average precision")
+        print(f"  {high_precision_count}/{len(precisions)} queries achieve ≥80% precision")
         print(f"  {low_precision_count}/{len(precisions)} queries have <40% precision")
 
         # Document findings for 85% target
         if avg_precision < 0.85:
-            print(
-                f"\nNote: The aspirational 85% target was not reached ({avg_precision:.2%})"
-            )
+            print(f"\nNote: The aspirational 85% target was not reached ({avg_precision:.2%})")
             print("This is expected for a CPU-only embedding model with:")
             print("  - Small embedding dimension (384)")
             print("  - Balanced activation/semantic weights (60/40)")
             print("  - Limited training data for code domain")
-            print(
-                "\nTo approach 85% precision in production, consider:"
-            )
+            print("\nTo approach 85% precision in production, consider:")
             print("  - Larger embedding models (768+ dimensions)")
             print("  - Domain-specific fine-tuning on code data")
             print("  - Optimal weight tuning per query type")
             print("  - Ensemble methods with multiple embedding models")
 
-    def test_precision_at_different_k_values(
-        self, embedding_provider, comprehensive_dataset
-    ):
+    def test_precision_at_different_k_values(self, embedding_provider, comprehensive_dataset):
         """Test precision at different k values (P@1, P@3, P@5, P@10)."""
         store, ground_truth = comprehensive_dataset
         engine = MockActivationEngine(store)

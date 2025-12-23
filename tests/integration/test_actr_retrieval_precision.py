@@ -96,10 +96,7 @@ def create_test_dataset(now: datetime):
         # Create access history based on pattern
         if pattern == "frequent":
             # 10 accesses over past week
-            history = [
-                AccessHistoryEntry(timestamp=now - timedelta(days=i))
-                for i in range(10)
-            ]
+            history = [AccessHistoryEntry(timestamp=now - timedelta(days=i)) for i in range(10)]
             last_access = now - timedelta(days=1)
         elif pattern == "recent":
             # 1 access 1 hour ago
@@ -172,16 +169,12 @@ class TestActivationRetrievalPrecision:
         retriever = ActivationRetriever(engine)
 
         # Create chunks with empty access history for baseline
-        baseline_chunks = [
-            MockChunk(c.id, c.keywords, [], None) for c in dataset["chunks"]
-        ]
+        baseline_chunks = [MockChunk(c.id, c.keywords, [], None) for c in dataset["chunks"]]
 
         query = "database query"
         query_keywords = {"database", "query"}
         ground_truth = dataset["ground_truth"]
-        relevant_ids = (
-            ground_truth[query]["highly_relevant"] | ground_truth[query]["relevant"]
-        )
+        relevant_ids = ground_truth[query]["highly_relevant"] | ground_truth[query]["relevant"]
 
         results = retriever.retrieve(
             candidates=baseline_chunks,
@@ -223,9 +216,7 @@ class TestActivationRetrievalPrecision:
         query = "database query"
         query_keywords = {"database", "query"}
         ground_truth = dataset["ground_truth"]
-        relevant_ids = (
-            ground_truth[query]["highly_relevant"] | ground_truth[query]["relevant"]
-        )
+        relevant_ids = ground_truth[query]["highly_relevant"] | ground_truth[query]["relevant"]
         highly_relevant_ids = ground_truth[query]["highly_relevant"]
 
         # Use chunks with actual access history
@@ -253,9 +244,7 @@ class TestActivationRetrievalPrecision:
                 if r.chunk_id in relevant_ids
                 else "no"
             )
-            print(
-                f"  {i}. {r.chunk_id:20s} (act={r.activation:6.3f}) [relevant={rel_level}]"
-            )
+            print(f"  {i}. {r.chunk_id:20s} (act={r.activation:6.3f}) [relevant={rel_level}]")
         print(f"Precision@3: {p3:.1%}")
         print(f"Precision@5: {p5:.1%}")
 
@@ -317,9 +306,7 @@ class TestActivationRetrievalPrecision:
         query = "network request"
         query_keywords = {"network", "request"}
         ground_truth = dataset["ground_truth"]
-        relevant_ids = (
-            ground_truth[query]["highly_relevant"] | ground_truth[query]["relevant"]
-        )
+        relevant_ids = ground_truth[query]["highly_relevant"] | ground_truth[query]["relevant"]
 
         results = retriever.retrieve_with_graph(
             candidates=dataset["chunks"],

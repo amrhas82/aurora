@@ -152,22 +152,22 @@ class TestHybridRetrieverInit:
         engine = MockActivationEngine()
         provider = EmbeddingProvider()
 
-        aurora_config = MockConfig({
-            "context": {
-                "code": {
-                    "hybrid_weights": {
-                        "activation": 0.8,
-                        "semantic": 0.2,
-                        "top_k": 75,
-                        "fallback_to_activation": False,
+        aurora_config = MockConfig(
+            {
+                "context": {
+                    "code": {
+                        "hybrid_weights": {
+                            "activation": 0.8,
+                            "semantic": 0.2,
+                            "top_k": 75,
+                            "fallback_to_activation": False,
+                        }
                     }
                 }
             }
-        })
-
-        retriever = HybridRetriever(
-            store, engine, provider, aurora_config=aurora_config
         )
+
+        retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
 
         assert retriever.config.activation_weight == 0.8
         assert retriever.config.semantic_weight == 0.2
@@ -185,16 +185,18 @@ class TestHybridRetrieverInit:
             semantic_weight=0.3,
         )
 
-        aurora_config = MockConfig({
-            "context": {
-                "code": {
-                    "hybrid_weights": {
-                        "activation": 0.9,
-                        "semantic": 0.1,
+        aurora_config = MockConfig(
+            {
+                "context": {
+                    "code": {
+                        "hybrid_weights": {
+                            "activation": 0.9,
+                            "semantic": 0.1,
+                        }
                     }
                 }
             }
-        })
+        )
 
         retriever = HybridRetriever(
             store,
@@ -214,21 +216,21 @@ class TestHybridRetrieverInit:
         engine = MockActivationEngine()
         provider = EmbeddingProvider()
 
-        aurora_config = MockConfig({
-            "context": {
-                "code": {
-                    "hybrid_weights": {
-                        "activation": 0.75,
-                        "semantic": 0.25,
-                        # top_k and fallback_to_activation not specified
+        aurora_config = MockConfig(
+            {
+                "context": {
+                    "code": {
+                        "hybrid_weights": {
+                            "activation": 0.75,
+                            "semantic": 0.25,
+                            # top_k and fallback_to_activation not specified
+                        }
                     }
                 }
             }
-        })
-
-        retriever = HybridRetriever(
-            store, engine, provider, aurora_config=aurora_config
         )
+
+        retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
 
         assert retriever.config.activation_weight == 0.75
         assert retriever.config.semantic_weight == 0.25
@@ -243,9 +245,7 @@ class TestHybridRetrieverInit:
 
         aurora_config = MockConfig({"context": {"code": {}}})
 
-        retriever = HybridRetriever(
-            store, engine, provider, aurora_config=aurora_config
-        )
+        retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
 
         # Should use all defaults
         assert retriever.config.activation_weight == 0.6
@@ -258,16 +258,18 @@ class TestHybridRetrieverInit:
         engine = MockActivationEngine()
         provider = EmbeddingProvider()
 
-        aurora_config = MockConfig({
-            "context": {
-                "code": {
-                    "hybrid_weights": {
-                        "activation": 0.5,
-                        "semantic": 0.6,  # Sum > 1.0
+        aurora_config = MockConfig(
+            {
+                "context": {
+                    "code": {
+                        "hybrid_weights": {
+                            "activation": 0.5,
+                            "semantic": 0.6,  # Sum > 1.0
+                        }
                     }
                 }
             }
-        })
+        )
 
         with pytest.raises(ValueError, match="Weights must sum to 1.0"):
             HybridRetriever(store, engine, provider, aurora_config=aurora_config)
@@ -337,9 +339,7 @@ class TestHybridRetrieverRetrieve:
             activation_weight=1.0,
             semantic_weight=0.0,
         )
-        retriever = HybridRetriever(
-            store, engine, provider, config=config_activation_only
-        )
+        retriever = HybridRetriever(store, engine, provider, config=config_activation_only)
 
         results = retriever.retrieve("calculate total", top_k=2)
 
@@ -352,9 +352,7 @@ class TestHybridRetrieverRetrieve:
             activation_weight=0.0,
             semantic_weight=1.0,
         )
-        retriever = HybridRetriever(
-            store, engine, provider, config=config_semantic_only
-        )
+        retriever = HybridRetriever(store, engine, provider, config=config_semantic_only)
 
         results = retriever.retrieve("calculate total", top_k=2)
 

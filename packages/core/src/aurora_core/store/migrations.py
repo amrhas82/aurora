@@ -29,7 +29,7 @@ class Migration:
         from_version: int,
         to_version: int,
         upgrade_fn: Callable[[sqlite3.Connection], None],
-        description: str
+        description: str,
     ):
         self.from_version = from_version
         self.to_version = to_version
@@ -52,8 +52,7 @@ class Migration:
         except sqlite3.Error as e:
             conn.rollback()
             raise StorageError(
-                f"Migration failed: v{self.from_version} -> v{self.to_version}",
-                details=str(e)
+                f"Migration failed: v{self.from_version} -> v{self.to_version}", details=str(e)
             )
 
 
@@ -77,20 +76,24 @@ class MigrationManager:
         Add new migrations here as the schema evolves.
         """
         # Migration v1 -> v2: Add access history tracking
-        self.add_migration(Migration(
-            from_version=1,
-            to_version=2,
-            upgrade_fn=self._migrate_v1_to_v2,
-            description="Add access history tracking (access_history JSON, first_access, last_access)"
-        ))
+        self.add_migration(
+            Migration(
+                from_version=1,
+                to_version=2,
+                upgrade_fn=self._migrate_v1_to_v2,
+                description="Add access history tracking (access_history JSON, first_access, last_access)",
+            )
+        )
 
         # Migration v2 -> v3: Add embeddings support
-        self.add_migration(Migration(
-            from_version=2,
-            to_version=3,
-            upgrade_fn=self._migrate_v2_to_v3,
-            description="Add embeddings column to chunks table for semantic retrieval"
-        ))
+        self.add_migration(
+            Migration(
+                from_version=2,
+                to_version=3,
+                upgrade_fn=self._migrate_v2_to_v3,
+                description="Add embeddings column to chunks table for semantic retrieval",
+            )
+        )
 
     def _migrate_v1_to_v2(self, conn: sqlite3.Connection) -> None:
         """
@@ -233,7 +236,8 @@ class MigrationManager:
 
         # Find and apply migrations in order
         applicable_migrations = [
-            m for m in self._migrations
+            m
+            for m in self._migrations
             if m.from_version >= current_version and m.to_version <= SCHEMA_VERSION
         ]
 
@@ -247,7 +251,7 @@ class MigrationManager:
             # Update schema version
             conn.execute(
                 "INSERT OR REPLACE INTO schema_version (version) VALUES (?)",
-                (migration.to_version,)
+                (migration.to_version,),
             )
             conn.commit()
 
@@ -279,15 +283,10 @@ class MigrationManager:
             shutil.copy2(db_path, backup_path)
             return str(backup_path)
         except Exception as e:
-            raise StorageError(
-                f"Failed to backup database: {db_path}",
-                details=str(e)
-            )
+            raise StorageError(f"Failed to backup database: {db_path}", details=str(e))
 
     def migrate_with_backup(
-        self,
-        conn: sqlite3.Connection,
-        db_path: str | None = None
+        self, conn: sqlite3.Connection, db_path: str | None = None
     ) -> str | None:
         """
         Migrate database with automatic backup.
@@ -332,7 +331,7 @@ def get_migration_manager() -> MigrationManager:
 
 
 __all__ = [
-    'Migration',
-    'MigrationManager',
-    'get_migration_manager',
+    "Migration",
+    "MigrationManager",
+    "get_migration_manager",
 ]

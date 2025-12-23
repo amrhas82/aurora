@@ -27,11 +27,13 @@ class TestTransientErrorRecovery:
         metrics = MetricsCollector()
 
         # Mock LLM call that fails twice, then succeeds
-        llm_call = Mock(side_effect=[
-            TimeoutError("LLM timeout"),
-            TimeoutError("LLM timeout"),
-            {"response": "success"}
-        ])
+        llm_call = Mock(
+            side_effect=[
+                TimeoutError("LLM timeout"),
+                TimeoutError("LLM timeout"),
+                {"response": "success"},
+            ]
+        )
 
         # Execute with retry
         start_time = time.time()
@@ -57,10 +59,9 @@ class TestTransientErrorRecovery:
         handler = RetryHandler(max_retries=3, base_delay=0.01)
 
         # Mock database operation that's locked initially
-        db_operation = Mock(side_effect=[
-            StorageError("Database is locked", "SQLite lock"),
-            "success"
-        ])
+        db_operation = Mock(
+            side_effect=[StorageError("Database is locked", "SQLite lock"), "success"]
+        )
 
         result = handler.execute(db_operation)
 
@@ -72,10 +73,9 @@ class TestTransientErrorRecovery:
         handler = RetryHandler(max_retries=3, base_delay=0.01)
 
         # Mock network operation that fails once
-        network_call = Mock(side_effect=[
-            ConnectionError("Connection refused"),
-            {"data": "success"}
-        ])
+        network_call = Mock(
+            side_effect=[ConnectionError("Connection refused"), {"data": "success"}]
+        )
 
         result = handler.execute(network_call)
 
@@ -108,9 +108,7 @@ class TestNonRecoverableErrors:
         handler = RetryHandler(max_retries=3, base_delay=0.01)
 
         # Mock operation that exceeds budget
-        operation = Mock(side_effect=BudgetExceededError(
-            "Budget exceeded", 10.0, 5.0, 2.0
-        ))
+        operation = Mock(side_effect=BudgetExceededError("Budget exceeded", 10.0, 5.0, 2.0))
 
         with pytest.raises(BudgetExceededError):
             handler.execute(operation)
@@ -202,11 +200,13 @@ class TestMetricsAndAlertingIntegration:
         stats = metrics.get_metrics()
 
         # Evaluate alerts
-        alerts = alerting.evaluate({
-            "error_rate": stats["errors"]["error_rate"],
-            "p95_latency": stats["queries"]["p95_latency"],
-            "cache_hit_rate": 0.5,  # Good cache rate
-        })
+        alerts = alerting.evaluate(
+            {
+                "error_rate": stats["errors"]["error_rate"],
+                "p95_latency": stats["queries"]["p95_latency"],
+                "cache_hit_rate": 0.5,  # Good cache rate
+            }
+        )
 
         # Should trigger high error rate alert (80% > 5%)
         assert len(alerts) >= 1
@@ -227,11 +227,13 @@ class TestMetricsAndAlertingIntegration:
         stats = metrics.get_metrics()
 
         # Evaluate alerts
-        alerts = alerting.evaluate({
-            "error_rate": stats["errors"]["error_rate"],
-            "p95_latency": stats["queries"]["p95_latency"],
-            "cache_hit_rate": 0.5,
-        })
+        alerts = alerting.evaluate(
+            {
+                "error_rate": stats["errors"]["error_rate"],
+                "p95_latency": stats["queries"]["p95_latency"],
+                "cache_hit_rate": 0.5,
+            }
+        )
 
         # Should trigger high p95 latency alert (>10s)
         assert len(alerts) >= 1
@@ -252,11 +254,13 @@ class TestMetricsAndAlertingIntegration:
         stats = metrics.get_metrics()
 
         # Evaluate alerts
-        alerts = alerting.evaluate({
-            "error_rate": 0.0,
-            "p95_latency": 1.0,
-            "cache_hit_rate": stats["cache"]["hit_rate"],
-        })
+        alerts = alerting.evaluate(
+            {
+                "error_rate": 0.0,
+                "p95_latency": 1.0,
+                "cache_hit_rate": stats["cache"]["hit_rate"],
+            }
+        )
 
         # Should trigger low cache hit rate alert (10% < 20%)
         assert len(alerts) >= 1
@@ -287,10 +291,7 @@ class TestFullResilienceWorkflow:
         mock_sleep.side_effect = sleep_side_effect
 
         # Mock query that fails once then succeeds
-        query_call = Mock(side_effect=[
-            TimeoutError("Timeout"),
-            {"result": "success"}
-        ])
+        query_call = Mock(side_effect=[TimeoutError("Timeout"), {"result": "success"}])
 
         # Execute complete workflow
         def execute_query():
@@ -299,7 +300,6 @@ class TestFullResilienceWorkflow:
 
             # 2. Execute with retry
             return retry_handler.execute(query_call)
-
 
         start_time = mock_time.return_value
         result = execute_query()
@@ -310,11 +310,13 @@ class TestFullResilienceWorkflow:
 
         # 4. Check alerts
         stats = metrics.get_metrics()
-        alerts = alerting.evaluate({
-            "error_rate": stats["errors"]["error_rate"],
-            "p95_latency": stats["queries"]["p95_latency"],
-            "cache_hit_rate": 1.0,  # Assume perfect cache
-        })
+        alerts = alerting.evaluate(
+            {
+                "error_rate": stats["errors"]["error_rate"],
+                "p95_latency": stats["queries"]["p95_latency"],
+                "cache_hit_rate": 1.0,  # Assume perfect cache
+            }
+        )
 
         # Verify results
         assert result == {"result": "success"}
@@ -375,10 +377,7 @@ class TestRecoveryRateVerification:
         # Simulate 100 operations with transient failures
         for i in range(total_attempts):
             # Each operation fails 1-2 times then succeeds
-            operation = Mock(side_effect=[
-                TimeoutError("Transient"),
-                {"result": f"success{i}"}
-            ])
+            operation = Mock(side_effect=[TimeoutError("Transient"), {"result": f"success{i}"}])
 
             try:
                 result = retry_handler.execute(operation)
@@ -404,10 +403,7 @@ class TestRecoveryRateVerification:
 
         # 95 recoverable, 5 non-recoverable
         for _i in range(recoverable_operations):
-            operation = Mock(side_effect=[
-                TimeoutError("Transient"),
-                "success"
-            ])
+            operation = Mock(side_effect=[TimeoutError("Transient"), "success"])
             try:
                 retry_handler.execute(operation)
                 successful_recoveries += 1

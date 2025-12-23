@@ -103,14 +103,16 @@ def synthesize_results(
     # Prepare agent outputs for synthesis
     agent_outputs = []
     for output in collect_result.agent_outputs:
-        agent_outputs.append({
-            "subgoal_index": output.subgoal_index,
-            "agent_name": output.agent_id,
-            "summary": output.summary,
-            "confidence": output.confidence,
-            "success": output.success,
-            "data": output.data or {},
-        })
+        agent_outputs.append(
+            {
+                "subgoal_index": output.subgoal_index,
+                "agent_name": output.agent_id,
+                "summary": output.summary,
+                "confidence": output.confidence,
+                "success": output.success,
+                "data": output.data or {},
+            }
+        )
 
     # Aggregate metadata
     total_files_modified = 0
@@ -158,13 +160,15 @@ def synthesize_results(
     )
 
     # Add aggregated metadata
-    synthesis_result.metadata.update({
-        "subgoals_completed": subgoals_completed,
-        "subgoals_partial": subgoals_partial,
-        "subgoals_failed": subgoals_failed,
-        "total_files_modified": total_files_modified,
-        "user_interactions_count": user_interactions_count,
-    })
+    synthesis_result.metadata.update(
+        {
+            "subgoals_completed": subgoals_completed,
+            "subgoals_partial": subgoals_partial,
+            "subgoals_failed": subgoals_failed,
+            "total_files_modified": total_files_modified,
+            "user_interactions_count": user_interactions_count,
+        }
+    )
 
     # Estimate token counts for cost tracking
     # Use rough approximation: 1 token ≈ 4 characters for English text

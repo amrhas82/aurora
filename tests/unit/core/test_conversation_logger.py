@@ -175,9 +175,7 @@ class TestConversationLogger:
         assert unique_path == temp_log_dir / "test-4.md"
 
     # Test 14-17: Markdown formatting
-    def test_format_log_structure(
-        self, logger, sample_phase_data, sample_execution_summary
-    ):
+    def test_format_log_structure(self, logger, sample_phase_data, sample_execution_summary):
         """Test log format has correct structure."""
         content = logger._format_log(
             query="Test query",
@@ -195,9 +193,7 @@ class TestConversationLogger:
         assert "## Phase: Decompose" in content
         assert "## Execution Summary" in content
 
-    def test_format_log_json_blocks(
-        self, logger, sample_phase_data, sample_execution_summary
-    ):
+    def test_format_log_json_blocks(self, logger, sample_phase_data, sample_execution_summary):
         """Test JSON blocks are properly formatted."""
         content = logger._format_log(
             query="Test query",
@@ -236,9 +232,7 @@ class TestConversationLogger:
         assert "**Cost**: $0.0042" in content
         assert "**Tokens Used**:" in content
 
-    def test_format_log_with_metadata(
-        self, logger, sample_phase_data, sample_execution_summary
-    ):
+    def test_format_log_with_metadata(self, logger, sample_phase_data, sample_execution_summary):
         """Test log includes optional metadata."""
         metadata = {"extra_field": "extra_value"}
 
@@ -403,9 +397,7 @@ class TestConversationLogger:
             assert isinstance(parsed, dict)
 
         # Extract phase data
-        assess_match = re.search(
-            r"## Phase: Assess\n\n```json\n(.*?)\n```", content, re.DOTALL
-        )
+        assess_match = re.search(r"## Phase: Assess\n\n```json\n(.*?)\n```", content, re.DOTALL)
         assert assess_match
         assess_data = json.loads(assess_match.group(1))
         assert assess_data["complexity"] == "MEDIUM"
@@ -434,9 +426,7 @@ class TestConversationLogger:
         assert dir1 != dir2
 
     # Test 29: Integration test
-    def test_full_logging_workflow(
-        self, logger, sample_phase_data, sample_execution_summary
-    ):
+    def test_full_logging_workflow(self, logger, sample_phase_data, sample_execution_summary):
         """Test complete logging workflow."""
         with patch.object(logger, "_write_async", new_callable=AsyncMock) as mock_write:
             # Log interaction
@@ -480,9 +470,7 @@ class TestConversationLogger:
 
             assert log_path is not None
 
-    def test_log_interaction_with_empty_phases(
-        self, logger, sample_execution_summary
-    ):
+    def test_log_interaction_with_empty_phases(self, logger, sample_execution_summary):
         """Test logging with empty phase data."""
         with patch.object(logger, "_write_async", new_callable=AsyncMock):
             log_path = logger.log_interaction(

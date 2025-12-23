@@ -13,7 +13,6 @@ This validates end-to-end functionality of:
 - Round-trip data integrity
 """
 
-
 import pytest
 
 from aurora_context_code.languages.python import PythonParser
@@ -158,23 +157,23 @@ def complex_function(items, threshold=10):
         """Test parsing and storing multiple files."""
         # Create multiple files
         file1 = tmp_path / "module1.py"
-        file1.write_text('''
+        file1.write_text("""
 def func_a():
     return 1
-''')
+""")
 
         file2 = tmp_path / "module2.py"
-        file2.write_text('''
+        file2.write_text("""
 def func_b():
     return 2
-''')
+""")
 
         file3 = tmp_path / "module3.py"
-        file3.write_text('''
+        file3.write_text("""
 class ClassC:
     def method_c(self):
         return 3
-''')
+""")
 
         # Parse all files and store chunks
         all_chunks = []
@@ -195,10 +194,10 @@ class ClassC:
         """Test updating stored chunks."""
         # Create file and parse
         test_file = tmp_path / "test.py"
-        test_file.write_text('''
+        test_file.write_text("""
 def original_function():
     return "original"
-''')
+""")
 
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -336,11 +335,11 @@ class TestErrorHandling:
     def test_parse_broken_file(self, parser, memory_store, tmp_path):
         """Test handling of broken Python files."""
         broken_file = tmp_path / "broken.py"
-        broken_file.write_text('''
+        broken_file.write_text("""
 def broken_function(x, y)
     # Missing colon
     return x + y
-''')
+""")
 
         # Parser should handle gracefully (return empty or partial results)
         chunks = parser.parse(broken_file)
@@ -357,10 +356,10 @@ def broken_function(x, y)
         parser = PythonParser()
 
         test_file = tmp_path / "test.py"
-        test_file.write_text('''
+        test_file.write_text("""
 def test_func():
     return 42
-''')
+""")
 
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -386,10 +385,10 @@ class TestPersistence:
 
         # Create test file
         test_file = tmp_path / "test.py"
-        test_file.write_text('''
+        test_file.write_text("""
 def persistent_function():
     return "persisted"
-''')
+""")
 
         chunks = parser.parse(test_file)
         assert len(chunks) == 1

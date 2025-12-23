@@ -62,7 +62,6 @@ __all__ = [
     "RetrievalResult",
     "BatchRetriever",
     "ChunkData",
-
     # Formula components
     "BaseLevelActivation",
     "BLAConfig",
@@ -83,13 +82,11 @@ __all__ = [
     "AGGRESSIVE_DECAY",
     "MODERATE_DECAY",
     "GENTLE_DECAY",
-
     # Graph caching
     "RelationshipProvider",
     "GraphCacheConfig",
     "RelationshipGraphCache",
     "CachedSpreadingActivation",
-
     # Configuration
     "ActivationConfig",
 ]

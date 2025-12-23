@@ -51,12 +51,12 @@ class StoreProtocol(Protocol):
 # Chunk type inference patterns
 # Maps query keywords to likely chunk types
 CHUNK_TYPE_PATTERNS = {
-    'function': ['function', 'def', 'method', 'call', 'invoke', 'execute'],
-    'class': ['class', 'object', 'instance', 'type', 'interface'],
-    'module': ['module', 'file', 'import', 'package'],
-    'variable': ['variable', 'const', 'global', 'field', 'attribute'],
-    'test': ['test', 'spec', 'unittest', 'assert', 'mock'],
-    'documentation': ['doc', 'comment', 'readme', 'guide', 'help'],
+    "function": ["function", "def", "method", "call", "invoke", "execute"],
+    "class": ["class", "object", "instance", "type", "interface"],
+    "module": ["module", "file", "import", "package"],
+    "variable": ["variable", "const", "global", "field", "attribute"],
+    "test": ["test", "spec", "unittest", "assert", "mock"],
+    "documentation": ["doc", "comment", "readme", "guide", "help"],
 }
 
 
@@ -73,6 +73,7 @@ class QueryOptimizationStats:
         type_filter_applied: Whether type filtering was used
         inferred_types: Chunk types inferred from query
     """
+
     total_chunks: int = 0
     filtered_chunks: int = 0
     candidates_evaluated: int = 0
@@ -276,7 +277,7 @@ class QueryOptimizer:
 
         # Process in batches
         for i in range(0, len(candidates), self.batch_size):
-            batch = candidates[i:i + self.batch_size]
+            batch = candidates[i : i + self.batch_size]
 
             for chunk in batch:
                 # Get spreading activation for this chunk
@@ -345,6 +346,7 @@ class QueryOptimizer:
             ...     print(f"Reduced search by {stats.reduction_ratio:.1%}")
         """
         import time
+
         start_time = time.time()
 
         stats = QueryOptimizationStats() if include_stats else None
@@ -383,11 +385,7 @@ class QueryOptimizer:
             stats.candidates_evaluated = len(activations)
 
         # Step 3: Sort by activation and take top-k
-        sorted_chunks = sorted(
-            activations.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:top_k]
+        sorted_chunks = sorted(activations.items(), key=lambda x: x[1], reverse=True)[:top_k]
 
         # Step 4: Create RetrievalResult objects
         results = [
@@ -395,7 +393,7 @@ class QueryOptimizer:
                 chunk_id=chunk_id,
                 activation=activation,
                 components=None,  # Don't include components for speed
-                rank=rank
+                rank=rank,
             )
             for rank, (chunk_id, activation) in enumerate(sorted_chunks, start=1)
         ]
@@ -462,18 +460,38 @@ class QueryOptimizer:
 
         # Remove common stop words (basic set)
         stop_words = {
-            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for',
-            'from', 'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on',
-            'that', 'the', 'to', 'was', 'will', 'with'
+            "a",
+            "an",
+            "and",
+            "are",
+            "as",
+            "at",
+            "be",
+            "by",
+            "for",
+            "from",
+            "has",
+            "he",
+            "in",
+            "is",
+            "it",
+            "its",
+            "of",
+            "on",
+            "that",
+            "the",
+            "to",
+            "was",
+            "will",
+            "with",
         }
 
         return {word for word in words if word not in stop_words}
 
 
-
 __all__ = [
-    'QueryOptimizer',
-    'QueryOptimizationStats',
-    'StoreProtocol',
-    'CHUNK_TYPE_PATTERNS',
+    "QueryOptimizer",
+    "QueryOptimizationStats",
+    "StoreProtocol",
+    "CHUNK_TYPE_PATTERNS",
 ]

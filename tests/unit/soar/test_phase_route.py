@@ -21,29 +21,35 @@ def agent_registry():
     registry = AgentRegistry()
 
     # Register test agents
-    registry.register(AgentInfo(
-        id="code-analyzer",
-        name="Code Analyzer",
-        description="Analyzes code structure",
-        capabilities=["code", "analysis"],
-        agent_type="local",
-    ))
+    registry.register(
+        AgentInfo(
+            id="code-analyzer",
+            name="Code Analyzer",
+            description="Analyzes code structure",
+            capabilities=["code", "analysis"],
+            agent_type="local",
+        )
+    )
 
-    registry.register(AgentInfo(
-        id="test-runner",
-        name="Test Runner",
-        description="Runs tests",
-        capabilities=["testing", "validation"],
-        agent_type="local",
-    ))
+    registry.register(
+        AgentInfo(
+            id="test-runner",
+            name="Test Runner",
+            description="Runs tests",
+            capabilities=["testing", "validation"],
+            agent_type="local",
+        )
+    )
 
-    registry.register(AgentInfo(
-        id="refactoring-engine",
-        name="Refactoring Engine",
-        description="Refactors code",
-        capabilities=["code", "refactoring"],
-        agent_type="local",
-    ))
+    registry.register(
+        AgentInfo(
+            id="refactoring-engine",
+            name="Refactoring Engine",
+            description="Refactors code",
+            capabilities=["code", "refactoring"],
+            agent_type="local",
+        )
+    )
 
     return registry
 
@@ -321,8 +327,18 @@ class TestValidateRouting:
     def test_validate_missing_assignment(self, agent_registry):
         """Test validation fails when subgoal has no assignment."""
         subgoals = [
-            {"description": "Test 1", "suggested_agent": "code-analyzer", "is_critical": True, "depends_on": []},
-            {"description": "Test 2", "suggested_agent": "test-runner", "is_critical": True, "depends_on": []},
+            {
+                "description": "Test 1",
+                "suggested_agent": "code-analyzer",
+                "is_critical": True,
+                "depends_on": [],
+            },
+            {
+                "description": "Test 2",
+                "suggested_agent": "test-runner",
+                "is_critical": True,
+                "depends_on": [],
+            },
         ]
 
         agent1 = agent_registry.get("code-analyzer")

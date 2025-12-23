@@ -54,16 +54,16 @@ You MUST respond with valid JSON only. Use this exact format:
         prompt_parts = [
             f"Subgoal: {subgoal}",
             f"\nAgent Output:\n{json.dumps(agent_output, indent=2)}",
-            "\nVerify this agent output and provide quality assessment in JSON format."
+            "\nVerify this agent output and provide quality assessment in JSON format.",
         ]
 
         return "\n".join(prompt_parts)
 
     def _format_single_example(self, example: dict[str, Any]) -> str:
         """Format a single example for agent output verification."""
-        return f"""Subgoal: {example.get('subgoal', '')}
-Agent Output: {json.dumps(example.get('output', {}), indent=2)}
-Verification: {json.dumps(example.get('verification', {}), indent=2)}"""
+        return f"""Subgoal: {example.get("subgoal", "")}
+Agent Output: {json.dumps(example.get("output", {}), indent=2)}
+Verification: {json.dumps(example.get("verification", {}), indent=2)}"""
 
 
 __all__ = ["VerifyAgentOutputPromptTemplate"]

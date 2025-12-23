@@ -103,14 +103,20 @@ def synthesize_results(
         # Gather agent summaries
         summaries = []
         for i, output in enumerate(agent_outputs):
-            subgoal = decomposition.get("subgoals", [])[i] if i < len(decomposition.get("subgoals", [])) else {}
-            summaries.append({
-                "subgoal_id": i,
-                "subgoal_description": subgoal.get("description", ""),
-                "agent": output.get("agent_name", "unknown"),
-                "summary": output.get("summary", ""),
-                "confidence": output.get("confidence", 0.0),
-            })
+            subgoal = (
+                decomposition.get("subgoals", [])[i]
+                if i < len(decomposition.get("subgoals", []))
+                else {}
+            )
+            summaries.append(
+                {
+                    "subgoal_id": i,
+                    "subgoal_description": subgoal.get("description", ""),
+                    "agent": output.get("agent_name", "unknown"),
+                    "summary": output.get("summary", ""),
+                    "confidence": output.get("confidence", 0.0),
+                }
+            )
 
         # Build synthesis prompt
         system_prompt = _build_synthesis_system_prompt()
@@ -136,7 +142,9 @@ def synthesize_results(
                 raise ValueError(
                     f"Synthesis parsing failed after {max_retries} retries: {e}"
                 ) from e
-            feedback = f"Previous synthesis had parsing error: {e}. Please ensure proper formatting."
+            feedback = (
+                f"Previous synthesis had parsing error: {e}. Please ensure proper formatting."
+            )
             retry_count += 1
             continue
 
@@ -263,23 +271,18 @@ def verify_synthesis(
     missing = [f for f in required_fields if f not in verification]
     if missing:
         raise ValueError(
-            f"Verification missing required fields: {missing}\n"
-            f"Response: {verification}"
+            f"Verification missing required fields: {missing}\nResponse: {verification}"
         )
 
     # Validate score ranges
     for score_field in required_fields:
         score = verification[score_field]
         if not isinstance(score, (int, float)) or not (0.0 <= score <= 1.0):
-            raise ValueError(
-                f"Invalid {score_field} score: {score} (must be float in [0.0, 1.0])"
-            )
+            raise ValueError(f"Invalid {score_field} score: {score} (must be float in [0.0, 1.0])")
 
     # Calculate expected overall score (equal weighting)
     expected_score = (
-        verification["coherence"] +
-        verification["completeness"] +
-        verification["factuality"]
+        verification["coherence"] + verification["completeness"] + verification["factuality"]
     ) / 3.0
 
     # Allow small floating point difference
@@ -433,10 +436,12 @@ def _extract_traceability(answer: str, summaries: list[dict[str, Any]]) -> list[
     for summary in summaries:
         agent_name = summary["agent"]
         if agent_name.lower() in answer.lower():
-            traceability.append({
-                "agent": agent_name,
-                "subgoal_id": summary["subgoal_id"],
-                "subgoal_description": summary["subgoal_description"],
-            })
+            traceability.append(
+                {
+                    "agent": agent_name,
+                    "subgoal_id": summary["subgoal_id"],
+                    "subgoal_description": summary["subgoal_description"],
+                }
+            )
 
     return traceability

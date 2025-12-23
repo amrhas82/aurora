@@ -38,6 +38,7 @@ class EscalationConfig:
         >>> config = EscalationConfig(threshold=0.6, enable_keyword_only=True)
         >>> handler = AutoEscalationHandler(config=config)
     """
+
     threshold: float = 0.6
     enable_keyword_only: bool = True
     force_aurora: bool = False
@@ -72,6 +73,7 @@ class EscalationResult:
         ...     # Use direct LLM call
         ...     response = llm_client.generate(query)
     """
+
     use_aurora: bool
     complexity: str
     confidence: float

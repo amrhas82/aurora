@@ -6,7 +6,6 @@ in a clear hierarchy for proper error handling and user-friendly messaging.
 """
 
 
-
 class AuroraError(Exception):
     """
     Base exception for all AURORA-specific errors.
@@ -43,6 +42,7 @@ class StorageError(AuroraError):
         - Transaction rollback failures
         - Disk space issues
     """
+
     pass
 
 
@@ -56,6 +56,7 @@ class ParseError(AuroraError):
         - Tree-sitter parsing failures
         - Malformed AST structures
     """
+
     pass
 
 
@@ -69,6 +70,7 @@ class ConfigurationError(AuroraError):
         - Schema validation failures
         - Conflicting configuration settings
     """
+
     pass
 
 
@@ -82,6 +84,7 @@ class ValidationError(AuroraError):
         - Missing required fields
         - Type mismatches
     """
+
     pass
 
 
@@ -165,12 +168,12 @@ class BudgetExceededError(AuroraError):
 
 
 __all__ = [
-    'AuroraError',
-    'StorageError',
-    'ParseError',
-    'ConfigurationError',
-    'ValidationError',
-    'ChunkNotFoundError',
-    'FatalError',
-    'BudgetExceededError',
+    "AuroraError",
+    "StorageError",
+    "ParseError",
+    "ConfigurationError",
+    "ValidationError",
+    "ChunkNotFoundError",
+    "FatalError",
+    "BudgetExceededError",
 ]

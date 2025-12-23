@@ -44,6 +44,7 @@ class CodeChunk(Chunk):
     dependencies: list[str] = field(default_factory=list)
     complexity_score: float = 0.0
     language: str = "python"
+    embeddings: bytes | None = None
 
     def __init__(
         self,
@@ -58,6 +59,7 @@ class CodeChunk(Chunk):
         dependencies: list[str] | None = None,
         complexity_score: float = 0.0,
         language: str = "python",
+        embeddings: bytes | None = None,
     ):
         """
         Initialize a CodeChunk.
@@ -92,6 +94,7 @@ class CodeChunk(Chunk):
         self.dependencies = dependencies if dependencies is not None else []
         self.complexity_score = complexity_score
         self.language = language
+        self.embeddings = embeddings
 
         # Validate on construction
         self.validate()
@@ -119,17 +122,17 @@ class CodeChunk(Chunk):
                 "ast_summary": {
                     "complexity": self.complexity_score,
                     "element_type": self.element_type,
-                }
+                },
             },
             "metadata": {
                 "language": self.language,
                 "created_at": self.created_at.isoformat(),
                 "last_modified": self.updated_at.isoformat(),
-            }
+            },
         }
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> 'CodeChunk':
+    def from_json(cls, data: dict[str, Any]) -> "CodeChunk":
         """
         Deserialize chunk from JSON dict.
 
@@ -207,9 +210,7 @@ class CodeChunk(Chunk):
         """
         # Validate line numbers
         if self.line_start <= 0:
-            raise ValueError(
-                f"line_start must be > 0, got {self.line_start}"
-            )
+            raise ValueError(f"line_start must be > 0, got {self.line_start}")
 
         if self.line_end < self.line_start:
             raise ValueError(
@@ -225,9 +226,7 @@ class CodeChunk(Chunk):
 
         # Validate complexity score range
         if not (0.0 <= self.complexity_score <= 1.0):
-            raise ValueError(
-                f"complexity_score must be in [0.0, 1.0], got {self.complexity_score}"
-            )
+            raise ValueError(f"complexity_score must be in [0.0, 1.0], got {self.complexity_score}")
 
         # Validate element type
         valid_types = {"function", "class", "method"}
@@ -255,4 +254,4 @@ class CodeChunk(Chunk):
         )
 
 
-__all__ = ['CodeChunk']
+__all__ = ["CodeChunk"]

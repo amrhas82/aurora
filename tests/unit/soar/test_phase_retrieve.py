@@ -43,10 +43,7 @@ class TestRetrieveContext:
         result = retrieve_context("test query", "SIMPLE", mock_store)
 
         # Should call store with SIMPLE budget (5)
-        mock_store.retrieve_by_activation.assert_called_once_with(
-            min_activation=0.0,
-            limit=5
-        )
+        mock_store.retrieve_by_activation.assert_called_once_with(min_activation=0.0, limit=5)
 
         assert result["total_retrieved"] == 3
         assert result["budget"] == 5
@@ -63,10 +60,7 @@ class TestRetrieveContext:
         result = retrieve_context("test query", "MEDIUM", mock_store)
 
         # Should call store with MEDIUM budget (10)
-        mock_store.retrieve_by_activation.assert_called_once_with(
-            min_activation=0.0,
-            limit=10
-        )
+        mock_store.retrieve_by_activation.assert_called_once_with(min_activation=0.0, limit=10)
 
         assert result["budget"] == 10
         assert result["total_retrieved"] == 8
@@ -79,10 +73,7 @@ class TestRetrieveContext:
 
         result = retrieve_context("test query", "COMPLEX", mock_store)
 
-        mock_store.retrieve_by_activation.assert_called_once_with(
-            min_activation=0.0,
-            limit=15
-        )
+        mock_store.retrieve_by_activation.assert_called_once_with(min_activation=0.0, limit=15)
 
         assert result["budget"] == 15
         assert result["total_retrieved"] == 15
@@ -95,10 +86,7 @@ class TestRetrieveContext:
 
         result = retrieve_context("test query", "CRITICAL", mock_store)
 
-        mock_store.retrieve_by_activation.assert_called_once_with(
-            min_activation=0.0,
-            limit=20
-        )
+        mock_store.retrieve_by_activation.assert_called_once_with(min_activation=0.0, limit=20)
 
         assert result["budget"] == 20
         assert result["total_retrieved"] == 20
@@ -111,10 +99,7 @@ class TestRetrieveContext:
         result = retrieve_context("test query", "UNKNOWN", mock_store)
 
         # Should default to MEDIUM (10)
-        mock_store.retrieve_by_activation.assert_called_once_with(
-            min_activation=0.0,
-            limit=10
-        )
+        mock_store.retrieve_by_activation.assert_called_once_with(min_activation=0.0, limit=10)
 
         assert result["budget"] == 10
 
@@ -129,7 +114,10 @@ class TestRetrieveContext:
         reasoning_chunk2 = Mock(metadata={"chunk_type": "ReasoningChunk"})
 
         mock_store.retrieve_by_activation.return_value = [
-            code_chunk1, reasoning_chunk1, code_chunk2, reasoning_chunk2
+            code_chunk1,
+            reasoning_chunk1,
+            code_chunk2,
+            reasoning_chunk2,
         ]
 
         result = retrieve_context("test query", "MEDIUM", mock_store)
@@ -221,12 +209,15 @@ class TestRetrieveContext:
 class TestBudgetAllocationLogic:
     """Tests specifically for budget allocation correctness."""
 
-    @pytest.mark.parametrize("complexity,expected_budget", [
-        ("SIMPLE", 5),
-        ("MEDIUM", 10),
-        ("COMPLEX", 15),
-        ("CRITICAL", 20),
-    ])
+    @pytest.mark.parametrize(
+        "complexity,expected_budget",
+        [
+            ("SIMPLE", 5),
+            ("MEDIUM", 10),
+            ("COMPLEX", 15),
+            ("CRITICAL", 20),
+        ],
+    )
     def test_correct_budget_by_complexity(self, complexity, expected_budget):
         """Test each complexity level gets correct budget."""
         mock_store = Mock()

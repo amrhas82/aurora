@@ -43,9 +43,7 @@ class TestSimpleQueryE2E:
         """Test that SIMPLE queries bypass decomposition phases."""
         # Configure mock LLM responses
         # Assessment should return SIMPLE complexity
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         # Simple path should call solving LLM directly (not decompose)
         solving_response = MockLLMResponse(
@@ -69,27 +67,24 @@ class TestSimpleQueryE2E:
 
         # Verify assessment phase executed
         e2e_framework.assert_phase_executed(response, "phase1_assess")
-        assert (
-            response["metadata"]["phases"]["phase1_assess"]["complexity"]
-            == "SIMPLE"
-        )
+        assert response["metadata"]["phases"]["phase1_assess"]["complexity"] == "SIMPLE"
 
         # Verify retrieval phase executed
         e2e_framework.assert_phase_executed(response, "phase2_retrieve")
 
         # Verify decomposition phases SKIPPED
-        assert (
-            "phase3_decompose" not in response["metadata"]["phases"]
-        ), "SIMPLE query should skip decomposition"
-        assert (
-            "phase4_verify" not in response["metadata"]["phases"]
-        ), "SIMPLE query should skip verification"
-        assert (
-            "phase5_route" not in response["metadata"]["phases"]
-        ), "SIMPLE query should skip routing"
-        assert (
-            "phase6_collect" not in response["metadata"]["phases"]
-        ), "SIMPLE query should skip agent execution"
+        assert "phase3_decompose" not in response["metadata"]["phases"], (
+            "SIMPLE query should skip decomposition"
+        )
+        assert "phase4_verify" not in response["metadata"]["phases"], (
+            "SIMPLE query should skip verification"
+        )
+        assert "phase5_route" not in response["metadata"]["phases"], (
+            "SIMPLE query should skip routing"
+        )
+        assert "phase6_collect" not in response["metadata"]["phases"], (
+            "SIMPLE query should skip agent execution"
+        )
 
         # Verify response phase executed
         e2e_framework.assert_phase_executed(response, "phase9_respond")
@@ -97,9 +92,7 @@ class TestSimpleQueryE2E:
     def test_simple_query_performance(self, e2e_framework):
         """Test that SIMPLE queries complete in <2s."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="This is a simple answer.",
@@ -117,9 +110,7 @@ class TestSimpleQueryE2E:
         elapsed_time = time.time() - start_time
 
         # Verify performance requirement: <2s
-        assert (
-            elapsed_time < 2.0
-        ), f"Simple query took {elapsed_time:.2f}s, expected <2s"
+        assert elapsed_time < 2.0, f"Simple query took {elapsed_time:.2f}s, expected <2s"
 
         # Verify response completed successfully
         assert response["confidence"] > 0
@@ -128,9 +119,7 @@ class TestSimpleQueryE2E:
     def test_simple_query_budget_allocation(self, e2e_framework):
         """Test that SIMPLE queries use minimal budget allocation."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="Budget-conscious response.",
@@ -147,22 +136,16 @@ class TestSimpleQueryE2E:
 
         # Verify minimal context retrieval (SIMPLE budget: 5 chunks)
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
-        assert retrieve_meta["budget"] == 5, (
-            "SIMPLE queries should have budget of 5 chunks"
-        )
+        assert retrieve_meta["budget"] == 5, "SIMPLE queries should have budget of 5 chunks"
 
         # Verify low cost
         total_cost = response["metadata"].get("total_cost_usd", 0)
-        assert total_cost < 0.01, (
-            f"SIMPLE query cost ${total_cost}, expected <$0.01"
-        )
+        assert total_cost < 0.01, f"SIMPLE query cost ${total_cost}, expected <$0.01"
 
     def test_simple_query_cost_tracking(self, e2e_framework):
         """Test that cost tracking works for simple queries."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="Cost-tracked response.",
@@ -193,9 +176,7 @@ class TestSimpleQueryE2E:
     def test_simple_query_verbosity_levels(self, e2e_framework):
         """Test that all verbosity levels work for simple queries."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="Verbosity test response.",
@@ -216,9 +197,7 @@ class TestSimpleQueryE2E:
 
         # Reset mock for next call
         e2e_framework.mock_llm.configure_response("verbosity", solving_response)
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         # Test NORMAL mode
         response_normal = orchestrator.execute(query, verbosity="NORMAL")
@@ -228,9 +207,7 @@ class TestSimpleQueryE2E:
 
         # Reset mock for next call
         e2e_framework.mock_llm.configure_response("verbosity", solving_response)
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         # Test VERBOSE mode
         response_verbose = orchestrator.execute(query, verbosity="VERBOSE")
@@ -287,9 +264,7 @@ class TestSimpleQueryE2E:
         e2e_framework.store.save_chunk(test_chunk)
 
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="The hello function returns 'world'.",
@@ -318,9 +293,7 @@ class TestSimpleQueryE2E:
     def test_simple_query_error_handling(self, e2e_framework):
         """Test error handling in simple query path."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         # Don't configure solving LLM response - should use default
         orchestrator = e2e_framework.create_orchestrator()
@@ -337,9 +310,7 @@ class TestSimpleQueryE2E:
     def test_simple_query_metadata_completeness(self, e2e_framework):
         """Test that simple query responses include complete metadata."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="Complete metadata test.",
@@ -374,9 +345,7 @@ class TestSimpleQueryE2E:
     def test_simple_query_confidence_scoring(self, e2e_framework):
         """Test that simple queries return appropriate confidence scores."""
         # Configure responses with varying confidence
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="High confidence response.",
@@ -405,9 +374,7 @@ class TestSimpleQueryEdgeCases:
     def test_borderline_simple_assessment(self, e2e_framework):
         """Test query on borderline between SIMPLE and MEDIUM complexity."""
         # Configure LLM to return SIMPLE after borderline keyword match
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.75
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.75)
 
         solving_response = MockLLMResponse(
             content="Borderline complexity response.",
@@ -429,9 +396,7 @@ class TestSimpleQueryEdgeCases:
 
     def test_very_short_simple_query(self, e2e_framework):
         """Test very short simple queries."""
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.98
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.98)
 
         solving_response = MockLLMResponse(
             content="Short answer.",
@@ -453,9 +418,7 @@ class TestSimpleQueryEdgeCases:
     def test_simple_query_with_no_context(self, e2e_framework):
         """Test simple query when no relevant context is found."""
         # Empty store - no context available
-        e2e_framework.configure_assessment_response(
-            complexity="SIMPLE", confidence=0.95
-        )
+        e2e_framework.configure_assessment_response(complexity="SIMPLE", confidence=0.95)
 
         solving_response = MockLLMResponse(
             content="No context available, general response.",

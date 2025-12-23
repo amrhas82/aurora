@@ -45,7 +45,7 @@ class TestReasoningChunkStoreIntegration:
             chunk_id="reasoning_test_simple",
             pattern="implement feature X",
             complexity="SIMPLE",
-            success_score=0.8
+            success_score=0.8,
         )
 
     @pytest.fixture
@@ -60,32 +60,32 @@ class TestReasoningChunkStoreIntegration:
                     "id": "sg1",
                     "description": "Parse existing code",
                     "agent": "parser-agent",
-                    "dependencies": []
+                    "dependencies": [],
                 },
                 {
                     "id": "sg2",
                     "description": "Refactor implementation",
                     "agent": "editor-agent",
-                    "dependencies": ["sg1"]
+                    "dependencies": ["sg1"],
                 },
                 {
                     "id": "sg3",
                     "description": "Write comprehensive tests",
                     "agent": "test-agent",
-                    "dependencies": ["sg2"]
-                }
+                    "dependencies": ["sg2"],
+                },
             ],
             execution_order=[
                 {"sequential": ["sg1"]},
                 {"sequential": ["sg2"]},
-                {"parallel": [["sg3"], ["sg4"]]}
+                {"parallel": [["sg3"], ["sg4"]]},
             ],
             tools_used=["parser", "editor", "analyzer", "test-runner"],
             tool_sequence=[
                 {"tool": "parser", "file": "module.py", "duration_ms": 100},
                 {"tool": "editor", "file": "module.py", "lines_changed": 150},
                 {"tool": "analyzer", "target": "module.py"},
-                {"tool": "test-runner", "tests_run": 25, "tests_passed": 25}
+                {"tool": "test-runner", "tests_run": 25, "tests_passed": 25},
             ],
             success_score=0.92,
             metadata={
@@ -96,13 +96,15 @@ class TestReasoningChunkStoreIntegration:
                 "subgoals_completed": 3,
                 "subgoals_failed": 0,
                 "files_modified": 5,
-                "user_interactions": 2
-            }
+                "user_interactions": 2,
+            },
         )
 
     # ===== Memory Store Tests =====
 
-    def test_memory_store_save_and_retrieve_simple_chunk(self, memory_store, simple_reasoning_chunk):
+    def test_memory_store_save_and_retrieve_simple_chunk(
+        self, memory_store, simple_reasoning_chunk
+    ):
         """Test saving and retrieving simple ReasoningChunk from MemoryStore."""
         # Save chunk
         memory_store.save_chunk(simple_reasoning_chunk)
@@ -118,7 +120,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.complexity == simple_reasoning_chunk.complexity
         assert retrieved_chunk.success_score == simple_reasoning_chunk.success_score
 
-    def test_memory_store_save_and_retrieve_complex_chunk(self, memory_store, complex_reasoning_chunk):
+    def test_memory_store_save_and_retrieve_complex_chunk(
+        self, memory_store, complex_reasoning_chunk
+    ):
         """Test saving and retrieving complex ReasoningChunk from MemoryStore."""
         # Save chunk
         memory_store.save_chunk(complex_reasoning_chunk)
@@ -139,7 +143,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.success_score == complex_reasoning_chunk.success_score
         assert retrieved_chunk.metadata == complex_reasoning_chunk.metadata
 
-    def test_memory_store_round_trip_preserves_nested_data(self, memory_store, complex_reasoning_chunk):
+    def test_memory_store_round_trip_preserves_nested_data(
+        self, memory_store, complex_reasoning_chunk
+    ):
         """Test that nested data structures are preserved through round-trip."""
         # Save and retrieve
         memory_store.save_chunk(complex_reasoning_chunk)
@@ -185,7 +191,7 @@ class TestReasoningChunkStoreIntegration:
                 chunk_id=f"reasoning_multi_{i}",
                 pattern=f"pattern {i}",
                 complexity="MEDIUM",
-                success_score=0.5 + (i * 0.1)
+                success_score=0.5 + (i * 0.1),
             )
             for i in range(5)
         ]
@@ -204,7 +210,9 @@ class TestReasoningChunkStoreIntegration:
 
     # ===== SQLite Store Tests =====
 
-    def test_sqlite_store_save_and_retrieve_simple_chunk(self, sqlite_store, simple_reasoning_chunk):
+    def test_sqlite_store_save_and_retrieve_simple_chunk(
+        self, sqlite_store, simple_reasoning_chunk
+    ):
         """Test saving and retrieving simple ReasoningChunk from SQLiteStore."""
         # Save chunk
         sqlite_store.save_chunk(simple_reasoning_chunk)
@@ -220,7 +228,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.complexity == simple_reasoning_chunk.complexity
         assert retrieved_chunk.success_score == simple_reasoning_chunk.success_score
 
-    def test_sqlite_store_save_and_retrieve_complex_chunk(self, sqlite_store, complex_reasoning_chunk):
+    def test_sqlite_store_save_and_retrieve_complex_chunk(
+        self, sqlite_store, complex_reasoning_chunk
+    ):
         """Test saving and retrieving complex ReasoningChunk from SQLiteStore."""
         # Save chunk
         sqlite_store.save_chunk(complex_reasoning_chunk)
@@ -241,7 +251,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.success_score == complex_reasoning_chunk.success_score
         assert retrieved_chunk.metadata == complex_reasoning_chunk.metadata
 
-    def test_sqlite_store_round_trip_preserves_nested_data(self, sqlite_store, complex_reasoning_chunk):
+    def test_sqlite_store_round_trip_preserves_nested_data(
+        self, sqlite_store, complex_reasoning_chunk
+    ):
         """Test that nested data structures are preserved through SQLite round-trip."""
         # Save and retrieve
         sqlite_store.save_chunk(complex_reasoning_chunk)
@@ -283,7 +295,7 @@ class TestReasoningChunkStoreIntegration:
                 chunk_id=f"reasoning_sqlite_{i}",
                 pattern=f"sqlite pattern {i}",
                 complexity="COMPLEX",
-                success_score=0.6 + (i * 0.05)
+                success_score=0.6 + (i * 0.05),
             )
             for i in range(5)
         ]
@@ -309,7 +321,7 @@ class TestReasoningChunkStoreIntegration:
             pattern="persistent pattern",
             complexity="MEDIUM",
             success_score=0.75,
-            metadata={"test": "persistence"}
+            metadata={"test": "persistence"},
         )
 
         # Save chunk and close store
@@ -338,7 +350,7 @@ class TestReasoningChunkStoreIntegration:
             chunk_id="reasoning_unicode",
             pattern="Implement feature with émojis 🚀 and spëcial çhars",
             complexity="SIMPLE",
-            success_score=0.8
+            success_score=0.8,
         )
 
         # Test MemoryStore
@@ -361,7 +373,7 @@ class TestReasoningChunkStoreIntegration:
             execution_order=[],
             tools_used=[],
             tool_sequence=[],
-            success_score=0.8
+            success_score=0.8,
         )
 
         # Test MemoryStore
@@ -386,7 +398,7 @@ class TestReasoningChunkStoreIntegration:
             chunk_id="reasoning_float",
             pattern="test pattern",
             complexity="SIMPLE",
-            success_score=0.123456789
+            success_score=0.123456789,
         )
 
         # Test MemoryStore
@@ -402,16 +414,14 @@ class TestReasoningChunkStoreIntegration:
 
     def test_large_metadata_preserved(self, memory_store, sqlite_store):
         """Test that large metadata dictionaries are preserved."""
-        large_metadata = {
-            f"key_{i}": f"value_{i}" for i in range(100)
-        }
+        large_metadata = {f"key_{i}": f"value_{i}" for i in range(100)}
 
         chunk = ReasoningChunk(
             chunk_id="reasoning_large_meta",
             pattern="test pattern",
             complexity="SIMPLE",
             success_score=0.8,
-            metadata=large_metadata
+            metadata=large_metadata,
         )
 
         # Test MemoryStore
@@ -432,13 +442,13 @@ class TestReasoningChunkStoreIntegration:
             chunk_id="reasoning_activation",
             pattern="test pattern",
             complexity="SIMPLE",
-            success_score=0.8
+            success_score=0.8,
         )
 
         memory_store.save_chunk(chunk)
 
         # Apply multiple updates (should not raise)
-        memory_store.update_activation(chunk.id, 0.2)   # High score pattern
+        memory_store.update_activation(chunk.id, 0.2)  # High score pattern
         memory_store.update_activation(chunk.id, 0.05)  # Medium score pattern
         memory_store.update_activation(chunk.id, -0.1)  # Low score penalty
 
@@ -453,7 +463,7 @@ class TestReasoningChunkStoreIntegration:
             chunk_id="reasoning_failure",
             pattern="failed pattern",
             complexity="SIMPLE",
-            success_score=0.2  # Low score
+            success_score=0.2,  # Low score
         )
 
         memory_store.save_chunk(chunk)

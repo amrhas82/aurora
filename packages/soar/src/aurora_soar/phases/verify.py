@@ -107,7 +107,9 @@ def verify_decomposition(
     verification_option = _select_verification_option(complexity)
 
     # Track verification method for metadata
-    verification_method = "adversarial" if verification_option == VerificationOption.ADVERSARIAL else "self"
+    verification_method = (
+        "adversarial" if verification_option == VerificationOption.ADVERSARIAL else "self"
+    )
 
     # Track all attempts
     all_attempts: list[VerificationResult] = []
@@ -125,10 +127,7 @@ def verify_decomposition(
     all_attempts.append(verification)
 
     # Retry loop if needed
-    while (
-        verification.verdict == VerificationVerdict.RETRY
-        and retry_count < max_retries
-    ):
+    while verification.verdict == VerificationVerdict.RETRY and retry_count < max_retries:
         retry_count += 1
 
         # Generate retry feedback

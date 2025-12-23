@@ -54,10 +54,16 @@ class MockLLMClientFast(LLMClient):
 
         # Order matters - check more specific patterns first
         # Check synthesis verification BEFORE decomposition verification
-        if ("verify" in combined or "validate" in combined) and ("coherence" in combined or "factuality" in combined or "synthesis" in combined):
+        if ("verify" in combined or "validate" in combined) and (
+            "coherence" in combined or "factuality" in combined or "synthesis" in combined
+        ):
             # Verification of synthesis - has coherence and factuality
-            content = '{"coherence": 0.9, "completeness": 0.9, "factuality": 0.9, "overall_score": 0.9}'
-        elif ("verify" in combined or "validate" in combined) and ("verdict" in combined or "score" in combined):
+            content = (
+                '{"coherence": 0.9, "completeness": 0.9, "factuality": 0.9, "overall_score": 0.9}'
+            )
+        elif ("verify" in combined or "validate" in combined) and (
+            "verdict" in combined or "score" in combined
+        ):
             # Verification of decomposition - has verdict and issues
             content = '{"completeness": 0.9, "consistency": 0.9, "groundedness": 0.9, "routability": 0.9, "overall_score": 0.9, "verdict": "PASS", "issues": []}'
         elif "decompose" in combined or "break down" in combined:
@@ -75,12 +81,15 @@ class MockLLMClientFast(LLMClient):
             model="mock-fast",
             input_tokens=1,
             output_tokens=1,
-            finish_reason="stop"
+            finish_reason="stop",
         )
 
-    def generate_json(self, prompt: str, system: str = "", schema: dict | None = None, **kwargs) -> dict:
+    def generate_json(
+        self, prompt: str, system: str = "", schema: dict | None = None, **kwargs
+    ) -> dict:
         """Generate JSON response."""
         import json
+
         response = self.generate(prompt, system, **kwargs)
         return json.loads(response.content)
 
@@ -92,6 +101,7 @@ class NoOpCostTracker(CostTracker):
         """Initialize no-op tracker with isolated temp file."""
         import tempfile
         from pathlib import Path
+
         temp_dir = tempfile.mkdtemp()
         tracker_path = Path(temp_dir) / "perf_budget_tracker.json"
         super().__init__(monthly_limit_usd=999999.0, tracker_path=tracker_path)
@@ -184,8 +194,9 @@ class TestSOARPerformance:
         elapsed_s = end - start
         print(f"\nSimple query latency: {elapsed_s:.3f}s")
 
-        assert elapsed_s < SIMPLE_QUERY_TARGET_S, \
+        assert elapsed_s < SIMPLE_QUERY_TARGET_S, (
             f"Simple query took {elapsed_s:.3f}s, target is {SIMPLE_QUERY_TARGET_S}s"
+        )
 
         # Verify result structure
         assert "answer" in result
@@ -202,8 +213,9 @@ class TestSOARPerformance:
         elapsed_s = end - start
         print(f"\nComplex query latency: {elapsed_s:.3f}s")
 
-        assert elapsed_s < COMPLEX_QUERY_TARGET_S, \
+        assert elapsed_s < COMPLEX_QUERY_TARGET_S, (
             f"Complex query took {elapsed_s:.3f}s, target is {COMPLEX_QUERY_TARGET_S}s"
+        )
 
         # Verify result structure
         assert "answer" in result
@@ -236,8 +248,9 @@ class TestSOARPerformance:
         elapsed_s = end - start
         print(f"\nVerification phase: {elapsed_s:.3f}s")
 
-        assert elapsed_s < VERIFICATION_TARGET_S, \
+        assert elapsed_s < VERIFICATION_TARGET_S, (
             f"Verification took {elapsed_s:.3f}s, target is {VERIFICATION_TARGET_S}s"
+        )
 
     def test_throughput_sequential(self, orchestrator):
         """Benchmark sequential query throughput."""
@@ -254,7 +267,9 @@ class TestSOARPerformance:
 
         total_time = end - start
         queries_per_second = len(queries) / total_time
-        print(f"\nSequential throughput: {queries_per_second:.2f} queries/second ({total_time:.3f}s total for {len(queries)} queries)")
+        print(
+            f"\nSequential throughput: {queries_per_second:.2f} queries/second ({total_time:.3f}s total for {len(queries)} queries)"
+        )
 
         # No strict assertion, just measuring and reporting
         assert queries_per_second > 0, "Should complete queries"
@@ -351,7 +366,9 @@ class TestPhasePerformance:
             ],
             decomposition={
                 "goal": "Test query",
-                "subgoals": [{"id": "sg1", "description": "Test subgoal", "suggested_agent": "test-agent"}],
+                "subgoals": [
+                    {"id": "sg1", "description": "Test subgoal", "suggested_agent": "test-agent"}
+                ],
                 "execution_order": ["sg1"],
                 "expected_tools": [],
             },

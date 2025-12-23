@@ -293,9 +293,7 @@ class TestExecuteParallelSubgoals:
         metadata = {"retries": 0, "failed_subgoals": 0}
 
         start_time = time.time()
-        outputs = await _execute_parallel_subgoals(
-            subgoals, agent_map, context, 5.0, metadata
-        )
+        outputs = await _execute_parallel_subgoals(subgoals, agent_map, context, 5.0, metadata)
         elapsed = time.time() - start_time
 
         assert len(outputs) == 2
@@ -314,9 +312,7 @@ class TestExecuteParallelSubgoals:
         metadata = {"retries": 0, "failed_subgoals": 0}
 
         # Mock will succeed, but test exception handling structure
-        outputs = await _execute_parallel_subgoals(
-            subgoals, agent_map, context, 5.0, metadata
-        )
+        outputs = await _execute_parallel_subgoals(subgoals, agent_map, context, 5.0, metadata)
 
         assert len(outputs) == 1
 
@@ -335,9 +331,7 @@ class TestExecuteSequentialSubgoals:
         context = {}
         metadata = {"retries": 0, "failed_subgoals": 0}
 
-        outputs = await _execute_sequential_subgoals(
-            subgoals, agent_map, context, 5.0, metadata
-        )
+        outputs = await _execute_sequential_subgoals(subgoals, agent_map, context, 5.0, metadata)
 
         assert len(outputs) == 2
         assert all(o.success for o in outputs)
@@ -354,9 +348,7 @@ class TestExecuteSequentialSubgoals:
         metadata = {"retries": 0, "failed_subgoals": 0}
 
         # Mock agents succeed, but test structure allows continuation
-        outputs = await _execute_sequential_subgoals(
-            subgoals, agent_map, context, 5.0, metadata
-        )
+        outputs = await _execute_sequential_subgoals(subgoals, agent_map, context, 5.0, metadata)
 
         assert len(outputs) == 2
 
@@ -371,9 +363,7 @@ class TestExecuteSingleSubgoal:
         context = {}
         metadata = {"retries": 0, "failed_subgoals": 0}
 
-        output = await _execute_single_subgoal(
-            0, subgoal, test_agent, context, 5.0, metadata
-        )
+        output = await _execute_single_subgoal(0, subgoal, test_agent, context, 5.0, metadata)
 
         assert output.success is True
         assert output.agent_id == test_agent.id
@@ -403,9 +393,7 @@ class TestExecuteSingleSubgoal:
         context = {}
         metadata = {"retries": 0, "failed_subgoals": 0}
 
-        output = await _execute_single_subgoal(
-            0, subgoal, test_agent, context, 5.0, metadata
-        )
+        output = await _execute_single_subgoal(0, subgoal, test_agent, context, 5.0, metadata)
 
         assert "duration_ms" in output.execution_metadata
         assert "retry_count" in output.execution_metadata
@@ -532,9 +520,7 @@ class TestCriticalSubgoals:
 
         # Test that critical failures would abort
         # (with mock agents that succeed, we test the structure)
-        outputs = await _execute_sequential_subgoals(
-            subgoals, agent_map, context, 5.0, metadata
-        )
+        outputs = await _execute_sequential_subgoals(subgoals, agent_map, context, 5.0, metadata)
 
         # Both should execute successfully with mocks
         assert len(outputs) == 2

@@ -51,20 +51,13 @@ def agent_registry():
 @pytest.fixture
 def config():
     """Create test config."""
-    return Config({
-        "budget": {
-            "monthly_limit_usd": 10.0
-        }
-    })
+    return Config({"budget": {"monthly_limit_usd": 10.0}})
 
 
 @pytest.fixture
 def orchestrator(store, agent_registry, config, mock_llm_client, temp_tracker_path):
     """Create orchestrator with cost tracking."""
-    cost_tracker = CostTracker(
-        monthly_limit_usd=10.0,
-        tracker_path=temp_tracker_path
-    )
+    cost_tracker = CostTracker(monthly_limit_usd=10.0, tracker_path=temp_tracker_path)
 
     return SOAROrchestrator(
         store=store,
@@ -85,7 +78,7 @@ class TestCostBudgetIntegration:
         mock_llm_client.generate_json.return_value = {
             "complexity": "SIMPLE",
             "confidence": 0.9,
-            "reasoning": "Simple query"
+            "reasoning": "Simple query",
         }
 
         # Mock LLM response with token usage
@@ -112,7 +105,7 @@ class TestCostBudgetIntegration:
         assert status["total_entries"] > 0
 
         # Verify cost is tracked in metadata (if execution completed)
-        if 'result' in locals():
+        if "result" in locals():
             metadata = result.get("metadata", {})
             assert "total_cost_usd" in metadata
             assert "budget_status" in metadata
@@ -125,7 +118,7 @@ class TestCostBudgetIntegration:
         # Mock LLM client to return high token usage
         orchestrator.reasoning_llm.generate_json.return_value = {
             "complexity": "SIMPLE",
-            "confidence": 0.9
+            "confidence": 0.9,
         }
 
         # Estimate cost for query would bring total to ~85%
@@ -174,17 +167,12 @@ class TestCostBudgetIntegration:
                 finish_reason="stop",
             )
             # Calculate cost
-            cost = orchestrator.cost_tracker.calculate_cost(
-                "claude-sonnet-4-20250514", 500, 250
-            )
+            cost = orchestrator.cost_tracker.calculate_cost("claude-sonnet-4-20250514", 500, 250)
             costs.append(cost)
             return response
 
         mock_llm_client.generate.side_effect = mock_generate_with_tracking
-        mock_llm_client.generate_json.return_value = {
-            "complexity": "MEDIUM",
-            "confidence": 0.8
-        }
+        mock_llm_client.generate_json.return_value = {"complexity": "MEDIUM", "confidence": 0.8}
 
         # Execute query (will fail in later phases due to mocking, but that's OK)
         with contextlib.suppress(Exception):
@@ -200,10 +188,7 @@ class TestCostBudgetIntegration:
     def test_cost_metadata_in_response(self, orchestrator, mock_llm_client):
         """Test that cost metadata is included in response."""
         # Mock successful execution
-        mock_llm_client.generate_json.return_value = {
-            "complexity": "SIMPLE",
-            "confidence": 0.9
-        }
+        mock_llm_client.generate_json.return_value = {"complexity": "SIMPLE", "confidence": 0.9}
         mock_llm_client.generate.return_value = LLMResponse(
             content="Answer",
             model="claude-sonnet-4-20250514",
@@ -262,15 +247,12 @@ class TestCostBudgetIntegration:
             model="claude-3-5-haiku-20241022",
             input_tokens=1000,
             output_tokens=500,
-            operation="test"
+            operation="test",
         )
 
         # Track costs for Opus (expensive)
         opus_cost = orchestrator.cost_tracker.record_cost(
-            model="claude-opus-4-20250514",
-            input_tokens=1000,
-            output_tokens=500,
-            operation="test"
+            model="claude-opus-4-20250514", input_tokens=1000, output_tokens=500, operation="test"
         )
 
         # Opus should be significantly more expensive than Haiku
@@ -299,7 +281,7 @@ class TestBudgetEnforcementScenarios:
                 model="claude-sonnet-4-20250514",
                 input_tokens=500,
                 output_tokens=250,
-                operation=f"query_{i}"
+                operation=f"query_{i}",
             )
 
             # Check budget after each
@@ -321,9 +303,7 @@ class TestBudgetEnforcementScenarios:
 
         # Try one expensive Opus query
         cost = tracker.estimate_cost(
-            model="claude-opus-4-20250514",
-            prompt_length=10000,
-            max_output_tokens=4096
+            model="claude-opus-4-20250514", prompt_length=10000, max_output_tokens=4096
         )
 
         # Should exceed budget

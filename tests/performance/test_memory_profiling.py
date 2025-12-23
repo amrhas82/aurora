@@ -25,7 +25,7 @@ def generate_test_chunks(count: int) -> list[CodeChunk]:
     chunks = []
     for i in range(count):
         chunk = CodeChunk(
-            chunk_id=f"code:file{i // 100}.py:func{i}:{i*10+1}-{i*10+21}",
+            chunk_id=f"code:file{i // 100}.py:func{i}:{i * 10 + 1}-{i * 10 + 21}",
             file_path=f"/test/file{i // 100}.py",
             element_type="function",
             name=f"test_function_{i}",
@@ -33,9 +33,11 @@ def generate_test_chunks(count: int) -> list[CodeChunk]:
             line_end=i * 10 + 21,
             signature=f"def test_function_{i}(arg1: int, arg2: str) -> bool:",
             docstring=f"Test function {i} for memory profiling.\n\nArgs:\n    arg1: First argument\n    arg2: Second argument\n\nReturns:\n    bool: Result of operation",
-            dependencies=[f"code:file{j}.py:func{j}:{j*10}-{j*10+20}" for j in range(max(0, i-3), i)],
+            dependencies=[
+                f"code:file{j}.py:func{j}:{j * 10}-{j * 10 + 20}" for j in range(max(0, i - 3), i)
+            ],
             complexity_score=0.3 + (i % 7) * 0.1,
-            language="python"
+            language="python",
         )
         chunks.append(chunk)
     return chunks
@@ -275,8 +277,12 @@ class TestMemoryProfiling:
         leaked = after_close - baseline
         stored = with_store - baseline
 
-        assert leaked < stored * 0.3, f"Memory leak detected: {leaked:.2f} MB (stored {stored:.2f} MB)"
-        print(f"✓ Memory properly released on close (leaked {leaked:.2f} MB / {stored:.2f} MB = {leaked/stored*100:.1f}%)")
+        assert leaked < stored * 0.3, (
+            f"Memory leak detected: {leaked:.2f} MB (stored {stored:.2f} MB)"
+        )
+        print(
+            f"✓ Memory properly released on close (leaked {leaked:.2f} MB / {stored:.2f} MB = {leaked / stored * 100:.1f}%)"
+        )
 
     def test_reasoning_chunk_10k_patterns_memory_usage(self):
         """Test memory usage with 10K reasoning patterns.

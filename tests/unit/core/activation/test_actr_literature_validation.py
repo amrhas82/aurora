@@ -94,8 +94,7 @@ class TestBaseLevelActivationLiterature:
         expected = -0.5 * math.log(t_seconds)
 
         assert activation == pytest.approx(expected, abs=0.01), (
-            f"Expected BLA={expected:.3f} for single access 1 day ago, "
-            f"got {activation:.3f}"
+            f"Expected BLA={expected:.3f} for single access 1 day ago, got {activation:.3f}"
         )
         assert expected == pytest.approx(-5.686, abs=0.01), (
             "Sanity check: Anderson's published value"
@@ -116,22 +115,18 @@ class TestBaseLevelActivationLiterature:
 
         # Multiple accesses at increasing intervals
         history = [
-            AccessHistoryEntry(timestamp=now - timedelta(hours=1)),   # 3600s ago
-            AccessHistoryEntry(timestamp=now - timedelta(days=1)),    # 86400s ago
-            AccessHistoryEntry(timestamp=now - timedelta(days=7))     # 604800s ago
+            AccessHistoryEntry(timestamp=now - timedelta(hours=1)),  # 3600s ago
+            AccessHistoryEntry(timestamp=now - timedelta(days=1)),  # 86400s ago
+            AccessHistoryEntry(timestamp=now - timedelta(days=7)),  # 604800s ago
         ]
         activation = bla.calculate(history, now)
 
         # Manual calculation
-        t1 = 3600      # 1 hour
-        t2 = 86400     # 1 day
-        t3 = 604800    # 7 days
+        t1 = 3600  # 1 hour
+        t2 = 86400  # 1 day
+        t3 = 604800  # 7 days
 
-        sum_powers = (
-            math.pow(t1, -0.5) +
-            math.pow(t2, -0.5) +
-            math.pow(t3, -0.5)
-        )
+        sum_powers = math.pow(t1, -0.5) + math.pow(t2, -0.5) + math.pow(t3, -0.5)
         expected = math.log(sum_powers)
 
         assert activation == pytest.approx(expected, abs=0.01), (
@@ -179,12 +174,8 @@ class TestBaseLevelActivationLiterature:
         activation_16 = bla.calculate(history_16, now)
 
         # Verify power law: more practice = higher activation
-        assert activation_4 > activation_1, (
-            "4 accesses should yield higher activation than 1"
-        )
-        assert activation_16 > activation_4, (
-            "16 accesses should yield higher activation than 4"
-        )
+        assert activation_4 > activation_1, "4 accesses should yield higher activation than 1"
+        assert activation_16 > activation_4, "16 accesses should yield higher activation than 4"
 
         # Verify diminishing returns: each quadrupling adds the same increment
         # ln(4×n^-d) - ln(n^-d) = ln(4) = 1.386
@@ -194,12 +185,10 @@ class TestBaseLevelActivationLiterature:
         expected_increment = math.log(4)  # For same-time accesses
 
         assert diff_1_to_4 == pytest.approx(expected_increment, abs=0.01), (
-            f"1→4 accesses should increase by {expected_increment:.3f}, "
-            f"got {diff_1_to_4:.3f}"
+            f"1→4 accesses should increase by {expected_increment:.3f}, got {diff_1_to_4:.3f}"
         )
         assert diff_4_to_16 == pytest.approx(expected_increment, abs=0.01), (
-            f"4→16 accesses should increase by {expected_increment:.3f}, "
-            f"got {diff_4_to_16:.3f}"
+            f"4→16 accesses should increase by {expected_increment:.3f}, got {diff_4_to_16:.3f}"
         )
 
     def test_anderson_2007_power_law_of_forgetting(self):
@@ -215,9 +204,7 @@ class TestBaseLevelActivationLiterature:
         now = datetime.now(timezone.utc)
 
         # Single access at different time points
-        activation_1d = bla.calculate(
-            [AccessHistoryEntry(timestamp=now - timedelta(days=1))], now
-        )
+        activation_1d = bla.calculate([AccessHistoryEntry(timestamp=now - timedelta(days=1))], now)
         activation_10d = bla.calculate(
             [AccessHistoryEntry(timestamp=now - timedelta(days=10))], now
         )
@@ -232,12 +219,10 @@ class TestBaseLevelActivationLiterature:
         diff_10d_to_100d = activation_10d - activation_100d
 
         assert diff_1d_to_10d == pytest.approx(expected_decrement, abs=0.01), (
-            f"1d→10d should decrease by {expected_decrement:.3f}, "
-            f"got {diff_1d_to_10d:.3f}"
+            f"1d→10d should decrease by {expected_decrement:.3f}, got {diff_1d_to_10d:.3f}"
         )
         assert diff_10d_to_100d == pytest.approx(expected_decrement, abs=0.01), (
-            f"10d→100d should decrease by {expected_decrement:.3f}, "
-            f"got {diff_10d_to_100d:.3f}"
+            f"10d→100d should decrease by {expected_decrement:.3f}, got {diff_10d_to_100d:.3f}"
         )
 
 
@@ -301,9 +286,9 @@ class TestSpreadingActivationLiterature:
         activations = spreading.calculate(["A"], graph, bidirectional=False)
 
         # Verify exponential decay
-        assert activations["B"] == pytest.approx(0.7 ** 1, abs=0.001)
-        assert activations["C"] == pytest.approx(0.7 ** 2, abs=0.001)
-        assert activations["D"] == pytest.approx(0.7 ** 3, abs=0.001)
+        assert activations["B"] == pytest.approx(0.7**1, abs=0.001)
+        assert activations["C"] == pytest.approx(0.7**2, abs=0.001)
+        assert activations["D"] == pytest.approx(0.7**3, abs=0.001)
 
     def test_anderson_1983_multiple_paths_summation(self):
         """Anderson (1983), p. 275: Multiple path integration.
@@ -329,7 +314,7 @@ class TestSpreadingActivationLiterature:
         activations = spreading.calculate(["A"], graph)
 
         # Both paths contribute equally
-        expected_per_path = 0.7 ** 2  # Distance 2
+        expected_per_path = 0.7**2  # Distance 2
         expected_total = 2 * expected_per_path
 
         assert activations["D"] == pytest.approx(expected_total, abs=0.001), (
@@ -437,10 +422,7 @@ class TestDecayPenaltyLiterature:
 
     def test_recent_access_no_penalty(self):
         """Very recent access (within grace period) has no penalty."""
-        decay = DecayCalculator(DecayConfig(
-            decay_factor=0.5,
-            grace_period_hours=24
-        ))
+        decay = DecayCalculator(DecayConfig(decay_factor=0.5, grace_period_hours=24))
 
         now = datetime.now(timezone.utc)
         last_access = now - timedelta(hours=12)  # Within grace period
@@ -458,10 +440,12 @@ class TestDecayPenaltyLiterature:
         Note: Implementation uses max(1.0, days) to avoid log10 of values < 1,
         which slightly affects the exact increment values.
         """
-        decay = DecayCalculator(DecayConfig(
-            decay_factor=0.5,
-            grace_period_hours=0  # No grace period
-        ))
+        decay = DecayCalculator(
+            DecayConfig(
+                decay_factor=0.5,
+                grace_period_hours=0,  # No grace period
+            )
+        )
 
         now = datetime.now(timezone.utc)
 
@@ -516,12 +500,14 @@ class TestTotalActivationFormula:
 
         Total = -3.9 + 0.7 + 0.25 - 0.0 = -2.95
         """
-        engine = ActivationEngine(ActivationConfig(
-            bla_config=BLAConfig(decay_rate=0.5),
-            spreading_config=SpreadingConfig(spread_factor=0.7),
-            context_config=ContextBoostConfig(boost_factor=0.5),
-            decay_config=DecayConfig(decay_factor=0.5, grace_period_hours=24)
-        ))
+        engine = ActivationEngine(
+            ActivationConfig(
+                bla_config=BLAConfig(decay_rate=0.5),
+                spreading_config=SpreadingConfig(spread_factor=0.7),
+                context_config=ContextBoostConfig(boost_factor=0.5),
+                decay_config=DecayConfig(decay_factor=0.5, grace_period_hours=24),
+            )
+        )
 
         now = datetime.now(timezone.utc)
 
@@ -529,7 +515,7 @@ class TestTotalActivationFormula:
         access_history = [
             AccessHistoryEntry(timestamp=now - timedelta(hours=1)),
             AccessHistoryEntry(timestamp=now - timedelta(days=1)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=7))
+            AccessHistoryEntry(timestamp=now - timedelta(days=7)),
         ]
 
         # Calculate components
@@ -538,7 +524,7 @@ class TestTotalActivationFormula:
             last_access=now - timedelta(hours=1),
             spreading_activation=0.7,  # 1 hop away
             query_keywords={"database", "optimize", "performance", "query"},
-            chunk_keywords={"database", "query"}  # 50% match
+            chunk_keywords={"database", "query"},  # 50% match
         )
 
         # Verify component values
@@ -569,20 +555,20 @@ class TestTotalActivationFormula:
         now = datetime.now(timezone.utc)
 
         # Single old access
-        access_history = [
-            AccessHistoryEntry(timestamp=now - timedelta(days=100))
-        ]
+        access_history = [AccessHistoryEntry(timestamp=now - timedelta(days=100))]
 
         result = engine.calculate_total(
             access_history=access_history,
             last_access=now - timedelta(days=100),
             spreading_activation=0.343,  # 3 hops (0.7^3)
             query_keywords={"database", "optimize", "performance", "query"},
-            chunk_keywords={"database"}  # 25% match
+            chunk_keywords={"database"},  # 25% match
         )
 
         # Verify low total activation
-        assert result.total < -5.0, "Old, distant, low-context chunk should have very low activation"
+        assert result.total < -5.0, (
+            "Old, distant, low-context chunk should have very low activation"
+        )
 
         # Verify BLA dominates (most negative)
         assert abs(result.bla) > abs(result.spreading + result.context_boost)
@@ -597,35 +583,33 @@ class TestTotalActivationFormula:
         access_history = [AccessHistoryEntry(timestamp=now - timedelta(days=1))]
 
         # Test with all components enabled
-        engine_all = ActivationEngine(ActivationConfig(
-            enable_bla=True,
-            enable_spreading=True,
-            enable_context=True,
-            enable_decay=True
-        ))
+        engine_all = ActivationEngine(
+            ActivationConfig(
+                enable_bla=True, enable_spreading=True, enable_context=True, enable_decay=True
+            )
+        )
 
         result_all = engine_all.calculate_total(
             access_history=access_history,
             last_access=now - timedelta(days=1),
             spreading_activation=0.5,
             query_keywords={"test"},
-            chunk_keywords={"test"}
+            chunk_keywords={"test"},
         )
 
         # Test with only BLA enabled
-        engine_bla_only = ActivationEngine(ActivationConfig(
-            enable_bla=True,
-            enable_spreading=False,
-            enable_context=False,
-            enable_decay=False
-        ))
+        engine_bla_only = ActivationEngine(
+            ActivationConfig(
+                enable_bla=True, enable_spreading=False, enable_context=False, enable_decay=False
+            )
+        )
 
         result_bla = engine_bla_only.calculate_total(
             access_history=access_history,
             last_access=now - timedelta(days=1),
             spreading_activation=0.5,
             query_keywords={"test"},
-            chunk_keywords={"test"}
+            chunk_keywords={"test"},
         )
 
         # BLA-only should match the BLA component from full calculation
@@ -653,7 +637,7 @@ class TestACTRPrincipleValidation:
         # Low frequency: 2 accesses
         history_low = [
             AccessHistoryEntry(timestamp=now - timedelta(days=5)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=15))
+            AccessHistoryEntry(timestamp=now - timedelta(days=15)),
         ]
 
         # High frequency: 8 accesses
@@ -665,17 +649,15 @@ class TestACTRPrincipleValidation:
             AccessHistoryEntry(timestamp=now - timedelta(days=10)),
             AccessHistoryEntry(timestamp=now - timedelta(days=12)),
             AccessHistoryEntry(timestamp=now - timedelta(days=15)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=20))
+            AccessHistoryEntry(timestamp=now - timedelta(days=20)),
         ]
 
         result_low = engine.calculate_total(
-            access_history=history_low,
-            last_access=now - timedelta(days=5)
+            access_history=history_low, last_access=now - timedelta(days=5)
         )
 
         result_high = engine.calculate_total(
-            access_history=history_high,
-            last_access=now - timedelta(days=1)
+            access_history=history_high, last_access=now - timedelta(days=1)
         )
 
         assert result_high.total > result_low.total, (
@@ -697,13 +679,11 @@ class TestACTRPrincipleValidation:
         history_recent = [AccessHistoryEntry(timestamp=now - timedelta(hours=1))]
 
         result_old = engine.calculate_total(
-            access_history=history_old,
-            last_access=now - timedelta(days=30)
+            access_history=history_old, last_access=now - timedelta(days=30)
         )
 
         result_recent = engine.calculate_total(
-            access_history=history_recent,
-            last_access=now - timedelta(hours=1)
+            access_history=history_recent, last_access=now - timedelta(hours=1)
         )
 
         assert result_recent.total > result_old.total, (
@@ -725,7 +705,7 @@ class TestACTRPrincipleValidation:
             access_history=access_history,
             last_access=now - timedelta(days=1),
             query_keywords={"database", "optimize", "performance"},
-            chunk_keywords={"database"}  # Only 1/3 match
+            chunk_keywords={"database"},  # Only 1/3 match
         )
 
         # High context relevance
@@ -733,7 +713,7 @@ class TestACTRPrincipleValidation:
             access_history=access_history,
             last_access=now - timedelta(days=1),
             query_keywords={"database", "optimize", "performance"},
-            chunk_keywords={"database", "optimize", "performance"}  # Perfect match
+            chunk_keywords={"database", "optimize", "performance"},  # Perfect match
         )
 
         assert result_high_context.total > result_low_context.total, (
@@ -755,14 +735,14 @@ class TestACTRPrincipleValidation:
         result_no_spread = engine.calculate_total(
             access_history=access_history,
             last_access=now - timedelta(days=1),
-            spreading_activation=0.0
+            spreading_activation=0.0,
         )
 
         # Strongly associated (high spreading)
         result_with_spread = engine.calculate_total(
             access_history=access_history,
             last_access=now - timedelta(days=1),
-            spreading_activation=0.7  # 1 hop away
+            spreading_activation=0.7,  # 1 hop away
         )
 
         assert result_with_spread.total > result_no_spread.total, (

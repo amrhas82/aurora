@@ -118,11 +118,11 @@ def get_init_statements() -> list[str]:
 
 
 __all__ = [
-    'SCHEMA_VERSION',
-    'CREATE_CHUNKS_TABLE',
-    'CREATE_ACTIVATIONS_TABLE',
-    'CREATE_RELATIONSHIPS_TABLE',
-    'INIT_SCHEMA',
-    'get_schema_version_insert',
-    'get_init_statements',
+    "SCHEMA_VERSION",
+    "CREATE_CHUNKS_TABLE",
+    "CREATE_ACTIVATIONS_TABLE",
+    "CREATE_RELATIONSHIPS_TABLE",
+    "INIT_SCHEMA",
+    "get_schema_version_insert",
+    "get_init_statements",
 ]

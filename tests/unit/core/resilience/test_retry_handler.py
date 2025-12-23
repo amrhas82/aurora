@@ -120,9 +120,7 @@ class TestRetryHandlerRecoverableErrors:
 
     def test_custom_recoverable_errors(self):
         """Test custom recoverable error types."""
-        handler = RetryHandler(
-            recoverable_errors=(ValueError, KeyError)
-        )
+        handler = RetryHandler(recoverable_errors=(ValueError, KeyError))
 
         assert handler.is_recoverable(ValueError("test")) is True
         assert handler.is_recoverable(KeyError("test")) is True
@@ -152,11 +150,7 @@ class TestRetryHandlerExponentialBackoff:
 
     def test_calculate_delay_with_max_delay(self):
         """Test delay calculation is capped by max_delay."""
-        handler = RetryHandler(
-            base_delay=1.0,
-            backoff_factor=2.0,
-            max_delay=3.0
-        )
+        handler = RetryHandler(base_delay=1.0, backoff_factor=2.0, max_delay=3.0)
         # Would be 8.0 without cap (1.0 * 2^3)
         delay = handler.calculate_delay(attempt=4)
         assert delay == 3.0
@@ -186,11 +180,7 @@ class TestRetryHandlerExecute:
         handler = RetryHandler(base_delay=0.01)  # Fast for testing
 
         # Fail twice, then succeed
-        func = Mock(side_effect=[
-            TimeoutError("timeout"),
-            TimeoutError("timeout"),
-            "success"
-        ])
+        func = Mock(side_effect=[TimeoutError("timeout"), TimeoutError("timeout"), "success"])
 
         result = handler.execute(func)
 
@@ -237,11 +227,7 @@ class TestRetryHandlerExecute:
         """Test that delays are applied between retry attempts."""
         handler = RetryHandler(base_delay=0.1, backoff_factor=2.0)
 
-        func = Mock(side_effect=[
-            TimeoutError("timeout"),
-            TimeoutError("timeout"),
-            "success"
-        ])
+        func = Mock(side_effect=[TimeoutError("timeout"), TimeoutError("timeout"), "success"])
 
         result = handler.execute(func)
 
@@ -255,11 +241,7 @@ class TestRetryHandlerExecute:
         """Test that retry count is tracked."""
         handler = RetryHandler(base_delay=0.01)
 
-        func = Mock(side_effect=[
-            TimeoutError("timeout"),
-            TimeoutError("timeout"),
-            "success"
-        ])
+        func = Mock(side_effect=[TimeoutError("timeout"), TimeoutError("timeout"), "success"])
 
         result = handler.execute(func)
 
@@ -270,11 +252,7 @@ class TestRetryHandlerExecute:
         """Test that total delay is tracked."""
         handler = RetryHandler(base_delay=0.1, backoff_factor=2.0)
 
-        func = Mock(side_effect=[
-            TimeoutError("timeout"),
-            TimeoutError("timeout"),
-            "success"
-        ])
+        func = Mock(side_effect=[TimeoutError("timeout"), TimeoutError("timeout"), "success"])
 
         start = time.time()
         result = handler.execute(func)
@@ -339,10 +317,7 @@ class TestRetryHandlerEdgeCases:
 
         # Should raise the original exception
         with pytest.raises(ValueError, match="always fails"):
-            handler.execute(
-                problematic_func,
-                recoverable_errors=(ValueError,)
-            )
+            handler.execute(problematic_func, recoverable_errors=(ValueError,))
 
     def test_zero_max_retries_validation(self):
         """Test that max_retries=0 is rejected."""

@@ -426,7 +426,7 @@ class TestEdgeCases:
 
         config = GitEnforcerConfig(
             required_branch=None,  # No required branch
-            blocked_branches=["main"]  # lowercase - shouldn't block "Main"
+            blocked_branches=["main"],  # lowercase - shouldn't block "Main"
         )
         enforcer = GitEnforcer(config)
 

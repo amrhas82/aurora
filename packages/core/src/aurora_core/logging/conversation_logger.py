@@ -17,10 +17,10 @@ from typing import Any
 class VerbosityLevel(str, Enum):
     """Verbosity levels for SOAR output."""
 
-    QUIET = "quiet"      # Single line with score
-    NORMAL = "normal"    # Phase progress with key metrics
+    QUIET = "quiet"  # Single line with score
+    NORMAL = "normal"  # Phase progress with key metrics
     VERBOSE = "verbose"  # Full trace with detailed metadata
-    JSON = "json"        # Structured JSON logs
+    JSON = "json"  # Structured JSON logs
 
 
 class ConversationLogger:
@@ -55,7 +55,7 @@ class ConversationLogger:
         query_id: str,
         phase_data: dict[str, Any],
         execution_summary: dict[str, Any],
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ) -> Path | None:
         """
         Log a SOAR interaction to a markdown file.
@@ -90,7 +90,7 @@ class ConversationLogger:
                 query_id=query_id,
                 phase_data=phase_data,
                 execution_summary=execution_summary,
-                metadata=metadata
+                metadata=metadata,
             )
 
             # Write asynchronously (non-blocking)
@@ -127,14 +127,47 @@ class ConversationLogger:
         """
         # Common stop words to filter
         stop_words = {
-            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
-            'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
-            'to', 'was', 'will', 'with', 'what', 'when', 'where', 'who', 'why',
-            'how', 'can', 'could', 'should', 'would', 'do', 'does', 'did'
+            "a",
+            "an",
+            "and",
+            "are",
+            "as",
+            "at",
+            "be",
+            "by",
+            "for",
+            "from",
+            "has",
+            "he",
+            "in",
+            "is",
+            "it",
+            "its",
+            "of",
+            "on",
+            "that",
+            "the",
+            "to",
+            "was",
+            "will",
+            "with",
+            "what",
+            "when",
+            "where",
+            "who",
+            "why",
+            "how",
+            "can",
+            "could",
+            "should",
+            "would",
+            "do",
+            "does",
+            "did",
         }
 
         # Extract words (alphanumeric only)
-        words = re.findall(r'\b[a-zA-Z0-9]+\b', query.lower())
+        words = re.findall(r"\b[a-zA-Z0-9]+\b", query.lower())
 
         # Filter stop words and keep meaningful words
         keywords = [w for w in words if w not in stop_words and len(w) > 2]
@@ -200,7 +233,7 @@ class ConversationLogger:
         query_id: str,
         phase_data: dict[str, Any],
         execution_summary: dict[str, Any],
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """
         Format conversation log as markdown.
@@ -229,8 +262,15 @@ class ConversationLogger:
 
         # Phase sections
         phase_order = [
-            "assess", "retrieve", "decompose", "verify", "route",
-            "collect", "synthesize", "record", "respond"
+            "assess",
+            "retrieve",
+            "decompose",
+            "verify",
+            "route",
+            "collect",
+            "synthesize",
+            "record",
+            "respond",
         ]
 
         for phase_name in phase_order:
@@ -314,11 +354,7 @@ class ConversationLogger:
                 return
 
             # Get all log files in current month sorted by modification time
-            log_files = sorted(
-                log_dir.glob("*.md"),
-                key=lambda p: p.stat().st_mtime,
-                reverse=True
-            )
+            log_files = sorted(log_dir.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
 
             # Archive files beyond limit
             if len(log_files) > max_files_per_month:

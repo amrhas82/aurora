@@ -144,7 +144,9 @@ class LargeClass_{i}:
         # Allow for reasonable variance due to system load and GC (up to 2x the avg)
         variance = max_duration - min_duration
         max_allowed_variance = avg_duration * 2.0
-        assert variance < max_allowed_variance, f"Performance variance too high: {variance:.3f}s (allowed: {max_allowed_variance:.3f}s)"
+        assert variance < max_allowed_variance, (
+            f"Performance variance too high: {variance:.3f}s (allowed: {max_allowed_variance:.3f}s)"
+        )
 
     def test_parse_returns_correct_count(self, parser, large_file):
         """Verify parser extracts expected number of elements."""
@@ -196,10 +198,13 @@ class TestParserMemoryUsage:
         files = []
         for i in range(10):
             test_file = tmp_path / f"file_{i}.py"
-            test_file.write_text(f"""
+            test_file.write_text(
+                f"""
 def function_{i}():
     return {i}
-""" * 10)
+"""
+                * 10
+            )
             files.append(test_file)
 
         # Parse all files

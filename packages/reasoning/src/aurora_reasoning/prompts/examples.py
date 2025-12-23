@@ -8,6 +8,7 @@ from typing import Any
 
 class Complexity(str, Enum):
     """Query complexity levels."""
+
     SIMPLE = "SIMPLE"
     MEDIUM = "MEDIUM"
     COMPLEX = "COMPLEX"

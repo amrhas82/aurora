@@ -42,10 +42,7 @@ class TestDecayConfig:
     def test_custom_config(self):
         """Test custom configuration values."""
         config = DecayConfig(
-            decay_factor=1.0,
-            max_days=30.0,
-            min_penalty=-3.0,
-            grace_period_hours=2.0
+            decay_factor=1.0, max_days=30.0, min_penalty=-3.0, grace_period_hours=2.0
         )
         assert config.decay_factor == 1.0
         assert config.max_days == 30.0
@@ -373,7 +370,7 @@ class TestDecayCurve:
         # Penalties should become more negative over time
         # (except within grace period where they stay at 0)
         for i in range(1, len(curve)):
-            days_prev, penalty_prev = curve[i-1]
+            days_prev, penalty_prev = curve[i - 1]
             days_curr, penalty_curr = curve[i]
 
             # Days should increase
@@ -403,15 +400,15 @@ class TestExplainDecay:
         explanation = calc.explain_decay(last_access, current)
 
         # Check all expected fields
-        assert 'penalty' in explanation
-        assert 'days_since_access' in explanation
-        assert 'hours_since_access' in explanation
-        assert 'grace_period_applied' in explanation
-        assert 'grace_period_hours' in explanation
-        assert 'capped_at_max' in explanation
-        assert 'max_days' in explanation
-        assert 'decay_factor' in explanation
-        assert 'formula' in explanation
+        assert "penalty" in explanation
+        assert "days_since_access" in explanation
+        assert "hours_since_access" in explanation
+        assert "grace_period_applied" in explanation
+        assert "grace_period_hours" in explanation
+        assert "capped_at_max" in explanation
+        assert "max_days" in explanation
+        assert "decay_factor" in explanation
+        assert "formula" in explanation
 
     def test_explain_decay_within_grace_period(self):
         """Test explain_decay shows grace period applied."""
@@ -421,9 +418,9 @@ class TestExplainDecay:
 
         explanation = calc.explain_decay(last_access, current)
 
-        assert explanation['penalty'] == 0.0
-        assert explanation['grace_period_applied'] is True
-        assert explanation['hours_since_access'] < 1.0
+        assert explanation["penalty"] == 0.0
+        assert explanation["grace_period_applied"] is True
+        assert explanation["hours_since_access"] < 1.0
 
     def test_explain_decay_after_grace_period(self):
         """Test explain_decay shows no grace period."""
@@ -433,9 +430,9 @@ class TestExplainDecay:
 
         explanation = calc.explain_decay(last_access, current)
 
-        assert explanation['penalty'] < 0.0
-        assert explanation['grace_period_applied'] is False
-        assert explanation['days_since_access'] > 9.0
+        assert explanation["penalty"] < 0.0
+        assert explanation["grace_period_applied"] is False
+        assert explanation["days_since_access"] > 9.0
 
     def test_explain_decay_capped_at_max(self):
         """Test explain_decay shows capping."""
@@ -446,10 +443,10 @@ class TestExplainDecay:
 
         explanation = calc.explain_decay(last_access, current)
 
-        assert explanation['capped_at_max'] is True
-        assert explanation['days_since_access'] > 90.0
+        assert explanation["capped_at_max"] is True
+        assert explanation["days_since_access"] > 90.0
         # Formula should show capped value (30) not actual (100)
-        assert '30.00' in explanation['formula']
+        assert "30.00" in explanation["formula"]
 
     def test_explain_decay_not_capped(self):
         """Test explain_decay shows no capping for recent access."""
@@ -459,7 +456,7 @@ class TestExplainDecay:
 
         explanation = calc.explain_decay(last_access, current)
 
-        assert explanation['capped_at_max'] is False
+        assert explanation["capped_at_max"] is False
 
     def test_explain_decay_formula_format(self):
         """Test formula string is properly formatted."""
@@ -469,10 +466,10 @@ class TestExplainDecay:
 
         explanation = calc.explain_decay(last_access, current)
 
-        formula = explanation['formula']
-        assert '-0.5' in formula  # decay_factor
-        assert 'log10' in formula
-        assert '10.' in formula  # days value
+        formula = explanation["formula"]
+        assert "-0.5" in formula  # decay_factor
+        assert "log10" in formula
+        assert "10." in formula  # days value
 
 
 class TestConvenienceFunction:

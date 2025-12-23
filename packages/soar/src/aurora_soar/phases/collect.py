@@ -184,9 +184,7 @@ async def execute_agents(
             # Check overall query timeout
             elapsed = time.time() - start_time
             if elapsed > query_timeout:
-                raise TimeoutError(
-                    f"Query timeout exceeded: {elapsed:.1f}s > {query_timeout}s"
-                )
+                raise TimeoutError(f"Query timeout exceeded: {elapsed:.1f}s > {query_timeout}s")
 
     except Exception as e:
         logger.error(f"Agent execution failed: {e}")
@@ -194,9 +192,7 @@ async def execute_agents(
 
     finally:
         # Calculate final metadata
-        execution_metadata["total_duration_ms"] = int(
-            (time.time() - start_time) * 1000
-        )
+        execution_metadata["total_duration_ms"] = int((time.time() - start_time) * 1000)
 
     logger.info(
         f"Agent execution complete: {len(agent_outputs)} subgoals, "
@@ -236,9 +232,7 @@ async def _execute_parallel_subgoals(
     for subgoal in subgoals:
         idx = subgoal["subgoal_index"]
         agent = agent_map[idx]
-        task = _execute_single_subgoal(
-            idx, subgoal, agent, context, timeout, metadata
-        )
+        task = _execute_single_subgoal(idx, subgoal, agent, context, timeout, metadata)
         tasks.append(task)
 
     # Execute all tasks concurrently
@@ -293,9 +287,7 @@ async def _execute_sequential_subgoals(
         agent = agent_map[idx]
 
         try:
-            output = await _execute_single_subgoal(
-                idx, subgoal, agent, context, timeout, metadata
-            )
+            output = await _execute_single_subgoal(idx, subgoal, agent, context, timeout, metadata)
             outputs.append(output)
         except Exception as e:
             logger.error(f"Subgoal {idx} failed: {e}")
@@ -312,9 +304,7 @@ async def _execute_sequential_subgoals(
             # Check if this is a critical subgoal - abort if so
             if subgoal.get("is_critical", False):
                 logger.error(f"Critical subgoal {idx} failed, aborting execution")
-                raise RuntimeError(
-                    f"Critical subgoal {idx} failed: {e}"
-                )
+                raise RuntimeError(f"Critical subgoal {idx} failed: {e}")
 
     return outputs
 
@@ -366,8 +356,7 @@ async def _execute_single_subgoal(
         output.execution_metadata["retry_count"] = retry_count
 
         logger.info(
-            f"Subgoal {idx} completed in {duration_ms}ms "
-            f"(confidence: {output.confidence:.2f})"
+            f"Subgoal {idx} completed in {duration_ms}ms (confidence: {output.confidence:.2f})"
         )
 
         return output
@@ -386,9 +375,7 @@ async def _execute_single_subgoal(
         # Max retries exceeded - check criticality
         is_critical = subgoal.get("is_critical", False)
         if is_critical:
-            raise RuntimeError(
-                f"Critical subgoal {idx} timed out after {max_retries + 1} attempts"
-            )
+            raise RuntimeError(f"Critical subgoal {idx} timed out after {max_retries + 1} attempts")
 
         # Non-critical: graceful degradation
         metadata["failed_subgoals"] += 1
@@ -480,9 +467,7 @@ def _validate_agent_output(output: AgentOutput) -> None:
         ValueError: If required fields are missing or invalid
     """
     if output.confidence < 0 or output.confidence > 1:
-        raise ValueError(
-            f"Agent confidence must be in [0, 1], got {output.confidence}"
-        )
+        raise ValueError(f"Agent confidence must be in [0, 1], got {output.confidence}")
 
     if output.success and not output.summary:
         raise ValueError("Successful agent output must have a summary")

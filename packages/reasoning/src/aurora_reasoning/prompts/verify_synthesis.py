@@ -55,7 +55,7 @@ You MUST respond with valid JSON only. Use this exact format:
         prompt_parts = [
             f"Original Query: {query}",
             f"\nSynthesized Answer:\n{synthesis_answer}",
-            "\nAgent Outputs:"
+            "\nAgent Outputs:",
         ]
 
         for i, output in enumerate(agent_outputs):
@@ -65,16 +65,18 @@ You MUST respond with valid JSON only. Use this exact format:
                 f"\nConfidence: {output.get('confidence', 0.0)}"
             )
 
-        prompt_parts.append("\n\nVerify this synthesis and provide quality assessment in JSON format.")
+        prompt_parts.append(
+            "\n\nVerify this synthesis and provide quality assessment in JSON format."
+        )
 
         return "\n".join(prompt_parts)
 
     def _format_single_example(self, example: dict[str, Any]) -> str:
         """Format a single example for synthesis verification."""
-        return f"""Query: {example.get('query', '')}
-Synthesis: {example.get('synthesis', '')}
-Agent Summaries: {json.dumps(example.get('summaries', []), indent=2)}
-Verification: {json.dumps(example.get('verification', {}), indent=2)}"""
+        return f"""Query: {example.get("query", "")}
+Synthesis: {example.get("synthesis", "")}
+Agent Summaries: {json.dumps(example.get("summaries", []), indent=2)}
+Verification: {json.dumps(example.get("verification", {}), indent=2)}"""
 
 
 __all__ = ["VerifySynthesisPromptTemplate"]

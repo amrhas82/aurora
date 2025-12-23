@@ -38,17 +38,15 @@ class Relationship(BaseModel):
         rel_type: Type of relationship (e.g., "calls", "imports", "depends_on")
         weight: Strength of the relationship (0.0 to 1.0)
     """
+
     from_chunk: str = Field(description="Source chunk ID")
     to_chunk: str = Field(description="Target chunk ID")
     rel_type: str = Field(description="Type of relationship")
     weight: float = Field(
-        default=1.0,
-        ge=0.0,
-        le=1.0,
-        description="Relationship strength (0.0 to 1.0)"
+        default=1.0, ge=0.0, le=1.0, description="Relationship strength (0.0 to 1.0)"
     )
 
-    @field_validator('weight')
+    @field_validator("weight")
     @classmethod
     def validate_weight(cls, v: float) -> float:
         """Ensure weight is within valid range."""
@@ -66,28 +64,19 @@ class SpreadingConfig(BaseModel):
         max_edges: Maximum edges to traverse (prevents runaway spreading)
         min_weight: Minimum relationship weight to consider
     """
+
     spread_factor: float = Field(
         default=0.7,
         ge=0.0,
         le=1.0,
-        description="Decay factor per hop (standard ACT-R value is 0.7)"
+        description="Decay factor per hop (standard ACT-R value is 0.7)",
     )
-    max_hops: int = Field(
-        default=3,
-        ge=1,
-        le=5,
-        description="Maximum relationship traversal depth"
-    )
+    max_hops: int = Field(default=3, ge=1, le=5, description="Maximum relationship traversal depth")
     max_edges: int = Field(
-        default=1000,
-        ge=1,
-        description="Maximum edges to traverse (prevents infinite loops)"
+        default=1000, ge=1, description="Maximum edges to traverse (prevents infinite loops)"
     )
     min_weight: float = Field(
-        default=0.1,
-        ge=0.0,
-        le=1.0,
-        description="Minimum relationship weight to consider"
+        default=0.1, ge=0.0, le=1.0, description="Minimum relationship weight to consider"
     )
 
 
@@ -106,11 +95,7 @@ class RelationshipGraph:
         self._edge_count = 0
 
     def add_relationship(
-        self,
-        from_chunk: str,
-        to_chunk: str,
-        rel_type: str,
-        weight: float = 1.0
+        self, from_chunk: str, to_chunk: str, rel_type: str, weight: float = 1.0
     ) -> None:
         """Add a relationship to the graph.
 
@@ -192,10 +177,7 @@ class SpreadingActivation:
         self.config = config or SpreadingConfig()
 
     def calculate(
-        self,
-        source_chunks: list[str],
-        graph: RelationshipGraph,
-        bidirectional: bool = True
+        self, source_chunks: list[str], graph: RelationshipGraph, bidirectional: bool = True
     ) -> dict[str, float]:
         """Calculate spreading activation from source chunks.
 
@@ -272,7 +254,7 @@ class SpreadingActivation:
                 # Calculate spreading activation for this hop
                 # Formula: weight × spread_factor^hop_count
                 hop_count = current_hop + 1
-                spreading_amount = weight * (self.config.spread_factor ** hop_count)
+                spreading_amount = weight * (self.config.spread_factor**hop_count)
 
                 # Accumulate activation
                 activations[target_chunk] += spreading_amount
@@ -292,7 +274,7 @@ class SpreadingActivation:
         self,
         source_chunks: list[str],
         relationships: list[Relationship],
-        bidirectional: bool = True
+        bidirectional: bool = True,
     ) -> dict[str, float]:
         """Convenience method to calculate spreading from a list of relationships.
 
@@ -309,12 +291,7 @@ class SpreadingActivation:
         # Build graph from relationships
         graph = RelationshipGraph()
         for rel in relationships:
-            graph.add_relationship(
-                rel.from_chunk,
-                rel.to_chunk,
-                rel.rel_type,
-                rel.weight
-            )
+            graph.add_relationship(rel.from_chunk, rel.to_chunk, rel.rel_type, rel.weight)
 
         return self.calculate(source_chunks, graph, bidirectional)
 
@@ -323,7 +300,7 @@ class SpreadingActivation:
         source_chunks: list[str],
         graph: RelationshipGraph,
         min_activation: float = 0.0,
-        bidirectional: bool = True
+        bidirectional: bool = True,
     ) -> list[tuple[str, float]]:
         """Get related chunks sorted by spreading activation.
 
@@ -352,7 +329,7 @@ def calculate_spreading(
     source_chunks: list[str],
     relationships: list[Relationship],
     spread_factor: float = 0.7,
-    max_hops: int = 3
+    max_hops: int = 3,
 ) -> dict[str, float]:
     """Convenience function for calculating spreading activation.
 

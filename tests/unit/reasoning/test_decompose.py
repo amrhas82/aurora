@@ -17,7 +17,14 @@ class TestDecompositionResult:
         """Test conversion to dictionary."""
         result = DecompositionResult(
             goal="Test goal",
-            subgoals=[{"description": "Test", "suggested_agent": "code-analyzer", "is_critical": True, "depends_on": []}],
+            subgoals=[
+                {
+                    "description": "Test",
+                    "suggested_agent": "code-analyzer",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
+            ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["code_reader"],
         )
@@ -31,7 +38,14 @@ class TestDecompositionResult:
         """Test creation from dictionary."""
         data = {
             "goal": "Test goal",
-            "subgoals": [{"description": "Test", "suggested_agent": "code-analyzer", "is_critical": True, "depends_on": []}],
+            "subgoals": [
+                {
+                    "description": "Test",
+                    "suggested_agent": "code-analyzer",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
+            ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
             "expected_tools": ["code_reader"],
         }
@@ -98,19 +112,31 @@ class TestDecomposeQuery:
         assert "Here are some examples:" not in user_prompt
 
     @patch("aurora_reasoning.decompose.get_loader")
-    def test_medium_query_gets_examples(self, mock_get_loader, mock_llm_client, valid_decomposition_response):
+    def test_medium_query_gets_examples(
+        self, mock_get_loader, mock_llm_client, valid_decomposition_response
+    ):
         """Test MEDIUM query gets 2 examples."""
         mock_loader = MagicMock()
         mock_loader.get_examples_by_complexity.return_value = [
             {
                 "complexity": "MEDIUM",
                 "query": "Example 1",
-                "decomposition": {"goal": "Example goal", "subgoals": [], "execution_order": [], "expected_tools": []},
+                "decomposition": {
+                    "goal": "Example goal",
+                    "subgoals": [],
+                    "execution_order": [],
+                    "expected_tools": [],
+                },
             },
             {
                 "complexity": "MEDIUM",
                 "query": "Example 2",
-                "decomposition": {"goal": "Example goal 2", "subgoals": [], "execution_order": [], "expected_tools": []},
+                "decomposition": {
+                    "goal": "Example goal 2",
+                    "subgoals": [],
+                    "execution_order": [],
+                    "expected_tools": [],
+                },
             },
         ]
         mock_get_loader.return_value = mock_loader
@@ -128,8 +154,7 @@ class TestDecomposeQuery:
 
         # Verify examples were loaded
         mock_loader.get_examples_by_complexity.assert_called_once_with(
-            "example_decompositions.json",
-            Complexity.MEDIUM
+            "example_decompositions.json", Complexity.MEDIUM
         )
 
         # Verify examples in user prompt
@@ -266,7 +291,12 @@ class TestDecomposeQuery:
         invalid_response = {
             "goal": "Test goal",
             "subgoals": [
-                {"description": "Test", "suggested_agent": "code-analyzer", "is_critical": True, "depends_on": []}
+                {
+                    "description": "Test",
+                    "suggested_agent": "code-analyzer",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
             ],
             "execution_order": "not a list",  # Should be list
             "expected_tools": [],
@@ -287,7 +317,12 @@ class TestDecomposeQuery:
         invalid_response = {
             "goal": "Test goal",
             "subgoals": [
-                {"description": "Test", "suggested_agent": "code-analyzer", "is_critical": True, "depends_on": []}
+                {
+                    "description": "Test",
+                    "suggested_agent": "code-analyzer",
+                    "is_critical": True,
+                    "depends_on": [],
+                }
             ],
             "execution_order": [
                 {

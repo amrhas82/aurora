@@ -20,6 +20,7 @@ from aurora_core.chunks.base import Chunk
 # Mock LLM
 # ============================================================================
 
+
 @dataclass
 class MockLLMResponse:
     """Mock LLM response structure.
@@ -30,6 +31,7 @@ class MockLLMResponse:
         model: Model identifier.
         latency_ms: Simulated latency in milliseconds.
     """
+
     content: str
     tokens_used: int = 100
     model: str = "mock-model-1.0"
@@ -132,11 +134,7 @@ class MockLLM:
         self.error_exception = None
 
     def complete(
-        self,
-        prompt: str,
-        temperature: float = 0.7,
-        max_tokens: int | None = None,
-        **kwargs: Any
+        self, prompt: str, temperature: float = 0.7, max_tokens: int | None = None, **kwargs: Any
     ) -> MockLLMResponse:
         """Generate completion for prompt.
 
@@ -220,9 +218,7 @@ class MockLLM:
         for call in self.calls:
             if prompt_substring in call["prompt"]:
                 return
-        raise AssertionError(
-            f"MockLLM was not called with prompt containing '{prompt_substring}'"
-        )
+        raise AssertionError(f"MockLLM was not called with prompt containing '{prompt_substring}'")
 
     def assert_call_count(self, expected_count: int) -> None:
         """Assert specific number of calls.
@@ -242,6 +238,7 @@ class MockLLM:
 # Mock Agent
 # ============================================================================
 
+
 @dataclass
 class MockAgent:
     """Mock agent for testing agent registry and discovery.
@@ -255,6 +252,7 @@ class MockAgent:
         is_available: Whether agent is currently available.
         execution_results: Predefined results for execute calls.
     """
+
     agent_id: str
     name: str
     agent_type: str = "local"
@@ -315,6 +313,7 @@ class MockAgent:
 # ============================================================================
 # Mock Parser
 # ============================================================================
+
 
 class MockParser:
     """Mock code parser for testing.
@@ -423,6 +422,7 @@ class MockParser:
 # ============================================================================
 # Mock Store
 # ============================================================================
+
 
 class MockStore:
     """Mock storage backend for testing.

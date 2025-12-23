@@ -96,10 +96,7 @@ def create_benchmark_chunks(count: int, now: datetime) -> list[MockChunk]:
 
         # Distribute access patterns
         if i < count * 0.2:  # 20% frequent
-            history = [
-                AccessHistoryEntry(timestamp=now - timedelta(days=j))
-                for j in range(10)
-            ]
+            history = [AccessHistoryEntry(timestamp=now - timedelta(days=j)) for j in range(10)]
             last_access = now - timedelta(days=1)
         elif i < count * 0.5:  # 30% recent
             history = [AccessHistoryEntry(timestamp=now - timedelta(hours=1))]
@@ -195,7 +192,7 @@ class TestBLAPerformance:
         # Performance target: <100ms total (part of activation calculation)
         # BLA should be < 50ms for 100 candidates (half of budget)
         assert benchmark.stats.stats.mean < 0.050, (
-            f"BLA calculation too slow: {benchmark.stats.stats.mean*1000:.1f}ms > 50ms"
+            f"BLA calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
         )
 
     def test_bla_1000_candidates(self, benchmark, bla_calculator):
@@ -218,7 +215,7 @@ class TestBLAPerformance:
         # Performance target: <200ms total (part of activation calculation)
         # BLA should be < 100ms for 1000 candidates (half of budget)
         assert benchmark.stats.stats.mean < 0.100, (
-            f"BLA calculation too slow: {benchmark.stats.stats.mean*1000:.1f}ms > 100ms"
+            f"BLA calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 100ms"
         )
 
 
@@ -246,7 +243,7 @@ class TestContextBoostPerformance:
 
         # Context boost should be very fast (<10ms for 100 candidates)
         assert benchmark.stats.stats.mean < 0.010, (
-            f"Context boost too slow: {benchmark.stats.stats.mean*1000:.1f}ms > 10ms"
+            f"Context boost too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 10ms"
         )
 
     def test_context_boost_1000_candidates(self, benchmark, context_boost_calculator):
@@ -270,7 +267,7 @@ class TestContextBoostPerformance:
 
         # Context boost should be very fast (<50ms for 1000 candidates)
         assert benchmark.stats.stats.mean < 0.050, (
-            f"Context boost too slow: {benchmark.stats.stats.mean*1000:.1f}ms > 50ms"
+            f"Context boost too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
         )
 
 
@@ -297,7 +294,7 @@ class TestDecayPerformance:
 
         # Decay should be very fast (<10ms for 100 candidates)
         assert benchmark.stats.stats.mean < 0.010, (
-            f"Decay calculation too slow: {benchmark.stats.stats.mean*1000:.1f}ms > 10ms"
+            f"Decay calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 10ms"
         )
 
     def test_decay_1000_candidates(self, benchmark, decay_calculator):
@@ -320,7 +317,7 @@ class TestDecayPerformance:
 
         # Decay should be very fast (<50ms for 1000 candidates)
         assert benchmark.stats.stats.mean < 0.050, (
-            f"Decay calculation too slow: {benchmark.stats.stats.mean*1000:.1f}ms > 50ms"
+            f"Decay calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
         )
 
 
@@ -517,9 +514,7 @@ class TestMemoryEfficiency:
 
         # Object count should not grow significantly (allow 10% growth)
         growth_rate = (final_objects - initial_objects) / initial_objects
-        assert growth_rate < 0.10, (
-            f"Memory leak detected: {growth_rate:.1%} object growth"
-        )
+        assert growth_rate < 0.10, f"Memory leak detected: {growth_rate:.1%} object growth"
 
 
 if __name__ == "__main__":

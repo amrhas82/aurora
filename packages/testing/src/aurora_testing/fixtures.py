@@ -27,6 +27,7 @@ from aurora_core.store.sqlite import SQLiteStore
 # Storage Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def memory_store():
     """Create an in-memory store for testing.
@@ -70,6 +71,7 @@ def sqlite_file_store(tmp_path):
 # ============================================================================
 # Chunk Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def sample_code_chunk():
@@ -172,7 +174,7 @@ def chunk_collection():
             signature="def parse_json_file(filepath: str) -> dict",
             docstring="Parse JSON data from a file and return as dictionary",
             complexity_score=0.3,
-            dependencies=[]
+            dependencies=[],
         ),
         CodeChunk(
             chunk_id="code:xml_parser.py:parse_xml",
@@ -184,7 +186,7 @@ def chunk_collection():
             signature="def parse_xml_file(filepath: str) -> ElementTree",
             docstring="Parse XML data from a file and return element tree",
             complexity_score=0.5,
-            dependencies=[]
+            dependencies=[],
         ),
         CodeChunk(
             chunk_id="code:validator.py:validate",
@@ -196,7 +198,7 @@ def chunk_collection():
             signature="def validate_data(data: dict) -> bool",
             docstring="Validate data structure matches schema requirements",
             complexity_score=0.4,
-            dependencies=["code:json_parser.py:parse_json"]
+            dependencies=["code:json_parser.py:parse_json"],
         ),
         CodeChunk(
             chunk_id="code:loader.py:ConfigLoader",
@@ -208,7 +210,7 @@ def chunk_collection():
             signature="class ConfigLoader",
             docstring="Load configuration from JSON files",
             complexity_score=0.6,
-            dependencies=["code:json_parser.py:parse_json"]
+            dependencies=["code:json_parser.py:parse_json"],
         ),
     ]
 
@@ -216,6 +218,7 @@ def chunk_collection():
 # ============================================================================
 # Parser Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def python_parser():
@@ -240,6 +243,7 @@ def parser_registry():
 # ============================================================================
 # Context Provider Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def code_context_provider(memory_store, parser_registry):
@@ -276,6 +280,7 @@ def populated_context_provider(memory_store, parser_registry, chunk_collection):
 # ============================================================================
 # File and Directory Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def sample_python_file(tmp_path):
@@ -414,7 +419,7 @@ def broken_python_file(tmp_path):
         Path: Path to created Python file with syntax errors.
     """
     test_file = tmp_path / "broken.py"
-    test_file.write_text('''
+    test_file.write_text("""
 def broken_function(x, y)
     # Missing colon
     return x + y
@@ -426,7 +431,7 @@ class BrokenClass
 
 # Unclosed string
 message = "this string is not closed
-''')
+""")
     return test_file
 
 
@@ -509,6 +514,7 @@ def python_file_with_only_docstring(tmp_path):
 # Performance Test Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def large_python_file(tmp_path):
     """Create a large Python file for performance testing (~1000 lines).
@@ -556,6 +562,7 @@ def scalable_python_file_factory(tmp_path):
     Returns:
         Callable: Function that creates Python file with N functions.
     """
+
     def create_file(num_functions: int) -> Path:
         """Create Python file with specified number of functions.
 
@@ -589,6 +596,7 @@ def function_{i}(x, y):
 # ============================================================================
 # Utility Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def temp_config_dir(tmp_path):
@@ -626,7 +634,7 @@ def sample_agent_config(tmp_path):
                 "type": "local",
                 "path": "/usr/local/bin/agent1",
                 "capabilities": ["code", "test"],
-                "domains": ["python"]
+                "domains": ["python"],
             },
             {
                 "id": "test-agent-2",
@@ -634,8 +642,8 @@ def sample_agent_config(tmp_path):
                 "type": "remote",
                 "endpoint": "http://localhost:8080/agent",
                 "capabilities": ["analyze", "review"],
-                "domains": ["python", "javascript"]
-            }
+                "domains": ["python", "javascript"],
+            },
         ]
     }
 

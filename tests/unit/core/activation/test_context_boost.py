@@ -33,10 +33,7 @@ class TestContextBoostConfig:
     def test_custom_config(self):
         """Test custom configuration values."""
         config = ContextBoostConfig(
-            boost_factor=1.0,
-            min_keyword_length=2,
-            case_sensitive=True,
-            stemming_enabled=True
+            boost_factor=1.0, min_keyword_length=2, case_sensitive=True, stemming_enabled=True
         )
         assert config.boost_factor == 1.0
         assert config.min_keyword_length == 2
@@ -76,7 +73,7 @@ class TestKeywordExtractor:
         """Test extracting simple keywords from text."""
         extractor = KeywordExtractor()
         keywords = extractor.extract("optimize database queries")
-        assert keywords == {'optimize', 'database', 'queries'}
+        assert keywords == {"optimize", "database", "queries"}
 
     def test_extract_filters_short_words(self):
         """Test that short words are filtered out."""
@@ -84,26 +81,26 @@ class TestKeywordExtractor:
         extractor = KeywordExtractor(config)
         keywords = extractor.extract("a database is good")
         # 'a' and 'is' should be filtered (too short or stop words)
-        assert 'database' in keywords
-        assert 'good' in keywords
-        assert 'a' not in keywords
+        assert "database" in keywords
+        assert "good" in keywords
+        assert "a" not in keywords
 
     def test_extract_filters_stop_words(self):
         """Test that common stop words are filtered out."""
         extractor = KeywordExtractor()
         keywords = extractor.extract("the database and the queries")
         # 'the' and 'and' are stop words
-        assert keywords == {'database', 'queries'}
+        assert keywords == {"database", "queries"}
 
     def test_programming_terms_not_filtered(self):
         """Test that programming terms are kept even if short."""
         extractor = KeywordExtractor()
         keywords = extractor.extract("api db id ui")
         # These should all be kept as programming terms
-        assert 'api' in keywords
-        assert 'db' in keywords
-        assert 'id' in keywords
-        assert 'ui' in keywords
+        assert "api" in keywords
+        assert "db" in keywords
+        assert "id" in keywords
+        assert "ui" in keywords
 
     def test_case_insensitive_by_default(self):
         """Test that extraction is case-insensitive by default."""
@@ -118,8 +115,8 @@ class TestKeywordExtractor:
         extractor = KeywordExtractor(config)
         keywords = extractor.extract("Database database")
         # Should keep both versions
-        assert 'Database' in keywords
-        assert 'database' in keywords
+        assert "Database" in keywords
+        assert "database" in keywords
 
     def test_extract_from_empty_string(self):
         """Test extracting from empty string."""
@@ -132,20 +129,20 @@ class TestKeywordExtractor:
         extractor = KeywordExtractor()
         keywords = extractor.extract("user_id, task-name, file.py")
         # Should extract words around special characters
-        assert 'user' in keywords or 'user_id' in keywords
-        assert 'task' in keywords or 'name' in keywords
-        assert 'file' in keywords
+        assert "user" in keywords or "user_id" in keywords
+        assert "task" in keywords or "name" in keywords
+        assert "file" in keywords
 
     def test_extract_from_chunks(self):
         """Test extracting keywords from multiple chunks."""
         extractor = KeywordExtractor()
         chunks = ["database query", "optimize performance", "database connection"]
         keywords = extractor.extract_from_chunks(chunks)
-        assert 'database' in keywords
-        assert 'query' in keywords
-        assert 'optimize' in keywords
-        assert 'performance' in keywords
-        assert 'connection' in keywords
+        assert "database" in keywords
+        assert "query" in keywords
+        assert "optimize" in keywords
+        assert "performance" in keywords
+        assert "connection" in keywords
 
     def test_extract_from_empty_chunks(self):
         """Test extracting from empty chunk list."""
@@ -159,9 +156,9 @@ class TestKeywordExtractor:
         extractor = KeywordExtractor(config)
         keywords = extractor.extract("query database optimization")
         # Only 'database' (8) and 'optimization' (12) are >= 6 chars
-        assert 'database' in keywords
-        assert 'optimization' in keywords
-        assert 'query' not in keywords  # Only 5 chars, too short
+        assert "database" in keywords
+        assert "optimization" in keywords
+        assert "query" not in keywords  # Only 5 chars, too short
 
 
 class TestContextBoost:
@@ -170,8 +167,8 @@ class TestContextBoost:
     def test_calculate_perfect_match(self):
         """Test boost when all query keywords match."""
         boost = ContextBoost()
-        query_keywords = {'database', 'query', 'optimize'}
-        chunk_keywords = {'database', 'query', 'optimize', 'performance'}
+        query_keywords = {"database", "query", "optimize"}
+        chunk_keywords = {"database", "query", "optimize", "performance"}
 
         score = boost.calculate(query_keywords, chunk_keywords)
         # All 3 query keywords match, so overlap_fraction = 1.0
@@ -181,8 +178,8 @@ class TestContextBoost:
     def test_calculate_partial_match(self):
         """Test boost with partial keyword overlap."""
         boost = ContextBoost()
-        query_keywords = {'database', 'query', 'optimize'}
-        chunk_keywords = {'database', 'performance'}
+        query_keywords = {"database", "query", "optimize"}
+        chunk_keywords = {"database", "performance"}
 
         score = boost.calculate(query_keywords, chunk_keywords)
         # 1 out of 3 query keywords match, so overlap_fraction = 1/3
@@ -192,8 +189,8 @@ class TestContextBoost:
     def test_calculate_no_match(self):
         """Test boost when no keywords match."""
         boost = ContextBoost()
-        query_keywords = {'database', 'query'}
-        chunk_keywords = {'network', 'socket'}
+        query_keywords = {"database", "query"}
+        chunk_keywords = {"network", "socket"}
 
         score = boost.calculate(query_keywords, chunk_keywords)
         # No matches, so boost = 0.0
@@ -203,7 +200,7 @@ class TestContextBoost:
         """Test that empty query returns zero boost."""
         boost = ContextBoost()
         query_keywords = set()
-        chunk_keywords = {'database', 'query'}
+        chunk_keywords = {"database", "query"}
 
         score = boost.calculate(query_keywords, chunk_keywords)
         assert score == 0.0
@@ -211,7 +208,7 @@ class TestContextBoost:
     def test_calculate_empty_chunk(self):
         """Test boost when chunk has no keywords."""
         boost = ContextBoost()
-        query_keywords = {'database', 'query'}
+        query_keywords = {"database", "query"}
         chunk_keywords = set()
 
         score = boost.calculate(query_keywords, chunk_keywords)
@@ -221,8 +218,8 @@ class TestContextBoost:
         """Test boost calculation with custom boost factor."""
         config = ContextBoostConfig(boost_factor=1.0)
         boost = ContextBoost(config)
-        query_keywords = {'database', 'query'}
-        chunk_keywords = {'database', 'query', 'optimize'}
+        query_keywords = {"database", "query"}
+        chunk_keywords = {"database", "query", "optimize"}
 
         score = boost.calculate(query_keywords, chunk_keywords)
         # All 2 query keywords match, so overlap_fraction = 1.0
@@ -252,11 +249,11 @@ class TestContextBoost:
     def test_get_matching_keywords(self):
         """Test getting the list of matching keywords."""
         boost = ContextBoost()
-        query_keywords = {'database', 'query', 'optimize'}
-        chunk_keywords = {'database', 'query', 'performance'}
+        query_keywords = {"database", "query", "optimize"}
+        chunk_keywords = {"database", "query", "performance"}
 
         matching = boost.get_matching_keywords(query_keywords, chunk_keywords)
-        assert matching == {'database', 'query'}
+        assert matching == {"database", "query"}
 
     def test_explain_boost(self):
         """Test boost explanation feature."""
@@ -266,18 +263,18 @@ class TestContextBoost:
 
         explanation = boost.explain_boost(query_text, chunk_text)
 
-        assert 'boost_value' in explanation
-        assert 'query_keywords' in explanation
-        assert 'chunk_keywords' in explanation
-        assert 'matching_keywords' in explanation
-        assert 'overlap_fraction' in explanation
+        assert "boost_value" in explanation
+        assert "query_keywords" in explanation
+        assert "chunk_keywords" in explanation
+        assert "matching_keywords" in explanation
+        assert "overlap_fraction" in explanation
 
         # Check values are reasonable
-        assert explanation['boost_value'] > 0.0
-        assert len(explanation['query_keywords']) > 0
-        assert len(explanation['chunk_keywords']) > 0
-        assert len(explanation['matching_keywords']) > 0
-        assert 0.0 <= explanation['overlap_fraction'] <= 1.0
+        assert explanation["boost_value"] > 0.0
+        assert len(explanation["query_keywords"]) > 0
+        assert len(explanation["chunk_keywords"]) > 0
+        assert len(explanation["matching_keywords"]) > 0
+        assert 0.0 <= explanation["overlap_fraction"] <= 1.0
 
     def test_explain_boost_no_match(self):
         """Test explanation when there's no match."""
@@ -287,9 +284,9 @@ class TestContextBoost:
 
         explanation = boost.explain_boost(query_text, chunk_text)
 
-        assert explanation['boost_value'] == 0.0
-        assert explanation['overlap_fraction'] == 0.0
-        assert len(explanation['matching_keywords']) == 0
+        assert explanation["boost_value"] == 0.0
+        assert explanation["overlap_fraction"] == 0.0
+        assert len(explanation["matching_keywords"]) == 0
 
 
 class TestCalculateFromChunkFields:
@@ -301,10 +298,7 @@ class TestCalculateFromChunkFields:
         query_text = "database query"
         chunk_name = "database query handler"  # Space-separated so keywords split
 
-        score = boost.calculate_from_chunk_fields(
-            query_text=query_text,
-            chunk_name=chunk_name
-        )
+        score = boost.calculate_from_chunk_fields(query_text=query_text, chunk_name=chunk_name)
 
         # Name has high weight (2.0)
         # Keywords from "database query" = {database, query}
@@ -321,9 +315,7 @@ class TestCalculateFromChunkFields:
         docstring = "Optimize database queries for performance"
 
         score = boost.calculate_from_chunk_fields(
-            query_text=query_text,
-            chunk_name=chunk_name,
-            chunk_docstring=docstring
+            query_text=query_text, chunk_name=chunk_name, chunk_docstring=docstring
         )
 
         # Should find matches in docstring
@@ -343,7 +335,7 @@ class TestCalculateFromChunkFields:
             chunk_name=chunk_name,
             chunk_docstring=docstring,
             chunk_signature=signature,
-            chunk_body=body
+            chunk_body=body,
         )
 
         # Should have high score due to matches across all fields
@@ -358,14 +350,14 @@ class TestCalculateFromChunkFields:
         score_name = boost.calculate_from_chunk_fields(
             query_text=query_text,
             chunk_name="special handler",  # Space-separated
-            chunk_body="generic function"
+            chunk_body="generic function",
         )
 
         # Score with body match only (weight 1.0)
         score_body = boost.calculate_from_chunk_fields(
             query_text=query_text,
             chunk_name="generic handler",  # Space-separated
-            chunk_body="special function implementation"
+            chunk_body="special function implementation",
         )
 
         # Name has 2x weight, so should score higher
@@ -388,7 +380,7 @@ class TestCalculateFromChunkFields:
             chunk_name=chunk_name,
             chunk_docstring=None,
             chunk_signature=None,
-            chunk_body=None
+            chunk_body=None,
         )
 
         # Keywords: query={database}, name={database, handler}
@@ -401,10 +393,7 @@ class TestCalculateFromChunkFields:
         query_text = ""
         chunk_name = "handler"
 
-        score = boost.calculate_from_chunk_fields(
-            query_text=query_text,
-            chunk_name=chunk_name
-        )
+        score = boost.calculate_from_chunk_fields(query_text=query_text, chunk_name=chunk_name)
 
         assert score == 0.0
 
@@ -428,7 +417,7 @@ class TestCalculateFromChunkFields:
             chunk_name=chunk_name,
             chunk_docstring=docstring,
             chunk_signature=signature,
-            chunk_body=body
+            chunk_body=body,
         )
 
         # Should have good overlap: 'parse', 'sql', 'query'
@@ -444,8 +433,7 @@ class TestCalculateContextBoostFunction:
     def test_calculate_with_defaults(self):
         """Test standalone function with default parameters."""
         score = calculate_context_boost(
-            query_text="database query",
-            chunk_text="database connection and query execution"
+            query_text="database query", chunk_text="database connection and query execution"
         )
 
         assert score > 0.0
@@ -454,9 +442,7 @@ class TestCalculateContextBoostFunction:
     def test_calculate_with_custom_boost_factor(self):
         """Test standalone function with custom boost factor."""
         score = calculate_context_boost(
-            query_text="database query",
-            chunk_text="database query",
-            boost_factor=1.0
+            query_text="database query", chunk_text="database query", boost_factor=1.0
         )
 
         # Perfect match with boost_factor=1.0 should give 1.0
@@ -464,10 +450,7 @@ class TestCalculateContextBoostFunction:
 
     def test_calculate_no_match(self):
         """Test standalone function with no match."""
-        score = calculate_context_boost(
-            query_text="database",
-            chunk_text="network"
-        )
+        score = calculate_context_boost(query_text="database", chunk_text="network")
 
         assert score == 0.0
 
@@ -502,7 +485,7 @@ class TestEdgeCases:
         keywords = extractor.extract("python3 version123 test")
 
         # Should extract words with numbers
-        assert any('python' in k or 'version' in k for k in keywords)
+        assert any("python" in k or "version" in k for k in keywords)
 
     def test_mixed_case_matching(self):
         """Test that mixed case text matches correctly."""
@@ -517,8 +500,8 @@ class TestEdgeCases:
     def test_repeated_keywords(self):
         """Test that repeated keywords don't inflate boost."""
         boost = ContextBoost()
-        query_keywords = {'database', 'query'}
-        chunk_keywords = {'database', 'query'}
+        query_keywords = {"database", "query"}
+        chunk_keywords = {"database", "query"}
 
         # Boost should be based on unique keyword overlap
         score = boost.calculate(query_keywords, chunk_keywords)
@@ -538,18 +521,14 @@ class TestRealWorldScenarios:
         relevant_name = "validate_user_input"
         relevant_doc = "Validate user input for security"
         relevant_score = boost.calculate_from_chunk_fields(
-            query_text=query_text,
-            chunk_name=relevant_name,
-            chunk_docstring=relevant_doc
+            query_text=query_text, chunk_name=relevant_name, chunk_docstring=relevant_doc
         )
 
         # Irrelevant function
         irrelevant_name = "database_connect"
         irrelevant_doc = "Connect to database"
         irrelevant_score = boost.calculate_from_chunk_fields(
-            query_text=query_text,
-            chunk_name=irrelevant_name,
-            chunk_docstring=irrelevant_doc
+            query_text=query_text, chunk_name=irrelevant_name, chunk_docstring=irrelevant_doc
         )
 
         # Relevant should score higher
@@ -583,5 +562,5 @@ class TestRealWorldScenarios:
         assert score == pytest.approx(0.5, abs=0.001)
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

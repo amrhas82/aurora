@@ -67,7 +67,7 @@ class MemoryStore(Store):
         self._activations.clear()
         self._relationships.clear()
 
-    def save_chunk(self, chunk: 'Chunk') -> bool:
+    def save_chunk(self, chunk: "Chunk") -> bool:
         """
         Save a chunk to memory.
 
@@ -87,10 +87,7 @@ class MemoryStore(Store):
         try:
             chunk.validate()
         except ValueError as e:
-            raise ValidationError(
-                f"Chunk validation failed: {chunk.id}",
-                details=str(e)
-            )
+            raise ValidationError(f"Chunk validation failed: {chunk.id}", details=str(e))
 
         # Store chunk
         self._chunks[chunk.id] = chunk
@@ -98,14 +95,14 @@ class MemoryStore(Store):
         # Initialize or update activation record
         if chunk.id not in self._activations:
             self._activations[chunk.id] = {
-                'base_level': 0.0,
-                'last_access': datetime.utcnow(),
-                'access_count': 0,
+                "base_level": 0.0,
+                "last_access": datetime.utcnow(),
+                "access_count": 0,
             }
 
         return True
 
-    def get_chunk(self, chunk_id: ChunkID) -> Optional['Chunk']:
+    def get_chunk(self, chunk_id: ChunkID) -> Optional["Chunk"]:
         """
         Retrieve a chunk by ID.
 
@@ -141,21 +138,17 @@ class MemoryStore(Store):
 
         if chunk_id_str not in self._activations:
             self._activations[chunk_id_str] = {
-                'base_level': 0.0,
-                'last_access': datetime.utcnow(),
-                'access_count': 0,
+                "base_level": 0.0,
+                "last_access": datetime.utcnow(),
+                "access_count": 0,
             }
 
         # Update activation
-        self._activations[chunk_id_str]['base_level'] += delta
-        self._activations[chunk_id_str]['last_access'] = datetime.utcnow()
-        self._activations[chunk_id_str]['access_count'] += 1
+        self._activations[chunk_id_str]["base_level"] += delta
+        self._activations[chunk_id_str]["last_access"] = datetime.utcnow()
+        self._activations[chunk_id_str]["access_count"] += 1
 
-    def retrieve_by_activation(
-        self,
-        min_activation: float,
-        limit: int
-    ) -> list['Chunk']:
+    def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
         """
         Retrieve chunks by activation threshold.
 
@@ -174,21 +167,17 @@ class MemoryStore(Store):
         # Filter and sort chunks by activation
         results = []
         for chunk_id, activation_data in self._activations.items():
-            if activation_data['base_level'] >= min_activation:
+            if activation_data["base_level"] >= min_activation:
                 chunk = self._chunks.get(chunk_id)
                 if chunk is not None:
-                    results.append((chunk, activation_data['base_level']))
+                    results.append((chunk, activation_data["base_level"]))
 
         # Sort by activation (highest first) and limit results
         results.sort(key=lambda x: x[1], reverse=True)
         return [chunk for chunk, _ in results[:limit]]
 
     def add_relationship(
-        self,
-        from_id: ChunkID,
-        to_id: ChunkID,
-        rel_type: str,
-        weight: float = 1.0
+        self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
     ) -> bool:
         """
         Add a relationship between chunks.
@@ -218,20 +207,18 @@ class MemoryStore(Store):
             raise ChunkNotFoundError(to_id_str)
 
         # Add relationship
-        self._relationships.append({
-            'from_chunk': from_id_str,
-            'to_chunk': to_id_str,
-            'relationship_type': rel_type,
-            'weight': weight,
-        })
+        self._relationships.append(
+            {
+                "from_chunk": from_id_str,
+                "to_chunk": to_id_str,
+                "relationship_type": rel_type,
+                "weight": weight,
+            }
+        )
 
         return True
 
-    def get_related_chunks(
-        self,
-        chunk_id: ChunkID,
-        max_depth: int = 2
-    ) -> list['Chunk']:
+    def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
         """
         Get related chunks via relationship graph traversal.
 
@@ -262,8 +249,8 @@ class MemoryStore(Store):
             for current_id in current_level:
                 # Find all chunks related to current_id
                 for rel in self._relationships:
-                    if rel['from_chunk'] == current_id:
-                        target_id = rel['to_chunk']
+                    if rel["from_chunk"] == current_id:
+                        target_id = rel["to_chunk"]
                         if target_id not in visited:
                             visited.add(target_id)
                             next_level.add(target_id)
@@ -275,10 +262,7 @@ class MemoryStore(Store):
         return [self._chunks[cid] for cid in visited if cid in self._chunks]
 
     def record_access(
-        self,
-        chunk_id: ChunkID,
-        access_time: datetime | None = None,
-        context: str | None = None
+        self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
     ) -> None:
         """
         Record an access to a chunk for ACT-R activation tracking.
@@ -304,21 +288,21 @@ class MemoryStore(Store):
         # Initialize or update activation record
         if chunk_id_str not in self._activations:
             self._activations[chunk_id_str] = {
-                'access_count': 1,
-                'first_access': access_time,
-                'last_access': access_time,
-                'access_history': [{'timestamp': access_time.isoformat(), 'context': context}]
+                "access_count": 1,
+                "first_access": access_time,
+                "last_access": access_time,
+                "access_history": [{"timestamp": access_time.isoformat(), "context": context}],
             }
         else:
             activation = self._activations[chunk_id_str]
-            activation['access_count'] += 1
-            activation['last_access'] = access_time
-            activation['access_history'].append({'timestamp': access_time.isoformat(), 'context': context})
+            activation["access_count"] += 1
+            activation["last_access"] = access_time
+            activation["access_history"].append(
+                {"timestamp": access_time.isoformat(), "context": context}
+            )
 
     def get_access_history(
-        self,
-        chunk_id: ChunkID,
-        limit: int | None = None
+        self, chunk_id: ChunkID, limit: int | None = None
     ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
@@ -345,10 +329,10 @@ class MemoryStore(Store):
         if chunk_id_str not in self._activations:
             return []
 
-        access_history = self._activations[chunk_id_str]['access_history']
+        access_history = self._activations[chunk_id_str]["access_history"]
 
         # Sort by timestamp, most recent first
-        sorted_history = sorted(access_history, key=lambda x: x['timestamp'], reverse=True)
+        sorted_history = sorted(access_history, key=lambda x: x["timestamp"], reverse=True)
 
         # Apply limit if specified
         if limit is not None:
@@ -385,16 +369,18 @@ class MemoryStore(Store):
         if chunk_id_str in self._activations:
             activation = self._activations[chunk_id_str]
             return {
-                'access_count': activation['access_count'],
-                'last_access': activation['last_access'],
-                'first_access': activation['first_access'],
-                'created_at': chunk.metadata.get('created_at') if hasattr(chunk, 'metadata') else None
+                "access_count": activation["access_count"],
+                "last_access": activation["last_access"],
+                "first_access": activation["first_access"],
+                "created_at": chunk.metadata.get("created_at")
+                if hasattr(chunk, "metadata")
+                else None,
             }
         return {
-            'access_count': 0,
-            'last_access': None,
-            'first_access': None,
-            'created_at': chunk.metadata.get('created_at') if hasattr(chunk, 'metadata') else None
+            "access_count": 0,
+            "last_access": None,
+            "first_access": None,
+            "created_at": chunk.metadata.get("created_at") if hasattr(chunk, "metadata") else None,
         }
 
     def close(self) -> None:
@@ -418,4 +404,4 @@ class MemoryStore(Store):
         return str(chunk_id) in self._chunks
 
 
-__all__ = ['MemoryStore']
+__all__ = ["MemoryStore"]

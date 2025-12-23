@@ -10,7 +10,6 @@ Functions:
     cosine_similarity: Calculate cosine similarity between two vectors
 """
 
-
 import numpy as np
 import numpy.typing as npt
 
@@ -19,6 +18,7 @@ import numpy.typing as npt
 try:
     import torch
     from sentence_transformers import SentenceTransformer
+
     HAS_SENTENCE_TRANSFORMERS = True
 except ImportError:
     HAS_SENTENCE_TRANSFORMERS = False
@@ -175,16 +175,15 @@ class EmbeddingProvider:
 
         # Generate embedding using sentence-transformers
         # The model.encode() returns normalized embeddings by default
-        embedding = self._model.encode(
+        embedding_result = self._model.encode(
             text,
             convert_to_numpy=True,
             normalize_embeddings=True,  # L2 normalization for cosine similarity
             show_progress_bar=False,
         )
 
-        # Ensure correct dtype
-        if embedding.dtype != np.float32:
-            embedding = embedding.astype(np.float32)
+        # Cast to numpy array and ensure correct dtype
+        embedding: npt.NDArray[np.float32] = np.asarray(embedding_result, dtype=np.float32)
 
         return embedding
 
@@ -224,16 +223,15 @@ class EmbeddingProvider:
 
         # Generate embedding using sentence-transformers
         # The model.encode() returns normalized embeddings by default
-        embedding = self._model.encode(
+        embedding_result = self._model.encode(
             query,
             convert_to_numpy=True,
             normalize_embeddings=True,  # L2 normalization for cosine similarity
             show_progress_bar=False,
         )
 
-        # Ensure correct dtype
-        if embedding.dtype != np.float32:
-            embedding = embedding.astype(np.float32)
+        # Cast to numpy array and ensure correct dtype
+        embedding: npt.NDArray[np.float32] = np.asarray(embedding_result, dtype=np.float32)
 
         return embedding
 

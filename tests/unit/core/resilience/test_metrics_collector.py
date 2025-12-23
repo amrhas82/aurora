@@ -4,7 +4,6 @@ Unit tests for MetricsCollector class.
 Tests performance and reliability metrics tracking.
 """
 
-
 import pytest
 
 from aurora_core.resilience.metrics_collector import MetricsCollector
@@ -355,12 +354,9 @@ class TestMetricsCollectorExport:
         assert "cache" in metrics
         assert "errors" in metrics
 
-        assert all(k in metrics["queries"] for k in [
-            "total", "success", "failed", "avg_latency", "p95_latency"
-        ])
-        assert all(k in metrics["cache"] for k in [
-            "hits", "misses", "hit_rate"
-        ])
-        assert all(k in metrics["errors"] for k in [
-            "total", "error_rate", "by_type"
-        ])
+        assert all(
+            k in metrics["queries"]
+            for k in ["total", "success", "failed", "avg_latency", "p95_latency"]
+        )
+        assert all(k in metrics["cache"] for k in ["hits", "misses", "hit_rate"])
+        assert all(k in metrics["errors"] for k in ["total", "error_rate", "by_type"])

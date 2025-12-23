@@ -99,9 +99,7 @@ class TestHeadlessCommandDryRun:
             mock_instance = MagicMock()
             mock_orch.return_value = mock_instance
 
-            result = runner.invoke(
-                cli, ["headless", str(temp_prompt), "--dry-run"]
-            )
+            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run"])
 
             # Dry run should succeed (validation only)
             assert result.exit_code == 0
@@ -160,9 +158,7 @@ class TestHeadlessCommandDryRun:
     def test_dry_run_allow_main_warning(self, runner: CliRunner, temp_prompt: Path):
         """Test dry-run shows warning when allowing main branch."""
         with patch("aurora_soar.headless.HeadlessOrchestrator"):
-            result = runner.invoke(
-                cli, ["headless", str(temp_prompt), "--dry-run", "--allow-main"]
-            )
+            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "--allow-main"])
 
             assert result.exit_code == 0
             # Should show warning about dangerous option
@@ -186,9 +182,7 @@ class TestHeadlessCommandOptions:
     def test_short_option_budget(self, runner: CliRunner, temp_prompt: Path):
         """Test short option -b for budget."""
         with patch("aurora_soar.headless.HeadlessOrchestrator"):
-            result = runner.invoke(
-                cli, ["headless", str(temp_prompt), "--dry-run", "-b", "15.5"]
-            )
+            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "-b", "15.5"])
 
             assert result.exit_code == 0
             assert "15.5" in result.output or "15" in result.output
@@ -196,9 +190,7 @@ class TestHeadlessCommandOptions:
     def test_short_option_max_iter(self, runner: CliRunner, temp_prompt: Path):
         """Test short option -m for max-iter."""
         with patch("aurora_soar.headless.HeadlessOrchestrator"):
-            result = runner.invoke(
-                cli, ["headless", str(temp_prompt), "--dry-run", "-m", "25"]
-            )
+            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "-m", "25"])
 
             assert result.exit_code == 0
             assert "25" in result.output

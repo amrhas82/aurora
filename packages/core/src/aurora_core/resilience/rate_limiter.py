@@ -81,10 +81,7 @@ class RateLimiter:
         tokens_to_add = time_elapsed * self.refill_rate
 
         # Add tokens and cap at max
-        self.current_tokens = min(
-            self.current_tokens + tokens_to_add,
-            self.max_tokens
-        )
+        self.current_tokens = min(self.current_tokens + tokens_to_add, self.max_tokens)
 
         self._last_refill_time = now
 
@@ -173,6 +170,8 @@ class RateLimiter:
         self.wait_if_needed()
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object
+    ) -> None:
         """Context manager exit: no cleanup needed."""
         pass

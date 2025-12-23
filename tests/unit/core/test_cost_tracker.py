@@ -364,7 +364,7 @@ class TestCostTracker:
     def test_persistence_corrupted_file(self, temp_tracker_path):
         """Test handling of corrupted tracker file."""
         # Write invalid JSON
-        with open(temp_tracker_path, 'w') as f:
+        with open(temp_tracker_path, "w") as f:
             f.write("invalid json{{{")
 
         # Should start fresh, not crash

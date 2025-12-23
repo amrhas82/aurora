@@ -80,7 +80,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
         # Phase 3 will add spreading activation from query keywords
         retrieved_chunks = store.retrieve_by_activation(
             min_activation=0.0,  # Get any activated chunks
-            limit=budget
+            limit=budget,
         )
 
         # Separate chunks by type
@@ -89,7 +89,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
 
         for chunk in retrieved_chunks:
             # Get chunk type from metadata if available, otherwise use class name
-            if hasattr(chunk, 'metadata') and isinstance(chunk.metadata, dict):
+            if hasattr(chunk, "metadata") and isinstance(chunk.metadata, dict):
                 chunk_type = chunk.metadata.get("chunk_type", chunk.__class__.__name__)
             else:
                 chunk_type = chunk.__class__.__name__

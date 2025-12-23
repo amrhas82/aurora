@@ -9,7 +9,6 @@ Tests the ACT-R spreading activation calculation including:
 - Edge cases (cycles, max_hops, max_edges, bidirectional spreading)
 """
 
-
 import pytest
 
 from aurora_core.activation.spreading import (
@@ -26,11 +25,7 @@ class TestRelationship:
 
     def test_create_relationship_minimal(self):
         """Test creating relationship with minimal required fields."""
-        rel = Relationship(
-            from_chunk="func_a",
-            to_chunk="func_b",
-            rel_type="calls"
-        )
+        rel = Relationship(from_chunk="func_a", to_chunk="func_b", rel_type="calls")
         assert rel.from_chunk == "func_a"
         assert rel.to_chunk == "func_b"
         assert rel.rel_type == "calls"
@@ -39,10 +34,7 @@ class TestRelationship:
     def test_create_relationship_with_weight(self):
         """Test creating relationship with custom weight."""
         rel = Relationship(
-            from_chunk="func_a",
-            to_chunk="func_b",
-            rel_type="depends_on",
-            weight=0.75
+            from_chunk="func_a", to_chunk="func_b", rel_type="depends_on", weight=0.75
         )
         assert rel.weight == 0.75
 
@@ -56,32 +48,18 @@ class TestRelationship:
     def test_weight_validation_negative(self):
         """Test weight cannot be negative."""
         with pytest.raises(Exception):  # Pydantic validation error
-            Relationship(
-                from_chunk="a",
-                to_chunk="b",
-                rel_type="test",
-                weight=-0.1
-            )
+            Relationship(from_chunk="a", to_chunk="b", rel_type="test", weight=-0.1)
 
     def test_weight_validation_above_one(self):
         """Test weight cannot exceed 1.0."""
         with pytest.raises(Exception):  # Pydantic validation error
-            Relationship(
-                from_chunk="a",
-                to_chunk="b",
-                rel_type="test",
-                weight=1.5
-            )
+            Relationship(from_chunk="a", to_chunk="b", rel_type="test", weight=1.5)
 
     def test_relationship_types(self):
         """Test different relationship types are supported."""
         types = ["calls", "imports", "depends_on", "inherits", "uses"]
         for rel_type in types:
-            rel = Relationship(
-                from_chunk="a",
-                to_chunk="b",
-                rel_type=rel_type
-            )
+            rel = Relationship(from_chunk="a", to_chunk="b", rel_type=rel_type)
             assert rel.rel_type == rel_type
 
 
@@ -98,12 +76,7 @@ class TestSpreadingConfig:
 
     def test_custom_config(self):
         """Test custom configuration values."""
-        config = SpreadingConfig(
-            spread_factor=0.5,
-            max_hops=2,
-            max_edges=500,
-            min_weight=0.2
-        )
+        config = SpreadingConfig(spread_factor=0.5, max_hops=2, max_edges=500, min_weight=0.2)
         assert config.spread_factor == 0.5
         assert config.max_hops == 2
         assert config.max_edges == 500
@@ -669,12 +642,7 @@ class TestCalculateSpreadingFunction:
             Relationship(from_chunk="b", to_chunk="c", rel_type="calls", weight=1.0),
         ]
 
-        activations = calculate_spreading(
-            ["a"],
-            relationships,
-            spread_factor=0.5,
-            max_hops=1
-        )
+        activations = calculate_spreading(["a"], relationships, spread_factor=0.5, max_hops=1)
 
         # Only b should receive activation (max_hops=1)
         assert "b" in activations
@@ -696,7 +664,7 @@ class TestACTRSpreadingFormula:
         activations = spreading.calculate(["a"], graph)
 
         # Expected: 1.0 × 0.7^1 = 0.7
-        expected = 1.0 * (0.7 ** 1)
+        expected = 1.0 * (0.7**1)
         assert activations["b"] == pytest.approx(expected, abs=0.001)
 
     def test_actr_two_hop_formula(self):
@@ -709,7 +677,7 @@ class TestACTRSpreadingFormula:
         activations = spreading.calculate(["a"], graph)
 
         # Expected for c: 0.8 × 0.7^2 = 0.392
-        expected = 0.8 * (0.7 ** 2)
+        expected = 0.8 * (0.7**2)
         assert activations["c"] == pytest.approx(expected, abs=0.001)
 
     def test_actr_multiple_paths_accumulation(self):
@@ -728,8 +696,8 @@ class TestACTRSpreadingFormula:
         # Path 1: a->b->d = 0.9 × 0.7^2 = 0.441
         # Path 2: a->c->d = 0.8 × 0.7^2 = 0.392
         # Total: 0.441 + 0.392 = 0.833
-        path1 = 0.9 * (0.7 ** 2)
-        path2 = 0.8 * (0.7 ** 2)
+        path1 = 0.9 * (0.7**2)
+        path2 = 0.8 * (0.7**2)
         expected = path1 + path2
 
         assert activations["d"] == pytest.approx(expected, abs=0.001)
@@ -826,7 +794,7 @@ class TestEdgeCases:
 
         # Create a large graph (100 nodes)
         for i in range(99):
-            graph.add_relationship(f"node_{i}", f"node_{i+1}", "calls", 1.0)
+            graph.add_relationship(f"node_{i}", f"node_{i + 1}", "calls", 1.0)
 
         # Should stop after max_edges
         activations = spreading.calculate(["node_0"], graph)
@@ -883,5 +851,5 @@ class TestEdgeCases:
         assert activations == {}
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

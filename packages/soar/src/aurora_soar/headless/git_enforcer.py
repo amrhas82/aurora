@@ -156,8 +156,7 @@ class GitEnforcer:
             # Git command failed - likely not in a git repository
             stderr = e.stderr.strip() if e.stderr else "unknown error"
             raise GitBranchError(
-                f"Failed to get current git branch: {stderr}. "
-                "Ensure you are in a git repository."
+                f"Failed to get current git branch: {stderr}. Ensure you are in a git repository."
             ) from e
 
         except subprocess.TimeoutExpired as e:

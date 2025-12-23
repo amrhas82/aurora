@@ -249,10 +249,7 @@ class TestMemoryCommand:
             # Create dummy database file
             Path("aurora.db").touch()
 
-            result = runner.invoke(
-                memory_command,
-                ["test function", "--db-path", "aurora.db"]
-            )
+            result = runner.invoke(memory_command, ["test function", "--db-path", "aurora.db"])
 
         assert result.exit_code == 0
         assert "Found 1 results" in result.output
@@ -302,12 +299,16 @@ class TestMemoryCommand:
                 memory_command,
                 [
                     "test",
-                    "--db-path", "aurora.db",
-                    "--max-results", "5",
-                    "--type", "function",
-                    "--min-activation", "0.5",
+                    "--db-path",
+                    "aurora.db",
+                    "--max-results",
+                    "5",
+                    "--type",
+                    "function",
+                    "--min-activation",
+                    "0.5",
                     "--show-content",
-                ]
+                ],
             )
 
         assert result.exit_code == 0
@@ -317,10 +318,7 @@ class TestMemoryCommand:
         """Test memory command when database doesn't exist."""
         runner = CliRunner()
         with runner.isolated_filesystem():
-            result = runner.invoke(
-                memory_command,
-                ["test", "--db-path", "nonexistent.db"]
-            )
+            result = runner.invoke(memory_command, ["test", "--db-path", "nonexistent.db"])
 
         assert result.exit_code != 0
         assert "Database not found" in result.output
@@ -352,10 +350,7 @@ class TestMemoryCommand:
         with runner.isolated_filesystem():
             Path("aurora.db").touch()
 
-            result = runner.invoke(
-                memory_command,
-                ["nonexistent query", "--db-path", "aurora.db"]
-            )
+            result = runner.invoke(memory_command, ["nonexistent query", "--db-path", "aurora.db"])
 
         assert result.exit_code == 0
         assert "No results found" in result.output
@@ -405,8 +400,7 @@ class TestMemoryCommand:
             Path("aurora.db").touch()
 
             result = runner.invoke(
-                memory_command,
-                ["test", "--db-path", "aurora.db", "--type", "function"]
+                memory_command, ["test", "--db-path", "aurora.db", "--type", "function"]
             )
 
         assert result.exit_code == 0
@@ -458,8 +452,7 @@ class TestMemoryCommand:
             Path("aurora.db").touch()
 
             result = runner.invoke(
-                memory_command,
-                ["test", "--db-path", "aurora.db", "--min-activation", "0.5"]
+                memory_command, ["test", "--db-path", "aurora.db", "--min-activation", "0.5"]
             )
 
         assert result.exit_code == 0

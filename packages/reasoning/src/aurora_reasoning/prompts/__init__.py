@@ -49,10 +49,7 @@ class PromptTemplate(ABC):
         pass
 
     def build_prompt(
-        self,
-        *,
-        examples: list[dict[str, Any]] | None = None,
-        **kwargs: Any
+        self, *, examples: list[dict[str, Any]] | None = None, **kwargs: Any
     ) -> dict[str, str]:
         """Build complete prompt with system and user messages.
 

@@ -5,7 +5,6 @@ Tests the complete flow from routing to agent execution:
 - Collect Phase 6: Agent execution with parallel and sequential execution
 """
 
-
 import pytest
 
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
@@ -18,29 +17,35 @@ def agent_registry():
     """Create a registry with test agents."""
     registry = AgentRegistry()
 
-    registry.register(AgentInfo(
-        id="code-analyzer",
-        name="Code Analyzer",
-        description="Analyzes code",
-        capabilities=["code", "analysis"],
-        agent_type="local",
-    ))
+    registry.register(
+        AgentInfo(
+            id="code-analyzer",
+            name="Code Analyzer",
+            description="Analyzes code",
+            capabilities=["code", "analysis"],
+            agent_type="local",
+        )
+    )
 
-    registry.register(AgentInfo(
-        id="test-runner",
-        name="Test Runner",
-        description="Runs tests",
-        capabilities=["testing"],
-        agent_type="local",
-    ))
+    registry.register(
+        AgentInfo(
+            id="test-runner",
+            name="Test Runner",
+            description="Runs tests",
+            capabilities=["testing"],
+            agent_type="local",
+        )
+    )
 
-    registry.register(AgentInfo(
-        id="file-writer",
-        name="File Writer",
-        description="Writes files",
-        capabilities=["file", "writing"],
-        agent_type="local",
-    ))
+    registry.register(
+        AgentInfo(
+            id="file-writer",
+            name="File Writer",
+            description="Writes files",
+            capabilities=["file", "writing"],
+            agent_type="local",
+        )
+    )
 
     return registry
 

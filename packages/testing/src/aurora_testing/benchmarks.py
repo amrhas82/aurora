@@ -19,12 +19,13 @@ from functools import wraps
 from typing import Any, TypeVar
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 # ============================================================================
 # Benchmark Results
 # ============================================================================
+
 
 @dataclass
 class BenchmarkResult:
@@ -45,6 +46,7 @@ class BenchmarkResult:
         target_ms: Target execution time (if specified).
         metadata: Additional metadata.
     """
+
     name: str
     duration_ms: float
     iterations: int = 1
@@ -68,13 +70,15 @@ class BenchmarkResult:
         ]
 
         if self.iterations > 1:
-            lines.extend([
-                f"  Iterations: {self.iterations}",
-                f"  Mean: {self.mean_ms:.2f}ms",
-                f"  Median: {self.median_ms:.2f}ms",
-                f"  Std Dev: {self.std_dev_ms:.2f}ms",
-                f"  Range: {self.min_ms:.2f}ms - {self.max_ms:.2f}ms",
-            ])
+            lines.extend(
+                [
+                    f"  Iterations: {self.iterations}",
+                    f"  Mean: {self.mean_ms:.2f}ms",
+                    f"  Median: {self.median_ms:.2f}ms",
+                    f"  Std Dev: {self.std_dev_ms:.2f}ms",
+                    f"  Range: {self.min_ms:.2f}ms - {self.max_ms:.2f}ms",
+                ]
+            )
 
         if self.target_ms:
             lines.append(f"  Target: {self.target_ms:.2f}ms")
@@ -91,6 +95,7 @@ class BenchmarkResult:
 # ============================================================================
 # Performance Timer
 # ============================================================================
+
 
 class PerformanceTimer:
     """High-resolution timer for performance measurement.
@@ -145,6 +150,7 @@ class PerformanceTimer:
 # ============================================================================
 # Performance Benchmark
 # ============================================================================
+
 
 class PerformanceBenchmark:
     """Main benchmarking utility for performance testing.
@@ -327,6 +333,7 @@ class PerformanceBenchmark:
 # Benchmark Decorator
 # ============================================================================
 
+
 def benchmark(
     name: str | None = None,
     target_ms: float | None = None,
@@ -350,6 +357,7 @@ def benchmark(
         ... def memory_intensive():
         ...     return [0] * 1000000
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         bench_name = name or func.__name__
 
@@ -388,6 +396,7 @@ def benchmark(
 # ============================================================================
 # Memory Profiler
 # ============================================================================
+
 
 class MemoryProfiler:
     """Memory profiling utility.
@@ -474,6 +483,7 @@ class MemoryProfiler:
 # ============================================================================
 # Benchmark Suite
 # ============================================================================
+
 
 class BenchmarkSuite:
     """Collection of related benchmarks.

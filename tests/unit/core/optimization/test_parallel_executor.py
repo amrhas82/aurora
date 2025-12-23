@@ -57,9 +57,9 @@ class TestBasicExecution:
 
         tasks = [
             AgentTask(
-                agent_id='agent1',
+                agent_id="agent1",
                 callable=fast_task,
-                args=('result1',),
+                args=("result1",),
             )
         ]
 
@@ -67,8 +67,8 @@ class TestBasicExecution:
 
         assert len(results) == 1
         assert results[0].success is True
-        assert results[0].result == 'result1'
-        assert results[0].agent_id == 'agent1'
+        assert results[0].result == "result1"
+        assert results[0].agent_id == "agent1"
 
     def test_execute_multiple_tasks(self):
         """Test executing multiple tasks in parallel."""
@@ -77,10 +77,7 @@ class TestBasicExecution:
             max_concurrency=10,
         )
 
-        tasks = [
-            AgentTask(agent_id=f'agent{i}', callable=fast_task, args=(i,))
-            for i in range(5)
-        ]
+        tasks = [AgentTask(agent_id=f"agent{i}", callable=fast_task, args=(i,)) for i in range(5)]
 
         results, stats = executor.execute_all(tasks)
 
@@ -91,17 +88,13 @@ class TestBasicExecution:
 
     def test_task_with_kwargs(self):
         """Test task execution with keyword arguments."""
+
         def task_with_kwargs(x, y=10):
             return x + y
 
         executor = ParallelAgentExecutor()
         tasks = [
-            AgentTask(
-                agent_id='agent1',
-                callable=task_with_kwargs,
-                args=(5,),
-                kwargs={'y': 20}
-            )
+            AgentTask(agent_id="agent1", callable=task_with_kwargs, args=(5,), kwargs={"y": 20})
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -114,9 +107,9 @@ class TestBasicExecution:
         executor = ParallelAgentExecutor()
         tasks = [
             AgentTask(
-                agent_id='agent1',
+                agent_id="agent1",
                 callable=slow_task,
-                args=('result', 0.05),  # 50ms delay
+                args=("result", 0.05),  # 50ms delay
             )
         ]
 
@@ -134,7 +127,7 @@ class TestFailureHandling:
         executor = ParallelAgentExecutor()
         tasks = [
             AgentTask(
-                agent_id='failing_agent',
+                agent_id="failing_agent",
                 callable=failing_task,
             )
         ]
@@ -151,9 +144,9 @@ class TestFailureHandling:
         """Test mixed successful and failing tasks."""
         executor = ParallelAgentExecutor()
         tasks = [
-            AgentTask(agent_id='agent1', callable=fast_task, args=(1,)),
-            AgentTask(agent_id='agent2', callable=failing_task),
-            AgentTask(agent_id='agent3', callable=fast_task, args=(3,)),
+            AgentTask(agent_id="agent1", callable=fast_task, args=(1,)),
+            AgentTask(agent_id="agent2", callable=failing_task),
+            AgentTask(agent_id="agent3", callable=fast_task, args=(3,)),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -179,22 +172,19 @@ class TestPriorityExecution:
 
         tasks = [
             AgentTask(
-                agent_id='low',
-                callable=fast_task,
-                args=('low',),
-                priority=AgentPriority.LOW
+                agent_id="low", callable=fast_task, args=("low",), priority=AgentPriority.LOW
             ),
             AgentTask(
-                agent_id='critical',
+                agent_id="critical",
                 callable=fast_task,
-                args=('critical',),
-                priority=AgentPriority.CRITICAL
+                args=("critical",),
+                priority=AgentPriority.CRITICAL,
             ),
             AgentTask(
-                agent_id='normal',
+                agent_id="normal",
                 callable=fast_task,
-                args=('normal',),
-                priority=AgentPriority.NORMAL
+                args=("normal",),
+                priority=AgentPriority.NORMAL,
             ),
         ]
 
@@ -218,29 +208,24 @@ class TestEarlyTermination:
 
         tasks = [
             AgentTask(
-                agent_id='critical_failing',
-                callable=failing_task,
-                priority=AgentPriority.CRITICAL
+                agent_id="critical_failing", callable=failing_task, priority=AgentPriority.CRITICAL
             ),
             AgentTask(
-                agent_id='agent2',
+                agent_id="agent2",
                 callable=slow_task,
-                args=('result2', 1.0),  # Slow task
-                priority=AgentPriority.NORMAL
+                args=("result2", 1.0),  # Slow task
+                priority=AgentPriority.NORMAL,
             ),
         ]
 
-        results, stats = executor.execute_all(
-            tasks,
-            enable_early_termination=True
-        )
+        results, stats = executor.execute_all(tasks, enable_early_termination=True)
 
         # Critical failure should trigger early termination
         assert stats.critical_failures == 1
         assert stats.early_terminated_tasks >= 0
 
         # Failing task result should be present
-        critical_result = [r for r in results if r.agent_id == 'critical_failing'][0]
+        critical_result = [r for r in results if r.agent_id == "critical_failing"][0]
         assert critical_result.success is False
 
     def test_no_early_termination_when_disabled(self):
@@ -249,21 +234,16 @@ class TestEarlyTermination:
 
         tasks = [
             AgentTask(
-                agent_id='critical_failing',
-                callable=failing_task,
-                priority=AgentPriority.CRITICAL
+                agent_id="critical_failing", callable=failing_task, priority=AgentPriority.CRITICAL
             ),
             AgentTask(
-                agent_id='agent2',
+                agent_id="agent2",
                 callable=fast_task,
-                args=('result2',),
+                args=("result2",),
             ),
         ]
 
-        results, stats = executor.execute_all(
-            tasks,
-            enable_early_termination=False
-        )
+        results, stats = executor.execute_all(tasks, enable_early_termination=False)
 
         # All tasks should complete
         assert len(results) == 2
@@ -275,21 +255,18 @@ class TestEarlyTermination:
 
         tasks = [
             AgentTask(
-                agent_id='failing',
+                agent_id="failing",
                 callable=failing_task,
-                priority=AgentPriority.NORMAL  # Not critical
+                priority=AgentPriority.NORMAL,  # Not critical
             ),
             AgentTask(
-                agent_id='success',
+                agent_id="success",
                 callable=fast_task,
-                args=('result',),
+                args=("result",),
             ),
         ]
 
-        results, stats = executor.execute_all(
-            tasks,
-            enable_early_termination=True
-        )
+        results, stats = executor.execute_all(tasks, enable_early_termination=True)
 
         # Both should complete
         assert len(results) == 2
@@ -303,10 +280,7 @@ class TestResultStreaming:
         """Test that streaming yields results as they complete."""
         executor = ParallelAgentExecutor()
 
-        tasks = [
-            AgentTask(agent_id=f'agent{i}', callable=fast_task, args=(i,))
-            for i in range(3)
-        ]
+        tasks = [AgentTask(agent_id=f"agent{i}", callable=fast_task, args=(i,)) for i in range(3)]
 
         results = []
         for result in executor.execute_streaming(tasks):
@@ -324,14 +298,12 @@ class TestResultStreaming:
 
         tasks = [
             AgentTask(
-                agent_id='critical_failing',
-                callable=failing_task,
-                priority=AgentPriority.CRITICAL
+                agent_id="critical_failing", callable=failing_task, priority=AgentPriority.CRITICAL
             ),
             AgentTask(
-                agent_id='agent2',
+                agent_id="agent2",
                 callable=slow_task,
-                args=('result2', 1.0),
+                args=("result2", 1.0),
             ),
         ]
 
@@ -341,7 +313,7 @@ class TestResultStreaming:
 
         # Should get at least the critical failure
         assert len(results) >= 1
-        critical_result = [r for r in results if r.agent_id == 'critical_failing'][0]
+        critical_result = [r for r in results if r.agent_id == "critical_failing"][0]
         assert critical_result.success is False
 
     def test_streaming_order(self):
@@ -350,8 +322,8 @@ class TestResultStreaming:
 
         # Create tasks with different delays
         tasks = [
-            AgentTask(agent_id='slow', callable=slow_task, args=('slow', 0.2)),
-            AgentTask(agent_id='fast', callable=fast_task, args=('fast',)),
+            AgentTask(agent_id="slow", callable=slow_task, args=("slow", 0.2)),
+            AgentTask(agent_id="fast", callable=fast_task, args=("fast",)),
         ]
 
         results = []
@@ -359,8 +331,8 @@ class TestResultStreaming:
             results.append(result)
 
         # Fast task should complete first
-        assert results[0].agent_id == 'fast'
-        assert results[1].agent_id == 'slow'
+        assert results[0].agent_id == "fast"
+        assert results[1].agent_id == "slow"
 
 
 class TestDynamicConcurrency:
@@ -386,7 +358,7 @@ class TestDynamicConcurrency:
 
         # Execute fast tasks
         tasks = [
-            AgentTask(agent_id=f'agent{i}', callable=fast_task, args=(i,))
+            AgentTask(agent_id=f"agent{i}", callable=fast_task, args=(i,))
             for i in range(20)  # Enough to trigger scaling
         ]
 
@@ -449,8 +421,8 @@ class TestStatisticsTracking:
         executor = ParallelAgentExecutor()
 
         tasks = [
-            AgentTask(agent_id='agent1', callable=fast_task, args=(1,)),
-            AgentTask(agent_id='agent2', callable=fast_task, args=(2,)),
+            AgentTask(agent_id="agent1", callable=fast_task, args=(1,)),
+            AgentTask(agent_id="agent2", callable=fast_task, args=(2,)),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -466,8 +438,8 @@ class TestStatisticsTracking:
         executor = ParallelAgentExecutor()
 
         tasks = [
-            AgentTask(agent_id='success', callable=fast_task, args=(1,)),
-            AgentTask(agent_id='failure', callable=failing_task),
+            AgentTask(agent_id="success", callable=fast_task, args=(1,)),
+            AgentTask(agent_id="failure", callable=failing_task),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -484,12 +456,8 @@ class TestStatisticsTracking:
         )
 
         tasks = [
-            AgentTask(
-                agent_id='critical',
-                callable=failing_task,
-                priority=AgentPriority.CRITICAL
-            ),
-            AgentTask(agent_id='agent2', callable=fast_task, args=(2,)),
+            AgentTask(agent_id="critical", callable=failing_task, priority=AgentPriority.CRITICAL),
+            AgentTask(agent_id="agent2", callable=fast_task, args=(2,)),
         ]
 
         results, stats = executor.execute_all(tasks, enable_early_termination=True)
@@ -504,7 +472,7 @@ class TestStatisticsTracking:
         )
 
         tasks = [
-            AgentTask(agent_id='agent1', callable=fast_task, args=(1,)),
+            AgentTask(agent_id="agent1", callable=fast_task, args=(1,)),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -532,7 +500,7 @@ class TestEdgeCases:
         )
 
         tasks = [
-            AgentTask(agent_id='agent1', callable=fast_task, args=(1,)),
+            AgentTask(agent_id="agent1", callable=fast_task, args=(1,)),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -547,10 +515,10 @@ class TestEdgeCases:
 
         tasks = [
             AgentTask(
-                agent_id='slow',
+                agent_id="slow",
                 callable=slow_task,
-                args=('result', 0.3),  # 300ms delay
-                timeout_seconds=5.0
+                args=("result", 0.3),  # 300ms delay
+                timeout_seconds=5.0,
             ),
         ]
 
@@ -563,10 +531,7 @@ class TestEdgeCases:
         """Test multiple concurrent failures."""
         executor = ParallelAgentExecutor()
 
-        tasks = [
-            AgentTask(agent_id=f'failing{i}', callable=failing_task)
-            for i in range(5)
-        ]
+        tasks = [AgentTask(agent_id=f"failing{i}", callable=failing_task) for i in range(5)]
 
         results, stats = executor.execute_all(tasks, enable_early_termination=False)
 
@@ -575,5 +540,5 @@ class TestEdgeCases:
         assert all(not r.success for r in results)
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

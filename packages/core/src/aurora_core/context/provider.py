@@ -86,4 +86,4 @@ class ContextProvider(ABC):
         pass
 
 
-__all__ = ['ContextProvider']
+__all__ = ["ContextProvider"]

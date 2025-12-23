@@ -44,19 +44,19 @@ class TestExtractJSON:
 
     def test_json_with_markdown(self):
         """Test extracting JSON from markdown code block."""
-        text = '''Here is the result:
+        text = """Here is the result:
 ```json
 {"key": "value"}
 ```
-Hope this helps!'''
+Hope this helps!"""
         result = extract_json_from_text(text)
         assert result == {"key": "value"}
 
     def test_json_in_code_block_no_language(self):
         """Test extracting JSON from code block without language specifier."""
-        text = '''```
+        text = """```
 {"key": "value"}
-```'''
+```"""
         result = extract_json_from_text(text)
         assert result == {"key": "value"}
 

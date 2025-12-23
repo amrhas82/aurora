@@ -56,9 +56,7 @@ class TestPromptData:
 
     def test_prompt_data_optional_defaults(self):
         """Test PromptData optional field defaults."""
-        data = PromptData(
-            goal="Test", success_criteria=["A"], constraints=[]
-        )
+        data = PromptData(goal="Test", success_criteria=["A"], constraints=[])
         assert data.context is None
         assert data.raw_content == ""
 
@@ -153,9 +151,7 @@ class TestReadFile:
 
     def test_read_file_unicode_error(self):
         """Test reading non-UTF-8 file raises PromptValidationError."""
-        with tempfile.NamedTemporaryFile(
-            mode="wb", suffix=".md", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="wb", suffix=".md", delete=False) as f:
             # Write invalid UTF-8 bytes
             f.write(b"\xff\xfe Invalid UTF-8")
             temp_path = f.name
@@ -221,9 +217,7 @@ Implement feature X with tests
         """Test extracting missing section returns empty string."""
         content = "# Goal\nTest goal"
         loader = PromptLoader("test.md")
-        result = loader._extract_section_content(
-            content, loader.SUCCESS_CRITERIA_HEADER
-        )
+        result = loader._extract_section_content(content, loader.SUCCESS_CRITERIA_HEADER)
         assert result == ""
 
     def test_extract_section_at_end(self):
@@ -487,9 +481,7 @@ Some text but no list items
         loader = PromptLoader("test.md")
         with pytest.raises(PromptValidationError) as exc_info:
             loader.parse(content)
-        assert "Success Criteria section must contain at least one item" in str(
-            exc_info.value
-        )
+        assert "Success Criteria section must contain at least one item" in str(exc_info.value)
 
     def test_parse_empty_constraints_allowed(self):
         """Test parsing succeeds with empty Constraints section."""
@@ -674,9 +666,7 @@ Test
             loader = PromptLoader(temp_path)
             is_valid, errors = loader.validate_format()
             assert is_valid is False
-            assert any(
-                "Missing required section: # Success Criteria" in e for e in errors
-            )
+            assert any("Missing required section: # Success Criteria" in e for e in errors)
         finally:
             Path(temp_path).unlink()
 
@@ -722,8 +712,7 @@ Some text but no list items
             is_valid, errors = loader.validate_format()
             assert is_valid is False
             assert any(
-                "Success Criteria section must contain at least one item" in e
-                for e in errors
+                "Success Criteria section must contain at least one item" in e for e in errors
             )
         finally:
             Path(temp_path).unlink()
@@ -959,7 +948,7 @@ Large test with many criteria and constraints
 {constraints}
 
 # Context
-{'Very long context. ' * 100}"""
+{"Very long context. " * 100}"""
         loader = PromptLoader("test.md")
         result = loader.parse(content)
         assert len(result.success_criteria) == 100

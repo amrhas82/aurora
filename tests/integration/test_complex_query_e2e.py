@@ -50,46 +50,33 @@ class TestComplexQueryE2E:
         """Test that COMPLEX queries execute all 9 phases."""
         # Configure mock LLM responses for all phases
         # Phase 1: Assessment - COMPLEX
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.92
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.92)
 
         # Phase 3: Decomposition - 3 subgoals
         subgoals = [
             {
                 "description": "Analyze authentication flow",
-
                 "suggested_agent": "code-analyzer",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
             {
                 "description": "Review security patterns",
-
                 "suggested_agent": "security-checker",
-
                 "is_critical": True,
-
                 "depends_on": [0],
             },
             {
                 "description": "Generate recommendations",
-
                 "suggested_agent": "code-analyzer",
-
                 "is_critical": True,
-
                 "depends_on": [0, 1],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
         # Phase 4: Verification - PASS
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.85, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.85, feedback="")
 
         # Register mock agents
         agent1 = MockAgent(
@@ -166,37 +153,27 @@ class TestComplexQueryE2E:
     def test_complex_query_adversarial_verification(self, e2e_framework):
         """Test that COMPLEX queries use adversarial verification (Option B)."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.93
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.93)
 
         # Decomposition
         subgoals = [
             {
                 "description": "Parse configuration files",
-
                 "suggested_agent": "file-parser",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
             {
                 "description": "Validate configuration schema",
-
                 "suggested_agent": "validator",
-
                 "is_critical": True,
-
                 "depends_on": [0],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
         # Verification - should use Option B (adversarial)
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.78, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.78, feedback="")
 
         # Register agents
         agent1 = MockAgent(
@@ -246,27 +223,20 @@ class TestComplexQueryE2E:
     def test_complex_query_performance(self, e2e_framework):
         """Test that COMPLEX queries complete in <10s."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.91
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.91)
 
         # Simple decomposition to keep test fast
         subgoals = [
             {
                 "description": "Analyze code structure",
-
                 "suggested_agent": "analyzer",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.80, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.80, feedback="")
 
         # Register fast agent
         agent = MockAgent(
@@ -295,9 +265,7 @@ class TestComplexQueryE2E:
         elapsed_time = time.time() - start_time
 
         # Verify performance requirement: <10s
-        assert (
-            elapsed_time < 10.0
-        ), f"Complex query took {elapsed_time:.2f}s, expected <10s"
+        assert elapsed_time < 10.0, f"Complex query took {elapsed_time:.2f}s, expected <10s"
 
         # Verify response completed successfully
         assert response["confidence"] > 0
@@ -306,26 +274,19 @@ class TestComplexQueryE2E:
     def test_complex_query_budget_allocation(self, e2e_framework):
         """Test that COMPLEX queries use appropriate budget allocation."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.94
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.94)
 
         subgoals = [
             {
                 "description": "Process data",
-
                 "suggested_agent": "processor",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.82, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.82, feedback="")
 
         agent = MockAgent(
             agent_id="processor",
@@ -350,53 +311,38 @@ class TestComplexQueryE2E:
 
         # Verify COMPLEX budget allocation (15 chunks)
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
-        assert retrieve_meta["budget"] == 15, (
-            "COMPLEX queries should have budget of 15 chunks"
-        )
+        assert retrieve_meta["budget"] == 15, "COMPLEX queries should have budget of 15 chunks"
 
     def test_complex_query_parallel_execution(self, e2e_framework):
         """Test that independent subgoals execute in parallel."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.92
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.92)
 
         # Three independent subgoals (can run in parallel)
         subgoals = [
             {
                 "description": "Task A",
-
                 "suggested_agent": "worker-a",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
             {
                 "description": "Task B",
-
                 "suggested_agent": "worker-b",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
             {
                 "description": "Task C",
-
                 "suggested_agent": "worker-c",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         decomposition = {
             "goal": "Parallel tasks",
             "subgoals": subgoals,
-            "execution_order": [
-                {"phase": 1, "parallelizable": [0, 1, 2], "sequential": []}
-            ],
+            "execution_order": [{"phase": 1, "parallelizable": [0, 1, 2], "sequential": []}],
             "expected_tools": ["worker"],
         }
         e2e_framework.mock_llm.configure_response(
@@ -408,9 +354,7 @@ class TestComplexQueryE2E:
             ),
         )
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.83, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.83, feedback="")
 
         # Register agents with execution time
         execution_time = 0.5  # 500ms each
@@ -454,37 +398,26 @@ class TestComplexQueryE2E:
     def test_complex_query_sequential_execution(self, e2e_framework):
         """Test that dependent subgoals execute sequentially."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.93
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.93)
 
         # Sequential subgoals with dependencies
         subgoals = [
             {
                 "description": "Step 1",
-
                 "suggested_agent": "step-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
             {
                 "description": "Step 2",
-
                 "suggested_agent": "step-agent",
-
                 "is_critical": True,
-
                 "depends_on": [0],
             },
             {
                 "description": "Step 3",
-
                 "suggested_agent": "step-agent",
-
                 "is_critical": True,
-
                 "depends_on": [1],
             },
         ]
@@ -507,9 +440,7 @@ class TestComplexQueryE2E:
             ),
         )
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.81, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.81, feedback="")
 
         # Register agent
         agent = MockAgent(
@@ -545,26 +476,19 @@ class TestComplexQueryE2E:
     def test_complex_query_cost_tracking(self, e2e_framework):
         """Test that cost tracking works for complex queries."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.92
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.92)
 
         subgoals = [
             {
                 "description": "Cost test",
-
                 "suggested_agent": "cost-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.84, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.84, feedback="")
 
         agent = MockAgent(
             agent_id="cost-agent",
@@ -608,26 +532,19 @@ class TestComplexQueryE2E:
     def test_complex_query_metadata_completeness(self, e2e_framework):
         """Test that complex query responses include complete metadata."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.93
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.93)
 
         subgoals = [
             {
                 "description": "Metadata test",
-
                 "suggested_agent": "meta-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.85, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.85, feedback="")
 
         agent = MockAgent(
             agent_id="meta-agent",
@@ -691,26 +608,19 @@ class TestComplexQueryE2E:
         e2e_framework.store.save_chunk(test_chunk)
 
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.93
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.93)
 
         subgoals = [
             {
                 "description": "Analyze auth service",
-
                 "suggested_agent": "auth-analyzer",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.83, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.83, feedback="")
 
         agent = MockAgent(
             agent_id="auth-analyzer",
@@ -751,9 +661,7 @@ class TestComplexQueryEdgeCases:
         """Test complex query with verification failure triggering retry."""
         # This will be covered in test_verification_retry.py
         # Just verify basic retry mechanism
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.92
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.92)
 
         # Configure agent
         agent = MockAgent(
@@ -771,7 +679,7 @@ class TestComplexQueryEdgeCases:
         synthesis_response = MockLLMResponse(
             content="ANSWER: Retry mechanism works. (Agent: retry-agent)\nCONFIDENCE: 0.88",
             input_tokens=600,
-            output_tokens=300
+            output_tokens=300,
         )
         e2e_framework.mock_llm.configure_response("synthesizing information", synthesis_response)
         e2e_framework.mock_llm.configure_response("combine the agent outputs", synthesis_response)
@@ -779,11 +687,8 @@ class TestComplexQueryEdgeCases:
         subgoals = [
             {
                 "description": "Test retry",
-
                 "suggested_agent": "retry-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
@@ -833,18 +738,14 @@ class TestComplexQueryEdgeCases:
                 {
                     "goal": "Retry test",
                     "subgoals": subgoals,
-                    "execution_order": [
-                        {"phase": 1, "parallelizable": [0], "sequential": []}
-                    ],
+                    "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
                     "expected_tools": ["retry-tool"],
                 }
             ),
             input_tokens=500,
             output_tokens=200,
         )
-        e2e_framework.mock_llm.configure_responses(
-            "decompose", [decomp_response, decomp_response]
-        )
+        e2e_framework.mock_llm.configure_responses("decompose", [decomp_response, decomp_response])
 
         orchestrator = e2e_framework.create_orchestrator()
 
@@ -860,27 +761,20 @@ class TestComplexQueryEdgeCases:
 
     def test_complex_query_agent_not_found_fallback(self, e2e_framework):
         """Test fallback when suggested agent not found."""
-        e2e_framework.configure_assessment_response(
-            complexity="COMPLEX", confidence=0.92
-        )
+        e2e_framework.configure_assessment_response(complexity="COMPLEX", confidence=0.92)
 
         # Decomposition suggests non-existent agent
         subgoals = [
             {
                 "description": "Task requiring non-existent agent",
-
                 "suggested_agent": "non-existent-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.80, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.80, feedback="")
 
         # Don't register the agent - should fall back to llm-executor
         # (llm-executor should be registered by default in agent registry)

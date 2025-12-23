@@ -51,10 +51,7 @@ class SQLiteStore(Store):
     """
 
     def __init__(
-        self,
-        db_path: str = "~/.aurora/memory.db",
-        timeout: float = 5.0,
-        wal_mode: bool = True
+        self, db_path: str = "~/.aurora/memory.db", timeout: float = 5.0, wal_mode: bool = True
     ):
         """Initialize SQLite store with connection pooling."""
         # Expand user home directory in path
@@ -79,13 +76,9 @@ class SQLiteStore(Store):
         Returns:
             Thread-local SQLite connection
         """
-        if not hasattr(self._local, 'connection') or self._local.connection is None:
+        if not hasattr(self._local, "connection") or self._local.connection is None:
             try:
-                conn = sqlite3.connect(
-                    self.db_path,
-                    timeout=self.timeout,
-                    check_same_thread=False
-                )
+                conn = sqlite3.connect(self.db_path, timeout=self.timeout, check_same_thread=False)
                 conn.row_factory = sqlite3.Row  # Enable column access by name
 
                 # Enable WAL mode for better concurrency
@@ -97,10 +90,7 @@ class SQLiteStore(Store):
 
                 self._local.connection = conn
             except sqlite3.Error as e:
-                raise StorageError(
-                    f"Failed to connect to database: {self.db_path}",
-                    details=str(e)
-                )
+                raise StorageError(f"Failed to connect to database: {self.db_path}", details=str(e))
 
         return cast(sqlite3.Connection, self._local.connection)
 
@@ -112,10 +102,7 @@ class SQLiteStore(Store):
                 conn.execute(statement)
             conn.commit()
         except sqlite3.Error as e:
-            raise StorageError(
-                "Failed to initialize database schema",
-                details=str(e)
-            )
+            raise StorageError("Failed to initialize database schema", details=str(e))
 
     @contextmanager
     def _transaction(self) -> Iterator[sqlite3.Connection]:
@@ -144,12 +131,9 @@ class SQLiteStore(Store):
             raise
         except Exception as e:
             conn.rollback()
-            raise StorageError(
-                "Transaction failed and was rolled back",
-                details=str(e)
-            )
+            raise StorageError("Transaction failed and was rolled back", details=str(e))
 
-    def save_chunk(self, chunk: 'Chunk') -> bool:
+    def save_chunk(self, chunk: "Chunk") -> bool:
         """
         Save a chunk to storage with validation.
 
@@ -167,24 +151,18 @@ class SQLiteStore(Store):
         try:
             chunk.validate()
         except ValueError as e:
-            raise ValidationError(
-                f"Chunk validation failed: {chunk.id}",
-                details=str(e)
-            )
+            raise ValidationError(f"Chunk validation failed: {chunk.id}", details=str(e))
 
         # Serialize chunk to JSON
         try:
             chunk_json = chunk.to_json()
         except Exception as e:
-            raise ValidationError(
-                f"Failed to serialize chunk: {chunk.id}",
-                details=str(e)
-            )
+            raise ValidationError(f"Failed to serialize chunk: {chunk.id}", details=str(e))
 
         with self._transaction() as conn:
             try:
                 # Get embeddings if available (optional field for semantic retrieval)
-                embeddings = getattr(chunk, 'embeddings', None)
+                embeddings = getattr(chunk, "embeddings", None)
 
                 # Insert or replace chunk
                 conn.execute(
@@ -195,11 +173,11 @@ class SQLiteStore(Store):
                     (
                         chunk.id,
                         chunk.type,
-                        json.dumps(chunk_json.get('content', {})),
-                        json.dumps(chunk_json.get('metadata', {})),
+                        json.dumps(chunk_json.get("content", {})),
+                        json.dumps(chunk_json.get("metadata", {})),
                         embeddings,  # BLOB - numpy array bytes or None
-                        datetime.utcnow().isoformat()
-                    )
+                        datetime.utcnow().isoformat(),
+                    ),
                 )
 
                 # Initialize activation record if not exists
@@ -212,18 +190,15 @@ class SQLiteStore(Store):
                         chunk.id,
                         0.0,  # Initial activation
                         datetime.utcnow().isoformat(),
-                        0
-                    )
+                        0,
+                    ),
                 )
 
                 return True
             except sqlite3.Error as e:
-                raise StorageError(
-                    f"Failed to save chunk: {chunk.id}",
-                    details=str(e)
-                )
+                raise StorageError(f"Failed to save chunk: {chunk.id}", details=str(e))
 
-    def get_chunk(self, chunk_id: ChunkID) -> Optional['Chunk']:
+    def get_chunk(self, chunk_id: ChunkID) -> Optional["Chunk"]:
         """
         Retrieve a chunk by ID.
 
@@ -244,7 +219,7 @@ class SQLiteStore(Store):
                 FROM chunks
                 WHERE id = ?
                 """,
-                (chunk_id,)
+                (chunk_id,),
             )
             row = cursor.fetchone()
 
@@ -257,12 +232,9 @@ class SQLiteStore(Store):
             return self._deserialize_chunk(dict(row))
 
         except sqlite3.Error as e:
-            raise StorageError(
-                f"Failed to retrieve chunk: {chunk_id}",
-                details=str(e)
-            )
+            raise StorageError(f"Failed to retrieve chunk: {chunk_id}", details=str(e))
 
-    def _deserialize_chunk(self, row_data: dict[str, Any]) -> Optional['Chunk']:
+    def _deserialize_chunk(self, row_data: dict[str, Any]) -> Optional["Chunk"]:
         """
         Deserialize a chunk from database row.
 
@@ -279,41 +251,40 @@ class SQLiteStore(Store):
 
         try:
             # Parse JSON fields
-            content = json.loads(row_data['content'])
-            metadata = json.loads(row_data['metadata'])
+            content = json.loads(row_data["content"])
+            metadata = json.loads(row_data["metadata"])
 
             # Reconstruct full JSON structure for from_json()
             full_data = {
-                'id': row_data['id'],
-                'type': row_data['type'],
-                'content': content,
-                'metadata': metadata
+                "id": row_data["id"],
+                "type": row_data["type"],
+                "content": content,
+                "metadata": metadata,
             }
 
             # Deserialize based on chunk type
-            chunk_type = row_data['type']
+            chunk_type = row_data["type"]
             chunk: Chunk
-            if chunk_type == 'code':
+            if chunk_type == "code":
                 chunk = CodeChunk.from_json(full_data)
-            elif chunk_type == 'reasoning':
+            elif chunk_type == "reasoning":
                 chunk = ReasoningChunk.from_json(full_data)
             else:
                 raise StorageError(
                     f"Unknown chunk type: {chunk_type}",
-                    details=f"Cannot deserialize chunk {row_data['id']}"
+                    details=f"Cannot deserialize chunk {row_data['id']}",
                 )
 
             # Restore embeddings if present (BLOB field for semantic retrieval)
-            if 'embeddings' in row_data and row_data['embeddings'] is not None:
-                if hasattr(chunk, 'embeddings'):
-                    chunk.embeddings = row_data['embeddings']
+            if "embeddings" in row_data and row_data["embeddings"] is not None:
+                if hasattr(chunk, "embeddings"):
+                    chunk.embeddings = row_data["embeddings"]
 
             return chunk
 
         except (KeyError, json.JSONDecodeError, ValueError) as e:
             raise StorageError(
-                f"Failed to deserialize chunk: {row_data.get('id', 'unknown')}",
-                details=str(e)
+                f"Failed to deserialize chunk: {row_data.get('id', 'unknown')}", details=str(e)
             )
 
     def update_activation(self, chunk_id: ChunkID, delta: float) -> None:
@@ -339,7 +310,7 @@ class SQLiteStore(Store):
                         access_count = access_count + 1
                     WHERE chunk_id = ?
                     """,
-                    (delta, datetime.utcnow().isoformat(), chunk_id)
+                    (delta, datetime.utcnow().isoformat(), chunk_id),
                 )
 
                 if cursor.rowcount == 0:
@@ -347,15 +318,10 @@ class SQLiteStore(Store):
 
             except sqlite3.Error as e:
                 raise StorageError(
-                    f"Failed to update activation for chunk: {chunk_id}",
-                    details=str(e)
+                    f"Failed to update activation for chunk: {chunk_id}", details=str(e)
                 )
 
-    def retrieve_by_activation(
-        self,
-        min_activation: float,
-        limit: int
-    ) -> list['Chunk']:
+    def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
         """
         Retrieve chunks by activation threshold.
 
@@ -380,7 +346,7 @@ class SQLiteStore(Store):
                 ORDER BY a.base_level DESC
                 LIMIT ?
                 """,
-                (min_activation, limit)
+                (min_activation, limit),
             )
 
             chunks = []
@@ -392,17 +358,10 @@ class SQLiteStore(Store):
             return chunks
 
         except sqlite3.Error as e:
-            raise StorageError(
-                "Failed to retrieve chunks by activation",
-                details=str(e)
-            )
+            raise StorageError("Failed to retrieve chunks by activation", details=str(e))
 
     def add_relationship(
-        self,
-        from_id: ChunkID,
-        to_id: ChunkID,
-        rel_type: str,
-        weight: float = 1.0
+        self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
     ) -> bool:
         """
         Add a relationship between chunks.
@@ -424,14 +383,11 @@ class SQLiteStore(Store):
             try:
                 # Verify both chunks exist
                 cursor = conn.execute(
-                    "SELECT COUNT(*) as cnt FROM chunks WHERE id IN (?, ?)",
-                    (from_id, to_id)
+                    "SELECT COUNT(*) as cnt FROM chunks WHERE id IN (?, ?)", (from_id, to_id)
                 )
-                count = cursor.fetchone()['cnt']
+                count = cursor.fetchone()["cnt"]
                 if count < 2:
-                    raise ChunkNotFoundError(
-                        f"One or both chunks not found: {from_id}, {to_id}"
-                    )
+                    raise ChunkNotFoundError(f"One or both chunks not found: {from_id}, {to_id}")
 
                 # Insert relationship
                 conn.execute(
@@ -439,22 +395,17 @@ class SQLiteStore(Store):
                     INSERT INTO relationships (from_chunk, to_chunk, relationship_type, weight)
                     VALUES (?, ?, ?, ?)
                     """,
-                    (from_id, to_id, rel_type, weight)
+                    (from_id, to_id, rel_type, weight),
                 )
 
                 return True
 
             except sqlite3.Error as e:
                 raise StorageError(
-                    f"Failed to add relationship: {from_id} -> {to_id}",
-                    details=str(e)
+                    f"Failed to add relationship: {from_id} -> {to_id}", details=str(e)
                 )
 
-    def get_related_chunks(
-        self,
-        chunk_id: ChunkID,
-        max_depth: int = 2
-    ) -> list['Chunk']:
+    def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
         """
         Get related chunks via relationship graph traversal.
 
@@ -477,10 +428,7 @@ class SQLiteStore(Store):
             if cursor.fetchone() is None:
                 raise ChunkNotFoundError(str(chunk_id))
         except sqlite3.Error as e:
-            raise StorageError(
-                f"Failed to verify chunk existence: {chunk_id}",
-                details=str(e)
-            )
+            raise StorageError(f"Failed to verify chunk existence: {chunk_id}", details=str(e))
 
         # Use recursive CTE for graph traversal
         query = """
@@ -514,16 +462,10 @@ class SQLiteStore(Store):
             return chunks
 
         except sqlite3.Error as e:
-            raise StorageError(
-                f"Failed to retrieve related chunks for: {chunk_id}",
-                details=str(e)
-            )
+            raise StorageError(f"Failed to retrieve related chunks for: {chunk_id}", details=str(e))
 
     def record_access(
-        self,
-        chunk_id: ChunkID,
-        access_time: datetime | None = None,
-        context: str | None = None
+        self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
     ) -> None:
         """
         Record an access to a chunk for ACT-R activation tracking.
@@ -553,8 +495,7 @@ class SQLiteStore(Store):
 
             # Get current access history from activations table
             cursor = conn.execute(
-                "SELECT access_history FROM activations WHERE chunk_id = ?",
-                (chunk_id,)
+                "SELECT access_history FROM activations WHERE chunk_id = ?", (chunk_id,)
             )
             row = cursor.fetchone()
 
@@ -564,11 +505,11 @@ class SQLiteStore(Store):
                 conn.execute(
                     """INSERT INTO activations (chunk_id, base_level, last_access, access_count, access_history)
                        VALUES (?, 0.0, ?, 1, ?)""",
-                    (chunk_id, access_time, json.dumps(access_history))
+                    (chunk_id, access_time, json.dumps(access_history)),
                 )
             else:
                 # Subsequent access - update existing record
-                access_history = json.loads(row['access_history']) if row['access_history'] else []
+                access_history = json.loads(row["access_history"]) if row["access_history"] else []
                 access_history.append({"timestamp": access_time.isoformat(), "context": context})
 
                 # Update activations table
@@ -578,7 +519,7 @@ class SQLiteStore(Store):
                            last_access = ?,
                            access_history = ?
                        WHERE chunk_id = ?""",
-                    (access_time, json.dumps(access_history), chunk_id)
+                    (access_time, json.dumps(access_history), chunk_id),
                 )
 
             # Update chunks table timestamps
@@ -587,22 +528,17 @@ class SQLiteStore(Store):
                    SET last_access = ?,
                        first_access = COALESCE(first_access, ?)
                    WHERE id = ?""",
-                (access_time, access_time, chunk_id)
+                (access_time, access_time, chunk_id),
             )
 
             conn.commit()
 
         except sqlite3.Error as e:
             conn.rollback()
-            raise StorageError(
-                f"Failed to record access for chunk: {chunk_id}",
-                details=str(e)
-            )
+            raise StorageError(f"Failed to record access for chunk: {chunk_id}", details=str(e))
 
     def get_access_history(
-        self,
-        chunk_id: ChunkID,
-        limit: int | None = None
+        self, chunk_id: ChunkID, limit: int | None = None
     ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
@@ -630,18 +566,17 @@ class SQLiteStore(Store):
 
             # Get access history from activations table
             cursor = conn.execute(
-                "SELECT access_history FROM activations WHERE chunk_id = ?",
-                (chunk_id,)
+                "SELECT access_history FROM activations WHERE chunk_id = ?", (chunk_id,)
             )
             row = cursor.fetchone()
 
-            if row is None or not row['access_history']:
+            if row is None or not row["access_history"]:
                 return []
 
-            access_history: list[dict[Any, Any]] = json.loads(row['access_history'])
+            access_history: list[dict[Any, Any]] = json.loads(row["access_history"])
 
             # Sort by timestamp, most recent first
-            access_history.sort(key=lambda x: x['timestamp'], reverse=True)
+            access_history.sort(key=lambda x: x["timestamp"], reverse=True)
 
             # Apply limit if specified
             if limit is not None:
@@ -651,8 +586,7 @@ class SQLiteStore(Store):
 
         except sqlite3.Error as e:
             raise StorageError(
-                f"Failed to retrieve access history for chunk: {chunk_id}",
-                details=str(e)
+                f"Failed to retrieve access history for chunk: {chunk_id}", details=str(e)
             )
 
     def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
@@ -689,7 +623,7 @@ class SQLiteStore(Store):
                    FROM chunks c
                    LEFT JOIN activations a ON c.id = a.chunk_id
                    WHERE c.id = ?""",
-                (chunk_id,)
+                (chunk_id,),
             )
             row = cursor.fetchone()
 
@@ -697,16 +631,15 @@ class SQLiteStore(Store):
                 raise ChunkNotFoundError(str(chunk_id))
 
             return {
-                'access_count': row['access_count'],
-                'last_access': row['last_access'],
-                'first_access': row['first_access'],
-                'created_at': row['created_at']
+                "access_count": row["access_count"],
+                "last_access": row["last_access"],
+                "first_access": row["first_access"],
+                "created_at": row["created_at"],
             }
 
         except sqlite3.Error as e:
             raise StorageError(
-                f"Failed to retrieve access stats for chunk: {chunk_id}",
-                details=str(e)
+                f"Failed to retrieve access stats for chunk: {chunk_id}", details=str(e)
             )
 
     def close(self) -> None:
@@ -716,15 +649,12 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If cleanup fails
         """
-        if hasattr(self._local, 'connection') and self._local.connection is not None:
+        if hasattr(self._local, "connection") and self._local.connection is not None:
             try:
                 self._local.connection.close()
                 self._local.connection = None
             except sqlite3.Error as e:
-                raise StorageError(
-                    "Failed to close database connection",
-                    details=str(e)
-                )
+                raise StorageError("Failed to close database connection", details=str(e))
 
 
-__all__ = ['SQLiteStore']
+__all__ = ["SQLiteStore"]

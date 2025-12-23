@@ -34,7 +34,7 @@ class PythonParser(CodeParser):
     """
 
     # Supported file extensions
-    EXTENSIONS = {'.py', '.pyi'}
+    EXTENSIONS = {".py", ".pyi"}
 
     def __init__(self) -> None:
         """Initialize Python parser with tree-sitter grammar."""
@@ -86,13 +86,13 @@ class PythonParser(CodeParser):
 
             # Read source code
             try:
-                source_code = file_path.read_text(encoding='utf-8')
+                source_code = file_path.read_text(encoding="utf-8")
             except Exception as e:
                 logger.error(f"Failed to read file {file_path}: {e}")
                 return []
 
             # Parse with tree-sitter
-            tree = self.parser.parse(bytes(source_code, 'utf-8'))
+            tree = self.parser.parse(bytes(source_code, "utf-8"))
 
             if tree.root_node.has_error:
                 logger.warning(f"Parse errors in {file_path}, extracting partial results")
@@ -101,9 +101,7 @@ class PythonParser(CodeParser):
             chunks: list[CodeChunk] = []
 
             # Extract functions
-            function_chunks = self._extract_functions(
-                tree.root_node, file_path, source_code
-            )
+            function_chunks = self._extract_functions(tree.root_node, file_path, source_code)
             chunks.extend(function_chunks)
 
             # Extract classes and methods
@@ -155,13 +153,13 @@ class PythonParser(CodeParser):
                 name_node = node.child_by_field_name("name")
                 if not name_node:
                     continue
-                name = source_code[name_node.start_byte:name_node.end_byte]
+                name = source_code[name_node.start_byte : name_node.end_byte]
 
                 # Extract parameters for signature
                 parameters_node = node.child_by_field_name("parameters")
                 signature = None
                 if parameters_node:
-                    params_text = source_code[parameters_node.start_byte:parameters_node.end_byte]
+                    params_text = source_code[parameters_node.start_byte : parameters_node.end_byte]
                     signature = f"{name}{params_text}"
 
                 # Get line numbers (tree-sitter uses 0-indexed, we use 1-indexed)
@@ -224,13 +222,15 @@ class PythonParser(CodeParser):
                 name_node = class_node.child_by_field_name("name")
                 if not name_node:
                     continue
-                class_name = source_code[name_node.start_byte:name_node.end_byte]
+                class_name = source_code[name_node.start_byte : name_node.end_byte]
 
                 # Extract class signature (with base classes if present)
                 signature = class_name
                 superclasses_node = class_node.child_by_field_name("superclasses")
                 if superclasses_node:
-                    bases_text = source_code[superclasses_node.start_byte:superclasses_node.end_byte]
+                    bases_text = source_code[
+                        superclasses_node.start_byte : superclasses_node.end_byte
+                    ]
                     signature = f"{class_name}{bases_text}"
 
                 # Get line numbers
@@ -306,7 +306,7 @@ class PythonParser(CodeParser):
                 name_node = method_node.child_by_field_name("name")
                 if not name_node:
                     continue
-                method_name = source_code[name_node.start_byte:name_node.end_byte]
+                method_name = source_code[name_node.start_byte : name_node.end_byte]
 
                 # Create qualified name (ClassName.method_name)
                 qualified_name = f"{class_name}.{method_name}"
@@ -315,7 +315,7 @@ class PythonParser(CodeParser):
                 parameters_node = method_node.child_by_field_name("parameters")
                 signature = None
                 if parameters_node:
-                    params_text = source_code[parameters_node.start_byte:parameters_node.end_byte]
+                    params_text = source_code[parameters_node.start_byte : parameters_node.end_byte]
                     signature = f"{qualified_name}{params_text}"
 
                 # Get line numbers
@@ -355,9 +355,7 @@ class PythonParser(CodeParser):
 
         return chunks
 
-    def _find_nodes_by_type(
-        self, node: tree_sitter.Node, node_type: str
-    ) -> list[tree_sitter.Node]:
+    def _find_nodes_by_type(self, node: tree_sitter.Node, node_type: str) -> list[tree_sitter.Node]:
         """
         Find all nodes of a given type in the tree.
 
@@ -424,7 +422,7 @@ class PythonParser(CodeParser):
                     for expr_child in child.children:
                         if expr_child.type == "string":
                             # Extract string content (strip quotes)
-                            string_text = source_code[expr_child.start_byte:expr_child.end_byte]
+                            string_text = source_code[expr_child.start_byte : expr_child.end_byte]
                             # Remove quotes and clean up
                             docstring = self._clean_docstring(string_text)
                             return docstring if docstring else None
@@ -538,22 +536,22 @@ class PythonParser(CodeParser):
             # import foo, bar
             for child in node.children:
                 if child.type == "dotted_name":
-                    name = source_code[child.start_byte:child.end_byte]
-                    imports.add(name.split('.')[0])  # Add base module name
+                    name = source_code[child.start_byte : child.end_byte]
+                    imports.add(name.split(".")[0])  # Add base module name
 
         for node in self._find_nodes_by_type(root_node, "import_from_statement"):
             # from foo import bar, baz
             for child in node.children:
                 if child.type == "dotted_name":
                     # Module being imported from
-                    name = source_code[child.start_byte:child.end_byte]
-                    imports.add(name.split('.')[0])
+                    name = source_code[child.start_byte : child.end_byte]
+                    imports.add(name.split(".")[0])
                 elif child.type in {"aliased_import", "dotted_name"}:
                     # Names being imported
-                    name = source_code[child.start_byte:child.end_byte]
-                    if ' as ' in name:
+                    name = source_code[child.start_byte : child.end_byte]
+                    if " as " in name:
                         # Handle "import foo as bar" - extract both names
-                        parts = name.split(' as ')
+                        parts = name.split(" as ")
                         imports.add(parts[0].strip())
                     else:
                         imports.add(name.strip())
@@ -610,4 +608,4 @@ class PythonParser(CodeParser):
         return f"code:{self.language}:{hash_digest[:16]}"
 
 
-__all__ = ['PythonParser']
+__all__ = ["PythonParser"]

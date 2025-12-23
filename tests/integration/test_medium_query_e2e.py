@@ -47,9 +47,7 @@ class TestMediumQueryE2E:
         """Test that MEDIUM queries execute all 9 phases."""
         # Configure mock LLM responses for all phases
         # Phase 1: Assessment - MEDIUM
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.89
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.89)
 
         # Phase 3: Decomposition - 2 subgoals (simpler than complex)
         subgoals = [
@@ -69,9 +67,7 @@ class TestMediumQueryE2E:
         e2e_framework.configure_decomposition_response(subgoals)
 
         # Phase 4: Verification - PASS (self-verification for MEDIUM)
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.82, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.82, feedback="")
 
         # Register mock agents
         agent1 = MockAgent(
@@ -146,9 +142,7 @@ class TestMediumQueryE2E:
     def test_medium_query_self_verification(self, e2e_framework):
         """Test that MEDIUM queries use self-verification (Option A)."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.87
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.87)
 
         # Decomposition
         subgoals = [
@@ -168,9 +162,7 @@ class TestMediumQueryE2E:
         e2e_framework.configure_decomposition_response(subgoals)
 
         # Verification - should use Option A (self-verification)
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.75, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.75, feedback="")
 
         # Register agents
         agent1 = MockAgent(
@@ -220,9 +212,7 @@ class TestMediumQueryE2E:
     def test_medium_query_performance(self, e2e_framework):
         """Test that MEDIUM queries complete in reasonable time (<5s)."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.88
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.88)
 
         # Simple decomposition to keep test fast
         subgoals = [
@@ -235,9 +225,7 @@ class TestMediumQueryE2E:
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.79, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.79, feedback="")
 
         # Register fast agent
         agent = MockAgent(
@@ -266,9 +254,7 @@ class TestMediumQueryE2E:
         elapsed_time = time.time() - start_time
 
         # Verify performance requirement: <5s (medium range)
-        assert (
-            elapsed_time < 5.0
-        ), f"Medium query took {elapsed_time:.2f}s, expected <5s"
+        assert elapsed_time < 5.0, f"Medium query took {elapsed_time:.2f}s, expected <5s"
 
         # Verify response completed successfully
         assert response["confidence"] > 0
@@ -277,26 +263,19 @@ class TestMediumQueryE2E:
     def test_medium_query_budget_allocation(self, e2e_framework):
         """Test that MEDIUM queries use appropriate budget allocation."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.86
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.86)
 
         subgoals = [
             {
                 "description": "Analyze data",
-
                 "suggested_agent": "analyzer",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.80, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.80, feedback="")
 
         agent = MockAgent(
             agent_id="analyzer",
@@ -321,16 +300,12 @@ class TestMediumQueryE2E:
 
         # Verify MEDIUM budget allocation (10 chunks)
         retrieve_meta = response["metadata"]["phases"]["phase2_retrieve"]
-        assert retrieve_meta["budget"] == 10, (
-            "MEDIUM queries should have budget of 10 chunks"
-        )
+        assert retrieve_meta["budget"] == 10, "MEDIUM queries should have budget of 10 chunks"
 
     def test_medium_query_parallel_execution(self, e2e_framework):
         """Test that independent subgoals execute in parallel for medium queries."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.87
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.87)
 
         # Two independent subgoals (can run in parallel)
         subgoals = [
@@ -349,9 +324,7 @@ class TestMediumQueryE2E:
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.81, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.81, feedback="")
 
         # Register agents with execution time
         execution_time = 0.3  # 300ms each
@@ -395,26 +368,19 @@ class TestMediumQueryE2E:
     def test_medium_query_cost_tracking(self, e2e_framework):
         """Test that cost tracking works for medium queries."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.87
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.87)
 
         subgoals = [
             {
                 "description": "Cost test",
-
                 "suggested_agent": "cost-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.78, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.78, feedback="")
 
         agent = MockAgent(
             agent_id="cost-agent",
@@ -458,26 +424,19 @@ class TestMediumQueryE2E:
     def test_medium_query_metadata_completeness(self, e2e_framework):
         """Test that medium query responses include complete metadata."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.88
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.88)
 
         subgoals = [
             {
                 "description": "Metadata test",
-
                 "suggested_agent": "meta-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.82, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.82, feedback="")
 
         agent = MockAgent(
             agent_id="meta-agent",
@@ -541,26 +500,19 @@ class TestMediumQueryE2E:
         e2e_framework.store.save_chunk(test_chunk)
 
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.88
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.88)
 
         subgoals = [
             {
                 "description": "Analyze calculate function",
-
                 "suggested_agent": "calc-analyzer",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.79, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.79, feedback="")
 
         agent = MockAgent(
             agent_id="calc-analyzer",
@@ -596,9 +548,7 @@ class TestMediumQueryE2E:
     def test_medium_query_verbosity_levels(self, e2e_framework):
         """Test that all verbosity levels work for medium queries."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.87
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.87)
 
         subgoals = [
             {
@@ -610,9 +560,7 @@ class TestMediumQueryE2E:
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.80, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.80, feedback="")
 
         agent = MockAgent(
             agent_id="verb-agent",
@@ -640,13 +588,9 @@ class TestMediumQueryE2E:
         assert "metadata" in response_quiet
 
         # Reset mocks for next calls
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.87
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.87)
         e2e_framework.configure_decomposition_response(subgoals)
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.80, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.80, feedback="")
         e2e_framework.configure_synthesis_response(
             answer="Verbosity level test for medium query.",
             confidence=0.88,
@@ -660,12 +604,8 @@ class TestMediumQueryE2E:
 
         # Reset mocks
         e2e_framework.configure_decomposition_response(subgoals)
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.87
-        )
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.80, feedback=""
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.87)
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.80, feedback="")
         e2e_framework.configure_synthesis_response(
             answer="Verbosity level test for medium query.",
             confidence=0.88,
@@ -685,26 +625,19 @@ class TestMediumQueryEdgeCases:
     def test_borderline_medium_assessment(self, e2e_framework):
         """Test query on borderline between SIMPLE and MEDIUM complexity."""
         # Configure LLM to return MEDIUM after borderline keyword match
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.72
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.72)
 
         subgoals = [
             {
                 "description": "Borderline task",
-
                 "suggested_agent": "border-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.76, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.76, feedback="")
 
         agent = MockAgent(
             agent_id="border-agent",
@@ -736,26 +669,19 @@ class TestMediumQueryEdgeCases:
     def test_medium_query_with_no_context(self, e2e_framework):
         """Test medium query when no relevant context is found."""
         # Empty store - no context available
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.88
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.88)
 
         subgoals = [
             {
                 "description": "Process without context",
-
                 "suggested_agent": "ctx-agent",
-
                 "is_critical": True,
-
                 "depends_on": [],
             },
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.77, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.77, feedback="")
 
         agent = MockAgent(
             agent_id="ctx-agent",
@@ -789,9 +715,7 @@ class TestMediumQueryEdgeCases:
     def test_medium_query_sequential_execution(self, e2e_framework):
         """Test that dependent subgoals execute sequentially for medium queries."""
         # Configure responses
-        e2e_framework.configure_assessment_response(
-            complexity="MEDIUM", confidence=0.87
-        )
+        e2e_framework.configure_assessment_response(complexity="MEDIUM", confidence=0.87)
 
         # Sequential subgoals with dependencies
         subgoals = [
@@ -810,9 +734,7 @@ class TestMediumQueryEdgeCases:
         ]
         e2e_framework.configure_decomposition_response(subgoals)
 
-        e2e_framework.configure_verification_response(
-            verdict="PASS", score=0.79, feedback=""
-        )
+        e2e_framework.configure_verification_response(verdict="PASS", score=0.79, feedback="")
 
         # Register agent
         agent = MockAgent(

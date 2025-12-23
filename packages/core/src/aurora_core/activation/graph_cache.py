@@ -39,10 +39,7 @@ class RelationshipProvider(Protocol):
     without tight coupling to a specific Store implementation.
     """
 
-    def get_all_relationships(
-        self,
-        limit: int | None = None
-    ) -> list[dict[str, Any]]:
+    def get_all_relationships(self, limit: int | None = None) -> list[dict[str, Any]]:
         """Get all relationships from storage.
 
         Args:
@@ -73,7 +70,7 @@ class GraphCacheConfig:
         rebuild_interval: int = 100,
         max_edges: int = 1000,
         cache_enabled: bool = True,
-        ttl_seconds: int | None = None
+        ttl_seconds: int | None = None,
     ):
         """Initialize graph cache configuration.
 
@@ -109,11 +106,7 @@ class RelationshipGraphCache:
         >>> graph = cache.get_graph()
     """
 
-    def __init__(
-        self,
-        provider: RelationshipProvider,
-        config: GraphCacheConfig | None = None
-    ):
+    def __init__(self, provider: RelationshipProvider, config: GraphCacheConfig | None = None):
         """Initialize the graph cache.
 
         Args:
@@ -201,20 +194,18 @@ class RelationshipGraphCache:
         graph = RelationshipGraph()
 
         # Get relationships from provider
-        relationships = self.provider.get_all_relationships(
-            limit=self.config.max_edges
-        )
+        relationships = self.provider.get_all_relationships(limit=self.config.max_edges)
 
         # Add to graph
         for rel in relationships:
-            from_chunk = rel.get('from_chunk')
-            to_chunk = rel.get('to_chunk')
+            from_chunk = rel.get("from_chunk")
+            to_chunk = rel.get("to_chunk")
             if from_chunk is not None and to_chunk is not None:
                 graph.add_relationship(
                     from_chunk=from_chunk,
                     to_chunk=to_chunk,
-                    rel_type=rel.get('relationship_type', 'unknown'),
-                    weight=rel.get('weight', 1.0)
+                    rel_type=rel.get("relationship_type", "unknown"),
+                    weight=rel.get("weight", 1.0),
                 )
 
         return graph
@@ -257,21 +248,17 @@ class RelationshipGraphCache:
         """
         with self._lock:
             total_requests = self._cache_hits + self._cache_misses
-            hit_rate = (
-                self._cache_hits / total_requests
-                if total_requests > 0
-                else 0.0
-            )
+            hit_rate = self._cache_hits / total_requests if total_requests > 0 else 0.0
 
             return {
-                'cache_hits': self._cache_hits,
-                'cache_misses': self._cache_misses,
-                'hit_rate': hit_rate,
-                'rebuilds': self._rebuilds,
-                'retrieval_count': self._retrieval_count,
-                'build_time': self._build_time.isoformat() if self._build_time else None,
-                'edge_count': self._graph.edge_count() if self._graph else 0,
-                'chunk_count': self._graph.chunk_count() if self._graph else 0,
+                "cache_hits": self._cache_hits,
+                "cache_misses": self._cache_misses,
+                "hit_rate": hit_rate,
+                "rebuilds": self._rebuilds,
+                "retrieval_count": self._retrieval_count,
+                "build_time": self._build_time.isoformat() if self._build_time else None,
+                "edge_count": self._graph.edge_count() if self._graph else 0,
+                "chunk_count": self._graph.chunk_count() if self._graph else 0,
             }
 
     def reset_stats(self) -> None:
@@ -310,8 +297,8 @@ class CachedSpreadingActivation:
     def __init__(
         self,
         provider: RelationshipProvider,
-        spreading_activation: 'SpreadingActivation',
-        cache_config: GraphCacheConfig | None = None
+        spreading_activation: "SpreadingActivation",
+        cache_config: GraphCacheConfig | None = None,
     ):
         """Initialize cached spreading activation.
 
@@ -324,9 +311,7 @@ class CachedSpreadingActivation:
         self.cache = RelationshipGraphCache(provider, cache_config)
 
     def calculate(
-        self,
-        source_chunks: list[ChunkID],
-        bidirectional: bool = True
+        self, source_chunks: list[ChunkID], bidirectional: bool = True
     ) -> dict[str, float]:
         """Calculate spreading activation with caching.
 
@@ -341,17 +326,12 @@ class CachedSpreadingActivation:
         # Convert ChunkIDs to strings for spreading calculation
         source_chunk_strs: list[str] = [str(chunk_id) for chunk_id in source_chunks]
         result: dict[str, float] = self.spreading_activation.calculate(
-            source_chunks=source_chunk_strs,
-            graph=graph,
-            bidirectional=bidirectional
+            source_chunks=source_chunk_strs, graph=graph, bidirectional=bidirectional
         )
         return result
 
     def get_related_chunks(
-        self,
-        source_chunks: list[ChunkID],
-        min_activation: float = 0.0,
-        bidirectional: bool = True
+        self, source_chunks: list[ChunkID], min_activation: float = 0.0, bidirectional: bool = True
     ) -> list[tuple[str, float]]:
         """Get related chunks sorted by spreading activation.
 
@@ -370,7 +350,7 @@ class CachedSpreadingActivation:
             source_chunks=source_chunk_strs,
             graph=graph,
             min_activation=min_activation,
-            bidirectional=bidirectional
+            bidirectional=bidirectional,
         )
         return result
 
@@ -388,8 +368,8 @@ class CachedSpreadingActivation:
 
 
 __all__ = [
-    'RelationshipProvider',
-    'GraphCacheConfig',
-    'RelationshipGraphCache',
-    'CachedSpreadingActivation',
+    "RelationshipProvider",
+    "GraphCacheConfig",
+    "RelationshipGraphCache",
+    "CachedSpreadingActivation",
 ]

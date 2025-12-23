@@ -77,12 +77,17 @@ You MUST respond with valid JSON only. Use this exact format:
         Returns:
             Formatted example string
         """
-        return f"""Query: {example['query']}
-Classification: {json.dumps({
-    'complexity': example['complexity'],
-    'confidence': example.get('confidence', 0.9),
-    'reasoning': example['reasoning']
-}, indent=2)}"""
+        return f"""Query: {example["query"]}
+Classification: {
+            json.dumps(
+                {
+                    "complexity": example["complexity"],
+                    "confidence": example.get("confidence", 0.9),
+                    "reasoning": example["reasoning"],
+                },
+                indent=2,
+            )
+        }"""
 
 
 __all__ = ["AssessPromptTemplate"]

@@ -24,6 +24,7 @@ class MockCostTracker(CostTracker):
         # Use temp file to avoid loading persistent budget data
         import tempfile
         from pathlib import Path
+
         temp_dir = tempfile.mkdtemp()
         tracker_path = Path(temp_dir) / "mock_budget_tracker.json"
         super().__init__(monthly_limit_usd=999999.0, tracker_path=tracker_path)
@@ -60,10 +61,13 @@ class MockLLMClientWithRetry(LLMClient):
         """Get default model identifier."""
         return "mock-model"
 
-    def generate_json(self, prompt: str, system: str = "", schema: dict | None = None, **kwargs) -> dict:
+    def generate_json(
+        self, prompt: str, system: str = "", schema: dict | None = None, **kwargs
+    ) -> dict:
         """Generate JSON response (not used in these tests)."""
         response = self.generate(prompt, system, **kwargs)
         import json
+
         return json.loads(response.content)
 
     def _make_response(self, content: str) -> LLMResponse:
@@ -84,9 +88,8 @@ class MockLLMClientWithRetry(LLMClient):
         # Track if retry feedback is being used in decomposition (not generation)
         # The retry decomposition will have the feedback embedded in examples/context
         is_retry_with_feedback = (
-            ("decompose" in prompt.lower() or "subgoals" in prompt.lower()) and
-            ("feedback" in prompt.lower() or "attempt" in prompt.lower())
-        )
+            "decompose" in prompt.lower() or "subgoals" in prompt.lower()
+        ) and ("feedback" in prompt.lower() or "attempt" in prompt.lower())
         if is_retry_with_feedback:
             # Store as evidence that retry feedback was used
             self.feedback_received.append(prompt[:500])
@@ -98,17 +101,19 @@ class MockLLMClientWithRetry(LLMClient):
         combined = (prompt + " " + system).upper()
         # Verification: RED TEAM or contains verification keywords, but NOT feedback generation
         is_verification = (
-            ("RED TEAM" in combined or
-             ("VERIF" in combined and "DECOMPOSITION" in combined) or
-             ("CONSISTENCY" in combined and "GROUNDEDNESS" in combined)) and
-            "VERIFICATION RESULT (ATTEMPT" not in combined  # Exclude feedback generation
+            (
+                "RED TEAM" in combined
+                or ("VERIF" in combined and "DECOMPOSITION" in combined)
+                or ("CONSISTENCY" in combined and "GROUNDEDNESS" in combined)
+            )
+            and "VERIFICATION RESULT (ATTEMPT" not in combined  # Exclude feedback generation
         )
 
         # Retry decomposition: has both decompose keywords AND retry indicators
         is_retry_decompose = (
-            ("DECOMPOSE" in combined or "SUBGOALS" in combined) and
-            ("FEEDBACK" in combined or "RETRY" in combined or "ATTEMPT" in combined) and
-            not is_verification  # Not a verification prompt
+            ("DECOMPOSE" in combined or "SUBGOALS" in combined)
+            and ("FEEDBACK" in combined or "RETRY" in combined or "ATTEMPT" in combined)
+            and not is_verification  # Not a verification prompt
         )
 
         if is_retry_decompose:
@@ -228,7 +233,6 @@ class MockLLMClientWithRetry(LLMClient):
 
         # Decomposition request
         if "decompose" in prompt.lower() or "subgoals" in prompt.lower():
-
             if self.retry_scenario == "fail_then_pass":
                 if self.call_count == 1:
                     # First attempt: incomplete decomposition (Phase 2 format)
@@ -323,7 +327,9 @@ class MockLLMClientWithRetry(LLMClient):
 """)
 
         # Feedback generation request (check for verification result in prompt)
-        if "verification result" in prompt.lower() or ("feedback" in prompt.lower() and "improve" in prompt.lower()):
+        if "verification result" in prompt.lower() or (
+            "feedback" in prompt.lower() and "improve" in prompt.lower()
+        ):
             feedback_text = """
 The decomposition is incomplete. To improve:
 
@@ -452,7 +458,9 @@ class TestVerificationRetry:
         )
 
         # Verify retry occurred
-        assert llm_client.call_count >= 4, "Should have multiple LLM calls (decompose + verify, then retry)"
+        assert llm_client.call_count >= 4, (
+            "Should have multiple LLM calls (decompose + verify, then retry)"
+        )
 
         # Verify feedback was generated and used
         assert len(llm_client.feedback_received) > 0, "Should have received retry feedback"
@@ -563,5 +571,6 @@ class TestVerificationRetry:
 
         # Verify feedback contains actionable content
         feedback_text = llm_client.feedback_generated[0]
-        assert "improve" in feedback_text.lower() or "add" in feedback_text.lower(), \
+        assert "improve" in feedback_text.lower() or "add" in feedback_text.lower(), (
             "Feedback should contain improvement suggestions"
+        )

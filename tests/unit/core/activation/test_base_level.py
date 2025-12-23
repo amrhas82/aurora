@@ -56,11 +56,7 @@ class TestBLAConfig:
 
     def test_custom_config(self):
         """Test custom configuration values."""
-        config = BLAConfig(
-            decay_rate=0.6,
-            min_activation=-15.0,
-            default_activation=-8.0
-        )
+        config = BLAConfig(decay_rate=0.6, min_activation=-15.0, default_activation=-8.0)
         assert config.decay_rate == 0.6
         assert config.min_activation == -15.0
         assert config.default_activation == -8.0
@@ -113,7 +109,7 @@ class TestBaseLevelActivation:
         multiple_history = [
             AccessHistoryEntry(timestamp=now - timedelta(days=1)),
             AccessHistoryEntry(timestamp=now - timedelta(days=2)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=3))
+            AccessHistoryEntry(timestamp=now - timedelta(days=3)),
         ]
         multiple_activation = bla.calculate(multiple_history, now)
 
@@ -174,10 +170,7 @@ class TestBaseLevelActivation:
         bla = BaseLevelActivation()
         now = datetime.now(timezone.utc)
 
-        timestamps = [
-            now - timedelta(days=1),
-            now - timedelta(days=7)
-        ]
+        timestamps = [now - timedelta(days=1), now - timedelta(days=7)]
 
         activation = bla.calculate_from_timestamps(timestamps, now)
         assert activation < 0  # Should be negative for past accesses
@@ -190,9 +183,7 @@ class TestBaseLevelActivation:
 
         # Approximate with 5 accesses
         activation = bla.calculate_from_access_counts(
-            access_count=5,
-            last_access=last_access,
-            current_time=now
+            access_count=5, last_access=last_access, current_time=now
         )
 
         # Should produce a reasonable activation value
@@ -204,9 +195,7 @@ class TestBaseLevelActivation:
         now = datetime.now(timezone.utc)
 
         activation = bla.calculate_from_access_counts(
-            access_count=0,
-            last_access=now,
-            current_time=now
+            access_count=0, last_access=now, current_time=now
         )
 
         assert activation == -5.0  # default_activation
@@ -267,7 +256,7 @@ class TestCalculateBlaFunction:
         now = datetime.now(timezone.utc)
         history = [
             AccessHistoryEntry(timestamp=now - timedelta(days=1)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=7))
+            AccessHistoryEntry(timestamp=now - timedelta(days=7)),
         ]
 
         activation = calculate_bla(history, current_time=now)
@@ -306,7 +295,7 @@ class TestACTRFormula:
         # Multiple accesses at different times
         history = [
             AccessHistoryEntry(timestamp=now - timedelta(days=1)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=10))
+            AccessHistoryEntry(timestamp=now - timedelta(days=10)),
         ]
         activation = bla.calculate(history, now)
 
@@ -326,7 +315,7 @@ class TestACTRFormula:
         # Less practice (2 accesses)
         less_practice = [
             AccessHistoryEntry(timestamp=now - timedelta(days=1)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=7))
+            AccessHistoryEntry(timestamp=now - timedelta(days=7)),
         ]
         activation_less = bla.calculate(less_practice, now)
 
@@ -336,7 +325,7 @@ class TestACTRFormula:
             AccessHistoryEntry(timestamp=now - timedelta(days=2)),
             AccessHistoryEntry(timestamp=now - timedelta(days=3)),
             AccessHistoryEntry(timestamp=now - timedelta(days=4)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=5))
+            AccessHistoryEntry(timestamp=now - timedelta(days=5)),
         ]
         activation_more = bla.calculate(more_practice, now)
 
@@ -352,7 +341,7 @@ class TestACTRFormula:
         recent = [
             AccessHistoryEntry(timestamp=now - timedelta(hours=1)),
             AccessHistoryEntry(timestamp=now - timedelta(hours=2)),
-            AccessHistoryEntry(timestamp=now - timedelta(hours=3))
+            AccessHistoryEntry(timestamp=now - timedelta(hours=3)),
         ]
         activation_recent = bla.calculate(recent, now)
 
@@ -360,7 +349,7 @@ class TestACTRFormula:
         old = [
             AccessHistoryEntry(timestamp=now - timedelta(days=10)),
             AccessHistoryEntry(timestamp=now - timedelta(days=11)),
-            AccessHistoryEntry(timestamp=now - timedelta(days=12))
+            AccessHistoryEntry(timestamp=now - timedelta(days=12)),
         ]
         activation_old = bla.calculate(old, now)
 
@@ -368,5 +357,5 @@ class TestACTRFormula:
         assert activation_recent > activation_old
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

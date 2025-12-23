@@ -30,15 +30,14 @@ class TestConfigurationIntegration:
         # 2. Create project config
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "type": "sqlite",
-                "path": ".aurora/memory.db"
-            },
-            "logging": {
-                "level": "DEBUG"
-            }
-        }))
+        project_config.write_text(
+            json.dumps(
+                {
+                    "storage": {"type": "sqlite", "path": ".aurora/memory.db"},
+                    "logging": {"level": "DEBUG"},
+                }
+            )
+        )
 
         # 3. Load config
         config = Config.load(project_path=project_dir)
@@ -67,24 +66,24 @@ class TestConfigurationIntegration:
         # Create global config
         global_config = home_dir / ".aurora" / "config.json"
         global_config.parent.mkdir(parents=True)
-        global_config.write_text(json.dumps({
-            "llm": {
-                "reasoning_provider": "openai",
-                "reasoning_model": "gpt-4",
-                "api_key_env": "OPENAI_API_KEY"
-            }
-        }))
+        global_config.write_text(
+            json.dumps(
+                {
+                    "llm": {
+                        "reasoning_provider": "openai",
+                        "reasoning_model": "gpt-4",
+                        "api_key_env": "OPENAI_API_KEY",
+                    }
+                }
+            )
+        )
 
         # Create project config
         project_dir = tmp_path / "project"
         project_dir.mkdir()
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "path": "/tmp/project.db"
-            }
-        }))
+        project_config.write_text(json.dumps({"storage": {"path": "/tmp/project.db"}}))
 
         # Load config
         config = Config.load(project_path=project_dir)
@@ -105,14 +104,9 @@ class TestConfigurationIntegration:
         project_dir.mkdir()
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "path": "/project/config.db"
-            },
-            "logging": {
-                "level": "DEBUG"
-            }
-        }))
+        project_config.write_text(
+            json.dumps({"storage": {"path": "/project/config.db"}, "logging": {"level": "DEBUG"}})
+        )
 
         # Load config
         config = Config.load(project_path=project_dir)
@@ -131,11 +125,7 @@ class TestConfigurationIntegration:
         project_dir.mkdir()
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "path": "/project/path.db"
-            }
-        }))
+        project_config.write_text(json.dumps({"storage": {"path": "/project/path.db"}}))
 
         # Load with CLI override
         cli_overrides = {"storage.path": "/cli/path.db"}
@@ -158,15 +148,14 @@ class TestConfigurationIntegration:
 
         # Create config with relative paths
         project_config = project_dir / ".aurora" / "config.json"
-        project_config.write_text(json.dumps({
-            "storage": {
-                "type": "sqlite",
-                "path": ".aurora/memory.db"
-            },
-            "logging": {
-                "path": ".aurora/logs/"
-            }
-        }))
+        project_config.write_text(
+            json.dumps(
+                {
+                    "storage": {"type": "sqlite", "path": ".aurora/memory.db"},
+                    "logging": {"path": ".aurora/logs/"},
+                }
+            )
+        )
 
         # Load config
         config = Config.load(project_path=project_dir)
@@ -188,12 +177,16 @@ class TestConfigurationIntegration:
         # Create invalid config
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "type": "invalid_type",  # Invalid enum value
-                "path": "~/.aurora/memory.db"
-            }
-        }))
+        project_config.write_text(
+            json.dumps(
+                {
+                    "storage": {
+                        "type": "invalid_type",  # Invalid enum value
+                        "path": "~/.aurora/memory.db",
+                    }
+                }
+            )
+        )
 
         # Should raise clear error
         with pytest.raises(ConfigurationError) as exc_info:
@@ -213,12 +206,7 @@ class TestConfigurationIntegration:
         project_dir.mkdir()
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "type": "memory",
-                "path": ":memory:"
-            }
-        }))
+        project_config.write_text(json.dumps({"storage": {"type": "memory", "path": ":memory:"}}))
 
         # Load config
         config = Config.load(project_path=project_dir)
@@ -240,17 +228,13 @@ class TestConfigurationIntegration:
         project_config.parent.mkdir(parents=True)
 
         # Initial config
-        project_config.write_text(json.dumps({
-            "logging": {"level": "INFO"}
-        }))
+        project_config.write_text(json.dumps({"logging": {"level": "INFO"}}))
 
         config1 = Config.load(project_path=project_dir)
         assert config1.get("logging.level") == "INFO"
 
         # Update config file
-        project_config.write_text(json.dumps({
-            "logging": {"level": "DEBUG"}
-        }))
+        project_config.write_text(json.dumps({"logging": {"level": "DEBUG"}}))
 
         # Reload
         config2 = Config.load(project_path=project_dir)
@@ -264,41 +248,45 @@ class TestConfigurationIntegration:
         # Create fully valid config
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "version": "1.0",
-            "mode": "standalone",
-            "storage": {
-                "type": "sqlite",
-                "path": "~/.aurora/memory.db",
-                "max_connections": 10,
-                "timeout_seconds": 5
-            },
-            "llm": {
-                "reasoning_provider": "anthropic",
-                "reasoning_model": "claude-3-5-sonnet-20241022",
-                "api_key_env": "ANTHROPIC_API_KEY",
-                "timeout_seconds": 30
-            },
-            "context": {
-                "code": {
-                    "enabled": True,
-                    "languages": ["python"],
-                    "max_file_size_kb": 500,
-                    "cache_ttl_hours": 24
+        project_config.write_text(
+            json.dumps(
+                {
+                    "version": "1.0",
+                    "mode": "standalone",
+                    "storage": {
+                        "type": "sqlite",
+                        "path": "~/.aurora/memory.db",
+                        "max_connections": 10,
+                        "timeout_seconds": 5,
+                    },
+                    "llm": {
+                        "reasoning_provider": "anthropic",
+                        "reasoning_model": "claude-3-5-sonnet-20241022",
+                        "api_key_env": "ANTHROPIC_API_KEY",
+                        "timeout_seconds": 30,
+                    },
+                    "context": {
+                        "code": {
+                            "enabled": True,
+                            "languages": ["python"],
+                            "max_file_size_kb": 500,
+                            "cache_ttl_hours": 24,
+                        }
+                    },
+                    "agents": {
+                        "discovery_paths": [".aurora/agents.json"],
+                        "refresh_interval_days": 15,
+                        "fallback_mode": "llm_only",
+                    },
+                    "logging": {
+                        "level": "INFO",
+                        "path": "~/.aurora/logs/",
+                        "max_size_mb": 100,
+                        "max_files": 10,
+                    },
                 }
-            },
-            "agents": {
-                "discovery_paths": [".aurora/agents.json"],
-                "refresh_interval_days": 15,
-                "fallback_mode": "llm_only"
-            },
-            "logging": {
-                "level": "INFO",
-                "path": "~/.aurora/logs/",
-                "max_size_mb": 100,
-                "max_files": 10
-            }
-        }))
+            )
+        )
 
         # Load and validate
         config = Config.load(project_path=project_dir)
@@ -323,14 +311,18 @@ class TestConfigWithComponents:
 
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "type": "sqlite",
-                "path": ".aurora/test.db",
-                "max_connections": 5,
-                "timeout_seconds": 10
-            }
-        }))
+        project_config.write_text(
+            json.dumps(
+                {
+                    "storage": {
+                        "type": "sqlite",
+                        "path": ".aurora/test.db",
+                        "max_connections": 5,
+                        "timeout_seconds": 10,
+                    }
+                }
+            )
+        )
 
         config = Config.load(project_path=project_dir)
 
@@ -367,16 +359,20 @@ class TestConfigWithComponents:
 
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "context": {
-                "code": {
-                    "enabled": True,
-                    "languages": ["python", "javascript"],
-                    "max_file_size_kb": 1000,
-                    "cache_ttl_hours": 48
+        project_config.write_text(
+            json.dumps(
+                {
+                    "context": {
+                        "code": {
+                            "enabled": True,
+                            "languages": ["python", "javascript"],
+                            "max_file_size_kb": 1000,
+                            "cache_ttl_hours": 48,
+                        }
+                    }
                 }
-            }
-        }))
+            )
+        )
 
         config = Config.load(project_path=project_dir)
 

@@ -47,7 +47,7 @@ class Chunk(ABC):
 
     @classmethod
     @abstractmethod
-    def from_json(cls, data: dict[str, Any]) -> 'Chunk':
+    def from_json(cls, data: dict[str, Any]) -> "Chunk":
         """
         Deserialize chunk from JSON dict.
 
@@ -87,4 +87,4 @@ class Chunk(ABC):
         return hash(self.id)
 
 
-__all__ = ['Chunk']
+__all__ = ["Chunk"]

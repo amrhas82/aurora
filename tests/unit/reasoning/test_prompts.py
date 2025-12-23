@@ -1,7 +1,5 @@
 """Unit tests for prompt templates."""
 
-
-
 from aurora_reasoning.prompts.assess import AssessPromptTemplate
 from aurora_reasoning.prompts.decompose import DecomposePromptTemplate
 from aurora_reasoning.prompts.examples import Complexity, ExamplesLoader, get_loader
@@ -41,10 +39,7 @@ class TestAssessPromptTemplate:
             "score": 0.5,
             "confidence": 0.6,
         }
-        user = template.build_user_prompt(
-            query="Test query",
-            keyword_result=keyword_result
-        )
+        user = template.build_user_prompt(query="Test query", keyword_result=keyword_result)
 
         assert "MEDIUM" in user
         assert "0.50" in user or "0.5" in user
@@ -84,10 +79,7 @@ class TestDecomposePromptTemplate:
     def test_user_prompt_with_context_summary(self):
         """Test user prompt includes context."""
         template = DecomposePromptTemplate()
-        user = template.build_user_prompt(
-            query="Test query",
-            context_summary="Context info here"
-        )
+        user = template.build_user_prompt(query="Test query", context_summary="Context info here")
 
         assert "Context info here" in user
 
@@ -95,8 +87,7 @@ class TestDecomposePromptTemplate:
         """Test user prompt includes retry feedback."""
         template = DecomposePromptTemplate()
         user = template.build_user_prompt(
-            query="Test query",
-            retry_feedback="Try again with more detail"
+            query="Test query", retry_feedback="Try again with more detail"
         )
 
         assert "Try again with more detail" in user
@@ -122,14 +113,8 @@ class TestVerifySelfPromptTemplate:
     def test_user_prompt_includes_decomposition(self):
         """Test user prompt includes decomposition."""
         template = VerifySelfPromptTemplate()
-        decomposition = {
-            "goal": "Test goal",
-            "subgoals": [{"description": "Step 1"}]
-        }
-        user = template.build_user_prompt(
-            query="Test query",
-            decomposition=decomposition
-        )
+        decomposition = {"goal": "Test goal", "subgoals": [{"description": "Step 1"}]}
+        user = template.build_user_prompt(query="Test query", decomposition=decomposition)
 
         assert "Test goal" in user
         assert "Step 1" in user
@@ -151,10 +136,7 @@ class TestVerifyAdversarialPromptTemplate:
         """Test user prompt emphasizes red team mode."""
         template = VerifyAdversarialPromptTemplate()
         decomposition = {"goal": "Test"}
-        user = template.build_user_prompt(
-            query="Test query",
-            decomposition=decomposition
-        )
+        user = template.build_user_prompt(query="Test query", decomposition=decomposition)
 
         assert "RED TEAM" in user or "critical" in user.lower()
 
@@ -174,14 +156,8 @@ class TestVerifyAgentOutputPromptTemplate:
     def test_user_prompt_includes_agent_output(self):
         """Test user prompt includes agent output."""
         template = VerifyAgentOutputPromptTemplate()
-        agent_output = {
-            "summary": "Completed task",
-            "data": {"result": "success"}
-        }
-        user = template.build_user_prompt(
-            subgoal="Do something",
-            agent_output=agent_output
-        )
+        agent_output = {"summary": "Completed task", "data": {"result": "success"}}
+        user = template.build_user_prompt(subgoal="Do something", agent_output=agent_output)
 
         assert "Do something" in user
         assert "Completed task" in user
@@ -205,7 +181,7 @@ class TestVerifySynthesisPromptTemplate:
         user = template.build_user_prompt(
             query="Test query",
             synthesis_answer="This is the synthesized answer",
-            agent_outputs=[{"agent_name": "test", "summary": "did work", "confidence": 0.9}]
+            agent_outputs=[{"agent_name": "test", "summary": "did work", "confidence": 0.9}],
         )
 
         assert "synthesized answer" in user.lower()
@@ -229,12 +205,9 @@ class TestRetryFeedbackPromptTemplate:
         verification = {
             "verdict": "RETRY",
             "issues": ["Problem 1", "Problem 2"],
-            "suggestions": ["Fix 1"]
+            "suggestions": ["Fix 1"],
         }
-        user = template.build_user_prompt(
-            verification_result=verification,
-            attempt_number=1
-        )
+        user = template.build_user_prompt(verification_result=verification, attempt_number=1)
 
         assert "Problem 1" in user
         assert "Problem 2" in user
@@ -249,8 +222,7 @@ class TestExamplesLoader:
         # Note: This will fail if example file doesn't exist, but that's expected
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json",
-                Complexity.SIMPLE
+                "example_decompositions.json", Complexity.SIMPLE
             )
             assert len(examples) == 0
         except FileNotFoundError:
@@ -262,8 +234,7 @@ class TestExamplesLoader:
         loader = ExamplesLoader()
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json",
-                Complexity.MEDIUM
+                "example_decompositions.json", Complexity.MEDIUM
             )
             assert len(examples) == 2
         except FileNotFoundError:
@@ -274,8 +245,7 @@ class TestExamplesLoader:
         loader = ExamplesLoader()
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json",
-                Complexity.COMPLEX
+                "example_decompositions.json", Complexity.COMPLEX
             )
             assert len(examples) == 4
         except FileNotFoundError:
@@ -286,8 +256,7 @@ class TestExamplesLoader:
         loader = ExamplesLoader()
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json",
-                Complexity.CRITICAL
+                "example_decompositions.json", Complexity.CRITICAL
             )
             assert len(examples) == 6
         except FileNotFoundError:
@@ -311,7 +280,7 @@ class TestPromptTemplateWithExamples:
                 "query": "Example query",
                 "complexity": "SIMPLE",
                 "confidence": 0.9,
-                "reasoning": "Direct question"
+                "reasoning": "Direct question",
             }
         ]
 

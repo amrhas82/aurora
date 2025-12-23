@@ -40,10 +40,11 @@ def _make_json_serializable(obj: Any) -> Any:
 
 class Verbosity(str, Enum):
     """Output verbosity levels."""
-    QUIET = "quiet"       # Single line with score
-    NORMAL = "normal"     # Phase progress with key metrics
-    VERBOSE = "verbose"   # Full trace with detailed metadata
-    JSON = "json"         # Structured JSON logs for each phase
+
+    QUIET = "quiet"  # Single line with score
+    NORMAL = "normal"  # Phase progress with key metrics
+    VERBOSE = "verbose"  # Full trace with detailed metadata
+    JSON = "json"  # Structured JSON logs for each phase
 
 
 class ResponseResult:
@@ -169,9 +170,7 @@ def _format_normal(
         f"{synthesis_result.metadata.get('subgoals_partial', 0)} partial, "
         f"{synthesis_result.metadata.get('subgoals_failed', 0)} failed"
     )
-    lines.append(
-        f"  Files Modified: {synthesis_result.metadata.get('total_files_modified', 0)}"
-    )
+    lines.append(f"  Files Modified: {synthesis_result.metadata.get('total_files_modified', 0)}")
 
     # Phase Summary
     if "phases" in phase_metadata:
@@ -228,9 +227,7 @@ def _format_verbose(
     lines.append("=" * 80)
     lines.append(f"Overall Confidence: {synthesis_result.confidence:.2f}")
     if "verification_score" in synthesis_result.metadata:
-        lines.append(
-            f"Verification Score: {synthesis_result.metadata['verification_score']:.2f}"
-        )
+        lines.append(f"Verification Score: {synthesis_result.metadata['verification_score']:.2f}")
     if "coherence" in synthesis_result.metadata:
         lines.append(f"  Coherence: {synthesis_result.metadata['coherence']:.2f}")
     if "completeness" in synthesis_result.metadata:
@@ -255,18 +252,10 @@ def _format_verbose(
     lines.append("\n" + "=" * 80)
     lines.append("EXECUTION SUMMARY")
     lines.append("=" * 80)
-    lines.append(
-        f"Subgoals Completed: {synthesis_result.metadata.get('subgoals_completed', 0)}"
-    )
-    lines.append(
-        f"Subgoals Partial: {synthesis_result.metadata.get('subgoals_partial', 0)}"
-    )
-    lines.append(
-        f"Subgoals Failed: {synthesis_result.metadata.get('subgoals_failed', 0)}"
-    )
-    lines.append(
-        f"Files Modified: {synthesis_result.metadata.get('total_files_modified', 0)}"
-    )
+    lines.append(f"Subgoals Completed: {synthesis_result.metadata.get('subgoals_completed', 0)}")
+    lines.append(f"Subgoals Partial: {synthesis_result.metadata.get('subgoals_partial', 0)}")
+    lines.append(f"Subgoals Failed: {synthesis_result.metadata.get('subgoals_failed', 0)}")
+    lines.append(f"Files Modified: {synthesis_result.metadata.get('total_files_modified', 0)}")
     lines.append(
         f"User Interactions: {synthesis_result.metadata.get('user_interactions_count', 0)}"
     )

@@ -51,9 +51,34 @@ class CodeContextProvider(ContextProvider):
 
     # Common English stopwords to filter out from queries
     STOPWORDS = {
-        'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
-        'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
-        'to', 'was', 'will', 'with', 'this', 'but', 'or', 'not'
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "for",
+        "from",
+        "has",
+        "he",
+        "in",
+        "is",
+        "it",
+        "its",
+        "of",
+        "on",
+        "that",
+        "the",
+        "to",
+        "was",
+        "will",
+        "with",
+        "this",
+        "but",
+        "or",
+        "not",
     }
 
     @staticmethod
@@ -81,7 +106,7 @@ class CodeContextProvider(ContextProvider):
         words = query.lower().split()
 
         # Strip common punctuation from each word
-        punctuation = '.,!?;:\'"()[]{}/'
+        punctuation = ".,!?;:'\"()[]{}/"
         cleaned_words = []
         for word in words:
             # Strip leading/trailing punctuation
@@ -91,7 +116,6 @@ class CodeContextProvider(ContextProvider):
 
         # Remove stopwords and empty strings
         return [w for w in cleaned_words if w and w not in CodeContextProvider.STOPWORDS]
-
 
     @staticmethod
     def _score_chunk(chunk: Chunk, keywords: list[str]) -> float:
@@ -120,17 +144,17 @@ class CodeContextProvider(ContextProvider):
         searchable_parts = []
 
         # For CodeChunk, include name and docstring
-        if hasattr(chunk, 'name'):
+        if hasattr(chunk, "name"):
             searchable_parts.append(chunk.name.lower())
 
-        if hasattr(chunk, 'docstring') and chunk.docstring:
+        if hasattr(chunk, "docstring") and chunk.docstring:
             searchable_parts.append(chunk.docstring.lower())
 
-        if hasattr(chunk, 'file_path'):
+        if hasattr(chunk, "file_path"):
             searchable_parts.append(str(chunk.file_path).lower())
 
         # Combine all searchable text
-        searchable_text = ' '.join(searchable_parts)
+        searchable_text = " ".join(searchable_parts)
 
         # Count how many keywords match
         matches = sum(1 for keyword in keywords if keyword.lower() in searchable_text)
@@ -138,8 +162,7 @@ class CodeContextProvider(ContextProvider):
         # Calculate score as ratio
         return matches / len(keywords)
 
-
-    def __init__(self, store: Store, parser_registry: 'ParserRegistry'):
+    def __init__(self, store: Store, parser_registry: "ParserRegistry"):
         """
         Initialize CodeContextProvider.
 
@@ -245,4 +268,4 @@ class CodeContextProvider(ContextProvider):
         pass
 
 
-__all__ = ['CodeContextProvider']
+__all__ = ["CodeContextProvider"]

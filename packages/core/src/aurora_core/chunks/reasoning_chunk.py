@@ -99,11 +99,11 @@ class ReasoningChunk(Chunk):
                 "created_at": self.created_at.isoformat(),
                 "last_modified": self.updated_at.isoformat(),
                 **self.metadata,  # Include custom metadata
-            }
+            },
         }
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> 'ReasoningChunk':
+    def from_json(cls, data: dict[str, Any]) -> "ReasoningChunk":
         """
         Deserialize chunk from JSON dict.
 
@@ -122,8 +122,7 @@ class ReasoningChunk(Chunk):
 
             # Extract custom metadata (exclude standard fields)
             custom_metadata = {
-                k: v for k, v in metadata_dict.items()
-                if k not in ["created_at", "last_modified"]
+                k: v for k, v in metadata_dict.items() if k not in ["created_at", "last_modified"]
             }
 
             return cls(
@@ -137,7 +136,6 @@ class ReasoningChunk(Chunk):
                 success_score=content.get("success_score", 0.0),
                 metadata=custom_metadata,
             )
-
 
         except KeyError as e:
             raise ValueError(f"Missing required field in JSON data: {e}")
@@ -156,9 +154,7 @@ class ReasoningChunk(Chunk):
         """
         # Validate success_score range
         if not (0.0 <= self.success_score <= 1.0):
-            raise ValueError(
-                f"success_score must be in [0.0, 1.0], got {self.success_score}"
-            )
+            raise ValueError(f"success_score must be in [0.0, 1.0], got {self.success_score}")
 
         # Validate pattern is not empty
         if not self.pattern or not self.pattern.strip():
@@ -177,9 +173,7 @@ class ReasoningChunk(Chunk):
 
         # Validate execution_order structure
         if not isinstance(self.execution_order, list):
-            raise ValueError(
-                f"execution_order must be a list, got {type(self.execution_order)}"
-            )
+            raise ValueError(f"execution_order must be a list, got {type(self.execution_order)}")
 
         # Validate tools_used is a list
         if not isinstance(self.tools_used, list):
@@ -187,9 +181,7 @@ class ReasoningChunk(Chunk):
 
         # Validate tool_sequence is a list
         if not isinstance(self.tool_sequence, list):
-            raise ValueError(
-                f"tool_sequence must be a list, got {type(self.tool_sequence)}"
-            )
+            raise ValueError(f"tool_sequence must be a list, got {type(self.tool_sequence)}")
 
         return True
 
@@ -202,4 +194,4 @@ class ReasoningChunk(Chunk):
         )
 
 
-__all__ = ['ReasoningChunk']
+__all__ = ["ReasoningChunk"]

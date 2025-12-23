@@ -72,9 +72,7 @@ class MockLLMClient(LLMClient):
         # Simple approximation: 1 token per 4 characters
         return len(text) // 4
 
-    def configure_response(
-        self, pattern: str, response: MockLLMResponse
-    ) -> None:
+    def configure_response(self, pattern: str, response: MockLLMResponse) -> None:
         """Configure a response for prompts matching a pattern.
 
         Args:
@@ -85,9 +83,7 @@ class MockLLMClient(LLMClient):
             self._responses[pattern] = []
         self._responses[pattern].append(response)
 
-    def configure_responses(
-        self, pattern: str, responses: list[MockLLMResponse]
-    ) -> None:
+    def configure_responses(self, pattern: str, responses: list[MockLLMResponse]) -> None:
         """Configure multiple responses for a pattern (returned in order).
 
         Args:
@@ -125,7 +121,7 @@ class MockLLMClient(LLMClient):
         max_tokens: int = 4096,
         temperature: float = 0.7,
         model: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         """Generate text response (mock).
 
@@ -165,7 +161,7 @@ class MockLLMClient(LLMClient):
                     model=model,
                     input_tokens=response.input_tokens,
                     output_tokens=response.output_tokens,
-                    finish_reason="stop"
+                    finish_reason="stop",
                 )
 
         # No matching response - return default
@@ -185,7 +181,7 @@ class MockLLMClient(LLMClient):
             model=model,
             input_tokens=100,
             output_tokens=50,
-            finish_reason="stop"
+            finish_reason="stop",
         )
 
     def generate_json(
@@ -196,7 +192,7 @@ class MockLLMClient(LLMClient):
         max_tokens: int = 4096,
         temperature: float = 0.7,
         model: str | None = None,
-        **kwargs
+        **kwargs,
     ) -> dict[str, Any]:
         """Generate JSON response (mock).
 
@@ -278,9 +274,7 @@ class MockAgent:
         self._should_fail = should_fail
         self._calls: list[dict[str, Any]] = []
 
-    async def execute(
-        self, subgoal: str, context: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def execute(self, subgoal: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute agent (mock).
 
         Args:
@@ -341,8 +335,11 @@ class E2ETestFramework:
         self.mock_llm = MockLLMClient()
         # Use unique tracker file for tests to avoid persistence issues
         from pathlib import Path
+
         tracker_path = Path(temp_dir) / "test_budget_tracker.json"
-        self.cost_tracker = CostTracker(monthly_limit_usd=1000.0, tracker_path=tracker_path)  # High limit for tests
+        self.cost_tracker = CostTracker(
+            monthly_limit_usd=1000.0, tracker_path=tracker_path
+        )  # High limit for tests
         self.conversation_logger = ConversationLogger(enabled=False)
 
         # Track mock agents
@@ -410,9 +407,7 @@ class E2ETestFramework:
         )
         self.agent_registry.register(agent_info)
 
-    def configure_assessment_response(
-        self, complexity: str, confidence: float = 0.9
-    ) -> None:
+    def configure_assessment_response(self, complexity: str, confidence: float = 0.9) -> None:
         """Configure mock response for complexity assessment.
 
         Args:
@@ -435,9 +430,7 @@ class E2ETestFramework:
         self.mock_llm.configure_response("query complexity analyzer", response)
         self.mock_llm.configure_response("classify user queries", response)
 
-    def configure_decomposition_response(
-        self, subgoals: list[dict[str, Any]]
-    ) -> None:
+    def configure_decomposition_response(self, subgoals: list[dict[str, Any]]) -> None:
         """Configure mock response for query decomposition.
 
         Args:
@@ -447,15 +440,17 @@ class E2ETestFramework:
         formatted_subgoals = []
         for i, sg in enumerate(subgoals):
             formatted_sg = {
-                "description": sg.get("description", f"Subgoal {i+1}"),
+                "description": sg.get("description", f"Subgoal {i + 1}"),
                 "suggested_agent": sg.get("agent_type", sg.get("suggested_agent", "mock-agent")),
                 "is_critical": sg.get("is_critical", True),
-                "depends_on": sg.get("dependencies", sg.get("depends_on", []))
+                "depends_on": sg.get("dependencies", sg.get("depends_on", [])),
             }
             formatted_subgoals.append(formatted_sg)
 
         # Create proper execution_order structure
-        execution_order = [{"phase": 1, "parallelizable": list(range(len(subgoals))), "sequential": []}]
+        execution_order = [
+            {"phase": 1, "parallelizable": list(range(len(subgoals))), "sequential": []}
+        ]
 
         response = MockLLMResponse(
             content=json.dumps(
@@ -463,7 +458,7 @@ class E2ETestFramework:
                     "goal": "Mock goal",
                     "subgoals": formatted_subgoals,
                     "execution_order": execution_order,
-                    "expected_tools": ["mock-tool"]
+                    "expected_tools": ["mock-tool"],
                 }
             ),
             input_tokens=500,
@@ -494,7 +489,7 @@ class E2ETestFramework:
                     "overall_score": score,
                     "verdict": verdict,
                     "issues": [feedback] if feedback else [],
-                    "suggestions": []
+                    "suggestions": [],
                 }
             ),
             input_tokens=400,
@@ -528,21 +523,21 @@ class E2ETestFramework:
         # Include agent reference for traceability validation
         answer_with_citation = f"{answer} (Agent: {agent_name})"
         content = f"ANSWER: {answer_with_citation}\nCONFIDENCE: {confidence}"
-        response = MockLLMResponse(
-            content=content, input_tokens=600, output_tokens=300
-        )
+        response = MockLLMResponse(content=content, input_tokens=600, output_tokens=300)
         # Multiple patterns for synthesis text generation (avoid patterns that appear in verification)
         self.mock_llm.configure_response("synthesizing information", response)
         self.mock_llm.configure_response("combine the agent outputs", response)
 
         # Also configure synthesis verification response (called after synthesis)
         verification_response = MockLLMResponse(
-            content=json.dumps({
-                "coherence": 0.9,
-                "completeness": 0.9,
-                "factuality": 0.9,
-                "overall_score": 0.9,
-            }),
+            content=json.dumps(
+                {
+                    "coherence": 0.9,
+                    "completeness": 0.9,
+                    "factuality": 0.9,
+                    "overall_score": 0.9,
+                }
+            ),
             input_tokens=200,
             output_tokens=50,
         )
@@ -552,9 +547,7 @@ class E2ETestFramework:
         self.mock_llm.configure_response("FACTUALITY", verification_response)
         self.mock_llm.configure_response("quality verifier", verification_response)
 
-    def assert_phase_executed(
-        self, response: dict[str, Any], phase_name: str
-    ) -> None:
+    def assert_phase_executed(self, response: dict[str, Any], phase_name: str) -> None:
         """Assert that a specific phase was executed.
 
         Args:
@@ -563,13 +556,9 @@ class E2ETestFramework:
         """
         assert "metadata" in response, "Response missing metadata"
         assert "phases" in response["metadata"], "Metadata missing phases"
-        assert (
-            phase_name in response["metadata"]["phases"]
-        ), f"Phase {phase_name} not executed"
+        assert phase_name in response["metadata"]["phases"], f"Phase {phase_name} not executed"
 
-    def assert_performance(
-        self, response: dict[str, Any], max_duration_ms: float
-    ) -> None:
+    def assert_performance(self, response: dict[str, Any], max_duration_ms: float) -> None:
         """Assert that query completed within time limit.
 
         Args:
@@ -578,13 +567,11 @@ class E2ETestFramework:
         """
         assert "metadata" in response, "Response missing metadata"
         duration = response["metadata"].get("total_duration_ms", 0)
-        assert (
-            duration <= max_duration_ms
-        ), f"Query took {duration}ms, expected <{max_duration_ms}ms"
+        assert duration <= max_duration_ms, (
+            f"Query took {duration}ms, expected <{max_duration_ms}ms"
+        )
 
-    def assert_cost_within_limit(
-        self, response: dict[str, Any], max_cost_usd: float
-    ) -> None:
+    def assert_cost_within_limit(self, response: dict[str, Any], max_cost_usd: float) -> None:
         """Assert that query cost is within limit.
 
         Args:
@@ -593,9 +580,7 @@ class E2ETestFramework:
         """
         assert "metadata" in response, "Response missing metadata"
         cost = response["metadata"].get("total_cost_usd", 0)
-        assert (
-            cost <= max_cost_usd
-        ), f"Query cost ${cost}, expected <${max_cost_usd}"
+        assert cost <= max_cost_usd, f"Query cost ${cost}, expected <${max_cost_usd}"
 
     def measure_performance(self, func: callable) -> tuple[Any, float]:
         """Measure execution time of a function.
@@ -648,9 +633,7 @@ def create_mock_decomposition(num_subgoals: int = 3) -> dict[str, Any]:
     }
 
 
-def create_mock_agent_response(
-    agent_id: str, confidence: float = 0.9
-) -> dict[str, Any]:
+def create_mock_agent_response(agent_id: str, confidence: float = 0.9) -> dict[str, Any]:
     """Create a mock agent response.
 
     Args:

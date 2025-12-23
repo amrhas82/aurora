@@ -47,10 +47,7 @@ def mock_llm_client():
         output_tokens=500,
         finish_reason="stop",
     )
-    client.generate_json.return_value = {
-        "complexity": "SIMPLE",
-        "confidence": 0.9
-    }
+    client.generate_json.return_value = {"complexity": "SIMPLE", "confidence": 0.9}
     return client
 
 
@@ -63,11 +60,13 @@ def agent_registry():
 @pytest.fixture
 def config():
     """Create test config."""
-    return Config({
-        "budget": {
-            "monthly_limit_usd": 1.0  # Very low limit for testing
+    return Config(
+        {
+            "budget": {
+                "monthly_limit_usd": 1.0  # Very low limit for testing
+            }
         }
-    })
+    )
 
 
 class TestBudgetExceededFaultInjection:
@@ -273,9 +272,7 @@ class TestBudgetExceededFaultInjection:
         # First query checks budget - should see 99.9% consumed
         # Any estimated cost will push over 100% limit
         estimated_cost = tracker.estimate_cost(
-            model="claude-sonnet-4-20250514",
-            prompt_length=400,
-            max_output_tokens=512
+            model="claude-sonnet-4-20250514", prompt_length=400, max_output_tokens=512
         )
 
         can_proceed1, msg1 = tracker.check_budget(estimated_cost)
@@ -286,7 +283,9 @@ class TestBudgetExceededFaultInjection:
         can_proceed2, msg2 = tracker.check_budget(estimated_cost)
         assert can_proceed2 is False
 
-    @pytest.mark.skip(reason="Known issue: CostTracker has ZeroDivisionError with limit=0.0 (tracker.py:303)")
+    @pytest.mark.skip(
+        reason="Known issue: CostTracker has ZeroDivisionError with limit=0.0 (tracker.py:303)"
+    )
     def test_budget_exceeded_with_zero_limit(
         self, store, agent_registry, mock_llm_client, temp_tracker_path
     ):

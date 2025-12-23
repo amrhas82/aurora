@@ -18,19 +18,26 @@ from .prompts.verify_self import VerifySelfPromptTemplate
 if TYPE_CHECKING:
     from .llm_client import LLMClient
 
-__all__ = ["verify_decomposition", "VerificationResult", "VerificationVerdict", "VerificationOption"]
+__all__ = [
+    "verify_decomposition",
+    "VerificationResult",
+    "VerificationVerdict",
+    "VerificationOption",
+]
 
 
 class VerificationVerdict(str, Enum):
     """Verification verdict outcomes."""
-    PASS = "PASS"      # Score ≥ 0.7, proceed with decomposition
-    RETRY = "RETRY"    # 0.5 ≤ score < 0.7, revise and retry
-    FAIL = "FAIL"      # Score < 0.5, fundamental issues
+
+    PASS = "PASS"  # Score ≥ 0.7, proceed with decomposition
+    RETRY = "RETRY"  # 0.5 ≤ score < 0.7, revise and retry
+    FAIL = "FAIL"  # Score < 0.5, fundamental issues
 
 
 class VerificationOption(str, Enum):
     """Verification approach options."""
-    SELF = "self"              # Option A: Self-verification (MEDIUM)
+
+    SELF = "self"  # Option A: Self-verification (MEDIUM)
     ADVERSARIAL = "adversarial"  # Option B: Adversarial (COMPLEX/CRITICAL)
 
 
@@ -168,31 +175,37 @@ def verify_decomposition(
 
     # Validate required fields
     required_fields = [
-        "completeness", "consistency", "groundedness", "routability",
-        "overall_score", "verdict"
+        "completeness",
+        "consistency",
+        "groundedness",
+        "routability",
+        "overall_score",
+        "verdict",
     ]
     missing = [f for f in required_fields if f not in verification]
     if missing:
         raise ValueError(
-            f"Verification missing required fields: {missing}\n"
-            f"Response: {verification}"
+            f"Verification missing required fields: {missing}\nResponse: {verification}"
         )
 
     # Validate score ranges
-    for score_field in ["completeness", "consistency", "groundedness", "routability", "overall_score"]:
+    for score_field in [
+        "completeness",
+        "consistency",
+        "groundedness",
+        "routability",
+        "overall_score",
+    ]:
         score = verification[score_field]
         if not isinstance(score, (int, float)) or not (0.0 <= score <= 1.0):
-            raise ValueError(
-                f"Invalid {score_field} score: {score} (must be float in [0.0, 1.0])"
-            )
+            raise ValueError(f"Invalid {score_field} score: {score} (must be float in [0.0, 1.0])")
 
     # Validate verdict
     try:
         verdict = VerificationVerdict(verification["verdict"])
     except ValueError as e:
         raise ValueError(
-            f"Invalid verdict: {verification['verdict']} "
-            f"(must be PASS, RETRY, or FAIL)"
+            f"Invalid verdict: {verification['verdict']} (must be PASS, RETRY, or FAIL)"
         ) from e
 
     # Calculate expected overall score and validate
@@ -254,12 +267,7 @@ def _calculate_overall_score(
     Returns:
         Weighted overall score (0.0-1.0)
     """
-    return (
-        0.4 * completeness +
-        0.2 * consistency +
-        0.2 * groundedness +
-        0.2 * routability
-    )
+    return 0.4 * completeness + 0.2 * consistency + 0.2 * groundedness + 0.2 * routability
 
 
 def _validate_verdict_consistency(verdict: VerificationVerdict, score: float) -> None:
@@ -279,8 +287,7 @@ def _validate_verdict_consistency(verdict: VerificationVerdict, score: float) ->
     """
     if score >= 0.7 and verdict != VerificationVerdict.PASS:
         raise ValueError(
-            f"Verdict {verdict} inconsistent with score {score:.2f} "
-            f"(score ≥ 0.7 should be PASS)"
+            f"Verdict {verdict} inconsistent with score {score:.2f} (score ≥ 0.7 should be PASS)"
         )
     if 0.5 <= score < 0.7 and verdict not in [VerificationVerdict.RETRY, VerificationVerdict.PASS]:
         # Allow PASS for borderline cases, but not FAIL

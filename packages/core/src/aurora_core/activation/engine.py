@@ -62,27 +62,18 @@ class ActivationConfig(BaseModel):
         enable_context: Whether to include context boost in total activation
         enable_decay: Whether to include decay in total activation
     """
+
     bla_config: BLAConfig = Field(default_factory=BLAConfig)
     spreading_config: SpreadingConfig = Field(default_factory=SpreadingConfig)
     context_config: ContextBoostConfig = Field(default_factory=ContextBoostConfig)
     decay_config: DecayConfig = Field(default_factory=DecayConfig)
 
-    enable_bla: bool = Field(
-        default=True,
-        description="Include base-level activation in total"
-    )
+    enable_bla: bool = Field(default=True, description="Include base-level activation in total")
     enable_spreading: bool = Field(
-        default=True,
-        description="Include spreading activation in total"
+        default=True, description="Include spreading activation in total"
     )
-    enable_context: bool = Field(
-        default=True,
-        description="Include context boost in total"
-    )
-    enable_decay: bool = Field(
-        default=True,
-        description="Include decay penalty in total"
-    )
+    enable_context: bool = Field(default=True, description="Include context boost in total")
+    enable_decay: bool = Field(default=True, description="Include decay penalty in total")
 
 
 class ActivationComponents(BaseModel):
@@ -98,6 +89,7 @@ class ActivationComponents(BaseModel):
         decay: Decay penalty component
         total: Total activation (sum of all components)
     """
+
     bla: float = Field(default=0.0, description="Base-level activation")
     spreading: float = Field(default=0.0, description="Spreading activation")
     context_boost: float = Field(default=0.0, description="Context boost")
@@ -155,7 +147,7 @@ class ActivationEngine:
         spreading_activation: float = 0.0,
         query_keywords: set[str] | None = None,
         chunk_keywords: set[str] | None = None,
-        current_time: datetime | None = None
+        current_time: datetime | None = None,
     ) -> ActivationComponents:
         """Calculate total activation with all components.
 
@@ -183,8 +175,7 @@ class ActivationEngine:
         # Calculate BLA
         if self.config.enable_bla and access_history is not None:
             components.bla = self.bla_calculator.calculate(
-                access_history=access_history,
-                current_time=current_time
+                access_history=access_history, current_time=current_time
             )
 
         # Add spreading activation (pre-calculated)
@@ -194,31 +185,27 @@ class ActivationEngine:
         # Calculate context boost
         if self.config.enable_context and query_keywords and chunk_keywords:
             components.context_boost = self.context_calculator.calculate(
-                query_keywords=query_keywords,
-                chunk_keywords=chunk_keywords
+                query_keywords=query_keywords, chunk_keywords=chunk_keywords
             )
 
         # Calculate decay penalty
         if self.config.enable_decay and last_access is not None:
             components.decay = self.decay_calculator.calculate(
-                last_access=last_access,
-                current_time=current_time
+                last_access=last_access, current_time=current_time
             )
 
         # Calculate total activation
         components.total = (
-            components.bla +
-            components.spreading +
-            components.context_boost -
-            abs(components.decay)  # Decay is negative, so we subtract its absolute value
+            components.bla
+            + components.spreading
+            + components.context_boost
+            - abs(components.decay)  # Decay is negative, so we subtract its absolute value
         )
 
         return components
 
     def calculate_bla_only(
-        self,
-        access_history: list[AccessHistoryEntry],
-        current_time: datetime | None = None
+        self, access_history: list[AccessHistoryEntry], current_time: datetime | None = None
     ) -> float:
         """Calculate only base-level activation.
 
@@ -232,10 +219,7 @@ class ActivationEngine:
         return self.bla_calculator.calculate(access_history, current_time)
 
     def calculate_spreading_only(
-        self,
-        source_chunks: list[str],
-        graph: RelationshipGraph,
-        bidirectional: bool = True
+        self, source_chunks: list[str], graph: RelationshipGraph, bidirectional: bool = True
     ) -> dict[str, float]:
         """Calculate only spreading activation.
 
@@ -248,16 +232,10 @@ class ActivationEngine:
             Dictionary mapping chunk_id -> spreading_activation
         """
         return self.spreading_calculator.calculate(
-            source_chunks=source_chunks,
-            graph=graph,
-            bidirectional=bidirectional
+            source_chunks=source_chunks, graph=graph, bidirectional=bidirectional
         )
 
-    def calculate_context_only(
-        self,
-        query_keywords: set[str],
-        chunk_keywords: set[str]
-    ) -> float:
+    def calculate_context_only(self, query_keywords: set[str], chunk_keywords: set[str]) -> float:
         """Calculate only context boost.
 
         Args:
@@ -270,9 +248,7 @@ class ActivationEngine:
         return self.context_calculator.calculate(query_keywords, chunk_keywords)
 
     def calculate_decay_only(
-        self,
-        last_access: datetime,
-        current_time: datetime | None = None
+        self, last_access: datetime, current_time: datetime | None = None
     ) -> float:
         """Calculate only decay penalty.
 
@@ -292,7 +268,7 @@ class ActivationEngine:
         spreading_activation: float = 0.0,
         query_keywords: set[str] | None = None,
         chunk_keywords: set[str] | None = None,
-        current_time: datetime | None = None
+        current_time: datetime | None = None,
     ) -> dict[str, Any]:
         """Explain how activation was calculated.
 
@@ -321,47 +297,45 @@ class ActivationEngine:
             spreading_activation=spreading_activation,
             query_keywords=query_keywords,
             chunk_keywords=chunk_keywords,
-            current_time=current_time
+            current_time=current_time,
         )
 
         enabled_components: list[str] = []
         explanation: dict[str, Any] = {
-            'components': components.model_dump(),
-            'enabled_components': enabled_components,
+            "components": components.model_dump(),
+            "enabled_components": enabled_components,
         }
 
         # Add component-specific details
         if self.config.enable_bla:
-            enabled_components.append('bla')
-            explanation['bla_details'] = {
-                'access_count': len(access_history) if access_history else 0,
-                'formula': 'ln(Σ t_j^(-d)) where d=0.5'
+            enabled_components.append("bla")
+            explanation["bla_details"] = {
+                "access_count": len(access_history) if access_history else 0,
+                "formula": "ln(Σ t_j^(-d)) where d=0.5",
             }
 
         if self.config.enable_spreading:
-            enabled_components.append('spreading')
-            explanation['spreading_details'] = {
-                'value': spreading_activation,
-                'formula': 'weight × 0.7^(hop_count)'
+            enabled_components.append("spreading")
+            explanation["spreading_details"] = {
+                "value": spreading_activation,
+                "formula": "weight × 0.7^(hop_count)",
             }
 
         if self.config.enable_context and query_keywords and chunk_keywords:
-            enabled_components.append('context')
+            enabled_components.append("context")
             matching = query_keywords & chunk_keywords
-            explanation['context_details'] = {
-                'query_keywords': sorted(query_keywords),
-                'chunk_keywords': sorted(chunk_keywords),
-                'matching_keywords': sorted(matching),
-                'overlap_fraction': len(matching) / len(query_keywords) if query_keywords else 0.0,
-                'formula': 'overlap_fraction × 0.5'
+            explanation["context_details"] = {
+                "query_keywords": sorted(query_keywords),
+                "chunk_keywords": sorted(chunk_keywords),
+                "matching_keywords": sorted(matching),
+                "overlap_fraction": len(matching) / len(query_keywords) if query_keywords else 0.0,
+                "formula": "overlap_fraction × 0.5",
             }
 
         if self.config.enable_decay and last_access:
-            enabled_components.append('decay')
-            decay_explanation = self.decay_calculator.explain_decay(
-                last_access, current_time
-            )
-            explanation['decay_details'] = decay_explanation
+            enabled_components.append("decay")
+            decay_explanation = self.decay_calculator.explain_decay(last_access, current_time)
+            explanation["decay_details"] = decay_explanation
 
         return explanation
 
@@ -370,7 +344,7 @@ class ActivationEngine:
         bla_config: BLAConfig | None = None,
         spreading_config: SpreadingConfig | None = None,
         context_config: ContextBoostConfig | None = None,
-        decay_config: DecayConfig | None = None
+        decay_config: DecayConfig | None = None,
     ) -> None:
         """Update component configurations.
 
@@ -405,7 +379,7 @@ AGGRESSIVE_CONFIG = ActivationConfig(
     bla_config=BLAConfig(decay_rate=0.6),
     spreading_config=SpreadingConfig(spread_factor=0.8, max_hops=3),
     context_config=ContextBoostConfig(boost_factor=0.8),
-    decay_config=DecayConfig(decay_factor=1.0, max_days=30.0)
+    decay_config=DecayConfig(decay_factor=1.0, max_days=30.0),
 )
 
 # Conservative configuration (minimal influence from components)
@@ -413,7 +387,7 @@ CONSERVATIVE_CONFIG = ActivationConfig(
     bla_config=BLAConfig(decay_rate=0.4),
     spreading_config=SpreadingConfig(spread_factor=0.6, max_hops=2),
     context_config=ContextBoostConfig(boost_factor=0.3),
-    decay_config=DecayConfig(decay_factor=0.25, max_days=180.0)
+    decay_config=DecayConfig(decay_factor=0.25, max_days=180.0),
 )
 
 # BLA-focused configuration (emphasize frequency/recency, minimize others)
@@ -430,17 +404,17 @@ CONTEXT_FOCUSED_CONFIG = ActivationConfig(
     bla_config=BLAConfig(decay_rate=0.3),
     spreading_config=SpreadingConfig(spread_factor=0.6, max_hops=2),
     context_config=ContextBoostConfig(boost_factor=1.0),
-    decay_config=DecayConfig(decay_factor=0.3, max_days=120.0)
+    decay_config=DecayConfig(decay_factor=0.3, max_days=120.0),
 )
 
 
 __all__ = [
-    'ActivationConfig',
-    'ActivationComponents',
-    'ActivationEngine',
-    'DEFAULT_CONFIG',
-    'AGGRESSIVE_CONFIG',
-    'CONSERVATIVE_CONFIG',
-    'BLA_FOCUSED_CONFIG',
-    'CONTEXT_FOCUSED_CONFIG',
+    "ActivationConfig",
+    "ActivationComponents",
+    "ActivationEngine",
+    "DEFAULT_CONFIG",
+    "AGGRESSIVE_CONFIG",
+    "CONSERVATIVE_CONFIG",
+    "BLA_FOCUSED_CONFIG",
+    "CONTEXT_FOCUSED_CONFIG",
 ]

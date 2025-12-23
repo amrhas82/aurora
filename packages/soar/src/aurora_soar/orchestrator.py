@@ -191,9 +191,7 @@ class SOAROrchestrator:
             self._phase_metadata["phase1_assess"] = phase1_result
 
             # Phase 2: Retrieve context
-            phase2_result = self._phase2_retrieve(
-                query, phase1_result["complexity"]
-            )
+            phase2_result = self._phase2_retrieve(query, phase1_result["complexity"])
             self._phase_metadata["phase2_retrieve"] = phase2_result
 
             # Check for SIMPLE query early exit
@@ -209,17 +207,13 @@ class SOAROrchestrator:
             self._phase_metadata["phase3_decompose"] = phase3_result
 
             # Phase 4: Verify decomposition
-            phase4_result = self._phase4_verify(
-                phase3_result, query, phase1_result["complexity"]
-            )
+            phase4_result = self._phase4_verify(phase3_result, query, phase1_result["complexity"])
             self._phase_metadata["phase4_verify"] = phase4_result
 
             # Check verification verdict
             if phase4_result["final_verdict"] == "FAIL":
                 logger.error("Decomposition verification failed")
-                return self._handle_verification_failure(
-                    query, phase4_result, verbosity
-                )
+                return self._handle_verification_failure(query, phase4_result, verbosity)
 
             # Phase 5: Route to agents
             # Extract the decomposition dict from the phase wrapper
@@ -232,9 +226,7 @@ class SOAROrchestrator:
             self._phase_metadata["phase5_route"] = phase5_dict
 
             # Phase 6: Execute agents (needs RouteResult object)
-            phase6_result_obj = self._phase6_collect(
-                phase5_result_obj, phase2_result
-            )
+            phase6_result_obj = self._phase6_collect(phase5_result_obj, phase2_result)
             # Store dict version in metadata, keep object for phase 7
             phase6_dict = phase6_result_obj.to_dict()
             phase6_dict["_timing_ms"] = 0  # Timing handled internally
@@ -255,7 +247,11 @@ class SOAROrchestrator:
 
             # Phase 8: Record pattern (needs object versions)
             phase8_result = self._phase8_record(
-                query, phase1_result["complexity"], decomposition_dict, phase6_result_obj, phase7_result_obj
+                query,
+                phase1_result["complexity"],
+                decomposition_dict,
+                phase6_result_obj,
+                phase7_result_obj,
             )
             phase8_dict = phase8_result.to_dict()
             phase8_dict["_timing_ms"] = 0
@@ -403,10 +399,9 @@ class SOAROrchestrator:
             logger.error(f"Phase 5 failed: {e}")
             # Return empty RouteResult on failure
             from aurora_soar.phases.route import RouteResult
+
             return RouteResult(
-                agent_assignments=[],
-                execution_plan=[],
-                routing_metadata={"error": str(e)}
+                agent_assignments=[], execution_plan=[], routing_metadata={"error": str(e)}
             )
 
     def _phase6_collect(
@@ -425,10 +420,9 @@ class SOAROrchestrator:
             logger.error(f"Phase 6 failed: {e}")
             # Return empty CollectResult on failure
             from aurora_soar.phases.collect import CollectResult
+
             return CollectResult(
-                agent_outputs=[],
-                execution_metadata={"error": str(e)},
-                user_interactions=[]
+                agent_outputs=[], execution_metadata={"error": str(e)}, user_interactions=[]
             )
 
     def _phase7_synthesize(
@@ -494,7 +488,10 @@ class SOAROrchestrator:
             )
 
     def _phase9_respond(
-        self, synthesis_result: synthesize.SynthesisResult, record_result: record.RecordResult, verbosity: str
+        self,
+        synthesis_result: synthesize.SynthesisResult,
+        record_result: record.RecordResult,
+        verbosity: str,
     ) -> dict[str, Any]:
         """Execute Phase 9: Response Formatting."""
         logger.info("Phase 9: Formatting response")
@@ -506,7 +503,9 @@ class SOAROrchestrator:
         }
 
         metadata = self._build_metadata()
-        response = respond.format_response(synthesis_result, record_result, metadata, Verbosity(verbosity))
+        response = respond.format_response(
+            synthesis_result, record_result, metadata, Verbosity(verbosity.lower())
+        )
 
         # Log conversation (async, non-blocking)
         execution_summary = {
@@ -558,13 +557,17 @@ class SOAROrchestrator:
             if code_chunks:
                 prompt_parts.append("\nRelevant Code:")
                 for chunk in code_chunks[:5]:  # Limit to top 5
-                    content = chunk.content if hasattr(chunk, 'content') else chunk.get('content', '')
+                    content = (
+                        chunk.content if hasattr(chunk, "content") else chunk.get("content", "")
+                    )
                     prompt_parts.append(f"- {content[:200]}...")  # Truncate long chunks
 
             if reasoning_chunks:
                 prompt_parts.append("\nRelevant Context:")
                 for chunk in reasoning_chunks[:3]:  # Limit to top 3
-                    pattern = chunk.pattern if hasattr(chunk, 'pattern') else chunk.get('pattern', '')
+                    pattern = (
+                        chunk.pattern if hasattr(chunk, "pattern") else chunk.get("pattern", "")
+                    )
                     prompt_parts.append(f"- {pattern}")
 
             prompt_parts.append("\nPlease provide a clear, concise answer:")
@@ -596,7 +599,7 @@ class SOAROrchestrator:
                     "context_used": {
                         "code_chunks": len(code_chunks),
                         "reasoning_chunks": len(reasoning_chunks),
-                    }
+                    },
                 },
                 timing={
                     "synthesis_ms": (time.time() - start_time) * 1000,
@@ -672,9 +675,7 @@ class SOAROrchestrator:
 
         return self._phase9_respond(synthesis, record, verbosity)
 
-    def _handle_execution_error(
-        self, error: Exception, verbosity: str
-    ) -> dict[str, Any]:
+    def _handle_execution_error(self, error: Exception, verbosity: str) -> dict[str, Any]:
         """Handle execution errors with graceful degradation.
 
         Args:

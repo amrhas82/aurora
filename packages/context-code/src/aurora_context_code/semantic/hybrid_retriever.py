@@ -29,6 +29,7 @@ class HybridConfig:
         >>> config = HybridConfig(activation_weight=0.7, semantic_weight=0.3)
         >>> retriever = HybridRetriever(store, engine, provider, config)
     """
+
     activation_weight: float = 0.6
     semantic_weight: float = 0.4
     activation_top_k: int = 100
@@ -41,7 +42,9 @@ class HybridConfig:
         if not (0.0 <= self.semantic_weight <= 1.0):
             raise ValueError(f"semantic_weight must be in [0, 1], got {self.semantic_weight}")
         if abs(self.activation_weight + self.semantic_weight - 1.0) > 1e-6:
-            raise ValueError(f"Weights must sum to 1.0, got {self.activation_weight + self.semantic_weight}")
+            raise ValueError(
+                f"Weights must sum to 1.0, got {self.activation_weight + self.semantic_weight}"
+            )
         if self.activation_top_k < 1:
             raise ValueError(f"activation_top_k must be >= 1, got {self.activation_top_k}")
 
@@ -160,9 +163,7 @@ class HybridRetriever:
         except Exception as e:
             # If embedding fails and fallback is enabled, use activation-only
             if self.config.fallback_to_activation:
-                return self._fallback_to_activation_only(
-                    activation_candidates, top_k
-                )
+                return self._fallback_to_activation_only(activation_candidates, top_k)
             raise ValueError(f"Failed to generate query embedding: {e}") from e
 
         # Step 3: Calculate hybrid scores for each candidate
@@ -214,9 +215,7 @@ class HybridRetriever:
         activation_scores_normalized = self._normalize_scores(
             [r["raw_activation"] for r in results]
         )
-        semantic_scores_normalized = self._normalize_scores(
-            [r["raw_semantic"] for r in results]
-        )
+        semantic_scores_normalized = self._normalize_scores([r["raw_semantic"] for r in results])
 
         # Step 5: Calculate hybrid scores and prepare output
         final_results = []
@@ -250,9 +249,7 @@ class HybridRetriever:
         final_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
         return final_results[:top_k]
 
-    def _fallback_to_activation_only(
-        self, chunks: list[Any], top_k: int
-    ) -> list[dict[str, Any]]:
+    def _fallback_to_activation_only(self, chunks: list[Any], top_k: int) -> list[dict[str, Any]]:
         """Fallback to activation-only retrieval when embeddings unavailable.
 
         Args:

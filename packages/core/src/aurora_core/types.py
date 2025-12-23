@@ -10,7 +10,7 @@ from typing import Any, NewType
 
 
 # Type aliases for improved readability and type safety
-ChunkID = NewType('ChunkID', str)
+ChunkID = NewType("ChunkID", str)
 """Unique identifier for a chunk. Format: <type>_<hash> (e.g., 'code_abc123')"""
 
 Activation = float
@@ -25,8 +25,8 @@ Timestamp = datetime
 """UTC timestamp for tracking chunk creation/modification times"""
 
 __all__ = [
-    'ChunkID',
-    'Activation',
-    'ChunkData',
-    'Timestamp',
+    "ChunkID",
+    "Activation",
+    "ChunkData",
+    "Timestamp",
 ]

@@ -86,4 +86,4 @@ class CodeParser(ABC):
         return f"{self.__class__.__name__}(language={self.language})"
 
 
-__all__ = ['CodeParser']
+__all__ = ["CodeParser"]

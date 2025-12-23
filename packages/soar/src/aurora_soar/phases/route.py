@@ -54,9 +54,7 @@ class RouteResult:
         }
 
 
-def route_subgoals(
-    decomposition: dict[str, Any], agent_registry: AgentRegistry
-) -> RouteResult:
+def route_subgoals(decomposition: dict[str, Any], agent_registry: AgentRegistry) -> RouteResult:
     """Route subgoals to agents based on suggested agents and capabilities.
 
     This function:
@@ -93,9 +91,7 @@ def route_subgoals(
 
     # Route each subgoal to an agent
     for idx, subgoal in enumerate(subgoals):
-        agent = _route_single_subgoal(
-            idx, subgoal, agent_registry, routing_metadata
-        )
+        agent = _route_single_subgoal(idx, subgoal, agent_registry, routing_metadata)
         agent_assignments.append((idx, agent))
 
     # Validate routing
@@ -143,9 +139,7 @@ def _validate_decomposition(decomposition: dict[str, Any]) -> None:
         ]
         for field in required_subgoal_fields:
             if field not in subgoal:
-                raise ValueError(
-                    f"Subgoal {idx} missing required field: {field}"
-                )
+                raise ValueError(f"Subgoal {idx} missing required field: {field}")
 
 
 def _route_single_subgoal(
@@ -192,9 +186,7 @@ def _route_single_subgoal(
         agents = agent_registry.find_by_capability(capability)
         if agents:
             agent = agents[0]  # Use first matching agent
-            logger.info(
-                f"Subgoal {idx}: Found agent '{agent.id}' with capability '{capability}'"
-            )
+            logger.info(f"Subgoal {idx}: Found agent '{agent.id}' with capability '{capability}'")
             metadata["warnings"].append(
                 f"Subgoal {idx}: Using '{agent.id}' instead of '{suggested_agent_id}'"
             )
@@ -261,13 +253,9 @@ def _validate_routing(
         deps = subgoal.get("depends_on", [])
         for dep_idx in deps:
             if dep_idx < 0 or dep_idx >= len(subgoals):
-                raise RuntimeError(
-                    f"Subgoal {idx} has invalid dependency: {dep_idx}"
-                )
+                raise RuntimeError(f"Subgoal {idx} has invalid dependency: {dep_idx}")
             if dep_idx == idx:
-                raise RuntimeError(
-                    f"Subgoal {idx} has circular dependency on itself"
-                )
+                raise RuntimeError(f"Subgoal {idx} has circular dependency on itself")
 
     # Check for circular dependencies (simple cycle detection)
     _check_circular_dependencies(subgoals)
@@ -311,9 +299,7 @@ def _check_circular_dependencies(subgoals: list[dict[str, Any]]) -> None:
 
     for node in graph:
         if node not in visited and dfs(node):
-            raise RuntimeError(
-                f"Circular dependency detected involving subgoal {node}"
-            )
+            raise RuntimeError(f"Circular dependency detected involving subgoal {node}")
 
 
 def _parse_execution_plan(

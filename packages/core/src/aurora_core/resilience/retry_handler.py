@@ -89,6 +89,7 @@ class RetryHandler:
         # Default recoverable errors: network, connection, timeouts
         if recoverable_errors is None:
             from aurora_core.exceptions import StorageError
+
             self._recoverable_errors: tuple[type[Exception], ...] = (
                 TimeoutError,
                 ConnectionError,
@@ -211,6 +212,7 @@ class RetryHandler:
         Returns:
             Wrapped function with retry logic
         """
+
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
             return self.execute(func, *args, **kwargs)

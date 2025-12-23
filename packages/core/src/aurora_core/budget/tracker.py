@@ -43,7 +43,6 @@ MODEL_PRICING: dict[str, ModelPricing] = {
     "claude-3-opus-20240229": ModelPricing(15.0, 75.0),  # Opus 3
     "claude-3-sonnet-20240229": ModelPricing(3.0, 15.0),  # Sonnet 3
     "claude-3-haiku-20240307": ModelPricing(0.25, 1.25),  # Haiku 3
-
     # OpenAI GPT models
     "gpt-4-turbo": ModelPricing(10.0, 30.0),
     "gpt-4-turbo-preview": ModelPricing(10.0, 30.0),
@@ -51,7 +50,6 @@ MODEL_PRICING: dict[str, ModelPricing] = {
     "gpt-4-32k": ModelPricing(60.0, 120.0),
     "gpt-3.5-turbo": ModelPricing(0.5, 1.5),
     "gpt-3.5-turbo-16k": ModelPricing(3.0, 4.0),
-
     # Ollama local models (free, but track as $0)
     "llama2": ModelPricing(0.0, 0.0),
     "llama3": ModelPricing(0.0, 0.0),
@@ -170,9 +168,7 @@ class CostTracker:
                     )
 
                 # Same period - load existing data
-                entries = [
-                    CostEntry(**entry) for entry in data.get("entries", [])
-                ]
+                entries = [CostEntry(**entry) for entry in data.get("entries", [])]
                 return PeriodBudget(
                     period=data["period"],
                     limit_usd=data.get("limit_usd", self.monthly_limit_usd),
@@ -198,7 +194,7 @@ class CostTracker:
         archive_path = archive_dir / f"budget_{old_period}.json"
 
         try:
-            with open(archive_path, 'w') as f:
+            with open(archive_path, "w") as f:
                 json.dump(old_data, f, indent=2)
         except Exception as e:
             print(f"Warning: Could not archive old budget data: {e}")
@@ -224,7 +220,7 @@ class CostTracker:
         }
 
         try:
-            with open(self.tracker_path, 'w') as f:
+            with open(self.tracker_path, "w") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
             print(f"Warning: Could not save budget tracker: {e}")
@@ -306,7 +302,7 @@ class CostTracker:
             return (
                 False,
                 f"Budget exceeded: ${projected_cost:.4f} / ${self.budget.limit_usd:.2f} "
-                f"({projected_percent:.1f}%). Query blocked."
+                f"({projected_percent:.1f}%). Query blocked.",
             )
 
         # Soft limit - warn but allow
@@ -314,7 +310,7 @@ class CostTracker:
             return (
                 True,
                 f"Budget warning: ${projected_cost:.4f} / ${self.budget.limit_usd:.2f} "
-                f"({projected_percent:.1f}%). Approaching limit."
+                f"({projected_percent:.1f}%). Approaching limit.",
             )
 
         # Within budget
@@ -400,4 +396,5 @@ class CostTracker:
 
 class BudgetTracker(CostTracker):
     """Alias for CostTracker for backward compatibility."""
+
     pass

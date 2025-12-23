@@ -104,7 +104,9 @@ class TestSQLiteStore(StoreContractTests):
     def test_initialize_with_home_directory_expansion(self, tmp_path, monkeypatch):
         """Test that ~ in path is expanded to home directory."""
         # Mock expanduser to use tmp_path
-        monkeypatch.setattr(Path, 'expanduser', lambda self: tmp_path / str(self).replace('~', 'home'))
+        monkeypatch.setattr(
+            Path, "expanduser", lambda self: tmp_path / str(self).replace("~", "home")
+        )
 
         store = SQLiteStore(db_path="~/aurora.db")
         # Should not raise an error
@@ -115,12 +117,10 @@ class TestSQLiteStore(StoreContractTests):
         conn = store._get_connection()
 
         # Check that tables exist
-        cursor = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        )
+        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = {row[0] for row in cursor.fetchall()}
 
-        expected_tables = {'chunks', 'activations', 'relationships', 'schema_version'}
+        expected_tables = {"chunks", "activations", "relationships", "schema_version"}
         assert expected_tables.issubset(tables), f"Missing tables: {expected_tables - tables}"
 
     def test_wal_mode_enabled(self, file_store):
@@ -157,10 +157,7 @@ class TestSQLiteStore(StoreContractTests):
         store.save_chunk(chunk)
 
         conn = store._get_connection()
-        cursor = conn.execute(
-            "SELECT updated_at FROM chunks WHERE id = ?",
-            (chunk.id,)
-        )
+        cursor = conn.execute("SELECT updated_at FROM chunks WHERE id = ?", (chunk.id,))
         row = cursor.fetchone()
         assert row is not None, "Chunk should be saved"
         assert row[0] is not None, "updated_at should be set"
@@ -172,11 +169,7 @@ class TestSQLiteStore(StoreContractTests):
 
         # Try to add a relationship with non-existent target (should fail)
         try:
-            store.add_relationship(
-                ChunkID(chunk.id),
-                ChunkID("nonexistent:chunk"),
-                "depends_on"
-            )
+            store.add_relationship(ChunkID(chunk.id), ChunkID("nonexistent:chunk"), "depends_on")
         except:
             pass  # Expected to fail
 
@@ -217,7 +210,7 @@ class TestSQLiteStore(StoreContractTests):
         # Relationship should be cascade deleted
         cursor = conn.execute(
             "SELECT COUNT(*) FROM relationships WHERE from_chunk = ? OR to_chunk = ?",
-            (chunk1.id, chunk1.id)
+            (chunk1.id, chunk1.id),
         )
         count = cursor.fetchone()[0]
         assert count == 0, "Relationships should be cascade deleted"
@@ -229,8 +222,7 @@ class TestSQLiteStore(StoreContractTests):
 
         conn = store._get_connection()
         cursor = conn.execute(
-            "SELECT base_level, access_count FROM activations WHERE chunk_id = ?",
-            (chunk.id,)
+            "SELECT base_level, access_count FROM activations WHERE chunk_id = ?", (chunk.id,)
         )
         row = cursor.fetchone()
 
@@ -249,8 +241,7 @@ class TestSQLiteStore(StoreContractTests):
 
         conn = store._get_connection()
         cursor = conn.execute(
-            "SELECT access_count FROM activations WHERE chunk_id = ?",
-            (chunk.id,)
+            "SELECT access_count FROM activations WHERE chunk_id = ?", (chunk.id,)
         )
         count = cursor.fetchone()[0]
         assert count == 2, "Access count should be incremented"
@@ -281,8 +272,9 @@ class TestSQLiteStore(StoreContractTests):
         activations = [row[1] for row in rows]
 
         # Check that activations are in descending order
-        assert activations == sorted(activations, reverse=True), \
+        assert activations == sorted(activations, reverse=True), (
             "Results should be ordered by activation (highest first)"
+        )
 
     def test_get_related_chunks_depth_limit(self, store):
         """Test that relationship traversal respects max_depth."""
@@ -293,11 +285,7 @@ class TestSQLiteStore(StoreContractTests):
             store.save_chunk(chunk)
 
         for i in range(len(chunks) - 1):
-            store.add_relationship(
-                ChunkID(chunks[i].id),
-                ChunkID(chunks[i + 1].id),
-                "depends_on"
-            )
+            store.add_relationship(ChunkID(chunks[i].id), ChunkID(chunks[i + 1].id), "depends_on")
 
         # Get related chunks with max_depth=1 (should only get chunk2)
         store.get_related_chunks(ChunkID(chunks[0].id), max_depth=1)
@@ -339,7 +327,7 @@ class TestSQLiteStore(StoreContractTests):
         chunk = create_test_code_chunk("test:chunk:1", "test_func")
 
         # Add embeddings as bytes (simulating numpy array serialization)
-        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        test_embeddings = b"\x00\x01\x02\x03\x04\x05\x06\x07"
         chunk.embeddings = test_embeddings
 
         # Save chunk
@@ -347,10 +335,7 @@ class TestSQLiteStore(StoreContractTests):
 
         # Verify embeddings were saved to database
         conn = store._get_connection()
-        cursor = conn.execute(
-            "SELECT embeddings FROM chunks WHERE id = ?",
-            (chunk.id,)
-        )
+        cursor = conn.execute("SELECT embeddings FROM chunks WHERE id = ?", (chunk.id,))
         row = cursor.fetchone()
         assert row is not None, "Chunk should be saved"
         assert row[0] == test_embeddings, "Embeddings should be saved as BLOB"
@@ -360,7 +345,7 @@ class TestSQLiteStore(StoreContractTests):
         chunk = create_test_code_chunk("test:chunk:1", "test_func")
 
         # Add embeddings
-        test_embeddings = b'\x00\x01\x02\x03\x04\x05\x06\x07'
+        test_embeddings = b"\x00\x01\x02\x03\x04\x05\x06\x07"
         chunk.embeddings = test_embeddings
 
         # Save and retrieve
@@ -368,7 +353,7 @@ class TestSQLiteStore(StoreContractTests):
         retrieved = store.get_chunk(ChunkID(chunk.id))
 
         assert retrieved is not None, "Chunk should be retrieved"
-        assert hasattr(retrieved, 'embeddings'), "Retrieved chunk should have embeddings attribute"
+        assert hasattr(retrieved, "embeddings"), "Retrieved chunk should have embeddings attribute"
         assert retrieved.embeddings == test_embeddings, "Embeddings should be preserved"
 
     def test_save_chunk_without_embeddings(self, store):
@@ -380,10 +365,7 @@ class TestSQLiteStore(StoreContractTests):
 
         # Verify embeddings column is NULL
         conn = store._get_connection()
-        cursor = conn.execute(
-            "SELECT embeddings FROM chunks WHERE id = ?",
-            (chunk.id,)
-        )
+        cursor = conn.execute("SELECT embeddings FROM chunks WHERE id = ?", (chunk.id,))
         row = cursor.fetchone()
         assert row is not None, "Chunk should be saved"
         assert row[0] is None, "Embeddings should be NULL when not set"
@@ -394,8 +376,8 @@ class TestSQLiteStore(StoreContractTests):
         chunk2 = create_test_code_chunk("test:chunk:2", "func2")
 
         # Add embeddings to both chunks
-        chunk1.embeddings = b'\x00\x01\x02\x03'
-        chunk2.embeddings = b'\x04\x05\x06\x07'
+        chunk1.embeddings = b"\x00\x01\x02\x03"
+        chunk2.embeddings = b"\x04\x05\x06\x07"
 
         # Save chunks and set activations
         store.save_chunk(chunk1)
@@ -410,8 +392,8 @@ class TestSQLiteStore(StoreContractTests):
         # Find chunk1 in results
         chunk1_retrieved = next((c for c in chunks if c.id == chunk1.id), None)
         assert chunk1_retrieved is not None, "Chunk1 should be in results"
-        assert hasattr(chunk1_retrieved, 'embeddings'), "Retrieved chunk should have embeddings"
+        assert hasattr(chunk1_retrieved, "embeddings"), "Retrieved chunk should have embeddings"
         assert chunk1_retrieved.embeddings == chunk1.embeddings, "Embeddings should be preserved"
 
 
-__all__ = ['TestSQLiteStore']
+__all__ = ["TestSQLiteStore"]

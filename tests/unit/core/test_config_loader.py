@@ -62,12 +62,9 @@ class TestConfigLoading:
         """Test project config overrides defaults."""
         project_config = tmp_path / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {
-                "type": "memory",
-                "path": "/custom/path.db"
-            }
-        }))
+        project_config.write_text(
+            json.dumps({"storage": {"type": "memory", "path": "/custom/path.db"}})
+        )
 
         config = Config.load(project_path=tmp_path)
         assert config.get("storage.type") == "memory"
@@ -80,11 +77,7 @@ class TestConfigLoading:
         # Create proper .aurora structure
         global_config = tmp_path / ".aurora" / "config.json"
         global_config.parent.mkdir(parents=True)
-        global_config.write_text(json.dumps({
-            "logging": {
-                "level": "DEBUG"
-            }
-        }))
+        global_config.write_text(json.dumps({"logging": {"level": "DEBUG"}}))
 
         # Mock Path.home to return our temp directory
         def mock_home():
@@ -96,10 +89,7 @@ class TestConfigLoading:
 
     def test_load_with_cli_overrides(self, tmp_path: Path) -> None:
         """Test CLI overrides have highest priority."""
-        cli_overrides = {
-            "storage.path": "/cli/override.db",
-            "logging.level": "ERROR"
-        }
+        cli_overrides = {"storage.path": "/cli/override.db", "logging.level": "ERROR"}
 
         config = Config.load(project_path=tmp_path, cli_overrides=cli_overrides)
         assert config.get("storage.path") == "/cli/override.db"
@@ -110,9 +100,7 @@ class TestConfigLoading:
         # Create project config
         project_config = tmp_path / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "storage": {"path": "/project/path.db"}
-        }))
+        project_config.write_text(json.dumps({"storage": {"path": "/project/path.db"}}))
 
         # CLI override should win
         cli_overrides = {"storage.path": "/cli/path.db"}
@@ -145,9 +133,7 @@ class TestEnvironmentVariableMapping:
         """Test environment variables override file-based config."""
         project_config = tmp_path / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
-        project_config.write_text(json.dumps({
-            "logging": {"level": "INFO"}
-        }))
+        project_config.write_text(json.dumps({"logging": {"level": "INFO"}}))
 
         monkeypatch.setenv("AURORA_LOG_LEVEL", "ERROR")
         config = Config.load(project_path=tmp_path)
@@ -161,12 +147,7 @@ class TestPathExpansion:
         """Test tilde (~) expands to home directory."""
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-        config_data = {
-            "storage": {
-                "type": "sqlite",
-                "path": "~/.aurora/memory.db"
-            }
-        }
+        config_data = {"storage": {"type": "sqlite", "path": "~/.aurora/memory.db"}}
 
         config_file = tmp_path / ".aurora" / "config.json"
         config_file.parent.mkdir(parents=True)
@@ -179,12 +160,7 @@ class TestPathExpansion:
 
     def test_relative_to_absolute_conversion(self, tmp_path: Path) -> None:
         """Test relative paths convert to absolute."""
-        config_data = {
-            "storage": {
-                "type": "sqlite",
-                "path": ".aurora/memory.db"
-            }
-        }
+        config_data = {"storage": {"type": "sqlite", "path": ".aurora/memory.db"}}
 
         config_file = tmp_path / ".aurora" / "config.json"
         config_file.parent.mkdir(parents=True)
@@ -202,14 +178,8 @@ class TestSchemaValidation:
         """Test minimal valid configuration passes validation."""
         config_data = {
             "version": "1.0",
-            "storage": {
-                "type": "sqlite",
-                "path": "~/.aurora/memory.db"
-            },
-            "llm": {
-                "reasoning_provider": "anthropic",
-                "api_key_env": "ANTHROPIC_API_KEY"
-            }
+            "storage": {"type": "sqlite", "path": "~/.aurora/memory.db"},
+            "llm": {"reasoning_provider": "anthropic", "api_key_env": "ANTHROPIC_API_KEY"},
         }
 
         config_file = tmp_path / ".aurora" / "config.json"
@@ -224,10 +194,7 @@ class TestSchemaValidation:
         # Missing 'llm' section entirely
         config_data = {
             "version": "1.0",
-            "storage": {
-                "type": "sqlite",
-                "path": "~/.aurora/memory.db"
-            }
+            "storage": {"type": "sqlite", "path": "~/.aurora/memory.db"},
             # Missing required 'llm' field
         }
 
@@ -248,12 +215,9 @@ class TestSchemaValidation:
             "version": "1.0",
             "storage": {
                 "type": "invalid_type",  # Not in enum
-                "path": "~/.aurora/memory.db"
+                "path": "~/.aurora/memory.db",
             },
-            "llm": {
-                "reasoning_provider": "anthropic",
-                "api_key_env": "ANTHROPIC_API_KEY"
-            }
+            "llm": {"reasoning_provider": "anthropic", "api_key_env": "ANTHROPIC_API_KEY"},
         }
 
         config_file = tmp_path / ".aurora" / "config.json"
@@ -270,12 +234,9 @@ class TestSchemaValidation:
             "storage": {
                 "type": "sqlite",
                 "path": "~/.aurora/memory.db",
-                "max_connections": 1000  # Exceeds maximum
+                "max_connections": 1000,  # Exceeds maximum
             },
-            "llm": {
-                "reasoning_provider": "anthropic",
-                "api_key_env": "ANTHROPIC_API_KEY"
-            }
+            "llm": {"reasoning_provider": "anthropic", "api_key_env": "ANTHROPIC_API_KEY"},
         }
 
         config_file = tmp_path / ".aurora" / "config.json"
@@ -321,15 +282,12 @@ class TestSecretsHandling:
         """Test API keys in config files are rejected."""
         config_data = {
             "version": "1.0",
-            "storage": {
-                "type": "sqlite",
-                "path": "~/.aurora/memory.db"
-            },
+            "storage": {"type": "sqlite", "path": "~/.aurora/memory.db"},
             "llm": {
                 "reasoning_provider": "anthropic",
                 "api_key": "sk-ant-12345",  # Should not be allowed
-                "api_key_env": "ANTHROPIC_API_KEY"
-            }
+                "api_key_env": "ANTHROPIC_API_KEY",
+            },
         }
 
         config_file = tmp_path / ".aurora" / "config.json"
@@ -343,6 +301,7 @@ class TestSecretsHandling:
 
 # Fixtures
 
+
 @pytest.fixture
 def sample_config(tmp_path: Path) -> Config:
     """Provide a sample configuration for testing."""
@@ -352,17 +311,15 @@ def sample_config(tmp_path: Path) -> Config:
             "type": "sqlite",
             "path": "~/.aurora/memory.db",
             "max_connections": 10,
-            "timeout_seconds": 5
+            "timeout_seconds": 5,
         },
         "llm": {
             "reasoning_provider": "anthropic",
             "reasoning_model": "claude-3-5-sonnet-20241022",
             "api_key_env": "ANTHROPIC_API_KEY",
-            "timeout_seconds": 30
+            "timeout_seconds": 30,
         },
-        "logging": {
-            "level": "INFO"
-        }
+        "logging": {"level": "INFO"},
     }
 
     config_file = tmp_path / ".aurora" / "config.json"

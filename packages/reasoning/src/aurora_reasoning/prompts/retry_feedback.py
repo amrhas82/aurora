@@ -47,15 +47,15 @@ Respond in plain text (NOT JSON) with a structured feedback message."""
 
         prompt_parts = [
             f"Verification Result (Attempt {attempt_number}):\n{json.dumps(verification_result, indent=2)}",
-            "\nGenerate clear, actionable feedback for the next retry attempt."
+            "\nGenerate clear, actionable feedback for the next retry attempt.",
         ]
 
         return "\n".join(prompt_parts)
 
     def _format_single_example(self, example: dict[str, Any]) -> str:
         """Format a single example for retry feedback generation."""
-        return f"""Verification Result: {json.dumps(example.get('verification', {}), indent=2)}
-Generated Feedback: {example.get('feedback', '')}"""
+        return f"""Verification Result: {json.dumps(example.get("verification", {}), indent=2)}
+Generated Feedback: {example.get("feedback", "")}"""
 
 
 __all__ = ["RetryFeedbackPromptTemplate"]

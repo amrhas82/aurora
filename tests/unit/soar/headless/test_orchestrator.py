@@ -260,7 +260,9 @@ class TestInitializeScratchpad:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_initialize_scratchpad_success(self, mock_git, mock_prompt_class, mock_scratchpad_class):
+    def test_initialize_scratchpad_success(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test successful scratchpad initialization."""
         mock_scratchpad = Mock()
         mock_scratchpad_class.return_value = mock_scratchpad
@@ -404,9 +406,7 @@ class TestEvaluateGoalAchievement:
         mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
-        mock_soar.reasoning_llm.complete.return_value = {
-            "content": "IN_PROGRESS - still working"
-        }
+        mock_soar.reasoning_llm.complete.return_value = {"content": "IN_PROGRESS - still working"}
 
         orchestrator = HeadlessOrchestrator(
             prompt_path="experiment.md",
@@ -435,9 +435,7 @@ class TestEvaluateGoalAchievement:
         mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
-        mock_soar.reasoning_llm.complete.return_value = {
-            "content": "BLOCKED - cannot proceed"
-        }
+        mock_soar.reasoning_llm.complete.return_value = {"content": "BLOCKED - cannot proceed"}
 
         orchestrator = HeadlessOrchestrator(
             prompt_path="experiment.md",
@@ -561,7 +559,9 @@ class TestBuildIterationQuery:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_build_query_truncates_long_scratchpad(self, mock_git, mock_prompt_class, mock_scratchpad_class):
+    def test_build_query_truncates_long_scratchpad(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test query truncates long scratchpad content."""
         mock_scratchpad = Mock()
         # Create scratchpad content longer than 2000 chars
@@ -590,8 +590,9 @@ class TestBuildIterationQuery:
         # The query will have the 2000 'x' chars from truncated scratchpad
         # Count consecutive 'x' in the scratchpad portion
         import re
+
         # Find the longest sequence of x's (should be exactly 2000)
-        x_sequences = re.findall(r'x+', query)
+        x_sequences = re.findall(r"x+", query)
         if x_sequences:
             longest_x_sequence = max(len(seq) for seq in x_sequences)
             assert longest_x_sequence == 2000
@@ -687,7 +688,9 @@ class TestRunMainLoop:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_run_main_loop_budget_exceeded_before_iteration(self, mock_git, mock_prompt_class, mock_scratchpad_class):
+    def test_run_main_loop_budget_exceeded_before_iteration(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test main loop terminates when budget exceeded before iteration."""
         mock_scratchpad = Mock()
         mock_scratchpad_class.return_value = mock_scratchpad
@@ -723,7 +726,9 @@ class TestRunMainLoop:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_run_main_loop_budget_exceeded_after_iteration(self, mock_git, mock_prompt_class, mock_scratchpad_class):
+    def test_run_main_loop_budget_exceeded_after_iteration(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test main loop terminates when budget exceeded after iteration."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
@@ -839,7 +844,9 @@ class TestRunMainLoop:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_run_main_loop_iteration_error(self, mock_git, mock_prompt_class, mock_scratchpad_class):
+    def test_run_main_loop_iteration_error(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test main loop handles iteration errors."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
@@ -877,7 +884,9 @@ class TestExecute:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_success_goal_achieved(self, mock_git_class, mock_prompt_class, mock_scratchpad_class):
+    def test_execute_success_goal_achieved(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test successful execution with goal achieved."""
         # Setup git enforcer
         mock_git = Mock()
@@ -915,7 +924,7 @@ class TestExecute:
             soar_orchestrator=mock_soar,
         )
 
-        with patch.object(orchestrator, 'start_time', datetime.now().timestamp()):
+        with patch.object(orchestrator, "start_time", datetime.now().timestamp()):
             result = orchestrator.execute()
 
         assert result.goal_achieved is True
@@ -987,7 +996,9 @@ class TestExecute:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_unexpected_error(self, mock_git_class, mock_prompt_class, mock_scratchpad_class):
+    def test_execute_unexpected_error(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test execution with unexpected error."""
         mock_git = Mock()
         mock_git.validate.side_effect = RuntimeError("Unexpected error")
@@ -1057,7 +1068,9 @@ class TestExecute:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_budget_exceeded(self, mock_git_class, mock_prompt_class, mock_scratchpad_class):
+    def test_execute_budget_exceeded(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad_class
+    ):
         """Test execution with budget exceeded."""
         mock_git = Mock()
         mock_git.validate.return_value = None

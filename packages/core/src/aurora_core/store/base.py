@@ -34,7 +34,7 @@ class Store(ABC):
     """
 
     @abstractmethod
-    def save_chunk(self, chunk: 'Chunk') -> bool:
+    def save_chunk(self, chunk: "Chunk") -> bool:
         """
         Save a chunk to storage.
 
@@ -51,7 +51,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def get_chunk(self, chunk_id: ChunkID) -> Optional['Chunk']:
+    def get_chunk(self, chunk_id: ChunkID) -> Optional["Chunk"]:
         """
         Retrieve a chunk by its ID.
 
@@ -86,7 +86,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def retrieve_by_activation(self, min_activation: float, limit: int) -> list['Chunk']:
+    def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
         """
         Retrieve top N chunks above an activation threshold.
 
@@ -106,11 +106,7 @@ class Store(ABC):
 
     @abstractmethod
     def add_relationship(
-        self,
-        from_id: ChunkID,
-        to_id: ChunkID,
-        rel_type: str,
-        weight: float = 1.0
+        self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
     ) -> bool:
         """
         Add a relationship between two chunks.
@@ -134,11 +130,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def get_related_chunks(
-        self,
-        chunk_id: ChunkID,
-        max_depth: int = 2
-    ) -> list['Chunk']:
+    def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
         """
         Get related chunks via relationships (for spreading activation).
 
@@ -160,10 +152,7 @@ class Store(ABC):
 
     @abstractmethod
     def record_access(
-        self,
-        chunk_id: ChunkID,
-        access_time: datetime | None = None,
-        context: str | None = None
+        self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
     ) -> None:
         """
         Record an access to a chunk for ACT-R activation tracking.
@@ -184,9 +173,7 @@ class Store(ABC):
 
     @abstractmethod
     def get_access_history(
-        self,
-        chunk_id: ChunkID,
-        limit: int | None = None
+        self, chunk_id: ChunkID, limit: int | None = None
     ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
@@ -249,4 +236,4 @@ class Store(ABC):
         pass
 
 
-__all__ = ['Store']
+__all__ = ["Store"]

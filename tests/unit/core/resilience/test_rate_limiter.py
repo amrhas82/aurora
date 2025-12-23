@@ -228,10 +228,7 @@ class TestRateLimiterWaitIfNeeded:
     @patch("time.time")
     def test_wait_if_needed_timeout_exceeded(self, mock_time):
         """Test that wait times exceeding max_wait_time raise error."""
-        limiter = RateLimiter(
-            requests_per_minute=60,
-            max_wait_time=5.0
-        )
+        limiter = RateLimiter(requests_per_minute=60, max_wait_time=5.0)
 
         # Empty bucket at t=0
         mock_time.return_value = 0.0
@@ -366,7 +363,7 @@ class TestRateLimiterEdgeCases:
         limiter = RateLimiter(requests_per_minute=1)
 
         assert limiter.max_tokens == 1
-        assert abs(limiter.refill_rate - 1/60) < 0.001  # ~0.0167 tokens/sec
+        assert abs(limiter.refill_rate - 1 / 60) < 0.001  # ~0.0167 tokens/sec
 
 
 class TestRateLimiterContextManager:

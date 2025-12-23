@@ -312,9 +312,7 @@ class ScratchpadManager:
         try:
             return self.scratchpad_path.read_text(encoding="utf-8")
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to read scratchpad at {self.scratchpad_path}: {e}"
-            ) from e
+            raise RuntimeError(f"Failed to read scratchpad at {self.scratchpad_path}: {e}") from e
 
     def append(self, content: str) -> None:
         """
@@ -338,9 +336,7 @@ class ScratchpadManager:
             if self.config.auto_create:
                 self.initialize(goal="Auto-created scratchpad")
             else:
-                raise FileNotFoundError(
-                    f"Scratchpad file not found: {self.scratchpad_path}"
-                )
+                raise FileNotFoundError(f"Scratchpad file not found: {self.scratchpad_path}")
 
         # Check file size before appending
         self._check_file_size()
@@ -431,9 +427,7 @@ class ScratchpadManager:
         try:
             self.scratchpad_path.write_text(updated_content, encoding="utf-8")
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to update status in scratchpad: {e}"
-            ) from e
+            raise RuntimeError(f"Failed to update status in scratchpad: {e}") from e
 
     def get_status(self) -> ScratchpadStatus | None:
         """

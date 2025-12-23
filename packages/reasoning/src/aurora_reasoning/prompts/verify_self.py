@@ -74,7 +74,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         prompt_parts = [
             f"Original Query: {query}",
-            f"\nDecomposition to Verify:\n{json.dumps(decomposition, indent=2)}"
+            f"\nDecomposition to Verify:\n{json.dumps(decomposition, indent=2)}",
         ]
 
         if context_summary:
@@ -93,9 +93,9 @@ You MUST respond with valid JSON only. Use this exact format:
         Returns:
             Formatted example string
         """
-        return f"""Query: {example['query']}
-Decomposition: {json.dumps(example.get('decomposition', {}), indent=2)}
-Verification: {json.dumps(example.get('verification', {}), indent=2)}"""
+        return f"""Query: {example["query"]}
+Decomposition: {json.dumps(example.get("decomposition", {}), indent=2)}
+Verification: {json.dumps(example.get("verification", {}), indent=2)}"""
 
 
 __all__ = ["VerifySelfPromptTemplate"]

@@ -429,9 +429,7 @@ class TestEscalationIntegration:
     def test_real_security_query(self):
         """Test real security-related query without mocks."""
         handler = AutoEscalationHandler()
-        result = handler.assess_query(
-            "Fix security vulnerability in authentication system"
-        )
+        result = handler.assess_query("Fix security vulnerability in authentication system")
 
         # Should route to AURORA (security = critical)
         assert result.use_aurora is True

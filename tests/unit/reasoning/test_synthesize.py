@@ -127,18 +127,14 @@ class TestValidateTraceability:
     def test_valid_traceability(self):
         """Test that valid traceability passes."""
         answer = "According to agent-1, the feature is implemented."
-        summaries = [
-            {"agent": "agent-1", "summary": "Feature implemented"}
-        ]
+        summaries = [{"agent": "agent-1", "summary": "Feature implemented"}]
         # Should not raise
         _validate_traceability(answer, summaries)
 
     def test_missing_reference_raises(self):
         """Test that missing agent reference raises ValueError."""
         answer = "The feature is implemented."
-        summaries = [
-            {"agent": "agent-1", "summary": "Feature implemented"}
-        ]
+        summaries = [{"agent": "agent-1", "summary": "Feature implemented"}]
         with pytest.raises(ValueError, match="does not reference any agent"):
             _validate_traceability(answer, summaries)
 
@@ -179,9 +175,7 @@ class TestExtractTraceability:
     def test_extract_no_references(self):
         """Test extraction with no agent references."""
         answer = "The feature is complete."
-        summaries = [
-            {"agent": "agent-1", "subgoal_id": 0, "subgoal_description": "Implement"}
-        ]
+        summaries = [{"agent": "agent-1", "subgoal_id": 0, "subgoal_description": "Implement"}]
 
         traceability = _extract_traceability(answer, summaries)
         assert len(traceability) == 0
@@ -207,13 +201,13 @@ class TestVerifySynthesis:
         mock_llm = MagicMock()
         # generate_json returns dict directly, not LLMResponse
         mock_llm.generate_json.return_value = {
-                "coherence": 0.9,
-                "completeness": 0.85,
-                "factuality": 0.95,
-                "overall_score": 0.9,
-                "issues": [],
-                "suggestions": [],
-            }
+            "coherence": 0.9,
+            "completeness": 0.85,
+            "factuality": 0.95,
+            "overall_score": 0.9,
+            "issues": [],
+            "suggestions": [],
+        }
 
         result = verify_synthesis(
             llm_client=mock_llm,
@@ -232,13 +226,13 @@ class TestVerifySynthesis:
         mock_llm = MagicMock()
         # generate_json returns dict directly, not LLMResponse
         mock_llm.generate_json.return_value = {
-                "coherence": 0.9,
-                "completeness": 0.9,
-                "factuality": 0.9,
-                "overall_score": 0.5,  # Wrong calculation
-                "issues": [],
-                "suggestions": [],
-            }
+            "coherence": 0.9,
+            "completeness": 0.9,
+            "factuality": 0.9,
+            "overall_score": 0.5,  # Wrong calculation
+            "issues": [],
+            "suggestions": [],
+        }
 
         result = verify_synthesis(
             llm_client=mock_llm,
@@ -269,9 +263,9 @@ class TestVerifySynthesis:
         mock_llm = MagicMock()
         # generate_json returns dict directly, not LLMResponse
         mock_llm.generate_json.return_value = {
-                "coherence": 0.8,
-                # Missing completeness, factuality, overall_score
-            }
+            "coherence": 0.8,
+            # Missing completeness, factuality, overall_score
+        }
 
         with pytest.raises(ValueError, match="missing required fields"):
             verify_synthesis(
@@ -286,11 +280,11 @@ class TestVerifySynthesis:
         mock_llm = MagicMock()
         # generate_json returns dict directly, not LLMResponse
         mock_llm.generate_json.return_value = {
-                "coherence": 1.5,  # Out of range
-                "completeness": 0.8,
-                "factuality": 0.8,
-                "overall_score": 0.8,
-            }
+            "coherence": 1.5,  # Out of range
+            "completeness": 0.8,
+            "factuality": 0.8,
+            "overall_score": 0.8,
+        }
 
         with pytest.raises(ValueError, match="Invalid coherence score"):
             verify_synthesis(
@@ -316,19 +310,21 @@ The feature has been successfully implemented by agent-coder.
 CONFIDENCE: 0.85
 """,
             model="test-model",
-            input_tokens=200, output_tokens=100, finish_reason="stop",
+            input_tokens=200,
+            output_tokens=100,
+            finish_reason="stop",
         )
 
         # Mock verification call
         # generate_json returns dict directly, not LLMResponse
         mock_llm.generate_json.return_value = {
-                "coherence": 0.9,
-                "completeness": 0.85,
-                "factuality": 0.9,
-                "overall_score": 0.88,
-                "issues": [],
-                "suggestions": [],
-            }
+            "coherence": 0.9,
+            "completeness": 0.85,
+            "factuality": 0.9,
+            "overall_score": 0.88,
+            "issues": [],
+            "suggestions": [],
+        }
 
         agent_outputs = [
             {
@@ -368,13 +364,17 @@ CONFIDENCE: 0.85
                 content="""ANSWER: Short answer by agent-test.
 CONFIDENCE: 0.6""",
                 model="test",
-                input_tokens=200, output_tokens=50, finish_reason="stop",
+                input_tokens=200,
+                output_tokens=50,
+                finish_reason="stop",
             ),
             LLMResponse(
                 content="""ANSWER: Agent-test completed the work successfully.
 CONFIDENCE: 0.8""",
                 model="test",
-                input_tokens=250, output_tokens=100, finish_reason="stop",
+                input_tokens=250,
+                output_tokens=100,
+                finish_reason="stop",
             ),
         ]
 
@@ -418,17 +418,19 @@ CONFIDENCE: 0.8""",
             content="""ANSWER: Agent-test completed briefly.
 CONFIDENCE: 0.5""",
             model="test",
-            input_tokens=200, output_tokens=20, finish_reason="stop",
+            input_tokens=200,
+            output_tokens=20,
+            finish_reason="stop",
         )
 
         # generate_json returns dict directly, not LLMResponse
         mock_llm.generate_json.return_value = {
-                "coherence": 0.5,
-                "completeness": 0.4,
-                "factuality": 0.5,
-                "overall_score": 0.47,
-                "issues": ["Too brief"],
-            }
+            "coherence": 0.5,
+            "completeness": 0.4,
+            "factuality": 0.5,
+            "overall_score": 0.47,
+            "issues": ["Too brief"],
+        }
 
         result = synthesize_results(
             llm_client=mock_llm,
@@ -448,13 +450,21 @@ CONFIDENCE: 0.5""",
 
         synthesis_responses = [
             # First synthesis - invalid format
-            LLMResponse(content="Invalid format", model="test", input_tokens=50, output_tokens=10, finish_reason="stop"),
+            LLMResponse(
+                content="Invalid format",
+                model="test",
+                input_tokens=50,
+                output_tokens=10,
+                finish_reason="stop",
+            ),
             # Second synthesis - valid
             LLMResponse(
                 content="""ANSWER: Agent-test completed work.
 CONFIDENCE: 0.8""",
                 model="test",
-                input_tokens=200, output_tokens=50, finish_reason="stop",
+                input_tokens=200,
+                output_tokens=50,
+                finish_reason="stop",
             ),
         ]
 

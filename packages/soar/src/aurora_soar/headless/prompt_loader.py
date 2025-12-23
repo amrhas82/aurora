@@ -120,9 +120,7 @@ class PromptLoader:
     SUCCESS_CRITERIA_HEADER = re.compile(
         r"^#\s+Success\s+Criteria\s*$", re.IGNORECASE | re.MULTILINE
     )
-    CONSTRAINTS_HEADER = re.compile(
-        r"^#\s+Constraints?\s*$", re.IGNORECASE | re.MULTILINE
-    )
+    CONSTRAINTS_HEADER = re.compile(r"^#\s+Constraints?\s*$", re.IGNORECASE | re.MULTILINE)
     CONTEXT_HEADER = re.compile(r"^#\s+Context\s*$", re.IGNORECASE | re.MULTILINE)
 
     # Any level-1 header pattern for section splitting
@@ -275,9 +273,7 @@ class PromptLoader:
             )
 
         # Extract Success Criteria
-        success_content = self._extract_section_content(
-            content, self.SUCCESS_CRITERIA_HEADER
-        )
+        success_content = self._extract_section_content(content, self.SUCCESS_CRITERIA_HEADER)
         if not success_content:
             raise PromptValidationError(
                 "Prompt file is missing required '# Success Criteria' section.\n"
@@ -298,9 +294,7 @@ class PromptLoader:
             )
 
         # Extract Constraints
-        constraints_content = self._extract_section_content(
-            content, self.CONSTRAINTS_HEADER
-        )
+        constraints_content = self._extract_section_content(content, self.CONSTRAINTS_HEADER)
         if not self.CONSTRAINTS_HEADER.search(content):
             raise PromptValidationError(
                 "Prompt file is missing required '# Constraints' section.\n"
@@ -444,9 +438,7 @@ class PromptLoader:
         try:
             content = self._read_file()
             summary["has_goal"] = bool(self.GOAL_HEADER.search(content))
-            summary["has_success_criteria"] = bool(
-                self.SUCCESS_CRITERIA_HEADER.search(content)
-            )
+            summary["has_success_criteria"] = bool(self.SUCCESS_CRITERIA_HEADER.search(content))
             summary["has_constraints"] = bool(self.CONSTRAINTS_HEADER.search(content))
             summary["has_context"] = bool(self.CONTEXT_HEADER.search(content))
 

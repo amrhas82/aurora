@@ -353,6 +353,7 @@ class TestLLMTimeoutIntegration:
 
         # Create tracker (use temp file)
         import tempfile
+
         temp_path = Path(tempfile.mktemp(suffix=".json"))
         tracker = CostTracker(monthly_limit_usd=10.0, tracker_path=temp_path)
 

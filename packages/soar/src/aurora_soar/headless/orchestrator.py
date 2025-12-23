@@ -251,9 +251,7 @@ class HeadlessOrchestrator:
         is_valid, errors = self.prompt_loader.validate_format()
         if not is_valid:
             error_msg = "\n".join(errors)
-            raise PromptValidationError(
-                f"Prompt validation failed:\n{error_msg}"
-            )
+            raise PromptValidationError(f"Prompt validation failed:\n{error_msg}")
 
     def _load_prompt(self) -> PromptData:
         """
@@ -384,10 +382,10 @@ class HeadlessOrchestrator:
 **Goal**: {self.prompt_data.goal}
 
 **Success Criteria**:
-{chr(10).join(f'- {c}' for c in self.prompt_data.success_criteria)}
+{chr(10).join(f"- {c}" for c in self.prompt_data.success_criteria)}
 
 **Constraints**:
-{chr(10).join(f'- {c}' for c in self.prompt_data.constraints)}
+{chr(10).join(f"- {c}" for c in self.prompt_data.constraints)}
 
 **Previous Progress** (from scratchpad):
 {scratchpad_content[-2000:] if len(scratchpad_content) > 2000 else scratchpad_content}
@@ -543,7 +541,9 @@ Provide a specific, actionable next step.
             print(f"✓ Scratchpad: {self.scratchpad_path}")
 
             # 4. Run main loop
-            print(f"\nStep 4: Running main loop (max {self.config.max_iterations} iterations, budget ${self.config.budget_limit})...")
+            print(
+                f"\nStep 4: Running main loop (max {self.config.max_iterations} iterations, budget ${self.config.budget_limit})..."
+            )
             termination_reason = self._run_main_loop()
 
             # 5. Calculate duration

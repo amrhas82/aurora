@@ -37,6 +37,7 @@ class CacheEntry:
         access_count: Number of times accessed
         last_access: Most recent access timestamp
     """
+
     value: Any
     timestamp: float
     access_count: int = 0
@@ -74,6 +75,7 @@ class CacheStats:
         promotions: Number of promotions to hot cache
         total_queries: Total number of cache queries
     """
+
     hot_hits: int = 0
     hot_misses: int = 0
     persistent_hits: int = 0
@@ -176,10 +178,7 @@ class LRUCache:
 
         # Add new entry at end (most recent)
         entry = CacheEntry(
-            value=value,
-            timestamp=time.time(),
-            access_count=0,
-            last_access=time.time()
+            value=value, timestamp=time.time(), access_count=0, last_access=time.time()
         )
         self.cache[key] = entry
 
@@ -317,9 +316,7 @@ class CacheManager:
             pass
 
     def get_activation(
-        self,
-        chunk_id: ChunkID,
-        current_time: datetime | None = None
+        self, chunk_id: ChunkID, current_time: datetime | None = None
     ) -> float | None:
         """Get cached activation score if not expired.
 
@@ -362,10 +359,7 @@ class CacheManager:
             activation: Activation score to cache
         """
         entry = CacheEntry(
-            value=activation,
-            timestamp=time.time(),
-            access_count=0,
-            last_access=time.time()
+            value=activation, timestamp=time.time(), access_count=0, last_access=time.time()
         )
         self.activation_cache[chunk_id] = entry
 
@@ -423,9 +417,9 @@ class CacheManager:
         activation_cache_bytes = len(self.activation_cache) * 100  # ~100 bytes per score
 
         return {
-            'hot_cache_bytes': hot_cache_bytes,
-            'activation_cache_bytes': activation_cache_bytes,
-            'total_bytes': hot_cache_bytes + activation_cache_bytes,
+            "hot_cache_bytes": hot_cache_bytes,
+            "activation_cache_bytes": activation_cache_bytes,
+            "total_bytes": hot_cache_bytes + activation_cache_bytes,
         }
 
     def cleanup_expired_activations(self) -> int:
@@ -448,8 +442,8 @@ class CacheManager:
 
 
 __all__ = [
-    'CacheManager',
-    'CacheStats',
-    'CacheEntry',
-    'LRUCache',
+    "CacheManager",
+    "CacheStats",
+    "CacheEntry",
+    "LRUCache",
 ]

@@ -16,13 +16,13 @@ import numpy.typing as npt
 
 # Optional dependency - only needed for semantic features
 try:
-    import torch  # type: ignore[import-not-found]
-    from sentence_transformers import SentenceTransformer  # type: ignore[import-not-found]
+    import torch
+    from sentence_transformers import SentenceTransformer
 
     HAS_SENTENCE_TRANSFORMERS = True
 except ImportError:
     HAS_SENTENCE_TRANSFORMERS = False
-    SentenceTransformer = None  # type: ignore[assignment]
+    SentenceTransformer = None  # type: ignore[assignment, misc]
     torch = None  # type: ignore[assignment]
 
 

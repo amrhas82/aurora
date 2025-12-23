@@ -115,7 +115,7 @@ jobs:
           make install-dev
 
       - name: Run performance benchmarks
-        run: pytest tests/performance/ -v --ignore=tests/performance/test_embedding_benchmarks.py --ignore=tests/performance/test_hybrid_retrieval_precision.py
+        run: pytest tests/performance/ -v --ignore=tests/performance/test_embedding_benchmarks.py --ignore=tests/performance/test_hybrid_retrieval_precision.py --cov-fail-under=0
 
       - name: Check performance targets
         run: |

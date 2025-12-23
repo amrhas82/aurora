@@ -49,7 +49,7 @@ jobs:
           make install-dev
 
       - name: Run mypy
-        run: mypy packages/core/src packages/context-code/src packages/soar/src packages/testing/src
+        run: mypy packages/core/src packages/context-code/src packages/soar/src packages/reasoning/src packages/cli/src packages/testing/src
 
   test:
     name: Test Python ${{ matrix.python-version }}
@@ -72,10 +72,16 @@ jobs:
           make install-dev
 
       - name: Run unit tests
-        run: pytest tests/unit/ -m unit --cov=packages --cov-report=xml
+        run: pytest tests/unit/ --cov=packages --cov-report=xml
 
       - name: Run integration tests
-        run: pytest tests/integration/ -m integration
+        run: pytest tests/integration/
+
+      - name: Run fault injection tests
+        run: pytest tests/fault_injection/ -v
+
+      - name: Run calibration tests
+        run: pytest tests/calibration/ -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -103,7 +109,7 @@ jobs:
           make install-dev
 
       - name: Run performance benchmarks
-        run: pytest tests/performance/ -m performance --benchmark-only
+        run: pytest tests/performance/ -v
 
       - name: Check performance targets
         run: |
@@ -160,6 +166,8 @@ jobs:
           python -m build packages/core/
           python -m build packages/context-code/
           python -m build packages/soar/
+          python -m build packages/reasoning/
+          python -m build packages/cli/
           python -m build packages/testing/
 
       - name: Upload build artifacts

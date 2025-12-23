@@ -22,8 +22,8 @@ try:
     HAS_SENTENCE_TRANSFORMERS = True
 except ImportError:
     HAS_SENTENCE_TRANSFORMERS = False
-    SentenceTransformer = None  # type: ignore[assignment, misc]
-    torch = None  # type: ignore[assignment]
+    SentenceTransformer = None  # type: ignore[misc]
+    torch = None
 
 
 def cosine_similarity(

@@ -12,6 +12,7 @@ from typing import Optional
 import click
 from rich.console import Console
 
+from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.memory import memory_command
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 
@@ -58,6 +59,7 @@ def cli(verbose: bool, debug: bool) -> None:
 
 
 # Register commands
+cli.add_command(headless_command)
 cli.add_command(memory_command)
 
 

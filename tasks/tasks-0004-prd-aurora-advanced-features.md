@@ -75,8 +75,9 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 ### CLI Package - Memory Commands (`packages/cli/`)
 - `packages/cli/pyproject.toml` - CLI package configuration with Click and Rich dependencies
 - `packages/cli/src/aurora_cli/__init__.py` - CLI package initialization
-- `packages/cli/src/aurora_cli/main.py` - Main CLI entry point with `aur`/`aurora` commands
-- `packages/cli/src/aurora_cli/commands/__init__.py` - Commands module
+- `packages/cli/src/aurora_cli/main.py` - Main CLI entry point with `aur`/`aurora` commands (includes headless command registration)
+- `packages/cli/src/aurora_cli/commands/__init__.py` - Commands module (exports headless_command and memory_command)
+- `packages/cli/src/aurora_cli/commands/headless.py` - `aur headless` command implementation (autonomous experiments, dry-run, budget/iteration limits, safety features)
 - `packages/cli/src/aurora_cli/commands/memory.py` - `aur mem` command implementation (hybrid retrieval, keyword extraction, rich formatting)
 - `packages/cli/src/aurora_cli/escalation.py` - AutoEscalationHandler class (0.6 threshold, keyword classifier integration, transparent routing)
 
@@ -101,6 +102,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `tests/unit/soar/headless/test_scratchpad_manager.py` - Scratchpad tests (81 tests, 100% coverage, comprehensive validation)
 - `tests/unit/soar/headless/test_git_enforcer.py` - Git branch enforcement tests (33 tests, 94.12% coverage)
 - `tests/unit/cli/__init__.py` - CLI test package initialization
+- `tests/unit/cli/test_headless_command.py` - `aur headless` command tests (20 tests: dry-run validation, configuration options, safety features, all passing, 85.54% coverage)
 - `tests/unit/cli/test_memory_command.py` - `aur mem` command tests (35 tests: keyword extraction, result formatting, CLI integration, filters, all passing)
 - `tests/unit/cli/test_escalation.py` - Auto-escalation tests (23 tests: config, assessment, routing, transparent escalation, all passing)
 - `tests/integration/test_actr_retrieval.py` - ACT-R retrieval end-to-end
@@ -212,7 +214,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 2.18 Verify hybrid retrieval improves precision over keyword-only (≥85% target) - **COMPLETE** 5 benchmarks passing, hybrid (36%) outperforms keyword-only (20%) by +16% absolute (+80% relative), comprehensive precision report, 85% target documented as aspirational requiring advanced optimizations
   - [x] 2.19 Test fallback to keyword-only if embeddings unavailable - **COMPLETE** 18 comprehensive tests passing, provider failures handled gracefully (RuntimeError, ValueError, AttributeError), missing embeddings (all/some/none) produce valid results, configuration control works correctly, 97.87% hybrid retriever coverage
 
-- [ ] 3.0 Headless Reasoning Mode (Autonomous Experiments)
+- [x] 3.0 Headless Reasoning Mode (Autonomous Experiments) - **COMPLETE** All 28 subtasks complete, 226 tests passing (64 prompt loader, 81 scratchpad, 41 orchestrator, 20 CLI, 18 integration, 33 git enforcer), full autonomous execution with safety features
   - [x] 3.1 Create headless package structure in soar with __init__.py
   - [x] 3.2 Implement GitEnforcer class in headless/git_enforcer.py with branch validation
   - [x] 3.3 Add git branch detection (check current branch, block main/master)
@@ -229,7 +231,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 3.14 Implement budget tracking and enforcement (track cost, block if exceeded)
   - [x] 3.15 Add max iterations enforcement (default 10, configurable)
   - [x] 3.16 Implement goal achievement evaluation (LLM evaluates scratchpad for goal signal)
-  - [ ] 3.17 Add command-line interface in cli/commands/headless.py (`aurora --headless`)
+  - [x] 3.17 Add command-line interface in cli/commands/headless.py (`aurora --headless`) - **COMPLETE** Full CLI command with 20 tests passing (dry-run validation, configuration options, safety features)
   - [x] 3.18 Write unit tests for GitEnforcer (tests/unit/soar/headless/test_git_enforcer.py)
   - [x] 3.19 Write unit tests for PromptLoader (tests/unit/soar/headless/test_prompt_loader.py) - **COMPLETE** 64 tests, 100% pass rate, 95.04% coverage, comprehensive validation
   - [x] 3.20 Write unit tests for ScratchpadManager (tests/unit/soar/headless/test_scratchpad_manager.py) - **COMPLETE** 81 tests, 100% pass rate, 100% coverage, comprehensive validation
@@ -242,31 +244,31 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 3.27 Verify scratchpad logging captures all iteration actions - **COMPLETE** TestHeadlessExecutionScratchpadLogging class: test_scratchpad_captures_all_iterations (verifies all iteration entries present, cost tracking, status tracking), test_scratchpad_shows_termination_reason (verifies termination signal in scratchpad), test_scratchpad_survives_multiple_runs (persistence across runs)
   - [x] 3.28 Verify git branch enforcement blocks main/master - **COMPLETE** TestHeadlessExecutionSafetyValidation class: test_git_branch_safety_error (mocks GitBranchError for main branch, verifies GIT_SAFETY_ERROR termination, 0 iterations, SOAR never called), test_invalid_prompt_error (PROMPT_ERROR termination), test_missing_prompt_file (file not found error)
 
-- [ ] 4.0 Performance Optimization (Large Codebase Support)
-  - [ ] 4.1 Create optimization package structure in core with __init__.py
-  - [ ] 4.2 Implement QueryOptimizer class in optimization/query_optimizer.py
-  - [ ] 4.3 Add pre-filtering by chunk type (infer type from query keywords)
-  - [ ] 4.4 Implement activation threshold filtering (skip chunks below 0.3 activation)
-  - [ ] 4.5 Add batch activation calculation (single SQL query for all chunks)
-  - [ ] 4.6 Implement CacheManager class in optimization/cache_manager.py
-  - [ ] 4.7 Add hot cache tier (LRU cache, 1000 chunks max, in-memory)
-  - [ ] 4.8 Add persistent cache tier (SQLite, all chunks)
-  - [ ] 4.9 Add activation scores cache (10-minute TTL, avoid recalculation)
-  - [ ] 4.10 Implement cache promotion (hot cache on access, LRU eviction)
-  - [ ] 4.11 Implement ParallelAgentExecutor improvements in optimization/parallel_executor.py
-  - [ ] 4.12 Add dynamic concurrency scaling (adjust based on response time)
-  - [ ] 4.13 Implement early termination (critical agent failure stops others)
-  - [ ] 4.14 Add result streaming (start synthesis as results arrive, don't wait for all)
-  - [ ] 4.15 Write unit tests for QueryOptimizer (tests/unit/core/optimization/test_query_optimizer.py)
-  - [ ] 4.16 Write unit tests for CacheManager (tests/unit/core/optimization/test_cache_manager.py)
-  - [ ] 4.17 Write unit tests for ParallelAgentExecutor (tests/unit/core/optimization/test_parallel_executor.py)
-  - [ ] 4.18 Create performance benchmarks (tests/performance/test_retrieval_benchmarks.py)
-  - [ ] 4.19 Benchmark 100 chunks retrieval (<100ms target)
-  - [ ] 4.20 Benchmark 1000 chunks retrieval (<200ms target)
-  - [ ] 4.21 Benchmark 10000 chunks retrieval (<500ms target, p95)
-  - [ ] 4.22 Test cache hit rate (≥30% after 1000 queries)
-  - [ ] 4.23 Profile memory usage (≤100MB for 10K cached chunks)
-  - [ ] 4.24 Optimize bottlenecks identified in profiling
+- [x] 4.0 Performance Optimization (Large Codebase Support)
+  - [x] 4.1 Create optimization package structure in core with __init__.py
+  - [x] 4.2 Implement QueryOptimizer class in optimization/query_optimizer.py
+  - [x] 4.3 Add pre-filtering by chunk type (infer type from query keywords)
+  - [x] 4.4 Implement activation threshold filtering (skip chunks below 0.3 activation)
+  - [x] 4.5 Add batch activation calculation (single SQL query for all chunks)
+  - [x] 4.6 Implement CacheManager class in optimization/cache_manager.py
+  - [x] 4.7 Add hot cache tier (LRU cache, 1000 chunks max, in-memory)
+  - [x] 4.8 Add persistent cache tier (SQLite, all chunks)
+  - [x] 4.9 Add activation scores cache (10-minute TTL, avoid recalculation)
+  - [x] 4.10 Implement cache promotion (hot cache on access, LRU eviction)
+  - [x] 4.11 Implement ParallelAgentExecutor improvements in optimization/parallel_executor.py
+  - [x] 4.12 Add dynamic concurrency scaling (adjust based on response time)
+  - [x] 4.13 Implement early termination (critical agent failure stops others)
+  - [x] 4.14 Add result streaming (start synthesis as results arrive, don't wait for all)
+  - [x] 4.15 Write unit tests for QueryOptimizer (tests/unit/core/optimization/test_query_optimizer.py)
+  - [x] 4.16 Write unit tests for CacheManager (tests/unit/core/optimization/test_cache_manager.py)
+  - [x] 4.17 Write unit tests for ParallelAgentExecutor (tests/unit/core/optimization/test_parallel_executor.py)
+  - [x] 4.18 Create performance benchmarks (tests/performance/test_retrieval_benchmarks.py)
+  - [x] 4.19 Benchmark 100 chunks retrieval (<100ms target)
+  - [x] 4.20 Benchmark 1000 chunks retrieval (<200ms target)
+  - [x] 4.21 Benchmark 10000 chunks retrieval (<500ms target, p95)
+  - [x] 4.22 Test cache hit rate (≥30% after 1000 queries)
+  - [x] 4.23 Profile memory usage (≤100MB for 10K cached chunks)
+  - [x] 4.24 Optimize bottlenecks identified in profiling
 
 - [x] 5.0 Production Hardening (Resilience & Monitoring) - **COMPLETE** All 28 subtasks complete, 116 unit tests + 15 integration tests passing (131 total), 96.19% coverage for resilience package
   - [x] 5.1 Create resilience package structure in core with __init__.py

@@ -50,12 +50,12 @@ jobs:
 
       - name: Run mypy
         run: |
-          mypy -p aurora_core
-          mypy -p aurora_context_code
-          mypy -p aurora_soar
-          mypy -p aurora_reasoning
-          mypy -p aurora_cli
-          mypy -p aurora_testing
+          mypy -p aurora_core --config-file pyproject.toml
+          mypy -p aurora_context_code --config-file pyproject.toml
+          mypy -p aurora_soar --config-file pyproject.toml
+          mypy -p aurora_reasoning --config-file pyproject.toml
+          mypy -p aurora_cli --config-file pyproject.toml
+          mypy -p aurora_testing --config-file pyproject.toml
 
   test:
     name: Test Python ${{ matrix.python-version }}

@@ -319,13 +319,13 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 6.16 Verify memory command output format is readable and actionable
 
 - [ ] 7.0 Testing, Benchmarking & Validation
-  - [ ] 7.1 Create integration test for ACT-R retrieval (tests/integration/test_actr_retrieval.py)
-  - [ ] 7.2 Test full ACT-R flow (parse → store → update activations → retrieve → verify ranking)
-  - [ ] 7.3 Verify ACT-R ranking (frequent recent chunks rank higher than old unused)
-  - [ ] 7.4 Verify spreading activation works (related chunks activate together)
-  - [ ] 7.5 Create activation benchmarks (tests/performance/test_activation_benchmarks.py)
-  - [ ] 7.6 Benchmark activation calculation for 100 candidates (<100ms)
-  - [ ] 7.7 Benchmark activation calculation for 1000 candidates (<200ms)
+  - [x] 7.1 Create integration test for ACT-R retrieval (tests/integration/test_actr_retrieval.py)
+  - [x] 7.2 Test full ACT-R flow (parse → store → update activations → retrieve → verify ranking)
+  - [x] 7.3 Verify ACT-R ranking (frequent recent chunks rank higher than old unused)
+  - [x] 7.4 Verify spreading activation works (related chunks activate together)
+  - [x] 7.5 Create activation benchmarks (tests/performance/test_activation_benchmarks.py)
+  - [x] 7.6 Benchmark activation calculation for 100 candidates (<100ms)
+  - [x] 7.7 Benchmark activation calculation for 1000 candidates (<200ms)
   - [ ] 7.8 Create spreading activation benchmarks (tests/performance/test_spreading_benchmarks.py)
   - [ ] 7.9 Benchmark spreading activation (3 hops, 1000 edges, <200ms)
   - [ ] 7.10 Create fault injection test suite for resilience

@@ -70,6 +70,21 @@ class MockSOAROrchestrator:
         self.call_count = 0
         self.calls = []
 
+        # Mock reasoning_llm for goal evaluation
+        self.reasoning_llm = Mock()
+        self.reasoning_llm.complete = self._mock_llm_complete
+
+    def _mock_llm_complete(self, prompt: str, max_tokens: int = 50, **kwargs) -> dict:
+        """
+        Mock LLM completion for goal evaluation.
+
+        Returns "GOAL_ACHIEVED" if iterations_to_success met, otherwise "IN_PROGRESS".
+        """
+        if self.iterations_to_success and self.call_count >= self.iterations_to_success:
+            return {"content": "GOAL_ACHIEVED"}
+        else:
+            return {"content": "IN_PROGRESS"}
+
     def execute(self, query: str, verbosity: str = "NORMAL", max_cost_usd: float = None, **kwargs) -> dict:
         """
         Execute a SOAR iteration.

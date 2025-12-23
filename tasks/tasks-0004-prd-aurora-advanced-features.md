@@ -326,8 +326,8 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 7.5 Create activation benchmarks (tests/performance/test_activation_benchmarks.py)
   - [x] 7.6 Benchmark activation calculation for 100 candidates (<100ms)
   - [x] 7.7 Benchmark activation calculation for 1000 candidates (<200ms)
-  - [ ] 7.8 Create spreading activation benchmarks (tests/performance/test_spreading_benchmarks.py)
-  - [ ] 7.9 Benchmark spreading activation (3 hops, 1000 edges, <200ms)
+  - [x] 7.8 Create spreading activation benchmarks (tests/performance/test_spreading_benchmarks.py)
+  - [x] 7.9 Benchmark spreading activation (3 hops, 1000 edges, <200ms)
   - [ ] 7.10 Create fault injection test suite for resilience
   - [ ] 7.11 Test LLM timeout recovery (mock timeout, verify retry succeeds)
   - [ ] 7.12 Test database lock recovery (simulate lock contention, verify backoff works)

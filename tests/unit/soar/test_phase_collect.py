@@ -1,21 +1,20 @@
 """Unit tests for Phase 6: Agent Execution (Collect)."""
 
-import asyncio
 import time
 
 import pytest
 
 from aurora_soar.agent_registry import AgentInfo
-from aurora_soar.phases.route import RouteResult
 from aurora_soar.phases.collect import (
     AgentOutput,
     CollectResult,
-    execute_agents,
     _execute_parallel_subgoals,
     _execute_sequential_subgoals,
     _execute_single_subgoal,
     _validate_agent_output,
+    execute_agents,
 )
+from aurora_soar.phases.route import RouteResult
 
 
 @pytest.fixture

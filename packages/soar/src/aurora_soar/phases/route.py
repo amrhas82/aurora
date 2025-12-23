@@ -9,8 +9,9 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
-    from aurora_soar.agent_registry import AgentRegistry, AgentInfo
+    from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class RouteResult:
 
     def __init__(
         self,
-        agent_assignments: list[tuple[int, "AgentInfo"]],
+        agent_assignments: list[tuple[int, AgentInfo]],
         execution_plan: list[dict[str, Any]],
         routing_metadata: dict[str, Any] | None = None,
     ):
@@ -54,7 +55,7 @@ class RouteResult:
 
 
 def route_subgoals(
-    decomposition: dict[str, Any], agent_registry: "AgentRegistry"
+    decomposition: dict[str, Any], agent_registry: AgentRegistry
 ) -> RouteResult:
     """Route subgoals to agents based on suggested agents and capabilities.
 
@@ -150,9 +151,9 @@ def _validate_decomposition(decomposition: dict[str, Any]) -> None:
 def _route_single_subgoal(
     idx: int,
     subgoal: dict[str, Any],
-    agent_registry: "AgentRegistry",
+    agent_registry: AgentRegistry,
     metadata: dict[str, Any],
-) -> "AgentInfo":
+) -> AgentInfo:
     """Route a single subgoal to an appropriate agent.
 
     Tries in order:
@@ -229,7 +230,7 @@ def _extract_capability_from_agent_id(agent_id: str) -> str | None:
 
 
 def _validate_routing(
-    agent_assignments: list[tuple[int, "AgentInfo"]],
+    agent_assignments: list[tuple[int, AgentInfo]],
     subgoals: list[dict[str, Any]],
     execution_order: list[dict[str, Any]],
 ) -> None:
@@ -309,11 +310,10 @@ def _check_circular_dependencies(subgoals: list[dict[str, Any]]) -> None:
         return False
 
     for node in graph:
-        if node not in visited:
-            if dfs(node):
-                raise RuntimeError(
-                    f"Circular dependency detected involving subgoal {node}"
-                )
+        if node not in visited and dfs(node):
+            raise RuntimeError(
+                f"Circular dependency detected involving subgoal {node}"
+            )
 
 
 def _parse_execution_plan(

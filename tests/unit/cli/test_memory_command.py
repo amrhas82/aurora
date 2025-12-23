@@ -10,19 +10,18 @@ This module tests the memory command functionality including:
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from click.testing import CliRunner
+from unittest.mock import Mock, patch
 
 from aurora_cli.commands.memory import (
-    memory_command,
+    _format_score,
+    _truncate_content,
+    _truncate_path,
     extract_keywords,
     format_memory_results,
-    _format_score,
-    _truncate_path,
-    _truncate_content,
+    memory_command,
 )
+from click.testing import CliRunner
 
 
 class TestKeywordExtraction:

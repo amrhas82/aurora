@@ -25,8 +25,8 @@ Reference:
 """
 
 import math
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import datetime, timezone
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -103,7 +103,7 @@ class DecayCalculator:
         30 days: -0.737
     """
 
-    def __init__(self, config: Optional[DecayConfig] = None):
+    def __init__(self, config: DecayConfig | None = None):
         """Initialize the decay calculator.
 
         Args:
@@ -114,7 +114,7 @@ class DecayCalculator:
     def calculate(
         self,
         last_access: datetime,
-        current_time: Optional[datetime] = None
+        current_time: datetime | None = None
     ) -> float:
         """Calculate decay penalty for a chunk.
 
@@ -151,8 +151,7 @@ class DecayCalculator:
         days_since_access = hours_since_access / 24.0
 
         # Cap at maximum days
-        if days_since_access > self.config.max_days:
-            days_since_access = self.config.max_days
+        days_since_access = min(days_since_access, self.config.max_days)
 
         # Calculate decay penalty: -decay_factor × log10(days)
         # For days < 1, we get log10(x) < 0, so we use max(1, days)
@@ -183,8 +182,7 @@ class DecayCalculator:
         days_since_access = hours_since_access / 24.0
 
         # Cap at maximum days
-        if days_since_access > self.config.max_days:
-            days_since_access = self.config.max_days
+        days_since_access = min(days_since_access, self.config.max_days)
 
         # Calculate penalty
         penalty = -self.config.decay_factor * math.log10(max(1.0, days_since_access))
@@ -211,7 +209,7 @@ class DecayCalculator:
 
     def get_decay_curve(
         self,
-        max_days: Optional[int] = None,
+        max_days: int | None = None,
         num_points: int = 50
     ) -> list[tuple[float, float]]:
         """Get decay curve data points for visualization.
@@ -243,7 +241,7 @@ class DecayCalculator:
     def explain_decay(
         self,
         last_access: datetime,
-        current_time: Optional[datetime] = None
+        current_time: datetime | None = None
     ) -> dict[str, Any]:
         """Explain how decay was calculated.
 
@@ -294,7 +292,7 @@ def calculate_decay(
     last_access: datetime,
     decay_factor: float = 0.5,
     max_days: float = 90.0,
-    current_time: Optional[datetime] = None
+    current_time: datetime | None = None
 ) -> float:
     """Convenience function for calculating decay penalty.
 

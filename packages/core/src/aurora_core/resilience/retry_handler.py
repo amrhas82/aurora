@@ -6,14 +6,9 @@ following the resilience patterns from PRD Section 5.1.
 """
 
 import time
-from typing import Any, Callable, TypeVar, ParamSpec
+from collections.abc import Callable
 from functools import wraps
-
-from aurora_core.exceptions import (
-    ConfigurationError,
-    BudgetExceededError,
-    ValidationError,
-)
+from typing import Any, ParamSpec, TypeVar
 
 
 P = ParamSpec("P")
@@ -174,8 +169,7 @@ class RetryHandler:
                 attempt += 1
                 try:
                     # Attempt execution
-                    result = func(*args, **kwargs)
-                    return result
+                    return func(*args, **kwargs)
 
                 except Exception as e:
                     # Check if we should retry

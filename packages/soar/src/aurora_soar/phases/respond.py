@@ -11,6 +11,7 @@ from dataclasses import asdict, is_dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from aurora_soar.phases.record import RecordResult
     from aurora_soar.phases.synthesize import SynthesisResult
@@ -25,17 +26,16 @@ def _make_json_serializable(obj: Any) -> Any:
     """
     if obj is None or isinstance(obj, (str, int, float, bool)):
         return obj
-    elif is_dataclass(obj) and not isinstance(obj, type):
+    if is_dataclass(obj) and not isinstance(obj, type):
         return asdict(obj)
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {k: _make_json_serializable(v) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple)):
+    if isinstance(obj, (list, tuple)):
         return [_make_json_serializable(item) for item in obj]
-    elif isinstance(obj, Enum):
+    if isinstance(obj, Enum):
         return obj.value
-    else:
-        # For other types, try to convert to string
-        return str(obj)
+    # For other types, try to convert to string
+    return str(obj)
 
 
 class Verbosity(str, Enum):

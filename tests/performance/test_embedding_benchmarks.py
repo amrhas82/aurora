@@ -32,7 +32,6 @@ Recommendations:
 """
 
 import time
-from typing import List
 
 import numpy as np
 import pytest
@@ -160,7 +159,7 @@ class TestEmbeddingPerformance:
         avg_time = sum(times) / len(times)
         p95_time = sorted(times)[int(len(times) * 0.95)]
 
-        print(f"\n[BENCHMARK] Short text embedding:")
+        print("\n[BENCHMARK] Short text embedding:")
         print(f"  - Average: {avg_time:.2f}ms")
         print(f"  - P95: {p95_time:.2f}ms")
         print(f"  - Min: {min(times):.2f}ms")
@@ -169,9 +168,9 @@ class TestEmbeddingPerformance:
         # Target: <50ms per chunk (aspirational for CPU)
         # Realistic: <100ms for CPU, <50ms with GPU
         if p95_time < 50:
-            print(f"  ✓ MEETS <50ms target")
+            print("  ✓ MEETS <50ms target")
         elif p95_time < 100:
-            print(f"  ✓ ACCEPTABLE (<100ms CPU target)")
+            print("  ✓ ACCEPTABLE (<100ms CPU target)")
 
         assert p95_time < 100, f"P95 time {p95_time:.2f}ms exceeds 100ms acceptable threshold"
 
@@ -193,16 +192,16 @@ class TestEmbeddingPerformance:
         avg_time = sum(times) / len(times)
         p95_time = sorted(times)[int(len(times) * 0.95)]
 
-        print(f"\n[BENCHMARK] Medium text embedding:")
+        print("\n[BENCHMARK] Medium text embedding:")
         print(f"  - Average: {avg_time:.2f}ms")
         print(f"  - P95: {p95_time:.2f}ms")
         print(f"  - Min: {min(times):.2f}ms")
         print(f"  - Max: {max(times):.2f}ms")
 
         if p95_time < 50:
-            print(f"  ✓ MEETS <50ms target")
+            print("  ✓ MEETS <50ms target")
         elif p95_time < 100:
-            print(f"  ✓ ACCEPTABLE (<100ms CPU target)")
+            print("  ✓ ACCEPTABLE (<100ms CPU target)")
 
         assert p95_time < 100, f"P95 time {p95_time:.2f}ms exceeds 100ms acceptable threshold"
 
@@ -224,16 +223,16 @@ class TestEmbeddingPerformance:
         avg_time = sum(times) / len(times)
         p95_time = sorted(times)[int(len(times) * 0.95)]
 
-        print(f"\n[BENCHMARK] Long text embedding:")
+        print("\n[BENCHMARK] Long text embedding:")
         print(f"  - Average: {avg_time:.2f}ms")
         print(f"  - P95: {p95_time:.2f}ms")
         print(f"  - Min: {min(times):.2f}ms")
         print(f"  - Max: {max(times):.2f}ms")
 
         if p95_time < 50:
-            print(f"  ✓ MEETS <50ms target")
+            print("  ✓ MEETS <50ms target")
         elif p95_time < 200:
-            print(f"  ✓ ACCEPTABLE (<200ms for long text)")
+            print("  ✓ ACCEPTABLE (<200ms for long text)")
 
         assert p95_time < 200, f"P95 time {p95_time:.2f}ms exceeds 200ms threshold for long text"
 
@@ -255,16 +254,16 @@ class TestEmbeddingPerformance:
         avg_time = sum(times) / len(times)
         p95_time = sorted(times)[int(len(times) * 0.95)]
 
-        print(f"\n[BENCHMARK] Very long text embedding:")
+        print("\n[BENCHMARK] Very long text embedding:")
         print(f"  - Average: {avg_time:.2f}ms")
         print(f"  - P95: {p95_time:.2f}ms")
         print(f"  - Min: {min(times):.2f}ms")
         print(f"  - Max: {max(times):.2f}ms")
 
         if p95_time < 100:
-            print(f"  ✓ EXCELLENT (<100ms for very long text)")
+            print("  ✓ EXCELLENT (<100ms for very long text)")
         elif p95_time < 300:
-            print(f"  ✓ ACCEPTABLE (<300ms for very long text)")
+            print("  ✓ ACCEPTABLE (<300ms for very long text)")
 
         # Allow more time for very long text (near 512 token limit)
         assert p95_time < 300, f"P95 time {p95_time:.2f}ms exceeds 300ms threshold for very long text"
@@ -291,16 +290,16 @@ class TestEmbeddingPerformance:
         avg_time = sum(times) / len(times)
         p95_time = sorted(times)[int(len(times) * 0.95)]
 
-        print(f"\n[BENCHMARK] Query embedding:")
+        print("\n[BENCHMARK] Query embedding:")
         print(f"  - Average: {avg_time:.2f}ms")
         print(f"  - P95: {p95_time:.2f}ms")
         print(f"  - Min: {min(times):.2f}ms")
         print(f"  - Max: {max(times):.2f}ms")
 
         if p95_time < 50:
-            print(f"  ✓ MEETS <50ms target")
+            print("  ✓ MEETS <50ms target")
         elif p95_time < 100:
-            print(f"  ✓ ACCEPTABLE (<100ms target)")
+            print("  ✓ ACCEPTABLE (<100ms target)")
 
         # Query embedding is user-facing, should be fast but allow CPU variability
         assert p95_time < 100, f"P95 time {p95_time:.2f}ms exceeds 100ms target"
@@ -327,14 +326,14 @@ class TestEmbeddingPerformance:
         avg_time = sum(times) / len(times)
         per_chunk_time = avg_time / 10
 
-        print(f"\n[BENCHMARK] Batch embedding (10 chunks):")
+        print("\n[BENCHMARK] Batch embedding (10 chunks):")
         print(f"  - Total time: {avg_time:.2f}ms")
         print(f"  - Per chunk: {per_chunk_time:.2f}ms")
 
         if per_chunk_time < 50:
-            print(f"  ✓ MEETS <50ms target")
+            print("  ✓ MEETS <50ms target")
         elif per_chunk_time < 100:
-            print(f"  ✓ ACCEPTABLE (<100ms per chunk)")
+            print("  ✓ ACCEPTABLE (<100ms per chunk)")
 
         # Batch processing should be efficient
         assert per_chunk_time < 150, f"Per-chunk time {per_chunk_time:.2f}ms exceeds 150ms batch threshold"
@@ -355,14 +354,14 @@ class TestEmbeddingPerformance:
 
         per_chunk_time = duration_ms / 100
 
-        print(f"\n[BENCHMARK] Batch embedding (100 chunks):")
+        print("\n[BENCHMARK] Batch embedding (100 chunks):")
         print(f"  - Total time: {duration_ms:.2f}ms")
         print(f"  - Per chunk: {per_chunk_time:.2f}ms")
 
         if per_chunk_time < 50:
-            print(f"  ✓ MEETS <50ms target")
+            print("  ✓ MEETS <50ms target")
         elif per_chunk_time < 100:
-            print(f"  ✓ ACCEPTABLE (<100ms per chunk)")
+            print("  ✓ ACCEPTABLE (<100ms per chunk)")
 
         # Note: Batch processing shows efficiency gains
         assert per_chunk_time < 100, f"Per-chunk time {per_chunk_time:.2f}ms exceeds 100ms batch threshold"
@@ -372,16 +371,16 @@ class TestEmbeddingPerformance:
     def test_model_loading_time(self):
         """Test model loading time (first-time initialization)."""
         start = time.perf_counter()
-        provider = EmbeddingProvider()
+        EmbeddingProvider()
         duration_ms = (time.perf_counter() - start) * 1000
 
-        print(f"\n[BENCHMARK] Model loading:")
+        print("\n[BENCHMARK] Model loading:")
         print(f"  - Time: {duration_ms:.2f}ms ({duration_ms / 1000:.2f}s)")
 
         if duration_ms < 3000:
-            print(f"  ✓ FAST (<3s)")
+            print("  ✓ FAST (<3s)")
         elif duration_ms < 10000:
-            print(f"  ✓ ACCEPTABLE (<10s startup cost)")
+            print("  ✓ ACCEPTABLE (<10s startup cost)")
 
         # Model loading should be reasonable (<10 seconds)
         # This is a one-time cost at application startup
@@ -414,7 +413,7 @@ class TestEmbeddingPerformance:
             avg_time = sum(times) / len(times)
             times_by_size[size] = avg_time
 
-        print(f"\n[BENCHMARK] Performance scaling:")
+        print("\n[BENCHMARK] Performance scaling:")
         for size, avg_time in times_by_size.items():
             print(f"  - {size} lines: {avg_time:.2f}ms")
 
@@ -468,7 +467,7 @@ class TestEmbeddingPerformance:
         total_bytes = sum(emb.nbytes for emb in embeddings)
         total_kb = total_bytes / 1024
 
-        print(f"\n[BENCHMARK] Memory efficiency:")
+        print("\n[BENCHMARK] Memory efficiency:")
         print(f"  - 100 embeddings: {total_kb:.2f} KB")
         print(f"  - Per embedding: {total_kb / 100:.2f} KB")
 

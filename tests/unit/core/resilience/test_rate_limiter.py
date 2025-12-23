@@ -4,8 +4,7 @@ Unit tests for RateLimiter class.
 Tests token bucket rate limiting algorithm.
 """
 
-import time
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -141,7 +140,7 @@ class TestRateLimiterAcquire:
         """Test acquiring multiple tokens."""
         limiter = RateLimiter()
 
-        for i in range(5):
+        for _i in range(5):
             result = limiter.try_acquire()
             assert result is True
 
@@ -274,7 +273,7 @@ class TestRateLimiterIntegration:
         limiter = RateLimiter(requests_per_minute=60)
 
         # Burst: acquire all 60 tokens
-        for i in range(60):
+        for _i in range(60):
             assert limiter.try_acquire() is True
 
         # Next request should fail (no tokens left)
@@ -295,7 +294,7 @@ class TestRateLimiterIntegration:
         mock_sleep.side_effect = sleep_side_effect
 
         # Make 10 requests at exactly 1/second rate
-        for i in range(10):
+        for _i in range(10):
             limiter.wait_if_needed()
             # Advance time by 1 second to refill 1 token
             mock_time.return_value += 1.0

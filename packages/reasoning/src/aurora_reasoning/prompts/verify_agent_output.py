@@ -1,7 +1,7 @@
 """Agent output verification prompt template."""
 
 import json
-from typing import Any, Dict
+from typing import Any
 
 from . import PromptTemplate
 
@@ -59,7 +59,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         return "\n".join(prompt_parts)
 
-    def _format_single_example(self, example: Dict[str, Any]) -> str:
+    def _format_single_example(self, example: dict[str, Any]) -> str:
         """Format a single example for agent output verification."""
         return f"""Subgoal: {example.get('subgoal', '')}
 Agent Output: {json.dumps(example.get('output', {}), indent=2)}

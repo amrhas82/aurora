@@ -1,13 +1,11 @@
 """Unit tests for decompose phase."""
 
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_reasoning.decompose import DecompositionResult
-from aurora_reasoning.llm_client import LLMResponse
 from aurora_reasoning.prompts.examples import Complexity
+
 from aurora_soar.phases.decompose import (
     DecomposePhaseResult,
     _build_context_summary,
@@ -250,7 +248,7 @@ class TestDecomposeQuery:
             "reasoning_chunks": [{"id": 3}],
         }
 
-        result = decompose_query(
+        decompose_query(
             query="Test query",
             context=context,
             complexity="MEDIUM",
@@ -270,7 +268,7 @@ class TestDecomposeQuery:
         context = {"code_chunks": [], "reasoning_chunks": []}
         agents = ["code-analyzer", "test-runner"]
 
-        result = decompose_query(
+        decompose_query(
             query="Test query",
             context=context,
             complexity="COMPLEX",
@@ -289,7 +287,7 @@ class TestDecomposeQuery:
         context = {"code_chunks": [], "reasoning_chunks": []}
         feedback = "Fix the issues identified"
 
-        result = decompose_query(
+        decompose_query(
             query="Test query",
             context=context,
             complexity="MEDIUM",

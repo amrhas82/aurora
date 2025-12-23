@@ -292,7 +292,7 @@ class SQLiteStore(Store):
 
             # Deserialize based on chunk type
             chunk_type = row_data['type']
-            chunk: 'Chunk'
+            chunk: Chunk
             if chunk_type == 'code':
                 chunk = CodeChunk.from_json(full_data)
             elif chunk_type == 'reasoning':
@@ -522,8 +522,8 @@ class SQLiteStore(Store):
     def record_access(
         self,
         chunk_id: ChunkID,
-        access_time: Optional[datetime] = None,
-        context: Optional[str] = None
+        access_time: datetime | None = None,
+        context: str | None = None
     ) -> None:
         """
         Record an access to a chunk for ACT-R activation tracking.
@@ -602,7 +602,7 @@ class SQLiteStore(Store):
     def get_access_history(
         self,
         chunk_id: ChunkID,
-        limit: Optional[int] = None
+        limit: int | None = None
     ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.

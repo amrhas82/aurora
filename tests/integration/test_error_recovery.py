@@ -7,14 +7,14 @@ metrics collection, and alerting working together.
 
 import time
 from unittest.mock import Mock, patch
+
 import pytest
 
 from aurora_core.resilience import (
-    RetryHandler,
+    Alerting,
     MetricsCollector,
     RateLimiter,
-    Alerting,
-    AlertSeverity,
+    RetryHandler,
 )
 
 
@@ -298,9 +298,8 @@ class TestFullResilienceWorkflow:
             rate_limiter.wait_if_needed()
 
             # 2. Execute with retry
-            result = retry_handler.execute(query_call)
+            return retry_handler.execute(query_call)
 
-            return result
 
         start_time = mock_time.return_value
         result = execute_query()
@@ -404,7 +403,7 @@ class TestRecoveryRateVerification:
         successful_recoveries = 0
 
         # 95 recoverable, 5 non-recoverable
-        for i in range(recoverable_operations):
+        for _i in range(recoverable_operations):
             operation = Mock(side_effect=[
                 TimeoutError("Transient"),
                 "success"
@@ -415,7 +414,7 @@ class TestRecoveryRateVerification:
             except Exception:
                 pass
 
-        for i in range(total_operations - recoverable_operations):
+        for _i in range(total_operations - recoverable_operations):
             operation = Mock(side_effect=ConfigurationError("Config error"))
             try:
                 retry_handler.execute(operation)

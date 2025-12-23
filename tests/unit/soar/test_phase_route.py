@@ -5,13 +5,13 @@ import pytest
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 from aurora_soar.phases.route import (
     RouteResult,
-    route_subgoals,
-    _validate_decomposition,
-    _route_single_subgoal,
-    _validate_routing,
     _check_circular_dependencies,
-    _parse_execution_plan,
     _extract_capability_from_agent_id,
+    _parse_execution_plan,
+    _route_single_subgoal,
+    _validate_decomposition,
+    _validate_routing,
+    route_subgoals,
 )
 
 

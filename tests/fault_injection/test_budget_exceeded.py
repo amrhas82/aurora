@@ -5,12 +5,12 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from aurora_reasoning.llm_client import LLMResponse
 
 from aurora_core.budget import CostTracker
 from aurora_core.config.loader import Config
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.store.sqlite import SQLiteStore
-from aurora_reasoning.llm_client import LLMResponse
 from aurora_soar.agent_registry import AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 
@@ -147,7 +147,7 @@ class TestBudgetExceededFaultInjection:
         # First query might succeed (small estimate)
         # But actual cost could push over limit
         try:
-            result = orchestrator.execute("Small query")
+            orchestrator.execute("Small query")
             # If execution succeeded, verify cost was tracked
             status = tracker.get_status()
             assert status["consumed_usd"] > 0.005
@@ -164,7 +164,6 @@ class TestBudgetExceededFaultInjection:
     ):
         """Test that budget error messages contain useful details."""
         # Use isolated temp directory to avoid loading persistent budget data
-        import tempfile
         temp_dir = tempfile.mkdtemp()
         isolated_path = Path(temp_dir) / "isolated_budget_tracker.json"
 
@@ -198,8 +197,8 @@ class TestBudgetExceededFaultInjection:
         self, store, agent_registry, config, mock_llm_client, temp_tracker_path
     ):
         """Test that budget is recovered after monthly rollover."""
-        from unittest.mock import patch
         from datetime import datetime
+        from unittest.mock import patch
 
         # Create tracker in December at limit
         with patch("aurora_core.budget.tracker.datetime") as mock_datetime:
@@ -235,7 +234,7 @@ class TestBudgetExceededFaultInjection:
             assert status["remaining_usd"] == 1.0
 
             # Query should now succeed (budget check should pass)
-            orchestrator2 = SOAROrchestrator(
+            SOAROrchestrator(
                 store=store,
                 agent_registry=agent_registry,
                 config=config,
@@ -256,14 +255,13 @@ class TestBudgetExceededFaultInjection:
         # before any complete, potentially exceeding budget
 
         # Use isolated temp directory to avoid loading persistent budget data
-        import tempfile
         temp_dir = tempfile.mkdtemp()
         isolated_path = Path(temp_dir) / "isolated_budget_tracker.json"
 
         tracker = CostTracker(monthly_limit_usd=1.0, tracker_path=isolated_path)
         tracker.budget.consumed_usd = 0.999  # 99.9% used - any query should exceed
 
-        orchestrator = SOAROrchestrator(
+        SOAROrchestrator(
             store=store,
             agent_registry=agent_registry,
             config=config,
@@ -302,7 +300,6 @@ class TestBudgetExceededFaultInjection:
         config = Config({"budget": {"monthly_limit_usd": 0.0}})
 
         # Use isolated temp directory to avoid loading persistent budget data
-        import tempfile
         temp_dir = tempfile.mkdtemp()
         isolated_path = Path(temp_dir) / "isolated_budget_tracker.json"
 

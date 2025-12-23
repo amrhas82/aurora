@@ -14,18 +14,18 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import click
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
+from aurora_context_code.semantic import EmbeddingProvider, HybridRetriever
 from aurora_core.activation import ActivationEngine
 from aurora_core.store import SQLiteStore
-from aurora_context_code.semantic import EmbeddingProvider, HybridRetriever
+
 
 __all__ = ["memory_command", "format_memory_results"]
 
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 
-def extract_keywords(query: str) -> List[str]:
+def extract_keywords(query: str) -> list[str]:
     """Extract keywords from query for memory search.
 
     Args:
@@ -71,7 +71,7 @@ def extract_keywords(query: str) -> List[str]:
 
 
 def format_memory_results(
-    results: List[Dict[str, Any]],
+    results: list[dict[str, Any]],
     show_content: bool = False,
     max_content_length: int = 200,
 ) -> Table:
@@ -265,10 +265,10 @@ def _truncate_content(content: str, max_length: int) -> str:
 def memory_command(
     query: str,
     max_results: int,
-    chunk_type: Optional[str],
+    chunk_type: str | None,
     min_activation: float,
     show_content: bool,
-    db_path: Optional[Path],
+    db_path: Path | None,
 ) -> None:
     """Search AURORA memory for relevant chunks.
 
@@ -356,7 +356,7 @@ def memory_command(
         avg_semantic = sum(r["semantic_score"] for r in results) / len(results)
         avg_hybrid = sum(r["hybrid_score"] for r in results) / len(results)
 
-        console.print(f"\n[dim]Average scores:[/]")
+        console.print("\n[dim]Average scores:[/]")
         console.print(f"  Activation: {avg_activation:.3f}")
         console.print(f"  Semantic:   {avg_semantic:.3f}")
         console.print(f"  Hybrid:     {avg_hybrid:.3f}")

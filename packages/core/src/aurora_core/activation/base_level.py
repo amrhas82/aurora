@@ -24,7 +24,6 @@ Reference:
 
 import math
 from datetime import datetime, timezone
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -39,7 +38,7 @@ class AccessHistoryEntry(BaseModel):
     timestamp: datetime = Field(
         description="UTC timestamp of the access"
     )
-    context: Optional[str] = Field(
+    context: str | None = Field(
         default=None,
         description="Optional context information for this access"
     )
@@ -95,7 +94,7 @@ class BaseLevelActivation:
         >>> print(f"BLA: {activation:.3f}")
     """
 
-    def __init__(self, config: Optional[BLAConfig] = None):
+    def __init__(self, config: BLAConfig | None = None):
         """Initialize the Base-Level Activation calculator.
 
         Args:
@@ -105,8 +104,8 @@ class BaseLevelActivation:
 
     def calculate(
         self,
-        access_history: List[AccessHistoryEntry],
-        current_time: Optional[datetime] = None
+        access_history: list[AccessHistoryEntry],
+        current_time: datetime | None = None
     ) -> float:
         """Calculate Base-Level Activation for a chunk.
 
@@ -146,18 +145,15 @@ class BaseLevelActivation:
             power_law_sum += math.pow(time_delta, -decay_rate)
 
         # BLA = ln(sum)
-        if power_law_sum > 0:
-            bla = math.log(power_law_sum)
-        else:
-            bla = self.config.default_activation
+        bla = math.log(power_law_sum) if power_law_sum > 0 else self.config.default_activation
 
         # Clamp to minimum activation
         return max(bla, self.config.min_activation)
 
     def calculate_from_timestamps(
         self,
-        timestamps: List[datetime],
-        current_time: Optional[datetime] = None
+        timestamps: list[datetime],
+        current_time: datetime | None = None
     ) -> float:
         """Convenience method to calculate BLA from a list of timestamps.
 
@@ -175,8 +171,8 @@ class BaseLevelActivation:
         self,
         access_count: int,
         last_access: datetime,
-        creation_time: Optional[datetime] = None,
-        current_time: Optional[datetime] = None
+        creation_time: datetime | None = None,
+        current_time: datetime | None = None
     ) -> float:
         """Approximate BLA when only access count and last access are known.
 
@@ -207,7 +203,7 @@ class BaseLevelActivation:
 
         # Generate synthetic access history with exponential spacing
         # (more recent accesses weighted more heavily)
-        history: List[AccessHistoryEntry] = []
+        history: list[AccessHistoryEntry] = []
 
         if access_count == 1:
             history = [AccessHistoryEntry(timestamp=last_access)]
@@ -228,9 +224,9 @@ class BaseLevelActivation:
 
 
 def calculate_bla(
-    access_history: List[AccessHistoryEntry],
+    access_history: list[AccessHistoryEntry],
     decay_rate: float = 0.5,
-    current_time: Optional[datetime] = None
+    current_time: datetime | None = None
 ) -> float:
     """Convenience function for calculating BLA with default configuration.
 

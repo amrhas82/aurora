@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from aurora_reasoning.verify import (
     VerificationOption,
     VerificationResult,
@@ -127,8 +126,7 @@ class TestVerifyDecomposition:
     @pytest.fixture
     def mock_llm_client(self):
         """Create mock LLM client."""
-        client = MagicMock()
-        return client
+        return MagicMock()
 
     @pytest.fixture
     def sample_decomposition(self):
@@ -256,7 +254,7 @@ class TestVerifyDecomposition:
         # generate_json returns dict directly, not LLMResponse
         mock_llm_client.generate_json.return_value = verification_response
 
-        result = verify_decomposition(
+        verify_decomposition(
             llm_client=mock_llm_client,
             query="Test query",
             decomposition=sample_decomposition,
@@ -284,7 +282,7 @@ class TestVerifyDecomposition:
         # generate_json returns dict directly, not LLMResponse
         mock_llm_client.generate_json.return_value = verification_response
 
-        result = verify_decomposition(
+        verify_decomposition(
             llm_client=mock_llm_client,
             query="Test query",
             decomposition=sample_decomposition,

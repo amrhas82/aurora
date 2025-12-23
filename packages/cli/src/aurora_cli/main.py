@@ -7,7 +7,6 @@ including memory commands, headless mode, and auto-escalation.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import click
 from rich.console import Console
@@ -15,6 +14,7 @@ from rich.console import Console
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.memory import memory_command
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
+
 
 __all__ = ["cli"]
 

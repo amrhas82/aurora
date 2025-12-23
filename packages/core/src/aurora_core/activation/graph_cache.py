@@ -22,10 +22,11 @@ Benefits:
 
 import threading
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from aurora_core.activation.spreading import RelationshipGraph, Relationship
+from aurora_core.activation.spreading import RelationshipGraph
 from aurora_core.types import ChunkID
+
 
 if TYPE_CHECKING:
     from aurora_core.activation.spreading import SpreadingActivation
@@ -40,8 +41,8 @@ class RelationshipProvider(Protocol):
 
     def get_all_relationships(
         self,
-        limit: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+        limit: int | None = None
+    ) -> list[dict[str, Any]]:
         """Get all relationships from storage.
 
         Args:
@@ -72,7 +73,7 @@ class GraphCacheConfig:
         rebuild_interval: int = 100,
         max_edges: int = 1000,
         cache_enabled: bool = True,
-        ttl_seconds: Optional[int] = None
+        ttl_seconds: int | None = None
     ):
         """Initialize graph cache configuration.
 
@@ -111,7 +112,7 @@ class RelationshipGraphCache:
     def __init__(
         self,
         provider: RelationshipProvider,
-        config: Optional[GraphCacheConfig] = None
+        config: GraphCacheConfig | None = None
     ):
         """Initialize the graph cache.
 
@@ -123,9 +124,9 @@ class RelationshipGraphCache:
         self.config = config or GraphCacheConfig()
 
         # Cache state
-        self._graph: Optional[RelationshipGraph] = None
+        self._graph: RelationshipGraph | None = None
         self._retrieval_count = 0
-        self._build_time: Optional[datetime] = None
+        self._build_time: datetime | None = None
         self._lock = threading.RLock()
 
         # Statistics
@@ -240,7 +241,7 @@ class RelationshipGraphCache:
             self.invalidate()
             return self.get_graph()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics.
 
         Returns:
@@ -310,7 +311,7 @@ class CachedSpreadingActivation:
         self,
         provider: RelationshipProvider,
         spreading_activation: 'SpreadingActivation',
-        cache_config: Optional[GraphCacheConfig] = None
+        cache_config: GraphCacheConfig | None = None
     ):
         """Initialize cached spreading activation.
 
@@ -324,9 +325,9 @@ class CachedSpreadingActivation:
 
     def calculate(
         self,
-        source_chunks: List[ChunkID],
+        source_chunks: list[ChunkID],
         bidirectional: bool = True
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate spreading activation with caching.
 
         Args:
@@ -338,8 +339,8 @@ class CachedSpreadingActivation:
         """
         graph = self.cache.get_graph()
         # Convert ChunkIDs to strings for spreading calculation
-        source_chunk_strs: List[str] = [str(chunk_id) for chunk_id in source_chunks]
-        result: Dict[str, float] = self.spreading_activation.calculate(
+        source_chunk_strs: list[str] = [str(chunk_id) for chunk_id in source_chunks]
+        result: dict[str, float] = self.spreading_activation.calculate(
             source_chunks=source_chunk_strs,
             graph=graph,
             bidirectional=bidirectional
@@ -348,10 +349,10 @@ class CachedSpreadingActivation:
 
     def get_related_chunks(
         self,
-        source_chunks: List[ChunkID],
+        source_chunks: list[ChunkID],
         min_activation: float = 0.0,
         bidirectional: bool = True
-    ) -> List[tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Get related chunks sorted by spreading activation.
 
         Args:
@@ -364,8 +365,8 @@ class CachedSpreadingActivation:
         """
         graph = self.cache.get_graph()
         # Convert ChunkIDs to strings for spreading calculation
-        source_chunk_strs: List[str] = [str(chunk_id) for chunk_id in source_chunks]
-        result: List[tuple[str, float]] = self.spreading_activation.get_related_chunks(
+        source_chunk_strs: list[str] = [str(chunk_id) for chunk_id in source_chunks]
+        result: list[tuple[str, float]] = self.spreading_activation.get_related_chunks(
             source_chunks=source_chunk_strs,
             graph=graph,
             min_activation=min_activation,
@@ -377,7 +378,7 @@ class CachedSpreadingActivation:
         """Invalidate the relationship graph cache."""
         self.cache.invalidate()
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache performance statistics.
 
         Returns:

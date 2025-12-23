@@ -7,13 +7,12 @@ down complex queries into executable subgoals using LLM-based reasoning.
 from __future__ import annotations
 
 import hashlib
-import json
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from aurora_reasoning import LLMClient
     from aurora_reasoning.decompose import DecompositionResult
-    from aurora_reasoning.prompts.examples import Complexity
 
 __all__ = ["decompose_query", "DecomposePhaseResult"]
 
@@ -40,7 +39,7 @@ class DecomposePhaseResult:
         self.query_hash = query_hash
         self.timing_ms = timing_ms
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "decomposition": self.decomposition.to_dict(),
@@ -51,7 +50,7 @@ class DecomposePhaseResult:
 
 
 # Cache for decomposition results (in-memory, keyed by query hash)
-_decomposition_cache: Dict[str, DecompositionResult] = {}
+_decomposition_cache: dict[str, DecompositionResult] = {}
 
 
 def _compute_query_hash(query: str, complexity: str) -> str:
@@ -70,11 +69,11 @@ def _compute_query_hash(query: str, complexity: str) -> str:
 
 def decompose_query(
     query: str,
-    context: Dict[str, Any],
+    context: dict[str, Any],
     complexity: str,
     llm_client: LLMClient,
-    available_agents: Optional[List[str]] = None,
-    retry_feedback: Optional[str] = None,
+    available_agents: list[str] | None = None,
+    retry_feedback: str | None = None,
     use_cache: bool = True,
 ) -> DecomposePhaseResult:
     """Decompose query into subgoals using LLM reasoning with caching.
@@ -103,6 +102,7 @@ def decompose_query(
         RuntimeError: If LLM call fails
     """
     import time
+
     from aurora_reasoning.decompose import decompose_query as reasoning_decompose
     from aurora_reasoning.prompts.examples import Complexity
 
@@ -155,7 +155,7 @@ def decompose_query(
     )
 
 
-def _build_context_summary(context: Dict[str, Any]) -> str:
+def _build_context_summary(context: dict[str, Any]) -> str:
     """Build a concise summary of retrieved context for decomposition.
 
     Args:

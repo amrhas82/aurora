@@ -4,8 +4,6 @@ Unit tests for MetricsCollector class.
 Tests performance and reliability metrics tracking.
 """
 
-import time
-from unittest.mock import Mock
 
 import pytest
 
@@ -317,7 +315,7 @@ class TestMetricsCollectorEdgeCases:
         collector = MetricsCollector()
 
         # Record 10,000 queries
-        for i in range(10000):
+        for _i in range(10000):
             collector.record_query(success=True, latency=0.1)
 
         metrics = collector.get_metrics()
@@ -328,7 +326,7 @@ class TestMetricsCollectorEdgeCases:
         collector = MetricsCollector()
 
         # Simulate concurrent recording
-        for i in range(100):
+        for _i in range(100):
             collector.record_query(success=True, latency=0.1)
             collector.record_cache_hit()
             collector.record_error("Error")

@@ -1,11 +1,10 @@
 """Unit tests for ConversationLogger."""
 
-import asyncio
 import json
 import re
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -455,7 +454,7 @@ class TestConversationLogger:
             # Verify write was called
             mock_write.assert_called_once()
             call_args = mock_write.call_args
-            written_path = call_args[0][0]
+            call_args[0][0]
             written_content = call_args[0][1]
 
             # Verify content

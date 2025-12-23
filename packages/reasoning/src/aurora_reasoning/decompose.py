@@ -7,10 +7,11 @@ down complex queries into actionable subgoals with agent routing and execution p
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from .prompts.decompose import DecomposePromptTemplate
 from .prompts.examples import Complexity, get_loader
+
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
@@ -33,9 +34,9 @@ class DecompositionResult:
     def __init__(
         self,
         goal: str,
-        subgoals: List[Dict[str, Any]],
-        execution_order: List[Dict[str, Any]],
-        expected_tools: List[str],
+        subgoals: list[dict[str, Any]],
+        execution_order: list[dict[str, Any]],
+        expected_tools: list[str],
         raw_response: str = "",
         prompt_used: str = "",
     ):
@@ -46,7 +47,7 @@ class DecompositionResult:
         self.raw_response = raw_response
         self.prompt_used = prompt_used
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "goal": self.goal,
@@ -56,7 +57,7 @@ class DecompositionResult:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> DecompositionResult:
+    def from_dict(cls, data: dict[str, Any]) -> DecompositionResult:
         """Create from dictionary representation."""
         return cls(
             goal=data["goal"],
@@ -70,9 +71,9 @@ def decompose_query(
     llm_client: LLMClient,
     query: str,
     complexity: Complexity,
-    context_summary: Optional[str] = None,
-    available_agents: Optional[List[str]] = None,
-    retry_feedback: Optional[str] = None,
+    context_summary: str | None = None,
+    available_agents: list[str] | None = None,
+    retry_feedback: str | None = None,
 ) -> DecompositionResult:
     """Decompose a query into actionable subgoals using LLM reasoning.
 

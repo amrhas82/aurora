@@ -25,7 +25,6 @@ Reference:
 """
 
 from collections import defaultdict, deque
-from typing import Dict, List, Optional, Set, Tuple
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -102,8 +101,8 @@ class RelationshipGraph:
     def __init__(self) -> None:
         """Initialize an empty relationship graph."""
         # Adjacency list: chunk_id -> [(target_id, rel_type, weight), ...]
-        self._outgoing: Dict[str, List[Tuple[str, str, float]]] = defaultdict(list)
-        self._incoming: Dict[str, List[Tuple[str, str, float]]] = defaultdict(list)
+        self._outgoing: dict[str, list[tuple[str, str, float]]] = defaultdict(list)
+        self._incoming: dict[str, list[tuple[str, str, float]]] = defaultdict(list)
         self._edge_count = 0
 
     def add_relationship(
@@ -127,7 +126,7 @@ class RelationshipGraph:
         self._incoming[to_chunk].append((from_chunk, rel_type, weight))
         self._edge_count += 1
 
-    def get_outgoing(self, chunk_id: str) -> List[Tuple[str, str, float]]:
+    def get_outgoing(self, chunk_id: str) -> list[tuple[str, str, float]]:
         """Get outgoing relationships from a chunk.
 
         Args:
@@ -138,7 +137,7 @@ class RelationshipGraph:
         """
         return self._outgoing.get(chunk_id, [])
 
-    def get_incoming(self, chunk_id: str) -> List[Tuple[str, str, float]]:
+    def get_incoming(self, chunk_id: str) -> list[tuple[str, str, float]]:
         """Get incoming relationships to a chunk.
 
         Args:
@@ -184,7 +183,7 @@ class SpreadingActivation:
         >>> print(activations)  # {'func_b': 0.7, 'func_c': 0.392}
     """
 
-    def __init__(self, config: Optional[SpreadingConfig] = None):
+    def __init__(self, config: SpreadingConfig | None = None):
         """Initialize the spreading activation calculator.
 
         Args:
@@ -194,10 +193,10 @@ class SpreadingActivation:
 
     def calculate(
         self,
-        source_chunks: List[str],
+        source_chunks: list[str],
         graph: RelationshipGraph,
         bidirectional: bool = True
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate spreading activation from source chunks.
 
         Uses BFS to traverse the relationship graph, accumulating activation
@@ -218,16 +217,16 @@ class SpreadingActivation:
             - Only relationships with weight >= min_weight are followed
         """
         # Track activation for each chunk
-        activations: Dict[str, float] = defaultdict(float)
+        activations: dict[str, float] = defaultdict(float)
 
         # Track visited edges to prevent infinite loops
-        visited_edges: Set[Tuple[str, str]] = set()
+        visited_edges: set[tuple[str, str]] = set()
 
         # BFS queue: (chunk_id, hop_count)
-        queue: deque[Tuple[str, int]] = deque()
+        queue: deque[tuple[str, int]] = deque()
 
         # Initialize queue with source chunks at hop 0
-        visited_chunks: Set[str] = set()
+        visited_chunks: set[str] = set()
         for chunk_id in source_chunks:
             queue.append((chunk_id, 0))
             visited_chunks.add(chunk_id)
@@ -242,7 +241,7 @@ class SpreadingActivation:
                 continue
 
             # Get relationships to traverse
-            edges_to_traverse: List[Tuple[str, str, float]] = []
+            edges_to_traverse: list[tuple[str, str, float]] = []
 
             # Add outgoing edges
             edges_to_traverse.extend(graph.get_outgoing(current_chunk))
@@ -252,7 +251,7 @@ class SpreadingActivation:
                 edges_to_traverse.extend(graph.get_incoming(current_chunk))
 
             # Process each edge
-            for target_chunk, rel_type, weight in edges_to_traverse:
+            for target_chunk, _rel_type, weight in edges_to_traverse:
                 # Skip if edge already visited
                 edge_key = (current_chunk, target_chunk)
                 if edge_key in visited_edges:
@@ -291,10 +290,10 @@ class SpreadingActivation:
 
     def calculate_from_relationships(
         self,
-        source_chunks: List[str],
-        relationships: List[Relationship],
+        source_chunks: list[str],
+        relationships: list[Relationship],
         bidirectional: bool = True
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Convenience method to calculate spreading from a list of relationships.
 
         Builds a graph from the relationships and calculates spreading activation.
@@ -321,11 +320,11 @@ class SpreadingActivation:
 
     def get_related_chunks(
         self,
-        source_chunks: List[str],
+        source_chunks: list[str],
         graph: RelationshipGraph,
         min_activation: float = 0.0,
         bidirectional: bool = True
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Get related chunks sorted by spreading activation.
 
         Args:
@@ -350,11 +349,11 @@ class SpreadingActivation:
 
 
 def calculate_spreading(
-    source_chunks: List[str],
-    relationships: List[Relationship],
+    source_chunks: list[str],
+    relationships: list[Relationship],
     spread_factor: float = 0.7,
     max_hops: int = 3
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Convenience function for calculating spreading activation.
 
     Args:

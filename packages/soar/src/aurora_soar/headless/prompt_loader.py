@@ -44,7 +44,7 @@ Validation Rules:
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class PromptValidationError(Exception):
@@ -72,9 +72,9 @@ class PromptData:
     """
 
     goal: str
-    success_criteria: List[str]
-    constraints: List[str]
-    context: Optional[str] = None
+    success_criteria: list[str]
+    constraints: list[str]
+    context: str | None = None
     raw_content: str = ""
 
 
@@ -207,16 +207,13 @@ class PromptLoader:
         if next_section_start == -1:
             # Look for any level-1 header after current position
             next_match = self.ANY_HEADER.search(content, start)
-            if next_match:
-                end = next_match.start()
-            else:
-                end = len(content)
+            end = next_match.start() if next_match else len(content)
         else:
             end = next_section_start
 
         return content[start:end].strip()
 
-    def _parse_list_items(self, content: str) -> List[str]:
+    def _parse_list_items(self, content: str) -> list[str]:
         """
         Parse markdown list items from content.
 
@@ -238,7 +235,7 @@ class PromptLoader:
                     items.append(item)
         return items
 
-    def _find_all_sections(self, content: str) -> Dict[str, int]:
+    def _find_all_sections(self, content: str) -> dict[str, int]:
         """
         Find all level-1 sections and their positions.
 
@@ -265,7 +262,7 @@ class PromptLoader:
             PromptValidationError: If required sections are missing or invalid
         """
         # Find all sections for proper boundary detection
-        sections = self._find_all_sections(content)
+        self._find_all_sections(content)
 
         # Extract Goal
         goal_content = self._extract_section_content(content, self.GOAL_HEADER)
@@ -353,7 +350,7 @@ class PromptLoader:
         content = self._read_file()
         return self.parse(content)
 
-    def validate_format(self) -> tuple[bool, List[str]]:
+    def validate_format(self) -> tuple[bool, list[str]]:
         """
         Validate prompt file format without raising exceptions.
 
@@ -409,7 +406,7 @@ class PromptLoader:
         is_valid = len(errors) == 0
         return is_valid, errors
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """
         Get a summary of the prompt without full parsing.
 

@@ -6,7 +6,6 @@ serialization, and integration with the chunk system.
 """
 
 from datetime import datetime
-from typing import Any
 
 import pytest
 

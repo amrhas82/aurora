@@ -90,9 +90,8 @@ class CodeContextProvider(ContextProvider):
                 cleaned_words.append(cleaned)
 
         # Remove stopwords and empty strings
-        keywords = [w for w in cleaned_words if w and w not in CodeContextProvider.STOPWORDS]
+        return [w for w in cleaned_words if w and w not in CodeContextProvider.STOPWORDS]
 
-        return keywords
 
     @staticmethod
     def _score_chunk(chunk: Chunk, keywords: list[str]) -> float:
@@ -137,9 +136,8 @@ class CodeContextProvider(ContextProvider):
         matches = sum(1 for keyword in keywords if keyword.lower() in searchable_text)
 
         # Calculate score as ratio
-        score = matches / len(keywords)
+        return matches / len(keywords)
 
-        return score
 
     def __init__(self, store: Store, parser_registry: 'ParserRegistry'):
         """

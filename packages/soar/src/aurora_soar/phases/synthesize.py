@@ -12,8 +12,10 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_reasoning import synthesize_results as reasoning_synthesize
 
+
 if TYPE_CHECKING:
     from aurora_reasoning import LLMClient
+
     from aurora_soar.phases.collect import CollectResult
 
 logger = logging.getLogger(__name__)

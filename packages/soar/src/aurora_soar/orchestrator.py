@@ -30,10 +30,11 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+from aurora_reasoning.decompose import DecompositionResult
+
 from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
-from aurora_core.logging import ConversationLogger, VerbosityLevel
-from aurora_reasoning.decompose import DecompositionResult
+from aurora_core.logging import ConversationLogger
 from aurora_soar.phases import (
     assess,
     collect,
@@ -49,9 +50,10 @@ from aurora_soar.phases.respond import Verbosity
 
 
 if TYPE_CHECKING:
+    from aurora_reasoning.llm_client import LLMClient
+
     from aurora_core.config.loader import Config
     from aurora_core.store.base import Store
-    from aurora_reasoning.llm_client import LLMClient
     from aurora_soar.agent_registry import AgentRegistry
 
 
@@ -394,10 +396,9 @@ class SOAROrchestrator:
         Returns RouteResult object (not dict) for use by phase 6.
         """
         logger.info("Phase 5: Routing to agents")
-        start_time = time.time()
+        time.time()
         try:
-            result = route.route_subgoals(decomposition, self.agent_registry)
-            return result
+            return route.route_subgoals(decomposition, self.agent_registry)
         except Exception as e:
             logger.error(f"Phase 5 failed: {e}")
             # Return empty RouteResult on failure
@@ -416,11 +417,10 @@ class SOAROrchestrator:
         Returns CollectResult object (not dict) for use by phase 7.
         """
         logger.info("Phase 6: Executing agents")
-        start_time = time.time()
+        time.time()
         try:
             # Execute agents asynchronously
-            result = asyncio.run(collect.execute_agents(routing, context))
-            return result
+            return asyncio.run(collect.execute_agents(routing, context))
         except Exception as e:
             logger.error(f"Phase 6 failed: {e}")
             # Return empty CollectResult on failure
@@ -475,7 +475,7 @@ class SOAROrchestrator:
         logger.info("Phase 8: Recording pattern")
         start_time = time.time()
         try:
-            result = record.record_pattern(
+            return record.record_pattern(
                 store=self.store,
                 query=query,
                 complexity=complexity,
@@ -483,7 +483,6 @@ class SOAROrchestrator:
                 collect_result=collect_result,
                 synthesis_result=synthesis_result,
             )
-            return result
         except Exception as e:
             logger.error(f"Phase 8 failed: {e}")
             return record.RecordResult(
@@ -545,8 +544,8 @@ class SOAROrchestrator:
         start_time = time.time()
 
         # For SIMPLE queries, we skip decomposition and call solving LLM directly
-        from aurora_soar.phases.synthesize import SynthesisResult
         from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
 
         try:
             # Build prompt with context
@@ -646,8 +645,8 @@ class SOAROrchestrator:
             Error response with partial results
         """
         logger.error("Returning partial results due to verification failure")
-        from aurora_soar.phases.synthesize import SynthesisResult
         from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
 
         synthesis = SynthesisResult(
             answer="Unable to decompose query successfully. Please rephrase or simplify.",
@@ -686,8 +685,8 @@ class SOAROrchestrator:
             Error response
         """
         logger.error(f"Handling execution error: {error}")
-        from aurora_soar.phases.synthesize import SynthesisResult
         from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
 
         synthesis = SynthesisResult(
             answer=f"An error occurred during query processing: {str(error)}",

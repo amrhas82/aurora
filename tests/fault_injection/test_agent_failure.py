@@ -8,17 +8,16 @@ Tests how the system handles various agent failure scenarios:
 - Partial results with degraded functionality
 """
 
-import asyncio
 
 import pytest
 
 from aurora_soar.agent_registry import AgentInfo
-from aurora_soar.phases.route import RouteResult
 from aurora_soar.phases.collect import (
     AgentOutput,
-    execute_agents,
     _execute_single_subgoal,
+    execute_agents,
 )
+from aurora_soar.phases.route import RouteResult
 
 
 @pytest.fixture
@@ -327,7 +326,7 @@ class TestQueryTimeout:
         # Note: With fast mock agents (0.1s), hard to trigger query timeout
         # This test validates the structure exists
         try:
-            result = await execute_agents(
+            await execute_agents(
                 routing, {}, agent_timeout=1.0, query_timeout=0.001
             )
             # May succeed if mock agent is very fast

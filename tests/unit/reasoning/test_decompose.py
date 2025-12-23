@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_reasoning.decompose import (
     DecompositionResult,
     decompose_query,
@@ -48,8 +47,7 @@ class TestDecomposeQuery:
     @pytest.fixture
     def mock_llm_client(self):
         """Create mock LLM client."""
-        client = MagicMock()
-        return client
+        return MagicMock()
 
     @pytest.fixture
     def valid_decomposition_response(self):
@@ -146,7 +144,7 @@ class TestDecomposeQuery:
         # generate_json returns dict directly, not LLMResponse
         mock_llm_client.generate_json.return_value = valid_decomposition_response
 
-        result = decompose_query(
+        decompose_query(
             llm_client=mock_llm_client,
             query="Test query",
             complexity=Complexity.SIMPLE,
@@ -162,7 +160,7 @@ class TestDecomposeQuery:
         # generate_json returns dict directly, not LLMResponse
         mock_llm_client.generate_json.return_value = valid_decomposition_response
 
-        result = decompose_query(
+        decompose_query(
             llm_client=mock_llm_client,
             query="Test query",
             complexity=Complexity.SIMPLE,
@@ -179,7 +177,7 @@ class TestDecomposeQuery:
         # generate_json returns dict directly, not LLMResponse
         mock_llm_client.generate_json.return_value = valid_decomposition_response
 
-        result = decompose_query(
+        decompose_query(
             llm_client=mock_llm_client,
             query="Test query",
             complexity=Complexity.SIMPLE,

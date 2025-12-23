@@ -29,18 +29,14 @@ Each test case documents:
 """
 
 import math
-import pytest
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from aurora_core.activation.base_level import (
+    AccessHistoryEntry,
     BaseLevelActivation,
     BLAConfig,
-    AccessHistoryEntry,
-)
-from aurora_core.activation.spreading import (
-    SpreadingActivation,
-    SpreadingConfig,
-    RelationshipGraph,
 )
 from aurora_core.activation.context_boost import (
     ContextBoost,
@@ -51,8 +47,13 @@ from aurora_core.activation.decay import (
     DecayConfig,
 )
 from aurora_core.activation.engine import (
-    ActivationEngine,
     ActivationConfig,
+    ActivationEngine,
+)
+from aurora_core.activation.spreading import (
+    RelationshipGraph,
+    SpreadingActivation,
+    SpreadingConfig,
 )
 
 
@@ -179,10 +180,10 @@ class TestBaseLevelActivationLiterature:
 
         # Verify power law: more practice = higher activation
         assert activation_4 > activation_1, (
-            f"4 accesses should yield higher activation than 1"
+            "4 accesses should yield higher activation than 1"
         )
         assert activation_16 > activation_4, (
-            f"16 accesses should yield higher activation than 4"
+            "16 accesses should yield higher activation than 4"
         )
 
         # Verify diminishing returns: each quadrupling adds the same increment

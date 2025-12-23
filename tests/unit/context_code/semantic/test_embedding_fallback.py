@@ -17,11 +17,13 @@ Test scenarios:
 - Activation-only fallback produces valid results
 """
 
+from unittest.mock import Mock
+
 import numpy as np
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+
 from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
+from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
 
 # Mock classes for testing

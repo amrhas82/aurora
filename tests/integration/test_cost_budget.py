@@ -1,16 +1,15 @@
 """Integration test for cost tracking and budget enforcement."""
 
-import tempfile
-from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
+import contextlib
+from unittest.mock import Mock
 
 import pytest
+from aurora_reasoning.llm_client import LLMResponse
 
 from aurora_core.budget import CostTracker
 from aurora_core.config.loader import Config
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.store.sqlite import SQLiteStore
-from aurora_reasoning.llm_client import LLMResponse
 from aurora_soar.agent_registry import AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 
@@ -102,7 +101,7 @@ class TestCostBudgetIntegration:
         # Execute query
         try:
             result = orchestrator.execute("What is 2+2?", verbosity="NORMAL")
-        except Exception as e:
+        except Exception:
             # Some phases might fail due to mocking, that's OK
             # We're mainly testing cost tracking integration
             pass
@@ -188,10 +187,8 @@ class TestCostBudgetIntegration:
         }
 
         # Execute query (will fail in later phases due to mocking, but that's OK)
-        try:
+        with contextlib.suppress(Exception):
             orchestrator.execute("Test query", verbosity="NORMAL")
-        except Exception:
-            pass
 
         # Verify multiple costs were tracked
         if costs:

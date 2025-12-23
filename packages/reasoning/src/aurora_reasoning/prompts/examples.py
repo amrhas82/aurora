@@ -1,10 +1,9 @@
 """Few-shot examples loader for AURORA reasoning prompts."""
 
 import json
-import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class Complexity(str, Enum):
@@ -25,7 +24,7 @@ class ExamplesLoader:
     - CRITICAL: 6 examples
     """
 
-    def __init__(self, examples_dir: Optional[Path] = None):
+    def __init__(self, examples_dir: Path | None = None):
         """Initialize examples loader.
 
         Args:
@@ -38,9 +37,9 @@ class ExamplesLoader:
             examples_dir = pkg_root / "examples"
 
         self.examples_dir = Path(examples_dir)
-        self._cache: Dict[str, List[Dict[str, Any]]] = {}
+        self._cache: dict[str, list[dict[str, Any]]] = {}
 
-    def load_examples(self, filename: str) -> List[Dict[str, Any]]:
+    def load_examples(self, filename: str) -> list[dict[str, Any]]:
         """Load examples from JSON file.
 
         Args:
@@ -62,7 +61,7 @@ class ExamplesLoader:
             raise FileNotFoundError(f"Examples file not found: {filepath}")
 
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 examples = json.load(f)
 
             if not isinstance(examples, list):
@@ -79,7 +78,7 @@ class ExamplesLoader:
         self,
         filename: str,
         complexity: Complexity,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get appropriate number of examples based on complexity.
 
         Args:
@@ -107,9 +106,9 @@ class ExamplesLoader:
     def get_examples_by_tags(
         self,
         filename: str,
-        tags: List[str],
+        tags: list[str],
         max_count: int = 6,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get examples filtered by tags.
 
         Args:
@@ -135,7 +134,7 @@ class ExamplesLoader:
 
 
 # Global singleton instance
-_default_loader: Optional[ExamplesLoader] = None
+_default_loader: ExamplesLoader | None = None
 
 
 def get_loader() -> ExamplesLoader:

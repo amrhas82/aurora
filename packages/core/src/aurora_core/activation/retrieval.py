@@ -20,12 +20,12 @@ Reference:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Protocol, Set, Tuple
+from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
 
-from aurora_core.activation.engine import ActivationEngine, ActivationComponents
 from aurora_core.activation.base_level import AccessHistoryEntry
+from aurora_core.activation.engine import ActivationComponents, ActivationEngine
 from aurora_core.activation.spreading import RelationshipGraph
 from aurora_core.types import ChunkID
 
@@ -43,17 +43,17 @@ class ChunkData(Protocol):
         ...
 
     @property
-    def access_history(self) -> List[AccessHistoryEntry]:
+    def access_history(self) -> list[AccessHistoryEntry]:
         """List of past accesses."""
         ...
 
     @property
-    def last_access(self) -> Optional[datetime]:
+    def last_access(self) -> datetime | None:
         """Most recent access timestamp."""
         ...
 
     @property
-    def keywords(self) -> Set[str]:
+    def keywords(self) -> set[str]:
         """Keywords extracted from chunk content."""
         ...
 
@@ -97,7 +97,7 @@ class RetrievalResult(BaseModel):
     """
     chunk_id: ChunkID = Field(description="Chunk identifier")
     activation: float = Field(description="Total activation score")
-    components: Optional[ActivationComponents] = Field(
+    components: ActivationComponents | None = Field(
         default=None,
         description="Activation component breakdown"
     )
@@ -140,7 +140,7 @@ class ActivationRetriever:
     def __init__(
         self,
         engine: ActivationEngine,
-        config: Optional[RetrievalConfig] = None
+        config: RetrievalConfig | None = None
     ):
         """Initialize the activation retriever.
 
@@ -153,13 +153,13 @@ class ActivationRetriever:
 
     def retrieve(
         self,
-        candidates: List[ChunkData],
-        query_keywords: Optional[Set[str]] = None,
-        spreading_scores: Optional[Dict[ChunkID, float]] = None,
-        threshold: Optional[float] = None,
-        max_results: Optional[int] = None,
-        current_time: Optional[datetime] = None
-    ) -> List[RetrievalResult]:
+        candidates: list[ChunkData],
+        query_keywords: set[str] | None = None,
+        spreading_scores: dict[ChunkID, float] | None = None,
+        threshold: float | None = None,
+        max_results: int | None = None,
+        current_time: datetime | None = None
+    ) -> list[RetrievalResult]:
         """Retrieve chunks based on activation scores.
 
         Args:
@@ -188,7 +188,7 @@ class ActivationRetriever:
             spreading_scores = {}
 
         # Calculate activation for all candidates
-        results: List[RetrievalResult] = []
+        results: list[RetrievalResult] = []
 
         for chunk in candidates:
             # Get spreading activation for this chunk
@@ -228,14 +228,14 @@ class ActivationRetriever:
 
     def retrieve_with_graph(
         self,
-        candidates: List[ChunkData],
-        query_keywords: Optional[Set[str]] = None,
-        source_chunks: Optional[List[ChunkID]] = None,
-        relationship_graph: Optional[RelationshipGraph] = None,
-        threshold: Optional[float] = None,
-        max_results: Optional[int] = None,
-        current_time: Optional[datetime] = None
-    ) -> List[RetrievalResult]:
+        candidates: list[ChunkData],
+        query_keywords: set[str] | None = None,
+        source_chunks: list[ChunkID] | None = None,
+        relationship_graph: RelationshipGraph | None = None,
+        threshold: float | None = None,
+        max_results: int | None = None,
+        current_time: datetime | None = None
+    ) -> list[RetrievalResult]:
         """Retrieve chunks with automatic spreading activation calculation.
 
         This is a convenience method that calculates spreading activation
@@ -262,7 +262,7 @@ class ActivationRetriever:
         # Calculate spreading activation if we have the necessary data
         if source_chunks and relationship_graph:
             # Convert ChunkIDs to strings for spreading calculation
-            source_chunk_strs: List[str] = [str(chunk_id) for chunk_id in source_chunks]
+            source_chunk_strs: list[str] = [str(chunk_id) for chunk_id in source_chunks]
             raw_scores = self.engine.calculate_spreading_only(
                 source_chunks=source_chunk_strs,
                 graph=relationship_graph,
@@ -282,12 +282,12 @@ class ActivationRetriever:
 
     def retrieve_top_n(
         self,
-        candidates: List[ChunkData],
-        query_keywords: Optional[Set[str]] = None,
-        spreading_scores: Optional[Dict[ChunkID, float]] = None,
+        candidates: list[ChunkData],
+        query_keywords: set[str] | None = None,
+        spreading_scores: dict[ChunkID, float] | None = None,
         n: int = 10,
-        current_time: Optional[datetime] = None
-    ) -> List[RetrievalResult]:
+        current_time: datetime | None = None
+    ) -> list[RetrievalResult]:
         """Retrieve top N chunks by activation (no threshold filtering).
 
         Args:
@@ -311,11 +311,11 @@ class ActivationRetriever:
 
     def calculate_activations(
         self,
-        candidates: List[ChunkData],
-        query_keywords: Optional[Set[str]] = None,
-        spreading_scores: Optional[Dict[ChunkID, float]] = None,
-        current_time: Optional[datetime] = None
-    ) -> Dict[ChunkID, ActivationComponents]:
+        candidates: list[ChunkData],
+        query_keywords: set[str] | None = None,
+        spreading_scores: dict[ChunkID, float] | None = None,
+        current_time: datetime | None = None
+    ) -> dict[ChunkID, ActivationComponents]:
         """Calculate activation for all candidates without filtering.
 
         Useful for debugging and analysis.
@@ -355,9 +355,9 @@ class ActivationRetriever:
     def explain_retrieval(
         self,
         chunk: ChunkData,
-        query_keywords: Optional[Set[str]] = None,
+        query_keywords: set[str] | None = None,
         spreading_score: float = 0.0,
-        current_time: Optional[datetime] = None
+        current_time: datetime | None = None
     ) -> dict[str, Any]:
         """Explain why a chunk was or wasn't retrieved.
 
@@ -418,7 +418,7 @@ class BatchRetriever:
     def __init__(
         self,
         engine: ActivationEngine,
-        config: Optional[RetrievalConfig] = None,
+        config: RetrievalConfig | None = None,
         batch_size: int = 100
     ):
         """Initialize the batch retriever.
@@ -433,13 +433,13 @@ class BatchRetriever:
 
     def retrieve_batched(
         self,
-        candidates: List[ChunkData],
-        query_keywords: Optional[Set[str]] = None,
-        spreading_scores: Optional[Dict[ChunkID, float]] = None,
-        threshold: Optional[float] = None,
-        max_results: Optional[int] = None,
-        current_time: Optional[datetime] = None
-    ) -> List[RetrievalResult]:
+        candidates: list[ChunkData],
+        query_keywords: set[str] | None = None,
+        spreading_scores: dict[ChunkID, float] | None = None,
+        threshold: float | None = None,
+        max_results: int | None = None,
+        current_time: datetime | None = None
+    ) -> list[RetrievalResult]:
         """Retrieve chunks in batches.
 
         Args:
@@ -453,7 +453,7 @@ class BatchRetriever:
         Returns:
             Combined results from all batches, sorted by activation
         """
-        all_results: List[RetrievalResult] = []
+        all_results: list[RetrievalResult] = []
 
         # Process in batches
         for i in range(0, len(candidates), self.batch_size):

@@ -17,14 +17,13 @@ Test Strategy:
 - Verify performance targets are met consistently
 """
 
+
 import pytest
-from typing import List, Dict
 
 from aurora_core.activation.spreading import (
+    RelationshipGraph,
     SpreadingActivation,
     SpreadingConfig,
-    RelationshipGraph,
-    Relationship,
 )
 
 
@@ -70,7 +69,7 @@ def create_tree_graph(depth: int, branching_factor: int) -> RelationshipGraph:
         if current_depth >= depth:
             return
 
-        for i in range(branching_factor):
+        for _i in range(branching_factor):
             node_counter += 1
             child_id = f"chunk_{node_counter:04d}"
             graph.add_relationship(parent_id, child_id, "calls")

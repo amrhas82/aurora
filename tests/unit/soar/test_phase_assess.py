@@ -1,14 +1,13 @@
 """Unit tests for Phase 1: Complexity Assessment."""
 
-import pytest
 
 from aurora_soar.phases.assess import (
-    _assess_tier1_keyword,
-    assess_complexity,
-    SIMPLE_KEYWORDS,
-    MEDIUM_KEYWORDS,
     COMPLEX_KEYWORDS,
     CRITICAL_KEYWORDS,
+    MEDIUM_KEYWORDS,
+    SIMPLE_KEYWORDS,
+    _assess_tier1_keyword,
+    assess_complexity,
 )
 
 

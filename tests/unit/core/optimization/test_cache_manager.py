@@ -10,15 +10,14 @@ Tests cover:
 - Memory usage estimation
 """
 
-import pytest
 import time
-from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock
+
+import pytest
 
 from aurora_core.optimization.cache_manager import (
+    CacheEntry,
     CacheManager,
     CacheStats,
-    CacheEntry,
     LRUCache,
 )
 

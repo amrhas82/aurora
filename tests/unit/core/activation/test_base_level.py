@@ -9,13 +9,14 @@ Tests the ACT-R BLA calculation including:
 """
 
 import math
-import pytest
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from aurora_core.activation.base_level import (
+    AccessHistoryEntry,
     BaseLevelActivation,
     BLAConfig,
-    AccessHistoryEntry,
     calculate_bla,
 )
 

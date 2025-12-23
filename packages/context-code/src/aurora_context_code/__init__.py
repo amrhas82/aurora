@@ -13,10 +13,11 @@ __version__ = "0.1.0"
 # Re-export semantic components for convenience
 from aurora_context_code.semantic import (
     EmbeddingProvider,
-    HybridRetriever,
     HybridConfig,
+    HybridRetriever,
     cosine_similarity,
 )
+
 
 __all__ = [
     "EmbeddingProvider",

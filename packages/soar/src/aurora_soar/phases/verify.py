@@ -6,14 +6,15 @@ decompositions with self-verification or adversarial approaches.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from aurora_reasoning.verify import VerificationOption
+
 
 if TYPE_CHECKING:
     from aurora_reasoning import LLMClient
     from aurora_reasoning.decompose import DecompositionResult
-    from aurora_reasoning.verify import VerificationResult, VerificationVerdict
+    from aurora_reasoning.verify import VerificationResult
 
 __all__ = ["verify_decomposition", "VerifyPhaseResult"]
 
@@ -34,7 +35,7 @@ class VerifyPhaseResult:
         self,
         verification: VerificationResult,
         retry_count: int = 0,
-        all_attempts: Optional[List[VerificationResult]] = None,
+        all_attempts: list[VerificationResult] | None = None,
         final_verdict: str = "PASS",
         timing_ms: float = 0.0,
         method: str = "self",
@@ -46,7 +47,7 @@ class VerifyPhaseResult:
         self.timing_ms = timing_ms
         self.method = method
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "verification": self.verification.to_dict(),
@@ -63,8 +64,8 @@ def verify_decomposition(
     complexity: str,
     llm_client: LLMClient,
     query: str,
-    context_summary: Optional[str] = None,
-    available_agents: Optional[List[str]] = None,
+    context_summary: str | None = None,
+    available_agents: list[str] | None = None,
     max_retries: int = 2,
 ) -> VerifyPhaseResult:
     """Verify decomposition quality with retry loop.
@@ -96,6 +97,7 @@ def verify_decomposition(
         RuntimeError: If LLM call fails
     """
     import time
+
     from aurora_reasoning.verify import VerificationOption, VerificationVerdict
     from aurora_reasoning.verify import verify_decomposition as reasoning_verify
 
@@ -108,7 +110,7 @@ def verify_decomposition(
     verification_method = "adversarial" if verification_option == VerificationOption.ADVERSARIAL else "self"
 
     # Track all attempts
-    all_attempts: List[VerificationResult] = []
+    all_attempts: list[VerificationResult] = []
     retry_count = 0
 
     # Initial verification
@@ -209,14 +211,13 @@ def _select_verification_option(complexity: str) -> VerificationOption:
         # SIMPLE queries should bypass verification, but use SELF if called
         return VerificationOption.SELF
 
-    elif complexity_upper == "MEDIUM":
+    if complexity_upper == "MEDIUM":
         return VerificationOption.SELF
 
-    elif complexity_upper in ["COMPLEX", "CRITICAL"]:
+    if complexity_upper in ["COMPLEX", "CRITICAL"]:
         return VerificationOption.ADVERSARIAL
 
-    else:
-        raise ValueError(f"Invalid complexity level: {complexity}")
+    raise ValueError(f"Invalid complexity level: {complexity}")
 
 
 def _generate_retry_feedback(

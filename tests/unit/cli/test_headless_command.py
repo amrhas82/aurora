@@ -5,14 +5,12 @@ Tests the `aur headless` command that runs autonomous experiments.
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from click.testing import CliRunner
-
 from aurora_cli.main import cli
+from click.testing import CliRunner
 
 
 @pytest.fixture

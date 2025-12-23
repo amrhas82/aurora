@@ -10,16 +10,14 @@ Tests cover:
 - Statistics tracking
 """
 
-import pytest
 import time
-from unittest.mock import Mock
+
+import pytest
 
 from aurora_core.optimization.parallel_executor import (
-    ParallelAgentExecutor,
-    AgentTask,
-    AgentResult,
     AgentPriority,
-    ExecutionStats,
+    AgentTask,
+    ParallelAgentExecutor,
 )
 
 

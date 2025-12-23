@@ -6,10 +6,10 @@ with traceability to sources and verification of synthesis quality.
 
 from __future__ import annotations
 
-import json
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from .prompts.verify_synthesis import VerifySynthesisPromptTemplate
+
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
@@ -33,8 +33,8 @@ class SynthesisResult:
         self,
         answer: str,
         confidence: float,
-        traceability: List[Dict[str, Any]],
-        metadata: Optional[Dict[str, Any]] = None,
+        traceability: list[dict[str, Any]],
+        metadata: dict[str, Any] | None = None,
         raw_response: str = "",
         prompt_used: str = "",
     ):
@@ -45,7 +45,7 @@ class SynthesisResult:
         self.raw_response = raw_response
         self.prompt_used = prompt_used
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "answer": self.answer,
@@ -55,7 +55,7 @@ class SynthesisResult:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> SynthesisResult:
+    def from_dict(cls, data: dict[str, Any]) -> SynthesisResult:
         """Create from dictionary representation."""
         return cls(
             answer=data["answer"],
@@ -68,8 +68,8 @@ class SynthesisResult:
 def synthesize_results(
     llm_client: LLMClient,
     query: str,
-    agent_outputs: List[Dict[str, Any]],
-    decomposition: Dict[str, Any],
+    agent_outputs: list[dict[str, Any]],
+    decomposition: dict[str, Any],
     max_retries: int = 2,
 ) -> SynthesisResult:
     """Synthesize agent outputs into a coherent final answer.
@@ -212,9 +212,9 @@ def synthesize_results(
 def verify_synthesis(
     llm_client: LLMClient,
     query: str,
-    agent_outputs: List[Dict[str, Any]],
+    agent_outputs: list[dict[str, Any]],
     synthesis_answer: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Verify synthesis quality using LLM-based verification.
 
     This function checks:
@@ -313,8 +313,8 @@ Do NOT output JSON. Output natural language with the above structure."""
 def _build_synthesis_user_prompt(
     query: str,
     goal: str,
-    summaries: List[Dict[str, Any]],
-    retry_feedback: Optional[str] = None,
+    summaries: list[dict[str, Any]],
+    retry_feedback: str | None = None,
 ) -> str:
     """Build user prompt for synthesis."""
     prompt_parts = []
@@ -341,7 +341,7 @@ def _build_synthesis_user_prompt(
     return "".join(prompt_parts)
 
 
-def _parse_synthesis_response(response: str) -> Dict[str, Any]:
+def _parse_synthesis_response(response: str) -> dict[str, Any]:
     """Parse synthesis response into structured format.
 
     Args:
@@ -392,7 +392,7 @@ def _parse_synthesis_response(response: str) -> Dict[str, Any]:
     }
 
 
-def _validate_traceability(answer: str, summaries: List[Dict[str, Any]]) -> None:
+def _validate_traceability(answer: str, summaries: list[dict[str, Any]]) -> None:
     """Validate that answer has traceability to agent outputs.
 
     Args:
@@ -417,7 +417,7 @@ def _validate_traceability(answer: str, summaries: List[Dict[str, Any]]) -> None
         )
 
 
-def _extract_traceability(answer: str, summaries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _extract_traceability(answer: str, summaries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Extract traceability mappings from answer.
 
     Args:

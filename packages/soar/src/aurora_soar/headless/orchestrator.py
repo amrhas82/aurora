@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .git_enforcer import GitBranchError, GitEnforcer, GitEnforcerConfig
 from .prompt_loader import PromptData, PromptLoader, PromptValidationError
@@ -54,7 +54,6 @@ from .scratchpad_manager import (
     ScratchpadConfig,
     ScratchpadManager,
     ScratchpadStatus,
-    TerminationSignal,
 )
 
 
@@ -140,7 +139,7 @@ class HeadlessResult:
     total_cost: float
     duration_seconds: float
     scratchpad_path: str
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class HeadlessOrchestrator:
@@ -197,7 +196,7 @@ class HeadlessOrchestrator:
         prompt_path: str | Path,
         scratchpad_path: str | Path,
         soar_orchestrator: Any,  # Type: SOAROrchestrator (avoiding circular import)
-        config: Optional[HeadlessConfig] = None,
+        config: HeadlessConfig | None = None,
     ):
         """
         Initialize HeadlessOrchestrator.
@@ -232,10 +231,10 @@ class HeadlessOrchestrator:
         )
 
         # Execution state
-        self.prompt_data: Optional[PromptData] = None
+        self.prompt_data: PromptData | None = None
         self.current_iteration: int = 0
         self.total_cost: float = 0.0
-        self.start_time: Optional[float] = None
+        self.start_time: float | None = None
 
     def _validate_safety(self) -> None:
         """
@@ -332,17 +331,16 @@ class HeadlessOrchestrator:
             # Extract status from response
             if "GOAL_ACHIEVED" in response:
                 return "GOAL_ACHIEVED"
-            elif "BLOCKED" in response:
+            if "BLOCKED" in response:
                 return "BLOCKED"
-            else:
-                return "IN_PROGRESS"
+            return "IN_PROGRESS"
 
         except Exception as e:
             # If LLM evaluation fails, assume in progress
             print(f"Warning: Goal evaluation failed: {e}")
             return "IN_PROGRESS"
 
-    def _execute_iteration(self, iteration: int) -> Dict[str, Any]:
+    def _execute_iteration(self, iteration: int) -> dict[str, Any]:
         """
         Execute a single SOAR iteration.
 
@@ -357,7 +355,7 @@ class HeadlessOrchestrator:
         query = self._build_iteration_query(iteration)
 
         # Execute SOAR pipeline
-        result: Dict[str, Any] = self.soar_orchestrator.execute(
+        result: dict[str, Any] = self.soar_orchestrator.execute(
             query=query,
             verbosity="NORMAL",
             max_cost_usd=self.config.budget_limit - self.total_cost,
@@ -381,7 +379,7 @@ class HeadlessOrchestrator:
         # Read recent scratchpad entries for context
         scratchpad_content = self.scratchpad_manager.read()
 
-        query = f"""# Autonomous Experiment - Iteration {iteration}
+        return f"""# Autonomous Experiment - Iteration {iteration}
 
 **Goal**: {self.prompt_data.goal}
 
@@ -401,7 +399,6 @@ What is the next action to move closer to achieving the goal? Consider:
 
 Provide a specific, actionable next step.
 """
-        return query
 
     def _run_main_loop(self) -> TerminationReason:
         """
@@ -464,7 +461,7 @@ Provide a specific, actionable next step.
                 self.scratchpad_manager.update_status(ScratchpadStatus.GOAL_ACHIEVED)
                 return TerminationReason.GOAL_ACHIEVED
 
-            elif evaluation == "BLOCKED":
+            if evaluation == "BLOCKED":
                 self.scratchpad_manager.update_status(ScratchpadStatus.BLOCKED)
                 return TerminationReason.BLOCKED
 
@@ -555,7 +552,7 @@ Provide a specific, actionable next step.
             # 6. Build result
             goal_achieved = termination_reason == TerminationReason.GOAL_ACHIEVED
 
-            print(f"\n=== Experiment Complete ===")
+            print("\n=== Experiment Complete ===")
             print(f"Termination: {termination_reason.value}")
             print(f"Goal Achieved: {goal_achieved}")
             print(f"Iterations: {self.current_iteration}")

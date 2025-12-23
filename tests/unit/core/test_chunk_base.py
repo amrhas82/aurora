@@ -128,7 +128,7 @@ class TestChunkInterface:
 
         assert chunk != "test-id"
         assert chunk != 123
-        assert chunk != None
+        assert chunk is not None
         assert chunk != {"id": "test-id"}
 
     def test_chunk_hash(self):
@@ -188,7 +188,7 @@ class TestChunkAbstractMethods:
         """Test that Chunk cannot be instantiated directly."""
         with pytest.raises(TypeError):
             # This should fail because Chunk has abstract methods
-            chunk = Chunk("test-id", "test-type")  # type: ignore
+            Chunk("test-id", "test-type")  # type: ignore
 
 
 class InvalidChunk(Chunk):
@@ -207,4 +207,4 @@ class TestChunkInheritance:
         """Test that subclass must implement all abstract methods."""
         with pytest.raises(TypeError):
             # Should fail because InvalidChunk doesn't implement all methods
-            chunk = InvalidChunk("test-id", "test-type")  # type: ignore
+            InvalidChunk("test-id", "test-type")  # type: ignore

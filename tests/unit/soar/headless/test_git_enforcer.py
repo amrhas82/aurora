@@ -12,14 +12,14 @@ Tests git branch validation and safety checks including:
 
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from aurora_soar.headless.git_enforcer import (
+    GitBranchError,
     GitEnforcer,
     GitEnforcerConfig,
-    GitBranchError,
 )
 
 

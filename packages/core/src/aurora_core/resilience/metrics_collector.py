@@ -4,9 +4,8 @@ MetricsCollector for tracking performance and reliability metrics.
 Implements metrics collection following PRD Section 5.2.
 """
 
-import copy
-from typing import Dict, Any
 from collections import defaultdict
+from typing import Any
 
 
 class MetricsCollector:
@@ -66,7 +65,7 @@ class MetricsCollector:
 
         # Error metrics
         self._total_errors = 0
-        self._errors_by_type: Dict[str, int] = defaultdict(int)
+        self._errors_by_type: dict[str, int] = defaultdict(int)
 
     def record_query(self, success: bool, latency: float) -> None:
         """
@@ -108,7 +107,7 @@ class MetricsCollector:
         self._total_errors += 1
         self._errors_by_type[error_type] += 1
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get a snapshot of current metrics.
 

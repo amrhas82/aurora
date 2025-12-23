@@ -11,10 +11,9 @@ Tests how the system handles LLM timeouts and API failures:
 
 import asyncio
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
-
 from aurora_reasoning.llm_client import LLMClient, LLMResponse
 
 
@@ -305,7 +304,7 @@ class TestLLMTimeoutMetadata:
             pass
 
         # Third call succeeds
-        response = client.generate("Test prompt")
+        client.generate("Test prompt")
 
         # Verify all attempts recorded
         assert client._call_count == call_count_before + 3
@@ -347,6 +346,7 @@ class TestLLMTimeoutIntegration:
     def test_timeout_with_cost_tracking(self):
         """Test that timeout interacts correctly with cost tracking."""
         from pathlib import Path
+
         from aurora_core.budget.tracker import CostTracker
 
         client = TimeoutLLMClient(timeout_after_seconds=0.001, fail_count=999)
@@ -360,7 +360,7 @@ class TestLLMTimeoutIntegration:
 
         try:
             # Attempt LLM call (will timeout)
-            response = client.generate("Test prompt")
+            client.generate("Test prompt")
             # If succeeded, record cost
             tracker.record_cost(
                 model="test-model",

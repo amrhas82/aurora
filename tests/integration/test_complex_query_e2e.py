@@ -21,10 +21,8 @@ Performance requirements:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import time
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -33,7 +31,6 @@ from tests.integration.test_e2e_framework import (
     E2ETestFramework,
     MockAgent,
     MockLLMResponse,
-    create_mock_decomposition,
 )
 
 
@@ -904,6 +901,6 @@ class TestComplexQueryEdgeCases:
 
         # Route phase should show fallback
         if "phase5_route" in response["metadata"]["phases"]:
-            route_meta = response["metadata"]["phases"]["phase5_route"]
+            response["metadata"]["phases"]["phase5_route"]
             # Check for fallback indicator if available
             # (implementation may vary)

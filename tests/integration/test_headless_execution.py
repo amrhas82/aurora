@@ -30,21 +30,17 @@ Integration Points:
 """
 
 import tempfile
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 
+from aurora_soar.headless.git_enforcer import GitBranchError
 from aurora_soar.headless.orchestrator import (
-    HeadlessOrchestrator,
     HeadlessConfig,
-    HeadlessResult,
+    HeadlessOrchestrator,
     TerminationReason,
 )
-from aurora_soar.headless.git_enforcer import GitBranchError
-from aurora_soar.headless.prompt_loader import PromptValidationError
 
 
 class MockSOAROrchestrator:
@@ -52,7 +48,7 @@ class MockSOAROrchestrator:
 
     def __init__(
         self,
-        iterations_to_success: Optional[int] = None,
+        iterations_to_success: int | None = None,
         cost_per_iteration: float = 0.25,
         should_fail: bool = False,
     ):
@@ -82,8 +78,7 @@ class MockSOAROrchestrator:
         """
         if self.iterations_to_success and self.call_count >= self.iterations_to_success:
             return {"content": "GOAL_ACHIEVED"}
-        else:
-            return {"content": "IN_PROGRESS"}
+        return {"content": "IN_PROGRESS"}
 
     def execute(self, query: str, verbosity: str = "NORMAL", max_cost_usd: float = None, **kwargs) -> dict:
         """

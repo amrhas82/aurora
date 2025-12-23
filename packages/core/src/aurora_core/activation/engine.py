@@ -22,19 +22,14 @@ Reference:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Collection, Dict, List, Optional, Set
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from aurora_core.activation.base_level import (
+    AccessHistoryEntry,
     BaseLevelActivation,
     BLAConfig,
-    AccessHistoryEntry,
-)
-from aurora_core.activation.spreading import (
-    SpreadingActivation,
-    SpreadingConfig,
-    RelationshipGraph,
 )
 from aurora_core.activation.context_boost import (
     ContextBoost,
@@ -43,6 +38,11 @@ from aurora_core.activation.context_boost import (
 from aurora_core.activation.decay import (
     DecayCalculator,
     DecayConfig,
+)
+from aurora_core.activation.spreading import (
+    RelationshipGraph,
+    SpreadingActivation,
+    SpreadingConfig,
 )
 
 
@@ -134,7 +134,7 @@ class ActivationEngine:
         >>> print(f"Total activation: {activation.total:.3f}")
     """
 
-    def __init__(self, config: Optional[ActivationConfig] = None):
+    def __init__(self, config: ActivationConfig | None = None):
         """Initialize the activation engine.
 
         Args:
@@ -150,12 +150,12 @@ class ActivationEngine:
 
     def calculate_total(
         self,
-        access_history: Optional[List[AccessHistoryEntry]] = None,
-        last_access: Optional[datetime] = None,
+        access_history: list[AccessHistoryEntry] | None = None,
+        last_access: datetime | None = None,
         spreading_activation: float = 0.0,
-        query_keywords: Optional[Set[str]] = None,
-        chunk_keywords: Optional[Set[str]] = None,
-        current_time: Optional[datetime] = None
+        query_keywords: set[str] | None = None,
+        chunk_keywords: set[str] | None = None,
+        current_time: datetime | None = None
     ) -> ActivationComponents:
         """Calculate total activation with all components.
 
@@ -217,8 +217,8 @@ class ActivationEngine:
 
     def calculate_bla_only(
         self,
-        access_history: List[AccessHistoryEntry],
-        current_time: Optional[datetime] = None
+        access_history: list[AccessHistoryEntry],
+        current_time: datetime | None = None
     ) -> float:
         """Calculate only base-level activation.
 
@@ -233,10 +233,10 @@ class ActivationEngine:
 
     def calculate_spreading_only(
         self,
-        source_chunks: List[str],
+        source_chunks: list[str],
         graph: RelationshipGraph,
         bidirectional: bool = True
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate only spreading activation.
 
         Args:
@@ -255,8 +255,8 @@ class ActivationEngine:
 
     def calculate_context_only(
         self,
-        query_keywords: Set[str],
-        chunk_keywords: Set[str]
+        query_keywords: set[str],
+        chunk_keywords: set[str]
     ) -> float:
         """Calculate only context boost.
 
@@ -272,7 +272,7 @@ class ActivationEngine:
     def calculate_decay_only(
         self,
         last_access: datetime,
-        current_time: Optional[datetime] = None
+        current_time: datetime | None = None
     ) -> float:
         """Calculate only decay penalty.
 
@@ -287,12 +287,12 @@ class ActivationEngine:
 
     def explain_activation(
         self,
-        access_history: Optional[List[AccessHistoryEntry]] = None,
-        last_access: Optional[datetime] = None,
+        access_history: list[AccessHistoryEntry] | None = None,
+        last_access: datetime | None = None,
         spreading_activation: float = 0.0,
-        query_keywords: Optional[Set[str]] = None,
-        chunk_keywords: Optional[Set[str]] = None,
-        current_time: Optional[datetime] = None
+        query_keywords: set[str] | None = None,
+        chunk_keywords: set[str] | None = None,
+        current_time: datetime | None = None
     ) -> dict[str, Any]:
         """Explain how activation was calculated.
 
@@ -324,7 +324,7 @@ class ActivationEngine:
             current_time=current_time
         )
 
-        enabled_components: List[str] = []
+        enabled_components: list[str] = []
         explanation: dict[str, Any] = {
             'components': components.model_dump(),
             'enabled_components': enabled_components,
@@ -367,10 +367,10 @@ class ActivationEngine:
 
     def update_config(
         self,
-        bla_config: Optional[BLAConfig] = None,
-        spreading_config: Optional[SpreadingConfig] = None,
-        context_config: Optional[ContextBoostConfig] = None,
-        decay_config: Optional[DecayConfig] = None
+        bla_config: BLAConfig | None = None,
+        spreading_config: SpreadingConfig | None = None,
+        context_config: ContextBoostConfig | None = None,
+        decay_config: DecayConfig | None = None
     ) -> None:
         """Update component configurations.
 

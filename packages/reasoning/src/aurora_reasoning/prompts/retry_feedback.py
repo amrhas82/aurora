@@ -1,7 +1,7 @@
 """Retry feedback generation prompt template."""
 
 import json
-from typing import Any, Dict
+from typing import Any
 
 from . import PromptTemplate
 
@@ -52,7 +52,7 @@ Respond in plain text (NOT JSON) with a structured feedback message."""
 
         return "\n".join(prompt_parts)
 
-    def _format_single_example(self, example: Dict[str, Any]) -> str:
+    def _format_single_example(self, example: dict[str, Any]) -> str:
         """Format a single example for retry feedback generation."""
         return f"""Verification Result: {json.dumps(example.get('verification', {}), indent=2)}
 Generated Feedback: {example.get('feedback', '')}"""

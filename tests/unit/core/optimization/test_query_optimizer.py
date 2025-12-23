@@ -10,18 +10,14 @@ Tests cover:
 - Statistics tracking
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional, Set
-from unittest.mock import Mock, MagicMock, patch
+from datetime import datetime, timedelta, timezone
 
-from aurora_core.activation.engine import ActivationEngine, ActivationComponents
+import pytest
+
 from aurora_core.activation.base_level import AccessHistoryEntry
-from aurora_core.activation.retrieval import RetrievalConfig
+from aurora_core.activation.engine import ActivationEngine
 from aurora_core.optimization.query_optimizer import (
     QueryOptimizer,
-    QueryOptimizationStats,
-    CHUNK_TYPE_PATTERNS,
 )
 from aurora_core.types import ChunkID
 
@@ -34,9 +30,9 @@ class MockChunk:
         self,
         chunk_id: ChunkID,
         chunk_type: str = "function",
-        keywords: Optional[Set[str]] = None,
-        access_history: Optional[List[AccessHistoryEntry]] = None,
-        last_access: Optional[datetime] = None,
+        keywords: set[str] | None = None,
+        access_history: list[AccessHistoryEntry] | None = None,
+        last_access: datetime | None = None,
     ):
         self.id = chunk_id
         self.type = chunk_type
@@ -49,7 +45,7 @@ class MockChunk:
 class MockStore:
     """Mock store for testing."""
 
-    def __init__(self, chunks: List[MockChunk]):
+    def __init__(self, chunks: list[MockChunk]):
         self.chunks = chunks
         self._chunks_by_type = {}
         for chunk in chunks:
@@ -57,13 +53,13 @@ class MockStore:
                 self._chunks_by_type[chunk.type] = []
             self._chunks_by_type[chunk.type].append(chunk)
 
-    def get_all_chunks(self) -> List[MockChunk]:
+    def get_all_chunks(self) -> list[MockChunk]:
         return self.chunks
 
-    def get_chunks_by_type(self, chunk_type: str) -> List[MockChunk]:
+    def get_chunks_by_type(self, chunk_type: str) -> list[MockChunk]:
         return self._chunks_by_type.get(chunk_type, [])
 
-    def get_chunks_by_types(self, chunk_types: List[str]) -> List[MockChunk]:
+    def get_chunks_by_types(self, chunk_types: list[str]) -> list[MockChunk]:
         result = []
         for chunk_type in chunk_types:
             result.extend(self.get_chunks_by_type(chunk_type))

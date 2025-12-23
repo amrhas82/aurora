@@ -1,10 +1,7 @@
 """Unit tests for prompt templates."""
 
-import json
 
-import pytest
 
-from aurora_reasoning.prompts import PromptTemplate
 from aurora_reasoning.prompts.assess import AssessPromptTemplate
 from aurora_reasoning.prompts.decompose import DecomposePromptTemplate
 from aurora_reasoning.prompts.examples import Complexity, ExamplesLoader, get_loader

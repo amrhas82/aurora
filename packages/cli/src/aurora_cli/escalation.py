@@ -12,9 +12,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aurora_soar.phases.assess import assess_complexity
+
 
 __all__ = ["AutoEscalationHandler", "EscalationConfig", "EscalationResult"]
 
@@ -102,8 +103,8 @@ class AutoEscalationHandler:
 
     def __init__(
         self,
-        config: Optional[EscalationConfig] = None,
-        llm_client: Optional[Any] = None,
+        config: EscalationConfig | None = None,
+        llm_client: Any | None = None,
     ):
         """Initialize auto-escalation handler.
 

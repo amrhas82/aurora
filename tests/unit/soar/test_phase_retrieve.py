@@ -1,11 +1,12 @@
 """Unit tests for Phase 2: Context Retrieval."""
 
-import pytest
 from unittest.mock import Mock
 
+import pytest
+
 from aurora_soar.phases.retrieve import (
-    retrieve_context,
     RETRIEVAL_BUDGETS,
+    retrieve_context,
 )
 
 

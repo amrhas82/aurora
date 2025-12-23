@@ -257,30 +257,29 @@ class MockLLMClient:
         # Parse the query from user prompt to determine which scenario this is
         if "OAuth2" in prompt:
             return self._good_verification_1()
-        elif "caching" in prompt or "API endpoints" in prompt:
+        if "caching" in prompt or "API endpoints" in prompt:
             return self._good_verification_2()
-        elif "Fix the login bug" in prompt:
+        if "Fix the login bug" in prompt:
             return self._bad_verification_1()
-        elif "database queries and add user dashboard" in prompt:
+        if "database queries and add user dashboard" in prompt:
             return self._bad_verification_2()
-        elif "Add feature X" in prompt:
+        if "Add feature X" in prompt:
             return self._bad_verification_3()
-        elif "API documentation" in prompt:
+        if "API documentation" in prompt:
             return self._borderline_verification_1()
-        elif "error handling in payment" in prompt:
+        if "error handling in payment" in prompt:
             return self._borderline_verification_2()
-        else:
-            # Default safe response
-            return {
-                "completeness": 0.8,
-                "consistency": 0.8,
-                "groundedness": 0.8,
-                "routability": 0.8,
-                "overall_score": 0.8,
-                "verdict": "PASS",
-                "issues": [],
-                "suggestions": []
-            }
+        # Default safe response
+        return {
+            "completeness": 0.8,
+            "consistency": 0.8,
+            "groundedness": 0.8,
+            "routability": 0.8,
+            "overall_score": 0.8,
+            "verdict": "PASS",
+            "issues": [],
+            "suggestions": []
+        }
 
     def _good_verification_1(self) -> dict:
         """High-quality OAuth2 decomposition."""

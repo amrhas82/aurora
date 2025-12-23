@@ -18,15 +18,16 @@ Precision Metrics:
 - Improvement: Should be better than activation-only baseline
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
-from typing import List, Set, Dict, Any, Optional
-import numpy as np
+from typing import Any
 
-from aurora_core.activation.engine import ActivationEngine, ActivationConfig
-from aurora_core.activation.base_level import AccessHistoryEntry
+import numpy as np
+import pytest
+
 from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
-from aurora_context_code.semantic.hybrid_retriever import HybridRetriever, HybridConfig
+from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+from aurora_core.activation.base_level import AccessHistoryEntry
+from aurora_core.activation.engine import ActivationConfig
 
 
 class MockChunk:
@@ -37,8 +38,8 @@ class MockChunk:
         chunk_id: str,
         content: str,
         activation: float = 0.0,
-        embedding: Optional[np.ndarray] = None,
-        access_history: Optional[List[AccessHistoryEntry]] = None,
+        embedding: np.ndarray | None = None,
+        access_history: list[AccessHistoryEntry] | None = None,
     ):
         self.id = chunk_id
         self.content = content
@@ -53,7 +54,7 @@ class MockChunk:
         )
 
     @property
-    def keywords(self) -> Set[str]:
+    def keywords(self) -> set[str]:
         """Extract keywords from content."""
         return set(self.content.lower().split())
 
@@ -62,7 +63,7 @@ class MockStore:
     """Mock storage backend for integration testing."""
 
     def __init__(self):
-        self.chunks: Dict[str, MockChunk] = {}
+        self.chunks: dict[str, MockChunk] = {}
 
     def add_chunk(self, chunk: MockChunk) -> None:
         """Add chunk to store."""
@@ -70,7 +71,7 @@ class MockStore:
 
     def retrieve_by_activation(
         self, min_activation: float = 0.0, limit: int = 100
-    ) -> List[MockChunk]:
+    ) -> list[MockChunk]:
         """Retrieve chunks sorted by activation."""
         # Filter by minimum activation
         candidates = [
@@ -84,7 +85,7 @@ class MockStore:
 
         return candidates[:limit]
 
-    def get_all_chunks(self) -> List[MockChunk]:
+    def get_all_chunks(self) -> list[MockChunk]:
         """Get all chunks."""
         return list(self.chunks.values())
 
@@ -92,12 +93,12 @@ class MockStore:
 class MockActivationEngine:
     """Mock activation engine for integration testing."""
 
-    def __init__(self, store: MockStore, config: Optional[ActivationConfig] = None):
+    def __init__(self, store: MockStore, config: ActivationConfig | None = None):
         self.store = store
         self.config = config or ActivationConfig()
 
     def calculate_activation(
-        self, chunk_id: str, context_keywords: Optional[Set[str]] = None
+        self, chunk_id: str, context_keywords: set[str] | None = None
     ) -> float:
         """Return pre-calculated activation from chunk."""
         chunk = self.store.chunks.get(chunk_id)
@@ -224,7 +225,7 @@ def create_test_dataset(embedding_provider: EmbeddingProvider, now: datetime):
 
 
 def calculate_precision_at_k(
-    results: List[Dict[str, Any]], relevant_ids: Set[str], k: int
+    results: list[dict[str, Any]], relevant_ids: set[str], k: int
 ) -> float:
     """Calculate precision@k metric."""
     if k == 0:
@@ -347,7 +348,7 @@ class TestSemanticRetrievalIntegration:
         )
 
         # Print for debugging
-        print(f"\nPrecision@5 comparison:")
+        print("\nPrecision@5 comparison:")
         print(f"  Activation-only: {precision_activation:.2%}")
         print(f"  Semantic-only:   {precision_semantic:.2%}")
         print(f"  Hybrid (60/40):  {precision_hybrid:.2%}")
@@ -356,7 +357,7 @@ class TestSemanticRetrievalIntegration:
         best_single_method = max(precision_activation, precision_semantic)
         assert (
             precision_hybrid >= best_single_method - 0.01
-        ), f"Hybrid should not be worse than single methods"
+        ), "Hybrid should not be worse than single methods"
 
         # Hybrid should achieve target precision
         assert precision_hybrid >= 0.6, f"Hybrid precision {precision_hybrid:.2%} < 60% target"
@@ -433,7 +434,7 @@ class TestSemanticRetrievalIntegration:
             precisions.append(precision)
             print(f"\nQuery: '{query}'")
             print(f"  Precision@5: {precision:.2%}")
-            print(f"  Top 3 results:")
+            print("  Top 3 results:")
             for i, result in enumerate(results[:3], 1):
                 chunk_id = result["chunk_id"]
                 relevant = "✓" if chunk_id in relevant_ids else "✗"

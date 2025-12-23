@@ -8,9 +8,9 @@ import gc
 import sys
 import tracemalloc
 from pathlib import Path
-from typing import List
 
 import pytest
+
 
 # Add packages to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages" / "core" / "src"))
@@ -20,7 +20,7 @@ from aurora_core.chunks import CodeChunk, ReasoningChunk
 from aurora_core.store import MemoryStore, SQLiteStore
 
 
-def generate_test_chunks(count: int) -> List[CodeChunk]:
+def generate_test_chunks(count: int) -> list[CodeChunk]:
     """Generate test chunks for memory profiling."""
     chunks = []
     for i in range(count):
@@ -41,7 +41,7 @@ def generate_test_chunks(count: int) -> List[CodeChunk]:
     return chunks
 
 
-def generate_test_reasoning_chunks(count: int) -> List[ReasoningChunk]:
+def generate_test_reasoning_chunks(count: int) -> list[ReasoningChunk]:
     """Generate test reasoning chunks for memory profiling."""
     chunks = []
     for i in range(count):
@@ -186,7 +186,7 @@ class TestMemoryProfiling:
         baseline_mb = get_memory_usage_mb()
 
         # Create 1000 chunks to measure average
-        chunks = generate_test_chunks(1000)
+        generate_test_chunks(1000)
 
         after_mb = get_memory_usage_mb()
         total_mb = after_mb - baseline_mb
@@ -335,7 +335,7 @@ class TestMemoryProfiling:
         baseline_mb = get_memory_usage_mb()
 
         # Create 1000 reasoning chunks to measure average
-        chunks = generate_test_reasoning_chunks(1000)
+        generate_test_reasoning_chunks(1000)
 
         after_mb = get_memory_usage_mb()
         total_mb = after_mb - baseline_mb

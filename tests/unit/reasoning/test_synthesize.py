@@ -1,24 +1,19 @@
 """Unit tests for synthesis logic."""
 
-import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-
 from aurora_reasoning.llm_client import LLMResponse
-from aurora_reasoning.synthesize import (
-    SynthesisResult,
-    synthesize_results,
-    verify_synthesis,
-)
 
 # Import internal functions for testing
 from aurora_reasoning.synthesize import (
+    SynthesisResult,
     _build_synthesis_system_prompt,
-    _build_synthesis_user_prompt,
     _extract_traceability,
     _parse_synthesis_response,
     _validate_traceability,
+    synthesize_results,
+    verify_synthesis,
 )
 
 

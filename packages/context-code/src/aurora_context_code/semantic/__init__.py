@@ -41,9 +41,10 @@ from aurora_context_code.semantic.embedding_provider import (
     cosine_similarity,
 )
 from aurora_context_code.semantic.hybrid_retriever import (
-    HybridRetriever,
     HybridConfig,
+    HybridRetriever,
 )
+
 
 __all__ = [
     "EmbeddingProvider",

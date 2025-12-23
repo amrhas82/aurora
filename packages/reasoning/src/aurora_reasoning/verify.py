@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import json
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from .prompts.verify_adversarial import VerifyAdversarialPromptTemplate
 from .prompts.verify_self import VerifySelfPromptTemplate
+
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
@@ -57,8 +58,8 @@ class VerificationResult:
         routability: float,
         overall_score: float,
         verdict: VerificationVerdict,
-        issues: List[str],
-        suggestions: List[str],
+        issues: list[str],
+        suggestions: list[str],
         option_used: VerificationOption,
         raw_response: str = "",
     ):
@@ -73,7 +74,7 @@ class VerificationResult:
         self.option_used = option_used
         self.raw_response = raw_response
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
         return {
             "completeness": self.completeness,
@@ -88,7 +89,7 @@ class VerificationResult:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> VerificationResult:
+    def from_dict(cls, data: dict[str, Any]) -> VerificationResult:
         """Create from dictionary representation."""
         return cls(
             completeness=data["completeness"],
@@ -106,10 +107,10 @@ class VerificationResult:
 def verify_decomposition(
     llm_client: LLMClient,
     query: str,
-    decomposition: Dict[str, Any],
+    decomposition: dict[str, Any],
     option: VerificationOption,
-    context_summary: Optional[str] = None,
-    available_agents: Optional[List[str]] = None,
+    context_summary: str | None = None,
+    available_agents: list[str] | None = None,
 ) -> VerificationResult:
     """Verify a query decomposition using specified verification option.
 
@@ -281,13 +282,13 @@ def _validate_verdict_consistency(verdict: VerificationVerdict, score: float) ->
             f"Verdict {verdict} inconsistent with score {score:.2f} "
             f"(score ≥ 0.7 should be PASS)"
         )
-    elif 0.5 <= score < 0.7 and verdict not in [VerificationVerdict.RETRY, VerificationVerdict.PASS]:
+    if 0.5 <= score < 0.7 and verdict not in [VerificationVerdict.RETRY, VerificationVerdict.PASS]:
         # Allow PASS for borderline cases, but not FAIL
         raise ValueError(
             f"Verdict {verdict} inconsistent with score {score:.2f} "
             f"(0.5 ≤ score < 0.7 should be RETRY or PASS)"
         )
-    elif score < 0.5 and verdict == VerificationVerdict.PASS:
+    if score < 0.5 and verdict == VerificationVerdict.PASS:
         raise ValueError(
             f"Verdict {verdict} inconsistent with score {score:.2f} "
             f"(score < 0.5 should not be PASS)"

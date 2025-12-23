@@ -5,19 +5,18 @@ Tests exponential backoff retry logic for transient errors.
 """
 
 import time
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_core.resilience.retry_handler import RetryHandler
 from aurora_core.exceptions import (
     AuroraError,
-    ConfigurationError,
     BudgetExceededError,
-    ValidationError,
+    ConfigurationError,
     StorageError,
+    ValidationError,
 )
+from aurora_core.resilience.retry_handler import RetryHandler
 
 
 class TestRetryHandlerInitialization:

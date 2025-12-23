@@ -1,15 +1,15 @@
 """Unit tests for verify phase."""
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_reasoning.decompose import DecompositionResult
 from aurora_reasoning.verify import (
     VerificationOption,
     VerificationResult,
     VerificationVerdict,
 )
+
 from aurora_soar.phases.verify import (
     VerifyPhaseResult,
     _generate_retry_feedback,
@@ -104,7 +104,7 @@ class TestGenerateRetryFeedback:
 
     def test_verification_dict_in_prompt(self, mock_llm_client, sample_verification):
         """Test that verification dict is included in prompt."""
-        feedback = _generate_retry_feedback(
+        _generate_retry_feedback(
             llm_client=mock_llm_client,
             verification=sample_verification,
             attempt_number=2,
@@ -339,7 +339,7 @@ class TestVerifyDecomposition:
         """Test MEDIUM complexity uses self-verification."""
         mock_verify_decomposition.return_value = passing_verification
 
-        result = verify_decomposition(
+        verify_decomposition(
             decomposition=sample_decomposition,
             complexity="MEDIUM",
             llm_client=mock_llm_client,
@@ -354,7 +354,7 @@ class TestVerifyDecomposition:
         """Test COMPLEX complexity uses adversarial verification."""
         mock_verify_decomposition.return_value = passing_verification
 
-        result = verify_decomposition(
+        verify_decomposition(
             decomposition=sample_decomposition,
             complexity="COMPLEX",
             llm_client=mock_llm_client,
@@ -369,7 +369,7 @@ class TestVerifyDecomposition:
         """Test context summary is passed through."""
         mock_verify_decomposition.return_value = passing_verification
 
-        result = verify_decomposition(
+        verify_decomposition(
             decomposition=sample_decomposition,
             complexity="MEDIUM",
             llm_client=mock_llm_client,
@@ -385,7 +385,7 @@ class TestVerifyDecomposition:
         mock_verify_decomposition.return_value = passing_verification
         agents = ["code-analyzer", "test-runner"]
 
-        result = verify_decomposition(
+        verify_decomposition(
             decomposition=sample_decomposition,
             complexity="MEDIUM",
             llm_client=mock_llm_client,

@@ -10,14 +10,15 @@ Functions:
     cosine_similarity: Calculate cosine similarity between two vectors
 """
 
-from typing import List, Optional
+
 import numpy as np
 import numpy.typing as npt
 
+
 # Optional dependency - only needed for semantic features
 try:
-    from sentence_transformers import SentenceTransformer
     import torch
+    from sentence_transformers import SentenceTransformer
     HAS_SENTENCE_TRANSFORMERS = True
 except ImportError:
     HAS_SENTENCE_TRANSFORMERS = False
@@ -103,7 +104,7 @@ class EmbeddingProvider:
     def __init__(
         self,
         model_name: str = "all-MiniLM-L6-v2",
-        device: Optional[str] = None,
+        device: str | None = None,
     ):
         """Initialize embedding provider.
 
@@ -236,7 +237,7 @@ class EmbeddingProvider:
 
         return embedding
 
-    def embed_batch(self, texts: List[str]) -> npt.NDArray[np.float32]:
+    def embed_batch(self, texts: list[str]) -> npt.NDArray[np.float32]:
         """Generate embeddings for multiple texts efficiently.
 
         Args:

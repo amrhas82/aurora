@@ -181,7 +181,7 @@ class TestSQLiteStore(StoreContractTests):
             pass  # Expected to fail
 
         # Original chunk should still exist
-        retrieved = store.get_chunk(ChunkID(chunk.id))
+        store.get_chunk(ChunkID(chunk.id))
         # Note: Will be None until deserialization is implemented, but should not crash
 
     def test_concurrent_connections(self, file_store):
@@ -194,8 +194,8 @@ class TestSQLiteStore(StoreContractTests):
         file_store.save_chunk(chunk2)
 
         # Both should be retrievable
-        retrieved1 = file_store.get_chunk(ChunkID(chunk1.id))
-        retrieved2 = file_store.get_chunk(ChunkID(chunk2.id))
+        file_store.get_chunk(ChunkID(chunk1.id))
+        file_store.get_chunk(ChunkID(chunk2.id))
 
         # At least verify they don't raise exceptions
         # Full equality depends on deserialization
@@ -300,11 +300,11 @@ class TestSQLiteStore(StoreContractTests):
             )
 
         # Get related chunks with max_depth=1 (should only get chunk2)
-        related = store.get_related_chunks(ChunkID(chunks[0].id), max_depth=1)
+        store.get_related_chunks(ChunkID(chunks[0].id), max_depth=1)
         # Note: Actual count depends on deserialization implementation
 
         # Get related chunks with max_depth=2 (should get chunk2 and chunk3)
-        related = store.get_related_chunks(ChunkID(chunks[0].id), max_depth=2)
+        store.get_related_chunks(ChunkID(chunks[0].id), max_depth=2)
         # Note: Actual count depends on deserialization implementation
 
     def test_close_connection(self, store):
@@ -330,7 +330,7 @@ class TestSQLiteStore(StoreContractTests):
 
         # Retrieve in second instance
         store2 = SQLiteStore(db_path=str(db_path))
-        retrieved = store2.get_chunk(ChunkID(chunk.id))
+        store2.get_chunk(ChunkID(chunk.id))
         # Should not raise an error (actual retrieval depends on deserialization)
         store2.close()
 

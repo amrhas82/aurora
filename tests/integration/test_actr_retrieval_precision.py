@@ -17,18 +17,16 @@ Precision Metrics:
 - Improvement: Should be measurably better than keyword-only baseline
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
-from typing import List, Set, Optional
 
 from aurora_core.activation.base_level import AccessHistoryEntry
-from aurora_core.activation.spreading import RelationshipGraph
-from aurora_core.activation.engine import ActivationEngine, ActivationConfig
+from aurora_core.activation.engine import ActivationConfig, ActivationEngine
 from aurora_core.activation.retrieval import (
     ActivationRetriever,
     RetrievalConfig,
     RetrievalResult,
 )
+from aurora_core.activation.spreading import RelationshipGraph
 from aurora_core.types import ChunkID
 
 
@@ -38,9 +36,9 @@ class MockChunk:
     def __init__(
         self,
         chunk_id: str,
-        keywords: Set[str],
-        access_history: List[AccessHistoryEntry],
-        last_access: Optional[datetime] = None,
+        keywords: set[str],
+        access_history: list[AccessHistoryEntry],
+        last_access: datetime | None = None,
     ):
         self._id = chunk_id
         self._keywords = keywords
@@ -52,15 +50,15 @@ class MockChunk:
         return self._id
 
     @property
-    def keywords(self) -> Set[str]:
+    def keywords(self) -> set[str]:
         return self._keywords
 
     @property
-    def access_history(self) -> List[AccessHistoryEntry]:
+    def access_history(self) -> list[AccessHistoryEntry]:
         return self._access_history
 
     @property
-    def last_access(self) -> Optional[datetime]:
+    def last_access(self) -> datetime | None:
         return self._last_access
 
 
@@ -145,7 +143,7 @@ class TestActivationRetrievalPrecision:
     """Test that activation-based ranking improves retrieval precision."""
 
     def calculate_precision_at_k(
-        self, results: List[RetrievalResult], relevant_ids: Set[str], k: int
+        self, results: list[RetrievalResult], relevant_ids: set[str], k: int
     ) -> float:
         """Calculate Precision@K metric."""
         if k <= 0 or len(results) == 0:

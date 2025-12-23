@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 # Forward reference to avoid circular imports - Chunk will be defined in chunks module
-from typing import TYPE_CHECKING, Optional, List, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 
 if TYPE_CHECKING:
@@ -162,8 +162,8 @@ class Store(ABC):
     def record_access(
         self,
         chunk_id: ChunkID,
-        access_time: Optional[datetime] = None,
-        context: Optional[str] = None
+        access_time: datetime | None = None,
+        context: str | None = None
     ) -> None:
         """
         Record an access to a chunk for ACT-R activation tracking.
@@ -186,8 +186,8 @@ class Store(ABC):
     def get_access_history(
         self,
         chunk_id: ChunkID,
-        limit: Optional[int] = None
-    ) -> List[dict[str, Any]]:
+        limit: int | None = None
+    ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
 

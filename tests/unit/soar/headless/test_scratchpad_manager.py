@@ -17,14 +17,14 @@ import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import patch
 
 import pytest
 
 from aurora_soar.headless.scratchpad_manager import (
-    ScratchpadManager,
-    ScratchpadEntry,
     ScratchpadConfig,
+    ScratchpadEntry,
+    ScratchpadManager,
     ScratchpadStatus,
     TerminationSignal,
 )

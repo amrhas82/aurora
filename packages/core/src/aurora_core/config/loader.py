@@ -373,9 +373,6 @@ class Config:
 
         # Convert relative to absolute
         if not p.is_absolute():
-            if project_path:
-                p = project_path / p
-            else:
-                p = Path.cwd() / p
+            p = project_path / p if project_path else Path.cwd() / p
 
         return p.resolve()

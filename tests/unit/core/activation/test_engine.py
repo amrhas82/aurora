@@ -12,27 +12,24 @@ Tests the complete ACT-R activation engine including:
 - Full activation workflow integration
 """
 
-import math
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from aurora_core.activation.base_level import AccessHistoryEntry
-from aurora_core.activation.spreading import Relationship, RelationshipGraph
-from aurora_core.activation.engine import (
-    ActivationConfig,
-    ActivationComponents,
-    ActivationEngine,
-    DEFAULT_CONFIG,
-    AGGRESSIVE_CONFIG,
-    CONSERVATIVE_CONFIG,
-    BLA_FOCUSED_CONFIG,
-    CONTEXT_FOCUSED_CONFIG,
-)
-from aurora_core.activation.base_level import BLAConfig
-from aurora_core.activation.spreading import SpreadingConfig
+from aurora_core.activation.base_level import AccessHistoryEntry, BLAConfig
 from aurora_core.activation.context_boost import ContextBoostConfig
 from aurora_core.activation.decay import DecayConfig
+from aurora_core.activation.engine import (
+    AGGRESSIVE_CONFIG,
+    BLA_FOCUSED_CONFIG,
+    CONSERVATIVE_CONFIG,
+    CONTEXT_FOCUSED_CONFIG,
+    DEFAULT_CONFIG,
+    ActivationComponents,
+    ActivationConfig,
+    ActivationEngine,
+)
+from aurora_core.activation.spreading import RelationshipGraph, SpreadingConfig
 
 
 class TestActivationConfig:

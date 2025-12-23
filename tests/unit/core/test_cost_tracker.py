@@ -1,7 +1,6 @@
 """Unit tests for CostTracker and BudgetTracker."""
 
 import json
-import tempfile
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -11,9 +10,7 @@ import pytest
 from aurora_core.budget.tracker import (
     MODEL_PRICING,
     BudgetTracker,
-    CostEntry,
     CostTracker,
-    ModelPricing,
     PeriodBudget,
 )
 
@@ -262,7 +259,7 @@ class TestCostTracker:
 
     def test_record_cost_with_query_id(self, tracker):
         """Test recording cost with query ID."""
-        cost = tracker.record_cost(
+        tracker.record_cost(
             model="claude-sonnet-4-20250514",
             input_tokens=1000,
             output_tokens=500,

@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class VerbosityLevel(str, Enum):
@@ -35,7 +35,7 @@ class ConversationLogger:
         enabled: Whether logging is enabled
     """
 
-    def __init__(self, base_path: Optional[Path] = None, enabled: bool = True):
+    def __init__(self, base_path: Path | None = None, enabled: bool = True):
         """
         Initialize conversation logger.
 
@@ -53,10 +53,10 @@ class ConversationLogger:
         self,
         query: str,
         query_id: str,
-        phase_data: Dict[str, Any],
-        execution_summary: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Optional[Path]:
+        phase_data: dict[str, Any],
+        execution_summary: dict[str, Any],
+        metadata: dict[str, Any] | None = None
+    ) -> Path | None:
         """
         Log a SOAR interaction to a markdown file.
 
@@ -114,7 +114,7 @@ class ConversationLogger:
         month = now.strftime("%m")
         return self.base_path / year / month
 
-    def _extract_keywords(self, query: str, max_keywords: int = 2) -> List[str]:
+    def _extract_keywords(self, query: str, max_keywords: int = 2) -> list[str]:
         """
         Extract keywords from query for filename.
 
@@ -198,9 +198,9 @@ class ConversationLogger:
         self,
         query: str,
         query_id: str,
-        phase_data: Dict[str, Any],
-        execution_summary: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
+        phase_data: dict[str, Any],
+        execution_summary: dict[str, Any],
+        metadata: dict[str, Any] | None = None
     ) -> str:
         """
         Format conversation log as markdown.

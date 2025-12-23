@@ -548,7 +548,7 @@ class PythonParser(CodeParser):
                     # Module being imported from
                     name = source_code[child.start_byte:child.end_byte]
                     imports.add(name.split('.')[0])
-                elif child.type == "aliased_import" or child.type == "dotted_name":
+                elif child.type in {"aliased_import", "dotted_name"}:
                     # Names being imported
                     name = source_code[child.start_byte:child.end_byte]
                     if ' as ' in name:

@@ -5,7 +5,7 @@ Tests the record_pattern function that caches successful reasoning patterns
 to ACT-R memory.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -153,7 +153,7 @@ class TestRecordPatternHighScore:
             timing={}
         )
 
-        result = record_pattern(
+        record_pattern(
             store=store,
             query="test query",
             complexity="SIMPLE",
@@ -197,7 +197,7 @@ class TestRecordPatternHighScore:
             timing={}
         )
 
-        result = record_pattern(
+        record_pattern(
             store=store,
             query="test",
             complexity="MEDIUM",
@@ -528,7 +528,7 @@ class TestRecordPatternEdgeCases:
             timing={}
         )
 
-        result = record_pattern(
+        record_pattern(
             store=store,
             query="test",
             complexity="SIMPLE",
@@ -562,7 +562,7 @@ class TestRecordPatternEdgeCases:
             timing={}
         )
 
-        result = record_pattern(
+        record_pattern(
             store=store,
             query="test",
             complexity="SIMPLE",

@@ -5,13 +5,12 @@ Tests the complete flow from routing to agent execution:
 - Collect Phase 6: Agent execution with parallel and sequential execution
 """
 
-import asyncio
 
 import pytest
 
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
-from aurora_soar.phases.route import route_subgoals
 from aurora_soar.phases.collect import execute_agents
+from aurora_soar.phases.route import route_subgoals
 
 
 @pytest.fixture

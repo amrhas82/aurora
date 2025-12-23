@@ -4,10 +4,10 @@ Unit tests for Phase 4 verification retry logic.
 Tests the retry loop when decompositions fail verification.
 """
 
-import pytest
 
 from aurora_reasoning.decompose import DecompositionResult
 from aurora_reasoning.llm_client import LLMClient
+
 from aurora_soar.phases.verify import verify_decomposition
 
 
@@ -72,7 +72,7 @@ class MockRetryLLMClient(LLMClient):
                     "issues": ["Still incomplete"],
                     "suggestions": []
                 }
-            elif self.fail_first and self.verification_call_count == 1:
+            if self.fail_first and self.verification_call_count == 1:
                 # First verification attempt fails with RETRY verdict
                 return {
                     "completeness": 0.5,
@@ -84,31 +84,29 @@ class MockRetryLLMClient(LLMClient):
                     "issues": ["Incomplete decomposition"],
                     "suggestions": []
                 }
-            else:
-                # Pass on subsequent attempts or if not failing first
-                return {
-                    "completeness": 0.9,
-                    "consistency": 0.9,
-                    "groundedness": 0.9,
-                    "routability": 0.9,
-                    "overall_score": 0.9,
-                    "verdict": "PASS",
-                    "issues": [],
-                    "suggestions": []
-                }
-        else:
-            # Decomposition request (for retry loop)
+            # Pass on subsequent attempts or if not failing first
             return {
-                "goal": "Test goal",
-                "subgoals": [{
-                    "description": "Test refined",
-                    "suggested_agent": "test",
-                    "is_critical": True,
-                    "depends_on": []
-                }],
-                "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
-                "expected_tools": ["test-tool"]
+                "completeness": 0.9,
+                "consistency": 0.9,
+                "groundedness": 0.9,
+                "routability": 0.9,
+                "overall_score": 0.9,
+                "verdict": "PASS",
+                "issues": [],
+                "suggestions": []
             }
+        # Decomposition request (for retry loop)
+        return {
+            "goal": "Test goal",
+            "subgoals": [{
+                "description": "Test refined",
+                "suggested_agent": "test",
+                "is_critical": True,
+                "depends_on": []
+            }],
+            "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
+            "expected_tools": ["test-tool"]
+        }
 
 
 class TestVerificationRetry:

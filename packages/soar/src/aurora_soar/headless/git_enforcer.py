@@ -30,7 +30,7 @@ Usage:
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class GitBranchError(Exception):
@@ -59,10 +59,10 @@ class GitEnforcerConfig:
         repo_path: Path to git repository. Default: None (use current directory)
     """
 
-    required_branch: Optional[str] = "headless"
-    blocked_branches: List[str] = field(default_factory=lambda: ["main", "master"])
+    required_branch: str | None = "headless"
+    blocked_branches: list[str] = field(default_factory=lambda: ["main", "master"])
     allow_detached_head: bool = False
-    repo_path: Optional[Path] = None
+    repo_path: Path | None = None
 
 
 class GitEnforcer:
@@ -103,7 +103,7 @@ class GitEnforcer:
         >>> print(f"Current branch: {branch}")
     """
 
-    def __init__(self, config: Optional[GitEnforcerConfig] = None):
+    def __init__(self, config: GitEnforcerConfig | None = None):
         """
         Initialize GitEnforcer with configuration.
 
@@ -272,9 +272,8 @@ class GitEnforcer:
 
         # All validations passed
         # Could log success here if we had logging configured
-        return
 
-    def get_validation_status(self) -> Dict[str, Any]:
+    def get_validation_status(self) -> dict[str, Any]:
         """
         Get detailed validation status without raising exceptions.
 
@@ -299,7 +298,7 @@ class GitEnforcer:
                 'error_message': "Cannot run headless mode on blocked branch 'main'..."
             }
         """
-        status: Dict[str, Any] = {
+        status: dict[str, Any] = {
             "is_git_repo": False,
             "current_branch": None,
             "is_valid": False,

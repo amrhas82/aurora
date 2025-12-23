@@ -6,11 +6,12 @@ from .llm_client import (
     AnthropicClient,
     LLMClient,
     LLMResponse,
-    OpenAIClient,
     OllamaClient,
+    OpenAIClient,
     extract_json_from_text,
 )
 from .synthesize import SynthesisResult, synthesize_results, verify_synthesis
+
 
 __all__ = [
     "LLMClient",

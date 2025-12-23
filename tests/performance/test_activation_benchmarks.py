@@ -18,19 +18,14 @@ Test Strategy:
 - Verify performance targets are met consistently (not just best-case)
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
-from typing import List, Set
+
+import pytest
 
 from aurora_core.activation.base_level import (
+    AccessHistoryEntry,
     BaseLevelActivation,
     BLAConfig,
-    AccessHistoryEntry,
-)
-from aurora_core.activation.spreading import (
-    SpreadingActivation,
-    SpreadingConfig,
-    RelationshipGraph,
 )
 from aurora_core.activation.context_boost import (
     ContextBoost,
@@ -41,8 +36,13 @@ from aurora_core.activation.decay import (
     DecayConfig,
 )
 from aurora_core.activation.engine import (
-    ActivationEngine,
     ActivationConfig,
+    ActivationEngine,
+)
+from aurora_core.activation.spreading import (
+    RelationshipGraph,
+    SpreadingActivation,
+    SpreadingConfig,
 )
 
 
@@ -52,8 +52,8 @@ class MockChunk:
     def __init__(
         self,
         chunk_id: str,
-        keywords: Set[str],
-        access_history: List[AccessHistoryEntry],
+        keywords: set[str],
+        access_history: list[AccessHistoryEntry],
         last_access: datetime | None = None,
     ):
         self._id = chunk_id
@@ -66,11 +66,11 @@ class MockChunk:
         return self._id
 
     @property
-    def keywords(self) -> Set[str]:
+    def keywords(self) -> set[str]:
         return self._keywords
 
     @property
-    def access_history(self) -> List[AccessHistoryEntry]:
+    def access_history(self) -> list[AccessHistoryEntry]:
         return self._access_history
 
     @property
@@ -78,7 +78,7 @@ class MockChunk:
         return self._last_access
 
 
-def create_benchmark_chunks(count: int, now: datetime) -> List[MockChunk]:
+def create_benchmark_chunks(count: int, now: datetime) -> list[MockChunk]:
     """
     Create realistic chunk dataset for benchmarking.
 
@@ -340,7 +340,7 @@ class TestFullActivationPerformance:
         now = datetime.now(timezone.utc)
         chunks = create_benchmark_chunks(100, now)
         query_keywords = {"function", "database", "query"}
-        graph = create_relationship_graph(100)
+        create_relationship_graph(100)
         source_chunks = [f"chunk_{i:04d}" for i in range(10)]  # 10% as sources
 
         def calculate_full_activation():
@@ -384,7 +384,7 @@ class TestFullActivationPerformance:
         now = datetime.now(timezone.utc)
         chunks = create_benchmark_chunks(1000, now)
         query_keywords = {"function", "database", "query"}
-        graph = create_relationship_graph(1000)
+        create_relationship_graph(1000)
         source_chunks = [f"chunk_{i:04d}" for i in range(100)]  # 10% as sources
 
         def calculate_full_activation():
@@ -432,7 +432,7 @@ class TestBatchActivationPerformance:
         now = datetime.now(timezone.utc)
         chunks = create_benchmark_chunks(100, now)
         query_keywords = {"function", "database", "query"}
-        graph = create_relationship_graph(100)
+        create_relationship_graph(100)
         source_chunks = [f"chunk_{i:04d}" for i in range(10)]
 
         def batch_calculate():
@@ -472,12 +472,11 @@ class TestMemoryEfficiency:
         Run multiple iterations and check that memory usage is stable.
         """
         import gc
-        import sys
 
         now = datetime.now(timezone.utc)
         chunks = create_benchmark_chunks(100, now)
         query_keywords = {"function", "database", "query"}
-        graph = create_relationship_graph(100)
+        create_relationship_graph(100)
         source_chunks = [f"chunk_{i:04d}" for i in range(10)]
 
         # Initial calculation to warm up
@@ -499,7 +498,7 @@ class TestMemoryEfficiency:
         initial_objects = len(gc.get_objects())
 
         # Run 10 iterations
-        for iteration in range(10):
+        for _iteration in range(10):
             for chunk in chunks:
                 spreading = 0.0
                 if chunk.id in source_chunks:

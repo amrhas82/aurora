@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 from aurora_core.chunks import ReasoningChunk
 from aurora_core.types import ChunkID
 
+
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_soar.phases.collect import CollectResult

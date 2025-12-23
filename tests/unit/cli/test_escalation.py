@@ -9,9 +9,9 @@ This module tests the auto-escalation functionality including:
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import Mock, patch
 
+import pytest
 from aurora_cli.escalation import (
     AutoEscalationHandler,
     EscalationConfig,
@@ -254,7 +254,7 @@ class TestAutoEscalationHandler:
 
         config = EscalationConfig(enable_keyword_only=True)
         handler = AutoEscalationHandler(config=config)
-        result = handler.assess_query("What is Python?")
+        handler.assess_query("What is Python?")
 
         # Should use keyword-only (no LLM client passed to assess_complexity)
         mock_assess.assert_called_once()
@@ -275,7 +275,7 @@ class TestAutoEscalationHandler:
         mock_llm = Mock()
         config = EscalationConfig(enable_keyword_only=False)
         handler = AutoEscalationHandler(config=config, llm_client=mock_llm)
-        result = handler.assess_query("Borderline complexity query")
+        handler.assess_query("Borderline complexity query")
 
         # Should pass LLM client for verification
         mock_assess.assert_called_once()

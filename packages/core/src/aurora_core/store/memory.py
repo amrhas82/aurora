@@ -277,8 +277,8 @@ class MemoryStore(Store):
     def record_access(
         self,
         chunk_id: ChunkID,
-        access_time: Optional[datetime] = None,
-        context: Optional[str] = None
+        access_time: datetime | None = None,
+        context: str | None = None
     ) -> None:
         """
         Record an access to a chunk for ACT-R activation tracking.
@@ -318,7 +318,7 @@ class MemoryStore(Store):
     def get_access_history(
         self,
         chunk_id: ChunkID,
-        limit: Optional[int] = None
+        limit: int | None = None
     ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
@@ -390,13 +390,12 @@ class MemoryStore(Store):
                 'first_access': activation['first_access'],
                 'created_at': chunk.metadata.get('created_at') if hasattr(chunk, 'metadata') else None
             }
-        else:
-            return {
-                'access_count': 0,
-                'last_access': None,
-                'first_access': None,
-                'created_at': chunk.metadata.get('created_at') if hasattr(chunk, 'metadata') else None
-            }
+        return {
+            'access_count': 0,
+            'last_access': None,
+            'first_access': None,
+            'created_at': chunk.metadata.get('created_at') if hasattr(chunk, 'metadata') else None
+        }
 
     def close(self) -> None:
         """

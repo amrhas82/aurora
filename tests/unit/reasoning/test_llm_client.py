@@ -1,17 +1,14 @@
 """Unit tests for LLM client interface and implementations."""
 
-import json
 import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_reasoning.llm_client import (
     AnthropicClient,
-    LLMClient,
     LLMResponse,
-    OpenAIClient,
     OllamaClient,
+    OpenAIClient,
     extract_json_from_text,
 )
 

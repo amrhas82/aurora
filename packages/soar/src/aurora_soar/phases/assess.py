@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Tuple
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from aurora_reasoning.llm_client import LLMClient
@@ -78,7 +79,7 @@ CRITICAL_KEYWORDS = {
 }
 
 
-def _assess_tier1_keyword(query: str) -> Tuple[str, float, float]:
+def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     """Fast keyword-based complexity assessment.
 
     This function performs a lightweight keyword analysis to classify queries
@@ -301,41 +302,39 @@ def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[s
             "reasoning": f"Keyword-based classification with {confidence:.1%} confidence",
             "score": score,
         }
-    else:
-        # Tier 2: LLM verification
-        if llm_client is not None:
-            logger.info(
-                f"Keyword assessment borderline or low confidence "
-                f"(confidence={confidence:.3f}, score={score:.3f}), "
-                f"calling LLM for verification"
-            )
+    # Tier 2: LLM verification
+    if llm_client is not None:
+        logger.info(
+            f"Keyword assessment borderline or low confidence "
+            f"(confidence={confidence:.3f}, score={score:.3f}), "
+            f"calling LLM for verification"
+        )
 
-            llm_result = _assess_tier2_llm(query, keyword_result, llm_client)
+        llm_result = _assess_tier2_llm(query, keyword_result, llm_client)
 
-            return {
-                "complexity": llm_result["complexity"],
-                "confidence": llm_result["confidence"],
-                "method": "llm",
-                "reasoning": llm_result["reasoning"],
-                "recommended_verification": llm_result.get("recommended_verification"),
-                "keyword_fallback": keyword_result,  # Include keyword result for reference
-            }
-        else:
-            # No LLM available, use keyword result with warning
-            logger.warning(
-                f"Keyword assessment borderline or low confidence "
-                f"(confidence={confidence:.3f}, score={score:.3f}), "
-                f"but no LLM client provided. Using keyword result."
-            )
+        return {
+            "complexity": llm_result["complexity"],
+            "confidence": llm_result["confidence"],
+            "method": "llm",
+            "reasoning": llm_result["reasoning"],
+            "recommended_verification": llm_result.get("recommended_verification"),
+            "keyword_fallback": keyword_result,  # Include keyword result for reference
+        }
+    # No LLM available, use keyword result with warning
+    logger.warning(
+        f"Keyword assessment borderline or low confidence "
+        f"(confidence={confidence:.3f}, score={score:.3f}), "
+        f"but no LLM client provided. Using keyword result."
+    )
 
-            return {
-                "complexity": complexity_level,
-                "confidence": confidence,
-                "method": "keyword",
-                "reasoning": (
-                    f"Keyword-based classification (borderline or low confidence). "
-                    f"LLM verification recommended but not available."
-                ),
-                "score": score,
-                "llm_verification_needed": True,
-            }
+    return {
+        "complexity": complexity_level,
+        "confidence": confidence,
+        "method": "keyword",
+        "reasoning": (
+            "Keyword-based classification (borderline or low confidence). "
+            "LLM verification recommended but not available."
+        ),
+        "score": score,
+        "llm_verification_needed": True,
+    }

@@ -16,6 +16,7 @@ Tests cosine_similarity() function including:
 
 import numpy as np
 import pytest
+
 from aurora_context_code.semantic.embedding_provider import (
     EmbeddingProvider,
     cosine_similarity,

@@ -1,11 +1,10 @@
 """Cost tracking and budget enforcement for AURORA LLM usage."""
 
 import json
-import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 @dataclass
@@ -35,7 +34,7 @@ class ModelPricing:
 
 # Provider-specific pricing (as of December 2024)
 # Source: https://www.anthropic.com/pricing, https://openai.com/pricing
-MODEL_PRICING: Dict[str, ModelPricing] = {
+MODEL_PRICING: dict[str, ModelPricing] = {
     # Anthropic Claude models
     "claude-opus-4-20250514": ModelPricing(15.0, 75.0),  # Opus 4
     "claude-sonnet-4-20250514": ModelPricing(3.0, 15.0),  # Sonnet 4
@@ -74,7 +73,7 @@ class CostEntry:
     output_tokens: int
     cost_usd: float
     operation: str  # e.g., "assess", "decompose", "verify"
-    query_id: Optional[str] = None
+    query_id: str | None = None
 
 
 @dataclass
@@ -131,7 +130,7 @@ class CostTracker:
     def __init__(
         self,
         monthly_limit_usd: float = 100.0,
-        tracker_path: Optional[Path] = None,
+        tracker_path: Path | None = None,
     ):
         """Initialize cost tracker.
 
@@ -158,7 +157,7 @@ class CostTracker:
         """Load existing budget or create new one for current period."""
         if self.tracker_path.exists():
             try:
-                with open(self.tracker_path, 'r') as f:
+                with open(self.tracker_path) as f:
                     data = json.load(f)
 
                 # Check if we need to roll over to new period
@@ -190,7 +189,7 @@ class CostTracker:
             limit_usd=self.monthly_limit_usd,
         )
 
-    def _archive_old_period(self, old_data: Dict[str, Any]) -> None:
+    def _archive_old_period(self, old_data: dict[str, Any]) -> None:
         """Archive old period data to archive file."""
         archive_dir = self.tracker_path.parent / "budget_archives"
         archive_dir.mkdir(exist_ok=True)
@@ -327,7 +326,7 @@ class CostTracker:
         input_tokens: int,
         output_tokens: int,
         operation: str,
-        query_id: Optional[str] = None,
+        query_id: str | None = None,
     ) -> float:
         """Record actual cost after query execution.
 
@@ -359,7 +358,7 @@ class CostTracker:
 
         return cost
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current budget status.
 
         Returns:
@@ -376,7 +375,7 @@ class CostTracker:
             "total_entries": len(self.budget.entries),
         }
 
-    def get_breakdown_by_operation(self) -> Dict[str, float]:
+    def get_breakdown_by_operation(self) -> dict[str, float]:
         """Get cost breakdown by operation type.
 
         Returns:
@@ -387,7 +386,7 @@ class CostTracker:
             breakdown[entry.operation] = breakdown.get(entry.operation, 0.0) + entry.cost_usd
         return breakdown
 
-    def get_breakdown_by_model(self) -> Dict[str, float]:
+    def get_breakdown_by_model(self) -> dict[str, float]:
         """Get cost breakdown by model.
 
         Returns:

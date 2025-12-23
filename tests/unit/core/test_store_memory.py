@@ -155,7 +155,7 @@ class TestMemoryStore(StoreContractTests):
 
         # Save chunks with specific activations
         activations = [1.0, 2.0, 3.0]
-        for chunk, activation in zip(chunks, activations):
+        for chunk, activation in zip(chunks, activations, strict=False):
             store.save_chunk(chunk)
             store.update_activation(ChunkID(chunk.id), activation)
 

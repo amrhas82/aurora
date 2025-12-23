@@ -296,7 +296,7 @@ class TestChunkValidationInStore:
 
     def test_invalid_chunk_rejected(self):
         """Test that invalid chunks are rejected by store."""
-        store = MemoryStore()
+        MemoryStore()
 
         # This should fail validation (line_start = 0)
         with pytest.raises(ValueError, match="line_start must be > 0"):

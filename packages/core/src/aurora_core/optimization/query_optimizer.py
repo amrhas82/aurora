@@ -20,7 +20,7 @@ References:
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Protocol, Set
+from typing import Protocol
 
 from aurora_core.activation.engine import ActivationEngine
 from aurora_core.activation.retrieval import (
@@ -35,15 +35,15 @@ from aurora_core.types import ChunkID
 class StoreProtocol(Protocol):
     """Protocol for store interface required by optimizer."""
 
-    def get_all_chunks(self) -> List[ChunkData]:
+    def get_all_chunks(self) -> list[ChunkData]:
         """Get all chunks from storage."""
         ...
 
-    def get_chunks_by_type(self, chunk_type: str) -> List[ChunkData]:
+    def get_chunks_by_type(self, chunk_type: str) -> list[ChunkData]:
         """Get chunks filtered by type."""
         ...
 
-    def get_chunks_by_types(self, chunk_types: List[str]) -> List[ChunkData]:
+    def get_chunks_by_types(self, chunk_types: list[str]) -> list[ChunkData]:
         """Get chunks filtered by multiple types."""
         ...
 
@@ -79,7 +79,7 @@ class QueryOptimizationStats:
     results_returned: int = 0
     optimization_time_ms: float = 0.0
     type_filter_applied: bool = False
-    inferred_types: List[str] | None = None
+    inferred_types: list[str] | None = None
 
     def __post_init__(self) -> None:
         if self.inferred_types is None:
@@ -144,7 +144,7 @@ class QueryOptimizer:
         activation_threshold: float = 0.3,
         enable_type_filtering: bool = True,
         batch_size: int = 100,
-        retrieval_config: Optional[RetrievalConfig] = None,
+        retrieval_config: RetrievalConfig | None = None,
     ):
         """Initialize the query optimizer.
 
@@ -171,7 +171,7 @@ class QueryOptimizer:
         )
         self.retriever = ActivationRetriever(engine, config)
 
-    def infer_chunk_types(self, query: str) -> List[str]:
+    def infer_chunk_types(self, query: str) -> list[str]:
         """Infer likely chunk types from query keywords.
 
         This analyzes the query to determine what types of chunks the user
@@ -194,7 +194,7 @@ class QueryOptimizer:
             ['test', 'function']
         """
         query_lower = query.lower()
-        query_words = set(query_lower.split())
+        set(query_lower.split())
 
         inferred_types = []
 
@@ -209,9 +209,9 @@ class QueryOptimizer:
 
     def pre_filter_candidates(
         self,
-        query: Optional[str] = None,
-        chunk_types: Optional[List[str]] = None,
-    ) -> List[ChunkData]:
+        query: str | None = None,
+        chunk_types: list[str] | None = None,
+    ) -> list[ChunkData]:
         """Pre-filter candidate chunks before activation calculation.
 
         This applies type-based filtering to reduce the search space before
@@ -238,17 +238,16 @@ class QueryOptimizer:
         # Apply type filtering if we have types
         if types_to_filter:
             return self.store.get_chunks_by_types(types_to_filter)
-        else:
-            # No filtering - return all chunks
-            return self.store.get_all_chunks()
+        # No filtering - return all chunks
+        return self.store.get_all_chunks()
 
     def calculate_activations_batch(
         self,
-        candidates: List[ChunkData],
-        query_keywords: Optional[Set[str]] = None,
-        spreading_scores: Optional[Dict[ChunkID, float]] = None,
-        current_time: Optional[datetime] = None,
-    ) -> Dict[ChunkID, float]:
+        candidates: list[ChunkData],
+        query_keywords: set[str] | None = None,
+        spreading_scores: dict[ChunkID, float] | None = None,
+        current_time: datetime | None = None,
+    ) -> dict[ChunkID, float]:
         """Calculate activations for candidates in batches.
 
         This batches activation calculations to reduce overhead from
@@ -302,13 +301,13 @@ class QueryOptimizer:
     def retrieve_optimized(
         self,
         query: str,
-        query_keywords: Optional[Set[str]] = None,
-        spreading_scores: Optional[Dict[ChunkID, float]] = None,
-        chunk_types: Optional[List[str]] = None,
+        query_keywords: set[str] | None = None,
+        spreading_scores: dict[ChunkID, float] | None = None,
+        chunk_types: list[str] | None = None,
         top_k: int = 10,
-        current_time: Optional[datetime] = None,
+        current_time: datetime | None = None,
         include_stats: bool = True,
-    ) -> tuple[List[RetrievalResult], Optional[QueryOptimizationStats]]:
+    ) -> tuple[list[RetrievalResult], QueryOptimizationStats | None]:
         """Retrieve chunks with full query optimization.
 
         This is the main optimized retrieval method that applies all
@@ -409,13 +408,13 @@ class QueryOptimizer:
 
     def retrieve_with_threshold(
         self,
-        candidates: List[ChunkData],
-        query_keywords: Optional[Set[str]] = None,
-        spreading_scores: Optional[Dict[ChunkID, float]] = None,
-        threshold: Optional[float] = None,
-        max_results: Optional[int] = None,
-        current_time: Optional[datetime] = None,
-    ) -> List[RetrievalResult]:
+        candidates: list[ChunkData],
+        query_keywords: set[str] | None = None,
+        spreading_scores: dict[ChunkID, float] | None = None,
+        threshold: float | None = None,
+        max_results: int | None = None,
+        current_time: datetime | None = None,
+    ) -> list[RetrievalResult]:
         """Retrieve chunks with explicit threshold filtering.
 
         This is a lower-level method that applies activation threshold
@@ -445,7 +444,7 @@ class QueryOptimizer:
             current_time=current_time,
         )
 
-    def _extract_keywords(self, query: str) -> Set[str]:
+    def _extract_keywords(self, query: str) -> set[str]:
         """Extract keywords from query string.
 
         This is a simple keyword extraction that splits on whitespace
@@ -468,9 +467,8 @@ class QueryOptimizer:
             'that', 'the', 'to', 'was', 'will', 'with'
         }
 
-        keywords = {word for word in words if word not in stop_words}
+        return {word for word in words if word not in stop_words}
 
-        return keywords
 
 
 __all__ = [

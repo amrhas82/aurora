@@ -22,7 +22,7 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aurora_core.types import ChunkID
 
@@ -134,7 +134,7 @@ class LRUCache:
         self.capacity = capacity
         self.cache: OrderedDict[str, CacheEntry] = OrderedDict()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache and update access order.
 
         Args:
@@ -254,7 +254,7 @@ class CacheManager:
             - Can be enabled for production deployments with large codebases
         """
         self.hot_cache = LRUCache(capacity=hot_cache_size)
-        self.activation_cache: Dict[ChunkID, CacheEntry] = {}
+        self.activation_cache: dict[ChunkID, CacheEntry] = {}
         self.activation_ttl = activation_ttl_seconds
         self.enable_persistent = enable_persistent_cache
         self.stats = CacheStats()
@@ -262,7 +262,7 @@ class CacheManager:
         # Persistent cache would be initialized here if enabled
         # For now, we'll keep it simple and only use hot + activation caches
 
-    def get_chunk(self, chunk_id: ChunkID) -> Optional[Any]:
+    def get_chunk(self, chunk_id: ChunkID) -> Any | None:
         """Get chunk from cache (hot → persistent → miss).
 
         This implements the cache hierarchy:
@@ -319,8 +319,8 @@ class CacheManager:
     def get_activation(
         self,
         chunk_id: ChunkID,
-        current_time: Optional[datetime] = None
-    ) -> Optional[float]:
+        current_time: datetime | None = None
+    ) -> float | None:
         """Get cached activation score if not expired.
 
         Args:
@@ -404,7 +404,7 @@ class CacheManager:
         """
         return self.stats
 
-    def get_memory_usage_estimate(self) -> Dict[str, int]:
+    def get_memory_usage_estimate(self) -> dict[str, int]:
         """Estimate memory usage of caches.
 
         Returns:

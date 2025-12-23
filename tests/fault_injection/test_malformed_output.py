@@ -15,7 +15,6 @@ import json
 from unittest.mock import Mock
 
 import pytest
-
 from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
 
 
@@ -69,11 +68,11 @@ class MalformedLLMClient(LLMClient):
             # Return string that looks like JSON but isn't valid
             raise ValueError("Invalid JSON: Expecting property name enclosed in double quotes")
 
-        elif self._malformed_type == "missing_fields":
+        if self._malformed_type == "missing_fields":
             # Valid JSON but missing required fields
             return {"partial": "data"}
 
-        elif self._malformed_type == "wrong_types":
+        if self._malformed_type == "wrong_types":
             # Valid JSON with wrong data types
             return {
                 "complexity": 123,  # Should be string
@@ -81,28 +80,27 @@ class MalformedLLMClient(LLMClient):
                 "subgoals": "not a list",  # Should be list
             }
 
-        elif self._malformed_type == "no_json":
+        if self._malformed_type == "no_json":
             # Plain text - raise error since we can't extract JSON
             raise ValueError("No JSON found in response")
 
-        elif self._malformed_type == "partial_json":
+        if self._malformed_type == "partial_json":
             # Truncated JSON
             raise ValueError("Unexpected end of JSON input")
 
-        elif self._malformed_type == "markdown_wrapped":
+        if self._malformed_type == "markdown_wrapped":
             # Valid JSON wrapped in markdown (should be extracted correctly)
             return {"status": "success", "data": "valid"}
 
-        elif self._malformed_type == "unicode_issues":
+        if self._malformed_type == "unicode_issues":
             # Problematic unicode
             raise ValueError("Invalid unicode escape sequence")
 
-        elif self._malformed_type == "oversized":
+        if self._malformed_type == "oversized":
             # Extremely large output
             return {"data": "x" * 1000000}
 
-        else:
-            raise ValueError("Unknown malformed type")
+        raise ValueError("Unknown malformed type")
 
     def count_tokens(self, text: str) -> int:
         """Count tokens (simple approximation)."""
@@ -338,14 +336,14 @@ class TestMalformedDecomposition:
         }
 
         # Routing fails with None agent (AttributeError on split())
-        from aurora_soar.phases.route import route_subgoals
         from aurora_soar.agent_registry import AgentRegistry
+        from aurora_soar.phases.route import route_subgoals
 
         registry = AgentRegistry()
 
         # Should raise AttributeError when trying to split None
         with pytest.raises(AttributeError, match="'NoneType'.*'split'"):
-            result = route_subgoals(
+            route_subgoals(
                 decomposition=invalid_decomposition,
                 agent_registry=registry,
             )
@@ -376,7 +374,7 @@ class TestMalformedDecomposition:
         # The verification logic should detect invalid dependencies
         # (though our mock might not - this tests the structure)
         try:
-            result = verify_decomposition(
+            verify_decomposition(
                 llm_client=mock_client,
                 query="Test query",
                 decomposition=invalid_decomposition,
@@ -413,7 +411,11 @@ class TestMalformedVerification:
 
     def test_verification_with_invalid_scores(self):
         """Test verification with out-of-range scores."""
-        from aurora_reasoning.verify import VerificationResult, VerificationVerdict, VerificationOption
+        from aurora_reasoning.verify import (
+            VerificationOption,
+            VerificationResult,
+            VerificationVerdict,
+        )
 
         # Scores are not validated at construction - system accepts out-of-range values
         # This test documents current behavior (no validation)
@@ -435,7 +437,11 @@ class TestMalformedVerification:
 
     def test_verification_with_negative_scores(self):
         """Test verification with negative scores."""
-        from aurora_reasoning.verify import VerificationResult, VerificationVerdict, VerificationOption
+        from aurora_reasoning.verify import (
+            VerificationOption,
+            VerificationResult,
+            VerificationVerdict,
+        )
 
         # Negative scores are not validated - system accepts them
         # This test documents current behavior (no validation)
@@ -501,8 +507,7 @@ class TestErrorRecovery:
             call_count["count"] += 1
             if call_count["count"] == 1:
                 raise ValueError("Invalid JSON")
-            else:
-                return {"status": "success"}
+            return {"status": "success"}
 
         mock_client = Mock(spec=LLMClient)
         mock_client.generate_json.side_effect = mock_generate_json

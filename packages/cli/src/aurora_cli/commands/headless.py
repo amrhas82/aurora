@@ -29,12 +29,13 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
 
 __all__ = ["headless_command"]
 
@@ -95,7 +96,7 @@ logger = logging.getLogger(__name__)
 )
 def headless_command(
     prompt_path: Path,
-    scratchpad: Optional[Path],
+    scratchpad: Path | None,
     budget: float,
     max_iter: int,
     branch: str,
@@ -209,7 +210,7 @@ def headless_command(
                 class MockSOAROrchestrator:
                     """Mock SOAR orchestrator for dry-run validation."""
 
-                    def execute(self, query: str, **kwargs: Any) -> Dict[str, Any]:
+                    def execute(self, query: str, **kwargs: Any) -> dict[str, Any]:
                         """Mock execute method."""
                         return {"response": "mock response", "cost": 0.0}
 
@@ -300,7 +301,7 @@ def headless_command(
         # Show scratchpad if requested
         if show_scratchpad and Path(result.scratchpad_path).exists():
             console.print("\n[bold]Scratchpad Content:[/]")
-            with open(result.scratchpad_path, "r") as f:
+            with open(result.scratchpad_path) as f:
                 scratchpad_content = f.read()
             console.print(
                 Panel(

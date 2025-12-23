@@ -15,17 +15,17 @@ Tests autonomous experiment execution including:
 
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch, call
+from unittest.mock import Mock, patch
 
 import pytest
 
+from aurora_soar.headless.git_enforcer import GitBranchError
 from aurora_soar.headless.orchestrator import (
-    HeadlessOrchestrator,
     HeadlessConfig,
+    HeadlessOrchestrator,
     HeadlessResult,
     TerminationReason,
 )
-from aurora_soar.headless.git_enforcer import GitBranchError, GitEnforcerConfig
 from aurora_soar.headless.prompt_loader import PromptData, PromptValidationError
 from aurora_soar.headless.scratchpad_manager import ScratchpadStatus
 
@@ -117,7 +117,7 @@ class TestHeadlessOrchestratorInit:
     def test_init_creates_components(self, mock_scratchpad, mock_prompt, mock_git):
         """Test initialization creates all required components."""
         mock_soar = Mock()
-        orchestrator = HeadlessOrchestrator(
+        HeadlessOrchestrator(
             prompt_path="experiment.md",
             scratchpad_path="scratchpad.md",
             soar_orchestrator=mock_soar,

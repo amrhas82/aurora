@@ -11,19 +11,18 @@ Focuses on:
 
 from __future__ import annotations
 
-import json
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
+from aurora_reasoning.decompose import DecompositionResult
+from aurora_reasoning.llm_client import LLMClient
+from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 
 from aurora_core.budget import CostTracker
 from aurora_core.config.loader import Config
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.logging import ConversationLogger
 from aurora_core.store.sqlite import SQLiteStore
-from aurora_reasoning.decompose import DecompositionResult
-from aurora_reasoning.llm_client import LLMClient
-from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 from aurora_soar.phases.collect import CollectResult
@@ -86,7 +85,6 @@ def mock_llm():
 @pytest.fixture
 def test_cost_tracker(tmp_path):
     """Test cost tracker with fresh budget."""
-    from pathlib import Path
     tracker_path = tmp_path / "test_budget.json"
     return CostTracker(monthly_limit_usd=100.0, tracker_path=tracker_path)
 
@@ -461,7 +459,7 @@ def test_budget_tracking_during_execution(
     mock_respond.side_effect = mock_format_response
 
     # Execute
-    initial_consumed = test_orchestrator.cost_tracker.get_status()[
+    test_orchestrator.cost_tracker.get_status()[
         "consumed_usd"
     ]
     result = test_orchestrator.execute(
@@ -702,7 +700,7 @@ def test_conversation_logging_integration(
     # Execute and check logger was called
     with patch.object(
         test_orchestrator.conversation_logger, "log_interaction"
-    ) as mock_log:
+    ):
         result = test_orchestrator.execute(
             query="Test query", verbosity="NORMAL"
         )

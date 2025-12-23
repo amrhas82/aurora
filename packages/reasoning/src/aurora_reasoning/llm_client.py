@@ -5,7 +5,7 @@ import os
 import re
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, cast
 
 from pydantic import BaseModel
 from tenacity import (
@@ -24,7 +24,7 @@ class LLMResponse(BaseModel):
     input_tokens: int
     output_tokens: int
     finish_reason: str
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 class LLMClient(ABC):
@@ -46,10 +46,10 @@ class LLMClient(ABC):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any
     ) -> LLMResponse:
         """Generate text completion from prompt.
@@ -76,12 +76,12 @@ class LLMClient(ABC):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate JSON-structured output from prompt.
 
         This method enforces JSON-only output, extracting valid JSON even if
@@ -123,7 +123,7 @@ class LLMClient(ABC):
         pass
 
 
-def extract_json_from_text(text: str) -> Dict[str, Any]:
+def extract_json_from_text(text: str) -> dict[str, Any]:
     """Extract JSON from text that may contain markdown code blocks or extra text.
 
     Args:
@@ -137,7 +137,7 @@ def extract_json_from_text(text: str) -> Dict[str, Any]:
     """
     # Try direct parse first
     try:
-        result: Dict[str, Any] = json.loads(text)
+        result: dict[str, Any] = json.loads(text)
         return result
     except json.JSONDecodeError:
         pass
@@ -147,7 +147,7 @@ def extract_json_from_text(text: str) -> Dict[str, Any]:
     matches = re.findall(json_block_pattern, text, re.DOTALL)
     for match in matches:
         try:
-            result_match: Dict[str, Any] = json.loads(match)
+            result_match: dict[str, Any] = json.loads(match)
             return result_match
         except json.JSONDecodeError:
             continue
@@ -157,7 +157,7 @@ def extract_json_from_text(text: str) -> Dict[str, Any]:
     matches = re.findall(json_object_pattern, text, re.DOTALL)
     for match in matches:
         try:
-            result_obj: Dict[str, Any] = json.loads(match)
+            result_obj: dict[str, Any] = json.loads(match)
             return result_obj
         except json.JSONDecodeError:
             continue
@@ -177,7 +177,7 @@ class AnthropicClient(LLMClient):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         default_model: str = "claude-sonnet-4-20250514",
     ):
         """Initialize Anthropic client.
@@ -227,10 +227,10 @@ class AnthropicClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate text completion from prompt.
@@ -283,12 +283,12 @@ class AnthropicClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate JSON-structured output from prompt.
 
         Args:
@@ -355,7 +355,7 @@ class OpenAIClient(LLMClient):
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         default_model: str = "gpt-4-turbo-preview",
     ):
         """Initialize OpenAI client.
@@ -405,10 +405,10 @@ class OpenAIClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate text completion from prompt.
@@ -434,7 +434,7 @@ class OpenAIClient(LLMClient):
         self._rate_limit()
 
         try:
-            messages: List[Dict[str, str]] = []
+            messages: list[dict[str, str]] = []
             if system:
                 messages.append({"role": "system", "content": system})
             messages.append({"role": "user", "content": prompt})
@@ -466,12 +466,12 @@ class OpenAIClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate JSON-structured output from prompt.
 
         Args:
@@ -583,10 +583,10 @@ class OllamaClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate text completion from prompt.
@@ -655,12 +655,12 @@ class OllamaClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
+        model: str | None = None,
         max_tokens: int = 4096,
         temperature: float = 0.7,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate JSON-structured output from prompt.
 
         Args:

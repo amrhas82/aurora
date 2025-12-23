@@ -4,13 +4,13 @@ Unit tests for Alerting class.
 Tests alert rules and notification system.
 """
 
-import logging
 from unittest.mock import Mock, patch
+
 import pytest
 
 from aurora_core.resilience.alerting import (
-    Alerting,
     Alert,
+    Alerting,
     AlertRule,
     AlertSeverity,
 )

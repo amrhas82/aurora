@@ -20,10 +20,7 @@ Performance requirements:
 
 from __future__ import annotations
 
-import asyncio
-import json
 import time
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -31,8 +28,6 @@ import pytest
 from tests.integration.test_e2e_framework import (
     E2ETestFramework,
     MockAgent,
-    MockLLMResponse,
-    create_mock_decomposition,
 )
 
 

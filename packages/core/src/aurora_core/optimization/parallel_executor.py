@@ -13,12 +13,12 @@ Performance Benefits:
 - Result streaming improves perceived latency by 40-50%
 """
 
-import asyncio
 import time
-from concurrent.futures import ThreadPoolExecutor, Future, as_completed
+from collections.abc import Callable, Generator
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, List, Optional, Set
+from typing import Any
 
 
 class AgentPriority(Enum):
@@ -75,7 +75,7 @@ class AgentResult:
     agent_id: str
     success: bool
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     execution_time_ms: float = 0.0
     priority: AgentPriority = AgentPriority.NORMAL
 
@@ -178,14 +178,14 @@ class ParallelAgentExecutor:
 
         # Dynamic concurrency state
         self.current_concurrency = min_concurrency
-        self.recent_response_times: List[float] = []
+        self.recent_response_times: list[float] = []
         self.response_time_window = 10  # Number of samples for moving average
 
     def execute_all(
         self,
-        tasks: List[AgentTask],
+        tasks: list[AgentTask],
         enable_early_termination: bool = True,
-    ) -> tuple[List[AgentResult], ExecutionStats]:
+    ) -> tuple[list[AgentResult], ExecutionStats]:
         """Execute all tasks in parallel and wait for completion.
 
         Args:
@@ -208,9 +208,9 @@ class ParallelAgentExecutor:
         # Sort tasks by priority (critical first)
         sorted_tasks = sorted(tasks, key=lambda t: t.priority.value)
 
-        results: List[AgentResult] = []
+        results: list[AgentResult] = []
         executor = ThreadPoolExecutor(max_workers=self.max_concurrency)
-        futures: Dict[Future[AgentResult], AgentTask] = {}
+        futures: dict[Future[AgentResult], AgentTask] = {}
         critical_failure = False
 
         try:
@@ -253,7 +253,7 @@ class ParallelAgentExecutor:
                 # Early termination on critical failure
                 if critical_failure:
                     # Cancel remaining futures
-                    for future in futures.keys():
+                    for future in futures:
                         future.cancel()
                         stats.early_terminated_tasks += 1
                     break
@@ -286,7 +286,7 @@ class ParallelAgentExecutor:
 
     def execute_streaming(
         self,
-        tasks: List[AgentTask],
+        tasks: list[AgentTask],
         enable_early_termination: bool = True,
     ) -> Generator[AgentResult, None, None]:
         """Execute tasks and yield results as they complete (streaming).
@@ -312,7 +312,7 @@ class ParallelAgentExecutor:
         sorted_tasks = sorted(tasks, key=lambda t: t.priority.value)
 
         executor = ThreadPoolExecutor(max_workers=self.max_concurrency)
-        futures: Dict[Future[AgentResult], AgentTask] = {}
+        futures: dict[Future[AgentResult], AgentTask] = {}
         critical_failure = False
 
         try:
@@ -352,7 +352,7 @@ class ParallelAgentExecutor:
                 # Early termination
                 if critical_failure:
                     # Cancel remaining futures
-                    for future in futures.keys():
+                    for future in futures:
                         future.cancel()
                     break
 

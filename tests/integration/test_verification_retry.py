@@ -6,12 +6,12 @@ the retry loop and that feedback is properly generated and incorporated.
 """
 
 import pytest
+from aurora_reasoning.llm_client import LLMClient, LLMResponse
 
 from aurora_core.budget import CostTracker
 from aurora_core.chunks import CodeChunk
 from aurora_core.config.loader import Config
 from aurora_core.store.memory import MemoryStore
-from aurora_reasoning.llm_client import LLMClient, LLMResponse
 from aurora_soar import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 
@@ -22,8 +22,8 @@ class MockCostTracker(CostTracker):
     def __init__(self):
         """Initialize mock cost tracker with unlimited budget."""
         # Use temp file to avoid loading persistent budget data
-        from pathlib import Path
         import tempfile
+        from pathlib import Path
         temp_dir = tempfile.mkdtemp()
         tracker_path = Path(temp_dir) / "mock_budget_tracker.json"
         super().__init__(monthly_limit_usd=999999.0, tracker_path=tracker_path)
@@ -113,7 +113,7 @@ class MockLLMClientWithRetry(LLMClient):
 
         if is_retry_decompose:
             # This is a retry decomposition with feedback - return decomposition based on scenario
-            
+
             if self.retry_scenario == "fail_then_pass":
                 # Second attempt: complete decomposition (Phase 2 format)
                 return self._make_response("""
@@ -143,7 +143,7 @@ class MockLLMClientWithRetry(LLMClient):
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
 """)
-            elif self.retry_scenario == "fail_twice":
+            if self.retry_scenario == "fail_twice":
                 # Still incomplete even after retry
                 return self._make_response("""
 {
@@ -160,12 +160,12 @@ class MockLLMClientWithRetry(LLMClient):
   "expected_tools": ["file_reader"]
 }
 """)
-            else:  # pass_first - shouldn't reach here
-                return self._make_response("mock response")
+            # pass_first - shouldn't reach here
+            return self._make_response("mock response")
 
-        elif is_verification:
+        if is_verification:
             self.verification_count += 1
-            
+
             if self.retry_scenario == "fail_then_pass":
                 if self.verification_count == 1:
                     # First decomposition gets low score
@@ -184,9 +184,8 @@ class MockLLMClientWithRetry(LLMClient):
   ]
 }
 """)
-                else:
-                    # Second decomposition passes
-                    return self._make_response("""
+                # Second decomposition passes
+                return self._make_response("""
 {
   "completeness": 0.9,
   "consistency": 0.9,
@@ -197,7 +196,7 @@ class MockLLMClientWithRetry(LLMClient):
   "issues": []
 }
 """)
-            elif self.retry_scenario == "fail_twice":
+            if self.retry_scenario == "fail_twice":
                 # Both verifications fail
                 return self._make_response("""
 {
@@ -213,9 +212,9 @@ class MockLLMClientWithRetry(LLMClient):
   ]
 }
 """)
-            else:  # pass_first
-                # First verification passes
-                return self._make_response("""
+            # pass_first
+            # First verification passes
+            return self._make_response("""
 {
   "completeness": 0.9,
   "consistency": 0.9,
@@ -228,8 +227,8 @@ class MockLLMClientWithRetry(LLMClient):
 """)
 
         # Decomposition request
-        elif "decompose" in prompt.lower() or "subgoals" in prompt.lower():
-            
+        if "decompose" in prompt.lower() or "subgoals" in prompt.lower():
+
             if self.retry_scenario == "fail_then_pass":
                 if self.call_count == 1:
                     # First attempt: incomplete decomposition (Phase 2 format)
@@ -248,9 +247,8 @@ class MockLLMClientWithRetry(LLMClient):
   "expected_tools": ["file_reader"]
 }
 """)
-                else:
-                    # Second attempt: complete decomposition (Phase 2 format)
-                    return self._make_response("""
+                # Second attempt: complete decomposition (Phase 2 format)
+                return self._make_response("""
 {
   "goal": "Review authentication module for security",
   "subgoals": [
@@ -277,7 +275,7 @@ class MockLLMClientWithRetry(LLMClient):
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
 """)
-            elif self.retry_scenario == "fail_twice":
+            if self.retry_scenario == "fail_twice":
                 # Both attempts: incomplete decomposition (Phase 2 format)
                 return self._make_response("""
 {
@@ -294,9 +292,9 @@ class MockLLMClientWithRetry(LLMClient):
   "expected_tools": ["file_reader"]
 }
 """)
-            else:  # pass_first
-                # First attempt: complete decomposition (Phase 2 format)
-                return self._make_response("""
+            # pass_first
+            # First attempt: complete decomposition (Phase 2 format)
+            return self._make_response("""
 {
   "goal": "Review authentication module for security",
   "subgoals": [
@@ -325,7 +323,7 @@ class MockLLMClientWithRetry(LLMClient):
 """)
 
         # Feedback generation request (check for verification result in prompt)
-        elif "verification result" in prompt.lower() or ("feedback" in prompt.lower() and "improve" in prompt.lower()):
+        if "verification result" in prompt.lower() or ("feedback" in prompt.lower() and "improve" in prompt.lower()):
             feedback_text = """
 The decomposition is incomplete. To improve:
 

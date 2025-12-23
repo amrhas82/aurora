@@ -518,7 +518,7 @@ class TestEdgeCases:
         """Test that repeated keywords don't inflate boost."""
         boost = ContextBoost()
         query_keywords = {'database', 'query'}
-        chunk_keywords = {'database', 'query', 'database', 'database'}
+        chunk_keywords = {'database', 'query'}
 
         # Boost should be based on unique keyword overlap
         score = boost.calculate(query_keywords, chunk_keywords)

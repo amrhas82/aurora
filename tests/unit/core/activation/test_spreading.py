@@ -9,8 +9,8 @@ Tests the ACT-R spreading activation calculation including:
 - Edge cases (cycles, max_hops, max_edges, bidirectional spreading)
 """
 
+
 import pytest
-from collections import defaultdict
 
 from aurora_core.activation.spreading import (
     Relationship,

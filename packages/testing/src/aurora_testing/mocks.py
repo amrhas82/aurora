@@ -113,10 +113,7 @@ class MockLLM:
             ...     lambda p: f"Long prompt ({len(p)} chars)"
             ... )
         """
-        if isinstance(response, str):
-            response_func = lambda _: response
-        else:
-            response_func = response
+        response_func = (lambda _: response) if isinstance(response, str) else response
 
         self.response_rules.append((condition, response_func))
 
@@ -312,10 +309,7 @@ class MockAgent:
         if capability not in self.capabilities:
             return False
 
-        if domain and domain not in self.domains:
-            return False
-
-        return True
+        return not (domain and domain not in self.domains)
 
 
 # ============================================================================

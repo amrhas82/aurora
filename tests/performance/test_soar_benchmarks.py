@@ -11,12 +11,12 @@ performance targets specified in the PRD:
 import time
 
 import pytest
+from aurora_reasoning.llm_client import LLMClient
 
 from aurora_core.budget import CostTracker
 from aurora_core.chunks import CodeChunk
 from aurora_core.config.loader import Config
 from aurora_core.store.memory import MemoryStore
-from aurora_reasoning.llm_client import LLMClient
 from aurora_soar import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 
@@ -90,8 +90,8 @@ class NoOpCostTracker(CostTracker):
 
     def __init__(self):
         """Initialize no-op tracker with isolated temp file."""
-        from pathlib import Path
         import tempfile
+        from pathlib import Path
         temp_dir = tempfile.mkdtemp()
         tracker_path = Path(temp_dir) / "perf_budget_tracker.json"
         super().__init__(monthly_limit_usd=999999.0, tracker_path=tracker_path)
@@ -225,7 +225,7 @@ class TestSOARPerformance:
         }
 
         start = time.perf_counter()
-        result = verify.verify_decomposition(
+        verify.verify_decomposition(
             llm_client=llm_client,
             query="Test query for verification timing",
             decomposition=decomposition,
@@ -297,7 +297,7 @@ class TestPhasePerformance:
         llm_client = MockLLMClientFast()
 
         start = time.perf_counter()
-        result = assess.assess_complexity(
+        assess.assess_complexity(
             query="Test query for complexity assessment",
             llm_client=llm_client,
         )
@@ -316,7 +316,7 @@ class TestPhasePerformance:
         llm_client = MockLLMClientFast()
 
         start = time.perf_counter()
-        result = decompose.decompose_query(
+        decompose.decompose_query(
             llm_client=llm_client,
             query="Test query for decomposition timing",
             complexity="COMPLEX",
@@ -337,7 +337,7 @@ class TestPhasePerformance:
         llm_client = MockLLMClientFast()
 
         start = time.perf_counter()
-        result = synthesize.synthesize_results(
+        synthesize.synthesize_results(
             llm_client=llm_client,
             query="Test query",
             agent_outputs=[

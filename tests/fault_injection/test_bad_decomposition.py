@@ -11,13 +11,13 @@ Tests how the verification system handles intentionally bad decompositions:
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_reasoning.decompose import DecompositionResult
 from aurora_reasoning.verify import (
     VerificationOption,
     VerificationResult,
     VerificationVerdict,
 )
+
 from aurora_soar.phases.verify import verify_decomposition
 
 
@@ -92,6 +92,7 @@ class TestIncompleteSubgoals:
     ):
         """Test that incomplete subgoals trigger retry loop."""
         from aurora_reasoning.llm_client import LLMResponse
+
         from aurora_soar.phases.decompose import DecomposePhaseResult
 
         # First attempt: RETRY verdict
@@ -384,6 +385,7 @@ class TestRetryLoopExhaustion:
     ):
         """Test that max retries are enforced and result in FAIL."""
         from aurora_reasoning.llm_client import LLMResponse
+
         from aurora_soar.phases.decompose import DecomposePhaseResult
 
         # Always return RETRY verdict (never passes)

@@ -12,20 +12,19 @@ Tests the ActivationRetriever and BatchRetriever classes including:
 - Edge cases (empty candidates, no spreading, zero keywords)
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
-from typing import List, Set, Optional
+
+import pytest
 
 from aurora_core.activation.base_level import AccessHistoryEntry
-from aurora_core.activation.spreading import RelationshipGraph
-from aurora_core.activation.engine import ActivationEngine, ActivationConfig
+from aurora_core.activation.engine import ActivationEngine
 from aurora_core.activation.retrieval import (
-    RetrievalConfig,
-    RetrievalResult,
     ActivationRetriever,
     BatchRetriever,
-    ChunkData,
+    RetrievalConfig,
+    RetrievalResult,
 )
+from aurora_core.activation.spreading import RelationshipGraph
 from aurora_core.types import ChunkID
 
 
@@ -36,9 +35,9 @@ class MockChunk:
     def __init__(
         self,
         chunk_id: ChunkID,
-        access_history: Optional[List[AccessHistoryEntry]] = None,
-        last_access: Optional[datetime] = None,
-        keywords: Optional[Set[str]] = None,
+        access_history: list[AccessHistoryEntry] | None = None,
+        last_access: datetime | None = None,
+        keywords: set[str] | None = None,
     ):
         self._id = chunk_id
         self._access_history = access_history or []
@@ -50,15 +49,15 @@ class MockChunk:
         return self._id
 
     @property
-    def access_history(self) -> List[AccessHistoryEntry]:
+    def access_history(self) -> list[AccessHistoryEntry]:
         return self._access_history
 
     @property
-    def last_access(self) -> Optional[datetime]:
+    def last_access(self) -> datetime | None:
         return self._last_access
 
     @property
-    def keywords(self) -> Set[str]:
+    def keywords(self) -> set[str]:
         return self._keywords
 
 

@@ -12,13 +12,13 @@ Tests prompt file parsing and validation including:
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import patch
 
 import pytest
 
 from aurora_soar.headless.prompt_loader import (
-    PromptLoader,
     PromptData,
+    PromptLoader,
     PromptValidationError,
 )
 
@@ -188,7 +188,7 @@ class TestReadFile:
     @patch("pathlib.Path.read_text")
     def test_read_file_generic_error(self, mock_read):
         """Test reading file with generic error."""
-        mock_read.side_effect = IOError("Disk error")
+        mock_read.side_effect = OSError("Disk error")
 
         # Create actual file so file_exists() passes
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:

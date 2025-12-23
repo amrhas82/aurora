@@ -132,8 +132,7 @@ class TestStoragePerformance:
 
         @measure_time_ms
         def cold_start():
-            store = SQLiteStore(db_path=str(db_path))
-            return store
+            return SQLiteStore(db_path=str(db_path))
 
         store, elapsed_ms = cold_start()
         print(f"\nSQLiteStore cold start: {elapsed_ms:.2f}ms")

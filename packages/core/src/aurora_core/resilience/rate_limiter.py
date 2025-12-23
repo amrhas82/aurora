@@ -5,7 +5,6 @@ Implements rate limiting following PRD Section 5.3.
 """
 
 import time
-from typing import Optional
 
 
 class RateLimiter:

@@ -5,9 +5,11 @@ Implements alert rules and notifications following PRD Section 5.4.
 """
 
 import logging
-from typing import Optional, Callable, Dict, Any
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -51,16 +53,15 @@ class AlertRule:
         """
         if self.comparison == "gt":
             return metric_value > self.threshold
-        elif self.comparison == "gte":
+        if self.comparison == "gte":
             return metric_value >= self.threshold
-        elif self.comparison == "lt":
+        if self.comparison == "lt":
             return metric_value < self.threshold
-        elif self.comparison == "lte":
+        if self.comparison == "lte":
             return metric_value <= self.threshold
-        elif self.comparison == "eq":
+        if self.comparison == "eq":
             return metric_value == self.threshold
-        else:
-            raise ValueError(f"Unknown comparison operator: {self.comparison}")
+        raise ValueError(f"Unknown comparison operator: {self.comparison}")
 
 
 @dataclass
@@ -123,7 +124,7 @@ class Alerting:
 
     def __init__(self) -> None:
         """Initialize the Alerting system."""
-        self.rules: Dict[str, AlertRule] = {}
+        self.rules: dict[str, AlertRule] = {}
         self.notification_handlers: list[Callable[[Alert], None]] = []
         self.fired_alerts: list[Alert] = []
 
@@ -210,7 +211,7 @@ class Alerting:
         """
         self.notification_handlers.append(handler)
 
-    def evaluate(self, metrics: Dict[str, float]) -> list[Alert]:
+    def evaluate(self, metrics: dict[str, float]) -> list[Alert]:
         """
         Evaluate all rules against provided metrics.
 
@@ -282,7 +283,7 @@ class Alerting:
                 logger.error(f"Error in notification handler: {e}", exc_info=True)
 
     def get_fired_alerts(
-        self, severity: Optional[AlertSeverity] = None
+        self, severity: AlertSeverity | None = None
     ) -> list[Alert]:
         """
         Get list of all fired alerts, optionally filtered by severity.
@@ -301,7 +302,7 @@ class Alerting:
         """Clear the history of fired alerts."""
         self.fired_alerts.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get alerting statistics.
 

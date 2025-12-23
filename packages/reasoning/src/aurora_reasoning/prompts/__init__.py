@@ -51,9 +51,9 @@ class PromptTemplate(ABC):
     def build_prompt(
         self,
         *,
-        examples: Optional[List[Dict[str, Any]]] = None,
+        examples: list[dict[str, Any]] | None = None,
         **kwargs: Any
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Build complete prompt with system and user messages.
 
         Args:
@@ -76,7 +76,7 @@ class PromptTemplate(ABC):
             "user": user_prompt,
         }
 
-    def _format_examples(self, examples: List[Dict[str, Any]]) -> str:
+    def _format_examples(self, examples: list[dict[str, Any]]) -> str:
         """Format few-shot examples for inclusion in prompt.
 
         Args:
@@ -97,7 +97,7 @@ class PromptTemplate(ABC):
         return "\n".join(lines)
 
     @abstractmethod
-    def _format_single_example(self, example: Dict[str, Any]) -> str:
+    def _format_single_example(self, example: dict[str, Any]) -> str:
         """Format a single example for this template.
 
         Args:

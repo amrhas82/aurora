@@ -21,7 +21,7 @@ Reference:
 """
 
 import re
-from typing import Any, List, Optional, Set
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -92,10 +92,10 @@ class KeywordExtractor:
         'ui', 'uri', 'url', 'usb', 'utc', 'var', 'vm', 'vpn', 'web',
         'www', 'xml', 'yml', 'zip', 'add', 'all', 'any', 'bin', 'bit',
         'buf', 'cmd', 'get', 'len', 'map', 'new', 'old', 'out', 'put',
-        'raw', 'set', 'src', 'sum', 'tag', 'tmp', 'top', 'use', 'val',
+        'raw', 'set', 'src', 'sum', 'tag', 'top', 'use', 'val',
     }
 
-    def __init__(self, config: Optional[ContextBoostConfig] = None):
+    def __init__(self, config: ContextBoostConfig | None = None):
         """Initialize the keyword extractor.
 
         Args:
@@ -103,7 +103,7 @@ class KeywordExtractor:
         """
         self.config = config or ContextBoostConfig()
 
-    def extract(self, text: str) -> Set[str]:
+    def extract(self, text: str) -> set[str]:
         """Extract keywords from text.
 
         Args:
@@ -147,7 +147,7 @@ class KeywordExtractor:
 
         return keywords
 
-    def extract_from_chunks(self, chunks: List[str]) -> Set[str]:
+    def extract_from_chunks(self, chunks: list[str]) -> set[str]:
         """Extract keywords from multiple text chunks.
 
         Args:
@@ -178,7 +178,7 @@ class ContextBoost:
         Context boost: 0.333
     """
 
-    def __init__(self, config: Optional[ContextBoostConfig] = None):
+    def __init__(self, config: ContextBoostConfig | None = None):
         """Initialize the context boost calculator.
 
         Args:
@@ -189,8 +189,8 @@ class ContextBoost:
 
     def calculate(
         self,
-        query_keywords: Set[str],
-        chunk_keywords: Set[str]
+        query_keywords: set[str],
+        chunk_keywords: set[str]
     ) -> float:
         """Calculate context boost based on keyword overlap.
 
@@ -240,9 +240,9 @@ class ContextBoost:
         self,
         query_text: str,
         chunk_name: str,
-        chunk_docstring: Optional[str] = None,
-        chunk_signature: Optional[str] = None,
-        chunk_body: Optional[str] = None
+        chunk_docstring: str | None = None,
+        chunk_signature: str | None = None,
+        chunk_body: str | None = None
     ) -> float:
         """Calculate context boost from chunk fields.
 
@@ -317,14 +317,13 @@ class ContextBoost:
         if total_weight > 0:
             weighted_fraction = total_overlap / total_weight
             return weighted_fraction * self.config.boost_factor
-        else:
-            return 0.0
+        return 0.0
 
     def get_matching_keywords(
         self,
-        query_keywords: Set[str],
-        chunk_keywords: Set[str]
-    ) -> Set[str]:
+        query_keywords: set[str],
+        chunk_keywords: set[str]
+    ) -> set[str]:
         """Get the keywords that match between query and chunk.
 
         Args:

@@ -53,11 +53,11 @@ Usage:
 """
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class TerminationSignal(Enum):
@@ -122,7 +122,7 @@ class ScratchpadEntry:
     action: str
     result: str
     cost: float
-    notes: Optional[str] = None
+    notes: str | None = None
 
     def to_markdown(self) -> str:
         """
@@ -198,7 +198,7 @@ class ScratchpadManager:
     def __init__(
         self,
         scratchpad_path: str | Path,
-        config: Optional[ScratchpadConfig] = None,
+        config: ScratchpadConfig | None = None,
     ):
         """
         Initialize ScratchpadManager.
@@ -360,7 +360,7 @@ class ScratchpadManager:
         action: str,
         result: str,
         cost: float,
-        notes: Optional[str] = None,
+        notes: str | None = None,
     ) -> None:
         """
         Append a structured iteration entry to the scratchpad.
@@ -435,7 +435,7 @@ class ScratchpadManager:
                 f"Failed to update status in scratchpad: {e}"
             ) from e
 
-    def get_status(self) -> Optional[ScratchpadStatus]:
+    def get_status(self) -> ScratchpadStatus | None:
         """
         Parse current status from scratchpad.
 
@@ -485,7 +485,7 @@ class ScratchpadManager:
 
         return status in termination_statuses
 
-    def get_termination_signal(self) -> Optional[TerminationSignal]:
+    def get_termination_signal(self) -> TerminationSignal | None:
         """
         Get the termination signal from scratchpad status.
 
@@ -552,7 +552,7 @@ class ScratchpadManager:
         except (FileNotFoundError, ValueError):
             return 0.0
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """
         Get a summary of the scratchpad state.
 
@@ -572,7 +572,7 @@ class ScratchpadManager:
             >>> print(f"Iterations: {summary['iteration_count']}")
             >>> print(f"Cost: ${summary['total_cost']:.2f}")
         """
-        summary: Dict[str, Any] = {
+        summary: dict[str, Any] = {
             "exists": self.exists(),
             "status": None,
             "iteration_count": 0,

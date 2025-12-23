@@ -11,6 +11,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
     from aurora_soar.phases.route import RouteResult
@@ -102,7 +103,7 @@ class CollectResult:
 
 
 async def execute_agents(
-    routing: "RouteResult",
+    routing: RouteResult,
     context: dict[str, Any],
     agent_timeout: float = DEFAULT_AGENT_TIMEOUT,
     query_timeout: float = DEFAULT_QUERY_TIMEOUT,
@@ -144,7 +145,7 @@ async def execute_agents(
     user_interactions: list[dict[str, Any]] = []
 
     # Convert agent assignments to dict for easy lookup
-    agent_map = {idx: agent for idx, agent in routing.agent_assignments}
+    agent_map = dict(routing.agent_assignments)
 
     try:
         # Execute each phase in the execution plan
@@ -211,7 +212,7 @@ async def execute_agents(
 
 async def _execute_parallel_subgoals(
     subgoals: list[dict[str, Any]],
-    agent_map: dict[int, "AgentInfo"],
+    agent_map: dict[int, AgentInfo],
     context: dict[str, Any],
     timeout: float,
     metadata: dict[str, Any],
@@ -267,7 +268,7 @@ async def _execute_parallel_subgoals(
 
 async def _execute_sequential_subgoals(
     subgoals: list[dict[str, Any]],
-    agent_map: dict[int, "AgentInfo"],
+    agent_map: dict[int, AgentInfo],
     context: dict[str, Any],
     timeout: float,
     metadata: dict[str, Any],
@@ -321,7 +322,7 @@ async def _execute_sequential_subgoals(
 async def _execute_single_subgoal(
     idx: int,
     subgoal: dict[str, Any],
-    agent: "AgentInfo",
+    agent: AgentInfo,
     context: dict[str, Any],
     timeout: float,
     metadata: dict[str, Any],
@@ -429,7 +430,7 @@ async def _execute_single_subgoal(
 async def _mock_agent_execution(
     idx: int,
     subgoal: dict[str, Any],
-    agent: "AgentInfo",
+    agent: AgentInfo,
     context: dict[str, Any],
 ) -> AgentOutput:
     """Mock agent execution (placeholder for actual agent integration).

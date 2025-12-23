@@ -126,7 +126,7 @@ class ReasoningChunk(Chunk):
                 if k not in ["created_at", "last_modified"]
             }
 
-            chunk = cls(
+            return cls(
                 chunk_id=data["id"],
                 pattern=content.get("pattern", ""),
                 complexity=content.get("complexity", "SIMPLE"),
@@ -138,7 +138,6 @@ class ReasoningChunk(Chunk):
                 metadata=custom_metadata,
             )
 
-            return chunk
 
         except KeyError as e:
             raise ValueError(f"Missing required field in JSON data: {e}")

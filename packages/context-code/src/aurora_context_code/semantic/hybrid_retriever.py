@@ -9,8 +9,9 @@ Classes:
     HybridRetriever: Main hybrid retrieval implementation
 """
 
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any
+
 import numpy as np
 
 
@@ -78,8 +79,8 @@ class HybridRetriever:
         store: Any,  # aurora_core.store.Store
         activation_engine: Any,  # aurora_core.activation.ActivationEngine
         embedding_provider: Any,  # EmbeddingProvider
-        config: Optional[HybridConfig] = None,
-        aurora_config: Optional[Any] = None,  # aurora_core.config.Config
+        config: HybridConfig | None = None,
+        aurora_config: Any | None = None,  # aurora_core.config.Config
     ):
         """Initialize hybrid retriever.
 
@@ -110,8 +111,8 @@ class HybridRetriever:
         self,
         query: str,
         top_k: int = 10,
-        context_keywords: Optional[List[str]] = None,
-    ) -> List[Dict[str, Any]]:
+        context_keywords: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
         """Retrieve chunks using hybrid scoring.
 
         Args:
@@ -188,12 +189,11 @@ class HybridRetriever:
                 semantic_score = cosine_similarity(query_embedding, chunk_embedding)
                 # Cosine similarity is in [-1, 1], normalize to [0, 1]
                 semantic_score = (semantic_score + 1.0) / 2.0
+            # No embedding available, use 0 or fallback
+            elif self.config.fallback_to_activation:
+                semantic_score = 0.0
             else:
-                # No embedding available, use 0 or fallback
-                if self.config.fallback_to_activation:
-                    semantic_score = 0.0
-                else:
-                    continue  # Skip chunks without embeddings
+                continue  # Skip chunks without embeddings
 
             semantic_scores.append(semantic_score)
 
@@ -251,8 +251,8 @@ class HybridRetriever:
         return final_results[:top_k]
 
     def _fallback_to_activation_only(
-        self, chunks: List[Any], top_k: int
-    ) -> List[Dict[str, Any]]:
+        self, chunks: list[Any], top_k: int
+    ) -> list[dict[str, Any]]:
         """Fallback to activation-only retrieval when embeddings unavailable.
 
         Args:
@@ -281,7 +281,7 @@ class HybridRetriever:
             )
         return results
 
-    def _normalize_scores(self, scores: List[float]) -> List[float]:
+    def _normalize_scores(self, scores: list[float]) -> list[float]:
         """Normalize scores to [0, 1] range using min-max scaling.
 
         Args:

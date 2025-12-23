@@ -78,7 +78,7 @@ jobs:
           make install-dev
 
       - name: Run unit tests
-        run: pytest tests/unit/ --cov=packages --cov-report=xml --ignore=tests/unit/context_code/semantic/
+        run: pytest tests/unit/ --cov=packages --cov-report=xml --cov-fail-under=84 --ignore=tests/unit/context_code/semantic/
 
       - name: Run integration tests
         run: pytest tests/integration/ --ignore=tests/integration/test_semantic_retrieval.py

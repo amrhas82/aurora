@@ -120,6 +120,14 @@ explicit_package_bases = true
 module = "tree_sitter.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "torch"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sentence_transformers"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]

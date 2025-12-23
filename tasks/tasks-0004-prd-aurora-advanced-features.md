@@ -95,7 +95,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `tests/unit/context_code/semantic/test_hybrid_retriever.py` - Hybrid retrieval tests
 - `tests/unit/soar/headless/test_orchestrator.py` - Headless loop tests
 - `tests/unit/soar/headless/test_prompt_loader.py` - Prompt parser tests (64 tests, 95.04% coverage, comprehensive validation)
-- `tests/unit/soar/headless/test_scratchpad_manager.py` - Scratchpad tests
+- `tests/unit/soar/headless/test_scratchpad_manager.py` - Scratchpad tests (81 tests, 100% coverage, comprehensive validation)
 - `tests/unit/soar/headless/test_git_enforcer.py` - Git branch enforcement tests (33 tests, 94.12% coverage)
 - `tests/unit/cli/test_memory_command.py` - `aur mem` command tests
 - `tests/unit/cli/test_headless_command.py` - Headless command tests
@@ -229,8 +229,8 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [ ] 3.17 Add command-line interface in cli/commands/headless.py (`aurora --headless`)
   - [x] 3.18 Write unit tests for GitEnforcer (tests/unit/soar/headless/test_git_enforcer.py)
   - [x] 3.19 Write unit tests for PromptLoader (tests/unit/soar/headless/test_prompt_loader.py) - **COMPLETE** 64 tests, 100% pass rate, 95.04% coverage, comprehensive validation
-  - [ ] 3.20 Write unit tests for ScratchpadManager (tests/unit/soar/headless/test_scratchpad_manager.py)
-  - [ ] 3.21 Write unit tests for HeadlessOrchestrator (tests/unit/soar/headless/test_orchestrator.py)
+  - [x] 3.20 Write unit tests for ScratchpadManager (tests/unit/soar/headless/test_scratchpad_manager.py) - **COMPLETE** 81 tests, 100% pass rate, 100% coverage, comprehensive validation
+  - [x] 3.21 Write unit tests for HeadlessOrchestrator (tests/unit/soar/headless/test_orchestrator.py) - **COMPLETE** 41 tests, 100% pass rate, 100% coverage, comprehensive validation of initialization, safety validation, prompt loading, scratchpad initialization, budget tracking, goal evaluation, iteration execution, main loop termination, and full workflow
   - [ ] 3.22 Create test fixtures for headless mode (tests/fixtures/headless/prompt.md, scratchpad.md)
   - [ ] 3.23 Write integration test for headless execution (tests/integration/test_headless_execution.py)
   - [ ] 3.24 Test goal completion termination (goal achieved within max iterations)

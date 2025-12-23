@@ -73,9 +73,12 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `packages/soar/src/aurora_soar/headless/orchestrator.py` - HeadlessOrchestrator main loop (implemented, integrates all components, main iteration loop, budget tracking, max iterations, LLM goal evaluation, SOAR integration)
 
 ### CLI Package - Memory Commands (`packages/cli/`)
-- `packages/cli/src/aurora_cli/commands/memory.py` - `aur mem` command implementation
-- `packages/cli/src/aurora_cli/commands/headless.py` - `aurora --headless` command
-- `packages/cli/src/aurora_cli/escalation.py` - Auto-escalation handler (simple vs complex)
+- `packages/cli/pyproject.toml` - CLI package configuration with Click and Rich dependencies
+- `packages/cli/src/aurora_cli/__init__.py` - CLI package initialization
+- `packages/cli/src/aurora_cli/main.py` - Main CLI entry point with `aur`/`aurora` commands
+- `packages/cli/src/aurora_cli/commands/__init__.py` - Commands module
+- `packages/cli/src/aurora_cli/commands/memory.py` - `aur mem` command implementation (hybrid retrieval, keyword extraction, rich formatting)
+- `packages/cli/src/aurora_cli/escalation.py` - AutoEscalationHandler class (0.6 threshold, keyword classifier integration, transparent routing)
 
 ### Test Files
 - `tests/unit/core/activation/test_base_level.py` - BLA formula tests (implemented, 24 tests, 90.91% coverage)
@@ -97,9 +100,9 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `tests/unit/soar/headless/test_prompt_loader.py` - Prompt parser tests (64 tests, 95.04% coverage, comprehensive validation)
 - `tests/unit/soar/headless/test_scratchpad_manager.py` - Scratchpad tests (81 tests, 100% coverage, comprehensive validation)
 - `tests/unit/soar/headless/test_git_enforcer.py` - Git branch enforcement tests (33 tests, 94.12% coverage)
-- `tests/unit/cli/test_memory_command.py` - `aur mem` command tests
-- `tests/unit/cli/test_headless_command.py` - Headless command tests
-- `tests/unit/cli/test_escalation.py` - Auto-escalation tests
+- `tests/unit/cli/__init__.py` - CLI test package initialization
+- `tests/unit/cli/test_memory_command.py` - `aur mem` command tests (35 tests: keyword extraction, result formatting, CLI integration, filters, all passing)
+- `tests/unit/cli/test_escalation.py` - Auto-escalation tests (23 tests: config, assessment, routing, transparent escalation, all passing)
 - `tests/integration/test_actr_retrieval.py` - ACT-R retrieval end-to-end
 - `tests/integration/test_semantic_retrieval.py` - Semantic retrieval end-to-end (11 tests passing, hybrid scoring, precision comparison, fallback)
 - `tests/integration/test_headless_execution.py` - Headless mode end-to-end
@@ -295,23 +298,23 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [x] 5.27 Verify graceful degradation (partial results on non-critical failures)
   - [x] 5.28 Test recovery rate (≥95% for transient errors)
 
-- [ ] 6.0 Memory Commands & Integration Modes
-  - [ ] 6.1 Implement memory command in cli/commands/memory.py (`aur mem`)
-  - [ ] 6.2 Add query parsing and keyword extraction for memory search
-  - [ ] 6.3 Integrate HybridRetriever for memory recall (activation + semantic)
-  - [ ] 6.4 Format memory search results (ID, type, activation, last used, context)
-  - [ ] 6.5 Add command-line options (--max-results, --type filter, --min-activation)
-  - [ ] 6.6 Implement AutoEscalationHandler class in cli/escalation.py
-  - [ ] 6.7 Add complexity assessment (reuse keyword classifier from Phase 2)
-  - [ ] 6.8 Configure escalation threshold (0.6 default, simple → direct LLM, complex → AURORA)
-  - [ ] 6.9 Integrate auto-escalation with CLI main entry point
-  - [ ] 6.10 Add transparent escalation (user doesn't need to think about it)
-  - [ ] 6.11 Write unit tests for memory command (tests/unit/cli/test_memory_command.py)
-  - [ ] 6.12 Write unit tests for auto-escalation (tests/unit/cli/test_escalation.py)
-  - [ ] 6.13 Test memory recall returns relevant results (sorted by activation)
-  - [ ] 6.14 Test auto-escalation routes simple queries to direct LLM
-  - [ ] 6.15 Test auto-escalation routes complex queries to full AURORA
-  - [ ] 6.16 Verify memory command output format is readable and actionable
+- [x] 6.0 Memory Commands & Integration Modes - **COMPLETE** All 16 subtasks complete, 58 tests passing, CLI package fully implemented
+  - [x] 6.1 Implement memory command in cli/commands/memory.py (`aur mem`)
+  - [x] 6.2 Add query parsing and keyword extraction for memory search
+  - [x] 6.3 Integrate HybridRetriever for memory recall (activation + semantic)
+  - [x] 6.4 Format memory search results (ID, type, activation, last used, context)
+  - [x] 6.5 Add command-line options (--max-results, --type filter, --min-activation)
+  - [x] 6.6 Implement AutoEscalationHandler class in cli/escalation.py
+  - [x] 6.7 Add complexity assessment (reuse keyword classifier from Phase 2)
+  - [x] 6.8 Configure escalation threshold (0.6 default, simple → direct LLM, complex → AURORA)
+  - [x] 6.9 Integrate auto-escalation with CLI main entry point
+  - [x] 6.10 Add transparent escalation (user doesn't need to think about it)
+  - [x] 6.11 Write unit tests for memory command (tests/unit/cli/test_memory_command.py)
+  - [x] 6.12 Write unit tests for auto-escalation (tests/unit/cli/test_escalation.py)
+  - [x] 6.13 Test memory recall returns relevant results (sorted by activation)
+  - [x] 6.14 Test auto-escalation routes simple queries to direct LLM
+  - [x] 6.15 Test auto-escalation routes complex queries to full AURORA
+  - [x] 6.16 Verify memory command output format is readable and actionable
 
 - [ ] 7.0 Testing, Benchmarking & Validation
   - [ ] 7.1 Create integration test for ACT-R retrieval (tests/integration/test_actr_retrieval.py)

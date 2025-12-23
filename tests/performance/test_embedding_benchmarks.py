@@ -37,9 +37,10 @@ import numpy as np
 import pytest
 
 from aurora_context_code.semantic.embedding_provider import (
-    EmbeddingProvider,
     HAS_SENTENCE_TRANSFORMERS,
+    EmbeddingProvider,
 )
+
 
 # Skip all tests in this module if sentence-transformers not available
 pytestmark = pytest.mark.skipif(

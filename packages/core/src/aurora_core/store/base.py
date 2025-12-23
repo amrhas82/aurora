@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 # Forward reference to avoid circular imports - Chunk will be defined in chunks module
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Any
 
 
 if TYPE_CHECKING:
@@ -187,7 +187,7 @@ class Store(ABC):
         self,
         chunk_id: ChunkID,
         limit: Optional[int] = None
-    ) -> List[dict]:
+    ) -> List[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
 
@@ -207,7 +207,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def get_access_stats(self, chunk_id: ChunkID) -> dict:
+    def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
         """
         Get access statistics for a chunk.
 

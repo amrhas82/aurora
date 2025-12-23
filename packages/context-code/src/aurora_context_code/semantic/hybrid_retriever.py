@@ -33,7 +33,7 @@ class HybridConfig:
     activation_top_k: int = 100
     fallback_to_activation: bool = True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate configuration."""
         if not (0.0 <= self.activation_weight <= 1.0):
             raise ValueError(f"activation_weight must be in [0, 1], got {self.activation_weight}")

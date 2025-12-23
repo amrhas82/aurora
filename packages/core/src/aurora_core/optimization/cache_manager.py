@@ -42,7 +42,7 @@ class CacheEntry:
     access_count: int = 0
     last_access: float = 0.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.last_access == 0.0:
             self.last_access = self.timestamp
 
@@ -351,6 +351,7 @@ class CacheManager:
         entry.last_access = time.time()
 
         self.stats.activation_hits += 1
+        assert isinstance(entry.value, float), "Activation cache should only store float values"
         return entry.value
 
     def set_activation(self, chunk_id: ChunkID, activation: float) -> None:

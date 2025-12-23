@@ -99,7 +99,7 @@ class RelationshipGraph:
     It uses an adjacency list representation and supports BFS traversal.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an empty relationship graph."""
         # Adjacency list: chunk_id -> [(target_id, rel_type, weight), ...]
         self._outgoing: Dict[str, List[Tuple[str, str, float]]] = defaultdict(list)
@@ -224,7 +224,7 @@ class SpreadingActivation:
         visited_edges: Set[Tuple[str, str]] = set()
 
         # BFS queue: (chunk_id, hop_count)
-        queue: deque = deque()
+        queue: deque[Tuple[str, int]] = deque()
 
         # Initialize queue with source chunks at hop 0
         visited_chunks: Set[str] = set()

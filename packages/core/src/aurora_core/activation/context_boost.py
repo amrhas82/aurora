@@ -21,7 +21,7 @@ Reference:
 """
 
 import re
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 from pydantic import BaseModel, Field
 
@@ -340,7 +340,7 @@ class ContextBoost:
         self,
         query_text: str,
         chunk_text: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Explain how context boost was calculated.
 
         Args:

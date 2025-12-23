@@ -26,7 +26,7 @@ Reference:
 
 import math
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -244,7 +244,7 @@ class DecayCalculator:
         self,
         last_access: datetime,
         current_time: Optional[datetime] = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Explain how decay was calculated.
 
         Args:

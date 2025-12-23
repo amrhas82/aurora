@@ -306,7 +306,7 @@ def memory_command(
         console.print(f"[dim]Loading AURORA memory from {db_path}...[/]")
 
         store = SQLiteStore(str(db_path))
-        activation_engine = ActivationEngine(store)
+        activation_engine = ActivationEngine()  # ActivationEngine doesn't take store as argument
         embedding_provider = EmbeddingProvider()
         retriever = HybridRetriever(store, activation_engine, embedding_provider)
 

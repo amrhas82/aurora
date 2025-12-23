@@ -79,9 +79,9 @@ class QueryOptimizationStats:
     results_returned: int = 0
     optimization_time_ms: float = 0.0
     type_filter_applied: bool = False
-    inferred_types: List[str] = None
+    inferred_types: List[str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.inferred_types is None:
             self.inferred_types = []
 

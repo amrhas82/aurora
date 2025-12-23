@@ -49,14 +49,13 @@ jobs:
           make install-dev
 
       - name: Run mypy
-        continue-on-error: true
         run: |
-          mypy -p aurora_core || true
-          mypy -p aurora_context_code || true
-          mypy -p aurora_soar || true
-          mypy -p aurora_reasoning || true
-          mypy -p aurora_cli || true
-          mypy -p aurora_testing || true
+          mypy -p aurora_core
+          mypy -p aurora_context_code
+          mypy -p aurora_soar
+          mypy -p aurora_reasoning
+          mypy -p aurora_cli
+          mypy -p aurora_testing
 
   test:
     name: Test Python ${{ matrix.python-version }}

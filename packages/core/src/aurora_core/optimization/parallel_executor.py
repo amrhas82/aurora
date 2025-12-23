@@ -18,7 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, Generator, List, Optional, Set
 
 
 class AgentPriority(Enum):
@@ -49,13 +49,13 @@ class AgentTask:
         timeout_seconds: Maximum execution time
     """
     agent_id: str
-    callable: Callable
-    args: tuple = ()
-    kwargs: dict = None
+    callable: Callable[..., Any]
+    args: tuple[Any, ...] = ()
+    kwargs: dict[str, Any] | None = None
     priority: AgentPriority = AgentPriority.NORMAL
     timeout_seconds: float = 30.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.kwargs is None:
             self.kwargs = {}
 
@@ -210,7 +210,7 @@ class ParallelAgentExecutor:
 
         results: List[AgentResult] = []
         executor = ThreadPoolExecutor(max_workers=self.max_concurrency)
-        futures: Dict[Future, AgentTask] = {}
+        futures: Dict[Future[AgentResult], AgentTask] = {}
         critical_failure = False
 
         try:
@@ -288,7 +288,7 @@ class ParallelAgentExecutor:
         self,
         tasks: List[AgentTask],
         enable_early_termination: bool = True,
-    ):
+    ) -> Generator[AgentResult, None, None]:
         """Execute tasks and yield results as they complete (streaming).
 
         This enables early processing of results without waiting for all
@@ -312,7 +312,7 @@ class ParallelAgentExecutor:
         sorted_tasks = sorted(tasks, key=lambda t: t.priority.value)
 
         executor = ThreadPoolExecutor(max_workers=self.max_concurrency)
-        futures: Dict[Future, AgentTask] = {}
+        futures: Dict[Future[AgentResult], AgentTask] = {}
         critical_failure = False
 
         try:
@@ -384,7 +384,8 @@ class ParallelAgentExecutor:
 
         try:
             # Execute with timeout
-            result = task.callable(*task.args, **task.kwargs)
+            kwargs = task.kwargs if task.kwargs is not None else {}
+            result = task.callable(*task.args, **kwargs)
 
             execution_time = (time.time() - start_time) * 1000
 

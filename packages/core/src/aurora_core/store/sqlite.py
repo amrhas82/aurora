@@ -292,6 +292,7 @@ class SQLiteStore(Store):
 
             # Deserialize based on chunk type
             chunk_type = row_data['type']
+            chunk: 'Chunk'
             if chunk_type == 'code':
                 chunk = CodeChunk.from_json(full_data)
             elif chunk_type == 'reasoning':
@@ -304,7 +305,8 @@ class SQLiteStore(Store):
 
             # Restore embeddings if present (BLOB field for semantic retrieval)
             if 'embeddings' in row_data and row_data['embeddings'] is not None:
-                chunk.embeddings = row_data['embeddings']
+                if hasattr(chunk, 'embeddings'):
+                    chunk.embeddings = row_data['embeddings']
 
             return chunk
 
@@ -601,7 +603,7 @@ class SQLiteStore(Store):
         self,
         chunk_id: ChunkID,
         limit: Optional[int] = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
 
@@ -636,7 +638,7 @@ class SQLiteStore(Store):
             if row is None or not row['access_history']:
                 return []
 
-            access_history = json.loads(row['access_history'])
+            access_history: list[dict[Any, Any]] = json.loads(row['access_history'])
 
             # Sort by timestamp, most recent first
             access_history.sort(key=lambda x: x['timestamp'], reverse=True)
@@ -653,7 +655,7 @@ class SQLiteStore(Store):
                 details=str(e)
             )
 
-    def get_access_stats(self, chunk_id: ChunkID) -> dict:
+    def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
         """
         Get access statistics for a chunk.
 

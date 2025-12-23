@@ -205,6 +205,9 @@ def synthesize_results(
         )
         retry_count += 1
 
+    # Should never reach here, but satisfy mypy
+    raise RuntimeError("Synthesis loop exited unexpectedly")
+
 
 def verify_synthesis(
     llm_client: LLMClient,

@@ -20,7 +20,7 @@ Reference:
 """
 
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Protocol, Set, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Set, Tuple
 
 from pydantic import BaseModel, Field
 
@@ -261,11 +261,15 @@ class ActivationRetriever:
 
         # Calculate spreading activation if we have the necessary data
         if source_chunks and relationship_graph:
-            spreading_scores = self.engine.calculate_spreading_only(
-                source_chunks=source_chunks,
+            # Convert ChunkIDs to strings for spreading calculation
+            source_chunk_strs: List[str] = [str(chunk_id) for chunk_id in source_chunks]
+            raw_scores = self.engine.calculate_spreading_only(
+                source_chunks=source_chunk_strs,
                 graph=relationship_graph,
                 bidirectional=True
             )
+            # Convert back to ChunkID keys
+            spreading_scores = {ChunkID(k): v for k, v in raw_scores.items()}
 
         return self.retrieve(
             candidates=candidates,
@@ -354,7 +358,7 @@ class ActivationRetriever:
         query_keywords: Optional[Set[str]] = None,
         spreading_score: float = 0.0,
         current_time: Optional[datetime] = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Explain why a chunk was or wasn't retrieved.
 
         Args:

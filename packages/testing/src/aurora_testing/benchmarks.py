@@ -137,7 +137,7 @@ class PerformanceTimer:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.stop()
 
@@ -332,7 +332,7 @@ def benchmark(
     target_ms: float | None = None,
     track_memory: bool = False,
     iterations: int = 1,
-):
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator for benchmarking functions.
 
     Args:
@@ -350,11 +350,11 @@ def benchmark(
         ... def memory_intensive():
         ...     return [0] * 1000000
     """
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
         bench_name = name or func.__name__
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> T:
             bench = PerformanceBenchmark(bench_name)
             if target_ms:
                 bench.set_target(target_ms)
@@ -376,8 +376,9 @@ def benchmark(
             # Print result (in test context)
             print(bench_result)
 
-            # Return original function result
-            return result_container[-1] if result_container else None
+            # Return original function result (guaranteed to have at least one result)
+            assert result_container, "Function must be called at least once"
+            return result_container[-1]
 
         return wrapper
 
@@ -492,13 +493,13 @@ class BenchmarkSuite:
             name: Suite name.
         """
         self.name = name
-        self.benchmarks: list[tuple[str, Callable, dict[str, Any]]] = []
+        self.benchmarks: list[tuple[str, Callable[..., Any], dict[str, Any]]] = []
         self.results: list[BenchmarkResult] = []
 
     def add(
         self,
         name: str,
-        func: Callable,
+        func: Callable[..., Any],
         target_ms: float | None = None,
         iterations: int = 1,
         track_memory: bool = False,

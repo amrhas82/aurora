@@ -22,10 +22,13 @@ Benefits:
 
 import threading
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol
 
 from aurora_core.activation.spreading import RelationshipGraph, Relationship
 from aurora_core.types import ChunkID
+
+if TYPE_CHECKING:
+    from aurora_core.activation.spreading import SpreadingActivation
 
 
 class RelationshipProvider(Protocol):
@@ -38,7 +41,7 @@ class RelationshipProvider(Protocol):
     def get_all_relationships(
         self,
         limit: Optional[int] = None
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """Get all relationships from storage.
 
         Args:
@@ -159,6 +162,7 @@ class RelationshipGraphCache:
             # Increment retrieval count
             self._retrieval_count += 1
 
+            assert self._graph is not None, "Graph should be built by this point"
             return self._graph
 
     def _should_rebuild(self) -> bool:
@@ -202,12 +206,15 @@ class RelationshipGraphCache:
 
         # Add to graph
         for rel in relationships:
-            graph.add_relationship(
-                from_chunk=rel.get('from_chunk'),
-                to_chunk=rel.get('to_chunk'),
-                rel_type=rel.get('relationship_type', 'unknown'),
-                weight=rel.get('weight', 1.0)
-            )
+            from_chunk = rel.get('from_chunk')
+            to_chunk = rel.get('to_chunk')
+            if from_chunk is not None and to_chunk is not None:
+                graph.add_relationship(
+                    from_chunk=from_chunk,
+                    to_chunk=to_chunk,
+                    rel_type=rel.get('relationship_type', 'unknown'),
+                    weight=rel.get('weight', 1.0)
+                )
 
         return graph
 
@@ -233,7 +240,7 @@ class RelationshipGraphCache:
             self.invalidate()
             return self.get_graph()
 
-    def get_stats(self) -> Dict[str, any]:
+    def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics.
 
         Returns:
@@ -330,11 +337,14 @@ class CachedSpreadingActivation:
             Dictionary mapping chunk_id -> spreading_activation_score
         """
         graph = self.cache.get_graph()
-        return self.spreading_activation.calculate(
-            source_chunks=source_chunks,
+        # Convert ChunkIDs to strings for spreading calculation
+        source_chunk_strs: List[str] = [str(chunk_id) for chunk_id in source_chunks]
+        result: Dict[str, float] = self.spreading_activation.calculate(
+            source_chunks=source_chunk_strs,
             graph=graph,
             bidirectional=bidirectional
         )
+        return result
 
     def get_related_chunks(
         self,
@@ -353,18 +363,21 @@ class CachedSpreadingActivation:
             List of (chunk_id, activation) tuples, sorted descending
         """
         graph = self.cache.get_graph()
-        return self.spreading_activation.get_related_chunks(
-            source_chunks=source_chunks,
+        # Convert ChunkIDs to strings for spreading calculation
+        source_chunk_strs: List[str] = [str(chunk_id) for chunk_id in source_chunks]
+        result: List[tuple[str, float]] = self.spreading_activation.get_related_chunks(
+            source_chunks=source_chunk_strs,
             graph=graph,
             min_activation=min_activation,
             bidirectional=bidirectional
         )
+        return result
 
     def invalidate_cache(self) -> None:
         """Invalidate the relationship graph cache."""
         self.cache.invalidate()
 
-    def get_cache_stats(self) -> Dict[str, any]:
+    def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache performance statistics.
 
         Returns:

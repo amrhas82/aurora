@@ -319,7 +319,7 @@ class MemoryStore(Store):
         self,
         chunk_id: ChunkID,
         limit: Optional[int] = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """
         Retrieve access history for a chunk.
 
@@ -356,7 +356,7 @@ class MemoryStore(Store):
 
         return sorted_history
 
-    def get_access_stats(self, chunk_id: ChunkID) -> dict:
+    def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
         """
         Get access statistics for a chunk.
 

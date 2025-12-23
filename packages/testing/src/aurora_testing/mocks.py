@@ -139,7 +139,7 @@ class MockLLM:
         prompt: str,
         temperature: float = 0.7,
         max_tokens: int | None = None,
-        **kwargs
+        **kwargs: Any
     ) -> MockLLMResponse:
         """Generate completion for prompt.
 

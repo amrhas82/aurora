@@ -5,7 +5,7 @@ import os
 import re
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from pydantic import BaseModel
 from tenacity import (
@@ -137,7 +137,8 @@ def extract_json_from_text(text: str) -> Dict[str, Any]:
     """
     # Try direct parse first
     try:
-        return json.loads(text)
+        result: Dict[str, Any] = json.loads(text)
+        return result
     except json.JSONDecodeError:
         pass
 
@@ -146,7 +147,8 @@ def extract_json_from_text(text: str) -> Dict[str, Any]:
     matches = re.findall(json_block_pattern, text, re.DOTALL)
     for match in matches:
         try:
-            return json.loads(match)
+            result_match: Dict[str, Any] = json.loads(match)
+            return result_match
         except json.JSONDecodeError:
             continue
 
@@ -155,7 +157,8 @@ def extract_json_from_text(text: str) -> Dict[str, Any]:
     matches = re.findall(json_object_pattern, text, re.DOTALL)
     for match in matches:
         try:
-            return json.loads(match)
+            result_obj: Dict[str, Any] = json.loads(match)
+            return result_obj
         except json.JSONDecodeError:
             continue
 
@@ -431,7 +434,7 @@ class OpenAIClient(LLMClient):
         self._rate_limit()
 
         try:
-            messages = []
+            messages: List[Dict[str, str]] = []
             if system:
                 messages.append({"role": "system", "content": system})
             messages.append({"role": "user", "content": prompt})
@@ -440,7 +443,7 @@ class OpenAIClient(LLMClient):
                 model=model or self._default_model,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                messages=messages,
+                messages=cast(Any, messages),  # OpenAI SDK expects specific message types
                 **kwargs,
             )
 

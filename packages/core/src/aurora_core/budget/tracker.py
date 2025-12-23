@@ -5,7 +5,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -190,7 +190,7 @@ class CostTracker:
             limit_usd=self.monthly_limit_usd,
         )
 
-    def _archive_old_period(self, old_data: Dict) -> None:
+    def _archive_old_period(self, old_data: Dict[str, Any]) -> None:
         """Archive old period data to archive file."""
         archive_dir = self.tracker_path.parent / "budget_archives"
         archive_dir.mkdir(exist_ok=True)
@@ -359,7 +359,7 @@ class CostTracker:
 
         return cost
 
-    def get_status(self) -> Dict:
+    def get_status(self) -> Dict[str, Any]:
         """Get current budget status.
 
         Returns:
@@ -382,7 +382,7 @@ class CostTracker:
         Returns:
             Dictionary mapping operation names to total costs
         """
-        breakdown = {}
+        breakdown: dict[str, float] = {}
         for entry in self.budget.entries:
             breakdown[entry.operation] = breakdown.get(entry.operation, 0.0) + entry.cost_usd
         return breakdown
@@ -393,7 +393,7 @@ class CostTracker:
         Returns:
             Dictionary mapping model names to total costs
         """
-        breakdown = {}
+        breakdown: dict[str, float] = {}
         for entry in self.budget.entries:
             breakdown[entry.model] = breakdown.get(entry.model, 0.0) + entry.cost_usd
         return breakdown

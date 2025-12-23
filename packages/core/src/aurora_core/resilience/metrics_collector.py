@@ -48,7 +48,7 @@ class MetricsCollector:
         >>> print(f"Average latency: {metrics['queries']['avg_latency']}")
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the MetricsCollector with zero metrics."""
         self.reset()
 

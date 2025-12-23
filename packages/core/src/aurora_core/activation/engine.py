@@ -22,7 +22,7 @@ Reference:
 """
 
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Set
+from typing import Any, Collection, Dict, List, Optional, Set
 
 from pydantic import BaseModel, Field
 
@@ -293,7 +293,7 @@ class ActivationEngine:
         query_keywords: Optional[Set[str]] = None,
         chunk_keywords: Optional[Set[str]] = None,
         current_time: Optional[datetime] = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Explain how activation was calculated.
 
         Provides detailed breakdown of each component for debugging
@@ -324,28 +324,29 @@ class ActivationEngine:
             current_time=current_time
         )
 
-        explanation = {
+        enabled_components: List[str] = []
+        explanation: dict[str, Any] = {
             'components': components.model_dump(),
-            'enabled_components': [],
+            'enabled_components': enabled_components,
         }
 
         # Add component-specific details
         if self.config.enable_bla:
-            explanation['enabled_components'].append('bla')
+            enabled_components.append('bla')
             explanation['bla_details'] = {
                 'access_count': len(access_history) if access_history else 0,
                 'formula': 'ln(Σ t_j^(-d)) where d=0.5'
             }
 
         if self.config.enable_spreading:
-            explanation['enabled_components'].append('spreading')
+            enabled_components.append('spreading')
             explanation['spreading_details'] = {
                 'value': spreading_activation,
                 'formula': 'weight × 0.7^(hop_count)'
             }
 
         if self.config.enable_context and query_keywords and chunk_keywords:
-            explanation['enabled_components'].append('context')
+            enabled_components.append('context')
             matching = query_keywords & chunk_keywords
             explanation['context_details'] = {
                 'query_keywords': sorted(query_keywords),
@@ -356,7 +357,7 @@ class ActivationEngine:
             }
 
         if self.config.enable_decay and last_access:
-            explanation['enabled_components'].append('decay')
+            enabled_components.append('decay')
             decay_explanation = self.decay_calculator.explain_decay(
                 last_access, current_time
             )

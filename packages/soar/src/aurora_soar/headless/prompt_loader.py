@@ -44,7 +44,7 @@ Validation Rules:
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class PromptValidationError(Exception):
@@ -183,7 +183,7 @@ class PromptLoader:
             ) from e
 
     def _extract_section_content(
-        self, content: str, header_pattern: re.Pattern, next_section_start: int = -1
+        self, content: str, header_pattern: re.Pattern[str], next_section_start: int = -1
     ) -> str:
         """
         Extract content between a section header and the next header.
@@ -238,7 +238,7 @@ class PromptLoader:
                     items.append(item)
         return items
 
-    def _find_all_sections(self, content: str) -> dict:
+    def _find_all_sections(self, content: str) -> Dict[str, int]:
         """
         Find all level-1 sections and their positions.
 
@@ -409,7 +409,7 @@ class PromptLoader:
         is_valid = len(errors) == 0
         return is_valid, errors
 
-    def get_summary(self) -> dict:
+    def get_summary(self) -> Dict[str, Any]:
         """
         Get a summary of the prompt without full parsing.
 

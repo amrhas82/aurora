@@ -174,6 +174,6 @@ class RateLimiter:
         self.wait_if_needed()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
         """Context manager exit: no cleanup needed."""
         pass

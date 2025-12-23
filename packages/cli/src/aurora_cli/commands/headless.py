@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import click
 from rich.console import Console
@@ -209,7 +209,7 @@ def headless_command(
                 class MockSOAROrchestrator:
                     """Mock SOAR orchestrator for dry-run validation."""
 
-                    def execute(self, query: str, **kwargs):
+                    def execute(self, query: str, **kwargs: Any) -> Dict[str, Any]:
                         """Mock execute method."""
                         return {"response": "mock response", "cost": 0.0}
 
@@ -219,13 +219,7 @@ def headless_command(
                     "[yellow]Warning:[/] Could not import SOAROrchestrator, using mock"
                 )
 
-                class MockSOAROrchestrator:
-                    """Mock SOAR orchestrator for dry-run validation."""
-
-                    def execute(self, query: str, **kwargs):
-                        """Mock execute method."""
-                        return {"response": "mock response", "cost": 0.0}
-
+                # Use the same class definition (avoid redefinition)
                 soar = MockSOAROrchestrator()
 
             # Create orchestrator (this validates git branch and prompt)
@@ -271,7 +265,7 @@ def headless_command(
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_path,
             scratchpad_path=scratchpad,
-            soar_orchestrator=soar,  # type: ignore
+            soar_orchestrator=soar,
             config=config,
         )
 

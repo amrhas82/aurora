@@ -121,7 +121,7 @@ class Alerting:
         >>> alerting.add_notification_handler(webhook_handler)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Alerting system."""
         self.rules: Dict[str, AlertRule] = {}
         self.notification_handlers: list[Callable[[Alert], None]] = []
@@ -321,7 +321,7 @@ class Alerting:
             for severity in AlertSeverity
         }
 
-        alerts_by_rule = {}
+        alerts_by_rule: dict[str, int] = {}
         for alert in self.fired_alerts:
             alerts_by_rule[alert.rule_name] = (
                 alerts_by_rule.get(alert.rule_name, 0) + 1

@@ -482,11 +482,15 @@ class TestMemoryEfficiency:
 
         # Initial calculation to warm up
         for chunk in chunks:
-            activation_engine.calculate(
-                chunk=chunk,
+            spreading = 0.0
+            if chunk.id in source_chunks:
+                spreading = 0.5
+            activation_engine.calculate_total(
+                access_history=chunk.access_history,
+                last_access=chunk.last_access,
+                spreading_activation=spreading,
                 query_keywords=query_keywords,
-                source_chunks=source_chunks,
-                relationship_graph=graph,
+                chunk_keywords=chunk.keywords,
                 current_time=now,
             )
 
@@ -497,11 +501,15 @@ class TestMemoryEfficiency:
         # Run 10 iterations
         for iteration in range(10):
             for chunk in chunks:
-                activation_engine.calculate(
-                    chunk=chunk,
+                spreading = 0.0
+                if chunk.id in source_chunks:
+                    spreading = 0.5
+                activation_engine.calculate_total(
+                    access_history=chunk.access_history,
+                    last_access=chunk.last_access,
+                    spreading_activation=spreading,
                     query_keywords=query_keywords,
-                    source_chunks=source_chunks,
-                    relationship_graph=graph,
+                    chunk_keywords=chunk.keywords,
                     current_time=now,
                 )
             gc.collect()

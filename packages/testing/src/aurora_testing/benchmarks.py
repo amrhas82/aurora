@@ -113,7 +113,7 @@ class PerformanceTimer:
         >>> assert timer.elapsed_ms < 100
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize timer."""
         self.start_time: float | None = None
         self.end_time: float | None = None
@@ -177,7 +177,7 @@ class PerformanceBenchmark:
         >>> print(f"Memory: {result.memory_peak_mb:.2f}MB")
     """
 
-    def __init__(self, name: str = "Benchmark"):
+    def __init__(self, name: str = "Benchmark") -> None:
         """Initialize benchmark.
 
         Args:
@@ -368,9 +368,9 @@ def benchmark(
                 bench.set_target(target_ms)
 
             # Wrap function to capture return value
-            result_container = []
+            result_container: list[T] = []
 
-            def run_func():
+            def run_func() -> T:
                 result = func(*args, **kwargs)
                 result_container.append(result)
                 return result
@@ -409,7 +409,7 @@ class MemoryProfiler:
         >>> print(f"Peak: {stats['peak_mb']:.2f}MB")
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize profiler."""
         self.is_running = False
         self.start_memory = 0
@@ -459,7 +459,7 @@ class MemoryProfiler:
         }
 
     @contextmanager
-    def profile(self):
+    def profile(self) -> Any:  # Generator[MemoryProfiler, None, None]
         """Context manager for memory profiling.
 
         Yields:
@@ -496,7 +496,7 @@ class BenchmarkSuite:
         >>> suite.print_summary()
     """
 
-    def __init__(self, name: str = "Benchmark Suite"):
+    def __init__(self, name: str = "Benchmark Suite") -> None:
         """Initialize suite.
 
         Args:

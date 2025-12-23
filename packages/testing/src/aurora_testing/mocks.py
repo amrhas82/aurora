@@ -195,7 +195,7 @@ class MockLLM:
             Last prompt string, or None if no calls made.
         """
         if self.calls:
-            return self.calls[-1]["prompt"]
+            return str(self.calls[-1]["prompt"])
         return None
 
     def assert_called(self) -> None:
@@ -261,7 +261,7 @@ class MockAgent:
     is_available: bool = True
     execution_results: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize call tracking."""
         self.calls: list[dict[str, Any]] = []
 
@@ -327,7 +327,7 @@ class MockParser:
         >>> assert len(chunks) == 2
     """
 
-    def __init__(self, language: str = "mock"):
+    def __init__(self, language: str = "mock") -> None:
         """Initialize MockParser.
 
         Args:
@@ -431,7 +431,7 @@ class MockStore:
     Useful for testing error handling and edge cases.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize MockStore."""
         self.chunks: dict[str, Chunk] = {}
         self.save_should_fail = False

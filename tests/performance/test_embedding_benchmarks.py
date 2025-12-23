@@ -36,7 +36,16 @@ import time
 import numpy as np
 import pytest
 
-from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
+from aurora_context_code.semantic.embedding_provider import (
+    EmbeddingProvider,
+    HAS_SENTENCE_TRANSFORMERS,
+)
+
+# Skip all tests in this module if sentence-transformers not available
+pytestmark = pytest.mark.skipif(
+    not HAS_SENTENCE_TRANSFORMERS,
+    reason="sentence-transformers not installed (pip install aurora-context-code[ml])",
+)
 
 
 class TestEmbeddingPerformance:

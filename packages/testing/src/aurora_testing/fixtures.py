@@ -9,7 +9,9 @@ Provides common fixtures for:
 - Temporary directories and file structures
 """
 
+from collections.abc import Callable, Generator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -29,7 +31,7 @@ from aurora_core.store.sqlite import SQLiteStore
 
 
 @pytest.fixture
-def memory_store():
+def memory_store() -> Generator[MemoryStore, None, None]:
     """Create an in-memory store for testing.
 
     Yields:
@@ -41,7 +43,7 @@ def memory_store():
 
 
 @pytest.fixture
-def sqlite_store():
+def sqlite_store() -> Generator[SQLiteStore, None, None]:
     """Create an in-memory SQLite store for testing.
 
     Yields:
@@ -53,7 +55,7 @@ def sqlite_store():
 
 
 @pytest.fixture
-def sqlite_file_store(tmp_path):
+def sqlite_file_store(tmp_path: Path) -> Generator[SQLiteStore, None, None]:
     """Create a file-based SQLite store for testing persistence.
 
     Args:
@@ -74,7 +76,7 @@ def sqlite_file_store(tmp_path):
 
 
 @pytest.fixture
-def sample_code_chunk():
+def sample_code_chunk() -> CodeChunk:
     """Create a simple code chunk for testing.
 
     Returns:
@@ -91,7 +93,7 @@ def sample_code_chunk():
 
 
 @pytest.fixture
-def sample_code_chunk_with_metadata():
+def sample_code_chunk_with_metadata() -> CodeChunk:
     """Create a code chunk with full metadata for testing.
 
     Returns:
@@ -113,7 +115,7 @@ def sample_code_chunk_with_metadata():
 
 
 @pytest.fixture
-def sample_class_chunk():
+def sample_class_chunk() -> CodeChunk:
     """Create a code chunk representing a class.
 
     Returns:
@@ -135,7 +137,7 @@ def sample_class_chunk():
 
 
 @pytest.fixture
-def sample_method_chunk():
+def sample_method_chunk() -> CodeChunk:
     """Create a code chunk representing a method.
 
     Returns:
@@ -157,7 +159,7 @@ def sample_method_chunk():
 
 
 @pytest.fixture
-def chunk_collection():
+def chunk_collection() -> list[CodeChunk]:
     """Create a collection of diverse chunks for testing retrieval.
 
     Returns:
@@ -221,7 +223,7 @@ def chunk_collection():
 
 
 @pytest.fixture
-def python_parser():
+def python_parser() -> PythonParser:
     """Create a PythonParser instance.
 
     Returns:
@@ -231,7 +233,7 @@ def python_parser():
 
 
 @pytest.fixture
-def parser_registry():
+def parser_registry() -> Any:  # ParserRegistry type not imported
     """Create a fresh ParserRegistry with PythonParser registered.
 
     Returns:
@@ -246,7 +248,7 @@ def parser_registry():
 
 
 @pytest.fixture
-def code_context_provider(memory_store, parser_registry):
+def code_context_provider(memory_store: MemoryStore, parser_registry: Any) -> CodeContextProvider:
     """Create a CodeContextProvider with memory store.
 
     Args:
@@ -260,7 +262,9 @@ def code_context_provider(memory_store, parser_registry):
 
 
 @pytest.fixture
-def populated_context_provider(memory_store, parser_registry, chunk_collection):
+def populated_context_provider(
+    memory_store: MemoryStore, parser_registry: Any, chunk_collection: list[CodeChunk]
+) -> CodeContextProvider:
     """Create a CodeContextProvider pre-populated with sample chunks.
 
     Args:
@@ -283,7 +287,7 @@ def populated_context_provider(memory_store, parser_registry, chunk_collection):
 
 
 @pytest.fixture
-def sample_python_file(tmp_path):
+def sample_python_file(tmp_path: Path) -> Path:
     """Create a simple Python file for parsing tests.
 
     Args:
@@ -320,7 +324,7 @@ class SimpleClass:
 
 
 @pytest.fixture
-def complex_python_file(tmp_path):
+def complex_python_file(tmp_path: Path) -> Path:
     """Create a complex Python file with nested structures.
 
     Args:
@@ -409,7 +413,7 @@ def standalone_function(data: Dict[str, Any]) -> bool:
 
 
 @pytest.fixture
-def broken_python_file(tmp_path):
+def broken_python_file(tmp_path: Path) -> Path:
     """Create a Python file with syntax errors.
 
     Args:
@@ -436,7 +440,7 @@ message = "this string is not closed
 
 
 @pytest.fixture
-def python_file_collection(tmp_path):
+def python_file_collection(tmp_path: Path) -> Path:
     """Create a collection of Python files in a directory structure.
 
     Args:
@@ -481,7 +485,7 @@ def process(data):
 
 
 @pytest.fixture
-def empty_python_file(tmp_path):
+def empty_python_file(tmp_path: Path) -> Path:
     """Create an empty Python file.
 
     Args:
@@ -496,7 +500,7 @@ def empty_python_file(tmp_path):
 
 
 @pytest.fixture
-def python_file_with_only_docstring(tmp_path):
+def python_file_with_only_docstring(tmp_path: Path) -> Path:
     """Create a Python file with only module docstring.
 
     Args:
@@ -516,7 +520,7 @@ def python_file_with_only_docstring(tmp_path):
 
 
 @pytest.fixture
-def large_python_file(tmp_path):
+def large_python_file(tmp_path: Path) -> Path:
     """Create a large Python file for performance testing (~1000 lines).
 
     Args:
@@ -553,7 +557,7 @@ class LargeClass_{i}:
 
 
 @pytest.fixture
-def scalable_python_file_factory(tmp_path):
+def scalable_python_file_factory(tmp_path: Path) -> Callable[[int], Path]:
     """Factory to create Python files of various sizes for scaling tests.
 
     Args:
@@ -599,7 +603,7 @@ def function_{i}(x, y):
 
 
 @pytest.fixture
-def temp_config_dir(tmp_path):
+def temp_config_dir(tmp_path: Path) -> Path:
     """Create a temporary directory with config files.
 
     Args:
@@ -614,7 +618,7 @@ def temp_config_dir(tmp_path):
 
 
 @pytest.fixture
-def sample_agent_config(tmp_path):
+def sample_agent_config(tmp_path: Path) -> Path:
     """Create a sample agent configuration file.
 
     Args:
@@ -652,7 +656,7 @@ def sample_agent_config(tmp_path):
 
 
 @pytest.fixture
-def fixtures_dir():
+def fixtures_dir() -> Path:
     """Get the path to test fixtures directory.
 
     Returns:
@@ -662,7 +666,7 @@ def fixtures_dir():
 
 
 @pytest.fixture
-def sample_python_files_dir(fixtures_dir):
+def sample_python_files_dir(fixtures_dir: Path) -> Path:
     """Get the path to sample Python files directory.
 
     Args:

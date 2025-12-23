@@ -53,11 +53,11 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `packages/core/src/aurora_core/optimization/parallel_executor.py` - Improved parallel agent execution
 
 ### Core Package - Resilience (`packages/core/`)
-- `packages/core/src/aurora_core/resilience/__init__.py` - Resilience module exports
-- `packages/core/src/aurora_core/resilience/retry_handler.py` - Retry logic with exponential backoff
-- `packages/core/src/aurora_core/resilience/metrics_collector.py` - Performance and reliability metrics
-- `packages/core/src/aurora_core/resilience/rate_limiter.py` - Token bucket rate limiting
-- `packages/core/src/aurora_core/resilience/alerting.py` - Alert rules and notification system
+- `packages/core/src/aurora_core/resilience/__init__.py` - Resilience module exports (RetryHandler, MetricsCollector, RateLimiter, Alerting, AlertRule, AlertSeverity)
+- `packages/core/src/aurora_core/resilience/retry_handler.py` - Retry logic with exponential backoff (implemented, 32 tests, 100% coverage)
+- `packages/core/src/aurora_core/resilience/metrics_collector.py` - Performance and reliability metrics (implemented, 26 tests, 98.11% coverage)
+- `packages/core/src/aurora_core/resilience/rate_limiter.py` - Token bucket rate limiting (implemented, 28 tests, 97.96% coverage)
+- `packages/core/src/aurora_core/resilience/alerting.py` - Alert rules and notification system (implemented, 30 tests, 100% coverage)
 
 ### Context-Code Package - Semantic (`packages/context-code/`)
 - `packages/context-code/pyproject.toml` - Dependencies (added sentence-transformers>=2.2.0)
@@ -87,10 +87,10 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `tests/unit/core/optimization/test_query_optimizer.py` - Query optimization tests
 - `tests/unit/core/optimization/test_cache_manager.py` - Multi-tier caching tests
 - `tests/unit/core/optimization/test_parallel_executor.py` - Parallel execution tests
-- `tests/unit/core/resilience/test_retry_handler.py` - Retry logic tests
-- `tests/unit/core/resilience/test_metrics_collector.py` - Metrics collection tests
-- `tests/unit/core/resilience/test_rate_limiter.py` - Rate limiting tests
-- `tests/unit/core/resilience/test_alerting.py` - Alerting rules tests
+- `tests/unit/core/resilience/test_retry_handler.py` - Retry logic tests (32 tests, 100% pass, comprehensive exponential backoff testing)
+- `tests/unit/core/resilience/test_metrics_collector.py` - Metrics collection tests (26 tests, 100% pass, query/cache/error metrics)
+- `tests/unit/core/resilience/test_rate_limiter.py` - Rate limiting tests (28 tests, 100% pass, token bucket algorithm)
+- `tests/unit/core/resilience/test_alerting.py` - Alerting rules tests (30 tests, 100% pass, default rules + notifications)
 - `packages/context-code/tests/unit/semantic/test_embedding_provider.py` - Embedding generation tests (23 tests: embed_chunk validation, edge cases, performance, all passing)
 - `tests/unit/context_code/semantic/test_hybrid_retriever.py` - Hybrid retrieval tests
 - `tests/unit/soar/headless/test_orchestrator.py` - Headless loop tests
@@ -103,7 +103,7 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
 - `tests/integration/test_actr_retrieval.py` - ACT-R retrieval end-to-end
 - `tests/integration/test_semantic_retrieval.py` - Semantic retrieval end-to-end (11 tests passing, hybrid scoring, precision comparison, fallback)
 - `tests/integration/test_headless_execution.py` - Headless mode end-to-end
-- `tests/integration/test_error_recovery.py` - Error recovery end-to-end
+- `tests/integration/test_error_recovery.py` - Error recovery end-to-end (15 tests, transient error recovery ≥95%, rate limiting, metrics+alerting integration)
 - `tests/performance/test_activation_benchmarks.py` - Activation calculation benchmarks
 - `tests/performance/test_retrieval_benchmarks.py` - Retrieval performance (100, 1K, 10K chunks)
 - `tests/performance/test_spreading_benchmarks.py` - Spreading activation performance
@@ -265,35 +265,35 @@ This task list breaks down PRD 0004 (AURORA Advanced Memory & Features) into act
   - [ ] 4.23 Profile memory usage (≤100MB for 10K cached chunks)
   - [ ] 4.24 Optimize bottlenecks identified in profiling
 
-- [ ] 5.0 Production Hardening (Resilience & Monitoring)
-  - [ ] 5.1 Create resilience package structure in core with __init__.py
-  - [ ] 5.2 Implement RetryHandler class in resilience/retry_handler.py
-  - [ ] 5.3 Add exponential backoff logic (100ms, 200ms, 400ms delays)
-  - [ ] 5.4 Configure max retry attempts (default 3, configurable)
-  - [ ] 5.5 Define recoverable errors (network timeout, rate limit, database lock)
-  - [ ] 5.6 Define non-recoverable errors (invalid config, budget exceeded, malformed input)
-  - [ ] 5.7 Implement MetricsCollector class in resilience/metrics_collector.py
-  - [ ] 5.8 Add query metrics tracking (total, success, failed, avg latency, p95 latency)
-  - [ ] 5.9 Add cache metrics tracking (hits, misses, hit rate)
-  - [ ] 5.10 Add error rate calculation (failed / total queries)
-  - [ ] 5.11 Implement metrics export (get_metrics() returns dict snapshot)
-  - [ ] 5.12 Implement RateLimiter class in resilience/rate_limiter.py
-  - [ ] 5.13 Add token bucket algorithm (60 requests/minute default)
-  - [ ] 5.14 Implement token refill logic (1 token per second)
-  - [ ] 5.15 Add wait_if_needed() method (block until token available, max 60s timeout)
-  - [ ] 5.16 Implement Alerting class in resilience/alerting.py
-  - [ ] 5.17 Define alert rules (error rate >5%, p95 latency >10s, cache hit rate <20%)
-  - [ ] 5.18 Add alert notification (log warnings, support webhook integration)
-  - [ ] 5.19 Write unit tests for RetryHandler (tests/unit/core/resilience/test_retry_handler.py)
-  - [ ] 5.20 Write unit tests for MetricsCollector (tests/unit/core/resilience/test_metrics_collector.py)
-  - [ ] 5.21 Write unit tests for RateLimiter (tests/unit/core/resilience/test_rate_limiter.py)
-  - [ ] 5.22 Write unit tests for Alerting (tests/unit/core/resilience/test_alerting.py)
-  - [ ] 5.23 Write integration test for error recovery (tests/integration/test_error_recovery.py)
-  - [ ] 5.24 Test transient error recovery (mock LLM fails twice, succeeds on 3rd attempt)
-  - [ ] 5.25 Test rate limiting (verify blocking at limit, token refill works)
-  - [ ] 5.26 Test alert triggers (inject high error rate, verify alert fires)
-  - [ ] 5.27 Verify graceful degradation (partial results on non-critical failures)
-  - [ ] 5.28 Test recovery rate (≥95% for transient errors)
+- [x] 5.0 Production Hardening (Resilience & Monitoring) - **COMPLETE** All 28 subtasks complete, 116 unit tests + 15 integration tests passing (131 total), 96.19% coverage for resilience package
+  - [x] 5.1 Create resilience package structure in core with __init__.py
+  - [x] 5.2 Implement RetryHandler class in resilience/retry_handler.py
+  - [x] 5.3 Add exponential backoff logic (100ms, 200ms, 400ms delays)
+  - [x] 5.4 Configure max retry attempts (default 3, configurable)
+  - [x] 5.5 Define recoverable errors (network timeout, rate limit, database lock)
+  - [x] 5.6 Define non-recoverable errors (invalid config, budget exceeded, malformed input)
+  - [x] 5.7 Implement MetricsCollector class in resilience/metrics_collector.py
+  - [x] 5.8 Add query metrics tracking (total, success, failed, avg latency, p95 latency)
+  - [x] 5.9 Add cache metrics tracking (hits, misses, hit rate)
+  - [x] 5.10 Add error rate calculation (failed / total queries)
+  - [x] 5.11 Implement metrics export (get_metrics() returns dict snapshot)
+  - [x] 5.12 Implement RateLimiter class in resilience/rate_limiter.py
+  - [x] 5.13 Add token bucket algorithm (60 requests/minute default)
+  - [x] 5.14 Implement token refill logic (1 token per second)
+  - [x] 5.15 Add wait_if_needed() method (block until token available, max 60s timeout)
+  - [x] 5.16 Implement Alerting class in resilience/alerting.py
+  - [x] 5.17 Define alert rules (error rate >5%, p95 latency >10s, cache hit rate <20%)
+  - [x] 5.18 Add alert notification (log warnings, support webhook integration)
+  - [x] 5.19 Write unit tests for RetryHandler (tests/unit/core/resilience/test_retry_handler.py)
+  - [x] 5.20 Write unit tests for MetricsCollector (tests/unit/core/resilience/test_metrics_collector.py)
+  - [x] 5.21 Write unit tests for RateLimiter (tests/unit/core/resilience/test_rate_limiter.py)
+  - [x] 5.22 Write unit tests for Alerting (tests/unit/core/resilience/test_alerting.py)
+  - [x] 5.23 Write integration test for error recovery (tests/integration/test_error_recovery.py)
+  - [x] 5.24 Test transient error recovery (mock LLM fails twice, succeeds on 3rd attempt)
+  - [x] 5.25 Test rate limiting (verify blocking at limit, token refill works)
+  - [x] 5.26 Test alert triggers (inject high error rate, verify alert fires)
+  - [x] 5.27 Verify graceful degradation (partial results on non-critical failures)
+  - [x] 5.28 Test recovery rate (≥95% for transient errors)
 
 - [ ] 6.0 Memory Commands & Integration Modes
   - [ ] 6.1 Implement memory command in cli/commands/memory.py (`aur mem`)

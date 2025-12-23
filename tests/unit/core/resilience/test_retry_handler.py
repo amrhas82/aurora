@@ -166,7 +166,7 @@ class TestRetryHandlerExponentialBackoff:
         """Test delay with custom backoff factor."""
         handler = RetryHandler(base_delay=0.1, backoff_factor=3.0)
         delay = handler.calculate_delay(attempt=2)
-        assert delay == 0.3  # 100ms * 3
+        assert abs(delay - 0.3) < 0.001  # 100ms * 3 (with tolerance for floating point)
 
 
 class TestRetryHandlerExecute:

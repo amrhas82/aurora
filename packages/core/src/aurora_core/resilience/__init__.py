@@ -11,11 +11,14 @@ This module provides production hardening features including:
 from aurora_core.resilience.retry_handler import RetryHandler
 from aurora_core.resilience.metrics_collector import MetricsCollector
 from aurora_core.resilience.rate_limiter import RateLimiter
-from aurora_core.resilience.alerting import Alerting
+from aurora_core.resilience.alerting import Alerting, Alert, AlertRule, AlertSeverity
 
 __all__ = [
     "RetryHandler",
     "MetricsCollector",
     "RateLimiter",
     "Alerting",
+    "Alert",
+    "AlertRule",
+    "AlertSeverity",
 ]

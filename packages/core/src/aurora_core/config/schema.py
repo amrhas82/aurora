@@ -18,8 +18,8 @@ CONFIG_SCHEMA: dict[str, Any] = {
     "properties": {
         "version": {
             "type": "string",
-            "pattern": "^[0-9]+\\.[0-9]+$",
-            "description": "Configuration schema version (e.g., '1.0')",
+            "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+            "description": "Configuration schema version (e.g., '1.0' or '1.1.0')",
         },
         "mode": {
             "type": "string",
@@ -96,6 +96,33 @@ CONFIG_SCHEMA: dict[str, Any] = {
                     "maximum": 600,
                     "default": 30,
                     "description": "LLM API timeout in seconds",
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": ["anthropic", "openai", "custom"],
+                    "description": "Legacy field - use reasoning_provider instead",
+                },
+                "model": {
+                    "type": "string",
+                    "description": "Legacy field - use reasoning_model instead",
+                },
+                "temperature": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 2.0,
+                    "default": 0.7,
+                    "description": "LLM temperature parameter (0.0-2.0)",
+                },
+                "max_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000,
+                    "default": 4096,
+                    "description": "Maximum tokens for LLM response",
+                },
+                "anthropic_api_key": {
+                    "type": ["string", "null"],
+                    "description": "Legacy field - use api_key_env instead",
                 },
             },
             "additionalProperties": False,
@@ -227,8 +254,93 @@ CONFIG_SCHEMA: dict[str, Any] = {
                     "default": 10,
                     "description": "Maximum number of log files to keep",
                 },
+                "file": {
+                    "type": "string",
+                    "description": "Log file path (legacy field, use path instead)",
+                },
             },
             "additionalProperties": False,
+        },
+        "escalation": {
+            "type": "object",
+            "properties": {
+                "threshold": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "default": 0.7,
+                    "description": "Confidence threshold for escalation (0.0-1.0)",
+                },
+                "enable_keyword_only": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Enable keyword-only escalation mode",
+                },
+                "force_mode": {
+                    "type": ["string", "null"],
+                    "enum": ["aurora", "direct", None],
+                    "default": None,
+                    "description": "Force specific escalation mode (aurora/direct/none)",
+                },
+            },
+            "additionalProperties": False,
+            "description": "Escalation configuration for complex queries",
+        },
+        "mcp": {
+            "type": "object",
+            "properties": {
+                "always_on": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Keep MCP server always active",
+                },
+                "log_file": {
+                    "type": "string",
+                    "default": "~/.aurora/mcp.log",
+                    "description": "MCP server log file path",
+                },
+                "max_results": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "default": 10,
+                    "description": "Maximum number of results to return",
+                },
+            },
+            "additionalProperties": False,
+            "description": "Model Context Protocol server configuration",
+        },
+        "memory": {
+            "type": "object",
+            "properties": {
+                "auto_index": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Automatically index code on changes",
+                },
+                "index_paths": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "default": ["."],
+                    "description": "Paths to index for code search",
+                },
+                "chunk_size": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 10000,
+                    "default": 1000,
+                    "description": "Text chunk size for indexing",
+                },
+                "overlap": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000,
+                    "default": 200,
+                    "description": "Overlap between chunks in characters",
+                },
+            },
+            "additionalProperties": False,
+            "description": "Memory and indexing configuration",
         },
     },
     "additionalProperties": False,

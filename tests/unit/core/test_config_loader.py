@@ -52,14 +52,20 @@ class TestConfigTypedAccess:
 class TestConfigLoading:
     """Test configuration loading with override hierarchy."""
 
-    def test_load_from_defaults_only(self, tmp_path: Path) -> None:
+    def test_load_from_defaults_only(self, tmp_path: Path, monkeypatch) -> None:
         """Test loading with only package defaults."""
+        # Mock home directory to prevent loading global config
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path / "fake_home")
+
         config = Config.load(project_path=tmp_path)
         assert config.get("version") == "1.0"
         assert config.get("storage.type") == "sqlite"
 
-    def test_load_with_project_override(self, tmp_path: Path) -> None:
+    def test_load_with_project_override(self, tmp_path: Path, monkeypatch) -> None:
         """Test project config overrides defaults."""
+        # Mock home directory to prevent loading global config
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path / "fake_home")
+
         project_config = tmp_path / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
         project_config.write_text(

@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from aurora.core.activation.decay import (
+from aurora_core.activation.decay import (
     AGGRESSIVE_DECAY,
     GENTLE_DECAY,
     MODERATE_DECAY,

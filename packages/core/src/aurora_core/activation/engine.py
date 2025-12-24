@@ -24,7 +24,7 @@ Reference:
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from aurora_core.activation.base_level import (
     AccessHistoryEntry,
@@ -62,6 +62,8 @@ class ActivationConfig(BaseModel):
         enable_context: Whether to include context boost in total activation
         enable_decay: Whether to include decay in total activation
     """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     bla_config: BLAConfig = Field(default_factory=BLAConfig)
     spreading_config: SpreadingConfig = Field(default_factory=SpreadingConfig)

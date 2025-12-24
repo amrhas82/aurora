@@ -11,7 +11,7 @@ Tests the ACT-R spreading activation calculation including:
 
 import pytest
 
-from aurora.core.activation.spreading import (
+from aurora_core.activation.spreading import (
     Relationship,
     RelationshipGraph,
     SpreadingActivation,

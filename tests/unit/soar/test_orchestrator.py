@@ -77,8 +77,21 @@ def test_registry():
 @pytest.fixture
 def mock_llm():
     """Mock LLM client."""
+    from aurora_reasoning.llm_client import LLMResponse
+
     llm = Mock(spec=LLMClient)
     llm.default_model = "mock-model"
+
+    # Mock generate method to return proper LLMResponse
+    llm.generate.return_value = LLMResponse(
+        content="Mock LLM response",
+        model="mock-model",
+        input_tokens=100,
+        output_tokens=50,
+        finish_reason="stop",
+        metadata={}
+    )
+
     return llm
 
 
@@ -110,7 +123,7 @@ def test_orchestrator(test_store, test_registry, test_config, mock_llm, test_cos
 
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_simple_query_path(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test SIMPLE query bypasses decomposition."""
     # Configure mocks for SIMPLE path
@@ -158,7 +171,7 @@ def test_simple_query_path(mock_respond, mock_retrieve, mock_assess, test_orches
 @patch("aurora_soar.phases.collect.execute_agents")
 @patch("aurora_soar.phases.synthesize.synthesize_results")
 @patch("aurora_soar.phases.record.record_pattern")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_complex_query_full_pipeline(
     mock_respond,
     mock_record,
@@ -291,7 +304,7 @@ def test_complex_query_full_pipeline(
 @patch("aurora_soar.phases.retrieve.retrieve_context")
 @patch("aurora_soar.phases.decompose.decompose_query")
 @patch("aurora_soar.phases.verify.verify_decomposition")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_verification_failure_handling(
     mock_respond,
     mock_verify,
@@ -370,7 +383,7 @@ def test_verification_failure_handling(
 
 
 @patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_phase_error_handling(mock_respond, mock_assess, test_orchestrator):
     """Test phase errors are caught and tracked."""
     # Configure mock to raise error
@@ -424,7 +437,7 @@ def test_budget_check_before_execution(test_orchestrator):
 
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_budget_tracking_during_execution(
     mock_respond, mock_retrieve, mock_assess, test_orchestrator
 ):
@@ -473,7 +486,7 @@ def test_budget_tracking_during_execution(
 
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_metadata_aggregation(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test metadata from all phases is aggregated."""
     # Configure mocks
@@ -519,7 +532,7 @@ def test_metadata_aggregation(mock_respond, mock_retrieve, mock_assess, test_orc
 
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_timing_tracking(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test execution timing is tracked."""
     # Configure mocks
@@ -565,7 +578,7 @@ def test_timing_tracking(mock_respond, mock_retrieve, mock_assess, test_orchestr
 
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_quiet_verbosity(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test QUIET verbosity mode."""
     # Configure mocks
@@ -602,7 +615,7 @@ def test_quiet_verbosity(mock_respond, mock_retrieve, mock_assess, test_orchestr
 
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_verbose_mode(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test VERBOSE verbosity mode."""
     # Configure mocks
@@ -644,7 +657,7 @@ def test_verbose_mode(mock_respond, mock_retrieve, mock_assess, test_orchestrato
 
 @patch("aurora_soar.phases.assess.assess_complexity")
 @patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.respond.format_response")
+@patch("aurora_soar.orchestrator.respond.format_response")
 def test_conversation_logging_integration(
     mock_respond, mock_retrieve, mock_assess, test_orchestrator
 ):

@@ -112,11 +112,12 @@ Technical debt is **not failure**—it's a strategic tradeoff made to ship an MV
 
 ### P1 - High Priority (3 items)
 
-#### TD-P1-001: Migration Logic Zero Test Coverage
+#### TD-P1-001: Migration Logic Zero Test Coverage ✅ RESOLVED
 **Category**: Test Coverage Gap
 **Location**: `packages/core/src/aurora_core/store/migrations.py` (lines 107-151)
 **Impact**: Data corruption risk during schema migrations
-**Effort**: M (2-3 days)
+**Effort**: M (2-3 days) - **ACTUAL: 2-3 days**
+**Resolved**: December 24, 2025 (v1.1.0)
 
 **Description**:
 Schema migration v1→v2 has **zero test coverage** (30.10% overall file coverage). This migration:
@@ -130,15 +131,24 @@ Schema migration v1→v2 has **zero test coverage** (30.10% overall file coverag
 - Data loss or corruption possible
 - Rollback failures untested
 
-**Acceptance Criteria**:
-- [ ] Test each migration path (v1→v2, v2→v3)
-- [ ] Test rollback scenarios
-- [ ] Test edge cases (empty data, malformed JSON)
-- [ ] Test error conditions (locked database, insufficient permissions)
-- [ ] Achieve 80%+ coverage on migrations.py
+**Resolution**:
+- ✅ Created `packages/core/tests/store/test_migrations.py` (33 tests, 725 lines)
+- ✅ Achieved 94.17% coverage (exceeded 80% target by 14.17%)
+- ✅ All migration paths tested (v1→v2, v2→v3)
+- ✅ Rollback scenarios tested with constraint violations
+- ✅ Edge cases covered (empty data, NULL values, malformed data)
+- ✅ Error conditions tested (locked DB, permissions, disk full)
+- ✅ Transaction atomicity verified
+- ✅ Idempotent migration execution tested
 
-**References**:
-- See: `docs/reports/testing/COVERAGE_ANALYSIS.md` (lines 65-89)
+**Acceptance Criteria**:
+- [x] Test each migration path (v1→v2, v2→v3)
+- [x] Test rollback scenarios
+- [x] Test edge cases (empty data, malformed JSON)
+- [x] Test error conditions (locked database, insufficient permissions)
+- [x] Achieve 80%+ coverage on migrations.py (achieved 94.17%)
+
+**Commit**: `31e048d` - test: add migration and LLM client error path tests (TD-P1-001, TD-P2-001)
 
 ---
 
@@ -404,11 +414,12 @@ Cache invalidation uses file modification time only. Should also consider:
 
 ### P1 - High Priority (5 items)
 
-#### TD-P2-001: LLM Client Initialization Error Paths Untested
+#### TD-P2-001: LLM Client Initialization Error Paths Untested ✅ RESOLVED
 **Category**: Test Coverage Gap
 **Location**: `packages/reasoning/src/aurora_reasoning/llm_client.py` (lines 192-210)
 **Impact**: Runtime failures with confusing error messages
-**Effort**: S (6-8 hours)
+**Effort**: S (6-8 hours) - **ACTUAL: 6-8 hours**
+**Resolved**: December 24, 2025 (v1.1.0)
 
 **Description**:
 Anthropic API client initialization has **untested error paths** (36.57% file coverage):
@@ -422,15 +433,25 @@ Anthropic API client initialization has **untested error paths** (36.57% file co
 - ImportError without actionable guidance
 - Rate limiter misconfiguration
 
-**Acceptance Criteria**:
-- [ ] Test API key validation (missing, empty, invalid format)
-- [ ] Test missing anthropic package (import mocking)
-- [ ] Test rate limiter initialization
-- [ ] Improve error messages with troubleshooting steps
-- [ ] Achieve 70%+ coverage on llm_client.py
+**Resolution**:
+- ✅ Created `packages/reasoning/tests/test_llm_client_errors.py` (46 tests, 584 lines)
+- ✅ Achieved 93.14% coverage (exceeded 70% target by 23.14%)
+- ✅ API key validation tested (Anthropic, OpenAI, Ollama formats)
+- ✅ Missing dependency errors tested with installation hints
+- ✅ Rate limiter initialization tested (100ms Anthropic/OpenAI, 50ms Ollama)
+- ✅ Empty/whitespace prompt validation tested
+- ✅ Token counting heuristics tested (4 chars per token)
+- ✅ JSON extraction from markdown and plain text tested
+- ✅ Error wrapping and RuntimeError handling tested
 
-**References**:
-- See: `docs/reports/testing/COVERAGE_ANALYSIS.md` (lines 106-125)
+**Acceptance Criteria**:
+- [x] Test API key validation (missing, empty, invalid format)
+- [x] Test missing anthropic package (import mocking)
+- [x] Test rate limiter initialization
+- [x] Improve error messages with troubleshooting steps
+- [x] Achieve 70%+ coverage on llm_client.py (achieved 93.14%)
+
+**Commit**: `31e048d` - test: add migration and LLM client error path tests (TD-P1-001, TD-P2-001)
 
 ---
 
@@ -1452,15 +1473,18 @@ Setting up development environment requires:
 
 ## Summary Statistics
 
+**Last Updated**: December 24, 2025 (v1.1.0)
+**Resolved This Release**: 2 P1 items (TD-P1-001, TD-P2-001)
+
 ### By Priority
 
-| Priority | Count | % of Total | Est. Effort |
-|----------|-------|------------|-------------|
-| **P0 - Critical** | 0 | 0% | 0 weeks |
-| **P1 - High** | 17 | 36% | 8-11 weeks |
-| **P2 - Medium** | 21 | 45% | 8-10 weeks |
-| **P3 - Low** | 9 | 19% | 2-3 weeks |
-| **Total** | 47 | 100% | 18-24 weeks |
+| Priority | Count | Resolved | Remaining | % Complete | Est. Effort |
+|----------|-------|----------|-----------|------------|-------------|
+| **P0 - Critical** | 0 | 0 | 0 | - | 0 weeks |
+| **P1 - High** | 17 | 2 | 15 | 12% | 7-9 weeks (was 8-11) |
+| **P2 - Medium** | 21 | 0 | 21 | 0% | 8-10 weeks |
+| **P3 - Low** | 9 | 0 | 9 | 0% | 2-3 weeks |
+| **Total** | 47 | 2 | 45 | 4% | 17-22 weeks (was 18-24) |
 
 ### By Category
 
@@ -1498,15 +1522,20 @@ Setting up development environment requires:
 
 ## Recommended Order of Attack
 
-### Sprint 1: Critical Coverage Gaps (2 weeks)
+### Sprint 1: Critical Coverage Gaps ✅ PARTIALLY COMPLETE
 **Goal**: Address high-risk test coverage gaps
+**Status**: 2/4 items resolved in v1.1.0
 
-1. **TD-P1-001**: Migration logic tests (HIGH IMPACT)
-2. **TD-P1-002**: Error handling rollback tests
-3. **TD-P2-001**: LLM client initialization tests
-4. **TD-P3-001**: Semantic embedding error paths
+1. ✅ **TD-P1-001**: Migration logic tests (RESOLVED - 94.17% coverage)
+2. **TD-P1-002**: Error handling rollback tests (PENDING)
+3. ✅ **TD-P2-001**: LLM client initialization tests (RESOLVED - 93.14% coverage)
+4. **TD-P3-001**: Semantic embedding error paths (PENDING)
 
-**Expected Outcome**: 85%+ coverage on critical modules, reduced production risk
+**Outcome Achieved**:
+- migrations.py: 94.17% coverage (exceeded 80% target)
+- llm_client.py: 93.14% coverage (exceeded 70% target)
+- 79 new tests added (33 migrations + 46 LLM client)
+- Production risk significantly reduced for schema migrations and API initialization
 
 ---
 

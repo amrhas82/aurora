@@ -399,8 +399,13 @@ def _execute_dry_run(
             memory_store = SQLiteStore(str(db_path))
             # Try to count chunks by querying the store
             from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
-            retriever = HybridRetriever(memory_store)
-            results = retriever.retrieve("test", limit=100)
+            from aurora_context_code.semantic import EmbeddingProvider
+            from aurora_core.activation.engine import ActivationEngine
+
+            activation_engine = ActivationEngine()
+            embedding_provider = EmbeddingProvider()
+            retriever = HybridRetriever(memory_store, activation_engine, embedding_provider)
+            results = retriever.retrieve("test", top_k=100)
             memory_chunks = len(results)
             console.print(f"  Database: {db_path} [green]✓[/]")
             console.print(f"  Chunks: ~{memory_chunks}")
@@ -502,8 +507,13 @@ def _is_memory_empty(memory_store) -> bool:
     try:
         # Try to get a count of chunks using HybridRetriever
         from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
-        retriever = HybridRetriever(memory_store)
-        results = retriever.retrieve("test", limit=1)
+        from aurora_context_code.semantic import EmbeddingProvider
+        from aurora_core.activation.engine import ActivationEngine
+
+        activation_engine = ActivationEngine()
+        embedding_provider = EmbeddingProvider()
+        retriever = HybridRetriever(memory_store, activation_engine, embedding_provider)
+        results = retriever.retrieve("test", top_k=1)
         return len(results) == 0
     except Exception:
         # If we can't check, assume empty

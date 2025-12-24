@@ -148,7 +148,7 @@ setup(
         "console_scripts": [
             "aur=aurora_cli.main:cli",
             "aurora-mcp=aurora.mcp.server:main",
-            "aurora-uninstall=scripts.aurora_uninstall:main",
+            "aurora-uninstall=aurora.scripts.uninstall:main",
         ],
     },
 

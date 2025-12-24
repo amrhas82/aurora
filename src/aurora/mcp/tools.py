@@ -51,7 +51,7 @@ class AuroraMCPTools:
         self._embedding_provider: Optional[EmbeddingProvider] = None
         self._retriever: Optional[HybridRetriever] = None
         self._memory_manager: Optional[MemoryManager] = None
-        self._parser_registry = get_global_registry()
+        self._parser_registry = None  # Lazy initialization
 
     def _ensure_initialized(self) -> None:
         """Ensure all components are initialized."""
@@ -68,6 +68,9 @@ class AuroraMCPTools:
             self._retriever = HybridRetriever(
                 self._store, self._activation_engine, self._embedding_provider
             )
+
+        if self._parser_registry is None:
+            self._parser_registry = get_global_registry()
 
         if self._memory_manager is None:
             self._memory_manager = MemoryManager(

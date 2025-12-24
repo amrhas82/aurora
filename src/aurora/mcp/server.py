@@ -22,25 +22,29 @@ from aurora.mcp.tools import AuroraMCPTools
 class AuroraMCPServer:
     """MCP Server for AURORA codebase tools."""
 
-    def __init__(self, db_path: Optional[str] = None, config_path: Optional[str] = None):
+    def __init__(self, db_path: Optional[str] = None, config_path: Optional[str] = None, test_mode: bool = False):
         """
         Initialize AURORA MCP Server.
 
         Args:
             db_path: Path to SQLite database (default: ~/.aurora/memory.db)
             config_path: Path to AURORA config file (default: ~/.aurora/config.json)
+            test_mode: If True, skip FastMCP initialization (for testing)
         """
         self.db_path = db_path or str(Path.home() / ".aurora" / "memory.db")
         self.config_path = config_path or str(Path.home() / ".aurora" / "config.json")
-
-        # Initialize FastMCP server
-        self.mcp = FastMCP("aurora")
+        self.test_mode = test_mode
 
         # Initialize tools
         self.tools = AuroraMCPTools(self.db_path, self.config_path)
 
-        # Register tools
-        self._register_tools()
+        # Initialize FastMCP server only if not in test mode
+        if not test_mode:
+            self.mcp = FastMCP("aurora")
+            # Register tools
+            self._register_tools()
+        else:
+            self.mcp = None
 
     def _register_tools(self) -> None:
         """Register MCP tools with the server."""
@@ -166,7 +170,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # Create server instance
-    server = AuroraMCPServer(db_path=args.db_path, config_path=args.config)
+    server = AuroraMCPServer(db_path=args.db_path, config_path=args.config, test_mode=args.test)
 
     if args.test:
         print("AURORA MCP Server - Test Mode")

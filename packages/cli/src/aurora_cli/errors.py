@@ -1,0 +1,339 @@
+"""Error handling utilities for AURORA CLI.
+
+This module defines custom exceptions and error handling utilities
+for providing actionable error messages to users.
+"""
+
+from typing import Any
+
+
+class AuroraError(Exception):
+    """Base exception for all AURORA CLI errors."""
+
+    pass
+
+
+class ConfigurationError(AuroraError):
+    """Raised when configuration is invalid or missing."""
+
+    pass
+
+
+class APIError(AuroraError):
+    """Raised when LLM API calls fail."""
+
+    pass
+
+
+class MemoryStoreError(AuroraError):
+    """Raised when memory store operations fail."""
+
+    pass
+
+
+class ErrorHandler:
+    """Handles formatting and presenting errors to users."""
+
+    @staticmethod
+    def format_error(error: Exception, context: str = "") -> str:
+        """Format an error with context and actionable guidance.
+
+        Args:
+            error: The exception to format
+            context: Additional context about where the error occurred
+
+        Returns:
+            Formatted error message string
+        """
+        error_type = type(error).__name__
+        error_msg = str(error)
+
+        formatted = f"[bold red]Error[/]: {error_type}"
+        if context:
+            formatted += f" in {context}"
+        formatted += f"\n\n{error_msg}"
+
+        return formatted
+
+    @staticmethod
+    def handle_api_error(error: Exception, operation: str = "API call") -> str:
+        """Handle and format API errors with actionable messages.
+
+        Args:
+            error: The API exception
+            operation: What operation was being attempted
+
+        Returns:
+            Formatted error message with recovery steps
+        """
+        error_str = str(error).lower()
+
+        # Authentication errors
+        if "401" in error_str or "unauthorized" in error_str or "authentication" in error_str:
+            return (
+                "[bold red][API][/] Authentication failed.\n\n"
+                "[yellow]Cause:[/] Invalid or missing ANTHROPIC_API_KEY.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Check environment variable:\n"
+                "     [cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]\n"
+                "  2. Update config file:\n"
+                "     [cyan]aur init[/]\n"
+                "  3. Get your API key at:\n"
+                "     [cyan]https://console.anthropic.com[/]"
+            )
+
+        # Rate limit errors
+        if "429" in error_str or "rate limit" in error_str:
+            return (
+                "[bold red][API][/] Rate limit exceeded.\n\n"
+                "[yellow]Cause:[/] Too many requests to Anthropic API.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Wait a few seconds and retry\n"
+                "  2. Upgrade your API tier for higher limits\n"
+                "  3. Use [cyan]--force-direct[/] to skip AURORA overhead"
+            )
+
+        # Network errors
+        if (
+            "connection" in error_str
+            or "timeout" in error_str
+            or "network" in error_str
+            or "dns" in error_str
+        ):
+            return (
+                "[bold red][Network][/] Cannot reach Anthropic API.\n\n"
+                "[yellow]Cause:[/] Network connectivity issue.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Check internet connection:\n"
+                "     [cyan]ping api.anthropic.com[/]\n"
+                "  2. Check firewall/proxy settings\n"
+                "  3. Try again in a few moments"
+            )
+
+        # Model not found
+        if "404" in error_str or "not found" in error_str or "model" in error_str:
+            return (
+                "[bold red][API][/] Model not found.\n\n"
+                "[yellow]Cause:[/] Specified model does not exist or is not accessible.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Check model name in config:\n"
+                "     [cyan]~/.aurora/config.json[/]\n"
+                "  2. Use default model:\n"
+                "     [cyan]claude-3-5-sonnet-20241022[/]\n"
+                "  3. See available models at:\n"
+                "     [cyan]https://docs.anthropic.com/models[/]"
+            )
+
+        # Server errors
+        if "500" in error_str or "502" in error_str or "503" in error_str or "server" in error_str:
+            return (
+                "[bold red][API][/] Anthropic server error.\n\n"
+                "[yellow]Cause:[/] Temporary server issue (not your fault).\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Retry automatically enabled (3 attempts)\n"
+                "  2. Try again in a few minutes\n"
+                "  3. Check status: [cyan]https://status.anthropic.com[/]"
+            )
+
+        # Generic API error
+        return (
+            f"[bold red][API][/] {operation} failed.\n\n"
+            f"[yellow]Error:[/] {error}\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Check your internet connection\n"
+            "  2. Verify API key is valid\n"
+            "  3. Try again in a few moments"
+        )
+
+    @staticmethod
+    def handle_config_error(error: Exception, config_path: str = "~/.aurora/config.json") -> str:
+        """Handle and format configuration errors with setup instructions.
+
+        Args:
+            error: The configuration exception
+            config_path: Path to the config file
+
+        Returns:
+            Formatted error message with setup instructions
+        """
+        error_str = str(error).lower()
+
+        # JSON syntax errors
+        if "json" in error_str or "syntax" in error_str or "decode" in error_str:
+            return (
+                "[bold red][Config][/] Configuration file syntax error.\n\n"
+                f"[yellow]File:[/] {config_path}\n"
+                f"[yellow]Error:[/] {error}\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Validate JSON syntax:\n"
+                f"     [cyan]python -m json.tool {config_path}[/]\n"
+                "  2. Recreate config file:\n"
+                "     [cyan]aur init[/]\n"
+                "  3. Use online JSON validator:\n"
+                "     [cyan]https://jsonlint.com[/]"
+            )
+
+        # Permission errors
+        if "permission" in error_str or "access" in error_str:
+            return (
+                "[bold red][Config][/] Cannot read configuration file.\n\n"
+                f"[yellow]File:[/] {config_path}\n"
+                "[yellow]Cause:[/] Insufficient file permissions.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Fix file permissions:\n"
+                f"     [cyan]chmod 600 {config_path}[/]\n"
+                "  2. Fix directory permissions:\n"
+                "     [cyan]chmod 700 ~/.aurora/[/]\n"
+                "  3. Recreate config:\n"
+                "     [cyan]aur init[/]"
+            )
+
+        # Invalid values
+        if "threshold" in error_str or "must be" in error_str:
+            return (
+                "[bold red][Config][/] Invalid configuration value.\n\n"
+                f"[yellow]Error:[/] {error}\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Edit config file manually:\n"
+                f"     [cyan]nano {config_path}[/]\n"
+                "  2. Recreate with defaults:\n"
+                "     [cyan]aur init[/]\n"
+                "  3. See example config:\n"
+                "     [cyan]https://docs.aurora.ai/config[/]"
+            )
+
+        # Missing API key
+        if "api" in error_str and "key" in error_str:
+            return (
+                "[bold red][Config][/] ANTHROPIC_API_KEY not found.\n\n"
+                "[yellow]Cause:[/] AURORA needs an API key to connect to LLM.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Set environment variable:\n"
+                "     [cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]\n"
+                "  2. Run interactive setup:\n"
+                "     [cyan]aur init[/]\n"
+                "  3. Get your API key at:\n"
+                "     [cyan]https://console.anthropic.com[/]"
+            )
+
+        # Generic config error
+        return (
+            "[bold red][Config][/] Configuration error.\n\n"
+            f"[yellow]Error:[/] {error}\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Run setup wizard:\n"
+            "     [cyan]aur init[/]\n"
+            f"  2. Check config file:\n"
+            f"     [cyan]{config_path}[/]\n"
+            "  3. Use environment variables"
+        )
+
+    @staticmethod
+    def handle_memory_error(error: Exception, operation: str = "memory operation") -> str:
+        """Handle and format memory store errors with recovery steps.
+
+        Args:
+            error: The memory store exception
+            operation: What memory operation was being attempted
+
+        Returns:
+            Formatted error message with recovery steps
+        """
+        error_str = str(error).lower()
+
+        # Database locked
+        if "locked" in error_str or "busy" in error_str:
+            return (
+                "[bold red][Memory][/] Memory store is locked.\n\n"
+                "[yellow]Cause:[/] Another AURORA process is using the database.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Close other AURORA processes:\n"
+                "     [cyan]ps aux | grep aur[/]\n"
+                "  2. Wait a few seconds and retry\n"
+                "  3. If stuck, remove lock file:\n"
+                "     [cyan]rm ~/.aurora/memory.db-wal[/]"
+            )
+
+        # Corrupted database
+        if "corrupt" in error_str or "malformed" in error_str or "database" in error_str:
+            return (
+                "[bold red][Memory][/] Memory store is corrupted.\n\n"
+                "[yellow]Cause:[/] Database file may be damaged.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Backup current database:\n"
+                "     [cyan]cp ~/.aurora/memory.db ~/.aurora/memory.db.backup[/]\n"
+                "  2. Reset memory store:\n"
+                "     [cyan]rm ~/.aurora/memory.db[/]\n"
+                "  3. Re-index your codebase:\n"
+                "     [cyan]aur mem index .[/]"
+            )
+
+        # Permission errors
+        if "permission" in error_str or "access" in error_str:
+            return (
+                "[bold red][Memory][/] Cannot write to memory store.\n\n"
+                "[yellow]Cause:[/] Insufficient file permissions.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Fix directory permissions:\n"
+                "     [cyan]chmod 700 ~/.aurora/[/]\n"
+                "  2. Fix database permissions:\n"
+                "     [cyan]chmod 600 ~/.aurora/memory.db[/]\n"
+                "  3. Check disk space:\n"
+                "     [cyan]df -h[/]"
+            )
+
+        # Disk full
+        if "disk" in error_str or "space" in error_str or "full" in error_str:
+            return (
+                "[bold red][Memory][/] Disk full.\n\n"
+                "[yellow]Cause:[/] Not enough disk space for operation.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Free up disk space (~50MB needed)\n"
+                "  2. Check disk usage:\n"
+                "     [cyan]du -sh ~/.aurora/[/]\n"
+                "  3. Clean old databases:\n"
+                "     [cyan]rm ~/.aurora/*.db.backup[/]"
+            )
+
+        # Parse errors (non-fatal for indexing)
+        if "parse" in error_str or "syntax" in error_str:
+            return (
+                f"[bold yellow][Memory][/] Parse error during {operation}.\n\n"
+                f"[yellow]Error:[/] {error}\n\n"
+                "[green]Note:[/] This is usually non-fatal.\n"
+                "Indexing continues with remaining files."
+            )
+
+        # Generic memory error
+        return (
+            f"[bold red][Memory][/] {operation} failed.\n\n"
+            f"[yellow]Error:[/] {error}\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Check database file:\n"
+            "     [cyan]ls -lh ~/.aurora/memory.db[/]\n"
+            "  2. Try re-indexing:\n"
+            "     [cyan]aur mem index .[/]\n"
+            "  3. Reset if needed:\n"
+            "     [cyan]rm ~/.aurora/memory.db[/]"
+        )
+
+    @staticmethod
+    def redact_api_key(key: str) -> str:
+        """Redact API key for safe display.
+
+        Shows first 7 characters and last 3 characters, masks the middle.
+
+        Args:
+            key: The API key to redact
+
+        Returns:
+            Redacted API key string
+
+        Example:
+            >>> redact_api_key("sk-ant-1234567890abcdef")
+            'sk-ant-...def'
+        """
+        if not key or len(key) < 10:
+            return "***"
+
+        return f"{key[:7]}...{key[-3:]}"

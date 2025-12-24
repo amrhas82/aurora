@@ -18,6 +18,7 @@ from rich.table import Table
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
+from aurora_cli.errors import ErrorHandler
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 from aurora_cli.execution import QueryExecutor
 
@@ -104,6 +105,12 @@ cli.add_command(memory_group)
     default=False,
     help="Show verbose output including phase trace for AURORA",
 )
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Show what would be executed without making API calls",
+)
 def query_command(
     query_text: str,
     force_aurora: bool,
@@ -111,6 +118,7 @@ def query_command(
     threshold: float,
     show_reasoning: bool,
     verbose: bool,
+    dry_run: bool,
 ) -> None:
     """Execute a query with automatic escalation.
 
@@ -140,7 +148,9 @@ def query_command(
     try:
         # Get API key from environment
         api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
+
+        # In dry-run mode, API key is optional (we won't make calls)
+        if not api_key and not dry_run:
             console.print(
                 "\n[bold red]Error:[/] ANTHROPIC_API_KEY environment variable not set.\n",
                 style="red",
@@ -149,6 +159,18 @@ def query_command(
             console.print("  export ANTHROPIC_API_KEY=sk-ant-...")
             console.print("\nGet your API key at: https://console.anthropic.com")
             raise click.Abort()
+
+        # Handle dry-run mode - show what would be executed without API calls
+        if dry_run:
+            _execute_dry_run(
+                query_text=query_text,
+                api_key=api_key,
+                force_aurora=force_aurora,
+                force_direct=force_direct,
+                threshold=threshold,
+                console=console,
+            )
+            return
 
         # Create escalation config
         config = EscalationConfig(
@@ -260,6 +282,113 @@ def query_command(
         logger.error(f"Query command failed: {e}", exc_info=True)
         console.print(f"\n[bold red]Error:[/] {e}", style="red")
         raise click.Abort()
+
+
+def _execute_dry_run(
+    query_text: str,
+    api_key: str | None,
+    force_aurora: bool,
+    force_direct: bool,
+    threshold: float,
+    console: Console,
+) -> None:
+    """Execute dry-run mode - show what would happen without API calls.
+
+    Args:
+        query_text: Query to analyze
+        api_key: API key (may be None in dry-run)
+        force_aurora: Whether AURORA is forced
+        force_direct: Whether direct LLM is forced
+        threshold: Escalation threshold
+        console: Rich console for output
+    """
+    from pathlib import Path
+
+    from aurora_core.store import SQLiteStore
+
+    error_handler = ErrorHandler()
+
+    # Display dry-run header
+    console.print("\n[bold yellow]DRY RUN MODE[/] - No API calls will be made\n")
+
+    # Show configuration
+    console.print("[bold]Configuration:[/]")
+    config_table = Table(show_header=False, box=None)
+    config_table.add_column("Key", style="cyan")
+    config_table.add_column("Value", style="white")
+
+    config_table.add_row("Provider", "anthropic")
+    config_table.add_row("Model", "claude-sonnet-4-20250514")
+
+    if api_key:
+        redacted_key = error_handler.redact_api_key(api_key)
+        config_table.add_row("API Key", f"{redacted_key} [green]✓[/]")
+    else:
+        config_table.add_row("API Key", "[red]Not set[/]")
+
+    config_table.add_row("Threshold", f"{threshold}")
+
+    console.print(config_table)
+
+    # Check memory store
+    console.print("\n[bold]Memory Store:[/]")
+    db_path = Path.cwd() / "aurora.db"
+    memory_chunks = 0
+
+    if db_path.exists():
+        try:
+            memory_store = SQLiteStore(str(db_path))
+            # Try to count chunks (simplified)
+            results = memory_store.search_keyword("test", limit=100)
+            memory_chunks = len(results)
+            console.print(f"  Database: {db_path} [green]✓[/]")
+            console.print(f"  Chunks: ~{memory_chunks}")
+        except Exception as e:
+            console.print(f"  Database: {db_path} [yellow]⚠[/]")
+            console.print(f"  Error: {e}")
+    else:
+        console.print(f"  Database: {db_path} [red]✗[/] (not found)")
+        console.print("  Chunks: 0")
+
+    # Run escalation assessment (no API call)
+    console.print("\n[bold]Escalation Decision:[/]")
+
+    config = EscalationConfig(
+        threshold=threshold,
+        enable_keyword_only=True,
+        force_aurora=force_aurora,
+        force_direct=force_direct,
+    )
+    handler = AutoEscalationHandler(config=config)
+    result = handler.assess_query(query_text)
+
+    decision_table = Table(show_header=False, box=None)
+    decision_table.add_column("Metric", style="cyan")
+    decision_table.add_column("Value", style="white")
+
+    decision_table.add_row("Query", query_text)
+    decision_table.add_row("Complexity", f"[bold]{result.complexity}[/]")
+    decision_table.add_row("Score", f"{result.score:.3f}")
+    decision_table.add_row("Confidence", f"{result.confidence:.3f}")
+    decision_table.add_row("Method", result.method)
+
+    if result.use_aurora:
+        decision_table.add_row("Decision", "[bold blue]Would use: AURORA[/]")
+    else:
+        decision_table.add_row("Decision", "[bold green]Would use: Direct LLM[/]")
+
+    decision_table.add_row("Reasoning", result.reasoning)
+
+    console.print(decision_table)
+
+    # Estimate cost
+    console.print("\n[bold]Estimated Cost:[/]")
+    if result.use_aurora:
+        console.print("  ~$0.005-0.015 (AURORA with multiple phases)")
+    else:
+        console.print("  ~$0.002-0.005 (Direct LLM)")
+
+    console.print("\n[bold yellow]Exiting without API calls[/]\n")
 
 
 def _display_phase_trace(phase_trace: dict[str, Any], console: Console) -> None:

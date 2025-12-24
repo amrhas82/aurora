@@ -7,10 +7,13 @@ through either direct LLM calls or the full AURORA SOAR pipeline.
 from __future__ import annotations
 
 import logging
+import random
 import time
 from typing import TYPE_CHECKING, Any
 
 from aurora_reasoning.llm_client import AnthropicClient, LLMClient
+
+from aurora_cli.errors import APIError, ErrorHandler
 
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
@@ -42,6 +45,7 @@ class QueryExecutor:
                 - max_tokens: Maximum tokens for generation
         """
         self.config = config or {}
+        self.error_handler = ErrorHandler()
         logger.info("QueryExecutor initialized")
 
     def execute_direct_llm(
@@ -91,7 +95,7 @@ class QueryExecutor:
                     if verbose:
                         logger.info(f"Added memory context ({len(context)} chars)")
 
-            # Execute LLM call
+            # Execute LLM call with retry logic
             model = self.config.get("model", "claude-sonnet-4-20250514")
             temperature = self.config.get("temperature", 0.7)
             max_tokens = self.config.get("max_tokens", 500)
@@ -99,11 +103,13 @@ class QueryExecutor:
             if verbose:
                 logger.info(f"Calling LLM: model={model}, temp={temperature}, max_tokens={max_tokens}")
 
-            response = llm.generate(
+            response = self._call_llm_with_retry(
+                llm=llm,
                 prompt=prompt,
                 model=model,
                 max_tokens=max_tokens,
                 temperature=temperature,
+                verbose=verbose,
             )
 
             duration = time.time() - start_time
@@ -117,9 +123,13 @@ class QueryExecutor:
 
             return response.content
 
+        except APIError:
+            # Re-raise API errors with formatted messages
+            raise
         except Exception as e:
             logger.error(f"Direct LLM execution failed: {e}", exc_info=True)
-            raise RuntimeError(f"LLM execution failed: {e}") from e
+            error_msg = self.error_handler.handle_api_error(e, "Direct LLM query")
+            raise APIError(error_msg) from e
 
     def execute_aurora(
         self,
@@ -179,9 +189,13 @@ class QueryExecutor:
 
             return final_response
 
+        except APIError:
+            # Re-raise API errors with formatted messages
+            raise
         except Exception as e:
             logger.error(f"AURORA execution failed: {e}", exc_info=True)
-            raise RuntimeError(f"AURORA execution failed: {e}") from e
+            error_msg = self.error_handler.handle_api_error(e, "AURORA orchestrator")
+            raise APIError(error_msg) from e
 
     def _initialize_llm_client(self, api_key: str) -> LLMClient:
         """Initialize LLM client with API key.
@@ -368,3 +382,87 @@ class QueryExecutor:
         output_cost = (output_tokens / 1000.0) * OUTPUT_COST_PER_1K
 
         return input_cost + output_cost
+
+    def _call_llm_with_retry(
+        self,
+        llm: LLMClient,
+        prompt: str,
+        model: str,
+        max_tokens: int,
+        temperature: float,
+        verbose: bool = False,
+        max_retries: int = 3,
+    ) -> Any:
+        """Call LLM with exponential backoff retry logic.
+
+        Implements retry logic for transient failures like rate limits and server errors.
+        Uses exponential backoff with jitter to avoid thundering herd.
+
+        Args:
+            llm: LLM client instance
+            prompt: Prompt to send to LLM
+            model: Model name to use
+            max_tokens: Maximum tokens for generation
+            temperature: Sampling temperature
+            verbose: If True, log retry attempts
+            max_retries: Maximum number of retry attempts (default: 3)
+
+        Returns:
+            LLM response object
+
+        Raises:
+            APIError: If all retries are exhausted or non-retryable error occurs
+        """
+        base_delay = 0.1  # Start with 100ms
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                response = llm.generate(
+                    prompt=prompt,
+                    model=model,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+                return response
+
+            except Exception as e:
+                last_error = e
+                error_str = str(e).lower()
+
+                # Check if error is retryable
+                is_rate_limit = "429" in error_str or "rate limit" in error_str
+                is_server_error = any(
+                    code in error_str for code in ["500", "502", "503", "504", "server error"]
+                )
+                is_network_error = any(
+                    term in error_str
+                    for term in ["connection", "timeout", "network", "temporarily unavailable"]
+                )
+
+                is_retryable = is_rate_limit or is_server_error or is_network_error
+
+                # Non-retryable errors: raise immediately
+                if not is_retryable or attempt == max_retries - 1:
+                    logger.error(f"LLM API call failed (attempt {attempt + 1}/{max_retries}): {e}")
+                    error_msg = self.error_handler.handle_api_error(e, "LLM API call")
+                    raise APIError(error_msg) from e
+
+                # Calculate delay with exponential backoff and jitter
+                delay = base_delay * (2**attempt)
+                jitter = random.uniform(0, delay * 0.1)  # Add 0-10% jitter
+                total_delay = delay + jitter
+
+                if verbose or is_rate_limit:
+                    logger.info(
+                        f"Retrying LLM call in {total_delay:.2f}s... "
+                        f"(attempt {attempt + 1}/{max_retries})"
+                    )
+
+                time.sleep(total_delay)
+
+        # Should never reach here, but just in case
+        error_msg = self.error_handler.handle_api_error(
+            last_error or Exception("Unknown error"), "LLM API call"
+        )
+        raise APIError(error_msg)

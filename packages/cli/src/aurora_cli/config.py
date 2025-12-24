@@ -13,11 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
-class ConfigurationError(Exception):
-    """Raised when configuration is invalid or missing required values."""
-
-    pass
+from aurora_cli.errors import ConfigurationError, ErrorHandler
 
 
 @dataclass
@@ -64,14 +60,12 @@ class Config:
         if self.anthropic_api_key and self.anthropic_api_key.strip():
             return self.anthropic_api_key.strip()
 
-        # No key found - raise helpful error
-        raise ConfigurationError(
-            "[Config] ANTHROPIC_API_KEY not found. AURORA needs this to connect to LLM.\n\n"
-            "Configure via:\n"
-            "  1. Environment: export ANTHROPIC_API_KEY=sk-ant-...\n"
-            "  2. Config file: aur init\n\n"
-            "Get your API key at: https://console.anthropic.com"
+        # No key found - raise helpful error with formatted message
+        error_handler = ErrorHandler()
+        error_msg = error_handler.handle_config_error(
+            Exception("API key not found"), config_path="~/.aurora/config.json"
         )
+        raise ConfigurationError(error_msg)
 
     def validate(self) -> None:
         """Validate configuration values.
@@ -202,20 +196,21 @@ def load_config(path: str | None = None) -> Config:
     if path is not None:
         config_path = Path(path).expanduser().resolve()
         if config_path.exists():
+            error_handler = ErrorHandler()
             try:
                 with open(config_path, "r") as f:
                     config_data = json.load(f)
                 config_source = str(config_path)
             except json.JSONDecodeError as e:
-                raise ConfigurationError(
-                    f"[Config] Config file syntax error: {e.msg} at line {e.lineno}\n"
-                    f"Validate JSON: jsonlint {config_path}"
-                )
-            except PermissionError:
-                raise ConfigurationError(
-                    f"[Config] Cannot read {config_path}. Check file permissions.\n"
-                    f"Fix permissions: chmod 600 {config_path}"
-                )
+                error_msg = error_handler.handle_config_error(e, config_path=str(config_path))
+                raise ConfigurationError(error_msg) from e
+            except PermissionError as e:
+                error_msg = error_handler.handle_config_error(e, config_path=str(config_path))
+                raise ConfigurationError(error_msg) from e
+            except Exception as e:
+                # Catch any other file-related errors (disk full, etc.)
+                error_msg = error_handler.handle_config_error(e, config_path=str(config_path))
+                raise ConfigurationError(error_msg) from e
 
     # Start with defaults
     defaults = CONFIG_SCHEMA.copy()

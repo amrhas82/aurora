@@ -8,6 +8,7 @@ file discovery, parsing, and embedding generation.
 from __future__ import annotations
 
 import logging
+import sqlite3
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +17,8 @@ from typing import TYPE_CHECKING, Callable
 from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import ParserRegistry, get_global_registry
 from aurora_context_code.semantic import EmbeddingProvider
+
+from aurora_cli.errors import ErrorHandler, MemoryStoreError
 
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
@@ -135,6 +138,7 @@ class MemoryManager:
         self.memory_store = memory_store
         self.parser_registry = parser_registry or get_global_registry()
         self.embedding_provider = embedding_provider or EmbeddingProvider()
+        self.error_handler = ErrorHandler()
         logger.info("MemoryManager initialized")
 
     def index_path(
@@ -201,8 +205,8 @@ class MemoryManager:
                         content_to_embed = self._build_chunk_content(chunk)
                         embedding = self.embedding_provider.embed(content_to_embed)
 
-                        # Store chunk with embedding
-                        self.memory_store.add_chunk(
+                        # Store chunk with embedding (with retry for database locks)
+                        self._store_chunk_with_retry(
                             chunk_id=chunk.chunk_id,
                             content=content_to_embed,
                             embedding=embedding,
@@ -224,7 +228,11 @@ class MemoryManager:
                     stats["files"] += 1
                     logger.debug(f"Indexed {file_path}: {len(chunks)} chunks")
 
+                except MemoryStoreError:
+                    # Re-raise memory store errors (already formatted)
+                    raise
                 except Exception as e:
+                    # Log parse errors but continue with other files
                     logger.warning(f"Failed to index {file_path}: {e}")
                     stats["errors"] += 1
                     continue
@@ -247,9 +255,13 @@ class MemoryManager:
                 errors=stats["errors"],
             )
 
+        except MemoryStoreError:
+            # Re-raise memory store errors with formatted messages
+            raise
         except Exception as e:
             logger.error(f"Indexing failed: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to index {path}: {e}") from e
+            error_msg = self.error_handler.handle_memory_error(e, "indexing")
+            raise MemoryStoreError(error_msg) from e
 
     def search(self, query: str, limit: int = 5) -> list[SearchResult]:
         """Search memory store for relevant chunks.
@@ -305,9 +317,13 @@ class MemoryManager:
             logger.info(f"Search returned {len(search_results)} results for '{query}'")
             return search_results
 
+        except MemoryStoreError:
+            # Re-raise memory store errors
+            raise
         except Exception as e:
             logger.error(f"Search failed: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to search memory: {e}") from e
+            error_msg = self.error_handler.handle_memory_error(e, "search")
+            raise MemoryStoreError(error_msg) from e
 
     def get_stats(self) -> MemoryStats:
         """Get statistics about memory store contents.
@@ -501,6 +517,87 @@ class MemoryManager:
         except Exception as e:
             logger.warning(f"Failed to get database size: {e}")
             return 0.0
+
+    def _store_chunk_with_retry(
+        self,
+        chunk_id: str,
+        content: str,
+        embedding: list[float],
+        metadata: dict,
+        max_retries: int = 5,
+    ) -> None:
+        """Store chunk in memory with retry logic for database locks.
+
+        Implements retry logic specifically for SQLite database locked errors.
+        Uses exponential backoff to wait for lock to be released.
+
+        Args:
+            chunk_id: Unique chunk identifier
+            content: Chunk content
+            embedding: Embedding vector
+            metadata: Chunk metadata
+            max_retries: Maximum retry attempts for database locks (default: 5)
+
+        Raises:
+            MemoryStoreError: If all retries exhausted or non-retryable error
+        """
+        base_delay = 0.1  # Start with 100ms
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                self.memory_store.add_chunk(
+                    chunk_id=chunk_id,
+                    content=content,
+                    embedding=embedding,
+                    metadata=metadata,
+                )
+                return  # Success
+
+            except sqlite3.OperationalError as e:
+                last_error = e
+                error_str = str(e).lower()
+
+                # Check if it's a database locked error
+                if "locked" in error_str or "busy" in error_str:
+                    if attempt < max_retries - 1:
+                        # Calculate delay with exponential backoff
+                        delay = base_delay * (2**attempt)
+                        logger.debug(
+                            f"Database locked, retrying in {delay:.2f}s "
+                            f"(attempt {attempt + 1}/{max_retries})"
+                        )
+                        time.sleep(delay)
+                        continue
+                    else:
+                        # All retries exhausted for lock error
+                        error_msg = self.error_handler.handle_memory_error(e, "storing chunk")
+                        raise MemoryStoreError(error_msg) from e
+                else:
+                    # Non-lock operational error - raise immediately
+                    error_msg = self.error_handler.handle_memory_error(e, "storing chunk")
+                    raise MemoryStoreError(error_msg) from e
+
+            except PermissionError as e:
+                # Permission errors are not retryable
+                error_msg = self.error_handler.handle_memory_error(e, "storing chunk")
+                raise MemoryStoreError(error_msg) from e
+
+            except OSError as e:
+                # OS errors like disk full are not retryable
+                error_msg = self.error_handler.handle_memory_error(e, "storing chunk")
+                raise MemoryStoreError(error_msg) from e
+
+            except Exception as e:
+                # Other errors - raise immediately
+                last_error = e
+                error_msg = self.error_handler.handle_memory_error(e, "storing chunk")
+                raise MemoryStoreError(error_msg) from e
+
+        # Should never reach here, but just in case
+        if last_error:
+            error_msg = self.error_handler.handle_memory_error(last_error, "storing chunk")
+            raise MemoryStoreError(error_msg)
 
 
 __all__ = ["MemoryManager", "IndexStats", "SearchResult", "MemoryStats"]

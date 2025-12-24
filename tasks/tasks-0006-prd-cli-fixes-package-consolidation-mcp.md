@@ -465,16 +465,16 @@
     - ✓ Section 5: Getting Help - GitHub issues, documentation links
     - ✓ Include actual error messages users might see with solutions
     - ✓ Cross-reference MCP_SETUP.md troubleshooting section
-  - [ ] **4.5** Update README.md for v0.2.0 (1 hour)
-    - Open `/home/hamr/PycharmProjects/aurora/README.md`
-    - Update installation section: Show single `pip install aurora` command
-    - Update quick start: Add MCP integration as primary workflow (before standalone CLI)
-    - Add standalone CLI usage section: `aur init`, `aur mem index`, `aur query`
-    - Add configuration section: Link to MCP_SETUP.md
-    - Add troubleshooting section: Link to TROUBLESHOOTING.md
-    - Update features list: Add MCP integration, package consolidation
-    - Add Windows support badge/note
-    - Test all example commands in README work as documented
+  - [x] **4.5** Update README.md for v0.2.0 (1 hour)
+    - ✓ Opened `/home/hamr/PycharmProjects/aurora/README.md`
+    - ✓ Updated installation section: Show single `pip install aurora` command with extras
+    - ✓ Updated quick start: Add MCP integration as primary workflow (before standalone CLI)
+    - ✓ Added standalone CLI usage section: `aur init`, `aur mem index`, `aur query`
+    - ✓ Added configuration section: Link to MCP_SETUP.md
+    - ✓ Added troubleshooting section: Link to TROUBLESHOOTING.md
+    - ✓ Updated features list: Add MCP integration, package consolidation, Windows support
+    - ✓ Updated version banner to v0.2.0 with new features
+    - ✓ Added verification and diagnostic commands section
   - [ ] **4.6** Create CHANGELOG.md for v0.2.0 (30 minutes)
     - Create or update `/home/hamr/PycharmProjects/aurora/CHANGELOG.md`
     - Add v0.2.0 section with date

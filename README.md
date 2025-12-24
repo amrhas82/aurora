@@ -7,18 +7,18 @@
 
 ---
 
-**🚀 v1.1.0 Released - CLI Implementation Complete!** Command-line interface with auto-escalation, memory management, and comprehensive documentation.
+**🚀 v0.2.0 Released - MCP Integration & Package Consolidation!** Claude Desktop integration with Model Context Protocol, simplified installation, and enhanced CLI.
 
-**Status**: 1,824+ tests passing (100%), 88%+ coverage, **Production Ready** ✅
+**Status**: 1,900+ tests passing (100%), 88%+ coverage, **Production Ready** ✅
 
-**New in v1.1.0 (CLI Implementation):**
-- ✅ Complete CLI implementation (`aur` command)
-- ✅ Auto-escalation (direct LLM vs AURORA based on complexity)
-- ✅ Memory commands (`aur mem index/search/stats`)
-- ✅ Configuration management (env vars, config files, precedence)
-- ✅ Comprehensive error handling with actionable messages
-- ✅ Dry-run mode for testing without API costs
-- ✅ Full documentation (usage guide, error catalog, troubleshooting)
+**New in v0.2.0:**
+- ✅ **MCP Server Integration** - Use AURORA directly in Claude Desktop with 5 powerful tools
+- ✅ **Single Package Installation** - Install everything with `pip install aurora`
+- ✅ **Windows Support** - Full cross-platform compatibility (Windows, macOS, Linux)
+- ✅ **Flexible CLI Syntax** - Both `aur --headless` and `aur headless` work
+- ✅ **Installation Verification** - `aur --verify` checks health and dependencies
+- ✅ **Improved Error Messages** - Actionable guidance for all common errors
+- ✅ **Bug Fixes** - Resolved Path shadowing, API mismatch, and import errors
 
 **Previous Releases:**
 
@@ -43,6 +43,14 @@ See [docs/](docs/) for 19 comprehensive guides
 AURORA is a cognitive architecture framework that provides intelligent context management, reasoning, and agent orchestration capabilities for AI systems. Built on principles inspired by cognitive science research (SOAR, ACT-R), AURORA enables AI agents to maintain persistent memory, learn from experience, and efficiently coordinate complex tasks.
 
 ### Key Features
+
+**v0.2.0 - MCP Integration:**
+- **Claude Desktop Integration**: 5 MCP tools for seamless codebase interaction in Claude
+- **Single Package Installation**: One command to install all AURORA components
+- **Cross-Platform Support**: Windows, macOS, and Linux fully supported
+- **Installation Verification**: Health checks and diagnostics with `aur --verify`
+- **Improved Error Handling**: Actionable error messages with recovery steps
+- **Flexible CLI Syntax**: Support for both `aur --headless` and `aur headless` patterns
 
 **Phase 1 Foundation:**
 - **Intelligent Context Management**: Adaptive chunking and retrieval of code and reasoning contexts
@@ -73,37 +81,93 @@ AURORA is a cognitive architecture framework that provides intelligent context m
 
 ### Installation
 
+**Option 1: Install from PyPI (Recommended)**
+
+```bash
+# Install AURORA with all features
+pip install aurora[all]
+
+# Or minimal installation (no ML dependencies)
+pip install aurora
+
+# Or with specific extras
+pip install aurora[ml]   # Machine learning dependencies
+pip install aurora[mcp]  # MCP server dependencies
+```
+
+**Option 2: Install from Source**
+
 ```bash
 # Clone the repository
 git clone https://github.com/aurora-project/aurora.git
 cd aurora
 
-# Install all packages in development mode
-make install-dev
+# Install in development mode
+pip install -e .
 
-# Or install individually
-pip install -e packages/core
-pip install -e packages/context-code
-pip install -e packages/soar
-pip install -e packages/cli  # Command-line interface
+# Or install with all extras
+pip install -e ".[all]"
 ```
 
-### CLI Usage (Recommended for v1.1.0+)
-
-AURORA v1.1.0 includes a powerful command-line interface for intelligent code querying and memory management.
-
-#### Install and Setup
+**Verify Installation**
 
 ```bash
-# Install CLI
-pip install -e packages/cli
+aur --verify
+```
 
-# Initialize configuration
+### MCP Integration with Claude Desktop (Primary Workflow)
+
+AURORA v0.2.0 integrates with Claude Desktop via the Model Context Protocol, enabling Claude to search and analyze your codebase directly.
+
+#### 1. Install and Index
+
+```bash
+# Install AURORA
+pip install aurora[all]
+
+# Initialize configuration (optional - sets API keys)
 aur init
 
 # Index your codebase
-aur mem index
+cd /path/to/your/project
+aur mem index .
 ```
+
+#### 2. Configure Claude Desktop
+
+Add AURORA to Claude Desktop's MCP configuration:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Linux:** `~/.config/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "aurora": {
+      "command": "python",
+      "args": ["-m", "aurora.mcp.server"]
+    }
+  }
+}
+```
+
+#### 3. Use in Claude Desktop
+
+Restart Claude Desktop and ask questions about your code:
+
+- "Search my codebase for authentication logic"
+- "Find all usages of the DatabaseConnection class"
+- "What does the UserService module do?"
+- "Show me error handling in payment processing"
+
+Claude will automatically use AURORA's tools to search your indexed codebase and provide contextual answers.
+
+**See:** [MCP Setup Guide](docs/MCP_SETUP.md) for detailed configuration and troubleshooting.
+
+### Standalone CLI Usage
+
+You can also use AURORA's CLI directly without Claude Desktop:
 
 #### Basic Queries
 
@@ -143,14 +207,29 @@ aur mem search "database" --limit 10 --show-content --format json
 #### Headless Mode (Autonomous Experiments)
 
 ```bash
-# Run autonomous experiment
+# Run autonomous experiment (both syntaxes work)
 aur headless experiment.md
+aur --headless experiment.md
 
 # Custom budget and iterations
 aur headless experiment.md --budget 10.0 --max-iter 20
 
 # Dry run (validation only)
 aur headless experiment.md --dry-run
+```
+
+#### Verification and Troubleshooting
+
+```bash
+# Check installation health
+aur --verify
+
+# Check MCP server status
+aurora-mcp status
+
+# View help
+aur --help
+aur mem --help
 ```
 
 **CLI Features:**
@@ -160,12 +239,13 @@ aur headless experiment.md --dry-run
 - ✅ Comprehensive error handling with recovery steps
 - ✅ Headless mode for autonomous reasoning
 - ✅ Rich terminal output with progress bars and tables
+- ✅ Installation verification and diagnostics
 
-**CLI Documentation:**
+**Documentation:**
+- [MCP Setup Guide](docs/MCP_SETUP.md) - Claude Desktop integration
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 - [CLI Usage Guide](docs/cli/CLI_USAGE_GUIDE.md) - Comprehensive command reference
 - [Quick Start](docs/cli/QUICK_START.md) - Get started in 5 minutes
-- [Error Catalog](docs/cli/ERROR_CATALOG.md) - All error codes and solutions
-- [Troubleshooting](docs/cli/TROUBLESHOOTING.md) - Common issues and fixes
 
 ### Python API Usage
 

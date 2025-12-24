@@ -7,17 +7,27 @@
 
 ---
 
-**🚀 Phase 3 Complete - MVP Released!** ACT-R Activation, Semantic Embeddings & Headless Mode (v1.0.0-phase3)
+**🚀 v1.1.0 Released - CLI Implementation Complete!** Command-line interface with auto-escalation, memory management, and comprehensive documentation.
 
-**Status**: 1,824 tests passing (100%), 88.41% coverage, **Production Ready** ✅
+**Status**: 1,824+ tests passing (100%), 88%+ coverage, **Production Ready** ✅
 
-**New in Phase 3:**
+**New in v1.1.0 (CLI Implementation):**
+- ✅ Complete CLI implementation (`aur` command)
+- ✅ Auto-escalation (direct LLM vs AURORA based on complexity)
+- ✅ Memory commands (`aur mem index/search/stats`)
+- ✅ Configuration management (env vars, config files, precedence)
+- ✅ Comprehensive error handling with actionable messages
+- ✅ Dry-run mode for testing without API costs
+- ✅ Full documentation (usage guide, error catalog, troubleshooting)
+
+**Previous Releases:**
+
+**v1.0.0-phase3 (ACT-R & Semantic Memory):**
 - ✅ ACT-R activation engine with BLA, spreading, context boost, decay formulas
 - ✅ Semantic embeddings with hybrid retrieval (60% activation + 40% semantic)
 - ✅ Headless reasoning mode for autonomous experiments
 - ✅ Performance optimization (multi-tier caching, query optimization, <500ms for 10K chunks)
 - ✅ Production hardening (retry handler, rate limiting, metrics, alerting)
-- ✅ Memory commands (`aur mem`) with auto-escalation
 
 **Release Documentation:**
 - [Release Notes](RELEASE_NOTES_v1.0.0-phase3.md) | [API Contracts](docs/API_CONTRACTS_v1.0.md) | [Migration Guide](docs/PHASE4_MIGRATION_GUIDE.md)
@@ -75,9 +85,89 @@ make install-dev
 pip install -e packages/core
 pip install -e packages/context-code
 pip install -e packages/soar
+pip install -e packages/cli  # Command-line interface
 ```
 
-### Basic Usage
+### CLI Usage (Recommended for v1.1.0+)
+
+AURORA v1.1.0 includes a powerful command-line interface for intelligent code querying and memory management.
+
+#### Install and Setup
+
+```bash
+# Install CLI
+pip install -e packages/cli
+
+# Initialize configuration
+aur init
+
+# Index your codebase
+aur mem index
+```
+
+#### Basic Queries
+
+```bash
+# Simple query (uses direct LLM - fast)
+aur query "What is a Python decorator?"
+
+# Complex query (uses full AURORA pipeline with memory context)
+aur query "How does the authentication system work?"
+
+# Force specific mode
+aur query "Explain classes" --force-aurora --verbose
+
+# Show escalation reasoning
+aur query "Design API endpoints" --show-reasoning
+
+# Test configuration without API calls
+aur query "test" --dry-run
+```
+
+#### Memory Management
+
+```bash
+# Index current directory
+aur mem index
+
+# Search indexed code
+aur mem search "authentication"
+
+# View statistics
+aur mem stats
+
+# Advanced search
+aur mem search "database" --limit 10 --show-content --format json
+```
+
+#### Headless Mode (Autonomous Experiments)
+
+```bash
+# Run autonomous experiment
+aur headless experiment.md
+
+# Custom budget and iterations
+aur headless experiment.md --budget 10.0 --max-iter 20
+
+# Dry run (validation only)
+aur headless experiment.md --dry-run
+```
+
+**CLI Features:**
+- ✅ Automatic escalation (direct LLM vs AURORA)
+- ✅ Memory indexing and hybrid search (activation + semantic)
+- ✅ Configuration management (env vars, config files)
+- ✅ Comprehensive error handling with recovery steps
+- ✅ Headless mode for autonomous reasoning
+- ✅ Rich terminal output with progress bars and tables
+
+**CLI Documentation:**
+- [CLI Usage Guide](docs/cli/CLI_USAGE_GUIDE.md) - Comprehensive command reference
+- [Quick Start](docs/cli/QUICK_START.md) - Get started in 5 minutes
+- [Error Catalog](docs/cli/ERROR_CATALOG.md) - All error codes and solutions
+- [Troubleshooting](docs/cli/TROUBLESHOOTING.md) - Common issues and fixes
+
+### Python API Usage
 
 #### Example 1: Parse and Store Code
 

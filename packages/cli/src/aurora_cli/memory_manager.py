@@ -203,25 +203,13 @@ class MemoryManager:
                         # Generate embedding for chunk content
                         # Use chunk's full content (signature + docstring + code)
                         content_to_embed = self._build_chunk_content(chunk)
-                        embedding = self.embedding_provider.embed(content_to_embed)
+                        embedding = self.embedding_provider.embed_chunk(content_to_embed)
+
+                        # Set embedding on the chunk object (numpy array -> bytes)
+                        chunk.embeddings = embedding.tobytes()
 
                         # Store chunk with embedding (with retry for database locks)
-                        self._store_chunk_with_retry(
-                            chunk_id=chunk.chunk_id,
-                            content=content_to_embed,
-                            embedding=embedding,
-                            metadata={
-                                "type": chunk.element_type,
-                                "name": chunk.name,
-                                "file_path": chunk.file_path,
-                                "line_start": chunk.line_start,
-                                "line_end": chunk.line_end,
-                                "signature": chunk.signature,
-                                "docstring": chunk.docstring,
-                                "language": chunk.language,
-                                "complexity": chunk.complexity_score,
-                            },
-                        )
+                        self._save_chunk_with_retry(chunk)
 
                         stats["chunks"] += 1
 
@@ -518,24 +506,18 @@ class MemoryManager:
             logger.warning(f"Failed to get database size: {e}")
             return 0.0
 
-    def _store_chunk_with_retry(
+    def _save_chunk_with_retry(
         self,
-        chunk_id: str,
-        content: str,
-        embedding: list[float],
-        metadata: dict,
+        chunk: "Chunk",
         max_retries: int = 5,
     ) -> None:
-        """Store chunk in memory with retry logic for database locks.
+        """Save chunk in memory with retry logic for database locks.
 
         Implements retry logic specifically for SQLite database locked errors.
         Uses exponential backoff to wait for lock to be released.
 
         Args:
-            chunk_id: Unique chunk identifier
-            content: Chunk content
-            embedding: Embedding vector
-            metadata: Chunk metadata
+            chunk: Chunk object to save (with embeddings already set)
             max_retries: Maximum retry attempts for database locks (default: 5)
 
         Raises:
@@ -546,12 +528,7 @@ class MemoryManager:
 
         for attempt in range(max_retries):
             try:
-                self.memory_store.add_chunk(
-                    chunk_id=chunk_id,
-                    content=content,
-                    embedding=embedding,
-                    metadata=metadata,
-                )
+                self.memory_store.save_chunk(chunk)
                 return  # Success
 
             except sqlite3.OperationalError as e:

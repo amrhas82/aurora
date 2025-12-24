@@ -6,9 +6,9 @@ Tests registration, discovery, and multi-language support.
 
 from pathlib import Path
 
-from aurora_context_code.parser import CodeParser
-from aurora_context_code.registry import ParserRegistry, get_global_registry
-from aurora_core.chunks.code_chunk import CodeChunk
+from aurora.context_code.parser import CodeParser
+from aurora.context_code.registry import ParserRegistry, get_global_registry
+from aurora.core.chunks.code_chunk import CodeChunk
 
 
 class MockParser(CodeParser):

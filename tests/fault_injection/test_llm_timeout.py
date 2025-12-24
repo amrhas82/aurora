@@ -14,7 +14,7 @@ import time
 from unittest.mock import Mock
 
 import pytest
-from aurora_reasoning.llm_client import LLMClient, LLMResponse
+from aurora.reasoning.llm_client import LLMClient, LLMResponse
 
 
 class TimeoutLLMClient(LLMClient):
@@ -131,7 +131,7 @@ class TestLLMTimeoutPhases:
 
     def test_timeout_during_assess_phase(self):
         """Test timeout during complexity assessment."""
-        from aurora_soar.phases.assess import _assess_tier2_llm
+        from aurora.soar.phases.assess import _assess_tier2_llm
 
         client = TimeoutLLMClient(timeout_after_seconds=0.001, fail_count=999)
 
@@ -154,7 +154,7 @@ class TestLLMTimeoutPhases:
 
     def test_timeout_during_decompose_phase(self):
         """Test timeout during query decomposition."""
-        from aurora_reasoning.decompose import decompose_query
+        from aurora.reasoning.decompose import decompose_query
 
         client = TimeoutLLMClient(timeout_after_seconds=0.001, fail_count=999)
 
@@ -170,7 +170,7 @@ class TestLLMTimeoutPhases:
 
     def test_timeout_during_verify_phase(self):
         """Test timeout during verification."""
-        from aurora_reasoning.verify import verify_decomposition
+        from aurora.reasoning.verify import verify_decomposition
 
         client = TimeoutLLMClient(timeout_after_seconds=0.001, fail_count=999)
 
@@ -192,7 +192,7 @@ class TestLLMTimeoutPhases:
 
     def test_timeout_during_synthesis_phase(self):
         """Test timeout during result synthesis."""
-        from aurora_reasoning.synthesize import synthesize_results
+        from aurora.reasoning.synthesize import synthesize_results
 
         client = TimeoutLLMClient(timeout_after_seconds=0.001, fail_count=999)
 
@@ -347,7 +347,7 @@ class TestLLMTimeoutIntegration:
         """Test that timeout interacts correctly with cost tracking."""
         from pathlib import Path
 
-        from aurora_core.budget.tracker import CostTracker
+        from aurora.core.budget.tracker import CostTracker
 
         client = TimeoutLLMClient(timeout_after_seconds=0.001, fail_count=999)
 
@@ -447,7 +447,7 @@ class TestLLMTimeoutEdgeCases:
 
     def test_timeout_with_empty_prompt(self):
         """Test timeout with empty prompt."""
-        from aurora_reasoning.llm_client import AnthropicClient
+        from aurora.reasoning.llm_client import AnthropicClient
 
         # Mock client that would timeout
         client = Mock(spec=AnthropicClient)

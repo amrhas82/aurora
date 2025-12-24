@@ -3,11 +3,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora_reasoning.decompose import (
+from aurora.reasoning.decompose import (
     DecompositionResult,
     decompose_query,
 )
-from aurora_reasoning.prompts.examples import Complexity
+from aurora.reasoning.prompts.examples import Complexity
 
 
 class TestDecompositionResult:

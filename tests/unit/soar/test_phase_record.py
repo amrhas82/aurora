@@ -9,11 +9,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from aurora_core.chunks import ReasoningChunk
-from aurora_core.store.base import Store
-from aurora_soar.phases.collect import AgentOutput, CollectResult
-from aurora_soar.phases.record import RecordResult, record_pattern
-from aurora_soar.phases.synthesize import SynthesisResult
+from aurora.core.chunks import ReasoningChunk
+from aurora.core.store.base import Store
+from aurora.soar.phases.collect import AgentOutput, CollectResult
+from aurora.soar.phases.record import RecordResult, record_pattern
+from aurora.soar.phases.synthesize import SynthesisResult
 
 
 class TestRecordPatternHighScore:

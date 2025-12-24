@@ -22,11 +22,11 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from aurora_context_code.semantic.embedding_provider import (
+from aurora.context_code.semantic.embedding_provider import (
     HAS_SENTENCE_TRANSFORMERS,
     EmbeddingProvider,
 )
-from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+from aurora.context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
 
 # Skip all tests in this module if sentence-transformers not available
@@ -445,7 +445,7 @@ class TestFallbackConfiguration:
 
     def test_aurora_config_fallback_setting(self):
         """Test loading fallback setting from aurora_config."""
-        from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
+        from aurora.context_code.semantic.hybrid_retriever import HybridRetriever
 
         # Mock AURORA Config with fallback disabled
         class MockAuroraConfig:

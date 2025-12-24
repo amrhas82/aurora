@@ -9,7 +9,7 @@ from datetime import datetime
 
 import pytest
 
-from aurora_core.chunks.reasoning_chunk import ReasoningChunk
+from aurora.core.chunks.reasoning_chunk import ReasoningChunk
 
 
 class TestReasoningChunkInitialization:

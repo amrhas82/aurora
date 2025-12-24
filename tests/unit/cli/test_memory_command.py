@@ -13,7 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from aurora_cli.commands.memory import (
+from aurora.cli.commands.memory import (
     _format_score,
     _truncate_content,
     _truncate_path,

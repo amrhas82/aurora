@@ -175,7 +175,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.AnthropicClient")
     def test_api_call_with_retry_success_first_attempt(self, mock_client_class):
         """Test successful API call on first attempt."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora.cli.execution import QueryExecutor
 
         # Mock successful response
         mock_response = Mock()
@@ -199,7 +199,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.time.sleep")
     def test_api_call_with_retry_rate_limit_success(self, mock_sleep, mock_client_class):
         """Test API call succeeds after rate limit retry."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora.cli.execution import QueryExecutor
 
         # Mock rate limit on first call, success on second
         mock_response = Mock()
@@ -227,7 +227,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.time.sleep")
     def test_api_call_with_retry_exhausted(self, mock_sleep, mock_client_class):
         """Test API call fails after exhausting retries."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora.cli.execution import QueryExecutor
 
         # Mock rate limit on all attempts
         mock_client = Mock()
@@ -248,7 +248,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.AnthropicClient")
     def test_api_call_non_retryable_error(self, mock_client_class):
         """Test non-retryable error (auth) fails immediately."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora.cli.execution import QueryExecutor
 
         # Mock authentication error (non-retryable)
         mock_client = Mock()
@@ -271,7 +271,7 @@ class TestConfigErrorHandling:
 
     def test_load_config_invalid_json(self, tmp_path):
         """Test loading config with invalid JSON."""
-        from aurora_cli.config import load_config
+        from aurora.cli.config import load_config
 
         # Create invalid JSON file
         config_file = tmp_path / "config.json"
@@ -286,7 +286,7 @@ class TestConfigErrorHandling:
 
     def test_load_config_permission_error(self, tmp_path):
         """Test loading config with permission error."""
-        from aurora_cli.config import load_config
+        from aurora.cli.config import load_config
 
         # Create config file and make it unreadable
         config_file = tmp_path / "config.json"
@@ -304,7 +304,7 @@ class TestConfigErrorHandling:
 
     def test_config_get_api_key_missing(self):
         """Test getting API key when not set."""
-        from aurora_cli.config import Config
+        from aurora.cli.config import Config
 
         config = Config(anthropic_api_key=None)
 
@@ -317,7 +317,7 @@ class TestConfigErrorHandling:
 
     def test_config_validate_invalid_threshold(self):
         """Test validation with invalid threshold."""
-        from aurora_cli.config import Config
+        from aurora.cli.config import Config
 
         config = Config(escalation_threshold=1.5)  # Invalid: > 1.0
 
@@ -335,7 +335,7 @@ class TestMemoryErrorHandling:
         """Test indexing continues after parse errors on individual files."""
         from pathlib import Path
 
-        from aurora_cli.memory_manager import MemoryManager
+        from aurora.cli.memory_manager import MemoryManager
 
         # Create mock memory store
         mock_memory_store = Mock()
@@ -375,7 +375,7 @@ class TestMemoryErrorHandling:
     @patch("aurora_cli.memory_manager.time.sleep")
     def test_store_chunk_with_database_lock_retry(self, mock_sleep):
         """Test storing chunk retries on database lock."""
-        from aurora_cli.memory_manager import MemoryManager
+        from aurora.cli.memory_manager import MemoryManager
 
         # Create mock memory store that fails twice then succeeds
         mock_memory_store = Mock()
@@ -400,7 +400,7 @@ class TestMemoryErrorHandling:
 
     def test_store_chunk_with_permission_error_fails_immediately(self):
         """Test storing chunk fails immediately on permission error."""
-        from aurora_cli.memory_manager import MemoryManager
+        from aurora.cli.memory_manager import MemoryManager
 
         # Create mock memory store that raises permission error
         mock_memory_store = Mock()
@@ -421,7 +421,7 @@ class TestMemoryErrorHandling:
 
     def test_store_chunk_with_disk_full_fails_immediately(self):
         """Test storing chunk fails immediately on disk full error."""
-        from aurora_cli.memory_manager import MemoryManager
+        from aurora.cli.memory_manager import MemoryManager
 
         # Create mock memory store that raises OSError
         mock_memory_store = Mock()
@@ -450,7 +450,7 @@ class TestDryRunMode:
         """Test dry-run mode displays configuration."""
         from click.testing import CliRunner
 
-        from aurora_cli.main import cli
+        from aurora.cli.main import cli
 
         # Mock escalation result
         mock_result = Mock()
@@ -488,7 +488,7 @@ class TestDryRunMode:
         """Test dry-run mode works without API key."""
         from click.testing import CliRunner
 
-        from aurora_cli.main import cli
+        from aurora.cli.main import cli
 
         runner = CliRunner()
         # Dry-run should work without API key

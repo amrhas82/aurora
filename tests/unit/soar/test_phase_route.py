@@ -2,8 +2,8 @@
 
 import pytest
 
-from aurora_soar.agent_registry import AgentInfo, AgentRegistry
-from aurora_soar.phases.route import (
+from aurora.soar.agent_registry import AgentInfo, AgentRegistry
+from aurora.soar.phases.route import (
     RouteResult,
     _check_circular_dependencies,
     _extract_capability_from_agent_id,

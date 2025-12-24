@@ -15,7 +15,7 @@ import json
 from unittest.mock import Mock
 
 import pytest
-from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
+from aurora.reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
 
 
 class MalformedLLMClient(LLMClient):
@@ -137,7 +137,7 @@ class TestMissingRequiredFields:
 
     def test_missing_fields_in_decomposition(self):
         """Test decomposition with missing required fields."""
-        from aurora_reasoning.decompose import decompose_query
+        from aurora.reasoning.decompose import decompose_query
 
         client = MalformedLLMClient(malformed_type="missing_fields")
 
@@ -151,7 +151,7 @@ class TestMissingRequiredFields:
 
     def test_missing_fields_in_verification(self):
         """Test verification with missing required fields."""
-        from aurora_reasoning.verify import verify_decomposition
+        from aurora.reasoning.verify import verify_decomposition
 
         client = MalformedLLMClient(malformed_type="missing_fields")
 
@@ -175,7 +175,7 @@ class TestWrongDataTypes:
 
     def test_wrong_type_complexity_assessment(self):
         """Test complexity assessment with wrong data types."""
-        from aurora_soar.phases.assess import _assess_tier2_llm
+        from aurora.soar.phases.assess import _assess_tier2_llm
 
         client = MalformedLLMClient(malformed_type="wrong_types")
 
@@ -336,8 +336,8 @@ class TestMalformedDecomposition:
         }
 
         # Routing fails with None agent (AttributeError on split())
-        from aurora_soar.agent_registry import AgentRegistry
-        from aurora_soar.phases.route import route_subgoals
+        from aurora.soar.agent_registry import AgentRegistry
+        from aurora.soar.phases.route import route_subgoals
 
         registry = AgentRegistry()
 
@@ -365,7 +365,7 @@ class TestMalformedDecomposition:
         }
 
         # Verification should catch this
-        from aurora_reasoning.verify import verify_decomposition
+        from aurora.reasoning.verify import verify_decomposition
 
         # Create mock client that returns high scores (won't catch the issue in mock)
         mock_client = Mock(spec=LLMClient)
@@ -411,7 +411,7 @@ class TestMalformedVerification:
 
     def test_verification_with_invalid_scores(self):
         """Test verification with out-of-range scores."""
-        from aurora_reasoning.verify import (
+        from aurora.reasoning.verify import (
             VerificationOption,
             VerificationResult,
             VerificationVerdict,
@@ -437,7 +437,7 @@ class TestMalformedVerification:
 
     def test_verification_with_negative_scores(self):
         """Test verification with negative scores."""
-        from aurora_reasoning.verify import (
+        from aurora.reasoning.verify import (
             VerificationOption,
             VerificationResult,
             VerificationVerdict,
@@ -466,7 +466,7 @@ class TestMalformedSynthesis:
 
     def test_synthesis_with_missing_traceability(self):
         """Test synthesis missing traceability links."""
-        from aurora_reasoning.synthesize import SynthesisResult
+        from aurora.reasoning.synthesize import SynthesisResult
 
         # Create synthesis without traceability
         result = SynthesisResult(
@@ -481,7 +481,7 @@ class TestMalformedSynthesis:
 
     def test_synthesis_with_invalid_confidence(self):
         """Test synthesis with out-of-range confidence."""
-        from aurora_reasoning.synthesize import SynthesisResult
+        from aurora.reasoning.synthesize import SynthesisResult
 
         # Confidence is not validated - system accepts out-of-range values
         # This test documents current behavior (no validation)
@@ -539,7 +539,7 @@ class TestMalformedMetadata:
 
     def test_missing_metadata_fields(self):
         """Test handling of missing metadata fields."""
-        from aurora_reasoning.llm_client import LLMResponse
+        from aurora.reasoning.llm_client import LLMResponse
 
         # Create response with minimal metadata
         response = LLMResponse(
@@ -556,7 +556,7 @@ class TestMalformedMetadata:
 
     def test_extra_metadata_fields(self):
         """Test handling of extra/unexpected metadata fields."""
-        from aurora_reasoning.llm_client import LLMResponse
+        from aurora.reasoning.llm_client import LLMResponse
 
         # Create response with extra fields
         response = LLMResponse(

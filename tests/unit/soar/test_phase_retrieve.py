@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from aurora_soar.phases.retrieve import (
+from aurora.soar.phases.retrieve import (
     RETRIEVAL_BUDGETS,
     retrieve_context,
 )

@@ -485,7 +485,7 @@ class TestMediumQueryE2E:
     def test_medium_query_with_context(self, e2e_framework):
         """Test that medium queries retrieve appropriate context."""
         # Add test chunks to the store
-        from aurora_core.chunks.code_chunk import CodeChunk
+        from aurora.core.chunks.code_chunk import CodeChunk
 
         test_chunk = CodeChunk(
             chunk_id="code:utils.py:calculate",

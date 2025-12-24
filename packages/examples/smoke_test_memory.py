@@ -19,8 +19,8 @@ import sys
 from datetime import datetime, timezone
 
 try:
-    from aurora_core.store.memory import MemoryStore
-    from aurora_core.chunks.code_chunk import CodeChunk
+    from aurora.core.store.memory import MemoryStore
+    from aurora.core.chunks.code_chunk import CodeChunk
 except ImportError as e:
     print(f"✗ Memory store: FAIL - Import error: {e}")
     sys.exit(1)

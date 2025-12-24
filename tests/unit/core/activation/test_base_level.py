@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from aurora_core.activation.base_level import (
+from aurora.core.activation.base_level import (
     AccessHistoryEntry,
     BaseLevelActivation,
     BLAConfig,

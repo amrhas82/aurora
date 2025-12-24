@@ -207,7 +207,7 @@ class CacheManager:
     3. **Activation Cache**: Short-lived cache for activation scores
 
     Examples:
-        >>> from aurora_core.optimization import CacheManager
+        >>> from aurora.core.optimization import CacheManager
         >>>
         >>> # Initialize cache
         >>> cache = CacheManager(

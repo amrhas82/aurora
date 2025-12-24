@@ -23,7 +23,7 @@ Safety Philosophy:
     - Scratchpad provides full audit trail
 
 Usage:
-    from aurora_soar.headless import HeadlessOrchestrator, HeadlessConfig
+    from aurora.soar.headless import HeadlessOrchestrator, HeadlessConfig
 
     orchestrator = HeadlessOrchestrator(
         prompt_path="experiment.md",
@@ -168,7 +168,7 @@ class HeadlessOrchestrator:
 
     Examples:
         # Basic usage
-        >>> from aurora_soar.headless import HeadlessOrchestrator, HeadlessConfig
+        >>> from aurora.soar.headless import HeadlessOrchestrator, HeadlessConfig
         >>> orchestrator = HeadlessOrchestrator(
         ...     prompt_path="experiment.md",
         ...     scratchpad_path="scratchpad.md",

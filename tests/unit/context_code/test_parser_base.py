@@ -6,8 +6,8 @@ Tests the contract that all parser implementations must follow.
 
 from pathlib import Path
 
-from aurora_context_code.parser import CodeParser
-from aurora_core.chunks.code_chunk import CodeChunk
+from aurora.context_code.parser import CodeParser
+from aurora.core.chunks.code_chunk import CodeChunk
 
 
 class MockParser(CodeParser):

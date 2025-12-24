@@ -10,10 +10,10 @@ from typing import Any
 
 import pytest
 
-from aurora_core.chunks.base import Chunk
-from aurora_core.exceptions import ChunkNotFoundError
-from aurora_core.store.base import Store
-from aurora_core.types import ChunkID
+from aurora.core.chunks.base import Chunk
+from aurora.core.exceptions import ChunkNotFoundError
+from aurora.core.store.base import Store
+from aurora.core.types import ChunkID
 
 
 # Test Chunk implementation for testing

@@ -249,7 +249,7 @@ class TestSimpleQueryE2E:
     def test_simple_query_with_context_retrieval(self, e2e_framework):
         """Test that simple queries retrieve appropriate context."""
         # Add some test chunks to the store
-        from aurora_core.chunks.code_chunk import CodeChunk
+        from aurora.core.chunks.code_chunk import CodeChunk
 
         test_chunk = CodeChunk(
             chunk_id="code:test.py:hello",

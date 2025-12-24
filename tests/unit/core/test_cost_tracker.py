@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from aurora_core.budget.tracker import (
+from aurora.core.budget.tracker import (
     MODEL_PRICING,
     BudgetTracker,
     CostTracker,

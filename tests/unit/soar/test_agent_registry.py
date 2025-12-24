@@ -8,7 +8,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from aurora_soar.agent_registry import AgentInfo, AgentRegistry
+from aurora.soar.agent_registry import AgentInfo, AgentRegistry
 
 
 class TestAgentInfo:

@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from aurora_reasoning import LLMClient
-    from aurora_reasoning.decompose import DecompositionResult
+    from aurora.reasoning import LLMClient
+    from aurora.reasoning.decompose import DecompositionResult
 
 __all__ = ["decompose_query", "DecomposePhaseResult"]
 
@@ -103,8 +103,8 @@ def decompose_query(
     """
     import time
 
-    from aurora_reasoning.decompose import decompose_query as reasoning_decompose
-    from aurora_reasoning.prompts.examples import Complexity
+    from aurora.reasoning.decompose import decompose_query as reasoning_decompose
+    from aurora.reasoning.prompts.examples import Complexity
 
     start_time = time.perf_counter()
 

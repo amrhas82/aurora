@@ -14,7 +14,7 @@ import time
 
 import pytest
 
-from aurora_core.optimization.parallel_executor import (
+from aurora.core.optimization.parallel_executor import (
     AgentPriority,
     AgentTask,
     ParallelAgentExecutor,

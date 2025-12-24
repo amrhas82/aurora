@@ -10,6 +10,7 @@ Provides testing utilities and fixtures:
 __version__ = "0.1.0"
 
 # Re-export modules for easy access
+# Note: Using old import path temporarily to avoid circular dependency during namespace setup
 from aurora_testing import benchmarks, fixtures, mocks
 
 

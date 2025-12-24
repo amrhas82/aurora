@@ -9,6 +9,7 @@ Provides agent registry and orchestration capabilities:
 - Headless reasoning mode for autonomous experiments
 """
 
+# Note: Using old import path temporarily to avoid circular dependency during namespace setup
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 

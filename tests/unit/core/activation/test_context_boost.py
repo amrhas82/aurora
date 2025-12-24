@@ -11,7 +11,7 @@ Tests the ACT-R context boost component including:
 
 import pytest
 
-from aurora_core.activation.context_boost import (
+from aurora.core.activation.context_boost import (
     ContextBoost,
     ContextBoostConfig,
     KeywordExtractor,

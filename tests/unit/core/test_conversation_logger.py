@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from aurora_core.logging import ConversationLogger, VerbosityLevel
+from aurora.core.logging import ConversationLogger, VerbosityLevel
 
 
 class TestConversationLogger:

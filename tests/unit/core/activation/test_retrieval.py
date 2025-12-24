@@ -16,16 +16,16 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from aurora_core.activation.base_level import AccessHistoryEntry
-from aurora_core.activation.engine import ActivationEngine
-from aurora_core.activation.retrieval import (
+from aurora.core.activation.base_level import AccessHistoryEntry
+from aurora.core.activation.engine import ActivationEngine
+from aurora.core.activation.retrieval import (
     ActivationRetriever,
     BatchRetriever,
     RetrievalConfig,
     RetrievalResult,
 )
-from aurora_core.activation.spreading import RelationshipGraph
-from aurora_core.types import ChunkID
+from aurora.core.activation.spreading import RelationshipGraph
+from aurora.core.types import ChunkID
 
 
 # Mock implementation of ChunkData for testing
@@ -111,7 +111,7 @@ class TestRetrievalResult:
 
     def test_result_with_components(self):
         """Test creating result with component breakdown."""
-        from aurora_core.activation.engine import ActivationComponents
+        from aurora.core.activation.engine import ActivationComponents
 
         components = ActivationComponents(
             bla=1.5, spreading=0.5, context_boost=0.3, decay=-0.2, total=2.1

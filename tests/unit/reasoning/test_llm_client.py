@@ -4,7 +4,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora_reasoning.llm_client import (
+from aurora.reasoning.llm_client import (
     AnthropicClient,
     LLMResponse,
     OllamaClient,

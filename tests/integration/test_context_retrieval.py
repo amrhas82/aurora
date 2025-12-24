@@ -6,10 +6,10 @@ Tests the complete flow: Parse → Store → Retrieve
 
 import pytest
 
-from aurora_context_code.registry import get_global_registry
-from aurora_core.chunks.code_chunk import CodeChunk
-from aurora_core.context.code_provider import CodeContextProvider
-from aurora_core.store.memory import MemoryStore
+from aurora.context_code.registry import get_global_registry
+from aurora.core.chunks.code_chunk import CodeChunk
+from aurora.core.context.code_provider import CodeContextProvider
+from aurora.core.store.memory import MemoryStore
 
 
 class TestContextRetrievalFlow:
@@ -139,7 +139,7 @@ class TestContextRetrievalFlow:
         assert len(results) == 1
 
         # Update activation for the retrieved chunk
-        from aurora_core.types import ChunkID
+        from aurora.core.types import ChunkID
 
         chunk_id = ChunkID(results[0].id)
         provider.update(chunk_id, 0.5)

@@ -98,16 +98,20 @@ class AuroraMCPTools:
             results = self._retriever.retrieve(query, top_k=limit)
 
             # Format results
+            # HybridRetriever returns list of dicts with keys:
+            # chunk_id, content, activation_score, semantic_score, hybrid_score, metadata
+            # metadata contains: type, name, file_path
             formatted_results = []
             for result in results:
+                metadata = result.get("metadata", {})
                 formatted_results.append(
                     {
-                        "file_path": result.chunk.source_file,
-                        "function_name": result.chunk.metadata.get("function_name", ""),
-                        "content": result.chunk.content,
-                        "score": float(result.score),
-                        "chunk_id": result.chunk.chunk_id,
-                        "line_range": result.chunk.metadata.get("line_range", [0, 0]),
+                        "file_path": metadata.get("file_path", ""),
+                        "function_name": metadata.get("name", ""),
+                        "content": result.get("content", ""),
+                        "score": float(result.get("hybrid_score", 0.0)),
+                        "chunk_id": result.get("chunk_id", ""),
+                        "line_range": metadata.get("line_range", [0, 0]),
                     }
                 )
 

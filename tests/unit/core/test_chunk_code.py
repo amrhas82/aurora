@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from aurora_core.chunks.code_chunk import CodeChunk
+from aurora.core.chunks.code_chunk import CodeChunk
 
 
 class TestCodeChunkBasic:

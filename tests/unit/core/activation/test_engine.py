@@ -16,10 +16,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from aurora_core.activation.base_level import AccessHistoryEntry, BLAConfig
-from aurora_core.activation.context_boost import ContextBoostConfig
-from aurora_core.activation.decay import DecayConfig
-from aurora_core.activation.engine import (
+from aurora.core.activation.base_level import AccessHistoryEntry, BLAConfig
+from aurora.core.activation.context_boost import ContextBoostConfig
+from aurora.core.activation.decay import DecayConfig
+from aurora.core.activation.engine import (
     AGGRESSIVE_CONFIG,
     BLA_FOCUSED_CONFIG,
     CONSERVATIVE_CONFIG,
@@ -29,7 +29,7 @@ from aurora_core.activation.engine import (
     ActivationConfig,
     ActivationEngine,
 )
-from aurora_core.activation.spreading import RelationshipGraph, SpreadingConfig
+from aurora.core.activation.spreading import RelationshipGraph, SpreadingConfig
 
 
 class TestActivationConfig:

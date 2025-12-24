@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 
 if TYPE_CHECKING:
-    from aurora_core.chunks.base import Chunk
+    from aurora.core.chunks.base import Chunk
 
 from aurora_core.types import ChunkID
 

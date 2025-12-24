@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_core.resilience.alerting import (
+from aurora.core.resilience.alerting import (
     Alert,
     Alerting,
     AlertRule,

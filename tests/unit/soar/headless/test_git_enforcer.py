@@ -16,7 +16,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_soar.headless.git_enforcer import (
+from aurora.soar.headless.git_enforcer import (
     GitBranchError,
     GitEnforcer,
     GitEnforcerConfig,

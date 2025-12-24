@@ -21,7 +21,7 @@ from unittest.mock import patch
 
 import pytest
 
-from aurora_soar.headless.scratchpad_manager import (
+from aurora.soar.headless.scratchpad_manager import (
     ScratchpadConfig,
     ScratchpadEntry,
     ScratchpadManager,

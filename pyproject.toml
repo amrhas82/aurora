@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aurora"
-version = "0.1.0"
-description = "AURORA: Adaptive Unified Reasoning and Orchestration Architecture"
+version = "0.2.0"
+description = "AURORA: Adaptive Unified Reasoning and Orchestration Architecture with MCP Integration"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -25,9 +25,24 @@ dependencies = [
     "aurora-core",
     "aurora-context-code",
     "aurora-soar",
+    "aurora-reasoning",
+    "aurora-cli",
+    "aurora-testing",
 ]
 
 [project.optional-dependencies]
+ml = [
+    "sentence-transformers>=2.2.0",
+    "torch>=2.0.0",
+]
+mcp = [
+    "fastmcp>=0.1.0",
+]
+all = [
+    "sentence-transformers>=2.2.0",
+    "torch>=2.0.0",
+    "fastmcp>=0.1.0",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
@@ -181,3 +196,9 @@ exclude_lines = [
 [tool.bandit]
 exclude_dirs = ["tests", "venv"]
 skips = ["B101"]  # assert_used in tests is ok
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

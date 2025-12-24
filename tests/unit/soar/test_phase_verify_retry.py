@@ -4,10 +4,10 @@ Unit tests for Phase 4 verification retry logic.
 Tests the retry loop when decompositions fail verification.
 """
 
-from aurora_reasoning.decompose import DecompositionResult
-from aurora_reasoning.llm_client import LLMClient
+from aurora.reasoning.decompose import DecompositionResult
+from aurora.reasoning.llm_client import LLMClient
 
-from aurora_soar.phases.verify import verify_decomposition
+from aurora.soar.phases.verify import verify_decomposition
 
 
 class MockRetryLLMClient(LLMClient):
@@ -36,7 +36,7 @@ class MockRetryLLMClient(LLMClient):
 
     def generate(self, prompt: str, system: str = "", **kwargs):
         """Generate text response."""
-        from aurora_reasoning.llm_client import LLMResponse
+        from aurora.reasoning.llm_client import LLMResponse
 
         # For feedback generation (returns LLMResponse)
         return LLMResponse(

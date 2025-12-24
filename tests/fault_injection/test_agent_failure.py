@@ -10,13 +10,13 @@ Tests how the system handles various agent failure scenarios:
 
 import pytest
 
-from aurora_soar.agent_registry import AgentInfo
-from aurora_soar.phases.collect import (
+from aurora.soar.agent_registry import AgentInfo
+from aurora.soar.phases.collect import (
     AgentOutput,
     _execute_single_subgoal,
     execute_agents,
 )
-from aurora_soar.phases.route import RouteResult
+from aurora.soar.phases.route import RouteResult
 
 
 @pytest.fixture

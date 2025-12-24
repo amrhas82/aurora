@@ -5,7 +5,7 @@ high-quality and low-quality decompositions with expected scores.
 """
 
 import pytest
-from aurora_reasoning.verify import verify_decomposition
+from aurora.reasoning.verify import verify_decomposition
 
 
 # Test data: Known good decompositions

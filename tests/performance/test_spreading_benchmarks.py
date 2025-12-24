@@ -19,7 +19,7 @@ Test Strategy:
 
 import pytest
 
-from aurora_core.activation.spreading import (
+from aurora.core.activation.spreading import (
     RelationshipGraph,
     SpreadingActivation,
     SpreadingConfig,

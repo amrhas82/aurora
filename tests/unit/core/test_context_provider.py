@@ -9,10 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from aurora_core.chunks.base import Chunk
-from aurora_core.chunks.code_chunk import CodeChunk
-from aurora_core.context.provider import ContextProvider
-from aurora_core.types import ChunkID
+from aurora.core.chunks.base import Chunk
+from aurora.core.chunks.code_chunk import CodeChunk
+from aurora.core.context.provider import ContextProvider
+from aurora.core.types import ChunkID
 
 
 class MockContextProvider(ContextProvider):
@@ -109,7 +109,7 @@ class TestCodeContextProvider:
     @pytest.fixture
     def memory_store(self):
         """Create an in-memory store for testing."""
-        from aurora_core.store.memory import MemoryStore
+        from aurora.core.store.memory import MemoryStore
 
         return MemoryStore()
 
@@ -157,14 +157,14 @@ class TestCodeContextProvider:
     @pytest.fixture
     def parser_registry(self):
         """Create a parser registry for testing."""
-        from aurora_context_code.registry import ParserRegistry
+        from aurora.context_code.registry import ParserRegistry
 
         return ParserRegistry()
 
     @pytest.fixture
     def code_provider(self, memory_store, parser_registry):
         """Create CodeContextProvider with test dependencies."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         return CodeContextProvider(store=memory_store, parser_registry=parser_registry)
 
@@ -267,7 +267,7 @@ class TestQueryParsing:
 
     def test_parse_query_lowercases_text(self):
         """Test that query parsing converts to lowercase."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = CodeContextProvider._parse_query("Calculate SUM Function")
         assert "calculate" in keywords
@@ -276,7 +276,7 @@ class TestQueryParsing:
 
     def test_parse_query_splits_on_whitespace(self):
         """Test that query is split on whitespace."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = CodeContextProvider._parse_query("parse json data")
         assert len(keywords) == 3
@@ -284,7 +284,7 @@ class TestQueryParsing:
 
     def test_parse_query_removes_stopwords(self):
         """Test that common stopwords are filtered out."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = CodeContextProvider._parse_query("parse the json data and return it")
         # "the", "and", "it" should be removed as stopwords
@@ -298,21 +298,21 @@ class TestQueryParsing:
 
     def test_parse_query_handles_empty_string(self):
         """Test that empty query returns empty list."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = CodeContextProvider._parse_query("")
         assert keywords == []
 
     def test_parse_query_handles_only_stopwords(self):
         """Test query with only stopwords returns empty list."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = CodeContextProvider._parse_query("the and it is")
         assert keywords == []
 
     def test_parse_query_strips_punctuation(self):
         """Test that punctuation is handled correctly."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = CodeContextProvider._parse_query("parse, json! data?")
         assert "parse" in keywords or "parse," in keywords  # Either strip or keep
@@ -321,7 +321,7 @@ class TestQueryParsing:
 
     def test_parse_query_handles_multiple_spaces(self):
         """Test that multiple spaces are handled correctly."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = CodeContextProvider._parse_query("parse    json     data")
         assert len(keywords) == 3
@@ -349,7 +349,7 @@ class TestChunkScoring:
 
     def test_score_chunk_perfect_match(self, sample_chunk):
         """Test scoring with all keywords matching."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = ["parse", "json", "data"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
@@ -358,7 +358,7 @@ class TestChunkScoring:
 
     def test_score_chunk_partial_match(self, sample_chunk):
         """Test scoring with some keywords matching."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = ["parse", "xml"]  # Only "parse" matches
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
@@ -366,7 +366,7 @@ class TestChunkScoring:
 
     def test_score_chunk_no_match(self, sample_chunk):
         """Test scoring with no keywords matching."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = ["calculate", "sum", "total"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
@@ -374,7 +374,7 @@ class TestChunkScoring:
 
     def test_score_chunk_empty_keywords(self, sample_chunk):
         """Test scoring with empty keyword list."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = []
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
@@ -382,7 +382,7 @@ class TestChunkScoring:
 
     def test_score_chunk_matches_in_name(self, sample_chunk):
         """Test that keywords match in chunk name."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = ["parse"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
@@ -390,7 +390,7 @@ class TestChunkScoring:
 
     def test_score_chunk_matches_in_docstring(self, sample_chunk):
         """Test that keywords match in docstring."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         keywords = ["string", "input"]
         score = CodeContextProvider._score_chunk(sample_chunk, keywords)
@@ -398,7 +398,7 @@ class TestChunkScoring:
 
     def test_score_chunk_case_insensitive(self):
         """Test that scoring is case-insensitive."""
-        from aurora_core.context.code_provider import CodeContextProvider
+        from aurora.core.context.code_provider import CodeContextProvider
 
         chunk = CodeChunk(
             chunk_id="code_test",

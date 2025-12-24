@@ -12,9 +12,9 @@ from aurora_reasoning.verify import VerificationOption
 
 
 if TYPE_CHECKING:
-    from aurora_reasoning import LLMClient
-    from aurora_reasoning.decompose import DecompositionResult
-    from aurora_reasoning.verify import VerificationResult
+    from aurora.reasoning import LLMClient
+    from aurora.reasoning.decompose import DecompositionResult
+    from aurora.reasoning.verify import VerificationResult
 
 __all__ = ["verify_decomposition", "VerifyPhaseResult"]
 
@@ -98,8 +98,8 @@ def verify_decomposition(
     """
     import time
 
-    from aurora_reasoning.verify import VerificationOption, VerificationVerdict
-    from aurora_reasoning.verify import verify_decomposition as reasoning_verify
+    from aurora.reasoning.verify import VerificationOption, VerificationVerdict
+    from aurora.reasoning.verify import verify_decomposition as reasoning_verify
 
     start_time = time.perf_counter()
 
@@ -138,7 +138,7 @@ def verify_decomposition(
         )
 
         # Re-decompose with retry feedback
-        from aurora_soar.phases.decompose import decompose_query as phase_decompose
+        from aurora.soar.phases.decompose import decompose_query as phase_decompose
 
         # Import here to avoid circular import
         decompose_result = phase_decompose(
@@ -234,7 +234,7 @@ def _generate_retry_feedback(
     Returns:
         Feedback string for next retry attempt
     """
-    from aurora_reasoning.prompts.retry_feedback import RetryFeedbackPromptTemplate
+    from aurora.reasoning.prompts.retry_feedback import RetryFeedbackPromptTemplate
 
     # Build feedback prompt
     prompt_template = RetryFeedbackPromptTemplate()

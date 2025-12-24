@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from aurora_core.chunks.code_chunk import CodeChunk
-from aurora_core.exceptions import ValidationError
-from aurora_core.store.sqlite import SQLiteStore
-from aurora_core.types import ChunkID
+from aurora.core.chunks.code_chunk import CodeChunk
+from aurora.core.exceptions import ValidationError
+from aurora.core.store.sqlite import SQLiteStore
+from aurora.core.types import ChunkID
 from tests.unit.core.test_store_base import StoreContractTests
 
 

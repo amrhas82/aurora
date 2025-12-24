@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 import pytest
 
-from aurora_soar.headless.prompt_loader import (
+from aurora.soar.headless.prompt_loader import (
     PromptData,
     PromptLoader,
     PromptValidationError,

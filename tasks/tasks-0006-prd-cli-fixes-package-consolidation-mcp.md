@@ -36,6 +36,7 @@
 - `/home/hamr/PycharmProjects/aurora/scripts/aurora-mcp` - MCP control script: start, stop, status commands (CREATED)
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/config.py` - Add MCP config schema (UPDATED)
 - `/home/hamr/PycharmProjects/aurora/tests/integration/test_mcp_harness.py` - MCP test harness (create new)
+- `/home/hamr/PycharmProjects/aurora/tests/integration/test_mcp_python_client.py` - Comprehensive Python-based MCP testing (create new)
 
 ### Phase 4: Testing & Documentation
 - `/home/hamr/PycharmProjects/aurora/tests/integration/test_memory_e2e.py` - Memory integration tests (create new)
@@ -61,6 +62,7 @@
 - **Bug Fixes**: 3 bugs already present in code at specified line numbers (verify before fixing)
 - **Platform Testing**: Test MCP on Windows (PowerShell), macOS (zsh), Linux (bash)
 - **Version Update**: Change version from `0.1.0` to `0.2.0` in `pyproject.toml`
+- **MCP Testing Strategy**: Phase 3.13 provides comprehensive testing WITHOUT requiring Claude Desktop installation. Tasks 3.10-3.12 (Claude Desktop testing) are marked OPTIONAL and can be done later when Claude Desktop is available on test machines. Phase 3.13 tests all MCP functionality programmatically via Python scripts and CLI commands.
 
 ---
 
@@ -253,7 +255,7 @@
     - ✓ Write logs to `~/.aurora/mcp.log` (configurable)
     - ✓ Format: `[timestamp] tool_name param=value latency=XXXms status=success/error`
     - ✓ Added @log_performance decorator to all 5 MCP tools
-  - [ ] **3.10** Test MCP integration with Claude Desktop - macOS (2 hours)
+  - [ ] **3.10** Test MCP integration with Claude Desktop - macOS (2 hours) - OPTIONAL
     - Install Claude Desktop on macOS
     - Configure MCP server in `~/Library/Application Support/Claude/claude_desktop_config.json`
     - Index sample codebase: `aur mem index ~/projects/sample`
@@ -265,7 +267,7 @@
       4. "Show me error handling in payment processing"
     - Verify each workflow: Claude calls correct tool, returns expected results
     - Debug any issues: check logs at `~/.aurora/mcp.log`, verify tools registered
-  - [ ] **3.11** Test MCP integration with Claude Desktop - Windows (2 hours)
+  - [ ] **3.11** Test MCP integration with Claude Desktop - Windows (2 hours) - OPTIONAL
     - Install Claude Desktop on Windows 11
     - Configure MCP server in `%APPDATA%\Claude\claude_desktop_config.json`
     - Handle Windows path differences: use backslashes, test with PowerShell
@@ -274,13 +276,142 @@
     - Test all 4 workflows (same as macOS test)
     - Document Windows-specific setup instructions
     - Test: Verify MCP server works with Windows paths, handles path separators correctly
-  - [ ] **3.12** Test MCP integration with Claude Desktop - Linux (1 hour)
+  - [ ] **3.12** Test MCP integration with Claude Desktop - Linux (1 hour) - OPTIONAL
     - Install Claude Desktop on Linux (Ubuntu 22.04)
     - Configure MCP server in `~/.config/Claude/claude_desktop_config.json`
     - Index sample codebase: `aur mem index ~/projects/sample`
     - Restart Claude Desktop
     - Test all 4 workflows (same as macOS test)
     - Verify no platform-specific issues
+  - [ ] **3.13** Comprehensive MCP testing via Python/CLI (4 hours)
+    - [ ] **3.13.1** Create Python MCP test client (45 minutes)
+      - Create `/home/hamr/PycharmProjects/aurora/tests/integration/test_mcp_python_client.py`
+      - Implement MCP client that directly imports and calls AuroraMCPTools
+      - Setup: Create temporary test directory with sample Python files
+      - Setup: Create temporary database for isolated testing
+      - Teardown: Clean up test files and database after tests
+      - Test helper: `_index_test_codebase()` - index sample files and return stats
+      - Test helper: `_verify_database_state()` - verify chunks exist in database
+    - [ ] **3.13.2** Test MCP tool: aurora_search (30 minutes)
+      - Test 1: Search returns valid JSON format
+      - Test 2: Search with empty database returns empty array
+      - Test 3: Search finds indexed function by name
+      - Test 4: Search finds indexed function by docstring content
+      - Test 5: Search respects limit parameter (test with limit=3)
+      - Test 6: Search results include all required fields (file_path, function_name, content, score, chunk_id)
+      - Test 7: Search scores are reasonable (between 0 and 1)
+      - Test 8: Search handles special characters in query
+      - Test 9: Search handles very long queries (1000+ characters)
+      - Test 10: Search handles invalid/malformed queries gracefully
+      - Verify: All results are properly sorted by score (descending)
+    - [ ] **3.13.3** Test MCP tool: aurora_index (30 minutes)
+      - Test 1: Index returns valid JSON with stats
+      - Test 2: Index non-existent directory returns error
+      - Test 3: Index file (not directory) returns error
+      - Test 4: Index directory with no Python files returns zero chunks
+      - Test 5: Index directory successfully creates chunks in database
+      - Test 6: Index respects pattern parameter (test with *.py vs *.txt)
+      - Test 7: Index handles permission denied errors gracefully
+      - Test 8: Index handles symbolic links correctly
+      - Test 9: Index handles very large files (>10MB) correctly
+      - Test 10: Index reports correct stats (files_indexed, chunks_created, duration_seconds)
+      - Verify: Chunks are actually saved to database (not just counted)
+    - [ ] **3.13.4** Test MCP tool: aurora_stats (20 minutes)
+      - Test 1: Stats returns valid JSON format
+      - Test 2: Stats with empty database returns zeros
+      - Test 3: Stats after indexing shows correct counts
+      - Test 4: Stats includes all required fields (total_chunks, total_files, database_size_mb)
+      - Test 5: Stats database_size_mb is reasonable (>0 for populated DB)
+      - Test 6: Stats handles non-existent database file gracefully
+      - Test 7: Stats handles corrupted database gracefully
+      - Verify: Stats counts match actual database queries
+    - [ ] **3.13.5** Test MCP tool: aurora_context (30 minutes)
+      - Test 1: Context returns file content for valid file
+      - Test 2: Context with non-existent file returns error JSON
+      - Test 3: Context with directory path returns error JSON
+      - Test 4: Context extracts specific function from Python file
+      - Test 5: Context with invalid function name returns error JSON
+      - Test 6: Context handles non-UTF8 files gracefully
+      - Test 7: Context handles very large files (>10MB) correctly
+      - Test 8: Context handles empty files correctly
+      - Test 9: Context function extraction only works for .py files
+      - Test 10: Context handles files with no functions gracefully
+      - Verify: Function extraction returns only the requested function, not entire file
+    - [ ] **3.13.6** Test MCP tool: aurora_related (30 minutes)
+      - Test 1: Related returns valid JSON array
+      - Test 2: Related with non-existent chunk_id returns error JSON
+      - Test 3: Related finds chunks from same file
+      - Test 4: Related returns chunks with all required fields
+      - Test 5: Related respects max_hops parameter
+      - Test 6: Related handles chunks with no relationships gracefully
+      - Test 7: Related activation scores are reasonable (between 0 and 1)
+      - Test 8: Related doesn't return the source chunk itself
+      - Test 9: Related handles very large codebases efficiently
+      - Verify: Related chunks are actually related (same file or imported modules)
+    - [ ] **3.13.7** Test MCP server startup and shutdown (20 minutes)
+      - Test 1: Server starts successfully with `--test` flag
+      - Test 2: Server lists all 5 tools correctly
+      - Test 3: Server accepts `--db-path` custom database location
+      - Test 4: Server accepts `--config` custom config location
+      - Test 5: Server handles missing fastmcp dependency gracefully
+      - Test 6: Server handles invalid database path gracefully
+      - Test 7: Server handles corrupted config file gracefully
+      - Verify: Server initialization creates necessary directories
+    - [ ] **3.13.8** Test MCP error handling and edge cases (30 minutes)
+      - Test 1: All tools handle database connection errors gracefully
+      - Test 2: All tools return valid JSON even on error
+      - Test 3: Error JSON includes helpful error messages
+      - Test 4: Tools handle concurrent access to database correctly
+      - Test 5: Tools handle database locked errors gracefully
+      - Test 6: Tools handle out-of-memory scenarios gracefully
+      - Test 7: Tools handle network/filesystem failures during indexing
+      - Test 8: Tools log errors to MCP log file
+      - Test 9: Tools recover gracefully from partial failures
+      - Verify: No tools crash with unhandled exceptions
+    - [ ] **3.13.9** Test MCP performance and logging (20 minutes)
+      - Test 1: Performance logs are written to ~/.aurora/mcp.log
+      - Test 2: Log entries include timestamp, tool name, parameters, latency
+      - Test 3: Log entries include status (success/error)
+      - Test 4: Search latency is reasonable (<500ms for 1000 chunks)
+      - Test 5: Index duration is reasonable (<5s for 100 files)
+      - Test 6: Log rotation works correctly (if implemented)
+      - Test 7: Logs don't contain sensitive information
+      - Test 8: @log_performance decorator works for all 5 tools
+      - Verify: Log file size doesn't grow unbounded
+    - [ ] **3.13.10** Test aurora-mcp control script (30 minutes)
+      - Test 1: `aurora-mcp status` shows current configuration
+      - Test 2: `aurora-mcp start` enables always_on mode in config
+      - Test 3: `aurora-mcp stop` disables always_on mode in config
+      - Test 4: `aurora-mcp status` shows database stats (chunks, files, size)
+      - Test 5: `aurora-mcp status` shows recent log entries (last 10 lines)
+      - Test 6: Control script handles missing config file gracefully
+      - Test 7: Control script handles corrupted config file gracefully
+      - Test 8: Control script provides platform-specific instructions (macOS/Windows/Linux)
+      - Test 9: Control script validates config after changes
+      - Verify: Config changes persist after script exits
+    - [ ] **3.13.11** Integration test: Real codebase indexing and retrieval (45 minutes)
+      - Test 1: Index entire AURORA codebase (packages/cli/src)
+      - Test 2: Verify chunks created for all major files
+      - Test 3: Search for "MemoryManager" returns relevant results
+      - Test 4: Search for "embedding" returns relevant results
+      - Test 5: Search for "ACT-R activation" returns relevant results
+      - Test 6: Get context for specific file (memory_manager.py)
+      - Test 7: Get context for specific function (index_path)
+      - Test 8: Find related chunks for a specific chunk
+      - Test 9: Stats accurately reflect indexed codebase size
+      - Test 10: Re-indexing same codebase updates existing chunks
+      - Verify: Search results are semantically relevant (not just keyword matches)
+    - [ ] **3.13.12** Platform compatibility tests (30 minutes)
+      - Test 1: All paths work correctly on current platform
+      - Test 2: Database file created with correct permissions
+      - Test 3: Log file created with correct permissions
+      - Test 4: Handle Windows-style paths if on Windows (C:\, backslashes)
+      - Test 5: Handle Unix-style paths if on Linux/macOS (/, forward slashes)
+      - Test 6: Tilde expansion works (~/.aurora)
+      - Test 7: Environment variables work in paths ($HOME, %APPDATA%)
+      - Test 8: Symbolic links handled correctly
+      - Test 9: Case sensitivity handled correctly (case-insensitive on Windows, sensitive on Linux)
+      - Verify: All tests pass on current platform (document which platform tested)
 
 - [ ] **4.0 Phase 4: Testing & Documentation** (Day 5 - 6 hours)
   - [ ] **4.1** Create memory integration tests (TD-P2-003) (2 hours)

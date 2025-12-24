@@ -18,9 +18,9 @@ This validates end-to-end functionality of:
 
 import pytest
 
-from aurora_core.chunks.reasoning_chunk import ReasoningChunk
-from aurora_core.store.memory import MemoryStore
-from aurora_core.store.sqlite import SQLiteStore
+from aurora.core.chunks.reasoning_chunk import ReasoningChunk
+from aurora.core.store.memory import MemoryStore
+from aurora.core.store.sqlite import SQLiteStore
 
 
 class TestReasoningChunkStoreIntegration:

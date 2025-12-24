@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from aurora_soar.agent_registry import AgentInfo, AgentRegistry
+    from aurora.soar.agent_registry import AgentInfo, AgentRegistry
 
 logger = logging.getLogger(__name__)
 

@@ -9,14 +9,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_core.exceptions import (
+from aurora.core.exceptions import (
     AuroraError,
     BudgetExceededError,
     ConfigurationError,
     StorageError,
     ValidationError,
 )
-from aurora_core.resilience.retry_handler import RetryHandler
+from aurora.core.resilience.retry_handler import RetryHandler
 
 
 class TestRetryHandlerInitialization:

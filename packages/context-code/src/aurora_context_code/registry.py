@@ -24,7 +24,7 @@ class ParserRegistry:
 
     Example:
         >>> registry = ParserRegistry()
-        >>> from aurora_context_code.languages.python import PythonParser
+        >>> from aurora.context_code.languages.python import PythonParser
         >>> registry.register(PythonParser())
         >>> parser = registry.get_parser_for_file(Path("example.py"))
     """

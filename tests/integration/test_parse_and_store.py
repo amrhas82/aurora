@@ -15,10 +15,10 @@ This validates end-to-end functionality of:
 
 import pytest
 
-from aurora_context_code.languages.python import PythonParser
-from aurora_core.store.memory import MemoryStore
-from aurora_core.store.sqlite import SQLiteStore
-from aurora_core.types import ChunkID
+from aurora.context_code.languages.python import PythonParser
+from aurora.core.store.memory import MemoryStore
+from aurora.core.store.sqlite import SQLiteStore
+from aurora.core.types import ChunkID
 
 
 class TestParseAndStoreFlow:

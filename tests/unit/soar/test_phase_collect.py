@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from aurora_soar.agent_registry import AgentInfo
-from aurora_soar.phases.collect import (
+from aurora.soar.agent_registry import AgentInfo
+from aurora.soar.phases.collect import (
     AgentOutput,
     CollectResult,
     _execute_parallel_subgoals,
@@ -14,7 +14,7 @@ from aurora_soar.phases.collect import (
     _validate_agent_output,
     execute_agents,
 )
-from aurora_soar.phases.route import RouteResult
+from aurora.soar.phases.route import RouteResult
 
 
 @pytest.fixture

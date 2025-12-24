@@ -36,7 +36,7 @@ import time
 import numpy as np
 import pytest
 
-from aurora_context_code.semantic.embedding_provider import (
+from aurora.context_code.semantic.embedding_provider import (
     HAS_SENTENCE_TRANSFORMERS,
     EmbeddingProvider,
 )

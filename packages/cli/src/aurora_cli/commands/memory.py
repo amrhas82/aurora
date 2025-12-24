@@ -27,6 +27,7 @@ from rich.table import Table
 from rich.text import Text
 
 from aurora_cli.memory_manager import MemoryManager
+from aurora_cli.errors import ErrorHandler, MemoryStoreError
 from aurora_core.store import SQLiteStore
 
 
@@ -38,7 +39,20 @@ console = Console()
 
 @click.group(name="mem")
 def memory_group():
-    """Memory management commands for indexing and searching code."""
+    """Memory management commands for indexing and searching code.
+
+    \b
+    Commands:
+        index   - Index code files into memory store
+        search  - Search indexed chunks with hybrid retrieval
+        stats   - Display memory store statistics
+
+    \b
+    Examples:
+        aur mem index .                      # Index current directory
+        aur mem search "authentication"      # Search for code
+        aur mem stats                        # Show database stats
+    """
     pass
 
 
@@ -54,20 +68,26 @@ def index_command(path: Path, db_path: Path | None) -> None:
     """Index code files into memory store.
 
     PATH is the directory or file to index. Defaults to current directory.
+    Recursively scans for Python files and extracts functions, classes, and docstrings.
 
+    \b
     Examples:
-
-        \b
-        # Index current directory
+        # Index current directory (default)
         aur mem index
 
         \b
-        # Index specific directory
+        # Index specific directory or file
         aur mem index /path/to/project
+        aur mem index src/main.py
 
         \b
-        # Index with custom database
+        # Index with custom database location
         aur mem index . --db-path ~/.aurora/memory.db
+
+        \b
+        # Force reindex (run index command again on same path)
+        aur mem index .
+        # Note: Will update existing chunks and add new ones
     """
     try:
         # Determine database path
@@ -118,9 +138,17 @@ def index_command(path: Path, db_path: Path | None) -> None:
         # Close store
         store.close()
 
-    except Exception as e:
+    except MemoryStoreError as e:
+        # Already has formatted error message
         logger.error(f"Index command failed: {e}", exc_info=True)
-        console.print(f"\n[bold red]Error:[/] {e}", style="red")
+        console.print(f"\n{e}", style="red")
+        raise click.Abort()
+    except Exception as e:
+        # Unexpected error - format it
+        logger.error(f"Index command failed: {e}", exc_info=True)
+        error_handler = ErrorHandler()
+        error_msg = error_handler.handle_memory_error(e, "indexing files")
+        console.print(f"\n{error_msg}", style="red")
         raise click.Abort()
 
 
@@ -166,10 +194,9 @@ def search_command(
     QUERY is the text to search for in memory. Uses hybrid retrieval
     (activation + semantic similarity) to find relevant chunks.
 
+    \b
     Examples:
-
-        \b
-        # Search for authentication-related code
+        # Basic search (returns top 5 results)
         aur mem search "authentication"
 
         \b
@@ -177,8 +204,16 @@ def search_command(
         aur mem search "calculate total" --limit 10 --show-content
 
         \b
-        # Search with JSON output
+        # Search with JSON output (for scripting)
         aur mem search "database" --format json
+
+        \b
+        # Search in custom database
+        aur mem search "config" --db-path ~/.aurora/memory.db
+
+        \b
+        # Quick alias for search with content
+        aur mem search "error handling" -n 3 -c
     """
     try:
         # Determine database path
@@ -186,9 +221,12 @@ def search_command(
             db_path = Path.cwd() / "aurora.db"
 
         if not db_path.exists():
+            error_handler = ErrorHandler()
+            error = FileNotFoundError(f"Database not found at {db_path}")
+            error_msg = error_handler.handle_path_error(error, str(db_path), "opening database")
             console.print(
-                f"[bold red]Error:[/] Database not found at {db_path}\n"
-                f"Run 'aur mem index' first to create the database",
+                f"\n{error_msg}\n\n"
+                "[green]Hint:[/] Run [cyan]aur mem index .[/] to create and populate the database.",
                 style="red",
             )
             raise click.Abort()
@@ -212,9 +250,17 @@ def search_command(
         # Close store
         store.close()
 
-    except Exception as e:
+    except MemoryStoreError as e:
+        # Already has formatted error message
         logger.error(f"Search command failed: {e}", exc_info=True)
-        console.print(f"\n[bold red]Error:[/] {e}", style="red")
+        console.print(f"\n{e}", style="red")
+        raise click.Abort()
+    except Exception as e:
+        # Unexpected error - format it
+        logger.error(f"Search command failed: {e}", exc_info=True)
+        error_handler = ErrorHandler()
+        error_msg = error_handler.handle_memory_error(e, "searching memory")
+        console.print(f"\n{error_msg}", style="red")
         raise click.Abort()
 
 
@@ -285,9 +331,17 @@ def stats_command(db_path: Path | None) -> None:
         # Close store
         store.close()
 
-    except Exception as e:
+    except MemoryStoreError as e:
+        # Already has formatted error message
         logger.error(f"Stats command failed: {e}", exc_info=True)
-        console.print(f"\n[bold red]Error:[/] {e}", style="red")
+        console.print(f"\n{e}", style="red")
+        raise click.Abort()
+    except Exception as e:
+        # Unexpected error - format it
+        logger.error(f"Stats command failed: {e}", exc_info=True)
+        error_handler = ErrorHandler()
+        error_msg = error_handler.handle_memory_error(e, "retrieving statistics")
+        console.print(f"\n{error_msg}", style="red")
         raise click.Abort()
 
 

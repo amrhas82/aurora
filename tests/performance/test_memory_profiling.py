@@ -16,8 +16,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages" / "core" / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages" / "context-code" / "src"))
 
-from aurora_core.chunks import CodeChunk, ReasoningChunk
-from aurora_core.store import MemoryStore, SQLiteStore
+from aurora.core.chunks import CodeChunk, ReasoningChunk
+from aurora.core.store import MemoryStore, SQLiteStore
 
 
 def generate_test_chunks(count: int) -> list[CodeChunk]:

@@ -19,15 +19,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_soar.headless.git_enforcer import GitBranchError
-from aurora_soar.headless.orchestrator import (
+from aurora.soar.headless.git_enforcer import GitBranchError
+from aurora.soar.headless.orchestrator import (
     HeadlessConfig,
     HeadlessOrchestrator,
     HeadlessResult,
     TerminationReason,
 )
-from aurora_soar.headless.prompt_loader import PromptData, PromptValidationError
-from aurora_soar.headless.scratchpad_manager import ScratchpadStatus
+from aurora.soar.headless.prompt_loader import PromptData, PromptValidationError
+from aurora.soar.headless.scratchpad_manager import ScratchpadStatus
 
 
 class TestHeadlessConfig:

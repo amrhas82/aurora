@@ -35,8 +35,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_soar.headless.git_enforcer import GitBranchError
-from aurora_soar.headless.orchestrator import (
+from aurora.soar.headless.git_enforcer import GitBranchError
+from aurora.soar.headless.orchestrator import (
     HeadlessConfig,
     HeadlessOrchestrator,
     TerminationReason,

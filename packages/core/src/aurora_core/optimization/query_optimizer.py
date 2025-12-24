@@ -111,8 +111,8 @@ class QueryOptimizer:
     3. **Batch Processing**: Calculate activations in batches for efficiency
 
     Examples:
-        >>> from aurora_core.activation import ActivationEngine
-        >>> from aurora_core.optimization import QueryOptimizer
+        >>> from aurora.core.activation import ActivationEngine
+        >>> from aurora.core.optimization import QueryOptimizer
         >>>
         >>> engine = ActivationEngine()
         >>> optimizer = QueryOptimizer(

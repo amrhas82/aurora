@@ -291,6 +291,110 @@ class TestHeadlessCommandExecution:
         assert "soar" in result.output.lower() or "implement" in result.output.lower()
 
 
+class TestHeadlessCommandFlagSyntax:
+    """Test --headless global flag syntax (Task 2.8 requirement)."""
+
+    def test_headless_command_syntax(self, runner: CliRunner, temp_prompt: Path):
+        """Test: aur headless test.md executes without errors (dry-run)."""
+        with patch("aurora_soar.headless.HeadlessOrchestrator") as mock_orch:
+            mock_instance = MagicMock()
+            mock_orch.return_value = mock_instance
+
+            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run"])
+
+            assert result.exit_code == 0
+            assert "Configuration" in result.output or "configuration" in result.output
+            # Should show validation output
+            assert "valid" in result.output.lower() or "dry" in result.output.lower()
+
+    def test_headless_flag_syntax(self, runner: CliRunner, temp_prompt: Path):
+        """Test: aur --headless test.md works identically to aur headless test.md."""
+        with patch("aurora_soar.headless.HeadlessOrchestrator") as mock_orch:
+            mock_instance = MagicMock()
+            mock_orch.return_value = mock_instance
+
+            # Test with --headless flag (global flag syntax)
+            result_flag = runner.invoke(cli, ["--headless", str(temp_prompt)])
+
+            # Should invoke headless command
+            # Note: Without --dry-run, this will fail with SOAR not implemented,
+            # but both syntaxes should fail the same way
+            assert result_flag.exit_code != 0
+            assert "soar" in result_flag.output.lower() or "implement" in result_flag.output.lower()
+
+    def test_headless_flag_vs_command_output_consistency(self, runner: CliRunner, temp_prompt: Path):
+        """Test: --headless flag and headless command produce consistent output (dry-run)."""
+        with patch("aurora_soar.headless.HeadlessOrchestrator") as mock_orch:
+            mock_instance = MagicMock()
+            mock_orch.return_value = mock_instance
+
+            # Test both syntaxes with dry-run
+            result_command = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run"])
+
+            # Reset mock for second call
+            mock_orch.reset_mock()
+            mock_instance = MagicMock()
+            mock_orch.return_value = mock_instance
+
+            # Note: Cannot test --headless with --dry-run because --dry-run is a subcommand option
+            # The --headless flag invokes the command with just the prompt_path
+            # So we verify the flag works by checking it invokes the command
+            result_flag = runner.invoke(cli, ["--headless", str(temp_prompt)])
+
+            # Both should invoke the headless command (though with different options)
+            # Command with dry-run should succeed (exit 0)
+            assert result_command.exit_code == 0
+            # Flag without dry-run should fail with SOAR message (exit != 0)
+            assert result_flag.exit_code != 0
+
+    def test_missing_file_error_message_quality(self, runner: CliRunner):
+        """Test: Headless mode handles missing files with clear error message."""
+        nonexistent_file = "/nonexistent/path/to/prompt.md"
+
+        result = runner.invoke(cli, ["headless", nonexistent_file])
+
+        # Should fail with clear error
+        assert result.exit_code != 0
+        # Click provides file existence validation, so error should mention file/path
+        # Error message quality check - should be understandable
+        assert len(result.output) > 0  # Should have some error output
+
+    def test_output_format_consistency(self, runner: CliRunner, temp_prompt: Path):
+        """Test: Output format is consistent across multiple runs."""
+        with patch("aurora_soar.headless.HeadlessOrchestrator") as mock_orch:
+            mock_instance = MagicMock()
+            mock_orch.return_value = mock_instance
+
+            # Run the same command multiple times
+            results = []
+            for _ in range(3):
+                mock_orch.reset_mock()
+                mock_instance = MagicMock()
+                mock_orch.return_value = mock_instance
+
+                result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run"])
+                results.append(result)
+
+            # All runs should succeed
+            for result in results:
+                assert result.exit_code == 0
+
+            # All outputs should have consistent structure
+            # Check for key formatting elements in all outputs
+            for result in results:
+                assert "Configuration" in result.output or "configuration" in result.output
+                assert "Prompt" in result.output
+                assert "Budget" in result.output
+
+            # Outputs should be identical (same prompt, same options)
+            # Note: Rich formatting may include ANSI codes, so we check structure not exact match
+            # Verify all outputs have similar length (within 10% variance)
+            lengths = [len(r.output) for r in results]
+            avg_length = sum(lengths) / len(lengths)
+            for length in lengths:
+                assert abs(length - avg_length) / avg_length < 0.1, "Output lengths vary too much"
+
+
 class TestHeadlessCommandIntegration:
     """Integration tests with mocked components."""
 

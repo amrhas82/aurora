@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from aurora_reasoning.llm_client import LLMClient
+    from aurora.reasoning.llm_client import LLMClient
 
 
 __all__ = ["assess_complexity"]
@@ -276,7 +276,7 @@ def _assess_tier2_llm(
     """
     try:
         # Import prompt template
-        from aurora_reasoning.prompts.assess import AssessPromptTemplate
+        from aurora.reasoning.prompts.assess import AssessPromptTemplate
 
         # Build prompt
         prompt_template = AssessPromptTemplate()

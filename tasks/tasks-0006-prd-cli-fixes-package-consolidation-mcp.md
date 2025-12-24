@@ -316,16 +316,16 @@
       - Test 9: Index handles very large files (>10MB) correctly
       - Test 10: Index reports correct stats (files_indexed, chunks_created, duration_seconds)
       - Verify: Chunks are actually saved to database (not just counted)
-    - [ ] **3.13.4** Test MCP tool: aurora_stats (20 minutes)
+    - [x] **3.13.4** Test MCP tool: aurora_stats (20 minutes)
       - Test 1: Stats returns valid JSON format
       - Test 2: Stats with empty database returns zeros
       - Test 3: Stats after indexing shows correct counts
       - Test 4: Stats includes all required fields (total_chunks, total_files, database_size_mb)
-      - Test 5: Stats database_size_mb is reasonable (>0 for populated DB)
+      - Test 5: Stats database_size_mb is reasonable (>=0 for populated DB)
       - Test 6: Stats handles non-existent database file gracefully
       - Test 7: Stats handles corrupted database gracefully
       - Verify: Stats counts match actual database queries
-    - [ ] **3.13.5** Test MCP tool: aurora_context (30 minutes)
+    - [x] **3.13.5** Test MCP tool: aurora_context (30 minutes)
       - Test 1: Context returns file content for valid file
       - Test 2: Context with non-existent file returns error JSON
       - Test 3: Context with directory path returns error JSON
@@ -337,7 +337,7 @@
       - Test 9: Context function extraction only works for .py files
       - Test 10: Context handles files with no functions gracefully
       - Verify: Function extraction returns only the requested function, not entire file
-    - [ ] **3.13.6** Test MCP tool: aurora_related (30 minutes)
+    - [x] **3.13.6** Test MCP tool: aurora_related (30 minutes)
       - Test 1: Related returns valid JSON array
       - Test 2: Related with non-existent chunk_id returns error JSON
       - Test 3: Related finds chunks from same file

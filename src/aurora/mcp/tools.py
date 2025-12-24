@@ -259,13 +259,18 @@ class AuroraMCPTools:
             if function:
                 if file_path.endswith(".py"):
                     parser = PythonParser()
-                    chunks = parser.parse(content, str(path_obj))
+                    chunks = parser.parse(path_obj)
 
                     # Find function in chunks
                     for chunk in chunks:
-                        func_name = chunk.metadata.get("function_name", "")
-                        if func_name == function:
-                            return chunk.content
+                        # CodeChunk has 'name' attribute directly
+                        if hasattr(chunk, 'name') and chunk.name == function:
+                            # Extract function code using line numbers
+                            lines = content.splitlines()
+                            start_line = chunk.line_start - 1  # Convert to 0-indexed
+                            end_line = chunk.line_end  # end_line is inclusive, so we use it as-is for slicing
+                            function_code = '\n'.join(lines[start_line:end_line])
+                            return function_code
 
                     return json.dumps(
                         {"error": f"Function '{function}' not found in {file_path}"}, indent=2
@@ -317,33 +322,67 @@ class AuroraMCPTools:
 
             related_chunks = []
 
+            # Get file path from source chunk
+            # source_chunk is a Chunk object with file_path attribute for CodeChunks
+            if hasattr(source_chunk, 'file_path'):
+                source_file_path = source_chunk.file_path
+            else:
+                # Fallback: try to extract from JSON if available
+                chunk_json = source_chunk.to_json()
+                source_file_path = chunk_json.get('content', {}).get('file', '')
+
             # Get chunks from the same file
             with self._store._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    SELECT chunk_id, source_file, content, metadata
+                    SELECT id, type, content, metadata
                     FROM chunks
-                    WHERE source_file = ? AND chunk_id != ?
-                    LIMIT 10
+                    WHERE type = 'code' AND id != ?
+                    LIMIT 50
                     """,
-                    (source_chunk.source_file, chunk_id),
+                    (chunk_id,),
                 )
 
                 for row in cursor.fetchall():
-                    chunk_id_rel, source_file, content, metadata_json = row
-                    metadata = json.loads(metadata_json) if metadata_json else {}
+                    chunk_id_rel, chunk_type, content_json, metadata_json = row
 
-                    related_chunks.append(
-                        {
-                            "chunk_id": chunk_id_rel,
-                            "file_path": source_file,
-                            "function_name": metadata.get("function_name", ""),
-                            "content": content[:500],  # Truncate for brevity
-                            "activation_score": 0.5,  # Placeholder
-                            "relationship_type": "same_file",
-                        }
-                    )
+                    try:
+                        content_data = json.loads(content_json) if content_json else {}
+                        metadata = json.loads(metadata_json) if metadata_json else {}
+
+                        # Extract file path from content JSON
+                        file_path = content_data.get('file', '')
+
+                        # Only include chunks from same file or related files
+                        if file_path == source_file_path or file_path.startswith(str(Path(source_file_path).parent)):
+                            # Extract function name
+                            function_name = content_data.get('function', '')
+
+                            # Build content snippet from stored data
+                            code_snippet = f"Function: {function_name}"
+                            if 'signature' in content_data:
+                                code_snippet = content_data['signature']
+                            if 'docstring' in content_data and content_data['docstring']:
+                                code_snippet += f"\n{content_data['docstring'][:200]}"
+
+                            related_chunks.append(
+                                {
+                                    "chunk_id": chunk_id_rel,
+                                    "file_path": file_path,
+                                    "function_name": function_name,
+                                    "content": code_snippet,
+                                    "activation_score": 0.5 if file_path == source_file_path else 0.3,
+                                    "relationship_type": "same_file" if file_path == source_file_path else "related_file",
+                                }
+                            )
+
+                            # Limit results
+                            if len(related_chunks) >= 10:
+                                break
+                    except (json.JSONDecodeError, KeyError) as e:
+                        logger.warning(f"Failed to parse chunk {chunk_id_rel}: {e}")
+                        continue
 
             return json.dumps(related_chunks, indent=2)
 

@@ -444,27 +444,27 @@
     - Test 5: `aurora_related` returns chunks with activation scores
     - Test error handling: invalid inputs, missing database, permission errors
     - Run tests: `pytest tests/integration/test_mcp_harness.py -v`
-  - [ ] **4.3** Create MCP setup guide (2 hours)
-    - Create `/home/hamr/PycharmProjects/aurora/docs/MCP_SETUP.md`
-    - Section 1: Introduction - what MCP integration provides, benefits
-    - Section 2: Prerequisites - Claude Desktop, Python 3.10+, indexed codebase
-    - Section 3: Installation - `pip install aurora`, `aur init`, `aur mem index .`
-    - Section 4: Configuration - Claude Desktop settings with example JSON for macOS, Linux, Windows
-    - Section 5: Usage Examples - 4 workflows with expected Claude responses
-    - Section 6: Operating Modes - always-on vs on-demand, how to toggle
-    - Section 7: Troubleshooting - 5+ common issues with solutions
-    - Section 8: Advanced - custom database paths, performance tuning
-    - Section 9: FAQ - API key requirements, multi-tool support, reindexing frequency
-    - Include screenshots or ASCII diagrams where helpful
-  - [ ] **4.4** Create troubleshooting guide (1 hour)
-    - Create `/home/hamr/PycharmProjects/aurora/docs/TROUBLESHOOTING.md`
-    - Section 1: Installation Issues - permission errors, missing dependencies
-    - Section 2: CLI Issues - common command errors, config problems
-    - Section 3: MCP Issues - server not starting, Claude not finding tools, indexing failures
-    - Section 4: Diagnostic Commands - `aur --verify`, `aurora-mcp status`, log locations
-    - Section 5: Getting Help - GitHub issues, documentation links
-    - Include actual error messages users might see with solutions
-    - Cross-reference MCP_SETUP.md troubleshooting section
+  - [x] **4.3** Create MCP setup guide (2 hours)
+    - ✓ Created `/home/hamr/PycharmProjects/aurora/docs/MCP_SETUP.md`
+    - ✓ Section 1: Introduction - what MCP integration provides, benefits
+    - ✓ Section 2: Prerequisites - Claude Desktop, Python 3.10+, indexed codebase
+    - ✓ Section 3: Installation - `pip install aurora`, `aur init`, `aur mem index .`
+    - ✓ Section 4: Configuration - Claude Desktop settings with example JSON for macOS, Linux, Windows
+    - ✓ Section 5: Usage Examples - 4 workflows with expected Claude responses
+    - ✓ Section 6: Operating Modes - always-on vs on-demand, how to toggle
+    - ✓ Section 7: Troubleshooting - 5+ common issues with solutions
+    - ✓ Section 8: Advanced - custom database paths, performance tuning
+    - ✓ Section 9: FAQ - API key requirements, multi-tool support, reindexing frequency
+    - ✓ Include screenshots or ASCII diagrams where helpful
+  - [x] **4.4** Create troubleshooting guide (1 hour)
+    - ✓ Created `/home/hamr/PycharmProjects/aurora/docs/TROUBLESHOOTING.md`
+    - ✓ Section 1: Installation Issues - permission errors, missing dependencies
+    - ✓ Section 2: CLI Issues - common command errors, config problems
+    - ✓ Section 3: MCP Issues - server not starting, Claude not finding tools, indexing failures
+    - ✓ Section 4: Diagnostic Commands - `aur --verify`, `aurora-mcp status`, log locations
+    - ✓ Section 5: Getting Help - GitHub issues, documentation links
+    - ✓ Include actual error messages users might see with solutions
+    - ✓ Cross-reference MCP_SETUP.md troubleshooting section
   - [ ] **4.5** Update README.md for v0.2.0 (1 hour)
     - Open `/home/hamr/PycharmProjects/aurora/README.md`
     - Update installation section: Show single `pip install aurora` command

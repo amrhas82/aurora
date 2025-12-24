@@ -1448,13 +1448,57 @@ class TestAuroraMCPControlScript:
 
     def test_start_enables_always_on(self, tmp_path):
         """Test 2: aurora-mcp start enables always_on mode."""
-        # Script doesn't support --config flag, skip this test
-        pytest.skip("aurora-mcp script doesn't support --config flag")
+        script_path = self._get_script_path()
+
+        if not script_path.exists():
+            pytest.skip("aurora-mcp script not found")
+
+        # Create test config
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"mcp": {"always_on": False}}))
+
+        # Run start command
+        result = subprocess.run(
+            [sys.executable, str(script_path), "start", "--config", str(config_path)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        # Should succeed
+        assert result.returncode == 0
+
+        # Check config was updated
+        with open(config_path) as f:
+            config = json.load(f)
+            assert config["mcp"]["always_on"] is True
 
     def test_stop_disables_always_on(self, tmp_path):
         """Test 3: aurora-mcp stop disables always_on mode."""
-        # Script doesn't support --config flag, skip this test
-        pytest.skip("aurora-mcp script doesn't support --config flag")
+        script_path = self._get_script_path()
+
+        if not script_path.exists():
+            pytest.skip("aurora-mcp script not found")
+
+        # Create test config with always_on enabled
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps({"mcp": {"always_on": True}}))
+
+        # Run stop command
+        result = subprocess.run(
+            [sys.executable, str(script_path), "stop", "--config", str(config_path)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        # Should succeed
+        assert result.returncode == 0
+
+        # Check config was updated
+        with open(config_path) as f:
+            config = json.load(f)
+            assert config["mcp"]["always_on"] is False
 
     def test_status_shows_database_stats(self, tmp_path):
         """Test 4: aurora-mcp status shows database stats."""
@@ -1478,15 +1522,50 @@ class TestAuroraMCPControlScript:
         # This requires actual log file and implementation
         pytest.skip("Log display not implemented in control script")
 
-    def test_control_script_handles_missing_config(self):
+    def test_control_script_handles_missing_config(self, tmp_path):
         """Test 6: Control script handles missing config file gracefully."""
-        # Script doesn't support --config flag, skip this test
-        pytest.skip("aurora-mcp script doesn't support --config flag")
+        script_path = self._get_script_path()
+
+        if not script_path.exists():
+            pytest.skip("aurora-mcp script not found")
+
+        # Point to non-existent config
+        config_path = tmp_path / "nonexistent.json"
+
+        # Run status command
+        result = subprocess.run(
+            [sys.executable, str(script_path), "status", "--config", str(config_path)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        # Should fail gracefully with error message
+        assert result.returncode == 1
+        assert "Configuration file not found" in result.stderr or "not found" in result.stderr
 
     def test_control_script_handles_corrupted_config(self, tmp_path):
         """Test 7: Control script handles corrupted config gracefully."""
-        # Script doesn't support --config flag, skip this test
-        pytest.skip("aurora-mcp script doesn't support --config flag")
+        script_path = self._get_script_path()
+
+        if not script_path.exists():
+            pytest.skip("aurora-mcp script not found")
+
+        # Create corrupted config
+        config_path = tmp_path / "config.json"
+        config_path.write_text("{invalid json")
+
+        # Run status command
+        result = subprocess.run(
+            [sys.executable, str(script_path), "status", "--config", str(config_path)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        # Should fail gracefully with error message
+        assert result.returncode == 1
+        assert "Invalid JSON" in result.stderr or "JSON" in result.stderr
 
     def test_control_script_provides_platform_instructions(self):
         """Test 8: Control script provides platform-specific instructions."""

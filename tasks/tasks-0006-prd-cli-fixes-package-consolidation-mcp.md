@@ -284,7 +284,7 @@
     - Test all 4 workflows (same as macOS test)
     - Verify no platform-specific issues
   - [ ] **3.13** Comprehensive MCP testing via Python/CLI (4 hours)
-    - [ ] **3.13.1** Create Python MCP test client (45 minutes)
+    - [x] **3.13.1** Create Python MCP test client (45 minutes)
       - Create `/home/hamr/PycharmProjects/aurora/tests/integration/test_mcp_python_client.py`
       - Implement MCP client that directly imports and calls AuroraMCPTools
       - Setup: Create temporary test directory with sample Python files
@@ -292,7 +292,7 @@
       - Teardown: Clean up test files and database after tests
       - Test helper: `_index_test_codebase()` - index sample files and return stats
       - Test helper: `_verify_database_state()` - verify chunks exist in database
-    - [ ] **3.13.2** Test MCP tool: aurora_search (30 minutes)
+    - [x] **3.13.2** Test MCP tool: aurora_search (30 minutes)
       - Test 1: Search returns valid JSON format
       - Test 2: Search with empty database returns empty array
       - Test 3: Search finds indexed function by name
@@ -304,7 +304,7 @@
       - Test 9: Search handles very long queries (1000+ characters)
       - Test 10: Search handles invalid/malformed queries gracefully
       - Verify: All results are properly sorted by score (descending)
-    - [ ] **3.13.3** Test MCP tool: aurora_index (30 minutes)
+    - [x] **3.13.3** Test MCP tool: aurora_index (30 minutes)
       - Test 1: Index returns valid JSON with stats
       - Test 2: Index non-existent directory returns error
       - Test 3: Index file (not directory) returns error

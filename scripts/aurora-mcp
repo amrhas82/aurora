@@ -15,14 +15,16 @@ import sys
 from pathlib import Path
 
 
-def get_config_path() -> Path:
+def get_config_path(custom_path: str = None) -> Path:
     """Get path to AURORA config file."""
+    if custom_path:
+        return Path(custom_path).expanduser().resolve()
     return Path.home() / ".aurora" / "config.json"
 
 
-def load_config() -> dict:
+def load_config(custom_path: str = None) -> dict:
     """Load AURORA configuration."""
-    config_path = get_config_path()
+    config_path = get_config_path(custom_path)
 
     if not config_path.exists():
         print(f"Error: Configuration file not found at {config_path}", file=sys.stderr)
@@ -40,9 +42,9 @@ def load_config() -> dict:
         sys.exit(1)
 
 
-def save_config(config: dict) -> None:
+def save_config(config: dict, custom_path: str = None) -> None:
     """Save AURORA configuration."""
-    config_path = get_config_path()
+    config_path = get_config_path(custom_path)
 
     # Ensure directory exists
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -56,9 +58,9 @@ def save_config(config: dict) -> None:
         sys.exit(1)
 
 
-def start_mcp() -> None:
+def start_mcp(config_path: str = None) -> None:
     """Enable MCP always-on mode."""
-    config = load_config()
+    config = load_config(config_path)
 
     # Ensure mcp section exists
     if "mcp" not in config:
@@ -70,7 +72,7 @@ def start_mcp() -> None:
 
     # Set always_on to true
     config["mcp"]["always_on"] = True
-    save_config(config)
+    save_config(config, config_path)
 
     print("\n" + "=" * 70)
     print("AURORA MCP Server - Always-On Mode ENABLED")
@@ -116,9 +118,9 @@ def start_mcp() -> None:
     print("=" * 70)
 
 
-def stop_mcp() -> None:
+def stop_mcp(config_path: str = None) -> None:
     """Disable MCP always-on mode."""
-    config = load_config()
+    config = load_config(config_path)
 
     # Ensure mcp section exists
     if "mcp" not in config:
@@ -127,7 +129,7 @@ def stop_mcp() -> None:
 
     # Set always_on to false
     config["mcp"]["always_on"] = False
-    save_config(config)
+    save_config(config, config_path)
 
     print("\n" + "=" * 70)
     print("AURORA MCP Server - Always-On Mode DISABLED")
@@ -137,9 +139,9 @@ def stop_mcp() -> None:
     print("=" * 70)
 
 
-def show_status() -> None:
+def show_status(config_path: str = None) -> None:
     """Show MCP server status."""
-    config = load_config()
+    config = load_config(config_path)
 
     print("\n" + "=" * 70)
     print("AURORA MCP Server - Status")
@@ -223,14 +225,21 @@ Examples:
         help="Command to execute",
     )
 
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Path to custom config file (default: ~/.aurora/config.json)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "start":
-        start_mcp()
+        start_mcp(args.config)
     elif args.command == "stop":
-        stop_mcp()
+        stop_mcp(args.config)
     elif args.command == "status":
-        show_status()
+        show_status(args.config)
 
 
 if __name__ == "__main__":

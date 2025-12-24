@@ -96,6 +96,10 @@ setup(
     license="MIT",
     python_requires=">=3.10",
 
+    # Package discovery - find namespace packages in src/
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+
     # Meta-package: install all core components
     # For development mode, these should already be installed from local packages/
     # For production, these will install from PyPI

@@ -11,6 +11,25 @@ import sys
 import importlib
 
 
+# Pre-populate sys.modules with all known submodules to enable direct imports
+_SUBMODULES = [
+    'store', 'chunks', 'activation', 'budget', 'config',
+    'context', 'logging', 'optimization', 'resilience', 'types', 'exceptions'
+]
+
+for _submodule_name in _SUBMODULES:
+    _original = f'aurora_core.{_submodule_name}'
+    _namespace = f'aurora.core.{_submodule_name}'
+    try:
+        if _original not in sys.modules:
+            _module = importlib.import_module(_original)
+        else:
+            _module = sys.modules[_original]
+        sys.modules[_namespace] = _module
+    except ImportError:
+        pass  # Submodule may not exist yet
+
+
 def __getattr__(name):
     """Dynamically import submodules from aurora_core when accessed."""
     # Map aurora.core.store -> aurora_core.store

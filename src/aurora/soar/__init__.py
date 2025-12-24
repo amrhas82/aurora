@@ -2,10 +2,31 @@
 Aurora SOAR Namespace Package
 
 Provides transparent access to aurora_soar package through the aurora.soar namespace.
+This enables imports like:
+    from aurora.soar.orchestrator import SOAROrchestrator
+    from aurora.soar.phases.implementation import ImplementationPhase
 """
 
 import sys
 import importlib
+
+
+# Pre-populate sys.modules with all known submodules to enable direct imports
+_SUBMODULES = [
+    'agent_registry', 'headless', 'orchestrator', 'phases'
+]
+
+for _submodule_name in _SUBMODULES:
+    _original = f'aurora_soar.{_submodule_name}'
+    _namespace = f'aurora.soar.{_submodule_name}'
+    try:
+        if _original not in sys.modules:
+            _module = importlib.import_module(_original)
+        else:
+            _module = sys.modules[_original]
+        sys.modules[_namespace] = _module
+    except ImportError:
+        pass  # Submodule may not exist yet
 
 
 def __getattr__(name):

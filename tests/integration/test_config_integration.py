@@ -43,7 +43,7 @@ class TestConfigurationIntegration:
         config = Config.load(project_path=project_dir)
 
         # 4. Verify merged configuration
-        assert config.get("version") == "1.0"  # From defaults
+        assert config.get("version") == "1.1.0"  # From defaults
         assert config.get("storage.type") == "sqlite"  # From project
         assert config.get("logging.level") == "DEBUG"  # From project
 
@@ -212,7 +212,7 @@ class TestConfigurationIntegration:
         config = Config.load(project_path=project_dir)
 
         # Verify config loaded successfully
-        assert config.get("version") == "1.0"
+        assert config.get("version") == "1.1.0"
         llm_config = config.llm_config()
         assert llm_config["api_key_env"] == "ANTHROPIC_API_KEY"
 

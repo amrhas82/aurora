@@ -7,6 +7,7 @@ from pathlib import Path
 import click
 
 from aurora_cli.config import CONFIG_SCHEMA
+from aurora_cli.errors import ErrorHandler
 
 
 @click.command(name="init")
@@ -15,6 +16,16 @@ def init_command():
 
     Creates ~/.aurora/config.json with defaults and optional API key.
     Optionally indexes the current directory for memory search.
+
+    \b
+    Examples:
+        # Basic initialization (will prompt for API key)
+        aur init
+
+        \b
+        # After initialization, set API key in environment
+        export ANTHROPIC_API_KEY=sk-ant-...
+        aur query "your question"
     """
     config_dir = Path.home() / ".aurora"
     config_path = config_dir / "config.json"
@@ -45,12 +56,16 @@ def init_command():
             return
 
     # Create config directory
+    error_handler = ErrorHandler()
     try:
         config_dir.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
-        click.echo(
-            f"✗ Error: Cannot create directory {config_dir}. Check permissions.", err=True
-        )
+    except PermissionError as e:
+        error_msg = error_handler.handle_path_error(e, str(config_dir), "creating config directory")
+        click.echo(error_msg, err=True)
+        return
+    except Exception as e:
+        error_msg = error_handler.handle_path_error(e, str(config_dir), "creating config directory")
+        click.echo(error_msg, err=True)
         return
 
     # Prepare config data
@@ -67,10 +82,13 @@ def init_command():
     try:
         with open(config_path, "w") as f:
             json.dump(config_data, f, indent=2)
-    except PermissionError:
-        click.echo(
-            f"✗ Error: Cannot write to {config_path}. Check permissions.", err=True
-        )
+    except PermissionError as e:
+        error_msg = error_handler.handle_path_error(e, str(config_path), "writing config file")
+        click.echo(error_msg, err=True)
+        return
+    except Exception as e:
+        error_msg = error_handler.handle_config_error(e, str(config_path))
+        click.echo(error_msg, err=True)
         return
 
     # Set secure file permissions (user read/write only)
@@ -85,7 +103,6 @@ def init_command():
     if click.confirm("Index current directory for memory search?", default=True):
         # Import memory indexing functionality
         try:
-            from pathlib import Path
             from aurora_core.store import SQLiteStore
             from aurora_cli.memory_manager import MemoryManager
             from rich.console import Console

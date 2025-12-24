@@ -267,7 +267,7 @@ class TestInitCommand:
             os.chmod(config_dir, 0o755)
 
     def test_init_with_indexing(self, tmp_path, monkeypatch):
-        """Test init with directory indexing (Phase 4 not implemented yet)."""
+        """Test init with directory indexing (Phase 4 implemented)."""
         # Mock home directory
         home_dir = tmp_path / "home"
         home_dir.mkdir()
@@ -279,10 +279,11 @@ class TestInitCommand:
         )
 
         assert result.exit_code == 0
-        assert "Configuration created" in result.output
+        assert "configuration created" in result.output.lower()
 
-        # Since Phase 4 is not implemented, should see warning
-        assert "not yet implemented" in result.output.lower()
+        # Since Phase 4 is now implemented, indexing should work
+        # May show "no python files found" if directory is empty, which is fine
+        assert ("indexing" in result.output.lower() or "no python files found" in result.output.lower())
 
     def test_init_skip_indexing(self, tmp_path, monkeypatch):
         """Test init skipping directory indexing."""

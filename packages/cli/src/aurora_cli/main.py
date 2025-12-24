@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
 import click
@@ -18,7 +19,7 @@ from rich.table import Table
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
-from aurora_cli.errors import ErrorHandler
+from aurora_cli.errors import ErrorHandler, APIError, ConfigurationError
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 from aurora_cli.execution import QueryExecutor
 
@@ -29,7 +30,7 @@ console = Console()
 logger = logging.getLogger(__name__)
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.option(
     "--verbose",
     "-v",
@@ -43,20 +44,44 @@ logger = logging.getLogger(__name__)
     default=False,
     help="Enable debug logging",
 )
+@click.option(
+    "--headless",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Run headless mode with specified prompt file (shorthand for 'aur headless <file>')",
+)
 @click.version_option(version="0.1.0", prog_name="aurora")
-def cli(verbose: bool, debug: bool) -> None:
+@click.pass_context
+def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -> None:
     """AURORA: Adaptive Unified Reasoning and Orchestration Architecture.
 
     A cognitive architecture framework for intelligent context management,
     reasoning, and agent orchestration.
 
     \b
-    Examples:
+    Common Commands:
         aur init                              # Initialize configuration
         aur mem index .                       # Index current directory
-        aur mem search "authentication"       # Search memory
-        aur --headless prompt.md              # Run headless mode
-        aur query "How to calculate totals?"  # Query with auto-escalation
+        aur mem search "authentication"       # Search indexed code
+        aur query "your question"             # Query with auto-escalation
+        aur --verify                          # Verify installation
+
+    \b
+    Examples:
+        # Quick start
+        aur init
+        aur mem index packages/
+        aur query "How does memory store work?"
+
+        \b
+        # Headless mode (both syntaxes work)
+        aur --headless prompt.md
+        aur headless prompt.md
+
+        \b
+        # Get help for any command
+        aur mem --help
+        aur query --help
     """
     # Configure logging
     if debug:
@@ -65,6 +90,12 @@ def cli(verbose: bool, debug: bool) -> None:
         logging.basicConfig(level=logging.INFO)
     else:
         logging.basicConfig(level=logging.WARNING)
+
+    # Handle --headless flag by invoking headless command
+    if headless is not None:
+        # Invoke the headless command with the provided file path
+        # This maps `aur --headless file.md` to `aur headless file.md`
+        ctx.invoke(headless_command, prompt_path=headless)
 
 
 # Register commands
@@ -138,26 +169,32 @@ def query_command(
         aur query "Refactor the authentication system to use OAuth2"
 
         \b
-        # Force AURORA mode
-        aur query "Explain classes" --force-aurora
+        # Dry-run mode (test without API calls)
+        aur query "How does authentication work?" --dry-run
 
         \b
-        # Show escalation reasoning
+        # Force AURORA mode with verbose output
+        aur query "Explain classes" --force-aurora --verbose
+
+        \b
+        # Show escalation reasoning and complexity score
         aur query "Design a microservices architecture" --show-reasoning
+
+        \b
+        # Adjust escalation threshold (higher = more likely to use AURORA)
+        aur query "Optimize database queries" --threshold 0.7
     """
     try:
+        error_handler = ErrorHandler()
+
         # Get API key from environment
         api_key = os.environ.get("ANTHROPIC_API_KEY")
 
         # In dry-run mode, API key is optional (we won't make calls)
         if not api_key and not dry_run:
-            console.print(
-                "\n[bold red]Error:[/] ANTHROPIC_API_KEY environment variable not set.\n",
-                style="red",
-            )
-            console.print("Please set your API key:")
-            console.print("  export ANTHROPIC_API_KEY=sk-ant-...")
-            console.print("\nGet your API key at: https://console.anthropic.com")
+            error = ConfigurationError("ANTHROPIC_API_KEY environment variable not set")
+            error_msg = error_handler.handle_config_error(error)
+            console.print(f"\n{error_msg}", style="red")
             raise click.Abort()
 
         # Handle dry-run mode - show what would be executed without API calls
@@ -278,9 +315,31 @@ def query_command(
 
     except click.Abort:
         raise
-    except Exception as e:
+    except APIError as e:
+        # API-specific error
         logger.error(f"Query command failed: {e}", exc_info=True)
-        console.print(f"\n[bold red]Error:[/] {e}", style="red")
+        error_msg = error_handler.handle_api_error(e, "query execution")
+        console.print(f"\n{error_msg}", style="red")
+        raise click.Abort()
+    except ConfigurationError as e:
+        # Configuration error
+        logger.error(f"Query command failed: {e}", exc_info=True)
+        error_msg = error_handler.handle_config_error(e)
+        console.print(f"\n{error_msg}", style="red")
+        raise click.Abort()
+    except Exception as e:
+        # Unexpected error - try to provide helpful message
+        logger.error(f"Query command failed: {e}", exc_info=True)
+        error_str = str(e).lower()
+
+        # Check if it's an API-related error
+        if any(word in error_str for word in ["api", "anthropic", "auth", "rate", "token", "model"]):
+            error_msg = error_handler.handle_api_error(e, "query execution")
+        else:
+            # Generic error
+            error_msg = f"[bold red]Error:[/] Query execution failed.\n\n[yellow]Error:[/] {e}\n\n[green]Suggestions:[/]\n  1. Check your query syntax\n  2. Verify ANTHROPIC_API_KEY is set\n  3. Try --dry-run to test without API calls"
+
+        console.print(f"\n{error_msg}", style="red")
         raise click.Abort()
 
 
@@ -339,7 +398,7 @@ def _execute_dry_run(
         try:
             memory_store = SQLiteStore(str(db_path))
             # Try to count chunks by querying the store
-            from aurora_core.store.hybrid_retriever import HybridRetriever
+            from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
             retriever = HybridRetriever(memory_store)
             results = retriever.retrieve("test", limit=100)
             memory_chunks = len(results)
@@ -442,7 +501,7 @@ def _is_memory_empty(memory_store) -> bool:
     """
     try:
         # Try to get a count of chunks using HybridRetriever
-        from aurora_core.store.hybrid_retriever import HybridRetriever
+        from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
         retriever = HybridRetriever(memory_store)
         results = retriever.retrieve("test", limit=1)
         return len(results) == 0
@@ -514,6 +573,99 @@ def _perform_auto_index(console: Console, memory_store) -> None:
         f"\n[bold green]✓[/] Indexed {stats.files_indexed} files, "
         f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s\n"
     )
+
+
+@cli.command(name="verify")
+def verify_command() -> None:
+    """Verify AURORA installation and dependencies.
+
+    Checks that all components are properly installed and configured.
+    """
+    import sys
+    from importlib import import_module
+    from pathlib import Path
+    from shutil import which
+
+    console.print("\n[bold]Checking AURORA installation...[/]\n")
+
+    all_ok = True
+    has_warnings = False
+
+    # Check 1: Core packages
+    packages_to_check = [
+        ("aurora.core", "Core components"),
+        ("aurora.context_code", "Context & parsing"),
+        ("aurora.soar", "SOAR orchestrator"),
+        ("aurora.reasoning", "Reasoning engine"),
+        ("aurora.cli", "CLI tools"),
+        ("aurora.testing", "Testing utilities"),
+    ]
+
+    for package_name, description in packages_to_check:
+        try:
+            import_module(package_name)
+            console.print(f"✓ {description} ({package_name})")
+        except ImportError:
+            console.print(f"✗ {description} ({package_name}) [red]MISSING[/]")
+            all_ok = False
+
+    # Check 2: CLI available
+    console.print()
+    aur_path = which("aur")
+    if aur_path:
+        console.print(f"✓ CLI available at {aur_path}")
+    else:
+        console.print("✗ CLI command 'aur' [red]NOT FOUND[/]")
+        all_ok = False
+
+    # Check 3: MCP server binary
+    mcp_path = which("aurora-mcp")
+    if mcp_path:
+        console.print(f"✓ MCP server at {mcp_path}")
+    else:
+        console.print("⚠ MCP server 'aurora-mcp' [yellow]NOT FOUND[/] (will be added in Phase 3)")
+        has_warnings = True
+
+    # Check 4: Python version
+    console.print()
+    py_version = sys.version_info
+    if py_version >= (3, 10):
+        console.print(f"✓ Python version: {py_version.major}.{py_version.minor}.{py_version.micro}")
+    else:
+        console.print(f"✗ Python version: {py_version.major}.{py_version.minor}.{py_version.micro} [red](requires >= 3.10)[/]")
+        all_ok = False
+
+    # Check 5: ML dependencies (embeddings)
+    console.print()
+    try:
+        import_module("sentence_transformers")
+        console.print("✓ ML dependencies (sentence-transformers)")
+    except ImportError:
+        console.print("⚠ ML dependencies [yellow]MISSING[/]")
+        console.print("  Install with: pip install aurora[ml]")
+        has_warnings = True
+
+    # Check 6: Config file
+    console.print()
+    config_path = Path.home() / ".aurora" / "config.json"
+    if config_path.exists():
+        console.print(f"✓ Config file exists at {config_path}")
+    else:
+        console.print(f"⚠ Config file [yellow]NOT FOUND[/] at {config_path}")
+        console.print("  Create with: aur init")
+        has_warnings = True
+
+    # Summary
+    console.print()
+    if all_ok and not has_warnings:
+        console.print("[bold green]✓ AURORA is ready to use![/]\n")
+        sys.exit(0)
+    elif all_ok:
+        console.print("[bold yellow]⚠ AURORA partially installed - some optional features unavailable[/]\n")
+        sys.exit(1)
+    else:
+        console.print("[bold red]✗ AURORA has critical issues - please reinstall[/]\n")
+        sys.exit(2)
 
 
 if __name__ == "__main__":

@@ -156,16 +156,35 @@ class ErrorHandler:
         Returns:
             Formatted error message with setup instructions
         """
+        import json
+
         error_str = str(error).lower()
 
-        # JSON syntax errors
-        if "json" in error_str or "syntax" in error_str or "decode" in error_str:
+        # Check exception type first (more reliable than string matching)
+
+        # Permission errors - check type first!
+        if isinstance(error, PermissionError):
             return (
-                "[bold red][Config][/] Configuration file syntax error.\n\n"
+                "[bold red][Config][/] Cannot read configuration file.\n\n"
+                f"[yellow]File:[/] {config_path}\n"
+                "[yellow]Cause:[/] Check file permissions.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Fix file permissions with chmod 600:\n"
+                f"     [cyan]chmod 600 {config_path}[/]\n"
+                "  2. Fix directory permissions:\n"
+                "     [cyan]chmod 700 ~/.aurora/[/]\n"
+                "  3. Recreate config:\n"
+                "     [cyan]aur init[/]"
+            )
+
+        # JSON decode errors - check type first!
+        if isinstance(error, json.JSONDecodeError):
+            return (
+                "[bold red][Config][/] Config file syntax error.\n\n"
                 f"[yellow]File:[/] {config_path}\n"
                 f"[yellow]Error:[/] {error}\n\n"
                 "[green]Solutions:[/]\n"
-                "  1. Validate JSON syntax:\n"
+                "  1. Validate JSON syntax with jsonlint:\n"
                 f"     [cyan]python -m json.tool {config_path}[/]\n"
                 "  2. Recreate config file:\n"
                 "     [cyan]aur init[/]\n"
@@ -173,19 +192,23 @@ class ErrorHandler:
                 "     [cyan]https://jsonlint.com[/]"
             )
 
-        # Permission errors
-        if "permission" in error_str or "access" in error_str:
+        # Missing config file
+        if "no such file" in error_str or "file not found" in error_str or "does not exist" in error_str:
             return (
-                "[bold red][Config][/] Cannot read configuration file.\n\n"
-                f"[yellow]File:[/] {config_path}\n"
-                "[yellow]Cause:[/] Insufficient file permissions.\n\n"
+                "[bold red][Config][/] Configuration file not found.\n\n"
+                f"[yellow]File:[/] {config_path}\n\n"
                 "[green]Solutions:[/]\n"
-                "  1. Fix file permissions:\n"
-                f"     [cyan]chmod 600 {config_path}[/]\n"
-                "  2. Fix directory permissions:\n"
-                "     [cyan]chmod 700 ~/.aurora/[/]\n"
-                "  3. Recreate config:\n"
-                "     [cyan]aur init[/]"
+                "  1. Run interactive setup:\n"
+                "     [cyan]aur init[/]\n"
+                "  2. Create minimal config manually:\n"
+                f"     [cyan]mkdir -p ~/.aurora && cat > {config_path} << 'EOF'\n"
+                "     {\n"
+                '       "llm": {"provider": "anthropic", "model": "claude-3-5-sonnet-20241022"},\n'
+                '       "escalation": {"threshold": 0.7}\n'
+                "     }\n"
+                "     EOF[/]\n"
+                "  3. Set ANTHROPIC_API_KEY environment variable:\n"
+                "     [cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]"
             )
 
         # Invalid values
@@ -315,6 +338,151 @@ class ErrorHandler:
             "     [cyan]aur mem index .[/]\n"
             "  3. Reset if needed:\n"
             "     [cyan]rm ~/.aurora/memory.db[/]"
+        )
+
+    @staticmethod
+    def handle_embedding_error(error: Exception, operation: str = "generating embeddings") -> str:
+        """Handle and format embedding/ML errors with setup instructions.
+
+        Args:
+            error: The embedding exception
+            operation: What operation was being attempted
+
+        Returns:
+            Formatted error message with recovery steps
+        """
+        error_str = str(error).lower()
+
+        # Missing model/package
+        if "no module" in error_str or "import" in error_str or "not found" in error_str:
+            return (
+                "[bold red][Embeddings][/] ML dependencies not installed.\n\n"
+                "[yellow]Cause:[/] sentence-transformers package is required for embeddings.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Install ML dependencies:\n"
+                "     [cyan]pip install 'aurora[ml]'[/]\n"
+                "  2. Or install manually:\n"
+                "     [cyan]pip install sentence-transformers torch[/]\n"
+                "  3. First time: Model will download (~90MB)\n"
+                "     [cyan]Model: sentence-transformers/all-MiniLM-L6-v2[/]"
+            )
+
+        # Model download errors
+        if "download" in error_str or "connection" in error_str or "timeout" in error_str:
+            return (
+                "[bold red][Embeddings][/] Cannot download embedding model.\n\n"
+                "[yellow]Cause:[/] Network issue downloading sentence-transformers model.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Check internet connection\n"
+                "  2. Retry - model downloads once:\n"
+                "     [cyan]~/.cache/torch/sentence_transformers/[/]\n"
+                "  3. Manual download:\n"
+                "     [cyan]python -c 'from sentence_transformers import SentenceTransformer; "
+                "SentenceTransformer(\"all-MiniLM-L6-v2\")'[/]"
+            )
+
+        # Memory/GPU errors
+        if "memory" in error_str or "cuda" in error_str or "device" in error_str:
+            return (
+                "[bold red][Embeddings][/] Insufficient memory for embeddings.\n\n"
+                "[yellow]Cause:[/] Not enough RAM or GPU memory.\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Close memory-intensive applications\n"
+                "  2. Use CPU-only mode (automatic fallback)\n"
+                "  3. Reduce chunk size in config:\n"
+                "     [cyan]memory.chunk_size: 500[/] (default: 1000)"
+            )
+
+        # Generic embedding error
+        return (
+            f"[bold red][Embeddings][/] {operation} failed.\n\n"
+            f"[yellow]Error:[/] {error}\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Ensure ML dependencies installed:\n"
+            "     [cyan]pip install 'aurora[ml]'[/]\n"
+            "  2. Clear model cache if corrupted:\n"
+            "     [cyan]rm -rf ~/.cache/torch/sentence_transformers/[/]\n"
+            "  3. Try again after clearing cache"
+        )
+
+    @staticmethod
+    def handle_path_error(error: Exception, path: str, operation: str = "accessing path") -> str:
+        """Handle and format file/path errors with recovery steps.
+
+        Args:
+            error: The path exception
+            path: Path that caused the error
+            operation: What operation was being attempted
+
+        Returns:
+            Formatted error message with recovery steps
+        """
+        error_str = str(error).lower()
+
+        # File/directory not found
+        if "no such file" in error_str or "not found" in error_str or "does not exist" in error_str:
+            return (
+                f"[bold red][Path][/] Path not found.\n\n"
+                f"[yellow]Path:[/] {path}\n"
+                f"[yellow]Operation:[/] {operation}\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Check path spelling:\n"
+                f"     [cyan]ls -la {path}[/]\n"
+                "  2. Use absolute path:\n"
+                f"     [cyan]{Path(path).resolve()}[/]\n"
+                "  3. Check current directory:\n"
+                "     [cyan]pwd[/]"
+            )
+
+        # Permission denied
+        if "permission" in error_str or "access" in error_str:
+            return (
+                f"[bold red][Path][/] Permission denied.\n\n"
+                f"[yellow]Path:[/] {path}\n"
+                f"[yellow]Operation:[/] {operation}\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Check file permissions:\n"
+                f"     [cyan]ls -la {path}[/]\n"
+                "  2. Fix permissions:\n"
+                f"     [cyan]chmod 644 {path}[/]\n"
+                "  3. Run as different user or use sudo if appropriate"
+            )
+
+        # Is a directory (expected file)
+        if "is a directory" in error_str:
+            return (
+                f"[bold red][Path][/] Expected file, found directory.\n\n"
+                f"[yellow]Path:[/] {path}\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Provide specific file path:\n"
+                f"     [cyan]{path}/filename.py[/]\n"
+                "  2. List directory contents:\n"
+                f"     [cyan]ls {path}[/]\n"
+                "  3. Index entire directory:\n"
+                f"     [cyan]aur mem index {path}[/]"
+            )
+
+        # Not a directory (expected directory)
+        if "not a directory" in error_str:
+            return (
+                f"[bold red][Path][/] Expected directory, found file.\n\n"
+                f"[yellow]Path:[/] {path}\n\n"
+                "[green]Solutions:[/]\n"
+                "  1. Use parent directory:\n"
+                f"     [cyan]{Path(path).parent}[/]\n"
+                "  2. Check path is correct:\n"
+                f"     [cyan]ls -la {path}[/]"
+            )
+
+        # Generic path error
+        return (
+            f"[bold red][Path][/] {operation} failed.\n\n"
+            f"[yellow]Path:[/] {path}\n"
+            f"[yellow]Error:[/] {error}\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Check path exists and is accessible\n"
+            "  2. Verify file/directory permissions\n"
+            "  3. Use absolute path to avoid confusion"
         )
 
     @staticmethod

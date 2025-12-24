@@ -17,7 +17,7 @@ from rich.table import Table
 
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
-from aurora_cli.commands.memory import memory_command
+from aurora_cli.commands.memory import memory_group
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 from aurora_cli.execution import QueryExecutor
 
@@ -52,7 +52,8 @@ def cli(verbose: bool, debug: bool) -> None:
     \b
     Examples:
         aur init                              # Initialize configuration
-        aur mem "authentication"              # Search memory
+        aur mem index .                       # Index current directory
+        aur mem search "authentication"       # Search memory
         aur --headless prompt.md              # Run headless mode
         aur query "How to calculate totals?"  # Query with auto-escalation
     """
@@ -68,7 +69,7 @@ def cli(verbose: bool, debug: bool) -> None:
 # Register commands
 cli.add_command(headless_command)
 cli.add_command(init_command)
-cli.add_command(memory_command)
+cli.add_command(memory_group)
 
 
 @cli.command(name="query")
@@ -174,6 +175,30 @@ def query_command(
             console.print(f"  Decision: [bold]{'AURORA' if result.use_aurora else 'Direct LLM'}[/]")
             console.print(f"  Reasoning: {result.reasoning}\n")
 
+        # Check if memory store exists and prompt to index if empty
+        from pathlib import Path
+        from aurora_core.store import SQLiteStore
+
+        db_path = Path.cwd() / "aurora.db"
+        memory_store = None
+
+        if result.use_aurora or verbose:
+            # Initialize or create memory store
+            if db_path.exists():
+                memory_store = SQLiteStore(str(db_path))
+                # Check if memory is empty
+                if _is_memory_empty(memory_store):
+                    should_index = _prompt_auto_index(console)
+                    if should_index:
+                        _perform_auto_index(console, memory_store)
+            else:
+                # No database, prompt to create and index
+                console.print("\n[yellow]No memory database found.[/]")
+                should_index = _prompt_auto_index(console)
+                if should_index:
+                    memory_store = SQLiteStore(str(db_path))
+                    _perform_auto_index(console, memory_store)
+
         # Create query executor
         executor_config = {
             "model": "claude-sonnet-4-20250514",
@@ -187,30 +212,31 @@ def query_command(
         if result.use_aurora:
             console.print("[bold blue]→[/] Using AURORA (full pipeline)")
 
-            # Note: For Phase 2, we'll use direct LLM as fallback
-            # Full AURORA integration requires memory store setup (Phase 4)
-            console.print("[dim]Note: Using direct LLM (AURORA requires memory store setup)[/]")
-
-            response = executor.execute_direct_llm(
-                query=query_text,
-                api_key=api_key,
-                memory_store=None,
-                verbose=verbose,
-            )
-
-            # TODO: Full AURORA execution (Phase 4)
-            # from aurora_core.store.memory import MemoryStore
-            # memory_store = MemoryStore(...)
-            # result = executor.execute_aurora(
-            #     query=query_text,
-            #     api_key=api_key,
-            #     memory_store=memory_store,
-            #     verbose=verbose,
-            # )
-            # if verbose and isinstance(result, tuple):
-            #     response, phase_trace = result
-            # else:
-            #     response = result
+            if memory_store is not None:
+                # Full AURORA execution with memory
+                if verbose:
+                    response, phase_trace = executor.execute_aurora(
+                        query=query_text,
+                        api_key=api_key,
+                        memory_store=memory_store,
+                        verbose=True,
+                    )
+                else:
+                    response = executor.execute_aurora(
+                        query=query_text,
+                        api_key=api_key,
+                        memory_store=memory_store,
+                        verbose=False,
+                    )
+            else:
+                # Fallback to direct LLM if no memory
+                console.print("[dim]Note: Using direct LLM (no memory store available)[/]")
+                response = executor.execute_direct_llm(
+                    query=query_text,
+                    api_key=api_key,
+                    memory_store=None,
+                    verbose=verbose,
+                )
         else:
             console.print("[bold green]→[/] Using Direct LLM (fast mode)")
             response = executor.execute_direct_llm(
@@ -272,6 +298,91 @@ def _display_phase_trace(phase_trace: dict[str, Any], console: Console) -> None:
     console.print(f"  Estimated Cost: ${total_cost:.4f}")
     console.print(f"  Confidence: {confidence:.2f}")
     console.print(f"  Overall Score: {overall_score:.2f}")
+
+
+def _is_memory_empty(memory_store) -> bool:
+    """Check if memory store is empty.
+
+    Args:
+        memory_store: Store instance to check
+
+    Returns:
+        True if memory store has no chunks, False otherwise
+    """
+    try:
+        # Try to get a count of chunks
+        # This is a simplified check - actual implementation depends on Store API
+        # For now, try to search and see if we get any results
+        results = memory_store.search_keyword("test", limit=1)
+        return len(results) == 0
+    except Exception:
+        # If we can't check, assume empty
+        return True
+
+
+def _prompt_auto_index(console: Console) -> bool:
+    """Prompt user to index current directory.
+
+    Args:
+        console: Rich console for output
+
+    Returns:
+        True if user wants to index, False otherwise
+    """
+    console.print("\n[yellow]Memory is empty. Index current directory?[/]")
+    response = click.prompt(
+        "This will index Python files in the current directory [Y/n]",
+        default="Y",
+        show_default=False,
+    )
+    return response.lower() in ("y", "yes", "")
+
+
+def _perform_auto_index(console: Console, memory_store) -> None:
+    """Perform automatic indexing of current directory.
+
+    Args:
+        console: Rich console for output
+        memory_store: Store instance for indexing
+    """
+    from pathlib import Path
+
+    from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+
+    from aurora_cli.memory_manager import MemoryManager
+
+    console.print("\n[bold]Indexing current directory...[/]")
+
+    # Initialize memory manager
+    manager = MemoryManager(memory_store)
+
+    # Create progress display
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        console=console,
+    ) as progress:
+        task_id = None
+
+        def progress_callback(current: int, total: int) -> None:
+            nonlocal task_id
+            if task_id is None:
+                task_id = progress.add_task(
+                    "Indexing files",
+                    total=total,
+                )
+            progress.update(task_id, completed=current)
+
+        # Perform indexing
+        stats = manager.index_path(Path.cwd(), progress_callback=progress_callback)
+
+    # Display summary
+    console.print(
+        f"\n[bold green]✓[/] Indexed {stats.files_indexed} files, "
+        f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s\n"
+    )
 
 
 if __name__ == "__main__":

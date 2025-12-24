@@ -1,279 +1,145 @@
 """Memory command implementation for AURORA CLI.
 
-This module implements the 'aur mem' command for explicit memory recall.
-It uses HybridRetriever (activation + semantic) to search stored chunks
-and displays results in a readable format.
+This module implements the 'aur mem' command group for memory management:
+- aur mem index: Index code files into memory store
+- aur mem search: Search indexed chunks
+- aur mem stats: Display memory store statistics
 
 Usage:
-    aur mem "query text" [options]
-    aur mem "calculate total" --max-results 10
-    aur mem "authentication" --type function --min-activation 0.5
+    aur mem index <path>
+    aur mem search "query text" [options]
+    aur mem stats
 """
 
 from __future__ import annotations
 
+import json
 import logging
-import re
 from pathlib import Path
 from typing import Any
 
 import click
 from rich.console import Console
+from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskID, TextColumn
+from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
-from aurora_context_code.semantic import EmbeddingProvider, HybridRetriever
-from aurora_core.activation import ActivationEngine
+from aurora_cli.memory_manager import MemoryManager
 from aurora_core.store import SQLiteStore
 
 
-__all__ = ["memory_command", "format_memory_results"]
+__all__ = ["memory_group"]
 
 logger = logging.getLogger(__name__)
 console = Console()
 
 
-def extract_keywords(query: str) -> list[str]:
-    """Extract keywords from query for memory search.
+@click.group(name="mem")
+def memory_group():
+    """Memory management commands for indexing and searching code."""
+    pass
 
-    Args:
-        query: User query string
 
-    Returns:
-        List of extracted keywords (lowercase, deduplicated)
+@memory_group.command(name="index")
+@click.argument("path", type=click.Path(exists=True, path_type=Path), default=".")
+@click.option(
+    "--db-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Path to AURORA database (default: ./aurora.db)",
+)
+def index_command(path: Path, db_path: Path | None) -> None:
+    """Index code files into memory store.
 
-    Example:
-        >>> extract_keywords("How to calculate the total price?")
-        ['calculate', 'total', 'price']
+    PATH is the directory or file to index. Defaults to current directory.
+
+    Examples:
+
+        \b
+        # Index current directory
+        aur mem index
+
+        \b
+        # Index specific directory
+        aur mem index /path/to/project
+
+        \b
+        # Index with custom database
+        aur mem index . --db-path ~/.aurora/memory.db
     """
-    # Remove common stop words
-    stop_words = {
-        "a",
-        "an",
-        "and",
-        "are",
-        "as",
-        "at",
-        "be",
-        "by",
-        "for",
-        "from",
-        "has",
-        "he",
-        "in",
-        "is",
-        "it",
-        "its",
-        "of",
-        "on",
-        "that",
-        "the",
-        "to",
-        "was",
-        "will",
-        "with",
-        "how",
-        "what",
-        "when",
-        "where",
-        "why",
-    }
+    try:
+        # Determine database path
+        if db_path is None:
+            db_path = Path.cwd() / "aurora.db"
 
-    # Extract words (alphanumeric sequences)
-    words = re.findall(r"\b\w+\b", query.lower())
+        # Initialize memory store
+        console.print(f"[dim]Using database: {db_path}[/]")
+        store = SQLiteStore(str(db_path))
 
-    # Filter stop words and short words
-    keywords = [w for w in words if w not in stop_words and len(w) > 2]
+        # Initialize memory manager
+        manager = MemoryManager(store)
 
-    # Deduplicate while preserving order
-    seen = set()
-    unique_keywords = []
-    for keyword in keywords:
-        if keyword not in seen:
-            seen.add(keyword)
-            unique_keywords.append(keyword)
+        # Create progress display
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            console=console,
+        ) as progress:
+            task_id: TaskID | None = None
 
-    return unique_keywords
+            def progress_callback(current: int, total: int) -> None:
+                nonlocal task_id
+                if task_id is None:
+                    task_id = progress.add_task(
+                        f"Indexing {path}",
+                        total=total,
+                    )
+                progress.update(task_id, completed=current)
 
+            # Perform indexing
+            stats = manager.index_path(path, progress_callback=progress_callback)
 
-def format_memory_results(
-    results: list[dict[str, Any]],
-    show_content: bool = False,
-    max_content_length: int = 200,
-) -> Table:
-    """Format memory search results as a Rich table.
+        # Display summary
+        console.print()
+        console.print(Panel.fit(
+            f"[bold green]✓ Indexing complete[/]\n\n"
+            f"Files indexed: [cyan]{stats.files_indexed}[/]\n"
+            f"Chunks created: [cyan]{stats.chunks_created}[/]\n"
+            f"Duration: [cyan]{stats.duration_seconds:.2f}s[/]\n"
+            f"Errors: [yellow]{stats.errors}[/]",
+            title="Index Summary",
+            border_style="green",
+        ))
 
-    Args:
-        results: List of search results from HybridRetriever
-        show_content: Whether to show chunk content (default: False)
-        max_content_length: Maximum length of content preview
+        # Close store
+        store.close()
 
-    Returns:
-        Rich Table object ready for display
-
-    Example:
-        >>> results = retriever.retrieve("calculate total", top_k=5)
-        >>> table = format_memory_results(results, show_content=True)
-        >>> console.print(table)
-    """
-    # Create table with columns
-    table = Table(title="Memory Search Results", show_header=True, header_style="bold magenta")
-
-    table.add_column("ID", style="cyan", no_wrap=True, width=8)
-    table.add_column("Type", style="green", no_wrap=True, width=12)
-    table.add_column("Name", style="yellow", width=25)
-    table.add_column("Activation", justify="right", style="blue", no_wrap=True, width=10)
-    table.add_column("Semantic", justify="right", style="blue", no_wrap=True, width=10)
-    table.add_column("Score", justify="right", style="bold blue", no_wrap=True, width=10)
-    table.add_column("File", style="dim", width=30)
-
-    if show_content:
-        table.add_column("Context", style="white", width=max_content_length)
-
-    # Add rows
-    for result in results:
-        chunk_id = str(result["chunk_id"])[:8]  # Truncate ID for display
-        chunk_type = result["metadata"].get("type", "unknown")
-        chunk_name = result["metadata"].get("name", "<unnamed>")
-        file_path = result["metadata"].get("file_path", "")
-
-        # Scores
-        activation_score = result["activation_score"]
-        semantic_score = result["semantic_score"]
-        hybrid_score = result["hybrid_score"]
-
-        # Format scores with color gradient
-        activation_text = _format_score(activation_score)
-        semantic_text = _format_score(semantic_score)
-        hybrid_text = _format_score(hybrid_score, bold=True)
-
-        # Prepare row data
-        row = [
-            chunk_id,
-            chunk_type,
-            chunk_name[:25],  # Truncate long names
-            activation_text,
-            semantic_text,
-            hybrid_text,
-            _truncate_path(file_path, 30),
-        ]
-
-        if show_content:
-            content = result.get("content", "")
-            content_preview = _truncate_content(content, max_content_length)
-            row.append(content_preview)
-
-        table.add_row(*row)
-
-    return table
+    except Exception as e:
+        logger.error(f"Index command failed: {e}", exc_info=True)
+        console.print(f"\n[bold red]Error:[/] {e}", style="red")
+        raise click.Abort()
 
 
-def _format_score(score: float, bold: bool = False) -> Text:
-    """Format score with color gradient (red → yellow → green).
-
-    Args:
-        score: Score value (0.0 - 1.0)
-        bold: Whether to make text bold
-
-    Returns:
-        Rich Text object with colored score
-    """
-    # Color gradient based on score
-    if score >= 0.7:
-        color = "green"
-    elif score >= 0.4:
-        color = "yellow"
-    else:
-        color = "red"
-
-    style = f"bold {color}" if bold else color
-    return Text(f"{score:.3f}", style=style)
-
-
-def _truncate_path(path: str, max_length: int) -> str:
-    """Truncate file path for display.
-
-    Args:
-        path: Full file path
-        max_length: Maximum length
-
-    Returns:
-        Truncated path with ellipsis if needed
-
-    Example:
-        >>> _truncate_path("/long/path/to/file.py", 15)
-        "...to/file.py"
-    """
-    if len(path) <= max_length:
-        return path
-
-    # Try to keep filename and some parent directories
-    path_obj = Path(path)
-    filename = path_obj.name
-
-    if len(filename) >= max_length:
-        return f"...{filename[: max_length - 3]}"
-
-    # Keep as many parent dirs as possible
-    remaining = max_length - len(filename) - 3  # 3 for "..."
-    parent_parts = list(path_obj.parent.parts)
-
-    # Build from end (closest to file)
-    truncated_parent = ""
-    for part in reversed(parent_parts):
-        if len(truncated_parent) + len(part) + 1 <= remaining:
-            truncated_parent = f"{part}/{truncated_parent}"
-        else:
-            break
-
-    return f"...{truncated_parent}{filename}"
-
-
-def _truncate_content(content: str, max_length: int) -> str:
-    """Truncate content for preview.
-
-    Args:
-        content: Full content
-        max_length: Maximum length
-
-    Returns:
-        Truncated content with ellipsis
-    """
-    if len(content) <= max_length:
-        return content
-
-    # Try to break at word boundary
-    truncated = content[: max_length - 3]
-    last_space = truncated.rfind(" ")
-    if last_space > max_length * 0.8:  # If space is in last 20%
-        truncated = truncated[:last_space]
-
-    return f"{truncated}..."
-
-
-@click.command(name="mem")
+@memory_group.command(name="search")
 @click.argument("query", type=str)
 @click.option(
-    "--max-results",
+    "--limit",
     "-n",
     type=int,
-    default=10,
-    help="Maximum number of results to return (default: 10)",
+    default=5,
+    help="Maximum number of results to return (default: 5)",
 )
 @click.option(
-    "--type",
-    "-t",
-    "chunk_type",
-    type=str,
-    default=None,
-    help="Filter by chunk type (function, class, etc.)",
-)
-@click.option(
-    "--min-activation",
-    "-a",
-    type=float,
-    default=0.0,
-    help="Minimum activation score threshold (0.0-1.0)",
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["rich", "json"]),
+    default="rich",
+    help="Output format (default: rich)",
 )
 @click.option(
     "--show-content",
@@ -288,32 +154,31 @@ def _truncate_content(content: str, max_length: int) -> str:
     default=None,
     help="Path to AURORA database (default: ./aurora.db)",
 )
-def memory_command(
+def search_command(
     query: str,
-    max_results: int,
-    chunk_type: str | None,
-    min_activation: float,
+    limit: int,
+    output_format: str,
     show_content: bool,
     db_path: Path | None,
 ) -> None:
     """Search AURORA memory for relevant chunks.
 
-    QUERY is the text to search for in memory. It will use hybrid retrieval
-    (activation + semantic similarity) to find the most relevant chunks.
+    QUERY is the text to search for in memory. Uses hybrid retrieval
+    (activation + semantic similarity) to find relevant chunks.
 
     Examples:
 
         \b
         # Search for authentication-related code
-        aur mem "authentication"
+        aur mem search "authentication"
 
         \b
-        # Search with type filter and show content
-        aur mem "calculate total" --type function --show-content
+        # Search with more results and content preview
+        aur mem search "calculate total" --limit 10 --show-content
 
         \b
-        # Search with activation threshold
-        aur mem "database" --min-activation 0.5 --max-results 20
+        # Search with JSON output
+        aur mem search "database" --format json
     """
     try:
         # Determine database path
@@ -323,67 +188,233 @@ def memory_command(
         if not db_path.exists():
             console.print(
                 f"[bold red]Error:[/] Database not found at {db_path}\n"
-                f"Please initialize AURORA first or specify --db-path",
+                f"Run 'aur mem index' first to create the database",
                 style="red",
             )
             raise click.Abort()
 
-        # Initialize components
-        console.print(f"[dim]Loading AURORA memory from {db_path}...[/]")
-
+        # Initialize memory store
+        console.print(f"[dim]Searching memory from {db_path}...[/]")
         store = SQLiteStore(str(db_path))
-        activation_engine = ActivationEngine()  # ActivationEngine doesn't take store as argument
-        embedding_provider = EmbeddingProvider()
-        retriever = HybridRetriever(store, activation_engine, embedding_provider)
 
-        # Extract keywords for logging
-        keywords = extract_keywords(query)
-        logger.info(f"Memory search: query='{query}', keywords={keywords}")
+        # Initialize memory manager
+        manager = MemoryManager(store)
 
-        # Perform retrieval
-        console.print(f"[dim]Searching for: '{query}'...[/]")
-        results = retriever.retrieve(query, top_k=max_results)
-
-        # Filter by type if specified
-        if chunk_type is not None:
-            results = [r for r in results if r["metadata"].get("type") == chunk_type]
-
-        # Filter by minimum activation
-        if min_activation > 0.0:
-            results = [r for r in results if r["activation_score"] >= min_activation]
+        # Perform search
+        results = manager.search(query, limit=limit)
 
         # Display results
-        if not results:
-            console.print("\n[yellow]No results found.[/]")
-            console.print(
-                "Try:\n"
-                "  - Broadening your search query\n"
-                "  - Lowering --min-activation threshold\n"
-                "  - Removing --type filter"
-            )
-            return
+        if output_format == "json":
+            _display_json_results(results)
+        else:
+            _display_rich_results(results, query, show_content)
 
-        console.print(f"\n[bold green]Found {len(results)} results[/]\n")
-
-        # Format and display table
-        table = format_memory_results(results, show_content=show_content, max_content_length=200)
-        console.print(table)
-
-        # Show summary statistics
-        avg_activation = sum(r["activation_score"] for r in results) / len(results)
-        avg_semantic = sum(r["semantic_score"] for r in results) / len(results)
-        avg_hybrid = sum(r["hybrid_score"] for r in results) / len(results)
-
-        console.print("\n[dim]Average scores:[/]")
-        console.print(f"  Activation: {avg_activation:.3f}")
-        console.print(f"  Semantic:   {avg_semantic:.3f}")
-        console.print(f"  Hybrid:     {avg_hybrid:.3f}")
+        # Close store
+        store.close()
 
     except Exception as e:
-        logger.error(f"Memory command failed: {e}", exc_info=True)
+        logger.error(f"Search command failed: {e}", exc_info=True)
         console.print(f"\n[bold red]Error:[/] {e}", style="red")
         raise click.Abort()
 
 
+@memory_group.command(name="stats")
+@click.option(
+    "--db-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Path to AURORA database (default: ./aurora.db)",
+)
+def stats_command(db_path: Path | None) -> None:
+    """Display memory store statistics.
+
+    Shows information about indexed chunks, files, languages, and database size.
+
+    Examples:
+
+        \b
+        # Show stats for default database
+        aur mem stats
+
+        \b
+        # Show stats for custom database
+        aur mem stats --db-path ~/.aurora/memory.db
+    """
+    try:
+        # Determine database path
+        if db_path is None:
+            db_path = Path.cwd() / "aurora.db"
+
+        if not db_path.exists():
+            console.print(
+                f"[bold red]Error:[/] Database not found at {db_path}\n"
+                f"Run 'aur mem index' first to create the database",
+                style="red",
+            )
+            raise click.Abort()
+
+        # Initialize memory store
+        console.print(f"[dim]Loading statistics from {db_path}...[/]")
+        store = SQLiteStore(str(db_path))
+
+        # Initialize memory manager
+        manager = MemoryManager(store)
+
+        # Get statistics
+        stats = manager.get_stats()
+
+        # Display statistics table
+        table = Table(title="Memory Store Statistics", show_header=False)
+        table.add_column("Metric", style="cyan", width=30)
+        table.add_column("Value", style="white")
+
+        table.add_row("Total Chunks", f"[bold]{stats.total_chunks:,}[/]")
+        table.add_row("Total Files", f"[bold]{stats.total_files:,}[/]")
+        table.add_row("Database Size", f"[bold]{stats.database_size_mb:.2f} MB[/]")
+
+        if stats.languages:
+            table.add_row("", "")  # Separator
+            table.add_row("[bold]Languages", "")
+            for lang, count in sorted(stats.languages.items(), key=lambda x: x[1], reverse=True):
+                table.add_row(f"  {lang}", f"{count:,} chunks")
+
+        console.print()
+        console.print(table)
+        console.print()
+
+        # Close store
+        store.close()
+
+    except Exception as e:
+        logger.error(f"Stats command failed: {e}", exc_info=True)
+        console.print(f"\n[bold red]Error:[/] {e}", style="red")
+        raise click.Abort()
+
+
+def _display_rich_results(results: list, query: str, show_content: bool) -> None:
+    """Display search results with rich formatting.
+
+    Args:
+        results: List of SearchResult objects
+        query: Original search query
+        show_content: Whether to show content preview
+    """
+    if not results:
+        console.print("\n[yellow]No results found.[/]")
+        console.print(
+            "Try:\n"
+            "  - Broadening your search query\n"
+            "  - Checking if the codebase has been indexed"
+        )
+        return
+
+    console.print(f"\n[bold green]Found {len(results)} results for '{query}'[/]\n")
+
+    # Create results table
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("File", style="yellow", width=40)
+    table.add_column("Type", style="green", width=12)
+    table.add_column("Name", style="cyan", width=25)
+    table.add_column("Lines", style="dim", width=12)
+    table.add_column("Score", justify="right", style="bold blue", width=10)
+
+    if show_content:
+        table.add_column("Preview", style="white", width=50)
+
+    for result in results:
+        file_path = Path(result.file_path).name  # Just filename
+        element_type = result.metadata.get("type", "unknown")
+        name = result.metadata.get("name", "<unnamed>")
+        line_start, line_end = result.line_range
+        line_range_str = f"{line_start}-{line_end}"
+
+        # Format score with color
+        score = result.hybrid_score
+        score_text = _format_score(score)
+
+        row = [
+            _truncate_text(file_path, 40),
+            element_type,
+            _truncate_text(name, 25),
+            line_range_str,
+            score_text,
+        ]
+
+        if show_content:
+            content_preview = _truncate_text(result.content, 50)
+            row.append(content_preview)
+
+        table.add_row(*row)
+
+    console.print(table)
+
+    # Show average scores
+    avg_activation = sum(r.activation_score for r in results) / len(results)
+    avg_semantic = sum(r.semantic_score for r in results) / len(results)
+    avg_hybrid = sum(r.hybrid_score for r in results) / len(results)
+
+    console.print("\n[dim]Average scores:[/]")
+    console.print(f"  Activation: {avg_activation:.3f}")
+    console.print(f"  Semantic:   {avg_semantic:.3f}")
+    console.print(f"  Hybrid:     {avg_hybrid:.3f}\n")
+
+
+def _display_json_results(results: list) -> None:
+    """Display search results as JSON.
+
+    Args:
+        results: List of SearchResult objects
+    """
+    json_results = []
+    for result in results:
+        json_results.append({
+            "chunk_id": result.chunk_id,
+            "file_path": result.file_path,
+            "line_start": result.line_range[0],
+            "line_end": result.line_range[1],
+            "content": result.content,
+            "activation_score": result.activation_score,
+            "semantic_score": result.semantic_score,
+            "hybrid_score": result.hybrid_score,
+            "metadata": result.metadata,
+        })
+
+    console.print(json.dumps(json_results, indent=2))
+
+
+def _format_score(score: float) -> Text:
+    """Format score with color gradient.
+
+    Args:
+        score: Score value (0.0 - 1.0)
+
+    Returns:
+        Rich Text object with colored score
+    """
+    if score >= 0.7:
+        color = "green"
+    elif score >= 0.4:
+        color = "yellow"
+    else:
+        color = "red"
+
+    return Text(f"{score:.3f}", style=f"bold {color}")
+
+
+def _truncate_text(text: str, max_length: int) -> str:
+    """Truncate text for display.
+
+    Args:
+        text: Text to truncate
+        max_length: Maximum length
+
+    Returns:
+        Truncated text with ellipsis if needed
+    """
+    if len(text) <= max_length:
+        return text
+    return text[: max_length - 3] + "..."
+
+
 if __name__ == "__main__":
-    memory_command()
+    memory_group()

@@ -1259,6 +1259,31 @@ Security checklist covers basics but should add:
 
 ---
 
+#### TD-P3-021: MCP Control Script Features Not Implemented
+**Category**: Feature Completeness
+**Location**: `scripts/aurora-mcp` (Task 3.13.10)
+**Impact**: MCP debugging and validation features missing
+**Effort**: S (8-12 hours total)
+
+**Description**:
+Two test cases in Phase 3.13.10 are skipped due to unimplemented features:
+1. **Log display** (test_status_shows_recent_logs): Status command shows logs but lacks filtering, streaming, rotation
+2. **Config validation** (test_control_script_validates_config): No explicit validation on config save
+
+**Action Needed**:
+- [ ] Implement log filtering by severity level
+- [ ] Add log streaming (--follow flag)
+- [ ] Implement log rotation handling
+- [ ] Add config schema validation on save
+- [ ] Add --validate-only flag for config checking
+- [ ] Validate paths are writable/readable
+- [ ] Bounds check max_results (1-1000)
+
+**Test Status**: 7/9 tests passing, 2 legitimately skipped
+**References**: `/home/hamr/PycharmProjects/aurora/tasks/tasks-0006-prd-cli-fixes-package-consolidation-mcp.md` (Task 3.13.10)
+
+---
+
 ## Cross-Phase Issues
 
 **Items**: 8 issues affecting multiple phases

@@ -59,7 +59,7 @@ class AuroraMCPTools:
             self._store = SQLiteStore(self.db_path)
 
         if self._activation_engine is None:
-            self._activation_engine = ActivationEngine(self._store)
+            self._activation_engine = ActivationEngine()
 
         if self._embedding_provider is None:
             self._embedding_provider = EmbeddingProvider()
@@ -185,9 +185,17 @@ class AuroraMCPTools:
                 cursor.execute("SELECT COUNT(*) FROM chunks")
                 total_chunks = cursor.fetchone()[0]
 
-                # Total files
-                cursor.execute("SELECT COUNT(DISTINCT source_file) FROM chunks")
-                total_files = cursor.fetchone()[0]
+                # Total files - extract from id field (format: "code:file:func")
+                cursor.execute("""
+                    SELECT COUNT(DISTINCT
+                        CASE
+                            WHEN id LIKE 'code:%' THEN substr(id, 6, instr(substr(id, 6), ':') - 1)
+                            ELSE id
+                        END
+                    ) FROM chunks WHERE type = 'code'
+                """)
+                result = cursor.fetchone()
+                total_files = result[0] if result else 0
 
             # Get database file size
             db_path = Path(self.db_path)

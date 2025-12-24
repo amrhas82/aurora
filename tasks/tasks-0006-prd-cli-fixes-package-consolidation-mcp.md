@@ -475,23 +475,25 @@
     - ✓ Updated features list: Add MCP integration, package consolidation, Windows support
     - ✓ Updated version banner to v0.2.0 with new features
     - ✓ Added verification and diagnostic commands section
-  - [ ] **4.6** Create CHANGELOG.md for v0.2.0 (30 minutes)
-    - Create or update `/home/hamr/PycharmProjects/aurora/CHANGELOG.md`
-    - Add v0.2.0 section with date
-    - List changes:
-      - Added: MCP server integration (5 tools)
-      - Added: Single package installation (meta-package)
-      - Added: `aur --verify` command
-      - Added: `aurora-uninstall` helper
-      - Added: Flexible `--headless` flag syntax
-      - Fixed: `aur init` Path shadowing crash
-      - Fixed: `aur mem index` API mismatch
-      - Fixed: Dry-run import error
-      - Improved: Error messages with actionable guidance
-      - Improved: Help text with examples
-      - Changed: Import paths to `aurora.*` namespace (breaking)
-      - Deprecated: Old `aurora_*` import paths
-    - Add migration guide for breaking changes
+  - [x] **4.6** Create CHANGELOG.md for v0.2.0 (30 minutes)
+    - ✓ Created `/home/hamr/PycharmProjects/aurora/CHANGELOG.md`
+    - ✓ Added v0.2.0 section with date (2025-01-24)
+    - ✓ Listed changes:
+      - ✓ Added: MCP server integration (5 tools)
+      - ✓ Added: Single package installation (meta-package)
+      - ✓ Added: `aur --verify` command
+      - ✓ Added: `aurora-uninstall` helper
+      - ✓ Added: Flexible `--headless` flag syntax
+      - ✓ Fixed: `aur init` Path shadowing crash
+      - ✓ Fixed: `aur mem index` API mismatch
+      - ✓ Fixed: Dry-run import error
+      - ✓ Improved: Error messages with actionable guidance
+      - ✓ Improved: Help text with examples
+      - ✓ Changed: Import paths to `aurora.*` namespace (breaking)
+      - ✓ Deprecated: Old `aurora_*` import paths
+    - ✓ Added comprehensive migration guide for breaking changes
+    - ✓ Included v0.1.0 section for historical context
+    - ✓ Followed Keep a Changelog format
   - [ ] **4.7** Run full test suite and verify all tests pass (30 minutes)
     - Run unit tests: `pytest tests/unit -v --cov=packages`
     - Run integration tests: `pytest tests/integration -v`

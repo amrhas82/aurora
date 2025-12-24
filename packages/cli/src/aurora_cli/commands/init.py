@@ -83,21 +83,50 @@ def init_command():
 
     # Prompt to index current directory
     if click.confirm("Index current directory for memory search?", default=True):
-        click.echo("⠋ Indexing files...")
-
-        # Import memory command (will be implemented in Phase 4)
+        # Import memory indexing functionality
         try:
-            from aurora_cli.commands.memory import index_command
-            from click.testing import CliRunner
+            from pathlib import Path
+            from aurora_core.store import SQLiteStore
+            from aurora_cli.memory_manager import MemoryManager
+            from rich.console import Console
+            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
-            runner = CliRunner()
-            result = runner.invoke(index_command, ["."])
+            console = Console()
+            console.print("[bold]Indexing current directory...[/]")
 
-            if result.exit_code == 0:
-                click.echo("✓ Indexed current directory")
+            # Initialize memory store
+            db_path = Path.cwd() / "aurora.db"
+            memory_store = SQLiteStore(str(db_path))
+            manager = MemoryManager(memory_store)
+
+            # Create progress display
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                console=console,
+            ) as progress:
+                task_id = None
+
+                def progress_callback(current: int, total: int) -> None:
+                    nonlocal task_id
+                    if task_id is None:
+                        task_id = progress.add_task("Indexing files", total=total)
+                    progress.update(task_id, completed=current)
+
+                # Perform indexing
+                stats = manager.index_path(Path.cwd(), progress_callback=progress_callback)
+
+            if stats.files_indexed > 0:
+                console.print(
+                    f"[bold green]✓[/] Indexed {stats.files_indexed} files, "
+                    f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s"
+                )
             else:
-                click.echo(f"⚠ Warning: Indexing failed: {result.output}")
-        except ImportError:
+                console.print("[yellow]⚠[/] No Python files found to index in current directory")
+
+        except ImportError as e:
             # Memory command not yet implemented - stub for Phase 3
             click.echo("⚠ Memory indexing not yet implemented (Phase 4)")
 

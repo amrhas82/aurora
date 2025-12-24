@@ -338,8 +338,10 @@ def _execute_dry_run(
     if db_path.exists():
         try:
             memory_store = SQLiteStore(str(db_path))
-            # Try to count chunks (simplified)
-            results = memory_store.search_keyword("test", limit=100)
+            # Try to count chunks by querying the store
+            from aurora_core.store.hybrid_retriever import HybridRetriever
+            retriever = HybridRetriever(memory_store)
+            results = retriever.retrieve("test", limit=100)
             memory_chunks = len(results)
             console.print(f"  Database: {db_path} [green]✓[/]")
             console.print(f"  Chunks: ~{memory_chunks}")
@@ -439,10 +441,10 @@ def _is_memory_empty(memory_store) -> bool:
         True if memory store has no chunks, False otherwise
     """
     try:
-        # Try to get a count of chunks
-        # This is a simplified check - actual implementation depends on Store API
-        # For now, try to search and see if we get any results
-        results = memory_store.search_keyword("test", limit=1)
+        # Try to get a count of chunks using HybridRetriever
+        from aurora_core.store.hybrid_retriever import HybridRetriever
+        retriever = HybridRetriever(memory_store)
+        results = retriever.retrieve("test", limit=1)
         return len(results) == 0
     except Exception:
         # If we can't check, assume empty

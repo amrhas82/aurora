@@ -16,6 +16,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from aurora_cli.commands.headless import headless_command
+from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_command
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 from aurora_cli.execution import QueryExecutor
@@ -50,6 +51,7 @@ def cli(verbose: bool, debug: bool) -> None:
 
     \b
     Examples:
+        aur init                              # Initialize configuration
         aur mem "authentication"              # Search memory
         aur --headless prompt.md              # Run headless mode
         aur query "How to calculate totals?"  # Query with auto-escalation
@@ -65,6 +67,7 @@ def cli(verbose: bool, debug: bool) -> None:
 
 # Register commands
 cli.add_command(headless_command)
+cli.add_command(init_command)
 cli.add_command(memory_command)
 
 

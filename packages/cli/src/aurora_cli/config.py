@@ -41,6 +41,9 @@ class Config:
     memory_overlap: int = 200
     logging_level: str = "INFO"
     logging_file: str = "~/.aurora/aurora.log"
+    mcp_always_on: bool = False
+    mcp_log_file: str = "~/.aurora/mcp.log"
+    mcp_max_results: int = 10
 
     def get_api_key(self) -> str:
         """Get API key with environment variable override.
@@ -120,6 +123,12 @@ class Config:
                 f"logging_level must be one of {valid_levels}, got '{self.logging_level}'"
             )
 
+        # Validate MCP configuration
+        if self.mcp_max_results < 1:
+            raise ConfigurationError(
+                f"mcp_max_results must be positive, got {self.mcp_max_results}"
+            )
+
         # Warn about non-existent paths (don't fail, just warn)
         for path in self.memory_index_paths:
             expanded_path = Path(path).expanduser()
@@ -151,6 +160,11 @@ CONFIG_SCHEMA: dict[str, Any] = {
     "logging": {
         "level": "INFO",
         "file": "~/.aurora/aurora.log",
+    },
+    "mcp": {
+        "always_on": False,
+        "log_file": "~/.aurora/mcp.log",
+        "max_results": 10,
     },
 }
 
@@ -254,6 +268,13 @@ def load_config(path: str | None = None) -> Config:
             "level", defaults["logging"]["level"]
         ),
         "logging_file": config_data.get("logging", {}).get("file", defaults["logging"]["file"]),
+        "mcp_always_on": config_data.get("mcp", {}).get(
+            "always_on", defaults["mcp"]["always_on"]
+        ),
+        "mcp_log_file": config_data.get("mcp", {}).get("log_file", defaults["mcp"]["log_file"]),
+        "mcp_max_results": config_data.get("mcp", {}).get(
+            "max_results", defaults["mcp"]["max_results"]
+        ),
     }
 
     # Apply environment variable overrides

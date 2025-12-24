@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+"""
+AURORA MCP Control Script.
+
+This script provides commands to control the AURORA MCP server:
+- start: Enable always-on mode
+- stop: Disable always-on mode
+- status: Check server status and view logs
+"""
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+
+def get_config_path() -> Path:
+    """Get path to AURORA config file."""
+    return Path.home() / ".aurora" / "config.json"
+
+
+def load_config() -> dict:
+    """Load AURORA configuration."""
+    config_path = get_config_path()
+
+    if not config_path.exists():
+        print(f"Error: Configuration file not found at {config_path}", file=sys.stderr)
+        print("Run 'aur init' to create a configuration file", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        with open(config_path, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON in config file: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error loading config: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def save_config(config: dict) -> None:
+    """Save AURORA configuration."""
+    config_path = get_config_path()
+
+    # Ensure directory exists
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=2)
+        print(f"Configuration saved to {config_path}")
+    except Exception as e:
+        print(f"Error saving config: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def start_mcp() -> None:
+    """Enable MCP always-on mode."""
+    config = load_config()
+
+    # Ensure mcp section exists
+    if "mcp" not in config:
+        config["mcp"] = {
+            "always_on": False,
+            "log_file": "~/.aurora/mcp.log",
+            "max_results": 10,
+        }
+
+    # Set always_on to true
+    config["mcp"]["always_on"] = True
+    save_config(config)
+
+    print("\n" + "=" * 70)
+    print("AURORA MCP Server - Always-On Mode ENABLED")
+    print("=" * 70)
+    print("\nNext steps:")
+    print("1. Configure Claude Desktop to use AURORA MCP server:")
+    print()
+
+    # Platform-specific instructions
+    if sys.platform == "darwin":
+        config_file = "~/Library/Application Support/Claude/claude_desktop_config.json"
+    elif sys.platform == "win32":
+        config_file = "%APPDATA%\\Claude\\claude_desktop_config.json"
+    else:  # Linux
+        config_file = "~/.config/Claude/claude_desktop_config.json"
+
+    print(f"   Edit: {config_file}")
+    print()
+    print("   Add AURORA MCP server configuration:")
+    print()
+    print("   {")
+    print('     "mcpServers": {')
+    print('       "aurora": {')
+    print('         "command": "python3",')
+    print('         "args": ["-m", "aurora.mcp.server"],')
+    print('         "env": {')
+    db_path = str(Path.home() / ".aurora" / "memory.db")
+    print(f'           "PYTHONPATH": "{Path.home() / "PycharmProjects/aurora/src"}"')
+    print("         }")
+    print("       }")
+    print("     }")
+    print("   }")
+    print()
+    print("2. Restart Claude Desktop")
+    print()
+    print("3. Index your codebase:")
+    print("   aur mem index /path/to/your/code")
+    print()
+    print("4. Test in Claude Desktop:")
+    print('   "Search my codebase for authentication logic"')
+    print()
+    print(f"Logs: {config['mcp'].get('log_file', '~/.aurora/mcp.log')}")
+    print("=" * 70)
+
+
+def stop_mcp() -> None:
+    """Disable MCP always-on mode."""
+    config = load_config()
+
+    # Ensure mcp section exists
+    if "mcp" not in config:
+        print("MCP is already disabled (no configuration found)")
+        return
+
+    # Set always_on to false
+    config["mcp"]["always_on"] = False
+    save_config(config)
+
+    print("\n" + "=" * 70)
+    print("AURORA MCP Server - Always-On Mode DISABLED")
+    print("=" * 70)
+    print("\nThe MCP server will no longer start automatically.")
+    print("You can still use AURORA via the CLI: aur query, aur mem search, etc.")
+    print("=" * 70)
+
+
+def show_status() -> None:
+    """Show MCP server status."""
+    config = load_config()
+
+    print("\n" + "=" * 70)
+    print("AURORA MCP Server - Status")
+    print("=" * 70)
+
+    # Check if MCP section exists
+    if "mcp" not in config:
+        print("\nStatus: NOT CONFIGURED")
+        print("Run 'aurora-mcp start' to enable MCP integration")
+    else:
+        always_on = config["mcp"].get("always_on", False)
+        log_file = config["mcp"].get("log_file", "~/.aurora/mcp.log")
+        max_results = config["mcp"].get("max_results", 10)
+
+        print(f"\nMode: {'ALWAYS-ON' if always_on else 'ON-DEMAND'}")
+        print(f"Log File: {log_file}")
+        print(f"Max Results: {max_results}")
+
+    # Check database
+    db_path = Path.home() / ".aurora" / "memory.db"
+    if db_path.exists():
+        size_mb = db_path.stat().st_size / (1024 * 1024)
+        print(f"\nDatabase: {db_path}")
+        print(f"Size: {size_mb:.2f} MB")
+
+        # Try to get chunk count
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(str(db_path))
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM chunks")
+            chunk_count = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(DISTINCT source_file) FROM chunks")
+            file_count = cursor.fetchone()[0]
+            conn.close()
+
+            print(f"Chunks: {chunk_count:,}")
+            print(f"Files: {file_count:,}")
+        except Exception:
+            pass
+    else:
+        print(f"\nDatabase: Not found at {db_path}")
+        print("Run 'aur mem index /path/to/code' to create index")
+
+    # Check log file
+    if "mcp" in config:
+        log_path = Path(config["mcp"].get("log_file", "~/.aurora/mcp.log")).expanduser()
+        if log_path.exists():
+            print(f"\nRecent log entries (last 10 lines):")
+            print("-" * 70)
+            try:
+                with open(log_path, "r") as f:
+                    lines = f.readlines()
+                    for line in lines[-10:]:
+                        print(line.rstrip())
+            except Exception as e:
+                print(f"Error reading log: {e}")
+        else:
+            print(f"\nLog file: Not found at {log_path}")
+
+    print("=" * 70)
+
+
+def main() -> None:
+    """Main entry point for MCP control script."""
+    parser = argparse.ArgumentParser(
+        description="AURORA MCP Control - Manage MCP server configuration",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  aurora-mcp start    # Enable always-on mode
+  aurora-mcp stop     # Disable always-on mode
+  aurora-mcp status   # Check server status
+        """,
+    )
+
+    parser.add_argument(
+        "command",
+        choices=["start", "stop", "status"],
+        help="Command to execute",
+    )
+
+    args = parser.parse_args()
+
+    if args.command == "start":
+        start_mcp()
+    elif args.command == "stop":
+        stop_mcp()
+    elif args.command == "status":
+        show_status()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,2 +1,0 @@
-This is a test file to verify branch protection is working.
-If this file appears in main branch without a PR, protection is NOT working.

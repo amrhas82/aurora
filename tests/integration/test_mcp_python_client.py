@@ -333,6 +333,7 @@ def indexed_client(test_client):
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestAuroraSearch:
     """Test suite for aurora_search tool."""
 
@@ -442,6 +443,7 @@ class TestAuroraSearch:
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestAuroraIndex:
     """Test suite for aurora_index tool."""
 
@@ -585,6 +587,7 @@ class TestAuroraIndex:
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestAuroraStats:
     """Test suite for aurora_stats tool."""
 
@@ -778,6 +781,7 @@ def bar():
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestAuroraRelated:
     """Test suite for aurora_related tool."""
 
@@ -1295,6 +1299,7 @@ class TestMCPErrorHandling:
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestMCPPerformanceAndLogging:
     """Test suite for MCP performance and logging."""
 

@@ -23,6 +23,7 @@ import pytest
 from aurora.mcp.tools import AuroraMCPTools
 
 
+@pytest.mark.ml
 class TestMCPHarness:
     """Test harness for MCP server tools using FastMCP patterns."""
 
@@ -241,6 +242,7 @@ def add_numbers(a: int, b: int) -> int:
             assert related_result is not None, "aurora_related should return result"
 
 
+@pytest.mark.ml
 class TestMCPHarnessEdgeCases:
     """Test edge cases and error conditions."""
 
@@ -313,6 +315,7 @@ class TestMCPHarnessEdgeCases:
         assert isinstance(data, (list, dict)), "Should return valid JSON"
 
 
+@pytest.mark.ml
 class TestMCPHarnessPerformance:
     """Performance and stress tests for MCP tools."""
 

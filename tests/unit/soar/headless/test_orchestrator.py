@@ -37,11 +37,11 @@ def prompt_file(tmp_path):
         """# Goal
 Test experiment goal
 
-## Success Criteria
+# Success Criteria
 - Test criterion 1
 - Test criterion 2
 
-## Constraints
+# Constraints
 - Test constraint 1
 """
     )
@@ -102,7 +102,9 @@ class TestHeadlessOrchestratorInit:
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    def test_init_with_defaults(self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file):
+    def test_init_with_defaults(
+        self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file
+    ):
         """Test initialization with default config."""
         mock_soar = Mock()
         orchestrator = HeadlessOrchestrator(
@@ -122,7 +124,9 @@ class TestHeadlessOrchestratorInit:
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    def test_init_with_custom_config(self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file):
+    def test_init_with_custom_config(
+        self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file
+    ):
         """Test initialization with custom config."""
         mock_soar = Mock()
         config = HeadlessConfig(max_iterations=20, budget_limit=10.0)
@@ -140,7 +144,9 @@ class TestHeadlessOrchestratorInit:
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    def test_init_creates_components(self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file):
+    def test_init_creates_components(
+        self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file
+    ):
         """Test initialization creates all required components."""
         mock_soar = Mock()
         HeadlessOrchestrator(
@@ -161,7 +167,9 @@ class TestValidateSafety:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_validate_safety_success(self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_validate_safety_success(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test successful safety validation."""
         mock_git = Mock()
         mock_git.validate.return_value = None
@@ -187,7 +195,9 @@ class TestValidateSafety:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_validate_safety_git_error(self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_validate_safety_git_error(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test git branch validation error."""
         mock_git = Mock()
         mock_git.validate.side_effect = GitBranchError("Not on headless branch")
@@ -206,7 +216,9 @@ class TestValidateSafety:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_validate_safety_prompt_error(self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_validate_safety_prompt_error(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test prompt validation error."""
         mock_git = Mock()
         mock_git.validate.return_value = None
@@ -233,7 +245,9 @@ class TestLoadPrompt:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_load_prompt_success(self, mock_git, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_load_prompt_success(
+        self, mock_git, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test successful prompt loading."""
         prompt_data = PromptData(
             goal="Test goal",
@@ -263,7 +277,9 @@ class TestLoadPrompt:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_load_prompt_error(self, mock_git, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_load_prompt_error(
+        self, mock_git, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test prompt loading error."""
         mock_prompt = Mock()
         mock_prompt.load.side_effect = PromptValidationError("Invalid prompt")
@@ -317,7 +333,9 @@ class TestInitializeScratchpad:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_initialize_scratchpad_no_prompt_data(self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_initialize_scratchpad_no_prompt_data(
+        self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test scratchpad initialization without prompt data."""
         mock_soar = Mock()
         orchestrator = HeadlessOrchestrator(
@@ -338,7 +356,9 @@ class TestCheckBudget:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_check_budget_under_limit(self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_check_budget_under_limit(
+        self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test budget check under limit."""
         mock_soar = Mock()
         config = HeadlessConfig(budget_limit=5.0)
@@ -355,7 +375,9 @@ class TestCheckBudget:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_check_budget_at_limit(self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_check_budget_at_limit(
+        self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test budget check at exact limit."""
         mock_soar = Mock()
         config = HeadlessConfig(budget_limit=5.0)
@@ -372,7 +394,9 @@ class TestCheckBudget:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_check_budget_over_limit(self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_check_budget_over_limit(
+        self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test budget check over limit."""
         mock_soar = Mock()
         config = HeadlessConfig(budget_limit=5.0)
@@ -393,7 +417,9 @@ class TestEvaluateGoalAchievement:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_evaluate_goal_achieved(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_evaluate_goal_achieved(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test evaluation when goal is achieved."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Test scratchpad content"
@@ -425,7 +451,9 @@ class TestEvaluateGoalAchievement:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_evaluate_in_progress(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_evaluate_in_progress(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test evaluation when goal is in progress."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Test scratchpad content"
@@ -454,7 +482,9 @@ class TestEvaluateGoalAchievement:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_evaluate_blocked(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_evaluate_blocked(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test evaluation when goal is blocked."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Test scratchpad content"
@@ -483,7 +513,9 @@ class TestEvaluateGoalAchievement:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_evaluate_no_prompt_data(self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_evaluate_no_prompt_data(
+        self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test evaluation without prompt data."""
         mock_soar = Mock()
         orchestrator = HeadlessOrchestrator(
@@ -501,7 +533,9 @@ class TestEvaluateGoalAchievement:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_evaluate_llm_error(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_evaluate_llm_error(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test evaluation when LLM fails."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Test scratchpad content"
@@ -535,7 +569,9 @@ class TestBuildIterationQuery:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_build_query_with_prompt_data(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_build_query_with_prompt_data(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test building query with prompt data."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Previous iteration content"
@@ -567,7 +603,9 @@ class TestBuildIterationQuery:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_build_query_without_prompt_data(self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file):
+    def test_build_query_without_prompt_data(
+        self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
+    ):
         """Test building query without prompt data."""
         mock_soar = Mock()
         orchestrator = HeadlessOrchestrator(
@@ -630,7 +668,9 @@ class TestExecuteIteration:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_iteration_success(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_execute_iteration_success(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test successful iteration execution."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
@@ -676,7 +716,9 @@ class TestRunMainLoop:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_run_main_loop_goal_achieved(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_run_main_loop_goal_achieved(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test main loop terminates when goal is achieved."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
@@ -793,7 +835,9 @@ class TestRunMainLoop:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_run_main_loop_max_iterations(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_run_main_loop_max_iterations(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test main loop terminates at max iterations."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
@@ -832,7 +876,9 @@ class TestRunMainLoop:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_run_main_loop_blocked(self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_run_main_loop_blocked(
+        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test main loop terminates when blocked."""
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
@@ -964,7 +1010,9 @@ class TestExecute:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_git_error(self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_execute_git_error(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test execution with git validation error."""
         mock_git = Mock()
         mock_git.validate.side_effect = GitBranchError("Not on headless branch")
@@ -993,7 +1041,9 @@ class TestExecute:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_prompt_error(self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_execute_prompt_error(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test execution with prompt validation error."""
         mock_git = Mock()
         mock_git.validate.return_value = None
@@ -1047,7 +1097,9 @@ class TestExecute:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_max_iterations(self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file):
+    def test_execute_max_iterations(
+        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+    ):
         """Test execution reaching max iterations."""
         # Setup mocks
         mock_git = Mock()

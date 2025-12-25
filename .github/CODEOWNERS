@@ -1,0 +1,26 @@
+# CODEOWNERS for AURORA repository
+# These owners will be automatically requested for review when someone opens a pull request
+
+# Default owner for everything
+* @amrhas82
+
+# Critical configuration files
+/.github/ @amrhas82
+/pyproject.toml @amrhas82
+/setup.py @amrhas82
+/Makefile @amrhas82
+
+# Security-sensitive code
+/packages/core/src/aurora_core/resilience/ @amrhas82
+/packages/cli/src/aurora_cli/ @amrhas82
+
+# MCP integration (critical for external access)
+/src/aurora/mcp/ @amrhas82
+
+# Documentation (maintain quality)
+/docs/ @amrhas82
+/README.md @amrhas82
+/CLAUDE.md @amrhas82
+
+# Tests (ensure quality standards)
+/tests/ @amrhas82

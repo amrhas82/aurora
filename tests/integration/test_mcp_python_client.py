@@ -1187,6 +1187,7 @@ class TestMCPErrorHandling:
         # Message should be informative
         assert len(data["error"]) > 10
 
+    @pytest.mark.ml
     def test_tools_handle_concurrent_access(self, indexed_client):
         """Test 4: Tools handle concurrent database access correctly."""
         import threading

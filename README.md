@@ -9,16 +9,20 @@
 
 **🚀 v0.2.0 Released - MCP Integration & Package Consolidation!** Claude Desktop integration with Model Context Protocol, simplified installation, and enhanced CLI.
 
-**Status**: 1,900+ tests passing (100%), 88%+ coverage, **Production Ready** ✅
+**Status**: 1,766+ tests passing (97% pass rate), 74%+ coverage, **Production Ready** ✅
 
 **New in v0.2.0:**
 - ✅ **MCP Server Integration** - Use AURORA directly in Claude Desktop with 5 powerful tools
-- ✅ **Single Package Installation** - Install everything with `pip install aurora`
+- ✅ **Single Package Installation** - Install everything with `pip install aurora-actr`
 - ✅ **Windows Support** - Full cross-platform compatibility (Windows, macOS, Linux)
 - ✅ **Flexible CLI Syntax** - Both `aur --headless` and `aur headless` work
 - ✅ **Installation Verification** - `aur --verify` checks health and dependencies
 - ✅ **Improved Error Messages** - Actionable guidance for all common errors
 - ✅ **Bug Fixes** - Resolved Path shadowing, API mismatch, and import errors
+- ✅ **PyPI Publication** - Available on PyPI as `aurora-actr`
+- ✅ **100% Type Safety** - Zero type errors across all 6 packages
+- ✅ **1,766+ Tests** - Comprehensive test suite with 97% pass rate
+- ✅ **CI/CD Pipeline** - Automated linting, formatting, type checks, and testing
 
 **Previous Releases:**
 
@@ -85,15 +89,17 @@ AURORA is a cognitive architecture framework that provides intelligent context m
 
 ```bash
 # Install AURORA with all features
-pip install aurora[all]
+pip install aurora-actr[all]
 
 # Or minimal installation (no ML dependencies)
-pip install aurora
+pip install aurora-actr
 
 # Or with specific extras
-pip install aurora[ml]   # Machine learning dependencies
-pip install aurora[mcp]  # MCP server dependencies
+pip install aurora-actr[ml]   # Machine learning dependencies
+pip install aurora-actr[mcp]  # MCP server dependencies
 ```
+
+**Note**: The package is published as `aurora-actr` on PyPI (the name `aurora` was unavailable), but you still import it as `from aurora.core import ...`
 
 **Option 2: Install from Source**
 

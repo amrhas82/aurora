@@ -150,9 +150,7 @@ class TestQueryExecutor:
 
         # Verify
         assert response == "Response with context"
-        mock_memory.search_keyword.assert_called_once_with(
-            "How does authentication work?", limit=3
-        )
+        mock_memory.search_keyword.assert_called_once_with("How does authentication work?", limit=3)
         # Verify prompt includes context
         call_kwargs = mock_llm.generate.call_args[1]
         assert "Context:" in call_kwargs["prompt"]
@@ -408,9 +406,7 @@ class TestQueryExecutor:
         assert summary == "Created 3 subgoals"
 
         # Test route phase
-        summary = executor._get_phase_summary(
-            "route", {"agent_assignments": ["agent1", "agent2"]}
-        )
+        summary = executor._get_phase_summary("route", {"agent_assignments": ["agent1", "agent2"]})
         assert summary == "Assigned 2 agents"
 
         # Test unknown phase

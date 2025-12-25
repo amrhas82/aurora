@@ -158,6 +158,6 @@ def init_command():
     else:
         click.echo("API key: Not configured (set ANTHROPIC_API_KEY or edit config)")
     click.echo("\nNext steps:")
-    click.echo('  1. Run "aur query \'your question\'" to start')
+    click.echo("  1. Run \"aur query 'your question'\" to start")
     if not api_key:
         click.echo("  2. Set API key: export ANTHROPIC_API_KEY=sk-ant-...")

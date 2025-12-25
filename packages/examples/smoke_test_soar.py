@@ -48,18 +48,16 @@ def run_smoke_test() -> bool:
             name="Test Agent",
             description="A test agent for smoke testing",
             capabilities=["code_analysis", "debugging"],
-            agent_type="local"
+            agent_type="local",
         )
         agent_registry.register(test_agent)
 
         # Mock config
         config = {
-            "budget": {
-                "monthly_limit_usd": 100.0
-            },
+            "budget": {"monthly_limit_usd": 100.0},
             "logging": {
                 "conversation_logging_enabled": False  # Disable logging for test
-            }
+            },
         }
 
         # Mock LLM clients
@@ -78,7 +76,7 @@ def run_smoke_test() -> bool:
             agent_registry=agent_registry,
             config=config,
             reasoning_llm=reasoning_llm,
-            solving_llm=solving_llm
+            solving_llm=solving_llm,
         )
         assert orchestrator is not None, "Orchestrator should be created"
         assert orchestrator.store is memory_store, "Store should be set"
@@ -87,9 +85,11 @@ def run_smoke_test() -> bool:
 
         # Test 3: Verify orchestrator components
         print("  Testing: Verify orchestrator components...")
-        assert hasattr(orchestrator, 'execute'), "Orchestrator should have execute method"
-        assert hasattr(orchestrator, 'cost_tracker'), "Orchestrator should have cost tracker"
-        assert hasattr(orchestrator, 'conversation_logger'), "Orchestrator should have conversation logger"
+        assert hasattr(orchestrator, "execute"), "Orchestrator should have execute method"
+        assert hasattr(orchestrator, "cost_tracker"), "Orchestrator should have cost tracker"
+        assert hasattr(orchestrator, "conversation_logger"), (
+            "Orchestrator should have conversation logger"
+        )
         print("    ✓ Components verified")
 
         # Test 4: Verify agent registry works
@@ -114,10 +114,11 @@ def run_smoke_test() -> bool:
         try:
             # Verify method signature
             import inspect
+
             sig = inspect.signature(orchestrator.execute)
             params = list(sig.parameters.keys())
-            assert 'query' in params, "Execute should accept query parameter"
-            assert 'verbosity' in params, "Execute should accept verbosity parameter"
+            assert "query" in params, "Execute should accept query parameter"
+            assert "verbosity" in params, "Execute should accept verbosity parameter"
             print("    ✓ Execute method signature verified")
         except Exception as e:
             print(f"    ✗ Execute method verification failed: {e}")
@@ -133,6 +134,7 @@ def run_smoke_test() -> bool:
     except Exception as e:
         print(f"✗ SOAR orchestrator: FAIL - {type(e).__name__}: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

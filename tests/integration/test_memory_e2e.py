@@ -26,6 +26,9 @@ from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
 
 
+pytestmark = pytest.mark.ml  # All tests in this file require ML dependencies
+
+
 class TestIndexSearchRetrieveFlow:
     """Test complete Index → Search → Retrieve workflow."""
 
@@ -46,9 +49,7 @@ class TestIndexSearchRetrieveFlow:
     def memory_manager(self, memory_store):
         """Create MemoryManager with real components."""
         embedding_provider = EmbeddingProvider()
-        return MemoryManager(
-            memory_store=memory_store, embedding_provider=embedding_provider
-        )
+        return MemoryManager(memory_store=memory_store, embedding_provider=embedding_provider)
 
     @pytest.fixture
     def test_codebase(self, tmp_path):
@@ -182,9 +183,7 @@ class DatabaseConnection:
 
         return codebase
 
-    def test_index_search_retrieve_complete_flow(
-        self, memory_manager, memory_store, test_codebase
-    ):
+    def test_index_search_retrieve_complete_flow(self, memory_manager, memory_store, test_codebase):
         """Test complete flow: index files → verify storage."""
         # Step 1: Index test codebase
         stats = memory_manager.index_path(test_codebase)
@@ -235,9 +234,9 @@ class DatabaseConnection:
 
         # Verify total_files is consistent
         total_files = progress_calls[0][1]
-        assert all(
-            call[1] == total_files for call in progress_calls
-        ), "Total files should be consistent"
+        assert all(call[1] == total_files for call in progress_calls), (
+            "Total files should be consistent"
+        )
 
 
 class TestIndexVerifyFlow:
@@ -381,9 +380,7 @@ def export_function(x: int) -> int:
         )
         return test_file
 
-    def test_manual_export_import_flow(
-        self, memory_store1, memory_store2, test_file, tmp_path
-    ):
+    def test_manual_export_import_flow(self, memory_store1, memory_store2, test_file, tmp_path):
         """Test manual export/import via JSON (manual implementation)."""
         # Step 1: Index file in DB1
         manager1 = MemoryManager(memory_store=memory_store1)
@@ -407,9 +404,9 @@ def export_function(x: int) -> int:
             if chunk_dict.get("embeddings"):
                 import base64
 
-                chunk_dict["embeddings"] = base64.b64encode(
-                    chunk_dict["embeddings"]
-                ).decode("utf-8")
+                chunk_dict["embeddings"] = base64.b64encode(chunk_dict["embeddings"]).decode(
+                    "utf-8"
+                )
             chunks_data.append(chunk_dict)
 
         with open(export_file, "w") as f:
@@ -485,19 +482,17 @@ class TestMemoryStoreStats:
         """Create MemoryManager."""
         return MemoryManager(memory_store=memory_store)
 
-    def test_get_stats_after_indexing(
-        self, memory_manager, memory_store, tmp_path, temp_db
-    ):
+    def test_get_stats_after_indexing(self, memory_manager, memory_store, tmp_path, temp_db):
         """Test retrieving stats after indexing."""
         # Create test files
         test_dir = tmp_path / "stats_test"
         test_dir.mkdir()
 
         file1 = test_dir / "file1.py"
-        file1.write_text('def func1(): return 1')
+        file1.write_text("def func1(): return 1")
 
         file2 = test_dir / "file2.py"
-        file2.write_text('def func2(): return 2')
+        file2.write_text("def func2(): return 2")
 
         # Index files
         stats = memory_manager.index_path(test_dir)

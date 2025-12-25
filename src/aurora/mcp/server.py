@@ -23,7 +23,9 @@ from aurora.mcp.tools import AuroraMCPTools
 class AuroraMCPServer:
     """MCP Server for AURORA codebase tools."""
 
-    def __init__(self, db_path: str | None = None, config_path: str | None = None, test_mode: bool = False):
+    def __init__(
+        self, db_path: str | None = None, config_path: str | None = None, test_mode: bool = False
+    ):
         """
         Initialize AURORA MCP Server.
 

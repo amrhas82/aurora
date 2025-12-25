@@ -88,7 +88,7 @@ def mock_llm():
         input_tokens=100,
         output_tokens=50,
         finish_reason="stop",
-        metadata={}
+        metadata={},
     )
 
     return llm

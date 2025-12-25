@@ -334,7 +334,9 @@ def query_command(
         error_str = str(e).lower()
 
         # Check if it's an API-related error
-        if any(word in error_str for word in ["api", "anthropic", "auth", "rate", "token", "model"]):
+        if any(
+            word in error_str for word in ["api", "anthropic", "auth", "rate", "token", "model"]
+        ):
             error_msg = error_handler.handle_api_error(e, "query execution")
         else:
             # Generic error
@@ -643,7 +645,9 @@ def verify_command() -> None:
     if py_version >= (3, 10):
         console.print(f"✓ Python version: {py_version.major}.{py_version.minor}.{py_version.micro}")
     else:
-        console.print(f"✗ Python version: {py_version.major}.{py_version.minor}.{py_version.micro} [red](requires >= 3.10)[/]")
+        console.print(
+            f"✗ Python version: {py_version.major}.{py_version.minor}.{py_version.micro} [red](requires >= 3.10)[/]"
+        )
         all_ok = False
 
     # Check 5: ML dependencies (embeddings)
@@ -672,7 +676,9 @@ def verify_command() -> None:
         console.print("[bold green]✓ AURORA is ready to use![/]\n")
         sys.exit(0)
     elif all_ok:
-        console.print("[bold yellow]⚠ AURORA partially installed - some optional features unavailable[/]\n")
+        console.print(
+            "[bold yellow]⚠ AURORA partially installed - some optional features unavailable[/]\n"
+        )
         sys.exit(1)
     else:
         console.print("[bold red]✗ AURORA has critical issues - please reinstall[/]\n")

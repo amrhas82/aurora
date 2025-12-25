@@ -61,7 +61,7 @@ def run_smoke_test() -> bool:
             response = client.generate(
                 prompt="Say 'test passed' exactly and nothing else.",
                 max_tokens=50,
-                temperature=0.0  # Deterministic
+                temperature=0.0,  # Deterministic
             )
             assert isinstance(response, LLMResponse), "Response should be LLMResponse"
             assert response.content, "Response should have content"
@@ -72,6 +72,7 @@ def run_smoke_test() -> bool:
         except Exception as e:
             print(f"    ✗ API call failed: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -85,14 +86,15 @@ def run_smoke_test() -> bool:
 
         # Test 4: Rate limiting initialization
         print("  Testing: Verify rate limiting initialized...")
-        assert hasattr(client, '_rate_limit'), "Client should have rate_limit method"
-        assert hasattr(client, '_min_request_interval'), "Client should have rate limit interval"
+        assert hasattr(client, "_rate_limit"), "Client should have rate_limit method"
+        assert hasattr(client, "_min_request_interval"), "Client should have rate limit interval"
         print(f"    ✓ Rate limiting configured (interval: {client._min_request_interval}s)")
 
         # Test 5: Retry logic with mocked transient failure (not a real API test)
         print("  Testing: Verify retry logic exists...")
         # Just verify the generate method has retry decorator
         import inspect
+
         source = inspect.getsource(client.generate)
         if "@retry" in source or "retry" in source:
             print("    ✓ Retry logic present")
@@ -105,6 +107,7 @@ def run_smoke_test() -> bool:
     except Exception as e:
         print(f"✗ LLM client: FAIL - {type(e).__name__}: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

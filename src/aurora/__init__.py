@@ -8,4 +8,4 @@ This is a PEP 420 implicit namespace package that aggregates the
 individual aurora-* packages into a unified namespace.
 """
 
-__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+__path__ = __import__("pkgutil").extend_path(__path__, __name__)

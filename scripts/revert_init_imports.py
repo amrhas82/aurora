@@ -29,21 +29,21 @@ def revert_import_line(line: str) -> str:
     """Revert a single line from new namespace import to old package import."""
     for new_name, old_name in REVERSE_MAPPINGS.items():
         # Pattern: from aurora.core.module import ...
-        pattern = re.compile(rf'\bfrom\s+{re.escape(new_name)}(\.|[^\w])')
+        pattern = re.compile(rf"\bfrom\s+{re.escape(new_name)}(\.|[^\w])")
         if pattern.search(line):
-            line = pattern.sub(f'from {old_name}\\1', line)
+            line = pattern.sub(f"from {old_name}\\1", line)
 
         # Pattern: import aurora.core.module
-        pattern2 = re.compile(rf'\bimport\s+{re.escape(new_name)}(\.|[^\w])')
+        pattern2 = re.compile(rf"\bimport\s+{re.escape(new_name)}(\.|[^\w])")
         if pattern2.search(line):
-            line = pattern2.sub(f'import {old_name}\\1', line)
+            line = pattern2.sub(f"import {old_name}\\1", line)
 
     return line
 
 
 def revert_init_file(file_path: Path) -> int:
     """Revert imports in an __init__.py file."""
-    content = file_path.read_text(encoding='utf-8')
+    content = file_path.read_text(encoding="utf-8")
     lines = content.splitlines(keepends=True)
 
     new_lines = []
@@ -56,7 +56,7 @@ def revert_init_file(file_path: Path) -> int:
             modified_count += 1
 
     if modified_count > 0:
-        file_path.write_text(''.join(new_lines), encoding='utf-8')
+        file_path.write_text("".join(new_lines), encoding="utf-8")
         print(f"✓ {file_path}: {modified_count} lines reverted")
 
     return modified_count

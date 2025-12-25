@@ -183,6 +183,7 @@ markers = [
     "integration: Integration tests",
     "performance: Performance benchmark tests",
     "slow: Slow running tests",
+    "ml: Tests requiring ML dependencies (torch, sentence-transformers)",
 ]
 
 [tool.coverage.run]

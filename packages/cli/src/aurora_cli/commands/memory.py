@@ -125,15 +125,17 @@ def index_command(path: Path, db_path: Path | None) -> None:
 
         # Display summary
         console.print()
-        console.print(Panel.fit(
-            f"[bold green]✓ Indexing complete[/]\n\n"
-            f"Files indexed: [cyan]{stats.files_indexed}[/]\n"
-            f"Chunks created: [cyan]{stats.chunks_created}[/]\n"
-            f"Duration: [cyan]{stats.duration_seconds:.2f}s[/]\n"
-            f"Errors: [yellow]{stats.errors}[/]",
-            title="Index Summary",
-            border_style="green",
-        ))
+        console.print(
+            Panel.fit(
+                f"[bold green]✓ Indexing complete[/]\n\n"
+                f"Files indexed: [cyan]{stats.files_indexed}[/]\n"
+                f"Chunks created: [cyan]{stats.chunks_created}[/]\n"
+                f"Duration: [cyan]{stats.duration_seconds:.2f}s[/]\n"
+                f"Errors: [yellow]{stats.errors}[/]",
+                title="Index Summary",
+                border_style="green",
+            )
+        )
 
         # Close store
         store.close()
@@ -356,9 +358,7 @@ def _display_rich_results(results: list, query: str, show_content: bool) -> None
     if not results:
         console.print("\n[yellow]No results found.[/]")
         console.print(
-            "Try:\n"
-            "  - Broadening your search query\n"
-            "  - Checking if the codebase has been indexed"
+            "Try:\n  - Broadening your search query\n  - Checking if the codebase has been indexed"
         )
         return
 
@@ -421,17 +421,19 @@ def _display_json_results(results: list) -> None:
     """
     json_results = []
     for result in results:
-        json_results.append({
-            "chunk_id": result.chunk_id,
-            "file_path": result.file_path,
-            "line_start": result.line_range[0],
-            "line_end": result.line_range[1],
-            "content": result.content,
-            "activation_score": result.activation_score,
-            "semantic_score": result.semantic_score,
-            "hybrid_score": result.hybrid_score,
-            "metadata": result.metadata,
-        })
+        json_results.append(
+            {
+                "chunk_id": result.chunk_id,
+                "file_path": result.file_path,
+                "line_start": result.line_range[0],
+                "line_end": result.line_range[1],
+                "content": result.content,
+                "activation_score": result.activation_score,
+                "semantic_score": result.semantic_score,
+                "hybrid_score": result.hybrid_score,
+                "metadata": result.metadata,
+            }
+        )
 
     console.print(json.dumps(json_results, indent=2))
 

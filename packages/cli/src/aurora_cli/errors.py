@@ -3,6 +3,7 @@
 This module defines custom exceptions and error handling utilities
 for providing actionable error messages to users.
 """
+
 from pathlib import Path
 from typing import Any
 
@@ -193,7 +194,11 @@ class ErrorHandler:
             )
 
         # Missing config file
-        if "no such file" in error_str or "file not found" in error_str or "does not exist" in error_str:
+        if (
+            "no such file" in error_str
+            or "file not found" in error_str
+            or "does not exist" in error_str
+        ):
             return (
                 "[bold red][Config][/] Configuration file not found.\n\n"
                 f"[yellow]File:[/] {config_path}\n\n"
@@ -378,7 +383,7 @@ class ErrorHandler:
                 "     [cyan]~/.cache/torch/sentence_transformers/[/]\n"
                 "  3. Manual download:\n"
                 "     [cyan]python -c 'from sentence_transformers import SentenceTransformer; "
-                "SentenceTransformer(\"all-MiniLM-L6-v2\")'[/]"
+                'SentenceTransformer("all-MiniLM-L6-v2")\'[/]'
             )
 
         # Memory/GPU errors

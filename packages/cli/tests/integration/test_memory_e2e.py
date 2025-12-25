@@ -116,7 +116,7 @@ def test_main():
         assert result.returncode == 0
 
         # Should index 1 file
-        assert ("1 file" in result.stdout.lower() or "files indexed: 1" in result.stdout.lower())
+        assert "1 file" in result.stdout.lower() or "files indexed: 1" in result.stdout.lower()
 
         # Database should exist
         assert db_path.exists()

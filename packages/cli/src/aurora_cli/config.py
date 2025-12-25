@@ -84,9 +84,7 @@ class Config:
 
         # Validate provider
         if self.llm_provider != "anthropic":
-            raise ConfigurationError(
-                f"llm_provider must be 'anthropic', got '{self.llm_provider}'"
-            )
+            raise ConfigurationError(f"llm_provider must be 'anthropic', got '{self.llm_provider}'")
 
         # Validate force mode if set
         if self.escalation_force_mode is not None:
@@ -97,14 +95,10 @@ class Config:
 
         # Validate numeric ranges
         if self.llm_temperature < 0.0 or self.llm_temperature > 1.0:
-            raise ConfigurationError(
-                f"llm_temperature must be 0.0-1.0, got {self.llm_temperature}"
-            )
+            raise ConfigurationError(f"llm_temperature must be 0.0-1.0, got {self.llm_temperature}")
 
         if self.llm_max_tokens < 1:
-            raise ConfigurationError(
-                f"llm_max_tokens must be positive, got {self.llm_max_tokens}"
-            )
+            raise ConfigurationError(f"llm_max_tokens must be positive, got {self.llm_max_tokens}")
 
         if self.memory_chunk_size < 100:
             raise ConfigurationError(
@@ -112,9 +106,7 @@ class Config:
             )
 
         if self.memory_overlap < 0:
-            raise ConfigurationError(
-                f"memory_overlap must be >= 0, got {self.memory_overlap}"
-            )
+            raise ConfigurationError(f"memory_overlap must be >= 0, got {self.memory_overlap}")
 
         # Validate logging level
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
@@ -264,13 +256,9 @@ def load_config(path: str | None = None) -> Config:
         "memory_overlap": config_data.get("memory", {}).get(
             "overlap", defaults["memory"]["overlap"]
         ),
-        "logging_level": config_data.get("logging", {}).get(
-            "level", defaults["logging"]["level"]
-        ),
+        "logging_level": config_data.get("logging", {}).get("level", defaults["logging"]["level"]),
         "logging_file": config_data.get("logging", {}).get("file", defaults["logging"]["file"]),
-        "mcp_always_on": config_data.get("mcp", {}).get(
-            "always_on", defaults["mcp"]["always_on"]
-        ),
+        "mcp_always_on": config_data.get("mcp", {}).get("always_on", defaults["mcp"]["always_on"]),
         "mcp_log_file": config_data.get("mcp", {}).get("log_file", defaults["mcp"]["log_file"]),
         "mcp_max_results": config_data.get("mcp", {}).get(
             "max_results", defaults["mcp"]["max_results"]
@@ -283,9 +271,7 @@ def load_config(path: str | None = None) -> Config:
 
     if "AURORA_ESCALATION_THRESHOLD" in os.environ:
         try:
-            flat_config["escalation_threshold"] = float(
-                os.environ["AURORA_ESCALATION_THRESHOLD"]
-            )
+            flat_config["escalation_threshold"] = float(os.environ["AURORA_ESCALATION_THRESHOLD"])
         except ValueError:
             raise ConfigurationError(
                 f"AURORA_ESCALATION_THRESHOLD must be a number, got '{os.environ['AURORA_ESCALATION_THRESHOLD']}'"

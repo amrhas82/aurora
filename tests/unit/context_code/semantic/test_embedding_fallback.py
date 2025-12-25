@@ -28,11 +28,14 @@ from aurora.context_code.semantic.embedding_provider import (
 from aurora.context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
 
-# Skip all tests in this module if sentence-transformers not available
-pytestmark = pytest.mark.skipif(
-    not HAS_SENTENCE_TRANSFORMERS,
-    reason="sentence-transformers not installed (pip install aurora-context-code[ml])",
-)
+# Mark all tests as requiring ML dependencies
+pytestmark = [
+    pytest.mark.ml,
+    pytest.mark.skipif(
+        not HAS_SENTENCE_TRANSFORMERS,
+        reason="sentence-transformers not installed (pip install aurora-context-code[ml])",
+    ),
+]
 
 
 # Mock classes for testing

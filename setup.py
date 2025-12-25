@@ -51,6 +51,7 @@ def display_install_feedback():
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
+
     def run(self):
         develop.run(self)
         display_install_feedback()
@@ -58,6 +59,7 @@ class PostDevelopCommand(develop):
 
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
+
     def run(self):
         install.run(self)
         display_install_feedback()
@@ -96,11 +98,9 @@ setup(
     url="https://github.com/aurora/aurora",
     license="MIT",
     python_requires=">=3.10",
-
     # Package discovery - find namespace packages in src/
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-
     # Meta-package: install all core components
     # For development mode, these should already be installed from local packages/
     # For production, these will install from PyPI
@@ -112,7 +112,6 @@ setup(
         "aurora-cli>=0.1.0",
         "aurora-testing>=0.1.0",
     ],
-
     # Optional dependencies
     extras_require={
         # Machine learning dependencies for embeddings
@@ -143,7 +142,6 @@ setup(
             "memory-profiler>=0.61.0",
         ],
     },
-
     # Console script entry points
     entry_points={
         "console_scripts": [
@@ -152,13 +150,11 @@ setup(
             "aurora-uninstall=aurora.scripts.uninstall:main",
         ],
     },
-
     # Custom commands for post-install feedback
     cmdclass={
         "develop": PostDevelopCommand,
         "install": PostInstallCommand,
     },
-
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -170,6 +166,5 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-
     keywords="aurora actr cognitive-architecture semantic-search mcp",
 )

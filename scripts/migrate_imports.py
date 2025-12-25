@@ -55,21 +55,21 @@ def migrate_import_line(line: str) -> tuple[str, bool]:
     for old_name, new_name in PACKAGE_MAPPINGS.items():
         # Pattern 1: from aurora_core.module import ...
         # Replace with: from aurora.core.module import ...
-        pattern1 = re.compile(rf'\bfrom\s+{re.escape(old_name)}(\.|[^\w])')
+        pattern1 = re.compile(rf"\bfrom\s+{re.escape(old_name)}(\.|[^\w])")
         if pattern1.search(line):
-            line = pattern1.sub(f'from {new_name}\\1', line)
+            line = pattern1.sub(f"from {new_name}\\1", line)
             modified = True
 
         # Pattern 2: import aurora_core.module
         # Replace with: import aurora.core.module
-        pattern2 = re.compile(rf'\bimport\s+{re.escape(old_name)}(\.|[^\w])')
+        pattern2 = re.compile(rf"\bimport\s+{re.escape(old_name)}(\.|[^\w])")
         if pattern2.search(line):
-            line = pattern2.sub(f'import {new_name}\\1', line)
+            line = pattern2.sub(f"import {new_name}\\1", line)
             modified = True
 
         # Pattern 3: import aurora_core (standalone package import)
         # Replace with: import aurora.core
-        pattern3 = re.compile(rf'\bimport\s+{re.escape(old_name)}(?:\s+as\s+|\s*,|\s*$)')
+        pattern3 = re.compile(rf"\bimport\s+{re.escape(old_name)}(?:\s+as\s+|\s*,|\s*$)")
         if pattern3.search(line):
             line = line.replace(old_name, new_name)
             modified = True
@@ -78,7 +78,7 @@ def migrate_import_line(line: str) -> tuple[str, bool]:
         # Example: "Uses aurora_core.store" -> "Uses aurora.core.store"
         if old_name in line and not modified:
             # Only replace in comments and docstrings
-            if line.strip().startswith('#') or '"""' in original or "'''" in original:
+            if line.strip().startswith("#") or '"""' in original or "'''" in original:
                 line = line.replace(old_name, new_name)
                 modified = True
 
@@ -93,7 +93,7 @@ def migrate_file(file_path: Path, dry_run: bool = False) -> dict[str, int]:
         Dictionary with statistics: lines_modified, total_lines
     """
     try:
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
         lines = content.splitlines(keepends=True)
     except Exception as e:
         print(f"Error reading {file_path}: {e}", file=sys.stderr)
@@ -115,7 +115,7 @@ def migrate_file(file_path: Path, dry_run: bool = False) -> dict[str, int]:
 
     if modified_count > 0 and not dry_run:
         try:
-            file_path.write_text(''.join(new_lines), encoding='utf-8')
+            file_path.write_text("".join(new_lines), encoding="utf-8")
             print(f"✓ {file_path}: {modified_count} lines migrated")
         except Exception as e:
             print(f"Error writing {file_path}: {e}", file=sys.stderr)
@@ -170,7 +170,7 @@ def main():
     python_files = find_python_files(args.path)
 
     if not args.include_tests:
-        python_files = [f for f in python_files if 'test' not in str(f)]
+        python_files = [f for f in python_files if "test" not in str(f)]
 
     print(f"Found {len(python_files)} Python files")
     print()

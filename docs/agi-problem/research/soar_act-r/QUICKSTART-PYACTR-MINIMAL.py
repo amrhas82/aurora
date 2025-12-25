@@ -27,14 +27,12 @@ from anthropic import Anthropic
 # Initialize Claude
 client = Anthropic()
 
+
 class MinimalACTRSystem:
     """Minimum viable ACT-R + LLM system"""
 
     def __init__(self):
-        self.memory = {
-            'procedures': [],
-            'last_procedure_id': None
-        }
+        self.memory = {"procedures": [], "last_procedure_id": None}
 
     def solve(self, prompt, visible_reasoning=True):
         """Solve a prompt using learned procedures or LLM"""
@@ -43,13 +41,13 @@ class MinimalACTRSystem:
         # Search memory for similar past procedures
         similar = self._find_similar_procedure(prompt)
 
-        if similar and similar['activation'] > 0.75:
+        if similar and similar["activation"] > 0.75:
             # Strong match: Execute learned procedure
             if visible_reasoning:
                 print(f"[ACT-R] Using learned procedure: {similar['name']}")
                 print(f"        (activation: {similar['activation']:.2f})")
 
-            self.memory['last_procedure_id'] = similar['id']
+            self.memory["last_procedure_id"] = similar["id"]
             return self._execute_procedure(similar)
 
         # Step 2: ACT-R ACTION with LLM (Phase 3)
@@ -60,34 +58,36 @@ class MinimalACTRSystem:
         response = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
         result = response.content[0].text
 
         # Step 3: ACT-R LEARNING (Phase 4)
         # Store for future reuse
-        proc_id = len(self.memory['procedures'])
-        self.memory['procedures'].append({
-            'id': proc_id,
-            'name': self._extract_type(prompt),
-            'prompt_keywords': self._extract_keywords(prompt),
-            'result': result[:200],  # Store first 200 chars
-            'rating': 0,
-            'timestamp': time.time(),
-            'use_count': 1,
-            'activation': 0.5  # Start neutral
-        })
-        self.memory['last_procedure_id'] = proc_id
+        proc_id = len(self.memory["procedures"])
+        self.memory["procedures"].append(
+            {
+                "id": proc_id,
+                "name": self._extract_type(prompt),
+                "prompt_keywords": self._extract_keywords(prompt),
+                "result": result[:200],  # Store first 200 chars
+                "rating": 0,
+                "timestamp": time.time(),
+                "use_count": 1,
+                "activation": 0.5,  # Start neutral
+            }
+        )
+        self.memory["last_procedure_id"] = proc_id
 
         return result
 
     def give_feedback(self, rating):
         """User rates last response (0-10)"""
-        if self.memory['last_procedure_id'] is not None:
-            proc = self.memory['procedures'][self.memory['last_procedure_id']]
-            proc['rating'] = rating
-            proc['activation'] = rating / 10.0
-            proc['use_count'] += 1
+        if self.memory["last_procedure_id"] is not None:
+            proc = self.memory["procedures"][self.memory["last_procedure_id"]]
+            proc["rating"] = rating
+            proc["activation"] = rating / 10.0
+            proc["use_count"] += 1
 
             if rating >= 7:
                 print(f"[ACT-R Learning] Procedure improved (rating: {rating}/10)")
@@ -98,23 +98,19 @@ class MinimalACTRSystem:
         best_score = 0.0
         prompt_words = set(self._extract_keywords(prompt))
 
-        for proc in self.memory['procedures']:
+        for proc in self.memory["procedures"]:
             # Similarity: how many keywords overlap
-            proc_words = set(proc['prompt_keywords'])
+            proc_words = set(proc["prompt_keywords"])
             if not (prompt_words | proc_words):
                 continue
 
             similarity = len(prompt_words & proc_words) / len(prompt_words | proc_words)
 
             # Activation: success * recency * frequency
-            if proc.get('rating', 0) > 0:
-                recency = 1.0 - min((time.time() - proc['timestamp']) / 86400, 1.0)
-                frequency = min(proc.get('use_count', 1) / 10.0, 1.0)
-                activation = (
-                    0.4 * (proc.get('activation', 0.5)) +
-                    0.3 * recency +
-                    0.3 * frequency
-                )
+            if proc.get("rating", 0) > 0:
+                recency = 1.0 - min((time.time() - proc["timestamp"]) / 86400, 1.0)
+                frequency = min(proc.get("use_count", 1) / 10.0, 1.0)
+                activation = 0.4 * (proc.get("activation", 0.5)) + 0.3 * recency + 0.3 * frequency
             else:
                 activation = 0.0
 
@@ -122,10 +118,10 @@ class MinimalACTRSystem:
 
             if score > best_score:
                 best_match = {
-                    'id': proc['id'],
-                    'name': proc['name'],
-                    'activation': activation,
-                    'proc': proc
+                    "id": proc["id"],
+                    "name": proc["name"],
+                    "activation": activation,
+                    "proc": proc,
                 }
                 best_score = score
 
@@ -133,31 +129,31 @@ class MinimalACTRSystem:
 
     def _execute_procedure(self, match):
         """Execute a learned procedure"""
-        return match['proc']['result']
+        return match["proc"]["result"]
 
     def _extract_keywords(self, text):
         """Extract keywords from text"""
-        stop_words = {'the', 'a', 'an', 'and', 'or', 'is', 'are', 'to', 'in', 'of', 'for'}
+        stop_words = {"the", "a", "an", "and", "or", "is", "are", "to", "in", "of", "for"}
         words = text.lower().split()
         return [w for w in words if w not in stop_words and len(w) > 3]
 
     def _extract_type(self, prompt):
         """Classify prompt type"""
-        if 'market' in prompt.lower():
-            return 'market_analysis'
-        elif 'design' in prompt.lower():
-            return 'design'
-        elif 'strategy' in prompt.lower():
-            return 'strategy'
-        return 'general'
+        if "market" in prompt.lower():
+            return "market_analysis"
+        elif "design" in prompt.lower():
+            return "design"
+        elif "strategy" in prompt.lower():
+            return "strategy"
+        return "general"
 
-    def save(self, filename='actr_memory.json'):
+    def save(self, filename="actr_memory.json"):
         """Save memory to disk"""
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(self.memory, f, indent=2)
         print(f"[ACT-R] Memory saved to {filename}")
 
-    def load(self, filename='actr_memory.json'):
+    def load(self, filename="actr_memory.json"):
         """Load memory from disk"""
         try:
             with open(filename) as f:
@@ -204,7 +200,7 @@ def main():
     # Show memory state
     print("\n[MEMORY STATE]")
     print(f"Procedures learned: {len(system.memory['procedures'])}")
-    for proc in system.memory['procedures']:
+    for proc in system.memory["procedures"]:
         print(f"  - {proc['name']}: activation={proc['activation']:.2f}, uses={proc['use_count']}")
 
     # Save for next session

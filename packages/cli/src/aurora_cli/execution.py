@@ -102,7 +102,9 @@ class QueryExecutor:
             max_tokens = self.config.get("max_tokens", 500)
 
             if verbose:
-                logger.info(f"Calling LLM: model={model}, temp={temperature}, max_tokens={max_tokens}")
+                logger.info(
+                    f"Calling LLM: model={model}, temp={temperature}, max_tokens={max_tokens}"
+                )
 
             response = self._call_llm_with_retry(
                 llm=llm,
@@ -185,7 +187,9 @@ class QueryExecutor:
             if verbose:
                 # Build phase trace
                 phase_trace = self._build_phase_trace(result, duration)
-                logger.info(f"AURORA execution complete: {duration:.2f}s, cost=${result.get('cost_usd', 0):.4f}")
+                logger.info(
+                    f"AURORA execution complete: {duration:.2f}s, cost=${result.get('cost_usd', 0):.4f}"
+                )
                 return final_response, phase_trace
 
             return final_response

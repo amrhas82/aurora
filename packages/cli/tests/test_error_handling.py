@@ -360,9 +360,7 @@ class TestMemoryErrorHandling:
                     with patch.object(manager, "_store_chunk_with_retry", return_value=None):
                         # Since embedding is an instance, we need to mock it differently
                         mock_embedding_provider = Mock()
-                        mock_embedding_provider.generate_embedding = Mock(
-                            return_value=[0.1, 0.2]
-                        )
+                        mock_embedding_provider.generate_embedding = Mock(return_value=[0.1, 0.2])
                         manager.embedding_provider = mock_embedding_provider
 
                         stats = manager.index_path(".")

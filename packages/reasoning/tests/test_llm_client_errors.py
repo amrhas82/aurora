@@ -37,7 +37,10 @@ class TestAPIKeyValidation:
 
             error_msg = str(exc_info.value)
             assert "API key required" in error_msg or "ANTHROPIC_API_KEY" in error_msg
-            assert "environment variable" in error_msg.lower() or "api_key parameter" in error_msg.lower()
+            assert (
+                "environment variable" in error_msg.lower()
+                or "api_key parameter" in error_msg.lower()
+            )
 
     def test_anthropic_empty_api_key_env(self):
         """Test AnthropicClient raises error when API key is empty string."""
@@ -76,7 +79,10 @@ class TestAPIKeyValidation:
 
             error_msg = str(exc_info.value)
             assert "API key required" in error_msg or "OPENAI_API_KEY" in error_msg
-            assert "environment variable" in error_msg.lower() or "api_key parameter" in error_msg.lower()
+            assert (
+                "environment variable" in error_msg.lower()
+                or "api_key parameter" in error_msg.lower()
+            )
 
     def test_openai_empty_api_key_env(self):
         """Test OpenAIClient raises error when API key is empty string."""
@@ -115,30 +121,41 @@ class TestMissingDependencies:
         with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test"}):
             with mock.patch.dict("sys.modules", {"anthropic": None}):
                 # Mock ImportError when trying to import anthropic
-                with mock.patch("builtins.__import__", side_effect=ImportError("No module named 'anthropic'")):
+                with mock.patch(
+                    "builtins.__import__", side_effect=ImportError("No module named 'anthropic'")
+                ):
                     with pytest.raises(ImportError) as exc_info:
                         AnthropicClient()
 
                     error_msg = str(exc_info.value)
                     assert "anthropic" in error_msg.lower()
-                    assert "pip install anthropic" in error_msg.lower() or "install" in error_msg.lower()
+                    assert (
+                        "pip install anthropic" in error_msg.lower()
+                        or "install" in error_msg.lower()
+                    )
 
     def test_openai_missing_package(self):
         """Test OpenAIClient raises helpful error when openai package missing."""
         with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-openai-test"}):
             with mock.patch.dict("sys.modules", {"openai": None}):
-                with mock.patch("builtins.__import__", side_effect=ImportError("No module named 'openai'")):
+                with mock.patch(
+                    "builtins.__import__", side_effect=ImportError("No module named 'openai'")
+                ):
                     with pytest.raises(ImportError) as exc_info:
                         OpenAIClient()
 
                     error_msg = str(exc_info.value)
                     assert "openai" in error_msg.lower()
-                    assert "pip install openai" in error_msg.lower() or "install" in error_msg.lower()
+                    assert (
+                        "pip install openai" in error_msg.lower() or "install" in error_msg.lower()
+                    )
 
     def test_ollama_missing_package(self):
         """Test OllamaClient raises helpful error when ollama package missing."""
         with mock.patch.dict("sys.modules", {"ollama": None}):
-            with mock.patch("builtins.__import__", side_effect=ImportError("No module named 'ollama'")):
+            with mock.patch(
+                "builtins.__import__", side_effect=ImportError("No module named 'ollama'")
+            ):
                 with pytest.raises(ImportError) as exc_info:
                     OllamaClient()
 
@@ -538,7 +555,10 @@ class TestGenerateJSON:
                 with pytest.raises(ValueError) as exc_info:
                     client.generate_json("Return JSON")
 
-                assert "extract JSON" in str(exc_info.value).lower() or "json" in str(exc_info.value).lower()
+                assert (
+                    "extract JSON" in str(exc_info.value).lower()
+                    or "json" in str(exc_info.value).lower()
+                )
 
     def test_openai_generate_json_with_response_format(self):
         """Test OpenAIClient generate_json uses JSON mode."""

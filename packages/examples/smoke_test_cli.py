@@ -56,7 +56,9 @@ def print_warning(msg: str) -> None:
     print(f"    {YELLOW}⚠{RESET} {msg}")
 
 
-def run_cli_command(args: list[str], env: dict[str, str] | None = None, input_text: str | None = None) -> tuple[int, str, str]:
+def run_cli_command(
+    args: list[str], env: dict[str, str] | None = None, input_text: str | None = None
+) -> tuple[int, str, str]:
     """
     Run CLI command and return exit code, stdout, stderr.
 
@@ -579,6 +581,7 @@ def run_smoke_tests() -> bool:
         except Exception as e:
             print_failure(f"Test raised exception: {e}")
             import traceback
+
             traceback.print_exc()
             results.append((test_name, False))
 
@@ -615,6 +618,7 @@ def main():
     except Exception as e:
         print(f"\n{RED}✗ Fatal error: {e}{RESET}\n")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

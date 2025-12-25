@@ -58,9 +58,7 @@ class MCPTestClient:
         self.db_path = db_path
         self.tools = AuroraMCPTools(str(db_path))
 
-    def create_sample_python_file(
-        self, filename: str, content: str
-    ) -> Path:
+    def create_sample_python_file(self, filename: str, content: str) -> Path:
         """Create a sample Python file in temp directory."""
         file_path = self.temp_dir / filename
         file_path.write_text(content, encoding="utf-8")
@@ -257,7 +255,9 @@ def process_payment(amount: float, card_number: str) -> dict:
 
         # Count unique files from metadata JSON
         # metadata JSON contains file_path in some chunks
-        cursor.execute("SELECT COUNT(DISTINCT json_extract(metadata, '$.file_path')) FROM chunks WHERE json_extract(metadata, '$.file_path') IS NOT NULL")
+        cursor.execute(
+            "SELECT COUNT(DISTINCT json_extract(metadata, '$.file_path')) FROM chunks WHERE json_extract(metadata, '$.file_path') IS NOT NULL"
+        )
         total_files = cursor.fetchone()[0]
 
         conn.close()
@@ -546,9 +546,7 @@ class TestAuroraIndex:
         """Test 9: Index reports correct statistics."""
         # Create known number of files
         for i in range(3):
-            test_client.create_sample_python_file(
-                f"file{i}.py", f"def func{i}(): pass"
-            )
+            test_client.create_sample_python_file(f"file{i}.py", f"def func{i}(): pass")
 
         result = test_client.tools.aurora_index(str(test_client.temp_dir), "*.py")
         data = json.loads(result)
@@ -656,9 +654,7 @@ class TestAuroraContext:
 
     def test_context_returns_file_content(self, test_client):
         """Test 1: Context returns file content for valid file."""
-        file_path = test_client.create_sample_python_file(
-            "test.py", "def foo():\n    pass\n"
-        )
+        file_path = test_client.create_sample_python_file("test.py", "def foo():\n    pass\n")
 
         result = test_client.tools.aurora_context(str(file_path))
 
@@ -704,13 +700,9 @@ def bar():
 
     def test_context_invalid_function_name(self, test_client):
         """Test 5: Context with invalid function name returns error JSON."""
-        file_path = test_client.create_sample_python_file(
-            "test.py", "def foo(): pass"
-        )
+        file_path = test_client.create_sample_python_file("test.py", "def foo(): pass")
 
-        result = test_client.tools.aurora_context(
-            str(file_path), function="nonexistent"
-        )
+        result = test_client.tools.aurora_context(str(file_path), function="nonexistent")
 
         data = json.loads(result)
         assert "error" in data
@@ -896,9 +888,7 @@ class TestAuroraRelated:
         """Test 9: Related handles large codebase efficiently."""
         # Create many files
         for i in range(20):
-            test_client.create_sample_python_file(
-                f"file{i}.py", f"def func{i}(): pass"
-            )
+            test_client.create_sample_python_file(f"file{i}.py", f"def func{i}(): pass")
 
         test_client.index_test_codebase()
         chunk_ids = test_client.get_chunk_ids()
@@ -1333,8 +1323,7 @@ class TestMCPPerformanceAndLogging:
         # Create moderate-sized test database
         for i in range(20):
             test_client.create_sample_python_file(
-                f"file{i}.py",
-                f"def function_{i}():\n    '''Function {i}'''\n    pass\n"
+                f"file{i}.py", f"def function_{i}():\n    '''Function {i}'''\n    pass\n"
             )
 
         test_client.index_test_codebase()
@@ -1354,10 +1343,7 @@ class TestMCPPerformanceAndLogging:
         """Test 5: Index duration is reasonable (<5s for 50 files)."""
         # Create 50 small files
         for i in range(50):
-            test_client.create_sample_python_file(
-                f"file{i}.py",
-                f"def func{i}(): pass\n"
-            )
+            test_client.create_sample_python_file(f"file{i}.py", f"def func{i}(): pass\n")
 
         # Measure indexing duration
         start = time.time()
@@ -1701,7 +1687,9 @@ class TestRealCodebaseIntegration:
     def test_get_context_memory_manager_file(self, tmp_path):
         """Test 6: Get context for memory_manager.py file."""
         project_root = Path(__file__).parent.parent.parent
-        memory_manager_file = project_root / "packages" / "cli" / "src" / "aurora_cli" / "memory_manager.py"
+        memory_manager_file = (
+            project_root / "packages" / "cli" / "src" / "aurora_cli" / "memory_manager.py"
+        )
 
         if not memory_manager_file.exists():
             pytest.skip("memory_manager.py not found")
@@ -1718,7 +1706,9 @@ class TestRealCodebaseIntegration:
     def test_get_context_specific_function(self, tmp_path):
         """Test 7: Get context for specific function."""
         project_root = Path(__file__).parent.parent.parent
-        memory_manager_file = project_root / "packages" / "cli" / "src" / "aurora_cli" / "memory_manager.py"
+        memory_manager_file = (
+            project_root / "packages" / "cli" / "src" / "aurora_cli" / "memory_manager.py"
+        )
 
         if not memory_manager_file.exists():
             pytest.skip("memory_manager.py not found")

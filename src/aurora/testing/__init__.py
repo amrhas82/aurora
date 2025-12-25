@@ -12,13 +12,11 @@ import sys
 
 
 # Pre-populate sys.modules with all known submodules to enable direct imports
-_SUBMODULES = [
-    'benchmarks', 'fixtures', 'mocks'
-]
+_SUBMODULES = ["benchmarks", "fixtures", "mocks"]
 
 for _submodule_name in _SUBMODULES:
-    _original = f'aurora_testing.{_submodule_name}'
-    _namespace = f'aurora.testing.{_submodule_name}'
+    _original = f"aurora_testing.{_submodule_name}"
+    _namespace = f"aurora.testing.{_submodule_name}"
     try:
         if _original not in sys.modules:
             _module = importlib.import_module(_original)
@@ -31,14 +29,14 @@ for _submodule_name in _SUBMODULES:
 
 def __getattr__(name):
     """Dynamically import submodules from aurora_testing when accessed."""
-    original_module_name = f'aurora_testing.{name}'
+    original_module_name = f"aurora_testing.{name}"
     try:
         module = importlib.import_module(original_module_name)
-        sys.modules[f'aurora.testing.{name}'] = module
+        sys.modules[f"aurora.testing.{name}"] = module
         return module
     except ImportError:
         raise AttributeError(f"module 'aurora.testing' has no attribute '{name}'")
 
 
 # Re-export all public members
-from aurora_testing import * # noqa: E402, F401, F403, I001
+from aurora_testing import *  # noqa: E402, F401, F403, I001

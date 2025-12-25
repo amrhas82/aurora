@@ -21,7 +21,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="sk-ant-test123\nn\n"  # API key, don't index
+            init_command,
+            input="sk-ant-test123\nn\n",  # API key, don't index
         )
 
         assert result.exit_code == 0
@@ -95,7 +96,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="sk-ant-valid123\nn\n"  # API key, don't index
+            init_command,
+            input="sk-ant-valid123\nn\n",  # API key, don't index
         )
 
         assert result.exit_code == 0
@@ -116,7 +118,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="invalid-key\ny\nn\n"  # Invalid key, continue anyway
+            init_command,
+            input="invalid-key\ny\nn\n",  # Invalid key, continue anyway
         )
 
         assert result.exit_code == 0
@@ -132,7 +135,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="invalid-key\nn\n"  # Invalid key, don't continue
+            init_command,
+            input="invalid-key\nn\n",  # Invalid key, don't continue
         )
 
         assert "Aborted" in result.output
@@ -187,7 +191,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="y\nsk-ant-new123\nn\n"  # Overwrite, new key, don't index
+            init_command,
+            input="y\nsk-ant-new123\nn\n",  # Overwrite, new key, don't index
         )
 
         assert result.exit_code == 0
@@ -208,7 +213,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="sk-ant-test123\nn\n"  # API key, don't index
+            init_command,
+            input="sk-ant-test123\nn\n",  # API key, don't index
         )
 
         assert result.exit_code == 0
@@ -274,7 +280,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="sk-ant-test123\ny\n"  # API key, yes to indexing
+            init_command,
+            input="sk-ant-test123\ny\n",  # API key, yes to indexing
         )
 
         assert result.exit_code == 0
@@ -282,7 +289,9 @@ class TestInitCommand:
 
         # Since Phase 4 is now implemented, indexing should work
         # May show "no python files found" if directory is empty, which is fine
-        assert ("indexing" in result.output.lower() or "no python files found" in result.output.lower())
+        assert (
+            "indexing" in result.output.lower() or "no python files found" in result.output.lower()
+        )
 
     def test_init_skip_indexing(self, tmp_path, monkeypatch):
         """Test init skipping directory indexing."""
@@ -293,7 +302,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="sk-ant-test123\nn\n"  # API key, no to indexing
+            init_command,
+            input="sk-ant-test123\nn\n",  # API key, no to indexing
         )
 
         assert result.exit_code == 0
@@ -311,7 +321,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="sk-ant-test123\nn\n"  # API key, don't index
+            init_command,
+            input="sk-ant-test123\nn\n",  # API key, don't index
         )
 
         assert result.exit_code == 0
@@ -348,7 +359,8 @@ class TestInitCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            init_command, input="sk-ant-test123\nn\n"  # API key, don't index
+            init_command,
+            input="sk-ant-test123\nn\n",  # API key, don't index
         )
 
         assert result.exit_code == 0

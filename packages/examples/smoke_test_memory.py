@@ -57,7 +57,7 @@ def run_smoke_test() -> bool:
                 docstring=f"Test function number {i}",
                 complexity_score=0.1 * i,
                 language="python",
-                embeddings=b"mock_embedding_data"  # Mock embeddings
+                embeddings=b"mock_embedding_data",  # Mock embeddings
             )
             store.save_chunk(chunk)
             chunk_ids.append(chunk_id)
@@ -126,6 +126,7 @@ def run_smoke_test() -> bool:
     except Exception as e:
         print(f"✗ Memory store: FAIL - {type(e).__name__}: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

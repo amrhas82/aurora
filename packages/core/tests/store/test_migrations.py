@@ -79,7 +79,10 @@ class TestMigration:
             connection.execute("INSERT INTO test VALUES (1)")
 
         migration = Migration(
-            from_version=0, to_version=1, upgrade_fn=invalid_operation, description="Invalid migration"
+            from_version=0,
+            to_version=1,
+            upgrade_fn=invalid_operation,
+            description="Invalid migration",
         )
 
         with pytest.raises(StorageError) as exc_info:
@@ -266,7 +269,9 @@ class TestMigrationV1ToV2:
         for i in range(50):
             chunk_id = f"chunk_{i:03d}"
             expected_activation = float(i) / 50.0
-            cursor = conn.execute("SELECT activation FROM activations WHERE chunk_id = ?", (chunk_id,))
+            cursor = conn.execute(
+                "SELECT activation FROM activations WHERE chunk_id = ?", (chunk_id,)
+            )
             row = cursor.fetchone()
             assert row is not None
             assert abs(row[0] - expected_activation) < 0.001, "Activation should be unchanged"
@@ -457,7 +462,9 @@ class TestMigrationRollback:
         error_msg = str(exc_info.value)
         assert "v5 -> v6" in error_msg, "Error should include version numbers"
         # Check for the sqlite error message
-        assert "no such table" in error_msg.lower() or "table" in error_msg.lower(), "Error should include original error details"
+        assert "no such table" in error_msg.lower() or "table" in error_msg.lower(), (
+            "Error should include original error details"
+        )
 
         conn.close()
 

@@ -322,7 +322,9 @@ class TestHeadlessCommandFlagSyntax:
             assert result_flag.exit_code != 0
             assert "soar" in result_flag.output.lower() or "implement" in result_flag.output.lower()
 
-    def test_headless_flag_vs_command_output_consistency(self, runner: CliRunner, temp_prompt: Path):
+    def test_headless_flag_vs_command_output_consistency(
+        self, runner: CliRunner, temp_prompt: Path
+    ):
         """Test: --headless flag and headless command produce consistent output (dry-run)."""
         with patch("aurora_soar.headless.HeadlessOrchestrator") as mock_orch:
             mock_instance = MagicMock()

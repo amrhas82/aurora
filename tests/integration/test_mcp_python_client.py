@@ -941,6 +941,7 @@ class TestAuroraRelated:
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestMCPServer:
     """Test suite for MCP server lifecycle."""
 

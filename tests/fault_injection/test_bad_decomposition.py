@@ -173,6 +173,10 @@ class TestIncompleteSubgoals:
             timing_ms=200,
         )
 
+        # Configure mock_llm_client.generate_json to return proper decomposition dict
+        # (This is needed in case the phase_decompose mock doesn't intercept all calls)
+        mock_llm_client.generate_json.return_value = corrected_decomposition.to_dict()
+
         result = verify_decomposition(
             decomposition=incomplete_decomposition,
             complexity="MEDIUM",

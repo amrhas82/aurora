@@ -50,10 +50,9 @@ from aurora_soar.phases.respond import Verbosity
 
 
 if TYPE_CHECKING:
-    from aurora.reasoning.llm_client import LLMClient
-
     from aurora.core.config.loader import Config
     from aurora.core.store.base import Store
+    from aurora.reasoning.llm_client import LLMClient
     from aurora.soar.agent_registry import AgentRegistry
 
 

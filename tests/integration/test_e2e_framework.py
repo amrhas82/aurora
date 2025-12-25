@@ -17,12 +17,11 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from aurora.reasoning.llm_client import LLMClient
-
 from aurora.core.budget import CostTracker
 from aurora.core.config.loader import Config
 from aurora.core.logging import ConversationLogger
 from aurora.core.store.sqlite import SQLiteStore
+from aurora.reasoning.llm_client import LLMClient
 from aurora.soar.agent_registry import AgentRegistry
 from aurora.soar.orchestrator import SOAROrchestrator
 

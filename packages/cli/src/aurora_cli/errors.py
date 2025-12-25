@@ -3,7 +3,7 @@
 This module defines custom exceptions and error handling utilities
 for providing actionable error messages to users.
 """
-
+from pathlib import Path
 from typing import Any
 
 

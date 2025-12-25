@@ -115,7 +115,7 @@ ignore = [
 ]
 
 [tool.ruff.per-file-ignores]
-"__init__.py" = ["F401"]  # unused imports in __init__.py
+"__init__.py" = ["F401", "E402"]  # unused imports and module-level imports
 "tests/**/*.py" = [
     "S101",    # assert statements in tests
     "PLC0415", # import at top-level (tests often import in fixtures/functions)

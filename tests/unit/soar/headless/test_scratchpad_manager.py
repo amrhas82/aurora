@@ -20,7 +20,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from aurora.soar.headless.scratchpad_manager import (
     ScratchpadConfig,
     ScratchpadEntry,

@@ -21,7 +21,10 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict
+
+
+# Deprecated typing imports - use lowercase
+
 
 # Mapping of old package names to new namespace paths
 PACKAGE_MAPPINGS = {
@@ -34,12 +37,12 @@ PACKAGE_MAPPINGS = {
 }
 
 
-def find_python_files(root_path: Path) -> List[Path]:
+def find_python_files(root_path: Path) -> list[Path]:
     """Find all Python files in the given directory tree."""
     return list(root_path.rglob("*.py"))
 
 
-def migrate_import_line(line: str) -> Tuple[str, bool]:
+def migrate_import_line(line: str) -> tuple[str, bool]:
     """
     Migrate a single line of code, replacing old import patterns.
 
@@ -82,7 +85,7 @@ def migrate_import_line(line: str) -> Tuple[str, bool]:
     return line, modified
 
 
-def migrate_file(file_path: Path, dry_run: bool = False) -> Dict[str, int]:
+def migrate_file(file_path: Path, dry_run: bool = False) -> dict[str, int]:
     """
     Migrate imports in a single file.
 

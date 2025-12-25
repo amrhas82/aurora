@@ -26,10 +26,10 @@ jobs:
           pip install ruff
 
       - name: Run ruff linter
-        run: ruff check packages/ tests/
+        run: ruff check .
 
       - name: Check formatting
-        run: ruff format --check packages/ tests/
+        run: ruff format --check .
 
   type-check:
     name: Type Check
@@ -47,6 +47,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install-dev
+          pip install fastmcp sentence-transformers torch
 
       - name: Run mypy
         run: |
@@ -76,6 +77,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install-dev
+          pip install fastmcp sentence-transformers torch
 
       - name: Run all tests
         run: pytest tests/ --cov=packages --cov-report=xml -v
@@ -104,6 +106,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           make install-dev
+          pip install fastmcp sentence-transformers torch
 
       - name: Run performance benchmarks
         run: pytest tests/performance/ -v --cov-fail-under=0

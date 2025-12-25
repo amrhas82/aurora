@@ -8,7 +8,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from aurora.core.chunks import CodeChunk, ReasoningChunk
 from aurora.core.store import MemoryStore, SQLiteStore
 

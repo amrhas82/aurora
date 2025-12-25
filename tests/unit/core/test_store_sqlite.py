@@ -11,11 +11,11 @@ These tests verify SQLite-specific functionality including:
 from pathlib import Path
 
 import pytest
-
 from aurora.core.chunks.code_chunk import CodeChunk
 from aurora.core.exceptions import ValidationError
 from aurora.core.store.sqlite import SQLiteStore
 from aurora.core.types import ChunkID
+
 from tests.unit.core.test_store_base import StoreContractTests
 
 

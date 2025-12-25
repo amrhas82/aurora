@@ -21,7 +21,6 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
-
 from aurora.context_code.semantic.embedding_provider import (
     HAS_SENTENCE_TRANSFORMERS,
     EmbeddingProvider,

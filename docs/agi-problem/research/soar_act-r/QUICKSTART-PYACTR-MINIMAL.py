@@ -20,7 +20,9 @@ Expected output:
 
 import json
 import time
+
 from anthropic import Anthropic
+
 
 # Initialize Claude
 client = Anthropic()
@@ -158,11 +160,11 @@ class MinimalACTRSystem:
     def load(self, filename='actr_memory.json'):
         """Load memory from disk"""
         try:
-            with open(filename, 'r') as f:
+            with open(filename) as f:
                 self.memory = json.load(f)
             print(f"[ACT-R] Memory loaded from {filename}")
         except FileNotFoundError:
-            print(f"[ACT-R] No prior memory found, starting fresh")
+            print("[ACT-R] No prior memory found, starting fresh")
 
 
 def main():

@@ -3,7 +3,6 @@
 from unittest.mock import Mock
 
 import pytest
-
 from aurora.soar.phases.retrieve import (
     RETRIEVAL_BUDGETS,
     retrieve_context,

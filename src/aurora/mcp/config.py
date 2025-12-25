@@ -6,10 +6,11 @@ This module provides logging configuration for MCP tools with performance metric
 
 import logging
 import time
+from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 def setup_mcp_logging(log_file: str = "~/.aurora/mcp.log") -> logging.Logger:

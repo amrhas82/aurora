@@ -7,7 +7,6 @@ Tests token bucket rate limiting algorithm.
 from unittest.mock import patch
 
 import pytest
-
 from aurora.core.resilience.rate_limiter import RateLimiter
 
 

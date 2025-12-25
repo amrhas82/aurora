@@ -9,7 +9,6 @@ Tests how the system handles various agent failure scenarios:
 """
 
 import pytest
-
 from aurora.soar.agent_registry import AgentInfo
 from aurora.soar.phases.collect import (
     AgentOutput,

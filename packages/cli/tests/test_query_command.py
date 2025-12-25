@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
 from aurora_cli.execution import QueryExecutor
 from aurora_reasoning.llm_client import LLMResponse
 

@@ -13,7 +13,6 @@ Tests all extraction features:
 from pathlib import Path
 
 import pytest
-
 from aurora.context_code.languages.python import PythonParser
 
 

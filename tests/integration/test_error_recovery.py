@@ -9,7 +9,6 @@ import time
 from unittest.mock import Mock, patch
 
 import pytest
-
 from aurora.core.resilience import (
     Alerting,
     MetricsCollector,

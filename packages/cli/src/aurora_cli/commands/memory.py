@@ -26,8 +26,8 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
-from aurora_cli.memory_manager import MemoryManager
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
+from aurora_cli.memory_manager import MemoryManager
 from aurora_core.store import SQLiteStore
 
 

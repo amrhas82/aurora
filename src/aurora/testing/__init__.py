@@ -7,8 +7,8 @@ This enables imports like:
     from aurora.testing.mocks import MockMemoryStore
 """
 
-import sys
 import importlib
+import sys
 
 
 # Pre-populate sys.modules with all known submodules to enable direct imports
@@ -41,4 +41,4 @@ def __getattr__(name):
 
 
 # Re-export all public members
-from aurora_testing import *  # noqa: F401, F403
+from aurora_testing import * # noqa: E402, F401, F403, I001

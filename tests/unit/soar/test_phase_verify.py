@@ -9,7 +9,6 @@ from aurora.reasoning.verify import (
     VerificationResult,
     VerificationVerdict,
 )
-
 from aurora.soar.phases.verify import (
     VerifyPhaseResult,
     _generate_retry_feedback,

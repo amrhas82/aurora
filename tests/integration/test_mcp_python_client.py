@@ -28,7 +28,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
@@ -66,7 +66,7 @@ class MCPTestClient:
         file_path.write_text(content, encoding="utf-8")
         return file_path
 
-    def create_test_codebase(self) -> Dict[str, Path]:
+    def create_test_codebase(self) -> dict[str, Path]:
         """
         Create a realistic test codebase with multiple files.
 
@@ -231,7 +231,7 @@ def process_payment(amount: float, card_number: str) -> dict:
 
         return files
 
-    def index_test_codebase(self) -> Dict[str, Any]:
+    def index_test_codebase(self) -> dict[str, Any]:
         """
         Index the test codebase and return statistics.
 
@@ -241,7 +241,7 @@ def process_payment(amount: float, card_number: str) -> dict:
         result_json = self.tools.aurora_index(str(self.temp_dir), "*.py")
         return json.loads(result_json)
 
-    def verify_database_state(self) -> Dict[str, int]:
+    def verify_database_state(self) -> dict[str, int]:
         """
         Verify database state by querying directly.
 
@@ -264,7 +264,7 @@ def process_payment(amount: float, card_number: str) -> dict:
 
         return {"chunks": total_chunks, "files": total_files}
 
-    def get_chunk_ids(self) -> List[str]:
+    def get_chunk_ids(self) -> list[str]:
         """Get all chunk IDs from database."""
         conn = sqlite3.connect(str(self.db_path))
         cursor = conn.cursor()
@@ -1151,7 +1151,7 @@ class TestMCPErrorHandling:
         for tool_func in tools_to_test:
             result = tool_func()
             # Should return valid JSON with error
-            data = json.loads(result)
+            json.loads(result)
             # May succeed or fail, but should not crash
 
     def test_all_tools_return_valid_json_on_error(self, test_client):
@@ -1234,7 +1234,7 @@ class TestMCPErrorHandling:
             result = test_client.tools.aurora_index(str(no_read_dir), "*.py")
 
             # Should handle gracefully
-            data = json.loads(result)
+            json.loads(result)
             # May error or return zero files
 
         finally:

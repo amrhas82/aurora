@@ -15,6 +15,7 @@ from aurora_reasoning.llm_client import AnthropicClient, LLMClient
 
 from aurora_cli.errors import APIError, ErrorHandler
 
+
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_soar.orchestrator import SOAROrchestrator

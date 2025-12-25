@@ -6,7 +6,6 @@ Tests the retry loop when decompositions fail verification.
 
 from aurora.reasoning.decompose import DecompositionResult
 from aurora.reasoning.llm_client import LLMClient
-
 from aurora.soar.phases.verify import verify_decomposition
 
 

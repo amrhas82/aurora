@@ -11,7 +11,6 @@ performance targets specified in the PRD:
 import time
 
 import pytest
-
 from aurora.core.chunks.code_chunk import CodeChunk
 from aurora.core.store.memory import MemoryStore
 from aurora.core.store.sqlite import SQLiteStore

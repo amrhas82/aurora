@@ -13,12 +13,13 @@ Exit codes:
 """
 
 import sys
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
+
 
 try:
-    from aurora.soar.orchestrator import SOAROrchestrator
-    from aurora.soar.agent_registry import AgentRegistry, AgentInfo
     from aurora.core.store.memory import MemoryStore
+    from aurora.soar.agent_registry import AgentInfo, AgentRegistry
+    from aurora.soar.orchestrator import SOAROrchestrator
 except ImportError as e:
     print(f"✗ SOAR orchestrator: FAIL - Import error: {e}")
     sys.exit(1)

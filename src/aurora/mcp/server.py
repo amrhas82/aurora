@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+
 try:
     from fastmcp import FastMCP
 except ImportError:
@@ -22,7 +23,7 @@ from aurora.mcp.tools import AuroraMCPTools
 class AuroraMCPServer:
     """MCP Server for AURORA codebase tools."""
 
-    def __init__(self, db_path: Optional[str] = None, config_path: Optional[str] = None, test_mode: bool = False):
+    def __init__(self, db_path: str | None = None, config_path: str | None = None, test_mode: bool = False):
         """
         Initialize AURORA MCP Server.
 
@@ -88,7 +89,7 @@ class AuroraMCPServer:
             return self.tools.aurora_stats()
 
         @self.mcp.tool()
-        def aurora_context(file_path: str, function: Optional[str] = None) -> str:
+        def aurora_context(file_path: str, function: str | None = None) -> str:
             """
             Get code context from file.
 

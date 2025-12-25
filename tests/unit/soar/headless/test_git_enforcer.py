@@ -15,7 +15,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
 from aurora.soar.headless.git_enforcer import (
     GitBranchError,
     GitEnforcer,

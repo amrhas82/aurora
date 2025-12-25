@@ -7,7 +7,6 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from aurora.core.logging import ConversationLogger, VerbosityLevel
 
 

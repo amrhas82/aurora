@@ -14,7 +14,6 @@ This validates end-to-end functionality of:
 """
 
 import pytest
-
 from aurora.context_code.languages.python import PythonParser
 from aurora.core.store.memory import MemoryStore
 from aurora.core.store.sqlite import SQLiteStore

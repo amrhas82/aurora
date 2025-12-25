@@ -10,15 +10,17 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
+from aurora_cli.errors import ErrorHandler, MemoryStoreError
 from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import ParserRegistry, get_global_registry
 from aurora_context_code.semantic import EmbeddingProvider
+from aurora_core.chunks import Chunk
 
-from aurora_cli.errors import ErrorHandler, MemoryStoreError
 
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
@@ -508,7 +510,7 @@ class MemoryManager:
 
     def _save_chunk_with_retry(
         self,
-        chunk: "Chunk",
+        chunk: Chunk,
         max_retries: int = 5,
     ) -> None:
         """Save chunk in memory with retry logic for database locks.

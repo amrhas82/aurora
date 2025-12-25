@@ -8,7 +8,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-
 from aurora.core.chunks.code_chunk import CodeChunk
 
 

@@ -212,7 +212,7 @@ def load_config(path: str | None = None) -> Config:
         if config_path.exists():
             error_handler = ErrorHandler()
             try:
-                with open(config_path, "r") as f:
+                with open(config_path) as f:
                     config_data = json.load(f)
                 config_source = str(config_path)
             except json.JSONDecodeError as e:

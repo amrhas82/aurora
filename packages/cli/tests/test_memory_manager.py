@@ -5,13 +5,12 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
 from aurora_cli.memory_manager import (
+    SKIP_DIRS,
     IndexStats,
     MemoryManager,
     MemoryStats,
     SearchResult,
-    SKIP_DIRS,
 )
 
 

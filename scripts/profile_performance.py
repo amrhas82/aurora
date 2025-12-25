@@ -6,11 +6,12 @@ It generates a comprehensive report with timing breakdown, memory usage, and rec
 """
 
 import cProfile
-import pstats
 import io
-import time
+import pstats
 import sys
+import time
 from pathlib import Path
+
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -109,10 +110,10 @@ def profile_phase(phase_name: str, phase_func, *args, **kwargs):
 
 def profile_full_pipeline():
     """Profile complete SOAR pipeline execution."""
-    from packages.soar.src.aurora_soar.orchestrator import SOAROrchestrator
+    from packages.core.src.aurora_core.config import Config
     from packages.core.src.aurora_core.store import Store
     from packages.soar.src.aurora_soar.agent_registry import AgentRegistry
-    from packages.core.src.aurora_core.config import Config
+    from packages.soar.src.aurora_soar.orchestrator import SOAROrchestrator
 
     print("="*60)
     print("AURORA SOAR PIPELINE PERFORMANCE PROFILE")
@@ -127,7 +128,7 @@ def profile_full_pipeline():
     mock_reasoning_llm = MockLLMClient(latency_ms=50)  # Fast LLM for reasoning
     mock_solving_llm = MockLLMClient(latency_ms=100)   # Slower LLM for solving
 
-    orchestrator = SOAROrchestrator(
+    SOAROrchestrator(
         store=store,
         agent_registry=agent_registry,
         config=config,
@@ -182,7 +183,7 @@ def profile_full_pipeline():
                 print("Phase 4: Verify")
                 verify_start = time.time()
                 mock_reasoning_llm.generate_json(
-                    prompt=f"Verify decomposition",
+                    prompt="Verify decomposition",
                     system="You are a verifier"
                 )
                 phase_times['verify'] = time.time() - verify_start
@@ -196,7 +197,7 @@ def profile_full_pipeline():
             print(f"Results for {complexity} query:")
             print('='*60)
             print(f"Total time: {elapsed_time*1000:.2f}ms")
-            print(f"\nPhase breakdown:")
+            print("\nPhase breakdown:")
             for phase, duration in phase_times.items():
                 percentage = (duration / elapsed_time * 100) if elapsed_time > 0 else 0
                 print(f"  {phase:12s}: {duration*1000:7.2f}ms ({percentage:5.1f}%)")
@@ -213,7 +214,7 @@ def profile_full_pipeline():
             stats = pstats.Stats(profiler, stream=s)
             stats.sort_stats('cumulative')
             stats.print_stats(15)
-            print(f"\nTop 15 functions:")
+            print("\nTop 15 functions:")
             print(s.getvalue())
 
         except Exception as e:

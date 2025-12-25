@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 import pytest
-
 from aurora_cli.config import Config, ConfigurationError, load_config
 
 

@@ -18,9 +18,10 @@ Exit codes:
 import sys
 from datetime import datetime, timezone
 
+
 try:
-    from aurora.core.store.memory import MemoryStore
     from aurora.core.chunks.code_chunk import CodeChunk
+    from aurora.core.store.memory import MemoryStore
 except ImportError as e:
     print(f"✗ Memory store: FAIL - Import error: {e}")
     sys.exit(1)
@@ -62,7 +63,7 @@ def run_smoke_test() -> bool:
             chunk_ids.append(chunk_id)
 
         assert len(store) == 10, f"Store should have 10 chunks, got {len(store)}"
-        print(f"    ✓ Added 10 chunks")
+        print("    ✓ Added 10 chunks")
 
         # Test 3: Retrieve chunk by ID (verify exact match)
         print("  Testing: Retrieve chunk by ID...")
@@ -93,7 +94,7 @@ def run_smoke_test() -> bool:
         try:
             store.update_activation(test_chunk_id, delta=0.5)
             store.update_activation(test_chunk_id, delta=0.3)
-            print(f"    ✓ Activation updated successfully")
+            print("    ✓ Activation updated successfully")
         except Exception as e:
             print(f"    ✗ Activation update failed: {e}")
             return False
@@ -106,7 +107,7 @@ def run_smoke_test() -> bool:
 
         # Test 7: Memory cleanup and close
         print("  Testing: Memory cleanup and close...")
-        initial_count = len(store)
+        len(store)
         store.close()
 
         # Verify store is closed (should raise error on operations)
@@ -118,7 +119,7 @@ def run_smoke_test() -> bool:
             # Expected: store should raise error when closed
             pass
 
-        print(f"    ✓ Store closed properly")
+        print("    ✓ Store closed properly")
 
         return True
 

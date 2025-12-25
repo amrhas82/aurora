@@ -17,7 +17,6 @@ from aurora.reasoning.verify import (
     VerificationResult,
     VerificationVerdict,
 )
-
 from aurora.soar.phases.verify import verify_decomposition
 
 
@@ -92,7 +91,6 @@ class TestIncompleteSubgoals:
     ):
         """Test that incomplete subgoals trigger retry loop."""
         from aurora.reasoning.llm_client import LLMResponse
-
         from aurora.soar.phases.decompose import DecomposePhaseResult
 
         # First attempt: RETRY verdict
@@ -393,7 +391,6 @@ class TestRetryLoopExhaustion:
     ):
         """Test that max retries are enforced and result in FAIL."""
         from aurora.reasoning.llm_client import LLMResponse
-
         from aurora.soar.phases.decompose import DecomposePhaseResult
 
         # Always return RETRY verdict (never passes)

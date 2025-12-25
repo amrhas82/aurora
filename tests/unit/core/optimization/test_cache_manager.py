@@ -13,7 +13,6 @@ Tests cover:
 import time
 
 import pytest
-
 from aurora.core.optimization.cache_manager import (
     CacheEntry,
     CacheManager,

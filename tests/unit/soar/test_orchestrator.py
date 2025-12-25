@@ -14,15 +14,14 @@ from __future__ import annotations
 from unittest.mock import Mock, patch
 
 import pytest
-from aurora.reasoning.decompose import DecompositionResult
-from aurora.reasoning.llm_client import LLMClient
-from aurora.reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
-
 from aurora.core.budget import CostTracker
 from aurora.core.config.loader import Config
 from aurora.core.exceptions import BudgetExceededError
 from aurora.core.logging import ConversationLogger
 from aurora.core.store.sqlite import SQLiteStore
+from aurora.reasoning.decompose import DecompositionResult
+from aurora.reasoning.llm_client import LLMClient
+from aurora.reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 from aurora.soar.agent_registry import AgentInfo, AgentRegistry
 from aurora.soar.orchestrator import SOAROrchestrator
 from aurora.soar.phases.collect import CollectResult

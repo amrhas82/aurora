@@ -21,7 +21,6 @@ Test Strategy:
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
 from aurora.core.activation.base_level import (
     AccessHistoryEntry,
     BaseLevelActivation,

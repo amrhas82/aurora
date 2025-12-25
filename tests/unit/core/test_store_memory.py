@@ -8,10 +8,10 @@ These tests verify in-memory storage functionality including:
 """
 
 import pytest
-
 from aurora.core.exceptions import StorageError
 from aurora.core.store.memory import MemoryStore
 from aurora.core.types import ChunkID
+
 from tests.unit.core.test_store_base import StoreContractTests, TestChunk
 
 

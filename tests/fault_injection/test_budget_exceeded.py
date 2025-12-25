@@ -5,12 +5,11 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from aurora.reasoning.llm_client import LLMResponse
-
 from aurora.core.budget import CostTracker
 from aurora.core.config.loader import Config
 from aurora.core.exceptions import BudgetExceededError
 from aurora.core.store.sqlite import SQLiteStore
+from aurora.reasoning.llm_client import LLMResponse
 from aurora.soar.agent_registry import AgentRegistry
 from aurora.soar.orchestrator import SOAROrchestrator
 

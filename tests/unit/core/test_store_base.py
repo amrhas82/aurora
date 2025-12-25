@@ -9,7 +9,6 @@ from abc import ABC
 from typing import Any
 
 import pytest
-
 from aurora.core.chunks.base import Chunk
 from aurora.core.exceptions import ChunkNotFoundError
 from aurora.core.store.base import Store

@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any
 
 import pytest
-
 from aurora.core.chunks.base import Chunk
 
 

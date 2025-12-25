@@ -49,7 +49,7 @@ def main():
     if not args.keep_config:
         config_dir = Path.home() / ".aurora"
         if config_dir.exists():
-            print(f"\nConfiguration directory will be removed:")
+            print("\nConfiguration directory will be removed:")
             print(f"  - {config_dir}")
 
     # Confirmation
@@ -85,7 +85,7 @@ def main():
     if not args.keep_config:
         config_dir = Path.home() / ".aurora"
         if config_dir.exists():
-            print(f"\n→ Removing configuration directory...")
+            print("\n→ Removing configuration directory...")
             try:
                 import shutil
                 shutil.rmtree(config_dir)

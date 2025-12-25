@@ -19,7 +19,7 @@ from rich.table import Table
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
-from aurora_cli.errors import ErrorHandler, APIError, ConfigurationError
+from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 from aurora_cli.execution import QueryExecutor
 
@@ -236,6 +236,7 @@ def query_command(
 
         # Check if memory store exists and prompt to index if empty
         from pathlib import Path
+
         from aurora_core.store import SQLiteStore
 
         db_path = Path.cwd() / "aurora.db"
@@ -398,8 +399,8 @@ def _execute_dry_run(
         try:
             memory_store = SQLiteStore(str(db_path))
             # Try to count chunks by querying the store
-            from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
             from aurora_context_code.semantic import EmbeddingProvider
+            from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
             from aurora_core.activation.engine import ActivationEngine
 
             activation_engine = ActivationEngine()
@@ -488,7 +489,7 @@ def _display_phase_trace(phase_trace: dict[str, Any], console: Console) -> None:
     confidence = phase_trace.get("confidence", 0.0)
     overall_score = phase_trace.get("overall_score", 0.0)
 
-    console.print(f"\n[bold]Summary:[/]")
+    console.print("\n[bold]Summary:[/]")
     console.print(f"  Total Duration: {total_duration:.2f}s")
     console.print(f"  Estimated Cost: ${total_cost:.4f}")
     console.print(f"  Confidence: {confidence:.2f}")
@@ -506,8 +507,8 @@ def _is_memory_empty(memory_store) -> bool:
     """
     try:
         # Try to get a count of chunks using HybridRetriever
-        from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
         from aurora_context_code.semantic import EmbeddingProvider
+        from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
         from aurora_core.activation.engine import ActivationEngine
 
         activation_engine = ActivationEngine()

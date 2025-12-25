@@ -103,10 +103,11 @@ def init_command():
     if click.confirm("Index current directory for memory search?", default=True):
         # Import memory indexing functionality
         try:
-            from aurora_core.store import SQLiteStore
-            from aurora_cli.memory_manager import MemoryManager
             from rich.console import Console
-            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+            from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+
+            from aurora_cli.memory_manager import MemoryManager
+            from aurora_core.store import SQLiteStore
 
             console = Console()
             console.print("[bold]Indexing current directory...[/]")
@@ -143,7 +144,7 @@ def init_command():
             else:
                 console.print("[yellow]⚠[/] No Python files found to index in current directory")
 
-        except ImportError as e:
+        except ImportError:
             # Memory command not yet implemented - stub for Phase 3
             click.echo("⚠ Memory indexing not yet implemented (Phase 4)")
 

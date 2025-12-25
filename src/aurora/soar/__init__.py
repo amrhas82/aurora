@@ -7,8 +7,8 @@ This enables imports like:
     from aurora.soar.phases.implementation import ImplementationPhase
 """
 
-import sys
 import importlib
+import sys
 
 
 # Pre-populate sys.modules with all known submodules to enable direct imports
@@ -41,4 +41,4 @@ def __getattr__(name):
 
 
 # Re-export all public members
-from aurora_soar import *  # noqa: F401, F403
+from aurora_soar import * # noqa: E402, F401, F403, I001

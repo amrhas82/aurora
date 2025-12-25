@@ -7,7 +7,6 @@ Tests alert rules and notification system.
 from unittest.mock import Mock, patch
 
 import pytest
-
 from aurora.core.resilience.alerting import (
     Alert,
     Alerting,

@@ -11,14 +11,14 @@ performance targets specified in the PRD:
 import time
 
 import pytest
-from aurora.reasoning.llm_client import LLMClient
-
 from aurora.core.budget import CostTracker
 from aurora.core.chunks import CodeChunk
 from aurora.core.config.loader import Config
 from aurora.core.store.memory import MemoryStore
-from aurora.soar import AgentInfo, AgentRegistry
+from aurora.reasoning.llm_client import LLMClient
 from aurora.soar.orchestrator import SOAROrchestrator
+
+from aurora.soar import AgentInfo, AgentRegistry
 
 
 # Performance targets from PRD

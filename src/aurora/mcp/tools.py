@@ -14,16 +14,18 @@ import logging
 import sqlite3
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
+from aurora_cli.memory_manager import IndexStats, MemoryManager, MemoryStats, SearchResult
 
 from aurora.mcp.config import log_performance, setup_mcp_logging
-from aurora_cli.memory_manager import IndexStats, MemoryManager, MemoryStats, SearchResult
 from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import get_global_registry
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
 from aurora_core.activation.engine import ActivationEngine
 from aurora_core.store.sqlite import SQLiteStore
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +36,7 @@ mcp_logger = setup_mcp_logging()
 class AuroraMCPTools:
     """Implementation of AURORA MCP tools."""
 
-    def __init__(self, db_path: str, config_path: Optional[str] = None):
+    def __init__(self, db_path: str, config_path: str | None = None):
         """
         Initialize AURORA MCP Tools.
 
@@ -46,11 +48,11 @@ class AuroraMCPTools:
         self.config_path = config_path
 
         # Initialize components lazily (on first use)
-        self._store: Optional[SQLiteStore] = None
-        self._activation_engine: Optional[ActivationEngine] = None
-        self._embedding_provider: Optional[EmbeddingProvider] = None
-        self._retriever: Optional[HybridRetriever] = None
-        self._memory_manager: Optional[MemoryManager] = None
+        self._store: SQLiteStore | None = None
+        self._activation_engine: ActivationEngine | None = None
+        self._embedding_provider: EmbeddingProvider | None = None
+        self._retriever: HybridRetriever | None = None
+        self._memory_manager: MemoryManager | None = None
         self._parser_registry = None  # Lazy initialization
 
     def _ensure_initialized(self) -> None:
@@ -229,7 +231,7 @@ class AuroraMCPTools:
             return json.dumps({"error": str(e)}, indent=2)
 
     @log_performance("aurora_context")
-    def aurora_context(self, file_path: str, function: Optional[str] = None) -> str:
+    def aurora_context(self, file_path: str, function: str | None = None) -> str:
         """
         Get code context from a specific file.
 
@@ -281,7 +283,7 @@ class AuroraMCPTools:
                 else:
                     return json.dumps(
                         {
-                            "error": f"Function extraction only supported for Python files (.py)"
+                            "error": "Function extraction only supported for Python files (.py)"
                         },
                         indent=2,
                     )
@@ -352,7 +354,7 @@ class AuroraMCPTools:
 
                     try:
                         content_data = json.loads(content_json) if content_json else {}
-                        metadata = json.loads(metadata_json) if metadata_json else {}
+                        json.loads(metadata_json) if metadata_json else {}
 
                         # Extract file path from content JSON
                         file_path = content_data.get('file', '')

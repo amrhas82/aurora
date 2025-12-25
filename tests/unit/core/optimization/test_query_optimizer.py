@@ -13,7 +13,6 @@ Tests cover:
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
 from aurora.core.activation.base_level import AccessHistoryEntry
 from aurora.core.activation.engine import ActivationEngine
 from aurora.core.optimization.query_optimizer import (

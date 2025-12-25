@@ -27,6 +27,7 @@ Usage:
     enforcer.validate()
 """
 
+import os
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -57,12 +58,15 @@ class GitEnforcerConfig:
         allow_detached_head: Whether to allow execution in detached HEAD state.
                             Default: False (safer)
         repo_path: Path to git repository. Default: None (use current directory)
+        skip_branch_check_in_ci: Skip branch validation when running in CI/CD.
+                                Default: True (allows tests to run on any branch)
     """
 
     required_branch: str | None = "headless"
     blocked_branches: list[str] = field(default_factory=lambda: ["main", "master"])
     allow_detached_head: bool = False
     repo_path: Path | None = None
+    skip_branch_check_in_ci: bool = True  # Skip branch validation in CI environments
 
 
 class GitEnforcer:
@@ -195,12 +199,45 @@ class GitEnforcer:
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
             return False
 
+    def is_ci_environment(self) -> bool:
+        """
+        Check if running in a CI/CD environment.
+
+        Detects common CI environment variables:
+        - GITHUB_ACTIONS (GitHub Actions)
+        - CI (generic, set by most CI systems)
+        - GITLAB_CI (GitLab CI)
+        - CIRCLECI (CircleCI)
+        - TRAVIS (Travis CI)
+        - JENKINS_URL (Jenkins)
+
+        Returns:
+            True if running in CI environment, False otherwise.
+
+        Examples:
+            >>> enforcer = GitEnforcer()
+            >>> if enforcer.is_ci_environment():
+            ...     print("Running in CI")
+        """
+        ci_indicators = [
+            "GITHUB_ACTIONS",
+            "CI",
+            "GITLAB_CI",
+            "CIRCLECI",
+            "TRAVIS",
+            "JENKINS_URL",
+        ]
+        return any(os.getenv(indicator) for indicator in ci_indicators)
+
     def validate(self) -> None:
         """
         Validate that current git state meets safety requirements.
 
         This is the main entry point for git branch enforcement. Call this before
         starting headless mode to ensure it's safe to proceed.
+
+        Note: Branch validation is automatically skipped in CI/CD environments when
+        skip_branch_check_in_ci is True (default), allowing tests to run on any branch.
 
         Raises:
             GitBranchError: If validation fails for any reason:
@@ -223,6 +260,17 @@ class GitEnforcer:
             Blocked branches: main, master
             Please switch to the 'headless' branch first.
         """
+        # 0. Skip branch validation if running in CI and configured to do so
+        if self.config.skip_branch_check_in_ci and self.is_ci_environment():
+            # In CI, we still want to verify it's a git repo but skip branch checks
+            if not self.is_git_repository():
+                raise GitBranchError(
+                    "Not in a git repository. Headless mode requires git for safety tracking. "
+                    "Initialize with 'git init' or run in a git repository."
+                )
+            # Skip branch validation in CI - tests may run on any branch
+            return
+
         # 1. Check if in a git repository
         if not self.is_git_repository():
             raise GitBranchError(

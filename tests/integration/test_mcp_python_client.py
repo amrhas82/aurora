@@ -34,6 +34,14 @@ import pytest
 
 from aurora.mcp.tools import AuroraMCPTools
 
+# Check if fastmcp is available (required for MCP server tests)
+try:
+    import fastmcp
+
+    HAS_FASTMCP = True
+except ImportError:
+    HAS_FASTMCP = False
+
 
 # ==============================================================================
 # Task 3.13.1: Test Client Infrastructure
@@ -942,6 +950,7 @@ class TestMCPServer:
             env["PYTHONPATH"] = str(src_path)
         return env
 
+    @pytest.mark.skipif(not HAS_FASTMCP, reason="fastmcp not installed (requires [mcp] extras)")
     def test_server_starts_with_test_flag(self, tmp_path):
         """Test 1: Server starts successfully with --test flag."""
         db_path = tmp_path / "test.db"
@@ -966,6 +975,7 @@ class TestMCPServer:
         assert result.returncode == 0, f"Server failed: {result.stderr}"
         assert "Test mode complete" in result.stdout or "Available Tools" in result.stdout
 
+    @pytest.mark.skipif(not HAS_FASTMCP, reason="fastmcp not installed (requires [mcp] extras)")
     def test_server_lists_all_tools(self, tmp_path):
         """Test 2: Server lists all 5 tools correctly."""
         db_path = tmp_path / "test.db"
@@ -992,6 +1002,7 @@ class TestMCPServer:
         assert "aurora_context" in result.stdout
         assert "aurora_related" in result.stdout
 
+    @pytest.mark.skipif(not HAS_FASTMCP, reason="fastmcp not installed (requires [mcp] extras)")
     def test_server_accepts_custom_db_path(self, tmp_path):
         """Test 3: Server accepts --db-path custom database location."""
         custom_db = tmp_path / "custom" / "memory.db"
@@ -1016,6 +1027,7 @@ class TestMCPServer:
         assert result.returncode == 0
         assert str(custom_db) in result.stdout
 
+    @pytest.mark.skipif(not HAS_FASTMCP, reason="fastmcp not installed (requires [mcp] extras)")
     def test_server_accepts_custom_config(self, tmp_path):
         """Test 4: Server accepts --config custom config location."""
         config_path = tmp_path / "config.json"
@@ -1091,6 +1103,7 @@ class TestMCPServer:
         # Main test: should not crash
         assert result.returncode in [0, 1]
 
+    @pytest.mark.skipif(not HAS_FASTMCP, reason="fastmcp not installed (requires [mcp] extras)")
     def test_server_creates_directories(self, tmp_path):
         """Test 8: Server initialization creates necessary directories."""
         db_path = tmp_path / "new_dir" / "memory.db"
@@ -1318,6 +1331,7 @@ class TestMCPPerformanceAndLogging:
         error_data = json.loads(error_result)
         assert "error" in error_data  # Error
 
+    @pytest.mark.ml
     def test_search_latency_reasonable(self, test_client):
         """Test 4: Search latency is reasonable (<500ms for small database)."""
         # Create moderate-sized test database
@@ -1339,6 +1353,7 @@ class TestMCPPerformanceAndLogging:
         data = json.loads(result)
         assert isinstance(data, list)
 
+    @pytest.mark.ml
     def test_index_duration_reasonable(self, test_client):
         """Test 5: Index duration is reasonable (<5s for 50 files)."""
         # Create 50 small files

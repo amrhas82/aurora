@@ -184,12 +184,14 @@ class TestValidate:
         # Should not raise
         enforcer.validate()
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_validate_fails_on_main_branch(self, mock_is_repo, mock_get_branch):
+    def test_validate_fails_on_main_branch(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test validation fails on main branch."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "main"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         enforcer = GitEnforcer()
         with pytest.raises(GitBranchError) as exc_info:
@@ -197,12 +199,14 @@ class TestValidate:
         assert "blocked branch 'main'" in str(exc_info.value).lower()
         assert "git checkout" in str(exc_info.value)
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_validate_fails_on_master_branch(self, mock_is_repo, mock_get_branch):
+    def test_validate_fails_on_master_branch(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test validation fails on master branch."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "master"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         enforcer = GitEnforcer()
         with pytest.raises(GitBranchError) as exc_info:
@@ -219,12 +223,14 @@ class TestValidate:
             enforcer.validate()
         assert "not in a git repository" in str(exc_info.value).lower()
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_validate_fails_wrong_required_branch(self, mock_is_repo, mock_get_branch):
+    def test_validate_fails_wrong_required_branch(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test validation fails when on wrong branch."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "feature-123"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         config = GitEnforcerConfig(required_branch="headless")
         enforcer = GitEnforcer(config)
@@ -250,12 +256,14 @@ class TestValidate:
         # Should not raise
         enforcer.validate()
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_validate_custom_blocked_branches(self, mock_is_repo, mock_get_branch):
+    def test_validate_custom_blocked_branches(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test validation with custom blocked branches."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "develop"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         config = GitEnforcerConfig(
             required_branch=None,
@@ -299,12 +307,14 @@ class TestGetValidationStatus:
         assert status["is_valid"] is True
         assert status["error_message"] is None
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_status_invalid_blocked_branch(self, mock_is_repo, mock_get_branch):
+    def test_status_invalid_blocked_branch(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test validation status on blocked branch."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "main"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         enforcer = GitEnforcer()
         status = enforcer.get_validation_status()
@@ -347,12 +357,14 @@ class TestGetValidationStatus:
 class TestErrorMessages:
     """Test error message quality and helpfulness."""
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_error_includes_git_command(self, mock_is_repo, mock_get_branch):
+    def test_error_includes_git_command(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test error message includes helpful git command."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "main"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         enforcer = GitEnforcer()
         with pytest.raises(GitBranchError) as exc_info:
@@ -361,12 +373,14 @@ class TestErrorMessages:
         error_msg = str(exc_info.value)
         assert "git checkout headless" in error_msg
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_error_lists_blocked_branches(self, mock_is_repo, mock_get_branch):
+    def test_error_lists_blocked_branches(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test error message lists blocked branches."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "master"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         enforcer = GitEnforcer()
         with pytest.raises(GitBranchError) as exc_info:
@@ -376,12 +390,14 @@ class TestErrorMessages:
         assert "main" in error_msg
         assert "master" in error_msg
 
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_ci_environment")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
     @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
-    def test_error_includes_create_branch_hint(self, mock_is_repo, mock_get_branch):
+    def test_error_includes_create_branch_hint(self, mock_is_repo, mock_get_branch, mock_is_ci):
         """Test error message includes hint to create branch."""
         mock_is_repo.return_value = True
         mock_get_branch.return_value = "feature"
+        mock_is_ci.return_value = False  # Ensure CI detection doesn't skip validation
 
         enforcer = GitEnforcer()
         with pytest.raises(GitBranchError) as exc_info:

@@ -65,9 +65,9 @@ class HybridRetriever:
         config: Hybrid retrieval configuration
 
     Example:
-        >>> from aurora.core.store import SQLiteStore
-        >>> from aurora.core.activation import ActivationEngine
-        >>> from aurora.context_code.semantic import EmbeddingProvider, HybridRetriever
+        >>> from aurora_core.store import SQLiteStore
+        >>> from aurora_core.activation import ActivationEngine
+        >>> from aurora_context_code.semantic import EmbeddingProvider, HybridRetriever
         >>>
         >>> store = SQLiteStore(":memory:")
         >>> engine = ActivationEngine(store)
@@ -179,7 +179,7 @@ class HybridRetriever:
             # Calculate semantic similarity
             chunk_embedding = getattr(chunk, "embedding", None)
             if chunk_embedding is not None:
-                from aurora.context_code.semantic.embedding_provider import (
+                from aurora_context_code.semantic.embedding_provider import (
                     cosine_similarity,
                 )
 

@@ -17,9 +17,9 @@ from unittest.mock import MagicMock, Mock
 
 
 try:
-    from aurora.core.store.memory import MemoryStore
-    from aurora.soar.agent_registry import AgentInfo, AgentRegistry
-    from aurora.soar.orchestrator import SOAROrchestrator
+    from aurora_core.store.memory import MemoryStore
+    from aurora_soar.agent_registry import AgentInfo, AgentRegistry
+    from aurora_soar.orchestrator import SOAROrchestrator
 except ImportError as e:
     print(f"✗ SOAR orchestrator: FAIL - Import error: {e}")
     sys.exit(1)

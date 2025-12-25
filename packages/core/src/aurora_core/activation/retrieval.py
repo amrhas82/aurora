@@ -105,7 +105,7 @@ class ActivationRetriever:
     ActivationEngine to compute full ACT-R activation.
 
     Examples:
-        >>> from aurora.core.activation import ActivationEngine
+        >>> from aurora_core.activation import ActivationEngine
         >>>
         >>> engine = ActivationEngine()
         >>> retriever = ActivationRetriever(engine)

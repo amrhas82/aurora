@@ -127,7 +127,7 @@ class ParallelAgentExecutor:
        - Reduces perceived latency
 
     Examples:
-        >>> from aurora.core.optimization import ParallelAgentExecutor, AgentTask
+        >>> from aurora_core.optimization import ParallelAgentExecutor, AgentTask
         >>>
         >>> executor = ParallelAgentExecutor(
         ...     min_concurrency=2,

@@ -24,7 +24,7 @@ Prompt File Format:
     the problem space and make better decisions.
 
 Usage:
-    from aurora.soar.headless import PromptLoader, PromptData
+    from aurora_soar.headless import PromptLoader, PromptData
 
     loader = PromptLoader("experiment.md")
     prompt = loader.load()

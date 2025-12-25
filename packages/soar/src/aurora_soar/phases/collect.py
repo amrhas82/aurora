@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from aurora.soar.agent_registry import AgentInfo
-    from aurora.soar.phases.route import RouteResult
+    from aurora_soar.agent_registry import AgentInfo
+    from aurora_soar.phases.route import RouteResult
 
 logger = logging.getLogger(__name__)
 

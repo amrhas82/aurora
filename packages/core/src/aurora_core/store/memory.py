@@ -21,7 +21,7 @@ from aurora_core.types import ChunkID
 
 
 if TYPE_CHECKING:
-    from aurora.core.chunks.base import Chunk
+    from aurora_core.chunks.base import Chunk
 
 
 class MemoryStore(Store):

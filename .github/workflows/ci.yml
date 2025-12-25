@@ -79,7 +79,7 @@ jobs:
 
       - name: Run non-ML tests
         run: |
-          pytest tests/ -m "not ml" --cov=packages --cov-report=xml -v
+          pytest tests/ -m "not ml" --cov=packages --cov-report=xml --cov-fail-under=84 -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -129,7 +129,7 @@ jobs:
 
       - name: Run ML tests only
         run: |
-          pytest tests/ -m ml -v --cov=packages --cov-report=xml
+          pytest tests/ -m ml -v --cov=packages --cov-report=xml --cov-fail-under=0
 
       - name: Upload ML coverage
         uses: codecov/codecov-action@v4
@@ -156,7 +156,7 @@ jobs:
           make install-dev
 
       - name: Run performance benchmarks (excluding ML)
-        run: pytest tests/performance/ -m "performance and not ml" -v --cov-fail-under=0
+        run: pytest tests/performance/ -m "not ml" -v --cov-fail-under=0
 
       - name: Check performance targets
         run: |

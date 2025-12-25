@@ -1581,6 +1581,7 @@ class TestAuroraMCPControlScript:
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestRealCodebaseIntegration:
     """Test suite for real AURORA codebase indexing and retrieval."""
 
@@ -1802,6 +1803,7 @@ class TestRealCodebaseIntegration:
 # ==============================================================================
 
 
+@pytest.mark.ml
 class TestPlatformCompatibility:
     """Test suite for platform compatibility."""
 

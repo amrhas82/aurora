@@ -11,7 +11,7 @@ Safety Philosophy:
     we create a safety boundary that prevents accidental damage to main development work.
 
 Usage:
-    from aurora.soar.headless import GitEnforcer, GitEnforcerConfig
+    from aurora_soar.headless import GitEnforcer, GitEnforcerConfig
 
     # Default: requires "headless" branch, blocks main/master
     enforcer = GitEnforcer()

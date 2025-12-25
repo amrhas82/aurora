@@ -50,10 +50,11 @@ from aurora_soar.phases.respond import Verbosity
 
 
 if TYPE_CHECKING:
-    from aurora.core.config.loader import Config
-    from aurora.core.store.base import Store
-    from aurora.reasoning.llm_client import LLMClient
-    from aurora.soar.agent_registry import AgentRegistry
+    from aurora_reasoning.llm_client import LLMClient
+
+    from aurora_core.config.loader import Config
+    from aurora_core.store.base import Store
+    from aurora_soar.agent_registry import AgentRegistry
 
 
 logger = logging.getLogger(__name__)
@@ -397,7 +398,7 @@ class SOAROrchestrator:
         except Exception as e:
             logger.error(f"Phase 5 failed: {e}")
             # Return empty RouteResult on failure
-            from aurora.soar.phases.route import RouteResult
+            from aurora_soar.phases.route import RouteResult
 
             return RouteResult(
                 agent_assignments=[], execution_plan=[], routing_metadata={"error": str(e)}
@@ -418,7 +419,7 @@ class SOAROrchestrator:
         except Exception as e:
             logger.error(f"Phase 6 failed: {e}")
             # Return empty CollectResult on failure
-            from aurora.soar.phases.collect import CollectResult
+            from aurora_soar.phases.collect import CollectResult
 
             return CollectResult(
                 agent_outputs=[], execution_metadata={"error": str(e)}, user_interactions=[]
@@ -542,8 +543,8 @@ class SOAROrchestrator:
         start_time = time.time()
 
         # For SIMPLE queries, we skip decomposition and call solving LLM directly
-        from aurora.soar.phases.record import RecordResult
-        from aurora.soar.phases.synthesize import SynthesisResult
+        from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
 
         try:
             # Build prompt with context
@@ -647,8 +648,8 @@ class SOAROrchestrator:
             Error response with partial results
         """
         logger.error("Returning partial results due to verification failure")
-        from aurora.soar.phases.record import RecordResult
-        from aurora.soar.phases.synthesize import SynthesisResult
+        from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
 
         synthesis = SynthesisResult(
             answer="Unable to decompose query successfully. Please rephrase or simplify.",
@@ -685,8 +686,8 @@ class SOAROrchestrator:
             Error response
         """
         logger.error(f"Handling execution error: {error}")
-        from aurora.soar.phases.record import RecordResult
-        from aurora.soar.phases.synthesize import SynthesisResult
+        from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
 
         synthesis = SynthesisResult(
             answer=f"An error occurred during query processing: {str(error)}",

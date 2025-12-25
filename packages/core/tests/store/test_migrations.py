@@ -180,7 +180,7 @@ class TestMigrationManagerBasics:
 
     def test_needs_migration_false(self):
         """Test needs_migration returns False when database is current."""
-        from aurora.core.store.schema import SCHEMA_VERSION
+        from aurora_core.store.schema import SCHEMA_VERSION
 
         conn = sqlite3.connect(":memory:")
         conn.execute("CREATE TABLE schema_version (version INTEGER)")
@@ -552,7 +552,7 @@ class TestMigrationManager:
 
     def test_migrate_already_current(self):
         """Test migrate does nothing when already at current version."""
-        from aurora.core.store.schema import SCHEMA_VERSION
+        from aurora_core.store.schema import SCHEMA_VERSION
 
         conn = sqlite3.connect(":memory:")
         conn.execute("CREATE TABLE schema_version (version INTEGER)")
@@ -692,7 +692,7 @@ class TestMigrationManager:
 
     def test_migrate_with_backup_no_backup_if_not_needed(self):
         """Test migrate_with_backup skips backup if migration not needed."""
-        from aurora.core.store.schema import SCHEMA_VERSION
+        from aurora_core.store.schema import SCHEMA_VERSION
 
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.db"

@@ -120,8 +120,8 @@ def test_orchestrator(test_store, test_registry, test_config, mock_llm, test_cos
 # Phase Execution Tests
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_simple_query_path(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test SIMPLE query bypasses decomposition."""
@@ -162,14 +162,14 @@ def test_simple_query_path(mock_respond, mock_retrieve, mock_assess, test_orches
     assert result["answer"] == "Simple answer"
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.decompose.decompose_query")
-@patch("aurora_soar.phases.verify.verify_decomposition")
-@patch("aurora_soar.phases.route.route_subgoals")
-@patch("aurora_soar.phases.collect.execute_agents")
-@patch("aurora_soar.phases.synthesize.synthesize_results")
-@patch("aurora_soar.phases.record.record_pattern")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.decompose.decompose_query")
+@patch("aurora_soar.orchestrator.verify.verify_decomposition")
+@patch("aurora_soar.orchestrator.route.route_subgoals")
+@patch("aurora_soar.orchestrator.collect.execute_agents")
+@patch("aurora_soar.orchestrator.synthesize.synthesize_results")
+@patch("aurora_soar.orchestrator.record.record_pattern")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_complex_query_full_pipeline(
     mock_respond,
@@ -299,10 +299,10 @@ def test_complex_query_full_pipeline(
     assert result["answer"] == "Complex answer"
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
-@patch("aurora_soar.phases.decompose.decompose_query")
-@patch("aurora_soar.phases.verify.verify_decomposition")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.decompose.decompose_query")
+@patch("aurora_soar.orchestrator.verify.verify_decomposition")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_verification_failure_handling(
     mock_respond,
@@ -381,7 +381,7 @@ def test_verification_failure_handling(
 # Error Handling Tests
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_phase_error_handling(mock_respond, mock_assess, test_orchestrator):
     """Test phase errors are caught and tracked."""
@@ -434,8 +434,8 @@ def test_budget_check_before_execution(test_orchestrator):
     assert exc_info.value.consumed_usd >= 100.0
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_budget_tracking_during_execution(
     mock_respond, mock_retrieve, mock_assess, test_orchestrator
@@ -483,8 +483,8 @@ def test_budget_tracking_during_execution(
 # Metadata Tracking Tests
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_metadata_aggregation(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test metadata from all phases is aggregated."""
@@ -529,8 +529,8 @@ def test_metadata_aggregation(mock_respond, mock_retrieve, mock_assess, test_orc
     assert "_timing_ms" in metadata["phases"]["phase1_assess"]
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_timing_tracking(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test execution timing is tracked."""
@@ -575,8 +575,8 @@ def test_timing_tracking(mock_respond, mock_retrieve, mock_assess, test_orchestr
 # Verbosity Tests
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_quiet_verbosity(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test QUIET verbosity mode."""
@@ -612,8 +612,8 @@ def test_quiet_verbosity(mock_respond, mock_retrieve, mock_assess, test_orchestr
     assert "confidence" in result
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_verbose_mode(mock_respond, mock_retrieve, mock_assess, test_orchestrator):
     """Test VERBOSE verbosity mode."""
@@ -654,8 +654,8 @@ def test_verbose_mode(mock_respond, mock_retrieve, mock_assess, test_orchestrato
 # Integration with Conversation Logger
 
 
-@patch("aurora_soar.phases.assess.assess_complexity")
-@patch("aurora_soar.phases.retrieve.retrieve_context")
+@patch("aurora_soar.orchestrator.assess.assess_complexity")
+@patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_conversation_logging_integration(
     mock_respond, mock_retrieve, mock_assess, test_orchestrator

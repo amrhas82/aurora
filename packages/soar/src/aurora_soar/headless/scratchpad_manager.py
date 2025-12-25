@@ -27,7 +27,7 @@ Scratchpad Format:
     ...
 
 Usage:
-    from aurora.soar.headless import ScratchpadManager, ScratchpadEntry
+    from aurora_soar.headless import ScratchpadManager, ScratchpadEntry
 
     manager = ScratchpadManager("scratchpad.md")
 

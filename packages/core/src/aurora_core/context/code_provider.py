@@ -18,7 +18,7 @@ from aurora_core.types import ChunkID
 
 
 if TYPE_CHECKING:
-    from aurora.context_code.registry import ParserRegistry
+    from aurora_context_code.registry import ParserRegistry
 
 
 logger = logging.getLogger(__name__)
@@ -41,8 +41,8 @@ class CodeContextProvider(ContextProvider):
     - Activation tracking for spreading activation algorithm
 
     Example:
-        >>> from aurora.core.store.memory import MemoryStore
-        >>> from aurora.context_code.registry import get_global_registry
+        >>> from aurora_core.store.memory import MemoryStore
+        >>> from aurora_context_code.registry import get_global_registry
         >>> store = MemoryStore()
         >>> registry = get_global_registry()
         >>> provider = CodeContextProvider(store, registry)

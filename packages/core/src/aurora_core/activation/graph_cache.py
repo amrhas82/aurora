@@ -29,7 +29,7 @@ from aurora_core.types import ChunkID
 
 
 if TYPE_CHECKING:
-    from aurora.core.activation.spreading import SpreadingActivation
+    from aurora_core.activation.spreading import SpreadingActivation
 
 
 class RelationshipProvider(Protocol):
@@ -279,7 +279,7 @@ class CachedSpreadingActivation:
     providing better performance for repeated calculations.
 
     Examples:
-        >>> from aurora.core.activation.spreading import SpreadingActivation
+        >>> from aurora_core.activation.spreading import SpreadingActivation
         >>>
         >>> spreading_calc = SpreadingActivation()
         >>> cached_calc = CachedSpreadingActivation(

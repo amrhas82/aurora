@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from aurora.soar.phases.record import RecordResult
-    from aurora.soar.phases.synthesize import SynthesisResult
+    from aurora_soar.phases.record import RecordResult
+    from aurora_soar.phases.synthesize import SynthesisResult
 
 __all__ = ["format_response", "Verbosity", "ResponseResult"]
 

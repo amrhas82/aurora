@@ -88,7 +88,7 @@ class RetryHandler:
 
         # Default recoverable errors: network, connection, timeouts
         if recoverable_errors is None:
-            from aurora.core.exceptions import StorageError
+            from aurora_core.exceptions import StorageError
 
             self._recoverable_errors: tuple[type[Exception], ...] = (
                 TimeoutError,

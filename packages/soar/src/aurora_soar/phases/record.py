@@ -16,9 +16,9 @@ from aurora_core.types import ChunkID
 
 
 if TYPE_CHECKING:
-    from aurora.core.store.base import Store
-    from aurora.soar.phases.collect import CollectResult
-    from aurora.soar.phases.synthesize import SynthesisResult
+    from aurora_core.store.base import Store
+    from aurora_soar.phases.collect import CollectResult
+    from aurora_soar.phases.synthesize import SynthesisResult
 
 logger = logging.getLogger(__name__)
 

@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from aurora.core.store.base import Store
+    from aurora_core.store.base import Store
 
 
 __all__ = ["retrieve_context"]

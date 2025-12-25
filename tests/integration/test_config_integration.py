@@ -90,7 +90,7 @@ class TestConfigurationIntegration:
         # Verify merge from both files
         assert config.get("llm.reasoning_provider") == "openai"  # From global
         assert config.get("storage.path") == "/tmp/project.db"  # From project
-        assert config.get("version") == "1.0"  # From defaults
+        assert config.get("version") == "1.1.0"  # From defaults
 
     def test_environment_override_integration(self, tmp_path: Path, monkeypatch) -> None:
         """Test environment variables override file configuration."""

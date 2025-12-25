@@ -23,7 +23,7 @@ class TestConfigTypedAccess:
 
     def test_get_with_dot_notation(self, sample_config: Config) -> None:
         """Test getting values using dot notation."""
-        assert sample_config.get("version") == "1.0"
+        assert sample_config.get("version") == "1.1.0"
         assert sample_config.get("storage.type") == "sqlite"
         assert sample_config.get("storage.max_connections") == 10
         assert sample_config.get("llm.reasoning_provider") == "anthropic"
@@ -57,7 +57,7 @@ class TestConfigLoading:
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path / "fake_home")
 
         config = Config.load(project_path=tmp_path)
-        assert config.get("version") == "1.0"
+        assert config.get("version") == "1.1.0"
         assert config.get("storage.type") == "sqlite"
 
     def test_load_with_project_override(self, tmp_path: Path, monkeypatch) -> None:
@@ -75,7 +75,7 @@ class TestConfigLoading:
         assert config.get("storage.type") == "memory"
         assert config.get("storage.path") == "/custom/path.db"
         # Other defaults should still be present
-        assert config.get("version") == "1.0"
+        assert config.get("version") == "1.1.0"
 
     def test_load_with_global_override(self, tmp_path: Path, monkeypatch) -> None:
         """Test global config overrides defaults."""
@@ -311,7 +311,7 @@ class TestSecretsHandling:
 def sample_config(tmp_path: Path) -> Config:
     """Provide a sample configuration for testing."""
     config_data = {
-        "version": "1.0",
+        "version": "1.1.0",
         "storage": {
             "type": "sqlite",
             "path": "~/.aurora/memory.db",

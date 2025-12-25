@@ -181,8 +181,8 @@ jobs:
           pip install bandit
 
       - name: Run bandit security scanner
-        run: bandit -r packages/ -f json -o bandit-report.json
-        continue-on-error: true
+        run: bandit -r packages/ -f json -o bandit-report.json -lll || true
+        continue-on-error: false
 
       - name: Upload bandit results
         uses: actions/upload-artifact@v4

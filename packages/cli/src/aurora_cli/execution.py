@@ -124,7 +124,8 @@ class QueryExecutor:
                     f"~${self._estimate_cost(response.input_tokens, response.output_tokens):.4f}"
                 )
 
-            return response.content
+            # Type assertion: we know response.content is a string from LLM client
+            return str(response.content)
 
         except APIError:
             # Re-raise API errors with formatted messages
@@ -190,9 +191,9 @@ class QueryExecutor:
                 logger.info(
                     f"AURORA execution complete: {duration:.2f}s, cost=${result.get('cost_usd', 0):.4f}"
                 )
-                return final_response, phase_trace
+                return str(final_response), phase_trace
 
-            return final_response
+            return str(final_response)
 
         except APIError:
             # Re-raise API errors with formatted messages
@@ -275,7 +276,8 @@ class QueryExecutor:
         """
         try:
             # Search memory store (keyword-based for simplicity)
-            results = memory_store.search_keyword(query, limit=limit)
+            # TODO: Replace with proper retrieval method once implemented
+            results = memory_store.search_keyword(query, limit=limit)  # type: ignore[attr-defined]
 
             if not results:
                 return ""
@@ -364,7 +366,7 @@ class QueryExecutor:
         summary_fn = summaries.get(phase_name)
         if summary_fn:
             try:
-                return summary_fn(phase_data)
+                return summary_fn(phase_data)  # type: ignore[no-untyped-call]
             except Exception:
                 return "Completed"
         return "Completed"

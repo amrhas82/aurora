@@ -188,14 +188,17 @@ def query_command(
         error_handler = ErrorHandler()
 
         # Get API key from environment
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        api_key_opt = os.environ.get("ANTHROPIC_API_KEY")
 
         # In dry-run mode, API key is optional (we won't make calls)
-        if not api_key and not dry_run:
+        if not api_key_opt and not dry_run:
             error = ConfigurationError("ANTHROPIC_API_KEY environment variable not set")
             error_msg = error_handler.handle_config_error(error)
             console.print(f"\n{error_msg}", style="red")
             raise click.Abort()
+
+        # After validation, api_key is guaranteed to be str (or we're in dry-run mode)
+        api_key: str = api_key_opt or ""  # Empty string in dry-run mode is fine
 
         # Handle dry-run mode - show what would be executed without API calls
         if dry_run:
@@ -275,19 +278,25 @@ def query_command(
             if memory_store is not None:
                 # Full AURORA execution with memory
                 if verbose:
-                    response, phase_trace = executor.execute_aurora(
+                    exec_result = executor.execute_aurora(
                         query=query_text,
                         api_key=api_key,
                         memory_store=memory_store,
                         verbose=True,
                     )
+                    # Type narrowing: verbose=True returns tuple
+                    assert isinstance(exec_result, tuple), "Expected tuple when verbose=True"
+                    response, phase_trace = exec_result
                 else:
-                    response = executor.execute_aurora(
+                    exec_result = executor.execute_aurora(
                         query=query_text,
                         api_key=api_key,
                         memory_store=memory_store,
                         verbose=False,
                     )
+                    # Type narrowing: verbose=False returns str
+                    assert isinstance(exec_result, str), "Expected str when verbose=False"
+                    response = exec_result
             else:
                 # Fallback to direct LLM if no memory
                 console.print("[dim]Note: Using direct LLM (no memory store available)[/]")
@@ -498,7 +507,7 @@ def _display_phase_trace(phase_trace: dict[str, Any], console: Console) -> None:
     console.print(f"  Overall Score: {overall_score:.2f}")
 
 
-def _is_memory_empty(memory_store) -> bool:
+def _is_memory_empty(memory_store: Any) -> bool:
     """Check if memory store is empty.
 
     Args:
@@ -541,7 +550,7 @@ def _prompt_auto_index(console: Console) -> bool:
     return response.lower() in ("y", "yes", "")
 
 
-def _perform_auto_index(console: Console, memory_store) -> None:
+def _perform_auto_index(console: Console, memory_store: Any) -> None:
     """Perform automatic indexing of current directory.
 
     Args:

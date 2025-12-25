@@ -13,7 +13,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
 from aurora_context_code.languages.python import PythonParser
@@ -91,7 +91,7 @@ class SearchResult:
     activation_score: float
     semantic_score: float
     hybrid_score: float
-    metadata: dict
+    metadata: dict[str, str]
 
 
 @dataclass
@@ -424,7 +424,7 @@ class MemoryManager:
 
         return extension_map.get(file_path.suffix, "unknown")
 
-    def _build_chunk_content(self, chunk) -> str:
+    def _build_chunk_content(self, chunk: Any) -> str:
         """Build content string for embedding from code chunk.
 
         Args:
@@ -526,7 +526,7 @@ class MemoryManager:
             MemoryStoreError: If all retries exhausted or non-retryable error
         """
         base_delay = 0.1  # Start with 100ms
-        last_error = None
+        last_error: Exception | None = None
 
         for attempt in range(max_retries):
             try:

@@ -27,7 +27,7 @@ from rich.table import Table
 from rich.text import Text
 
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
-from aurora_cli.memory_manager import MemoryManager
+from aurora_cli.memory_manager import MemoryManager, SearchResult
 from aurora_core.store import SQLiteStore
 
 
@@ -38,7 +38,7 @@ console = Console()
 
 
 @click.group(name="mem")
-def memory_group():
+def memory_group() -> None:
     """Memory management commands for indexing and searching code.
 
     \b
@@ -347,7 +347,7 @@ def stats_command(db_path: Path | None) -> None:
         raise click.Abort()
 
 
-def _display_rich_results(results: list, query: str, show_content: bool) -> None:
+def _display_rich_results(results: list[SearchResult], query: str, show_content: bool) -> None:
     """Display search results with rich formatting.
 
     Args:
@@ -398,7 +398,7 @@ def _display_rich_results(results: list, query: str, show_content: bool) -> None
             content_preview = _truncate_text(result.content, 50)
             row.append(content_preview)
 
-        table.add_row(*row)
+        table.add_row(*row)  # type: ignore[arg-type]
 
     console.print(table)
 
@@ -413,7 +413,7 @@ def _display_rich_results(results: list, query: str, show_content: bool) -> None
     console.print(f"  Hybrid:     {avg_hybrid:.3f}\n")
 
 
-def _display_json_results(results: list) -> None:
+def _display_json_results(results: list[SearchResult]) -> None:
     """Display search results as JSON.
 
     Args:

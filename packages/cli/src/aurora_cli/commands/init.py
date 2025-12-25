@@ -11,7 +11,7 @@ from aurora_cli.errors import ErrorHandler
 
 
 @click.command(name="init")
-def init_command():
+def init_command() -> None:
     """Initialize AURORA configuration.
 
     Creates ~/.aurora/config.json with defaults and optional API key.

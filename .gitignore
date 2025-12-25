@@ -61,6 +61,9 @@ htmlcov/
 .env
 .env.local
 
+# PyPI credentials
+.pypirc
+
 # Claude Code specific
 .claude/
 

@@ -85,7 +85,7 @@ def get_long_description():
 
 
 setup(
-    name="aurora",
+    name="aurora-actr",
     version=get_version(),
     description="AURORA: Adaptive Unified Reasoning and Orchestration Architecture with MCP Integration",
     long_description=get_long_description(),

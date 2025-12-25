@@ -90,7 +90,6 @@ git status
 
 # Should show:
 # - .github/CODEOWNERS
-# - .github/workflows/required-checks.yml
 # - .github/SECURITY_SETUP.md
 # - .github/SECURITY_QUICK_START.md
 # - scripts/setup-github-security.sh

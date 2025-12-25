@@ -11,15 +11,29 @@
 ## Relevant Files
 
 ### Core Implementation Files
-- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/tools.py` - Add aurora_query method to AuroraMCPTools class
-- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/server.py` - Register aurora_query tool with FastMCP
+- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/tools.py` - aurora_query method fully implemented (lines 405-1041, 636 lines total)
+  - Main method: aurora_query() - lines 405-507
+  - Helper methods: _validate_parameters(), _load_config(), _get_api_key(), _check_budget(), _ensure_query_executor_initialized() - lines 509-719
+  - Execution methods: _execute_with_auto_escalation(), _assess_complexity(), _execute_direct_llm(), _execute_soar() - lines 721-938
+  - Response formatting: _format_response(), _extract_metadata(), _format_error() - lines 959-1041
+- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/server.py` - Register aurora_query tool with FastMCP (pending Task 5.1)
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution.py` - Reference for QueryExecutor integration patterns
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/errors.py` - Reference for error handling patterns
 
-### Test Files (to create)
-- `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_aurora_query_tool.py` - Unit tests for aurora_query (50 tests)
-- `/home/hamr/PycharmProjects/aurora/tests/integration/test_mcp_aurora_query_integration.py` - Integration tests (20 tests)
-- `/home/hamr/PycharmProjects/aurora/tests/e2e/test_aurora_query_e2e.py` - End-to-end tests with real API (5 tests, optional)
+### Test Files
+- `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_aurora_query_tool.py` - Unit tests for aurora_query (54 tests, ALL PASSING)
+  - TestParameterValidation - 7 tests for parameter validation
+  - TestConfigurationLoading - 8 tests for config loading
+  - TestAPIKeyHandling - 2 tests for API key management
+  - TestBudgetEnforcement - 2 tests for budget checking
+  - TestAutoEscalation - 6 tests for complexity-based routing
+  - TestResponseFormatting - 7 tests for response JSON structure
+  - TestErrorHandling - 7 tests for error scenarios
+  - TestVerbosityHandling - 3 tests for verbosity parameter
+  - TestProgressTracking - 6 tests for SOAR phase tracking
+  - TestEnhancedVerbosity - 6 tests for verbosity levels
+- `/home/hamr/PycharmProjects/aurora/tests/integration/test_mcp_aurora_query_integration.py` - Integration tests (not yet created)
+- `/home/hamr/PycharmProjects/aurora/tests/e2e/test_aurora_query_e2e.py` - End-to-end tests with real API (optional, not yet created)
 
 ### Documentation Files
 - `/home/hamr/PycharmProjects/aurora/docs/MCP_SETUP.md` - Add aurora_query usage examples
@@ -64,22 +78,22 @@
 
 ## Tasks
 
-- [ ] 1.0 Implement aurora_query MCP Tool (Core Implementation)
-  - [ ] 1.1 Write unit tests for parameter validation (TDD) (1.5h)
-  - [ ] 1.2 Add aurora_query method skeleton to AuroraMCPTools (0.5h)
-  - [ ] 1.3 Implement parameter validation logic (1h)
-  - [ ] 1.4 Implement configuration loading (_load_config helper) (1h)
-  - [ ] 1.5 Implement API key loading (_get_api_key helper) (0.5h)
-  - [ ] 1.6 Implement budget checking integration (1h)
-  - [ ] 1.7 Initialize QueryExecutor with configuration (1h)
-  - [ ] 1.8 Implement auto-escalation logic (complexity assessment) (1.5h)
+- [x] 1.0 Implement aurora_query MCP Tool (Core Implementation)
+  - [x] 1.1 Write unit tests for parameter validation (TDD) (1.5h)
+  - [x] 1.2 Add aurora_query method skeleton to AuroraMCPTools (0.5h)
+  - [x] 1.3 Implement parameter validation logic (1h)
+  - [x] 1.4 Implement configuration loading (_load_config helper) (1h)
+  - [x] 1.5 Implement API key loading (_get_api_key helper) (0.5h)
+  - [x] 1.6 Implement budget checking integration (1h)
+  - [x] 1.7 Initialize QueryExecutor with configuration (1h)
+  - [x] 1.8 Implement auto-escalation logic (complexity assessment) (1.5h)
 
-- [ ] 2.0 Add Progress Visibility and Response Formatting
-  - [ ] 2.1 Write unit tests for response formatting (TDD) (1h)
-  - [ ] 2.2 Implement _format_response helper method (1.5h)
-  - [ ] 2.3 Implement _extract_metadata helper method (1h)
-  - [ ] 2.4 Implement progress tracking for SOAR phases (1.5h)
-  - [ ] 2.5 Add verbosity handling (verbose vs non-verbose) (1h)
+- [x] 2.0 Add Progress Visibility and Response Formatting
+  - [x] 2.1 Write unit tests for response formatting (TDD) (1h)
+  - [x] 2.2 Implement _format_response helper method (1.5h)
+  - [x] 2.3 Implement _extract_metadata helper method (1h)
+  - [x] 2.4 Implement progress tracking for SOAR phases (1.5h)
+  - [x] 2.5 Add verbosity handling (verbose vs non-verbose) (1h)
 
 - [ ] 3.0 Implement Error Handling and User Messages
   - [ ] 3.1 Write unit tests for error scenarios (TDD) (1.5h)

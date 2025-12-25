@@ -280,7 +280,7 @@ orchestrator = SOAROrchestrator(store, agent_registry, reasoning_llm)
 result = orchestrator.execute(query="Analyze security vulnerabilities")
 ```
 
-**Full API documentation:** [API Reference](docs/API_CONTRACTS_v1.0.md)
+**Full API documentation:** [API Reference](docs/architecture/API_CONTRACTS_v1.0.md)
 
 ---
 
@@ -311,7 +311,7 @@ AURORA is organized as a Python monorepo with modular packages:
 - Memory usage: <100MB for 10K chunks (achieved: 39MB)
 - Retrieval: <500ms for 10K chunks
 
-**Detailed architecture:** [SOAR Architecture](docs/SOAR_ARCHITECTURE.md), [Verification Checkpoints](docs/VERIFICATION_CHECKPOINTS.md)
+**Detailed architecture:** [SOAR Architecture](docs/architecture/SOAR_ARCHITECTURE.md), [Verification Checkpoints](docs/reports/quality/VERIFICATION_CHECKPOINTS.md)
 
 ---
 
@@ -324,21 +324,21 @@ AURORA is organized as a Python monorepo with modular packages:
 - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
 **Architecture & Design**
-- [SOAR Architecture](docs/SOAR_ARCHITECTURE.md) - 9-phase pipeline details
-- [Verification Checkpoints](docs/VERIFICATION_CHECKPOINTS.md) - Scoring and thresholds
-- [Agent Integration Guide](docs/AGENT_INTEGRATION.md) - Agent formats and execution
-- [Cost Tracking Guide](docs/COST_TRACKING_GUIDE.md) - Budget management
-- [Prompt Engineering Guide](docs/PROMPT_ENGINEERING_GUIDE.md) - Template design
+- [SOAR Architecture](docs/architecture/SOAR_ARCHITECTURE.md) - 9-phase pipeline details
+- [Verification Checkpoints](docs/reports/quality/VERIFICATION_CHECKPOINTS.md) - Scoring and thresholds
+- [Agent Integration Guide](docs/architecture/AGENT_INTEGRATION.md) - Agent formats and execution
+- [Cost Tracking Guide](docs/guides/COST_TRACKING_GUIDE.md) - Budget management
+- [Prompt Engineering Guide](docs/development/PROMPT_ENGINEERING_GUIDE.md) - Template design
 
 **Development**
-- [API Contracts](docs/API_CONTRACTS_v1.0.md) - API reference
-- [Migration Guide](docs/PHASE4_MIGRATION_GUIDE.md) - Upgrade guide
-- [Code Review Report](docs/CODE_REVIEW_REPORT_v1.0.0-phase3.md) - Quality analysis
-- [Security Audit](docs/SECURITY_AUDIT_REPORT_v1.0.0-phase3.md) - Security review
+- [API Contracts](docs/architecture/API_CONTRACTS_v1.0.md) - API reference
+- [Migration Guide](docs/development/PHASE4_MIGRATION_GUIDE.md) - Upgrade guide
+- [Code Review Report](docs/reports/quality/CODE_REVIEW_REPORT_v1.0.0-phase3.md) - Quality analysis
+- [Security Audit](docs/reports/security/SECURITY_AUDIT_REPORT_v1.0.0-phase3.md) - Security review
 
 **Project History**
 - [Release Notes](RELEASE_NOTES_v1.0.0-phase3.md) - Version history
-- [Phase Archives](docs/PHASE3_ARCHIVE_MANIFEST.md) - Development phases
+- [Phase Archives](docs/phases/phase3/PHASE3_ARCHIVE_MANIFEST.md) - Development phases
 
 ---
 

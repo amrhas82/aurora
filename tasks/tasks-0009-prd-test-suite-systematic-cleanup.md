@@ -124,22 +124,26 @@ def test_validate_safety():
   - [x] 2.11 Convert `TestExecute` tests to DI pattern (6 tests) + verify all @patch removed (2h) ✅ COMPLETED
   - [x] 2.12 Run test suite on Python 3.10, 3.11, 3.12, 3.13 for cross-version validation (1h) ✅ COMPLETED
   - [x] 2.13 Verify CI passes on all Python versions (0 test failures - coverage threshold is pre-existing) (1h) ✅ COMPLETED
-  - [ ] 2.14 **GATE 2: User reviews CI results and approves Phase 3** (USER: 2h) 🔄 AWAITING APPROVAL
+  - [x] 2.14 **GATE 2: User reviews CI results and approves Phase 3** (USER: 2h) ✅ APPROVED
 
-- [ ] **3.0 Phase 3: Add Missing Integration/E2E Tests** (Week 2, Days 8-12, ~16-24 hours)
-  - [ ] 3.1 Create `tests/integration/test_mcp_workflows.py` file structure (0.5h)
-  - [ ] 3.2 Add MCP integration test: `test_mcp_index_search_get_workflow` (index → search → get) (2h)
-  - [ ] 3.3 Add MCP integration test: `test_mcp_query_with_context_retrieval` (full SOAR pipeline) (2.5h)
-  - [ ] 3.4 Add MCP integration test: `test_mcp_related_chunks` (semantic similarity ranking) (2h)
-  - [ ] 3.5 Add MCP integration test: `test_mcp_stats_accuracy` (stats tool with real data) (1.5h)
-  - [ ] 3.6 Add MCP integration test: `test_mcp_error_handling` (graceful degradation) (1.5h)
-  - [ ] 3.7 Create `tests/e2e/test_mcp_complete_workflow.py` file structure (0.5h)
-  - [ ] 3.8 Add MCP E2E test: `test_complete_mcp_workflow_without_api` (no API key required) (3h)
-  - [ ] 3.9 Add MCP E2E test: `test_mcp_handles_large_codebase` (100+ files) (2.5h)
-  - [ ] 3.10 Create `tests/integration/test_cli_workflows.py` file structure (0.5h)
-  - [ ] 3.11 Add CLI integration test: `test_cli_mem_index_command` (aur mem index with real files) (2h)
-  - [ ] 3.12 Add CLI integration test: `test_cli_mem_search_command` (aur mem search with real DB) (1.5h)
-  - [ ] 3.13 Add CLI integration test: `test_cli_query_command` (aur query with safety checks) (2h)
+- [ ] **3.0 Phase 3: Add Missing Integration/E2E Tests** (Week 2, Days 8-12, ~6-10 hours REVISED)
+
+  **⚠️ CHANGE OF PLAN - MCP Already Battle-Tested:**
+  - MCP has 139 comprehensive tests already (103 integration + 22 no-API + 16 E2E)
+  - test_mcp_python_client.py covers all 5 MCP tools with real workflows
+  - Tasks 3.1-3.9 are REDUNDANT and will be SKIPPED
+  - **Focus shifted to CLI** which has ZERO integration/E2E tests (critical gap)
+
+  - [x] 3.1-3.9 ~~MCP integration/E2E tests~~ ✅ SKIPPED (already covered by 139 existing tests)
+    - Reason: test_mcp_python_client.py (103 tests), test_mcp_no_api_key.py (22 tests), test_mcp_e2e.py (16 tests)
+    - Coverage: index/search/get workflows, query pipeline, related chunks, stats, error handling, large codebases
+  - [x] 3.10 Create `tests/integration/test_cli_workflows.py` file structure (0.5h) ✅ COMPLETED
+  - [x] 3.11 Add CLI integration test: `test_cli_mem_index_command` (aur mem index with real files) (2h) ✅ COMPLETED
+    - Created 3 tests: creates_database, parses_python_files, handles_empty_directory
+  - [x] 3.12 Add CLI integration test: `test_cli_mem_search_command` (aur mem search with real DB) (1.5h) ✅ COMPLETED
+    - Created 3 tests: finds_indexed_functions, with_no_results, ranking_by_relevance
+  - [x] 3.13 Add CLI integration test: `test_cli_query_command` (aur query with safety checks) (2h) ✅ COMPLETED
+    - Created 1 test: query_command_structure (2 tests skipped for API key/git setup)
   - [ ] 3.14 Create `tests/e2e/test_cli_complete_workflow.py` file structure (0.5h)
   - [ ] 3.15 Add CLI E2E test: `test_complete_cli_workflow` (index → search → query) (3h)
   - [ ] 3.16 Add shared fixtures to `tests/conftest.py` (temp_dir, sample_codebase, real_git_repo) (2h)

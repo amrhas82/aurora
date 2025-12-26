@@ -30,7 +30,6 @@ class TestKeywordClassifier:
         assert complexity == "SIMPLE"
         assert confidence >= 0.3  # May have lower confidence
 
-
     def test_medium_query_refactoring(self):
         """Test MEDIUM classification for refactoring queries."""
         query = "Refactor the authentication module to improve readability"

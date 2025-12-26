@@ -199,4 +199,3 @@ class InvalidChunk(Chunk):
 
 class TestChunkInheritance:
     """Test chunk inheritance requirements."""
-

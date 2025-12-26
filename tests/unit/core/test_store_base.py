@@ -52,7 +52,6 @@ class TestStoreInterface:
             Store()  # Should fail - abstract class
 
 
-
 class StoreContractTests(ABC):
     """
     Abstract test suite that verifies Store implementation contract.

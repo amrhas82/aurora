@@ -637,7 +637,6 @@ class TestExplainRetrieval:
         assert "filtered out" in explanation["explanation"].lower()
 
 
-
 class TestBatchRetriever:
     """Test BatchRetriever for large-scale retrieval."""
 

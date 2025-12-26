@@ -88,7 +88,6 @@ class TestHeadlessConfig:
         assert config.scratchpad_backup is False
 
 
-
 class TestHeadlessOrchestratorInit:
     """Test HeadlessOrchestrator initialization."""
 
@@ -477,9 +476,7 @@ class TestEvaluateGoalAchievement:
 class TestBuildIterationQuery:
     """Test _build_iteration_query method."""
 
-    def test_build_query_without_prompt_data(
-        self, prompt_file, scratchpad_file
-    ):
+    def test_build_query_without_prompt_data(self, prompt_file, scratchpad_file):
         """Test building query without prompt data."""
         mock_git = Mock()
         mock_prompt = Mock()
@@ -501,9 +498,7 @@ class TestBuildIterationQuery:
 
         assert query == "Continue working toward the goal."
 
-    def test_execute_iteration_success(
-        self, prompt_file, scratchpad_file
-    ):
+    def test_execute_iteration_success(self, prompt_file, scratchpad_file):
         """Test successful iteration execution."""
         mock_git = Mock()
         mock_prompt = Mock()
@@ -1044,6 +1039,3 @@ class TestExecute:
         assert result.termination_reason == TerminationReason.BUDGET_EXCEEDED
         assert result.iterations == 1
         assert result.total_cost == 6.0
-
-
-

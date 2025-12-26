@@ -39,10 +39,6 @@ class MockContextProvider(ContextProvider):
 class TestContextProviderInterface:
     """Test the abstract ContextProvider interface contract."""
 
-
-
-
-
     def test_retrieve_returns_list_of_chunks(self):
         """Test that retrieve returns a list (even if empty)."""
         provider = MockContextProvider()

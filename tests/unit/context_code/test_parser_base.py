@@ -39,8 +39,6 @@ class TestCodeParserInterface:
         parser = MockParser(language="test")
         assert parser.language == "test"
 
-
-
     def test_parser_repr(self):
         """Test string representation of parser."""
         parser = MockParser(language="test")

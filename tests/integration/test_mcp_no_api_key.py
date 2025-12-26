@@ -26,6 +26,7 @@ import pytest
 
 from aurora.mcp.tools import AuroraMCPTools
 
+
 # Mark entire module as requiring ML dependencies
 pytestmark = pytest.mark.ml
 

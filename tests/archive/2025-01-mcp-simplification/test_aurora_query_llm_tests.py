@@ -39,7 +39,7 @@ class TestAPIKeyHandling:
         tools = AuroraMCPTools(db_path=":memory:")
 
         # Mock config loading to return no API key
-        with patch.object(tools, '_get_api_key', return_value=None):
+        with patch.object(tools, "_get_api_key", return_value=None):
             result = tools.aurora_query("Test query")
 
         response = json.loads(result)
@@ -53,7 +53,7 @@ class TestAPIKeyHandling:
         """Empty string API key should be treated as missing."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value=''):
+        with patch.object(tools, "_get_api_key", return_value=""):
             result = tools.aurora_query("Test query")
 
         response = json.loads(result)
@@ -74,8 +74,8 @@ class TestBudgetEnforcement:
         tools._budget_estimated_cost = 0.05
 
         # Mock budget check to return False
-        with patch.object(tools, '_check_budget', return_value=False):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
+        with patch.object(tools, "_check_budget", return_value=False):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
                 result = tools.aurora_query("Test query")
 
         response = json.loads(result)
@@ -88,12 +88,13 @@ class TestBudgetEnforcement:
         tools = AuroraMCPTools(db_path=":memory:")
 
         # Mock budget check to return True
-        with patch.object(tools, '_check_budget', return_value=True):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_execute_with_auto_escalation', return_value={
-                    "answer": "Test",
-                    "execution_path": "direct_llm"
-                }):
+        with patch.object(tools, "_check_budget", return_value=True):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(
+                    tools,
+                    "_execute_with_auto_escalation",
+                    return_value={"answer": "Test", "execution_path": "direct_llm"},
+                ):
                     result = tools.aurora_query("Test query")
 
                     # Should not have budget error
@@ -115,14 +116,18 @@ class TestAutoEscalation:
         tools = AuroraMCPTools(db_path=":memory:")
 
         # Mock components
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_assess_complexity', return_value=0.3):
-                    with patch.object(tools, '_execute_direct_llm', return_value={
-                        "answer": "Direct LLM answer",
-                        "execution_path": "direct_llm"
-                    }) as mock_direct:
-                        with patch.object(tools, '_execute_soar') as mock_soar:
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_assess_complexity", return_value=0.3):
+                    with patch.object(
+                        tools,
+                        "_execute_direct_llm",
+                        return_value={
+                            "answer": "Direct LLM answer",
+                            "execution_path": "direct_llm",
+                        },
+                    ) as mock_direct:
+                        with patch.object(tools, "_execute_soar") as mock_soar:
                             tools.aurora_query("What is X?")
 
                             # Should call direct LLM, not SOAR
@@ -133,14 +138,18 @@ class TestAutoEscalation:
         """Complex query should use SOAR pipeline."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_assess_complexity', return_value=0.8):
-                    with patch.object(tools, '_execute_direct_llm') as mock_direct:
-                        with patch.object(tools, '_execute_soar', return_value={
-                            "answer": "SOAR answer",
-                            "execution_path": "soar_pipeline"
-                        }) as mock_soar:
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_assess_complexity", return_value=0.8):
+                    with patch.object(tools, "_execute_direct_llm") as mock_direct:
+                        with patch.object(
+                            tools,
+                            "_execute_soar",
+                            return_value={
+                                "answer": "SOAR answer",
+                                "execution_path": "soar_pipeline",
+                            },
+                        ) as mock_soar:
                             tools.aurora_query("Analyze complex architecture...")
 
                             # Should call SOAR, not direct LLM
@@ -152,13 +161,14 @@ class TestAutoEscalation:
         tools = AuroraMCPTools(db_path=":memory:")
 
         # Even with low complexity, should use SOAR
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_assess_complexity') as mock_assess:
-                    with patch.object(tools, '_execute_soar', return_value={
-                        "answer": "SOAR answer",
-                        "execution_path": "soar_pipeline"
-                    }) as mock_soar:
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_assess_complexity") as mock_assess:
+                    with patch.object(
+                        tools,
+                        "_execute_soar",
+                        return_value={"answer": "SOAR answer", "execution_path": "soar_pipeline"},
+                    ) as mock_soar:
                         tools.aurora_query("Simple question", force_soar=True)
 
                         # Should call SOAR without checking complexity
@@ -171,14 +181,15 @@ class TestAutoEscalation:
 
         mock_config = {"query": {"complexity_threshold": 0.5}}
 
-        with patch.object(tools, '_load_config', return_value=mock_config):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', return_value=True):
-                    with patch.object(tools, '_assess_complexity', return_value=0.55):
-                        with patch.object(tools, '_execute_soar', return_value={
-                            "answer": "SOAR",
-                            "execution_path": "soar_pipeline"
-                        }) as mock_soar:
+        with patch.object(tools, "_load_config", return_value=mock_config):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(tools, "_check_budget", return_value=True):
+                    with patch.object(tools, "_assess_complexity", return_value=0.55):
+                        with patch.object(
+                            tools,
+                            "_execute_soar",
+                            return_value={"answer": "SOAR", "execution_path": "soar_pipeline"},
+                        ) as mock_soar:
                             # Complexity 0.55 > threshold 0.5, should use SOAR
                             tools.aurora_query("Test")
                             assert mock_soar.called
@@ -187,14 +198,18 @@ class TestAutoEscalation:
         """Response should indicate direct_llm execution path."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_assess_complexity', return_value=0.3):
-                    with patch.object(tools, '_execute_direct_llm', return_value={
-                        "answer": "Answer",
-                        "execution_path": "direct_llm",
-                        "metadata": {}
-                    }):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_assess_complexity", return_value=0.3):
+                    with patch.object(
+                        tools,
+                        "_execute_direct_llm",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "direct_llm",
+                            "metadata": {},
+                        },
+                    ):
                         result = tools.aurora_query("Simple query")
 
                         response = json.loads(result)
@@ -204,14 +219,18 @@ class TestAutoEscalation:
         """Response should indicate soar_pipeline execution path."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_assess_complexity', return_value=0.8):
-                    with patch.object(tools, '_execute_soar', return_value={
-                        "answer": "Answer",
-                        "execution_path": "soar_pipeline",
-                        "metadata": {}
-                    }):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_assess_complexity", return_value=0.8):
+                    with patch.object(
+                        tools,
+                        "_execute_soar",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "soar_pipeline",
+                            "metadata": {},
+                        },
+                    ):
                         result = tools.aurora_query("Complex query")
 
                         response = json.loads(result)
@@ -244,17 +263,19 @@ class TestRetryLogic:
                 "input_tokens": 100,
                 "output_tokens": 50,
                 "model": "claude-sonnet-4-20250514",
-                "temperature": 0.7
+                "temperature": 0.7,
             }
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_execute_direct_llm", side_effect=mock_execute):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
 
                     # Should eventually succeed
-                    assert "error" not in response or response.get("answer") == "Success after retry"
+                    assert (
+                        "error" not in response or response.get("answer") == "Success after retry"
+                    )
 
     def test_retry_on_timeout_error(self):
         """Should retry on timeout errors."""
@@ -274,12 +295,12 @@ class TestRetryLogic:
                 "input_tokens": 100,
                 "output_tokens": 50,
                 "model": "claude-sonnet-4-20250514",
-                "temperature": 0.7
+                "temperature": 0.7,
             }
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_execute_direct_llm", side_effect=mock_execute):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
 
@@ -296,9 +317,9 @@ class TestRetryLogic:
             call_count[0] += 1
             raise Exception("Authentication failed (401)")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_execute_direct_llm", side_effect=mock_execute):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
 
@@ -314,9 +335,9 @@ class TestRetryLogic:
         def always_fail(*args, **kwargs):
             raise Exception("Server error (500)")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', side_effect=always_fail):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_execute_direct_llm", side_effect=always_fail):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
 
@@ -344,12 +365,12 @@ class TestRetryLogic:
                 "input_tokens": 100,
                 "output_tokens": 50,
                 "model": "claude-sonnet-4-20250514",
-                "temperature": 0.7
+                "temperature": 0.7,
             }
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_execute_direct_llm", side_effect=mock_execute):
                     tools.aurora_query("Test query")
                     # Should have made multiple attempts
                     assert call_count[0] >= 2
@@ -362,9 +383,9 @@ class TestMemoryGracefulDegradation:
         """Query should succeed even when memory store is empty."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_get_memory_context', return_value=""):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_get_memory_context", return_value=""):
                     result = tools.aurora_query("What is Python?")
                     response = json.loads(result)
 
@@ -376,9 +397,11 @@ class TestMemoryGracefulDegradation:
         """Memory retrieval error should log warning, not raise exception."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_get_memory_context', side_effect=Exception("Memory unavailable")):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(
+                    tools, "_get_memory_context", side_effect=Exception("Memory unavailable")
+                ):
                     # Should not raise exception
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
@@ -390,20 +413,24 @@ class TestMemoryGracefulDegradation:
         """Empty memory store should not block query execution."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
                 # Memory returns empty string (no indexed content)
-                with patch.object(tools, '_get_memory_context', return_value=""):
-                    with patch.object(tools, '_execute_direct_llm', return_value={
-                        "answer": "LLM answer without memory context",
-                        "execution_path": "direct_llm",
-                        "duration": 1.0,
-                        "cost": 0.01,
-                        "input_tokens": 100,
-                        "output_tokens": 50,
-                        "model": "claude-sonnet-4-20250514",
-                        "temperature": 0.7
-                    }):
+                with patch.object(tools, "_get_memory_context", return_value=""):
+                    with patch.object(
+                        tools,
+                        "_execute_direct_llm",
+                        return_value={
+                            "answer": "LLM answer without memory context",
+                            "execution_path": "direct_llm",
+                            "duration": 1.0,
+                            "cost": 0.01,
+                            "input_tokens": 100,
+                            "output_tokens": 50,
+                            "model": "claude-sonnet-4-20250514",
+                            "temperature": 0.7,
+                        },
+                    ):
                         result = tools.aurora_query("Test query")
                         response = json.loads(result)
 
@@ -413,18 +440,22 @@ class TestMemoryGracefulDegradation:
         """Response structure should be valid even when memory fails."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', return_value={
-                    "answer": "Answer",
-                    "execution_path": "direct_llm",
-                    "duration": 1.0,
-                    "cost": 0.01,
-                    "input_tokens": 100,
-                    "output_tokens": 50,
-                    "model": "claude-sonnet-4-20250514",
-                    "temperature": 0.7
-                }):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(
+                    tools,
+                    "_execute_direct_llm",
+                    return_value={
+                        "answer": "Answer",
+                        "execution_path": "direct_llm",
+                        "duration": 1.0,
+                        "cost": 0.01,
+                        "input_tokens": 100,
+                        "output_tokens": 50,
+                        "model": "claude-sonnet-4-20250514",
+                        "temperature": 0.7,
+                    },
+                ):
                     result = tools.aurora_query("Test")
                     response = json.loads(result)
 
@@ -441,7 +472,7 @@ class TestErrorLogging:
         """Errors should be logged before returning response."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch('aurora.mcp.tools.logger') as mock_logger:
+        with patch("aurora.mcp.tools.logger") as mock_logger:
             # Trigger an error
             tools.aurora_query("")
 
@@ -452,8 +483,8 @@ class TestErrorLogging:
         """APIKeyMissing error should be logged."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch('aurora.mcp.tools.logger') as mock_logger:
-            with patch.object(tools, '_get_api_key', return_value=None):
+        with patch("aurora.mcp.tools.logger") as mock_logger:
+            with patch.object(tools, "_get_api_key", return_value=None):
                 tools.aurora_query("Test query")
 
                 # Should have logged APIKeyMissing
@@ -463,9 +494,11 @@ class TestErrorLogging:
         """Unexpected exceptions should be logged with stack trace."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch('aurora.mcp.tools.logger') as mock_logger:
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', side_effect=RuntimeError("Unexpected error")):
+        with patch("aurora.mcp.tools.logger") as mock_logger:
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(
+                    tools, "_check_budget", side_effect=RuntimeError("Unexpected error")
+                ):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
 
@@ -477,7 +510,7 @@ class TestErrorLogging:
         """Parameter validation errors should be logged."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch('aurora.mcp.tools.logger') as mock_logger:
+        with patch("aurora.mcp.tools.logger") as mock_logger:
             tools.aurora_query("Test", temperature=2.0)
 
             # Should have logged the InvalidParameter error
@@ -496,8 +529,8 @@ class TestProgressTracking:
         """SOAR execution should include all 9 phase entries in verbose mode."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
                 # Don't mock _execute_soar - let it run to test real phase tracking
                 result = tools.aurora_query("Complex analysis query", force_soar=True, verbose=True)
                 response = json.loads(result)
@@ -508,8 +541,15 @@ class TestProgressTracking:
                 # Verify all 9 SOAR phase names
                 phase_names = [p["phase"] for p in response["phases"]]
                 expected_phases = [
-                    "Assess", "Retrieve", "Decompose", "Verify",
-                    "Route", "Collect", "Synthesize", "Record", "Respond"
+                    "Assess",
+                    "Retrieve",
+                    "Decompose",
+                    "Verify",
+                    "Route",
+                    "Collect",
+                    "Synthesize",
+                    "Record",
+                    "Respond",
                 ]
                 assert phase_names == expected_phases
 
@@ -517,8 +557,8 @@ class TestProgressTracking:
         """Each phase should have phase name, status, and duration."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
                 result = tools.aurora_query("Complex query", force_soar=True, verbose=True)
                 response = json.loads(result)
 
@@ -531,35 +571,37 @@ class TestProgressTracking:
         """Phase duration should be a number (seconds)."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
                 result = tools.aurora_query("Complex query", force_soar=True, verbose=True)
                 response = json.loads(result)
 
                 for phase in response["phases"]:
-                    assert isinstance(phase["duration"], (int, float)), \
+                    assert isinstance(phase["duration"], (int, float)), (
                         f"Phase duration should be numeric, got {type(phase['duration'])}"
+                    )
                     assert phase["duration"] >= 0, "Phase duration should be non-negative"
 
     def test_phase_status_is_completed(self):
         """Successful phases should have 'completed' status."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
                 result = tools.aurora_query("Complex query", force_soar=True, verbose=True)
                 response = json.loads(result)
 
                 for phase in response["phases"]:
-                    assert phase["status"] == "completed", \
+                    assert phase["status"] == "completed", (
                         f"Expected 'completed' status, got '{phase['status']}'"
+                    )
 
     def test_progress_not_included_for_direct_llm(self):
         """Direct LLM execution should not include SOAR phases."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
                 # Simple query should use direct LLM
                 result = tools.aurora_query("What is X?", verbose=True)
                 response = json.loads(result)
@@ -571,8 +613,8 @@ class TestProgressTracking:
         """Metadata should include total duration."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
                 result = tools.aurora_query("Complex query", force_soar=True, verbose=True)
                 response = json.loads(result)
 
@@ -595,19 +637,23 @@ class TestEnhancedVerbosity:
 
         mock_config = {"query": {"verbosity": "quiet"}}
 
-        with patch.object(tools, '_load_config', return_value=mock_config):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', return_value=True):
-                    with patch.object(tools, '_execute_direct_llm', return_value={
-                        "answer": "Answer",
-                        "execution_path": "direct_llm",
-                        "duration": 1.0,
-                        "cost": 0.01,
-                        "input_tokens": 100,
-                        "output_tokens": 50,
-                        "model": "claude-sonnet-4-20250514",
-                        "temperature": 0.7
-                    }):
+        with patch.object(tools, "_load_config", return_value=mock_config):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(tools, "_check_budget", return_value=True):
+                    with patch.object(
+                        tools,
+                        "_execute_direct_llm",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "direct_llm",
+                            "duration": 1.0,
+                            "cost": 0.01,
+                            "input_tokens": 100,
+                            "output_tokens": 50,
+                            "model": "claude-sonnet-4-20250514",
+                            "temperature": 0.7,
+                        },
+                    ):
                         # verbose=None should use config (quiet)
                         result = tools.aurora_query("Test", verbose=None)
                         response = json.loads(result)
@@ -621,20 +667,28 @@ class TestEnhancedVerbosity:
 
         mock_config = {"query": {"verbosity": "normal"}}
 
-        with patch.object(tools, '_load_config', return_value=mock_config):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', return_value=True):
-                    with patch.object(tools, '_execute_soar', return_value={
-                        "answer": "Answer",
-                        "execution_path": "soar_pipeline",
-                        "phase_trace": {"phases": [{"phase": "Assess", "duration": 0.1, "status": "completed"}]},
-                        "duration": 1.0,
-                        "cost": 0.01,
-                        "input_tokens": 100,
-                        "output_tokens": 50,
-                        "model": "claude-sonnet-4-20250514",
-                        "temperature": 0.7
-                    }):
+        with patch.object(tools, "_load_config", return_value=mock_config):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(tools, "_check_budget", return_value=True):
+                    with patch.object(
+                        tools,
+                        "_execute_soar",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "soar_pipeline",
+                            "phase_trace": {
+                                "phases": [
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
+                                ]
+                            },
+                            "duration": 1.0,
+                            "cost": 0.01,
+                            "input_tokens": 100,
+                            "output_tokens": 50,
+                            "model": "claude-sonnet-4-20250514",
+                            "temperature": 0.7,
+                        },
+                    ):
                         result = tools.aurora_query("Complex", force_soar=True, verbose=None)
                         response = json.loads(result)
 
@@ -650,20 +704,28 @@ class TestEnhancedVerbosity:
 
         mock_config = {"query": {"verbosity": "verbose"}}
 
-        with patch.object(tools, '_load_config', return_value=mock_config):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', return_value=True):
-                    with patch.object(tools, '_execute_soar', return_value={
-                        "answer": "Answer",
-                        "execution_path": "soar_pipeline",
-                        "phase_trace": {"phases": [{"phase": "Assess", "duration": 0.1, "status": "completed"}]},
-                        "duration": 1.0,
-                        "cost": 0.01,
-                        "input_tokens": 100,
-                        "output_tokens": 50,
-                        "model": "claude-sonnet-4-20250514",
-                        "temperature": 0.7
-                    }):
+        with patch.object(tools, "_load_config", return_value=mock_config):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(tools, "_check_budget", return_value=True):
+                    with patch.object(
+                        tools,
+                        "_execute_soar",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "soar_pipeline",
+                            "phase_trace": {
+                                "phases": [
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
+                                ]
+                            },
+                            "duration": 1.0,
+                            "cost": 0.01,
+                            "input_tokens": 100,
+                            "output_tokens": 50,
+                            "model": "claude-sonnet-4-20250514",
+                            "temperature": 0.7,
+                        },
+                    ):
                         result = tools.aurora_query("Complex", force_soar=True, verbose=None)
                         response = json.loads(result)
 
@@ -676,20 +738,28 @@ class TestEnhancedVerbosity:
 
         mock_config = {"query": {"verbosity": "quiet"}}  # Config says quiet
 
-        with patch.object(tools, '_load_config', return_value=mock_config):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', return_value=True):
-                    with patch.object(tools, '_execute_soar', return_value={
-                        "answer": "Answer",
-                        "execution_path": "soar_pipeline",
-                        "phase_trace": {"phases": [{"phase": "Assess", "duration": 0.1, "status": "completed"}]},
-                        "duration": 1.0,
-                        "cost": 0.01,
-                        "input_tokens": 100,
-                        "output_tokens": 50,
-                        "model": "claude-sonnet-4-20250514",
-                        "temperature": 0.7
-                    }):
+        with patch.object(tools, "_load_config", return_value=mock_config):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(tools, "_check_budget", return_value=True):
+                    with patch.object(
+                        tools,
+                        "_execute_soar",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "soar_pipeline",
+                            "phase_trace": {
+                                "phases": [
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
+                                ]
+                            },
+                            "duration": 1.0,
+                            "cost": 0.01,
+                            "input_tokens": 100,
+                            "output_tokens": 50,
+                            "model": "claude-sonnet-4-20250514",
+                            "temperature": 0.7,
+                        },
+                    ):
                         # Parameter verbose=True should override config
                         result = tools.aurora_query("Complex", force_soar=True, verbose=True)
                         response = json.loads(result)
@@ -703,20 +773,28 @@ class TestEnhancedVerbosity:
 
         mock_config = {"query": {"verbosity": "verbose"}}  # Config says verbose
 
-        with patch.object(tools, '_load_config', return_value=mock_config):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', return_value=True):
-                    with patch.object(tools, '_execute_soar', return_value={
-                        "answer": "Answer",
-                        "execution_path": "soar_pipeline",
-                        "phase_trace": {"phases": [{"phase": "Assess", "duration": 0.1, "status": "completed"}]},
-                        "duration": 1.0,
-                        "cost": 0.01,
-                        "input_tokens": 100,
-                        "output_tokens": 50,
-                        "model": "claude-sonnet-4-20250514",
-                        "temperature": 0.7
-                    }):
+        with patch.object(tools, "_load_config", return_value=mock_config):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(tools, "_check_budget", return_value=True):
+                    with patch.object(
+                        tools,
+                        "_execute_soar",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "soar_pipeline",
+                            "phase_trace": {
+                                "phases": [
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
+                                ]
+                            },
+                            "duration": 1.0,
+                            "cost": 0.01,
+                            "input_tokens": 100,
+                            "output_tokens": 50,
+                            "model": "claude-sonnet-4-20250514",
+                            "temperature": 0.7,
+                        },
+                    ):
                         # Parameter verbose=False should override config
                         result = tools.aurora_query("Complex", force_soar=True, verbose=False)
                         response = json.loads(result)
@@ -729,23 +807,31 @@ class TestEnhancedVerbosity:
         tools = AuroraMCPTools(db_path=":memory:")
 
         # Clear any cached config
-        if hasattr(tools, '_config_cache'):
+        if hasattr(tools, "_config_cache"):
             del tools._config_cache
 
-        with patch.dict('os.environ', {'AURORA_VERBOSITY': 'verbose'}):
-            with patch.object(tools, '_get_api_key', return_value='test-key'):
-                with patch.object(tools, '_check_budget', return_value=True):
-                    with patch.object(tools, '_execute_soar', return_value={
-                        "answer": "Answer",
-                        "execution_path": "soar_pipeline",
-                        "phase_trace": {"phases": [{"phase": "Assess", "duration": 0.1, "status": "completed"}]},
-                        "duration": 1.0,
-                        "cost": 0.01,
-                        "input_tokens": 100,
-                        "output_tokens": 50,
-                        "model": "claude-sonnet-4-20250514",
-                        "temperature": 0.7
-                    }):
+        with patch.dict("os.environ", {"AURORA_VERBOSITY": "verbose"}):
+            with patch.object(tools, "_get_api_key", return_value="test-key"):
+                with patch.object(tools, "_check_budget", return_value=True):
+                    with patch.object(
+                        tools,
+                        "_execute_soar",
+                        return_value={
+                            "answer": "Answer",
+                            "execution_path": "soar_pipeline",
+                            "phase_trace": {
+                                "phases": [
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
+                                ]
+                            },
+                            "duration": 1.0,
+                            "cost": 0.01,
+                            "input_tokens": 100,
+                            "output_tokens": 50,
+                            "model": "claude-sonnet-4-20250514",
+                            "temperature": 0.7,
+                        },
+                    ):
                         result = tools.aurora_query("Complex", force_soar=True, verbose=None)
                         response = json.loads(result)
 

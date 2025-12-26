@@ -129,21 +129,23 @@ def temp_aurora_config(tmp_path):
     aurora_dir.mkdir(exist_ok=True)
 
     config_file = aurora_dir / "config.json"
-    config_file.write_text(json.dumps({
-        "api": {
-            "default_model": "claude-sonnet-4-20250514",
-            "temperature": 0.7,
-            "max_tokens": 4000
-        },
-        "query": {
-            "auto_escalate": True,
-            "complexity_threshold": 0.6,
-            "verbosity": "normal"
-        },
-        "budget": {
-            "monthly_limit_usd": 50.0
-        }
-    }))
+    config_file.write_text(
+        json.dumps(
+            {
+                "api": {
+                    "default_model": "claude-sonnet-4-20250514",
+                    "temperature": 0.7,
+                    "max_tokens": 4000,
+                },
+                "query": {
+                    "auto_escalate": True,
+                    "complexity_threshold": 0.6,
+                    "verbosity": "normal",
+                },
+                "budget": {"monthly_limit_usd": 50.0},
+            }
+        )
+    )
 
     return tmp_path
 
@@ -235,9 +237,9 @@ class TestE2EIndexQueryGet:
         """Test complete workflow: index, query, get result."""
         tools, code_dir = e2e_tools
 
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
             # Clear cached config
-            if hasattr(tools, '_config_cache'):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             # Step 1: Query for context
@@ -260,8 +262,8 @@ class TestE2EIndexQueryGet:
         """Test query complexity assessment in E2E workflow."""
         tools, code_dir = e2e_tools
 
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
-            if hasattr(tools, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             # Simple query
@@ -279,8 +281,10 @@ class TestE2EIndexQueryGet:
 
             assert "assessment" in complex_response
             # Complex query should have higher complexity score
-            assert complex_response["assessment"]["complexity_score"] > \
-                   simple_response["assessment"]["complexity_score"]
+            assert (
+                complex_response["assessment"]["complexity_score"]
+                > simple_response["assessment"]["complexity_score"]
+            )
 
 
 # ==============================================================================

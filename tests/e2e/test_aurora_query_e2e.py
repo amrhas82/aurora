@@ -23,8 +23,7 @@ from aurora.mcp.tools import AuroraMCPTools
 
 # Skip all tests if no API key is available
 pytestmark = pytest.mark.skipif(
-    not os.getenv("ANTHROPIC_API_KEY"),
-    reason="ANTHROPIC_API_KEY environment variable not set"
+    not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY environment variable not set"
 )
 
 
@@ -42,28 +41,29 @@ def temp_aurora_config(tmp_path):
 
     # Create config with high budget limit for testing
     config_file = aurora_dir / "config.json"
-    config_file.write_text(json.dumps({
-        "api": {
-            "default_model": "claude-sonnet-4-20250514",
-            "temperature": 0.7,
-            "max_tokens": 500  # Low limit for testing
-        },
-        "query": {
-            "auto_escalate": True,
-            "complexity_threshold": 0.6,
-            "verbosity": "normal"
-        },
-        "budget": {
-            "monthly_limit_usd": 100.0  # High limit for testing
-        }
-    }))
+    config_file.write_text(
+        json.dumps(
+            {
+                "api": {
+                    "default_model": "claude-sonnet-4-20250514",
+                    "temperature": 0.7,
+                    "max_tokens": 500,  # Low limit for testing
+                },
+                "query": {
+                    "auto_escalate": True,
+                    "complexity_threshold": 0.6,
+                    "verbosity": "normal",
+                },
+                "budget": {
+                    "monthly_limit_usd": 100.0  # High limit for testing
+                },
+            }
+        )
+    )
 
     # Create budget tracker with low usage
     budget_file = aurora_dir / "budget_tracker.json"
-    budget_file.write_text(json.dumps({
-        "monthly_usage_usd": 0.0,
-        "monthly_limit_usd": 100.0
-    }))
+    budget_file.write_text(json.dumps({"monthly_usage_usd": 0.0, "monthly_limit_usd": 100.0}))
 
     return tmp_path
 
@@ -86,9 +86,9 @@ class TestAuroraQueryE2E:
 
         This is a basic smoke test to verify API connectivity.
         """
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
             # Clear cached config
-            if hasattr(tools, '_config_cache'):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             result = tools.aurora_query("What is the capital of France?")
@@ -110,8 +110,8 @@ class TestAuroraQueryE2E:
 
     def test_complex_query_with_real_api(self, tools, temp_aurora_config):
         """Test complex query triggers appropriate path with real API."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
-            if hasattr(tools, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             result = tools.aurora_query(
@@ -128,14 +128,11 @@ class TestAuroraQueryE2E:
 
     def test_verbose_response_with_real_api(self, tools, temp_aurora_config):
         """Test verbose mode returns detailed information with real API."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
-            if hasattr(tools, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
-            result = tools.aurora_query(
-                "Explain Python decorators",
-                verbose=True
-            )
+            result = tools.aurora_query("Explain Python decorators", verbose=True)
             response = json.loads(result)
 
             assert "answer" in response or "error" in response
@@ -147,8 +144,8 @@ class TestAuroraQueryE2E:
 
     def test_actual_cost_tracking(self, tools, temp_aurora_config):
         """Test that actual API costs are tracked."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
-            if hasattr(tools, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             result = tools.aurora_query("Hello, what is 2+2?")
@@ -165,14 +162,14 @@ class TestAuroraQueryE2E:
 
     def test_parameter_overrides_with_real_api(self, tools, temp_aurora_config):
         """Test that parameter overrides work with real API."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
-            if hasattr(tools, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             result = tools.aurora_query(
                 "Say hello",
                 temperature=0.1,  # Low temperature for consistent response
-                max_tokens=50     # Limited tokens
+                max_tokens=50,  # Limited tokens
             )
             response = json.loads(result)
 
@@ -200,8 +197,8 @@ class TestAuroraQueryPerformanceE2E:
 
     def test_simple_query_response_time(self, tools, temp_aurora_config):
         """Simple queries should complete within 10 seconds (generous for E2E)."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
-            if hasattr(tools, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             start_time = time.time()
@@ -216,8 +213,8 @@ class TestAuroraQueryPerformanceE2E:
 
     def test_multiple_queries_stability(self, tools, temp_aurora_config):
         """Multiple sequential queries should all succeed."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_config):
-            if hasattr(tools, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_config):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
 
             queries = [
@@ -238,5 +235,4 @@ class TestAuroraQueryPerformanceE2E:
                 time.sleep(0.5)
 
             # At least most queries should succeed
-            assert success_count >= 2, \
-                f"Only {success_count}/{len(queries)} queries succeeded"
+            assert success_count >= 2, f"Only {success_count}/{len(queries)} queries succeeded"

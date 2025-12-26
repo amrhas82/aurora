@@ -91,21 +91,23 @@ def temp_aurora_dir(tmp_path):
 
     # Create config without API key
     config_file = aurora_dir / "config.json"
-    config_file.write_text(json.dumps({
-        "api": {
-            "default_model": "claude-sonnet-4-20250514",
-            "temperature": 0.7,
-            "max_tokens": 4000
-        },
-        "query": {
-            "auto_escalate": True,
-            "complexity_threshold": 0.6,
-            "verbosity": "normal"
-        },
-        "budget": {
-            "monthly_limit_usd": 50.0
-        }
-    }))
+    config_file.write_text(
+        json.dumps(
+            {
+                "api": {
+                    "default_model": "claude-sonnet-4-20250514",
+                    "temperature": 0.7,
+                    "max_tokens": 4000,
+                },
+                "query": {
+                    "auto_escalate": True,
+                    "complexity_threshold": 0.6,
+                    "verbosity": "normal",
+                },
+                "budget": {"monthly_limit_usd": 50.0},
+            }
+        )
+    )
 
     return aurora_dir
 
@@ -344,9 +346,9 @@ class TestAuroraQueryNoAPIKey:
 
     def test_query_context_retrieval(self, tools_no_api_key, temp_aurora_dir):
         """Test aurora_query returns context without API key."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_dir.parent):
+        with patch("pathlib.Path.home", return_value=temp_aurora_dir.parent):
             # Clear any cached config
-            if hasattr(tools_no_api_key, '_config_cache'):
+            if hasattr(tools_no_api_key, "_config_cache"):
                 del tools_no_api_key._config_cache
 
             result = tools_no_api_key.aurora_query("hello world")
@@ -365,8 +367,8 @@ class TestAuroraQueryNoAPIKey:
 
     def test_query_with_type_filter(self, tools_no_api_key, temp_aurora_dir):
         """Test aurora_query with type filter without API key."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_dir.parent):
-            if hasattr(tools_no_api_key, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_dir.parent):
+            if hasattr(tools_no_api_key, "_config_cache"):
                 del tools_no_api_key._config_cache
 
             result = tools_no_api_key.aurora_query("function", type_filter="code")
@@ -381,8 +383,8 @@ class TestAuroraQueryNoAPIKey:
 
     def test_query_empty_query(self, tools_no_api_key, temp_aurora_dir):
         """Test aurora_query handles empty query without API key."""
-        with patch('pathlib.Path.home', return_value=temp_aurora_dir.parent):
-            if hasattr(tools_no_api_key, '_config_cache'):
+        with patch("pathlib.Path.home", return_value=temp_aurora_dir.parent):
+            if hasattr(tools_no_api_key, "_config_cache"):
                 del tools_no_api_key._config_cache
 
             result = tools_no_api_key.aurora_query("")

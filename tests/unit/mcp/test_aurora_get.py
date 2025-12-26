@@ -111,9 +111,14 @@ class TestBasicFunctionality:
         tools = AuroraMCPTools(db_path=":memory:")
 
         mock_results = [
-            {"chunk_id": f"code:test{i}.py:func{i}", "content": f"content {i}",
-             "file_path": f"test{i}.py", "function_name": f"func{i}",
-             "score": 0.9 - (i * 0.1), "line_range": [1, 1]}
+            {
+                "chunk_id": f"code:test{i}.py:func{i}",
+                "content": f"content {i}",
+                "file_path": f"test{i}.py",
+                "function_name": f"func{i}",
+                "score": 0.9 - (i * 0.1),
+                "line_range": [1, 1],
+            }
             for i in range(5)
         ]
 
@@ -143,9 +148,14 @@ class TestErrorHandling:
 
         # Set up cache
         mock_results = [
-            {"chunk_id": "code:test.py:func", "content": "content",
-             "file_path": "test.py", "function_name": "func",
-             "score": 0.9, "line_range": [1, 1]}
+            {
+                "chunk_id": "code:test.py:func",
+                "content": "content",
+                "file_path": "test.py",
+                "function_name": "func",
+                "score": 0.9,
+                "line_range": [1, 1],
+            }
         ]
         tools._last_search_results = mock_results
         tools._last_search_timestamp = time.time()
@@ -157,7 +167,10 @@ class TestErrorHandling:
         assert "error" in response
         assert response["error"]["type"] == "InvalidParameter"
         assert "index" in response["error"]["message"].lower()
-        assert "must be >= 1" in response["error"]["message"] or "1-indexed" in response["error"]["message"]
+        assert (
+            "must be >= 1" in response["error"]["message"]
+            or "1-indexed" in response["error"]["message"]
+        )
 
     def test_get_negative_index_returns_error(self):
         """Negative index should return an error."""
@@ -165,9 +178,14 @@ class TestErrorHandling:
 
         # Set up cache
         mock_results = [
-            {"chunk_id": "code:test.py:func", "content": "content",
-             "file_path": "test.py", "function_name": "func",
-             "score": 0.9, "line_range": [1, 1]}
+            {
+                "chunk_id": "code:test.py:func",
+                "content": "content",
+                "file_path": "test.py",
+                "function_name": "func",
+                "score": 0.9,
+                "line_range": [1, 1],
+            }
         ]
         tools._last_search_results = mock_results
         tools._last_search_timestamp = time.time()
@@ -186,9 +204,14 @@ class TestErrorHandling:
 
         # Set up cache with only 3 results
         mock_results = [
-            {"chunk_id": f"code:test{i}.py:func{i}", "content": f"content {i}",
-             "file_path": f"test{i}.py", "function_name": f"func{i}",
-             "score": 0.9 - (i * 0.1), "line_range": [1, 1]}
+            {
+                "chunk_id": f"code:test{i}.py:func{i}",
+                "content": f"content {i}",
+                "file_path": f"test{i}.py",
+                "function_name": f"func{i}",
+                "score": 0.9 - (i * 0.1),
+                "line_range": [1, 1],
+            }
             for i in range(3)
         ]
         tools._last_search_results = mock_results
@@ -201,7 +224,10 @@ class TestErrorHandling:
         # Should be an error
         assert "error" in response
         assert response["error"]["type"] == "InvalidParameter"
-        assert "out of range" in response["error"]["message"].lower() or "only 3" in response["error"]["message"]
+        assert (
+            "out of range" in response["error"]["message"].lower()
+            or "only 3" in response["error"]["message"]
+        )
         # Should suggest valid range
         assert "1" in response["error"]["message"]
         assert "3" in response["error"]["message"]
@@ -217,9 +243,15 @@ class TestErrorHandling:
         # Should be an error
         assert "error" in response
         assert response["error"]["type"] == "NoSearchResults"
-        assert "no previous search" in response["error"]["message"].lower() or "search first" in response["error"]["message"].lower()
+        assert (
+            "no previous search" in response["error"]["message"].lower()
+            or "search first" in response["error"]["message"].lower()
+        )
         # Should suggest running aurora_search or aurora_query first
-        assert "aurora_search" in response["error"]["suggestion"] or "aurora_query" in response["error"]["suggestion"]
+        assert (
+            "aurora_search" in response["error"]["suggestion"]
+            or "aurora_query" in response["error"]["suggestion"]
+        )
 
 
 # ==============================================================================
@@ -244,7 +276,7 @@ class TestSessionCache:
             }
         ]
 
-        with patch.object(tools, '_retriever') as mock_retriever:
+        with patch.object(tools, "_retriever") as mock_retriever:
             mock_retriever.retrieve.return_value = mock_search_results
 
             # Run aurora_search
@@ -252,10 +284,10 @@ class TestSessionCache:
             tools.aurora_search("test query")
 
             # Cache should be populated
-            assert hasattr(tools, '_last_search_results')
+            assert hasattr(tools, "_last_search_results")
             assert tools._last_search_results is not None
             assert len(tools._last_search_results) > 0
-            assert hasattr(tools, '_last_search_timestamp')
+            assert hasattr(tools, "_last_search_timestamp")
             assert tools._last_search_timestamp is not None
 
     def test_new_search_clears_previous_cache(self):
@@ -282,7 +314,7 @@ class TestSessionCache:
             }
         ]
 
-        with patch.object(tools, '_retriever') as mock_retriever:
+        with patch.object(tools, "_retriever") as mock_retriever:
             tools._ensure_initialized()
 
             # First search
@@ -329,7 +361,10 @@ class TestSessionCache:
         # Should return error for expired cache
         assert "error" in response
         assert response["error"]["type"] in ["CacheExpired", "NoSearchResults"]
-        assert "expired" in response["error"]["message"].lower() or "search again" in response["error"]["message"].lower()
+        assert (
+            "expired" in response["error"]["message"].lower()
+            or "search again" in response["error"]["message"].lower()
+        )
 
 
 # ==============================================================================

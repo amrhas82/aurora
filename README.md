@@ -355,6 +355,7 @@ AURORA is organized as a Python monorepo with modular packages:
 - [Prompt Engineering Guide](docs/development/PROMPT_ENGINEERING_GUIDE.md) - Template design
 
 **Development**
+- [Pre-Push Validation](docs/development/PRE_PUSH_VALIDATION.md) - Local CI/CD checks before pushing
 - [API Contracts](docs/architecture/API_CONTRACTS_v1.0.md) - API reference
 - [Migration Guide](docs/development/PHASE4_MIGRATION_GUIDE.md) - Upgrade guide
 - [Code Review Report](docs/reports/quality/CODE_REVIEW_REPORT_v1.0.0-phase3.md) - Quality analysis

@@ -655,6 +655,9 @@ class AuroraMCPTools:
             "budget": {
                 "monthly_limit_usd": 50.0,
             },
+            "memory": {
+                "default_limit": 10,
+            },
         }
 
         # Try to load from config file
@@ -885,9 +888,7 @@ class AuroraMCPTools:
                 total_chunks = cursor.fetchone()[0]
 
                 # Count by type
-                cursor.execute(
-                    "SELECT type, COUNT(*) FROM chunks GROUP BY type"
-                )
+                cursor.execute("SELECT type, COUNT(*) FROM chunks GROUP BY type")
                 types_breakdown = {row[0]: row[1] for row in cursor.fetchall()}
         except Exception as e:
             logger.warning(f"Failed to get index stats: {e}")

@@ -79,8 +79,9 @@ class TestParameterValidation:
 
             # Should NOT have InvalidParameter error for type_filter
             if "error" in response:
-                assert "type_filter" not in response["error"]["message"].lower(), \
+                assert "type_filter" not in response["error"]["message"].lower(), (
                     f"Valid type_filter '{filter_type}' was rejected"
+                )
 
 
 # ==============================================================================
@@ -96,16 +97,20 @@ class TestResponseFormat:
         tools = AuroraMCPTools(db_path=":memory:")
 
         # Mock retrieval to return some chunks
-        with patch.object(tools, '_retrieve_chunks', return_value=[
-            {
-                "id": "code:test.py:func",
-                "type": "code",
-                "content": "def func(): pass",
-                "file_path": "test.py",
-                "line_range": [1, 1],
-                "relevance_score": 0.9
-            }
-        ]):
+        with patch.object(
+            tools,
+            "_retrieve_chunks",
+            return_value=[
+                {
+                    "id": "code:test.py:func",
+                    "type": "code",
+                    "content": "def func(): pass",
+                    "file_path": "test.py",
+                    "line_range": [1, 1],
+                    "relevance_score": 0.9,
+                }
+            ],
+        ):
             result = tools.aurora_query("test query")
             response = json.loads(result)
 
@@ -117,7 +122,7 @@ class TestResponseFormat:
         """Response must include 'assessment' section with complexity and confidence."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_retrieve_chunks', return_value=[]):
+        with patch.object(tools, "_retrieve_chunks", return_value=[]):
             result = tools.aurora_query("test query")
             response = json.loads(result)
 
@@ -130,7 +135,7 @@ class TestResponseFormat:
         """Response must include 'metadata' section with query info and stats."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_retrieve_chunks', return_value=[]):
+        with patch.object(tools, "_retrieve_chunks", return_value=[]):
             result = tools.aurora_query("test query")
             response = json.loads(result)
 
@@ -145,12 +150,18 @@ class TestResponseFormat:
         tools = AuroraMCPTools(db_path=":memory:")
 
         mock_chunks = [
-            {"id": f"code:test{i}.py:func", "type": "code", "content": f"content {i}",
-             "file_path": f"test{i}.py", "line_range": [1, 1], "relevance_score": 0.8}
+            {
+                "id": f"code:test{i}.py:func",
+                "type": "code",
+                "content": f"content {i}",
+                "file_path": f"test{i}.py",
+                "line_range": [1, 1],
+                "relevance_score": 0.8,
+            }
             for i in range(3)
         ]
 
-        with patch.object(tools, '_retrieve_chunks', return_value=mock_chunks):
+        with patch.object(tools, "_retrieve_chunks", return_value=mock_chunks):
             result = tools.aurora_query("test query")
             response = json.loads(result)
 
@@ -166,11 +177,17 @@ class TestResponseFormat:
         tools = AuroraMCPTools(db_path=":memory:")
 
         mock_chunks = [
-            {"id": "code:test.py:func", "type": "code", "content": "content",
-             "file_path": "test.py", "line_range": [1, 1], "relevance_score": 0.85}
+            {
+                "id": "code:test.py:func",
+                "type": "code",
+                "content": "content",
+                "file_path": "test.py",
+                "line_range": [1, 1],
+                "relevance_score": 0.85,
+            }
         ]
 
-        with patch.object(tools, '_retrieve_chunks', return_value=mock_chunks):
+        with patch.object(tools, "_retrieve_chunks", return_value=mock_chunks):
             result = tools.aurora_query("test query")
             response = json.loads(result)
 
@@ -193,12 +210,18 @@ class TestConfidenceHandling:
 
         # Mock low-confidence results (low scores, few results)
         mock_chunks = [
-            {"id": "code:test.py:func", "type": "code", "content": "content",
-             "file_path": "test.py", "line_range": [1, 1], "relevance_score": 0.3}
+            {
+                "id": "code:test.py:func",
+                "type": "code",
+                "content": "content",
+                "file_path": "test.py",
+                "line_range": [1, 1],
+                "relevance_score": 0.3,
+            }
         ]
 
-        with patch.object(tools, '_retrieve_chunks', return_value=mock_chunks):
-            with patch.object(tools, '_calculate_retrieval_confidence', return_value=0.4):
+        with patch.object(tools, "_retrieve_chunks", return_value=mock_chunks):
+            with patch.object(tools, "_calculate_retrieval_confidence", return_value=0.4):
                 result = tools.aurora_query("test query")
                 response = json.loads(result)
 
@@ -214,13 +237,19 @@ class TestConfidenceHandling:
 
         # Mock high-confidence results
         mock_chunks = [
-            {"id": f"code:test{i}.py:func", "type": "code", "content": f"content {i}",
-             "file_path": f"test{i}.py", "line_range": [1, 1], "relevance_score": 0.9}
+            {
+                "id": f"code:test{i}.py:func",
+                "type": "code",
+                "content": f"content {i}",
+                "file_path": f"test{i}.py",
+                "line_range": [1, 1],
+                "relevance_score": 0.9,
+            }
             for i in range(5)
         ]
 
-        with patch.object(tools, '_retrieve_chunks', return_value=mock_chunks):
-            with patch.object(tools, '_calculate_retrieval_confidence', return_value=0.85):
+        with patch.object(tools, "_retrieve_chunks", return_value=mock_chunks):
+            with patch.object(tools, "_calculate_retrieval_confidence", return_value=0.85):
                 result = tools.aurora_query("test query")
                 response = json.loads(result)
 
@@ -232,7 +261,7 @@ class TestConfidenceHandling:
         """Empty search results should have confidence of 0.0."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_retrieve_chunks', return_value=[]):
+        with patch.object(tools, "_retrieve_chunks", return_value=[]):
             result = tools.aurora_query("test query")
             response = json.loads(result)
 
@@ -255,13 +284,25 @@ class TestTypeFiltering:
 
         # Mock mixed type results, but filtering should only return code
         mock_all_chunks = [
-            {"id": "code:test.py:func", "type": "code", "content": "code content",
-             "file_path": "test.py", "line_range": [1, 1], "relevance_score": 0.9},
-            {"id": "reas:reasoning:1", "type": "reas", "content": "reasoning content",
-             "file_path": None, "line_range": None, "relevance_score": 0.8},
+            {
+                "id": "code:test.py:func",
+                "type": "code",
+                "content": "code content",
+                "file_path": "test.py",
+                "line_range": [1, 1],
+                "relevance_score": 0.9,
+            },
+            {
+                "id": "reas:reasoning:1",
+                "type": "reas",
+                "content": "reasoning content",
+                "file_path": None,
+                "line_range": None,
+                "relevance_score": 0.8,
+            },
         ]
 
-        with patch.object(tools, '_retrieve_chunks') as mock_retrieve:
+        with patch.object(tools, "_retrieve_chunks") as mock_retrieve:
             # Filter should be passed through and only code returned
             mock_retrieve.return_value = [c for c in mock_all_chunks if c["type"] == "code"]
 
@@ -282,11 +323,19 @@ class TestTypeFiltering:
         tools = AuroraMCPTools(db_path=":memory:")
 
         mock_reas_chunks = [
-            {"id": "reas:reasoning:1", "type": "reas", "content": "reasoning",
-             "file_path": None, "line_range": None, "relevance_score": 0.85}
+            {
+                "id": "reas:reasoning:1",
+                "type": "reas",
+                "content": "reasoning",
+                "file_path": None,
+                "line_range": None,
+                "relevance_score": 0.85,
+            }
         ]
 
-        with patch.object(tools, '_retrieve_chunks', return_value=mock_reas_chunks) as mock_retrieve:
+        with patch.object(
+            tools, "_retrieve_chunks", return_value=mock_reas_chunks
+        ) as mock_retrieve:
             result = tools.aurora_query("test query", type_filter="reas")
             response = json.loads(result)
 
@@ -302,11 +351,19 @@ class TestTypeFiltering:
         tools = AuroraMCPTools(db_path=":memory:")
 
         mock_know_chunks = [
-            {"id": "know:pref:auth", "type": "know", "content": "knowledge",
-             "file_path": None, "line_range": None, "relevance_score": 0.8}
+            {
+                "id": "know:pref:auth",
+                "type": "know",
+                "content": "knowledge",
+                "file_path": None,
+                "line_range": None,
+                "relevance_score": 0.8,
+            }
         ]
 
-        with patch.object(tools, '_retrieve_chunks', return_value=mock_know_chunks) as mock_retrieve:
+        with patch.object(
+            tools, "_retrieve_chunks", return_value=mock_know_chunks
+        ) as mock_retrieve:
             result = tools.aurora_query("test query", type_filter="know")
             response = json.loads(result)
 
@@ -321,15 +378,35 @@ class TestTypeFiltering:
         tools = AuroraMCPTools(db_path=":memory:")
 
         mock_mixed_chunks = [
-            {"id": "code:test.py:func", "type": "code", "content": "code",
-             "file_path": "test.py", "line_range": [1, 1], "relevance_score": 0.9},
-            {"id": "reas:reasoning:1", "type": "reas", "content": "reasoning",
-             "file_path": None, "line_range": None, "relevance_score": 0.8},
-            {"id": "know:pref:auth", "type": "know", "content": "knowledge",
-             "file_path": None, "line_range": None, "relevance_score": 0.7},
+            {
+                "id": "code:test.py:func",
+                "type": "code",
+                "content": "code",
+                "file_path": "test.py",
+                "line_range": [1, 1],
+                "relevance_score": 0.9,
+            },
+            {
+                "id": "reas:reasoning:1",
+                "type": "reas",
+                "content": "reasoning",
+                "file_path": None,
+                "line_range": None,
+                "relevance_score": 0.8,
+            },
+            {
+                "id": "know:pref:auth",
+                "type": "know",
+                "content": "knowledge",
+                "file_path": None,
+                "line_range": None,
+                "relevance_score": 0.7,
+            },
         ]
 
-        with patch.object(tools, '_retrieve_chunks', return_value=mock_mixed_chunks) as mock_retrieve:
+        with patch.object(
+            tools, "_retrieve_chunks", return_value=mock_mixed_chunks
+        ) as mock_retrieve:
             result = tools.aurora_query("test query", type_filter=None)
             response = json.loads(result)
 
@@ -354,7 +431,7 @@ class TestComplexityAssessment:
         """Simple, short query should have low complexity score."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch.object(tools, '_retrieve_chunks', return_value=[]):
+        with patch.object(tools, "_retrieve_chunks", return_value=[]):
             result = tools.aurora_query("What is X?")
             response = json.loads(result)
 
@@ -374,7 +451,7 @@ class TestComplexityAssessment:
             "conditions, and suggest architectural improvements for scalability"
         )
 
-        with patch.object(tools, '_retrieve_chunks', return_value=[]):
+        with patch.object(tools, "_retrieve_chunks", return_value=[]):
             result = tools.aurora_query(complex_query)
             response = json.loads(result)
 
@@ -393,7 +470,7 @@ class TestComplexityAssessment:
             "and how it integrates with the session management module"
         )
 
-        with patch.object(tools, '_retrieve_chunks', return_value=[]):
+        with patch.object(tools, "_retrieve_chunks", return_value=[]):
             result = tools.aurora_query(medium_query)
             response = json.loads(result)
 
@@ -416,18 +493,19 @@ class TestNoAPIKeyRequired:
         tools = AuroraMCPTools(db_path=":memory:")
 
         # Explicitly unset API key
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             # Ensure no ANTHROPIC_API_KEY in environment
-            assert 'ANTHROPIC_API_KEY' not in os.environ
+            assert "ANTHROPIC_API_KEY" not in os.environ
 
-            with patch.object(tools, '_retrieve_chunks', return_value=[]):
+            with patch.object(tools, "_retrieve_chunks", return_value=[]):
                 result = tools.aurora_query("test query")
                 response = json.loads(result)
 
                 # Should NOT have APIKeyMissing error
                 if "error" in response:
-                    assert response["error"]["type"] != "APIKeyMissing", \
+                    assert response["error"]["type"] != "APIKeyMissing", (
                         "aurora_query should work without API key"
+                    )
 
                 # Should have successful response structure
                 assert "context" in response or "error" not in response
@@ -439,9 +517,9 @@ class TestNoAPIKeyRequired:
         # Mock config without API key
         mock_config = {"memory": {"default_limit": 10}}
 
-        with patch.object(tools, '_load_config', return_value=mock_config):
-            with patch.dict('os.environ', {}, clear=True):
-                with patch.object(tools, '_retrieve_chunks', return_value=[]):
+        with patch.object(tools, "_load_config", return_value=mock_config):
+            with patch.dict("os.environ", {}, clear=True):
+                with patch.object(tools, "_retrieve_chunks", return_value=[]):
                     result = tools.aurora_query("test query")
                     response = json.loads(result)
 
@@ -457,20 +535,22 @@ class TestNoAPIKeyRequired:
         test_queries = [
             "simple query",
             "complex query with many words and clauses",
-            "query with type filter"
+            "query with type filter",
         ]
 
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             for query in test_queries:
-                with patch.object(tools, '_retrieve_chunks', return_value=[]):
+                with patch.object(tools, "_retrieve_chunks", return_value=[]):
                     result = tools.aurora_query(query)
                     response = json.loads(result)
 
                     if "error" in response:
                         error_type = response["error"]["type"]
-                        assert error_type != "APIKeyMissing", \
+                        assert error_type != "APIKeyMissing", (
                             f"Query '{query}' should not require API key, got error: {error_type}"
+                        )
                         # Also check error message doesn't mention API key
                         error_msg = response["error"]["message"].lower()
-                        assert "api" not in error_msg or "key" not in error_msg, \
+                        assert "api" not in error_msg or "key" not in error_msg, (
                             f"Error message should not mention API key: {error_msg}"
+                        )

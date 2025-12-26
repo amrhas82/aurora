@@ -35,28 +35,27 @@ def temp_aurora_dir(tmp_path):
 
     # Create budget tracker
     budget_file = aurora_dir / "budget_tracker.json"
-    budget_file.write_text(json.dumps({
-        "monthly_usage_usd": 10.0,
-        "monthly_limit_usd": 50.0
-    }))
+    budget_file.write_text(json.dumps({"monthly_usage_usd": 10.0, "monthly_limit_usd": 50.0}))
 
     # Create config file
     config_file = aurora_dir / "config.json"
-    config_file.write_text(json.dumps({
-        "api": {
-            "default_model": "claude-sonnet-4-20250514",
-            "temperature": 0.7,
-            "max_tokens": 4000
-        },
-        "query": {
-            "auto_escalate": True,
-            "complexity_threshold": 0.6,
-            "verbosity": "normal"
-        },
-        "budget": {
-            "monthly_limit_usd": 50.0
-        }
-    }))
+    config_file.write_text(
+        json.dumps(
+            {
+                "api": {
+                    "default_model": "claude-sonnet-4-20250514",
+                    "temperature": 0.7,
+                    "max_tokens": 4000,
+                },
+                "query": {
+                    "auto_escalate": True,
+                    "complexity_threshold": 0.6,
+                    "verbosity": "normal",
+                },
+                "budget": {"monthly_limit_usd": 50.0},
+            }
+        )
+    )
 
     return aurora_dir
 
@@ -64,10 +63,10 @@ def temp_aurora_dir(tmp_path):
 @pytest.fixture
 def tools_with_temp_home(tmp_path, temp_aurora_dir):
     """Create AuroraMCPTools with temporary home directory."""
-    with patch('pathlib.Path.home', return_value=tmp_path):
+    with patch("pathlib.Path.home", return_value=tmp_path):
         tools = AuroraMCPTools(db_path=":memory:")
         # Clear any cached config
-        if hasattr(tools, '_config_cache'):
+        if hasattr(tools, "_config_cache"):
             del tools._config_cache
         yield tools
 
@@ -83,7 +82,7 @@ def mock_llm_response():
         "input_tokens": 50,
         "output_tokens": 30,
         "model": "claude-sonnet-4-20250514",
-        "temperature": 0.7
+        "temperature": 0.7,
     }
 
 
@@ -111,7 +110,7 @@ def mock_soar_response():
                 {"phase": "Record", "duration": 0.2, "status": "completed"},
                 {"phase": "Respond", "duration": 0.2, "status": "completed"},
             ]
-        }
+        },
     }
 
 
@@ -123,14 +122,12 @@ def mock_soar_response():
 class TestDirectLLMExecution:
     """Integration tests for direct LLM execution path."""
 
-    def test_simple_query_end_to_end_with_mocked_llm(
-        self, tools_with_temp_home, mock_llm_response
-    ):
+    def test_simple_query_end_to_end_with_mocked_llm(self, tools_with_temp_home, mock_llm_response):
         """Test simple query flows through direct LLM path end-to-end."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_direct_llm', return_value=mock_llm_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_direct_llm", return_value=mock_llm_response):
                 result = tools.aurora_query("What is Python?")
                 response = json.loads(result)
 
@@ -139,9 +136,7 @@ class TestDirectLLMExecution:
                 assert "metadata" in response
                 assert response["metadata"]["model"] == "claude-sonnet-4-20250514"
 
-    def test_memory_context_included_in_direct_llm(
-        self, tools_with_temp_home, mock_llm_response
-    ):
+    def test_memory_context_included_in_direct_llm(self, tools_with_temp_home, mock_llm_response):
         """Test that memory context is retrieved for direct LLM queries.
 
         This test verifies that the execution path calls _get_memory_context
@@ -156,8 +151,8 @@ class TestDirectLLMExecution:
             memory_context_called[0] = True
             return original_get_memory(*args, **kwargs)
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_get_memory_context', side_effect=spy_get_memory):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_get_memory_context", side_effect=spy_get_memory):
                 # Don't mock _execute_direct_llm so _get_memory_context gets called
                 result = tools.aurora_query("What is Python?")
                 response = json.loads(result)
@@ -167,14 +162,12 @@ class TestDirectLLMExecution:
                 # Query should complete successfully
                 assert "answer" in response
 
-    def test_response_includes_all_required_fields(
-        self, tools_with_temp_home, mock_llm_response
-    ):
+    def test_response_includes_all_required_fields(self, tools_with_temp_home, mock_llm_response):
         """Test that direct LLM response includes all required fields."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_direct_llm', return_value=mock_llm_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_direct_llm", return_value=mock_llm_response):
                 result = tools.aurora_query("Simple question")
                 response = json.loads(result)
 
@@ -204,9 +197,9 @@ class TestDirectLLMExecution:
             budget_checked[0] = True
             return True
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', side_effect=mock_check_budget):
-                with patch.object(tools, '_execute_direct_llm', return_value=mock_llm_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", side_effect=mock_check_budget):
+                with patch.object(tools, "_execute_direct_llm", return_value=mock_llm_response):
                     tools.aurora_query("Test query")
 
                     # Budget should have been checked
@@ -221,28 +214,24 @@ class TestDirectLLMExecution:
 class TestSOARPipelineExecution:
     """Integration tests for SOAR pipeline execution."""
 
-    def test_complex_query_triggers_soar(
-        self, tools_with_temp_home, mock_soar_response
-    ):
+    def test_complex_query_triggers_soar(self, tools_with_temp_home, mock_soar_response):
         """Test that complex queries trigger SOAR pipeline."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_soar', return_value=mock_soar_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_soar", return_value=mock_soar_response):
                 # Use complex keywords that trigger SOAR
                 result = tools.aurora_query("Analyze the architecture design pattern")
                 response = json.loads(result)
 
                 assert response["execution_path"] == "soar_pipeline"
 
-    def test_force_soar_parameter_works(
-        self, tools_with_temp_home, mock_soar_response
-    ):
+    def test_force_soar_parameter_works(self, tools_with_temp_home, mock_soar_response):
         """Test that force_soar=True always uses SOAR pipeline."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_soar', return_value=mock_soar_response) as mock_soar:
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_soar", return_value=mock_soar_response) as mock_soar:
                 # Simple query with force_soar should use SOAR
                 result = tools.aurora_query("What is X?", force_soar=True)
                 response = json.loads(result)
@@ -250,18 +239,14 @@ class TestSOARPipelineExecution:
                 assert mock_soar.called
                 assert response["execution_path"] == "soar_pipeline"
 
-    def test_verbose_mode_includes_all_phases(
-        self, tools_with_temp_home, mock_soar_response
-    ):
+    def test_verbose_mode_includes_all_phases(self, tools_with_temp_home, mock_soar_response):
         """Test that verbose mode includes all 9 SOAR phases."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_soar', return_value=mock_soar_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_soar", return_value=mock_soar_response):
                 result = tools.aurora_query(
-                    "Analyze complex pattern",
-                    force_soar=True,
-                    verbose=True
+                    "Analyze complex pattern", force_soar=True, verbose=True
                 )
                 response = json.loads(result)
 
@@ -271,24 +256,25 @@ class TestSOARPipelineExecution:
                 # Verify phase names
                 phase_names = [p["phase"] for p in response["phases"]]
                 expected = [
-                    "Assess", "Retrieve", "Decompose", "Verify",
-                    "Route", "Collect", "Synthesize", "Record", "Respond"
+                    "Assess",
+                    "Retrieve",
+                    "Decompose",
+                    "Verify",
+                    "Route",
+                    "Collect",
+                    "Synthesize",
+                    "Record",
+                    "Respond",
                 ]
                 assert phase_names == expected
 
-    def test_phase_timing_included_in_response(
-        self, tools_with_temp_home, mock_soar_response
-    ):
+    def test_phase_timing_included_in_response(self, tools_with_temp_home, mock_soar_response):
         """Test that phase timing is included in verbose response."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_soar', return_value=mock_soar_response):
-                result = tools.aurora_query(
-                    "Complex query",
-                    force_soar=True,
-                    verbose=True
-                )
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_soar", return_value=mock_soar_response):
+                result = tools.aurora_query("Complex query", force_soar=True, verbose=True)
                 response = json.loads(result)
 
                 for phase in response["phases"]:
@@ -296,14 +282,12 @@ class TestSOARPipelineExecution:
                     assert isinstance(phase["duration"], (int, float))
                     assert phase["duration"] >= 0
 
-    def test_soar_response_has_correct_structure(
-        self, tools_with_temp_home, mock_soar_response
-    ):
+    def test_soar_response_has_correct_structure(self, tools_with_temp_home, mock_soar_response):
         """Test that SOAR response has correct structure."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_soar', return_value=mock_soar_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_soar", return_value=mock_soar_response):
                 result = tools.aurora_query("Complex query", force_soar=True)
                 response = json.loads(result)
 
@@ -327,7 +311,7 @@ class TestErrorScenarios:
         """Test that missing API key returns user-friendly error."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value=None):
+        with patch.object(tools, "_get_api_key", return_value=None):
             result = tools.aurora_query("Test query")
             response = json.loads(result)
 
@@ -346,8 +330,8 @@ class TestErrorScenarios:
         tools._budget_monthly_limit = 50.0
         tools._budget_estimated_cost = 0.05
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=False):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=False):
                 result = tools.aurora_query("Test query")
                 response = json.loads(result)
 
@@ -366,9 +350,9 @@ class TestErrorScenarios:
             call_count[0] += 1
             raise Exception("Rate limit exceeded (429)")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', side_effect=always_fail):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_execute_direct_llm", side_effect=always_fail):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
 
@@ -386,27 +370,25 @@ class TestErrorScenarios:
         def always_timeout(*args, **kwargs):
             raise TimeoutError("Request timed out")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_execute_direct_llm', side_effect=always_timeout):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_execute_direct_llm", side_effect=always_timeout):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
 
                     assert "error" in response
                     assert "suggestion" in response["error"]
 
-    def test_graceful_degradation_memory_unavailable(
-        self, tools_with_temp_home, mock_llm_response
-    ):
+    def test_graceful_degradation_memory_unavailable(self, tools_with_temp_home, mock_llm_response):
         """Test graceful degradation when memory is unavailable."""
         tools = tools_with_temp_home
 
         def memory_error(*args, **kwargs):
             raise Exception("Memory store not available")
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_check_budget', return_value=True):
-                with patch.object(tools, '_get_memory_context', side_effect=memory_error):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_check_budget", return_value=True):
+                with patch.object(tools, "_get_memory_context", side_effect=memory_error):
                     # Should not raise - graceful degradation
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
@@ -436,10 +418,12 @@ class TestErrorScenarios:
             response = json.loads(result)
 
             if "error" in response:
-                assert "suggestion" in response["error"], \
+                assert "suggestion" in response["error"], (
                     f"Missing suggestion for scenario: {scenario}"
-                assert len(response["error"]["suggestion"]) > 0, \
+                )
+                assert len(response["error"]["suggestion"]) > 0, (
                     f"Empty suggestion for scenario: {scenario}"
+                )
 
 
 # ==============================================================================
@@ -465,10 +449,10 @@ class TestConfigurationIntegration:
         tools = tools_with_temp_home
 
         # Clear cached config
-        if hasattr(tools, '_config_cache'):
+        if hasattr(tools, "_config_cache"):
             del tools._config_cache
 
-        with patch.dict('os.environ', {'AURORA_MODEL': 'custom-model'}):
+        with patch.dict("os.environ", {"AURORA_MODEL": "custom-model"}):
             config = tools._load_config()
 
             assert config["api"]["default_model"] == "custom-model"
@@ -477,44 +461,40 @@ class TestConfigurationIntegration:
 class TestQueryParameterOverrides:
     """Test parameter overrides in queries."""
 
-    def test_model_parameter_override(
-        self, tools_with_temp_home, mock_llm_response
-    ):
+    def test_model_parameter_override(self, tools_with_temp_home, mock_llm_response):
         """Test that model parameter overrides config."""
         tools = tools_with_temp_home
 
         custom_response = {**mock_llm_response, "model": "custom-model"}
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_direct_llm', return_value=custom_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_direct_llm", return_value=custom_response):
                 result = tools.aurora_query("Test", model="custom-model")
                 response = json.loads(result)
 
                 assert response["metadata"]["model"] == "custom-model"
 
-    def test_temperature_parameter_override(
-        self, tools_with_temp_home, mock_llm_response
-    ):
+    def test_temperature_parameter_override(self, tools_with_temp_home, mock_llm_response):
         """Test that temperature parameter overrides config."""
         tools = tools_with_temp_home
 
         custom_response = {**mock_llm_response, "temperature": 0.9}
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_direct_llm', return_value=custom_response):
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(tools, "_execute_direct_llm", return_value=custom_response):
                 result = tools.aurora_query("Test", temperature=0.9)
                 response = json.loads(result)
 
                 assert response["metadata"]["temperature"] == 0.9
 
-    def test_max_tokens_parameter_passed(
-        self, tools_with_temp_home, mock_llm_response
-    ):
+    def test_max_tokens_parameter_passed(self, tools_with_temp_home, mock_llm_response):
         """Test that max_tokens parameter is passed through."""
         tools = tools_with_temp_home
 
-        with patch.object(tools, '_get_api_key', return_value='test-key'):
-            with patch.object(tools, '_execute_direct_llm', return_value=mock_llm_response) as mock_exec:
+        with patch.object(tools, "_get_api_key", return_value="test-key"):
+            with patch.object(
+                tools, "_execute_direct_llm", return_value=mock_llm_response
+            ) as mock_exec:
                 tools.aurora_query("Test", max_tokens=2000)
 
                 # Verify max_tokens was passed

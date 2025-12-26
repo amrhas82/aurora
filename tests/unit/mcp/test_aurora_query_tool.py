@@ -70,16 +70,12 @@ class TestConfigurationLoading:
         aurora_dir = tmp_path / ".aurora"
         aurora_dir.mkdir(exist_ok=True)
         config_file = aurora_dir / "config.json"
-        config_data = {
-            "memory": {
-                "default_limit": 20
-            }
-        }
-        config_file.write_text(json.dumps(config_data), encoding='utf-8')
+        config_data = {"memory": {"default_limit": 20}}
+        config_file.write_text(json.dumps(config_data), encoding="utf-8")
 
-        with patch('pathlib.Path.home', return_value=tmp_path):
+        with patch("pathlib.Path.home", return_value=tmp_path):
             # Clear any cached config
-            if hasattr(tools, '_config_cache'):
+            if hasattr(tools, "_config_cache"):
                 del tools._config_cache
             config = tools._load_config()
             assert config["memory"]["default_limit"] == 20
@@ -88,7 +84,7 @@ class TestConfigurationLoading:
         """Config defaults should be applied when file doesn't exist."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch('pathlib.Path.exists', return_value=False):
+        with patch("pathlib.Path.exists", return_value=False):
             config = tools._load_config()
 
             # Should have defaults
@@ -99,10 +95,10 @@ class TestConfigurationLoading:
         tools = AuroraMCPTools(db_path=":memory:")
 
         config_file = tmp_path / "config.json"
-        config_file.write_text("{ invalid json }", encoding='utf-8')
+        config_file.write_text("{ invalid json }", encoding="utf-8")
 
-        with patch('pathlib.Path.home', return_value=tmp_path):
-            with patch('pathlib.Path.exists', return_value=True):
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            with patch("pathlib.Path.exists", return_value=True):
                 config = tools._load_config()
 
                 # Should fall back to defaults
@@ -112,7 +108,7 @@ class TestConfigurationLoading:
         """Config should be cached and only loaded once per instance."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch('pathlib.Path.exists', return_value=False):
+        with patch("pathlib.Path.exists", return_value=False):
             # Load config twice
             config1 = tools._load_config()
             config2 = tools._load_config()

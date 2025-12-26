@@ -1,6 +1,6 @@
-# MCP Setup Guide
+# MCP Setup Guide - Claude Code CLI
 
-This guide explains how to integrate AURORA's MCP (Model Context Protocol) server with Claude Desktop, enabling Claude to search, index, and navigate your codebase directly from conversations.
+This guide explains how to integrate AURORA's MCP (Model Context Protocol) server with Claude Code CLI, enabling you to search, index, and query your codebase directly from your development sessions.
 
 ## Table of Contents
 
@@ -8,11 +8,8 @@ This guide explains how to integrate AURORA's MCP (Model Context Protocol) serve
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Configuration](#configuration)
-  - [macOS Configuration](#macos-configuration)
-  - [Linux Configuration](#linux-configuration)
-  - [Windows Configuration](#windows-configuration)
 - [Usage Examples](#usage-examples)
-- [Operating Modes](#operating-modes)
+- [Available Tools](#available-tools)
 - [Troubleshooting](#troubleshooting)
 - [Advanced Configuration](#advanced-configuration)
 - [FAQ](#faq)
@@ -21,7 +18,7 @@ This guide explains how to integrate AURORA's MCP (Model Context Protocol) serve
 
 ## Introduction
 
-AURORA's MCP server provides Claude Desktop with six powerful tools for code navigation and intelligent querying:
+AURORA's MCP server provides Claude Code CLI with six powerful tools for code navigation and intelligent querying:
 
 1. **aurora_search**: Semantic search over your indexed codebase
 2. **aurora_index**: Index new files or directories
@@ -31,11 +28,11 @@ AURORA's MCP server provides Claude Desktop with six powerful tools for code nav
 6. **aurora_query**: Execute queries with auto-escalation (direct LLM or SOAR pipeline)
 
 **Benefits:**
-- Natural language code search ("find authentication logic")
+- Natural language code search directly in your terminal
 - Intelligent query processing with automatic complexity assessment
-- Contextual code understanding (Claude knows your codebase structure)
-- Faster development (no manual file copying)
-- Memory persistence across conversations
+- Contextual code understanding during development
+- No manual file copying or context switching
+- Memory persistence across Claude Code CLI sessions
 
 ---
 
@@ -50,14 +47,14 @@ Before setting up MCP integration, ensure you have:
 
 2. **AURORA installed**
    ```bash
-   pip install aurora
+   pip install aurora-actr[all]
    # Or for development:
    pip install -e .
    ```
 
-3. **Claude Desktop installed**
-   - Download from: https://claude.ai/download
-   - Verify installation by opening Claude Desktop
+3. **Claude Code CLI installed**
+   - Verify: `claude-code --version`
+   - Installation: See [Claude Code documentation](https://claude.ai/claude-code)
 
 4. **Indexed codebase**
    ```bash
@@ -78,708 +75,527 @@ AURORA's MCP server is automatically installed with the `aurora` package. No add
 Verify the MCP server is available:
 
 ```bash
-# Check if aurora-mcp script exists
-which aurora-mcp
-
 # Test the MCP server
-python -m aurora.mcp.server --test
+python3 -m aurora.mcp.server --test
 ```
 
 Expected output:
 ```
-Aurora MCP Server initialized successfully
-Available tools: aurora_search, aurora_index, aurora_stats, aurora_context, aurora_related, aurora_query
+AURORA MCP Server - Test Mode
+Database: /home/user/.aurora/memory.db
+Available tools: 6
+- aurora_search
+- aurora_index
+- aurora_stats
+- aurora_context
+- aurora_related
+- aurora_query
 ```
 
 ---
 
 ## Configuration
 
-Configure Claude Desktop to use AURORA's MCP server by editing the Claude Desktop configuration file.
+Configure Claude Code CLI to use AURORA's MCP server in two steps:
 
-### macOS Configuration
+### Step 1: Create MCP Server Configuration
 
-1. **Locate the configuration file:**
-   ```bash
-   # Configuration file location
-   ~/Library/Application Support/Claude/claude_desktop_config.json
-   ```
+Create the plugin directory and configuration file:
 
-2. **Edit the configuration:**
-   ```bash
-   # Open in your preferred editor
-   nano ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```bash
+mkdir -p ~/.claude/plugins/aurora
+```
 
-   # Or use VS Code
-   code ~/Library/Application\ Support/Claude/claude_desktop_config.json
-   ```
+Create `~/.claude/plugins/aurora/.mcp.json`:
 
-3. **Add AURORA MCP server:**
-   ```json
-   {
-     "mcpServers": {
-       "aurora": {
-         "command": "python3",
-         "args": [
-           "-m",
-           "aurora.mcp.server"
-         ],
-         "env": {
-           "AURORA_DB_PATH": "/Users/YOUR_USERNAME/.aurora/memory.db"
-         }
-       }
-     }
-   }
-   ```
+```json
+{
+  "aurora": {
+    "command": "python3",
+    "args": ["-m", "aurora.mcp.server"],
+    "env": {
+      "AURORA_DB_PATH": "${HOME}/.aurora/memory.db",
+      "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}"
+    }
+  }
+}
+```
 
-4. **Replace `YOUR_USERNAME`** with your actual username:
-   ```bash
-   # Find your username
-   whoami
-   ```
+**Environment Variables:**
+- `AURORA_DB_PATH`: Path to your AURORA database (default: `~/.aurora/memory.db`)
+- `ANTHROPIC_API_KEY`: Required for `aurora_query` tool (optional for other tools)
 
-5. **Restart Claude Desktop** for changes to take effect.
+### Step 2: Add Tool Permissions
 
-### Linux Configuration
+Edit `~/.claude/settings.local.json` to grant permissions for AURORA tools:
 
-1. **Locate the configuration file:**
-   ```bash
-   # Configuration file location
-   ~/.config/Claude/claude_desktop_config.json
-   ```
+```json
+{
+  "permissions": {
+    "allow": [
+      "// === MCP Tools ===",
+      "mcp__aurora__aurora_query",
+      "mcp__aurora__aurora_search",
+      "mcp__aurora__aurora_index",
+      "mcp__aurora__aurora_stats",
+      "mcp__aurora__aurora_context",
+      "mcp__aurora__aurora_related"
+    ]
+  }
+}
+```
 
-2. **Edit the configuration:**
-   ```bash
-   # Create directory if it doesn't exist
-   mkdir -p ~/.config/Claude
+**Note:** If `settings.local.json` doesn't exist, create it with the structure above.
 
-   # Edit configuration
-   nano ~/.config/Claude/claude_desktop_config.json
-   ```
+### Step 3: Restart Claude Code CLI
 
-3. **Add AURORA MCP server:**
-   ```json
-   {
-     "mcpServers": {
-       "aurora": {
-         "command": "python3",
-         "args": [
-           "-m",
-           "aurora.mcp.server"
-         ],
-         "env": {
-           "AURORA_DB_PATH": "/home/YOUR_USERNAME/.aurora/memory.db"
-         }
-       }
-     }
-   }
-   ```
-
-4. **Replace `YOUR_USERNAME`** with your actual username:
-   ```bash
-   # Find your username
-   whoami
-   ```
-
-5. **Restart Claude Desktop**.
-
-### Windows Configuration
-
-1. **Locate the configuration file:**
-   ```powershell
-   # Configuration file location
-   %APPDATA%\Claude\claude_desktop_config.json
-
-   # Full path (replace YOUR_USERNAME)
-   C:\Users\YOUR_USERNAME\AppData\Roaming\Claude\claude_desktop_config.json
-   ```
-
-2. **Edit the configuration:**
-   - Open File Explorer
-   - Paste the path: `%APPDATA%\Claude`
-   - Edit `claude_desktop_config.json` with Notepad or VS Code
-
-3. **Add AURORA MCP server:**
-   ```json
-   {
-     "mcpServers": {
-       "aurora": {
-         "command": "python",
-         "args": [
-           "-m",
-           "aurora.mcp.server"
-         ],
-         "env": {
-           "AURORA_DB_PATH": "C:\\Users\\YOUR_USERNAME\\.aurora\\memory.db"
-         }
-       }
-     }
-   }
-   ```
-
-   **Note:** Use double backslashes (`\\`) in Windows paths!
-
-4. **Replace `YOUR_USERNAME`** with your actual Windows username.
-
-5. **Restart Claude Desktop**.
+Restart your Claude Code CLI session for changes to take effect.
 
 ---
 
 ## Usage Examples
 
-Once configured, you can ask Claude to search and navigate your codebase:
+Once configured, AURORA's tools are automatically available in Claude Code CLI sessions. You don't call them directly - Claude Code CLI uses them as needed.
 
-### Example 1: Search for Code
+### Example Session
 
-**You:** "Search my codebase for authentication logic"
+```
+User: "Search my codebase for authentication logic"
+Claude: [Uses aurora_search tool]
+Found 12 matches for authentication in your codebase:
+1. auth/login.py:45 - login_user() function
+2. auth/middleware.py:89 - verify_token() function
+...
 
-**Claude uses:** `aurora_search("authentication login user credentials")`
+User: "What does the UserService class do?"
+Claude: [Uses aurora_context tool]
+The UserService class in services/user.py handles user management...
 
-**Claude responds:** "I found 3 relevant chunks in your codebase:
-1. `auth.py`: `authenticate_user()` function (lines 45-67)
-2. `middleware.py`: `verify_token()` function (lines 112-135)
-3. `models.py`: `User` class with authentication methods (lines 89-145)"
+User: "Compare our API patterns with REST best practices"
+Claude: [Uses aurora_query tool with SOAR pipeline]
+Analyzing your API implementation...
+[Provides comprehensive analysis with code examples]
+```
 
-### Example 2: Find All Usages
+### Tool Selection (Automatic)
 
-**You:** "Find all usages of the DatabaseConnection class"
+Claude Code CLI automatically selects the appropriate tool based on your request:
 
-**Claude uses:** `aurora_search("DatabaseConnection class usage import")`
-
-**Claude responds:** "The `DatabaseConnection` class is used in 5 files:
-- `db/connection.py`: Class definition
-- `api/handlers.py`: Import and connection pooling
-- `services/data_service.py`: Query execution
-- `tests/test_db.py`: Unit tests
-- `config/settings.py`: Connection configuration"
-
-### Example 3: Understand a Module
-
-**You:** "What does the UserService module do?"
-
-**Claude uses:**
-1. `aurora_search("UserService")`
-2. `aurora_context("/path/to/services/user_service.py")`
-
-**Claude responds:** "The `UserService` module provides user management functionality:
-- User CRUD operations (create, read, update, delete)
-- Password hashing and validation
-- Email verification
-- Session management
-- Integration with authentication middleware"
-
-### Example 4: Find Error Handling
-
-**You:** "Show me error handling in the payment processing code"
-
-**Claude uses:** `aurora_search("payment process error exception handling try catch")`
-
-**Claude responds:** "Payment processing includes error handling in:
-1. `payments/processor.py`: Try-except blocks for API failures
-2. `payments/validators.py`: Input validation errors
-3. `payments/retry.py`: Retry logic for transient failures
-..."
+| Request Type | Tool Used | Example |
+|--------------|-----------|---------|
+| Code search | `aurora_search` | "Find all database queries" |
+| View file/function | `aurora_context` | "Show me the login function" |
+| Find dependencies | `aurora_related` | "What calls this function?" |
+| Index new code | `aurora_index` | "Index the new api/ directory" |
+| Database stats | `aurora_stats` | "How many files are indexed?" |
+| Complex analysis | `aurora_query` | "Explain our authentication flow" |
 
 ---
 
-## aurora_query Tool
+## Available Tools
 
-The `aurora_query` tool provides intelligent query processing with automatic complexity assessment. Simple queries use fast direct LLM calls, while complex queries automatically escalate to the full SOAR 9-phase reasoning pipeline.
+### 1. aurora_search
 
-### Parameters
+Search your indexed codebase using semantic or keyword-based search.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `query` | string | required | Natural language query to process |
-| `force_soar` | boolean | false | Always use SOAR pipeline (bypass auto-escalation) |
-| `verbose` | boolean | null | Include phase trace and detailed metrics |
-| `model` | string | null | Override default LLM model |
-| `temperature` | float | null | Override temperature (0.0-1.0) |
-| `max_tokens` | integer | null | Override max tokens for response |
+**When Claude Uses It:**
+- "Find code that handles authentication"
+- "Search for database connection logic"
+- "Show me all error handling"
 
-### Response Format
+**Returns:** List of relevant code chunks with file paths and snippets
 
+---
+
+### 2. aurora_index
+
+Index new files or directories into AURORA's database.
+
+**When Claude Uses It:**
+- "Index the new api/ directory"
+- "Add tests/ to the codebase index"
+
+**Returns:** Indexing statistics (files processed, chunks created)
+
+---
+
+### 3. aurora_stats
+
+View statistics about your indexed codebase.
+
+**When Claude Uses It:**
+- "How many files are indexed?"
+- "Show codebase statistics"
+
+**Returns:** Chunk count, file count, database size
+
+---
+
+### 4. aurora_context
+
+Retrieve content from a specific file or function.
+
+**When Claude Uses It:**
+- "Show me the login function"
+- "What's in auth/middleware.py?"
+
+**Returns:** Full source code with syntax highlighting
+
+---
+
+### 5. aurora_related
+
+Find related code chunks through ACT-R spreading activation.
+
+**When Claude Uses It:**
+- "What calls this function?"
+- "Find related authentication code"
+
+**Returns:** Related chunks ranked by activation strength
+
+---
+
+### 6. aurora_query
+
+Execute intelligent queries with automatic escalation between direct LLM and SOAR pipeline.
+
+**When Claude Uses It:**
+- "Explain our authentication architecture"
+- "Compare our API design with best practices"
+- "How does the payment system work?"
+
+**Features:**
+- Auto-escalation: Simple queries use direct LLM (fast), complex ones use SOAR (thorough)
+- Budget enforcement with configurable limits
+- Progress tracking with verbose mode
+- Graceful degradation when memory unavailable
+- Retry logic for transient errors
+
+**Configuration:**
 ```json
+// ~/.aurora/config.json
 {
-  "answer": "The response to your query...",
-  "execution_path": "direct_llm",
-  "metadata": {
-    "duration_seconds": 1.23,
-    "cost_usd": 0.01,
-    "input_tokens": 150,
-    "output_tokens": 200,
-    "model": "claude-sonnet-4-20250514",
-    "temperature": 0.7
+  "api": {
+    "default_model": "claude-sonnet-4-20250514",
+    "temperature": 0.7,
+    "max_tokens": 4000
+  },
+  "query": {
+    "auto_escalate": true,
+    "complexity_threshold": 0.6,
+    "verbosity": "verbose"
+  },
+  "budget": {
+    "monthly_limit_usd": 50.0
   }
 }
 ```
 
-With `verbose=true` and SOAR pipeline:
-```json
-{
-  "answer": "...",
-  "execution_path": "soar_pipeline",
-  "metadata": { ... },
-  "phases": [
-    {"phase": "Assess", "duration": 0.05, "status": "completed"},
-    {"phase": "Retrieve", "duration": 0.12, "status": "completed"},
-    ...
-  ]
-}
-```
-
-### Usage Examples
-
-#### Example 1: Simple Query (Direct LLM)
-
-**You:** "What is a Python decorator?"
-
-**Claude uses:** `aurora_query("What is a Python decorator?")`
-
-**Response:** Uses direct LLM path (~1-2s) because query is simple.
-
-#### Example 2: Complex Query (Auto-Escalation to SOAR)
-
-**You:** "Compare the authentication patterns used in our API with industry best practices"
-
-**Claude uses:** `aurora_query("Compare the authentication patterns used in our API with industry best practices")`
-
-**Response:** Auto-escalates to SOAR pipeline because query involves analysis and comparison.
-
-#### Example 3: Force SOAR with Verbose Output
-
-**You:** "Explain how our caching layer works, and show me the reasoning process"
-
-**Claude uses:** `aurora_query("Explain how our caching layer works", force_soar=True, verbose=True)`
-
-**Response:** Uses full SOAR pipeline with phase trace showing all 9 phases:
-- Assess, Retrieve, Decompose, Verify, Route, Collect, Synthesize, Record, Respond
-
-#### Example 4: Custom Model Settings
-
-**You:** "Generate a detailed security analysis with higher creativity"
-
-**Claude uses:** `aurora_query("Generate security analysis", temperature=0.9, max_tokens=4000)`
-
-**Response:** Uses custom temperature for more varied responses.
-
-#### Example 5: Code-Aware Query
-
-**You:** "How does the UserService class handle authentication?"
-
-**Claude uses:**
-1. `aurora_search("UserService authentication")` - to find relevant code
-2. `aurora_query("Explain how UserService handles authentication based on this code: ...")` - to analyze
-
-**Response:** Contextual answer based on your actual codebase.
-
-### Auto-Escalation Logic
-
-The tool automatically determines which execution path to use:
-
-**Direct LLM (simple queries, <2s):**
-- "What is X?"
-- "Define Y"
-- "Explain briefly Z"
-
-**SOAR Pipeline (complex queries, 3-10s):**
-- "Compare X and Y"
-- "Analyze the architecture of..."
-- "Design a solution for..."
-- "How does X interact with Y?"
-
-You can always override with `force_soar=True`.
-
-### Requirements
-
-- **API Key:** Requires `ANTHROPIC_API_KEY` environment variable or `~/.aurora/config.json` setting
-- **Budget:** Respects monthly budget limits configured in `~/.aurora/budget_tracker.json`
-
-### Error Handling
-
-If something goes wrong, you'll receive a structured error:
-
-```json
-{
-  "error": {
-    "type": "APIKeyMissing",
-    "message": "API key not found...",
-    "suggestion": "To fix this:\n1. Set environment variable..."
-  }
-}
-```
-
-See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md#mcp-query-errors) for all error types and solutions.
-
----
-
-## Operating Modes
-
-AURORA's MCP server supports two operating modes:
-
-### On-Demand Mode (Default)
-
-- MCP server starts when Claude Desktop launches
-- Stops when Claude Desktop closes
-- Minimal resource usage
-- **Best for:** Most users
-
-**Configuration:** No additional configuration needed (default behavior)
-
-### Always-On Mode
-
-- MCP server runs continuously as a background service
-- Slightly faster response times
-- Uses more system resources
-- **Best for:** Heavy users, large codebases
-
-**Enable Always-On Mode:**
-```bash
-# Enable always-on mode
-aurora-mcp start
-
-# Check status
-aurora-mcp status
-
-# Disable always-on mode
-aurora-mcp stop
-```
+**Returns:** Comprehensive answer with reasoning trace (in verbose mode)
 
 ---
 
 ## Troubleshooting
 
-### Claude Desktop Can't Find MCP Server
+### Issue: MCP Server Not Found
 
-**Symptom:** Claude says "I don't have access to aurora_search" or tools are missing
+**Symptoms:**
+- Claude Code CLI shows "unknown tool" errors
+- AURORA tools don't appear in tool list
 
-**Solutions:**
-
-1. **Verify Python path in configuration:**
+**Solution:**
+1. Verify configuration file exists:
    ```bash
-   # Find Python path
-   which python3
-
-   # Update claude_desktop_config.json with full path
-   # Example: "/usr/local/bin/python3" instead of "python3"
+   cat ~/.claude/plugins/aurora/.mcp.json
    ```
 
-2. **Check AURORA installation:**
+2. Check file permissions:
    ```bash
-   python3 -c "import aurora.mcp; print('OK')"
+   chmod 644 ~/.claude/plugins/aurora/.mcp.json
    ```
 
-3. **Restart Claude Desktop completely:**
-   - Quit Claude Desktop (Cmd+Q on macOS, not just close window)
-   - Reopen Claude Desktop
+3. Restart Claude Code CLI completely (exit and relaunch)
 
-4. **Check MCP logs:**
-   ```bash
-   # View MCP server logs
-   tail -f ~/.aurora/mcp.log
-   ```
+---
 
-### MCP Server Fails to Start
+### Issue: aurora_query Returns "API Key Missing"
 
-**Symptom:** Errors in Claude Desktop or MCP doesn't respond
+**Symptoms:**
+```
+Error: ANTHROPIC_API_KEY not found
+Please set the API key...
+```
 
-**Solutions:**
+**Solution:**
+Add API key to MCP configuration:
 
-1. **Test MCP server manually:**
-   ```bash
-   python3 -m aurora.mcp.server --test
-   ```
+```json
+{
+  "aurora": {
+    "command": "python3",
+    "args": ["-m", "aurora.mcp.server"],
+    "env": {
+      "AURORA_DB_PATH": "${HOME}/.aurora/memory.db",
+      "ANTHROPIC_API_KEY": "sk-ant-your-key-here"
+    }
+  }
+}
+```
 
-2. **Check database path:**
-   ```bash
-   # Verify database exists
-   ls -lh ~/.aurora/memory.db
+Or set environment variable globally:
+```bash
+export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+```
 
-   # If missing, reindex your codebase
-   aur mem index /path/to/your/project
-   ```
+---
 
-3. **Check permissions:**
-   ```bash
-   # Ensure ~/.aurora/ is writable
-   chmod 755 ~/.aurora
-   chmod 644 ~/.aurora/memory.db
-   ```
+### Issue: Search Returns No Results
 
-### Search Returns No Results
+**Symptoms:**
+- `aurora_search` finds nothing
+- `aurora_stats` shows 0 chunks
 
-**Symptom:** Claude can use tools but search returns empty results
+**Solution:**
+Index your codebase first:
 
-**Solutions:**
+```bash
+cd /path/to/your/project
+aur mem index .
+aur mem stats  # Verify chunks were created
+```
 
-1. **Verify codebase is indexed:**
-   ```bash
-   aur mem stats
-   ```
+---
 
-   Should show:
-   ```
-   Total chunks: 1,234
-   Total files: 56
-   Database size: 12.5 MB
-   ```
+### Issue: Slow MCP Server Startup
 
-2. **Reindex if needed:**
-   ```bash
-   aur mem index --force /path/to/your/project
-   ```
+**Symptoms:**
+- First query in a session takes 3-5 seconds
+- Subsequent queries are fast
 
-3. **Check file types:**
-   ```bash
-   # AURORA indexes .py files by default
-   # Check if your files are included
-   aur mem index --help
-   ```
+**Root Cause:**
+- Cold start: Loading sentence-transformers model (~500MB)
+- Tree-sitter grammar initialization
 
-### Performance Issues
+**Solution (Acceptable):**
+This is expected behavior. Warm queries are <100ms.
 
-**Symptom:** MCP tools are slow to respond
+**Solution (Optimization):**
+Use keyword-only search (no semantic embeddings):
 
-**Solutions:**
+```bash
+# Skip ML dependencies for faster startup
+pip install aurora-actr  # Without [all]
+```
 
-1. **Check database size:**
-   ```bash
-   aur mem stats
-   ```
+---
 
-   Large databases (>1GB) may need optimization.
+### Issue: Permission Denied Errors
 
-2. **Enable always-on mode:**
-   ```bash
-   aurora-mcp start
-   ```
+**Symptoms:**
+```
+Error: Permission denied writing to /home/user/.aurora/memory.db
+```
 
-3. **Adjust search limit:**
-   ```bash
-   # Edit ~/.aurora/config.json
-   {
-     "mcp": {
-       "max_results": 5  # Reduce from default 10
-     }
-   }
-   ```
+**Solution:**
+Check file permissions:
 
-For more troubleshooting, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+```bash
+ls -la ~/.aurora/
+chmod 644 ~/.aurora/memory.db
+```
 
 ---
 
 ## Advanced Configuration
 
-### Custom Database Path
+### Configuration Priority
 
-Use a project-specific database instead of the global one:
+AURORA uses a 3-tier configuration system:
+
+1. **Environment Variables** (highest priority)
+   - `ANTHROPIC_API_KEY` - Anthropic API key for aurora_query
+   - `OPENAI_API_KEY` - OpenAI API key (alternative)
+   - `AURORA_DB_PATH` - Database location
+   - `AURORA_CONFIG_PATH` - Config file location
+
+2. **Config File** (`~/.aurora/config.json`)
+   ```json
+   {
+     "api": {
+       "anthropic_key": "sk-ant-...",
+       "default_model": "claude-sonnet-4-20250514",
+       "temperature": 0.7,
+       "max_tokens": 4000
+     },
+     "query": {
+       "auto_escalate": true,
+       "complexity_threshold": 0.6,
+       "verbosity": "verbose"
+     },
+     "budget": {
+       "monthly_limit_usd": 50.0
+     }
+   }
+   ```
+
+3. **Hard-coded Defaults** (lowest priority)
+
+### Debugging Configuration
+
+Check effective configuration:
+```bash
+aur --verify
+```
+
+Validate MCP server:
+```bash
+python3 -m aurora.mcp.server --test --db-path ~/.aurora/memory.db
+```
+
+---
+
+### Multiple Database Support
+
+Use different databases for different projects:
 
 ```json
 {
-  "mcpServers": {
-    "aurora": {
-      "command": "python3",
-      "args": [
-        "-m",
-        "aurora.mcp.server",
-        "--db-path",
-        "/path/to/project/.aurora_db"
-      ]
+  "aurora": {
+    "command": "python3",
+    "args": ["-m", "aurora.mcp.server"],
+    "env": {
+      "AURORA_DB_PATH": "/path/to/project-specific/memory.db"
     }
   }
 }
 ```
 
-### Custom Configuration File
+---
+
+### Budget Management
+
+Control API costs with budget limits:
 
 ```json
+// ~/.aurora/config.json
 {
-  "mcpServers": {
-    "aurora": {
-      "command": "python3",
-      "args": [
-        "-m",
-        "aurora.mcp.server",
-        "--config",
-        "/path/to/custom_config.json"
-      ]
-    }
+  "budget": {
+    "monthly_limit_usd": 50.0
   }
 }
 ```
 
-### Performance Tuning
-
-Edit `~/.aurora/config.json`:
-
-```json
-{
-  "mcp": {
-    "always_on": false,
-    "log_file": "~/.aurora/mcp.log",
-    "max_results": 10
-  },
-  "context_code": {
-    "hybrid_weights": {
-      "activation": 0.6,
-      "semantic": 0.4
-    }
-  }
-}
+Track spending:
+```bash
+cat ~/.aurora/budget_tracker.json
 ```
-
-**Configuration options:**
-- `always_on`: Run MCP server continuously (default: false)
-- `log_file`: Path to MCP log file
-- `max_results`: Maximum search results returned (default: 10)
-- `hybrid_weights`: Adjust activation vs semantic scoring
 
 ---
 
 ## FAQ
 
-### Do I need an API key for MCP?
+### Q: Do I need an API key for all tools?
 
-**Partially.** Most MCP tools (search, index, stats, context, related) work locally without API keys using Sentence-BERT embeddings.
+**A:** No. Only `aurora_query` requires an `ANTHROPIC_API_KEY`. Other tools (`aurora_search`, `aurora_index`, etc.) work without API keys.
 
-However, the **aurora_query** tool requires an Anthropic API key for LLM-powered responses:
-```bash
-export ANTHROPIC_API_KEY="your-key"
-```
-Or add to `~/.aurora/config.json` under `api.anthropic_key`.
+---
 
-### Can I use multiple MCP servers simultaneously?
+### Q: Can I use AURORA with other MCP clients?
 
-**Yes.** Claude Desktop supports multiple MCP servers. Add additional entries to the `mcpServers` object:
+**A:** Yes! AURORA's MCP server implements the standard MCP protocol. It works with:
+- Claude Code CLI (primary)
+- Any MCP-compatible client
+- Custom integrations via MCP SDK
+
+---
+
+### Q: How much does aurora_query cost?
+
+**A:** Costs depend on query complexity:
+- Simple queries (direct LLM): $0.01-0.05 per query
+- Complex queries (SOAR pipeline): $0.10-0.30 per query
+
+Set budget limits in `~/.aurora/config.json` to control spending.
+
+---
+
+### Q: Can I disable auto-escalation?
+
+**A:** Yes. Set `auto_escalate: false` in config:
 
 ```json
 {
-  "mcpServers": {
-    "aurora": { ... },
-    "other-mcp-server": { ... }
+  "query": {
+    "auto_escalate": false
   }
 }
 ```
 
-### Does MCP slow down Claude Desktop?
+This forces all queries to use SOAR pipeline (slower but more thorough).
 
-**No.** MCP servers run independently and only activate when Claude calls them. There's minimal performance impact in on-demand mode.
+---
 
-### How often should I reindex my codebase?
+### Q: How do I update the indexed codebase?
 
-**When code changes significantly:**
-- After pulling major updates from Git
-- After creating new modules or files
-- Weekly for active development projects
+**A:** Re-index anytime:
 
-Quick reindex:
 ```bash
-aur mem index --force /path/to/project
+cd /path/to/project
+aur mem index .  # Overwrites previous index
 ```
 
-### Can I index multiple projects?
-
-**Yes, with project-specific databases:**
-
-1. Index each project to its own database:
-   ```bash
-   aur mem index --db ~/project1.db ~/code/project1
-   aur mem index --db ~/project2.db ~/code/project2
-   ```
-
-2. Configure Claude Desktop with both:
-   ```json
-   {
-     "mcpServers": {
-       "aurora-project1": {
-         "command": "python3",
-         "args": ["-m", "aurora.mcp.server", "--db-path", "/Users/you/project1.db"]
-       },
-       "aurora-project2": {
-         "command": "python3",
-         "args": ["-m", "aurora.mcp.server", "--db-path", "/Users/you/project2.db"]
-       }
-     }
-   }
-   ```
-
-### What file types does AURORA index?
-
-**Current support:**
-- Python (`.py`)
-
-**Coming soon:**
-- JavaScript/TypeScript (`.js`, `.ts`, `.jsx`, `.tsx`)
-- Java (`.java`)
-- Go (`.go`)
-- Rust (`.rs`)
-
-### How much disk space does indexing use?
-
-**Approximately:**
-- 100 KB per Python file
-- 10-50 MB for typical projects (100-500 files)
-- 100-500 MB for large codebases (1,000-5,000 files)
-
-Check your database size:
+Or use incremental updates:
 ```bash
-aur mem stats
+aur mem index src/  # Index only src/ directory
 ```
 
-### Can I exclude files or directories from indexing?
+---
 
-**Yes, use `.auroraignore` file:**
+### Q: What languages are supported?
 
-Create `.auroraignore` in your project root:
-```
-# Ignore test files
-**/test_*.py
-**/tests/
+**A:** Currently:
+- **Python**: Full support with tree-sitter parsing
+- **Other languages**: Coming soon (TypeScript, JavaScript, Go, Rust)
 
-# Ignore build artifacts
-**/build/
-**/dist/
-**/__pycache__/
+Generic text-based indexing works for all languages.
 
-# Ignore dependencies
-**/node_modules/
-**/venv/
-```
+---
 
-Or use CLI flags:
+### Q: Can I use aurora_query in standalone CLI?
+
+**A:** Yes:
+
 ```bash
-aur mem index --exclude "tests" --exclude "venv" .
+aur query "Explain the authentication system"
 ```
 
-### Is my code data sent to Anthropic?
-
-**No.** AURORA processes everything locally:
-- Code indexing: local
-- Embeddings: local (Sentence-BERT)
-- Search: local database
-- MCP server: runs on your machine
-
-The only network communication is between Claude Desktop (local app) and Anthropic's servers for Claude's responses, but AURORA's search results are generated locally first.
+This bypasses MCP and runs AURORA directly from the command line.
 
 ---
 
 ## Getting Help
 
-**Issues or questions?**
+If you encounter issues not covered in this guide:
 
-1. Check [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
-2. Run diagnostic: `aur --verify`
-3. Check MCP logs: `tail -f ~/.aurora/mcp.log`
-4. GitHub Issues: [github.com/your-org/aurora/issues](https://github.com/your-org/aurora/issues)
+1. **Check logs:**
+   ```bash
+   cat ~/.aurora/logs/mcp.log
+   ```
 
-**Additional Resources:**
+2. **Validate installation:**
+   ```bash
+   aur --verify
+   ```
 
-- [README.md](../README.md) - Quick start guide
-- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - Common issues
-- [API Documentation](./api/) - Developer reference
-- [MCP Protocol](https://modelcontextprotocol.io/) - Learn about MCP
+3. **Run diagnostics:**
+   ```bash
+   python3 -m aurora.mcp.server --test
+   ```
+
+4. **Report issues:**
+   - GitHub: https://github.com/aurora-project/aurora/issues
+   - Include: OS, Python version, error message, config files
 
 ---
 
-**Last Updated:** 2025-12-24
-**AURORA Version:** 0.2.0
+**End of MCP Setup Guide**

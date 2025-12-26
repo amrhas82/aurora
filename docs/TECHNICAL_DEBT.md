@@ -1328,7 +1328,7 @@ Server initialization blocks on heavy imports during subprocess startup:
 - CI/CD fails unpredictably (false negatives)
 - Developers lose trust in test suite
 - Real MCP server issues may be masked
-- Claude Desktop users experience slow initial connection
+- Claude Code CLI users experience slow initial connection
 
 **Acceptance Criteria**:
 - [ ] Add lazy initialization to MCP server (defer heavy imports until first tool call)
@@ -1433,14 +1433,14 @@ execute_direct_llm() # Fails: RateLimitError
 
 ---
 
-#### TD-MCP-004: Claude Desktop Environment Variable Injection Undocumented
+#### TD-MCP-004: Claude Code CLI Environment Variable Injection Undocumented
 **Category**: Documentation
 **Location**: `docs/MCP_SETUP.md` (Configuration section)
 **Impact**: Users unaware of critical configuration options
 **Effort**: S (2-3 hours)
 
 **Description**:
-Claude Desktop MCP configuration supports environment variable injection, but documentation only shows `AURORA_DB_PATH`. Key undocumented variables:
+Claude Code CLI MCP configuration supports environment variable injection, but documentation only shows `AURORA_DB_PATH`. Key undocumented variables:
 
 1. **ANTHROPIC_API_KEY**: Required for `aurora_query` tool (not mentioned in setup guide)
 2. **PYTHONPATH**: May be needed if aurora installed in non-standard location
@@ -1513,13 +1513,13 @@ Claude Desktop MCP configuration supports environment variable injection, but do
 #### TD-MCP-005: MCP Tool Registration Error Messages Not User-Friendly
 **Category**: Developer Experience
 **Location**: `src/aurora/mcp/server.py::_register_tools()` (lines 52-172)
-**Impact**: Difficult to debug Claude Desktop connection issues
+**Impact**: Difficult to debug Claude Code CLI connection issues
 **Effort**: S (4-6 hours)
 
 **Description**:
-When MCP server fails to register tools with Claude Desktop, error messages are generic:
+When MCP server fails to register tools with Claude Code CLI, error messages are generic:
 
-1. **FastMCP Import Error**: Shows "Error: FastMCP not installed" but doesn't explain that Claude Desktop needs to install it
+1. **FastMCP Import Error**: Shows "Error: FastMCP not installed" but doesn't explain that Claude Code CLI needs to install it
 2. **Tool Registration Failure**: No visibility into which tool failed to register
 3. **Silent Failures**: Some registration errors are swallowed by FastMCP
 4. **No Startup Validation**: Server doesn't verify all tools registered successfully
@@ -1531,35 +1531,35 @@ except ImportError:
     sys.exit(1)
 ```
 
-**Issue**: This message assumes user controls the Python environment, but Claude Desktop manages it.
+**Issue**: This message assumes user controls the Python environment, but Claude Code CLI manages it.
 
 **Risk**:
-- Users see "tool not found" in Claude Desktop with no explanation
-- Debugging requires diving into Claude Desktop logs
-- No way to verify MCP server health from Claude Desktop
-- Users don't know if issue is AURORA or Claude Desktop
+- Users see "tool not found" in Claude Code CLI with no explanation
+- Debugging requires diving into Claude Code CLI logs
+- No way to verify MCP server health from Claude Code CLI
+- Users don't know if issue is AURORA or Claude Code CLI
 
 **Acceptance Criteria**:
 - [ ] Add detailed error messages for each failure mode
 - [ ] Create MCP server health check command: `aurora-mcp doctor`
 - [ ] Log all tool registrations with success/failure status
 - [ ] Add startup validation that reports missing tools
-- [ ] Improve FastMCP import error with Claude Desktop context
-- [ ] Document how to check Claude Desktop logs for MCP errors
+- [ ] Improve FastMCP import error with Claude Code CLI context
+- [ ] Document how to check Claude Code CLI logs for MCP errors
 
 **Recommended Error Messages**:
 ```python
 # Import Error
 """
-Error: FastMCP not installed in Claude Desktop's Python environment.
+Error: FastMCP not installed in Claude Code CLI's Python environment.
 
 This is expected if you're running the MCP server directly.
-Claude Desktop manages its own Python environment and installs dependencies automatically.
+Claude Code CLI manages its own Python environment and installs dependencies automatically.
 
-If you see this error in Claude Desktop:
-1. Check Claude Desktop logs: ~/Library/Logs/Claude/mcp.log (macOS)
+If you see this error in Claude Code CLI:
+1. Check Claude Code CLI logs: ~/Library/Logs/Claude/mcp.log (macOS)
 2. Verify claude_desktop_config.json is correct
-3. Restart Claude Desktop
+3. Restart Claude Code CLI
 4. Contact support if issue persists
 
 For manual testing, install FastMCP:
@@ -1619,14 +1619,14 @@ E2E tests for `aurora_query` are comprehensive but skipped in CI due to missing 
 **Risk**:
 - Real-world bugs slip through (only found by users)
 - Performance regressions undetected
-- No validation of Claude Desktop integration
+- No validation of Claude Code CLI integration
 - Can't reproduce user-reported issues in test environment
 
 **Acceptance Criteria**:
 - [ ] Add nightly E2E CI job with API key secret (GitHub Actions)
 - [ ] Create mock LLM provider for E2E testing (no API cost)
 - [ ] Run performance E2E tests monthly, track latency trends
-- [ ] Add smoke test that validates MCP server in Claude Desktop context
+- [ ] Add smoke test that validates MCP server in Claude Code CLI context
 - [ ] Document E2E test execution for contributors
 - [ ] Set up performance tracking dashboard (Grafana/Datadog)
 
@@ -1758,7 +1758,7 @@ Three verbosity levels implemented but distinctions are subtle:
 
 **Risk**:
 - Users confused about which verbosity to use
-- "detailed" mode generates excessive output (Claude Desktop chat clutter)
+- "detailed" mode generates excessive output (Claude Code CLI chat clutter)
 - No streaming progress (only see results after completion)
 
 **Acceptance Criteria**:
@@ -1886,7 +1886,7 @@ aurora-mcp config --validate
 #### TD-MCP-010: MCP Server Startup Health Check Missing
 **Category**: Observability
 **Location**: `src/aurora/mcp/server.py::main()` (lines 202-245)
-**Impact**: Difficult to diagnose Claude Desktop connection issues
+**Impact**: Difficult to diagnose Claude Code CLI connection issues
 **Effort**: M (1-2 days)
 
 **Description**:
@@ -1910,10 +1910,10 @@ def main():
 **Issue**: Server may start successfully but fail first request due to missing dependency or config issue.
 
 **Risk**:
-- Claude Desktop shows "tool failed" with no context
-- Users don't know if issue is AURORA or Claude Desktop
+- Claude Code CLI shows "tool failed" with no context
+- Users don't know if issue is AURORA or Claude Code CLI
 - No way to pre-flight check configuration
-- Debugging requires checking Claude Desktop logs
+- Debugging requires checking Claude Code CLI logs
 
 **Acceptance Criteria**:
 - [ ] Add health check on startup (before `server.run()`)
@@ -2273,14 +2273,14 @@ Setting up development environment requires:
 ---
 
 ### Sprint 2: MCP Integration Reliability (1 week)
-**Goal**: Stabilize MCP integration for Claude Desktop usage
+**Goal**: Stabilize MCP integration for Claude Code CLI usage
 
 1. **TD-MCP-001**: Fix MCP server subprocess timeouts (P1) - 2-3 days
 2. **TD-MCP-002**: Adjust embedding performance thresholds (P2) - 4-6 hours
 3. **TD-MCP-004**: Document environment variables (P2) - 2-3 hours
 4. **TD-MCP-009**: Document configuration priority (P3) - 2 hours
 
-**Expected Outcome**: CI/CD reliable, Claude Desktop users have clear setup docs
+**Expected Outcome**: CI/CD reliable, Claude Code CLI users have clear setup docs
 
 ---
 

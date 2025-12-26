@@ -12,10 +12,10 @@ A cognitive architecture framework that brings intelligent memory, reasoning, an
 ## Features
 
 **MCP Server Integration**
-- Native Claude Desktop integration via Model Context Protocol
+- Native Claude Code CLI integration via Model Context Protocol
 - 6 powerful tools for seamless codebase search, analysis, and intelligent querying
 - Auto-escalating queries: simple questions use direct LLM, complex ones use SOAR pipeline
-- Conversation-driven development workflow
+- Conversation-driven development workflow directly from your terminal
 
 **Cognitive Reasoning**
 - ACT-R activation-based memory (frequency, recency, semantic similarity)
@@ -74,9 +74,9 @@ pip install -e ".[all]"
 
 ## Quick Start
 
-### MCP Server with Claude Desktop (Primary Workflow)
+### MCP Server with Claude Code CLI (Primary Workflow)
 
-AURORA integrates with Claude Desktop via the Model Context Protocol, enabling Claude to search and analyze your codebase directly.
+AURORA integrates with Claude Code CLI via the Model Context Protocol, enabling you to search and analyze your codebase directly from your development sessions.
 
 #### 1. Install and Index Your Codebase
 
@@ -86,36 +86,53 @@ cd /path/to/your/project
 aur mem index .
 ```
 
-#### 2. Configure Claude Desktop
+#### 2. Configure Claude Code CLI
 
-Add AURORA to your Claude Desktop MCP configuration:
+Create AURORA's MCP configuration:
 
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Linux:** `~/.config/Claude/claude_desktop_config.json`
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+**Location:** `~/.claude/plugins/aurora/.mcp.json`
 
 ```json
 {
-  "mcpServers": {
-    "aurora": {
-      "command": "python",
-      "args": ["-m", "aurora.mcp.server"]
+  "aurora": {
+    "command": "python3",
+    "args": ["-m", "aurora.mcp.server"],
+    "env": {
+      "AURORA_DB_PATH": "${HOME}/.aurora/memory.db",
+      "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}"
     }
   }
 }
 ```
 
-#### 3. Use with Claude Desktop
+Add tool permissions to `~/.claude/settings.local.json`:
 
-Restart Claude Desktop and ask questions about your code:
+```json
+{
+  "permissions": {
+    "allow": [
+      "mcp__aurora__aurora_query",
+      "mcp__aurora__aurora_search",
+      "mcp__aurora__aurora_index",
+      "mcp__aurora__aurora_stats",
+      "mcp__aurora__aurora_context",
+      "mcp__aurora__aurora_related"
+    ]
+  }
+}
+```
 
-- *"Search my codebase for authentication logic"*
-- *"Find all usages of the DatabaseConnection class"*
-- *"Show me error handling in payment processing"*
-- *"What does the UserService module do?"*
-- *"Compare our API patterns with best practices"* (auto-escalates to SOAR)
+#### 3. Use with Claude Code CLI
 
-Claude automatically uses AURORA's tools to search your indexed codebase and provide contextual answers. Simple queries use direct LLM calls, while complex analytical questions automatically escalate to the full SOAR reasoning pipeline.
+Restart Claude Code CLI and AURORA's tools are available in your sessions:
+
+- *"Search my codebase for authentication logic"* → `aurora_search`
+- *"Find all usages of the DatabaseConnection class"* → `aurora_search`
+- *"Show me error handling in payment processing"* → `aurora_context`
+- *"What does the UserService module do?"* → `aurora_context`
+- *"Compare our API patterns with best practices"* → `aurora_query` (auto-escalates to SOAR)
+
+Claude Code CLI automatically uses AURORA's tools to search your indexed codebase and provide contextual answers. Simple queries use direct LLM calls, while complex analytical questions automatically escalate to the full SOAR reasoning pipeline.
 
 **Note:** The `aurora_query` tool requires an `ANTHROPIC_API_KEY` environment variable.
 

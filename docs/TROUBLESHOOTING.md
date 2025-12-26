@@ -210,7 +210,7 @@ Commands like `aur mem search "function"` run without errors but display no resu
 
 ## MCP Server Issues
 
-### Claude Desktop Can't Find AURORA Tools
+### Claude Code CLI Can't Find AURORA Tools
 
 **Symptom:**
 Ask Claude "Search my codebase for authentication", Claude responds "I don't have access to codebase search tools"
@@ -222,9 +222,9 @@ Ask Claude "Search my codebase for authentication", Claude responds "I don't hav
    ```
 
 2. Check configuration file exists:
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+   - **macOS**: `~/Library/Application Support/Claude/~/.claude/plugins/aurora/.mcp.json`
+   - **Linux**: `~/.config/Claude/~/.claude/plugins/aurora/.mcp.json`
+   - **Windows**: `%APPDATA%\Claude\~/.claude/plugins/aurora/.mcp.json`
 
 3. Verify configuration format (see [MCP_SETUP.md](MCP_SETUP.md#configuration)):
    ```json
@@ -238,7 +238,7 @@ Ask Claude "Search my codebase for authentication", Claude responds "I don't hav
    }
    ```
 
-4. Restart Claude Desktop completely (Quit, not just close window)
+4. Restart Claude Code CLI completely (Quit, not just close window)
 
 5. Check MCP logs for errors:
    ```bash
@@ -307,7 +307,7 @@ Error: Database not found at ~/.aurora/memory.db
 
 2. Check Python environment matches:
    ```bash
-   # Which Python does Claude Desktop use?
+   # Which Python does Claude Code CLI use?
    which python
 
    # Which Python has aurora installed?
@@ -888,9 +888,9 @@ aur mem index C:/projects/mycode
 aur mem index "C:\projects\mycode"
 ```
 
-**Claude Desktop config location:**
+**Claude Code CLI config location:**
 ```
-%APPDATA%\Claude\claude_desktop_config.json
+%APPDATA%\Claude\~/.claude/plugins/aurora/.mcp.json
 ```
 
 ### macOS
@@ -907,9 +907,9 @@ Some ML dependencies may require Rosetta 2 or native ARM builds. Use:
 pip install --upgrade sentence-transformers torch
 ```
 
-**Claude Desktop config location:**
+**Claude Code CLI config location:**
 ```
-~/Library/Application Support/Claude/claude_desktop_config.json
+~/Library/Application Support/Claude/~/.claude/plugins/aurora/.mcp.json
 ```
 
 ### Linux
@@ -928,9 +928,9 @@ python3 -m pip install aurora
 python3 -m aurora_cli --help
 ```
 
-**Claude Desktop config location:**
+**Claude Code CLI config location:**
 ```
-~/.config/Claude/claude_desktop_config.json
+~/.config/Claude/~/.claude/plugins/aurora/.mcp.json
 ```
 
 ---

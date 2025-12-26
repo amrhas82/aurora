@@ -374,28 +374,28 @@ class TestCostTracker:
     @patch("aurora_core.budget.tracker.datetime")
     def test_period_rollover(self, mock_datetime, temp_tracker_path):
         """Test monthly period rollover."""
-        # Start in December 2024
-        mock_datetime.now.return_value = datetime(2024, 12, 15)
+        # Start in December 2025
+        mock_datetime.now.return_value = datetime(2025, 12, 15)
         tracker1 = CostTracker(monthly_limit_usd=100.0, tracker_path=temp_tracker_path)
         tracker1.record_cost("claude-sonnet-4-20250514", 1000, 500, "assess")
-        assert tracker1.current_period == "2024-12"
+        assert tracker1.current_period == "2025-12"
         december_consumed = tracker1.budget.consumed_usd
 
-        # Move to January 2025
-        mock_datetime.now.return_value = datetime(2025, 1, 5)
+        # Move to January 2026
+        mock_datetime.now.return_value = datetime(2026, 1, 5)
         tracker2 = CostTracker(monthly_limit_usd=100.0, tracker_path=temp_tracker_path)
-        assert tracker2.current_period == "2025-01"
+        assert tracker2.current_period == "2026-01"
         assert tracker2.budget.consumed_usd == 0.0  # Reset for new period
         assert len(tracker2.budget.entries) == 0
 
         # Old data should be archived
-        archive_path = temp_tracker_path.parent / "budget_archives" / "budget_2024-12.json"
+        archive_path = temp_tracker_path.parent / "budget_archives" / "budget_2025-12.json"
         assert archive_path.exists()
 
         # Load archived data
         with open(archive_path) as f:
             archived = json.load(f)
-        assert archived["period"] == "2024-12"
+        assert archived["period"] == "2025-12"
         assert archived["consumed_usd"] == december_consumed
 
     def test_budget_tracker_alias(self):

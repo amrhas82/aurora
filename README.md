@@ -13,8 +13,8 @@ A cognitive architecture framework that brings intelligent memory, reasoning, an
 
 **MCP Server Integration**
 - Native Claude Code CLI integration via Model Context Protocol
-- 6 powerful tools for seamless codebase search, analysis, and intelligent querying
-- Auto-escalating queries: simple questions use direct LLM, complex ones use SOAR pipeline
+- 7 powerful tools for seamless codebase search, analysis, and intelligent querying
+- No API key required - MCP tools provide context to Claude Code CLI's built-in LLM
 - Conversation-driven development workflow directly from your terminal
 
 **Cognitive Reasoning**
@@ -116,7 +116,8 @@ Add tool permissions to `~/.claude/settings.local.json`:
       "mcp__aurora__aurora_index",
       "mcp__aurora__aurora_stats",
       "mcp__aurora__aurora_context",
-      "mcp__aurora__aurora_related"
+      "mcp__aurora__aurora_related",
+      "mcp__aurora__aurora_get"
     ]
   }
 }
@@ -132,9 +133,9 @@ Restart Claude Code CLI and AURORA's tools are available in your sessions:
 - *"What does the UserService module do?"* → `aurora_context`
 - *"Compare our API patterns with best practices"* → `aurora_query` (auto-escalates to SOAR)
 
-Claude Code CLI automatically uses AURORA's tools to search your indexed codebase and provide contextual answers. Simple queries use direct LLM calls, while complex analytical questions automatically escalate to the full SOAR reasoning pipeline.
+Claude Code CLI automatically uses AURORA's tools to search your indexed codebase and provide contextual answers.
 
-**Note:** The `aurora_query` tool requires an `ANTHROPIC_API_KEY` environment variable.
+**Important:** MCP tools do NOT require API keys. They provide context/search results that Claude Code CLI's built-in LLM processes. No additional API costs beyond your Claude subscription.
 
 **See:** [MCP Setup Guide](docs/MCP_SETUP.md) for detailed configuration and troubleshooting.
 
@@ -144,32 +145,34 @@ Claude Code CLI automatically uses AURORA's tools to search your indexed codebas
 
 Use AURORA's CLI directly for queries, memory management, and autonomous reasoning.
 
+**Note:** CLI commands like `aur query` require an `ANTHROPIC_API_KEY` environment variable (they run LLM inference directly). For API-key-free usage, use MCP integration instead.
+
 #### Basic Queries
 
 ```bash
-# Simple query (fast direct LLM)
+# Simple query (fast direct LLM) - requires API key
 aur query "What is a Python decorator?"
 
-# Complex query (full AURORA pipeline with context)
+# Complex query (full AURORA pipeline with context) - requires API key
 aur query "How does the authentication system work?"
 
-# Force specific mode
+# Force specific mode - requires API key
 aur query "Explain classes" --force-aurora --verbose
 ```
 
 #### Memory Management
 
 ```bash
-# Index current directory
+# Index current directory - no API key required
 aur mem index
 
-# Search indexed code
+# Search indexed code - no API key required
 aur mem search "authentication"
 
-# View statistics
+# View statistics - no API key required
 aur mem stats
 
-# Advanced search
+# Advanced search - no API key required
 aur mem search "database" --limit 10 --show-content --format json
 ```
 

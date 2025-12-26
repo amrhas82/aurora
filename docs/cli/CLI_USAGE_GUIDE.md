@@ -7,6 +7,22 @@ Complete guide to using the AURORA command-line interface for intelligent code q
 
 ---
 
+## Important: CLI vs MCP - API Key Requirements
+
+**Standalone CLI commands (`aur query`, `aur headless`):**
+- **REQUIRE** `ANTHROPIC_API_KEY` environment variable
+- Run LLM inference directly in the CLI
+- You pay for API usage
+
+**MCP tools (inside Claude Code CLI):**
+- **DO NOT REQUIRE** API keys
+- Provide context/search to Claude Code CLI's built-in LLM
+- No additional API costs beyond your Claude subscription
+
+See [MCP Setup Guide](../MCP_SETUP.md) for MCP integration details.
+
+---
+
 ## Table of Contents
 
 1. [Installation Verification](#installation-verification)
@@ -596,9 +612,11 @@ Migration plan should include:
 Error: ANTHROPIC_API_KEY not found.
 ```
 
-**Solution:**
+**Important:** This error only occurs with standalone CLI commands like `aur query` and `aur headless`. MCP tools inside Claude Code CLI do NOT require API keys.
+
+**Solution for CLI commands:**
 ```bash
-# Option 1: Set environment variable
+# Option 1: Set environment variable (recommended)
 export ANTHROPIC_API_KEY=sk-ant-...
 
 # Option 2: Run init command
@@ -612,6 +630,9 @@ nano ~/.aurora/config.json
 - Visit: https://console.anthropic.com
 - Generate new API key
 - Copy and store securely
+
+**Alternative:** Use MCP tools inside Claude Code CLI (no API key needed)
+- See [MCP Setup Guide](../MCP_SETUP.md)
 
 ---
 

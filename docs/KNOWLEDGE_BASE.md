@@ -8,10 +8,19 @@ Last Updated: 2025-12-25 | Version: v0.2.0
 
 ## Getting Started
 
-- **docs/MCP_SETUP.md** - Claude Code CLI integration via MCP (primary workflow)
-- **docs/cli/QUICK_START.md** - 5-minute CLI setup guide
+- **docs/MCP_SETUP.md** - Claude Code CLI integration via MCP (7 tools, no API key required)
+- **docs/cli/QUICK_START.md** - 5-minute CLI setup guide (requires API key for queries)
 - **docs/cli/CLI_USAGE_GUIDE.md** - Comprehensive command reference
 - **docs/INSTALLATION_VERIFICATION_GUIDE.md** - Installation health checks
+
+### MCP Tools vs CLI Commands
+
+| Tool/Command | API Key? | Usage Context |
+|--------------|----------|---------------|
+| 7 MCP Tools | NO | Inside Claude Code CLI |
+| `aur query` | YES | Standalone CLI |
+| `aur mem` commands | NO | Standalone CLI |
+| `aur headless` | YES | Standalone CLI |
 
 ## Architecture
 

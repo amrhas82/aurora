@@ -18,7 +18,7 @@ This guide explains how to integrate AURORA's MCP (Model Context Protocol) serve
 
 ## Introduction
 
-AURORA's MCP server provides Claude Code CLI with six powerful tools for code navigation and intelligent querying:
+AURORA's MCP server provides Claude Code CLI with seven powerful tools for code navigation and intelligent querying:
 
 1. **aurora_search**: Semantic search over your indexed codebase
 2. **aurora_index**: Index new files or directories
@@ -26,6 +26,7 @@ AURORA's MCP server provides Claude Code CLI with six powerful tools for code na
 4. **aurora_context**: Retrieve file or function content
 5. **aurora_related**: Find related code chunks through dependency relationships
 6. **aurora_query**: Execute queries with auto-escalation (direct LLM or SOAR pipeline)
+7. **aurora_get**: Retrieve full chunk by index from last search results
 
 **Benefits:**
 - Natural language code search directly in your terminal
@@ -33,6 +34,31 @@ AURORA's MCP server provides Claude Code CLI with six powerful tools for code na
 - Contextual code understanding during development
 - No manual file copying or context switching
 - Memory persistence across Claude Code CLI sessions
+
+### MCP Tools vs CLI Commands - API Key Requirements
+
+**IMPORTANT:** MCP tools (inside Claude Code CLI) do NOT require API keys. Only standalone CLI commands need API keys for LLM functionality.
+
+| Tool/Command | API Key Required? | Notes |
+|--------------|------------------|-------|
+| **MCP Tools (Inside Claude Code CLI)** |
+| `aurora_search` | NO | Uses local index only |
+| `aurora_index` | NO | Local file parsing and storage |
+| `aurora_stats` | NO | Reads local database statistics |
+| `aurora_context` | NO | Retrieves local file content |
+| `aurora_related` | NO | Uses local ACT-R activation |
+| `aurora_get` | NO | Retrieves from session cache |
+| `aurora_query` | NO | Returns context WITHOUT running LLM (Claude Code CLI processes the context) |
+| **Standalone CLI Commands** |
+| `aur query` | YES | Requires `ANTHROPIC_API_KEY` for LLM inference |
+| `aur mem index` | NO | Local indexing only |
+| `aur mem search` | NO | Local search only |
+| `aur mem stats` | NO | Local statistics only |
+| `aur headless` | YES | Requires `ANTHROPIC_API_KEY` for autonomous reasoning |
+
+**Key Distinction:**
+- **MCP tools inside Claude Code CLI**: No API key needed. They provide context/search results that Claude Code CLI's built-in LLM processes.
+- **Standalone CLI `aur query`**: Requires API key. It runs LLM inference directly.
 
 ---
 
@@ -83,13 +109,14 @@ Expected output:
 ```
 AURORA MCP Server - Test Mode
 Database: /home/user/.aurora/memory.db
-Available tools: 6
+Available tools: 7
 - aurora_search
 - aurora_index
 - aurora_stats
 - aurora_context
 - aurora_related
 - aurora_query
+- aurora_get
 ```
 
 ---
@@ -123,7 +150,7 @@ Create `~/.claude/plugins/aurora/.mcp.json`:
 
 **Environment Variables:**
 - `AURORA_DB_PATH`: Path to your AURORA database (default: `~/.aurora/memory.db`)
-- `ANTHROPIC_API_KEY`: Required for `aurora_query` tool (optional for other tools)
+- `ANTHROPIC_API_KEY`: NOT required for MCP tools (Claude Code CLI provides LLM)
 
 ### Step 2: Add Tool Permissions
 
@@ -139,7 +166,8 @@ Edit `~/.claude/settings.local.json` to grant permissions for AURORA tools:
       "mcp__aurora__aurora_index",
       "mcp__aurora__aurora_stats",
       "mcp__aurora__aurora_context",
-      "mcp__aurora__aurora_related"
+      "mcp__aurora__aurora_related",
+      "mcp__aurora__aurora_get"
     ]
   }
 }
@@ -257,7 +285,7 @@ Find related code chunks through ACT-R spreading activation.
 
 ### 6. aurora_query
 
-Execute intelligent queries with automatic escalation between direct LLM and SOAR pipeline.
+Execute intelligent queries without LLM inference - returns structured context for Claude Code CLI to process.
 
 **When Claude Uses It:**
 - "Explain our authentication architecture"
@@ -265,33 +293,45 @@ Execute intelligent queries with automatic escalation between direct LLM and SOA
 - "How does the payment system work?"
 
 **Features:**
-- Auto-escalation: Simple queries use direct LLM (fast), complex ones use SOAR (thorough)
-- Budget enforcement with configurable limits
-- Progress tracking with verbose mode
+- Returns structured context (chunks, scores, metadata) WITHOUT running LLM
+- Complexity assessment helps Claude decide how to process the context
+- No API key required (Claude Code CLI's LLM processes the returned context)
 - Graceful degradation when memory unavailable
-- Retry logic for transient errors
 
-**Configuration:**
-```json
-// ~/.aurora/config.json
-{
-  "api": {
-    "default_model": "claude-sonnet-4-20250514",
-    "temperature": 0.7,
-    "max_tokens": 4000
-  },
-  "query": {
-    "auto_escalate": true,
-    "complexity_threshold": 0.6,
-    "verbosity": "verbose"
-  },
-  "budget": {
-    "monthly_limit_usd": 50.0
-  }
-}
-```
+**Important:** This tool does NOT perform LLM inference. It retrieves relevant context from AURORA's memory and returns it to Claude Code CLI, which then uses its own LLM to answer your question.
 
-**Returns:** Comprehensive answer with reasoning trace (in verbose mode)
+**Returns:** Structured JSON with:
+- `context`: Retrieved chunks with relevance scores
+- `assessment`: Complexity score and suggested approach
+- `metadata`: Query info, retrieval time, index statistics
+
+---
+
+### 7. aurora_get
+
+Retrieve a full chunk by index from last search results.
+
+**When Claude Uses It:**
+- "Get result #3 from the last search"
+- "Show me the full content of the second result"
+- "Retrieve chunk number 5"
+
+**Workflow:**
+1. Run `aurora_search` or `aurora_query` to get numbered results
+2. Review the list and choose which result you want
+3. Call `aurora_get(N)` to retrieve the full chunk for result N
+
+**Features:**
+- 1-indexed system (first result is 1, not 0)
+- Session-based caching (10-minute expiry)
+- Full chunk content with all metadata
+- No API key required
+
+**Returns:** Complete chunk with metadata including:
+- Full chunk content
+- File path and line range
+- Index position and total results
+- Cache age
 
 ---
 
@@ -315,37 +355,6 @@ Execute intelligent queries with automatic escalation between direct LLM and SOA
    ```
 
 3. Restart Claude Code CLI completely (exit and relaunch)
-
----
-
-### Issue: aurora_query Returns "API Key Missing"
-
-**Symptoms:**
-```
-Error: ANTHROPIC_API_KEY not found
-Please set the API key...
-```
-
-**Solution:**
-Add API key to MCP configuration:
-
-```json
-{
-  "aurora": {
-    "command": "python3",
-    "args": ["-m", "aurora.mcp.server"],
-    "env": {
-      "AURORA_DB_PATH": "${HOME}/.aurora/memory.db",
-      "ANTHROPIC_API_KEY": "sk-ant-your-key-here"
-    }
-  }
-}
-```
-
-Or set environment variable globally:
-```bash
-export ANTHROPIC_API_KEY="sk-ant-your-key-here"
-```
 
 ---
 
@@ -494,9 +503,9 @@ cat ~/.aurora/budget_tracker.json
 
 ## FAQ
 
-### Q: Do I need an API key for all tools?
+### Q: Do I need an API key for MCP tools?
 
-**A:** No. Only `aurora_query` requires an `ANTHROPIC_API_KEY`. Other tools (`aurora_search`, `aurora_index`, etc.) work without API keys.
+**A:** No. MCP tools running inside Claude Code CLI do NOT require API keys. They provide context/search results that Claude Code CLI's built-in LLM processes. Only standalone CLI commands like `aur query` require an API key.
 
 ---
 
@@ -509,13 +518,13 @@ cat ~/.aurora/budget_tracker.json
 
 ---
 
-### Q: How much does aurora_query cost?
+### Q: Does aurora_query cost money?
 
-**A:** Costs depend on query complexity:
+**A:** No. MCP tools do NOT make LLM API calls. The `aurora_query` tool returns context without running any LLM. Claude Code CLI's built-in LLM processes the context using your existing Claude subscription.
+
+For standalone CLI usage (`aur query`), costs depend on query complexity:
 - Simple queries (direct LLM): $0.01-0.05 per query
 - Complex queries (SOAR pipeline): $0.10-0.30 per query
-
-Set budget limits in `~/.aurora/config.json` to control spending.
 
 ---
 

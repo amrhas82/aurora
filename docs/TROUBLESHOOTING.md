@@ -488,39 +488,11 @@ Error: OpenAI API key not found
 
 ## MCP Query Errors
 
-The `aurora_query` tool returns structured JSON errors with actionable suggestions. Here are all error types and their solutions:
+**Important:** MCP tools do NOT require API keys. The errors below only apply to standalone CLI usage (`aur query`).
 
-### APIKeyMissing
+MCP tools return structured JSON errors with actionable suggestions. Here are error types and their solutions:
 
-**Error:**
-```json
-{
-  "error": {
-    "type": "APIKeyMissing",
-    "message": "API key not found. AURORA requires an Anthropic API key to execute queries.",
-    "suggestion": "To fix this:\n1. Set environment variable: export ANTHROPIC_API_KEY=\"your-key\"\n2. Or add to config file..."
-  }
-}
-```
-
-**Solution:**
-1. Set environment variable (recommended):
-   ```bash
-   export ANTHROPIC_API_KEY="sk-ant-..."
-   ```
-
-2. Or add to config file `~/.aurora/config.json`:
-   ```json
-   {
-     "api": {
-       "anthropic_key": "sk-ant-..."
-     }
-   }
-   ```
-
-3. Get your API key at: https://console.anthropic.com/
-
-### BudgetExceeded
+### BudgetExceeded (CLI only)
 
 **Error:**
 ```json
@@ -939,7 +911,12 @@ python3 -m aurora_cli --help
 
 ### Q: Do I need an API key to use AURORA?
 
-**A:** Only for the `aur query` command (LLM-powered reasoning). Memory indexing and search work without any API keys.
+**A:**
+- **MCP tools (inside Claude Code CLI):** No API key required
+- **Standalone CLI `aur query`:** Requires `ANTHROPIC_API_KEY`
+- **Memory commands (`aur mem`):** No API key required
+
+For most users, MCP integration is recommended (no API key, seamless workflow).
 
 ### Q: How much disk space does indexing use?
 

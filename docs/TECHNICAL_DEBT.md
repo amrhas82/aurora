@@ -1894,9 +1894,9 @@ MCP server starts but doesn't validate it's ready to serve requests:
 
 **Missing Checks**:
 1. **Database Reachable**: Can connect to SQLite database?
-2. **Required Tools Available**: Are all 6 tools registered?
+2. **Required Tools Available**: Are all 7 tools registered?
 3. **Dependencies Loaded**: Is sentence-transformers available (for semantic search)?
-4. **API Key Present**: Is ANTHROPIC_API_KEY set (for aurora_query)?
+4. **API Key Present**: Is ANTHROPIC_API_KEY set (for CLI aurora_query only, not MCP)?
 5. **Permissions Valid**: Can write to log files?
 
 **Current Startup**:

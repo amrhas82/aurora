@@ -299,9 +299,10 @@ class TestSessionCache:
             assert len(second_cache) == 1  # Only second results
             assert second_cache[0]["chunk_id"] == "code:second.py:func2"
             # Should NOT contain first results
-            first_chunk_ids = [r["chunk_id"] for r in first_cache]
             second_chunk_ids = [r["chunk_id"] for r in second_cache]
             assert "code:first.py:func1" not in second_chunk_ids
+            # Verify first cache was valid before replacement
+            assert len(first_cache) == 1
 
     def test_cache_expires_after_timeout(self):
         """Cache should expire after 10 minutes (600 seconds)."""

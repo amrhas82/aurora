@@ -54,6 +54,10 @@ class AuroraMCPTools:
         self._memory_manager: MemoryManager | None = None
         self._parser_registry = None  # Lazy initialization
 
+        # Session cache for aurora_get (Task 7.1, 7.2)
+        self._last_search_results: list = []
+        self._last_search_timestamp: float | None = None
+
     def _ensure_initialized(self) -> None:
         """Ensure all components are initialized."""
         if self._store is None:
@@ -83,6 +87,8 @@ class AuroraMCPTools:
         """
         Search AURORA indexed codebase using hybrid retrieval.
 
+        No API key required. Uses local index only.
+
         Args:
             query: Search query string
             limit: Maximum number of results (default: 10)
@@ -96,6 +102,8 @@ class AuroraMCPTools:
             - chunk_id: Unique chunk identifier
         """
         try:
+            import time
+
             self._ensure_initialized()
 
             # Use HybridRetriever to search
@@ -119,6 +127,10 @@ class AuroraMCPTools:
                     }
                 )
 
+            # Store results in session cache for aurora_get (Task 7.3)
+            self._last_search_results = formatted_results
+            self._last_search_timestamp = time.time()
+
             return json.dumps(formatted_results, indent=2)
 
         except Exception as e:
@@ -129,6 +141,8 @@ class AuroraMCPTools:
     def aurora_index(self, path: str, pattern: str = "*.py") -> str:
         """
         Index a directory of code files.
+
+        No API key required. Local file parsing and storage only.
 
         Args:
             path: Directory path to index
@@ -174,6 +188,8 @@ class AuroraMCPTools:
     def aurora_stats(self) -> str:
         """
         Get database statistics.
+
+        No API key required. Reads local database statistics only.
 
         Returns:
             JSON string with database statistics:
@@ -233,6 +249,8 @@ class AuroraMCPTools:
     def aurora_context(self, file_path: str, function: str | None = None) -> str:
         """
         Get code context from a specific file.
+
+        No API key required. Retrieves local file content only.
 
         Args:
             file_path: Path to source file
@@ -298,6 +316,8 @@ class AuroraMCPTools:
     def aurora_related(self, chunk_id: str, max_hops: int = 2) -> str:
         """
         Find related code chunks using ACT-R spreading activation.
+
+        No API key required. Uses local ACT-R activation engine only.
 
         Args:
             chunk_id: Source chunk ID
@@ -404,43 +424,45 @@ class AuroraMCPTools:
     def aurora_query(
         self,
         query: str,
-        force_soar: bool = False,
-        verbose: bool | None = None,
-        model: str | None = None,
-        temperature: float | None = None,
-        max_tokens: int | None = None,
+        limit: int = 10,
+        type_filter: str | None = None,
+        verbose: bool = False,
     ) -> str:
         """
-        Query AURORA with auto-escalation (simple → complex → SOAR).
+        Retrieve relevant context from AURORA memory without LLM inference.
 
-        This tool provides intelligent query handling with automatic complexity
-        escalation based on query characteristics and results.
+        No API key required. Returns structured context WITHOUT running any LLM.
+        Claude Code CLI's built-in LLM processes the returned context.
+
+        This simplified tool provides intelligent context retrieval with complexity
+        assessment and confidence scoring. It returns structured context that can
+        be used by the LLM client (Claude Code CLI) for further processing.
 
         Args:
             query: Natural language query string
-            force_soar: Skip auto-escalation and use full SOAR pipeline (default: False)
-            verbose: Override verbose mode from config (default: use config)
-            model: Override default LLM model (default: use config)
-            temperature: Override default temperature 0.0-1.0 (default: use config)
-            max_tokens: Override default max tokens (default: use config)
+            limit: Maximum number of chunks to retrieve (default: 10)
+            type_filter: Filter by memory type - "code", "reas", "know", or None (default: None)
+            verbose: Include detailed metadata in response (default: False)
 
         Returns:
-            JSON string with query response containing:
-            - answer: Final response to the query
-            - execution_path: Which path was selected (direct_llm/soar_pipeline)
-            - metadata: Additional information about processing
-            - phases: List of SOAR phases (if verbose=True and SOAR used)
+            JSON string with structured context containing:
+            - context: Retrieved chunks with metadata
+            - assessment: Complexity score, confidence, and suggested approach
+            - metadata: Query info, retrieval time, and index statistics
         """
         try:
-            # Task 1.3: Parameter validation
-            is_valid, error_msg = self._validate_parameters(query, temperature, max_tokens, model)
+            import time
+
+            start_time = time.time()
+
+            # Validate parameters
+            is_valid, error_msg = self._validate_parameters(query, type_filter)
             if not is_valid:
                 # Build suggestion based on error type
-                suggestion = "Please check parameter values and try again.\n\nValid ranges:\n"
+                suggestion = "Please check parameter values and try again.\n\nValid values:\n"
                 suggestion += "- query: Non-empty string\n"
-                suggestion += "- temperature: 0.0 to 1.0\n"
-                suggestion += "- max_tokens: Positive integer\n"
-                suggestion += "- model: Non-empty string"
+                suggestion += "- limit: Positive integer\n"
+                suggestion += "- type_filter: 'code', 'reas', 'know', or None"
 
                 return self._format_error(
                     error_type="InvalidParameter",
@@ -448,60 +470,122 @@ class AuroraMCPTools:
                     suggestion=suggestion,
                 )
 
-            # Task 1.4: Load configuration
-            config = self._load_config()
+            # Retrieve chunks using hybrid retrieval
+            chunks = self._retrieve_chunks(query, limit=limit, type_filter=type_filter)
 
-            # Task 1.5: Get API key
-            api_key = self._get_api_key()
-            if not api_key:
-                return self._format_error(
-                    error_type="APIKeyMissing",
-                    message=(
-                        "API key not found. AURORA requires an Anthropic API key "
-                        "to execute queries."
-                    ),
-                    suggestion=(
-                        "To fix this:\n"
-                        "1. Set environment variable: "
-                        "export ANTHROPIC_API_KEY=\"your-key\"\n"
-                        "2. Or add to config file: ~/.aurora/config.json "
-                        "under \"api.anthropic_key\"\n\n"
-                        "Get your API key at: https://console.anthropic.com/\n\n"
-                        "See docs/TROUBLESHOOTING.md for more details."
-                    ),
-                )
+            # Store results in session cache for aurora_get (Task 7.4)
+            self._last_search_results = chunks
+            self._last_search_timestamp = time.time()
 
-            # Task 1.6: Budget checking
-            budget_ok = self._check_budget(force_soar)
-            if not budget_ok:
-                return self._get_budget_error_message()
+            # Assess complexity using heuristics
+            complexity_score = self._assess_complexity(query)
 
-            # Task 1.7: Initialize QueryExecutor
-            self._ensure_query_executor_initialized(config)
+            # Calculate retrieval time
+            retrieval_time_ms = (time.time() - start_time) * 1000
 
-            # Determine verbose mode
-            if verbose is not None:
-                verbose_mode = verbose
-            else:
-                verbose_mode = config.get("query", {}).get("verbosity") == "verbose"
-
-            # Task 1.8: Auto-escalation logic
-            result = self._execute_with_auto_escalation(
+            # Build structured response
+            response = self._build_context_response(
+                chunks=chunks,
                 query=query,
-                force_soar=force_soar,
-                api_key=api_key,
-                verbose=verbose_mode,
-                config=config,
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                retrieval_time_ms=retrieval_time_ms,
+                complexity_score=complexity_score,
             )
 
-            # Format response
-            return self._format_response(result, verbose_mode)
+            return json.dumps(response, indent=2)
 
         except Exception as e:
             logger.error(f"Error in aurora_query: {e}", exc_info=True)
+            return self._format_error(
+                error_type="UnexpectedError",
+                message=f"An unexpected error occurred: {str(e)}",
+                suggestion="Please check the logs at ~/.aurora/logs/mcp.log for details.",
+            )
+
+    @log_performance("aurora_get")
+    def aurora_get(self, index: int) -> str:
+        """
+        Retrieve a full chunk by index from the last search results.
+
+        No API key required. Retrieves from session cache only.
+
+        This tool allows you to get the complete content of a specific result
+        from your last aurora_search or aurora_query call. Results are numbered
+        starting from 1 (1-indexed).
+
+        Workflow:
+        1. Call aurora_search or aurora_query to get numbered results
+        2. Review the list and choose which result you want
+        3. Call aurora_get(N) to retrieve the full chunk for result N
+
+        Args:
+            index: 1-indexed position in last search results (must be >= 1)
+
+        Returns:
+            JSON string with full chunk including:
+            - chunk: Complete chunk with all metadata
+            - metadata: Index position and total count
+
+        Note:
+            - Results are cached for 10 minutes after search
+            - Index must be >= 1 and <= total results count
+            - Returns error if no previous search or cache expired
+        """
+        try:
+            import time
+
+            # Check if there's a previous search (Task 7.10)
+            if not self._last_search_results or self._last_search_timestamp is None:
+                return self._format_error(
+                    error_type="NoSearchResults",
+                    message="No previous search results found. Please run aurora_search or aurora_query first.",
+                    suggestion="Use aurora_search or aurora_query to search for code, then use aurora_get to retrieve specific results by index.",
+                )
+
+            # Check cache expiry (10 minutes = 600 seconds) (Task 7.6)
+            cache_age_seconds = time.time() - self._last_search_timestamp
+            if cache_age_seconds > 600:
+                return self._format_error(
+                    error_type="CacheExpired",
+                    message="Search results cache has expired (older than 10 minutes). Please search again.",
+                    suggestion="Run aurora_search or aurora_query again to refresh the results cache.",
+                )
+
+            # Validate index (Task 7.7)
+            # Must be >= 1 (1-indexed)
+            if index < 1:
+                return self._format_error(
+                    error_type="InvalidParameter",
+                    message=f"Index must be >= 1 (1-indexed system). Got: {index}",
+                    suggestion="Use index starting from 1. For example: aurora_get(1) for the first result.",
+                )
+
+            # Must be <= length of results
+            total_results = len(self._last_search_results)
+            if index > total_results:
+                return self._format_error(
+                    error_type="InvalidParameter",
+                    message=f"Index {index} is out of range. Only {total_results} results available (valid range: 1-{total_results}).",
+                    suggestion=f"Choose an index between 1 and {total_results}.",
+                )
+
+            # Get the chunk (convert 1-indexed to 0-indexed)
+            chunk = self._last_search_results[index - 1]
+
+            # Build response per FR-11.4 (Task 7.8)
+            response = {
+                "chunk": chunk,
+                "metadata": {
+                    "index": index,
+                    "total_results": total_results,
+                    "retrieved_from": "session_cache",
+                    "cache_age_seconds": round(cache_age_seconds, 1),
+                },
+            }
+
+            return json.dumps(response, indent=2)
+
+        except Exception as e:
+            logger.error(f"Error in aurora_get: {e}", exc_info=True)
             return self._format_error(
                 error_type="UnexpectedError",
                 message=f"An unexpected error occurred: {str(e)}",
@@ -515,18 +599,14 @@ class AuroraMCPTools:
     def _validate_parameters(
         self,
         query: str,
-        temperature: float | None,
-        max_tokens: int | None,
-        model: str | None,
+        type_filter: str | None,
     ) -> tuple[bool, str | None]:
         """
-        Validate aurora_query parameters (Task 1.3).
+        Validate aurora_query parameters.
 
         Args:
             query: Query string to validate
-            temperature: Temperature parameter (0.0-1.0)
-            max_tokens: Max tokens parameter (must be positive)
-            model: Model string (must be non-empty if provided)
+            type_filter: Type filter ("code", "reas", "know", or None)
 
         Returns:
             Tuple of (is_valid, error_message)
@@ -535,20 +615,11 @@ class AuroraMCPTools:
         if not query or not query.strip():
             return False, "Query cannot be empty or whitespace-only"
 
-        # Check temperature is in valid range [0.0, 1.0]
-        if temperature is not None:
-            if temperature < 0.0 or temperature > 1.0:
-                return False, f"Temperature must be between 0.0 and 1.0, got {temperature}"
-
-        # Check max_tokens is positive
-        if max_tokens is not None:
-            if max_tokens <= 0:
-                return False, f"max_tokens must be positive, got {max_tokens}"
-
-        # Check model is non-empty if provided
-        if model is not None:
-            if not model or not model.strip():
-                return False, "Model cannot be empty string"
+        # Check type_filter is valid if provided
+        if type_filter is not None:
+            valid_types = ["code", "reas", "know"]
+            if type_filter not in valid_types:
+                return False, f"type_filter must be one of {valid_types}, got '{type_filter}'"
 
         return True, None
 
@@ -590,7 +661,7 @@ class AuroraMCPTools:
         config_path = Path.home() / ".aurora" / "config.json"
         if config_path.exists():
             try:
-                with open(str(config_path), "r") as f:
+                with open(str(config_path)) as f:
                     user_config = json.load(f)
 
                 # Merge user config with defaults (deep merge)
@@ -600,7 +671,7 @@ class AuroraMCPTools:
                     else:
                         config[section] = values
 
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 logger.warning(f"Failed to load config from {config_path}: {e}. Using defaults.")
 
         # Override with environment variables
@@ -640,18 +711,218 @@ class AuroraMCPTools:
             "why does",
             "evaluate",
             "implement",
+            "multiple",
+            "across",
+            "identify",
+            "suggest",
+            "improve",
         ]
         complex_score = sum(1 for keyword in complex_keywords if keyword in query_lower)
 
         # Calculate complexity (0.0 to 1.0)
         if simple_score > 0 and complex_score == 0:
             return 0.3  # Likely simple
-        elif complex_score > 0:
-            return 0.7  # Likely complex
+        elif complex_score >= 2:
+            return 0.7  # Likely complex (2+ complex keywords)
         elif len(query.split()) > 20:
             return 0.6  # Long query = moderate complexity
         else:
             return 0.5  # Default: medium complexity
+
+    def _retrieve_chunks(
+        self, query: str, limit: int = 10, type_filter: str | None = None
+    ) -> list[dict[str, Any]]:
+        """
+        Retrieve chunks using HybridRetriever with full metadata.
+
+        Args:
+            query: Query string
+            limit: Maximum number of chunks to retrieve
+            type_filter: Filter by memory type (code, reas, know, or None)
+
+        Returns:
+            List of chunk dictionaries with full metadata including:
+            - chunk_id: Unique identifier
+            - type: Memory type (code, reas, know)
+            - content: Chunk content
+            - file_path: Path to source file
+            - line_range: [start, end] line numbers
+            - relevance_score: Hybrid score (0.0-1.0)
+            - name: Function/class name (if applicable)
+        """
+        try:
+            self._ensure_initialized()
+
+            # Use HybridRetriever to get chunks with relevance scores
+            results = self._retriever.retrieve(query, top_k=limit)
+
+            # Format results with full metadata
+            formatted_chunks = []
+            for result in results:
+                metadata = result.get("metadata", {})
+                chunk_type = metadata.get("type", "unknown")
+
+                # Apply type filter if specified
+                if type_filter and chunk_type != type_filter:
+                    continue
+
+                # Extract line range from metadata or chunk
+                line_range = [0, 0]
+                if "line_range" in metadata:
+                    line_range = metadata.get("line_range", [0, 0])
+
+                formatted_chunks.append(
+                    {
+                        "chunk_id": result.get("chunk_id", ""),
+                        "type": chunk_type,
+                        "content": result.get("content", ""),
+                        "file_path": metadata.get("file_path", ""),
+                        "line_range": line_range,
+                        "relevance_score": float(result.get("hybrid_score", 0.0)),
+                        "name": metadata.get("name", ""),
+                    }
+                )
+
+            return formatted_chunks
+
+        except Exception as e:
+            logger.warning(f"Failed to retrieve chunks: {e}")
+            return []
+
+    def _calculate_retrieval_confidence(self, chunks: list[dict[str, Any]]) -> float:
+        """
+        Calculate confidence score for retrieved chunks.
+
+        Confidence is based on:
+        - Top result score (main factor)
+        - Number of results found
+        - Score distribution
+
+        Args:
+            chunks: List of retrieved chunks with relevance_score field
+
+        Returns:
+            Confidence score from 0.0 to 1.0
+        """
+        if not chunks:
+            return 0.0
+
+        # Get relevance scores
+        scores = [chunk.get("relevance_score", 0.0) for chunk in chunks]
+
+        # Top score is the main factor (70% weight)
+        top_score = max(scores) if scores else 0.0
+
+        # Result count factor (20% weight)
+        # More results = higher confidence (up to 5 results)
+        count_factor = min(len(chunks) / 5.0, 1.0)
+
+        # Score distribution factor (10% weight)
+        # Consistent high scores = higher confidence
+        if len(scores) > 1:
+            avg_score = sum(scores) / len(scores)
+            distribution_factor = avg_score / top_score if top_score > 0 else 0.0
+        else:
+            distribution_factor = 1.0
+
+        # Calculate weighted confidence
+        confidence = 0.7 * top_score + 0.2 * count_factor + 0.1 * distribution_factor
+
+        # Clamp to [0.0, 1.0]
+        return max(0.0, min(1.0, confidence))
+
+    def _build_context_response(
+        self,
+        chunks: list[dict[str, Any]],
+        query: str,
+        retrieval_time_ms: float,
+        complexity_score: float,
+    ) -> dict[str, Any]:
+        """
+        Build structured context response per FR-2.2 schema.
+
+        Args:
+            chunks: Retrieved chunks with metadata
+            query: Original query string
+            retrieval_time_ms: Time taken for retrieval in milliseconds
+            complexity_score: Heuristic complexity assessment (0.0-1.0)
+
+        Returns:
+            Response dictionary with context, assessment, and metadata sections
+        """
+        # Calculate retrieval confidence
+        confidence = self._calculate_retrieval_confidence(chunks)
+
+        # Determine suggested approach based on complexity
+        if complexity_score < 0.5:
+            suggested_approach = "simple"
+        elif complexity_score < 0.65:
+            suggested_approach = "direct"
+        else:
+            suggested_approach = "complex"
+
+        # Build numbered chunks list
+        numbered_chunks = []
+        for idx, chunk in enumerate(chunks, start=1):
+            numbered_chunks.append(
+                {
+                    "id": chunk.get("chunk_id", ""),
+                    "number": idx,
+                    "type": chunk.get("type", "unknown"),
+                    "content": chunk.get("content", ""),
+                    "file_path": chunk.get("file_path", ""),
+                    "line_range": chunk.get("line_range", [0, 0]),
+                    "relevance_score": round(chunk.get("relevance_score", 0.0), 3),
+                }
+            )
+
+        # Get index stats
+        try:
+            self._ensure_initialized()
+            with self._store._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM chunks")
+                total_chunks = cursor.fetchone()[0]
+
+                # Count by type
+                cursor.execute(
+                    "SELECT type, COUNT(*) FROM chunks GROUP BY type"
+                )
+                types_breakdown = {row[0]: row[1] for row in cursor.fetchall()}
+        except Exception as e:
+            logger.warning(f"Failed to get index stats: {e}")
+            total_chunks = 0
+            types_breakdown = {}
+
+        # Build response structure
+        response: dict[str, Any] = {
+            "context": {
+                "chunks": numbered_chunks,
+                "total_found": len(chunks),
+                "returned": len(chunks),
+            },
+            "assessment": {
+                "complexity_score": round(complexity_score, 2),
+                "suggested_approach": suggested_approach,
+                "retrieval_confidence": round(confidence, 2),
+            },
+            "metadata": {
+                "query": query,
+                "retrieval_time_ms": round(retrieval_time_ms, 1),
+                "index_stats": {
+                    "total_chunks": total_chunks,
+                    "types": types_breakdown,
+                },
+            },
+        }
+
+        # Add suggestion if confidence is low
+        if confidence < 0.5:
+            response["assessment"]["suggestion"] = (
+                "Low confidence results. Consider refining your query or indexing more code."
+            )
+
+        return response
 
     def _get_memory_context(self, query: str, limit: int = 3) -> str:
         """

@@ -5,6 +5,8 @@ Get started with AURORA in 5 minutes. This guide walks you through installation,
 **Time Required**: 5 minutes
 **Prerequisites**: Python 3.10+, pip
 
+**Note:** This guide covers standalone CLI usage. For Claude Code CLI integration (no API key required), see [MCP Setup Guide](../MCP_SETUP.md).
+
 ---
 
 ## Step 1: Install (1 minute)
@@ -26,6 +28,9 @@ aurora, version 0.1.0
 
 ## Step 2: Get API Key (2 minutes)
 
+**Required for:** Standalone CLI commands (`aur query`, `aur headless`)
+**Not required for:** MCP tools inside Claude Code CLI
+
 1. **Visit Anthropic Console**: https://console.anthropic.com
 
 2. **Sign in** or create account
@@ -44,6 +49,8 @@ aurora, version 0.1.0
    echo 'export ANTHROPIC_API_KEY=sk-ant-...' >> ~/.bashrc
    source ~/.bashrc
    ```
+
+**Skip this step?** Use AURORA with Claude Code CLI instead - no API key needed. See [MCP Setup Guide](../MCP_SETUP.md).
 
 ---
 

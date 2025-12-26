@@ -121,54 +121,78 @@ class AuroraMCPServer:
         @self.mcp.tool()
         def aurora_query(
             query: str,
-            force_soar: bool = False,
-            verbose: bool | None = None,
-            model: str | None = None,
-            temperature: float | None = None,
-            max_tokens: int | None = None,
+            limit: int = 10,
+            type_filter: str | None = None,
+            verbose: bool = False,
         ) -> str:
             """
-            Execute AURORA query with reasoning and memory integration.
+            Retrieve relevant context from AURORA memory without LLM inference.
 
-            This tool provides intelligent query handling with automatic complexity
-            assessment. Simple queries use direct LLM calls for speed, while complex
-            queries automatically escalate to the full SOAR 9-phase reasoning pipeline.
+            This tool provides intelligent context retrieval with complexity assessment
+            and confidence scoring. It returns structured context for the host LLM
+            (Claude Code CLI) to reason about, rather than calling external LLM APIs.
 
             Args:
-                query: Natural language query to process (required)
-                force_soar: If True, bypass auto-escalation and always use SOAR pipeline
-                verbose: If True, include phase trace and detailed metrics in response
-                model: Override default LLM model (e.g., "claude-sonnet-4-20250514")
-                temperature: Override default temperature (0.0-1.0)
-                max_tokens: Override default max tokens for response
+                query: Natural language query string (required)
+                limit: Maximum number of chunks to retrieve (default: 10)
+                type_filter: Filter by memory type - "code", "reas", "know", or None (default: None)
+                verbose: Include detailed metadata in response (default: False)
 
             Returns:
                 JSON string with:
-                - answer: The response to your query
-                - execution_path: "direct_llm" or "soar_pipeline"
-                - metadata: Processing details (duration, cost, tokens, model)
-                - phases: SOAR phase trace (only if verbose=True and SOAR used)
+                - context: Retrieved memory chunks with content, metadata, and relevance scores
+                - assessment: Complexity assessment and retrieval confidence score
+                - metadata: Database stats and result counts
 
             Examples:
-                Simple query (uses direct LLM):
+                Basic retrieval:
                     aurora_query("What is a Python decorator?")
 
-                Complex query (auto-escalates to SOAR):
-                    aurora_query("Compare async/await patterns in Python and JavaScript")
+                Type-filtered retrieval:
+                    aurora_query("async patterns", type_filter="code", limit=5)
 
-                Force SOAR pipeline:
-                    aurora_query("Explain decorators", force_soar=True, verbose=True)
-
-                Custom model settings:
-                    aurora_query("Analyze code", model="claude-opus-4", temperature=0.5)
+                Detailed metadata:
+                    aurora_query("SOAR pipeline", verbose=True)
 
             Note:
-                Requires ANTHROPIC_API_KEY environment variable or config file setting.
-                See docs/TROUBLESHOOTING.md for error handling guidance.
+                No API key required. This tool runs inside Claude Code CLI which
+                provides the LLM reasoning capabilities. For standalone usage with
+                LLM responses, use the CLI command: $ aur query "your question"
             """
-            return self.tools.aurora_query(
-                query, force_soar, verbose, model, temperature, max_tokens
-            )
+            return self.tools.aurora_query(query, limit, type_filter, verbose)
+
+        @self.mcp.tool()
+        def aurora_get(index: int) -> str:
+            """
+            Retrieve a full chunk by index from the last search results.
+
+            This tool allows you to get the complete content of a specific result
+            from your last aurora_search or aurora_query call. Results are numbered
+            starting from 1 (1-indexed).
+
+            Workflow:
+            1. Call aurora_search or aurora_query to get numbered results
+            2. Review the list and choose which result you want
+            3. Call aurora_get(N) to retrieve the full chunk for result N
+
+            Args:
+                index: 1-indexed position in last search results (must be >= 1)
+
+            Returns:
+                JSON string with:
+                - chunk: Complete chunk with all metadata (id, type, content, file_path, etc.)
+                - metadata: Index position and total count
+
+            Examples:
+                After aurora_search("async patterns"):
+                    aurora_get(1)  # Get first result
+                    aurora_get(3)  # Get third result
+
+            Note:
+                Session cache expires after 10 minutes. Results are stored per-session
+                and cleared when a new search is performed.
+            """
+            return self.tools.aurora_get(index)
 
     def run(self) -> None:
         """Run the MCP server."""
@@ -186,7 +210,8 @@ class AuroraMCPServer:
             ("aurora_stats", "Get database statistics (chunks, files, size)"),
             ("aurora_context", "Retrieve code context from a specific file/function"),
             ("aurora_related", "Find related code using ACT-R spreading activation"),
-            ("aurora_query", "Execute queries with auto-escalation (direct LLM or SOAR)"),
+            ("aurora_query", "Retrieve relevant context without LLM inference"),
+            ("aurora_get", "Get full chunk by index from last search results"),
         ]
 
         for name, description in tools:

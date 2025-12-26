@@ -25,7 +25,7 @@ This task list implements the simplification of the AURORA MCP `aurora_query` to
 ## Relevant Files
 
 ### Production Files
-- `src/aurora/mcp/tools.py` - Main MCP tools implementation; remove LLM methods, simplify aurora_query
+- `src/aurora/mcp/tools.py` - Main MCP tools implementation (755 lines, removed 411 lines of LLM code); 9 LLM methods removed, 3 methods retained (_assess_complexity, _get_memory_context, _format_error)
 - `src/aurora/mcp/server.py` - MCP server registration; update aurora_query tool signature
 - `src/aurora/mcp/config.py` - MCP configuration; may need minor updates for removed features
 
@@ -97,21 +97,21 @@ This task list implements the simplification of the AURORA MCP `aurora_query` to
 
 ### Phase 2: Implementation (TDD GREEN - Make Tests Pass)
 
-- [ ] 4.0 Remove LLM-Related Methods from tools.py
-  - [ ] 4.1 Remove `_get_api_key()` method (lines ~617-639) from `AuroraMCPTools` class
-  - [ ] 4.2 Remove `_check_budget()` method (lines ~641-689) from `AuroraMCPTools` class
-  - [ ] 4.3 Remove `_get_budget_error_message()` method (lines ~691-713) from `AuroraMCPTools` class
-  - [ ] 4.4 Remove `_ensure_query_executor_initialized()` method (lines ~715-727) from `AuroraMCPTools` class
-  - [ ] 4.5 Remove `_is_transient_error()` method (lines ~729-778) from `AuroraMCPTools` class
-  - [ ] 4.6 Remove `_execute_with_retry()` method (lines ~780-832) from `AuroraMCPTools` class
-  - [ ] 4.7 Remove `_execute_with_auto_escalation()` method (lines ~834-883) from `AuroraMCPTools` class
-  - [ ] 4.8 Remove `_execute_direct_llm()` method (lines ~925-978) from `AuroraMCPTools` class
-  - [ ] 4.9 Remove `_execute_soar()` method (lines ~980-1065) from `AuroraMCPTools` class
-  - [ ] 4.10 Remove unused imports at top of file: `time` (if only used by removed methods), any LLM-related imports
-  - [ ] 4.11 Retain `_assess_complexity()` method (lines ~885-923) - this is used for heuristic assessment
-  - [ ] 4.12 Retain `_get_memory_context()` method (lines ~1067-1084) - this becomes the primary function
-  - [ ] 4.13 Retain `_format_error()` method (lines ~1133-1166) - still needed for error responses
-  - [ ] 4.14 Run `python -c "from aurora.mcp.tools import AuroraMCPTools"` to verify module still imports
+- [x] 4.0 Remove LLM-Related Methods from tools.py
+  - [x] 4.1 Remove `_get_api_key()` method (lines ~617-639) from `AuroraMCPTools` class
+  - [x] 4.2 Remove `_check_budget()` method (lines ~641-689) from `AuroraMCPTools` class
+  - [x] 4.3 Remove `_get_budget_error_message()` method (lines ~691-713) from `AuroraMCPTools` class
+  - [x] 4.4 Remove `_ensure_query_executor_initialized()` method (lines ~715-727) from `AuroraMCPTools` class
+  - [x] 4.5 Remove `_is_transient_error()` method (lines ~729-778) from `AuroraMCPTools` class
+  - [x] 4.6 Remove `_execute_with_retry()` method (lines ~780-832) from `AuroraMCPTools` class
+  - [x] 4.7 Remove `_execute_with_auto_escalation()` method (lines ~834-883) from `AuroraMCPTools` class
+  - [x] 4.8 Remove `_execute_direct_llm()` method (lines ~925-978) from `AuroraMCPTools` class
+  - [x] 4.9 Remove `_execute_soar()` method (lines ~980-1065) from `AuroraMCPTools` class
+  - [x] 4.10 Remove unused imports at top of file: `time` (if only used by removed methods), any LLM-related imports
+  - [x] 4.11 Retain `_assess_complexity()` method (lines ~885-923) - this is used for heuristic assessment
+  - [x] 4.12 Retain `_get_memory_context()` method (lines ~1067-1084) - this becomes the primary function
+  - [x] 4.13 Retain `_format_error()` method (lines ~1133-1166) - still needed for error responses
+  - [x] 4.14 Run `python -c "from aurora.mcp.tools import AuroraMCPTools"` to verify module still imports
 
 - [ ] 5.0 Implement Simplified aurora_query Response Format
   - [ ] 5.1 Modify `_get_memory_context()` to return structured dict instead of string, including chunk metadata (id, type, content, file_path, line_range, relevance_score)

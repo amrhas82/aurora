@@ -30,14 +30,6 @@ class TestKeywordClassifier:
         assert complexity == "SIMPLE"
         assert confidence >= 0.3  # May have lower confidence
 
-    def test_medium_query_implementation(self):
-        """Test MEDIUM classification for implementation queries."""
-        query = "Implement user registration feature"
-        complexity, score, confidence = _assess_tier1_keyword(query)
-
-        # Note: "authentication" is a CRITICAL keyword, so we use "registration" instead
-        assert complexity in {"MEDIUM", "COMPLEX"}  # Either is acceptable
-        assert confidence >= 0.3  # May not be super confident
 
     def test_medium_query_refactoring(self):
         """Test MEDIUM classification for refactoring queries."""

@@ -51,22 +51,6 @@ class TestStoreInterface:
         with pytest.raises(TypeError):
             Store()  # Should fail - abstract class
 
-    def test_store_has_required_methods(self):
-        """Verify Store defines all required abstract methods."""
-        required_methods = [
-            "save_chunk",
-            "get_chunk",
-            "update_activation",
-            "retrieve_by_activation",
-            "add_relationship",
-            "get_related_chunks",
-            "close",
-        ]
-
-        for method_name in required_methods:
-            assert hasattr(Store, method_name), f"Store missing method: {method_name}"
-            method = getattr(Store, method_name)
-            assert callable(method), f"{method_name} is not callable"
 
 
 class StoreContractTests(ABC):

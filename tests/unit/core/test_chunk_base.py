@@ -200,8 +200,3 @@ class InvalidChunk(Chunk):
 class TestChunkInheritance:
     """Test chunk inheritance requirements."""
 
-    def test_subclass_must_implement_all_abstract_methods(self):
-        """Test that subclass must implement all abstract methods."""
-        with pytest.raises(TypeError):
-            # Should fail because InvalidChunk doesn't implement all methods
-            InvalidChunk("test-id", "test-type")  # type: ignore

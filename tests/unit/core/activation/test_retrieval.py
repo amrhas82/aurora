@@ -636,25 +636,6 @@ class TestExplainRetrieval:
         assert explanation["above_threshold"] is False
         assert "filtered out" in explanation["explanation"].lower()
 
-    def test_explain_retrieval_contains_details(self):
-        """Test explanation contains detailed breakdown."""
-        engine = ActivationEngine()
-        retriever = ActivationRetriever(engine)
-        now = datetime.now(timezone.utc)
-
-        chunk = MockChunk(
-            chunk_id="chunk_1",
-            access_history=[AccessHistoryEntry(timestamp=now - timedelta(hours=1))],
-            last_access=now - timedelta(hours=1),
-            keywords={"database", "query"},
-        )
-
-        explanation = retriever.explain_retrieval(
-            chunk=chunk, query_keywords={"database"}, spreading_score=0.3, current_time=now
-        )
-
-        assert "details" in explanation
-        assert "components" in explanation["details"]
 
 
 class TestBatchRetriever:

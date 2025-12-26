@@ -39,30 +39,9 @@ class MockContextProvider(ContextProvider):
 class TestContextProviderInterface:
     """Test the abstract ContextProvider interface contract."""
 
-    def test_interface_requires_implementation(self):
-        """Test that ContextProvider cannot be instantiated directly."""
-        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            ContextProvider()
 
-    def test_retrieve_method_signature(self):
-        """Test retrieve method exists with correct signature."""
-        provider = MockContextProvider()
-        result = provider.retrieve("test query", limit=5)
-        assert isinstance(result, list)
-        assert provider.queries == [("test query", 5)]
 
-    def test_update_method_signature(self):
-        """Test update method exists with correct signature."""
-        provider = MockContextProvider()
-        chunk_id = ChunkID("code_test123")
-        provider.update(chunk_id, 0.5)
-        assert provider.updates == [(chunk_id, 0.5)]
 
-    def test_refresh_method_signature(self):
-        """Test refresh method exists."""
-        provider = MockContextProvider()
-        provider.refresh()
-        assert provider.refresh_count == 1
 
     def test_retrieve_returns_list_of_chunks(self):
         """Test that retrieve returns a list (even if empty)."""

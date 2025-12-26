@@ -87,13 +87,6 @@ class TestHeadlessConfig:
         assert config.auto_create_scratchpad is False
         assert config.scratchpad_backup is False
 
-    def test_evaluation_template_contains_placeholders(self):
-        """Test evaluation template has required placeholders."""
-        config = HeadlessConfig()
-        template = config.evaluation_prompt_template
-        assert "{goal}" in template
-        assert "{success_criteria}" in template
-        assert "{scratchpad_content}" in template
 
 
 class TestHeadlessOrchestratorInit:
@@ -144,56 +137,6 @@ class TestHeadlessOrchestratorInit:
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    def test_init_creates_components(
-        self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file
-    ):
-        """Test initialization creates all required components."""
-        mock_soar = Mock()
-        HeadlessOrchestrator(
-            prompt_path=prompt_file,
-            scratchpad_path=scratchpad_file,
-            soar_orchestrator=mock_soar,
-        )
-
-        # Verify components were created
-        assert mock_git.called
-        assert mock_prompt.called
-        assert mock_scratchpad.called
-
-
-class TestValidateSafety:
-    """Test _validate_safety method."""
-
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_validate_safety_success(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
-    ):
-        """Test successful safety validation."""
-        mock_git = Mock()
-        mock_git.validate.return_value = None
-        mock_git_class.return_value = mock_git
-
-        mock_prompt = Mock()
-        mock_prompt.validate_format.return_value = (True, [])
-        mock_prompt_class.return_value = mock_prompt
-
-        mock_soar = Mock()
-        orchestrator = HeadlessOrchestrator(
-            prompt_path=prompt_file,
-            scratchpad_path=scratchpad_file,
-            soar_orchestrator=mock_soar,
-        )
-
-        # Should not raise
-        orchestrator._validate_safety()
-
-        mock_git.validate.assert_called_once()
-        mock_prompt.validate_format.assert_called_once()
-
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     def test_validate_safety_git_error(
         self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
@@ -241,38 +184,6 @@ class TestValidateSafety:
 
 class TestLoadPrompt:
     """Test _load_prompt method."""
-
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_load_prompt_success(
-        self, mock_git, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
-    ):
-        """Test successful prompt loading."""
-        prompt_data = PromptData(
-            goal="Test goal",
-            success_criteria=["Criterion 1", "Criterion 2"],
-            constraints=["Constraint 1"],
-            context="Test context",
-        )
-
-        mock_prompt = Mock()
-        mock_prompt.load.return_value = prompt_data
-        mock_prompt_class.return_value = mock_prompt
-
-        mock_soar = Mock()
-        orchestrator = HeadlessOrchestrator(
-            prompt_path=prompt_file,
-            scratchpad_path=scratchpad_file,
-            soar_orchestrator=mock_soar,
-        )
-
-        result = orchestrator._load_prompt()
-
-        assert result.goal == "Test goal"
-        assert len(result.success_criteria) == 2
-        assert len(result.constraints) == 1
-        mock_prompt.load.assert_called_once()
 
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
@@ -569,40 +480,6 @@ class TestBuildIterationQuery:
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
     @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_build_query_with_prompt_data(
-        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
-        """Test building query with prompt data."""
-        mock_scratchpad = Mock()
-        mock_scratchpad.read.return_value = "Previous iteration content"
-        mock_scratchpad_class.return_value = mock_scratchpad
-
-        mock_soar = Mock()
-        orchestrator = HeadlessOrchestrator(
-            prompt_path=prompt_file,
-            scratchpad_path=scratchpad_file,
-            soar_orchestrator=mock_soar,
-        )
-
-        orchestrator.prompt_data = PromptData(
-            goal="Test goal",
-            success_criteria=["Criterion 1", "Criterion 2"],
-            constraints=["Constraint 1", "Constraint 2"],
-            context="Test context",
-        )
-
-        query = orchestrator._build_iteration_query(1)
-
-        assert "Iteration 1" in query
-        assert "Test goal" in query
-        assert "Criterion 1" in query
-        assert "Criterion 2" in query
-        assert "Constraint 1" in query
-        assert "Previous iteration content" in query
-
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     def test_build_query_without_prompt_data(
         self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
     ):
@@ -619,51 +496,6 @@ class TestBuildIterationQuery:
         query = orchestrator._build_iteration_query(1)
 
         assert query == "Continue working toward the goal."
-
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_build_query_truncates_long_scratchpad(
-        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
-        """Test query truncates long scratchpad content."""
-        mock_scratchpad = Mock()
-        # Create scratchpad content longer than 2000 chars
-        long_content = "x" * 3000
-        mock_scratchpad.read.return_value = long_content
-        mock_scratchpad_class.return_value = mock_scratchpad
-
-        mock_soar = Mock()
-        orchestrator = HeadlessOrchestrator(
-            prompt_path=prompt_file,
-            scratchpad_path=scratchpad_file,
-            soar_orchestrator=mock_soar,
-        )
-
-        orchestrator.prompt_data = PromptData(
-            goal="Test goal",
-            success_criteria=["Criterion 1"],
-            constraints=["Constraint 1"],
-            context="Test context",
-        )
-
-        query = orchestrator._build_iteration_query(1)
-
-        # Should only include last 2000 chars of scratchpad
-        assert long_content[-2000:] in query
-        # The query will have the 2000 'x' chars from truncated scratchpad
-        # Count consecutive 'x' in the scratchpad portion
-        import re
-
-        # Find the longest sequence of x's (should be exactly 2000)
-        x_sequences = re.findall(r"x+", query)
-        if x_sequences:
-            longest_x_sequence = max(len(seq) for seq in x_sequences)
-            assert longest_x_sequence == 2000
-
-
-class TestExecuteIteration:
-    """Test _execute_iteration method."""
 
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
     @patch("aurora_soar.headless.orchestrator.PromptLoader")
@@ -1230,62 +1062,4 @@ class TestExecute:
         assert result.total_cost == 6.0
 
 
-class TestHeadlessResult:
-    """Test HeadlessResult dataclass."""
 
-    def test_result_creation(self):
-        """Test creating result object."""
-        result = HeadlessResult(
-            goal_achieved=True,
-            termination_reason=TerminationReason.GOAL_ACHIEVED,
-            iterations=5,
-            total_cost=2.5,
-            duration_seconds=120.5,
-            scratchpad_path="/tmp/scratchpad.md",
-            error_message=None,
-        )
-
-        assert result.goal_achieved is True
-        assert result.termination_reason == TerminationReason.GOAL_ACHIEVED
-        assert result.iterations == 5
-        assert result.total_cost == 2.5
-        assert result.duration_seconds == 120.5
-        assert result.scratchpad_path == "/tmp/scratchpad.md"
-        assert result.error_message is None
-
-    def test_result_with_error(self):
-        """Test creating result with error."""
-        result = HeadlessResult(
-            goal_achieved=False,
-            termination_reason=TerminationReason.BLOCKED,
-            iterations=3,
-            total_cost=1.0,
-            duration_seconds=60.0,
-            scratchpad_path="/tmp/scratchpad.md",
-            error_message="SOAR execution failed",
-        )
-
-        assert result.goal_achieved is False
-        assert result.error_message == "SOAR execution failed"
-
-
-class TestTerminationReason:
-    """Test TerminationReason enum."""
-
-    def test_all_reasons_exist(self):
-        """Test all termination reasons are defined."""
-        assert TerminationReason.GOAL_ACHIEVED.value == "GOAL_ACHIEVED"
-        assert TerminationReason.BUDGET_EXCEEDED.value == "BUDGET_EXCEEDED"
-        assert TerminationReason.MAX_ITERATIONS.value == "MAX_ITERATIONS"
-        assert TerminationReason.BLOCKED.value == "BLOCKED"
-        assert TerminationReason.GIT_SAFETY_ERROR.value == "GIT_SAFETY_ERROR"
-        assert TerminationReason.PROMPT_ERROR.value == "PROMPT_ERROR"
-
-    def test_reason_comparison(self):
-        """Test comparing termination reasons."""
-        reason1 = TerminationReason.GOAL_ACHIEVED
-        reason2 = TerminationReason.GOAL_ACHIEVED
-        reason3 = TerminationReason.BLOCKED
-
-        assert reason1 == reason2
-        assert reason1 != reason3

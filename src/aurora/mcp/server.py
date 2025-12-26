@@ -118,6 +118,58 @@ class AuroraMCPServer:
             """
             return self.tools.aurora_related(chunk_id, max_hops)
 
+        @self.mcp.tool()
+        def aurora_query(
+            query: str,
+            force_soar: bool = False,
+            verbose: bool | None = None,
+            model: str | None = None,
+            temperature: float | None = None,
+            max_tokens: int | None = None,
+        ) -> str:
+            """
+            Execute AURORA query with reasoning and memory integration.
+
+            This tool provides intelligent query handling with automatic complexity
+            assessment. Simple queries use direct LLM calls for speed, while complex
+            queries automatically escalate to the full SOAR 9-phase reasoning pipeline.
+
+            Args:
+                query: Natural language query to process (required)
+                force_soar: If True, bypass auto-escalation and always use SOAR pipeline
+                verbose: If True, include phase trace and detailed metrics in response
+                model: Override default LLM model (e.g., "claude-sonnet-4-20250514")
+                temperature: Override default temperature (0.0-1.0)
+                max_tokens: Override default max tokens for response
+
+            Returns:
+                JSON string with:
+                - answer: The response to your query
+                - execution_path: "direct_llm" or "soar_pipeline"
+                - metadata: Processing details (duration, cost, tokens, model)
+                - phases: SOAR phase trace (only if verbose=True and SOAR used)
+
+            Examples:
+                Simple query (uses direct LLM):
+                    aurora_query("What is a Python decorator?")
+
+                Complex query (auto-escalates to SOAR):
+                    aurora_query("Compare async/await patterns in Python and JavaScript")
+
+                Force SOAR pipeline:
+                    aurora_query("Explain decorators", force_soar=True, verbose=True)
+
+                Custom model settings:
+                    aurora_query("Analyze code", model="claude-opus-4", temperature=0.5)
+
+            Note:
+                Requires ANTHROPIC_API_KEY environment variable or config file setting.
+                See docs/TROUBLESHOOTING.md for error handling guidance.
+            """
+            return self.tools.aurora_query(
+                query, force_soar, verbose, model, temperature, max_tokens
+            )
+
     def run(self) -> None:
         """Run the MCP server."""
         self.mcp.run()
@@ -134,6 +186,7 @@ class AuroraMCPServer:
             ("aurora_stats", "Get database statistics (chunks, files, size)"),
             ("aurora_context", "Retrieve code context from a specific file/function"),
             ("aurora_related", "Find related code using ACT-R spreading activation"),
+            ("aurora_query", "Execute queries with auto-escalation (direct LLM or SOAR)"),
         ]
 
         for name, description in tools:

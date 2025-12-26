@@ -21,16 +21,18 @@ This guide explains how to integrate AURORA's MCP (Model Context Protocol) serve
 
 ## Introduction
 
-AURORA's MCP server provides Claude Desktop with five powerful tools for code navigation:
+AURORA's MCP server provides Claude Desktop with six powerful tools for code navigation and intelligent querying:
 
 1. **aurora_search**: Semantic search over your indexed codebase
 2. **aurora_index**: Index new files or directories
 3. **aurora_stats**: View statistics about your indexed codebase
 4. **aurora_context**: Retrieve file or function content
 5. **aurora_related**: Find related code chunks through dependency relationships
+6. **aurora_query**: Execute queries with auto-escalation (direct LLM or SOAR pipeline)
 
 **Benefits:**
 - Natural language code search ("find authentication logic")
+- Intelligent query processing with automatic complexity assessment
 - Contextual code understanding (Claude knows your codebase structure)
 - Faster development (no manual file copying)
 - Memory persistence across conversations
@@ -86,7 +88,7 @@ python -m aurora.mcp.server --test
 Expected output:
 ```
 Aurora MCP Server initialized successfully
-Available tools: aurora_search, aurora_index, aurora_stats, aurora_context, aurora_related
+Available tools: aurora_search, aurora_index, aurora_stats, aurora_context, aurora_related, aurora_query
 ```
 
 ---
@@ -277,6 +279,137 @@ Once configured, you can ask Claude to search and navigate your codebase:
 2. `payments/validators.py`: Input validation errors
 3. `payments/retry.py`: Retry logic for transient failures
 ..."
+
+---
+
+## aurora_query Tool
+
+The `aurora_query` tool provides intelligent query processing with automatic complexity assessment. Simple queries use fast direct LLM calls, while complex queries automatically escalate to the full SOAR 9-phase reasoning pipeline.
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | string | required | Natural language query to process |
+| `force_soar` | boolean | false | Always use SOAR pipeline (bypass auto-escalation) |
+| `verbose` | boolean | null | Include phase trace and detailed metrics |
+| `model` | string | null | Override default LLM model |
+| `temperature` | float | null | Override temperature (0.0-1.0) |
+| `max_tokens` | integer | null | Override max tokens for response |
+
+### Response Format
+
+```json
+{
+  "answer": "The response to your query...",
+  "execution_path": "direct_llm",
+  "metadata": {
+    "duration_seconds": 1.23,
+    "cost_usd": 0.01,
+    "input_tokens": 150,
+    "output_tokens": 200,
+    "model": "claude-sonnet-4-20250514",
+    "temperature": 0.7
+  }
+}
+```
+
+With `verbose=true` and SOAR pipeline:
+```json
+{
+  "answer": "...",
+  "execution_path": "soar_pipeline",
+  "metadata": { ... },
+  "phases": [
+    {"phase": "Assess", "duration": 0.05, "status": "completed"},
+    {"phase": "Retrieve", "duration": 0.12, "status": "completed"},
+    ...
+  ]
+}
+```
+
+### Usage Examples
+
+#### Example 1: Simple Query (Direct LLM)
+
+**You:** "What is a Python decorator?"
+
+**Claude uses:** `aurora_query("What is a Python decorator?")`
+
+**Response:** Uses direct LLM path (~1-2s) because query is simple.
+
+#### Example 2: Complex Query (Auto-Escalation to SOAR)
+
+**You:** "Compare the authentication patterns used in our API with industry best practices"
+
+**Claude uses:** `aurora_query("Compare the authentication patterns used in our API with industry best practices")`
+
+**Response:** Auto-escalates to SOAR pipeline because query involves analysis and comparison.
+
+#### Example 3: Force SOAR with Verbose Output
+
+**You:** "Explain how our caching layer works, and show me the reasoning process"
+
+**Claude uses:** `aurora_query("Explain how our caching layer works", force_soar=True, verbose=True)`
+
+**Response:** Uses full SOAR pipeline with phase trace showing all 9 phases:
+- Assess, Retrieve, Decompose, Verify, Route, Collect, Synthesize, Record, Respond
+
+#### Example 4: Custom Model Settings
+
+**You:** "Generate a detailed security analysis with higher creativity"
+
+**Claude uses:** `aurora_query("Generate security analysis", temperature=0.9, max_tokens=4000)`
+
+**Response:** Uses custom temperature for more varied responses.
+
+#### Example 5: Code-Aware Query
+
+**You:** "How does the UserService class handle authentication?"
+
+**Claude uses:**
+1. `aurora_search("UserService authentication")` - to find relevant code
+2. `aurora_query("Explain how UserService handles authentication based on this code: ...")` - to analyze
+
+**Response:** Contextual answer based on your actual codebase.
+
+### Auto-Escalation Logic
+
+The tool automatically determines which execution path to use:
+
+**Direct LLM (simple queries, <2s):**
+- "What is X?"
+- "Define Y"
+- "Explain briefly Z"
+
+**SOAR Pipeline (complex queries, 3-10s):**
+- "Compare X and Y"
+- "Analyze the architecture of..."
+- "Design a solution for..."
+- "How does X interact with Y?"
+
+You can always override with `force_soar=True`.
+
+### Requirements
+
+- **API Key:** Requires `ANTHROPIC_API_KEY` environment variable or `~/.aurora/config.json` setting
+- **Budget:** Respects monthly budget limits configured in `~/.aurora/budget_tracker.json`
+
+### Error Handling
+
+If something goes wrong, you'll receive a structured error:
+
+```json
+{
+  "error": {
+    "type": "APIKeyMissing",
+    "message": "API key not found...",
+    "suggestion": "To fix this:\n1. Set environment variable..."
+  }
+}
+```
+
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md#mcp-query-errors) for all error types and solutions.
 
 ---
 
@@ -507,7 +640,13 @@ Edit `~/.aurora/config.json`:
 
 ### Do I need an API key for MCP?
 
-**No.** AURORA's MCP server uses local embeddings (Sentence-BERT) and doesn't require any API keys or internet connection.
+**Partially.** Most MCP tools (search, index, stats, context, related) work locally without API keys using Sentence-BERT embeddings.
+
+However, the **aurora_query** tool requires an Anthropic API key for LLM-powered responses:
+```bash
+export ANTHROPIC_API_KEY="your-key"
+```
+Or add to `~/.aurora/config.json` under `api.anthropic_key`.
 
 ### Can I use multiple MCP servers simultaneously?
 

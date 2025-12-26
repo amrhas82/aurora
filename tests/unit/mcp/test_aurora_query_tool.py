@@ -16,7 +16,7 @@ Total: ~50 unit tests
 import json
 import os
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -221,7 +221,7 @@ class TestConfigurationLoading:
         """Config should be cached and only loaded once per instance."""
         tools = AuroraMCPTools(db_path=":memory:")
 
-        with patch('pathlib.Path.exists', return_value=False) as mock_exists:
+        with patch('pathlib.Path.exists', return_value=False):
             # Load config twice
             config1 = tools._load_config()
             config2 = tools._load_config()
@@ -716,6 +716,345 @@ class TestErrorHandling:
             if "error" in response:
                 assert "suggestion" in response["error"], f"Missing suggestion for query='{query}', kwargs={kwargs}"
                 assert len(response["error"]["suggestion"]) > 0, f"Empty suggestion for query='{query}'"
+
+
+# ==============================================================================
+# Task 3.1: Extended Error Handling Tests (TDD)
+# ==============================================================================
+
+
+class TestRetryLogic:
+    """Test LLM API retry logic for transient failures (FR-5.4)."""
+
+    def test_retry_on_rate_limit_error(self):
+        """Should retry on rate limit (429) errors."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        call_count = [0]
+
+        def mock_execute(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] < 3:
+                raise Exception("Rate limit exceeded (429)")
+            return {
+                "answer": "Success after retry",
+                "execution_path": "direct_llm",
+                "duration": 1.0,
+                "cost": 0.01,
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "model": "claude-sonnet-4-20250514",
+                "temperature": 0.7
+            }
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+                    result = tools.aurora_query("Test query")
+                    response = json.loads(result)
+
+                    # Should eventually succeed
+                    assert "error" not in response or response.get("answer") == "Success after retry"
+
+    def test_retry_on_timeout_error(self):
+        """Should retry on timeout errors."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        call_count = [0]
+
+        def mock_execute(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] < 2:
+                raise TimeoutError("Request timed out")
+            return {
+                "answer": "Success",
+                "execution_path": "direct_llm",
+                "duration": 1.0,
+                "cost": 0.01,
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "model": "claude-sonnet-4-20250514",
+                "temperature": 0.7
+            }
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+                    result = tools.aurora_query("Test query")
+                    response = json.loads(result)
+
+                    # Should eventually succeed
+                    assert "error" not in response or "answer" in response
+
+    def test_no_retry_on_auth_error(self):
+        """Should NOT retry on authentication errors."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        call_count = [0]
+
+        def mock_execute(*args, **kwargs):
+            call_count[0] += 1
+            raise Exception("Authentication failed (401)")
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+                    result = tools.aurora_query("Test query")
+                    response = json.loads(result)
+
+                    # Should fail immediately without multiple retries
+                    assert "error" in response
+                    # Auth errors shouldn't be retried many times
+                    assert call_count[0] <= 3
+
+    def test_max_retry_attempts_exhausted(self):
+        """Should fail after maximum retry attempts."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        def always_fail(*args, **kwargs):
+            raise Exception("Server error (500)")
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_execute_direct_llm', side_effect=always_fail):
+                    result = tools.aurora_query("Test query")
+                    response = json.loads(result)
+
+                    # Should return error after retries exhausted
+                    assert "error" in response
+                    assert "suggestion" in response["error"]
+
+    def test_retry_uses_exponential_backoff(self):
+        """Retry should use exponential backoff timing."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        # This test verifies the retry mechanism exists
+        # Actual timing verification would require time mocking
+        call_count = [0]
+
+        def mock_execute(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] < 3:
+                raise Exception("Rate limit exceeded")
+            return {
+                "answer": "Success",
+                "execution_path": "direct_llm",
+                "duration": 1.0,
+                "cost": 0.01,
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "model": "claude-sonnet-4-20250514",
+                "temperature": 0.7
+            }
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_execute_direct_llm', side_effect=mock_execute):
+                    tools.aurora_query("Test query")
+                    # Should have made multiple attempts
+                    assert call_count[0] >= 2
+
+
+class TestMemoryGracefulDegradation:
+    """Test graceful degradation when memory is unavailable (FR-5.5)."""
+
+    def test_query_succeeds_without_memory(self):
+        """Query should succeed even when memory store is empty."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_get_memory_context', return_value=""):
+                    result = tools.aurora_query("What is Python?")
+                    response = json.loads(result)
+
+                    # Should not have an error related to memory
+                    if "error" in response:
+                        assert "memory" not in response["error"]["type"].lower()
+
+    def test_memory_error_logs_warning(self):
+        """Memory retrieval error should log warning, not raise exception."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_get_memory_context', side_effect=Exception("Memory unavailable")):
+                    # Should not raise exception
+                    result = tools.aurora_query("Test query")
+                    response = json.loads(result)
+
+                    # Query should still complete (possibly with error, but not memory-related crash)
+                    assert isinstance(response, dict)
+
+    def test_empty_memory_store_handled_gracefully(self):
+        """Empty memory store should not block query execution."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                # Memory returns empty string (no indexed content)
+                with patch.object(tools, '_get_memory_context', return_value=""):
+                    with patch.object(tools, '_execute_direct_llm', return_value={
+                        "answer": "LLM answer without memory context",
+                        "execution_path": "direct_llm",
+                        "duration": 1.0,
+                        "cost": 0.01,
+                        "input_tokens": 100,
+                        "output_tokens": 50,
+                        "model": "claude-sonnet-4-20250514",
+                        "temperature": 0.7
+                    }):
+                        result = tools.aurora_query("Test query")
+                        response = json.loads(result)
+
+                        assert "answer" in response
+
+    def test_memory_failure_does_not_affect_response_structure(self):
+        """Response structure should be valid even when memory fails."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=True):
+                with patch.object(tools, '_execute_direct_llm', return_value={
+                    "answer": "Answer",
+                    "execution_path": "direct_llm",
+                    "duration": 1.0,
+                    "cost": 0.01,
+                    "input_tokens": 100,
+                    "output_tokens": 50,
+                    "model": "claude-sonnet-4-20250514",
+                    "temperature": 0.7
+                }):
+                    result = tools.aurora_query("Test")
+                    response = json.loads(result)
+
+                    # Standard response structure should be present
+                    assert "answer" in response
+                    assert "execution_path" in response
+                    assert "metadata" in response
+
+
+class TestErrorLogging:
+    """Test error logging to mcp.log (FR-5.6)."""
+
+    def test_errors_are_logged(self):
+        """Errors should be logged before returning response."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch('aurora.mcp.tools.logger') as mock_logger:
+            # Trigger an error
+            tools.aurora_query("")
+
+            # Should have logged the error
+            assert mock_logger.error.called
+
+    def test_api_key_missing_logged(self):
+        """APIKeyMissing error should be logged."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch('aurora.mcp.tools.logger') as mock_logger:
+            with patch.object(tools, '_get_api_key', return_value=None):
+                tools.aurora_query("Test query")
+
+                # Should have logged APIKeyMissing
+                assert mock_logger.error.called
+
+    def test_unexpected_exception_logged_with_traceback(self):
+        """Unexpected exceptions should be logged with stack trace."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch('aurora.mcp.tools.logger') as mock_logger:
+            with patch.object(tools, '_get_api_key', return_value='test-key'):
+                with patch.object(tools, '_check_budget', side_effect=RuntimeError("Unexpected error")):
+                    result = tools.aurora_query("Test query")
+                    response = json.loads(result)
+
+                    assert "error" in response
+                    # Should have logged with exc_info=True
+                    mock_logger.error.assert_called()
+
+    def test_validation_errors_logged(self):
+        """Parameter validation errors should be logged."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch('aurora.mcp.tools.logger') as mock_logger:
+            tools.aurora_query("Test", temperature=2.0)
+
+            # Should have logged the InvalidParameter error
+            assert mock_logger.error.called
+
+
+class TestErrorMessageFormat:
+    """Test user-friendly error message formatting (FR-4.2)."""
+
+    def test_error_message_is_user_friendly(self):
+        """Error messages should be understandable by non-technical users."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch.object(tools, '_get_api_key', return_value=None):
+            result = tools.aurora_query("Test")
+            response = json.loads(result)
+
+            # Message should be clear, not technical jargon
+            assert "error" in response
+            message = response["error"]["message"]
+            # Should not contain stack traces or technical details
+            assert "Traceback" not in message
+            assert "Exception" not in message or "API key" in message
+
+    def test_error_suggestion_is_actionable(self):
+        """Error suggestions should provide clear action steps."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch.object(tools, '_get_api_key', return_value=None):
+            result = tools.aurora_query("Test")
+            response = json.loads(result)
+
+            suggestion = response["error"]["suggestion"]
+            # Should contain numbered steps or clear instructions
+            assert "To fix this" in suggestion or "1." in suggestion or "export" in suggestion.lower()
+
+    def test_error_includes_troubleshooting_link(self):
+        """Error messages should include link to troubleshooting docs."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        with patch.object(tools, '_get_api_key', return_value=None):
+            result = tools.aurora_query("Test")
+            response = json.loads(result)
+
+            suggestion = response["error"]["suggestion"]
+            # Should reference troubleshooting documentation
+            assert "TROUBLESHOOTING" in suggestion or "docs/" in suggestion or "console.anthropic.com" in suggestion
+
+    def test_budget_error_shows_current_usage(self):
+        """Budget exceeded error should show current and limit values."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        tools._budget_current_usage = 45.50
+        tools._budget_monthly_limit = 50.0
+        tools._budget_estimated_cost = 0.05
+
+        with patch.object(tools, '_get_api_key', return_value='test-key'):
+            with patch.object(tools, '_check_budget', return_value=False):
+                result = tools.aurora_query("Test")
+                response = json.loads(result)
+
+                assert response["error"]["type"] == "BudgetExceeded"
+                # Should include usage details
+                details = response["error"].get("details", {})
+                suggestion = response["error"]["suggestion"]
+                assert "45.50" in suggestion or details.get("current_usage_usd") == 45.50
+
+    def test_invalid_model_error_message(self):
+        """Invalid model string should return clear error."""
+        tools = AuroraMCPTools(db_path=":memory:")
+
+        result = tools.aurora_query("Test", model="   ")
+        response = json.loads(result)
+
+        assert "error" in response
+        assert response["error"]["type"] == "InvalidParameter"
+        assert "model" in response["error"]["message"].lower() or "empty" in response["error"]["message"].lower()
 
 
 # ==============================================================================

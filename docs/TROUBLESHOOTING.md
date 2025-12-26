@@ -9,8 +9,9 @@ This guide provides solutions to common issues you might encounter when using AU
 3. [MCP Server Issues](#mcp-server-issues)
 4. [Memory/Indexing Issues](#memoryindexing-issues)
 5. [Query Issues](#query-issues)
-6. [Diagnostic Commands](#diagnostic-commands)
-7. [Getting Help](#getting-help)
+6. [MCP Query Errors](#mcp-query-errors)
+7. [Diagnostic Commands](#diagnostic-commands)
+8. [Getting Help](#getting-help)
 
 ---
 
@@ -482,6 +483,214 @@ Error: OpenAI API key not found
      }
    }
    ```
+
+---
+
+## MCP Query Errors
+
+The `aurora_query` tool returns structured JSON errors with actionable suggestions. Here are all error types and their solutions:
+
+### APIKeyMissing
+
+**Error:**
+```json
+{
+  "error": {
+    "type": "APIKeyMissing",
+    "message": "API key not found. AURORA requires an Anthropic API key to execute queries.",
+    "suggestion": "To fix this:\n1. Set environment variable: export ANTHROPIC_API_KEY=\"your-key\"\n2. Or add to config file..."
+  }
+}
+```
+
+**Solution:**
+1. Set environment variable (recommended):
+   ```bash
+   export ANTHROPIC_API_KEY="sk-ant-..."
+   ```
+
+2. Or add to config file `~/.aurora/config.json`:
+   ```json
+   {
+     "api": {
+       "anthropic_key": "sk-ant-..."
+     }
+   }
+   ```
+
+3. Get your API key at: https://console.anthropic.com/
+
+### BudgetExceeded
+
+**Error:**
+```json
+{
+  "error": {
+    "type": "BudgetExceeded",
+    "message": "Monthly budget limit reached. Cannot execute query.",
+    "suggestion": "To fix this:\n1. Increase your monthly limit...",
+    "details": {
+      "current_usage_usd": 49.50,
+      "monthly_limit_usd": 50.00,
+      "estimated_query_cost_usd": 0.05
+    }
+  }
+}
+```
+
+**Solution:**
+1. Increase monthly limit in `~/.aurora/config.json`:
+   ```json
+   {
+     "budget": {
+       "monthly_limit_usd": 100.0
+     }
+   }
+   ```
+
+2. Wait until next month for budget reset
+
+3. Reset usage manually by editing `~/.aurora/budget_tracker.json`:
+   ```json
+   {
+     "monthly_usage_usd": 0.0,
+     "monthly_limit_usd": 50.0
+   }
+   ```
+
+### InvalidParameter
+
+**Error:**
+```json
+{
+  "error": {
+    "type": "InvalidParameter",
+    "message": "Temperature must be between 0.0 and 1.0, got 1.5",
+    "suggestion": "Please check parameter values and try again..."
+  }
+}
+```
+
+**Valid parameter ranges:**
+- `query`: Non-empty string (required)
+- `temperature`: 0.0 to 1.0
+- `max_tokens`: Positive integer (e.g., 100-8000)
+- `model`: Valid model string (e.g., "claude-sonnet-4-20250514")
+
+### SOARPhaseFailed
+
+**Error:**
+```json
+{
+  "error": {
+    "type": "SOARPhaseFailed",
+    "message": "SOAR pipeline failed at Retrieve phase",
+    "suggestion": "Check memory index and retry..."
+  }
+}
+```
+
+**Solution:**
+1. Check if codebase is indexed:
+   ```bash
+   aur mem stats
+   ```
+
+2. Reindex if needed:
+   ```bash
+   aur mem index /path/to/code
+   ```
+
+3. Check MCP logs for details:
+   ```bash
+   tail -f ~/.aurora/logs/mcp.log
+   ```
+
+### MemoryUnavailable
+
+**Note:** This is logged as a warning, not returned as an error. Queries continue with LLM base knowledge.
+
+**Log message:**
+```
+WARNING: Memory store not available. Answering from base knowledge.
+```
+
+**Solution:**
+1. Index your codebase:
+   ```bash
+   aur mem index /path/to/code
+   ```
+
+2. Verify database exists:
+   ```bash
+   ls -lh ~/.aurora/memory.db
+   ```
+
+### LLMAPIFailure
+
+**Error:**
+```json
+{
+  "error": {
+    "type": "LLMAPIFailure",
+    "message": "LLM API request failed after 3 retries",
+    "suggestion": "Check API status and retry..."
+  }
+}
+```
+
+**Solution:**
+1. Check Anthropic API status: https://status.anthropic.com/
+
+2. Verify API key is valid:
+   ```bash
+   curl https://api.anthropic.com/v1/messages \
+     -H "x-api-key: $ANTHROPIC_API_KEY" \
+     -H "anthropic-version: 2023-06-01" \
+     -d '{"model": "claude-sonnet-4-20250514", "max_tokens": 10, "messages": [{"role": "user", "content": "Hi"}]}'
+   ```
+
+3. Check for rate limiting (wait and retry)
+
+4. Check network connectivity
+
+### UnexpectedError
+
+**Error:**
+```json
+{
+  "error": {
+    "type": "UnexpectedError",
+    "message": "An unexpected error occurred: [details]",
+    "suggestion": "Please check the logs at ~/.aurora/logs/mcp.log for details."
+  }
+}
+```
+
+**Solution:**
+1. Check MCP logs:
+   ```bash
+   tail -100 ~/.aurora/logs/mcp.log
+   ```
+
+2. Look for stack traces and error details
+
+3. Report issue with logs if problem persists
+
+### Checking MCP Query Logs
+
+All aurora_query errors are logged to `~/.aurora/logs/mcp.log`:
+
+```bash
+# View recent errors
+grep "ERROR" ~/.aurora/logs/mcp.log | tail -20
+
+# Watch logs in real-time
+tail -f ~/.aurora/logs/mcp.log
+
+# Filter for specific error type
+grep "APIKeyMissing\|BudgetExceeded" ~/.aurora/logs/mcp.log
+```
 
 ### Dry-Run Import Error
 

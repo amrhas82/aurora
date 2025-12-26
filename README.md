@@ -13,7 +13,8 @@ A cognitive architecture framework that brings intelligent memory, reasoning, an
 
 **MCP Server Integration**
 - Native Claude Desktop integration via Model Context Protocol
-- 5 powerful tools for seamless codebase search and analysis
+- 6 powerful tools for seamless codebase search, analysis, and intelligent querying
+- Auto-escalating queries: simple questions use direct LLM, complex ones use SOAR pipeline
 - Conversation-driven development workflow
 
 **Cognitive Reasoning**
@@ -112,8 +113,11 @@ Restart Claude Desktop and ask questions about your code:
 - *"Find all usages of the DatabaseConnection class"*
 - *"Show me error handling in payment processing"*
 - *"What does the UserService module do?"*
+- *"Compare our API patterns with best practices"* (auto-escalates to SOAR)
 
-Claude automatically uses AURORA's tools to search your indexed codebase and provide contextual answers.
+Claude automatically uses AURORA's tools to search your indexed codebase and provide contextual answers. Simple queries use direct LLM calls, while complex analytical questions automatically escalate to the full SOAR reasoning pipeline.
+
+**Note:** The `aurora_query` tool requires an `ANTHROPIC_API_KEY` environment variable.
 
 **See:** [MCP Setup Guide](docs/MCP_SETUP.md) for detailed configuration and troubleshooting.
 

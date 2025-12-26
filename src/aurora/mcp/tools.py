@@ -12,12 +12,11 @@ This module provides the actual implementation of the 5 MCP tools:
 import json
 import logging
 import os
-import sqlite3
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from aurora_cli.memory_manager import IndexStats, MemoryManager, MemoryStats, SearchResult
+from aurora_cli.memory_manager import MemoryManager
 
 from aurora.mcp.config import log_performance, setup_mcp_logging
 from aurora_context_code.languages.python import PythonParser
@@ -458,11 +457,16 @@ class AuroraMCPTools:
             if not api_key:
                 return self._format_error(
                     error_type="APIKeyMissing",
-                    message="API key not found. AURORA requires an Anthropic API key to execute queries.",
+                    message=(
+                        "API key not found. AURORA requires an Anthropic API key "
+                        "to execute queries."
+                    ),
                     suggestion=(
                         "To fix this:\n"
-                        "1. Set environment variable: export ANTHROPIC_API_KEY=\"your-key\"\n"
-                        "2. Or add to config file: ~/.aurora/config.json under \"api.anthropic_key\"\n\n"
+                        "1. Set environment variable: "
+                        "export ANTHROPIC_API_KEY=\"your-key\"\n"
+                        "2. Or add to config file: ~/.aurora/config.json "
+                        "under \"api.anthropic_key\"\n\n"
                         "Get your API key at: https://console.anthropic.com/\n\n"
                         "See docs/TROUBLESHOOTING.md for more details."
                     ),
@@ -722,6 +726,111 @@ class AuroraMCPTools:
             self._query_executor = None
             logger.info("QueryExecutor placeholder initialized")
 
+    def _is_transient_error(self, error: Exception) -> bool:
+        """
+        Check if an error is transient and should be retried.
+
+        Args:
+            error: The exception that occurred
+
+        Returns:
+            True if the error is transient, False otherwise
+        """
+        error_str = str(error).lower()
+
+        # Transient errors that should be retried
+        transient_patterns = [
+            "rate limit",
+            "429",
+            "timeout",
+            "timed out",
+            "server error",
+            "500",
+            "502",
+            "503",
+            "504",
+            "connection",
+            "temporary",
+            "retry",
+        ]
+
+        # Non-transient errors that should NOT be retried
+        non_transient_patterns = [
+            "authentication",
+            "401",
+            "403",
+            "invalid api key",
+            "unauthorized",
+            "forbidden",
+        ]
+
+        # Check for non-transient first
+        for pattern in non_transient_patterns:
+            if pattern in error_str:
+                return False
+
+        # Check for transient patterns
+        for pattern in transient_patterns:
+            if pattern in error_str:
+                return True
+
+        # Default: don't retry unknown errors
+        return False
+
+    def _execute_with_retry(
+        self,
+        func: Any,
+        *args: Any,
+        max_attempts: int = 3,
+        base_delay_ms: int = 100,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Execute a function with retry logic for transient errors.
+
+        Args:
+            func: Function to execute
+            *args: Positional arguments for the function
+            max_attempts: Maximum number of attempts (default: 3)
+            base_delay_ms: Base delay in milliseconds (default: 100)
+            **kwargs: Keyword arguments for the function
+
+        Returns:
+            Result from function on success
+
+        Raises:
+            Exception: If all retries are exhausted
+        """
+        last_error: Exception | None = None
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                last_error = e
+                is_transient = self._is_transient_error(e)
+
+                if not is_transient or attempt >= max_attempts:
+                    # Non-transient error or last attempt - don't retry
+                    logger.warning(
+                        f"Attempt {attempt}/{max_attempts} failed (not retrying): {e}"
+                    )
+                    raise
+
+                # Calculate exponential backoff delay
+                delay_ms = base_delay_ms * (2 ** (attempt - 1))
+                logger.warning(
+                    f"Attempt {attempt}/{max_attempts} failed (will retry in {delay_ms}ms): {e}"
+                )
+
+                # Sleep before retry
+                time.sleep(delay_ms / 1000.0)
+
+        # Should not reach here, but raise if it does
+        if last_error:
+            raise last_error
+        raise RuntimeError("Retry logic failed unexpectedly")
+
     def _execute_with_auto_escalation(
         self,
         query: str,
@@ -751,18 +860,27 @@ class AuroraMCPTools:
         """
         # If force_soar is True, use SOAR pipeline directly
         if force_soar:
-            return self._execute_soar(query, api_key, verbose, config, model, temperature, max_tokens)
+            return self._execute_with_retry(
+                self._execute_soar,
+                query, api_key, verbose, config, model, temperature, max_tokens
+            )
 
         # Otherwise, assess complexity
         complexity = self._assess_complexity(query)
         threshold = config.get("query", {}).get("complexity_threshold", 0.6)
 
         if complexity >= threshold:
-            # Complex query - use SOAR
-            return self._execute_soar(query, api_key, verbose, config, model, temperature, max_tokens)
+            # Complex query - use SOAR with retry
+            return self._execute_with_retry(
+                self._execute_soar,
+                query, api_key, verbose, config, model, temperature, max_tokens
+            )
         else:
-            # Simple query - use direct LLM
-            return self._execute_direct_llm(query, api_key, verbose, config, model, temperature, max_tokens)
+            # Simple query - use direct LLM with retry
+            return self._execute_with_retry(
+                self._execute_direct_llm,
+                query, api_key, verbose, config, model, temperature, max_tokens
+            )
 
     def _assess_complexity(self, query: str) -> float:
         """
@@ -920,13 +1038,17 @@ class AuroraMCPTools:
                 }
             )
 
-            logger.info(f"  → {phase_name} completed ({phase_duration:.3f}s)")
+            logger.info(f"  -> {phase_name} completed ({phase_duration:.3f}s)")
 
-        # Get memory context
-        memory_context = self._get_memory_context(query, limit=5)
+        # Get memory context (for future use with actual SOAR implementation)
+        # Currently used for side effect of logging if memory unavailable
+        self._get_memory_context(query, limit=5)
 
         # Build answer (placeholder)
-        answer = f"[SOAR Pipeline Response] Query processed through 9 phases: {query[:50]}..."
+        answer = (
+            f"[SOAR Pipeline Response] Query processed through 9 phases: "
+            f"{query[:50]}..."
+        )
 
         duration = time.time() - start_time
 

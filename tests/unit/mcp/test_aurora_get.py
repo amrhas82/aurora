@@ -262,6 +262,7 @@ class TestErrorHandling:
 class TestSessionCache:
     """Test session cache storage and management."""
 
+    @pytest.mark.ml
     def test_cache_stores_last_search_results(self):
         """aurora_search should store results in session cache."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -290,6 +291,7 @@ class TestSessionCache:
             assert hasattr(tools, "_last_search_timestamp")
             assert tools._last_search_timestamp is not None
 
+    @pytest.mark.ml
     def test_new_search_clears_previous_cache(self):
         """New search should replace previous cache, not append."""
         tools = AuroraMCPTools(db_path=":memory:")

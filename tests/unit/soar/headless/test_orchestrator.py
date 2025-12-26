@@ -1014,13 +1014,28 @@ class TestExecute:
         self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
     ):
         """Test execution with git validation error."""
+        # Use lambda to ensure exception is raised consistently across Python versions
+        def raise_git_error():
+            raise GitBranchError("Not on headless branch")
+
         mock_git = Mock()
-        mock_git.validate.side_effect = GitBranchError("Not on headless branch")
+        mock_git.validate.side_effect = raise_git_error
         mock_git_class.return_value = mock_git
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (True, [])
+        # Configure load() to return valid PromptData
+        mock_prompt.load.return_value = PromptData(
+            goal="Test goal",
+            success_criteria=["Test criterion"],
+            constraints=["Test constraint"],
+            context=None,
+        )
         mock_prompt_class.return_value = mock_prompt
+
+        # Configure scratchpad mock
+        mock_scratchpad = Mock()
+        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
 
@@ -1051,7 +1066,18 @@ class TestExecute:
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (False, ["Missing goal section"])
+        # Configure load() even though it shouldn't be called
+        mock_prompt.load.return_value = PromptData(
+            goal="Test goal",
+            success_criteria=["Test criterion"],
+            constraints=["Test constraint"],
+            context=None,
+        )
         mock_prompt_class.return_value = mock_prompt
+
+        # Configure scratchpad mock
+        mock_scratchpad = Mock()
+        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
 
@@ -1076,9 +1102,27 @@ class TestExecute:
         self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
     ):
         """Test execution with unexpected error."""
+        # Use lambda to ensure exception is raised consistently
+        def raise_unexpected_error():
+            raise RuntimeError("Unexpected error")
+
         mock_git = Mock()
-        mock_git.validate.side_effect = RuntimeError("Unexpected error")
+        mock_git.validate.side_effect = raise_unexpected_error
         mock_git_class.return_value = mock_git
+
+        mock_prompt = Mock()
+        mock_prompt.validate_format.return_value = (True, [])
+        mock_prompt.load.return_value = PromptData(
+            goal="Test goal",
+            success_criteria=["Test criterion"],
+            constraints=["Test constraint"],
+            context=None,
+        )
+        mock_prompt_class.return_value = mock_prompt
+
+        # Configure scratchpad mock
+        mock_scratchpad = Mock()
+        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
 
@@ -1092,6 +1136,7 @@ class TestExecute:
 
         assert result.goal_achieved is False
         assert result.termination_reason == TerminationReason.BLOCKED
+        assert result.error_message is not None
         assert "Unexpected error" in result.error_message
 
     @patch("aurora_soar.headless.orchestrator.ScratchpadManager")

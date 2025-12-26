@@ -1007,21 +1007,16 @@ class TestExecute:
         assert result.scratchpad_path == scratchpad_file
         assert result.error_message is None
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_git_error(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
+    def test_execute_git_error(self, prompt_file, scratchpad_file):
         """Test execution with git validation error."""
 
         # Use lambda to ensure exception is raised consistently across Python versions
         def raise_git_error():
             raise GitBranchError("Not on headless branch")
 
+        # Create mock instances directly (no patching needed with DI)
         mock_git = Mock()
         mock_git.validate.side_effect = raise_git_error
-        mock_git_class.return_value = mock_git
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (True, [])
@@ -1032,18 +1027,20 @@ class TestExecute:
             constraints=["Test constraint"],
             context=None,
         )
-        mock_prompt_class.return_value = mock_prompt
 
         # Configure scratchpad mock
         mock_scratchpad = Mock()
-        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
 
+        # Inject mocks via constructor (dependency injection)
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         result = orchestrator.execute()
@@ -1054,16 +1051,11 @@ class TestExecute:
         assert result.total_cost == 0.0
         assert "Not on headless branch" in result.error_message
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_prompt_error(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
+    def test_execute_prompt_error(self, prompt_file, scratchpad_file):
         """Test execution with prompt validation error."""
+        # Create mock instances directly (no patching needed with DI)
         mock_git = Mock()
         mock_git.validate.return_value = None
-        mock_git_class.return_value = mock_git
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (False, ["Missing goal section"])
@@ -1074,18 +1066,20 @@ class TestExecute:
             constraints=["Test constraint"],
             context=None,
         )
-        mock_prompt_class.return_value = mock_prompt
 
         # Configure scratchpad mock
         mock_scratchpad = Mock()
-        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
 
+        # Inject mocks via constructor (dependency injection)
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         result = orchestrator.execute()
@@ -1096,21 +1090,16 @@ class TestExecute:
         assert result.total_cost == 0.0
         assert "Prompt validation failed" in result.error_message
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_unexpected_error(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
+    def test_execute_unexpected_error(self, prompt_file, scratchpad_file):
         """Test execution with unexpected error."""
 
         # Use lambda to ensure exception is raised consistently
         def raise_unexpected_error():
             raise RuntimeError("Unexpected error")
 
+        # Create mock instances directly (no patching needed with DI)
         mock_git = Mock()
         mock_git.validate.side_effect = raise_unexpected_error
-        mock_git_class.return_value = mock_git
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (True, [])
@@ -1120,18 +1109,20 @@ class TestExecute:
             constraints=["Test constraint"],
             context=None,
         )
-        mock_prompt_class.return_value = mock_prompt
 
         # Configure scratchpad mock
         mock_scratchpad = Mock()
-        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
 
+        # Inject mocks via constructor (dependency injection)
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         result = orchestrator.execute()

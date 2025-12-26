@@ -197,6 +197,9 @@ class HeadlessOrchestrator:
         scratchpad_path: str | Path,
         soar_orchestrator: Any,  # Type: SOAROrchestrator (avoiding circular import)
         config: HeadlessConfig | None = None,
+        git_enforcer: GitEnforcer | None = None,
+        prompt_loader: PromptLoader | None = None,
+        scratchpad_manager: ScratchpadManager | None = None,
     ):
         """
         Initialize HeadlessOrchestrator.
@@ -206,23 +209,26 @@ class HeadlessOrchestrator:
             scratchpad_path: Path to scratchpad markdown file
             soar_orchestrator: SOAROrchestrator instance for query execution
             config: Optional HeadlessConfig (uses defaults if None)
+            git_enforcer: Optional GitEnforcer instance (creates default if None)
+            prompt_loader: Optional PromptLoader instance (creates default if None)
+            scratchpad_manager: Optional ScratchpadManager instance (creates default if None)
         """
         self.prompt_path = Path(prompt_path)
         self.scratchpad_path = Path(scratchpad_path)
         self.soar_orchestrator = soar_orchestrator
         self.config = config or HeadlessConfig()
 
-        # Initialize components
-        self.git_enforcer = GitEnforcer(
+        # Initialize components (allow dependency injection for testing)
+        self.git_enforcer = git_enforcer or GitEnforcer(
             GitEnforcerConfig(
                 required_branch=self.config.required_branch,
                 blocked_branches=self.config.blocked_branches,
             )
         )
 
-        self.prompt_loader = PromptLoader(self.prompt_path)
+        self.prompt_loader = prompt_loader or PromptLoader(self.prompt_path)
 
-        self.scratchpad_manager = ScratchpadManager(
+        self.scratchpad_manager = scratchpad_manager or ScratchpadManager(
             self.scratchpad_path,
             ScratchpadConfig(
                 auto_create=self.config.auto_create_scratchpad,

@@ -92,18 +92,20 @@ class TestHeadlessConfig:
 class TestHeadlessOrchestratorInit:
     """Test HeadlessOrchestrator initialization."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    def test_init_with_defaults(
-        self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file
-    ):
+    def test_init_with_defaults(self, prompt_file, scratchpad_file):
         """Test initialization with default config."""
         mock_soar = Mock()
+        mock_git = Mock()
+        mock_prompt = Mock()
+        mock_scratchpad = Mock()
+
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         assert orchestrator.prompt_path == Path(prompt_file)
@@ -114,14 +116,12 @@ class TestHeadlessOrchestratorInit:
         assert orchestrator.total_cost == 0.0
         assert orchestrator.prompt_data is None
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    def test_init_with_custom_config(
-        self, mock_scratchpad, mock_prompt, mock_git, prompt_file, scratchpad_file
-    ):
+    def test_init_with_custom_config(self, prompt_file, scratchpad_file):
         """Test initialization with custom config."""
         mock_soar = Mock()
+        mock_git = Mock()
+        mock_prompt = Mock()
+        mock_scratchpad = Mock()
         config = HeadlessConfig(max_iterations=20, budget_limit=10.0)
 
         orchestrator = HeadlessOrchestrator(
@@ -129,28 +129,29 @@ class TestHeadlessOrchestratorInit:
             scratchpad_path=Path(scratchpad_file),
             soar_orchestrator=mock_soar,
             config=config,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         assert orchestrator.config.max_iterations == 20
         assert orchestrator.config.budget_limit == 10.0
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_validate_safety_git_error(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
-    ):
+    def test_validate_safety_git_error(self, prompt_file, scratchpad_file):
         """Test git branch validation error."""
         mock_git = Mock()
         mock_git.validate.side_effect = GitBranchError("Not on headless branch")
-        mock_git_class.return_value = mock_git
-
+        mock_prompt = Mock()
+        mock_scratchpad = Mock()
         mock_soar = Mock()
+
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         with pytest.raises(GitBranchError, match="Not on headless branch"):

@@ -98,22 +98,22 @@ def test_validate_safety():
 
 ## Tasks
 
-- [ ] **1.0 Setup & Phase 1: Triage & Delete** (Week 1, Days 1-3, ~8-12 hours)
-  - [ ] 1.1 Create feature branch `test/cleanup-systematic` from main (0.25h)
-  - [ ] 1.2 Collect baseline metrics: test count, coverage, failures by Python version (1h)
-  - [ ] 1.3 Analyze test suite and identify 20-25 deletion candidates (2h)
-  - [ ] 1.4 Create `docs/development/PHASE1_DELETIONS.md` with deletion audit trail (1.5h)
-  - [ ] 1.5 Delete redundant unit tests (implementation detail tests) (1h)
-  - [ ] 1.6 Delete duplicate coverage tests (already covered at higher levels) (1h)
-  - [ ] 1.7 Archive performance benchmarks to `tests/archive/performance/` (0.5h)
-  - [ ] 1.8 Run test suite on Python 3.10 to verify no new breakage (0.5h)
-  - [ ] 1.9 Update baseline metrics and prepare Phase 1 Gate approval (0.5h)
-  - [ ] 1.10 **GATE 1: User reviews PHASE1_DELETIONS.md and approves Phase 2** (USER: 2h)
+- [x] **1.0 Setup & Phase 1: Triage & Delete** (Week 1, Days 1-3, ~8-12 hours) ✅ COMPLETED
+  - [x] 1.1 Create feature branch `test/cleanup-systematic` from main (0.25h)
+  - [x] 1.2 Collect baseline metrics: test count, coverage, failures by Python version (1h)
+  - [x] 1.3 Analyze test suite and identify 20-25 deletion candidates (2h)
+  - [x] 1.4 Create `docs/development/PHASE1_DELETIONS.md` with deletion audit trail (1.5h)
+  - [x] 1.5 Delete redundant unit tests (implementation detail tests) (1h)
+  - [x] 1.6 Delete duplicate coverage tests (already covered at higher levels) (1h)
+  - [x] 1.7 Archive performance benchmarks to `tests/archive/performance/` (0.5h)
+  - [x] 1.8 Run test suite on Python 3.10 to verify no new breakage (0.5h)
+  - [x] 1.9 Update baseline metrics and prepare Phase 1 Gate approval (0.5h)
+  - [x] 1.10 **GATE 1: User reviews PHASE1_DELETIONS.md and approves Phase 2** (USER: 2h)
 
-- [ ] **2.0 Phase 2: Fix Fragile Tests** (Week 1-2, Days 4-7, ~12-16 hours)
-  - [ ] 2.1 Add DI support to `HeadlessOrchestrator.__init__()` with optional parameters (2h)
-  - [ ] 2.2 Add DI support to `PromptLoader` and `ScratchpadManager` classes if needed (1.5h)
-  - [ ] 2.3 Convert `TestHeadlessOrchestratorInit` tests to DI pattern (2 tests) (1h)
+- [ ] **2.0 Phase 2: Fix Fragile Tests** (Week 1-2, Days 4-7, ~12-16 hours) 🔄 IN PROGRESS
+  - [x] 2.1 Add DI support to `HeadlessOrchestrator.__init__()` with optional parameters (2h) ✅ Already implemented
+  - [x] 2.2 Add DI support to `PromptLoader` and `ScratchpadManager` classes if needed (1.5h) ✅ Not needed (leaf dependencies)
+  - [x] 2.3 Convert `TestHeadlessOrchestratorInit` tests to DI pattern (3 tests) (1h) ✅ COMPLETED
   - [ ] 2.4 Convert `TestValidateSafety` tests to DI pattern (2 tests, high priority - safety) (1h)
   - [ ] 2.5 Convert `TestCheckBudget` tests to DI pattern (3 tests, high priority - budget) (1.5h)
   - [ ] 2.6 Convert `TestRunMainLoop` tests to DI pattern (6 tests, high priority - core) (2.5h)

@@ -1014,6 +1014,7 @@ class TestExecute:
         self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
     ):
         """Test execution with git validation error."""
+
         # Use lambda to ensure exception is raised consistently across Python versions
         def raise_git_error():
             raise GitBranchError("Not on headless branch")
@@ -1102,6 +1103,7 @@ class TestExecute:
         self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
     ):
         """Test execution with unexpected error."""
+
         # Use lambda to ensure exception is raised consistently
         def raise_unexpected_error():
             raise RuntimeError("Unexpected error")

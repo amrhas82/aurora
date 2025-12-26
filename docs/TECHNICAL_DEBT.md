@@ -1284,6 +1284,710 @@ Two test cases in Phase 3.13.10 are skipped due to unimplemented features:
 
 ---
 
+## Phase 4: MCP Integration & aurora_query
+
+**Phase Completed**: December 26, 2025
+**Debt Items**: 10 items
+**Total Estimated Effort**: 2-3 weeks
+
+---
+
+### P0 - Critical (0 items)
+
+*None* - MCP integration is production-ready.
+
+---
+
+### P1 - High Priority (1 item)
+
+#### TD-MCP-001: MCP Server Subprocess Timeout in Integration Tests
+**Category**: Test Infrastructure
+**Location**: `tests/integration/test_mcp_python_client.py::TestMCPServer` (6 failing tests)
+**Impact**: CI/CD unreliable, integration tests fail intermittently
+**Effort**: M (2-3 days)
+
+**Description**:
+MCP server integration tests timeout after 10 seconds when running in `--test` mode:
+- `test_server_lists_all_tools`
+- `test_server_accepts_custom_db_path`
+- `test_server_accepts_custom_config`
+- `test_server_handles_invalid_db_path`
+- `test_server_handles_corrupted_config`
+- `test_server_creates_directories`
+
+**Root Cause**:
+Server initialization blocks on heavy imports during subprocess startup:
+1. **FastMCP import**: Triggers pydantic model validation
+2. **EmbeddingProvider initialization**: May attempt to download sentence-transformers model (~500MB)
+3. **Registry setup**: Tree-sitter grammar loading
+4. **SQLite migrations**: Database schema checks on cold start
+
+**Current Workaround**: Tests skip `fastmcp` import with `test_mode=True`, but subprocess tests spawn full server process.
+
+**Risk**:
+- CI/CD fails unpredictably (false negatives)
+- Developers lose trust in test suite
+- Real MCP server issues may be masked
+- Claude Desktop users experience slow initial connection
+
+**Acceptance Criteria**:
+- [ ] Add lazy initialization to MCP server (defer heavy imports until first tool call)
+- [ ] Mock sentence-transformers in test environment
+- [ ] Add startup health check with progressive timeout (5s → 10s → 20s)
+- [ ] Implement `--fast-start` mode that skips ML model loading
+- [ ] Test MCP server startup in CI with timeout monitoring
+- [ ] Document expected startup time (cold: 3-5s, warm: <1s)
+
+**References**:
+- Test output: `/tmp/claude/-home-hamr-PycharmProjects-aurora/tasks/b5b0ae9.output` (lines 92-98)
+- Related: TD-P3-006 (Embedding model download UX)
+
+---
+
+### P2 - Medium Priority (6 items)
+
+#### TD-MCP-002: Embedding Performance Test Threshold Too Strict for CI
+**Category**: Test Configuration
+**Location**: `tests/performance/test_embedding_benchmarks.py::test_embed_chunk_long_text_performance`
+**Impact**: Flaky performance tests, false CI failures
+**Effort**: S (4-6 hours)
+
+**Description**:
+Embedding performance test fails with P95 latency of 1075ms vs 200ms threshold (5.4x over budget).
+
+**Root Cause**:
+1. **Cold model loading**: First embedding call loads ~500MB model into memory (takes 500-700ms)
+2. **CPU vs GPU**: CI environment has no GPU; CPU inference is 3-5x slower
+3. **Long text processing**: Test uses 2000-character chunks requiring multiple tokenizer passes
+4. **No warmup phase**: Test measures cold start latency, not steady-state performance
+
+**Actual Production Performance**:
+- First query: ~1000ms (model loading)
+- Subsequent queries: 50-100ms (acceptable)
+- GPU environments: 20-30ms (excellent)
+
+**Risk**:
+- Developers ignore performance regressions (test is always failing)
+- Real performance issues masked by flaky threshold
+- CI time wasted re-running flaky tests
+
+**Acceptance Criteria**:
+- [ ] Separate cold start and warm performance tests
+- [ ] Set environment-specific thresholds (CPU: 1000ms, GPU: 200ms)
+- [ ] Add warmup phase (3 embedding calls before measurement)
+- [ ] Skip performance tests in CI (run in nightly or manually)
+- [ ] Add performance tracking dashboard (track trends, not absolute values)
+- [ ] Document expected latency by environment and text length
+
+**References**:
+- Test failure: `AssertionError: P95 time 1075.89ms exceeds 200ms threshold for long text`
+- Related: TD-P3-006 (Embedding model download UX)
+
+---
+
+#### TD-MCP-003: aurora_query Error Recovery Coverage Gaps
+**Category**: Reliability
+**Location**: `src/aurora/mcp/tools.py::aurora_query` (lines 440-510)
+**Impact**: Some queries may fail unnecessarily due to transient errors
+**Effort**: M (2-3 days)
+
+**Description**:
+While `aurora_query` implements retry logic (`_execute_with_retry()`) and graceful degradation, edge cases remain untested:
+
+1. **API Key Rotation Mid-Execution**: No handling if API key expires between assess and execute phases
+2. **Heuristic Transient Detection**: `_is_transient_error()` uses pattern matching on error messages (fragile)
+3. **No Circuit Breaker**: Repeated failures don't trigger circuit breaker (wastes retries)
+4. **Fallback Path Untested**: Graceful degradation from SOAR → Direct LLM lacks integration tests
+
+**Risk**:
+- Users experience unnecessary query failures
+- Budget wasted on doomed retries
+- No visibility into retry effectiveness
+- Complex queries fail when direct LLM would succeed
+
+**Acceptance Criteria**:
+- [ ] Add integration test for API key expiry mid-query
+- [ ] Implement circuit breaker (3 failures → open for 60s)
+- [ ] Replace heuristic error detection with error type checking
+- [ ] Add integration test for SOAR → Direct LLM fallback
+- [ ] Add retry metrics (success rate, avg retries per query)
+- [ ] Document retry behavior and fallback logic in MCP_SETUP.md
+
+**Example Untested Scenarios**:
+```python
+# Scenario 1: API key expires after assess phase
+assess_complexity()  # Succeeds with old key
+execute_soar()       # Fails with 401 Unauthorized
+
+# Scenario 2: Memory DB locked during SOAR
+execute_soar()       # Fails: database is locked
+# Should fallback to direct LLM (no memory needed)
+
+# Scenario 3: Rate limit exceeded
+execute_direct_llm() # Fails: RateLimitError
+# Should exponentially backoff, not retry immediately
+```
+
+**References**:
+- Implementation: `src/aurora/mcp/tools.py` (lines 749-787, 789-822)
+
+---
+
+#### TD-MCP-004: Claude Desktop Environment Variable Injection Undocumented
+**Category**: Documentation
+**Location**: `docs/MCP_SETUP.md` (Configuration section)
+**Impact**: Users unaware of critical configuration options
+**Effort**: S (2-3 hours)
+
+**Description**:
+Claude Desktop MCP configuration supports environment variable injection, but documentation only shows `AURORA_DB_PATH`. Key undocumented variables:
+
+1. **ANTHROPIC_API_KEY**: Required for `aurora_query` tool (not mentioned in setup guide)
+2. **PYTHONPATH**: May be needed if aurora installed in non-standard location
+3. **AURORA_CONFIG_PATH**: Override default config file location
+4. **AURORA_LOG_LEVEL**: Control logging verbosity (DEBUG, INFO, WARNING, ERROR)
+
+**Current Documentation Gap**:
+```json
+{
+  "mcpServers": {
+    "aurora": {
+      "command": "python3",
+      "args": ["-m", "aurora.mcp.server"],
+      "env": {
+        "AURORA_DB_PATH": "/home/user/.aurora/memory.db"
+        // Missing: ANTHROPIC_API_KEY, PYTHONPATH, etc.
+      }
+    }
+  }
+}
+```
+
+**Risk**:
+- Users try `aurora_query` but get "API key missing" errors
+- Installation issues due to missing PYTHONPATH
+- No way to debug MCP server issues (logging not documented)
+- Confusion about config file priority (env vars vs config.json)
+
+**Acceptance Criteria**:
+- [ ] Document all supported environment variables in MCP_SETUP.md
+- [ ] Add example with ANTHROPIC_API_KEY for aurora_query
+- [ ] Document config priority: env vars > config file > defaults
+- [ ] Add troubleshooting section for common env var issues
+- [ ] Create config validation command: `aurora-mcp validate`
+
+**Recommended Documentation Addition**:
+```json
+{
+  "mcpServers": {
+    "aurora": {
+      "command": "python3",
+      "args": ["-m", "aurora.mcp.server"],
+      "env": {
+        // Required: Database path
+        "AURORA_DB_PATH": "/home/user/.aurora/memory.db",
+
+        // Required for aurora_query tool
+        "ANTHROPIC_API_KEY": "sk-ant-...",
+
+        // Optional: Custom config file
+        "AURORA_CONFIG_PATH": "/home/user/.aurora/config.json",
+
+        // Optional: Logging verbosity (DEBUG, INFO, WARNING, ERROR)
+        "AURORA_LOG_LEVEL": "INFO",
+
+        // Optional: Python path (if aurora not in system path)
+        "PYTHONPATH": "/path/to/aurora/packages"
+      }
+    }
+  }
+}
+```
+
+**References**:
+- Current docs: `docs/MCP_SETUP.md` (lines 118-133, 160-176)
+- API key check: `src/aurora/mcp/tools.py` (lines 617-637)
+
+---
+
+#### TD-MCP-005: MCP Tool Registration Error Messages Not User-Friendly
+**Category**: Developer Experience
+**Location**: `src/aurora/mcp/server.py::_register_tools()` (lines 52-172)
+**Impact**: Difficult to debug Claude Desktop connection issues
+**Effort**: S (4-6 hours)
+
+**Description**:
+When MCP server fails to register tools with Claude Desktop, error messages are generic:
+
+1. **FastMCP Import Error**: Shows "Error: FastMCP not installed" but doesn't explain that Claude Desktop needs to install it
+2. **Tool Registration Failure**: No visibility into which tool failed to register
+3. **Silent Failures**: Some registration errors are swallowed by FastMCP
+4. **No Startup Validation**: Server doesn't verify all tools registered successfully
+
+**Current Error Message**:
+```python
+except ImportError:
+    print("Error: FastMCP not installed. Install with: pip install fastmcp", file=sys.stderr)
+    sys.exit(1)
+```
+
+**Issue**: This message assumes user controls the Python environment, but Claude Desktop manages it.
+
+**Risk**:
+- Users see "tool not found" in Claude Desktop with no explanation
+- Debugging requires diving into Claude Desktop logs
+- No way to verify MCP server health from Claude Desktop
+- Users don't know if issue is AURORA or Claude Desktop
+
+**Acceptance Criteria**:
+- [ ] Add detailed error messages for each failure mode
+- [ ] Create MCP server health check command: `aurora-mcp doctor`
+- [ ] Log all tool registrations with success/failure status
+- [ ] Add startup validation that reports missing tools
+- [ ] Improve FastMCP import error with Claude Desktop context
+- [ ] Document how to check Claude Desktop logs for MCP errors
+
+**Recommended Error Messages**:
+```python
+# Import Error
+"""
+Error: FastMCP not installed in Claude Desktop's Python environment.
+
+This is expected if you're running the MCP server directly.
+Claude Desktop manages its own Python environment and installs dependencies automatically.
+
+If you see this error in Claude Desktop:
+1. Check Claude Desktop logs: ~/Library/Logs/Claude/mcp.log (macOS)
+2. Verify claude_desktop_config.json is correct
+3. Restart Claude Desktop
+4. Contact support if issue persists
+
+For manual testing, install FastMCP:
+  pip install fastmcp
+"""
+
+# Registration Error
+"""
+Error: Failed to register tool 'aurora_query'
+Reason: Missing dependency 'anthropic'
+
+To fix:
+1. Set ANTHROPIC_API_KEY environment variable in claude_desktop_config.json
+2. Or disable aurora_query by commenting it out in config
+3. Other tools will continue working
+
+See: docs/MCP_SETUP.md#aurora_query-setup
+"""
+```
+
+**References**:
+- Implementation: `src/aurora/mcp/server.py` (lines 14-18)
+- Related: TD-MCP-004 (environment variable docs)
+
+---
+
+#### TD-MCP-006: E2E Test Coverage Limited by API Key Requirement
+**Category**: Test Coverage Gap
+**Location**: `tests/e2e/test_aurora_query_e2e.py` (7 tests, all skipped)
+**Impact**: Real-world MCP usage patterns untested in CI
+**Effort**: M (2-3 days)
+
+**Description**:
+E2E tests for `aurora_query` are comprehensive but skipped in CI due to missing `ANTHROPIC_API_KEY`:
+- `test_simple_query_direct_llm_e2e`
+- `test_complex_query_soar_pipeline_e2e`
+- `test_query_with_memory_integration_e2e`
+- `test_query_budget_enforcement_e2e`
+- `test_query_error_handling_e2e`
+- `test_query_verbose_mode_e2e`
+- `test_query_performance_benchmark_e2e`
+
+**Current State**:
+```python
+@pytest.mark.skipif(
+    os.getenv("ANTHROPIC_API_KEY") is None,
+    reason="ANTHROPIC_API_KEY environment variable not set"
+)
+```
+
+**Issues**:
+1. **No CI Coverage**: E2E tests never run in CI (only run manually)
+2. **No Mock Alternative**: No way to test E2E flow without real API
+3. **Performance Benchmarks Skipped**: Can't track aurora_query latency trends
+4. **Integration Regressions Possible**: Changes may break real usage without detection
+
+**Risk**:
+- Real-world bugs slip through (only found by users)
+- Performance regressions undetected
+- No validation of Claude Desktop integration
+- Can't reproduce user-reported issues in test environment
+
+**Acceptance Criteria**:
+- [ ] Add nightly E2E CI job with API key secret (GitHub Actions)
+- [ ] Create mock LLM provider for E2E testing (no API cost)
+- [ ] Run performance E2E tests monthly, track latency trends
+- [ ] Add smoke test that validates MCP server in Claude Desktop context
+- [ ] Document E2E test execution for contributors
+- [ ] Set up performance tracking dashboard (Grafana/Datadog)
+
+**Recommended Approach**:
+```yaml
+# .github/workflows/nightly-e2e.yml
+name: Nightly E2E Tests
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2am UTC daily
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run E2E Tests
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AURORA_E2E_BUDGET: 1.00  # $1 daily budget
+        run: |
+          pytest tests/e2e/ -v --tb=short
+
+      - name: Report Performance
+        run: |
+          # Extract latency metrics, post to dashboard
+          python scripts/report_e2e_metrics.py
+```
+
+**Cost Management**:
+- Daily budget: $1 (10-20 queries at $0.05-0.10 each)
+- Monthly cost: ~$30
+- Performance tracking: Priceless 😊
+
+**References**:
+- E2E tests: `tests/e2e/test_aurora_query_e2e.py` (201 lines)
+- Test output: Line 72-78 showing 7 skipped tests
+
+---
+
+#### TD-MCP-007: Budget Enforcement Edge Cases Untested
+**Category**: Test Coverage Gap
+**Location**: `src/aurora/mcp/tools.py::_check_budget()` (lines 641-683)
+**Impact**: Budget may be exceeded slightly in edge cases
+**Effort**: S (4-6 hours)
+
+**Description**:
+Budget checking is implemented but edge cases lack test coverage:
+
+1. **Budget Exceeded Mid-Query**: Budget OK at start, exceeded during SOAR execution
+2. **Concurrent Queries**: Multiple MCP tools running simultaneously (race condition)
+3. **Budget File Locking**: What happens if budget tracker locked by another process?
+4. **Negative Budget**: Misconfiguration allows negative budget values
+5. **Monthly Rollover**: Budget resets monthly, but rollover timing untested
+6. **Budget Warning Thresholds**: No warnings at 80%, 95% budget consumption
+
+**Current Implementation**:
+```python
+def _check_budget(self, config: dict[str, Any]) -> tuple[bool, str | None]:
+    """Check if query execution would exceed budget."""
+    # Basic check: total spent < monthly limit
+    # Missing: mid-query checks, warnings, concurrent access
+```
+
+**Risk**:
+- Users surprised by budget overruns
+- No warnings before hitting limit
+- Race conditions in concurrent usage
+- Budget tracker file corruption
+
+**Acceptance Criteria**:
+- [ ] Add unit tests for budget edge cases
+- [ ] Test concurrent budget access (file locking)
+- [ ] Implement budget warning thresholds (80%, 95%)
+- [ ] Add mid-query budget checks (between SOAR phases)
+- [ ] Test monthly rollover logic
+- [ ] Add budget validation (prevent negative values)
+- [ ] Document budget enforcement timing in MCP_SETUP.md
+
+**Example Edge Case Tests**:
+```python
+def test_budget_exceeded_mid_query():
+    """Test budget check between assess and execute phases."""
+    # Budget: $10, Spent: $9.50
+    # Assess: $0.10 (total: $9.60, under budget)
+    # Execute: $0.50 (would exceed $10.00)
+    # Expected: Fail after assess, before execute
+
+def test_concurrent_budget_updates():
+    """Test multiple MCP tools updating budget simultaneously."""
+    # Spawn 3 aurora_query calls in parallel
+    # Each costs $0.50, budget is $1.00
+    # Expected: Only 2 succeed, 1 fails with budget exceeded
+
+def test_budget_warning_thresholds():
+    """Test warnings at 80% and 95% budget consumption."""
+    # Budget: $10, Spent: $8.00
+    # Expected: Warning in response: "80% of monthly budget used"
+```
+
+**References**:
+- Implementation: `src/aurora/mcp/tools.py` (lines 641-683)
+- Related: `packages/core/src/aurora_core/tracking/budget_tracker.py`
+
+---
+
+### P3 - Low Priority (3 items)
+
+#### TD-MCP-008: Progress Tracking Verbosity Levels Overlapping
+**Category**: User Experience
+**Location**: `src/aurora/mcp/tools.py::aurora_query` (verbosity parameter)
+**Impact**: Minor - verbosity levels may not provide distinct value
+**Effort**: S (4-6 hours)
+
+**Description**:
+Three verbosity levels implemented but distinctions are subtle:
+
+1. **minimal**: Shows final answer only (good for simple queries)
+2. **verbose**: Shows phase transitions, key decisions (recommended default)
+3. **detailed**: Shows full execution trace, all intermediate results (debugging)
+
+**Issue**: "verbose" and "detailed" modes overlap significantly (80%+ same information).
+
+**User Feedback Needed**:
+- Is "minimal" too sparse for debugging failed queries?
+- Is "detailed" overwhelming for most users?
+- Should we add "progress" mode with real-time phase updates?
+
+**Risk**:
+- Users confused about which verbosity to use
+- "detailed" mode generates excessive output (Claude Desktop chat clutter)
+- No streaming progress (only see results after completion)
+
+**Acceptance Criteria**:
+- [ ] Gather user feedback on verbosity levels (5-10 users)
+- [ ] Create comparison matrix of what each level shows
+- [ ] Consider streaming progress updates (MCP progress notifications)
+- [ ] Add verbosity recommendations to MCP_SETUP.md
+- [ ] Add examples of each level's output to docs
+
+**Potential Improvements**:
+```python
+# Option 1: Streaming progress (requires MCP extension)
+@mcp.tool(supports_progress=True)
+def aurora_query(...) -> Generator[ProgressUpdate, None, str]:
+    yield {"phase": "assess", "progress": 0.1}
+    yield {"phase": "retrieve", "progress": 0.3}
+    # ...
+
+# Option 2: Restructure levels
+# - silent: No output, just answer
+# - normal: Phase transitions only (current "verbose")
+# - debug: Full trace (current "detailed")
+```
+
+**References**:
+- Implementation: `src/aurora/mcp/tools.py` (lines 888-927, 928-980, 981-1030)
+- Task: `tasks/tasks-0007-tasklist-mcp-aurora-query.md` (Task 2.0)
+
+---
+
+#### TD-MCP-009: Configuration Priority Not Well Documented
+**Category**: Documentation
+**Location**: `src/aurora/mcp/tools.py::_load_config()` (lines 556-615)
+**Impact**: User confusion about configuration precedence
+**Effort**: XS (2 hours)
+
+**Description**:
+Configuration loading implements 3-tier priority but lacks documentation:
+
+**Priority Order** (highest to lowest):
+1. Environment variables (`ANTHROPIC_API_KEY`)
+2. Config file (`~/.aurora/config.json`)
+3. Hard-coded defaults
+
+**Issue**: Users don't know which env vars are checked, what config file keys exist, or what defaults are.
+
+**Example Confusion**:
+```bash
+# User sets API key in config.json
+echo '{"api": {"anthropic_key": "sk-ant-..."}}' > ~/.aurora/config.json
+
+# But also has env var set (takes precedence!)
+export ANTHROPIC_API_KEY="sk-ant-OLD-KEY"
+
+# Query uses OLD key, user confused why config.json ignored
+aur query "test"
+```
+
+**Risk**:
+- Users set config in wrong place
+- Env vars override config unexpectedly
+- No way to debug config loading
+- Can't validate config without running query
+
+**Acceptance Criteria**:
+- [ ] Document all env vars checked (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)
+- [ ] Document config.json structure and all keys
+- [ ] Add configuration priority section to MCP_SETUP.md
+- [ ] Create config validation command: `aurora-mcp config --validate`
+- [ ] Add config debugging command: `aurora-mcp config --show-effective`
+
+**Recommended Documentation Addition** (MCP_SETUP.md):
+```markdown
+## Configuration Priority
+
+AURORA uses a 3-tier configuration system:
+
+1. **Environment Variables** (highest priority)
+   - `ANTHROPIC_API_KEY` - Anthropic API key for aurora_query
+   - `OPENAI_API_KEY` - OpenAI API key (alternative)
+   - `AURORA_DB_PATH` - Database location (default: ~/.aurora/memory.db)
+   - `AURORA_CONFIG_PATH` - Config file location (default: ~/.aurora/config.json)
+
+2. **Config File** (`~/.aurora/config.json`)
+   ```json
+   {
+     "api": {
+       "anthropic_key": "sk-ant-...",
+       "default_model": "claude-sonnet-4-20250514",
+       "temperature": 0.7,
+       "max_tokens": 4000
+     },
+     "query": {
+       "auto_escalate": true,
+       "complexity_threshold": 0.6,
+       "verbosity": "verbose"
+     },
+     "budget": {
+       "monthly_limit_usd": 50.0
+     }
+   }
+   ```
+
+3. **Hard-coded Defaults** (lowest priority)
+
+### Debugging Configuration
+
+Check effective configuration:
+```bash
+aurora-mcp config --show-effective
+```
+
+Validate configuration:
+```bash
+aurora-mcp config --validate
+```
+```
+
+**References**:
+- Implementation: `src/aurora/mcp/tools.py` (lines 556-615)
+- Related: TD-MCP-004 (env var documentation)
+
+---
+
+#### TD-MCP-010: MCP Server Startup Health Check Missing
+**Category**: Observability
+**Location**: `src/aurora/mcp/server.py::main()` (lines 202-245)
+**Impact**: Difficult to diagnose Claude Desktop connection issues
+**Effort**: M (1-2 days)
+
+**Description**:
+MCP server starts but doesn't validate it's ready to serve requests:
+
+**Missing Checks**:
+1. **Database Reachable**: Can connect to SQLite database?
+2. **Required Tools Available**: Are all 6 tools registered?
+3. **Dependencies Loaded**: Is sentence-transformers available (for semantic search)?
+4. **API Key Present**: Is ANTHROPIC_API_KEY set (for aurora_query)?
+5. **Permissions Valid**: Can write to log files?
+
+**Current Startup**:
+```python
+def main():
+    server = AuroraMCPServer(...)
+    print("Starting AURORA MCP Server...")
+    server.run()  # No health check!
+```
+
+**Issue**: Server may start successfully but fail first request due to missing dependency or config issue.
+
+**Risk**:
+- Claude Desktop shows "tool failed" with no context
+- Users don't know if issue is AURORA or Claude Desktop
+- No way to pre-flight check configuration
+- Debugging requires checking Claude Desktop logs
+
+**Acceptance Criteria**:
+- [ ] Add health check on startup (before `server.run()`)
+- [ ] Validate database connection, log file permissions
+- [ ] Check optional dependencies (report missing but don't fail)
+- [ ] Add `aurora-mcp doctor` command for pre-flight checks
+- [ ] Log health check results to MCP log file
+- [ ] Document health check output in troubleshooting guide
+
+**Recommended Implementation**:
+```python
+def health_check(self) -> dict[str, Any]:
+    """Run pre-flight health checks."""
+    results = {
+        "database": self._check_database(),
+        "tools": self._check_tools_registered(),
+        "dependencies": self._check_dependencies(),
+        "api_keys": self._check_api_keys(),
+        "permissions": self._check_permissions()
+    }
+
+    # Log results
+    logger.info(f"Health check: {results}")
+
+    # Warn on non-critical failures
+    for check, status in results.items():
+        if not status["ok"] and not status["critical"]:
+            logger.warning(f"{check} check failed: {status['message']}")
+
+    return results
+
+def main():
+    server = AuroraMCPServer(...)
+
+    # Run health check
+    health = server.health_check()
+
+    # Fail on critical issues
+    critical_failures = [
+        check for check, status in health.items()
+        if not status["ok"] and status["critical"]
+    ]
+
+    if critical_failures:
+        print(f"Critical health check failures: {critical_failures}")
+        sys.exit(1)
+
+    print("Starting AURORA MCP Server...")
+    server.run()
+```
+
+**Command Line Interface**:
+```bash
+# Pre-flight check (doesn't start server)
+aurora-mcp doctor
+
+# Output:
+✓ Database: Connected (/home/user/.aurora/memory.db, 1,234 chunks)
+✓ Tools: 6/6 registered
+⚠ Dependencies: sentence-transformers not found (semantic search disabled)
+✓ API Keys: ANTHROPIC_API_KEY present
+✓ Permissions: Log file writable
+✗ Config: Invalid temperature value: 1.5 (must be 0.0-1.0)
+
+Result: 1 error, 1 warning
+Fix errors before starting MCP server.
+```
+
+**References**:
+- Implementation: `src/aurora/mcp/server.py` (lines 202-245)
+- Related: TD-MCP-005 (error messages), TD-MCP-004 (env vars)
+
+---
+
 ## Cross-Phase Issues
 
 **Items**: 8 issues affecting multiple phases
@@ -1498,31 +2202,34 @@ Setting up development environment requires:
 
 ## Summary Statistics
 
-**Last Updated**: December 24, 2025 (v1.1.0)
+**Last Updated**: December 26, 2025 (v0.2.0 + MCP aurora_query)
 **Resolved This Release**: 2 P1 items (TD-P1-001, TD-P2-001)
+**New This Release**: 10 MCP items (Phase 4)
 
 ### By Priority
 
 | Priority | Count | Resolved | Remaining | % Complete | Est. Effort |
 |----------|-------|----------|-----------|------------|-------------|
 | **P0 - Critical** | 0 | 0 | 0 | - | 0 weeks |
-| **P1 - High** | 17 | 2 | 15 | 12% | 7-9 weeks (was 8-11) |
-| **P2 - Medium** | 21 | 0 | 21 | 0% | 8-10 weeks |
-| **P3 - Low** | 9 | 0 | 9 | 0% | 2-3 weeks |
-| **Total** | 47 | 2 | 45 | 4% | 17-22 weeks (was 18-24) |
+| **P1 - High** | 18 | 2 | 16 | 11% | 7-10 weeks (was 7-9) |
+| **P2 - Medium** | 27 | 0 | 27 | 0% | 9-12 weeks (was 8-10) |
+| **P3 - Low** | 12 | 0 | 12 | 0% | 3-4 weeks (was 2-3) |
+| **Total** | 57 | 2 | 55 | 4% | 19-26 weeks (was 17-22) |
 
 ### By Category
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Test Coverage Gap | 10 | 21% |
-| Documentation | 9 | 19% |
-| Performance | 7 | 15% |
-| Feature Completeness | 6 | 13% |
-| Developer Experience | 5 | 11% |
-| Type Safety | 3 | 6% |
+| Test Coverage Gap | 14 | 25% |
+| Documentation | 11 | 19% |
+| Performance | 7 | 12% |
+| Feature Completeness | 6 | 11% |
+| Developer Experience | 6 | 11% |
+| Reliability | 4 | 7% |
+| Type Safety | 3 | 5% |
+| Observability | 3 | 5% |
 | Configuration | 2 | 4% |
-| Others | 5 | 11% |
+| Others | 1 | 2% |
 
 ### By Phase
 
@@ -1531,16 +2238,17 @@ Setting up development environment requires:
 | Phase 1 | 12 | 4-6 weeks |
 | Phase 2 | 15 | 6-8 weeks |
 | Phase 3 | 20 | 8-10 weeks |
+| Phase 4 (MCP) | 10 | 2-3 weeks |
 | Cross-Phase | 8 | 4-6 weeks |
 
 ### By Effort
 
 | Effort | Count | % of Total |
 |--------|-------|------------|
-| XS (<2h) | 3 | 6% |
-| S (2-8h) | 13 | 28% |
-| M (1-3d) | 18 | 38% |
-| L (1-2w) | 12 | 26% |
+| XS (<2h) | 4 | 7% |
+| S (2-8h) | 17 | 30% |
+| M (1-3d) | 23 | 40% |
+| L (1-2w) | 12 | 21% |
 | XL (2w+) | 1 | 2% |
 
 ---
@@ -1564,7 +2272,19 @@ Setting up development environment requires:
 
 ---
 
-### Sprint 2: Type Safety & Developer Experience (2 weeks)
+### Sprint 2: MCP Integration Reliability (1 week)
+**Goal**: Stabilize MCP integration for Claude Desktop usage
+
+1. **TD-MCP-001**: Fix MCP server subprocess timeouts (P1) - 2-3 days
+2. **TD-MCP-002**: Adjust embedding performance thresholds (P2) - 4-6 hours
+3. **TD-MCP-004**: Document environment variables (P2) - 2-3 hours
+4. **TD-MCP-009**: Document configuration priority (P3) - 2 hours
+
+**Expected Outcome**: CI/CD reliable, Claude Desktop users have clear setup docs
+
+---
+
+### Sprint 3: Type Safety & Developer Experience (2 weeks)
 **Goal**: Improve type safety and developer workflow
 
 1. **TD-P1-003**: Add py.typed markers (QUICK WIN)

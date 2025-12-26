@@ -157,26 +157,24 @@ class TestHeadlessOrchestratorInit:
         with pytest.raises(GitBranchError, match="Not on headless branch"):
             orchestrator._validate_safety()
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_validate_safety_prompt_error(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad, prompt_file, scratchpad_file
-    ):
+    def test_validate_safety_prompt_error(self, prompt_file, scratchpad_file):
         """Test prompt validation error."""
         mock_git = Mock()
         mock_git.validate.return_value = None
-        mock_git_class.return_value = mock_git
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (False, ["Missing goal section"])
-        mock_prompt_class.return_value = mock_prompt
 
+        mock_scratchpad = Mock()
         mock_soar = Mock()
+
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         with pytest.raises(PromptValidationError, match="Prompt validation failed"):
@@ -479,18 +477,22 @@ class TestEvaluateGoalAchievement:
 class TestBuildIterationQuery:
     """Test _build_iteration_query method."""
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     def test_build_query_without_prompt_data(
-        self, mock_git, mock_prompt, mock_scratchpad, prompt_file, scratchpad_file
+        self, prompt_file, scratchpad_file
     ):
         """Test building query without prompt data."""
+        mock_git = Mock()
+        mock_prompt = Mock()
+        mock_scratchpad = Mock()
         mock_soar = Mock()
+
         orchestrator = HeadlessOrchestrator(
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         orchestrator.prompt_data = None
@@ -499,16 +501,14 @@ class TestBuildIterationQuery:
 
         assert query == "Continue working toward the goal."
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
     def test_execute_iteration_success(
-        self, mock_git, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
+        self, prompt_file, scratchpad_file
     ):
         """Test successful iteration execution."""
+        mock_git = Mock()
+        mock_prompt = Mock()
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
-        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
         mock_soar.execute.return_value = {
@@ -523,6 +523,9 @@ class TestBuildIterationQuery:
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
             config=config,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         orchestrator.prompt_data = PromptData(
@@ -781,17 +784,11 @@ class TestRunMainLoop:
 class TestExecute:
     """Test execute method (full workflow)."""
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_success_goal_achieved(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
+    def test_execute_success_goal_achieved(self, prompt_file, scratchpad_file):
         """Test successful execution with goal achieved."""
         # Setup git enforcer
         mock_git = Mock()
         mock_git.validate.return_value = None
-        mock_git_class.return_value = mock_git
 
         # Setup prompt loader
         mock_prompt = Mock()
@@ -802,12 +799,10 @@ class TestExecute:
             constraints=["Constraint 1"],
             context="Test context",
         )
-        mock_prompt_class.return_value = mock_prompt
 
         # Setup scratchpad
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
-        mock_scratchpad_class.return_value = mock_scratchpad
 
         # Setup SOAR
         mock_soar = Mock()
@@ -822,6 +817,9 @@ class TestExecute:
             prompt_path=prompt_file,
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         with patch.object(orchestrator, "start_time", datetime.now().timestamp()):
@@ -960,17 +958,11 @@ class TestExecute:
         assert result.error_message is not None
         assert "Unexpected error" in result.error_message
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_max_iterations(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
+    def test_execute_max_iterations(self, prompt_file, scratchpad_file):
         """Test execution reaching max iterations."""
         # Setup mocks
         mock_git = Mock()
         mock_git.validate.return_value = None
-        mock_git_class.return_value = mock_git
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (True, [])
@@ -980,11 +972,9 @@ class TestExecute:
             constraints=["Constraint 1"],
             context="Test context",
         )
-        mock_prompt_class.return_value = mock_prompt
 
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
-        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
         mock_soar.execute.return_value = {
@@ -1000,6 +990,9 @@ class TestExecute:
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
             config=config,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         result = orchestrator.execute()
@@ -1009,16 +1002,10 @@ class TestExecute:
         assert result.iterations == 2
         assert result.total_cost == 0.2
 
-    @patch("aurora_soar.headless.orchestrator.ScratchpadManager")
-    @patch("aurora_soar.headless.orchestrator.PromptLoader")
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer")
-    def test_execute_budget_exceeded(
-        self, mock_git_class, mock_prompt_class, mock_scratchpad_class, prompt_file, scratchpad_file
-    ):
+    def test_execute_budget_exceeded(self, prompt_file, scratchpad_file):
         """Test execution with budget exceeded."""
         mock_git = Mock()
         mock_git.validate.return_value = None
-        mock_git_class.return_value = mock_git
 
         mock_prompt = Mock()
         mock_prompt.validate_format.return_value = (True, [])
@@ -1028,11 +1015,9 @@ class TestExecute:
             constraints=["Constraint 1"],
             context="Test context",
         )
-        mock_prompt_class.return_value = mock_prompt
 
         mock_scratchpad = Mock()
         mock_scratchpad.read.return_value = "Scratchpad content"
-        mock_scratchpad_class.return_value = mock_scratchpad
 
         mock_soar = Mock()
         mock_soar.execute.return_value = {
@@ -1048,6 +1033,9 @@ class TestExecute:
             scratchpad_path=scratchpad_file,
             soar_orchestrator=mock_soar,
             config=config,
+            git_enforcer=mock_git,
+            prompt_loader=mock_prompt,
+            scratchpad_manager=mock_scratchpad,
         )
 
         result = orchestrator.execute()

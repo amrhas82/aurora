@@ -107,6 +107,8 @@ class TestQueryCommand:
     @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-test-key-12345"})
     @patch("aurora_cli.main.QueryExecutor")
     @patch("aurora_cli.main.AutoEscalationHandler")
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_query_command_basic(
         self, mock_handler_class: Mock, mock_executor_class: Mock
     ) -> None:
@@ -135,6 +137,8 @@ class TestQueryCommand:
         assert "Test response" in result.output or "Response:" in result.output
 
     @patch.dict("os.environ", {}, clear=True)
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_query_command_missing_api_key(self) -> None:
         """Test query_command() fails gracefully when API key is missing."""
         runner = CliRunner()
@@ -145,6 +149,8 @@ class TestQueryCommand:
         # Should mention API key in error output
 
     @patch("aurora_cli.main._execute_dry_run")
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_query_command_with_dry_run_flag(self, mock_dry_run: Mock) -> None:
         """Test query_command() with --dry-run flag does not make API calls."""
         runner = CliRunner()
@@ -159,6 +165,8 @@ class TestQueryCommand:
     @patch("aurora_cli.main._is_memory_empty")
     @patch("aurora_core.store.SQLiteStore")
     @patch("aurora_cli.main.AutoEscalationHandler")
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_query_command_with_force_aurora(
         self,
         mock_handler_class: Mock,

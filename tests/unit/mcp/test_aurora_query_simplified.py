@@ -33,6 +33,7 @@ from aurora.mcp.tools import AuroraMCPTools
 
 class TestParameterValidation:
     """Test parameter validation for simplified aurora_query."""
+    @pytest.mark.mcp
 
     def test_query_empty_string_returns_error(self):
         """Empty query string should return InvalidParameter error."""
@@ -43,6 +44,7 @@ class TestParameterValidation:
         assert "error" in response
         assert response["error"]["type"] == "InvalidParameter"
         assert "empty" in response["error"]["message"].lower()
+    @pytest.mark.mcp
 
     def test_query_whitespace_only_returns_error(self):
         """Whitespace-only query should return InvalidParameter error."""

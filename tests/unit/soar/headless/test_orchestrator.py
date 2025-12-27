@@ -58,6 +58,7 @@ def scratchpad_file(tmp_path):
 
 class TestHeadlessConfig:
     """Test HeadlessConfig dataclass."""
+    @pytest.mark.soar
 
     def test_default_config(self):
         """Test default configuration values."""
@@ -69,6 +70,7 @@ class TestHeadlessConfig:
         assert config.auto_create_scratchpad is True
         assert config.scratchpad_backup is True
         assert "Goal Achievement Evaluation" in config.evaluation_prompt_template
+    @pytest.mark.soar
 
     def test_custom_config(self):
         """Test custom configuration."""

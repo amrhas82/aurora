@@ -63,6 +63,7 @@ class MockChunk:
 
 class TestRetrievalConfig:
     """Test RetrievalConfig model."""
+    @pytest.mark.core
 
     def test_default_config(self):
         """Test default configuration values."""
@@ -71,6 +72,7 @@ class TestRetrievalConfig:
         assert config.max_results == 10
         assert config.include_components is False
         assert config.sort_by_activation is True
+    @pytest.mark.core
 
     def test_custom_config(self):
         """Test custom configuration values."""
@@ -81,6 +83,7 @@ class TestRetrievalConfig:
         assert config.max_results == 20
         assert config.include_components is True
         assert config.sort_by_activation is False
+    @pytest.mark.core
 
     def test_max_results_validation(self):
         """Test max_results must be at least 1."""

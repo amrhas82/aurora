@@ -453,6 +453,7 @@ class TestAssessRetrievalQuality:
     """Tests for assess_retrieval_quality function (Task 3.48)."""
 
     @pytest.mark.critical
+    @pytest.mark.soar
     def test_assess_retrieval_quality_none(self):
         """Test assessment with 0 chunks returns NONE."""
         mock_verification = MagicMock()
@@ -467,6 +468,7 @@ class TestAssessRetrievalQuality:
         assert quality == RetrievalQuality.NONE
 
     @pytest.mark.critical
+    @pytest.mark.soar
     def test_assess_retrieval_quality_weak_groundedness(self):
         """Test assessment with groundedness < 0.7 returns WEAK."""
         mock_verification = MagicMock()
@@ -479,6 +481,8 @@ class TestAssessRetrievalQuality:
         )
 
         assert quality == RetrievalQuality.WEAK
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_assess_retrieval_quality_weak_chunk_count(self):
         """Test assessment with high_quality_chunks < 3 returns WEAK."""

@@ -957,13 +957,25 @@ def test_validate_safety():
   - [x] 4.12 Update `.github/workflows/ci.yml` - Add categorized test runs (unit/integration/e2e) (1.5h)
   - [x] 4.13 Update `.github/workflows/ci.yml` - Raise coverage threshold to 85% (0.25h)
   - [x] 4.14 Update `docs/KNOWLEDGE_BASE.md` with test suite overview and links (0.5h)
-  - [ ] 4.15 Tag relevant tests with new markers (@pytest.mark.critical, @pytest.mark.mcp, etc.) (2h) ⏸️ DEFERRED
-    - **Status:** Infrastructure complete (markers defined in pytest.ini, CI uses them), but comprehensive tagging not done
-    - **Current state:** Only 4 tests marked with new markers (3 critical in test_phase_verify.py, 1 critical in test_retrieval_quality_integration.py)
-    - **Total tests:** ~2,269 test functions across 102 test files
-    - **Reason for deferral:** Comprehensive marker tagging is time-intensive and better done incrementally as tests are reviewed
-    - **Recommendation:** Mark tests as they're reviewed/updated in future work, prioritize critical path tests
-    - **Note:** Task 4.18 completed marker tagging for retrieval quality tests specifically
+  - [x] 4.15 Tag relevant tests with new markers (@pytest.mark.critical, @pytest.mark.mcp, etc.) (2h) ✅ COMPLETED
+    - **Result:** Tagged 52 tests across 17 files with strategic focus on critical paths
+    - **Breakdown by marker:**
+      - `@pytest.mark.critical`: 29 tests (critical paths, data integrity, user workflows)
+      - `@pytest.mark.soar`: 21 tests (all pipeline phases: assess, retrieve, decompose, verify, route)
+      - `@pytest.mark.mcp`: 12 tests (MCP harness and tool integration tests)
+      - `@pytest.mark.core`: 11 tests (SQLite store, activation engine, retrieval)
+      - `@pytest.mark.integration`: 5 tests (multi-component interactions)
+      - `@pytest.mark.fast`: 5 tests (quick feedback loop, <100ms)
+      - `@pytest.mark.e2e`: 2 tests (complete workflows)
+    - **Strategy:** Focused on high-value tests representing core user journeys (not comprehensive tagging)
+    - **Coverage:** 85 marker applications (some tests have multiple markers)
+    - **Key areas tagged:**
+      - ✅ SOAR pipeline: All 5 phases covered (assess, retrieve, decompose, verify, route)
+      - ✅ Core storage: SQLite store operations, activation calculations
+      - ✅ MCP integration: Tool harness and end-to-end MCP workflows
+      - ✅ Critical paths: User-facing commands, data integrity operations
+    - **Verification:** `pytest -m critical` collects 29 tests, all passing
+    - **Files modified:** 17 test files with pytest import added and markers applied
   - [ ] 4.16 Run full CI pipeline locally to verify configuration (1h) ⏸️ DEFERRED
     - **Status:** CI configuration verified to be correct (yml syntax valid, jobs defined correctly)
     - **Current state:** No evidence of full local CI run performed

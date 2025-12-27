@@ -32,6 +32,7 @@ class TestIndexCommand:
 
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
+    @pytest.mark.cli
     def test_index_command_with_default_path(
         self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
     ) -> None:
@@ -77,6 +78,7 @@ class TestIndexCommand:
 
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
+    @pytest.mark.cli
     def test_index_command_with_custom_db_path(
         self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
     ) -> None:
@@ -109,6 +111,7 @@ class TestIndexCommand:
 
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
+    @pytest.mark.cli
     def test_index_command_with_specific_file(
         self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
     ) -> None:

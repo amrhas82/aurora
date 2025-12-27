@@ -42,6 +42,8 @@ class TestMCPHarness:
         return AuroraMCPTools(db_path=temp_db)
 
     @pytest.fixture
+    @pytest.mark.mcp
+    @pytest.mark.integration
     def test_codebase(self, tmp_path):
         """Create test codebase for indexing."""
         codebase = tmp_path / "test_code"
@@ -65,6 +67,8 @@ def add_numbers(a: int, b: int) -> int:
         )
 
         return codebase
+    @pytest.mark.mcp
+    @pytest.mark.integration
 
     def test_aurora_search_valid_json(self, mcp_tools, test_codebase):
         """Test that aurora_search returns valid JSON."""
@@ -88,6 +92,8 @@ def add_numbers(a: int, b: int) -> int:
             for item in data:
                 assert "file_path" in item, "Should have file_path"
                 assert "score" in item, "Should have score"
+    @pytest.mark.mcp
+    @pytest.mark.integration
 
     def test_aurora_index_returns_stats(self, mcp_tools, test_codebase):
         """Test that aurora_index successfully indexes and returns stats."""
@@ -108,6 +114,8 @@ def add_numbers(a: int, b: int) -> int:
         assert data["files_indexed"] >= 1, "Should index at least 1 file"
         assert data["chunks_created"] >= 1, "Should create at least 1 chunk"
         assert data["duration_seconds"] >= 0, "Duration should be non-negative"
+    @pytest.mark.mcp
+    @pytest.mark.integration
 
     def test_aurora_stats_returns_counts(self, mcp_tools, test_codebase):
         """Test that aurora_stats returns valid counts."""
@@ -132,6 +140,8 @@ def add_numbers(a: int, b: int) -> int:
         assert data["total_chunks"] > 0, "Should have chunks after indexing"
         assert data["total_files"] > 0, "Should have files after indexing"
         assert data["database_size_mb"] >= 0, "Database size should be non-negative"
+    @pytest.mark.mcp
+    @pytest.mark.integration
 
     def test_aurora_context_retrieves_file(self, mcp_tools, test_codebase):
         """Test that aurora_context retrieves file content correctly."""

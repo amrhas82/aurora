@@ -957,8 +957,19 @@ def test_validate_safety():
   - [x] 4.12 Update `.github/workflows/ci.yml` - Add categorized test runs (unit/integration/e2e) (1.5h)
   - [x] 4.13 Update `.github/workflows/ci.yml` - Raise coverage threshold to 85% (0.25h)
   - [x] 4.14 Update `docs/KNOWLEDGE_BASE.md` with test suite overview and links (0.5h)
-  - [ ] 4.15 Tag relevant tests with new markers (@pytest.mark.critical, @pytest.mark.mcp, etc.) (2h)
-  - [ ] 4.16 Run full CI pipeline locally to verify configuration (1h)
+  - [ ] 4.15 Tag relevant tests with new markers (@pytest.mark.critical, @pytest.mark.mcp, etc.) (2h) ⏸️ DEFERRED
+    - **Status:** Infrastructure complete (markers defined in pytest.ini, CI uses them), but comprehensive tagging not done
+    - **Current state:** Only 4 tests marked with new markers (3 critical in test_phase_verify.py, 1 critical in test_retrieval_quality_integration.py)
+    - **Total tests:** ~2,269 test functions across 102 test files
+    - **Reason for deferral:** Comprehensive marker tagging is time-intensive and better done incrementally as tests are reviewed
+    - **Recommendation:** Mark tests as they're reviewed/updated in future work, prioritize critical path tests
+    - **Note:** Task 4.18 completed marker tagging for retrieval quality tests specifically
+  - [ ] 4.16 Run full CI pipeline locally to verify configuration (1h) ⏸️ DEFERRED
+    - **Status:** CI configuration verified to be correct (yml syntax valid, jobs defined correctly)
+    - **Current state:** No evidence of full local CI run performed
+    - **Reason for deferral:** Local CI run requires Act or similar tooling; CI will be validated on first push to PR
+    - **Recommendation:** Verify CI on actual GitHub Actions when PR is created (more reliable than local simulation)
+    - **Note:** CI configuration includes all required jobs: lint, type-check, test (unit/integration/e2e), test-critical, test-ml
 
   **Phase 4: Retrieval Quality Documentation & Testing (TD-P2-016 related):**
 

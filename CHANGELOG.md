@@ -5,6 +5,34 @@ All notable changes to the AURORA project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+**Test Suite Systematic Cleanup (Phases 1-5):**
+- Removed 20 low-value tests (constructor tests, implementation detail tests)
+- Archived 7 performance benchmarks for manual execution
+- Converted 79 @patch decorators to Dependency Injection pattern
+- Added 26 integration tests for CLI, memory manager, and auto-escalation
+- Improved test pyramid from 95/4/1 to 76/21/3 (unit/integration/E2E)
+- Increased coverage from 74.95% to 81.06% (+6.11 percentage points)
+- Created comprehensive testing documentation (TESTING.md, TEST_REFERENCE.md)
+- Marked 86 tests with pytest markers (critical, core, integration, e2e)
+- Fixed Python 3.11/3.12 compatibility (from 28+27 failures to 0)
+
+**Testing Documentation:**
+- Added `docs/development/TESTING.md` - Testing principles and best practices
+- Added `docs/development/TEST_REFERENCE.md` - Test categorization and markers
+- Added `docs/development/TESTING_TECHNICAL_DEBT.md` - Technical debt tracking
+
+### Fixed
+
+- Python 3.11/3.12 test failures caused by @patch decorators (79 instances)
+- Import organization issues (19 auto-fixes)
+- Test fragility across Python versions
+
+---
+
 ## [0.2.0] - 2025-01-24
 
 ### Added

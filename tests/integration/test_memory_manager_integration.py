@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-
 from aurora_cli.errors import MemoryStoreError
 from aurora_cli.memory_manager import (
     IndexStats,
@@ -25,6 +24,7 @@ from aurora_cli.memory_manager import (
     MemoryStats,
     SearchResult,
 )
+
 from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import ParserRegistry
 from aurora_context_code.semantic import EmbeddingProvider

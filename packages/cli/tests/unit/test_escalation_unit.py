@@ -9,7 +9,6 @@ Pattern: Direct function calls with mocked dependencies (no subprocess, no @patc
 from unittest.mock import Mock
 
 import pytest
-
 from aurora_cli.escalation import (
     AutoEscalationHandler,
     EscalationConfig,

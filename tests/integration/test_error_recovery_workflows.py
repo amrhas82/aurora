@@ -21,12 +21,13 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
 from aurora_cli.config import Config
 from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler, MemoryStoreError
 from aurora_cli.execution import QueryExecutor
 from aurora_cli.memory_manager import MemoryManager
+
 from aurora_core.store.sqlite import SQLiteStore
+
 
 # Sample Python files for testing
 VALID_PYTHON_FILE = '''"""Sample module for testing."""

@@ -8,13 +8,14 @@ Tests boundary conditions, error handling, and unusual scenarios:
 - Special edge cases
 """
 
+from unittest.mock import MagicMock, Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock
+from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_soar.phases.retrieve import ACTIVATION_THRESHOLD, filter_by_activation
 from aurora_soar.phases.verify import RetrievalQuality, assess_retrieval_quality
-from aurora_reasoning.verify import VerificationResult, VerificationVerdict, VerificationOption
 
 
 class TestRetrievalQualityEdgeCases:

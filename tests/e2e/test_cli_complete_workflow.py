@@ -32,10 +32,11 @@ import pytest
 
 # Import CLI components for direct testing (contributes to coverage)
 from aurora_cli.config import load_config
-from aurora_cli.memory_manager import MemoryManager
 from aurora_cli.errors import AuroraError, ConfigurationError, MemoryStoreError
-from aurora_core.store import SQLiteStore
+from aurora_cli.memory_manager import MemoryManager
+
 from aurora_core.chunks import CodeChunk
+from aurora_core.store import SQLiteStore
 
 
 # ==============================================================================

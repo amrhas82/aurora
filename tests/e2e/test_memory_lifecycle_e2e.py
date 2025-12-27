@@ -25,11 +25,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from aurora_cli.memory_manager import IndexStats, MemoryManager, SearchResult
 
-from aurora_cli.memory_manager import MemoryManager, IndexStats, SearchResult
-from aurora_core.store.sqlite import SQLiteStore
-from aurora_core.chunks import CodeChunk
 from aurora_context_code.languages.python import PythonParser
+from aurora_core.chunks import CodeChunk
+from aurora_core.store.sqlite import SQLiteStore
 
 
 # ==============================================================================

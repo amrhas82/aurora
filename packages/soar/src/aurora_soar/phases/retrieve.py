@@ -45,7 +45,7 @@ RETRIEVAL_BUDGETS = {
 ACTIVATION_THRESHOLD = 0.3
 
 
-def filter_by_activation(chunks: list[Any], store: "Store" | None = None) -> tuple[list[Any], int]:
+def filter_by_activation(chunks: list[Any], store: Store | None = None) -> tuple[list[Any], int]:
     """Filter chunks by activation threshold and count high-quality chunks.
 
     Args:

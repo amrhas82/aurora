@@ -124,6 +124,7 @@ class TestAnthropicClient:
                     with pytest.raises(ImportError, match="anthropic package required"):
                         # Force a reload of the module to trigger the import
                         import importlib
+
                         import aurora.reasoning.llm_client as llm_module
                         importlib.reload(llm_module)
                         llm_module.AnthropicClient()

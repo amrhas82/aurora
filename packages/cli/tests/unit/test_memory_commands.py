@@ -11,8 +11,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from click.testing import CliRunner
-
 from aurora_cli.commands.memory import (
     _display_json_results,
     _display_rich_results,
@@ -25,6 +23,7 @@ from aurora_cli.commands.memory import (
 )
 from aurora_cli.errors import MemoryStoreError
 from aurora_cli.memory_manager import IndexStats, MemoryStats, SearchResult
+from click.testing import CliRunner
 
 
 class TestIndexCommand:

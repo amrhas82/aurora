@@ -18,12 +18,12 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-
 from aurora_cli.errors import APIError
 from aurora_cli.execution import QueryExecutor
+from aurora_reasoning.llm_client import LLMResponse
+
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.store.sqlite import SQLiteStore
-from aurora_reasoning.llm_client import LLMResponse
 
 
 @pytest.fixture

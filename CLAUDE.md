@@ -14,7 +14,7 @@
 
 AURORA: Adaptive Unified Reasoning and Orchestration Architecture - cognitive framework for AI systems with persistent memory, reasoning, and orchestration. Built on ACT-R/SOAR principles.
 
-**Version**: v0.2.0 | **Root**: /home/hamr/PycharmProjects/aurora | **Quality**: 1,766+ tests (97% pass), 74%+ coverage
+**Version**: v0.2.0 | **Root**: /home/hamr/PycharmProjects/aurora | **Quality**: 2,369 tests (97% pass), 81.06% coverage
 
 ## Package Structure
 
@@ -32,20 +32,24 @@ AURORA: Adaptive Unified Reasoning and Orchestration Architecture - cognitive fr
 ```bash
 # Development
 make quality-check         # Lint, type-check, test (all quality gates)
-make test                  # Run 1,766+ tests
+make test                  # Run 2,369 tests
 make type-check            # MyPy strict mode (0 errors required)
 
 # CLI
 aur --verify               # Check installation health
 aur mem index .            # Index codebase for semantic search
 aur mem search "text"      # Search indexed code
-aur query "text"           # Query with auto-escalation
+aur query "text"           # Query with auto-escalation (may prompt if weak match)
+aur query "text" --non-interactive  # For CI/CD (no prompts, auto-continue)
 aurora-mcp status          # Check MCP server status
 
 # Testing
 pytest tests/unit/         # Unit tests (fast)
+pytest -m critical         # Critical tests only
 pytest --cov=packages      # Coverage report
 ```
+
+**Retrieval Quality Note**: Queries may prompt for user decisions when context quality is low (groundedness < 0.7 or <3 high-quality chunks). Use `--non-interactive` flag for automated/scripted usage. See [CLI_USAGE_GUIDE.md](docs/cli/CLI_USAGE_GUIDE.md#retrieval-quality-handling) for details.
 
 ## Critical Gotchas
 

@@ -7,25 +7,17 @@
 
 ---
 
-## Relevant Files (Phase 3-4 Completion)
+## Relevant Files (Phase 3 Completion)
 
-**Documentation Created (Phase 3-4):**
+**Documentation Created (Phase 3 Completion):**
 - `docs/development/TECHNICAL_DEBT_COVERAGE.md` - Comprehensive coverage gap analysis with prioritized recommendations
-- `docs/development/TESTING.md` - Complete testing guide (Tasks 4.1-4.5)
-- `docs/development/TEST_REFERENCE.md` - Test inventory and pyramid visualization (Tasks 4.6-4.9)
 
 **Production Code Modified (Tasks 3.46-3.55 - Retrieval Quality):**
 - `packages/core/src/aurora_core/store/sqlite.py` - Added `get_activation(chunk_id)` method
 - `packages/soar/src/aurora_soar/phases/retrieve.py` - Updated `filter_by_activation()` to use store.get_activation()
-
-**Documentation Updated (Tasks 3.53, 4.17, 4.20 - Retrieval Quality):**
 - `docs/cli/CLI_USAGE_GUIDE.md` - Added 260-line "Retrieval Quality Handling" section
 - `docs/KNOWLEDGE_BASE.md` - Added link to retrieval quality documentation
 - `docs/TROUBLESHOOTING.md` - Added 245-line "Weak Match Warnings" section
-- `docs/architecture/SOAR_ARCHITECTURE.md` - Added Phase 4.1 "Retrieval Quality Assessment" subsection (100+ lines)
-- `packages/soar/README.md` - Added retrieval quality feature overview with examples
-- `README.md` - Added retrieval quality feature section (updated by user)
-- `CLAUDE.md` - Added retrieval quality notes for CLI usage (updated by user)
 
 **Tests Created (Tasks 3.46-3.55 - Retrieval Quality):**
 - `tests/integration/test_retrieval_quality_integration.py` - 7 integration tests for all scenarios
@@ -34,9 +26,9 @@
 **Tests Fixed (Tasks 3.46-3.55):**
 - `tests/unit/soar/test_phase_retrieve.py` - Fixed 12 tests to work with new get_activation() method
 
-**CI Configuration Modified (Tasks 4.10-4.13, 4.18-4.19):**
+**CI Configuration Modified (Tasks 4.18-4.19 - Retrieval Quality):**
 - `pytest.ini` - Added markers (critical, cli, mcp, safety)
-- `.github/workflows/ci.yml` - Added retrieval quality test steps, test-critical job, categorized test runs, raised coverage threshold to 85%
+- `.github/workflows/ci.yml` - Added retrieval quality test steps
 
 ## Relevant Files
 
@@ -943,20 +935,20 @@ def test_validate_safety():
     - Approve continuation to Phase 4 or request changes
 
 - [ ] **4.0 Phase 4: Documentation & CI Improvements** (Week 2-3, Days 13-18, ~12-16 hours)
-  - [x] 4.1 Create `docs/development/TESTING.md` - Section 1: Philosophy (1h)
-  - [x] 4.2 Create `docs/development/TESTING.md` - Section 2: Test Pyramid (1h)
-  - [x] 4.3 Create `docs/development/TESTING.md` - Sections 3-4: Principles & When to Write Tests (1.5h)
-  - [x] 4.4 Create `docs/development/TESTING.md` - Sections 5-6: Anti-Patterns & DI Examples (1.5h)
-  - [x] 4.5 Create `docs/development/TESTING.md` - Sections 7-8: Markers & Running Tests (1h)
-  - [x] 4.6 Create `docs/development/TEST_REFERENCE.md` - Test pyramid ASCII visualization (1h)
-  - [x] 4.7 Create `docs/development/TEST_REFERENCE.md` - Comprehensive test reference table (2h)
-  - [x] 4.8 Create `docs/development/TEST_REFERENCE.md` - Coverage matrix by component (1h)
-  - [x] 4.9 Create `docs/development/TEST_REFERENCE.md` - Stats summary (0.5h)
-  - [x] 4.10 Update `pytest.ini` with new markers (critical, safety, mcp, cli) (0.5h)
-  - [x] 4.11 Update `.github/workflows/ci.yml` - Add test-critical job (1h)
-  - [x] 4.12 Update `.github/workflows/ci.yml` - Add categorized test runs (unit/integration/e2e) (1.5h)
-  - [x] 4.13 Update `.github/workflows/ci.yml` - Raise coverage threshold to 85% (0.25h)
-  - [x] 4.14 Update `docs/KNOWLEDGE_BASE.md` with test suite overview and links (0.5h)
+  - [ ] 4.1 Create `docs/development/TESTING.md` - Section 1: Philosophy (1h)
+  - [ ] 4.2 Create `docs/development/TESTING.md` - Section 2: Test Pyramid (1h)
+  - [ ] 4.3 Create `docs/development/TESTING.md` - Sections 3-4: Principles & When to Write Tests (1.5h)
+  - [ ] 4.4 Create `docs/development/TESTING.md` - Sections 5-6: Anti-Patterns & DI Examples (1.5h)
+  - [ ] 4.5 Create `docs/development/TESTING.md` - Sections 7-8: Markers & Running Tests (1h)
+  - [ ] 4.6 Create `docs/development/TEST_REFERENCE.md` - Test pyramid ASCII visualization (1h)
+  - [ ] 4.7 Create `docs/development/TEST_REFERENCE.md` - Comprehensive test reference table (2h)
+  - [ ] 4.8 Create `docs/development/TEST_REFERENCE.md` - Coverage matrix by component (1h)
+  - [ ] 4.9 Create `docs/development/TEST_REFERENCE.md` - Stats summary (0.5h)
+  - [ ] 4.10 Update `pytest.ini` with new markers (critical, safety, mcp, cli) (0.5h)
+  - [ ] 4.11 Update `.github/workflows/ci.yml` - Add test-critical job (1h)
+  - [ ] 4.12 Update `.github/workflows/ci.yml` - Add categorized test runs (unit/integration/e2e) (1.5h)
+  - [ ] 4.13 Update `.github/workflows/ci.yml` - Raise coverage threshold to 85% (0.25h)
+  - [ ] 4.14 Update `docs/KNOWLEDGE_BASE.md` with test suite overview and links (0.5h)
   - [ ] 4.15 Tag relevant tests with new markers (@pytest.mark.critical, @pytest.mark.mcp, etc.) (2h)
   - [ ] 4.16 Run full CI pipeline locally to verify configuration (1h)
 
@@ -1004,11 +996,7 @@ def test_validate_safety():
     - Add comment to CI config explaining purpose: "Critical UX feature - must pass"
     - **Success criteria:** CI explicitly validates retrieval quality tests
 
-  - [x] 4.20 Update major documentation files for retrieval quality feature (2h) ✅ COMPLETED
-    - **Result:** Updated SOAR_ARCHITECTURE.md Phase 4 section with comprehensive retrieval quality documentation (100+ lines)
-    - **Result:** Updated packages/soar/README.md with feature overview, examples, and VerifyPhaseResult schema
-    - **Result:** Added decision matrix table, quality levels (NONE/WEAK/GOOD), interactive vs non-interactive behavior
-    - **Note:** README.md and CLAUDE.md already updated by user in previous session
+  - [ ] 4.20 Update major documentation files for retrieval quality feature (2h)
     - Update `README.md` (root):
       - Expand Task 5.12's brief mention into proper "Retrieval Quality Handling" feature section
       - Add subsection under "Features" with decision matrix table (no match / weak match / good match)

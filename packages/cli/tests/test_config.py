@@ -146,6 +146,20 @@ class TestConfigDataclass:
             config.validate()
         assert "logging_level must be one of" in str(exc_info.value)
 
+    def test_validate_mcp_max_results_zero(self):
+        """Test validation fails for zero mcp_max_results."""
+        config = Config(mcp_max_results=0)
+        with pytest.raises(ConfigurationError) as exc_info:
+            config.validate()
+        assert "mcp_max_results must be positive" in str(exc_info.value)
+
+    def test_validate_mcp_max_results_negative(self):
+        """Test validation fails for negative mcp_max_results."""
+        config = Config(mcp_max_results=-5)
+        with pytest.raises(ConfigurationError) as exc_info:
+            config.validate()
+        assert "mcp_max_results must be positive" in str(exc_info.value)
+
     def test_validate_warns_nonexistent_path(self, capsys, tmp_path):
         """Test validation warns about non-existent paths."""
         nonexistent_path = str(tmp_path / "does_not_exist")
@@ -161,8 +175,15 @@ class TestLoadConfig:
 
     def test_load_config_defaults(self, tmp_path, monkeypatch, capsys):
         """Test loading config with defaults (no file, no env vars)."""
+        # Mock home directory to avoid picking up real config
+        fake_home = tmp_path / "fake_home"
+        fake_home.mkdir()
+        monkeypatch.setenv("HOME", str(fake_home))
+
         # Change to temp directory where no config exists
-        monkeypatch.chdir(tmp_path)
+        work_dir = tmp_path / "work"
+        work_dir.mkdir()
+        monkeypatch.chdir(work_dir)
 
         # Clear any env vars
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
@@ -323,6 +344,29 @@ class TestLoadConfig:
             # Restore permissions for cleanup
             os.chmod(config_path, 0o600)
 
+    def test_load_config_generic_file_error(self, tmp_path, monkeypatch):
+        """Test loading config with generic file error (e.g., IO error)."""
+        from unittest.mock import mock_open, patch
+
+        # Mock Path.exists to return True but open() to raise OSError
+        config_path = tmp_path / "aurora.config.json"
+
+        # Create a real file so exists() returns True
+        config_data = {"version": "1.1.0"}
+        with open(config_path, "w") as f:
+            json.dump(config_data, f)
+
+        monkeypatch.chdir(tmp_path)
+
+        # Mock open to raise a generic OSError (simulating disk full, IO error, etc.)
+        with patch("builtins.open", side_effect=OSError("Disk full")):
+            with pytest.raises(ConfigurationError) as exc_info:
+                load_config()
+
+            error_message = str(exc_info.value)
+            # Should contain helpful error message from ErrorHandler
+            assert "Config file error" in error_message or "Disk full" in error_message
+
     def test_load_config_invalid_threshold_env(self, monkeypatch):
         """Test loading config with invalid threshold from environment."""
         monkeypatch.setenv("AURORA_ESCALATION_THRESHOLD", "not_a_number")
@@ -456,3 +500,107 @@ class TestConfigPrecedence:
 
         # File value should win over default (0.7)
         assert config.escalation_threshold == 0.9
+
+
+class TestConfigEdgeCases:
+    """Test edge cases and additional scenarios."""
+
+    def test_config_with_all_mcp_fields(self, tmp_path, monkeypatch):
+        """Test loading config with all MCP fields specified."""
+        config_path = tmp_path / "aurora.config.json"
+        config_data = {
+            "mcp": {
+                "always_on": True,
+                "log_file": "/custom/mcp.log",
+                "max_results": 50,
+            }
+        }
+
+        with open(config_path, "w") as f:
+            json.dump(config_data, f)
+
+        monkeypatch.chdir(tmp_path)
+
+        config = load_config()
+
+        assert config.mcp_always_on is True
+        assert config.mcp_log_file == "/custom/mcp.log"
+        assert config.mcp_max_results == 50
+
+    def test_config_with_valid_force_modes(self):
+        """Test Config accepts valid force modes."""
+        # Test 'direct' mode
+        config_direct = Config(escalation_force_mode="direct")
+        config_direct.validate()  # Should not raise
+
+        # Test 'aurora' mode
+        config_aurora = Config(escalation_force_mode="aurora")
+        config_aurora.validate()  # Should not raise
+
+    def test_config_with_all_valid_logging_levels(self):
+        """Test Config accepts all valid logging levels."""
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+        for level in valid_levels:
+            config = Config(logging_level=level)
+            config.validate()  # Should not raise
+
+    def test_validate_boundary_values(self):
+        """Test validation with boundary values."""
+        # Minimum valid values
+        config_min = Config(
+            escalation_threshold=0.0,
+            llm_temperature=0.0,
+            llm_max_tokens=1,
+            memory_chunk_size=100,
+            memory_overlap=0,
+            mcp_max_results=1,
+        )
+        config_min.validate()  # Should not raise
+
+        # Maximum valid values
+        config_max = Config(
+            escalation_threshold=1.0,
+            llm_temperature=1.0,
+        )
+        config_max.validate()  # Should not raise
+
+    def test_load_config_empty_nested_sections(self, tmp_path, monkeypatch):
+        """Test loading config with empty nested sections uses defaults."""
+        config_path = tmp_path / "aurora.config.json"
+        config_data = {
+            "llm": {},
+            "escalation": {},
+            "memory": {},
+            "logging": {},
+            "mcp": {},
+        }
+
+        with open(config_path, "w") as f:
+            json.dump(config_data, f)
+
+        monkeypatch.chdir(tmp_path)
+
+        config = load_config()
+
+        # Should use defaults for all empty sections
+        assert config.llm_provider == "anthropic"
+        assert config.escalation_threshold == 0.7
+        assert config.memory_auto_index is True
+        assert config.logging_level == "INFO"
+        assert config.mcp_always_on is False
+
+    def test_get_api_key_with_whitespace_only(self):
+        """Test that whitespace-only API key is treated as missing."""
+        config = Config(anthropic_api_key="   ")
+        with pytest.raises(ConfigurationError):
+            config.get_api_key()
+
+    def test_get_api_key_env_empty_falls_back_to_config(self, monkeypatch):
+        """Test that empty env var falls back to config value."""
+        # Set empty env var
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "   ")
+        config = Config(anthropic_api_key="sk-ant-config123")
+
+        # Empty env var should be ignored, use config
+        assert config.get_api_key() == "sk-ant-config123"

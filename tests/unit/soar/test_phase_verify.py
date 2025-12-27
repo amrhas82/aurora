@@ -10,9 +10,11 @@ from aurora.reasoning.verify import (
     VerificationVerdict,
 )
 from aurora.soar.phases.verify import (
+    RetrievalQuality,
     VerifyPhaseResult,
     _generate_retry_feedback,
     _select_verification_option,
+    assess_retrieval_quality,
     verify_decomposition,
 )
 
@@ -445,3 +447,227 @@ class TestVerifyDecomposition:
         )
 
         assert result.timing_ms > 0
+
+
+class TestAssessRetrievalQuality:
+    """Tests for assess_retrieval_quality function (Task 3.48)."""
+
+    @pytest.mark.critical
+    def test_assess_retrieval_quality_none(self):
+        """Test assessment with 0 chunks returns NONE."""
+        mock_verification = MagicMock()
+        mock_verification.groundedness = 0.5
+
+        quality = assess_retrieval_quality(
+            verification=mock_verification,
+            high_quality_chunks=0,
+            total_chunks=0,
+        )
+
+        assert quality == RetrievalQuality.NONE
+
+    @pytest.mark.critical
+    def test_assess_retrieval_quality_weak_groundedness(self):
+        """Test assessment with groundedness < 0.7 returns WEAK."""
+        mock_verification = MagicMock()
+        mock_verification.groundedness = 0.6  # Below threshold
+
+        quality = assess_retrieval_quality(
+            verification=mock_verification,
+            high_quality_chunks=5,  # Even with high-quality chunks
+            total_chunks=10,
+        )
+
+        assert quality == RetrievalQuality.WEAK
+
+    def test_assess_retrieval_quality_weak_chunk_count(self):
+        """Test assessment with high_quality_chunks < 3 returns WEAK."""
+        mock_verification = MagicMock()
+        mock_verification.groundedness = 0.8  # High groundedness
+
+        quality = assess_retrieval_quality(
+            verification=mock_verification,
+            high_quality_chunks=2,  # Below threshold
+            total_chunks=10,
+        )
+
+        assert quality == RetrievalQuality.WEAK
+
+    @pytest.mark.critical
+    def test_assess_retrieval_quality_good(self):
+        """Test assessment with groundedness >= 0.7 AND chunks >= 3 returns GOOD."""
+        mock_verification = MagicMock()
+        mock_verification.groundedness = 0.75
+
+        quality = assess_retrieval_quality(
+            verification=mock_verification,
+            high_quality_chunks=3,
+            total_chunks=5,
+        )
+
+        assert quality == RetrievalQuality.GOOD
+
+    def test_boundary_groundedness_exactly_0_7(self):
+        """Test boundary: groundedness exactly 0.7 is GOOD."""
+        mock_verification = MagicMock()
+        mock_verification.groundedness = 0.7
+
+        quality = assess_retrieval_quality(
+            verification=mock_verification,
+            high_quality_chunks=3,
+            total_chunks=5,
+        )
+
+        assert quality == RetrievalQuality.GOOD
+
+    def test_boundary_chunks_exactly_3(self):
+        """Test boundary: exactly 3 high-quality chunks is GOOD."""
+        mock_verification = MagicMock()
+        mock_verification.groundedness = 0.8
+
+        quality = assess_retrieval_quality(
+            verification=mock_verification,
+            high_quality_chunks=3,
+            total_chunks=3,
+        )
+
+        assert quality == RetrievalQuality.GOOD
+
+
+class TestVerifyWithRetrievalContext:
+    """Tests for verify_decomposition with retrieval_context (Task 3.48)."""
+
+    @pytest.fixture
+    def sample_decomposition(self):
+        """Create sample decomposition result."""
+        return DecompositionResult(
+            goal="Test goal",
+            subgoals=[],
+            execution_order=[],
+            expected_tools=[],
+        )
+
+    @pytest.fixture
+    def sample_verification(self):
+        """Create sample verification result."""
+        return VerificationResult(
+            completeness=0.85,
+            consistency=0.9,
+            groundedness=0.8,
+            routability=0.9,
+            overall_score=0.86,
+            verdict=VerificationVerdict.PASS,
+            issues=[],
+            suggestions=[],
+            option_used=VerificationOption.SELF,
+            raw_response="Sample verification response",
+        )
+
+    @patch("aurora_reasoning.verify.verify_decomposition")
+    def test_verify_with_retrieval_context_assesses_quality(
+        self, mock_verify, sample_decomposition, sample_verification
+    ):
+        """Test that quality assessment is called when retrieval_context provided."""
+        mock_verify.return_value = sample_verification
+        mock_llm = MagicMock()
+
+        retrieval_context = {
+            "high_quality_count": 5,
+            "total_retrieved": 10,
+        }
+
+        result = verify_decomposition(
+            decomposition=sample_decomposition,
+            complexity="MEDIUM",
+            llm_client=mock_llm,
+            query="Test query",
+            retrieval_context=retrieval_context,
+        )
+
+        # Should assess quality and set retrieval_quality field
+        assert result.retrieval_quality is not None
+        assert result.retrieval_quality == RetrievalQuality.GOOD
+
+    @patch("aurora_reasoning.verify.verify_decomposition")
+    def test_verify_non_interactive_skips_prompt(
+        self, mock_verify, sample_decomposition
+    ):
+        """Test that non-interactive mode doesn't prompt user."""
+        # Create verification with low groundedness (weak match)
+        weak_verification = VerificationResult(
+            completeness=0.85,
+            consistency=0.9,
+            groundedness=0.5,  # Low, triggers weak match
+            routability=0.9,
+            overall_score=0.79,
+            verdict=VerificationVerdict.PASS,
+            issues=[],
+            suggestions=[],
+            option_used=VerificationOption.SELF,
+            raw_response="Weak verification response",
+        )
+        mock_verify.return_value = weak_verification
+        mock_llm = MagicMock()
+
+        retrieval_context = {
+            "high_quality_count": 2,  # Low, triggers weak match
+            "total_retrieved": 5,
+        }
+
+        # Non-interactive mode (default)
+        result = verify_decomposition(
+            decomposition=sample_decomposition,
+            complexity="MEDIUM",
+            llm_client=mock_llm,
+            query="Test query",
+            retrieval_context=retrieval_context,
+            interactive_mode=False,
+        )
+
+        # Should assess as weak but not prompt
+        assert result.retrieval_quality == RetrievalQuality.WEAK
+        # Test passes if no exception raised (no prompt shown)
+
+    @patch("aurora_reasoning.verify.verify_decomposition")
+    def test_verify_without_retrieval_context_no_assessment(
+        self, mock_verify, sample_decomposition, sample_verification
+    ):
+        """Test that quality assessment is skipped when no retrieval_context."""
+        mock_verify.return_value = sample_verification
+        mock_llm = MagicMock()
+
+        result = verify_decomposition(
+            decomposition=sample_decomposition,
+            complexity="MEDIUM",
+            llm_client=mock_llm,
+            query="Test query",
+            # No retrieval_context provided
+        )
+
+        # Should not assess quality
+        assert result.retrieval_quality is None
+
+    @patch("aurora_reasoning.verify.verify_decomposition")
+    def test_verify_result_includes_retrieval_quality_in_dict(
+        self, mock_verify, sample_decomposition, sample_verification
+    ):
+        """Test that to_dict() includes retrieval_quality field."""
+        mock_verify.return_value = sample_verification
+        mock_llm = MagicMock()
+
+        retrieval_context = {
+            "high_quality_count": 4,
+            "total_retrieved": 6,
+        }
+
+        result = verify_decomposition(
+            decomposition=sample_decomposition,
+            complexity="MEDIUM",
+            llm_client=mock_llm,
+            query="Test query",
+            retrieval_context=retrieval_context,
+        )
+
+        result_dict = result.to_dict()
+        assert "retrieval_quality" in result_dict
+        assert result_dict["retrieval_quality"] == "good"

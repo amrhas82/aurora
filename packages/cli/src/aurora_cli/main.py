@@ -142,6 +142,12 @@ cli.add_command(memory_group)
     default=False,
     help="Show what would be executed without making API calls",
 )
+@click.option(
+    "--non-interactive",
+    is_flag=True,
+    default=False,
+    help="Disable interactive prompts for weak retrieval matches (auto-continue)",
+)
 def query_command(
     query_text: str,
     force_aurora: bool,
@@ -150,6 +156,7 @@ def query_command(
     show_reasoning: bool,
     verbose: bool,
     dry_run: bool,
+    non_interactive: bool,
 ) -> None:
     """Execute a query with automatic escalation.
 
@@ -158,6 +165,10 @@ def query_command(
     - AURORA: Full SOAR pipeline (for complex queries)
 
     The decision is based on query complexity assessment.
+
+    In interactive mode (default), the system will prompt you when retrieval
+    quality is weak (poor groundedness or insufficient high-quality chunks).
+    Use --non-interactive to auto-continue for automation/scripting.
 
     \b
     Examples:
@@ -183,6 +194,10 @@ def query_command(
         \b
         # Adjust escalation threshold (higher = more likely to use AURORA)
         aur query "Optimize database queries" --threshold 0.7
+
+        \b
+        # Non-interactive mode for automation (no prompts)
+        aur query "Explain authentication" --non-interactive
     """
     try:
         error_handler = ErrorHandler()
@@ -262,13 +277,15 @@ def query_command(
                     memory_store = SQLiteStore(str(db_path))
                     _perform_auto_index(console, memory_store)
 
-        # Create query executor
+        # Create query executor with interactive mode setting
+        # Interactive mode is enabled by default (when non_interactive=False)
+        interactive_mode = not non_interactive
         executor_config = {
             "model": "claude-sonnet-4-20250514",
             "temperature": 0.7,
             "max_tokens": 500,
         }
-        executor = QueryExecutor(config=executor_config)
+        executor = QueryExecutor(config=executor_config, interactive_mode=interactive_mode)
 
         # Execute query based on escalation decision
         phase_trace = None

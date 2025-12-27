@@ -416,3 +416,91 @@ class TestHelperFunctions:
 
         # Verify MemoryManager was called
         mock_manager.index_path.assert_called_once()
+
+
+class TestQueryCommandInteractiveMode:
+    """Test query command with --non-interactive flag for retrieval quality handling."""
+
+    @patch("aurora_cli.main.QueryExecutor")
+    @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"})
+    def test_query_command_with_non_interactive_flag(self, mock_executor_class: Mock) -> None:
+        """Test query command with --non-interactive flag sets interactive_mode=False."""
+        # Mock executor instance
+        mock_executor = Mock()
+        mock_executor.execute_direct_llm.return_value = "Test response"
+        mock_executor_class.return_value = mock_executor
+
+        # Mock AutoEscalationHandler
+        with patch("aurora_cli.main.AutoEscalationHandler") as mock_handler_class:
+            mock_handler = Mock()
+            mock_result = Mock(use_aurora=False, complexity="SIMPLE", score=0.3, confidence=0.9, method="keyword", reasoning="Simple query")
+            mock_handler.assess_query.return_value = mock_result
+            mock_handler_class.return_value = mock_handler
+
+            runner = CliRunner()
+            result = runner.invoke(
+                cli, ["query", "What is Python?", "--non-interactive", "--force-direct"]
+            )
+
+            # Verify query executed successfully
+            assert result.exit_code == 0
+
+            # Verify QueryExecutor was initialized with interactive_mode=False
+            call_kwargs = mock_executor_class.call_args[1]
+            assert call_kwargs["interactive_mode"] is False
+
+    @patch("aurora_cli.main.QueryExecutor")
+    @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"})
+    def test_query_command_default_interactive(self, mock_executor_class: Mock) -> None:
+        """Test query command without --non-interactive defaults to interactive_mode=True."""
+        # Mock executor instance
+        mock_executor = Mock()
+        mock_executor.execute_direct_llm.return_value = "Test response"
+        mock_executor_class.return_value = mock_executor
+
+        # Mock AutoEscalationHandler
+        with patch("aurora_cli.main.AutoEscalationHandler") as mock_handler_class:
+            mock_handler = Mock()
+            mock_result = Mock(use_aurora=False, complexity="SIMPLE", score=0.3, confidence=0.9, method="keyword", reasoning="Simple query")
+            mock_handler.assess_query.return_value = mock_result
+            mock_handler_class.return_value = mock_handler
+
+            runner = CliRunner()
+            result = runner.invoke(cli, ["query", "What is Python?", "--force-direct"])
+
+            # Verify query executed successfully
+            assert result.exit_code == 0
+
+            # Verify QueryExecutor was initialized with interactive_mode=True (default)
+            call_kwargs = mock_executor_class.call_args[1]
+            assert call_kwargs["interactive_mode"] is True
+
+    @patch("aurora_cli.main.QueryExecutor")
+    @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"})
+    def test_query_command_interactive_flag_passed_to_executor(
+        self, mock_executor_class: Mock
+    ) -> None:
+        """Test that interactive mode flag is correctly propagated to QueryExecutor."""
+        # Mock executor instance
+        mock_executor = Mock()
+        mock_executor.execute_direct_llm.return_value = "Test response"
+        mock_executor_class.return_value = mock_executor
+
+        # Mock AutoEscalationHandler
+        with patch("aurora_cli.main.AutoEscalationHandler") as mock_handler_class:
+            mock_handler = Mock()
+            mock_result = Mock(use_aurora=False, complexity="SIMPLE", score=0.3, confidence=0.9, method="keyword", reasoning="Simple query")
+            mock_handler.assess_query.return_value = mock_result
+            mock_handler_class.return_value = mock_handler
+
+            runner = CliRunner()
+
+            # Test with --non-interactive
+            runner.invoke(cli, ["query", "test query", "--non-interactive", "--force-direct"])
+            call_kwargs_non_interactive = mock_executor_class.call_args[1]
+            assert call_kwargs_non_interactive["interactive_mode"] is False
+
+            # Test without --non-interactive (interactive by default)
+            runner.invoke(cli, ["query", "test query", "--force-direct"])
+            call_kwargs_interactive = mock_executor_class.call_args[1]
+            assert call_kwargs_interactive["interactive_mode"] is True

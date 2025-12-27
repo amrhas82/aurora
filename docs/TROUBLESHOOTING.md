@@ -9,9 +9,10 @@ This guide provides solutions to common issues you might encounter when using AU
 3. [MCP Server Issues](#mcp-server-issues)
 4. [Memory/Indexing Issues](#memoryindexing-issues)
 5. [Query Issues](#query-issues)
-6. [MCP Query Errors](#mcp-query-errors)
-7. [Diagnostic Commands](#diagnostic-commands)
-8. [Getting Help](#getting-help)
+6. [Weak Match Warnings and Retrieval Quality](#weak-match-warnings-and-retrieval-quality)
+7. [MCP Query Errors](#mcp-query-errors)
+8. [Diagnostic Commands](#diagnostic-commands)
+9. [Getting Help](#getting-help)
 
 ---
 
@@ -483,6 +484,259 @@ Error: OpenAI API key not found
      }
    }
    ```
+
+---
+
+## Weak Match Warnings and Retrieval Quality
+
+AURORA's retrieval quality system helps you understand when your indexed memory might not have enough relevant information for a query. This section explains the warnings you might see and how to respond.
+
+### Understanding Retrieval Quality
+
+When you run `aur query`, AURORA assesses the quality of retrieved context using two metrics:
+
+1. **Groundedness Score** (≥0.7 is good): Measures how well the decomposed query is supported by retrieved chunks
+2. **High-Quality Chunks** (≥3 needed): Chunks with activation score ≥0.3 are considered high-quality
+
+**Three Quality Levels:**
+
+| Quality | Chunks | Groundedness | High-Quality | Behavior |
+|---------|--------|--------------|--------------|----------|
+| **NONE** | 0 | N/A | 0 | Auto-proceeds with LLM general knowledge |
+| **WEAK** | >0 | <0.7 OR | <3 | **Interactive prompt** (3 options) |
+| **GOOD** | >0 | ≥0.7 AND | ≥3 | Auto-proceeds with chunks |
+
+### Weak Match Warning
+
+When retrieval quality is **WEAK**, you'll see an interactive prompt:
+
+```
+⚠ Weak Match Warning
+═══════════════════════════════════════════════════════════
+Retrieved context has low quality:
+  • Groundedness: 0.55 (threshold: 0.7)
+  • High-quality chunks: 2/5 (need: 3+)
+
+The indexed memory may not have enough relevant information for this query.
+═══════════════════════════════════════════════════════════
+
+How would you like to proceed?
+
+  1. Start anew - Clear weak chunks and use LLM general knowledge
+  2. Start over - Rephrase your query and try again
+  3. Continue - Proceed with available chunks (may be incomplete)
+
+Choice [1-3]:
+```
+
+### When to Choose Each Option
+
+**Option 1: Start anew (use general knowledge)**
+- Best when: Query is outside your indexed codebase domain
+- Example: You ask "How does OAuth2 work?" but your codebase doesn't implement OAuth
+- Result: Clears weak chunks, proceeds with LLM's general knowledge
+
+**Option 2: Start over (rephrase query)**
+- Best when: Your phrasing might not match how code is written
+- Example: You ask "authentication" but code uses "auth" or "login"
+- Result: Exits so you can rephrase and try again
+- Tips for better queries:
+  - Use exact function/class names from your code
+  - Include file names if you know them
+  - Use technical terms from your domain
+  - Try broader terms (e.g., "user login" instead of "JWT validation")
+
+**Option 3: Continue (use weak chunks)**
+- Best when: Partial context is better than none
+- Example: Query about a feature that's partially implemented
+- Result: Proceeds with available chunks, but answer may be incomplete
+- When to use: You understand the limitations and want to see what's available
+
+### Common Scenarios
+
+#### Scenario 1: Empty Index (0 Chunks)
+
+```bash
+aur query "how does authentication work?"
+```
+
+**What happens:**
+- No interactive prompt shown
+- Message: "No indexed context available. Using LLM general knowledge."
+- Query proceeds normally with LLM's base knowledge
+
+**Solution:**
+Index your codebase first:
+```bash
+aur mem index /path/to/your/code
+aur mem stats  # Verify chunks were indexed
+```
+
+#### Scenario 2: Low Groundedness (<0.7)
+
+**What causes this:**
+- Query decomposition doesn't align well with retrieved chunks
+- Chunks are tangentially related but not directly relevant
+- Query is too broad or abstract
+
+**Example:**
+```bash
+aur query "explain the architecture"
+# Retrieved chunks about individual functions (groundedness: 0.6)
+```
+
+**Solution:**
+- Be more specific: `aur query "explain the authentication architecture"`
+- Use concrete terms: `aur query "how do the User and Auth classes interact?"`
+- Reference specific files: `aur query "what does auth_manager.py do?"`
+
+#### Scenario 3: Insufficient High-Quality Chunks (<3)
+
+**What causes this:**
+- Only a few chunks have high activation (≥0.3)
+- Most retrieved chunks have low relevance scores
+- Your query term appears rarely in the codebase
+
+**Example:**
+```bash
+aur query "database migration"
+# Only 2 chunks mention "migration" (high-quality: 2)
+```
+
+**Solution:**
+- Check if feature exists: `aur mem search "migration"`
+- Use broader terms: `aur query "database schema changes"`
+- Verify indexing: `aur mem stats` to ensure all files are indexed
+
+#### Scenario 4: Query Outside Codebase Domain
+
+**What causes this:**
+- Asking about concepts not implemented in your code
+- Generic programming questions unrelated to your project
+
+**Example:**
+```bash
+# Your project: web scraper in Python
+aur query "how do React hooks work?"
+# Weak match: Python code doesn't mention React
+```
+
+**Solution:**
+- Choose **Option 1 (Start anew)** to use LLM general knowledge
+- Or rephrase to relate to your codebase: `aur query "how does the scraper handle state?"`
+
+### Disabling Interactive Prompts
+
+For automation, CI/CD, or scripting, use `--non-interactive`:
+
+```bash
+aur query "test query" --non-interactive
+```
+
+**Behavior with `--non-interactive`:**
+- No prompts shown (silent execution)
+- WEAK matches auto-continue with available chunks
+- Logs quality metadata for debugging
+- Suitable for batch processing or scripts
+
+**When to use:**
+- CI/CD pipelines
+- Automated documentation generation
+- Batch query processing
+- Scripting workflows
+
+### Interpreting Quality Metrics
+
+**Groundedness Score:**
+- **0.8-1.0**: Excellent - Retrieved chunks strongly support the query
+- **0.7-0.8**: Good - Adequate support with minor gaps
+- **0.5-0.7**: Weak - Chunks are tangentially related
+- **<0.5**: Poor - Chunks don't align well with query
+
+**Activation Threshold (0.3):**
+- Based on ACT-R cognitive architecture
+- Chunks with activation ≥0.3 are considered "readily accessible" in memory
+- Lower activation = less relevant or less frequently accessed
+- Formula: Base-level activation (frequency + recency) + spreading activation + context boost
+
+### Troubleshooting Persistent Weak Matches
+
+If you consistently see weak match warnings:
+
+1. **Check index status:**
+   ```bash
+   aur mem stats
+   ```
+   Verify chunks are indexed and count looks reasonable
+
+2. **Verify query domain match:**
+   ```bash
+   aur mem search "key terms from your query"
+   ```
+   Confirms those terms exist in indexed code
+
+3. **Reindex with updated files:**
+   ```bash
+   aur mem index /path/to/code --force
+   ```
+   Refreshes index with latest code changes
+
+4. **Check activation scores:**
+   Use `--show-reasoning` to see which chunks were retrieved and their scores:
+   ```bash
+   aur query "your query" --show-reasoning
+   ```
+
+5. **Adjust query phrasing:**
+   - Match terminology used in your code
+   - Use exact class/function names
+   - Be more specific or more general depending on results
+
+### Example Workflows
+
+**Good Match (No Prompt):**
+```bash
+$ aur query "how does UserAuth.login work?"
+
+# Retrieves 5 chunks with groundedness=0.85, high-quality=5
+# No prompt shown, proceeds automatically
+
+The UserAuth.login method in auth_manager.py:42 validates credentials
+by checking the password hash against the database...
+```
+
+**Weak Match (Interactive):**
+```bash
+$ aur query "authentication flow"
+
+⚠ Weak Match Warning
+  • Groundedness: 0.62 (threshold: 0.7)
+  • High-quality chunks: 2/8 (need: 3+)
+
+How would you like to proceed?
+Choice [1-3]: 2
+
+# User rephrases:
+$ aur query "how does login authentication work in auth_manager.py?"
+
+# Better match - proceeds with good quality chunks
+```
+
+**No Match (Auto-Proceed):**
+```bash
+$ aur query "what is OAuth2?"
+
+No indexed context available. Using LLM general knowledge.
+
+OAuth2 is an authorization framework that enables applications to obtain
+limited access to user accounts...
+```
+
+### Related Documentation
+
+- [CLI Usage Guide - Retrieval Quality Section](cli/CLI_USAGE_GUIDE.md#retrieval-quality-handling) - Detailed interactive prompt documentation
+- [SOAR Architecture](architecture/SOAR_ARCHITECTURE.md) - How retrieval quality fits into the 9-phase pipeline
+- [API Contracts](architecture/API_CONTRACTS_v1.0.md) - VerifyPhaseResult.retrieval_quality field
 
 ---
 

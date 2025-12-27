@@ -807,3 +807,83 @@ class TestCallLLMWithRetry:
         # Base delays: 0.1, 0.2, 0.4 (with up to 10% jitter)
         assert second_delay > first_delay
         assert second_delay < first_delay * 3  # Allow for jitter
+
+
+class TestQueryExecutorInteractiveMode:
+    """Test QueryExecutor with interactive_mode parameter for retrieval quality handling."""
+
+    def test_query_executor_interactive_mode_enabled(self) -> None:
+        """Test QueryExecutor initialization with interactive_mode=True."""
+        executor = QueryExecutor(config={}, interactive_mode=True)
+
+        assert executor.interactive_mode is True
+
+    def test_query_executor_non_interactive_mode(self) -> None:
+        """Test QueryExecutor initialization with interactive_mode=False."""
+        executor = QueryExecutor(config={}, interactive_mode=False)
+
+        assert executor.interactive_mode is False
+
+    def test_query_executor_default_non_interactive(self) -> None:
+        """Test QueryExecutor defaults to interactive_mode=False when not specified."""
+        executor = QueryExecutor(config={})
+
+        assert executor.interactive_mode is False
+
+    @patch("aurora_soar.orchestrator.SOAROrchestrator")
+    @patch("aurora_soar.agent_registry.AgentRegistry")
+    @patch("aurora_core.config.loader.Config")
+    @patch("aurora_cli.execution.AnthropicClient")
+    def test_execute_aurora_passes_interactive_mode_to_orchestrator(
+        self,
+        mock_client_class: Mock,
+        mock_config_class: Mock,
+        mock_registry_class: Mock,
+        mock_orchestrator_class: Mock,
+    ) -> None:
+        """Test that execute_aurora passes interactive_mode to SOAROrchestrator."""
+        # Mock LLM client
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+
+        # Mock config
+        mock_config = Mock()
+        mock_config_class.return_value = mock_config
+
+        # Mock agent registry
+        mock_registry = Mock()
+        mock_registry_class.return_value = mock_registry
+
+        # Mock orchestrator
+        mock_orchestrator = Mock()
+        mock_orchestrator.execute.return_value = {"answer": "Test response", "cost_usd": 0.01}
+        mock_orchestrator_class.return_value = mock_orchestrator
+
+        # Mock memory store
+        mock_store = Mock()
+
+        # Test with interactive_mode=True
+        executor = QueryExecutor(config={}, interactive_mode=True)
+        executor.execute_aurora(
+            query="What is Python?",
+            api_key="test-key",
+            memory_store=mock_store,
+            verbose=False,
+        )
+
+        # Verify SOAROrchestrator was initialized with interactive_mode=True
+        call_kwargs = mock_orchestrator_class.call_args[1]
+        assert call_kwargs["interactive_mode"] is True
+
+        # Test with interactive_mode=False
+        executor = QueryExecutor(config={}, interactive_mode=False)
+        executor.execute_aurora(
+            query="What is Python?",
+            api_key="test-key",
+            memory_store=mock_store,
+            verbose=False,
+        )
+
+        # Verify SOAROrchestrator was initialized with interactive_mode=False
+        call_kwargs = mock_orchestrator_class.call_args[1]
+        assert call_kwargs["interactive_mode"] is False

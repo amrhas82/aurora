@@ -1,4 +1,4 @@
-# Technical Debt: Test Coverage Analysis
+# Testing Technical Debt: Coverage Analysis
 
 **Document Version:** 1.0
 **Date:** 2025-12-27

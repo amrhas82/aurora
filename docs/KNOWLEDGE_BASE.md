@@ -36,7 +36,7 @@ Last Updated: 2025-12-25 | Version: v0.2.0
 
 - **docs/development/TESTING.md** - Comprehensive testing guide (philosophy, test pyramid, principles, anti-patterns, DI examples)
 - **docs/development/TEST_REFERENCE.md** - Complete test catalog (2,369 tests, coverage matrix, test statistics)
-- **docs/development/TECHNICAL_DEBT_COVERAGE.md** - Coverage gap analysis (81.06% vs 85% target, prioritized recommendations)
+- **docs/development/TESTING_TECHNICAL_DEBT.md** - Coverage gap analysis (81.06% vs 85% target, prioritized recommendations)
 - **docs/CLI_TESTING_GUIDE.md** - CLI-specific testing guide
 - **docs/CLI_TEST_RESULTS.md** - CLI test results and analysis
 

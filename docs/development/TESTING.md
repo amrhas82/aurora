@@ -110,7 +110,7 @@ Testing is not just about catching bugs—it's about **building confidence** in 
 
 **Metrics** (as of December 27, 2025):
 - **Total Tests**: 2,369 tests (up from 1,833 at Phase 2)
-- **Coverage**: 81.06% (accepted gap from 85% target, documented in TECHNICAL_DEBT_COVERAGE.md)
+- **Coverage**: 81.06% (accepted gap from 85% target, documented in TESTING_TECHNICAL_DEBT.md)
 - **Test Pass Rate**: 97%+ (14 skipped for external APIs)
 - **Test Execution Time**: ~2-3 minutes (full suite)
 - **Test Distribution**: 76.4% Unit / 21.1% Integration / 2.5% E2E
@@ -1681,7 +1681,7 @@ def test_cache_improves_performance():
 ### References
 
 **Internal**:
-- [Technical Debt (Coverage Gaps)](TECHNICAL_DEBT_COVERAGE.md)
+- [Technical Debt (Coverage Gaps)](TESTING_TECHNICAL_DEBT.md)
 - [Test Reference](TEST_REFERENCE.md) - Comprehensive test catalog
 
 **External**:

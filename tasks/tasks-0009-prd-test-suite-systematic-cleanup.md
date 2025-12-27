@@ -10,7 +10,7 @@
 ## Relevant Files (Phase 3-4 Completion)
 
 **Documentation Created (Phase 3-4):**
-- `docs/development/TECHNICAL_DEBT_COVERAGE.md` - Comprehensive coverage gap analysis with prioritized recommendations
+- `docs/development/TESTING_TECHNICAL_DEBT.md` - Comprehensive coverage gap analysis with prioritized recommendations
 - `docs/development/TESTING.md` - Complete testing guide (Tasks 4.1-4.5)
 - `docs/development/TEST_REFERENCE.md` - Test inventory and pyramid visualization (Tasks 4.6-4.9)
 
@@ -543,14 +543,14 @@ def test_validate_safety():
   - [x] 3.41 ~~Create `tests/e2e/test_multi_package_integration_e2e.py`~~ - DEFERRED ✅ COMPLETED
     - **Status:** Cross-package integration already well-tested through existing E2E tests
     - **Reason:** Tasks 3.38-3.40 provide comprehensive E2E coverage across packages
-    - **Decision:** Defer to future work if specific gaps identified (documented in TECHNICAL_DEBT_COVERAGE.md)
+    - **Decision:** Defer to future work if specific gaps identified (documented in TESTING_TECHNICAL_DEBT.md)
     - **Target:** +60 covered statements, 6-8 E2E tests - NOT EXECUTED
     - **Outcome:** Marked complete as deferred; technical debt tracked
 
   - [x] 3.42 ~~Create `tests/e2e/test_performance_e2e.py`~~ - DEFERRED ✅ COMPLETED
     - **Status:** Performance requirements validated in existing tests
     - **Reason:** Integration tests cover performance-critical paths
-    - **Decision:** Defer to future work; focus on documentation (tracked in TECHNICAL_DEBT_COVERAGE.md as TD-TEST-002)
+    - **Decision:** Defer to future work; focus on documentation (tracked in TESTING_TECHNICAL_DEBT.md as TD-TEST-002)
     - **Target:** +30 covered statements, 4-5 E2E tests - NOT EXECUTED
     - **Outcome:** Marked complete as deferred; technical debt tracked
 
@@ -632,7 +632,7 @@ def test_validate_safety():
     - Review test pyramid: 76.4% / 21.1% / 2.5% (target: 70/20/10) - ✅ **ACCEPTED** (inverted but justified)
     - Review new test files: 25+ test files created ✅
     - Review test quality: DI pattern, real components, workflows ✅
-    - Review technical debt documentation: TECHNICAL_DEBT_COVERAGE.md created ✅
+    - Review technical debt documentation: TESTING_TECHNICAL_DEBT.md created ✅
     - **Decision:** Accept 81.06% coverage; proceed to Phase 4 documentation
     - **Rationale:** CLI subprocess tests validate functionality; core packages exceed targets; diminishing returns beyond 81%
 
@@ -644,7 +644,7 @@ def test_validate_safety():
   - **Final Coverage:** 81.06% (target: 85%, gap: -3.94%)
   - **Starting Coverage:** 74.89% (Phase 2 completion)
   - **Improvement:** +6.17% absolute coverage gain
-  - **Decision:** ACCEPTED as pragmatic completion (documented in TECHNICAL_DEBT_COVERAGE.md)
+  - **Decision:** ACCEPTED as pragmatic completion (documented in TESTING_TECHNICAL_DEBT.md)
 
   **Test Suite Growth:**
   - **Tests Added:** 356 new tests (249 CLI unit + 72 integration + 35 E2E)
@@ -666,7 +666,7 @@ def test_validate_safety():
   | SOAR | 94.00% | +4.00% (target: 90%) | ✅ Exceeds target |
 
   **Technical Debt Documentation:**
-  - Created `docs/development/TECHNICAL_DEBT_COVERAGE.md` (comprehensive gap analysis)
+  - Created `docs/development/TESTING_TECHNICAL_DEBT.md` (comprehensive gap analysis)
   - Tracked 4 technical debt items (TD-TEST-001 through TD-TEST-004)
   - Prioritized recommendations for future work (7-10 hours to reach 85%)
 
@@ -680,7 +680,7 @@ def test_validate_safety():
   **Key Achievements:**
   1. **CLI Battle-Tested:** 249 unit tests + 9 subprocess integration tests + 15 E2E tests
   2. **Retrieval Quality Feature:** Implemented TD-P2-016 (25 tests, 260-line docs, interactive prompts)
-  3. **Comprehensive Documentation:** CLI_USAGE_GUIDE.md, TROUBLESHOOTING.md, TECHNICAL_DEBT_COVERAGE.md
+  3. **Comprehensive Documentation:** CLI_USAGE_GUIDE.md, TROUBLESHOOTING.md, TESTING_TECHNICAL_DEBT.md
   4. **Pragmatic Coverage:** 81.06% provides strong foundation; remaining gaps are edge cases
 
   **Deferred Work (Tracked as Technical Debt):**

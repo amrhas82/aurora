@@ -705,7 +705,7 @@ def test_complete_cli_workflow():
 ### Related Documentation
 
 - [TESTING.md](TESTING.md) - Comprehensive testing guide
-- [TECHNICAL_DEBT_COVERAGE.md](TECHNICAL_DEBT_COVERAGE.md) - Coverage gap analysis
+- [TESTING_TECHNICAL_DEBT.md](TESTING_TECHNICAL_DEBT.md) - Coverage gap analysis
 - [../KNOWLEDGE_BASE.md](../KNOWLEDGE_BASE.md) - Project overview
 
 ### Maintenance

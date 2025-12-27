@@ -47,6 +47,8 @@ class TestMemoryManager:
             embedding_provider=mock_embedding_provider,
         )
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_init(self, mock_store, mock_parser_registry, mock_embedding_provider):
         """Test MemoryManager initialization."""
         manager = MemoryManager(
@@ -148,6 +150,8 @@ class TestMemoryManager:
 
         assert "function minimal_function" in content
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_index_path_nonexistent(self, memory_manager):
         """Test indexing nonexistent path raises error."""
         with pytest.raises(ValueError, match="Path does not exist"):
@@ -299,6 +303,7 @@ class TestMemoryManager:
         assert stats.files_indexed == 1
         assert stats.errors == 1
 
+    @pytest.mark.cli
     def test_search(self, memory_manager):
         """Test memory search."""
         # Mock HybridRetriever

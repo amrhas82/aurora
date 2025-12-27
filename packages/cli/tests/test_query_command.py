@@ -12,6 +12,8 @@ from aurora_reasoning.llm_client import LLMResponse
 class TestQueryExecutor:
     """Tests for QueryExecutor class."""
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_init_with_config(self):
         """Test QueryExecutor initialization with config."""
         config = {"model": "claude-sonnet-4-20250514", "temperature": 0.5}
@@ -27,6 +29,8 @@ class TestQueryExecutor:
 
         assert executor.config == {}
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     @patch("aurora_cli.execution.AnthropicClient")
     def test_execute_direct_llm_basic(self, mock_client_class):
         """Test basic direct LLM execution."""
@@ -89,6 +93,8 @@ class TestQueryExecutor:
         assert response == "Verbose response"
         mock_llm.generate.assert_called_once()
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_execute_direct_llm_empty_query(self):
         """Test direct LLM execution with empty query raises error."""
         executor = QueryExecutor()
@@ -100,6 +106,8 @@ class TestQueryExecutor:
                 memory_store=None,
             )
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_execute_direct_llm_empty_api_key(self):
         """Test direct LLM execution with empty API key raises error."""
         executor = QueryExecutor()
@@ -173,6 +181,8 @@ class TestQueryExecutor:
                 memory_store=None,
             )
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     @patch("aurora_soar.orchestrator.SOAROrchestrator")
     @patch("aurora_soar.agent_registry.AgentRegistry")
     @patch("aurora_core.config.loader.Config")

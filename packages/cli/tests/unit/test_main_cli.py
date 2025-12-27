@@ -30,6 +30,8 @@ from aurora_cli.main import (
 class TestCliGroup:
     """Test the main CLI group function and flag combinations."""
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     @patch("aurora_cli.main.logging.basicConfig")
     def test_cli_with_verbose_flag(self, mock_basic_config: Mock) -> None:
         """Test cli() function with --verbose flag sets INFO logging level."""
@@ -77,6 +79,8 @@ class TestCliGroup:
         assert "prompt_path" in call_kwargs
         assert call_kwargs["prompt_path"] == prompt_file
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_cli_version_option(self) -> None:
         """Test cli() function displays version with --version flag."""
         runner = CliRunner()
@@ -87,6 +91,8 @@ class TestCliGroup:
         assert "0.1.0" in result.output
         assert "aurora" in result.output
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_cli_help_text(self) -> None:
         """Test cli() function displays help text with --help flag."""
         runner = CliRunner()

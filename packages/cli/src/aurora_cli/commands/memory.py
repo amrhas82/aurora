@@ -26,9 +26,9 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
+from aurora_cli.config import Config, load_config
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
 from aurora_cli.memory_manager import MemoryManager, SearchResult
-from aurora_core.store import SQLiteStore
 
 
 __all__ = ["memory_group"]
@@ -58,13 +58,7 @@ def memory_group() -> None:
 
 @memory_group.command(name="index")
 @click.argument("path", type=click.Path(exists=True, path_type=Path), default=".")
-@click.option(
-    "--db-path",
-    type=click.Path(path_type=Path),
-    default=None,
-    help="Path to AURORA database (default: ./aurora.db)",
-)
-def index_command(path: Path, db_path: Path | None) -> None:
+def index_command(path: Path) -> None:
     """Index code files into memory store.
 
     PATH is the directory or file to index. Defaults to current directory.
@@ -81,25 +75,18 @@ def index_command(path: Path, db_path: Path | None) -> None:
         aur mem index src/main.py
 
         \b
-        # Index with custom database location
-        aur mem index . --db-path ~/.aurora/memory.db
-
-        \b
         # Force reindex (run index command again on same path)
         aur mem index .
         # Note: Will update existing chunks and add new ones
     """
     try:
-        # Determine database path
-        if db_path is None:
-            db_path = Path.cwd() / "aurora.db"
+        # Load configuration
+        config = load_config()
+        db_path = config.get_db_path()
 
-        # Initialize memory store
+        # Initialize memory manager with config
         console.print(f"[dim]Using database: {db_path}[/]")
-        store = SQLiteStore(str(db_path))
-
-        # Initialize memory manager
-        manager = MemoryManager(store)
+        manager = MemoryManager(config=config)
 
         # Create progress display
         with Progress(
@@ -178,18 +165,11 @@ def index_command(path: Path, db_path: Path | None) -> None:
     default=False,
     help="Show content preview for each result",
 )
-@click.option(
-    "--db-path",
-    type=click.Path(path_type=Path),
-    default=None,
-    help="Path to AURORA database (default: ./aurora.db)",
-)
 def search_command(
     query: str,
     limit: int,
     output_format: str,
     show_content: bool,
-    db_path: Path | None,
 ) -> None:
     """Search AURORA memory for relevant chunks.
 
@@ -210,17 +190,13 @@ def search_command(
         aur mem search "database" --format json
 
         \b
-        # Search in custom database
-        aur mem search "config" --db-path ~/.aurora/memory.db
-
-        \b
         # Quick alias for search with content
         aur mem search "error handling" -n 3 -c
     """
     try:
-        # Determine database path
-        if db_path is None:
-            db_path = Path.cwd() / "aurora.db"
+        # Load configuration
+        config = load_config()
+        db_path = Path(config.get_db_path())
 
         if not db_path.exists():
             error_handler = ErrorHandler()
@@ -233,12 +209,9 @@ def search_command(
             )
             raise click.Abort()
 
-        # Initialize memory store
+        # Initialize memory manager with config
         console.print(f"[dim]Searching memory from {db_path}...[/]")
-        store = SQLiteStore(str(db_path))
-
-        # Initialize memory manager
-        manager = MemoryManager(store)
+        manager = MemoryManager(config=config)
 
         # Perform search
         results = manager.search(query, limit=limit)
@@ -248,9 +221,6 @@ def search_command(
             _display_json_results(results)
         else:
             _display_rich_results(results, query, show_content)
-
-        # Close store
-        store.close()
 
     except MemoryStoreError as e:
         # Already has formatted error message
@@ -267,13 +237,7 @@ def search_command(
 
 
 @memory_group.command(name="stats")
-@click.option(
-    "--db-path",
-    type=click.Path(path_type=Path),
-    default=None,
-    help="Path to AURORA database (default: ./aurora.db)",
-)
-def stats_command(db_path: Path | None) -> None:
+def stats_command() -> None:
     """Display memory store statistics.
 
     Shows information about indexed chunks, files, languages, and database size.
@@ -281,17 +245,13 @@ def stats_command(db_path: Path | None) -> None:
     Examples:
 
         \b
-        # Show stats for default database
+        # Show stats for database
         aur mem stats
-
-        \b
-        # Show stats for custom database
-        aur mem stats --db-path ~/.aurora/memory.db
     """
     try:
-        # Determine database path
-        if db_path is None:
-            db_path = Path.cwd() / "aurora.db"
+        # Load configuration
+        config = load_config()
+        db_path = Path(config.get_db_path())
 
         if not db_path.exists():
             console.print(
@@ -301,12 +261,9 @@ def stats_command(db_path: Path | None) -> None:
             )
             raise click.Abort()
 
-        # Initialize memory store
+        # Initialize memory manager with config
         console.print(f"[dim]Loading statistics from {db_path}...[/]")
-        store = SQLiteStore(str(db_path))
-
-        # Initialize memory manager
-        manager = MemoryManager(store)
+        manager = MemoryManager(config=config)
 
         # Get statistics
         stats = manager.get_stats()

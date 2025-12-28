@@ -15,11 +15,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from aurora_cli.config import Config
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
 from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import ParserRegistry, get_global_registry
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.chunks import Chunk
+from aurora_core.store import SQLiteStore
 
 
 if TYPE_CHECKING:
@@ -126,18 +128,35 @@ class MemoryManager:
 
     def __init__(
         self,
-        memory_store: Store,
+        config: Config | None = None,
+        memory_store: Store | None = None,
         parser_registry: ParserRegistry | None = None,
         embedding_provider: EmbeddingProvider | None = None,
     ):
         """Initialize MemoryManager.
 
         Args:
-            memory_store: Store instance for chunk storage
+            config: Configuration with db_path (preferred way to initialize)
+            memory_store: Optional store instance (for backward compatibility)
             parser_registry: Optional parser registry (uses global if None)
             embedding_provider: Optional embedding provider (creates new if None)
+
+        Note:
+            Either config or memory_store must be provided.
+            If both provided, memory_store takes precedence.
+            New code should use config parameter.
         """
+        # Create store from config if needed
+        if memory_store is None:
+            if config is None:
+                raise ValueError("Either config or memory_store must be provided")
+            db_path = config.get_db_path()
+            logger.info(f"Creating SQLiteStore at {db_path}")
+            memory_store = SQLiteStore(db_path)
+
         self.memory_store = memory_store
+        self.store = memory_store  # Alias for compatibility
+        self.config = config
         self.parser_registry = parser_registry or get_global_registry()
         self.embedding_provider = embedding_provider or EmbeddingProvider()
         self.error_handler = ErrorHandler()

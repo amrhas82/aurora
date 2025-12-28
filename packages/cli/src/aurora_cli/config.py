@@ -44,6 +44,24 @@ class Config:
     mcp_always_on: bool = False
     mcp_log_file: str = "~/.aurora/mcp.log"
     mcp_max_results: int = 10
+    db_path: str = "~/.aurora/memory.db"  # Database path with tilde support
+    budget_limit: float = 10.0  # Default budget limit in USD
+    budget_tracker_path: str = "~/.aurora/budget_tracker.json"
+
+    def get_db_path(self) -> str:
+        """Get expanded absolute database path.
+
+        Expands ~ to home directory and returns absolute path.
+
+        Returns:
+            Absolute path to database file
+
+        Example:
+            >>> config = Config(db_path="~/.aurora/memory.db")
+            >>> config.get_db_path()
+            '/home/user/.aurora/memory.db'
+        """
+        return str(Path(self.db_path).expanduser().resolve())
 
     def get_api_key(self) -> str:
         """Get API key with environment variable override.
@@ -121,6 +139,14 @@ class Config:
                 f"mcp_max_results must be positive, got {self.mcp_max_results}"
             )
 
+        # Validate database path (just check it's a valid path format)
+        if not self.db_path or not self.db_path.strip():
+            raise ConfigurationError("db_path cannot be empty")
+
+        # Validate budget limit
+        if self.budget_limit < 0:
+            raise ConfigurationError(f"budget_limit must be non-negative, got {self.budget_limit}")
+
         # Warn about non-existent paths (don't fail, just warn)
         for path in self.memory_index_paths:
             expanded_path = Path(path).expanduser()
@@ -157,6 +183,13 @@ CONFIG_SCHEMA: dict[str, Any] = {
         "always_on": False,
         "log_file": "~/.aurora/mcp.log",
         "max_results": 10,
+    },
+    "database": {
+        "path": "~/.aurora/memory.db",
+    },
+    "budget": {
+        "limit": 10.0,
+        "tracker_path": "~/.aurora/budget_tracker.json",
     },
 }
 
@@ -262,6 +295,11 @@ def load_config(path: str | None = None) -> Config:
         "mcp_log_file": config_data.get("mcp", {}).get("log_file", defaults["mcp"]["log_file"]),
         "mcp_max_results": config_data.get("mcp", {}).get(
             "max_results", defaults["mcp"]["max_results"]
+        ),
+        "db_path": config_data.get("database", {}).get("path", defaults["database"]["path"]),
+        "budget_limit": config_data.get("budget", {}).get("limit", defaults["budget"]["limit"]),
+        "budget_tracker_path": config_data.get("budget", {}).get(
+            "tracker_path", defaults["budget"]["tracker_path"]
         ),
     }
 

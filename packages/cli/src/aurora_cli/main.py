@@ -255,9 +255,11 @@ def query_command(
         # Check if memory store exists and prompt to index if empty
         from pathlib import Path
 
+        from aurora_cli.config import load_config
         from aurora_core.store import SQLiteStore
 
-        db_path = Path.cwd() / "aurora.db"
+        config = load_config()
+        db_path = Path(config.get_db_path())
         memory_store = None
 
         if result.use_aurora or verbose:
@@ -392,6 +394,7 @@ def _execute_dry_run(
     """
     from pathlib import Path
 
+    from aurora_cli.config import load_config
     from aurora_core.store import SQLiteStore
 
     error_handler = ErrorHandler()
@@ -420,7 +423,8 @@ def _execute_dry_run(
 
     # Check memory store
     console.print("\n[bold]Memory Store:[/]")
-    db_path = Path.cwd() / "aurora.db"
+    config = load_config()
+    db_path = Path(config.get_db_path())
     memory_chunks = 0
 
     if db_path.exists():
@@ -572,18 +576,20 @@ def _perform_auto_index(console: Console, memory_store: Any) -> None:
 
     Args:
         console: Rich console for output
-        memory_store: Store instance for indexing
+        memory_store: Store instance for indexing (deprecated, uses config instead)
     """
     from pathlib import Path
 
     from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+    from aurora_cli.config import load_config
     from aurora_cli.memory_manager import MemoryManager
 
     console.print("\n[bold]Indexing current directory...[/]")
 
-    # Initialize memory manager
-    manager = MemoryManager(memory_store)
+    # Initialize memory manager with config
+    config = load_config()
+    manager = MemoryManager(config=config)
 
     # Create progress display
     with Progress(

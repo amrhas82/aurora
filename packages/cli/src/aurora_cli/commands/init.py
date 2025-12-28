@@ -2,12 +2,133 @@
 
 import json
 import os
+import shutil
+import sqlite3
 from pathlib import Path
 
 import click
 
 from aurora_cli.config import CONFIG_SCHEMA
 from aurora_cli.errors import ErrorHandler
+
+
+def detect_local_db() -> Path | None:
+    """Detect if there's a local aurora.db file in the current directory.
+
+    Returns:
+        Path to local aurora.db if found, None otherwise
+    """
+    local_db = Path.cwd() / "aurora.db"
+    if local_db.exists() and local_db.is_file():
+        return local_db
+    return None
+
+
+def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
+    """Migrate data from source database to destination database.
+
+    Uses SQLite ATTACH to copy chunks and activations tables.
+
+    Args:
+        src: Source database path
+        dst: Destination database path
+
+    Returns:
+        Tuple of (chunks_migrated, activations_migrated)
+
+    Raises:
+        sqlite3.Error: If migration fails
+    """
+    # Ensure destination parent directory exists
+    dst.parent.mkdir(parents=True, exist_ok=True)
+
+    # Connect to destination database (creates if doesn't exist)
+    conn = sqlite3.connect(str(dst))
+    cursor = conn.cursor()
+
+    try:
+        # Attach source database
+        cursor.execute(f"ATTACH DATABASE '{src}' AS source")
+
+        # Get table names from source
+        cursor.execute("SELECT name FROM source.sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+
+        chunks_migrated = 0
+        activations_migrated = 0
+
+        # Copy chunks table if exists
+        if "chunks" in tables:
+            # Create chunks table in destination if not exists
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS chunks (
+                    chunk_id TEXT PRIMARY KEY,
+                    content TEXT NOT NULL,
+                    file_path TEXT NOT NULL,
+                    line_start INTEGER NOT NULL,
+                    line_end INTEGER NOT NULL,
+                    metadata TEXT,
+                    created_at REAL NOT NULL
+                )
+            """)
+
+            # Copy data
+            cursor.execute("""
+                INSERT OR REPLACE INTO chunks
+                SELECT * FROM source.chunks
+            """)
+            chunks_migrated = cursor.rowcount
+
+        # Copy activations table if exists
+        if "activations" in tables:
+            # Create activations table in destination if not exists
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS activations (
+                    chunk_id TEXT PRIMARY KEY,
+                    base_level REAL NOT NULL DEFAULT 0.0,
+                    access_count INTEGER NOT NULL DEFAULT 0,
+                    last_access_time REAL,
+                    FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
+                )
+            """)
+
+            # Copy data
+            cursor.execute("""
+                INSERT OR REPLACE INTO activations
+                SELECT * FROM source.activations
+            """)
+            activations_migrated = cursor.rowcount
+
+        # Copy embeddings table if exists
+        if "embeddings" in tables:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS embeddings (
+                    chunk_id TEXT PRIMARY KEY,
+                    embedding BLOB NOT NULL,
+                    model TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
+                )
+            """)
+
+            cursor.execute("""
+                INSERT OR REPLACE INTO embeddings
+                SELECT * FROM source.embeddings
+            """)
+
+        # Detach source database
+        cursor.execute("DETACH DATABASE source")
+
+        # Commit changes
+        conn.commit()
+
+        return chunks_migrated, activations_migrated
+
+    except sqlite3.Error as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
 
 
 @click.command(name="init")
@@ -99,6 +220,36 @@ def init_command() -> None:
 
     click.echo(f"✓ Configuration created at {config_path}")
 
+    # Check for local aurora.db and offer migration
+    local_db = detect_local_db()
+    if local_db is not None:
+        from aurora_cli.config import load_config
+
+        config = load_config()
+        dest_db = Path(config.get_db_path())
+
+        click.echo(f"\n⚠ Found local database at {local_db}")
+        if click.confirm(f"Migrate data to {dest_db}?", default=True):
+            try:
+                chunks, activations = migrate_database(local_db, dest_db)
+                click.echo(f"✓ Migration complete:")
+                click.echo(f"  - Chunks migrated: {chunks}")
+                click.echo(f"  - Activations migrated: {activations}")
+
+                # Rename old database to backup
+                backup_path = local_db.with_suffix(".db.backup")
+                shutil.move(str(local_db), str(backup_path))
+                click.echo(f"  - Original database backed up to: {backup_path}")
+            except sqlite3.Error as e:
+                error_msg = error_handler.handle_memory_error(e, "migrating database")
+                click.echo(f"\n{error_msg}", err=True)
+                click.echo("⚠ Migration failed, keeping original database")
+            except Exception as e:
+                click.echo(f"⚠ Migration failed: {e}", err=True)
+                click.echo("Keeping original database")
+        else:
+            click.echo("Skipping migration. Local database will remain.")
+
     # Prompt to index current directory
     if click.confirm("Index current directory for memory search?", default=True):
         # Import memory indexing functionality
@@ -106,16 +257,15 @@ def init_command() -> None:
             from rich.console import Console
             from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+            from aurora_cli.config import load_config
             from aurora_cli.memory_manager import MemoryManager
-            from aurora_core.store import SQLiteStore
 
             console = Console()
             console.print("[bold]Indexing current directory...[/]")
 
-            # Initialize memory store
-            db_path = Path.cwd() / "aurora.db"
-            memory_store = SQLiteStore(str(db_path))
-            manager = MemoryManager(memory_store)
+            # Load config and initialize memory manager
+            config = load_config()
+            manager = MemoryManager(config=config)
 
             # Create progress display
             with Progress(

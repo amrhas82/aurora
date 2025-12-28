@@ -12,6 +12,7 @@ This module provides the actual implementation of the 5 MCP tools:
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -108,6 +109,18 @@ class AuroraMCPTools:
 
             # Use HybridRetriever to search
             results = self._retriever.retrieve(query, top_k=limit)
+
+            # Record access for ACT-R activation tracking (CRITICAL FIX)
+            access_time = datetime.now(timezone.utc)
+            for result in results:
+                chunk_id = result.get("chunk_id")
+                if chunk_id:
+                    try:
+                        self._store.record_access(
+                            chunk_id=chunk_id, access_time=access_time, context=query
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to record access for chunk {chunk_id}: {e}")
 
             # Format results
             # HybridRetriever returns list of dicts with keys:

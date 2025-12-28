@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_cli.config import Config
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
+from aurora_context_code.git import GitSignalExtractor
 from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import ParserRegistry, get_global_registry
 from aurora_context_code.semantic import EmbeddingProvider
@@ -201,6 +202,14 @@ class MemoryManager:
             total_files = len(files)
             logger.info(f"Discovered {total_files} code files in {path}")
 
+            # Initialize Git signal extractor for this directory
+            try:
+                git_extractor = GitSignalExtractor()
+                logger.debug(f"Initialized GitSignalExtractor for {path}")
+            except Exception as e:
+                logger.warning(f"Could not initialize Git extractor: {e}. Using default BLA values.")
+                git_extractor = None
+
             # Process each file
             for i, file_path in enumerate(files):
                 try:
@@ -221,6 +230,40 @@ class MemoryManager:
 
                     # Generate embeddings and store chunks
                     for chunk in chunks:
+                        # Extract Git signals for function-level BLA initialization
+                        initial_bla = 0.5  # Default BLA for non-Git or on error
+                        commit_count = 0
+
+                        if git_extractor and hasattr(chunk, 'line_start') and hasattr(chunk, 'line_end'):
+                            try:
+                                # Get commit times for this specific function (FUNCTION-level tracking)
+                                commit_times = git_extractor.get_function_commit_times(
+                                    file_path=str(file_path),
+                                    line_start=chunk.line_start,
+                                    line_end=chunk.line_end
+                                )
+
+                                if commit_times:
+                                    # Calculate BLA from commit history
+                                    initial_bla = git_extractor.calculate_bla(commit_times, decay=0.5)
+                                    commit_count = len(commit_times)
+
+                                    # Store Git metadata in chunk
+                                    if not hasattr(chunk, 'metadata') or chunk.metadata is None:
+                                        chunk.metadata = {}
+
+                                    chunk.metadata['git_hash'] = commit_times[0] if commit_times else None
+                                    chunk.metadata['last_modified'] = commit_times[0] if commit_times else None
+                                    chunk.metadata['commit_count'] = commit_count
+
+                                    logger.debug(
+                                        f"Function {chunk.name} ({file_path.name}:{chunk.line_start}-{chunk.line_end}): "
+                                        f"BLA={initial_bla:.4f} from {commit_count} commits"
+                                    )
+                            except Exception as e:
+                                logger.debug(f"Could not extract Git signals for {chunk.name}: {e}")
+                                # Continue with default BLA
+
                         # Generate embedding for chunk content
                         # Use chunk's full content (signature + docstring + code)
                         content_to_embed = self._build_chunk_content(chunk)
@@ -231,6 +274,27 @@ class MemoryManager:
 
                         # Store chunk with embedding (with retry for database locks)
                         self._save_chunk_with_retry(chunk)
+                        chunk_id = chunk.id  # Get chunk ID from the chunk object
+
+                        # Update activation with function-specific BLA and commit count
+                        # Note: save_chunk creates activation record with base_level=0.0, access_count=0
+                        # We need to update it with Git-derived values
+                        if initial_bla != 0.0 or commit_count > 0:
+                            try:
+                                # Use store's transaction manager to update activation
+                                if hasattr(self.memory_store, '_transaction'):
+                                    with self.memory_store._transaction() as conn:
+                                        conn.execute(
+                                            """
+                                            UPDATE activations
+                                            SET base_level = ?, access_count = ?
+                                            WHERE chunk_id = ?
+                                            """,
+                                            (initial_bla, commit_count, chunk_id)
+                                        )
+                                    logger.debug(f"Initialized activation for {chunk.name}: BLA={initial_bla:.4f}, count={commit_count}")
+                            except Exception as e:
+                                logger.warning(f"Could not initialize activation for {chunk.name}: {e}")
 
                         stats["chunks"] += 1
 

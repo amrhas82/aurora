@@ -124,9 +124,6 @@ def index_command(path: Path) -> None:
             )
         )
 
-        # Close store
-        store.close()
-
     except MemoryStoreError as e:
         # Already has formatted error message
         logger.error(f"Index command failed: {e}", exc_info=True)
@@ -286,9 +283,6 @@ def stats_command() -> None:
         console.print()
         console.print(table)
         console.print()
-
-        # Close store
-        store.close()
 
     except MemoryStoreError as e:
         # Already has formatted error message

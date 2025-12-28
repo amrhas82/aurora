@@ -21,6 +21,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+
+pytestmark = pytest.mark.ml
 from aurora_cli.config import Config
 from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler, MemoryStoreError
 from aurora_cli.execution import QueryExecutor

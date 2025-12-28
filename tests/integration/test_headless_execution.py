@@ -201,7 +201,7 @@ def scratchpad_path(temp_workspace):
 class TestHeadlessExecutionSuccess:
     """Test successful headless execution scenarios."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_goal_achieved_within_budget(
         self, mock_git_validate, valid_prompt_file, scratchpad_path
     ):
@@ -251,7 +251,7 @@ class TestHeadlessExecutionSuccess:
         # Verify git validation was called
         mock_git_validate.assert_called_once()
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_minimal_prompt_execution(
         self, mock_git_validate, minimal_prompt_file, scratchpad_path
     ):
@@ -277,7 +277,7 @@ class TestHeadlessExecutionSuccess:
 class TestHeadlessExecutionBudgetExceeded:
     """Test budget limit enforcement."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_budget_exceeded_before_goal(
         self, mock_git_validate, valid_prompt_file, scratchpad_path
     ):
@@ -313,7 +313,7 @@ class TestHeadlessExecutionBudgetExceeded:
         scratchpad_content = scratchpad_path.read_text()
         assert "BUDGET_EXCEEDED" in scratchpad_content
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_budget_exactly_at_limit(self, mock_git_validate, valid_prompt_file, scratchpad_path):
         """Test execution when budget is exactly at the limit."""
         # Setup: Costs exactly $1.00 per iteration, budget is $3.00
@@ -344,7 +344,7 @@ class TestHeadlessExecutionBudgetExceeded:
 class TestHeadlessExecutionMaxIterations:
     """Test max iterations enforcement."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_max_iterations_reached(self, mock_git_validate, valid_prompt_file, scratchpad_path):
         """Test execution terminates when max iterations is reached without achieving goal."""
         # Setup: Never achieves goal, low cost per iteration
@@ -377,7 +377,7 @@ class TestHeadlessExecutionMaxIterations:
         scratchpad_content = scratchpad_path.read_text()
         assert "MAX_ITERATIONS" in scratchpad_content or "Iteration 5" in scratchpad_content
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_max_iterations_one(self, mock_git_validate, valid_prompt_file, scratchpad_path):
         """Test execution with max_iterations=1 (edge case)."""
         mock_soar = MockSOAROrchestrator(
@@ -403,7 +403,7 @@ class TestHeadlessExecutionMaxIterations:
 class TestHeadlessExecutionSafetyValidation:
     """Test safety validation and error handling."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_git_branch_safety_error(self, mock_git_validate, valid_prompt_file, scratchpad_path):
         """Test execution fails if git branch validation fails."""
         # Setup: Git validation raises error
@@ -430,7 +430,7 @@ class TestHeadlessExecutionSafetyValidation:
         # Verify SOAR was never called
         assert mock_soar.call_count == 0
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_invalid_prompt_error(self, mock_git_validate, invalid_prompt_file, scratchpad_path):
         """Test execution fails if prompt validation fails."""
         mock_soar = MockSOAROrchestrator(iterations_to_success=2)
@@ -452,7 +452,7 @@ class TestHeadlessExecutionSafetyValidation:
         # Verify SOAR was never called
         assert mock_soar.call_count == 0
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_missing_prompt_file(self, mock_git_validate, temp_workspace, scratchpad_path):
         """Test execution fails if prompt file doesn't exist."""
         nonexistent_prompt = temp_workspace / "nonexistent.md"
@@ -475,7 +475,7 @@ class TestHeadlessExecutionSafetyValidation:
 class TestHeadlessExecutionScratchpadLogging:
     """Test scratchpad logging captures iteration actions."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_scratchpad_captures_all_iterations(
         self, mock_git_validate, valid_prompt_file, scratchpad_path
     ):
@@ -509,7 +509,7 @@ class TestHeadlessExecutionScratchpadLogging:
         # Verify status tracking
         assert "Status" in scratchpad_content or "STATUS" in scratchpad_content
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_scratchpad_shows_termination_reason(
         self, mock_git_validate, valid_prompt_file, scratchpad_path
     ):
@@ -538,7 +538,7 @@ class TestHeadlessExecutionScratchpadLogging:
 class TestHeadlessExecutionConfiguration:
     """Test different configuration scenarios."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_custom_branch_requirement(self, mock_git_validate, valid_prompt_file, scratchpad_path):
         """Test execution with custom required branch name."""
         mock_soar = MockSOAROrchestrator(iterations_to_success=2)
@@ -560,7 +560,7 @@ class TestHeadlessExecutionConfiguration:
         result = orchestrator.execute()
         assert result.goal_achieved is True
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_high_budget_limit(self, mock_git_validate, valid_prompt_file, scratchpad_path):
         """Test execution with high budget limit."""
         mock_soar = MockSOAROrchestrator(
@@ -589,7 +589,7 @@ class TestHeadlessExecutionConfiguration:
 class TestHeadlessExecutionEdgeCases:
     """Test edge cases and corner scenarios."""
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_goal_achieved_on_first_iteration(
         self, mock_git_validate, valid_prompt_file, scratchpad_path
     ):
@@ -611,7 +611,7 @@ class TestHeadlessExecutionEdgeCases:
         assert result.iterations == 1
         assert result.total_cost == 0.10
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_zero_cost_iterations(self, mock_git_validate, valid_prompt_file, scratchpad_path):
         """Test execution with zero-cost iterations (edge case)."""
         mock_soar = MockSOAROrchestrator(
@@ -633,7 +633,7 @@ class TestHeadlessExecutionEdgeCases:
         assert result.goal_achieved is True
         assert result.total_cost == 0.0
 
-    @patch("aurora_soar.headless.orchestrator.GitEnforcer.validate")
+    @patch("aurora.soar.headless.orchestrator.GitEnforcer.validate")
     def test_scratchpad_survives_multiple_runs(
         self, mock_git_validate, valid_prompt_file, scratchpad_path
     ):

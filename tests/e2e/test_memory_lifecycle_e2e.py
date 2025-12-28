@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
+pytestmark = pytest.mark.ml
 from aurora_cli.memory_manager import IndexStats, MemoryManager, SearchResult
 
 from aurora_context_code.languages.python import PythonParser

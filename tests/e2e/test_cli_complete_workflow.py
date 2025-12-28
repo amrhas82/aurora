@@ -30,6 +30,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+pytestmark = pytest.mark.ml
+
 # Import CLI components for direct testing (contributes to coverage)
 from aurora_cli.config import load_config
 from aurora_cli.errors import AuroraError, ConfigurationError, MemoryStoreError

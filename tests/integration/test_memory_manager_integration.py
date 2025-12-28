@@ -17,6 +17,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+
+pytestmark = pytest.mark.ml
 from aurora_cli.errors import MemoryStoreError
 from aurora_cli.memory_manager import (
     IndexStats,

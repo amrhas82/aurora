@@ -77,35 +77,11 @@ jobs:
           python -m pip install --upgrade pip
           make install-dev
 
-      - name: Run unit tests
+      - name: Run all non-ML tests
         run: |
-          echo "=== Unit Tests (Fast, Isolated) ==="
-          pytest -m "unit and not ml" --cov=packages --cov-report=xml --cov-fail-under=81 -v
-          echo "Unit tests completed"
-
-      - name: Run integration tests
-        run: |
-          echo "=== Integration Tests (Multi-Component) ==="
-          pytest -m "integration and not ml" --cov=packages --cov-append --cov-report=xml -v
-          echo "Integration tests completed"
-
-      - name: Run E2E tests
-        run: |
-          echo "=== End-to-End Tests (Full Workflows) ==="
-          pytest -m "e2e and not ml" --cov=packages --cov-append --cov-report=xml -v
-          echo "E2E tests completed"
-
-      - name: Run retrieval quality tests
-        run: |
-          echo "=== Retrieval Quality Test Suite ==="
-          pytest tests/unit/soar/test_retrieval_quality*.py tests/integration/test_retrieval_quality*.py -v --tb=short --no-cov
-          echo "Retrieval quality tests completed"
-
-      - name: Run critical tests
-        run: |
-          echo "=== Critical Tests (Must Pass) ==="
-          pytest -m critical --no-cov -v
-          echo "Critical tests completed"
+          echo "=== Running All Non-ML Tests ==="
+          pytest tests/ -m "not ml" --cov=packages --cov-report=xml --cov-fail-under=81 -v
+          echo "All non-ML tests completed"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

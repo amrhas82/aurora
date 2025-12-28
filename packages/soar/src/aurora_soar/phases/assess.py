@@ -99,6 +99,27 @@ MEDIUM_KEYWORDS = {
     "test",
     "unit test",
     "integration test",
+    # Domain-specific terms (Aurora, ACT-R, SOAR, AI)
+    "soar",
+    "actr",
+    "act-r",
+    "activation",
+    "retrieval",
+    "reasoning",
+    "agentic",
+    "marketplace",
+    "aurora",
+    "orchestration",
+    "cognitive",
+    "memory",
+    # Scope indicators (suggest broader work)
+    "research",
+    "design",
+    "architecture",
+    # Multi-part indicators
+    "list all",
+    "find all",
+    "show me",
 }
 
 COMPLEX_KEYWORDS = {
@@ -171,6 +192,20 @@ CRITICAL_KEYWORDS = {
 }
 
 
+def _count_questions(query: str) -> int:
+    """Count the number of questions in a query.
+
+    Counts question marks as a proxy for multi-part queries.
+
+    Args:
+        query: User query string
+
+    Returns:
+        Number of question marks in the query
+    """
+    return query.count("?")
+
+
 def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     """Fast keyword-based complexity assessment.
 
@@ -223,6 +258,20 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     # Normalize score to 0-1 range
     normalized_score = min(raw_score, 1.0)
 
+    # Multi-question boost: If query has 2+ questions, boost score
+    num_questions = _count_questions(query)
+    if num_questions >= 2:
+        # Boost score by 0.3, but cap at 1.0
+        boost = 0.3
+        normalized_score = min(normalized_score + boost, 1.0)
+
+        # Re-evaluate complexity level with boosted score
+        # Multi-question queries should be at least MEDIUM complexity
+        if complexity_level == "SIMPLE" and normalized_score >= 0.3:
+            complexity_level = "MEDIUM"
+        elif complexity_level == "MEDIUM" and normalized_score >= 0.6:
+            complexity_level = "COMPLEX"
+
     # Calculate confidence based on:
     # 1. How much the top score beats the second-highest score (separation)
     # 2. Whether we matched any keywords at all (coverage)
@@ -234,6 +283,11 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
 
     # Confidence is combination of separation and coverage
     confidence = separation * 0.6 + coverage * 0.4
+
+    # Multi-question queries increase confidence (we're more sure it's complex)
+    if num_questions >= 2:
+        confidence = min(confidence + 0.2, 1.0)
+
     confidence = min(max(confidence, 0.1), 1.0)  # Clamp to [0.1, 1.0]
 
     # Special case: If critical keywords detected, always flag as CRITICAL
@@ -244,7 +298,7 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
         f"Keyword assessment: {complexity_level} "
         f"(score={normalized_score:.3f}, confidence={confidence:.3f}, "
         f"matches: S={simple_matches}, M={medium_matches}, "
-        f"C={complex_matches}, CR={critical_matches})"
+        f"C={complex_matches}, CR={critical_matches}, questions={num_questions})"
     )
 
     return (complexity_level, normalized_score, confidence)

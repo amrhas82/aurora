@@ -139,6 +139,117 @@ class QueryExecutor:
             error_msg = self.error_handler.handle_api_error(e, "Direct LLM query")
             raise APIError(error_msg) from e
 
+    def execute_with_auto_escalation(
+        self,
+        query: str,
+        api_key: str,
+        memory_store: Store,
+        verbose: bool = False,
+        confidence_threshold: float = 0.6,
+    ) -> str | tuple[str, dict[str, Any]]:
+        """Execute query with automatic escalation based on confidence.
+
+        This method assesses query complexity first, then decides whether to
+        use direct LLM or SOAR pipeline based on confidence score. In non-interactive
+        mode, low-confidence queries automatically escalate to SOAR. In interactive
+        mode, user is prompted to confirm escalation.
+
+        Args:
+            query: The user query string
+            api_key: Anthropic API key for authentication
+            memory_store: Memory store for context retrieval (required)
+            verbose: If True, return phase trace data (SOAR) or detailed logs
+            confidence_threshold: Confidence below this triggers escalation (default: 0.6)
+
+        Returns:
+            If verbose=False: The final response string
+            If verbose=True: Tuple of (response, metadata_dict)
+
+        Raises:
+            ValueError: If query is empty or memory store is None
+            RuntimeError: If execution fails
+        """
+        if not query or not query.strip():
+            raise ValueError("Query cannot be empty")
+
+        if memory_store is None:
+            raise ValueError("Memory store is required for auto-escalation")
+
+        try:
+            # Assess query complexity
+            from aurora_soar.phases.assess import assess_complexity
+
+            llm = self._initialize_llm_client(api_key)
+            assessment = assess_complexity(query, llm_client=llm)
+
+            complexity = assessment.get("complexity", "SIMPLE")
+            confidence = assessment.get("confidence", 1.0)
+
+            logger.info(
+                f"Complexity assessment: {complexity} "
+                f"(confidence={confidence:.3f}, method={assessment.get('method')})"
+            )
+
+            # Determine if escalation is needed
+            should_escalate = False
+            if confidence < confidence_threshold:
+                logger.info(
+                    f"Low confidence ({confidence:.3f} < {confidence_threshold}), "
+                    "considering escalation to SOAR"
+                )
+
+                if self.interactive_mode:
+                    # Prompt user for escalation decision
+                    import click
+
+                    should_escalate = click.confirm(
+                        f"Query has low confidence ({confidence:.2f}). "
+                        "Use SOAR 9-phase pipeline for better accuracy?",
+                        default=False,
+                    )
+
+                    if should_escalate:
+                        logger.info("User confirmed escalation to SOAR")
+                    else:
+                        logger.info("User declined escalation, using direct LLM")
+                else:
+                    # Non-interactive: auto-escalate
+                    should_escalate = True
+                    logger.info("Non-interactive mode: auto-escalating to SOAR")
+
+            # Execute based on escalation decision
+            if should_escalate or complexity in ["COMPLEX", "CRITICAL"]:
+                logger.info("Executing with SOAR pipeline")
+                return self.execute_aurora(
+                    query=query,
+                    api_key=api_key,
+                    memory_store=memory_store,
+                    verbose=verbose,
+                )
+            else:
+                logger.info("Executing with direct LLM")
+                response = self.execute_direct_llm(
+                    query=query,
+                    api_key=api_key,
+                    memory_store=memory_store,
+                    verbose=verbose,
+                )
+
+                if verbose:
+                    # Return response with assessment metadata
+                    metadata = {
+                        "method": "direct_llm",
+                        "assessment": assessment,
+                        "escalated": False,
+                    }
+                    return response, metadata
+
+                return response
+
+        except Exception as e:
+            logger.error(f"Auto-escalation execution failed: {e}", exc_info=True)
+            raise
+
     def execute_aurora(
         self,
         query: str,

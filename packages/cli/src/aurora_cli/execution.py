@@ -280,21 +280,31 @@ class QueryExecutor:
             Formatted context string (empty if no results)
         """
         try:
-            # Search memory store (keyword-based for simplicity)
-            # TODO: Replace with proper retrieval method once implemented
-            results = memory_store.search_keyword(query, limit=limit)  # type: ignore[attr-defined]
+            # Use MemoryManager to perform hybrid search with activation scoring
+            from aurora_cli.config import Config
+            from aurora_cli.memory_manager import MemoryManager
+
+            # Create a temporary MemoryManager with the memory store
+            # This allows us to use the proper search functionality
+            manager = MemoryManager(memory_store=memory_store)
+
+            # Perform search using hybrid retrieval
+            results = manager.search(query, limit=limit)
 
             if not results:
                 return ""
 
-            # Format results as context
+            # Format results as context with file paths and line ranges
             context_parts = []
-            for i, chunk in enumerate(results, 1):
-                metadata = chunk.get("metadata", {})
-                file_path = metadata.get("file_path", "unknown")
-                content = chunk.get("content", "")
-                context_parts.append(f"[{i}] {file_path}:\n{content}\n")
+            for i, result in enumerate(results, 1):
+                file_path = result.file_path or "unknown"
+                line_range = f"{result.line_range[0]}-{result.line_range[1]}"
+                content = result.content
+                context_parts.append(
+                    f"[{i}] {file_path} (lines {line_range}):\n{content}\n"
+                )
 
+            logger.debug(f"Retrieved {len(results)} chunks for context")
             return "\n".join(context_parts)
 
         except Exception as e:

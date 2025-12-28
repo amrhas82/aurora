@@ -12,6 +12,7 @@ import sqlite3
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -387,7 +388,21 @@ class MemoryManager:
                     )
                 )
 
+            # Record access for each retrieved chunk (Issue #4: Activation Tracking)
+            access_time = datetime.now(timezone.utc)
+            for result in search_results:
+                try:
+                    self.memory_store.record_access(
+                        chunk_id=result.chunk_id,
+                        access_time=access_time,
+                        context={"query": query}
+                    )
+                except Exception as e:
+                    # Log but don't fail the search if access recording fails
+                    logger.warning(f"Failed to record access for chunk {result.chunk_id}: {e}")
+
             logger.info(f"Search returned {len(search_results)} results for '{query}'")
+            logger.debug(f"Recorded access for {len(search_results)} chunks")
             return search_results
 
         except MemoryStoreError:

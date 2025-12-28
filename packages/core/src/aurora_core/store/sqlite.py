@@ -514,9 +514,11 @@ class SQLiteStore(Store):
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
         """
+        from aurora_core.activation.base_level import calculate_bla, AccessHistoryEntry
+
         conn = self._get_connection()
         if access_time is None:
-            access_time = datetime.now()
+            access_time = datetime.now(timezone.utc)
 
         try:
             # First check if chunk exists
@@ -533,24 +535,39 @@ class SQLiteStore(Store):
             if row is None:
                 # First access - initialize activation record
                 access_history = [{"timestamp": access_time.isoformat(), "context": context}]
+
+                # Calculate initial BLA (single access)
+                history_entries = [AccessHistoryEntry(timestamp=access_time)]
+                new_base_level = calculate_bla(history_entries, decay_rate=0.5, current_time=access_time)
+
                 conn.execute(
                     """INSERT INTO activations (chunk_id, base_level, last_access, access_count, access_history)
-                       VALUES (?, 0.0, ?, 1, ?)""",
-                    (chunk_id, access_time, json.dumps(access_history)),
+                       VALUES (?, ?, ?, 1, ?)""",
+                    (chunk_id, new_base_level, access_time, json.dumps(access_history)),
                 )
             else:
                 # Subsequent access - update existing record
                 access_history = json.loads(row["access_history"]) if row["access_history"] else []
                 access_history.append({"timestamp": access_time.isoformat(), "context": context})
 
-                # Update activations table
+                # Recalculate BLA based on updated access history
+                history_entries = [
+                    AccessHistoryEntry(
+                        timestamp=datetime.fromisoformat(entry["timestamp"].replace('Z', '+00:00'))
+                    )
+                    for entry in access_history
+                ]
+                new_base_level = calculate_bla(history_entries, decay_rate=0.5, current_time=access_time)
+
+                # Update activations table with new base_level
                 conn.execute(
                     """UPDATE activations
                        SET access_count = access_count + 1,
                            last_access = ?,
-                           access_history = ?
+                           access_history = ?,
+                           base_level = ?
                        WHERE chunk_id = ?""",
-                    (access_time, json.dumps(access_history), chunk_id),
+                    (access_time, json.dumps(access_history), new_base_level, chunk_id),
                 )
 
             # Update chunks table timestamps

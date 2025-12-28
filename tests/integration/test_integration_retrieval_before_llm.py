@@ -37,7 +37,7 @@ import pytest
 from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
 from aurora_cli.memory_manager import MemoryManager
-from aurora_core.chunks.base import Chunk, ChunkType
+from aurora_core.chunks.base import Chunk
 from aurora_reasoning.llm_client import LLMClient
 
 
@@ -98,17 +98,18 @@ class DatabaseConnection:
         """Create QueryExecutor with populated memory store."""
         # Setup database and index data
         db_path = tmp_path / "test_memory.db"
-        config = Config(api_key="test-key", db_path=str(db_path), budget_limit=10.0)
+        config = Config(anthropic_api_key="test-key", db_path=str(db_path), budget_limit=10.0)
 
         memory_manager = MemoryManager(config=config)
-        memory_manager.index_directory(temp_workspace)
+        memory_manager.index_path(temp_workspace)
 
-        # Create QueryExecutor with memory store
-        executor = QueryExecutor(
-            config=config,
-            memory_store=memory_manager.store,
-            interactive_mode=False
-        )
+        # Create QueryExecutor with config dict
+        config_dict = {
+            "model": "claude-sonnet-4-20250514",
+            "temperature": 0.7,
+            "max_tokens": 500
+        }
+        executor = QueryExecutor(config=config_dict, interactive_mode=False)
 
         return executor, memory_manager
 
@@ -120,13 +121,22 @@ class DatabaseConnection:
         """
         executor, memory_manager = executor_with_memory
 
-        # Mock LLM client to capture prompts
-        mock_llm_response = "Based on the code, the DatabaseConnection class uses SQLite."
+        # Mock the LLM response
+        mock_response = MagicMock()
+        mock_response.content = "Based on the code, the DatabaseConnection class uses SQLite."
+        mock_response.input_tokens = 100
+        mock_response.output_tokens = 50
 
-        with patch.object(executor.llm_client, 'generate', return_value=mock_llm_response) as mock_generate:
+        # Patch the LLM client's generate method
+        with patch('aurora_reasoning.llm_client.AnthropicClient.generate', return_value=mock_response) as mock_generate:
             # Execute query about indexed code
             query = "How does DatabaseConnection handle connection failures?"
-            result = executor.execute_direct_llm(query)
+            result = executor.execute_direct_llm(
+                query=query,
+                api_key="test-api-key",
+                memory_store=memory_manager.store,
+                verbose=False
+            )
 
             # ASSERTION 1: LLM generate should be called
             assert mock_generate.called, (
@@ -138,11 +148,12 @@ class DatabaseConnection:
             # ASSERTION 2: Prompt should include retrieved context
             call_args = mock_generate.call_args
             if call_args:
-                prompt = call_args[0][0] if call_args[0] else call_args[1].get('prompt', '')
+                # Get the prompt argument
+                prompt = call_args.kwargs.get('prompt', '')
 
                 # Check for context indicators
                 has_context = any(indicator in prompt.lower() for indicator in [
-                    'context', 'codebase', 'retrieved', 'from the code', 'based on'
+                    'context', 'codebase', 'retrieved', 'database.py'
                 ])
 
                 assert has_context, (
@@ -242,7 +253,7 @@ class DatabaseConnection:
         """
         # Create empty memory store
         db_path = tmp_path / "empty_memory.db"
-        config = Config(api_key="test-key", db_path=str(db_path), budget_limit=10.0)
+        config = Config(anthropic_api_key="test-key", db_path=str(db_path), budget_limit=10.0)
 
         memory_manager = MemoryManager(config=config)
 
@@ -355,8 +366,8 @@ class TestContextFormatting:
         chunks = [
             Chunk(
                 chunk_id="chunk1",
+                chunk_type="function",
                 name="calculate_sum",
-                chunk_type=ChunkType.FUNCTION,
                 file_path=Path("utils.py"),
                 content="def calculate_sum(numbers):\n    return sum(numbers)",
                 line_start=1,
@@ -365,8 +376,8 @@ class TestContextFormatting:
             ),
             Chunk(
                 chunk_id="chunk2",
+                chunk_type="function",
                 name="calculate_average",
-                chunk_type=ChunkType.FUNCTION,
                 file_path=Path("utils.py"),
                 content="def calculate_average(numbers):\n    return sum(numbers) / len(numbers)",
                 line_start=4,

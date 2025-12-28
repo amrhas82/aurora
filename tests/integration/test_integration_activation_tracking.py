@@ -34,13 +34,13 @@ import sqlite3
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, patch, spy
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
-from aurora_core.chunks.base import Chunk, ChunkType
+from aurora_core.chunks.base import Chunk
 
 
 class TestActivationTracking:
@@ -86,12 +86,12 @@ def calculate_median(numbers):
     def manager_with_data(self, test_db_path, temp_workspace):
         """Create MemoryManager with indexed data."""
         config = Config(
-            api_key="test-key",
+            anthropic_api_key="test-key",
             db_path=str(test_db_path),
             budget_limit=10.0
         )
         manager = MemoryManager(config=config)
-        manager.index_directory(temp_workspace)
+        manager.index_path(temp_workspace)
         return manager, test_db_path
 
     def test_record_access_called_during_search(self, manager_with_data):
@@ -124,7 +124,15 @@ def calculate_median(numbers):
 
             # ASSERTION 3: Verify chunk IDs passed to record_access
             if mock_record.call_count > 0:
-                recorded_chunk_ids = {call[0][0] for call in mock_record.call_args_list}
+                # Extract chunk_id from call arguments (first positional arg or 'chunk_id' keyword)
+                recorded_chunk_ids = set()
+                for call in mock_record.call_args_list:
+                    args, kwargs = call
+                    if args:
+                        recorded_chunk_ids.add(args[0])
+                    elif 'chunk_id' in kwargs:
+                        recorded_chunk_ids.add(kwargs['chunk_id'])
+
                 result_chunk_ids = {r.chunk_id for r in results}
 
                 # At least some results should have been recorded
@@ -251,11 +259,11 @@ def calculate_median(numbers):
         results = manager.search("calculate sum", limit=5)
         result_ids = {r.chunk_id for r in results}
 
-        # Query last_access_time
+        # Query last_access (not last_access_time - that's the column name)
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT chunk_id, last_access_time
+            SELECT chunk_id, last_access
             FROM activations
             WHERE chunk_id IN ({})
         """.format(','.join('?' * len(result_ids))), tuple(result_ids))
@@ -263,12 +271,12 @@ def calculate_median(numbers):
         access_times = {row[0]: row[1] for row in cursor.fetchall()}
         conn.close()
 
-        # ASSERTION: last_access_time should be recent (within last minute)
+        # ASSERTION: last_access should be recent (within last minute)
         for chunk_id in result_ids:
             last_access = access_times.get(chunk_id)
 
             assert last_access is not None, (
-                f"last_access_time is NULL for chunk {chunk_id}\n"
+                f"last_access is NULL for chunk {chunk_id}\n"
                 f"Expected: Recent timestamp\n"
                 f"Actual: NULL\n"
                 f"Cause: record_access() never called\n"
@@ -410,9 +418,9 @@ def moderately_used():
 """)
 
         db_path = tmp_path / "test_memory.db"
-        config = Config(api_key="test-key", db_path=str(db_path), budget_limit=10.0)
+        config = Config(anthropic_api_key="test-key", db_path=str(db_path), budget_limit=10.0)
         manager = MemoryManager(config=config)
-        manager.index_directory(workspace)
+        manager.index_path(workspace)
 
         # Simulate access patterns
         # Frequently used: 5 accesses

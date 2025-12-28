@@ -143,9 +143,7 @@ def cli_runner(temp_project_dir, temp_aurora_home):
 class TestCLIMemIndex:
     """Test 'aur mem index' command with real file system and database."""
 
-    def test_index_command_creates_database(
-        self, cli_runner, temp_project_dir, temp_aurora_home
-    ):
+    def test_index_command_creates_database(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem index' creates a database file."""
         db_path = temp_aurora_home / "memory.db"
         result = cli_runner("mem", "index", str(temp_project_dir), "--db-path", str(db_path))
@@ -167,6 +165,7 @@ class TestCLIMemIndex:
 
         # Query database to verify chunks were created
         import sqlite3
+
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
@@ -179,7 +178,11 @@ class TestCLIMemIndex:
         cursor.execute("SELECT content FROM chunks WHERE type = 'code'")
         functions = [row[0] for row in cursor.fetchall()]
         # Content is JSON, check if any contain our function names
-        function_names = [f for f in functions if "hello_world" in str(f) or "add" in str(f) or "multiply" in str(f)]
+        function_names = [
+            f
+            for f in functions
+            if "hello_world" in str(f) or "add" in str(f) or "multiply" in str(f)
+        ]
 
         assert len(function_names) > 0, f"Should index Python functions, found {count} chunks total"
 
@@ -206,9 +209,7 @@ class TestCLIMemIndex:
 class TestCLIMemSearch:
     """Test 'aur mem search' command with real database and ranking."""
 
-    def test_search_finds_indexed_functions(
-        self, cli_runner, temp_project_dir, temp_aurora_home
-    ):
+    def test_search_finds_indexed_functions(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem search' finds indexed code."""
         db_path = temp_aurora_home / "memory.db"
 
@@ -219,12 +220,12 @@ class TestCLIMemSearch:
         # Now search for a function
         search_result = cli_runner("mem", "search", "hello_world", "--db-path", str(db_path))
 
-        assert search_result.returncode == 0, f"STDOUT: {search_result.stdout}\nSTDERR: {search_result.stderr}"
+        assert search_result.returncode == 0, (
+            f"STDOUT: {search_result.stdout}\nSTDERR: {search_result.stderr}"
+        )
         assert "hello_world" in search_result.stdout or "Hello" in search_result.stdout
 
-    def test_search_with_no_results(
-        self, cli_runner, temp_project_dir, temp_aurora_home
-    ):
+    def test_search_with_no_results(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem search' handles no results gracefully."""
         db_path = temp_aurora_home / "memory.db"
 
@@ -237,9 +238,7 @@ class TestCLIMemSearch:
         # Should not crash
         assert result.returncode in [0, 1], f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
 
-    def test_search_ranking_by_relevance(
-        self, cli_runner, temp_project_dir, temp_aurora_home
-    ):
+    def test_search_ranking_by_relevance(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem search' ranks results by relevance."""
         db_path = temp_aurora_home / "memory.db"
 
@@ -265,9 +264,7 @@ class TestCLIQuery:
     """Test 'aur query' command with real safety checks."""
 
     @pytest.mark.skip(reason="Requires API key - will be tested in E2E with mocked LLM")
-    def test_query_requires_api_key(
-        self, cli_runner, temp_project_dir, temp_aurora_home
-    ):
+    def test_query_requires_api_key(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur query' requires API key configuration."""
         # Ensure no API key is set
         env = os.environ.copy()
@@ -278,9 +275,7 @@ class TestCLIQuery:
         # Should fail or warn about missing API key
         assert result.returncode != 0 or "API key" in result.stderr
 
-    def test_query_command_structure(
-        self, cli_runner, temp_project_dir, temp_aurora_home
-    ):
+    def test_query_command_structure(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur query' command accepts valid structure."""
         # This just validates command structure, not full execution
         result = cli_runner("query", "--help")
@@ -289,9 +284,7 @@ class TestCLIQuery:
         assert "query" in result.stdout.lower() or "usage" in result.stdout.lower()
 
     @pytest.mark.skip(reason="Git safety checks require git repository setup")
-    def test_query_respects_git_safety_checks(
-        self, cli_runner, temp_project_dir, temp_aurora_home
-    ):
+    def test_query_respects_git_safety_checks(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur query' respects git safety configuration."""
         # This test would require setting up a git repository
         # and configuring safety checks - deferred to E2E tests

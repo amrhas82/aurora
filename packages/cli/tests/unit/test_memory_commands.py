@@ -230,7 +230,11 @@ class TestIndexCommand:
     @patch("aurora_cli.commands.memory.SQLiteStore")
     @patch("aurora_cli.commands.memory.ErrorHandler")
     def test_index_command_handles_unexpected_error(
-        self, mock_error_handler_class: Mock, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_error_handler_class: Mock,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test index_command() handles unexpected exceptions with ErrorHandler."""
         # Setup mocks to raise unexpected error
@@ -556,7 +560,7 @@ class TestStatsCommand:
         # Verify success
         assert result.exit_code == 0
         assert "150" in result.output  # total_chunks
-        assert "25" in result.output   # total_files
+        assert "25" in result.output  # total_files
         assert "2.5" in result.output  # database_size_mb
         assert "python" in result.output
         assert "javascript" in result.output

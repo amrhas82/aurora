@@ -114,9 +114,7 @@ class TestQueryCommand:
     @patch("aurora_cli.main.AutoEscalationHandler")
     @pytest.mark.cli
     @pytest.mark.critical
-    def test_query_command_basic(
-        self, mock_handler_class: Mock, mock_executor_class: Mock
-    ) -> None:
+    def test_query_command_basic(self, mock_handler_class: Mock, mock_executor_class: Mock) -> None:
         """Test query_command() basic invocation with mocked dependencies."""
         # Mock dependencies
         mock_handler = Mock()
@@ -261,6 +259,7 @@ class TestVerifyCommand:
         self, mock_exit: Mock, mock_import: Mock, mock_which: Mock
     ) -> None:
         """Test verify_command() detects missing packages."""
+
         # Mock import_module to raise ImportError for some packages
         def side_effect_import(name: str) -> None:
             if "aurora.testing" in name:
@@ -446,7 +445,14 @@ class TestQueryCommandInteractiveMode:
         # Mock AutoEscalationHandler
         with patch("aurora_cli.main.AutoEscalationHandler") as mock_handler_class:
             mock_handler = Mock()
-            mock_result = Mock(use_aurora=False, complexity="SIMPLE", score=0.3, confidence=0.9, method="keyword", reasoning="Simple query")
+            mock_result = Mock(
+                use_aurora=False,
+                complexity="SIMPLE",
+                score=0.3,
+                confidence=0.9,
+                method="keyword",
+                reasoning="Simple query",
+            )
             mock_handler.assess_query.return_value = mock_result
             mock_handler_class.return_value = mock_handler
 
@@ -474,7 +480,14 @@ class TestQueryCommandInteractiveMode:
         # Mock AutoEscalationHandler
         with patch("aurora_cli.main.AutoEscalationHandler") as mock_handler_class:
             mock_handler = Mock()
-            mock_result = Mock(use_aurora=False, complexity="SIMPLE", score=0.3, confidence=0.9, method="keyword", reasoning="Simple query")
+            mock_result = Mock(
+                use_aurora=False,
+                complexity="SIMPLE",
+                score=0.3,
+                confidence=0.9,
+                method="keyword",
+                reasoning="Simple query",
+            )
             mock_handler.assess_query.return_value = mock_result
             mock_handler_class.return_value = mock_handler
 
@@ -502,7 +515,14 @@ class TestQueryCommandInteractiveMode:
         # Mock AutoEscalationHandler
         with patch("aurora_cli.main.AutoEscalationHandler") as mock_handler_class:
             mock_handler = Mock()
-            mock_result = Mock(use_aurora=False, complexity="SIMPLE", score=0.3, confidence=0.9, method="keyword", reasoning="Simple query")
+            mock_result = Mock(
+                use_aurora=False,
+                complexity="SIMPLE",
+                score=0.3,
+                confidence=0.9,
+                method="keyword",
+                reasoning="Simple query",
+            )
             mock_handler.assess_query.return_value = mock_result
             mock_handler_class.return_value = mock_handler
 

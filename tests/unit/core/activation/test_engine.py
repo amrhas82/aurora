@@ -122,9 +122,9 @@ class TestActivationEngine:
         config = ActivationConfig(bla_config=BLAConfig(decay_rate=0.6))
         engine = ActivationEngine(config)
         assert engine.config.bla_config.decay_rate == 0.6
+
     @pytest.mark.core
     @pytest.mark.critical
-
     def test_calculate_total_with_all_components(self):
         """Test calculating total activation with all components enabled."""
         engine = ActivationEngine()
@@ -160,9 +160,9 @@ class TestActivationEngine:
             components.bla + components.spreading + components.context_boost - abs(components.decay)
         )
         assert components.total == pytest.approx(expected_total, abs=0.001)
+
     @pytest.mark.core
     @pytest.mark.critical
-
     def test_calculate_total_missing_data_returns_partial(self):
         """Test that missing data for components results in 0.0 for those components."""
         engine = ActivationEngine()
@@ -175,9 +175,9 @@ class TestActivationEngine:
         assert components.context_boost == 0.0  # No keywords
         assert components.decay == 0.0  # No last_access
         assert components.total == 0.8
+
     @pytest.mark.core
     @pytest.mark.critical
-
     def test_calculate_total_with_bla_disabled(self):
         """Test calculation with BLA disabled."""
         config = ActivationConfig(enable_bla=False)

@@ -351,9 +351,7 @@ class TestEscalationWithCustomThreshold:
         """Test threshold=1.0 never escalates to AURORA (always direct)."""
         handler = AutoEscalationHandler(config=EscalationConfig(threshold=1.0))
 
-        result = handler.assess_query(
-            "Complex multi-phase refactoring with testing and deployment"
-        )
+        result = handler.assess_query("Complex multi-phase refactoring with testing and deployment")
 
         # Score will be < 1.0 (likely 0.95), so should use direct
         assert result.use_aurora is False

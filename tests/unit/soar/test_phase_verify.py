@@ -481,9 +481,9 @@ class TestAssessRetrievalQuality:
         )
 
         assert quality == RetrievalQuality.WEAK
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_assess_retrieval_quality_weak_chunk_count(self):
         """Test assessment with high_quality_chunks < 3 returns WEAK."""
         mock_verification = MagicMock()
@@ -593,9 +593,7 @@ class TestVerifyWithRetrievalContext:
         assert result.retrieval_quality == RetrievalQuality.GOOD
 
     @patch("aurora_reasoning.verify.verify_decomposition")
-    def test_verify_non_interactive_skips_prompt(
-        self, mock_verify, sample_decomposition
-    ):
+    def test_verify_non_interactive_skips_prompt(self, mock_verify, sample_decomposition):
         """Test that non-interactive mode doesn't prompt user."""
         # Create verification with low groundedness (weak match)
         weak_verification = VerificationResult(

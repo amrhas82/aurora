@@ -34,11 +34,7 @@ class TestKeywordClassifier:
         assert confidence >= 0.3  # May have lower confidence
 
     @pytest.mark.soar
-
-
     @pytest.mark.critical
-
-
     def test_medium_query_refactoring(self):
         """Test MEDIUM classification for refactoring queries."""
         query = "Refactor the authentication module to improve readability"
@@ -47,11 +43,7 @@ class TestKeywordClassifier:
         assert complexity == "MEDIUM"
 
     @pytest.mark.soar
-
-
     @pytest.mark.critical
-
-
     def test_complex_query_system_design(self):
         """Test COMPLEX classification for system design queries."""
         # Need multiple complex keywords to override weight
@@ -69,11 +61,7 @@ class TestKeywordClassifier:
         assert complexity in {"COMPLEX", "MEDIUM"}  # Either is acceptable
 
     @pytest.mark.soar
-
-
     @pytest.mark.critical
-
-
     def test_critical_query_security(self):
         """Test CRITICAL classification for security queries."""
         query = "Fix security vulnerability in authentication endpoint"
@@ -131,9 +119,9 @@ class TestKeywordClassifier:
 
 class TestAssessComplexity:
     """Tests for main assess_complexity function."""
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_assess_without_llm_high_confidence(self):
         """Test assessment without LLM when keyword confidence is high."""
         # Use a longer query with more keywords for higher confidence
@@ -144,9 +132,9 @@ class TestAssessComplexity:
         assert result["method"] == "keyword"
         assert result["confidence"] >= 0.3  # Accept lower confidence
         assert "score" in result
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_assess_without_llm_low_confidence(self):
         """Test assessment without LLM when keyword confidence is low."""
         query = "xyz abc def"  # No keyword matches
@@ -154,9 +142,9 @@ class TestAssessComplexity:
 
         assert result["method"] == "keyword"  # Still uses keyword since no LLM
         assert "llm_verification_needed" in result or result["confidence"] < 0.5
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_assess_critical_security_high_confidence(self):
         """Test that critical security queries have high confidence."""
         query = "Fix authentication vulnerability in production"

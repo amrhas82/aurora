@@ -355,7 +355,9 @@ class TestHeadlessGoalAchievement:
         assert result.goal_achieved is False
         assert result.termination_reason == TerminationReason.MAX_ITERATIONS
         assert result.iterations == 3
-        assert abs(result.total_cost - 0.3) < 0.01  # 3 iterations * 0.1, with floating-point tolerance
+        assert (
+            abs(result.total_cost - 0.3) < 0.01
+        )  # 3 iterations * 0.1, with floating-point tolerance
 
 
 # ==============================================================================
@@ -409,9 +411,7 @@ class TestHeadlessSafetyChecks:
             "cost_usd": 3.0,
         }
 
-        mock_soar_orchestrator.reasoning_llm.complete.return_value = {
-            "content": "IN_PROGRESS"
-        }
+        mock_soar_orchestrator.reasoning_llm.complete.return_value = {"content": "IN_PROGRESS"}
 
         # Low budget limit
         config = HeadlessConfig(max_iterations=10, budget_limit=2.0)
@@ -594,9 +594,7 @@ class TestHeadlessEdgeCases:
             "confidence": 0.9,
             "cost_usd": 0.1,
         }
-        mock_soar_orchestrator.reasoning_llm.complete.return_value = {
-            "content": "GOAL_ACHIEVED"
-        }
+        mock_soar_orchestrator.reasoning_llm.complete.return_value = {"content": "GOAL_ACHIEVED"}
 
         config = HeadlessConfig(max_iterations=3)
         orchestrator = HeadlessOrchestrator(

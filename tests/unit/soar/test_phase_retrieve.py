@@ -33,9 +33,9 @@ class TestRetrievalBudgets:
 
 class TestRetrieveContext:
     """Tests for context retrieval function."""
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_retrieve_simple_query(self):
         """Test retrieval for SIMPLE query respects budget."""
         # Mock store
@@ -54,9 +54,9 @@ class TestRetrieveContext:
         assert result["budget_used"] == 3
         assert len(result["code_chunks"]) == 3
         assert len(result["reasoning_chunks"]) == 0
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_retrieve_medium_query(self):
         """Test retrieval for MEDIUM query respects budget."""
         mock_store = Mock()
@@ -71,13 +71,15 @@ class TestRetrieveContext:
 
         assert result["budget"] == 10
         assert result["total_retrieved"] == 8
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_retrieve_complex_query(self):
         """Test retrieval for COMPLEX query respects budget."""
         mock_store = Mock()
-        mock_chunks = [Mock(id=f"chunk{i}", metadata={"chunk_type": "CodeChunk"}) for i in range(15)]
+        mock_chunks = [
+            Mock(id=f"chunk{i}", metadata={"chunk_type": "CodeChunk"}) for i in range(15)
+        ]
         mock_store.retrieve_by_activation.return_value = mock_chunks
         mock_store.get_activation.return_value = 0.0
 
@@ -91,7 +93,9 @@ class TestRetrieveContext:
     def test_retrieve_critical_query(self):
         """Test retrieval for CRITICAL query respects budget."""
         mock_store = Mock()
-        mock_chunks = [Mock(id=f"chunk{i}", metadata={"chunk_type": "CodeChunk"}) for i in range(20)]
+        mock_chunks = [
+            Mock(id=f"chunk{i}", metadata={"chunk_type": "CodeChunk"}) for i in range(20)
+        ]
         mock_store.retrieve_by_activation.return_value = mock_chunks
         mock_store.get_activation.return_value = 0.0
 
@@ -382,7 +386,7 @@ class TestRetrieveWithActivationFiltering:
             Mock(id="chunk2", metadata={"chunk_type": "CodeChunk"}, activation=0.1),  # Low
             Mock(id="chunk3", metadata={"chunk_type": "CodeChunk"}, activation=0.2),  # Low
             Mock(id="chunk4", metadata={"chunk_type": "CodeChunk"}, activation=0.8),  # High
-            Mock(id="chunk5", metadata={"chunk_type": "CodeChunk"}, activation=0.25), # Low
+            Mock(id="chunk5", metadata={"chunk_type": "CodeChunk"}, activation=0.25),  # Low
         ]
 
         mock_store.retrieve_by_activation.return_value = chunks

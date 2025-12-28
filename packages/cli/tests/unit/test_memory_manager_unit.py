@@ -39,15 +39,11 @@ class TestMemoryManagerInit:
         assert manager.error_handler is not None
 
     @patch("aurora_cli.memory_manager.get_global_registry")
-    def test_init_with_custom_parser_registry(
-        self, mock_get_registry: Mock
-    ) -> None:
+    def test_init_with_custom_parser_registry(self, mock_get_registry: Mock) -> None:
         """Test MemoryManager.__init__() with custom parser_registry."""
         mock_store = Mock()
         mock_registry = Mock()
-        manager = MemoryManager(
-            memory_store=mock_store, parser_registry=mock_registry
-        )
+        manager = MemoryManager(memory_store=mock_store, parser_registry=mock_registry)
 
         assert manager.memory_store is mock_store
         assert manager.parser_registry is mock_registry
@@ -55,15 +51,11 @@ class TestMemoryManagerInit:
         mock_get_registry.assert_not_called()
 
     @patch("aurora_cli.memory_manager.EmbeddingProvider")
-    def test_init_with_custom_embedding_provider(
-        self, mock_provider_class: Mock
-    ) -> None:
+    def test_init_with_custom_embedding_provider(self, mock_provider_class: Mock) -> None:
         """Test MemoryManager.__init__() with custom embedding_provider."""
         mock_store = Mock()
         mock_provider = Mock()
-        manager = MemoryManager(
-            memory_store=mock_store, embedding_provider=mock_provider
-        )
+        manager = MemoryManager(memory_store=mock_store, embedding_provider=mock_provider)
 
         assert manager.memory_store is mock_store
         assert manager.embedding_provider is mock_provider
@@ -347,9 +339,7 @@ class TestIndexPath:
         assert stats.errors == 0
         mock_store.save_chunk.assert_not_called()
 
-    def test_index_path_propagates_memory_store_error(
-        self, tmp_path: Path
-    ) -> None:
+    def test_index_path_propagates_memory_store_error(self, tmp_path: Path) -> None:
         """Test index_path() propagates MemoryStoreError immediately."""
         # Create test file
         test_file = tmp_path / "test.py"
@@ -377,9 +367,7 @@ class TestIndexPath:
         mock_embedding_provider.embed_chunk.return_value = mock_embedding
 
         # Store raises MemoryStoreError
-        mock_store.save_chunk.side_effect = MemoryStoreError(
-            "Database connection failed"
-        )
+        mock_store.save_chunk.side_effect = MemoryStoreError("Database connection failed")
 
         # Execute
         manager = MemoryManager(
@@ -614,9 +602,7 @@ class TestDiscoverFiles:
         mock_registry.get_parser_for_file.side_effect = get_parser_side_effect
 
         # Execute
-        manager = MemoryManager(
-            memory_store=mock_store, parser_registry=mock_registry
-        )
+        manager = MemoryManager(memory_store=mock_store, parser_registry=mock_registry)
         files = manager._discover_files(tmp_path)
 
         # Verify only Python files discovered
@@ -651,9 +637,7 @@ class TestDiscoverFiles:
         mock_registry.get_parser_for_file.return_value = Mock()
 
         # Execute
-        manager = MemoryManager(
-            memory_store=mock_store, parser_registry=mock_registry
-        )
+        manager = MemoryManager(memory_store=mock_store, parser_registry=mock_registry)
         files = manager._discover_files(tmp_path)
 
         # Verify only valid file found
@@ -732,9 +716,7 @@ class TestSaveChunkWithRetry:
         assert mock_store.save_chunk.call_count == 2
 
     @patch("aurora_cli.memory_manager.time.sleep")
-    def test_save_chunk_with_retry_uses_exponential_backoff(
-        self, mock_sleep: Mock
-    ) -> None:
+    def test_save_chunk_with_retry_uses_exponential_backoff(self, mock_sleep: Mock) -> None:
         """Test _save_chunk_with_retry() uses exponential backoff."""
         mock_store = Mock()
         manager = MemoryManager(memory_store=mock_store)
@@ -767,9 +749,7 @@ class TestSaveChunkWithRetry:
         chunk = Mock()
 
         # Always raise locked error
-        mock_store.save_chunk.side_effect = sqlite3.OperationalError(
-            "database is locked"
-        )
+        mock_store.save_chunk.side_effect = sqlite3.OperationalError("database is locked")
 
         # Execute - should raise after retries exhausted
         with pytest.raises(MemoryStoreError):
@@ -822,9 +802,7 @@ class TestSaveChunkWithRetry:
         chunk = Mock()
 
         # Raise non-lock operational error
-        mock_store.save_chunk.side_effect = sqlite3.OperationalError(
-            "syntax error"
-        )
+        mock_store.save_chunk.side_effect = sqlite3.OperationalError("syntax error")
 
         # Execute - should raise immediately without retry
         with pytest.raises(MemoryStoreError):
@@ -846,9 +824,7 @@ class TestDetectLanguage:
 
         mock_registry.get_parser_for_file.return_value = mock_parser
 
-        manager = MemoryManager(
-            memory_store=mock_store, parser_registry=mock_registry
-        )
+        manager = MemoryManager(memory_store=mock_store, parser_registry=mock_registry)
         language = manager._detect_language(Path("test.py"))
 
         assert language == "python"
@@ -859,9 +835,7 @@ class TestDetectLanguage:
         mock_registry = Mock()
         mock_registry.get_parser_for_file.return_value = None
 
-        manager = MemoryManager(
-            memory_store=mock_store, parser_registry=mock_registry
-        )
+        manager = MemoryManager(memory_store=mock_store, parser_registry=mock_registry)
 
         assert manager._detect_language(Path("test.py")) == "python"
         assert manager._detect_language(Path("test.js")) == "javascript"

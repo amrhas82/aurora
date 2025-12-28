@@ -350,9 +350,7 @@ class SQLiteStore(Store):
             return float(row[0])
 
         except sqlite3.Error as e:
-            raise StorageError(
-                f"Failed to get activation for chunk: {chunk_id}", details=str(e)
-            )
+            raise StorageError(f"Failed to get activation for chunk: {chunk_id}", details=str(e))
 
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
         """

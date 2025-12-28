@@ -126,6 +126,7 @@ class TestAnthropicClient:
                         import importlib
 
                         import aurora.reasoning.llm_client as llm_module
+
                         importlib.reload(llm_module)
                         llm_module.AnthropicClient()
             finally:

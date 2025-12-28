@@ -532,7 +532,7 @@ class TestQueryExecutorCostEstimation:
         mock_response = Mock(spec=LLMResponse)
         mock_response.content = "Response"
         mock_response.input_tokens = 1000  # 1K input tokens
-        mock_response.output_tokens = 500   # 500 output tokens
+        mock_response.output_tokens = 500  # 500 output tokens
         mock_call_llm.return_value = mock_response
 
         executor = QueryExecutor()

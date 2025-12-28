@@ -88,7 +88,7 @@ class TestErrorPropagationWorkflows:
                         query="test query",
                         api_key="sk-ant-test123",
                         memory_store=store,
-                        verbose=False
+                        verbose=False,
                     )
 
     def test_configuration_error_stops_execution_early(self):
@@ -105,7 +105,7 @@ class TestErrorPropagationWorkflows:
             memory_chunk_size=1000,
             memory_overlap=100,
             memory_auto_index=False,
-            memory_index_paths=["."]
+            memory_index_paths=["."],
         )
 
         # Validate should raise ConfigurationError
@@ -138,7 +138,7 @@ class TestGracefulDegradation:
             executor.execute_direct_llm(
                 query="test query",
                 api_key="",  # Empty API key
-                memory_store=None
+                memory_store=None,
             )
 
     def test_empty_query_shows_actionable_error(self):
@@ -149,7 +149,7 @@ class TestGracefulDegradation:
             executor.execute_direct_llm(
                 query="",  # Empty query
                 api_key="sk-ant-test123",
-                memory_store=None
+                memory_store=None,
             )
 
     def test_corrupted_database_handled_gracefully(self):
@@ -232,9 +232,7 @@ class TestRetryMechanisms:
 
                 # Should succeed after retries
                 result = executor.execute_direct_llm(
-                    query="test query",
-                    api_key="sk-ant-test123",
-                    memory_store=store
+                    query="test query", api_key="sk-ant-test123", memory_store=store
                 )
 
                 assert result == "Success after retry"
@@ -257,9 +255,7 @@ class TestRetryMechanisms:
                 # Should raise APIError after all retries exhausted
                 with pytest.raises(APIError):
                     executor.execute_direct_llm(
-                        query="test query",
-                        api_key="sk-ant-test123",
-                        memory_store=store
+                        query="test query", api_key="sk-ant-test123", memory_store=store
                     )
 
                 # Verify it tried 3 times (initial + 2 retries)
@@ -276,8 +272,10 @@ class TestRetryMechanisms:
             delays = []
 
             # Mock time.sleep to capture delays
-            with patch("aurora_cli.execution.AnthropicClient") as mock_client_class, \
-                 patch("aurora_cli.execution.time.sleep") as mock_sleep:
+            with (
+                patch("aurora_cli.execution.AnthropicClient") as mock_client_class,
+                patch("aurora_cli.execution.time.sleep") as mock_sleep,
+            ):
                 mock_client = Mock()
                 mock_client.generate.side_effect = RuntimeError("503 Service unavailable")
                 mock_client_class.return_value = mock_client
@@ -288,9 +286,7 @@ class TestRetryMechanisms:
                 # Execute (will fail after retries)
                 with pytest.raises(APIError):
                     executor.execute_direct_llm(
-                        query="test query",
-                        api_key="sk-ant-test123",
-                        memory_store=store
+                        query="test query", api_key="sk-ant-test123", memory_store=store
                     )
 
                 # Verify exponential backoff: 0.1s base, 0.2s, 0.4s (only 2 retries = 2 sleeps)
@@ -324,7 +320,7 @@ class TestPartialSuccessScenarios:
             stats = manager.index_path(tmp_path)
 
             # Verify success - valid.py should be indexed
-            assert stats.files_indexed >= 1   # At least valid.py succeeded
+            assert stats.files_indexed >= 1  # At least valid.py succeeded
             assert stats.chunks_created >= 1  # Valid file produced chunks
 
     def test_search_returns_empty_on_no_results(self):
@@ -364,7 +360,7 @@ class TestPartialSuccessScenarios:
                     query="test query",
                     api_key="sk-ant-test123",
                     memory_store=store,  # Empty store
-                    verbose=True
+                    verbose=True,
                 )
 
                 # Should succeed with just the query (no context)
@@ -388,8 +384,8 @@ class TestPartialSuccessScenarios:
             stats = manager.index_path(tmp_path)
 
             # Verify stats accuracy
-            assert stats.files_indexed >= 2   # 2 valid files
-            assert stats.errors == 0          # No errors
+            assert stats.files_indexed >= 2  # 2 valid files
+            assert stats.errors == 0  # No errors
             assert stats.chunks_created >= 2  # Valid files produced chunks
             assert stats.duration_seconds > 0  # Took some time
 
@@ -421,9 +417,7 @@ class TestErrorRecoveryInstructions:
         """Test path errors include diagnostic commands."""
         error = FileNotFoundError("path/to/file.py not found")
         formatted = ErrorHandler.handle_path_error(
-            error,
-            path="path/to/file.py",
-            operation="indexing"
+            error, path="path/to/file.py", operation="indexing"
         )
 
         assert "[Path]" in formatted

@@ -18,7 +18,12 @@ if TYPE_CHECKING:
 
     from aurora.reasoning import LLMClient
 
-__all__ = ["verify_decomposition", "VerifyPhaseResult", "RetrievalQuality", "assess_retrieval_quality"]
+__all__ = [
+    "verify_decomposition",
+    "VerifyPhaseResult",
+    "RetrievalQuality",
+    "assess_retrieval_quality",
+]
 
 
 class RetrievalQuality(Enum):
@@ -246,6 +251,7 @@ def verify_decomposition(
             )
 
             import logging
+
             logger = logging.getLogger(__name__)
             logger.info(f"User selected option: {user_choice}")
 

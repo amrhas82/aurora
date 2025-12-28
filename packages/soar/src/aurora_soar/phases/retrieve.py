@@ -69,7 +69,7 @@ def filter_by_activation(chunks: list[Any], store: Store | None = None) -> tuple
                 # Query the activations table for this chunk's base_level
                 # SQLiteStore has a _get_connection method but it's internal
                 # We'll use get_activation if available, or fall back to attribute check
-                if hasattr(store, 'get_activation'):
+                if hasattr(store, "get_activation"):
                     activation = store.get_activation(chunk.id)
                 else:
                     # Fallback: check if chunk has activation attribute

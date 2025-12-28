@@ -68,9 +68,7 @@ class TestExecuteDirectLLM:
 
         # Execute
         executor = QueryExecutor()
-        result = executor.execute_direct_llm(
-            query="What is Python?", api_key="sk-ant-test123"
-        )
+        result = executor.execute_direct_llm(query="What is Python?", api_key="sk-ant-test123")
 
         # Verify
         assert result == "This is the LLM response"
@@ -167,9 +165,7 @@ class TestExecuteDirectLLM:
         # Execute with verbose
         executor = QueryExecutor()
         with patch("aurora_cli.execution.logger") as mock_logger:
-            executor.execute_direct_llm(
-                query="Test query", api_key="sk-ant-test123", verbose=True
-            )
+            executor.execute_direct_llm(query="Test query", api_key="sk-ant-test123", verbose=True)
 
             # Verify verbose logging calls
             assert mock_logger.info.call_count >= 1
@@ -272,9 +268,7 @@ class TestExecuteAurora:
         mock_orchestrator.execute.assert_called_once()
 
     @patch("aurora_cli.execution.QueryExecutor._initialize_orchestrator")
-    def test_execute_aurora_with_verbose_returns_trace(
-        self, mock_init_orch: Mock
-    ) -> None:
+    def test_execute_aurora_with_verbose_returns_trace(self, mock_init_orch: Mock) -> None:
         """Test execute_aurora() with verbose=True returns response and trace."""
         # Setup mocks
         mock_orchestrator = Mock()
@@ -327,13 +321,13 @@ class TestExecuteAurora:
 
         with pytest.raises(ValueError, match="Memory store is required"):
             executor.execute_aurora(
-                query="Test query", api_key="sk-ant-test123", memory_store=None  # type: ignore[arg-type]
+                query="Test query",
+                api_key="sk-ant-test123",
+                memory_store=None,  # type: ignore[arg-type]
             )
 
     @patch("aurora_cli.execution.QueryExecutor._initialize_orchestrator")
-    def test_execute_aurora_orchestrator_error_wrapped(
-        self, mock_init_orch: Mock
-    ) -> None:
+    def test_execute_aurora_orchestrator_error_wrapped(self, mock_init_orch: Mock) -> None:
         """Test execute_aurora() wraps orchestrator errors as APIError."""
         # Setup mock to raise error
         mock_orchestrator = Mock()
@@ -345,9 +339,7 @@ class TestExecuteAurora:
         # Execute and verify error
         executor = QueryExecutor()
         with pytest.raises(APIError):
-            executor.execute_aurora(
-                query="Test", api_key="sk-ant-test123", memory_store=mock_store
-            )
+            executor.execute_aurora(query="Test", api_key="sk-ant-test123", memory_store=mock_store)
 
 
 class TestInitializeLLMClient:
@@ -371,9 +363,7 @@ class TestInitializeLLMClient:
         assert result == mock_client
 
     @patch("aurora_cli.execution.AnthropicClient")
-    def test_initialize_llm_client_uses_config_model(
-        self, mock_anthropic_class: Mock
-    ) -> None:
+    def test_initialize_llm_client_uses_config_model(self, mock_anthropic_class: Mock) -> None:
         """Test _initialize_llm_client() uses model from config."""
         mock_client = Mock()
         mock_anthropic_class.return_value = mock_client
@@ -559,9 +549,7 @@ class TestGetPhaseSummary:
         executor = QueryExecutor()
 
         # Test different phase types
-        assert "Complexity:" in executor._get_phase_summary(
-            "assess", {"complexity": "high"}
-        )
+        assert "Complexity:" in executor._get_phase_summary("assess", {"complexity": "high"})
         assert "Retrieved 5 chunks" in executor._get_phase_summary(
             "retrieve", {"chunks_retrieved": 5}
         )
@@ -626,9 +614,7 @@ class TestCallLLMWithRetry:
     """Test LLM retry logic."""
 
     @patch("aurora_cli.execution.time.sleep")
-    def test_call_llm_with_retry_succeeds_on_first_attempt(
-        self, mock_sleep: Mock
-    ) -> None:
+    def test_call_llm_with_retry_succeeds_on_first_attempt(self, mock_sleep: Mock) -> None:
         """Test _call_llm_with_retry() succeeds on first attempt."""
         mock_llm = Mock()
         mock_response = Mock()
@@ -649,9 +635,7 @@ class TestCallLLMWithRetry:
         mock_sleep.assert_not_called()
 
     @patch("aurora_cli.execution.time.sleep")
-    def test_call_llm_with_retry_retries_on_rate_limit(
-        self, mock_sleep: Mock
-    ) -> None:
+    def test_call_llm_with_retry_retries_on_rate_limit(self, mock_sleep: Mock) -> None:
         """Test _call_llm_with_retry() retries on 429 rate limit error."""
         mock_llm = Mock()
 
@@ -677,9 +661,7 @@ class TestCallLLMWithRetry:
         mock_sleep.assert_called_once()
 
     @patch("aurora_cli.execution.time.sleep")
-    def test_call_llm_with_retry_retries_on_server_error(
-        self, mock_sleep: Mock
-    ) -> None:
+    def test_call_llm_with_retry_retries_on_server_error(self, mock_sleep: Mock) -> None:
         """Test _call_llm_with_retry() retries on 500-series server errors."""
         mock_llm = Mock()
 
@@ -703,9 +685,7 @@ class TestCallLLMWithRetry:
         mock_sleep.assert_called_once()
 
     @patch("aurora_cli.execution.time.sleep")
-    def test_call_llm_with_retry_fails_after_max_retries(
-        self, mock_sleep: Mock
-    ) -> None:
+    def test_call_llm_with_retry_fails_after_max_retries(self, mock_sleep: Mock) -> None:
         """Test _call_llm_with_retry() raises APIError after exhausting retries."""
         mock_llm = Mock()
         mock_llm.generate.side_effect = Exception("429 rate limit exceeded")
@@ -776,9 +756,7 @@ class TestCallLLMWithRetry:
         assert any("Retrying" in str(call) for call in log_calls)
 
     @patch("aurora_cli.execution.time.sleep")
-    def test_call_llm_with_retry_uses_exponential_backoff(
-        self, mock_sleep: Mock
-    ) -> None:
+    def test_call_llm_with_retry_uses_exponential_backoff(self, mock_sleep: Mock) -> None:
         """Test _call_llm_with_retry() uses exponential backoff for delays."""
         mock_llm = Mock()
         mock_response = Mock()

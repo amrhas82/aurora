@@ -252,8 +252,10 @@ class TestEscalationMetrics:
         complex_result = handler.assess_query(complex_query)
 
         # Results should be different
-        assert simple_result.use_aurora != complex_result.use_aurora or \
-               simple_result.score != complex_result.score
+        assert (
+            simple_result.use_aurora != complex_result.use_aurora
+            or simple_result.score != complex_result.score
+        )
 
     def test_confidence_reflects_assessment_quality(self):
         """Test confidence score reflects assessment quality."""

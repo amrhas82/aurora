@@ -21,9 +21,7 @@ class TestHeadlessCommandBasic:
         """Test headless command with missing prompt file fails."""
         runner = CliRunner()
 
-        result = runner.invoke(
-            headless_command, ["/nonexistent/prompt.md"]
-        )
+        result = runner.invoke(headless_command, ["/nonexistent/prompt.md"])
 
         assert result.exit_code != 0
         # Click handles path validation before command execution
@@ -34,9 +32,7 @@ class TestHeadlessCommandBasic:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest goal\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file), "--dry-run"]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file), "--dry-run"])
 
         assert "Headless Mode Configuration:" in result.output
         assert "Prompt" in result.output
@@ -49,9 +45,7 @@ class TestHeadlessCommandBasic:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file), "--budget", "0"]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file), "--budget", "0"])
 
         assert result.exit_code != 0
         assert "Budget must be positive" in result.output
@@ -62,9 +56,7 @@ class TestHeadlessCommandBasic:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file), "--budget", "-5.0"]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file), "--budget", "-5.0"])
 
         assert result.exit_code != 0
         assert "Budget must be positive" in result.output
@@ -75,9 +67,7 @@ class TestHeadlessCommandBasic:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file), "--max-iter", "0"]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file), "--max-iter", "0"])
 
         assert result.exit_code != 0
         assert "Max iterations must be positive" in result.output
@@ -88,9 +78,7 @@ class TestHeadlessCommandBasic:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file), "--max-iter", "-10"]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file), "--max-iter", "-10"])
 
         assert result.exit_code != 0
         assert "Max iterations must be positive" in result.output
@@ -120,9 +108,7 @@ class TestHeadlessCommandDryRun:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file), "--dry-run"]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file), "--dry-run"])
 
         assert "scratchpad" in result.output.lower()
 
@@ -206,9 +192,7 @@ class TestHeadlessCommandExecution:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file)]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file)])
 
         # Should show implementation warning
         assert (
@@ -222,9 +206,7 @@ class TestHeadlessCommandExecution:
         prompt_file = tmp_path / "experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file)]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file)])
 
         assert result.exit_code != 0
 
@@ -282,9 +264,7 @@ class TestHeadlessCommandDefaultScratchpad:
         prompt_file = tmp_path / "my_experiment.md"
         prompt_file.write_text("## Goal\nTest\n")
 
-        result = runner.invoke(
-            headless_command, [str(prompt_file), "--dry-run"]
-        )
+        result = runner.invoke(headless_command, [str(prompt_file), "--dry-run"])
 
         # Output might be wrapped, so check for the key parts
         assert "my_experiment" in result.output
@@ -304,9 +284,7 @@ class TestHeadlessCommandKeyboardInterrupt:
         with patch("aurora_soar.headless.orchestrator.HeadlessOrchestrator") as mock_orch:
             mock_orch.return_value.execute.side_effect = KeyboardInterrupt()
 
-            result = runner.invoke(
-                headless_command, [str(prompt_file)]
-            )
+            result = runner.invoke(headless_command, [str(prompt_file)])
 
             # Execution aborts before reaching orchestrator, so just verify exit code
             assert result.exit_code != 0

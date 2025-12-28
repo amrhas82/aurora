@@ -87,10 +87,10 @@ def divide(x: float, y: float) -> float:
     return x / y
 '''
 
-MALFORMED_PYTHON_FILE = '''
+MALFORMED_PYTHON_FILE = """
 def broken_function(
     # Missing closing parenthesis and body
-'''
+"""
 
 
 @pytest.fixture

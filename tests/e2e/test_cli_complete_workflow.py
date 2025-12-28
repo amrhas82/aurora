@@ -243,7 +243,9 @@ class TestCompleteCLIWorkflow:
 
         # Verify search found relevant code
         output = search_result.stdout.lower()
-        assert "auth" in output or "authenticate" in output, "Should find authentication-related code"
+        assert "auth" in output or "authenticate" in output, (
+            "Should find authentication-related code"
+        )
 
         # Step 3: Verify database contains indexed code
         import sqlite3
@@ -258,7 +260,9 @@ class TestCompleteCLIWorkflow:
         # Verify specific functions are indexed
         cursor.execute("SELECT content FROM chunks WHERE type = 'code'")
         all_content = [row[0] for row in cursor.fetchall()]
-        has_auth_content = any("authenticate" in str(c).lower() or "authmanager" in str(c).lower() for c in all_content)
+        has_auth_content = any(
+            "authenticate" in str(c).lower() or "authmanager" in str(c).lower() for c in all_content
+        )
         assert has_auth_content, "Should index AuthManager or authenticate method"
 
         conn.close()
@@ -318,7 +322,9 @@ class TestCompleteCLIWorkflow:
         # Verify stats output contains expected information
         output = stats_result.stdout.lower()
         # Stats should mention chunks or database information
-        assert "chunk" in output or "database" in output or "total" in output, "Stats should display database information"
+        assert "chunk" in output or "database" in output or "total" in output, (
+            "Stats should display database information"
+        )
 
 
 # ==============================================================================
@@ -380,7 +386,9 @@ class TestNewUserSetupWorkflow:
                 elif "AURORA_HOME" in os.environ:
                     del os.environ["AURORA_HOME"]
 
-    @pytest.mark.skip(reason="Requires tree-sitter Python parser to be built - covered by subprocess test")
+    @pytest.mark.skip(
+        reason="Requires tree-sitter Python parser to be built - covered by subprocess test"
+    )
     def test_e2e_new_user_direct_api_workflow(self, temp_cli_project):
         """Test new user workflow using direct API calls (coverage contribution).
 
@@ -414,9 +422,15 @@ class TestNewUserSetupWorkflow:
                 result = manager.index_path(str(temp_cli_project))
                 stats_after = manager.get_stats()
 
-                assert result.files_indexed > 0, f"Should index some files, got {result.files_indexed}"
-                assert result.chunks_created > 0, f"Should create chunks, got {result.chunks_created}"
-                assert stats_after.total_chunks > stats_before.total_chunks, f"Total chunks should increase: before={stats_before.total_chunks}, after={stats_after.total_chunks}"
+                assert result.files_indexed > 0, (
+                    f"Should index some files, got {result.files_indexed}"
+                )
+                assert result.chunks_created > 0, (
+                    f"Should create chunks, got {result.chunks_created}"
+                )
+                assert stats_after.total_chunks > stats_before.total_chunks, (
+                    f"Total chunks should increase: before={stats_before.total_chunks}, after={stats_after.total_chunks}"
+                )
 
                 # Step 3: Search using direct API
                 search_results = manager.search("AuthManager authenticate", limit=5)
@@ -500,7 +514,16 @@ def handle_request(request: dict) -> dict:
 
             # Search should find results from all projects
             search_result = subprocess.run(
-                ["aur", "mem", "search", "authenticate connect handle", "--db-path", str(db_path), "--limit", "10"],
+                [
+                    "aur",
+                    "mem",
+                    "search",
+                    "authenticate connect handle",
+                    "--db-path",
+                    str(db_path),
+                    "--limit",
+                    "10",
+                ],
                 capture_output=True,
                 text=True,
             )
@@ -810,10 +833,7 @@ class TestQueryEscalationWorkflow:
         from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 
         # Simple query should not escalate with keyword-only mode
-        config = EscalationConfig(
-            enable_keyword_only=True,
-            threshold=0.6
-        )
+        config = EscalationConfig(enable_keyword_only=True, threshold=0.6)
         handler = AutoEscalationHandler(config=config)
 
         # Simple queries (no complexity keywords) - test assess_query method

@@ -32,13 +32,13 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         quality = assess_retrieval_quality(
             verification=verification,
             high_quality_chunks=3,  # Exactly at threshold
-            total_chunks=5
+            total_chunks=5,
         )
 
         assert quality == RetrievalQuality.GOOD
@@ -54,13 +54,11 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         quality = assess_retrieval_quality(
-            verification=verification,
-            high_quality_chunks=5,
-            total_chunks=5
+            verification=verification, high_quality_chunks=5, total_chunks=5
         )
 
         assert quality == RetrievalQuality.GOOD
@@ -76,14 +74,12 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         # 10 total chunks but 0 high-quality
         quality = assess_retrieval_quality(
-            verification=verification,
-            high_quality_chunks=0,
-            total_chunks=10
+            verification=verification, high_quality_chunks=0, total_chunks=10
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -99,6 +95,7 @@ class TestRetrievalQualityEdgeCases:
 
         # Mock store that returns different activations
         mock_store = Mock()
+
         def get_activation_side_effect(chunk_id):
             if chunk_id in ["chunk0", "chunk1"]:
                 return 0.5  # High quality (>= 0.3)
@@ -123,13 +120,13 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         quality = assess_retrieval_quality(
             verification=verification,
             high_quality_chunks=0,
-            total_chunks=0  # Error/no retrieval
+            total_chunks=0,  # Error/no retrieval
         )
 
         assert quality == RetrievalQuality.NONE
@@ -183,10 +180,7 @@ class TestRetrievalQualityEdgeCases:
 
     def test_store_exception_handled_gracefully(self):
         """Test that exceptions from store.get_activation() are handled."""
-        chunks = [
-            Mock(spec=CodeChunk, id="chunk0"),
-            Mock(spec=CodeChunk, id="chunk1")
-        ]
+        chunks = [Mock(spec=CodeChunk, id="chunk0"), Mock(spec=CodeChunk, id="chunk1")]
 
         mock_store = Mock()
         # First call raises exception, second call succeeds
@@ -208,13 +202,13 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         quality = assess_retrieval_quality(
             verification=verification,
             high_quality_chunks=5,  # Enough chunks
-            total_chunks=5
+            total_chunks=5,
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -230,13 +224,13 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         quality = assess_retrieval_quality(
             verification=verification,
             high_quality_chunks=2,  # Just below threshold of 3
-            total_chunks=10
+            total_chunks=10,
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -247,7 +241,7 @@ class TestRetrievalQualityEdgeCases:
         chunks = [
             Mock(spec=CodeChunk, id="chunk0", activation=0.5),
             Mock(spec=CodeChunk, id="chunk1", activation=0.2),
-            Mock(spec=CodeChunk, id="chunk2", activation=0.4)
+            Mock(spec=CodeChunk, id="chunk2", activation=0.4),
         ]
 
         _, high_quality_count = filter_by_activation(chunks, store=None)
@@ -295,13 +289,11 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         quality = assess_retrieval_quality(
-            verification=verification,
-            high_quality_chunks=5,
-            total_chunks=5
+            verification=verification, high_quality_chunks=5, total_chunks=5
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -317,13 +309,11 @@ class TestRetrievalQualityEdgeCases:
             verdict=VerificationVerdict.PASS,
             issues=[],
             suggestions=[],
-            option_used=VerificationOption.SELF
+            option_used=VerificationOption.SELF,
         )
 
         quality = assess_retrieval_quality(
-            verification=verification,
-            high_quality_chunks=3,
-            total_chunks=3
+            verification=verification, high_quality_chunks=3, total_chunks=3
         )
 
         assert quality == RetrievalQuality.GOOD

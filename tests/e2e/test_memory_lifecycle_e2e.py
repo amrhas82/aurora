@@ -120,10 +120,7 @@ def test_complete_memory_lifecycle(temp_memory_project, temp_db_path):
     results = manager.search("hello function", limit=5)
     assert len(results) > 0
     # Check metadata for "hello" - CodeChunk stores function name in metadata
-    hello_result = next(
-        (r for r in results if "hello" in r.metadata.get("name", "").lower()),
-        None
-    )
+    hello_result = next((r for r in results if "hello" in r.metadata.get("name", "").lower()), None)
     assert hello_result is not None
 
     # Step 4: Modify module1.py (add new function, modify existing)
@@ -154,19 +151,13 @@ def greet(name: str) -> str:
     # Step 6: Search again - should find updated content
     results = manager.search("hello function", limit=5)
     assert len(results) > 0
-    hello_result = next(
-        (r for r in results if "hello" in r.metadata.get("name", "").lower()),
-        None
-    )
+    hello_result = next((r for r in results if "hello" in r.metadata.get("name", "").lower()), None)
     assert hello_result is not None
 
     # Step 7: Search for new function
     results = manager.search("greet someone by name", limit=5)
     assert len(results) > 0
-    greet_result = next(
-        (r for r in results if "greet" in r.metadata.get("name", "").lower()),
-        None
-    )
+    greet_result = next((r for r in results if "greet" in r.metadata.get("name", "").lower()), None)
     assert greet_result is not None
 
     # Step 8: Verify re-indexing replaced old chunks correctly
@@ -177,7 +168,9 @@ def greet(name: str) -> str:
     # Should have similar count to initial (updated, not accumulated)
     # Module1: 3 chunks (hello, goodbye, greet), Module2: 3 chunks (Calculator + 2 methods)
     # Total: ~6 chunks (allowing for variance in parsing)
-    assert total_chunks_after_update >= initial_chunk_count, f"Expected >= {initial_chunk_count} chunks, got {total_chunks_after_update}"
+    assert total_chunks_after_update >= initial_chunk_count, (
+        f"Expected >= {initial_chunk_count} chunks, got {total_chunks_after_update}"
+    )
 
 
 @pytest.mark.e2e
@@ -274,7 +267,9 @@ class DataProcessor:
     cursor = store._get_connection().cursor()
     cursor.execute("SELECT COUNT(*) FROM chunks")
     final_chunk_count = cursor.fetchone()[0]
-    assert final_chunk_count > initial_chunk_count, f"Should have more chunks after adding module3: {final_chunk_count} > {initial_chunk_count}"
+    assert final_chunk_count > initial_chunk_count, (
+        f"Should have more chunks after adding module3: {final_chunk_count} > {initial_chunk_count}"
+    )
     # Should have chunks from all 3 modules
     assert final_chunk_count == incremental_stats.chunks_created
 
@@ -286,7 +281,9 @@ class DataProcessor:
     cursor = store._get_connection().cursor()
     cursor.execute("SELECT COUNT(*) FROM chunks")
     total_chunks = cursor.fetchone()[0]
-    assert total_chunks == incremental_stats.chunks_created, f"DB count {total_chunks} should match stats {incremental_stats.chunks_created}"
+    assert total_chunks == incremental_stats.chunks_created, (
+        f"DB count {total_chunks} should match stats {incremental_stats.chunks_created}"
+    )
 
 
 @pytest.mark.e2e
@@ -430,10 +427,7 @@ def test_memory_lifecycle_search_ranking_stability(temp_memory_project, temp_db_
     initial_results = manager.search("calculator add subtract", limit=5)
     assert len(initial_results) > 0
     # Calculator class should be in results (metadata contains name)
-    calc_found = any(
-        "calculator" in r.metadata.get("name", "").lower()
-        for r in initial_results
-    )
+    calc_found = any("calculator" in r.metadata.get("name", "").lower() for r in initial_results)
     assert calc_found
 
     # Step 2: Modify module1 to also have math operations

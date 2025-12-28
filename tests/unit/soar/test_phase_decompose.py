@@ -145,9 +145,9 @@ class TestDecomposeQuery:
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["code_reader"],
         )
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_decompose_simple_query(
         self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
     ):
@@ -176,9 +176,9 @@ class TestDecomposeQuery:
         call_args = mock_reasoning_decompose.call_args
         assert call_args.kwargs["query"] == "Test query"
         assert call_args.kwargs["complexity"] == Complexity.SIMPLE
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_decompose_with_caching(
         self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
     ):
@@ -377,9 +377,9 @@ class TestDecomposeQuery:
         )
         assert result2.cached is False
         assert mock_reasoning_decompose.call_count == 2
+
     @pytest.mark.soar
     @pytest.mark.critical
-
     def test_decompose_with_empty_context_includes_note(
         self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
     ):

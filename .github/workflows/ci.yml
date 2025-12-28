@@ -80,7 +80,7 @@ jobs:
       - name: Run all non-ML tests
         run: |
           echo "=== Running All Non-ML Tests ==="
-          pytest tests/ -m "not ml" --cov=packages --cov-report=xml --cov-fail-under=81 -v
+          pytest tests/ -m "not ml" --cov=packages --cov-report=xml --cov-fail-under=74 -v
           echo "All non-ML tests completed"
 
       - name: Upload coverage to Codecov

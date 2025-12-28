@@ -181,13 +181,15 @@ If complexity is SIMPLE, skip phases 3-7 and go directly to solving LLM with ret
 
 ### Phase 4: Verify (Decomposition Verification)
 
-**Purpose**: Validate decomposition quality before expensive agent execution.
+**Purpose**: Validate decomposition quality before expensive agent execution, and assess retrieval quality to provide user guidance.
 
 **Inputs**:
 - Original query
 - Decomposition result
 - Verification option (A: self, B: adversarial)
 - Retry count
+- Optional `retrieval_context`: Contains `high_quality_count` and `total_chunks` from Phase 2
+- Optional `interactive_mode`: Boolean flag (default: False)
 
 **Outputs**:
 - `completeness`: 0.0-1.0 (covers all query aspects?)
@@ -198,6 +200,7 @@ If complexity is SIMPLE, skip phases 3-7 and go directly to solving LLM with ret
 - `verdict`: PASS | RETRY | FAIL
 - `issues`: List of identified problems
 - `suggestions`: List of improvements
+- `retrieval_quality`: NONE | WEAK | GOOD (see below)
 
 **Verification Options**:
 - **Option A (Self-Verification)**: Used for MEDIUM queries
@@ -215,6 +218,63 @@ If complexity is SIMPLE, skip phases 3-7 and go directly to solving LLM with ret
 - PASS: `overall_score ≥ 0.7` → Proceed to routing
 - RETRY: `0.5 ≤ overall_score < 0.7` AND `retry_count < 2` → Generate feedback, retry decomposition
 - FAIL: `overall_score < 0.5` OR `retry_count ≥ 2` → Return error with issues
+
+#### 4.1 Retrieval Quality Assessment
+
+After verification completes, Phase 4 assesses the quality of retrieved context to guide users toward better results.
+
+**Quality Levels**:
+
+- **NONE**: `total_chunks == 0`
+  - No indexed context available
+  - Query proceeds automatically using LLM general knowledge
+  - Phase 3 receives "No indexed context available. Using LLM general knowledge." message
+  - No user interaction required
+
+- **WEAK**: `groundedness < 0.7` OR `high_quality_chunks < 3`
+  - Retrieved context exists but quality is questionable
+  - Decomposition may not be well-grounded in actual codebase
+  - In interactive mode (CLI only), user is prompted with 3 options:
+    1. **Start anew** - Clear weak chunks, continue with general knowledge
+    2. **Start over** - Abort query, user should rephrase
+    3. **Continue** - Proceed with weak chunks (may produce generic results)
+  - In non-interactive mode (MCP, headless, automation), automatically continues
+
+- **GOOD**: `groundedness ≥ 0.7` AND `high_quality_chunks ≥ 3`
+  - Retrieved context is high-quality and relevant
+  - Decomposition is well-grounded in codebase
+  - Query proceeds automatically
+  - No user interaction required
+
+**Decision Criteria**:
+
+| Metric | Threshold | Meaning |
+|--------|-----------|---------|
+| `groundedness` | ≥ 0.7 | Decomposition claims are traceable to retrieved context |
+| `high_quality_chunks` | ≥ 3 | At least 3 chunks have activation score ≥ 0.3 (ACT-R threshold) |
+| `total_chunks` | > 0 | Context was retrieved (not empty) |
+
+**Interactive Mode Behavior** (CLI with default settings):
+
+When `interactive_mode=True` and quality is WEAK, user sees:
+```
+⚠ Warning: Retrieved context quality is weak
+  Groundedness: 0.62 (target: ≥0.7)
+  High-quality chunks: 2 (target: ≥3)
+
+Options:
+  1. Start anew - Clear weak matches, use general knowledge
+  2. Start over - Rephrase query for better matches
+  3. Continue - Proceed with weak matches (results may be generic)
+
+Choice (1-3):
+```
+
+**Non-Interactive Mode** (MCP, headless, `--non-interactive` flag):
+- WEAK quality → auto-continues silently
+- No prompts displayed
+- Retrieval quality metadata included in response for client-side handling
+- Suitable for automation, CI/CD, programmatic usage
 
 ### Phase 5: Route (Agent Routing)
 
@@ -409,6 +469,13 @@ The SOAR pipeline tracks costs at every LLM call site:
 - Never fail silently
 - Mark partial results clearly
 - Explain what couldn't be completed
+
+### Retrieval Quality Degradation
+- **No Match (NONE)**: Automatically proceeds with LLM general knowledge, no user intervention
+- **Weak Match (WEAK)**: In interactive mode, prompts user with clear options (start anew/over/continue); in non-interactive mode, auto-continues with weak context
+- **Quality metadata**: Always included in verification results for observability and client-side decision making
+- **Activation filtering**: Chunks with activation < 0.3 are tracked separately but not excluded (preserves context breadth)
+- **User guidance**: Interactive prompts explain quality issues and provide actionable choices
 
 ## Performance Characteristics
 

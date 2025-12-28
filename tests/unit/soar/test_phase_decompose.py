@@ -76,7 +76,24 @@ class TestBuildContextSummary:
             "reasoning_chunks": [],
         }
         summary = _build_context_summary(context)
-        assert "No specific context" in summary
+        assert "No indexed context available" in summary
+        assert "Using LLM general knowledge" in summary
+
+    def test_empty_context_triggers_note(self):
+        """Test that empty context returns correct message (Task 3.47)."""
+        context = {
+            "code_chunks": [],
+            "reasoning_chunks": [],
+        }
+        summary = _build_context_summary(context)
+        assert summary == "No indexed context available. Using LLM general knowledge."
+
+    def test_empty_context_note_includes_general_knowledge_phrase(self):
+        """Test exact wording of empty context note (Task 3.47)."""
+        context = {"code_chunks": [], "reasoning_chunks": []}
+        summary = _build_context_summary(context)
+        assert "general knowledge" in summary.lower()
+        assert "no indexed context" in summary.lower()
 
 
 class TestDecomposePhaseResult:
@@ -128,6 +145,8 @@ class TestDecomposeQuery:
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["code_reader"],
         )
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_decompose_simple_query(
         self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
@@ -157,6 +176,8 @@ class TestDecomposeQuery:
         call_args = mock_reasoning_decompose.call_args
         assert call_args.kwargs["query"] == "Test query"
         assert call_args.kwargs["complexity"] == Complexity.SIMPLE
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_decompose_with_caching(
         self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
@@ -356,3 +377,56 @@ class TestDecomposeQuery:
         )
         assert result2.cached is False
         assert mock_reasoning_decompose.call_count == 2
+    @pytest.mark.soar
+    @pytest.mark.critical
+
+    def test_decompose_with_empty_context_includes_note(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
+        """Test that empty context note is passed to LLM (Task 3.47)."""
+        clear_cache()
+        mock_reasoning_decompose.return_value = sample_decomposition
+
+        # Empty context
+        context = {"code_chunks": [], "reasoning_chunks": []}
+
+        decompose_query(
+            query="Test query",
+            context=context,
+            complexity="MEDIUM",
+            llm_client=mock_llm_client,
+        )
+
+        # Verify the context_summary passed includes the empty context note
+        call_args = mock_reasoning_decompose.call_args
+        context_summary = call_args.kwargs["context_summary"]
+        assert "No indexed context available" in context_summary
+        assert "Using LLM general knowledge" in context_summary
+
+    def test_decompose_caching_with_empty_context(
+        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+    ):
+        """Test that caching works with empty context (Task 3.47)."""
+        clear_cache()
+        mock_reasoning_decompose.return_value = sample_decomposition
+
+        context = {"code_chunks": [], "reasoning_chunks": []}
+
+        # First call with empty context
+        result1 = decompose_query(
+            query="Empty test",
+            context=context,
+            complexity="SIMPLE",
+            llm_client=mock_llm_client,
+        )
+        assert result1.cached is False
+
+        # Second call with same empty context - should use cache
+        result2 = decompose_query(
+            query="Empty test",
+            context=context,
+            complexity="SIMPLE",
+            llm_client=mock_llm_client,
+        )
+        assert result2.cached is True
+        assert mock_reasoning_decompose.call_count == 1  # Only called once

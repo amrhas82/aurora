@@ -125,6 +125,8 @@ def complex_decomposition():
 
 class TestRouteSubgoals:
     """Test the main route_subgoals function."""
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_route_simple_decomposition(self, agent_registry, simple_decomposition):
         """Test routing a simple decomposition with one subgoal."""
@@ -143,6 +145,8 @@ class TestRouteSubgoals:
 
         assert result.routing_metadata["fallback_count"] == 0
         assert result.routing_metadata["capability_searches"] == 0
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_route_complex_decomposition(self, agent_registry, complex_decomposition):
         """Test routing a complex decomposition with dependencies."""
@@ -158,6 +162,8 @@ class TestRouteSubgoals:
         assert "refactoring-engine" in agent_ids
 
         assert result.routing_metadata["fallback_count"] == 0
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_route_with_missing_agent(self, agent_registry, simple_decomposition):
         """Test routing when suggested agent doesn't exist."""

@@ -83,6 +83,7 @@ class SOAROrchestrator:
         solving_llm: LLMClient,
         cost_tracker: CostTracker | None = None,
         conversation_logger: ConversationLogger | None = None,
+        interactive_mode: bool = False,
     ):
         """Initialize SOAR orchestrator.
 
@@ -94,10 +95,12 @@ class SOAROrchestrator:
             solving_llm: LLM client for solving tasks (Tier 1 model: Haiku/GPT-3.5)
             cost_tracker: Optional cost tracker (creates default if not provided)
             conversation_logger: Optional conversation logger (creates default if not provided)
+            interactive_mode: If True, prompt user for weak retrieval matches (CLI only, default: False)
         """
         self.store = store
         self.agent_registry = agent_registry
         self.config = config
+        self.interactive_mode = interactive_mode
         self.reasoning_llm = reasoning_llm
         self.solving_llm = solving_llm
 
@@ -207,7 +210,9 @@ class SOAROrchestrator:
             self._phase_metadata["phase3_decompose"] = phase3_result
 
             # Phase 4: Verify decomposition
-            phase4_result = self._phase4_verify(phase3_result, query, phase1_result["complexity"])
+            phase4_result = self._phase4_verify(
+                phase3_result, query, phase1_result["complexity"], phase2_result
+            )
             self._phase_metadata["phase4_verify"] = phase4_result
 
             # Check verification verdict
@@ -338,7 +343,11 @@ class SOAROrchestrator:
             }
 
     def _phase4_verify(
-        self, decomposition_dict: dict[str, Any], query: str, complexity: str
+        self,
+        decomposition_dict: dict[str, Any],
+        query: str,
+        complexity: str,
+        retrieval_result: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Execute Phase 4: Decomposition Verification."""
         logger.info("Phase 4: Verifying decomposition")
@@ -353,12 +362,22 @@ class SOAROrchestrator:
             decomposition_data = decomposition_dict.get("decomposition", decomposition_dict)
             decomposition = DecompositionResult.from_dict(decomposition_data)
 
+            # Build retrieval context for quality assessment
+            retrieval_context = None
+            if retrieval_result is not None:
+                retrieval_context = {
+                    "high_quality_count": retrieval_result.get("high_quality_count", 0),
+                    "total_retrieved": retrieval_result.get("total_retrieved", 0),
+                }
+
             phase_result = verify.verify_decomposition(
                 decomposition=decomposition,
                 complexity=complexity,
                 llm_client=self.reasoning_llm,
                 query=query,
                 available_agents=available_agents,
+                interactive_mode=self.interactive_mode,
+                retrieval_context=retrieval_context,
             )
             result = phase_result.to_dict()
             result["_timing_ms"] = (time.time() - start_time) * 1000

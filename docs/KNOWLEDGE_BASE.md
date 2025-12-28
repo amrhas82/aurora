@@ -32,17 +32,31 @@ Last Updated: 2025-12-25 | Version: v0.2.0
 
 ## Development
 
-- **docs/development/TESTING.md** - Comprehensive testing guide
+### Testing & Quality
+
+- **docs/development/TESTING.md** - Comprehensive testing guide (philosophy, test pyramid, principles, anti-patterns, DI examples)
+- **docs/development/TEST_REFERENCE.md** - Complete test catalog (2,369 tests, coverage matrix, test statistics)
+- **docs/development/TESTING_TECHNICAL_DEBT.md** - Coverage gap analysis (81.06% vs 85% target, prioritized recommendations)
+- **docs/CLI_TESTING_GUIDE.md** - CLI-specific testing guide
+- **docs/CLI_TEST_RESULTS.md** - CLI test results and analysis
+
+**Test Suite Overview**:
+- **Total Tests**: 2,369 (1,810 unit, 500 integration, 59 E2E)
+- **Coverage**: 81.06% (Core: 86.8%, SOAR: 94%, Context-Code: 89.25%)
+- **Quality Gates**: ✅ DI pattern, ✅ Real components, ✅ Python 3.10-3.13
+- **Execution Time**: ~2-3 minutes (full suite)
+
+### Extension & Migration
+
 - **docs/development/EXTENSION_GUIDE.md** - Extending AURORA with new features
 - **docs/development/PROMPT_ENGINEERING_GUIDE.md** - Template design patterns
 - **docs/development/PHASE4_MIGRATION_GUIDE.md** - Upgrade guide
 - **docs/development/CODE_REVIEW_CHECKLIST.md** - Quality gate checklist
-- **docs/CLI_TESTING_GUIDE.md** - CLI-specific testing guide
-- **docs/CLI_TEST_RESULTS.md** - CLI test results and analysis
 
 ## CLI Reference
 
 - **docs/cli/CLI_USAGE_GUIDE.md** - Complete CLI command reference
+  - **[Retrieval Quality Handling](cli/CLI_USAGE_GUIDE.md#retrieval-quality-handling)** - Interactive prompts for weak/missing context
 - **docs/cli/QUICK_START.md** - Quick start for CLI users
 - **docs/cli/ERROR_CATALOG.md** - Error messages and solutions
 

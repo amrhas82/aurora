@@ -27,6 +27,21 @@ A cognitive architecture framework that brings intelligent memory, reasoning, an
 - Hybrid retrieval (60% activation + 40% semantic similarity)
 - Multi-tier caching for sub-500ms retrieval on 10K+ chunks
 
+**Retrieval Quality Handling**
+- Intelligent detection of no match / weak match / good match scenarios
+- Interactive prompts when retrieval quality is low (give users control)
+- Automatic groundedness scoring (prevents hallucination on weak context)
+- Non-interactive mode for CI/CD and automation (`--non-interactive` flag)
+
+**Decision Matrix**:
+| Scenario | Chunks | Groundedness | Action |
+|----------|--------|--------------|--------|
+| **No match** | 0 | N/A | Auto-proceed with general knowledge |
+| **Weak match** | >0 | <0.7 OR <3 high-quality | Prompt user (interactive) / auto-continue (non-interactive) |
+| **Good match** | >0 | ≥0.7 AND ≥3 high-quality | Auto-proceed with retrieved context |
+
+*See [CLI_USAGE_GUIDE.md](docs/cli/CLI_USAGE_GUIDE.md#retrieval-quality-handling) for detailed examples*
+
 **Agent Orchestration**
 - Discover and coordinate multiple AI agents by capability
 - Parallel and sequential task execution
@@ -390,14 +405,14 @@ make lint              # Ruff linter
 make format            # Format code
 make type-check        # MyPy type checker (100% type safety)
 make benchmark         # Performance benchmarks
-make coverage          # HTML coverage report (74%+ coverage)
+make coverage          # HTML coverage report (81%+ coverage)
 ```
 
 **Code Quality Standards**
 
 - **Linting:** Ruff with comprehensive rules
 - **Type Checking:** MyPy strict mode (zero type errors)
-- **Test Coverage:** 74%+ coverage maintained
+- **Test Coverage:** 81%+ coverage maintained
 - **Security:** Bandit security scanning
 - **Performance:** Benchmarks for critical operations
 

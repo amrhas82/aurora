@@ -32,6 +32,7 @@ from aurora.mcp.tools import AuroraMCPTools
 
 class TestBasicFunctionality:
     """Test basic aurora_get functionality with valid indices."""
+    @pytest.mark.mcp
 
     def test_get_valid_index_returns_chunk(self):
         """Getting a valid index should return the corresponding chunk."""
@@ -71,6 +72,7 @@ class TestBasicFunctionality:
         assert chunk["chunk_id"] == "code:test2.py:func2"
         assert chunk["content"] == "def func2(): pass"
         assert chunk["file_path"] == "test2.py"
+    @pytest.mark.mcp
 
     def test_get_first_item_index_1(self):
         """Index 1 should return the first item (1-indexed, not 0-indexed)."""

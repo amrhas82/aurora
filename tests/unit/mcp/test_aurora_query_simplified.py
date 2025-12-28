@@ -34,6 +34,8 @@ from aurora.mcp.tools import AuroraMCPTools
 class TestParameterValidation:
     """Test parameter validation for simplified aurora_query."""
 
+    @pytest.mark.critical
+    @pytest.mark.mcp
     def test_query_empty_string_returns_error(self):
         """Empty query string should return InvalidParameter error."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -44,6 +46,8 @@ class TestParameterValidation:
         assert response["error"]["type"] == "InvalidParameter"
         assert "empty" in response["error"]["message"].lower()
 
+    @pytest.mark.critical
+    @pytest.mark.mcp
     def test_query_whitespace_only_returns_error(self):
         """Whitespace-only query should return InvalidParameter error."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -54,6 +58,8 @@ class TestParameterValidation:
         assert response["error"]["type"] == "InvalidParameter"
         assert "empty" in response["error"]["message"].lower()
 
+    @pytest.mark.critical
+    @pytest.mark.mcp
     def test_invalid_type_filter_returns_error(self):
         """Invalid type_filter should return InvalidParameter error with valid options."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -92,6 +98,8 @@ class TestParameterValidation:
 class TestResponseFormat:
     """Test response format structure (FR-2.2)."""
 
+    @pytest.mark.critical
+    @pytest.mark.mcp
     def test_response_contains_context_section(self):
         """Response must include 'context' section with chunks."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -118,6 +126,8 @@ class TestResponseFormat:
             assert "chunks" in response["context"]
             assert isinstance(response["context"]["chunks"], list)
 
+    @pytest.mark.critical
+    @pytest.mark.mcp
     def test_response_contains_assessment_section(self):
         """Response must include 'assessment' section with complexity and confidence."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -204,6 +214,8 @@ class TestResponseFormat:
 class TestConfidenceHandling:
     """Test retrieval confidence calculation and suggestions (FR-2.4, FR-2.5)."""
 
+    @pytest.mark.critical
+    @pytest.mark.mcp
     def test_low_confidence_includes_suggestion(self):
         """Response with confidence < 0.5 must include suggestion (FR-2.5)."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -488,6 +500,8 @@ class TestComplexityAssessment:
 class TestNoAPIKeyRequired:
     """Test that aurora_query works without API key (FR-1)."""
 
+    @pytest.mark.critical
+    @pytest.mark.mcp
     def test_works_without_api_key_env(self):
         """aurora_query should work when ANTHROPIC_API_KEY env var is not set."""
         tools = AuroraMCPTools(db_path=":memory:")

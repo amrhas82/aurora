@@ -163,7 +163,10 @@ def _build_context_summary(context: dict[str, Any]) -> str:
         context: Context dict with code_chunks and reasoning_chunks
 
     Returns:
-        Summary string describing available context
+        Summary string describing available context. When no chunks are
+        available (empty retrieval), returns a note indicating that LLM
+        general knowledge will be used, signaling to downstream phases
+        that retrieval failed.
     """
     code_chunks = context.get("code_chunks", [])
     reasoning_chunks = context.get("reasoning_chunks", [])
@@ -182,8 +185,10 @@ def _build_context_summary(context: dict[str, Any]) -> str:
             f"decompositions and solutions"
         )
 
+    # When no context is available (0 code chunks AND 0 reasoning chunks),
+    # return special message to signal retrieval failure to downstream phases
     if not summary_parts:
-        return "No specific context retrieved (general query)"
+        return "No indexed context available. Using LLM general knowledge."
 
     return ". ".join(summary_parts) + "."
 

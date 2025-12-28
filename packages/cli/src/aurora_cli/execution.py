@@ -33,9 +33,10 @@ class QueryExecutor:
 
     Attributes:
         config: Configuration dictionary with execution settings
+        interactive_mode: Whether to prompt user for weak retrieval matches
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None, interactive_mode: bool = False):
         """Initialize QueryExecutor.
 
         Args:
@@ -44,10 +45,13 @@ class QueryExecutor:
                 - model: LLM model to use
                 - temperature: Sampling temperature
                 - max_tokens: Maximum tokens for generation
+            interactive_mode: If True, prompt user when retrieval quality is weak.
+                Only applicable to CLI usage (not MCP tools). Default: False.
         """
         self.config = config or {}
+        self.interactive_mode = interactive_mode
         self.error_handler = ErrorHandler()
-        logger.info("QueryExecutor initialized")
+        logger.info(f"QueryExecutor initialized (interactive_mode={interactive_mode})")
 
     def execute_direct_llm(
         self,
@@ -247,13 +251,14 @@ class QueryExecutor:
         # Initialize agent registry
         agent_registry = AgentRegistry()
 
-        # Create orchestrator
+        # Create orchestrator with interactive mode setting
         orchestrator = SOAROrchestrator(
             store=memory_store,
             agent_registry=agent_registry,
             config=config,
             reasoning_llm=reasoning_llm,
             solving_llm=solving_llm,
+            interactive_mode=self.interactive_mode,
         )
 
         return orchestrator

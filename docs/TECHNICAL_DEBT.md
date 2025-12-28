@@ -406,9 +406,107 @@ Cache invalidation uses file modification time only. Should also consider:
 
 ---
 
-### P0 - Critical (0 items)
+### P0 - Critical (1 item)
 
-*None* - Phase 2 SOAR pipeline is production-ready.
+#### TD-P2-016: Retrieval Quality Handling for No Match / Weak Match
+**Category**: User Experience & Query Orchestration
+**Location**: `packages/soar/src/aurora_soar/phases/retrieve.py`, `packages/soar/src/aurora_soar/phases/verify.py`
+**Impact**: Users confused by low-quality results when memory retrieval fails or returns weak matches
+**Effort**: M (2-3 days)
+
+**Description**:
+When memory retrieval returns no chunks or weak matches, the system doesn't handle it optimally:
+
+**Scenario 1: No Match (0 chunks)**
+```
+Query → Phase 2 (Retrieve) → 0 chunks → Phase 3 (Decompose with empty context)
+```
+Current behavior passes empty context, leading to decomposition without grounding.
+
+**Scenario 2: Weak Match (Borderline Quality)**
+```
+Query → Phase 2 (Retrieve) → 3 chunks, activation [0.2, 0.15, 0.1] (weak)
+         OR
+Query → Phase 4 (Verify) → groundedness < 0.7 → Proceed anyway
+```
+Low-quality chunks pollute context, verification catches it but doesn't offer user recourse.
+
+**Risk**:
+- Poor quality results when memory is insufficient
+- Users don't know retrieval failed (silent degradation)
+- No way to refine query or provide more context
+- LLM hallucinates using general knowledge without user awareness
+
+**Proposed Solution**:
+
+1. **No Match (0 chunks)**: Auto-proceed with LLM general knowledge
+   ```python
+   # Phase 3: Decompose
+   if len(code_chunks) == 0:
+       context_note = "No indexed context available. Using LLM general knowledge."
+   else:
+       context_note = summarize_chunks(code_chunks)
+   ```
+
+2. **Weak Match (Borderline Quality)**: Defer to user (interactive mode only)
+   ```python
+   # Phase 2: Retrieval Quality Check
+   high_quality_chunks = [c for c in chunks if c.activation >= 0.3]
+
+   # Phase 4: After Verify
+   if (verification.groundedness < 0.7 or len(high_quality_chunks) < 3) and config.interactive_mode:
+       choice = prompt_user(
+           f"""
+           ⚠️  Weak context match:
+           - Groundedness: {verification.groundedness:.2f}
+           - High-quality chunks: {len(high_quality_chunks)}
+
+           Options:
+           1. Start anew (ignore weak matches, use LLM general knowledge)
+           2. Start over (rephrase query and re-search)
+           3. Continue (let LLM judge relevance of weak matches)
+
+           Choice [1-3]:
+           """
+       )
+
+       if choice == "1":
+           # Clear weak chunks, proceed with general knowledge
+           code_chunks = []
+       elif choice == "2":
+           # Return to user for query refinement
+           return {"status": "rephrase_needed", "message": "Please rephrase query"}
+       # else: continue with weak chunks
+   ```
+
+**Decision Matrix**:
+
+| Scenario | Chunks | Groundedness | Activation ≥0.3 | Action |
+|----------|--------|--------------|-----------------|--------|
+| **No match** | 0 | N/A | 0 | Auto-proceed (general knowledge) |
+| **Weak match** | >0 | <0.7 | <3 | Defer to user (3 options) |
+| **Good match** | >0 | ≥0.7 | ≥3 | Auto-proceed (use chunks) |
+
+**Acceptance Criteria**:
+- [ ] Add activation threshold filtering (≥0.3) in Phase 2 retrieval
+- [ ] Add context note handling for empty retrieval in Phase 3
+- [ ] Add interactive user prompt in Phase 4 when groundedness < 0.7 OR high_quality_chunks < 3
+- [ ] CLI only (not MCP tools - those are non-interactive)
+- [ ] Add tests for all 3 scenarios (no match, weak match, good match)
+- [ ] Document behavior in CLI_USAGE_GUIDE.md
+- [ ] Add `--non-interactive` flag to skip prompts (default: auto-continue)
+
+**Files to Modify**:
+- `packages/soar/src/aurora_soar/phases/retrieve.py` (add activation threshold)
+- `packages/soar/src/aurora_soar/phases/decompose.py` (handle empty context)
+- `packages/soar/src/aurora_soar/phases/verify.py` (add user prompt after verification)
+- `packages/cli/src/aurora_cli/commands/query_command.py` (add interactive prompt handling)
+- `tests/unit/soar/test_retrieval_quality.py` (new test file)
+
+**Related Items**:
+- TD-P3-002 (Hybrid retrieval precision)
+- TD-P2-003 (Verification Option B)
+- TD-MCP-003 (aurora_query error recovery)
 
 ---
 
@@ -2210,25 +2308,26 @@ Setting up development environment requires:
 
 | Priority | Count | Resolved | Remaining | % Complete | Est. Effort |
 |----------|-------|----------|-----------|------------|-------------|
-| **P0 - Critical** | 0 | 0 | 0 | - | 0 weeks |
-| **P1 - High** | 18 | 2 | 16 | 11% | 7-10 weeks (was 7-9) |
-| **P2 - Medium** | 27 | 0 | 27 | 0% | 9-12 weeks (was 8-10) |
-| **P3 - Low** | 12 | 0 | 12 | 0% | 3-4 weeks (was 2-3) |
-| **Total** | 57 | 2 | 55 | 4% | 19-26 weeks (was 17-22) |
+| **P0 - Critical** | 1 | 0 | 1 | 0% | 2-3 days |
+| **P1 - High** | 18 | 2 | 16 | 11% | 7-10 weeks |
+| **P2 - Medium** | 27 | 0 | 27 | 0% | 9-12 weeks |
+| **P3 - Low** | 12 | 0 | 12 | 0% | 3-4 weeks |
+| **Total** | 58 | 2 | 56 | 3% | 19-26 weeks |
 
 ### By Category
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Test Coverage Gap | 14 | 25% |
+| Test Coverage Gap | 14 | 24% |
 | Documentation | 11 | 19% |
 | Performance | 7 | 12% |
-| Feature Completeness | 6 | 11% |
-| Developer Experience | 6 | 11% |
+| Feature Completeness | 6 | 10% |
+| Developer Experience | 6 | 10% |
+| User Experience | 1 | 2% |
 | Reliability | 4 | 7% |
 | Type Safety | 3 | 5% |
 | Observability | 3 | 5% |
-| Configuration | 2 | 4% |
+| Configuration | 2 | 3% |
 | Others | 1 | 2% |
 
 ### By Phase
@@ -2236,7 +2335,7 @@ Setting up development environment requires:
 | Phase | Count | Est. Effort |
 |-------|-------|-------------|
 | Phase 1 | 12 | 4-6 weeks |
-| Phase 2 | 15 | 6-8 weeks |
+| Phase 2 | 16 | 6-8 weeks |
 | Phase 3 | 20 | 8-10 weeks |
 | Phase 4 (MCP) | 10 | 2-3 weeks |
 | Cross-Phase | 8 | 4-6 weeks |
@@ -2246,8 +2345,8 @@ Setting up development environment requires:
 | Effort | Count | % of Total |
 |--------|-------|------------|
 | XS (<2h) | 4 | 7% |
-| S (2-8h) | 17 | 30% |
-| M (1-3d) | 23 | 40% |
+| S (2-8h) | 17 | 29% |
+| M (1-3d) | 24 | 41% |
 | L (1-2w) | 12 | 21% |
 | XL (2w+) | 1 | 2% |
 

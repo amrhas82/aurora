@@ -19,6 +19,8 @@ from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler, Memory
 class TestCustomExceptions:
     """Test custom exception classes."""
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_configuration_error_inheritance(self):
         """ConfigurationError should inherit from AuroraError and Exception."""
         error = ConfigurationError("test error")
@@ -45,6 +47,8 @@ class TestErrorHandler:
         """Set up test fixtures."""
         self.handler = ErrorHandler()
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_handle_api_error_authentication(self):
         """Test handling of authentication errors (401)."""
         error = Exception("401 Unauthorized")
@@ -54,6 +58,8 @@ class TestErrorHandler:
         assert "ANTHROPIC_API_KEY" in result
         assert "console.anthropic.com" in result
 
+    @pytest.mark.cli
+    @pytest.mark.critical
     def test_handle_api_error_rate_limit(self):
         """Test handling of rate limit errors (429)."""
         error = Exception("429 Rate limit exceeded")

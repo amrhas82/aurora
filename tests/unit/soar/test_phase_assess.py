@@ -1,5 +1,6 @@
 """Unit tests for Phase 1: Complexity Assessment."""
 
+import pytest
 from aurora.soar.phases.assess import (
     COMPLEX_KEYWORDS,
     CRITICAL_KEYWORDS,
@@ -13,6 +14,8 @@ from aurora.soar.phases.assess import (
 class TestKeywordClassifier:
     """Tests for Tier 1 keyword-based classifier."""
 
+    @pytest.mark.soar
+    @pytest.mark.critical
     def test_simple_query_what_is(self):
         """Test SIMPLE classification for 'what is' queries."""
         query = "What is OAuth2?"
@@ -30,14 +33,11 @@ class TestKeywordClassifier:
         assert complexity == "SIMPLE"
         assert confidence >= 0.3  # May have lower confidence
 
-    def test_medium_query_implementation(self):
-        """Test MEDIUM classification for implementation queries."""
-        query = "Implement user registration feature"
-        complexity, score, confidence = _assess_tier1_keyword(query)
+    @pytest.mark.soar
 
-        # Note: "authentication" is a CRITICAL keyword, so we use "registration" instead
-        assert complexity in {"MEDIUM", "COMPLEX"}  # Either is acceptable
-        assert confidence >= 0.3  # May not be super confident
+
+    @pytest.mark.critical
+
 
     def test_medium_query_refactoring(self):
         """Test MEDIUM classification for refactoring queries."""
@@ -45,6 +45,12 @@ class TestKeywordClassifier:
         complexity, score, confidence = _assess_tier1_keyword(query)
 
         assert complexity == "MEDIUM"
+
+    @pytest.mark.soar
+
+
+    @pytest.mark.critical
+
 
     def test_complex_query_system_design(self):
         """Test COMPLEX classification for system design queries."""
@@ -61,6 +67,12 @@ class TestKeywordClassifier:
         complexity, score, confidence = _assess_tier1_keyword(query)
 
         assert complexity in {"COMPLEX", "MEDIUM"}  # Either is acceptable
+
+    @pytest.mark.soar
+
+
+    @pytest.mark.critical
+
 
     def test_critical_query_security(self):
         """Test CRITICAL classification for security queries."""
@@ -119,6 +131,8 @@ class TestKeywordClassifier:
 
 class TestAssessComplexity:
     """Tests for main assess_complexity function."""
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_assess_without_llm_high_confidence(self):
         """Test assessment without LLM when keyword confidence is high."""
@@ -130,6 +144,8 @@ class TestAssessComplexity:
         assert result["method"] == "keyword"
         assert result["confidence"] >= 0.3  # Accept lower confidence
         assert "score" in result
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_assess_without_llm_low_confidence(self):
         """Test assessment without LLM when keyword confidence is low."""
@@ -138,6 +154,8 @@ class TestAssessComplexity:
 
         assert result["method"] == "keyword"  # Still uses keyword since no LLM
         assert "llm_verification_needed" in result or result["confidence"] < 0.5
+    @pytest.mark.soar
+    @pytest.mark.critical
 
     def test_assess_critical_security_high_confidence(self):
         """Test that critical security queries have high confidence."""

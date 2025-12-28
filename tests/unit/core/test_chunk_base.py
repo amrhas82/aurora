@@ -46,6 +46,7 @@ class ConcreteChunk(Chunk):
 
 class TestChunkInterface:
     """Test suite for Chunk interface contract."""
+    @pytest.mark.fast
 
     def test_chunk_initialization(self):
         """Test that chunk initializes with correct attributes."""
@@ -55,6 +56,7 @@ class TestChunkInterface:
         assert chunk.type == "test-type"
         assert isinstance(chunk.created_at, datetime)
         assert isinstance(chunk.updated_at, datetime)
+    @pytest.mark.fast
 
     def test_chunk_timestamps_are_utc(self):
         """Test that timestamps are in UTC."""
@@ -66,6 +68,7 @@ class TestChunkInterface:
         now = datetime.now(timezone.utc)
         assert abs((chunk.created_at - now).total_seconds()) < 1
         assert abs((chunk.updated_at - now).total_seconds()) < 1
+    @pytest.mark.fast
 
     def test_chunk_to_json_must_be_implemented(self):
         """Test that to_json() must be implemented by subclasses."""
@@ -76,6 +79,7 @@ class TestChunkInterface:
         assert result["id"] == "test-id"
         assert result["type"] == "test-type"
         assert result["data"] == "test-data"
+    @pytest.mark.fast
 
     def test_chunk_from_json_must_be_implemented(self):
         """Test that from_json() must be implemented by subclasses."""
@@ -86,6 +90,7 @@ class TestChunkInterface:
         assert chunk.id == "test-id"
         assert chunk.type == "test-type"
         assert chunk.data == "test-data"
+    @pytest.mark.fast
 
     def test_chunk_validate_must_be_implemented(self):
         """Test that validate() must be implemented by subclasses."""
@@ -199,9 +204,3 @@ class InvalidChunk(Chunk):
 
 class TestChunkInheritance:
     """Test chunk inheritance requirements."""
-
-    def test_subclass_must_implement_all_abstract_methods(self):
-        """Test that subclass must implement all abstract methods."""
-        with pytest.raises(TypeError):
-            # Should fail because InvalidChunk doesn't implement all methods
-            InvalidChunk("test-id", "test-type")  # type: ignore

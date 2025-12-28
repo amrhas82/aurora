@@ -136,6 +136,8 @@ class TestSQLiteStore(StoreContractTests):
         cursor = conn.execute("PRAGMA foreign_keys")
         enabled = cursor.fetchone()[0]
         assert enabled == 1, "Foreign keys should be enabled"
+    @pytest.mark.core
+    @pytest.mark.critical
 
     def test_save_chunk_validation_error(self, store):
         """Test that invalid chunks are rejected."""
@@ -150,6 +152,8 @@ class TestSQLiteStore(StoreContractTests):
                 line_end=5,  # End before start - invalid
             )
             store.save_chunk(invalid_chunk)
+    @pytest.mark.core
+    @pytest.mark.critical
 
     def test_save_chunk_updates_timestamp(self, store):
         """Test that saving a chunk updates the updated_at timestamp."""
@@ -229,6 +233,8 @@ class TestSQLiteStore(StoreContractTests):
         assert row is not None, "Activation record should be created"
         assert row[0] == 0.0, "Initial base_level should be 0.0"
         assert row[1] == 0, "Initial access_count should be 0"
+    @pytest.mark.core
+    @pytest.mark.critical
 
     def test_update_activation_increments_count(self, store):
         """Test that updating activation increments access count."""
@@ -245,6 +251,8 @@ class TestSQLiteStore(StoreContractTests):
         )
         count = cursor.fetchone()[0]
         assert count == 2, "Access count should be incremented"
+    @pytest.mark.core
+    @pytest.mark.critical
 
     def test_retrieve_by_activation_ordering(self, store):
         """Test that results are ordered by activation (highest first)."""
@@ -275,6 +283,8 @@ class TestSQLiteStore(StoreContractTests):
         assert activations == sorted(activations, reverse=True), (
             "Results should be ordered by activation (highest first)"
         )
+    @pytest.mark.core
+    @pytest.mark.critical
 
     def test_get_related_chunks_depth_limit(self, store):
         """Test that relationship traversal respects max_depth."""

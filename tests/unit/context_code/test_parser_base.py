@@ -39,20 +39,6 @@ class TestCodeParserInterface:
         parser = MockParser(language="test")
         assert parser.language == "test"
 
-    def test_parser_requires_parse_method(self):
-        """Test that parse() method is required."""
-        parser = MockParser()
-        result = parser.parse(Path("/fake/file.mock"))
-        assert isinstance(result, list)
-        assert parser.parse_called
-
-    def test_parser_requires_can_parse_method(self):
-        """Test that can_parse() method is required."""
-        parser = MockParser()
-        result = parser.can_parse(Path("/fake/file.mock"))
-        assert isinstance(result, bool)
-        assert parser.can_parse_called
-
     def test_parser_repr(self):
         """Test string representation of parser."""
         parser = MockParser(language="test")

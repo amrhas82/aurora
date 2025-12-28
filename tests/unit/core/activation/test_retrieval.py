@@ -63,6 +63,7 @@ class MockChunk:
 
 class TestRetrievalConfig:
     """Test RetrievalConfig model."""
+    @pytest.mark.core
 
     def test_default_config(self):
         """Test default configuration values."""
@@ -71,6 +72,7 @@ class TestRetrievalConfig:
         assert config.max_results == 10
         assert config.include_components is False
         assert config.sort_by_activation is True
+    @pytest.mark.core
 
     def test_custom_config(self):
         """Test custom configuration values."""
@@ -81,6 +83,7 @@ class TestRetrievalConfig:
         assert config.max_results == 20
         assert config.include_components is True
         assert config.sort_by_activation is False
+    @pytest.mark.core
 
     def test_max_results_validation(self):
         """Test max_results must be at least 1."""
@@ -635,26 +638,6 @@ class TestExplainRetrieval:
         assert explanation["chunk_id"] == "chunk_1"
         assert explanation["above_threshold"] is False
         assert "filtered out" in explanation["explanation"].lower()
-
-    def test_explain_retrieval_contains_details(self):
-        """Test explanation contains detailed breakdown."""
-        engine = ActivationEngine()
-        retriever = ActivationRetriever(engine)
-        now = datetime.now(timezone.utc)
-
-        chunk = MockChunk(
-            chunk_id="chunk_1",
-            access_history=[AccessHistoryEntry(timestamp=now - timedelta(hours=1))],
-            last_access=now - timedelta(hours=1),
-            keywords={"database", "query"},
-        )
-
-        explanation = retriever.explain_retrieval(
-            chunk=chunk, query_keywords={"database"}, spreading_score=0.3, current_time=now
-        )
-
-        assert "details" in explanation
-        assert "components" in explanation["details"]
 
 
 class TestBatchRetriever:

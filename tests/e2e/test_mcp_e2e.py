@@ -162,6 +162,9 @@ def temp_aurora_config(tmp_path):
 class TestE2EIndexSearchGet:
     """End-to-end tests for index → search → get workflow."""
 
+    @pytest.mark.critical
+    @pytest.mark.e2e
+    @pytest.mark.mcp
     def test_complete_search_workflow(self, e2e_tools):
         """Test complete workflow: index, search, get result."""
         tools, code_dir = e2e_tools
@@ -187,6 +190,9 @@ class TestE2EIndexSearchGet:
             # No results is acceptable - just verify no crash
             pass
 
+    @pytest.mark.critical
+    @pytest.mark.e2e
+    @pytest.mark.mcp
     def test_multiple_searches_with_get(self, e2e_tools):
         """Test multiple searches update cache correctly."""
         tools, code_dir = e2e_tools

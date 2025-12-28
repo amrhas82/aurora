@@ -321,6 +321,39 @@ class SQLiteStore(Store):
                     f"Failed to update activation for chunk: {chunk_id}", details=str(e)
                 )
 
+    def get_activation(self, chunk_id: ChunkID) -> float:
+        """
+        Get the current activation score for a chunk.
+
+        Args:
+            chunk_id: The chunk ID to query
+
+        Returns:
+            Current activation score (base_level) for the chunk, or 0.0 if not found
+
+        Raises:
+            StorageError: If storage operation fails
+        """
+        conn = self._get_connection()
+        try:
+            cursor = conn.execute(
+                """
+                SELECT base_level
+                FROM activations
+                WHERE chunk_id = ?
+                """,
+                (chunk_id,),
+            )
+            row = cursor.fetchone()
+            if row is None:
+                return 0.0
+            return float(row[0])
+
+        except sqlite3.Error as e:
+            raise StorageError(
+                f"Failed to get activation for chunk: {chunk_id}", details=str(e)
+            )
+
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
         """
         Retrieve chunks by activation threshold.

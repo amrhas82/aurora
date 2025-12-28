@@ -5,6 +5,54 @@ All notable changes to the AURORA project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+**Retrieval Quality Handling (TD-P2-016):**
+- 3-tier retrieval quality system: no match / weak match / good match detection
+- Interactive prompts for weak matches in CLI (groundedness < 0.7 OR < 3 high-quality chunks)
+- Automatic groundedness scoring to prevent hallucination on weak context
+- Activation threshold filtering (≥0.3) to exclude low-relevance chunks
+- `--non-interactive` flag for CI/CD and automation workflows
+- Production deployment guide for tuning activation and groundedness thresholds
+- MCP tools remain non-interactive (unaffected by retrieval quality handling)
+- Comprehensive test coverage: 7 integration tests + 18 edge case tests
+- Documentation in CLI_USAGE_GUIDE.md, TROUBLESHOOTING.md, and SOAR_ARCHITECTURE.md
+
+**Decision Matrix:**
+| Scenario | Chunks | Groundedness | CLI Interactive | CLI Non-Interactive | MCP/Headless |
+|----------|--------|--------------|-----------------|---------------------|--------------|
+| No match | 0 | N/A | Auto-proceed + note | Auto-proceed | Auto-proceed |
+| Weak match | >0 | <0.7 OR <3 high-quality | Prompt user (3 options) | Auto-continue | Auto-continue |
+| Good match | >0 | ≥0.7 AND ≥3 high-quality | Auto-proceed | Auto-proceed | Auto-proceed |
+
+### Changed
+
+**Test Suite Systematic Cleanup (Phases 1-5):**
+- Removed 20 low-value tests (constructor tests, implementation detail tests)
+- Archived 7 performance benchmarks for manual execution
+- Converted 79 @patch decorators to Dependency Injection pattern
+- Added 26 integration tests for CLI, memory manager, and auto-escalation
+- Improved test pyramid from 95/4/1 to 76/21/3 (unit/integration/E2E)
+- Increased coverage from 74.95% to 81.06% (+6.11 percentage points)
+- Created comprehensive testing documentation (TESTING.md, TEST_REFERENCE.md)
+- Marked 86 tests with pytest markers (critical, core, integration, e2e)
+- Fixed Python 3.11/3.12 compatibility (from 28+27 failures to 0)
+
+**Testing Documentation:**
+- Added `docs/development/TESTING.md` - Testing principles and best practices
+- Added `docs/development/TEST_REFERENCE.md` - Test categorization and markers
+- Added `docs/development/TESTING_TECHNICAL_DEBT.md` - Technical debt tracking
+
+### Fixed
+
+- Python 3.11/3.12 test failures caused by @patch decorators (79 instances)
+- Import organization issues (19 auto-fixes)
+- Test fragility across Python versions
+
+---
+
 ## [0.2.0] - 2025-01-24
 
 ### Added

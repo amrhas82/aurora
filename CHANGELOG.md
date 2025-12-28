@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+**Retrieval Quality Handling (TD-P2-016):**
+- 3-tier retrieval quality system: no match / weak match / good match detection
+- Interactive prompts for weak matches in CLI (groundedness < 0.7 OR < 3 high-quality chunks)
+- Automatic groundedness scoring to prevent hallucination on weak context
+- Activation threshold filtering (≥0.3) to exclude low-relevance chunks
+- `--non-interactive` flag for CI/CD and automation workflows
+- Production deployment guide for tuning activation and groundedness thresholds
+- MCP tools remain non-interactive (unaffected by retrieval quality handling)
+- Comprehensive test coverage: 7 integration tests + 18 edge case tests
+- Documentation in CLI_USAGE_GUIDE.md, TROUBLESHOOTING.md, and SOAR_ARCHITECTURE.md
+
+**Decision Matrix:**
+| Scenario | Chunks | Groundedness | CLI Interactive | CLI Non-Interactive | MCP/Headless |
+|----------|--------|--------------|-----------------|---------------------|--------------|
+| No match | 0 | N/A | Auto-proceed + note | Auto-proceed | Auto-proceed |
+| Weak match | >0 | <0.7 OR <3 high-quality | Prompt user (3 options) | Auto-continue | Auto-continue |
+| Good match | >0 | ≥0.7 AND ≥3 high-quality | Auto-proceed | Auto-proceed | Auto-proceed |
+
 ### Changed
 
 **Test Suite Systematic Cleanup (Phases 1-5):**

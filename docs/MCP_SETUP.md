@@ -544,6 +544,32 @@ This forces all queries to use SOAR pipeline (slower but more thorough).
 
 ---
 
+### Q: Do MCP tools use retrieval quality handling?
+
+**A:** No. MCP tools are non-interactive and do NOT use retrieval quality handling. They always return results regardless of quality (no filtering or prompts).
+
+**Retrieval Quality Handling (CLI Only)**:
+- The AURORA CLI (`aur query`) includes a 3-tier retrieval quality system that can interactively prompt users when retrieval fails or returns weak matches
+- This feature is **CLI-only** and does NOT affect MCP tools
+
+**Why MCP tools are exempt**:
+- MCP tools are designed to be non-interactive (no user prompts possible in MCP context)
+- MCP tools use `HybridRetriever` directly (not SOAR pipeline with quality checks)
+- Claude Code CLI handles quality assessment at a higher level
+
+**For quality-aware queries in Claude Code CLI**:
+- MCP tools: Always return raw results (no quality filtering)
+- CLI `aur query`: Can prompt user for weak matches (interactive mode only)
+- Headless mode: Always non-interactive, auto-continues regardless of quality
+
+**Summary**:
+- **MCP Tools** (`aurora_search`, `aurora_index`, `aurora_stats`, `aurora_context`, `aurora_related`, `aurora_query`): No retrieval quality handling, always return results
+- **CLI** (`aur query --interactive`): Optional retrieval quality prompts for weak matches
+- **CLI** (`aur query --non-interactive`): No prompts, auto-continues
+- **Headless**: Always non-interactive, no prompts
+
+---
+
 ### Q: How do I update the indexed codebase?
 
 **A:** Re-index anytime:

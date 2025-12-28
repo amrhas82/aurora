@@ -25,7 +25,7 @@ class TestInitCommandBasic:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             # Mock home to use temp directory
             with patch("aurora_cli.commands.init.Path.home", return_value=tmp_path):
-                result = runner.invoke(
+                runner.invoke(
                     init_command,
                     input="\n",  # Skip API key
                 )
@@ -40,7 +40,7 @@ class TestInitCommandBasic:
 
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch("aurora_cli.commands.init.Path.home", return_value=tmp_path):
-                result = runner.invoke(
+                runner.invoke(
                     init_command,
                     input="\nn\n",  # Skip API key, don't index
                 )
@@ -119,7 +119,7 @@ class TestInitCommandExistingConfig:
                 config_file = config_dir / "config.json"
                 config_file.write_text('{"existing": "config"}')
 
-                result = runner.invoke(
+                runner.invoke(
                     init_command,
                     input="y\n\nn\n",  # Yes overwrite, skip API key, no index
                 )
@@ -152,7 +152,7 @@ class TestInitCommandApiKey:
 
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch("aurora_cli.commands.init.Path.home", return_value=tmp_path):
-                result = runner.invoke(
+                runner.invoke(
                     init_command,
                     input="sk-ant-test123\nn\n",  # Valid API key, no index
                 )
@@ -235,7 +235,7 @@ class TestInitCommandConfigSchema:
 
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch("aurora_cli.commands.init.Path.home", return_value=tmp_path):
-                result = runner.invoke(
+                runner.invoke(
                     init_command,
                     input="\nn\n",  # Skip API key, no index
                 )
@@ -251,7 +251,7 @@ class TestInitCommandConfigSchema:
 
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch("aurora_cli.commands.init.Path.home", return_value=tmp_path):
-                result = runner.invoke(
+                runner.invoke(
                     init_command,
                     input="\nn\n",  # Skip API key, no index
                 )
@@ -267,7 +267,7 @@ class TestInitCommandConfigSchema:
 
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch("aurora_cli.commands.init.Path.home", return_value=tmp_path):
-                result = runner.invoke(
+                runner.invoke(
                     init_command,
                     input="\nn\n",  # Skip API key, no index
                 )
@@ -288,7 +288,7 @@ class TestInitCommandFilePermissions:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch("aurora_cli.commands.init.Path.home", return_value=tmp_path):
                 with patch("os.chmod") as mock_chmod:
-                    result = runner.invoke(
+                    runner.invoke(
                         init_command,
                         input="\nn\n",  # Skip API key, no index
                     )

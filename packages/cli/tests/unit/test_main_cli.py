@@ -69,7 +69,7 @@ class TestCliGroup:
         prompt_file.write_text("# Test Goal\n\nTest prompt content")
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--headless", str(prompt_file)])
+        runner.invoke(cli, ["--headless", str(prompt_file)])
 
         # Verify headless_command was invoked with the prompt path
         mock_headless.assert_called_once()
@@ -269,7 +269,7 @@ class TestVerifyCommand:
         mock_import.side_effect = side_effect_import
 
         runner = CliRunner()
-        result = runner.invoke(verify_command, [])
+        runner.invoke(verify_command, [])
 
         # Verify missing package is detected
         # The output should contain some indication of missing components

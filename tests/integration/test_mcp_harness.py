@@ -42,9 +42,7 @@ class TestMCPHarness:
         return AuroraMCPTools(db_path=temp_db)
 
     @pytest.fixture
-    @pytest.mark.mcp
-    @pytest.mark.integration
-    def test_codebase(self, tmp_path):
+    def codebase(self, tmp_path):
         """Create test codebase for indexing."""
         codebase = tmp_path / "test_code"
         codebase.mkdir()
@@ -70,10 +68,10 @@ def add_numbers(a: int, b: int) -> int:
     @pytest.mark.mcp
     @pytest.mark.integration
 
-    def test_aurora_search_valid_json(self, mcp_tools, test_codebase):
+    def test_aurora_search_valid_json(self, mcp_tools, codebase):
         """Test that aurora_search returns valid JSON."""
         # Index first
-        mcp_tools.aurora_index(str(test_codebase))
+        mcp_tools.aurora_index(str(codebase))
 
         # Search
         result = mcp_tools.aurora_search("hello world greeting")
@@ -95,9 +93,9 @@ def add_numbers(a: int, b: int) -> int:
     @pytest.mark.mcp
     @pytest.mark.integration
 
-    def test_aurora_index_returns_stats(self, mcp_tools, test_codebase):
+    def test_aurora_index_returns_stats(self, mcp_tools, codebase):
         """Test that aurora_index successfully indexes and returns stats."""
-        result = mcp_tools.aurora_index(str(test_codebase))
+        result = mcp_tools.aurora_index(str(codebase))
 
         # Parse result
         if isinstance(result, str):
@@ -117,10 +115,10 @@ def add_numbers(a: int, b: int) -> int:
     @pytest.mark.mcp
     @pytest.mark.integration
 
-    def test_aurora_stats_returns_counts(self, mcp_tools, test_codebase):
+    def test_aurora_stats_returns_counts(self, mcp_tools, codebase):
         """Test that aurora_stats returns valid counts."""
         # Index first
-        mcp_tools.aurora_index(str(test_codebase))
+        mcp_tools.aurora_index(str(codebase))
 
         # Get stats
         result = mcp_tools.aurora_stats()
@@ -143,10 +141,10 @@ def add_numbers(a: int, b: int) -> int:
     @pytest.mark.mcp
     @pytest.mark.integration
 
-    def test_aurora_context_retrieves_file(self, mcp_tools, test_codebase):
+    def test_aurora_context_retrieves_file(self, mcp_tools, codebase):
         """Test that aurora_context retrieves file content correctly."""
         # Get path to sample file
-        sample_file = test_codebase / "sample.py"
+        sample_file = codebase / "sample.py"
 
         # Retrieve content
         result = mcp_tools.aurora_context(str(sample_file))
@@ -171,10 +169,10 @@ def add_numbers(a: int, b: int) -> int:
 
         assert "error" in data, "Should have error field"
 
-    def test_aurora_related_returns_chunks(self, mcp_tools, test_codebase):
+    def test_aurora_related_returns_chunks(self, mcp_tools, codebase):
         """Test that aurora_related returns related chunks."""
         # Index first
-        mcp_tools.aurora_index(str(test_codebase))
+        mcp_tools.aurora_index(str(codebase))
 
         # Search to get a chunk ID
         search_result = mcp_tools.aurora_search("hello")
@@ -221,10 +219,10 @@ def add_numbers(a: int, b: int) -> int:
             data = result
         assert "error" in data, "Should return error for non-existent path"
 
-    def test_all_tools_return_valid_json(self, mcp_tools, test_codebase):
+    def test_all_tools_return_valid_json(self, mcp_tools, codebase):
         """Test that all tools return valid JSON (no exceptions)."""
         # Index codebase
-        index_result = mcp_tools.aurora_index(str(test_codebase))
+        index_result = mcp_tools.aurora_index(str(codebase))
         assert index_result is not None, "aurora_index should return result"
 
         # Search
@@ -236,7 +234,7 @@ def add_numbers(a: int, b: int) -> int:
         assert stats_result is not None, "aurora_stats should return result"
 
         # Context
-        sample_file = test_codebase / "sample.py"
+        sample_file = codebase / "sample.py"
         context_result = mcp_tools.aurora_context(str(sample_file))
         assert context_result is not None, "aurora_context should return result"
 

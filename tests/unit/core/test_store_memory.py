@@ -12,7 +12,7 @@ from aurora.core.exceptions import StorageError
 from aurora.core.store.memory import MemoryStore
 from aurora.core.types import ChunkID
 
-from tests.unit.core.test_store_base import StoreContractTests, TestChunk
+from tests.unit.core.test_store_base import SimpleChunk, StoreContractTests
 
 
 class TestMemoryStore(StoreContractTests):
@@ -35,8 +35,8 @@ class TestMemoryStore(StoreContractTests):
         """Test that reset() clears all stored data."""
         # Add some data
         chunks = [
-            TestChunk("test:chunk:1", "content1"),
-            TestChunk("test:chunk:2", "content2"),
+            SimpleChunk("test:chunk:1", "content1"),
+            SimpleChunk("test:chunk:2", "content2"),
         ]
 
         for chunk in chunks:
@@ -55,7 +55,7 @@ class TestMemoryStore(StoreContractTests):
 
     def test_contains_operator(self, store):
         """Test the 'in' operator for checking chunk existence."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
 
         # Chunk should not exist initially
         assert ChunkID(chunk.id) not in store
@@ -72,14 +72,14 @@ class TestMemoryStore(StoreContractTests):
 
         # Add chunks
         for i in range(5):
-            chunk = TestChunk(f"test:chunk:{i}", f"content{i}")
+            chunk = SimpleChunk(f"test:chunk:{i}", f"content{i}")
             store.save_chunk(chunk)
 
         assert len(store) == 5, "Store should have 5 chunks"
 
     def test_closed_store_raises_error(self, store):
         """Test that operations on closed store raise errors."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
         store.close()
 
         with pytest.raises(StorageError):
@@ -102,7 +102,7 @@ class TestMemoryStore(StoreContractTests):
 
     def test_save_chunk_stores_in_memory(self, store):
         """Test that chunks are stored in memory dictionary."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
         store.save_chunk(chunk)
 
         # Check internal storage
@@ -111,7 +111,7 @@ class TestMemoryStore(StoreContractTests):
 
     def test_get_chunk_returns_same_instance(self, store):
         """Test that get_chunk returns the same instance (no serialization)."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
         store.save_chunk(chunk)
 
         retrieved = store.get_chunk(ChunkID(chunk.id))
@@ -119,7 +119,7 @@ class TestMemoryStore(StoreContractTests):
 
     def test_activation_updates_timestamp(self, store):
         """Test that updating activation updates last_access timestamp."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
         store.save_chunk(chunk)
 
         # Get initial timestamp
@@ -140,9 +140,9 @@ class TestMemoryStore(StoreContractTests):
     def test_retrieve_by_activation_exact_match(self, store):
         """Test retrieving chunks with exact activation match."""
         chunks = [
-            TestChunk("test:chunk:1", "content1"),
-            TestChunk("test:chunk:2", "content2"),
-            TestChunk("test:chunk:3", "content3"),
+            SimpleChunk("test:chunk:1", "content1"),
+            SimpleChunk("test:chunk:2", "content2"),
+            SimpleChunk("test:chunk:3", "content3"),
         ]
 
         # Save chunks with specific activations
@@ -160,9 +160,9 @@ class TestMemoryStore(StoreContractTests):
     def test_retrieve_by_activation_sorted(self, store):
         """Test that results are sorted by activation (highest first)."""
         chunks = [
-            TestChunk("test:chunk:1", "low"),
-            TestChunk("test:chunk:2", "high"),
-            TestChunk("test:chunk:3", "medium"),
+            SimpleChunk("test:chunk:1", "low"),
+            SimpleChunk("test:chunk:2", "high"),
+            SimpleChunk("test:chunk:3", "medium"),
         ]
 
         # Save with different activations
@@ -186,8 +186,8 @@ class TestMemoryStore(StoreContractTests):
 
     def test_add_relationship_stores_metadata(self, store):
         """Test that relationships store all metadata."""
-        chunk1 = TestChunk("test:chunk:1", "content1")
-        chunk2 = TestChunk("test:chunk:2", "content2")
+        chunk1 = SimpleChunk("test:chunk:1", "content1")
+        chunk2 = SimpleChunk("test:chunk:2", "content2")
 
         store.save_chunk(chunk1)
         store.save_chunk(chunk2)
@@ -205,9 +205,9 @@ class TestMemoryStore(StoreContractTests):
     def test_get_related_chunks_single_hop(self, store):
         """Test getting related chunks with single hop."""
         chunks = [
-            TestChunk("test:chunk:1", "content1"),
-            TestChunk("test:chunk:2", "content2"),
-            TestChunk("test:chunk:3", "content3"),
+            SimpleChunk("test:chunk:1", "content1"),
+            SimpleChunk("test:chunk:2", "content2"),
+            SimpleChunk("test:chunk:3", "content3"),
         ]
 
         for chunk in chunks:
@@ -230,9 +230,9 @@ class TestMemoryStore(StoreContractTests):
         """Test getting related chunks with multiple hops."""
         # Create chain: 1 -> 2 -> 3
         chunks = [
-            TestChunk("test:chunk:1", "content1"),
-            TestChunk("test:chunk:2", "content2"),
-            TestChunk("test:chunk:3", "content3"),
+            SimpleChunk("test:chunk:1", "content1"),
+            SimpleChunk("test:chunk:2", "content2"),
+            SimpleChunk("test:chunk:3", "content3"),
         ]
 
         for chunk in chunks:
@@ -256,7 +256,7 @@ class TestMemoryStore(StoreContractTests):
     def test_get_related_chunks_no_duplicates(self, store):
         """Test that related chunks are not duplicated."""
         # Create diamond: 1 -> 2, 1 -> 3, 2 -> 4, 3 -> 4
-        chunks = [TestChunk(f"test:chunk:{i}", f"content{i}") for i in range(1, 5)]
+        chunks = [SimpleChunk(f"test:chunk:{i}", f"content{i}") for i in range(1, 5)]
 
         for chunk in chunks:
             store.save_chunk(chunk)
@@ -278,7 +278,7 @@ class TestMemoryStore(StoreContractTests):
         # This is implicit in the implementation, but we can verify
         # that it works without any file system dependencies
 
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
         store.save_chunk(chunk)
 
         retrieved = store.get_chunk(ChunkID(chunk.id))
@@ -289,7 +289,7 @@ class TestMemoryStore(StoreContractTests):
 
     def test_save_chunk_with_embeddings(self, store):
         """Test saving a chunk with embeddings attribute."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
 
         # Add embeddings as bytes (simulating numpy array serialization)
         test_embeddings = b"\x00\x01\x02\x03\x04\x05\x06\x07"
@@ -306,7 +306,7 @@ class TestMemoryStore(StoreContractTests):
 
     def test_get_chunk_with_embeddings(self, store):
         """Test retrieving a chunk with embeddings."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
 
         # Add embeddings
         test_embeddings = b"\x00\x01\x02\x03\x04\x05\x06\x07"
@@ -323,7 +323,7 @@ class TestMemoryStore(StoreContractTests):
 
     def test_save_chunk_without_embeddings(self, store):
         """Test saving a chunk without embeddings (optional field)."""
-        chunk = TestChunk("test:chunk:1", "content")
+        chunk = SimpleChunk("test:chunk:1", "content")
 
         # Don't set embeddings - should work fine
         store.save_chunk(chunk)
@@ -336,8 +336,8 @@ class TestMemoryStore(StoreContractTests):
 
     def test_retrieve_by_activation_with_embeddings(self, store):
         """Test that retrieve_by_activation preserves embeddings."""
-        chunk1 = TestChunk("test:chunk:1", "content1")
-        chunk2 = TestChunk("test:chunk:2", "content2")
+        chunk1 = SimpleChunk("test:chunk:1", "content1")
+        chunk2 = SimpleChunk("test:chunk:2", "content2")
 
         # Add embeddings to both chunks
         chunk1.embeddings = b"\x00\x01\x02\x03"

@@ -336,7 +336,7 @@ class TestSearchCommand:
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
             Path("aurora.db").touch()
-            result = runner.invoke(search_command, ["test", "--limit", "10"])
+            runner.invoke(search_command, ["test", "--limit", "10"])
 
         # Verify search was called with custom limit
         mock_manager.search.assert_called_once_with("test", limit=10)
@@ -490,7 +490,7 @@ class TestSearchCommand:
 
         # Run command with custom db-path
         runner = CliRunner()
-        result = runner.invoke(search_command, ["test", "--db-path", str(custom_db)])
+        runner.invoke(search_command, ["test", "--db-path", str(custom_db)])
 
         # Verify store was initialized with custom path
         mock_store_class.assert_called_once_with(str(custom_db))
@@ -636,7 +636,7 @@ class TestStatsCommand:
 
         # Run command with custom db-path
         runner = CliRunner()
-        result = runner.invoke(stats_command, ["--db-path", str(custom_db)])
+        runner.invoke(stats_command, ["--db-path", str(custom_db)])
 
         # Verify store was initialized with custom path
         mock_store_class.assert_called_once_with(str(custom_db))

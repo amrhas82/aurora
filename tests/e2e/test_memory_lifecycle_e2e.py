@@ -198,7 +198,6 @@ def test_memory_lifecycle_with_file_deletion(temp_memory_project, temp_db_path):
     manager = MemoryManager(store)
     stats = manager.index_path(str(project_dir))
     assert stats.files_indexed == 2
-    initial_total_chunks = stats.chunks_created
 
     # Step 2: Verify module1 chunks exist
     results = manager.search("hello", limit=10)

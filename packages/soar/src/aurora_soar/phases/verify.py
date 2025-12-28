@@ -371,11 +371,13 @@ The retrieved context may not be sufficient to answer your query accurately.
 
     # Prompt user for choice
     while True:
-        choice = click.prompt(
-            "\nSelect an option",
-            type=click.IntRange(1, 3),
-            default=3,
-            show_default=True,
+        choice = int(
+            click.prompt(
+                "\nSelect an option",
+                type=click.IntRange(1, 3),
+                default=3,
+                show_default=True,
+            )
         )
 
         # Confirm choice

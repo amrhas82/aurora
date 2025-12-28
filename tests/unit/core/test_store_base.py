@@ -15,8 +15,8 @@ from aurora.core.store.base import Store
 from aurora.core.types import ChunkID
 
 
-# Test Chunk implementation for testing
-class TestChunk(Chunk):
+# Helper Chunk implementation for testing
+class SimpleChunk(Chunk):
     """Simple chunk implementation for testing."""
 
     def __init__(self, chunk_id: str, content: str = "test"):
@@ -32,7 +32,7 @@ class TestChunk(Chunk):
         }
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "TestChunk":
+    def from_json(cls, data: dict[str, Any]) -> "SimpleChunk":
         chunk_id = data["id"]
         content = data.get("content", {}).get("data", "test")
         return cls(chunk_id, content)
@@ -72,15 +72,15 @@ class StoreContractTests(ABC):
     @pytest.fixture
     def sample_chunk(self):
         """Create a sample chunk for testing."""
-        return TestChunk("test:chunk:1", "Sample content")
+        return SimpleChunk("test:chunk:1", "Sample content")
 
     @pytest.fixture
     def sample_chunks(self):
         """Create multiple sample chunks for testing."""
         return [
-            TestChunk("test:chunk:1", "Content 1"),
-            TestChunk("test:chunk:2", "Content 2"),
-            TestChunk("test:chunk:3", "Content 3"),
+            SimpleChunk("test:chunk:1", "Content 1"),
+            SimpleChunk("test:chunk:2", "Content 2"),
+            SimpleChunk("test:chunk:3", "Content 3"),
         ]
 
     def test_save_and_retrieve_chunk(self, store, sample_chunk):
@@ -179,4 +179,4 @@ class StoreContractTests(ABC):
         store.close()
 
 
-__all__ = ["TestStoreInterface", "StoreContractTests", "TestChunk"]
+__all__ = ["TestStoreInterface", "StoreContractTests", "SimpleChunk"]

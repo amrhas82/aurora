@@ -188,7 +188,7 @@ class TestConfigIntegrationWorkflows:
 
         # 2. Load config should succeed, but validation should fail
         with pytest.raises(ConfigurationError) as exc_info:
-            config = load_config()  # Calls validate() internally
+            load_config()  # Calls validate() internally
 
         # 3. Verify validation error is caught
         error_message = str(exc_info.value)

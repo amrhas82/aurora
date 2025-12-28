@@ -165,7 +165,7 @@ class TestGracefulDegradation:
 
             # Attempt to open corrupted database - should raise StorageError
             with pytest.raises(StorageError, match="not a database"):
-                store = SQLiteStore(db_path=str(db_path))
+                SQLiteStore(db_path=str(db_path))
 
     def test_error_handler_formats_api_authentication_error(self):
         """Test ErrorHandler formats 401 authentication errors with solutions."""

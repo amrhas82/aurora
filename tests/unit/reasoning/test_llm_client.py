@@ -180,7 +180,7 @@ class TestAnthropicClient:
         mock_client_instance.messages.create.return_value = mock_response
 
         client = AnthropicClient(api_key="test-key")
-        response = client.generate("Test prompt", system="You are helpful")
+        client.generate("Test prompt", system="You are helpful")
 
         mock_client_instance.messages.create.assert_called_once()
         call_kwargs = mock_client_instance.messages.create.call_args[1]
@@ -202,7 +202,7 @@ class TestAnthropicClient:
         mock_client_instance.messages.create.return_value = mock_response
 
         client = AnthropicClient(api_key="test-key")
-        response = client.generate("Test prompt", max_tokens=2048, temperature=0.5)
+        client.generate("Test prompt", max_tokens=2048, temperature=0.5)
 
         call_kwargs = mock_client_instance.messages.create.call_args[1]
         assert call_kwargs["max_tokens"] == 2048
@@ -446,7 +446,7 @@ class TestOpenAIClient:
         mock_client_instance.chat.completions.create.return_value = mock_response
 
         client = OpenAIClient(api_key="test-key")
-        response = client.generate("Test prompt", system="You are helpful")
+        client.generate("Test prompt", system="You are helpful")
 
         mock_client_instance.chat.completions.create.assert_called_once()
         call_kwargs = mock_client_instance.chat.completions.create.call_args[1]
@@ -617,7 +617,7 @@ class TestOllamaClient:
         mock_client_instance.chat.return_value = mock_response
 
         client = OllamaClient()
-        response = client.generate("Test prompt", system="You are helpful")
+        client.generate("Test prompt", system="You are helpful")
 
         mock_client_instance.chat.assert_called_once()
         call_kwargs = mock_client_instance.chat.call_args[1]
@@ -675,7 +675,7 @@ class TestOllamaClient:
         mock_client_instance.chat.return_value = mock_response
 
         client = OllamaClient()
-        response = client.generate("Test prompt", max_tokens=2048, temperature=0.5)
+        client.generate("Test prompt", max_tokens=2048, temperature=0.5)
 
         call_kwargs = mock_client_instance.chat.call_args[1]
         options = call_kwargs["options"]

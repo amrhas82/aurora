@@ -606,7 +606,7 @@ class TestConfigChangeWorkflow:
 
             # Load should raise ConfigurationError due to strict validation
             with pytest.raises(ConfigurationError) as exc_info:
-                loaded = load_config(str(config_path))
+                load_config(str(config_path))
 
             # Verify error message mentions the invalid provider
             assert "invalid_provider" in str(exc_info.value)
@@ -635,7 +635,7 @@ class TestErrorRecoveryWorkflow:
             os.environ["AURORA_HOME"] = str(aurora_home)
 
             try:
-                search_result = subprocess.run(
+                subprocess.run(
                     ["aur", "mem", "search", "test", "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,

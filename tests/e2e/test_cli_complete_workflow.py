@@ -29,16 +29,15 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
-pytestmark = pytest.mark.ml
-
-# Import CLI components for direct testing (contributes to coverage)
 from aurora_cli.config import load_config
 from aurora_cli.errors import AuroraError, ConfigurationError, MemoryStoreError
 from aurora_cli.memory_manager import MemoryManager
 
 from aurora_core.chunks import CodeChunk
 from aurora_core.store import SQLiteStore
+
+
+pytestmark = pytest.mark.ml
 
 
 # ==============================================================================
@@ -839,11 +838,12 @@ class TestQueryEscalationWorkflow:
         handler = AutoEscalationHandler(config=config)
 
         # Simple queries (no complexity keywords) - test assess_query method
-        result1 = handler.assess_query("what is authentication")
-        assert result1.decision == "direct", "Simple query should use direct LLM"
+        # Use queries that don't contain CRITICAL keywords like "authentication", "security", etc.
+        result1 = handler.assess_query("what is the weather today")
+        assert result1.use_aurora is False, "Simple query should use direct LLM (not AURORA)"
 
-        result2 = handler.assess_query("how do I use this")
-        assert result2.decision == "direct", "Simple query should use direct LLM"
+        result2 = handler.assess_query("how do I use this tool")
+        assert result2.use_aurora is False, "Simple query should use direct LLM (not AURORA)"
 
         # This tests the escalation decision logic exists and works
         # Note: keyword-only mode checks for complexity indicators in the query

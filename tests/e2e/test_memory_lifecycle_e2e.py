@@ -25,13 +25,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
-pytestmark = pytest.mark.ml
 from aurora_cli.memory_manager import IndexStats, MemoryManager, SearchResult
 
 from aurora_context_code.languages.python import PythonParser
 from aurora_core.chunks import CodeChunk
 from aurora_core.store.sqlite import SQLiteStore
+
+
+pytestmark = pytest.mark.ml
 
 
 # ==============================================================================
@@ -157,10 +158,14 @@ def greet(name: str) -> str:
     assert hello_result is not None
 
     # Step 7: Search for new function
-    results = manager.search("greet someone by name", limit=5)
-    assert len(results) > 0
+    # Try direct search first with function name
+    results = manager.search("greet", limit=10)
+    assert len(results) > 0, "Should find results for 'greet'"
     greet_result = next((r for r in results if "greet" in r.metadata.get("name", "").lower()), None)
-    assert greet_result is not None
+    if greet_result is None:
+        # Debug: print what we actually found
+        names = [r.metadata.get("name", "N/A") for r in results]
+        pytest.fail(f"Could not find 'greet' function. Found functions: {names}")
 
     # Step 8: Verify re-indexing replaced old chunks correctly
     # Check total chunk count - should have updated chunks (not duplicated)

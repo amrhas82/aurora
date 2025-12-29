@@ -155,14 +155,21 @@ class TestCostTracker:
         """Create CostTracker instance with temp path."""
         return CostTracker(monthly_limit_usd=100.0, tracker_path=temp_tracker_path)
 
-    def test_init_default_path(self):
-        """Test CostTracker initialization with default path."""
+    def test_init_default_path(self, tmp_path, monkeypatch):
+        """Test CostTracker initialization with default path.
+
+        Uses monkeypatch to isolate from user's global config.
+        """
+        # Isolate from user's global ~/.aurora directory
+        fake_home = tmp_path / "home"
+        fake_home.mkdir()
+        monkeypatch.setenv("HOME", str(fake_home))
+
         tracker = CostTracker(monthly_limit_usd=50.0)
         assert tracker.monthly_limit_usd == 50.0
-        assert tracker.tracker_path == Path.home() / ".aurora" / "budget_tracker.json"
-        # Limit should be set correctly, regardless of what was loaded from disk
-        # (Could be 50.0 if starting fresh, or previous value if loading existing)
-        assert tracker.budget.limit_usd > 0
+        assert tracker.tracker_path == fake_home / ".aurora" / "budget_tracker.json"
+        # Limit should be set correctly (50.0 since starting fresh)
+        assert tracker.budget.limit_usd == 50.0
 
     def test_init_custom_path(self, temp_tracker_path):
         """Test CostTracker initialization with custom path."""
@@ -224,7 +231,9 @@ class TestCostTracker:
         """Test budget check at hard limit (100%)."""
         # Consume 90, check for 15 more → 105% total
         tracker.budget.consumed_usd = 90.0
-        can_proceed, message = tracker.check_budget(estimated_cost=15.0)
+        can_proceed, message = tracker.check_budget(
+            estimated_cost=15.0, raise_on_exceeded=False
+        )
         assert can_proceed is False
         assert "Budget exceeded" in message
         assert "105.0%" in message
@@ -232,7 +241,9 @@ class TestCostTracker:
     def test_check_budget_exactly_at_limit(self, tracker):
         """Test budget check exactly at 100%."""
         tracker.budget.consumed_usd = 95.0
-        can_proceed, message = tracker.check_budget(estimated_cost=5.0)
+        can_proceed, message = tracker.check_budget(
+            estimated_cost=5.0, raise_on_exceeded=False
+        )
         assert can_proceed is False
         assert "100.0%" in message
 
@@ -448,18 +459,30 @@ class TestCostEstimation:
 class TestBudgetEnforcement:
     """Test budget enforcement scenarios."""
 
-    def test_single_expensive_query_blocked(self):
+    def test_single_expensive_query_blocked(self, tmp_path, monkeypatch):
         """Test blocking single expensive query."""
+        # Isolate from user's global ~/.aurora directory
+        fake_home = tmp_path / "home"
+        fake_home.mkdir()
+        monkeypatch.setenv("HOME", str(fake_home))
+
         tracker = CostTracker(monthly_limit_usd=1.0)  # Very low limit
         tracker.budget.consumed_usd = 0.9  # Already at 90%
 
-        # Try to add query that would exceed
-        can_proceed, message = tracker.check_budget(estimated_cost=0.2)
+        # Try to add query that would exceed - use raise_on_exceeded=False to get return value
+        can_proceed, message = tracker.check_budget(
+            estimated_cost=0.2, raise_on_exceeded=False
+        )
         assert can_proceed is False
         assert "Budget exceeded" in message
 
-    def test_multiple_queries_soft_warning(self):
+    def test_multiple_queries_soft_warning(self, tmp_path, monkeypatch):
         """Test soft warning after multiple queries."""
+        # Isolate from user's global ~/.aurora directory
+        fake_home = tmp_path / "home"
+        fake_home.mkdir()
+        monkeypatch.setenv("HOME", str(fake_home))
+
         tracker = CostTracker(monthly_limit_usd=1.0)
 
         # Manually set consumed to 70% to trigger warning

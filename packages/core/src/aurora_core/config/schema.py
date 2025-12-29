@@ -342,6 +342,36 @@ CONFIG_SCHEMA: dict[str, Any] = {
             "additionalProperties": False,
             "description": "Memory and indexing configuration",
         },
+        "budget": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "number",
+                    "minimum": 0,
+                    "default": 5.0,
+                    "description": "Budget limit in dollars",
+                },
+                "tracker_path": {
+                    "type": "string",
+                    "default": "~/.aurora/budget_tracker.json",
+                    "description": "Path to budget tracker file",
+                },
+            },
+            "additionalProperties": False,
+            "description": "Budget tracking configuration",
+        },
+        "database": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "default": "~/.aurora/memory.db",
+                    "description": "Path to SQLite database file",
+                },
+            },
+            "additionalProperties": False,
+            "description": "Database configuration",
+        },
     },
     "additionalProperties": False,
 }

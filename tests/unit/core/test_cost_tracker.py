@@ -231,9 +231,7 @@ class TestCostTracker:
         """Test budget check at hard limit (100%)."""
         # Consume 90, check for 15 more → 105% total
         tracker.budget.consumed_usd = 90.0
-        can_proceed, message = tracker.check_budget(
-            estimated_cost=15.0, raise_on_exceeded=False
-        )
+        can_proceed, message = tracker.check_budget(estimated_cost=15.0, raise_on_exceeded=False)
         assert can_proceed is False
         assert "Budget exceeded" in message
         assert "105.0%" in message
@@ -241,9 +239,7 @@ class TestCostTracker:
     def test_check_budget_exactly_at_limit(self, tracker):
         """Test budget check exactly at 100%."""
         tracker.budget.consumed_usd = 95.0
-        can_proceed, message = tracker.check_budget(
-            estimated_cost=5.0, raise_on_exceeded=False
-        )
+        can_proceed, message = tracker.check_budget(estimated_cost=5.0, raise_on_exceeded=False)
         assert can_proceed is False
         assert "100.0%" in message
 
@@ -470,9 +466,7 @@ class TestBudgetEnforcement:
         tracker.budget.consumed_usd = 0.9  # Already at 90%
 
         # Try to add query that would exceed - use raise_on_exceeded=False to get return value
-        can_proceed, message = tracker.check_budget(
-            estimated_cost=0.2, raise_on_exceeded=False
-        )
+        can_proceed, message = tracker.check_budget(estimated_cost=0.2, raise_on_exceeded=False)
         assert can_proceed is False
         assert "Budget exceeded" in message
 

@@ -195,7 +195,7 @@ def init_command() -> None:
     config_data = CONFIG_SCHEMA.copy()
 
     # Set database path to respect AURORA_HOME
-    config_data["context"]["db_path"] = str(config_dir / "memory.db")
+    config_data["database"]["path"] = str(config_dir / "memory.db")
 
     # Set API key if provided (non-empty)
     if api_key and api_key.strip():

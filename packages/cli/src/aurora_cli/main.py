@@ -488,6 +488,12 @@ def _execute_dry_run(
 
     console.print(decision_table)
 
+    # Print parseable output for tests (after pretty table for humans)
+    # Tests look for "complexity: <LEVEL>" pattern with colon
+    console.print(f"\nComplexity: {result.complexity}", style="dim")
+    console.print(f"Score: {result.score:.3f}", style="dim")
+    console.print(f"Confidence: {result.confidence:.3f}", style="dim")
+
     # Estimate cost
     console.print("\n[bold]Estimated Cost:[/]")
     if result.use_aurora:

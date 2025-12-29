@@ -225,12 +225,14 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     # Normalize query
     query_lower = query.lower()
     query_words = set(re.findall(r"\b\w+\b", query_lower))
+    logger.debug(f"Query words extracted: {query_words}")
 
     # Count matches for each complexity level
     simple_matches = len(query_words & SIMPLE_KEYWORDS)
     medium_matches = len(query_words & MEDIUM_KEYWORDS)
     complex_matches = len(query_words & COMPLEX_KEYWORDS)
     critical_matches = len(query_words & CRITICAL_KEYWORDS)
+    logger.debug(f"Keyword matches: simple={simple_matches}, medium={medium_matches}, complex={complex_matches}, critical={critical_matches}")
 
     # Calculate total keywords present
     total_keywords = len(query_words)
@@ -243,6 +245,7 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     medium_score = (medium_matches / total_keywords) * 1.2
     complex_score = (complex_matches / total_keywords) * 1.5
     critical_score = (critical_matches / total_keywords) * 2.0
+    logger.debug(f"Raw scores: simple={simple_score:.3f}, medium={medium_score:.3f}, complex={complex_score:.3f}, critical={critical_score:.3f}")
 
     # Determine complexity based on highest score
     scores = {
@@ -254,6 +257,7 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
 
     complexity_level = max(scores, key=lambda k: scores[k])
     raw_score = scores[complexity_level]
+    logger.debug(f"Chosen complexity: {complexity_level}, normalized_score={raw_score:.3f}")
 
     # Normalize score to 0-1 range
     normalized_score = min(raw_score, 1.0)

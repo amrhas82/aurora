@@ -104,11 +104,7 @@ class DatabaseConnection:
         memory_manager.index_path(temp_workspace)
 
         # Create QueryExecutor with config dict
-        config_dict = {
-            "model": "claude-sonnet-4-20250514",
-            "temperature": 0.7,
-            "max_tokens": 500
-        }
+        config_dict = {"model": "claude-sonnet-4-20250514", "temperature": 0.7, "max_tokens": 500}
         executor = QueryExecutor(config=config_dict, interactive_mode=False)
 
         return executor, memory_manager
@@ -128,14 +124,16 @@ class DatabaseConnection:
         mock_response.output_tokens = 50
 
         # Patch the LLM client's generate method
-        with patch('aurora_reasoning.llm_client.AnthropicClient.generate', return_value=mock_response) as mock_generate:
+        with patch(
+            "aurora_reasoning.llm_client.AnthropicClient.generate", return_value=mock_response
+        ) as mock_generate:
             # Execute query about indexed code
             query = "How does DatabaseConnection handle connection failures?"
             result = executor.execute_direct_llm(
                 query=query,
                 api_key="test-api-key",
                 memory_store=memory_manager.store,
-                verbose=False
+                verbose=False,
             )
 
             # ASSERTION 1: LLM generate should be called
@@ -149,12 +147,13 @@ class DatabaseConnection:
             call_args = mock_generate.call_args
             if call_args:
                 # Get the prompt argument
-                prompt = call_args.kwargs.get('prompt', '')
+                prompt = call_args.kwargs.get("prompt", "")
 
                 # Check for context indicators
-                has_context = any(indicator in prompt.lower() for indicator in [
-                    'context', 'codebase', 'retrieved', 'database.py'
-                ])
+                has_context = any(
+                    indicator in prompt.lower()
+                    for indicator in ["context", "codebase", "retrieved", "database.py"]
+                )
 
                 assert has_context, (
                     f"LLM prompt doesn't include retrieved context\n"
@@ -180,7 +179,7 @@ class DatabaseConnection:
             captured_prompt = prompt
             return "Mocked response about database connections"
 
-        with patch.object(executor.llm_client, 'generate', side_effect=capture_prompt):
+        with patch.object(executor.llm_client, "generate", side_effect=capture_prompt):
             query = "What retry logic does DatabaseConnection use?"
             executor.execute_direct_llm(query)
 
@@ -188,14 +187,10 @@ class DatabaseConnection:
             assert captured_prompt is not None, "LLM was not called"
 
             # Look for file path patterns
-            has_file_ref = any(pattern in captured_prompt for pattern in [
-                'database.py',
-                'file:',
-                'File:',
-                'source:',
-                'Source:',
-                '.py'
-            ])
+            has_file_ref = any(
+                pattern in captured_prompt
+                for pattern in ["database.py", "file:", "File:", "source:", "Source:", ".py"]
+            )
 
             assert has_file_ref, (
                 f"Context doesn't include file path references\n"
@@ -219,7 +214,7 @@ class DatabaseConnection:
             captured_prompt = prompt
             return "Mocked response"
 
-        with patch.object(executor.llm_client, 'generate', side_effect=capture_prompt):
+        with patch.object(executor.llm_client, "generate", side_effect=capture_prompt):
             query = "Show me the connect method implementation"
             executor.execute_direct_llm(query)
 
@@ -227,11 +222,11 @@ class DatabaseConnection:
 
             # Look for code-specific content
             code_indicators = [
-                'def connect',
-                'DatabaseConnection',
-                'sqlite3',
-                'max_retries',
-                'connection'
+                "def connect",
+                "DatabaseConnection",
+                "sqlite3",
+                "max_retries",
+                "connection",
             ]
 
             matches = [ind for ind in code_indicators if ind in captured_prompt]
@@ -258,13 +253,13 @@ class DatabaseConnection:
         memory_manager = MemoryManager(config=config)
 
         executor = QueryExecutor(
-            config=config,
-            memory_store=memory_manager.store,
-            interactive_mode=False
+            config=config, memory_store=memory_manager.store, interactive_mode=False
         )
 
         # Mock LLM
-        with patch.object(executor.llm_client, 'generate', return_value="Generic response") as mock_generate:
+        with patch.object(
+            executor.llm_client, "generate", return_value="Generic response"
+        ) as mock_generate:
             query = "What is Python?"
             result = executor.execute_direct_llm(query)
 
@@ -300,7 +295,7 @@ class DatabaseConnection:
             captured_prompt = prompt
             return "Response based on indexed code"
 
-        with patch.object(executor.llm_client, 'generate', side_effect=capture_prompt):
+        with patch.object(executor.llm_client, "generate", side_effect=capture_prompt):
             query = "Explain the database retry mechanism"
             result = executor.execute_direct_llm(query)
 
@@ -331,7 +326,7 @@ class DatabaseConnection:
             # Return all available chunks (more than limit)
             return original_search(query, limit=100)
 
-        with patch.object(memory_manager, 'search', side_effect=mock_search_many_results):
+        with patch.object(memory_manager, "search", side_effect=mock_search_many_results):
             captured_prompt = None
 
             def capture_prompt(prompt, **kwargs):
@@ -339,14 +334,14 @@ class DatabaseConnection:
                 captured_prompt = prompt
                 return "Response"
 
-            with patch.object(executor.llm_client, 'generate', side_effect=capture_prompt):
+            with patch.object(executor.llm_client, "generate", side_effect=capture_prompt):
                 query = "database connection"
                 executor.execute_direct_llm(query)
 
                 # Count how many chunks appear in context
                 # (this is heuristic - checking for "def " or "class " occurrences)
                 if captured_prompt:
-                    chunk_markers = captured_prompt.count('def ') + captured_prompt.count('class ')
+                    chunk_markers = captured_prompt.count("def ") + captured_prompt.count("class ")
 
                     # Should include top chunks but not ALL chunks
                     assert chunk_markers <= 15, (
@@ -372,7 +367,7 @@ class TestContextFormatting:
                 content="def calculate_sum(numbers):\n    return sum(numbers)",
                 line_start=1,
                 line_end=2,
-                metadata={"docstring": "Calculate sum of numbers"}
+                metadata={"docstring": "Calculate sum of numbers"},
             ),
             Chunk(
                 chunk_id="chunk2",
@@ -382,8 +377,8 @@ class TestContextFormatting:
                 content="def calculate_average(numbers):\n    return sum(numbers) / len(numbers)",
                 line_start=4,
                 line_end=5,
-                metadata={"docstring": "Calculate average"}
-            )
+                metadata={"docstring": "Calculate average"},
+            ),
         ]
         return chunks
 
@@ -401,7 +396,7 @@ class TestContextFormatting:
             "# Lines: 1-2",
             "def calculate_sum",
             "# Lines: 4-5",
-            "def calculate_average"
+            "def calculate_average",
         ]
 
         # When fix is implemented, context should include:

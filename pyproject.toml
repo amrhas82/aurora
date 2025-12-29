@@ -75,6 +75,8 @@ dev = [
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -114,7 +116,7 @@ ignore = [
     "UP035",   # deprecated import
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "E402"]  # unused imports and module-level imports
 "tests/**/*.py" = [
     "S101",    # assert statements in tests

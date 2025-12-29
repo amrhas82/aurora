@@ -109,16 +109,16 @@ def func_c():
         # We add new lines each time so git blame tracks them separately
         for i in range(7):
             content = file_path.read_text()
-            lines = content.split('\n')
+            lines = content.split("\n")
             for idx, line in enumerate(lines):
-                if 'def func_a' in line:
+                if "def func_a" in line:
                     # Insert a new line before return statement
-                    lines.insert(idx + 2, f'    # Edit {i+1}')
+                    lines.insert(idx + 2, f"    # Edit {i + 1}")
                     break
-            file_path.write_text('\n'.join(lines))
+            file_path.write_text("\n".join(lines))
             subprocess.run(["git", "add", "test_file.py"], cwd=temp_git_repo, check=True)
             subprocess.run(
-                ["git", "commit", "-m", f"Edit func_a iteration {i+1}"],
+                ["git", "commit", "-m", f"Edit func_a iteration {i + 1}"],
                 cwd=temp_git_repo,
                 check=True,
                 capture_output=True,
@@ -127,17 +127,17 @@ def func_c():
         # Edit func_b 2 more times (3 total commits touching func_b's body)
         for i in range(2):
             content = file_path.read_text()
-            lines = content.split('\n')
+            lines = content.split("\n")
             # Find and add to func_b
             for idx, line in enumerate(lines):
-                if 'def func_b' in line:
+                if "def func_b" in line:
                     # Insert a new line before return
-                    lines.insert(idx + 2, f'    # Func B edit {i+1}')
+                    lines.insert(idx + 2, f"    # Func B edit {i + 1}")
                     break
-            file_path.write_text('\n'.join(lines))
+            file_path.write_text("\n".join(lines))
             subprocess.run(["git", "add", "test_file.py"], cwd=temp_git_repo, check=True)
             subprocess.run(
-                ["git", "commit", "-m", f"Edit func_b iteration {i+1}"],
+                ["git", "commit", "-m", f"Edit func_b iteration {i + 1}"],
                 cwd=temp_git_repo,
                 check=True,
                 capture_output=True,
@@ -150,18 +150,18 @@ def func_c():
 
         # Read the final file to find actual line numbers for each function
         final_content = file_path.read_text()
-        lines = final_content.split('\n')
+        lines = final_content.split("\n")
 
         # Find func_a lines
-        func_a_start = next(i for i, line in enumerate(lines, 1) if 'def func_a' in line)
+        func_a_start = next(i for i, line in enumerate(lines, 1) if "def func_a" in line)
         func_a_end = func_a_start + 10  # Wide range to capture all edits
 
         # Find func_b lines
-        func_b_start = next(i for i, line in enumerate(lines, 1) if 'def func_b' in line)
+        func_b_start = next(i for i, line in enumerate(lines, 1) if "def func_b" in line)
         func_b_end = func_b_start + 10
 
         # Find func_c lines
-        func_c_start = next(i for i, line in enumerate(lines, 1) if 'def func_c' in line)
+        func_c_start = next(i for i, line in enumerate(lines, 1) if "def func_c" in line)
         func_c_end = func_c_start + 3
 
         # func_a: 8 commits expected (initial + 7 edits)
@@ -223,14 +223,14 @@ def rarely_edited():
         for i in range(9):
             content = file_path.read_text()
             content = content.replace(
-                f'return {i+1}',
-                f'return {i+2}',
-                1  # Only first occurrence
+                f"return {i + 1}",
+                f"return {i + 2}",
+                1,  # Only first occurrence
             )
             file_path.write_text(content)
             subprocess.run(["git", "add", "test_file.py"], cwd=temp_git_repo, check=True)
             subprocess.run(
-                ["git", "commit", "-m", f"Edit frequently_edited #{i+1}"],
+                ["git", "commit", "-m", f"Edit frequently_edited #{i + 1}"],
                 cwd=temp_git_repo,
                 check=True,
                 capture_output=True,
@@ -395,9 +395,9 @@ abc123def456789012345678901234567890abcd 3 3
         # Commits 1 hour, 2 hours, and 3 hours ago
         current_time = 1703001600  # Fixed timestamp
         commit_times = [
-            current_time - 3600,    # 1 hour ago
-            current_time - 7200,    # 2 hours ago
-            current_time - 10800,   # 3 hours ago
+            current_time - 3600,  # 1 hour ago
+            current_time - 7200,  # 2 hours ago
+            current_time - 10800,  # 3 hours ago
         ]
 
         # Calculate with different decay rates
@@ -458,14 +458,11 @@ def actively_developed_function():
         # Edit ONLY actively_developed_function 5 times
         for i in range(5):
             content = file_path.read_text()
-            content = content.replace(
-                f'return "version_{i}"',
-                f'return "version_{i+1}"'
-            )
+            content = content.replace(f'return "version_{i}"', f'return "version_{i + 1}"')
             file_path.write_text(content)
             subprocess.run(["git", "add", "multi_function.py"], cwd=temp_git_repo, check=True)
             subprocess.run(
-                ["git", "commit", "-m", f"Update active function v{i+1}"],
+                ["git", "commit", "-m", f"Update active function v{i + 1}"],
                 cwd=temp_git_repo,
                 check=True,
                 capture_output=True,

@@ -53,7 +53,7 @@ def mock_config(temp_budget_file, temp_config_file):
         budget_limit=15.00,
         db_path="~/.aurora/memory.db",
         llm_provider="anthropic",
-        llm_model="claude-3-5-sonnet-20241022"
+        llm_model="claude-3-5-sonnet-20241022",
     )
     return config
 
@@ -64,10 +64,7 @@ class TestShowCommand:
     def test_show_displays_budget_status(self, mock_config, temp_budget_file):
         """Test show command displays budget status correctly."""
         # Initialize tracker with some spending
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         tracker.record_query("test query", 0.50, "success")
 
         runner = CliRunner()
@@ -85,10 +82,7 @@ class TestShowCommand:
     def test_show_displays_warning_at_soft_limit(self, mock_config, temp_budget_file):
         """Test show command displays warning when approaching budget limit."""
         # Initialize tracker with 85% spending (soft limit)
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         tracker.record_query("expensive query", 13.00, "success")
 
         runner = CliRunner()
@@ -101,10 +95,7 @@ class TestShowCommand:
     def test_show_displays_error_at_hard_limit(self, mock_config, temp_budget_file):
         """Test show command displays error when budget limit exceeded."""
         # Initialize tracker with 100% spending (hard limit)
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         tracker.record_query("expensive query", 15.50, "success")
 
         runner = CliRunner()
@@ -190,10 +181,7 @@ class TestResetCommand:
     def test_reset_clears_spending_with_confirmation(self, mock_config, temp_budget_file):
         """Test reset command clears spending with confirmation."""
         # Initialize tracker with some spending
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         tracker.record_query("test query", 2.50, "success")
 
         runner = CliRunner()
@@ -207,10 +195,7 @@ class TestResetCommand:
         assert "$0.00" in result.output
 
         # Verify spending was actually reset
-        tracker_check = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker_check = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         assert tracker_check.get_total_spent() == 0.0
 
     def test_reset_requires_confirmation_without_flag(self, mock_config, temp_budget_file):
@@ -227,10 +212,7 @@ class TestResetCommand:
     def test_reset_preserves_budget_limit(self, mock_config, temp_budget_file):
         """Test reset command preserves budget limit."""
         # Initialize tracker with some spending
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         tracker.record_query("test query", 5.00, "success")
 
         runner = CliRunner()
@@ -258,10 +240,7 @@ class TestHistoryCommand:
     def test_history_displays_query_records(self, mock_config, temp_budget_file):
         """Test history command displays query records."""
         # Initialize tracker and add some queries
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         tracker.record_query("first query", 0.25, "success")
         tracker.record_query("second query", 0.50, "success")
         tracker.record_query("third query", 0.75, "success")
@@ -291,10 +270,7 @@ class TestHistoryCommand:
     def test_history_respects_limit_option(self, mock_config, temp_budget_file):
         """Test history command respects --limit option."""
         # Initialize tracker and add many queries
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         for i in range(25):
             tracker.record_query(f"query {i}", 0.10, "success")
 
@@ -309,10 +285,7 @@ class TestHistoryCommand:
     def test_history_shows_all_with_flag(self, mock_config, temp_budget_file):
         """Test history command shows all entries with --all flag."""
         # Initialize tracker and add several queries
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         for i in range(30):
             tracker.record_query(f"query {i}", 0.10, "success")
 
@@ -327,10 +300,7 @@ class TestHistoryCommand:
     def test_history_displays_total_cost(self, mock_config, temp_budget_file):
         """Test history command displays total cost."""
         # Initialize tracker and add queries with known costs
-        tracker = CostTracker(
-            monthly_limit_usd=15.00,
-            tracker_path=temp_budget_file
-        )
+        tracker = CostTracker(monthly_limit_usd=15.00, tracker_path=temp_budget_file)
         tracker.record_query("query 1", 1.00, "success")
         tracker.record_query("query 2", 2.00, "success")
         tracker.record_query("query 3", 3.00, "success")

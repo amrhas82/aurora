@@ -45,9 +45,11 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar:
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
+        ):
             result = executor.execute_with_auto_escalation(
                 query="ambiguous query",
                 api_key="test-key",
@@ -68,11 +70,12 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch("click.confirm", return_value=True), patch.object(
-            executor, "execute_aurora", return_value="SOAR response"
-        ) as mock_soar:
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch("click.confirm", return_value=True),
+            patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
+        ):
             result = executor.execute_with_auto_escalation(
                 query="ambiguous query",
                 api_key="test-key",
@@ -93,13 +96,15 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch("click.confirm", return_value=False), patch.object(
-            executor, "execute_direct_llm", return_value="Direct LLM response"
-        ) as mock_llm, patch.object(
-            executor, "execute_aurora"
-        ) as mock_soar:
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch("click.confirm", return_value=False),
+            patch.object(
+                executor, "execute_direct_llm", return_value="Direct LLM response"
+            ) as mock_llm,
+            patch.object(executor, "execute_aurora") as mock_soar,
+        ):
             result = executor.execute_with_auto_escalation(
                 query="ambiguous query",
                 api_key="test-key",
@@ -121,13 +126,14 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch.object(
-            executor, "execute_direct_llm", return_value="Direct LLM response"
-        ) as mock_llm, patch.object(
-            executor, "execute_aurora"
-        ) as mock_soar:
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch.object(
+                executor, "execute_direct_llm", return_value="Direct LLM response"
+            ) as mock_llm,
+            patch.object(executor, "execute_aurora") as mock_soar,
+        ):
             result = executor.execute_with_auto_escalation(
                 query="what is Python?",
                 api_key="test-key",
@@ -149,9 +155,11 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar:
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
+        ):
             result = executor.execute_with_auto_escalation(
                 query="design system architecture",
                 api_key="test-key",
@@ -172,9 +180,11 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar:
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
+        ):
             result = executor.execute_with_auto_escalation(
                 query="fix security vulnerability",
                 api_key="test-key",
@@ -195,9 +205,11 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar:
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
+        ):
             result = executor.execute_with_auto_escalation(
                 query="test query",
                 api_key="test-key",
@@ -219,10 +231,10 @@ class TestAutoEscalation:
             "method": "keyword",
         }
 
-        with patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"), patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment
-        ), patch.object(
-            executor, "execute_direct_llm", return_value="Direct LLM response"
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
+            patch.object(executor, "execute_direct_llm", return_value="Direct LLM response"),
         ):
             result = executor.execute_with_auto_escalation(
                 query="what is Python?",

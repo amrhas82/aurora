@@ -54,15 +54,11 @@ class TestAutoEscalation:
     def executor_non_interactive(self, tmp_path):
         """Create QueryExecutor in non-interactive mode."""
         db_path = tmp_path / "test_memory.db"
-        config = Config(
-            anthropic_api_key="test-key",
-            db_path=str(db_path),
-            budget_limit=10.0
-        )
+        config = Config(anthropic_api_key="test-key", db_path=str(db_path), budget_limit=10.0)
 
         executor = QueryExecutor(
             config={"api_key": "test-key"},
-            interactive_mode=False  # Non-interactive
+            interactive_mode=False,  # Non-interactive
         )
 
         return executor
@@ -71,20 +67,18 @@ class TestAutoEscalation:
     def executor_interactive(self, tmp_path):
         """Create QueryExecutor in interactive mode."""
         db_path = tmp_path / "test_memory.db"
-        config = Config(
-            anthropic_api_key="test-key",
-            db_path=str(db_path),
-            budget_limit=10.0
-        )
+        config = Config(anthropic_api_key="test-key", db_path=str(db_path), budget_limit=10.0)
 
         executor = QueryExecutor(
             config={"api_key": "test-key"},
-            interactive_mode=True  # Interactive
+            interactive_mode=True,  # Interactive
         )
 
         return executor
 
-    def test_low_confidence_triggers_escalation_non_interactive(self, executor_non_interactive, mock_memory_store):
+    def test_low_confidence_triggers_escalation_non_interactive(
+        self, executor_non_interactive, mock_memory_store
+    ):
         """
         Test that low confidence automatically escalates to SOAR in non-interactive mode.
 
@@ -96,7 +90,7 @@ class TestAutoEscalation:
         low_confidence_result = {
             "complexity": "MEDIUM",
             "confidence": 0.4,  # Low confidence
-            "reasoning": "Ambiguous query"
+            "reasoning": "Ambiguous query",
         }
 
         # Track which execution path is taken
@@ -113,18 +107,19 @@ class TestAutoEscalation:
             soar_called = True
             return "SOAR response"
 
-        with patch('aurora_cli.execution.QueryExecutor._initialize_llm_client'), patch(
-            'aurora_soar.phases.assess.assess_complexity', return_value=low_confidence_result
+        with (
+            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch(
+                "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+            ),
         ):
-            with patch.object(executor, 'execute_direct_llm', side_effect=mock_direct_llm):
-                with patch.object(executor, 'execute_aurora', side_effect=mock_soar):
+            with patch.object(executor, "execute_direct_llm", side_effect=mock_direct_llm):
+                with patch.object(executor, "execute_aurora", side_effect=mock_soar):
                     query = "ambiguous query that might need SOAR"
 
                     # Execute with auto-escalation
                     result = executor.execute_with_auto_escalation(
-                        query=query,
-                        api_key="test-key",
-                        memory_store=mock_memory_store
+                        query=query, api_key="test-key", memory_store=mock_memory_store
                     )
 
                     # ASSERTION: SOAR should be called (not direct LLM)
@@ -156,7 +151,7 @@ class TestAutoEscalation:
         high_confidence_result = {
             "complexity": "SIMPLE",
             "confidence": 0.9,  # High confidence
-            "reasoning": "Clear simple query"
+            "reasoning": "Clear simple query",
         }
 
         direct_llm_called = False
@@ -172,9 +167,11 @@ class TestAutoEscalation:
             soar_called = True
             return "SOAR response"
 
-        with patch('aurora_soar.phases.assess.assess_complexity', return_value=high_confidence_result):
-            with patch.object(executor, 'execute_direct_llm', side_effect=mock_direct_llm):
-                with patch.object(executor, 'execute_aurora', side_effect=mock_soar):
+        with patch(
+            "aurora_soar.phases.assess.assess_complexity", return_value=high_confidence_result
+        ):
+            with patch.object(executor, "execute_direct_llm", side_effect=mock_direct_llm):
+                with patch.object(executor, "execute_aurora", side_effect=mock_soar):
                     query = "What is 2+2?"
 
                     result = executor.execute_with_auto_escalation(query)
@@ -203,7 +200,7 @@ class TestAutoEscalation:
         low_confidence_result = {
             "complexity": "MEDIUM",
             "confidence": 0.5,
-            "reasoning": "Uncertain classification"
+            "reasoning": "Uncertain classification",
         }
 
         soar_called = False
@@ -214,9 +211,11 @@ class TestAutoEscalation:
             return "SOAR response"
 
         # Mock user accepting escalation
-        with patch('aurora_soar.phases.assess.assess_complexity', return_value=low_confidence_result):
-            with patch.object(executor, 'execute_aurora', side_effect=mock_soar):
-                with patch('click.confirm', return_value=True) as mock_confirm:  # User says YES
+        with patch(
+            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+        ):
+            with patch.object(executor, "execute_aurora", side_effect=mock_soar):
+                with patch("click.confirm", return_value=True) as mock_confirm:  # User says YES
                     query = "ambiguous query"
 
                     result = executor.execute_with_auto_escalation(query)
@@ -249,7 +248,7 @@ class TestAutoEscalation:
         low_confidence_result = {
             "complexity": "MEDIUM",
             "confidence": 0.5,
-            "reasoning": "Uncertain"
+            "reasoning": "Uncertain",
         }
 
         direct_llm_called = False
@@ -265,10 +264,12 @@ class TestAutoEscalation:
             soar_called = True
             return "SOAR response"
 
-        with patch('aurora_soar.phases.assess.assess_complexity', return_value=low_confidence_result):
-            with patch.object(executor, 'execute_direct_llm', side_effect=mock_direct_llm):
-                with patch.object(executor, 'execute_aurora', side_effect=mock_soar):
-                    with patch('click.confirm', return_value=False):  # User says NO
+        with patch(
+            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+        ):
+            with patch.object(executor, "execute_direct_llm", side_effect=mock_direct_llm):
+                with patch.object(executor, "execute_aurora", side_effect=mock_soar):
+                    with patch("click.confirm", return_value=False):  # User says NO
                         query = "ambiguous query"
 
                         result = executor.execute_with_auto_escalation(query)
@@ -300,7 +301,7 @@ class TestAutoEscalation:
         threshold_result = {
             "complexity": "MEDIUM",
             "confidence": 0.6,  # Exactly at threshold
-            "reasoning": "At boundary"
+            "reasoning": "At boundary",
         }
 
         direct_llm_called = False
@@ -316,9 +317,9 @@ class TestAutoEscalation:
             soar_called = True
             return "SOAR"
 
-        with patch('aurora_soar.phases.assess.assess_complexity', return_value=threshold_result):
-            with patch.object(executor, 'execute_direct_llm', side_effect=mock_direct_llm):
-                with patch.object(executor, 'execute_aurora', side_effect=mock_soar):
+        with patch("aurora_soar.phases.assess.assess_complexity", return_value=threshold_result):
+            with patch.object(executor, "execute_direct_llm", side_effect=mock_direct_llm):
+                with patch.object(executor, "execute_aurora", side_effect=mock_soar):
                     query = "threshold query"
 
                     result = executor.execute_with_auto_escalation(query)
@@ -351,11 +352,13 @@ class TestEscalationLogging:
         low_confidence_result = {
             "complexity": "MEDIUM",
             "confidence": 0.4,
-            "reasoning": "Unclear intent"
+            "reasoning": "Unclear intent",
         }
 
-        with patch('aurora_soar.phases.assess.assess_complexity', return_value=low_confidence_result):
-            with patch.object(executor, 'execute_aurora', return_value="SOAR result"):
+        with patch(
+            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+        ):
+            with patch.object(executor, "execute_aurora", return_value="SOAR result"):
                 query = "ambiguous query"
 
                 result = executor.execute_with_auto_escalation(query)
@@ -407,15 +410,13 @@ def process_data(data):
 
         # Create memory store directly
         from aurora_core.store.sqlite import SQLiteStore
+
         memory_store = SQLiteStore(db_path=str(db_path))
 
         memory_manager = MemoryManager(memory_store=memory_store)
         memory_manager.index_directory(workspace)
 
-        executor = QueryExecutor(
-            config={"api_key": "test-key"},
-            interactive_mode=False
-        )
+        executor = QueryExecutor(config={"api_key": "test-key"}, interactive_mode=False)
 
         return executor, memory_store
 
@@ -431,18 +432,22 @@ def process_data(data):
         low_confidence_result = {
             "complexity": "COMPLEX",
             "confidence": 0.3,
-            "reasoning": "Complex multi-part query"
+            "reasoning": "Complex multi-part query",
         }
 
         soar_memory_store_arg = None
 
         def capture_soar_call(query, **kwargs):
             nonlocal soar_memory_store_arg
-            soar_memory_store_arg = kwargs.get('memory_store')
+            soar_memory_store_arg = kwargs.get("memory_store")
             return "SOAR result"
 
-        with patch('aurora_soar.phases.assess.assess_complexity', return_value=low_confidence_result):
-            with patch.object(executor, 'execute_aurora', side_effect=capture_soar_call) as mock_soar:
+        with patch(
+            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+        ):
+            with patch.object(
+                executor, "execute_aurora", side_effect=capture_soar_call
+            ) as mock_soar:
                 query = "complex query about data processing"
 
                 result = executor.execute_with_auto_escalation(query)

@@ -246,7 +246,9 @@ class FileHandler:
 ''')
 
         # Create math/algorithm module
-        (project_path / "algorithms.py").write_text('''"""Mathematical algorithms and computations."""
+        (
+            project_path / "algorithms.py"
+        ).write_text('''"""Mathematical algorithms and computations."""
 from typing import List
 
 
@@ -682,7 +684,11 @@ class TestSearchAccuracy:
                     if line_ranges:
                         # Not all should be (0, 0) or "0-0"
                         all_zero = all(
-                            (lr == (0, 0) or lr == "0-0" or (isinstance(lr, tuple) and lr[0] == 0 and lr[1] == 0))
+                            (
+                                lr == (0, 0)
+                                or lr == "0-0"
+                                or (isinstance(lr, tuple) and lr[0] == 0 and lr[1] == 0)
+                            )
                             for lr in line_ranges
                         )
 
@@ -758,7 +764,7 @@ class TestSearchAccuracy:
                 f"ISSUE #4 CONFIRMED: Searches return identical results!\n"
                 f"Query 1: 'database' returned:\n{search1.stdout[:200]}...\n\n"
                 f"Query 2: 'algorithm' returned:\n{search2.stdout[:200]}...\n\n"
-                f"Similarity: {similarity_ratio*100:.1f}% (should be <50% for different queries)\n\n"
+                f"Similarity: {similarity_ratio * 100:.1f}% (should be <50% for different queries)\n\n"
                 f"Root cause: Activation tracking broken (all base_level = 0.0)\n"
                 f"Fix: Call store.record_access() during search"
             )

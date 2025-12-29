@@ -21,11 +21,20 @@ ignore = [
     "E721",    # type comparison
     "E722",    # bare except
     "F401",    # unused import (many are intentional for re-exports)
+    "UP035",   # deprecated typing imports (e.g., Dict, List)
 ]
 
 [lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]  # unused imports
-"tests/**/*.py" = ["S101", "ARG", "PLR2004"]  # assert, unused args, magic values ok in tests
+"tests/**/*.py" = [
+    "S101",    # assert statements in tests
+    "ARG",     # unused args in tests (fixtures may not use all)
+    "PLR2004", # magic values ok in tests
+    "F841",    # unused local variable (tests often assign for verification)
+    "PLC0415", # import at top-level (tests often import in fixtures/functions)
+    "PLR0913", # too many arguments (test functions with many fixtures)
+    "PLR0915", # too many statements (complex test scenarios)
+]
 "tests/fixtures/sample_python_files/broken.py" = ["ALL"]  # intentionally broken file for parser tests
 
 [lint.isort]

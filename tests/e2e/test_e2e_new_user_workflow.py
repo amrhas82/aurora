@@ -91,7 +91,9 @@ def sample_python_project() -> Generator[Path, None, None]:
         (project_path / "src" / "__init__.py").write_text("")
 
         # Create a module with searchable functions
-        (project_path / "src" / "calculator.py").write_text('''"""Calculator module with math functions."""
+        (
+            project_path / "src" / "calculator.py"
+        ).write_text('''"""Calculator module with math functions."""
 
 def add(a: int, b: int) -> int:
     """Add two numbers together."""
@@ -163,7 +165,9 @@ def clamp(value: int, min_val: int, max_val: int) -> int:
         # Create tests directory
         (project_path / "tests").mkdir()
         (project_path / "tests" / "__init__.py").write_text("")
-        (project_path / "tests" / "test_calculator.py").write_text('''"""Tests for calculator module."""
+        (
+            project_path / "tests" / "test_calculator.py"
+        ).write_text('''"""Tests for calculator module."""
 import pytest
 from src.calculator import add, subtract, multiply, divide, Calculator
 
@@ -221,7 +225,9 @@ class TestNewUserWorkflowE2E:
         )
 
         # Verify command succeeded
-        assert result.returncode == 0, f"aur init failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        assert result.returncode == 0, (
+            f"aur init failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        )
 
         # Verify config file created at correct location
         config_path = clean_aurora_home / "config.json"
@@ -235,9 +241,10 @@ class TestNewUserWorkflowE2E:
         # Check if db_path is in config (this is the fix we need to implement)
         if "db_path" in config_data:
             expected_db_path = str(clean_aurora_home / "memory.db")
-            assert config_data["db_path"] == expected_db_path or \
-                   config_data["db_path"] == "~/.aurora/memory.db", \
-                   f"db_path should point to ~/.aurora/memory.db, got {config_data.get('db_path')}"
+            assert (
+                config_data["db_path"] == expected_db_path
+                or config_data["db_path"] == "~/.aurora/memory.db"
+            ), f"db_path should point to ~/.aurora/memory.db, got {config_data.get('db_path')}"
 
     def test_1_1_3_aur_mem_index_writes_to_aurora_home(
         self, clean_aurora_home: Path, sample_python_project: Path
@@ -267,7 +274,9 @@ class TestNewUserWorkflowE2E:
         )
 
         # Verify command succeeded
-        assert result.returncode == 0, f"aur mem index failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        assert result.returncode == 0, (
+            f"aur mem index failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        )
 
         # CRITICAL: Verify DB created at ~/.aurora/memory.db
         expected_db = clean_aurora_home / "memory.db"
@@ -437,7 +446,12 @@ class TestNewUserWorkflowE2E:
 
         # Check that some retrieval happened or the query referenced indexed data
         # This is a soft check since --dry-run behavior may vary
-        assert query_result.returncode == 0 or "calculator" in output or "chunks" in output or "retrieve" in output, (
+        assert (
+            query_result.returncode == 0
+            or "calculator" in output
+            or "chunks" in output
+            or "retrieve" in output
+        ), (
             f"Query should attempt to retrieve from index:\n"
             f"stdout: {query_result.stdout}\n"
             f"stderr: {query_result.stderr}"

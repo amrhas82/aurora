@@ -75,7 +75,9 @@ def project_with_unique_patterns() -> Generator[Path, None, None]:
         project_path = Path(tmp_project)
 
         # Create a module with unique class and methods
-        (project_path / "hybrid_retriever.py").write_text('''"""Hybrid retrieval combining activation and semantic search."""
+        (
+            project_path / "hybrid_retriever.py"
+        ).write_text('''"""Hybrid retrieval combining activation and semantic search."""
 
 
 class HybridRetriever:
@@ -140,7 +142,9 @@ class HybridRetriever:
 ''')
 
         # Create another unique module
-        (project_path / "complexity_assessment.py").write_text('''"""Complexity assessment for query routing."""
+        (
+            project_path / "complexity_assessment.py"
+        ).write_text('''"""Complexity assessment for query routing."""
 
 
 class ComplexityAssessor:
@@ -222,9 +226,10 @@ class TestQueryUsesIndex:
         assert result.returncode == 0, f"Indexing failed:\nstderr: {result.stderr}"
 
         # Verify specific files were indexed
-        assert "hybrid_retriever" in result.stdout.lower() or "complexity_assessment" in result.stdout.lower(), (
-            f"Should have indexed our specific files:\n{result.stdout}"
-        )
+        assert (
+            "hybrid_retriever" in result.stdout.lower()
+            or "complexity_assessment" in result.stdout.lower()
+        ), f"Should have indexed our specific files:\n{result.stdout}"
 
     def test_1_4_2_query_for_existing_code(
         self, clean_aurora_home: Path, project_with_unique_patterns: Path
@@ -478,7 +483,13 @@ class TestQueryUsesIndex:
 
         # Run a very specific query about indexed code
         result = subprocess.run(
-            ["aur", "query", "List all methods in the HybridRetriever class", "--dry-run", "--verbose"],
+            [
+                "aur",
+                "query",
+                "List all methods in the HybridRetriever class",
+                "--dry-run",
+                "--verbose",
+            ],
             capture_output=True,
             text=True,
             cwd=project_with_unique_patterns,

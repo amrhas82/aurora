@@ -85,11 +85,7 @@ def calculate_median(numbers):
     @pytest.fixture
     def manager_with_data(self, test_db_path, temp_workspace):
         """Create MemoryManager with indexed data."""
-        config = Config(
-            anthropic_api_key="test-key",
-            db_path=str(test_db_path),
-            budget_limit=10.0
-        )
+        config = Config(anthropic_api_key="test-key", db_path=str(test_db_path), budget_limit=10.0)
         manager = MemoryManager(config=config)
         manager.index_path(temp_workspace)
         return manager, test_db_path
@@ -103,7 +99,9 @@ def calculate_median(numbers):
         manager, db_path = manager_with_data
 
         # Spy on record_access method
-        with patch.object(manager.store, 'record_access', wraps=manager.store.record_access) as mock_record:
+        with patch.object(
+            manager.store, "record_access", wraps=manager.store.record_access
+        ) as mock_record:
             # Perform search
             results = manager.search("calculate", limit=5)
 
@@ -130,8 +128,8 @@ def calculate_median(numbers):
                     args, kwargs = call
                     if args:
                         recorded_chunk_ids.add(args[0])
-                    elif 'chunk_id' in kwargs:
-                        recorded_chunk_ids.add(kwargs['chunk_id'])
+                    elif "chunk_id" in kwargs:
+                        recorded_chunk_ids.add(kwargs["chunk_id"])
 
                 result_chunk_ids = {r.chunk_id for r in results}
 
@@ -203,8 +201,9 @@ def calculate_median(numbers):
             SELECT chunk_id, base_level, access_count
             FROM activations
         """)
-        initial_state = {row[0]: {"base_level": row[1], "access_count": row[2]}
-                        for row in cursor.fetchall()}
+        initial_state = {
+            row[0]: {"base_level": row[1], "access_count": row[2]} for row in cursor.fetchall()
+        }
 
         # Perform search
         results = manager.search("calculate median", limit=5)
@@ -218,8 +217,9 @@ def calculate_median(numbers):
             SELECT chunk_id, base_level, access_count
             FROM activations
         """)
-        updated_state = {row[0]: {"base_level": row[1], "access_count": row[2]}
-                        for row in cursor.fetchall()}
+        updated_state = {
+            row[0]: {"base_level": row[1], "access_count": row[2]} for row in cursor.fetchall()
+        }
         conn.close()
 
         # ASSERTION: base_level should update for accessed chunks
@@ -262,11 +262,14 @@ def calculate_median(numbers):
         # Query last_access (not last_access_time - that's the column name)
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT chunk_id, last_access
             FROM activations
             WHERE chunk_id IN ({})
-        """.format(','.join('?' * len(result_ids))), tuple(result_ids))
+        """.format(",".join("?" * len(result_ids))),
+            tuple(result_ids),
+        )
 
         access_times = {row[0]: row[1] for row in cursor.fetchall()}
         conn.close()
@@ -286,7 +289,7 @@ def calculate_median(numbers):
             # If last_access is stored as string, parse it
             if isinstance(last_access, str):
                 try:
-                    last_access_dt = datetime.fromisoformat(last_access.replace('Z', '+00:00'))
+                    last_access_dt = datetime.fromisoformat(last_access.replace("Z", "+00:00"))
                 except:
                     # Try alternative parsing
                     last_access_dt = datetime.strptime(last_access, "%Y-%m-%d %H:%M:%S.%f")
@@ -367,17 +370,20 @@ def calculate_median(numbers):
             # Query context/metadata for recent accesses
             result_ids = tuple(r.chunk_id for r in results)
             if len(result_ids) > 0:
-                cursor.execute(f"""
+                cursor.execute(
+                    f"""
                     SELECT chunk_id, context, metadata
                     FROM activations
-                    WHERE chunk_id IN ({','.join('?' * len(result_ids))})
-                """, result_ids)
+                    WHERE chunk_id IN ({",".join("?" * len(result_ids))})
+                """,
+                    result_ids,
+                )
 
                 contexts = {row[0]: (row[1], row[2]) for row in cursor.fetchall()}
 
                 # At least one chunk should have context stored
                 has_context = any(
-                    (ctx is not None and ctx != '') or (meta is not None and meta != '')
+                    (ctx is not None and ctx != "") or (meta is not None and meta != "")
                     for ctx, meta in contexts.values()
                 )
 

@@ -54,7 +54,7 @@ class TestBudgetEnforcement:
             "temperature": 0.7,
             "max_tokens": 500,
             "budget_limit": 0.005,  # $0.005 limit (very low for testing)
-            "budget_tracker_path": str(budget_path)
+            "budget_tracker_path": str(budget_path),
         }
 
         return config, budget_path
@@ -66,7 +66,7 @@ class TestBudgetEnforcement:
 
         tracker = CostTracker(
             budget_file=str(budget_path),
-            total_budget=0.005  # Match the low_budget_config limit
+            total_budget=0.005,  # Match the low_budget_config limit
         )
 
         return tracker, budget_path
@@ -79,10 +79,7 @@ class TestBudgetEnforcement:
         """
         config, budget_path = low_budget_config
 
-        executor = QueryExecutor(
-            config=config,
-            interactive_mode=False
-        )
+        executor = QueryExecutor(config=config, interactive_mode=False)
 
         # Mock LLM client to track if it's called
         llm_called = False
@@ -99,13 +96,13 @@ class TestBudgetEnforcement:
 
         mock_llm.generate.side_effect = mock_generate
 
-        with patch.object(executor, '_initialize_llm_client', return_value=mock_llm):
+        with patch.object(executor, "_initialize_llm_client", return_value=mock_llm):
             # Attempt expensive query (very long prompt = higher estimated cost)
             # Need ~8000 chars to get ~2000 input tokens
             # With max_tokens=500, estimated output=250 tokens
             # Cost: (2000/1M * $3) + (250/1M * $15) = $0.006 + $0.00375 = $0.00975
             # Still under $0.01! Let's make it even longer
-            long_query = ("Explain in detail " + " and elaborate " * 500)  # ~14k chars = ~3500 tokens
+            long_query = "Explain in detail " + " and elaborate " * 500  # ~14k chars = ~3500 tokens
 
             # Should raise BudgetExceededError
             with pytest.raises(BudgetExceededError) as exc_info:
@@ -142,13 +139,10 @@ class TestBudgetEnforcement:
             "temperature": 0.7,
             "max_tokens": 500,
             "budget_limit": 10.0,
-            "budget_tracker_path": str(budget_path)
+            "budget_tracker_path": str(budget_path),
         }
 
-        executor = QueryExecutor(
-            config=config,
-            interactive_mode=False
-        )
+        executor = QueryExecutor(config=config, interactive_mode=False)
 
         # Mock LLM to return response with cost metadata
         mock_llm = MagicMock()
@@ -163,9 +157,9 @@ class TestBudgetEnforcement:
 
         mock_llm.generate.side_effect = mock_generate_with_cost
 
-        with patch.object(executor, '_initialize_llm_client', return_value=mock_llm):
+        with patch.object(executor, "_initialize_llm_client", return_value=mock_llm):
             # Mock the _call_llm_with_retry to return mock response
-            with patch.object(executor, '_call_llm_with_retry', return_value=mock_response):
+            with patch.object(executor, "_call_llm_with_retry", return_value=mock_response):
                 query = "What is Python?"
                 result = executor.execute_direct_llm(query, api_key="test-key")
 
@@ -208,7 +202,8 @@ class TestBudgetEnforcement:
 
         # ASSERTION: History should include blocked query
         blocked_entries = [
-            entry for entry in history
+            entry
+            for entry in history
             if entry.get("status") == "blocked" or entry.get("blocked", False)
         ]
 
@@ -229,10 +224,7 @@ class TestBudgetEnforcement:
         config, budget_path = low_budget_config
 
         # Initial tracker with low budget
-        tracker = CostTracker(
-            budget_file=str(budget_path),
-            total_budget=0.01
-        )
+        tracker = CostTracker(budget_file=str(budget_path), total_budget=0.01)
 
         # Verify initial budget blocks query
         high_cost = 0.05
@@ -267,10 +259,7 @@ class TestBudgetCommands:
         """Create tracker with some spending history."""
         budget_path = tmp_path / "budget.json"
 
-        tracker = CostTracker(
-            budget_file=str(budget_path),
-            total_budget=5.00
-        )
+        tracker = CostTracker(budget_file=str(budget_path), total_budget=5.00)
 
         # Record some queries
         tracker.record_query("What is Python?", 0.02, status="success")
@@ -314,10 +303,7 @@ class TestBudgetCommands:
         """
         budget_path = tmp_path / "budget.json"
 
-        tracker = CostTracker(
-            budget_file=str(budget_path),
-            total_budget=5.00
-        )
+        tracker = CostTracker(budget_file=str(budget_path), total_budget=5.00)
 
         # Set new budget
         new_budget = 10.00
@@ -325,9 +311,7 @@ class TestBudgetCommands:
 
         # ASSERTION: Budget should be updated
         assert tracker.total_budget == new_budget, (
-            f"Budget not updated\n"
-            f"Expected: ${new_budget}\n"
-            f"Actual: ${tracker.total_budget}"
+            f"Budget not updated\nExpected: ${new_budget}\nActual: ${tracker.total_budget}"
         )
 
         # Verify persisted to file
@@ -355,9 +339,7 @@ class TestBudgetCommands:
 
         # ASSERTION: Spending should be cleared
         assert tracker.get_total_spent() == 0, (
-            f"Spending not reset\n"
-            f"Expected: $0.00\n"
-            f"Actual: ${tracker.get_total_spent()}"
+            f"Spending not reset\nExpected: $0.00\nActual: ${tracker.get_total_spent()}"
         )
 
     def test_budget_history_command_shows_queries(self, budget_tracker_with_history):

@@ -43,6 +43,7 @@ import pytest
 # For now, this will fail with ImportError
 try:
     from aurora_context_code.git import GitSignalExtractor
+
     GIT_EXTRACTOR_EXISTS = True
 except ImportError:
     GIT_EXTRACTOR_EXISTS = False
@@ -67,7 +68,9 @@ class TestGitSignalExtraction:
         # Initialize git repo
         subprocess.run(["git", "init"], cwd=repo_dir, check=True)
         subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_dir, check=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_dir, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"], cwd=repo_dir, check=True
+        )
 
         # Create Python file with 3 functions
         test_file = repo_dir / "functions.py"
@@ -91,7 +94,11 @@ def rarely_edited_function(x):
             ["git", "commit", "-m", "Initial commit"],
             cwd=repo_dir,
             check=True,
-            env={**subprocess.os.environ, "GIT_AUTHOR_DATE": "2024-01-01 00:00:00", "GIT_COMMITTER_DATE": "2024-01-01 00:00:00"}
+            env={
+                **subprocess.os.environ,
+                "GIT_AUTHOR_DATE": "2024-01-01 00:00:00",
+                "GIT_COMMITTER_DATE": "2024-01-01 00:00:00",
+            },
         )
 
         time.sleep(0.1)
@@ -99,32 +106,26 @@ def rarely_edited_function(x):
         # Edit frequently_edited_function 7 more times (total: 8 commits)
         for i in range(2, 9):
             content = test_file.read_text()
-            content = content.replace(
-                f"return x * {i-1}",
-                f"return x * {i}"
-            )
+            content = content.replace(f"return x * {i - 1}", f"return x * {i}")
             test_file.write_text(content)
             subprocess.run(["git", "add", "functions.py"], cwd=repo_dir, check=True)
             subprocess.run(
                 ["git", "commit", "-m", f"Update frequently_edited_function v{i}"],
                 cwd=repo_dir,
-                check=True
+                check=True,
             )
             time.sleep(0.1)
 
         # Edit moderately_edited_function 2 more times (total: 3 commits)
         for i in range(2, 4):
             content = test_file.read_text()
-            content = content.replace(
-                f"return x + {i-1}",
-                f"return x + {i}"
-            )
+            content = content.replace(f"return x + {i - 1}", f"return x + {i}")
             test_file.write_text(content)
             subprocess.run(["git", "add", "functions.py"], cwd=repo_dir, check=True)
             subprocess.run(
                 ["git", "commit", "-m", f"Update moderately_edited_function v{i}"],
                 cwd=repo_dir,
-                check=True
+                check=True,
             )
             time.sleep(0.1)
 
@@ -132,7 +133,9 @@ def rarely_edited_function(x):
 
         return repo_dir, test_file
 
-    @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented (task 4.1)")
+    @pytest.mark.skipif(
+        not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented (task 4.1)"
+    )
     def test_get_function_commit_times_extracts_per_function(self, git_repo_with_function_history):
         """
         Test that get_function_commit_times() returns function-specific commit times.
@@ -145,23 +148,17 @@ def rarely_edited_function(x):
 
         # Get commit times for frequently_edited_function (lines 2-4)
         freq_commits = extractor.get_function_commit_times(
-            file_path=test_file,
-            line_start=2,
-            line_end=4
+            file_path=test_file, line_start=2, line_end=4
         )
 
         # Get commit times for moderately_edited_function (lines 6-8)
         mod_commits = extractor.get_function_commit_times(
-            file_path=test_file,
-            line_start=6,
-            line_end=8
+            file_path=test_file, line_start=6, line_end=8
         )
 
         # Get commit times for rarely_edited_function (lines 10-12)
         rare_commits = extractor.get_function_commit_times(
-            file_path=test_file,
-            line_start=10,
-            line_end=12
+            file_path=test_file, line_start=10, line_end=12
         )
 
         # ASSERTION 1: Frequently edited function should have 2 unique commits
@@ -251,9 +248,15 @@ def rarely_edited_function(x):
         # ASSERTION 2: All BLA values should be > 0
         # Note: BLA can be negative in ACT-R (it's log-odds of retrieval)
         # Just verify they're valid floats, not NaN or infinity
-        assert isinstance(freq_bla, (int, float)) and not (freq_bla != freq_bla), f"Frequent BLA should be valid number, got {freq_bla}"
-        assert isinstance(mod_bla, (int, float)) and not (mod_bla != mod_bla), f"Moderate BLA should be valid number, got {mod_bla}"
-        assert isinstance(rare_bla, (int, float)) and not (rare_bla != rare_bla), f"Rare BLA should be valid number, got {rare_bla}"
+        assert isinstance(freq_bla, (int, float)) and not (freq_bla != freq_bla), (
+            f"Frequent BLA should be valid number, got {freq_bla}"
+        )
+        assert isinstance(mod_bla, (int, float)) and not (mod_bla != mod_bla), (
+            f"Moderate BLA should be valid number, got {mod_bla}"
+        )
+        assert isinstance(rare_bla, (int, float)) and not (rare_bla != rare_bla), (
+            f"Rare BLA should be valid number, got {rare_bla}"
+        )
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_non_git_directory_graceful_fallback(self, tmp_path):
@@ -272,11 +275,7 @@ def rarely_edited_function(x):
         extractor = GitSignalExtractor()
 
         # Get commit times for non-Git file
-        commits = extractor.get_function_commit_times(
-            file_path=test_file,
-            line_start=1,
-            line_end=1
-        )
+        commits = extractor.get_function_commit_times(file_path=test_file, line_start=1, line_end=1)
 
         # ASSERTION 1: Should return empty list (no crash)
         assert isinstance(commits, list), (
@@ -316,14 +315,15 @@ def rarely_edited_function(x):
             cwd=repo_dir,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
         blame_output = result.stdout
 
         # Parse commit SHAs (first 40 chars of lines starting with commit SHA)
         import re
-        sha_pattern = re.compile(r'^([0-9a-f]{40})', re.MULTILINE)
+
+        sha_pattern = re.compile(r"^([0-9a-f]{40})", re.MULTILINE)
         shas = sha_pattern.findall(blame_output)
 
         # ASSERTION: Should find multiple commit SHAs
@@ -371,7 +371,7 @@ class TestGitMetadataStorage:
             cwd=repo_dir,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         commit_sha = sha_result.stdout.strip()
 
@@ -389,11 +389,7 @@ class TestGitMetadataStorage:
         extractor = GitSignalExtractor()
 
         # Get commit times
-        commits = extractor.get_function_commit_times(
-            file_path=test_file,
-            line_start=1,
-            line_end=2
-        )
+        commits = extractor.get_function_commit_times(file_path=test_file, line_start=1, line_end=2)
 
         # ASSERTION: Should return at least one commit
         assert len(commits) >= 1, "Should have at least one commit"
@@ -445,9 +441,9 @@ class TestBLACalculationFormula:
         # Simulate 3 accesses at known times
         now = time.time()
         commit_times = [
-            now - 86400,     # 1 day ago
-            now - 86400 * 7, # 1 week ago
-            now - 86400 * 30 # 1 month ago
+            now - 86400,  # 1 day ago
+            now - 86400 * 7,  # 1 week ago
+            now - 86400 * 30,  # 1 month ago
         ]
 
         # Expected calculation:

@@ -200,7 +200,9 @@ class TestDatabasePersistence:
         db_chunk_count = cursor.fetchone()[0]
         conn.close()
 
-        assert db_chunk_count > 0, f"Database should have chunks after indexing, got {db_chunk_count}"
+        assert db_chunk_count > 0, (
+            f"Database should have chunks after indexing, got {db_chunk_count}"
+        )
 
         # Run stats and parse output
         stats_result = subprocess.run(
@@ -451,7 +453,9 @@ class TestDatabasePersistence:
         # Check activations table exists and has data
         cursor.execute("SELECT COUNT(*) FROM activations")
         activation_count = cursor.fetchone()[0]
-        assert activation_count > 0, f"Should have activations in {expected_db}, got {activation_count}"
+        assert activation_count > 0, (
+            f"Should have activations in {expected_db}, got {activation_count}"
+        )
 
         conn.close()
 
@@ -499,9 +503,9 @@ class TestDatabasePersistence:
         if len(databases_found) > 1:
             pytest.fail(
                 f"ISSUE #2 DETECTED: Multiple databases found!\n"
-                f"Found {len(databases_found)} databases:\n" +
-                "\n".join(f"  - {db}" for db in databases_found) +
-                f"\n\nShould only have one database at: {expected_db}\n"
+                f"Found {len(databases_found)} databases:\n"
+                + "\n".join(f"  - {db}" for db in databases_found)
+                + f"\n\nShould only have one database at: {expected_db}\n"
                 f"Fix: All commands must use config.get_db_path()"
             )
 

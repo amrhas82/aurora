@@ -74,18 +74,11 @@ class Calculator:
     @pytest.fixture
     def config_with_custom_path(self, custom_db_path):
         """Create config with custom database path."""
-        config = Config(
-            api_key="test-key",
-            db_path=str(custom_db_path),
-            budget_limit=10.0
-        )
+        config = Config(api_key="test-key", db_path=str(custom_db_path), budget_limit=10.0)
         return config
 
     def test_memory_manager_respects_config_db_path(
-        self,
-        config_with_custom_path,
-        custom_db_path,
-        temp_workspace
+        self, config_with_custom_path, custom_db_path, temp_workspace
     ):
         """
         Test that MemoryManager creates database at config-specified path.
@@ -122,10 +115,7 @@ class Calculator:
         )
 
     def test_all_operations_use_same_database(
-        self,
-        config_with_custom_path,
-        custom_db_path,
-        temp_workspace
+        self, config_with_custom_path, custom_db_path, temp_workspace
     ):
         """
         Test that stats, search, and retrieval all use the same database.
@@ -157,10 +147,7 @@ class Calculator:
         )
 
     def test_search_uses_config_database(
-        self,
-        config_with_custom_path,
-        custom_db_path,
-        temp_workspace
+        self, config_with_custom_path, custom_db_path, temp_workspace
     ):
         """
         Test that search operation uses config-specified database.
@@ -247,24 +234,20 @@ class Calculator:
         This test will FAIL if get_db_path() method doesn't exist or doesn't expand ~.
         """
         # Create config with tilde path
-        config = Config(
-            api_key="test-key",
-            db_path="~/.aurora/test_memory.db",
-            budget_limit=10.0
-        )
+        config = Config(api_key="test-key", db_path="~/.aurora/test_memory.db", budget_limit=10.0)
 
         # Get expanded path
         expanded_path = config.get_db_path()
 
         # ASSERTION 1: Method should exist
-        assert hasattr(config, 'get_db_path'), (
+        assert hasattr(config, "get_db_path"), (
             "Config class missing get_db_path() method\n"
             "Expected: Config.get_db_path() returns expanded absolute path\n"
             "Fix: Add get_db_path() method to Config class in config.py"
         )
 
         # ASSERTION 2: Path should be expanded (no tilde)
-        assert '~' not in expanded_path, (
+        assert "~" not in expanded_path, (
             f"Path not expanded: {expanded_path}\n"
             f"Expected: Absolute path without tilde\n"
             f"Fix: Use Path.expanduser() in get_db_path()"
@@ -284,11 +267,7 @@ class Calculator:
         This test will FAIL if validation doesn't exist or is insufficient.
         """
         # Valid path should work
-        config = Config(
-            api_key="test-key",
-            db_path="/tmp/valid/memory.db",
-            budget_limit=10.0
-        )
+        config = Config(api_key="test-key", db_path="/tmp/valid/memory.db", budget_limit=10.0)
         assert config.db_path == "/tmp/valid/memory.db"
 
         # Path validation should accept common formats
@@ -296,7 +275,7 @@ class Calculator:
             "~/.aurora/memory.db",
             "/tmp/aurora.db",
             "./local_memory.db",
-            "../parent_dir/memory.db"
+            "../parent_dir/memory.db",
         ]
 
         for path in valid_paths:
@@ -332,7 +311,7 @@ class TestDatabaseMigration:
         # Insert sample data
         cursor.execute(
             "INSERT INTO chunks (id, name, content) VALUES (?, ?, ?)",
-            ("chunk1", "test_function", "def test(): pass")
+            ("chunk1", "test_function", "def test(): pass"),
         )
         conn.commit()
         conn.close()

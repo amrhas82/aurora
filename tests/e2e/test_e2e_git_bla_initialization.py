@@ -93,11 +93,15 @@ def git_repo_with_history() -> Generator[Path, None, None]:
         subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
         subprocess.run(
             ["git", "config", "user.email", "test@example.com"],
-            cwd=repo_path, check=True, capture_output=True
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
         )
         subprocess.run(
             ["git", "config", "user.name", "Test User"],
-            cwd=repo_path, check=True, capture_output=True
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
         )
 
         # Create initial file with 3 functions
@@ -124,7 +128,9 @@ def func_c(z: float) -> float:
         subprocess.run(["git", "add", "module.py"], cwd=repo_path, check=True, capture_output=True)
         subprocess.run(
             ["git", "commit", "-m", "Initial commit: all functions v1"],
-            cwd=repo_path, check=True, capture_output=True
+            cwd=repo_path,
+            check=True,
+            capture_output=True,
         )
         time.sleep(0.1)  # Small delay for commit timestamps
 
@@ -132,16 +138,17 @@ def func_c(z: float) -> float:
         for i in range(2, 9):  # 7 more edits
             content = (repo_path / "module.py").read_text()
             # Only modify func_a lines
-            content = content.replace(
-                'return x',
-                f'return x  # edit {i}'
-            )
+            content = content.replace("return x", f"return x  # edit {i}")
             (repo_path / "module.py").write_text(content)
 
-            subprocess.run(["git", "add", "module.py"], cwd=repo_path, check=True, capture_output=True)
+            subprocess.run(
+                ["git", "add", "module.py"], cwd=repo_path, check=True, capture_output=True
+            )
             subprocess.run(
                 ["git", "commit", "-m", f"Edit func_a: version {i}"],
-                cwd=repo_path, check=True, capture_output=True
+                cwd=repo_path,
+                check=True,
+                capture_output=True,
             )
             time.sleep(0.1)
 
@@ -149,16 +156,17 @@ def func_c(z: float) -> float:
         for i in range(2, 4):  # 2 more edits
             content = (repo_path / "module.py").read_text()
             # Only modify func_b lines
-            content = content.replace(
-                'return y',
-                f'return y  # edit {i}'
-            )
+            content = content.replace("return y", f"return y  # edit {i}")
             (repo_path / "module.py").write_text(content)
 
-            subprocess.run(["git", "add", "module.py"], cwd=repo_path, check=True, capture_output=True)
+            subprocess.run(
+                ["git", "add", "module.py"], cwd=repo_path, check=True, capture_output=True
+            )
             subprocess.run(
                 ["git", "commit", "-m", f"Edit func_b: version {i}"],
-                cwd=repo_path, check=True, capture_output=True
+                cwd=repo_path,
+                check=True,
+                capture_output=True,
             )
             time.sleep(0.1)
 
@@ -174,9 +182,7 @@ class TestGitBasedBLAInitialization:
     activation scores, with FUNCTION-level granularity (not file-level).
     """
 
-    def test_1_6_1_create_git_repo_with_history(
-        self, git_repo_with_history: Path
-    ) -> None:
+    def test_1_6_1_create_git_repo_with_history(self, git_repo_with_history: Path) -> None:
         """Test 1.6.1: Write test that creates git repo with commit history.
 
         Verifies the fixture creates a proper Git repo.
@@ -223,7 +229,14 @@ class TestGitBasedBLAInitialization:
         # Run git blame for func_a lines (should show 8 unique commits)
         # Approximate: func_a is lines 4-6 (def, docstring, return)
         result_a = subprocess.run(
-            ["git", "blame", "-L", f"{func_a_line},{func_a_line+2}", "module.py", "--line-porcelain"],
+            [
+                "git",
+                "blame",
+                "-L",
+                f"{func_a_line},{func_a_line + 2}",
+                "module.py",
+                "--line-porcelain",
+            ],
             cwd=git_repo_with_history,
             capture_output=True,
             text=True,
@@ -457,9 +470,9 @@ class TestGitBasedBLAInitialization:
         assert unique_bla > 1, (
             "CRITICAL ISSUE #16: All functions in same file have identical BLA!\n"
             "This proves Git tracking is FILE-level, not FUNCTION-level.\n\n"
-            "Functions in module.py:\n" +
-            "\n".join(f"  - {name}: BLA={bl:.4f}, access={ac}" for name, bl, ac in results) +
-            f"\n\n"
+            "Functions in module.py:\n"
+            + "\n".join(f"  - {name}: BLA={bl:.4f}, access={ac}" for name, bl, ac in results)
+            + f"\n\n"
             f"Unique BLA values: {unique_bla} (should be >= 2)\n\n"
             f"Expected: func_a (8 commits) should have DIFFERENT BLA than\n"
             f"          func_b (3 commits) and func_c (1 commit)\n\n"
@@ -511,12 +524,11 @@ class TestGitBasedBLAInitialization:
                 missing_metadata.append((name, missing_fields))
 
         assert len(missing_metadata) == 0, (
-            "ISSUE #16: Git metadata not stored in chunks!\n" +
-            "\n".join(
-                f"  - {name}: missing {', '.join(fields)}"
-                for name, fields in missing_metadata
-            ) +
-            "\n\nExpected metadata fields: git_hash, last_modified, commit_count"
+            "ISSUE #16: Git metadata not stored in chunks!\n"
+            + "\n".join(
+                f"  - {name}: missing {', '.join(fields)}" for name, fields in missing_metadata
+            )
+            + "\n\nExpected metadata fields: git_hash, last_modified, commit_count"
         )
 
     def test_1_6_9_access_count_initialized_from_commits(
@@ -564,12 +576,12 @@ class TestGitBasedBLAInitialization:
         # If we have commit_count in metadata but access_count doesn't match
         if mismatches:
             pytest.fail(
-                "ISSUE #16: access_count not initialized from commit_count!\n" +
-                "\n".join(
+                "ISSUE #16: access_count not initialized from commit_count!\n"
+                + "\n".join(
                     f"  - {name}: access_count={ac}, commit_count={cc}"
                     for name, ac, cc in mismatches
-                ) +
-                "\n\nExpected: access_count should equal commit_count for each function"
+                )
+                + "\n\nExpected: access_count should equal commit_count for each function"
             )
 
         # If commit_count is missing entirely, that's also a failure
@@ -579,9 +591,7 @@ class TestGitBasedBLAInitialization:
                 "Git-based BLA initialization not implemented."
             )
 
-    def test_1_6_10_non_git_directory_graceful_fallback(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_6_10_non_git_directory_graceful_fallback(self, clean_aurora_home: Path) -> None:
         """Test 1.6.11: Test non-Git directory (no crash, base_level=0.5 fallback).
 
         Verifies Aurora handles non-Git directories gracefully.
@@ -609,8 +619,7 @@ def hello():
 
             # Should succeed (not crash on missing Git)
             assert result.returncode == 0, (
-                f"Indexing non-Git directory should not crash:\n"
-                f"stderr: {result.stderr}"
+                f"Indexing non-Git directory should not crash:\nstderr: {result.stderr}"
             )
 
             # Query database
@@ -636,8 +645,7 @@ def hello():
                     # Should have fallback value (0.5 or similar)
                     # Not 0.0 (which indicates not initialized at all)
                     assert base_level >= 0.0, (
-                        f"Non-Git file should have default base_level\n"
-                        f"Got: {base_level}"
+                        f"Non-Git file should have default base_level\nGot: {base_level}"
                     )
 
     def test_1_6_11_comprehensive_git_bla_check(
@@ -692,9 +700,7 @@ def hello():
         # Check 1: Are all base_level = 0.0?
         base_levels = [r[2] for r in results]
         if all(bl == 0.0 for bl in base_levels):
-            issues.append(
-                "❌ All base_level = 0.0 (Git history completely ignored)"
-            )
+            issues.append("❌ All base_level = 0.0 (Git history completely ignored)")
 
         # Check 2: Do functions in same file have different BLA?
         unique_bla = len(set(base_levels))
@@ -708,32 +714,26 @@ def hello():
         for name, metadata_json, base_level, access_count in results:
             metadata = json.loads(metadata_json) if metadata_json else {}
             if "git_hash" not in metadata or "commit_count" not in metadata:
-                issues.append(
-                    f"❌ {name}: Missing Git metadata (git_hash, commit_count)"
-                )
+                issues.append(f"❌ {name}: Missing Git metadata (git_hash, commit_count)")
                 break  # Only report once
 
         # Check 4: Is access_count = 0?
         access_counts = [r[3] for r in results]
         if all(ac == 0 for ac in access_counts):
-            issues.append(
-                "❌ All access_count = 0 (not initialized from commit history)"
-            )
+            issues.append("❌ All access_count = 0 (not initialized from commit history)")
 
         # If any issues found, fail with comprehensive report
         if issues:
             pytest.fail(
                 f"ISSUE #16 CONFIRMED: Git-based BLA initialization not working!\n\n"
-                f"Found {len(issues)} problems:\n\n" +
-                "\n".join(issues) +
-                "\n\n"
-                "Current function data:\n" +
-                "\n".join(
+                f"Found {len(issues)} problems:\n\n" + "\n".join(issues) + "\n\n"
+                "Current function data:\n"
+                + "\n".join(
                     f"  - {name}: BLA={bl:.4f}, access={ac}, "
                     f"metadata={json.loads(meta) if meta else 'None'}"
                     for name, meta, bl, ac in results
-                ) +
-                "\n\n"
+                )
+                + "\n\n"
                 "Expected (after fix):\n"
                 "  - func_a: BLA=~2.4 (8 commits)\n"
                 "  - func_b: BLA=~1.8 (3 commits)\n"

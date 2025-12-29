@@ -122,9 +122,7 @@ class TestComplexityAssessment:
     and routes them to the appropriate processing pipeline.
     """
 
-    def test_1_5_1_multi_part_query_classified_as_complex(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_1_multi_part_query_classified_as_complex(self, clean_aurora_home: Path) -> None:
         """Test 1.5.1: Write test for multi-part query.
 
         Query: "research X? who are Y? what features Z?"
@@ -161,9 +159,7 @@ class TestComplexityAssessment:
             f"Expected: Query with 4 questions should trigger MEDIUM or COMPLEX"
         )
 
-    def test_1_5_2_dry_run_shows_complexity_assessment(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_2_dry_run_shows_complexity_assessment(self, clean_aurora_home: Path) -> None:
         """Test 1.5.2: Run `aur query --dry-run` to see complexity assessment.
 
         Verifies --dry-run shows assessment details.
@@ -191,9 +187,7 @@ class TestComplexityAssessment:
             f"Output: {result.stdout}"
         )
 
-    def test_1_5_3_parse_complexity_level_and_confidence(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_3_parse_complexity_level_and_confidence(self, clean_aurora_home: Path) -> None:
         """Test 1.5.3: Parse output to extract complexity level and confidence score.
 
         Verifies we can extract assessment details from output.
@@ -217,9 +211,7 @@ class TestComplexityAssessment:
             f"Parsed: {assessment}"
         )
 
-    def test_1_5_4_complexity_not_always_simple(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_4_complexity_not_always_simple(self, clean_aurora_home: Path) -> None:
         """Test 1.5.4: Assert complexity is MEDIUM or COMPLEX (not SIMPLE).
 
         For queries that are clearly complex.
@@ -251,17 +243,12 @@ class TestComplexityAssessment:
         non_simple = [r for r in results if r[1]["complexity"] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            "Complex queries should not all be SIMPLE (Issue #6)!\n" +
-            "\n".join(
-                f"  - {q[:50]}... → {a['complexity']}"
-                for q, a in results
-            ) +
-            f"\n\nAt least 2 should be MEDIUM/COMPLEX, got {len(non_simple)}"
+            "Complex queries should not all be SIMPLE (Issue #6)!\n"
+            + "\n".join(f"  - {q[:50]}... → {a['complexity']}" for q, a in results)
+            + f"\n\nAt least 2 should be MEDIUM/COMPLEX, got {len(non_simple)}"
         )
 
-    def test_1_5_5_confidence_score_reasonable(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_5_confidence_score_reasonable(self, clean_aurora_home: Path) -> None:
         """Test 1.5.5: Assert confidence score >= 0.4.
 
         For queries with clear complexity indicators.
@@ -290,9 +277,7 @@ class TestComplexityAssessment:
         else:
             pytest.skip("Could not parse confidence from output")
 
-    def test_1_5_6_domain_specific_queries_soar(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_6_domain_specific_queries_soar(self, clean_aurora_home: Path) -> None:
         """Test 1.5.6: Test domain-specific queries (SOAR, ACT-R, agentic AI).
 
         EXPECTED TO FAIL: Domain terms not in keyword list (Issue #6).
@@ -321,17 +306,12 @@ class TestComplexityAssessment:
         non_simple = [r for r in results if r[1]["complexity"] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            "Domain-specific queries should be MEDIUM/COMPLEX (Issue #6)!\n" +
-            "\n".join(
-                f"  - {q[:50]}... → {a['complexity']}"
-                for q, a in results
-            ) +
-            "\n\nDomain terms (SOAR, ACT-R, agentic, Aurora) should trigger MEDIUM"
+            "Domain-specific queries should be MEDIUM/COMPLEX (Issue #6)!\n"
+            + "\n".join(f"  - {q[:50]}... → {a['complexity']}" for q, a in results)
+            + "\n\nDomain terms (SOAR, ACT-R, agentic, Aurora) should trigger MEDIUM"
         )
 
-    def test_1_5_7_domain_queries_classified_correctly(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_7_domain_queries_classified_correctly(self, clean_aurora_home: Path) -> None:
         """Test 1.5.7: Verify domain queries classified as MEDIUM/COMPLEX.
 
         Specifically tests Aurora-related terminology.
@@ -360,9 +340,7 @@ class TestComplexityAssessment:
             f"Expected: MEDIUM (requires Aurora knowledge)"
         )
 
-    def test_1_5_8_simple_query_remains_simple(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_8_simple_query_remains_simple(self, clean_aurora_home: Path) -> None:
         """Test 1.5.8: Test simple query remains SIMPLE ("what is Python?").
 
         Verifies assessment doesn't over-classify simple queries.
@@ -390,17 +368,12 @@ class TestComplexityAssessment:
         simple_count = len([r for r in results if r[1]["complexity"] == "SIMPLE"])
 
         assert simple_count >= 2, (
-            "Simple queries should be classified as SIMPLE!\n" +
-            "\n".join(
-                f"  - {q} → {a['complexity']}"
-                for q, a in results
-            ) +
-            f"\n\nAt least 2 should be SIMPLE, got {simple_count}"
+            "Simple queries should be classified as SIMPLE!\n"
+            + "\n".join(f"  - {q} → {a['complexity']}" for q, a in results)
+            + f"\n\nAt least 2 should be SIMPLE, got {simple_count}"
         )
 
-    def test_1_5_9_comprehensive_complexity_assessment_check(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_1_5_9_comprehensive_complexity_assessment_check(self, clean_aurora_home: Path) -> None:
         """Test 1.5.9: Expected - Test FAILS because complexity always SIMPLE (Issue #6).
 
         Comprehensive test documenting Issue #6.
@@ -422,27 +395,15 @@ class TestComplexityAssessment:
             (
                 "research agentic AI market? who are top players? what features?",
                 "MEDIUM",
-                "Multi-part (3 questions) + research keyword"
+                "Multi-part (3 questions) + research keyword",
             ),
-            (
-                "explain SOAR reasoning phases",
-                "MEDIUM",
-                "Domain keyword: SOAR"
-            ),
-            (
-                "how does ACT-R activation work?",
-                "MEDIUM",
-                "Domain keyword: ACT-R"
-            ),
-            (
-                "what is Python?",
-                "SIMPLE",
-                "Simple definition query"
-            ),
+            ("explain SOAR reasoning phases", "MEDIUM", "Domain keyword: SOAR"),
+            ("how does ACT-R activation work?", "MEDIUM", "Domain keyword: ACT-R"),
+            ("what is Python?", "SIMPLE", "Simple definition query"),
             (
                 "analyze and compare Aurora with traditional systems",
                 "MEDIUM",
-                "Analyze + compare keywords + domain (Aurora)"
+                "Analyze + compare keywords + domain (Aurora)",
             ),
         ]
 
@@ -474,9 +435,9 @@ class TestComplexityAssessment:
         if failures:
             pytest.fail(
                 f"ISSUE #6 CONFIRMED: Complexity assessment broken!\n\n"
-                f"Failed {len(failures)}/{len(test_cases)} test cases:\n\n" +
-                "\n\n".join(failures) +
-                "\n\n"
+                f"Failed {len(failures)}/{len(test_cases)} test cases:\n\n"
+                + "\n\n".join(failures)
+                + "\n\n"
                 "Root causes:\n"
                 "1. Missing domain keywords in assess.py:\n"
                 "   - MEDIUM_KEYWORDS needs: soar, actr, activation, retrieval,\n"
@@ -490,9 +451,7 @@ class TestComplexityAssessment:
 class TestComplexityAssessmentEdgeCases:
     """Test edge cases and boundary conditions for complexity assessment."""
 
-    def test_multiple_questions_boost_complexity(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_multiple_questions_boost_complexity(self, clean_aurora_home: Path) -> None:
         """Queries with 2+ question marks should be boosted to MEDIUM/COMPLEX.
 
         EXPECTED TO FAIL: Multi-question detection not implemented (Issue #6).
@@ -529,9 +488,7 @@ class TestComplexityAssessmentEdgeCases:
             f"Expected: Multi-question queries should be boosted"
         )
 
-    def test_scope_keywords_trigger_medium(
-        self, clean_aurora_home: Path
-    ) -> None:
+    def test_scope_keywords_trigger_medium(self, clean_aurora_home: Path) -> None:
         """Queries with scope keywords (research, analyze, compare) should be MEDIUM.
 
         EXPECTED TO FAIL: Scope keywords missing from assess.py (Issue #6).
@@ -560,12 +517,9 @@ class TestComplexityAssessmentEdgeCases:
         non_simple = [r for r in results if r[1] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            "Scope keywords should trigger MEDIUM (Issue #6)!\n" +
-            "\n".join(
-                f"  - {q[:50]}... → {c}"
-                for q, c in results
-            ) +
-            "\n\nKeywords: research, analyze, compare, design should trigger MEDIUM"
+            "Scope keywords should trigger MEDIUM (Issue #6)!\n"
+            + "\n".join(f"  - {q[:50]}... → {c}" for q, c in results)
+            + "\n\nKeywords: research, analyze, compare, design should trigger MEDIUM"
         )
 
 

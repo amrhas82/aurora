@@ -569,14 +569,18 @@ class MemoryManager:
         """Count total chunks in memory store.
 
         Returns:
-            Number of chunks
+            Number of chunks in the database
         """
         try:
-            # This is a simplified implementation
-            # In reality, we'd query the store's database
-            # For now, return 0 as placeholder
-            # TODO: Implement proper chunk counting based on Store API
-            return 0
+            # Use _transaction() context manager for direct SQL access
+            if hasattr(self.memory_store, "_transaction"):
+                with self.memory_store._transaction() as conn:
+                    cursor = conn.execute("SELECT COUNT(*) FROM chunks")
+                    result = cursor.fetchone()
+                    return result[0] if result else 0
+            else:
+                logger.warning("Store does not support _transaction(), cannot count chunks")
+                return 0
         except Exception as e:
             logger.warning(f"Failed to count chunks: {e}")
             return 0
@@ -585,11 +589,21 @@ class MemoryManager:
         """Count unique files in memory store.
 
         Returns:
-            Number of unique files
+            Number of unique files indexed
         """
         try:
-            # TODO: Implement proper file counting based on Store API
-            return 0
+            # Use _transaction() context manager for direct SQL access
+            # file_path is stored in content JSON as content->>'$.file'
+            if hasattr(self.memory_store, "_transaction"):
+                with self.memory_store._transaction() as conn:
+                    cursor = conn.execute(
+                        "SELECT COUNT(DISTINCT json_extract(content, '$.file')) FROM chunks WHERE type = 'code'"
+                    )
+                    result = cursor.fetchone()
+                    return result[0] if result else 0
+            else:
+                logger.warning("Store does not support _transaction(), cannot count files")
+                return 0
         except Exception as e:
             logger.warning(f"Failed to count files: {e}")
             return 0
@@ -598,11 +612,26 @@ class MemoryManager:
         """Get distribution of chunks by language.
 
         Returns:
-            Dictionary mapping language to chunk count
+            Dictionary mapping language name to chunk count
         """
         try:
-            # TODO: Implement proper language distribution based on Store API
-            return {}
+            # Use _transaction() context manager for direct SQL access
+            # language is stored in metadata JSON as metadata->>'$.language'
+            if hasattr(self.memory_store, "_transaction"):
+                with self.memory_store._transaction() as conn:
+                    cursor = conn.execute(
+                        """
+                        SELECT json_extract(metadata, '$.language') as lang, COUNT(*) as count
+                        FROM chunks
+                        WHERE type = 'code'
+                        GROUP BY lang
+                        """
+                    )
+                    results = cursor.fetchall()
+                    return {row[0]: row[1] for row in results if row[0] is not None}
+            else:
+                logger.warning("Store does not support _transaction(), cannot get language distribution")
+                return {}
         except Exception as e:
             logger.warning(f"Failed to get language distribution: {e}")
             return {}

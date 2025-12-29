@@ -99,10 +99,7 @@ class QueryExecutor:
 
             budget_limit = self.config.get("budget_limit", 10.0)
 
-            tracker = CostTracker(
-                monthly_limit_usd=budget_limit,
-                tracker_path=budget_path
-            )
+            tracker = CostTracker(monthly_limit_usd=budget_limit, tracker_path=budget_path)
 
             # Check budget BEFORE making LLM call
             model = self.config.get("model", "claude-sonnet-4-20250514")
@@ -157,7 +154,7 @@ class QueryExecutor:
                 input_tokens=response.input_tokens,
                 output_tokens=response.output_tokens,
                 operation="direct_llm",
-                query_id=None
+                query_id=None,
             )
 
             if verbose:
@@ -454,9 +451,7 @@ class QueryExecutor:
                 file_path = result.file_path or "unknown"
                 line_range = f"{result.line_range[0]}-{result.line_range[1]}"
                 content = result.content
-                context_parts.append(
-                    f"[{i}] {file_path} (lines {line_range}):\n{content}\n"
-                )
+                context_parts.append(f"[{i}] {file_path} (lines {line_range}):\n{content}\n")
 
             logger.debug(f"Retrieved {len(results)} chunks for context")
             return "\n".join(context_parts)

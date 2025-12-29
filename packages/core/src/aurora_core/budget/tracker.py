@@ -300,7 +300,9 @@ class CostTracker:
 
         return self.calculate_cost(model, estimated_input_tokens, estimated_output_tokens)
 
-    def check_budget(self, estimated_cost: float = 0.0, raise_on_exceeded: bool = True) -> tuple[bool, str]:
+    def check_budget(
+        self, estimated_cost: float = 0.0, raise_on_exceeded: bool = True
+    ) -> tuple[bool, str]:
         """Check if query can proceed within budget.
 
         Args:

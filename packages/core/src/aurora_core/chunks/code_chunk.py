@@ -45,6 +45,7 @@ class CodeChunk(Chunk):
     complexity_score: float = 0.0
     language: str = "python"
     embeddings: bytes | None = None
+    metadata: dict[str, Any] | None = None
 
     def __init__(
         self,
@@ -60,6 +61,7 @@ class CodeChunk(Chunk):
         complexity_score: float = 0.0,
         language: str = "python",
         embeddings: bytes | None = None,
+        metadata: dict[str, Any] | None = None,
     ):
         """
         Initialize a CodeChunk.
@@ -95,6 +97,7 @@ class CodeChunk(Chunk):
         self.complexity_score = complexity_score
         self.language = language
         self.embeddings = embeddings
+        self.metadata = metadata
 
         # Validate on construction
         self.validate()

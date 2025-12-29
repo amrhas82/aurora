@@ -361,7 +361,7 @@ def save_config(config: Config, path: str | None = None) -> None:
     config_path = Path(path).expanduser().resolve()
 
     # Convert Config dataclass to nested dict structure
-    config_dict = {
+    config_dict: dict[str, Any] = {
         "version": config.version,
         "llm": {
             "provider": config.llm_provider,

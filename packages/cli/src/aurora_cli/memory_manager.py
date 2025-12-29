@@ -24,6 +24,7 @@ from aurora_context_code.registry import ParserRegistry, get_global_registry
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.chunks import Chunk
 from aurora_core.store import SQLiteStore
+from aurora_core.types import ChunkID
 
 
 if TYPE_CHECKING:
@@ -208,7 +209,9 @@ class MemoryManager:
                 git_extractor = GitSignalExtractor()
                 logger.debug(f"Initialized GitSignalExtractor for {path}")
             except Exception as e:
-                logger.warning(f"Could not initialize Git extractor: {e}. Using default BLA values.")
+                logger.warning(
+                    f"Could not initialize Git extractor: {e}. Using default BLA values."
+                )
                 git_extractor = None
 
             # Process each file
@@ -235,27 +238,37 @@ class MemoryManager:
                         initial_bla = 0.5  # Default BLA for non-Git or on error
                         commit_count = 0
 
-                        if git_extractor and hasattr(chunk, 'line_start') and hasattr(chunk, 'line_end'):
+                        if (
+                            git_extractor
+                            and hasattr(chunk, "line_start")
+                            and hasattr(chunk, "line_end")
+                        ):
                             try:
                                 # Get commit times for this specific function (FUNCTION-level tracking)
                                 commit_times = git_extractor.get_function_commit_times(
                                     file_path=str(file_path),
                                     line_start=chunk.line_start,
-                                    line_end=chunk.line_end
+                                    line_end=chunk.line_end,
                                 )
 
                                 if commit_times:
                                     # Calculate BLA from commit history
-                                    initial_bla = git_extractor.calculate_bla(commit_times, decay=0.5)
+                                    initial_bla = git_extractor.calculate_bla(
+                                        commit_times, decay=0.5
+                                    )
                                     commit_count = len(commit_times)
 
                                     # Store Git metadata in chunk
-                                    if not hasattr(chunk, 'metadata') or chunk.metadata is None:
+                                    if not hasattr(chunk, "metadata") or chunk.metadata is None:
                                         chunk.metadata = {}
 
-                                    chunk.metadata['git_hash'] = commit_times[0] if commit_times else None
-                                    chunk.metadata['last_modified'] = commit_times[0] if commit_times else None
-                                    chunk.metadata['commit_count'] = commit_count
+                                    chunk.metadata["git_hash"] = (
+                                        commit_times[0] if commit_times else None
+                                    )
+                                    chunk.metadata["last_modified"] = (
+                                        commit_times[0] if commit_times else None
+                                    )
+                                    chunk.metadata["commit_count"] = commit_count
 
                                     logger.debug(
                                         f"Function {chunk.name} ({file_path.name}:{chunk.line_start}-{chunk.line_end}): "
@@ -283,7 +296,7 @@ class MemoryManager:
                         if initial_bla != 0.0 or commit_count > 0:
                             try:
                                 # Use store's transaction manager to update activation
-                                if hasattr(self.memory_store, '_transaction'):
+                                if hasattr(self.memory_store, "_transaction"):
                                     with self.memory_store._transaction() as conn:
                                         conn.execute(
                                             """
@@ -291,11 +304,15 @@ class MemoryManager:
                                             SET base_level = ?, access_count = ?
                                             WHERE chunk_id = ?
                                             """,
-                                            (initial_bla, commit_count, chunk_id)
+                                            (initial_bla, commit_count, chunk_id),
                                         )
-                                    logger.debug(f"Initialized activation for {chunk.name}: BLA={initial_bla:.4f}, count={commit_count}")
+                                    logger.debug(
+                                        f"Initialized activation for {chunk.name}: BLA={initial_bla:.4f}, count={commit_count}"
+                                    )
                             except Exception as e:
-                                logger.warning(f"Could not initialize activation for {chunk.name}: {e}")
+                                logger.warning(
+                                    f"Could not initialize activation for {chunk.name}: {e}"
+                                )
 
                         stats["chunks"] += 1
 
@@ -390,16 +407,18 @@ class MemoryManager:
 
             # Record access for each retrieved chunk (Issue #4: Activation Tracking)
             access_time = datetime.now(timezone.utc)
-            for result in search_results:
+            for search_result in search_results:
                 try:
                     self.memory_store.record_access(
-                        chunk_id=result.chunk_id,
+                        chunk_id=ChunkID(search_result.chunk_id),
                         access_time=access_time,
-                        context={"query": query}
+                        context=query,
                     )
                 except Exception as e:
                     # Log but don't fail the search if access recording fails
-                    logger.warning(f"Failed to record access for chunk {result.chunk_id}: {e}")
+                    logger.warning(
+                        f"Failed to record access for chunk {search_result.chunk_id}: {e}"
+                    )
 
             logger.info(f"Search returned {len(search_results)} results for '{query}'")
             logger.debug(f"Recorded access for {len(search_results)} chunks")

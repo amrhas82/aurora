@@ -55,10 +55,7 @@ def show_command() -> None:
         budget_limit = config.budget_limit
 
         # Initialize tracker
-        tracker = CostTracker(
-            monthly_limit_usd=budget_limit,
-            tracker_path=budget_path
-        )
+        tracker = CostTracker(monthly_limit_usd=budget_limit, tracker_path=budget_path)
 
         # Get status
         status = tracker.get_status()
@@ -133,10 +130,7 @@ def set_command(amount: float) -> None:
         budget_path = Path(config.budget_tracker_path).expanduser()
 
         # Initialize tracker with old limit
-        tracker = CostTracker(
-            monthly_limit_usd=config.budget_limit,
-            tracker_path=budget_path
-        )
+        tracker = CostTracker(monthly_limit_usd=config.budget_limit, tracker_path=budget_path)
 
         # Set new budget
         tracker.set_budget(amount)
@@ -146,6 +140,7 @@ def set_command(amount: float) -> None:
 
         # Save config back to file
         from aurora_cli.config import save_config
+
         save_config(config)
 
         console.print(f"\n[bold green]✓[/] Budget limit set to [bold]${amount:.2f}[/] per month\n")
@@ -170,8 +165,7 @@ def reset_command(confirm: bool) -> None:
     """
     if not confirm:
         response = click.confirm(
-            "\nThis will reset spending to $0.00 for the current period. Continue?",
-            default=False
+            "\nThis will reset spending to $0.00 for the current period. Continue?", default=False
         )
         if not response:
             console.print("\n[dim]Reset cancelled[/]\n")
@@ -186,10 +180,7 @@ def reset_command(confirm: bool) -> None:
         budget_limit = config.budget_limit
 
         # Initialize tracker
-        tracker = CostTracker(
-            monthly_limit_usd=budget_limit,
-            tracker_path=budget_path
-        )
+        tracker = CostTracker(monthly_limit_usd=budget_limit, tracker_path=budget_path)
 
         # Get current spending before reset
         old_spent = tracker.get_total_spent()
@@ -197,7 +188,9 @@ def reset_command(confirm: bool) -> None:
         # Reset spending
         tracker.reset_spending()
 
-        console.print(f"\n[bold green]✓[/] Spending reset from [bold]${old_spent:.4f}[/] to [bold]$0.00[/]\n")
+        console.print(
+            f"\n[bold green]✓[/] Spending reset from [bold]${old_spent:.4f}[/] to [bold]$0.00[/]\n"
+        )
         console.print(f"[dim]Budget limit remains: ${budget_limit:.2f}[/]\n")
 
     except Exception as e:
@@ -231,10 +224,7 @@ def history_command(limit: int, show_all: bool) -> None:
         budget_limit = config.budget_limit
 
         # Initialize tracker
-        tracker = CostTracker(
-            monthly_limit_usd=budget_limit,
-            tracker_path=budget_path
-        )
+        tracker = CostTracker(monthly_limit_usd=budget_limit, tracker_path=budget_path)
 
         # Get history
         history = tracker.get_history()
@@ -250,7 +240,9 @@ def history_command(limit: int, show_all: bool) -> None:
             entries_to_show = history[-limit:] if len(history) > limit else history
 
         # Display history table
-        console.print(f"\n[bold]Query History[/] (showing {len(entries_to_show)} of {len(history)} entries)")
+        console.print(
+            f"\n[bold]Query History[/] (showing {len(entries_to_show)} of {len(history)} entries)"
+        )
 
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Timestamp", style="cyan", no_wrap=True)

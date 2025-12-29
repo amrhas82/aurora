@@ -371,7 +371,7 @@ class SQLiteStore(Store):
             # Note: In ACT-R, base_level can be negative (it's log-odds)
             # Default min_activation of 0.0 would filter out valid chunks
             # Use -float('inf') if min_activation is 0.0 to get all chunks
-            actual_min = min_activation if min_activation != 0.0 else -float('inf')
+            actual_min = min_activation if min_activation != 0.0 else -float("inf")
 
             cursor = conn.execute(
                 """
@@ -543,7 +543,9 @@ class SQLiteStore(Store):
 
                 # Calculate initial BLA (single access)
                 history_entries = [AccessHistoryEntry(timestamp=access_time)]
-                new_base_level = calculate_bla(history_entries, decay_rate=0.5, current_time=access_time)
+                new_base_level = calculate_bla(
+                    history_entries, decay_rate=0.5, current_time=access_time
+                )
 
                 conn.execute(
                     """INSERT INTO activations (chunk_id, base_level, last_access, access_count, access_history)
@@ -558,12 +560,16 @@ class SQLiteStore(Store):
                 # Recalculate BLA based on updated access history
                 history_entries = [
                     AccessHistoryEntry(
-                        timestamp=datetime.fromisoformat(str(entry["timestamp"]).replace('Z', '+00:00'))
+                        timestamp=datetime.fromisoformat(
+                            str(entry["timestamp"]).replace("Z", "+00:00")
+                        )
                     )
                     for entry in access_history
                     if entry.get("timestamp")
                 ]
-                new_base_level = calculate_bla(history_entries, decay_rate=0.5, current_time=access_time)
+                new_base_level = calculate_bla(
+                    history_entries, decay_rate=0.5, current_time=access_time
+                )
 
                 # Update activations table with new base_level
                 conn.execute(

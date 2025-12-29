@@ -235,7 +235,7 @@ def query_command(
             return
 
         # Create escalation config
-        config = EscalationConfig(
+        escalation_config = EscalationConfig(
             threshold=threshold,
             enable_keyword_only=True,  # Use keyword-only for speed
             force_aurora=force_aurora,
@@ -243,7 +243,7 @@ def query_command(
         )
 
         # Create handler
-        handler = AutoEscalationHandler(config=config)
+        handler = AutoEscalationHandler(config=escalation_config)
 
         # Assess query
         result = handler.assess_query(query_text)
@@ -460,13 +460,13 @@ def _execute_dry_run(
     # Run escalation assessment (no API call)
     console.print("\n[bold]Escalation Decision:[/]")
 
-    config = EscalationConfig(
+    escalation_config = EscalationConfig(
         threshold=threshold,
         enable_keyword_only=True,
         force_aurora=force_aurora,
         force_direct=force_direct,
     )
-    handler = AutoEscalationHandler(config=config)
+    handler = AutoEscalationHandler(config=escalation_config)
     result = handler.assess_query(query_text)
 
     decision_table = Table(show_header=False, box=None)

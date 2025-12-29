@@ -10,8 +10,6 @@ from unittest.mock import MagicMock, patch
 
 import click
 import pytest
-from click.testing import CliRunner
-
 from aurora_cli.commands.budget import (
     budget_group,
     history_command,
@@ -20,6 +18,8 @@ from aurora_cli.commands.budget import (
     show_command,
 )
 from aurora_cli.config import Config
+from click.testing import CliRunner
+
 from aurora_core.budget.tracker import CostTracker
 
 

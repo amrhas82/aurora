@@ -537,7 +537,7 @@ class ErrorHandler:
             "  3. Reset spending for new period:\n"
             "     [cyan]aur budget reset[/]\n"
             "  4. Use --force-direct for lower-cost queries:\n"
-            "     [cyan]aur query \"question\" --force-direct[/]"
+            '     [cyan]aur query "question" --force-direct[/]'
         )
 
     @staticmethod

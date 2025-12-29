@@ -28,6 +28,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -137,7 +138,7 @@ class GitSignalExtractor:
             logger.warning(f"Git blame timeout for {file_path}:{line_start}-{line_end}")
             return []
         except FileNotFoundError:
-            logger.debug(f"Git not found in PATH")
+            logger.debug("Git not found in PATH")
             return []
         except Exception as e:
             logger.warning(f"Error extracting Git history for {file_path}: {e}")

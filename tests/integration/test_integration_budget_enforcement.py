@@ -35,10 +35,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
-from aurora_core.cost.tracker import CostTracker, BudgetExceededError
+
+from aurora_core.cost.tracker import BudgetExceededError, CostTracker
 
 
 class TestBudgetEnforcement:
@@ -50,12 +49,13 @@ class TestBudgetEnforcement:
         db_path = tmp_path / "test_memory.db"
         budget_path = tmp_path / "budget.json"
 
-        config = Config(
-            api_key="test-key",
-            db_path=str(db_path),
-            budget_limit=0.01,  # $0.01 limit
-            budget_tracker_path=str(budget_path)
-        )
+        config = {
+            "model": "claude-sonnet-4-20250514",
+            "temperature": 0.7,
+            "max_tokens": 500,
+            "budget_limit": 0.005,  # $0.005 limit (very low for testing)
+            "budget_tracker_path": str(budget_path)
+        }
 
         return config, budget_path
 
@@ -66,7 +66,7 @@ class TestBudgetEnforcement:
 
         tracker = CostTracker(
             budget_file=str(budget_path),
-            total_budget=0.01
+            total_budget=0.005  # Match the low_budget_config limit
         )
 
         return tracker, budget_path
@@ -81,25 +81,35 @@ class TestBudgetEnforcement:
 
         executor = QueryExecutor(
             config=config,
-            memory_store=None,
             interactive_mode=False
         )
 
-        # Mock LLM to track if it's called
+        # Mock LLM client to track if it's called
         llm_called = False
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "This should not be reached if budget check works"
+        mock_response.input_tokens = 1000
+        mock_response.output_tokens = 500
 
         def mock_generate(prompt, **kwargs):
             nonlocal llm_called
             llm_called = True
-            return "This should not be reached if budget check works"
+            return mock_response
 
-        with patch.object(executor.llm_client, 'generate', side_effect=mock_generate):
-            # Attempt expensive query (long prompt = higher estimated cost)
-            long_query = "Explain in detail " + " and elaborate " * 100
+        mock_llm.generate.side_effect = mock_generate
+
+        with patch.object(executor, '_initialize_llm_client', return_value=mock_llm):
+            # Attempt expensive query (very long prompt = higher estimated cost)
+            # Need ~8000 chars to get ~2000 input tokens
+            # With max_tokens=500, estimated output=250 tokens
+            # Cost: (2000/1M * $3) + (250/1M * $15) = $0.006 + $0.00375 = $0.00975
+            # Still under $0.01! Let's make it even longer
+            long_query = ("Explain in detail " + " and elaborate " * 500)  # ~14k chars = ~3500 tokens
 
             # Should raise BudgetExceededError
             with pytest.raises(BudgetExceededError) as exc_info:
-                executor.execute_direct_llm(long_query)
+                executor.execute_direct_llm(long_query, api_key="test-key")
 
             # ASSERTION 1: Budget error should be raised BEFORE LLM call
             assert not llm_called, (
@@ -127,43 +137,51 @@ class TestBudgetEnforcement:
         budget_path = tmp_path / "budget.json"
 
         # High budget for this test
-        config = Config(
-            api_key="test-key",
-            db_path=str(db_path),
-            budget_limit=10.0,
-            budget_tracker_path=str(budget_path)
-        )
+        config = {
+            "model": "claude-sonnet-4-20250514",
+            "temperature": 0.7,
+            "max_tokens": 500,
+            "budget_limit": 10.0,
+            "budget_tracker_path": str(budget_path)
+        }
 
         executor = QueryExecutor(
             config=config,
-            memory_store=None,
             interactive_mode=False
         )
 
         # Mock LLM to return response with cost metadata
+        mock_llm = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "Response text"
+        mock_response.input_tokens = 100
+        mock_response.output_tokens = 50
+
         def mock_generate_with_cost(prompt, **kwargs):
             # Simulate response with usage info
-            return "Response text"
+            return mock_response
 
-        with patch.object(executor.llm_client, 'generate', side_effect=mock_generate_with_cost):
-            # Mock the cost calculation
-            with patch.object(executor.llm_client, 'get_last_cost', return_value=0.05):
+        mock_llm.generate.side_effect = mock_generate_with_cost
+
+        with patch.object(executor, '_initialize_llm_client', return_value=mock_llm):
+            # Mock the _call_llm_with_retry to return mock response
+            with patch.object(executor, '_call_llm_with_retry', return_value=mock_response):
                 query = "What is Python?"
-                result = executor.execute_direct_llm(query)
+                result = executor.execute_direct_llm(query, api_key="test-key")
 
                 # Check budget file for recorded cost
                 if budget_path.exists():
                     with open(budget_path) as f:
                         budget_data = json.load(f)
 
-                    spent = budget_data.get("spent", 0.0)
+                    spent = budget_data.get("consumed_usd", 0.0)
 
                     # ASSERTION: Cost should be recorded
                     assert spent > 0, (
                         f"Query cost not recorded in budget tracker\n"
-                        f"Expected: spent > 0 (around $0.05)\n"
-                        f"Actual: spent = {spent}\n"
-                        f"Fix: Call tracker.record_query(query, cost) after LLM call"
+                        f"Expected: spent > 0 (calculated from 100 input + 50 output tokens)\n"
+                        f"Actual: spent = ${spent:.6f}\n"
+                        f"Fix: Call tracker.record_cost() after LLM call"
                     )
 
     def test_budget_history_shows_blocked_queries(self, cost_tracker_with_low_budget):

@@ -7,6 +7,12 @@ from pathlib import Path
 from typing import Any
 
 
+class BudgetExceededError(Exception):
+    """Raised when an operation would exceed the budget limit."""
+
+    pass
+
+
 @dataclass
 class ModelPricing:
     """Pricing information for a specific LLM model.
@@ -129,14 +135,25 @@ class CostTracker:
         self,
         monthly_limit_usd: float = 100.0,
         tracker_path: Path | None = None,
+        budget_file: str | None = None,
+        total_budget: float | None = None,
     ):
         """Initialize cost tracker.
 
         Args:
-            monthly_limit_usd: Monthly budget limit in USD
+            monthly_limit_usd: Monthly budget limit in USD (deprecated, use total_budget)
             tracker_path: Path to tracker file (defaults to ~/.aurora/budget_tracker.json)
+            budget_file: Alias for tracker_path (for backward compatibility)
+            total_budget: Alias for monthly_limit_usd (for backward compatibility)
         """
+        # Support legacy parameter names for backward compatibility
+        if total_budget is not None:
+            monthly_limit_usd = total_budget
+        if budget_file is not None:
+            tracker_path = Path(budget_file)
+
         self.monthly_limit_usd = monthly_limit_usd
+        self.total_budget = monthly_limit_usd  # Alias for compatibility
 
         if tracker_path is None:
             aurora_dir = Path.home() / ".aurora"
@@ -146,6 +163,10 @@ class CostTracker:
         self.tracker_path = tracker_path
         self.current_period = self._get_current_period()
         self.budget = self._load_or_create_budget()
+
+        # Sync instance variables with loaded budget
+        self.monthly_limit_usd = self.budget.limit_usd
+        self.total_budget = self.budget.limit_usd
 
     def _get_current_period(self) -> str:
         """Get current period identifier (YYYY-MM)."""
@@ -279,16 +300,20 @@ class CostTracker:
 
         return self.calculate_cost(model, estimated_input_tokens, estimated_output_tokens)
 
-    def check_budget(self, estimated_cost: float = 0.0) -> tuple[bool, str]:
+    def check_budget(self, estimated_cost: float = 0.0, raise_on_exceeded: bool = True) -> tuple[bool, str]:
         """Check if query can proceed within budget.
 
         Args:
             estimated_cost: Estimated cost of upcoming operation
+            raise_on_exceeded: If True, raise BudgetExceededError when budget exceeded (default)
 
         Returns:
             Tuple of (can_proceed, message)
             - can_proceed: True if query should proceed
             - message: Status message (warning or error)
+
+        Raises:
+            BudgetExceededError: If raise_on_exceeded=True and budget is exceeded
         """
         # Check if we need to roll over to new period
         if self.budget.period != self.current_period:
@@ -299,11 +324,27 @@ class CostTracker:
 
         # Hard limit - block query
         if projected_percent >= 100.0:
-            return (
-                False,
+            message = (
                 f"Budget exceeded: ${projected_cost:.4f} / ${self.budget.limit_usd:.2f} "
-                f"({projected_percent:.1f}%). Query blocked.",
+                f"({projected_percent:.1f}%). Query blocked."
             )
+
+            # Record blocked query in history
+            entry = CostEntry(
+                timestamp=datetime.now().isoformat(),
+                model="unknown",
+                input_tokens=0,
+                output_tokens=0,
+                cost_usd=estimated_cost,
+                operation="blocked_query",
+                query_id=None,
+            )
+            self.budget.entries.append(entry)
+            self._save_budget()
+
+            if raise_on_exceeded:
+                raise BudgetExceededError(message)
+            return (False, message)
 
         # Soft limit - warn but allow
         if projected_percent >= 80.0:
@@ -392,6 +433,86 @@ class CostTracker:
         for entry in self.budget.entries:
             breakdown[entry.model] = breakdown.get(entry.model, 0.0) + entry.cost_usd
         return breakdown
+
+    # Compatibility methods for integration tests
+
+    def set_budget(self, amount: float) -> None:
+        """Set the budget limit.
+
+        Args:
+            amount: New budget limit in USD
+        """
+        self.budget.limit_usd = amount
+        self.monthly_limit_usd = amount
+        self.total_budget = amount
+        self._save_budget()
+
+    def reset_spending(self) -> None:
+        """Reset spending to zero (clears all entries)."""
+        self.budget.consumed_usd = 0.0
+        self.budget.entries = []
+        self._save_budget()
+
+    def get_total_spent(self) -> float:
+        """Get total amount spent in current period.
+
+        Returns:
+            Total spent in USD
+        """
+        return self.budget.consumed_usd
+
+    def get_history(self) -> list[dict[str, Any]]:
+        """Get query history with costs.
+
+        Returns:
+            List of dictionaries with query information
+        """
+        return [
+            {
+                "timestamp": entry.timestamp,
+                "query": entry.operation,  # Use operation as query for compatibility
+                "cost": entry.cost_usd,
+                "status": "blocked" if entry.operation == "blocked_query" else "success",
+                "model": entry.model,
+                "input_tokens": entry.input_tokens,
+                "output_tokens": entry.output_tokens,
+            }
+            for entry in self.budget.entries
+        ]
+
+    def record_query(
+        self,
+        query: str,
+        cost: float,
+        status: str = "success",
+        model: str = "unknown",
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+    ) -> None:
+        """Record a query with cost (compatibility method).
+
+        Args:
+            query: Query text
+            cost: Cost in USD
+            status: Status of query (success, blocked, etc.)
+            model: Model used
+            input_tokens: Input tokens used
+            output_tokens: Output tokens generated
+        """
+        entry = CostEntry(
+            timestamp=datetime.now().isoformat(),
+            model=model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cost_usd=cost,
+            operation=query,  # Use query as operation
+            query_id=None,
+        )
+
+        self.budget.entries.append(entry)
+        if status == "success":
+            self.budget.consumed_usd += cost
+        self._save_budget()
 
 
 class BudgetTracker(CostTracker):

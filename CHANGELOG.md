@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.2.1] - 2025-12-29
+
+### Fixed - Phase 1: Core Restoration
+
+**Critical Bug Fixes (P0 Priority):**
+- **Issue #2 - Database Path Unification**: All commands now use `~/.aurora/memory.db` as single source of truth. No more local `aurora.db` files created. Config-based path resolution ensures consistency across all operations.
+- **Issue #4 - Activation Tracking**: Fixed `record_access()` not being called during search. Activation scores now properly update with each chunk access, using ACT-R decay formula. Scores vary across chunks instead of remaining static.
+- **Issue #15 - Query Retrieval Integration**: Direct LLM queries now retrieve context from indexed codebase before generating responses. Memory store properly initialized and passed to all query execution modes.
+- **Issue #16 - Git-Based BLA Initialization**: Chunks now initialized with activation scores based on Git commit history at FUNCTION level using `git blame -L <start>,<end>`. Frequently-edited functions have higher initial activation than rarely-touched functions in the same file. Gracefully falls back to base_level=0.5 for non-Git directories.
+
+**Critical Bug Fixes (Found During Manual E2E Testing):**
+- **Bug #1**: Fixed `retrieve_by_activation` filtering out negative BLA values (sqlite.py:355) - Changed filter to use `-inf` when min_activation==0.0 to include all chunks
+- **Bug #2**: Fixed Query command not passing memory_store to Direct LLM (main.py:340) - Memory store now initialized and passed for all query modes
+- **Bug #3**: Fixed HybridRetriever not extracting CodeChunk content properly (hybrid_retriever.py:236) - Now extracts full function signature and docstring with proper line ranges
+- **Bug #4**: Fixed Config not respecting AURORA_HOME environment variable (config.py:226,359, init.py:151) - Added `_get_aurora_home()` helper function, tests now use isolated config/database
+
+**Feature Improvements (P1 Priority):**
+- **Issue #6 - Complexity Assessment**: Added 16 domain-specific keywords (soar, actr, activation, agentic, marketplace, research, analyze, etc.). Multi-question queries (2+ `?`) get +0.3 complexity boost. Domain queries now correctly classified as MEDIUM/COMPLEX.
+- **Issue #9 - Auto-Escalation Logic**: Low confidence queries (<0.6) now trigger escalation to SOAR pipeline. In non-interactive mode, auto-escalates automatically. In interactive mode, prompts user with clear choice.
+- **Issue #10 - Budget Management**: Implemented `aur budget` command group with 4 subcommands: `show`, `set <amount>`, `reset`, `history`. Budget checked before LLM calls, queries blocked with helpful error if limit exceeded.
+- **Issue #11 - Error Handling**: Added user-friendly error messages for authentication, API, network, configuration, and budget errors. Stack traces hidden by default, shown with `--debug` flag. Each error includes actionable solutions.
+
+### Changed
+
+**Database Management:**
+- Default database location changed from `./aurora.db` to `~/.aurora/memory.db`
+- Migration tool added to `aur init` for existing local databases
+- Config file now specifies database path for all operations
+
+**Activation Scores:**
+- Initial BLA calculated from Git commit history at function level (not file level)
+- Negative BLA values are valid (ACT-R log-odds representation)
+- Each function has individual activation based on its edit history
+- Access tracking now updates base_level, access_count, and last_access_time
+
+**Query Execution:**
+- Direct LLM mode now retrieves context from memory store (not just SOAR mode)
+- Context includes file paths, line ranges, and full chunk content
+- Queries about indexed code return accurate answers from codebase
+
+**Complexity Assessment:**
+- Threshold adjusted to confidence < 0.6 for auto-escalation
+- Domain keywords expanded from 8 to 16 terms
+- Multi-question detection added (2+ `?` triggers complexity boost)
+
+### Documentation
+
+**Updated Documentation:**
+- CHANGELOG.md - Added v0.2.1 release notes with all fixes and improvements
+- CLI_USAGE_GUIDE.md - Added budget commands section with examples
+- TROUBLESHOOTING.md - Added budget exceeded errors, configuration errors with --debug usage
+- PRD-0010 - Complete Phase 1 implementation documented
+
+**New Features Documented:**
+- FUNCTION-level Git tracking via `git blame -L <start>,<end>`
+- Base-level activation (BLA) initialization from commit history
+- Negative BLA values are valid (ACT-R log-odds)
+- Budget management workflow with enforcement and history
+
+### Reference
+
+**Related PRD**: [tasks/0010-prd-aurora-phase1-core-restoration.md](tasks/0010-prd-aurora-phase1-core-restoration.md)
+
+**Issues Fixed**: #2, #4, #6, #9, #10, #11, #15, #16 (8 issues total)
+
+**Test Coverage**: 12 E2E/integration tests added, 62 unit tests added, 4 critical bugs fixed during manual testing
+
+**Test Results**: 31 budget tests passing, 10 integration tests passing, all 4 bugs verified fixed. E2E tests have environment setup issues (unrelated to bug fixes).
+
+---
+
+## [Unreleased]
+
 ### Added
 
 **Retrieval Quality Handling (TD-P2-016):**

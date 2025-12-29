@@ -25,8 +25,9 @@ import os
 import re
 import subprocess
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, Dict, Optional
+from typing import Dict, Optional
 
 import pytest
 
@@ -69,7 +70,7 @@ def clean_aurora_home() -> Generator[Path, None, None]:
             del os.environ["AURORA_HOME"]
 
 
-def parse_complexity_output(output: str) -> Dict[str, any]:
+def parse_complexity_output(output: str) -> dict[str, any]:
     """Parse complexity assessment from command output.
 
     Args:
@@ -250,7 +251,7 @@ class TestComplexityAssessment:
         non_simple = [r for r in results if r[1]["complexity"] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            f"Complex queries should not all be SIMPLE (Issue #6)!\n" +
+            "Complex queries should not all be SIMPLE (Issue #6)!\n" +
             "\n".join(
                 f"  - {q[:50]}... → {a['complexity']}"
                 for q, a in results
@@ -320,12 +321,12 @@ class TestComplexityAssessment:
         non_simple = [r for r in results if r[1]["complexity"] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            f"Domain-specific queries should be MEDIUM/COMPLEX (Issue #6)!\n" +
+            "Domain-specific queries should be MEDIUM/COMPLEX (Issue #6)!\n" +
             "\n".join(
                 f"  - {q[:50]}... → {a['complexity']}"
                 for q, a in results
             ) +
-            f"\n\nDomain terms (SOAR, ACT-R, agentic, Aurora) should trigger MEDIUM"
+            "\n\nDomain terms (SOAR, ACT-R, agentic, Aurora) should trigger MEDIUM"
         )
 
     def test_1_5_7_domain_queries_classified_correctly(
@@ -389,7 +390,7 @@ class TestComplexityAssessment:
         simple_count = len([r for r in results if r[1]["complexity"] == "SIMPLE"])
 
         assert simple_count >= 2, (
-            f"Simple queries should be classified as SIMPLE!\n" +
+            "Simple queries should be classified as SIMPLE!\n" +
             "\n".join(
                 f"  - {q} → {a['complexity']}"
                 for q, a in results
@@ -475,14 +476,14 @@ class TestComplexityAssessment:
                 f"ISSUE #6 CONFIRMED: Complexity assessment broken!\n\n"
                 f"Failed {len(failures)}/{len(test_cases)} test cases:\n\n" +
                 "\n\n".join(failures) +
-                f"\n\n"
-                f"Root causes:\n"
-                f"1. Missing domain keywords in assess.py:\n"
-                f"   - MEDIUM_KEYWORDS needs: soar, actr, activation, retrieval,\n"
-                f"     reasoning, agentic, marketplace, aurora\n"
-                f"2. No multi-question detection (should count '?')\n"
-                f"3. Missing scope keywords: research, analyze, compare\n\n"
-                f"Fix location: packages/soar/src/aurora_soar/phases/assess.py"
+                "\n\n"
+                "Root causes:\n"
+                "1. Missing domain keywords in assess.py:\n"
+                "   - MEDIUM_KEYWORDS needs: soar, actr, activation, retrieval,\n"
+                "     reasoning, agentic, marketplace, aurora\n"
+                "2. No multi-question detection (should count '?')\n"
+                "3. Missing scope keywords: research, analyze, compare\n\n"
+                "Fix location: packages/soar/src/aurora_soar/phases/assess.py"
             )
 
 
@@ -559,12 +560,12 @@ class TestComplexityAssessmentEdgeCases:
         non_simple = [r for r in results if r[1] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            f"Scope keywords should trigger MEDIUM (Issue #6)!\n" +
+            "Scope keywords should trigger MEDIUM (Issue #6)!\n" +
             "\n".join(
                 f"  - {q[:50]}... → {c}"
                 for q, c in results
             ) +
-            f"\n\nKeywords: research, analyze, compare, design should trigger MEDIUM"
+            "\n\nKeywords: research, analyze, compare, design should trigger MEDIUM"
         )
 
 

@@ -173,7 +173,11 @@ class SOAROrchestrator:
                 max_output_tokens=4096,
             )
 
-            can_proceed, budget_message = self.cost_tracker.check_budget(estimated_cost)
+            # Check budget with raise_on_exceeded=False to get tuple return
+            # We'll raise manually with proper error attributes
+            can_proceed, budget_message = self.cost_tracker.check_budget(
+                estimated_cost, raise_on_exceeded=False
+            )
 
             if not can_proceed:
                 # Hard limit exceeded - reject query

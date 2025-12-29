@@ -176,6 +176,9 @@ def _format_normal(
     if "phases" in phase_metadata:
         lines.append("\nPHASE SUMMARY:")
         for phase_name, phase_data in phase_metadata["phases"].items():
+            # Skip non-dict phase data (e.g., error_details string)
+            if not isinstance(phase_data, dict):
+                continue
             duration = phase_data.get("duration_ms", 0)
             lines.append(f"  {phase_name}: {duration}ms")
 
@@ -267,6 +270,9 @@ def _format_verbose(
         lines.append("=" * 80)
         total_duration = 0
         for phase_name, phase_data in phase_metadata["phases"].items():
+            # Skip non-dict phase data (e.g., error_details string)
+            if not isinstance(phase_data, dict):
+                continue
             duration = phase_data.get("duration_ms", 0)
             total_duration += duration
             lines.append(f"  {phase_name}: {duration}ms")

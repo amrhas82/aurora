@@ -9,11 +9,13 @@ from __future__ import annotations
 import logging
 import random
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from aurora_reasoning.llm_client import AnthropicClient, LLMClient
 
 from aurora_cli.errors import APIError, ErrorHandler
+from aurora_core.budget.tracker import BudgetExceededError, CostTracker
 
 
 if TYPE_CHECKING:
@@ -88,6 +90,33 @@ class QueryExecutor:
         start_time = time.time()
 
         try:
+            # Initialize budget tracker with config overrides
+            budget_path_str = self.config.get("budget_tracker_path")
+            if budget_path_str:
+                budget_path = Path(budget_path_str)
+            else:
+                budget_path = Path.home() / ".aurora" / "budget_tracker.json"
+
+            budget_limit = self.config.get("budget_limit", 10.0)
+
+            tracker = CostTracker(
+                monthly_limit_usd=budget_limit,
+                tracker_path=budget_path
+            )
+
+            # Check budget BEFORE making LLM call
+            model = self.config.get("model", "claude-sonnet-4-20250514")
+            max_tokens = self.config.get("max_tokens", 500)
+
+            # Estimate cost (conservative: assume full prompt + expected response)
+            estimated_cost = tracker.estimate_cost(model, len(query), max_tokens)
+
+            if verbose:
+                logger.info(f"Estimated cost: ${estimated_cost:.4f}")
+
+            # This will raise BudgetExceededError if budget exceeded
+            tracker.check_budget(estimated_cost, raise_on_exceeded=True)
+
             # Initialize LLM client
             llm = self._initialize_llm_client(api_key)
 
@@ -101,9 +130,7 @@ class QueryExecutor:
                         logger.info(f"Added memory context ({len(context)} chars)")
 
             # Execute LLM call with retry logic
-            model = self.config.get("model", "claude-sonnet-4-20250514")
             temperature = self.config.get("temperature", 0.7)
-            max_tokens = self.config.get("max_tokens", 500)
 
             if verbose:
                 logger.info(
@@ -121,15 +148,31 @@ class QueryExecutor:
 
             duration = time.time() - start_time
 
+            # Record actual cost after successful LLM call
+            actual_cost = tracker.calculate_cost(
+                model, response.input_tokens, response.output_tokens
+            )
+            tracker.record_cost(
+                model=model,
+                input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens,
+                operation="direct_llm",
+                query_id=None
+            )
+
             if verbose:
                 logger.info(
                     f"LLM response: {response.output_tokens} tokens, "
                     f"{duration:.2f}s, "
-                    f"~${self._estimate_cost(response.input_tokens, response.output_tokens):.4f}"
+                    f"~${actual_cost:.4f}"
                 )
 
             # Type assertion: we know response.content is a string from LLM client
             return str(response.content)
+
+        except BudgetExceededError:
+            # Re-raise budget errors without wrapping
+            raise
 
         except APIError:
             # Re-raise API errors with formatted messages

@@ -21,11 +21,12 @@ Reference: PRD-0010 Section 3 (User Stories), US-2 (Accurate Search Results)
 
 import json
 import os
+import statistics
 import subprocess
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, List, Dict, Any
-import statistics
+from typing import Any, Dict, List
 
 import pytest
 

@@ -230,18 +230,43 @@ class HybridRetriever:
                 + self.config.semantic_weight * semantic_norm
             )
 
+            # Extract content and metadata from chunk
+            # For CodeChunk: content is signature + docstring
+            # For other types: use to_json()
+            if hasattr(chunk, "signature") and hasattr(chunk, "docstring"):
+                # CodeChunk
+                content_parts = []
+                if getattr(chunk, "signature", None):
+                    content_parts.append(chunk.signature)
+                if getattr(chunk, "docstring", None):
+                    content_parts.append(chunk.docstring)
+                content = "\n".join(content_parts) if content_parts else ""
+
+                metadata = {
+                    "type": getattr(chunk, "type", "unknown"),
+                    "name": getattr(chunk, "name", ""),
+                    "file_path": getattr(chunk, "file_path", ""),
+                    "line_start": getattr(chunk, "line_start", 0),
+                    "line_end": getattr(chunk, "line_end", 0),
+                }
+            else:
+                # Other chunk types - use to_json() to get content
+                chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
+                content = str(chunk_json.get("content", ""))
+                metadata = {
+                    "type": getattr(chunk, "type", "unknown"),
+                    "name": getattr(chunk, "name", ""),
+                    "file_path": getattr(chunk, "file_path", ""),
+                }
+
             final_results.append(
                 {
                     "chunk_id": chunk.id,
-                    "content": getattr(chunk, "content", ""),
+                    "content": content,
                     "activation_score": activation_norm,
                     "semantic_score": semantic_norm,
                     "hybrid_score": hybrid_score,
-                    "metadata": {
-                        "type": getattr(chunk, "type", "unknown"),
-                        "name": getattr(chunk, "name", ""),
-                        "file_path": getattr(chunk, "file_path", ""),
-                    },
+                    "metadata": metadata,
                 }
             )
 

@@ -33,12 +33,12 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
 from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
 from aurora_cli.memory_manager import MemoryManager
-from aurora_core.chunks.base import Chunk
 from aurora_reasoning.llm_client import LLMClient
+
+from aurora_core.chunks.base import Chunk
 
 
 class TestRetrievalBeforeLLM:

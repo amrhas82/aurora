@@ -148,13 +148,15 @@ def init_command() -> None:
         export ANTHROPIC_API_KEY=sk-ant-...
         aur query "your question"
     """
-    config_dir = Path.home() / ".aurora"
+    from aurora_cli.config import _get_aurora_home
+
+    config_dir = _get_aurora_home()
     config_path = config_dir / "config.json"
 
     # Check if config already exists
     if config_path.exists():
         overwrite = click.confirm(
-            "Config file already exists at ~/.aurora/config.json. Overwrite?", default=False
+            f"Config file already exists at {config_path}. Overwrite?", default=False
         )
         if not overwrite:
             click.echo("Keeping existing config.")
@@ -191,6 +193,9 @@ def init_command() -> None:
 
     # Prepare config data
     config_data = CONFIG_SCHEMA.copy()
+
+    # Set database path to respect AURORA_HOME
+    config_data["context"]["db_path"] = str(config_dir / "memory.db")
 
     # Set API key if provided (non-empty)
     if api_key and api_key.strip():
@@ -232,7 +237,7 @@ def init_command() -> None:
         if click.confirm(f"Migrate data to {dest_db}?", default=True):
             try:
                 chunks, activations = migrate_database(local_db, dest_db)
-                click.echo(f"✓ Migration complete:")
+                click.echo("✓ Migration complete:")
                 click.echo(f"  - Chunks migrated: {chunks}")
                 click.echo(f"  - Activations migrated: {activations}")
 

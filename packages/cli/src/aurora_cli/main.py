@@ -16,6 +16,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from aurora_cli.commands.budget import budget_group
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
@@ -83,6 +84,11 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
         aur mem --help
         aur query --help
     """
+    # Store debug flag in context for error handler
+    ctx.ensure_object(dict)
+    ctx.obj["debug"] = debug
+    ctx.obj["verbose"] = verbose
+
     # Configure logging
     if debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -99,6 +105,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
 
 
 # Register commands
+cli.add_command(budget_group)
 cli.add_command(headless_command)
 cli.add_command(init_command)
 cli.add_command(memory_group)
@@ -262,22 +269,22 @@ def query_command(
         db_path = Path(config.get_db_path())
         memory_store = None
 
-        if result.use_aurora or verbose:
-            # Initialize or create memory store
-            if db_path.exists():
-                memory_store = SQLiteStore(str(db_path))
-                # Check if memory is empty
-                if _is_memory_empty(memory_store):
-                    should_index = _prompt_auto_index(console)
-                    if should_index:
-                        _perform_auto_index(console, memory_store)
-            else:
-                # No database, prompt to create and index
-                console.print("\n[yellow]No memory database found.[/]")
+        # Initialize memory store for both AURORA and Direct LLM (Issue #15)
+        # This allows Direct LLM to use indexed context for better responses
+        if db_path.exists():
+            memory_store = SQLiteStore(str(db_path))
+            # Check if memory is empty (only prompt for AURORA or verbose mode)
+            if (result.use_aurora or verbose) and _is_memory_empty(memory_store):
                 should_index = _prompt_auto_index(console)
                 if should_index:
-                    memory_store = SQLiteStore(str(db_path))
                     _perform_auto_index(console, memory_store)
+        elif result.use_aurora or verbose:
+            # No database, prompt to create and index (only for AURORA or verbose)
+            console.print("\n[yellow]No memory database found.[/]")
+            should_index = _prompt_auto_index(console)
+            if should_index:
+                memory_store = SQLiteStore(str(db_path))
+                _perform_auto_index(console, memory_store)
 
         # Create query executor with interactive mode setting
         # Interactive mode is enabled by default (when non_interactive=False)
@@ -327,10 +334,11 @@ def query_command(
                 )
         else:
             console.print("[bold green]→[/] Using Direct LLM (fast mode)")
+            # Pass memory_store to direct LLM for context retrieval (Issue #15)
             response = executor.execute_direct_llm(
                 query=query_text,
                 api_key=api_key,
-                memory_store=None,
+                memory_store=memory_store,
                 verbose=verbose,
             )
 

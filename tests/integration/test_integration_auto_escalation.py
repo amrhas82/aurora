@@ -31,12 +31,12 @@ Phase: 1 (Core Restoration)
 Priority: P1 (High)
 """
 
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
-
 from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
+
 from aurora_soar.phases.assess import assess_complexity
 
 
@@ -140,8 +140,8 @@ class TestAutoEscalation:
                     )
 
                     assert not direct_llm_called, (
-                        f"Direct LLM called when SOAR should be used\n"
-                        f"In non-interactive mode with low confidence, should escalate to SOAR"
+                        "Direct LLM called when SOAR should be used\n"
+                        "In non-interactive mode with low confidence, should escalate to SOAR"
                     )
 
     def test_high_confidence_no_escalation(self, executor_non_interactive):
@@ -181,14 +181,14 @@ class TestAutoEscalation:
 
                     # ASSERTION: Direct LLM should be used (no escalation)
                     assert direct_llm_called, (
-                        f"Direct LLM not called for high-confidence simple query\n"
-                        f"Confidence: 0.9 (>= 0.6 threshold)\n"
-                        f"Expected: Use direct LLM (no escalation needed)"
+                        "Direct LLM not called for high-confidence simple query\n"
+                        "Confidence: 0.9 (>= 0.6 threshold)\n"
+                        "Expected: Use direct LLM (no escalation needed)"
                     )
 
                     assert not soar_called, (
-                        f"SOAR called unnecessarily for high-confidence query\n"
-                        f"High confidence means direct LLM is sufficient"
+                        "SOAR called unnecessarily for high-confidence query\n"
+                        "High confidence means direct LLM is sufficient"
                     )
 
     def test_interactive_mode_prompts_user(self, executor_interactive):
@@ -223,18 +223,18 @@ class TestAutoEscalation:
 
                     # ASSERTION 1: User should be prompted
                     assert mock_confirm.called, (
-                        f"User not prompted in interactive mode with low confidence\n"
-                        f"Confidence: 0.5 (< 0.6)\n"
-                        f"Interactive: True\n"
-                        f"Expected: click.confirm() called to ask user\n"
-                        f"Fix: Add user prompt in execute_with_auto_escalation() when interactive=True"
+                        "User not prompted in interactive mode with low confidence\n"
+                        "Confidence: 0.5 (< 0.6)\n"
+                        "Interactive: True\n"
+                        "Expected: click.confirm() called to ask user\n"
+                        "Fix: Add user prompt in execute_with_auto_escalation() when interactive=True"
                     )
 
                     # ASSERTION 2: SOAR should be called (user accepted)
                     assert soar_called, (
-                        f"SOAR not called despite user accepting escalation\n"
-                        f"User response: True (accept)\n"
-                        f"Expected: execute_aurora() called"
+                        "SOAR not called despite user accepting escalation\n"
+                        "User response: True (accept)\n"
+                        "Expected: execute_aurora() called"
                     )
 
     def test_interactive_mode_user_declines_escalation(self, executor_interactive):
@@ -278,14 +278,14 @@ class TestAutoEscalation:
 
                         # ASSERTION 2: Direct LLM should be called (user declined SOAR)
                         assert direct_llm_called, (
-                            f"Direct LLM not called when user declined escalation\n"
-                            f"User response: False (decline)\n"
-                            f"Expected: Proceed with original complexity assessment (direct LLM)"
+                            "Direct LLM not called when user declined escalation\n"
+                            "User response: False (decline)\n"
+                            "Expected: Proceed with original complexity assessment (direct LLM)"
                         )
 
                         assert not soar_called, (
-                            f"SOAR called despite user declining\n"
-                            f"User should be able to decline escalation"
+                            "SOAR called despite user declining\n"
+                            "User should be able to decline escalation"
                         )
 
     def test_confidence_threshold_boundary(self, executor_non_interactive):
@@ -325,9 +325,9 @@ class TestAutoEscalation:
 
                     # ASSERTION: >= 0.6 should NOT escalate
                     assert direct_llm_called, (
-                        f"Confidence = 0.6 should not trigger escalation\n"
-                        f"Threshold: < 0.6 (strictly less than)\n"
-                        f"Expected: Direct LLM used"
+                        "Confidence = 0.6 should not trigger escalation\n"
+                        "Threshold: < 0.6 (strictly less than)\n"
+                        "Expected: Direct LLM used"
                     )
 
                     assert not soar_called, "SOAR should not be called at threshold"
@@ -409,7 +409,6 @@ def process_data(data):
         from aurora_core.store.sqlite import SQLiteStore
         memory_store = SQLiteStore(db_path=str(db_path))
 
-        from aurora_cli.memory_manager import MemoryManager
         memory_manager = MemoryManager(memory_store=memory_store)
         memory_manager.index_directory(workspace)
 

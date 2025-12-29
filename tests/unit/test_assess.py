@@ -8,7 +8,7 @@ Tests the enhanced complexity assessment with:
 
 import pytest
 
-from aurora_soar.phases.assess import assess_complexity, _count_questions
+from aurora_soar.phases.assess import _count_questions, assess_complexity
 
 
 class TestCountQuestions:

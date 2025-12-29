@@ -357,7 +357,7 @@ class SQLiteStore(Store):
         Retrieve chunks by activation threshold.
 
         Args:
-            min_activation: Minimum activation score
+            min_activation: Minimum activation score (can be negative in ACT-R)
             limit: Maximum number of chunks to return
 
         Returns:
@@ -368,6 +368,11 @@ class SQLiteStore(Store):
         """
         conn = self._get_connection()
         try:
+            # Note: In ACT-R, base_level can be negative (it's log-odds)
+            # Default min_activation of 0.0 would filter out valid chunks
+            # Use -float('inf') if min_activation is 0.0 to get all chunks
+            actual_min = min_activation if min_activation != 0.0 else -float('inf')
+
             cursor = conn.execute(
                 """
                 SELECT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at
@@ -377,7 +382,7 @@ class SQLiteStore(Store):
                 ORDER BY a.base_level DESC
                 LIMIT ?
                 """,
-                (min_activation, limit),
+                (actual_min, limit),
             )
 
             chunks = []
@@ -514,7 +519,7 @@ class SQLiteStore(Store):
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
         """
-        from aurora_core.activation.base_level import calculate_bla, AccessHistoryEntry
+        from aurora_core.activation.base_level import AccessHistoryEntry, calculate_bla
 
         conn = self._get_connection()
         if access_time is None:
@@ -553,9 +558,10 @@ class SQLiteStore(Store):
                 # Recalculate BLA based on updated access history
                 history_entries = [
                     AccessHistoryEntry(
-                        timestamp=datetime.fromisoformat(entry["timestamp"].replace('Z', '+00:00'))
+                        timestamp=datetime.fromisoformat(str(entry["timestamp"]).replace('Z', '+00:00'))
                     )
                     for entry in access_history
+                    if entry.get("timestamp")
                 ]
                 new_base_level = calculate_bla(history_entries, decay_rate=0.5, current_time=access_time)
 

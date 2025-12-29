@@ -25,8 +25,8 @@ import shutil
 import sqlite3
 import subprocess
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import patch
 
 import pytest
@@ -674,7 +674,7 @@ class TestNewUserWorkflowWithExplicitDbPath:
 
         # Verify NO local aurora.db created
         local_db = sample_python_project / "aurora.db"
-        assert not local_db.exists(), f"Should not create local aurora.db when --db-path specified"
+        assert not local_db.exists(), "Should not create local aurora.db when --db-path specified"
 
 
 if __name__ == "__main__":

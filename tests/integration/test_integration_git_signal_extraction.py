@@ -38,6 +38,7 @@ from pathlib import Path
 
 import pytest
 
+
 # GitSignalExtractor will be created in task 4.1
 # For now, this will fail with ImportError
 try:

@@ -30,8 +30,9 @@ import sqlite3
 import subprocess
 import tempfile
 import time
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, List, Dict, Any
+from typing import Any, Dict, List
 
 import pytest
 
@@ -132,7 +133,7 @@ def func_c(z: float) -> float:
             content = (repo_path / "module.py").read_text()
             # Only modify func_a lines
             content = content.replace(
-                f'return x',
+                'return x',
                 f'return x  # edit {i}'
             )
             (repo_path / "module.py").write_text(content)
@@ -149,7 +150,7 @@ def func_c(z: float) -> float:
             content = (repo_path / "module.py").read_text()
             # Only modify func_b lines
             content = content.replace(
-                f'return y',
+                'return y',
                 f'return y  # edit {i}'
             )
             (repo_path / "module.py").write_text(content)
@@ -454,9 +455,9 @@ class TestGitBasedBLAInitialization:
         unique_bla = len(set(base_levels))
 
         assert unique_bla > 1, (
-            f"CRITICAL ISSUE #16: All functions in same file have identical BLA!\n"
-            f"This proves Git tracking is FILE-level, not FUNCTION-level.\n\n"
-            f"Functions in module.py:\n" +
+            "CRITICAL ISSUE #16: All functions in same file have identical BLA!\n"
+            "This proves Git tracking is FILE-level, not FUNCTION-level.\n\n"
+            "Functions in module.py:\n" +
             "\n".join(f"  - {name}: BLA={bl:.4f}, access={ac}" for name, bl, ac in results) +
             f"\n\n"
             f"Unique BLA values: {unique_bla} (should be >= 2)\n\n"
@@ -510,12 +511,12 @@ class TestGitBasedBLAInitialization:
                 missing_metadata.append((name, missing_fields))
 
         assert len(missing_metadata) == 0, (
-            f"ISSUE #16: Git metadata not stored in chunks!\n" +
+            "ISSUE #16: Git metadata not stored in chunks!\n" +
             "\n".join(
                 f"  - {name}: missing {', '.join(fields)}"
                 for name, fields in missing_metadata
             ) +
-            f"\n\nExpected metadata fields: git_hash, last_modified, commit_count"
+            "\n\nExpected metadata fields: git_hash, last_modified, commit_count"
         )
 
     def test_1_6_9_access_count_initialized_from_commits(
@@ -563,12 +564,12 @@ class TestGitBasedBLAInitialization:
         # If we have commit_count in metadata but access_count doesn't match
         if mismatches:
             pytest.fail(
-                f"ISSUE #16: access_count not initialized from commit_count!\n" +
+                "ISSUE #16: access_count not initialized from commit_count!\n" +
                 "\n".join(
                     f"  - {name}: access_count={ac}, commit_count={cc}"
                     for name, ac, cc in mismatches
                 ) +
-                f"\n\nExpected: access_count should equal commit_count for each function"
+                "\n\nExpected: access_count should equal commit_count for each function"
             )
 
         # If commit_count is missing entirely, that's also a failure
@@ -725,25 +726,25 @@ def hello():
                 f"ISSUE #16 CONFIRMED: Git-based BLA initialization not working!\n\n"
                 f"Found {len(issues)} problems:\n\n" +
                 "\n".join(issues) +
-                f"\n\n"
-                f"Current function data:\n" +
+                "\n\n"
+                "Current function data:\n" +
                 "\n".join(
                     f"  - {name}: BLA={bl:.4f}, access={ac}, "
                     f"metadata={json.loads(meta) if meta else 'None'}"
                     for name, meta, bl, ac in results
                 ) +
-                f"\n\n"
-                f"Expected (after fix):\n"
-                f"  - func_a: BLA=~2.4 (8 commits)\n"
-                f"  - func_b: BLA=~1.8 (3 commits)\n"
-                f"  - func_c: BLA=~0.9 (1 commit)\n\n"
-                f"Root cause: Not using git blame -L for function-level tracking\n\n"
-                f"Fix:\n"
-                f"1. Create GitSignalExtractor class in aurora_context_code/git.py\n"
-                f"2. Use: git blame -L <start>,<end> <file> for each function\n"
-                f"3. Extract unique commit SHAs and timestamps\n"
-                f"4. Calculate BLA: ln(Σ (time_since)^(-0.5)) per function\n"
-                f"5. Initialize: store.initialize_activation(chunk_id, base_level=BLA, access_count=commits)"
+                "\n\n"
+                "Expected (after fix):\n"
+                "  - func_a: BLA=~2.4 (8 commits)\n"
+                "  - func_b: BLA=~1.8 (3 commits)\n"
+                "  - func_c: BLA=~0.9 (1 commit)\n\n"
+                "Root cause: Not using git blame -L for function-level tracking\n\n"
+                "Fix:\n"
+                "1. Create GitSignalExtractor class in aurora_context_code/git.py\n"
+                "2. Use: git blame -L <start>,<end> <file> for each function\n"
+                "3. Extract unique commit SHAs and timestamps\n"
+                "4. Calculate BLA: ln(Σ (time_since)^(-0.5)) per function\n"
+                "5. Initialize: store.initialize_activation(chunk_id, base_level=BLA, access_count=commits)"
             )
 
 

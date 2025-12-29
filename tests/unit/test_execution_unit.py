@@ -10,7 +10,6 @@ Tests the execute_with_auto_escalation() method with various scenarios:
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
 from aurora_cli.execution import QueryExecutor
 
 

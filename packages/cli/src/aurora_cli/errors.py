@@ -4,12 +4,28 @@ This module defines custom exceptions and error handling utilities
 for providing actionable error messages to users.
 """
 
+import functools
+import sys
+import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
+
+import click
+from rich.console import Console
+
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class AuroraError(Exception):
     """Base exception for all AURORA CLI errors."""
+
+    pass
+
+
+class BudgetExceededError(AuroraError):
+    """Raised when budget limit is exceeded."""
 
     pass
 
@@ -491,6 +507,40 @@ class ErrorHandler:
         )
 
     @staticmethod
+    def handle_budget_error(
+        error: Exception, spent: float = 0.0, limit: float = 0.0, operation: str = "query execution"
+    ) -> str:
+        """Handle and format budget errors with spending details.
+
+        Args:
+            error: The budget exception
+            spent: Current spending amount
+            limit: Budget limit
+            operation: What operation was being attempted
+
+        Returns:
+            Formatted error message with spending details
+        """
+        remaining = max(0.0, limit - spent)
+
+        return (
+            "[bold red][Budget][/] Budget limit exceeded.\n\n"
+            f"[yellow]Operation:[/] {operation}\n"
+            f"[yellow]Spent:[/] ${spent:.4f}\n"
+            f"[yellow]Budget:[/] ${limit:.2f}\n"
+            f"[yellow]Remaining:[/] ${remaining:.4f}\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Increase budget limit:\n"
+            "     [cyan]aur budget set <amount>[/]\n"
+            "  2. Check spending history:\n"
+            "     [cyan]aur budget history[/]\n"
+            "  3. Reset spending for new period:\n"
+            "     [cyan]aur budget reset[/]\n"
+            "  4. Use --force-direct for lower-cost queries:\n"
+            "     [cyan]aur query \"question\" --force-direct[/]"
+        )
+
+    @staticmethod
     def redact_api_key(key: str) -> str:
         """Redact API key for safe display.
 
@@ -510,3 +560,95 @@ class ErrorHandler:
             return "***"
 
         return f"{key[:7]}...{key[-3:]}"
+
+
+def handle_errors(f: F) -> F:
+    """Decorator to handle errors gracefully in CLI commands.
+
+    This decorator catches exceptions and formats them appropriately based on
+    the debug mode setting in the click context. In debug mode, full stack traces
+    are shown. Otherwise, clean error messages are displayed with suggestions.
+
+    Usage:
+        @handle_errors
+        @click.command()
+        @click.pass_context
+        def my_command(ctx: click.Context) -> None:
+            # Command implementation
+            pass
+
+    Args:
+        f: Function to wrap with error handling
+
+    Returns:
+        Wrapped function with error handling
+    """
+
+    @functools.wraps(f)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        # Get click context and debug flag
+        ctx = click.get_current_context(silent=True)
+        debug_mode = False
+        if ctx and ctx.obj and isinstance(ctx.obj, dict):
+            debug_mode = ctx.obj.get("debug", False)
+
+        try:
+            return f(*args, **kwargs)
+        except click.Abort:
+            # Re-raise click abort (used for controlled exits)
+            raise
+        except Exception as e:
+            console = Console()
+            error_handler = ErrorHandler()
+
+            # In debug mode, show full stack trace
+            if debug_mode:
+                console.print("\n[bold red]Error occurred (debug mode):[/]")
+                console.print(f"[yellow]{type(e).__name__}:[/] {e}\n")
+                console.print("[dim]Stack trace:[/]")
+                traceback.print_exc()
+                console.print(
+                    "\n[dim]Note: Use without --debug flag to see user-friendly error messages[/]\n"
+                )
+                sys.exit(1)
+
+            # Otherwise, show clean error message
+            error_msg = None
+
+            # Determine error type and format appropriately
+            if isinstance(e, BudgetExceededError):
+                # Try to extract budget info from error message or default to 0
+                error_msg = error_handler.handle_budget_error(e)
+            elif isinstance(e, APIError):
+                error_msg = error_handler.handle_api_error(e)
+            elif isinstance(e, ConfigurationError):
+                error_msg = error_handler.handle_config_error(e)
+            elif isinstance(e, MemoryStoreError):
+                error_msg = error_handler.handle_memory_error(e)
+            else:
+                # Check error message for clues
+                error_str = str(e).lower()
+                if "api" in error_str or "anthropic" in error_str:
+                    error_msg = error_handler.handle_api_error(e)
+                elif "budget" in error_str or "limit" in error_str:
+                    error_msg = error_handler.handle_budget_error(e)
+                elif "config" in error_str:
+                    error_msg = error_handler.handle_config_error(e)
+                elif "memory" in error_str or "database" in error_str:
+                    error_msg = error_handler.handle_memory_error(e)
+                else:
+                    # Generic error
+                    error_msg = (
+                        f"[bold red]Error:[/] {type(e).__name__}\n\n"
+                        f"[yellow]{e}[/]\n\n"
+                        "[green]Solutions:[/]\n"
+                        "  1. Check command syntax and arguments\n"
+                        "  2. Verify configuration: [cyan]aur init[/]\n"
+                        "  3. Run with --debug flag for detailed error:\n"
+                        f"     [cyan]aur --debug {' '.join(sys.argv[1:])}[/]"
+                    )
+
+            console.print(f"\n{error_msg}\n")
+            sys.exit(1)
+
+    return wrapper  # type: ignore[return-value]

@@ -31,9 +31,10 @@ See [MCP Setup Guide](../MCP_SETUP.md) for MCP integration details.
 4. [Basic Queries](#basic-queries)
 5. [Retrieval Quality Handling](#retrieval-quality-handling)
 6. [Memory Management](#memory-management)
-7. [Headless Mode](#headless-mode)
-8. [Troubleshooting](#troubleshooting)
-9. [Command Reference](#command-reference)
+7. [Budget Management](#budget-management)
+8. [Headless Mode](#headless-mode)
+9. [Troubleshooting](#troubleshooting)
+10. [Command Reference](#command-reference)
 
 ---
 
@@ -778,6 +779,235 @@ This will index Python files in the current directory [Y/n]: _
 
 - **Y** or Enter: Index current directory
 - **n**: Skip and continue without memory context
+
+---
+
+## Budget Management
+
+AURORA provides comprehensive budget management to help you monitor and control API spending.
+
+### Check Budget Status
+
+```bash
+aur budget show
+```
+
+**Output:**
+```
+Budget Status
+┌─────────────────┬───────────┐
+│ Spent           │ $2.3450   │
+│ Budget Limit    │ $15.0000  │
+│ Remaining       │ $12.6550  │
+│ Usage           │ 15.6%     │
+└─────────────────┴───────────┘
+```
+
+**Alternative (default subcommand):**
+```bash
+aur budget
+```
+
+### Set Budget Limit
+
+```bash
+aur budget set 50.00
+```
+
+**Output:**
+```
+✓ Budget limit updated to $50.00
+  Previous limit: $15.00
+```
+
+**Use Case:**
+- Set monthly budget to control costs
+- Increase limit when running complex queries
+- Lower limit for testing or exploratory work
+
+### Reset Spending
+
+```bash
+aur budget reset
+```
+
+**Output:**
+```
+✓ Spending reset to $0.00
+  Previous spending: $2.3450
+```
+
+**Use Case:**
+- Reset at start of billing cycle
+- Clear spending after testing
+- Start fresh after budget adjustment
+
+### View Query History
+
+```bash
+aur budget history
+```
+
+**Output:**
+```
+Query History
+┌──────────────────────┬──────────────────────────────────┬───────────┬───────────┐
+│ Timestamp            │ Query                            │ Cost      │ Status    │
+├──────────────────────┼──────────────────────────────────┼───────────┼───────────┤
+│ 2025-12-29 10:30:45  │ "explain SOAR architecture"      │ $0.0234   │ completed │
+│ 2025-12-29 10:32:12  │ "list all functions in aurora"   │ $0.0156   │ completed │
+│ 2025-12-29 10:35:01  │ "refactor authentication system" │ $0.0000   │ blocked   │
+│ 2025-12-29 10:36:22  │ "what is ACT-R?"                 │ $0.0089   │ completed │
+└──────────────────────┴──────────────────────────────────┴───────────┴───────────┘
+
+Total Queries: 4 (3 completed, 1 blocked)
+Total Cost: $0.0479
+```
+
+**Filtering Options:**
+```bash
+# Show last 10 queries
+aur budget history --limit 10
+
+# Show only blocked queries
+aur budget history --status blocked
+
+# Show queries from today
+aur budget history --today
+```
+
+### Budget Enforcement
+
+AURORA automatically enforces budget limits before making API calls.
+
+**Example: Budget Exceeded**
+```bash
+# Set low budget for demo
+aur budget set 0.01
+
+# Attempt expensive query
+aur query "explain everything about Aurora in extreme detail"
+```
+
+**Output:**
+```
+✗ Budget limit exceeded
+
+Cannot execute query:
+  Current spending:  $0.0000
+  Budget limit:      $0.0100
+  Estimated cost:    $0.0234
+
+To continue:
+  1. Increase budget: aur budget set 1.00
+  2. Or reset spending: aur budget reset
+
+Current usage: 0.0% of budget
+```
+
+### Budget Best Practices
+
+**1. Set Realistic Budget**
+```bash
+# For testing and exploration
+aur budget set 10.00
+
+# For daily development work
+aur budget set 50.00
+
+# For intensive research projects
+aur budget set 200.00
+```
+
+**2. Monitor Usage Regularly**
+```bash
+# Check before large queries
+aur budget show
+
+# Review history weekly
+aur budget history --limit 50
+```
+
+**3. Reset at Billing Cycle**
+```bash
+# Monthly reset (add to cron/scheduler)
+aur budget reset
+```
+
+**4. Use Non-Interactive Mode for CI/CD**
+```bash
+# Queries will fail gracefully if budget exceeded
+aur query "test query" --non-interactive
+```
+
+### Configuration
+
+Budget settings stored in: `~/.aurora/budget_tracker.json`
+
+**Format:**
+```json
+{
+  "monthly_limit_usd": 15.0,
+  "total_spent_usd": 2.345,
+  "query_history": [
+    {
+      "timestamp": "2025-12-29T10:30:45Z",
+      "query": "explain SOAR architecture",
+      "cost_usd": 0.0234,
+      "status": "completed",
+      "model": "claude-sonnet-4-20250514",
+      "tokens": {
+        "input": 450,
+        "output": 320
+      }
+    }
+  ],
+  "last_reset": "2025-12-01T00:00:00Z"
+}
+```
+
+**Direct Editing (Not Recommended):**
+```bash
+# Backup first
+cp ~/.aurora/budget_tracker.json ~/.aurora/budget_tracker.json.backup
+
+# Edit carefully
+nano ~/.aurora/budget_tracker.json
+
+# Verify JSON syntax
+python -m json.tool ~/.aurora/budget_tracker.json
+```
+
+**Better Approach:** Use `aur budget` commands for safe updates.
+
+### FAQ
+
+**Q: When is cost calculated?**
+
+A:
+1. **Before query**: Estimated cost based on query length and expected response
+2. **After query**: Actual cost recorded based on API response tokens
+3. Budget check happens BEFORE API call (prevents overage)
+
+**Q: What happens if actual cost exceeds estimate?**
+
+A: Query completes (already paid), but actual cost recorded. Next query may be blocked if total exceeds budget.
+
+**Q: Does budget reset automatically?**
+
+A: No. Use `aur budget reset` manually or schedule with cron/task scheduler.
+
+**Q: Can I set different budgets per project?**
+
+A: Budget is per-user (`~/.aurora/budget_tracker.json`). For per-project budgets, use separate user accounts or manually track.
+
+**Q: What if I delete budget_tracker.json?**
+
+A: Aurora recreates it with default limit ($15.00) and zero spending. History lost.
+
+**Q: Do memory commands count toward budget?**
+
+A: No. Only `aur query` and `aur headless` commands that call LLM APIs count toward budget. `aur mem index/search/stats` are free.
 
 ---
 

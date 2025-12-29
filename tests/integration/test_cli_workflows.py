@@ -148,8 +148,12 @@ class TestCLIMemIndex:
 
     def test_index_command_creates_database(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem index' creates a database file."""
+        # Initialize config first (creates config.json)
+        # Pass empty string for API key prompt (skip API key)
+        init_result = cli_runner("init", input="\n")
+
         db_path = temp_aurora_home / "memory.db"
-        result = cli_runner("mem", "index", str(temp_project_dir), "--db-path", str(db_path))
+        result = cli_runner("mem", "index", str(temp_project_dir))
 
         # Command should succeed
         assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
@@ -161,8 +165,11 @@ class TestCLIMemIndex:
         self, cli_runner, temp_project_dir, temp_aurora_home
     ):
         """Test that 'aur mem index' correctly parses Python files."""
+        # Initialize config first
+        cli_runner("init", input="\n")
+
         db_path = temp_aurora_home / "memory.db"
-        result = cli_runner("mem", "index", str(temp_project_dir), "--db-path", str(db_path))
+        result = cli_runner("mem", "index", str(temp_project_dir))
 
         assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
 
@@ -214,14 +221,16 @@ class TestCLIMemSearch:
 
     def test_search_finds_indexed_functions(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem search' finds indexed code."""
+        # Initialize config first
+        cli_runner("init", input="\n")
         db_path = temp_aurora_home / "memory.db"
 
         # First, index the project
-        index_result = cli_runner("mem", "index", str(temp_project_dir), "--db-path", str(db_path))
+        index_result = cli_runner("mem", "index", str(temp_project_dir))
         assert index_result.returncode == 0
 
         # Now search for a function
-        search_result = cli_runner("mem", "search", "hello_world", "--db-path", str(db_path))
+        search_result = cli_runner("mem", "search", "hello_world")
 
         assert search_result.returncode == 0, (
             f"STDOUT: {search_result.stdout}\nSTDERR: {search_result.stderr}"
@@ -230,26 +239,30 @@ class TestCLIMemSearch:
 
     def test_search_with_no_results(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem search' handles no results gracefully."""
+        # Initialize config first
+        cli_runner("init", input="\n")
         db_path = temp_aurora_home / "memory.db"
 
         # Index the project first
-        cli_runner("mem", "index", str(temp_project_dir), "--db-path", str(db_path))
+        cli_runner("mem", "index", str(temp_project_dir))
 
         # Search for something that doesn't exist
-        result = cli_runner("mem", "search", "nonexistent_function_xyz", "--db-path", str(db_path))
+        result = cli_runner("mem", "search", "nonexistent_function_xyz")
 
         # Should not crash
         assert result.returncode in [0, 1], f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
 
     def test_search_ranking_by_relevance(self, cli_runner, temp_project_dir, temp_aurora_home):
         """Test that 'aur mem search' ranks results by relevance."""
+        # Initialize config first
+        cli_runner("init", input="\n")
         db_path = temp_aurora_home / "memory.db"
 
         # Index the project
-        cli_runner("mem", "index", str(temp_project_dir), "--db-path", str(db_path))
+        cli_runner("mem", "index", str(temp_project_dir))
 
         # Search for arithmetic operations
-        result = cli_runner("mem", "search", "add multiply", "--db-path", str(db_path))
+        result = cli_runner("mem", "search", "add multiply")
 
         assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
 

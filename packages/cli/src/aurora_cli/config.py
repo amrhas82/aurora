@@ -194,15 +194,30 @@ CONFIG_SCHEMA: dict[str, Any] = {
 }
 
 
+def _get_aurora_home() -> Path:
+    """Get Aurora home directory, respecting AURORA_HOME environment variable.
+
+    Returns:
+        Path to Aurora home directory (default: ~/.aurora)
+    """
+    import os
+
+    aurora_home_env = os.environ.get("AURORA_HOME")
+    if aurora_home_env:
+        return Path(aurora_home_env)
+    return Path.home() / ".aurora"
+
+
 def load_config(path: str | None = None) -> Config:
     """Load configuration from file with environment variable overrides.
 
     Search order (if path not provided):
     1. Current directory: ./aurora.config.json
-    2. Home directory: ~/.aurora/config.json
+    2. Aurora home directory: $AURORA_HOME/config.json or ~/.aurora/config.json
     3. Use built-in defaults
 
     Environment variables take precedence over file values:
+    - AURORA_HOME → config file location
     - ANTHROPIC_API_KEY → anthropic_api_key
     - AURORA_ESCALATION_THRESHOLD → escalation_threshold
     - AURORA_LOGGING_LEVEL → logging_level
@@ -223,7 +238,7 @@ def load_config(path: str | None = None) -> Config:
     if path is None:
         search_paths = [
             Path("./aurora.config.json"),
-            Path.home() / ".aurora" / "config.json",
+            _get_aurora_home() / "config.json",
         ]
 
         for search_path in search_paths:
@@ -328,3 +343,73 @@ def load_config(path: str | None = None) -> Config:
     print(f"Configuration loaded from: {config_source}")
 
     return config
+
+
+def save_config(config: Config, path: str | None = None) -> None:
+    """Save configuration to file.
+
+    Args:
+        config: Config instance to save
+        path: Optional explicit path to config file (defaults to $AURORA_HOME/config.json or ~/.aurora/config.json)
+
+    Raises:
+        ConfigurationError: If cannot write to config file
+    """
+    if path is None:
+        path = str(_get_aurora_home() / "config.json")
+
+    config_path = Path(path).expanduser().resolve()
+
+    # Convert Config dataclass to nested dict structure
+    config_dict = {
+        "version": config.version,
+        "llm": {
+            "provider": config.llm_provider,
+            "model": config.llm_model,
+            "temperature": config.llm_temperature,
+            "max_tokens": config.llm_max_tokens,
+        },
+        "escalation": {
+            "threshold": config.escalation_threshold,
+            "enable_keyword_only": config.escalation_enable_keyword_only,
+            "force_mode": config.escalation_force_mode,
+        },
+        "memory": {
+            "auto_index": config.memory_auto_index,
+            "index_paths": config.memory_index_paths,
+            "chunk_size": config.memory_chunk_size,
+            "overlap": config.memory_overlap,
+        },
+        "logging": {
+            "level": config.logging_level,
+            "file": config.logging_file,
+        },
+        "mcp": {
+            "always_on": config.mcp_always_on,
+            "log_file": config.mcp_log_file,
+            "max_results": config.mcp_max_results,
+        },
+        "database": {
+            "path": config.db_path,
+        },
+        "budget": {
+            "limit": config.budget_limit,
+            "tracker_path": config.budget_tracker_path,
+        },
+    }
+
+    # Only include API key if it's explicitly set in config (not just from env)
+    if config.anthropic_api_key and config.anthropic_api_key != os.environ.get("ANTHROPIC_API_KEY"):
+        config_dict["llm"]["anthropic_api_key"] = config.anthropic_api_key
+
+    # Ensure directory exists
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write config file
+    try:
+        with open(config_path, "w") as f:
+            json.dump(config_dict, f, indent=2)
+    except Exception as e:
+        error_handler = ErrorHandler()
+        error_msg = error_handler.handle_config_error(e, config_path=str(config_path))
+        raise ConfigurationError(error_msg) from e

@@ -34,7 +34,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
 

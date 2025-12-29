@@ -37,9 +37,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
+
 from aurora_core.chunks.base import Chunk
 
 
@@ -384,9 +384,9 @@ def calculate_median(numbers):
                 # This is informational - context storage is nice-to-have, not critical
                 if not has_context:
                     print(
-                        f"INFO: Search context not stored in activations table\n"
-                        f"Consider passing context={{'query': query_text}} to record_access()\n"
-                        f"This helps with debugging and analysis but is not critical."
+                        "INFO: Search context not stored in activations table\n"
+                        "Consider passing context={'query': query_text} to record_access()\n"
+                        "This helps with debugging and analysis but is not critical."
                     )
 
         conn.close()

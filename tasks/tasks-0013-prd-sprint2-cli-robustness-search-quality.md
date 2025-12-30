@@ -298,18 +298,18 @@
     - Verify no Python traceback in output
     - Test backup creation and reset flow
     - Result: ✅ Schema migration detection working correctly - detects v1 (7 cols) vs v3 (9 cols), shows helpful error message
-  - [ ] 5.6 Manual verification of Problem 2: Error Handling
+  - [x] 5.6 Manual verification of Problem 2: Error Handling
     - Trigger `StorageError` by corrupting database
     - Verify: "Error: Database error" message shown (not traceback)
     - Run with `AURORA_DEBUG=1`, verify traceback IS shown
     - Verify exit codes: `echo $?` returns 1 or 2 appropriately
-    - Result: NOT VERIFIED - need to run actual shell commands
-  - [ ] 5.7 Manual verification of Problem 3: Search Threshold
+    - Result: ✅ VERIFIED - Clean error with exit code 2, traceback only with --debug. BUG FOUND AND FIXED: Removed duplicate error handling in memory commands.
+  - [x] 5.7 Manual verification of Problem 3: Search Threshold
     - Index a test project: `aur mem index .`
     - Search non-existent term: `aur mem search "payment"`
     - Expected: "No relevant results found" OR low confidence indicators
     - NOT: High scores (0.88+) for irrelevant content
-    - Result: ✅ Search threshold filtering working - `--min-score` parameter filters results correctly
+    - Result: ✅ VERIFIED - BUG FOUND AND FIXED: Threshold was filtering AFTER normalization. Now filters RAW scores before normalization. `--min-score 0.95` correctly returns "No relevant results". Default 0.50 allows semantic matches (embeddings find relationships).
   - [x] 5.8 Collect evidence artifacts
     - Screenshot/output of schema migration handling
     - Screenshot/output of error handling (with and without debug)
@@ -328,14 +328,14 @@
 
 Before marking sprint complete, verify:
 
-- [ ] All PRD requirements from Section 4 (FR-1 through FR-6) are covered by tasks
-- [ ] Tasks are in logical dependency order (schema -> errors -> search -> investigation -> validation)
-- [ ] Every implementation file has corresponding test file in task list
-- [ ] Sub-tasks are specific enough for a junior developer to implement
-- [ ] Filename matches PRD: `tasks-0013-prd-sprint2-cli-robustness-search-quality.md`
-- [ ] Two-phase model followed (high-level tasks first, then detailed sub-tasks)
-- [ ] Existing codebase patterns referenced (ErrorHandler, Config, HybridRetriever)
-- [ ] Red flags from PRD Section 11 are understood and will be avoided
+- [x] All PRD requirements from Section 4 (FR-1 through FR-6) are covered by tasks - Task 1.0=FR-1, 2.0=FR-2, 3.0=FR-3, 4.0=FR-4, 5.0=FR-5+FR-6
+- [x] Tasks are in logical dependency order (schema -> errors -> search -> investigation -> validation) - Order is correct
+- [x] Every implementation file has corresponding test file in task list - Verified in subtasks
+- [x] Sub-tasks are specific enough for a junior developer to implement - Each subtask has file paths, line numbers, code examples
+- [x] Filename matches PRD: `tasks-0013-prd-sprint2-cli-robustness-search-quality.md` - Matches
+- [x] Two-phase model followed (high-level tasks first, then detailed sub-tasks) - 5 parent tasks, 45 subtasks
+- [x] Existing codebase patterns referenced (ErrorHandler, Config, HybridRetriever) - All referenced in tasks
+- [x] Red flags from PRD Section 11 are understood and will be avoided - Documented in task file
 
 ---
 

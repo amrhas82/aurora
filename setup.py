@@ -16,37 +16,54 @@ from setuptools.command.install import install
 
 
 def display_install_feedback():
-    """Display component-level installation feedback after install."""
-    components = [
-        ("Core", "aurora-core", "Memory store, activation, ACT-R spreading"),
-        ("Context Code", "aurora-context-code", "Semantic search, embeddings, AST parsing"),
-        ("SOAR", "aurora-soar", "Deliberation, escalation, cognitive architecture"),
-        ("Reasoning", "aurora-reasoning", "Decision-making, planning, goal management"),
-        ("CLI", "aurora-cli", "Command-line interface (aur)"),
-        ("Testing", "aurora-testing", "Test utilities and fixtures"),
+    """Display beads-style installation feedback after install."""
+    # Verify core components are installed
+    components_installed = True
+    failed_components = []
+
+    core_packages = [
+        "aurora_core",
+        "aurora_context_code",
+        "aurora_soar",
+        "aurora_reasoning",
+        "aurora_cli",
+        "aurora_testing",
     ]
 
-    print("\n" + "=" * 70)
-    print("AURORA v0.2.0 Installation Complete")
-    print("=" * 70)
-    print("\nInstalled Components:")
-
-    for name, package, description in components:
+    for package in core_packages:
         try:
-            __import__(package.replace("-", "_"))
-            status = "✓"
+            __import__(package)
         except ImportError:
-            status = "✗"
-        print(f"  {status} {name:15} ({package})")
-        print(f"    {description}")
+            components_installed = False
+            failed_components.append(package)
 
-    print("\n" + "=" * 70)
-    print("Next Steps:")
-    print("  1. Run 'aur init' to create configuration")
-    print("  2. Run 'aur mem index <path>' to index your codebase")
-    print("  3. Run 'aur --verify' to verify installation health")
-    print("  4. See docs/MCP_SETUP.md for Claude Desktop integration")
-    print("=" * 70 + "\n")
+    # Beads-style output
+    print("\n🔗 Aurora Installer")
+    print()
+    print("==> Installation complete!")
+    print("==> Aurora v0.2.0 installed successfully")
+    print()
+
+    if not components_installed:
+        print("⚠️  Warning: Some components failed to install:")
+        for pkg in failed_components:
+            print(f"    ✗ {pkg}")
+        print()
+
+    print("Aurora is installed and ready!")
+    print()
+    print("Get started:")
+    print("  aur init              # Initialize Aurora in your project")
+    print("  aur mem index .       # Index your codebase")
+    print('  aur query "question"  # Search with natural language')
+    print()
+    print("For interactive setup:")
+    print("  aur init --interactive")
+    print()
+    print("Check installation health:")
+    print("  aur doctor")
+    print("  aur version")
+    print()
 
 
 class PostDevelopCommand(develop):

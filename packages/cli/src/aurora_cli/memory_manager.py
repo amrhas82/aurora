@@ -66,12 +66,14 @@ class IndexStats:
         chunks_created: Number of code chunks created
         duration_seconds: Total indexing duration
         errors: Number of files that failed to parse
+        warnings: Number of files with parse warnings (partial results)
     """
 
     files_indexed: int
     chunks_created: int
     duration_seconds: float
     errors: int = 0
+    warnings: int = 0
 
 
 @dataclass
@@ -192,7 +194,7 @@ class MemoryManager:
             raise ValueError(f"Path does not exist: {path}")
 
         start_time = time.time()
-        stats = {"files": 0, "chunks": 0, "errors": 0}
+        stats = {"files": 0, "chunks": 0, "errors": 0, "warnings": 0}
 
         try:
             # Discover all code files
@@ -227,7 +229,29 @@ class MemoryManager:
                         logger.debug(f"No parser for {file_path}, skipping")
                         continue
 
-                    chunks = parser.parse(file_path)
+                    # Track if we see parse warnings for this file
+                    # Create a custom handler to capture warnings
+                    warning_detected = False
+
+                    class WarningDetector(logging.Handler):
+                        def emit(self, record: logging.LogRecord) -> None:
+                            nonlocal warning_detected
+                            if record.levelno == logging.WARNING and "Parse errors" in record.getMessage():
+                                warning_detected = True
+
+                    warning_handler = WarningDetector()
+                    parser_logger = logging.getLogger("aurora_context_code.languages.python")
+                    parser_logger.addHandler(warning_handler)
+
+                    try:
+                        chunks = parser.parse(file_path)
+                    finally:
+                        parser_logger.removeHandler(warning_handler)
+
+                    # Count warnings if detected (before checking chunks)
+                    if warning_detected:
+                        stats["warnings"] += 1
+
                     if not chunks:
                         logger.debug(f"No chunks extracted from {file_path}")
                         continue
@@ -336,6 +360,7 @@ class MemoryManager:
             logger.info(
                 f"Indexing complete: {stats['files']} files, "
                 f"{stats['chunks']} chunks, {stats['errors']} errors, "
+                f"{stats['warnings']} warnings, "
                 f"{duration:.2f}s"
             )
 
@@ -344,6 +369,7 @@ class MemoryManager:
                 chunks_created=stats["chunks"],
                 duration_seconds=duration,
                 errors=stats["errors"],
+                warnings=stats["warnings"],
             )
 
         except MemoryStoreError:

@@ -119,7 +119,8 @@ def index_command(ctx: click.Context, path: Path) -> None:
             f"Files indexed: [cyan]{stats.files_indexed}[/]\n"
             f"Chunks created: [cyan]{stats.chunks_created}[/]\n"
             f"Duration: [cyan]{stats.duration_seconds:.2f}s[/]\n"
-            f"Errors: [yellow]{stats.errors}[/]",
+            f"Errors: [red]{stats.errors}[/]\n"
+            f"Warnings: [yellow]{stats.warnings}[/]",
             title="Index Summary",
             border_style="green",
         )
@@ -214,7 +215,7 @@ def search_command(
     if output_format == "json":
         _display_json_results(results)
     else:
-        _display_rich_results(results, query, show_content)
+        _display_rich_results(results, query, show_content, config)
 
 
 @memory_group.command(name="stats")
@@ -270,13 +271,16 @@ def stats_command(ctx: click.Context) -> None:
     console.print()
 
 
-def _display_rich_results(results: list[SearchResult], query: str, show_content: bool) -> None:
+def _display_rich_results(
+    results: list[SearchResult], query: str, show_content: bool, config: Config
+) -> None:
     """Display search results with rich formatting.
 
     Args:
         results: List of SearchResult objects
         query: Original search query
         show_content: Whether to show content preview
+        config: Configuration object with threshold settings
     """
     if not results:
         console.print("\n[yellow]No relevant results found.[/]")
@@ -291,6 +295,18 @@ def _display_rich_results(results: list[SearchResult], query: str, show_content:
 
     console.print(f"\n[bold green]Found {len(results)} results for '{query}'[/]\n")
 
+    # Check if all results have low semantic quality
+    avg_semantic = sum(r.semantic_score for r in results) / len(results)
+    if avg_semantic < 0.4:
+        console.print(
+            "[yellow]⚠️  Warning: All results have weak semantic relevance[/]\n"
+            "Results shown are based primarily on recent access history, not semantic match.\n"
+            "[dim]Consider:[/]\n"
+            "  • [cyan]Broadening your search query[/]\n"
+            "  • [cyan]Re-indexing if files are missing[/]: aur mem index .\n"
+            "  • [cyan]Using grep for exact matches[/]: grep -r 'term' .\n"
+        )
+
     # Create results table
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("File", style="yellow", width=40)
@@ -302,10 +318,10 @@ def _display_rich_results(results: list[SearchResult], query: str, show_content:
     if show_content:
         table.add_column("Preview", style="white", width=50)
 
-    # Calculate threshold for low confidence indicator
-    # Use default threshold of 0.35 (from config default)
-    threshold = 0.35
-    borderline_range = 0.1
+    # Mark results with weak semantic relevance as "low"
+    # These are results boosted mainly by activation (recency) rather than semantic match
+    # Use a threshold relative to normalized semantic scores (0-1 range after min-max normalization)
+    semantic_low_threshold = 0.4  # Normalized semantic score threshold
 
     for result in results:
         file_path = Path(result.file_path).name  # Just filename
@@ -318,12 +334,13 @@ def _display_rich_results(results: list[SearchResult], query: str, show_content:
         score = result.hybrid_score
         semantic_score = result.semantic_score
 
-        # Check if result is in borderline range (low confidence)
-        is_low_confidence = threshold <= semantic_score < threshold + borderline_range
+        # Mark results with weak semantic relevance (normalized score < 0.4)
+        # These passed the filter but are mainly showing due to recent access
+        is_low_confidence = semantic_score < semantic_low_threshold
 
         if is_low_confidence:
-            # Display score with yellow color and low confidence indicator
-            score_text = Text(f"{score:.3f}", style="bold yellow")
+            # Display score with yellow/red color and low confidence indicator
+            score_text = _format_score(score)
             score_text.append(" (low)", style="dim yellow")
         else:
             score_text = _format_score(score)

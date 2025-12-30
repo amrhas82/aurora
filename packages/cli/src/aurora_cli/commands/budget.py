@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.table import Table
 
 from aurora_cli.config import load_config
+from aurora_cli.errors import handle_errors
 from aurora_core.budget.tracker import CostTracker
 
 
@@ -37,6 +38,7 @@ def budget_group(ctx: click.Context) -> None:
 
 
 @budget_group.command(name="show")
+@handle_errors
 def show_command() -> None:
     """Show current budget status and spending (default command).
 
@@ -107,6 +109,7 @@ def show_command() -> None:
 
 @budget_group.command(name="set")
 @click.argument("amount", type=float)
+@handle_errors
 def set_command(amount: float) -> None:
     """Set monthly budget limit.
 
@@ -152,6 +155,7 @@ def set_command(amount: float) -> None:
 
 @budget_group.command(name="reset")
 @click.option("--confirm", is_flag=True, help="Skip confirmation prompt")
+@handle_errors
 def reset_command(confirm: bool) -> None:
     """Reset spending to zero (clears all entries for current period).
 
@@ -201,6 +205,7 @@ def reset_command(confirm: bool) -> None:
 @budget_group.command(name="history")
 @click.option("--limit", "-n", type=int, default=20, help="Number of entries to show (default: 20)")
 @click.option("--all", "show_all", is_flag=True, help="Show all entries")
+@handle_errors
 def history_command(limit: int, show_all: bool) -> None:
     """Show query history with costs and timestamps.
 

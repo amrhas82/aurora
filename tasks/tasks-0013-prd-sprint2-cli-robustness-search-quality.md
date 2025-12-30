@@ -117,42 +117,42 @@
     - Test backup creation flow
     - Test reset flow creates valid new schema
 
-- [ ] 2.0 Improve CLI Error Handling (P1)
-  - [ ] 2.1 Verify `--debug` flag is properly passed through Click context in `packages/cli/src/aurora_cli/main.py`
+- [x] 2.0 Improve CLI Error Handling (P1) - COMPLETE
+  - [x] 2.1 Verify `--debug` flag is properly passed through Click context in `packages/cli/src/aurora_cli/main.py`
     - Confirm `ctx.obj["debug"]` is set correctly (line 89)
     - Verify `@handle_errors` decorator reads debug flag from context
     - Test that `AURORA_DEBUG=1` environment variable is also checked
-  - [ ] 2.2 Update `@handle_errors` decorator in `packages/cli/src/aurora_cli/errors.py` to check both sources
+  - [x] 2.2 Update `@handle_errors` decorator in `packages/cli/src/aurora_cli/errors.py` to check both sources
     - Check `ctx.obj.get("debug", False)` from Click context
     - Check `os.environ.get("AURORA_DEBUG") == "1"` as fallback
     - If either is true, print full traceback using `traceback.print_exc()`
-  - [ ] 2.3 Add `SchemaMismatchError` handling to `@handle_errors` decorator
+  - [x] 2.3 Add `SchemaMismatchError` handling to `@handle_errors` decorator
     - Import `SchemaMismatchError` from `aurora_core.exceptions`
     - Add case in decorator to call `handle_schema_error()` for schema errors
     - Set exit code to 2 (system error) for schema errors
-  - [ ] 2.4 Ensure consistent exit codes across all CLI commands
+  - [x] 2.4 Ensure consistent exit codes across all CLI commands
     - Define constants at top of `errors.py`: `EXIT_SUCCESS = 0`, `EXIT_USER_ERROR = 1`, `EXIT_SYSTEM_ERROR = 2`
     - Update `@handle_errors` decorator to use appropriate exit code based on exception type
     - `ConfigurationError`, `FileNotFoundError`, `ValueError` -> `EXIT_USER_ERROR` (1)
     - `StorageError`, `SchemaMismatchError`, `PermissionError` -> `EXIT_SYSTEM_ERROR` (2)
-  - [ ] 2.5 Apply `@handle_errors` decorator to `init_command` in `packages/cli/src/aurora_cli/commands/init.py`
+  - [x] 2.5 Apply `@handle_errors` decorator to `init_command` in `packages/cli/src/aurora_cli/commands/init.py`
     - Add decorator above `@click.command(name="init")` line
     - Ensure all manual try/except blocks are removed or simplified
     - Verify error messages display correctly without duplication
-  - [ ] 2.6 Apply `@handle_errors` decorator to budget commands in `packages/cli/src/aurora_cli/commands/budget.py`
+  - [x] 2.6 Apply `@handle_errors` decorator to budget commands in `packages/cli/src/aurora_cli/commands/budget.py`
     - Add decorator to `budget_status`, `budget_set`, `budget_reset`, `budget_history` commands
     - Verify budget-specific errors are handled by `handle_budget_error()`
-  - [ ] 2.7 Verify memory commands in `packages/cli/src/aurora_cli/commands/memory.py` use error handling correctly
+  - [x] 2.7 Verify memory commands in `packages/cli/src/aurora_cli/commands/memory.py` use error handling correctly
     - Check `index_command`, `search_command`, `stats_command` have proper error handling
     - These already have try/except - verify they call `ErrorHandler` methods
     - Consider adding `@handle_errors` decorator for consistency
-  - [ ] 2.8 Write unit tests for error formatting in `tests/unit/cli/test_error_handler.py`
+  - [x] 2.8 Write unit tests for error formatting in `tests/unit/cli/test_error_handler.py`
     - Test `handle_schema_error()` returns formatted message with hints
     - Test `handle_api_error()` for various API error types (401, 429, 500)
     - Test `handle_memory_error()` for database locked, corrupt, permission errors
     - Test `handle_config_error()` for JSON decode, permission, missing file errors
     - Test `redact_api_key()` properly masks API keys
-  - [ ] 2.9 Write E2E test for error handling in `tests/e2e/test_e2e_error_handling.py`
+  - [x] 2.9 Write E2E test for error handling in `tests/e2e/test_e2e_error_handling.py`
     - Test: Trigger `StorageError` by corrupting database, verify no traceback in output
     - Test: Verify exit code is 2 for system errors
     - Test: Verify exit code is 1 for user errors (e.g., invalid path)

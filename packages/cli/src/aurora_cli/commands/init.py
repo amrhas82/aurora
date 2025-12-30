@@ -9,7 +9,91 @@ from pathlib import Path
 import click
 
 from aurora_cli.config import CONFIG_SCHEMA
-from aurora_cli.errors import ErrorHandler
+from aurora_cli.errors import ErrorHandler, handle_errors
+
+
+def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler) -> bool:
+    """Check for schema mismatch and handle it interactively.
+
+    This function checks if an existing database has an incompatible schema
+    and offers the user options to backup and reset.
+
+    Args:
+        db_path: Path to the database file
+        error_handler: ErrorHandler instance for formatting messages
+
+    Returns:
+        True if database is ready to use, False if user aborted
+
+    Note:
+        This function handles SchemaMismatchError gracefully by prompting
+        the user for action rather than displaying a traceback.
+    """
+    from aurora_core.exceptions import SchemaMismatchError
+    from aurora_core.store.sqlite import SQLiteStore, backup_database
+
+    if not db_path.exists():
+        # No existing database - nothing to check
+        return True
+
+    # Try to open the database and check schema
+    try:
+        # Create a temporary store to check schema
+        store = SQLiteStore(db_path=str(db_path))
+        store.close()
+        return True
+    except SchemaMismatchError as e:
+        # Schema mismatch detected - handle interactively
+        click.echo(f"\n[Schema Migration Required]")
+        click.echo(f"  Database: {db_path}")
+        click.echo(f"  Found version: v{e.found_version}")
+        click.echo(f"  Required version: v{e.expected_version}")
+        click.echo("")
+        click.echo("Your database was created with an older version of AURORA.")
+        click.echo("It needs to be reset to use the new schema.")
+        click.echo("")
+
+        # Ask if user wants to proceed
+        if not click.confirm("Reset database and re-index? (your data will need to be re-indexed)", default=True):
+            click.echo("Aborted. Database unchanged.")
+            click.echo("Note: You can manually backup and delete the database file to reset.")
+            return False
+
+        # Ask about backup
+        if click.confirm("Create backup before reset?", default=True):
+            try:
+                backup_path = backup_database(str(db_path))
+                click.echo(f"  Backup created: {backup_path}")
+            except Exception as backup_error:
+                error_msg = error_handler.handle_memory_error(backup_error, "creating backup")
+                click.echo(f"\n{error_msg}", err=True)
+                if not click.confirm("Continue without backup?", default=False):
+                    click.echo("Aborted.")
+                    return False
+
+        # Perform reset
+        try:
+            # Delete the old database
+            db_path.unlink()
+
+            # Also remove WAL and SHM files if they exist
+            wal_file = Path(f"{db_path}-wal")
+            shm_file = Path(f"{db_path}-shm")
+            if wal_file.exists():
+                wal_file.unlink()
+            if shm_file.exists():
+                shm_file.unlink()
+
+            click.echo("  Database reset successfully.")
+            click.echo("  Run 'aur mem index .' to re-index your codebase.")
+            return True
+        except OSError as reset_error:
+            error_msg = error_handler.handle_memory_error(reset_error, "resetting database")
+            click.echo(f"\n{error_msg}", err=True)
+            return False
+    except Exception as e:
+        # Other errors - let them propagate
+        raise
 
 
 def detect_local_db() -> Path | None:
@@ -132,6 +216,7 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
 
 
 @click.command(name="init")
+@handle_errors
 def init_command() -> None:
     """Initialize AURORA configuration.
 
@@ -223,7 +308,13 @@ def init_command() -> None:
     except Exception as e:
         click.echo(f"⚠ Warning: Could not set secure permissions on {config_path}: {e}")
 
-    click.echo(f"✓ Configuration created at {config_path}")
+    click.echo(f"Configuration created at {config_path}")
+
+    # Check for schema migration issues with main database
+    main_db_path = config_dir / "memory.db"
+    if not check_and_handle_schema_mismatch(main_db_path, error_handler):
+        # User aborted schema migration - exit early
+        return
 
     # Check for local aurora.db and offer migration
     local_db = detect_local_db()

@@ -5,6 +5,7 @@ for providing actionable error messages to users.
 """
 
 import functools
+import os
 import sys
 import traceback
 from collections.abc import Callable
@@ -16,6 +17,11 @@ from rich.console import Console
 
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+# Exit code constants
+EXIT_SUCCESS = 0
+EXIT_USER_ERROR = 1
+EXIT_SYSTEM_ERROR = 2
 
 
 class AuroraError(Exception):
@@ -507,6 +513,42 @@ class ErrorHandler:
         )
 
     @staticmethod
+    def handle_schema_error(
+        error: Exception,
+        db_path: str | None = None,
+    ) -> str:
+        """Handle and format schema mismatch errors with recovery steps.
+
+        Args:
+            error: The schema mismatch exception
+            db_path: Path to the database file (if known)
+
+        Returns:
+            Formatted error message with recovery steps
+        """
+        # Try to extract version info from the error if it's a SchemaMismatchError
+        found_version = getattr(error, "found_version", "unknown")
+        expected_version = getattr(error, "expected_version", "unknown")
+        error_db_path = getattr(error, "db_path", None) or db_path or "~/.aurora/memory.db"
+
+        return (
+            "[bold red][Schema][/] Database schema outdated.\n\n"
+            f"[yellow]Database:[/] {error_db_path}\n"
+            f"[yellow]Found version:[/] v{found_version}\n"
+            f"[yellow]Required version:[/] v{expected_version}\n\n"
+            "[yellow]Cause:[/] Database was created with an older version of AURORA.\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Run setup to reset database:\n"
+            "     [cyan]aur init[/]\n"
+            "  2. After reset, re-index your codebase:\n"
+            "     [cyan]aur mem index .[/]\n"
+            "  3. Manual backup before reset:\n"
+            f"     [cyan]cp {error_db_path} {error_db_path}.backup[/]\n"
+            "  4. Manual reset (delete database):\n"
+            f"     [cyan]rm {error_db_path}[/]"
+        )
+
+    @staticmethod
     def handle_budget_error(
         error: Exception, spent: float = 0.0, limit: float = 0.0, operation: str = "query execution"
     ) -> str:
@@ -592,6 +634,10 @@ def handle_errors(f: F) -> F:
         if ctx and ctx.obj and isinstance(ctx.obj, dict):
             debug_mode = ctx.obj.get("debug", False)
 
+        # Also check AURORA_DEBUG environment variable
+        if not debug_mode:
+            debug_mode = os.environ.get("AURORA_DEBUG") == "1"
+
         try:
             return f(*args, **kwargs)
         except click.Abort:
@@ -610,32 +656,75 @@ def handle_errors(f: F) -> F:
                 console.print(
                     "\n[dim]Note: Use without --debug flag to see user-friendly error messages[/]\n"
                 )
-                sys.exit(1)
+                sys.exit(EXIT_USER_ERROR)
 
             # Otherwise, show clean error message
             error_msg = None
+            exit_code = EXIT_USER_ERROR  # Default to user error
+
+            # Import SchemaMismatchError for schema error handling
+            try:
+                from aurora_core.exceptions import SchemaMismatchError, StorageError
+            except ImportError:
+                SchemaMismatchError = None
+                StorageError = None
 
             # Determine error type and format appropriately
-            if isinstance(e, BudgetExceededError):
+            if SchemaMismatchError and isinstance(e, SchemaMismatchError):
+                error_msg = error_handler.handle_schema_error(e)
+                exit_code = EXIT_SYSTEM_ERROR
+            elif isinstance(e, BudgetExceededError):
                 # Try to extract budget info from error message or default to 0
                 error_msg = error_handler.handle_budget_error(e)
+                exit_code = EXIT_USER_ERROR
             elif isinstance(e, APIError):
                 error_msg = error_handler.handle_api_error(e)
+                exit_code = EXIT_USER_ERROR
             elif isinstance(e, ConfigurationError):
                 error_msg = error_handler.handle_config_error(e)
+                exit_code = EXIT_USER_ERROR
             elif isinstance(e, MemoryStoreError):
                 error_msg = error_handler.handle_memory_error(e)
+                exit_code = EXIT_SYSTEM_ERROR
+            elif StorageError and isinstance(e, StorageError):
+                error_msg = error_handler.handle_memory_error(e)
+                exit_code = EXIT_SYSTEM_ERROR
+            elif isinstance(e, PermissionError):
+                error_msg = error_handler.handle_path_error(e, str(getattr(e, "filename", "unknown")), "accessing file")
+                exit_code = EXIT_SYSTEM_ERROR
+            elif isinstance(e, FileNotFoundError):
+                error_msg = error_handler.handle_path_error(e, str(getattr(e, "filename", "unknown")), "accessing file")
+                exit_code = EXIT_USER_ERROR
+            elif isinstance(e, ValueError):
+                # Value errors are typically user input errors
+                error_msg = (
+                    f"[bold red]Error:[/] Invalid value\n\n"
+                    f"[yellow]{e}[/]\n\n"
+                    "[green]Solutions:[/]\n"
+                    "  1. Check command arguments and values\n"
+                    "  2. See command help: [cyan]aur <command> --help[/]\n"
+                    "  3. Run with --debug flag for details:\n"
+                    f"     [cyan]aur --debug {' '.join(sys.argv[1:])}[/]"
+                )
+                exit_code = EXIT_USER_ERROR
             else:
                 # Check error message for clues
                 error_str = str(e).lower()
-                if "api" in error_str or "anthropic" in error_str:
+                if "schema" in error_str:
+                    error_msg = error_handler.handle_schema_error(e)
+                    exit_code = EXIT_SYSTEM_ERROR
+                elif "api" in error_str or "anthropic" in error_str:
                     error_msg = error_handler.handle_api_error(e)
+                    exit_code = EXIT_USER_ERROR
                 elif "budget" in error_str or "limit" in error_str:
                     error_msg = error_handler.handle_budget_error(e)
+                    exit_code = EXIT_USER_ERROR
                 elif "config" in error_str:
                     error_msg = error_handler.handle_config_error(e)
+                    exit_code = EXIT_USER_ERROR
                 elif "memory" in error_str or "database" in error_str:
                     error_msg = error_handler.handle_memory_error(e)
+                    exit_code = EXIT_SYSTEM_ERROR
                 else:
                     # Generic error
                     error_msg = (
@@ -647,8 +736,9 @@ def handle_errors(f: F) -> F:
                         "  3. Run with --debug flag for detailed error:\n"
                         f"     [cyan]aur --debug {' '.join(sys.argv[1:])}[/]"
                     )
+                    exit_code = EXIT_USER_ERROR
 
             console.print(f"\n{error_msg}\n")
-            sys.exit(1)
+            sys.exit(exit_code)
 
     return wrapper  # type: ignore[return-value]

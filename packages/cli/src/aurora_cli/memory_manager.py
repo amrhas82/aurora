@@ -354,7 +354,9 @@ class MemoryManager:
             error_msg = self.error_handler.handle_memory_error(e, "indexing")
             raise MemoryStoreError(error_msg) from e
 
-    def search(self, query: str, limit: int = 5) -> list[SearchResult]:
+    def search(
+        self, query: str, limit: int = 5, min_semantic_score: float | None = None
+    ) -> list[SearchResult]:
         """Search memory store for relevant chunks.
 
         Uses hybrid retrieval (keyword + semantic) to find the most relevant
@@ -363,6 +365,8 @@ class MemoryManager:
         Args:
             query: Search query string
             limit: Maximum number of results to return
+            min_semantic_score: Minimum semantic score threshold (0.0-1.0).
+                If None, uses config value or no filtering.
 
         Returns:
             List of SearchResult objects sorted by relevance
@@ -382,8 +386,13 @@ class MemoryManager:
                 self.embedding_provider,
             )
 
+            # Use config value as default if min_semantic_score not provided
+            threshold = min_semantic_score
+            if threshold is None and self.config is not None:
+                threshold = self.config.search_min_semantic_score
+
             # Perform search
-            results = retriever.retrieve(query, top_k=limit)
+            results = retriever.retrieve(query, top_k=limit, min_semantic_score=threshold)
 
             # Convert to SearchResult objects
             search_results = []

@@ -115,6 +115,7 @@ class HybridRetriever:
         query: str,
         top_k: int = 10,
         context_keywords: list[str] | None = None,
+        min_semantic_score: float | None = None,
     ) -> list[dict[str, Any]]:
         """Retrieve chunks using hybrid scoring.
 
@@ -122,6 +123,7 @@ class HybridRetriever:
             query: User query string
             top_k: Number of results to return
             context_keywords: Optional keywords for context boost
+            min_semantic_score: Minimum semantic score threshold (0.0-1.0). Results below this will be filtered out.
 
         Returns:
             List of dicts with keys:
@@ -177,7 +179,7 @@ class HybridRetriever:
             activation_scores.append(activation_score)
 
             # Calculate semantic similarity
-            chunk_embedding = getattr(chunk, "embedding", None)
+            chunk_embedding = getattr(chunk, "embeddings", None)
             if chunk_embedding is not None:
                 from aurora_context_code.semantic.embedding_provider import (
                     cosine_similarity,
@@ -270,8 +272,16 @@ class HybridRetriever:
                 }
             )
 
-        # Step 6: Sort by hybrid score (descending) and return top_k
+        # Step 6: Sort by hybrid score (descending)
         final_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
+
+        # Step 7: Apply semantic score threshold filter if specified
+        if min_semantic_score is not None:
+            filtered = [r for r in final_results if r["semantic_score"] >= min_semantic_score]
+            if not filtered:
+                return []  # All results below threshold
+            final_results = filtered
+
         return final_results[:top_k]
 
     def _fallback_to_activation_only(self, chunks: list[Any], top_k: int) -> list[dict[str, Any]]:
@@ -311,6 +321,10 @@ class HybridRetriever:
 
         Returns:
             Normalized scores in [0, 1] range
+
+        Note:
+            When all scores are equal, returns original scores unchanged
+            to preserve meaningful zero values rather than inflating to 1.0.
         """
         if not scores:
             return []
@@ -319,8 +333,9 @@ class HybridRetriever:
         max_score = max(scores)
 
         if max_score - min_score < 1e-9:
-            # All scores equal, return uniform distribution
-            return [1.0] * len(scores)
+            # All scores equal - preserve original values
+            # This prevents [0.0, 0.0, 0.0] from becoming [1.0, 1.0, 1.0]
+            return list(scores)
 
         return [(s - min_score) / (max_score - min_score) for s in scores]
 

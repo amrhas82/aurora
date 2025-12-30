@@ -159,8 +159,8 @@
     - Test: Run with `AURORA_DEBUG=1`, verify traceback IS shown
     - Test: Run with `--debug` flag, verify traceback IS shown
 
-- [ ] 3.0 Implement Semantic Search Threshold Filtering (P1)
-  - [ ] 3.1 Add `search` section to `CONFIG_SCHEMA` in `packages/cli/src/aurora_cli/config.py`
+- [x] 3.0 Implement Semantic Search Threshold Filtering (P1)
+  - [x] 3.1 Add `search` section to `CONFIG_SCHEMA` in `packages/cli/src/aurora_cli/config.py`
     - Add after `"budget"` section (around line 193):
       ```python
       "search": {
@@ -168,12 +168,12 @@
       },
       ```
     - This sets the default threshold for filtering low-relevance results
-  - [ ] 3.2 Add `search_min_semantic_score` field to `Config` dataclass in `packages/cli/src/aurora_cli/config.py`
+  - [x] 3.2 Add `search_min_semantic_score` field to `Config` dataclass in `packages/cli/src/aurora_cli/config.py`
     - Add field: `search_min_semantic_score: float = 0.35`
     - Add validation in `validate()` method: `0.0 <= search_min_semantic_score <= 1.0`
     - Update `load_config()` to read from `config_data.get("search", {}).get("min_semantic_score", ...)`
     - Update `save_config()` to include `"search": {"min_semantic_score": ...}` section
-  - [ ] 3.3 Modify `HybridRetriever.retrieve()` to accept and apply semantic threshold
+  - [x] 3.3 Modify `HybridRetriever.retrieve()` to accept and apply semantic threshold
     - Add `min_semantic_score: float | None = None` parameter to `retrieve()` method
     - After line 274 (before return), filter results:
       ```python
@@ -184,11 +184,11 @@
           final_results = filtered
       ```
     - Update docstring to document new parameter
-  - [ ] 3.4 Update `MemoryManager.search()` to pass threshold to retriever in `packages/cli/src/aurora_cli/memory_manager.py`
+  - [x] 3.4 Update `MemoryManager.search()` to pass threshold to retriever in `packages/cli/src/aurora_cli/memory_manager.py`
     - Add `min_semantic_score: float | None = None` parameter to `search()` method
     - Pass to `retriever.retrieve(query, top_k=limit, min_semantic_score=min_semantic_score)`
     - If `self.config` is available, use `self.config.search_min_semantic_score` as default
-  - [ ] 3.5 Add `--min-score` CLI option to `search_command` in `packages/cli/src/aurora_cli/commands/memory.py`
+  - [x] 3.5 Add `--min-score` CLI option to `search_command` in `packages/cli/src/aurora_cli/commands/memory.py`
     - Add option after `--show-content` (around line 164):
       ```python
       @click.option(
@@ -199,7 +199,7 @@
       )
       ```
     - Pass `min_score` to `manager.search(query, limit=limit, min_semantic_score=min_score)`
-  - [ ] 3.6 Update `_display_rich_results()` to show "No relevant results" message
+  - [x] 3.6 Update `_display_rich_results()` to show "No relevant results" message
     - Modify the empty results check (line 309-313):
       ```python
       if not results:
@@ -211,21 +211,21 @@
           )
           return
       ```
-  - [ ] 3.7 Add "low confidence" indicator for borderline results in `_display_rich_results()`
+  - [x] 3.7 Add "low confidence" indicator for borderline results in `_display_rich_results()`
     - Define borderline range: `threshold <= score < threshold + 0.1`
     - In the results loop, check if `result.semantic_score` is in borderline range
     - Append " (low confidence)" to the score display for borderline results
     - Use yellow color for low confidence scores
-  - [ ] 3.8 Update search output to show filter statistics
+  - [ ] 3.8 Update search output to show filter statistics [SKIPPED - requires return value changes]
     - After filtering, track how many results were filtered out
     - Display: "Found {N} results ({M} filtered as low relevance)"
     - Only show filter count if M > 0
-  - [ ] 3.9 Write unit tests for threshold filtering in `tests/unit/context_code/semantic/test_hybrid_retriever_threshold.py`
+  - [x] 3.9 Write unit tests for threshold filtering in `tests/unit/context_code/semantic/test_hybrid_retriever_threshold.py`
     - Test `retrieve()` with `min_semantic_score=0.5` filters out results below 0.5
     - Test `retrieve()` with `min_semantic_score=0.0` returns all results
     - Test `retrieve()` with `min_semantic_score=0.9` returns empty if all below
     - Test `retrieve()` without threshold parameter returns all results (backward compat)
-  - [ ] 3.10 Write E2E test for search threshold in `tests/e2e/test_e2e_search_threshold.py`
+  - [x] 3.10 Write E2E test for search threshold in `tests/e2e/test_e2e_search_threshold.py`
     - Create test project with diverse content (reuse `diverse_python_project` fixture)
     - Test: Search for "payment" (non-existent term), verify low/no results
     - Test: Search with `--min-score 0.8`, verify stricter filtering

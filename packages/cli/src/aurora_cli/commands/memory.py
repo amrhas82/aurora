@@ -162,11 +162,18 @@ def index_command(path: Path) -> None:
     default=False,
     help="Show content preview for each result",
 )
+@click.option(
+    "--min-score",
+    type=float,
+    default=None,
+    help="Minimum semantic score threshold (0.0-1.0, default: from config or 0.35)",
+)
 def search_command(
     query: str,
     limit: int,
     output_format: str,
     show_content: bool,
+    min_score: float | None,
 ) -> None:
     """Search AURORA memory for relevant chunks.
 
@@ -211,7 +218,7 @@ def search_command(
         manager = MemoryManager(config=config)
 
         # Perform search
-        results = manager.search(query, limit=limit)
+        results = manager.search(query, limit=limit, min_semantic_score=min_score)
 
         # Display results
         if output_format == "json":
@@ -307,9 +314,13 @@ def _display_rich_results(results: list[SearchResult], query: str, show_content:
         show_content: Whether to show content preview
     """
     if not results:
-        console.print("\n[yellow]No results found.[/]")
+        console.print("\n[yellow]No relevant results found.[/]")
         console.print(
-            "Try:\n  - Broadening your search query\n  - Checking if the codebase has been indexed"
+            "All results were below the semantic threshold.\n"
+            "Try:\n"
+            "  - Broadening your search query\n"
+            "  - Lowering the threshold with --min-score 0.2\n"
+            "  - Checking if the codebase has been indexed"
         )
         return
 
@@ -326,6 +337,11 @@ def _display_rich_results(results: list[SearchResult], query: str, show_content:
     if show_content:
         table.add_column("Preview", style="white", width=50)
 
+    # Calculate threshold for low confidence indicator
+    # Use default threshold of 0.35 (from config default)
+    threshold = 0.35
+    borderline_range = 0.1
+
     for result in results:
         file_path = Path(result.file_path).name  # Just filename
         element_type = result.metadata.get("type", "unknown")
@@ -333,9 +349,19 @@ def _display_rich_results(results: list[SearchResult], query: str, show_content:
         line_start, line_end = result.line_range
         line_range_str = f"{line_start}-{line_end}"
 
-        # Format score with color
+        # Format score with color and low confidence indicator
         score = result.hybrid_score
-        score_text = _format_score(score)
+        semantic_score = result.semantic_score
+
+        # Check if result is in borderline range (low confidence)
+        is_low_confidence = threshold <= semantic_score < threshold + borderline_range
+
+        if is_low_confidence:
+            # Display score with yellow color and low confidence indicator
+            score_text = Text(f"{score:.3f}", style="bold yellow")
+            score_text.append(" (low)", style="dim yellow")
+        else:
+            score_text = _format_score(score)
 
         row = [
             _truncate_text(file_path, 40),

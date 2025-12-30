@@ -47,6 +47,7 @@ class Config:
     db_path: str = "~/.aurora/memory.db"  # Database path with tilde support
     budget_limit: float = 10.0  # Default budget limit in USD
     budget_tracker_path: str = "~/.aurora/budget_tracker.json"
+    search_min_semantic_score: float = 0.35  # Minimum semantic score threshold for search results
 
     def get_db_path(self) -> str:
         """Get expanded absolute database path.
@@ -147,6 +148,12 @@ class Config:
         if self.budget_limit < 0:
             raise ConfigurationError(f"budget_limit must be non-negative, got {self.budget_limit}")
 
+        # Validate search threshold
+        if not 0.0 <= self.search_min_semantic_score <= 1.0:
+            raise ConfigurationError(
+                f"search_min_semantic_score must be 0.0-1.0, got {self.search_min_semantic_score}"
+            )
+
         # Warn about non-existent paths (don't fail, just warn)
         for path in self.memory_index_paths:
             expanded_path = Path(path).expanduser()
@@ -190,6 +197,9 @@ CONFIG_SCHEMA: dict[str, Any] = {
     "budget": {
         "limit": 10.0,
         "tracker_path": "~/.aurora/budget_tracker.json",
+    },
+    "search": {
+        "min_semantic_score": 0.35,
     },
 }
 
@@ -316,6 +326,9 @@ def load_config(path: str | None = None) -> Config:
         "budget_tracker_path": config_data.get("budget", {}).get(
             "tracker_path", defaults["budget"]["tracker_path"]
         ),
+        "search_min_semantic_score": config_data.get("search", {}).get(
+            "min_semantic_score", defaults["search"]["min_semantic_score"]
+        ),
     }
 
     # Apply environment variable overrides
@@ -395,6 +408,9 @@ def save_config(config: Config, path: str | None = None) -> None:
         "budget": {
             "limit": config.budget_limit,
             "tracker_path": config.budget_tracker_path,
+        },
+        "search": {
+            "min_semantic_score": config.search_min_semantic_score,
         },
     }
 

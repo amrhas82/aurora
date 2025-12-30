@@ -233,26 +233,26 @@
     - Test: Verify config value `search.min_semantic_score` is respected
     - Test: Verify "No relevant results found" message appears appropriately
 
-- [ ] 4.0 Investigate Activation Score Variance (P2)
-  - [ ] 4.1 Create investigation script to analyze activation distribution
+- [x] 4.0 Investigate Activation Score Variance (P2) - CLOSED: Working as Designed
+  - [x] 4.1 Create investigation script to analyze activation distribution
     - Query: `SELECT base_level, access_count FROM activations`
     - Calculate: min, max, mean, standard deviation of base_level
     - Count: How many chunks have base_level = 0.0, 0.5, or other values
     - Document distribution in investigation report
-  - [ ] 4.2 Analyze normalization logic in `_normalize_scores()` method
+  - [x] 4.2 Analyze normalization logic in `_normalize_scores()` method
     - Review `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` lines 306-330
     - Check: Does min-max normalization cause uniform output when inputs are similar?
     - Check: Sprint 1 fix preserved equal scores - is this causing the issue?
     - Document findings with code snippets
-  - [ ] 4.3 Check if all chunks have identical base_level values
+  - [x] 4.3 Check if all chunks have identical base_level values
     - If all base_level = 0.5 (non-Git default), normalization would produce 0.0 for all
     - If all base_level = 0.0, same issue
     - Determine if variance is expected based on Git history availability
-  - [ ] 4.4 Check if access_count is being updated during search
+  - [x] 4.4 Check if access_count is being updated during search
     - Verify `record_access()` is called in `MemoryManager.search()` (line 408-421)
     - Check if access_count updates actually change base_level
     - Test by running multiple searches and checking database values
-  - [ ] 4.5 Document findings in `docs/development/aurora_fixes/activation_variance_investigation.md`
+  - [x] 4.5 Document findings in `docs/development/aurora_fixes/activation_variance_investigation.md`
     - Section 1: Problem Statement (activation scores often identical at 1.000)
     - Section 2: Investigation Methodology
     - Section 3: Database Analysis Results (actual base_level distribution)
@@ -260,11 +260,11 @@
     - Section 5: Root Cause Identification
     - Section 6: Recommendation (fix required OR document as expected behavior)
     - Section 7: Evidence (SQL queries, output samples)
-  - [ ] 4.6 IF bug identified: Implement fix
+  - [x] 4.6 IF bug identified: Implement fix [N/A - no bug found]
     - Update relevant code (likely in `_normalize_scores()` or BLA initialization)
     - Add unit test verifying activation scores vary after fix
     - Manual verification with `aur mem search` showing varied scores
-  - [ ] 4.7 IF expected behavior: Document and close
+  - [x] 4.7 IF expected behavior: Document and close [COMPLETED]
     - Update user documentation explaining why activation scores may be uniform
     - Add note to CLI output explaining score interpretation
     - Close investigation as "working as intended"

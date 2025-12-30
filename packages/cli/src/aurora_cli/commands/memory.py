@@ -81,63 +81,49 @@ def index_command(ctx: click.Context, path: Path) -> None:
         aur mem index .
         # Note: Will update existing chunks and add new ones
     """
-    try:
-        # Load configuration
-        config = load_config()
-        db_path = config.get_db_path()
+    # Load configuration
+    config = load_config()
+    db_path = config.get_db_path()
 
-        # Initialize memory manager with config
-        console.print(f"[dim]Using database: {db_path}[/]")
-        manager = MemoryManager(config=config)
+    # Initialize memory manager with config
+    console.print(f"[dim]Using database: {db_path}[/]")
+    manager = MemoryManager(config=config)
 
-        # Create progress display
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            console=console,
-        ) as progress:
-            task_id: TaskID | None = None
+    # Create progress display
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        console=console,
+    ) as progress:
+        task_id: TaskID | None = None
 
-            def progress_callback(current: int, total: int) -> None:
-                nonlocal task_id
-                if task_id is None:
-                    task_id = progress.add_task(
-                        f"Indexing {path}",
-                        total=total,
-                    )
-                progress.update(task_id, completed=current)
+        def progress_callback(current: int, total: int) -> None:
+            nonlocal task_id
+            if task_id is None:
+                task_id = progress.add_task(
+                    f"Indexing {path}",
+                    total=total,
+                )
+            progress.update(task_id, completed=current)
 
-            # Perform indexing
-            stats = manager.index_path(path, progress_callback=progress_callback)
+        # Perform indexing
+        stats = manager.index_path(path, progress_callback=progress_callback)
 
-        # Display summary
-        console.print()
-        console.print(
-            Panel.fit(
-                f"[bold green]✓ Indexing complete[/]\n\n"
-                f"Files indexed: [cyan]{stats.files_indexed}[/]\n"
-                f"Chunks created: [cyan]{stats.chunks_created}[/]\n"
-                f"Duration: [cyan]{stats.duration_seconds:.2f}s[/]\n"
-                f"Errors: [yellow]{stats.errors}[/]",
-                title="Index Summary",
-                border_style="green",
-            )
+    # Display summary
+    console.print()
+    console.print(
+        Panel.fit(
+            f"[bold green]✓ Indexing complete[/]\n\n"
+            f"Files indexed: [cyan]{stats.files_indexed}[/]\n"
+            f"Chunks created: [cyan]{stats.chunks_created}[/]\n"
+            f"Duration: [cyan]{stats.duration_seconds:.2f}s[/]\n"
+            f"Errors: [yellow]{stats.errors}[/]",
+            title="Index Summary",
+            border_style="green",
         )
-
-    except MemoryStoreError as e:
-        # Already has formatted error message
-        logger.error(f"Index command failed: {e}", exc_info=True)
-        console.print(f"\n{e}", style="red")
-        raise click.Abort()
-    except Exception as e:
-        # Unexpected error - format it
-        logger.error(f"Index command failed: {e}", exc_info=True)
-        error_handler = ErrorHandler()
-        error_msg = error_handler.handle_memory_error(e, "indexing files")
-        console.print(f"\n{error_msg}", style="red")
-        raise click.Abort()
+    )
 
 
 @memory_group.command(name="search")
@@ -202,47 +188,33 @@ def search_command(
         # Quick alias for search with content
         aur mem search "error handling" -n 3 -c
     """
-    try:
-        # Load configuration
-        config = load_config()
-        db_path = Path(config.get_db_path())
+    # Load configuration
+    config = load_config()
+    db_path = Path(config.get_db_path())
 
-        if not db_path.exists():
-            error_handler = ErrorHandler()
-            error = FileNotFoundError(f"Database not found at {db_path}")
-            error_msg = error_handler.handle_path_error(error, str(db_path), "opening database")
-            console.print(
-                f"\n{error_msg}\n\n"
-                "[green]Hint:[/] Run [cyan]aur mem index .[/] to create and populate the database.",
-                style="red",
-            )
-            raise click.Abort()
-
-        # Initialize memory manager with config
-        console.print(f"[dim]Searching memory from {db_path}...[/]")
-        manager = MemoryManager(config=config)
-
-        # Perform search
-        results = manager.search(query, limit=limit, min_semantic_score=min_score)
-
-        # Display results
-        if output_format == "json":
-            _display_json_results(results)
-        else:
-            _display_rich_results(results, query, show_content)
-
-    except MemoryStoreError as e:
-        # Already has formatted error message
-        logger.error(f"Search command failed: {e}", exc_info=True)
-        console.print(f"\n{e}", style="red")
-        raise click.Abort()
-    except Exception as e:
-        # Unexpected error - format it
-        logger.error(f"Search command failed: {e}", exc_info=True)
+    if not db_path.exists():
         error_handler = ErrorHandler()
-        error_msg = error_handler.handle_memory_error(e, "searching memory")
-        console.print(f"\n{error_msg}", style="red")
+        error = FileNotFoundError(f"Database not found at {db_path}")
+        error_msg = error_handler.handle_path_error(error, str(db_path), "opening database")
+        console.print(
+            f"\n{error_msg}\n\n"
+            "[green]Hint:[/] Run [cyan]aur mem index .[/] to create and populate the database.",
+            style="red",
+        )
         raise click.Abort()
+
+    # Initialize memory manager with config
+    console.print(f"[dim]Searching memory from {db_path}...[/]")
+    manager = MemoryManager(config=config)
+
+    # Perform search
+    results = manager.search(query, limit=limit, min_semantic_score=min_score)
+
+    # Display results
+    if output_format == "json":
+        _display_json_results(results)
+    else:
+        _display_rich_results(results, query, show_content)
 
 
 @memory_group.command(name="stats")
@@ -259,57 +231,43 @@ def stats_command(ctx: click.Context) -> None:
         # Show stats for database
         aur mem stats
     """
-    try:
-        # Load configuration
-        config = load_config()
-        db_path = Path(config.get_db_path())
+    # Load configuration
+    config = load_config()
+    db_path = Path(config.get_db_path())
 
-        if not db_path.exists():
-            console.print(
-                f"[bold red]Error:[/] Database not found at {db_path}\n"
-                f"Run 'aur mem index' first to create the database",
-                style="red",
-            )
-            raise click.Abort()
-
-        # Initialize memory manager with config
-        console.print(f"[dim]Loading statistics from {db_path}...[/]")
-        manager = MemoryManager(config=config)
-
-        # Get statistics
-        stats = manager.get_stats()
-
-        # Display statistics table
-        table = Table(title="Memory Store Statistics", show_header=False)
-        table.add_column("Metric", style="cyan", width=30)
-        table.add_column("Value", style="white")
-
-        table.add_row("Total Chunks", f"[bold]{stats.total_chunks:,}[/]")
-        table.add_row("Total Files", f"[bold]{stats.total_files:,}[/]")
-        table.add_row("Database Size", f"[bold]{stats.database_size_mb:.2f} MB[/]")
-
-        if stats.languages:
-            table.add_row("", "")  # Separator
-            table.add_row("[bold]Languages", "")
-            for lang, count in sorted(stats.languages.items(), key=lambda x: x[1], reverse=True):
-                table.add_row(f"  {lang}", f"{count:,} chunks")
-
-        console.print()
-        console.print(table)
-        console.print()
-
-    except MemoryStoreError as e:
-        # Already has formatted error message
-        logger.error(f"Stats command failed: {e}", exc_info=True)
-        console.print(f"\n{e}", style="red")
+    if not db_path.exists():
+        console.print(
+            f"[bold red]Error:[/] Database not found at {db_path}\n"
+            f"Run 'aur mem index' first to create the database",
+            style="red",
+        )
         raise click.Abort()
-    except Exception as e:
-        # Unexpected error - format it
-        logger.error(f"Stats command failed: {e}", exc_info=True)
-        error_handler = ErrorHandler()
-        error_msg = error_handler.handle_memory_error(e, "retrieving statistics")
-        console.print(f"\n{error_msg}", style="red")
-        raise click.Abort()
+
+    # Initialize memory manager with config
+    console.print(f"[dim]Loading statistics from {db_path}...[/]")
+    manager = MemoryManager(config=config)
+
+    # Get statistics
+    stats = manager.get_stats()
+
+    # Display statistics table
+    table = Table(title="Memory Store Statistics", show_header=False)
+    table.add_column("Metric", style="cyan", width=30)
+    table.add_column("Value", style="white")
+
+    table.add_row("Total Chunks", f"[bold]{stats.total_chunks:,}[/]")
+    table.add_row("Total Files", f"[bold]{stats.total_files:,}[/]")
+    table.add_row("Database Size", f"[bold]{stats.database_size_mb:.2f} MB[/]")
+
+    if stats.languages:
+        table.add_row("", "")  # Separator
+        table.add_row("[bold]Languages", "")
+        for lang, count in sorted(stats.languages.items(), key=lambda x: x[1], reverse=True):
+            table.add_row(f"  {lang}", f"{count:,} chunks")
+
+    console.print()
+    console.print(table)
+    console.print()
 
 
 def _display_rich_results(results: list[SearchResult], query: str, show_content: bool) -> None:

@@ -298,13 +298,13 @@
     - Verify no Python traceback in output
     - Test backup creation and reset flow
     - Result: ✅ Schema migration detection working correctly - detects v1 (7 cols) vs v3 (9 cols), shows helpful error message
-  - [x] 5.6 Manual verification of Problem 2: Error Handling
+  - [ ] 5.6 Manual verification of Problem 2: Error Handling
     - Trigger `StorageError` by corrupting database
     - Verify: "Error: Database error" message shown (not traceback)
     - Run with `AURORA_DEBUG=1`, verify traceback IS shown
     - Verify exit codes: `echo $?` returns 1 or 2 appropriately
-    - Result: ⚠️ Partial - errors caught and reported, but tracebacks still shown (decorator not applied to memory commands)
-  - [x] 5.7 Manual verification of Problem 3: Search Threshold
+    - Result: NOT VERIFIED - need to run actual shell commands
+  - [ ] 5.7 Manual verification of Problem 3: Search Threshold
     - Index a test project: `aur mem index .`
     - Search non-existent term: `aur mem search "payment"`
     - Expected: "No relevant results found" OR low confidence indicators

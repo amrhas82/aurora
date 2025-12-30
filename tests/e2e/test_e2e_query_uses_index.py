@@ -29,6 +29,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from .conftest import run_cli_command
+
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
@@ -215,7 +217,7 @@ class TestQueryUsesIndex:
         Indexes project with unique, searchable classes and methods.
         """
         # Index the project
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -241,7 +243,7 @@ class TestQueryUsesIndex:
         EXPECTED TO FAIL: Query doesn't retrieve from index (Issue #15).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -252,7 +254,7 @@ class TestQueryUsesIndex:
 
         # Query about something specific in the code
         # Using --dry-run to avoid needing real API key
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", "What is HybridRetriever and how does it work?", "--dry-run"],
             capture_output=True,
             text=True,
@@ -281,7 +283,7 @@ class TestQueryUsesIndex:
         EXPECTED TO FAIL: No retrieval happens (Issue #15).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -291,7 +293,7 @@ class TestQueryUsesIndex:
         )
 
         # Query with verbose flag and dry-run
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", "explain HybridRetriever", "--verbose", "--dry-run"],
             capture_output=True,
             text=True,
@@ -321,7 +323,7 @@ class TestQueryUsesIndex:
         This proves the code is indexed and searchable - so query should find it too.
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -331,7 +333,7 @@ class TestQueryUsesIndex:
         )
 
         # Search for HybridRetriever (should work)
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "HybridRetriever"],
             capture_output=True,
             text=True,
@@ -361,7 +363,7 @@ class TestQueryUsesIndex:
         EXPECTED TO FAIL: Response is generic (Issue #15).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -371,7 +373,7 @@ class TestQueryUsesIndex:
         )
 
         # Query with --dry-run (avoids needing API key but shows process)
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", "What methods does HybridRetriever have?", "--dry-run", "--verbose"],
             capture_output=True,
             text=True,
@@ -411,7 +413,7 @@ class TestQueryUsesIndex:
         EXPECTED TO FAIL: Query doesn't use search results (Issue #15).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -421,7 +423,7 @@ class TestQueryUsesIndex:
         )
 
         # First, search for a term
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "ComplexityAssessor"],
             capture_output=True,
             text=True,
@@ -434,7 +436,7 @@ class TestQueryUsesIndex:
         search_found = "complexity" in search_result.stdout.lower()
 
         # Now query for same concept
-        query_result = subprocess.run(
+        query_result = run_cli_command(
             ["aur", "query", "What is ComplexityAssessor?", "--dry-run"],
             capture_output=True,
             text=True,
@@ -472,7 +474,7 @@ class TestQueryUsesIndex:
         - Answers reference actual indexed code
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -532,7 +534,7 @@ class TestQueryRetrievalWithoutAPI:
         Even if it doesn't call LLM, it should retrieve chunks.
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -542,7 +544,7 @@ class TestQueryRetrievalWithoutAPI:
         )
 
         # Query with dry-run
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", "what is HybridRetriever", "--dry-run"],
             capture_output=True,
             text=True,

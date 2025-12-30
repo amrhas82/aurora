@@ -36,6 +36,8 @@ from typing import Any, Dict, List
 
 import pytest
 
+from .conftest import run_cli_command
+
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
@@ -268,7 +270,7 @@ class TestGitBasedBLAInitialization:
         This setup enables testing FUNCTION-level BLA differences.
         """
         # Index the git repo
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -298,7 +300,7 @@ class TestGitBasedBLAInitialization:
         Then query activation scores from database.
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -336,7 +338,7 @@ class TestGitBasedBLAInitialization:
         EXPECTED TO FAIL: All base_level = 0.0 (Issue #16).
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -381,7 +383,7 @@ class TestGitBasedBLAInitialization:
         EXPECTED TO FAIL: All base_level = 0.0 or equal (Issue #16).
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -438,7 +440,7 @@ class TestGitBasedBLAInitialization:
         EXPECTED TO FAIL: All functions in same file have identical BLA (file-level tracking).
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -488,7 +490,7 @@ class TestGitBasedBLAInitialization:
         EXPECTED TO FAIL: Metadata not stored (Issue #16).
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -539,7 +541,7 @@ class TestGitBasedBLAInitialization:
         EXPECTED TO FAIL: access_count = 0 (not initialized from Git).
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -609,7 +611,7 @@ def hello():
 ''')
 
             # Index (should not crash)
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "mem", "index", "."],
                 capture_output=True,
                 text=True,
@@ -669,7 +671,7 @@ def hello():
         - access_count initialized from commit_count
         """
         # Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,

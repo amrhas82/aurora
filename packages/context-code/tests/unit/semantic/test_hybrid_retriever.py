@@ -19,14 +19,14 @@ from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRe
 class MockChunk:
     """Mock chunk for testing."""
 
-    def __init__(self, chunk_id, content, activation=0.5, embedding=None):
+    def __init__(self, chunk_id, content, activation=0.5, embeddings=None):
         self.id = chunk_id
         self.content = content
         self.type = "code"
         self.name = f"chunk_{chunk_id}"
         self.file_path = f"/path/to/file_{chunk_id}.py"
         self.activation = activation
-        self.embedding = embedding
+        self.embeddings = embeddings
 
 
 class MockStore:
@@ -327,8 +327,8 @@ class TestHybridRetrieverRetrieve:
         chunk2_embedding = provider.embed_chunk(chunk2_text)
 
         chunks = [
-            MockChunk("1", chunk1_text, activation=0.9, embedding=chunk1_embedding),
-            MockChunk("2", chunk2_text, activation=0.3, embedding=chunk2_embedding),
+            MockChunk("1", chunk1_text, activation=0.9, embeddings=chunk1_embedding),
+            MockChunk("2", chunk2_text, activation=0.3, embeddings=chunk2_embedding),
         ]
 
         store = MockStore(chunks=chunks)
@@ -381,17 +381,27 @@ class TestHybridRetrieverNormalization:
         assert all(0.0 <= s <= 1.0 for s in normalized)
 
     def test_normalize_scores_equal(self):
-        """Test normalization with all equal scores."""
+        """Test normalization with all equal scores preserves original values.
+
+        When all scores are equal, normalization should preserve the original
+        values rather than mapping them all to 1.0. This prevents misleading
+        results where [0.0, 0.0, 0.0] becomes [1.0, 1.0, 1.0].
+        """
         store = MockStore()
         engine = MockActivationEngine()
         provider = EmbeddingProvider()
 
         retriever = HybridRetriever(store, engine, provider)
 
+        # Test with non-zero equal scores
         scores = [0.5, 0.5, 0.5, 0.5]
         normalized = retriever._normalize_scores(scores)
+        assert normalized == [0.5, 0.5, 0.5, 0.5]
 
-        assert all(s == 1.0 for s in normalized)
+        # Test with zero scores - should NOT inflate to 1.0
+        zero_scores = [0.0, 0.0, 0.0]
+        zero_normalized = retriever._normalize_scores(zero_scores)
+        assert zero_normalized == [0.0, 0.0, 0.0]
 
     def test_normalize_scores_empty(self):
         """Test normalization with empty list."""
@@ -411,8 +421,8 @@ class TestHybridRetrieverFallback:
     def test_fallback_when_embeddings_missing(self):
         """Test fallback to activation-only when chunks lack embeddings."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embedding=None),
-            MockChunk("2", "chunk two", activation=0.7, embedding=None),
+            MockChunk("1", "chunk one", activation=0.9, embeddings=None),
+            MockChunk("2", "chunk two", activation=0.7, embeddings=None),
         ]
 
         store = MockStore(chunks=chunks)
@@ -436,8 +446,8 @@ class TestHybridRetrieverFallback:
         chunk1_embedding = provider.embed_chunk("chunk one")
 
         chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embedding=chunk1_embedding),
-            MockChunk("2", "chunk two", activation=0.7, embedding=None),
+            MockChunk("1", "chunk one", activation=0.9, embeddings=chunk1_embedding),
+            MockChunk("2", "chunk two", activation=0.7, embeddings=None),
         ]
 
         store = MockStore(chunks=chunks)

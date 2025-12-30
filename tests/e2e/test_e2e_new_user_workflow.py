@@ -31,6 +31,8 @@ from unittest.mock import patch
 
 import pytest
 
+from .conftest import run_cli_command
+
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
@@ -171,6 +173,8 @@ def clamp(value: int, min_val: int, max_val: int) -> int:
 import pytest
 from src.calculator import add, subtract, multiply, divide, Calculator
 
+from .conftest import run_cli_command
+
 
 def test_add():
     assert add(2, 3) == 5
@@ -215,7 +219,7 @@ class TestNewUserWorkflowE2E:
         EXPECTED TO FAIL: Currently creates aurora.db in current directory.
         """
         # Run aur init with simulated input (API key = empty, don't index = 'n')
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "init"],
             input="\nn\n",  # Empty API key, don't index current directory
             capture_output=True,
@@ -265,7 +269,7 @@ class TestNewUserWorkflowE2E:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Run aur mem index
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -312,7 +316,7 @@ class TestNewUserWorkflowE2E:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index the project
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -333,7 +337,7 @@ class TestNewUserWorkflowE2E:
             pytest.fail(f"Expected DB at {expected_db} does not exist after indexing")
 
         # Run stats command
-        stats_result = subprocess.run(
+        stats_result = run_cli_command(
             ["aur", "mem", "stats"],
             capture_output=True,
             text=True,
@@ -371,7 +375,7 @@ class TestNewUserWorkflowE2E:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index the project
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -381,7 +385,7 @@ class TestNewUserWorkflowE2E:
         assert index_result.returncode == 0, f"Index failed: {index_result.stderr}"
 
         # Run search command
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "calculator add subtract"],
             capture_output=True,
             text=True,
@@ -422,7 +426,7 @@ class TestNewUserWorkflowE2E:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index the project
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -432,7 +436,7 @@ class TestNewUserWorkflowE2E:
         assert index_result.returncode == 0, f"Index failed: {index_result.stderr}"
 
         # Run query with --dry-run (should show what would be retrieved)
-        query_result = subprocess.run(
+        query_result = run_cli_command(
             ["aur", "query", "what does the Calculator class do?", "--dry-run"],
             capture_output=True,
             text=True,
@@ -474,7 +478,7 @@ class TestNewUserWorkflowE2E:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Test aur --help
-        help_result = subprocess.run(
+        help_result = run_cli_command(
             ["aur", "--help"],
             capture_output=True,
             text=True,
@@ -483,7 +487,7 @@ class TestNewUserWorkflowE2E:
         assert help_result.returncode == 0, f"aur --help failed: {help_result.stderr}"
 
         # Test aur mem --help
-        mem_help_result = subprocess.run(
+        mem_help_result = run_cli_command(
             ["aur", "mem", "--help"],
             capture_output=True,
             text=True,
@@ -493,7 +497,7 @@ class TestNewUserWorkflowE2E:
 
         # Test aur mem index with explicit --db-path (workaround for current bug)
         db_path = clean_aurora_home / "memory.db"
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", ".", "--db-path", str(db_path)],
             capture_output=True,
             text=True,
@@ -503,7 +507,7 @@ class TestNewUserWorkflowE2E:
         assert index_result.returncode == 0, f"aur mem index failed: {index_result.stderr}"
 
         # Test aur mem stats with explicit --db-path
-        stats_result = subprocess.run(
+        stats_result = run_cli_command(
             ["aur", "mem", "stats", "--db-path", str(db_path)],
             capture_output=True,
             text=True,
@@ -513,7 +517,7 @@ class TestNewUserWorkflowE2E:
         assert stats_result.returncode == 0, f"aur mem stats failed: {stats_result.stderr}"
 
         # Test aur mem search with explicit --db-path
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "function", "--db-path", str(db_path)],
             capture_output=True,
             text=True,
@@ -546,7 +550,7 @@ class TestNewUserWorkflowE2E:
         assert not local_db.exists(), "Local aurora.db should not exist before any operations"
 
         # Run aur mem index WITHOUT explicit --db-path (should use config)
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -594,7 +598,7 @@ class TestNewUserWorkflowE2E:
         clean_aurora_home.mkdir(parents=True, exist_ok=True)
 
         # Run init (without indexing)
-        init_result = subprocess.run(
+        init_result = run_cli_command(
             ["aur", "init"],
             input="\nn\n",  # Empty API key, don't index
             capture_output=True,
@@ -604,7 +608,7 @@ class TestNewUserWorkflowE2E:
         )
 
         # Run index
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -648,7 +652,7 @@ class TestNewUserWorkflowWithExplicitDbPath:
         db_path = clean_aurora_home / "memory.db"
 
         # Index with explicit path
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", ".", "--db-path", str(db_path)],
             capture_output=True,
             text=True,
@@ -658,7 +662,7 @@ class TestNewUserWorkflowWithExplicitDbPath:
         assert index_result.returncode == 0, f"Index failed: {index_result.stderr}"
 
         # Stats with explicit path
-        stats_result = subprocess.run(
+        stats_result = run_cli_command(
             ["aur", "mem", "stats", "--db-path", str(db_path)],
             capture_output=True,
             text=True,
@@ -667,7 +671,7 @@ class TestNewUserWorkflowWithExplicitDbPath:
         assert stats_result.returncode == 0, f"Stats failed: {stats_result.stderr}"
 
         # Search with explicit path
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "calculator", "--db-path", str(db_path)],
             capture_output=True,
             text=True,

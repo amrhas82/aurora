@@ -28,6 +28,8 @@ from pathlib import Path
 
 import pytest
 
+from .conftest import run_cli_command
+
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
@@ -118,7 +120,7 @@ class TestDatabasePersistence:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index files
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -128,7 +130,7 @@ class TestDatabasePersistence:
         assert index_result.returncode == 0, f"Index failed: {index_result.stderr}"
 
         # Get stats (first time)
-        stats1_result = subprocess.run(
+        stats1_result = run_cli_command(
             ["aur", "mem", "stats"],
             capture_output=True,
             text=True,
@@ -138,7 +140,7 @@ class TestDatabasePersistence:
         assert stats1_result.returncode == 0, f"Stats failed: {stats1_result.stderr}"
 
         # Run search
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "helper"],
             capture_output=True,
             text=True,
@@ -148,7 +150,7 @@ class TestDatabasePersistence:
         assert search_result.returncode == 0, f"Search failed: {search_result.stderr}"
 
         # Get stats (second time - should show same data)
-        stats2_result = subprocess.run(
+        stats2_result = run_cli_command(
             ["aur", "mem", "stats"],
             capture_output=True,
             text=True,
@@ -181,7 +183,7 @@ class TestDatabasePersistence:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index files
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -205,7 +207,7 @@ class TestDatabasePersistence:
         )
 
         # Run stats and parse output
-        stats_result = subprocess.run(
+        stats_result = run_cli_command(
             ["aur", "mem", "stats"],
             capture_output=True,
             text=True,
@@ -224,7 +226,7 @@ class TestDatabasePersistence:
         )
 
         # Run search (should return results if using correct DB)
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "def"],
             capture_output=True,
             text=True,
@@ -255,7 +257,7 @@ class TestDatabasePersistence:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index files (first command invocation)
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -277,7 +279,7 @@ class TestDatabasePersistence:
         # If Aurora is using correct persistent DB, data should still be there
 
         # Second command invocation - stats
-        stats_result = subprocess.run(
+        stats_result = run_cli_command(
             ["aur", "mem", "stats"],
             capture_output=True,
             text=True,
@@ -293,7 +295,7 @@ class TestDatabasePersistence:
         )
 
         # Third command invocation - search
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "main"],
             capture_output=True,
             text=True,
@@ -338,7 +340,7 @@ class TestDatabasePersistence:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index files
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -355,7 +357,7 @@ class TestDatabasePersistence:
             local_db.unlink()
 
         # Now try to run commands - they should still work if using correct DB
-        stats_result = subprocess.run(
+        stats_result = run_cli_command(
             ["aur", "mem", "stats"],
             capture_output=True,
             text=True,
@@ -371,7 +373,7 @@ class TestDatabasePersistence:
         )
 
         # Search should also work
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "helper"],
             capture_output=True,
             text=True,
@@ -403,7 +405,7 @@ class TestDatabasePersistence:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index files
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -413,7 +415,7 @@ class TestDatabasePersistence:
         )
 
         # Run multiple operations
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "stats"],
             capture_output=True,
             text=True,
@@ -422,7 +424,7 @@ class TestDatabasePersistence:
             check=True,
         )
 
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "search", "main"],
             capture_output=True,
             text=True,
@@ -478,7 +480,7 @@ class TestDatabasePersistence:
         config_path.write_text(json.dumps(config_data, indent=2))
 
         # Index files
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,

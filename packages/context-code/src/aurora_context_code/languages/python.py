@@ -7,10 +7,20 @@ This module provides the PythonParser class for extracting code elements
 
 import hashlib
 import logging
+import os
 from pathlib import Path
 
-import tree_sitter
-import tree_sitter_python
+# Try to import tree-sitter, fall back to text chunking if unavailable
+TREE_SITTER_AVAILABLE = True
+try:
+    import tree_sitter
+    import tree_sitter_python
+except ImportError:
+    TREE_SITTER_AVAILABLE = False
+
+# Check environment variable override
+if os.getenv("AURORA_SKIP_TREESITTER"):
+    TREE_SITTER_AVAILABLE = False
 
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
@@ -40,12 +50,21 @@ class PythonParser(CodeParser):
         """Initialize Python parser with tree-sitter grammar."""
         super().__init__(language="python")
 
-        # Initialize tree-sitter parser
-        # Wrap the PyCapsule in tree_sitter.Language
-        python_language = tree_sitter.Language(tree_sitter_python.language())
-        self.parser = tree_sitter.Parser(python_language)
+        # Declare parser type (may be None if tree-sitter unavailable)
+        self.parser: tree_sitter.Parser | None
 
-        logger.debug("PythonParser initialized")
+        if TREE_SITTER_AVAILABLE:
+            # Initialize tree-sitter parser
+            # Wrap the PyCapsule in tree_sitter.Language
+            python_language = tree_sitter.Language(tree_sitter_python.language())
+            self.parser = tree_sitter.Parser(python_language)
+            logger.debug("PythonParser initialized with tree-sitter")
+        else:
+            self.parser = None
+            logger.warning(
+                "Tree-sitter unavailable - using text chunking (reduced quality)\n"
+                "→ Install with: pip install tree-sitter tree-sitter-python"
+            )
 
     def can_parse(self, file_path: Path) -> bool:
         """
@@ -90,6 +109,10 @@ class PythonParser(CodeParser):
             except Exception as e:
                 logger.error(f"Failed to read file {file_path}: {e}")
                 return []
+
+            # Use fallback chunking if tree-sitter unavailable
+            if self.parser is None:
+                return self._get_fallback_chunks(file_path, source_code)
 
             # Parse with tree-sitter
             tree = self.parser.parse(bytes(source_code, "utf-8"))
@@ -606,6 +629,50 @@ class PythonParser(CodeParser):
         unique_string = f"{file_path}:{element_name}:{line_start}"
         hash_digest = hashlib.sha256(unique_string.encode()).hexdigest()
         return f"code:{self.language}:{hash_digest[:16]}"
+
+    def _get_fallback_chunks(self, file_path: Path, content: str) -> list[CodeChunk]:
+        """
+        Fallback chunking when tree-sitter is unavailable.
+
+        Creates simple text-based chunks by splitting on double newlines
+        and grouping into 50-line chunks.
+
+        Args:
+            file_path: Source file path
+            content: File content as string
+
+        Returns:
+            List of CodeChunk instances with basic text chunks
+        """
+        chunks: list[CodeChunk] = []
+        lines = content.split("\n")
+        chunk_size = 50
+
+        for i in range(0, len(lines), chunk_size):
+            chunk_lines = lines[i:i + chunk_size]
+            line_start = i + 1
+            line_end = min(i + chunk_size, len(lines))
+
+            # Generate chunk ID
+            chunk_id = self._generate_chunk_id(file_path, f"chunk_{i}", line_start)
+
+            # Create basic chunk (use 'function' as valid element_type)
+            chunk = CodeChunk(
+                chunk_id=chunk_id,
+                file_path=str(file_path),
+                element_type="function",
+                name=f"fallback_lines_{line_start}_{line_end}",
+                line_start=line_start,
+                line_end=line_end,
+                signature="",
+                docstring="Fallback text chunk (tree-sitter unavailable)",
+                dependencies=[],
+                complexity_score=0.0,
+                language="python",
+            )
+            chunks.append(chunk)
+
+        return chunks
 
 
 __all__ = ["PythonParser"]

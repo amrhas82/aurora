@@ -17,9 +17,11 @@ from rich.panel import Panel
 from rich.table import Table
 
 from aurora_cli.commands.budget import budget_group
+from aurora_cli.commands.doctor import doctor_command
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
+from aurora_cli.commands.version import version_command
 from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig
 from aurora_cli.execution import QueryExecutor
@@ -29,6 +31,28 @@ __all__ = ["cli"]
 
 console = Console()
 logger = logging.getLogger(__name__)
+
+
+def _show_first_run_welcome_if_needed() -> None:
+    """Show welcome message on first run.
+
+    Checks for the presence of a .aurora directory and config file.
+    If neither exists, displays a welcome message guiding the user to run 'aur init'.
+    """
+    from aurora_cli.config import _get_aurora_home
+
+    aurora_home = _get_aurora_home()
+    config_path = aurora_home / "config.json"
+
+    # Only show welcome if neither directory nor config exists
+    if not aurora_home.exists() or not config_path.exists():
+        console.print("\n[bold cyan]Welcome to AURORA![/]\n")
+        console.print("AURORA is not yet initialized on this system.\n")
+        console.print("[bold]Get started:[/]")
+        console.print("  1. Run [cyan]aur init[/] to set up configuration")
+        console.print("  2. Run [cyan]aur doctor[/] to verify your setup")
+        console.print("  3. Run [cyan]aur version[/] to check your installation\n")
+        console.print("For help with any command, use [cyan]aur <command> --help[/]\n")
 
 
 @click.group(invoke_without_command=True)
@@ -62,6 +86,8 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
     \b
     Common Commands:
         aur init                              # Initialize configuration
+        aur doctor                            # Run health checks
+        aur version                           # Show version info
         aur mem index .                       # Index current directory
         aur mem search "authentication"       # Search indexed code
         aur query "your question"             # Query with auto-escalation
@@ -73,6 +99,11 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
         aur init
         aur mem index packages/
         aur query "How does memory store work?"
+
+        \b
+        # Health checks and diagnostics
+        aur doctor                            # Check system health
+        aur doctor --fix                      # Auto-repair issues
 
         \b
         # Headless mode (both syntaxes work)
@@ -97,6 +128,10 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
     else:
         logging.basicConfig(level=logging.WARNING)
 
+    # Show first-run welcome message if this is the first time running
+    if ctx.invoked_subcommand is None and headless is None:
+        _show_first_run_welcome_if_needed()
+
     # Handle --headless flag by invoking headless command
     if headless is not None:
         # Invoke the headless command with the provided file path
@@ -106,9 +141,11 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
 
 # Register commands
 cli.add_command(budget_group)
+cli.add_command(doctor_command)
 cli.add_command(headless_command)
 cli.add_command(init_command)
 cli.add_command(memory_group)
+cli.add_command(version_command)
 
 
 @cli.command(name="query")
@@ -376,7 +413,7 @@ def query_command(
             error_msg = error_handler.handle_api_error(e, "query execution")
         else:
             # Generic error
-            error_msg = f"[bold red]Error:[/] Query execution failed.\n\n[yellow]Error:[/] {e}\n\n[green]Suggestions:[/]\n  1. Check your query syntax\n  2. Verify ANTHROPIC_API_KEY is set\n  3. Try --dry-run to test without API calls"
+            error_msg = f"[bold red]Error:[/] An error occurred.\n\n[yellow]Details:[/] {e}\n\n[green]Next steps:[/]\n  1. Run diagnostics: [cyan]aur doctor[/]\n  2. Check your query syntax\n  3. Report issue on GitHub if problem persists"
 
         console.print(f"\n{error_msg}", style="red")
         raise click.Abort()

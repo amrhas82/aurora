@@ -31,6 +31,8 @@ from typing import Dict, Optional
 
 import pytest
 
+from .conftest import run_cli_command
+
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
@@ -138,7 +140,7 @@ class TestComplexityAssessment:
         )
 
         # Run with --dry-run to see assessment without API call
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", query, "--dry-run"],
             capture_output=True,
             text=True,
@@ -166,7 +168,7 @@ class TestComplexityAssessment:
         """
         query = "explain SOAR reasoning phases in Aurora"
 
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", query, "--dry-run"],
             capture_output=True,
             text=True,
@@ -194,7 +196,7 @@ class TestComplexityAssessment:
         """
         query = "research machine learning frameworks and compare features"
 
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", query, "--dry-run"],
             capture_output=True,
             text=True,
@@ -228,7 +230,7 @@ class TestComplexityAssessment:
 
         results = []
         for query in complex_queries:
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "query", query, "--dry-run"],
                 capture_output=True,
                 text=True,
@@ -255,7 +257,7 @@ class TestComplexityAssessment:
         """
         query = "research SOAR cognitive architecture and compare with ACT-R"
 
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", query, "--dry-run"],
             capture_output=True,
             text=True,
@@ -291,7 +293,7 @@ class TestComplexityAssessment:
 
         results = []
         for query in domain_queries:
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "query", query, "--dry-run"],
                 capture_output=True,
                 text=True,
@@ -320,7 +322,7 @@ class TestComplexityAssessment:
         """
         query = "how does Aurora's hybrid retrieval combine activation and semantic scoring?"
 
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "query", query, "--dry-run"],
             capture_output=True,
             text=True,
@@ -353,7 +355,7 @@ class TestComplexityAssessment:
 
         results = []
         for query in simple_queries:
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "query", query, "--dry-run"],
                 capture_output=True,
                 text=True,
@@ -409,7 +411,7 @@ class TestComplexityAssessment:
 
         failures = []
         for query, expected_min, reason in test_cases:
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "query", query, "--dry-run"],
                 capture_output=True,
                 text=True,
@@ -464,7 +466,7 @@ class TestComplexityAssessmentEdgeCases:
 
         results = []
         for query, q_count in [(single_q, 1), (double_q, 2), (triple_q, 3)]:
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "query", query, "--dry-run"],
                 capture_output=True,
                 text=True,
@@ -502,7 +504,7 @@ class TestComplexityAssessmentEdgeCases:
 
         results = []
         for query in scope_queries:
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "query", query, "--dry-run"],
                 capture_output=True,
                 text=True,

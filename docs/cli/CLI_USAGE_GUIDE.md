@@ -33,8 +33,10 @@ See [MCP Setup Guide](../MCP_SETUP.md) for MCP integration details.
 6. [Memory Management](#memory-management)
 7. [Budget Management](#budget-management)
 8. [Headless Mode](#headless-mode)
-9. [Troubleshooting](#troubleshooting)
-10. [Command Reference](#command-reference)
+9. [Health Checks & Diagnostics](#health-checks--diagnostics)
+10. [Graceful Degradation](#graceful-degradation)
+11. [Troubleshooting](#troubleshooting)
+12. [Command Reference](#command-reference)
 
 ---
 
@@ -67,29 +69,122 @@ aur --help
 
 ## Initial Setup
 
-### Run Interactive Setup
+### Option 1: Interactive Setup Wizard (Recommended)
 
-The `aur init` command guides you through initial configuration:
+The `aur init --interactive` command provides a guided 8-step wizard for first-time setup:
+
+```bash
+aur init --interactive
+```
+
+**Wizard Steps:**
+
+1. **Welcome & Environment Detection**
+   - Auto-detects Python version, Git repository, working directory
+
+2. **Memory Indexing** (Step 1/7):
+   ```
+   Index current directory for memory search? [Y/n]:
+   ```
+   - `Y`: Index Python files for semantic search
+   - `n`: Skip (can index later with `aur mem index .`)
+
+3. **LLM Provider Selection** (Step 2/7):
+   ```
+   1. Anthropic (Claude) - Recommended
+   2. OpenAI (GPT)
+   3. Ollama (Local)
+   Select provider [1]:
+   ```
+
+4. **API Key Configuration** (Step 3/7):
+   ```
+   API key (or press Enter to skip):
+   ```
+   - Validates format (`sk-ant-` for Anthropic, `sk-` for OpenAI)
+   - Skipped for Ollama (local model)
+   - Can set via environment variable later
+
+5. **MCP Server Setup** (Step 4/7):
+   ```
+   Enable Model Context Protocol (MCP) server? [y/N]:
+   ```
+   - Enables Claude Desktop integration
+
+6. **Configuration Creation** (Step 5/7):
+   - Creates `~/.aurora/config.json` with secure permissions (0600)
+   - Sets up database path
+
+7. **Indexing** (Step 6/7, if enabled):
+   - Progress bar shows indexing status
+   - Example: "Indexed 47 files, 234 chunks in 3.4s"
+
+8. **Completion Summary** (Step 7/7):
+   - Shows configuration summary
+   - Displays next steps
+
+**Example Session:**
+
+```
+Welcome to AURORA!
+Estimated time: 2 minutes
+
+Environment Detection:
+  • Python version: 3.10.12
+  • Git repository: ✓ Detected
+  • Working directory: /home/user/project
+
+Step 1/7: Memory Indexing
+Index current directory for memory search? [Y/n]: y
+  ✓ Will index current directory
+
+Step 2/7: LLM Provider
+1. Anthropic (Claude) - Recommended
+2. OpenAI (GPT)
+3. Ollama (Local)
+Select provider [1]: 1
+  ✓ Using Anthropic (Claude)
+
+Step 3/7: API Key
+API key (or press Enter to skip): sk-ant-...
+  ✓ Valid Anthropic API key format
+
+Step 4/7: MCP Server
+Enable MCP server? [y/N]: n
+  Skipped - you can enable MCP later
+
+Step 5/7: Creating Configuration
+  ✓ Created directory: ~/.aurora
+  ✓ Created config: ~/.aurora/config.json
+  ✓ Set secure permissions (0600)
+
+Step 6/7: Indexing Codebase
+Indexing files ████████████████████ 100%
+  ✓ Indexed 47 files, 234 chunks in 3.4s
+
+✓ Setup Complete!
+
+Configuration Summary:
+  • Provider: anthropic
+  • API Key: ✓ Configured
+  • Indexing: ✓ Complete
+  • MCP Server: Disabled
+
+Next Steps:
+  2. Verify setup: aur doctor
+  3. Check version: aur version
+  4. Start querying: aur query 'your question'
+```
+
+**Time Estimate:** < 2 minutes
+
+### Option 2: Quick Setup (Non-Interactive)
+
+The `aur init` command provides quick, non-interactive setup:
 
 ```bash
 aur init
 ```
-
-**Interactive Prompts:**
-
-1. **API Key Setup** (optional):
-   ```
-   Enter Anthropic API key (or press Enter to skip):
-   ```
-   - Enter your API key: `sk-ant-...`
-   - Or press Enter to skip and use environment variable later
-
-2. **Index Current Directory** (optional):
-   ```
-   Index current directory? [Y/n]:
-   ```
-   - `Y` or Enter: Index Python files in current directory
-   - `n`: Skip indexing
 
 **What It Creates:**
 
@@ -1098,7 +1193,249 @@ Migration plan should include:
 
 ---
 
+## Health Checks & Diagnostics
+
+AURORA provides built-in diagnostic tools to verify your installation and identify configuration issues.
+
+### `aur doctor` - Check System Health
+
+The `aur doctor` command performs comprehensive health checks across 4 categories:
+
+```bash
+aur doctor
+```
+
+**Health Check Categories:**
+
+1. **Core System** (Critical)
+   - ✓ Config file exists (`~/.aurora/config.json`)
+   - ✓ Aurora directory exists (`~/.aurora/`)
+   - ✓ Permissions are correct
+
+2. **Code Analysis** (Important)
+   - ✓ Tree-sitter parser available
+   - ✓ Python language support installed
+
+3. **Search & Retrieval** (Important)
+   - ✓ Vector database accessible
+   - ✓ Embedding provider configured
+
+4. **Configuration** (Info)
+   - ✓ API keys configured (Anthropic/OpenAI)
+   - ✓ LLM provider set
+
+**Example Output:**
+
+```
+🏥 AURORA Health Check
+
+Core System
+  ✓ Config file exists: ~/.aurora/config.json
+  ✓ Aurora home directory exists
+  ✓ Permissions correct (0600)
+
+Code Analysis
+  ✓ Tree-sitter available
+  ✓ Python language support installed
+
+Search & Retrieval
+  ✓ Vector database accessible
+  ⚠ No embeddings found (database empty)
+    → Run 'aur mem index .' to create embeddings
+
+Configuration
+  ✓ Anthropic API key configured
+  ✓ LLM provider: anthropic
+
+Health Check: 7 passed, 1 warning, 0 failed
+```
+
+**Exit Codes:**
+
+- `0`: All checks passed (success)
+- `1`: Warnings detected (partial functionality)
+- `2`: Critical failures (requires attention)
+
+### `aur doctor --fix` - Auto-Repair Issues
+
+The `--fix` flag automatically repairs common issues:
+
+```bash
+aur doctor --fix
+```
+
+**Fixable Issues:**
+
+- Missing `~/.aurora/` directory → Creates directory
+- Missing config file → Creates default config
+- Missing database file → Creates empty database
+- Incorrect permissions → Sets secure permissions (0600)
+- Missing cache directory → Creates cache
+
+**Manual Issues** (requires user action):
+
+- Missing API keys → Set via environment variable
+- Tree-sitter not installed → Run `pip install tree-sitter tree-sitter-python`
+- Not in Git repository → Run `git init` (optional)
+
+**Example Session:**
+
+```
+🏥 AURORA Health Check with Auto-Repair
+
+Core System
+  ✗ Config file missing
+    → Creating ~/.aurora/config.json
+  ✓ Config file created
+
+  ✗ Database file missing
+    → Creating ~/.aurora/memory.db
+  ✓ Database created
+
+The following issues require manual attention:
+  ⚠ API key not configured
+    → Set ANTHROPIC_API_KEY environment variable
+
+Automatic repairs: 2 fixed
+Manual actions required: 1
+
+Run 'aur doctor' again to verify fixes.
+```
+
+**Safety:**
+
+- All fixes are idempotent (safe to run multiple times)
+- No data loss (only creates missing files/directories)
+- User confirmation before making changes
+
+### `aur version` - Show Version Information
+
+Display AURORA version and installation details:
+
+```bash
+aur version
+```
+
+**Example Output:**
+
+```
+AURORA Version Information:
+  Version: 0.2.0
+  Git Hash: 26b54e0
+  Python: 3.10.12
+  Install Path: /home/user/.local/lib/python3.10/site-packages/aurora_cli
+```
+
+**Fields:**
+
+- **Version**: Aurora package version
+- **Git Hash**: Commit hash (if installed from Git repo)
+- **Python**: Python interpreter version
+- **Install Path**: Location of Aurora CLI package
+
+---
+
+## Graceful Degradation
+
+AURORA gracefully handles missing dependencies by falling back to reduced functionality with clear warnings.
+
+### Degraded Modes
+
+**1. Tree-sitter Unavailable (Code Parsing)**
+
+**Symptom:**
+```
+WARNING: Tree-sitter unavailable - using text chunking (reduced quality)
+→ Install with: pip install tree-sitter tree-sitter-python
+```
+
+**Impact:**
+- Falls back to simple 50-line text chunks
+- No function/class-level granularity
+- Reduced search precision
+
+**Restore:**
+```bash
+pip install tree-sitter tree-sitter-python
+```
+
+**2. Git Not Available (Base-Level Activation)**
+
+**Symptom:**
+```
+WARNING: Git disabled via AURORA_SKIP_GIT - BLA will use default activation (0.5)
+→ Unset AURORA_SKIP_GIT to enable Git-based activation
+```
+
+or (in non-Git directory):
+```
+DEBUG: Git blame failed for file.py - not a Git repository
+```
+
+**Impact:**
+- Uses default activation score (0.5) instead of Git-based frequency
+- No commit history analysis
+- All functions treated equally
+
+**Restore:**
+- Ensure you're in a Git repository: `git init`
+- Or use Git-tracked project
+
+### Environment Variable Overrides
+
+You can explicitly disable features for testing or restricted environments:
+
+| Variable | Effect | Use Case |
+|----------|--------|----------|
+| `AURORA_SKIP_TREESITTER=1` | Force text chunking fallback | Test degraded parsing, CI without tree-sitter |
+| `AURORA_SKIP_GIT=1` | Disable Git-based activation | Test without Git, non-repo environments |
+
+**Example:**
+
+```bash
+# Test without tree-sitter
+AURORA_SKIP_TREESITTER=1 aur mem index .
+
+# Test without Git
+AURORA_SKIP_GIT=1 aur query "test query"
+
+# Test with all features disabled
+AURORA_SKIP_TREESITTER=1 AURORA_SKIP_GIT=1 aur mem index .
+```
+
+### Recovery Steps
+
+**General Recovery Process:**
+
+1. **Run health check:**
+   ```bash
+   aur doctor
+   ```
+
+2. **Apply automatic fixes:**
+   ```bash
+   aur doctor --fix
+   ```
+
+3. **Address manual issues** (see health check output)
+
+4. **Verify recovery:**
+   ```bash
+   aur doctor
+   # Should show: "Health Check: All checks passed"
+   ```
+
+---
+
 ## Troubleshooting
+
+**First Step:** Always run `aur doctor` to diagnose issues automatically.
+
+```bash
+aur doctor
+```
+
+If automatic diagnosis doesn't resolve the issue, see specific troubleshooting steps below.
 
 ### Issue: "ANTHROPIC_API_KEY not found"
 

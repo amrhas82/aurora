@@ -30,6 +30,8 @@ from typing import Any, Dict, List
 
 import pytest
 
+from .conftest import run_cli_command
+
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
@@ -79,6 +81,8 @@ def diverse_python_project() -> Generator[Path, None, None]:
         (project_path / "database.py").write_text('''"""Database management with SQLite."""
 import sqlite3
 from typing import List, Dict, Any
+
+from .conftest import run_cli_command
 
 
 class DatabaseManager:
@@ -328,7 +332,7 @@ class TestSearchAccuracy:
         Indexes a project with clearly distinct modules (database, API, file I/O, algorithms).
         """
         # Index the diverse project
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -351,7 +355,7 @@ class TestSearchAccuracy:
         EXPECTED TO FAIL: All searches return identical results (Issue #4).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -369,7 +373,7 @@ class TestSearchAccuracy:
 
         results = []
         for query in queries:
-            result = subprocess.run(
+            result = run_cli_command(
                 ["aur", "mem", "search", query, "--output", "json"],
                 capture_output=True,
                 text=True,
@@ -379,7 +383,7 @@ class TestSearchAccuracy:
 
             # If command failed, try without --output json
             if result.returncode != 0:
-                result = subprocess.run(
+                result = run_cli_command(
                     ["aur", "mem", "search", query],
                     capture_output=True,
                     text=True,
@@ -419,7 +423,7 @@ class TestSearchAccuracy:
         Verifies JSON output is parseable and has expected structure.
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -429,7 +433,7 @@ class TestSearchAccuracy:
         )
 
         # Run search with JSON output
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "search", "database", "--output", "json"],
             capture_output=True,
             text=True,
@@ -468,7 +472,7 @@ class TestSearchAccuracy:
         EXPECTED TO FAIL: All queries return same top result (Issue #4).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -478,7 +482,7 @@ class TestSearchAccuracy:
         )
 
         # Run distinct queries
-        query1_result = subprocess.run(
+        query1_result = run_cli_command(
             ["aur", "mem", "search", "sqlite database connection"],
             capture_output=True,
             text=True,
@@ -487,7 +491,7 @@ class TestSearchAccuracy:
             check=True,
         )
 
-        query2_result = subprocess.run(
+        query2_result = run_cli_command(
             ["aur", "mem", "search", "http api requests post get"],
             capture_output=True,
             text=True,
@@ -496,7 +500,7 @@ class TestSearchAccuracy:
             check=True,
         )
 
-        query3_result = subprocess.run(
+        query3_result = run_cli_command(
             ["aur", "mem", "search", "binary search algorithm fibonacci"],
             capture_output=True,
             text=True,
@@ -539,7 +543,7 @@ class TestSearchAccuracy:
         EXPECTED TO FAIL: All activation scores identical (Issue #4).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -549,7 +553,7 @@ class TestSearchAccuracy:
         )
 
         # Search and try to get JSON output with scores
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "search", "function", "--output", "json"],
             capture_output=True,
             text=True,
@@ -590,7 +594,7 @@ class TestSearchAccuracy:
         EXPECTED TO FAIL: Semantic scores all identical (embeddings not working).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -600,7 +604,7 @@ class TestSearchAccuracy:
         )
 
         # Search for specific term
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "search", "database sqlite", "--output", "json"],
             capture_output=True,
             text=True,
@@ -650,7 +654,7 @@ class TestSearchAccuracy:
         EXPECTED TO FAIL: Line ranges show "0-0" (metadata not stored correctly).
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -660,7 +664,7 @@ class TestSearchAccuracy:
         )
 
         # Search
-        result = subprocess.run(
+        result = run_cli_command(
             ["aur", "mem", "search", "def", "--output", "json"],
             capture_output=True,
             text=True,
@@ -725,7 +729,7 @@ class TestSearchAccuracy:
         - Line ranges show actual code locations
         """
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", "."],
             capture_output=True,
             text=True,
@@ -735,7 +739,7 @@ class TestSearchAccuracy:
         )
 
         # Run very different searches
-        search1 = subprocess.run(
+        search1 = run_cli_command(
             ["aur", "mem", "search", "database"],
             capture_output=True,
             text=True,
@@ -744,7 +748,7 @@ class TestSearchAccuracy:
             check=True,
         )
 
-        search2 = subprocess.run(
+        search2 = run_cli_command(
             ["aur", "mem", "search", "algorithm"],
             capture_output=True,
             text=True,

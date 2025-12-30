@@ -2653,3 +2653,677 @@ Before starting implementation:
 5. **PRIORITY 3**: Implement Path B (Real SOAR in MCP - 2-3 days)
 6. Add test to verify activation updates after retrieval
 7. Update all documentation with agreed approach
+
+---
+
+## ═══════════════════════════════════════════════════════════════
+## POST-PHASE2A: NEW SPRINT STRATEGY (FOCUSED, ISOLATED SPRINTS)
+## ═══════════════════════════════════════════════════════════════
+
+**Date**: 2025-12-29
+**Context**: Manual CLI testing revealed Phase 2A only added output formatting, didn't fix actual bugs
+
+### Critical Discovery
+
+**Phase 2A Failed Because**:
+1. One massive sprint trying to fix everything at once
+2. Agent masked test failures by modifying test parsing instead of production code
+3. Guardrails and verification gates were insufficient
+4. No actual manual testing until after "completion"
+
+**Manual Testing Results** (`MANUAL_CLI_TEST_REPORT.md`):
+- **Pass Rate**: 9/17 tests (52.9%)
+- **Critical Failures**: 3 (search scoring, complexity assessment, single file indexing)
+- **Documentation Errors**: 3 (help mentions non-existent options)
+- **What Actually Works**: init, directory indexing, stats, budget, headless validation
+
+### New Approach: One Feature Per Sprint
+
+**Philosophy**:
+- Each sprint focuses on ONE self-contained feature
+- Manual testing BEFORE marking complete
+- No moving to next feature until current one verified working
+- Separate development like complexity_assess (develop standalone, test, integrate)
+
+---
+
+## SPRINT 1: FIX SEARCH SCORING (PRIORITY 1 - CRITICAL)
+
+**Goal**: Make `aur mem search` return varied, meaningful scores (not all 1.000)
+
+**Duration**: 1-2 days (estimated 8-16 hours)
+
+**Why This First**:
+- Most critical - blocks all retrieval quality
+- Self-contained - doesn't depend on other features
+- Easily testable - verify scores != 1.000
+- E2E tests exist but don't check score variance
+
+### Issue Summary
+
+**Problem**: All scores (activation, semantic, hybrid) return 1.000 regardless of query relevance
+
+**Evidence** (from manual testing):
+```bash
+$ aur mem search "SOAR reasoning phases"
+
+Found 5 results for 'SOAR reasoning phases'
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━┓
+┃ File                   ┃ Type  ┃ Name           ┃ Lines ┃ Sc… ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━┩
+│ sqlite.py              │ code  │ SQLiteStore    │ 36-7… │ 1.… │
+│ sqlite.py              │ code  │ SQLiteStore.… │ 503-… │ 1.… │
+│ tracker.py             │ code  │ CostTracker    │ 113-… │ 1.… │
+└────────────────────────┴───────┴────────────────┴───────┴─────┘
+
+Average scores:
+  Activation: 1.000
+  Semantic:   1.000
+  Hybrid:     1.000
+```
+
+**Impact**: Users cannot identify most relevant results, search ranking is meaningless
+
+### Root Cause Hypotheses
+
+1. **Activation Scoring**: May be using incorrect frequency/recency calculation
+2. **Semantic Scoring**: May be using cosine similarity incorrectly
+3. **Hybrid Blending**: 60/40 blend may not be applied correctly
+4. **Normalization**: When all scores equal, normalization returns [1.0, 1.0, ...]
+
+### Files to Investigate
+
+```
+packages/core/src/aurora_core/memory_manager.py
+├─ search() method - main entry point
+└─ _calculate_scores() or similar scoring logic
+
+packages/core/src/aurora_core/sqlite.py
+├─ retrieve_by_activation() - activation scoring
+└─ retrieve_by_semantic() - semantic scoring
+
+packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py
+├─ retrieve() - main hybrid retrieval
+├─ _normalize_scores() - normalization logic
+└─ _blend_scores() - 60/40 hybrid blending
+```
+
+### Sprint Tasks
+
+#### Task 1.0: Investigation (2-4 hours)
+
+**1.1 Read Scoring Implementation**:
+```bash
+# Read the full scoring pipeline
+grep -r "def search" packages/core/src/aurora_core/memory_manager.py
+grep -r "activation.*score" packages/core/src/aurora_core/sqlite.py
+grep -r "semantic.*score" packages/context-code/src/aurora_context_code/semantic/
+grep -r "hybrid.*score" packages/context-code/src/aurora_context_code/semantic/
+```
+
+**1.2 Check Database Activation Values**:
+```bash
+# Verify chunks have actual activation scores
+sqlite3 ~/.aurora/memory.db "SELECT chunk_id, base_level, access_count FROM activations LIMIT 10"
+# Expected: Varied base_level values
+# Current (suspected): All 0.0
+```
+
+**1.3 Test Semantic Embeddings**:
+```python
+# Verify embeddings are actually different
+from aurora_core.sqlite import SQLiteStore
+store = SQLiteStore("~/.aurora/memory.db")
+chunks = store.retrieve_chunks(limit=5)
+for chunk in chunks:
+    print(f"{chunk.chunk_id}: {chunk.embedding[:5]}...")  # First 5 dims
+# Expected: Different vectors
+# Current (suspected): All same or None
+```
+
+**1.4 Trace Scoring Flow**:
+```bash
+# Add debug logging to see actual score calculation
+export DEBUG=1
+aur mem search "test" 2>&1 | grep -i "score"
+```
+
+**Deliverable**: Investigation report at `/docs/development/aurora_fixes/search_scoring_investigation.md`
+
+Must include:
+- Root cause identification (which component is broken)
+- Specific line numbers where bug occurs
+- Minimal reproduction test case
+- Proposed fix approach
+
+**Success Criteria**: Can pinpoint exact bug location
+
+---
+
+#### Task 1.1: Fix Activation Scoring (3-5 hours)
+
+**IF Root Cause = Activation Tracking Not Working**:
+
+**1.1.1 Add record_access() Calls**:
+```python
+# File: packages/core/src/aurora_core/memory_manager.py
+def search(self, query: str, limit: int = 5):
+    results = self._retriever.retrieve(query, top_k=limit)
+
+    # ADD THIS: Record access for activation
+    from datetime import datetime, timezone
+    access_time = datetime.now(timezone.utc)
+    for result in results:
+        self._store.record_access(
+            result["chunk_id"],
+            access_time,
+            context=query
+        )
+
+    return results
+```
+
+**1.1.2 Verify Access Recording Works**:
+```bash
+# Before fix
+sqlite3 ~/.aurora/memory.db "SELECT COUNT(*) FROM activations WHERE access_count > 0"
+# Expected: 0
+
+# Run searches
+aur mem search "test"
+aur mem search "function"
+
+# After fix
+sqlite3 ~/.aurora/memory.db "SELECT COUNT(*) FROM activations WHERE access_count > 0"
+# Expected: > 0
+```
+
+**1.1.3 Check Activation Calculation**:
+```python
+# File: packages/core/src/aurora_core/activation/engine.py
+# Verify ACT-R formula is correct:
+# activation = ln(frequency) + recency_decay
+
+# Check for bugs:
+# - Division by zero
+# - Missing frequency/recency values
+# - Incorrect ln() calculation
+```
+
+---
+
+#### Task 1.2: Fix Semantic Scoring (2-4 hours)
+
+**IF Root Cause = Semantic Embeddings Broken**:
+
+**1.2.1 Verify Embeddings Generated During Indexing**:
+```python
+# File: packages/cli/src/aurora_cli/commands/memory.py
+# Check index() function
+
+def index(path: str):
+    # ... existing code ...
+
+    # VERIFY: embeddings are actually computed
+    for chunk in chunks:
+        if chunk.embedding is None:
+            logger.error(f"No embedding for chunk {chunk.chunk_id}")
+```
+
+**1.2.2 Check Cosine Similarity Calculation**:
+```python
+# File: packages/context-code/src/aurora_context_code/semantic/embeddings.py
+# Verify cosine similarity formula:
+# similarity = dot(a, b) / (norm(a) * norm(b))
+
+# Common bugs:
+# - Norm is 0 → division by zero → returns 1.0
+# - Vectors not normalized
+# - Wrong axis for dot product
+```
+
+**1.2.3 Test Semantic Scoring Directly**:
+```python
+# Test semantic scoring in isolation
+from aurora_context_code.semantic import EmbeddingProvider
+provider = EmbeddingProvider()
+
+query_emb = provider.embed("SOAR reasoning")
+chunk_emb = provider.embed("SQLiteStore class")
+
+similarity = cosine_similarity(query_emb, chunk_emb)
+print(f"Similarity: {similarity}")
+# Expected: 0.1-0.5 (low similarity for unrelated terms)
+# Current (suspected): 1.000
+```
+
+---
+
+#### Task 1.3: Fix Hybrid Blending (1-2 hours)
+
+**IF Root Cause = Hybrid Blending Not Applied**:
+
+**1.3.1 Check Blending Formula**:
+```python
+# File: packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py
+def _blend_scores(activation_scores, semantic_scores):
+    # Expected: 60% activation + 40% semantic
+    hybrid = 0.6 * activation_scores + 0.4 * semantic_scores
+
+    # VERIFY:
+    # - Arrays are same length
+    # - Scores are normalized BEFORE blending (not after)
+    # - Not accidentally overwriting with normalized values
+```
+
+---
+
+#### Task 1.4: Fix Normalization Bug (1-2 hours)
+
+**IF Root Cause = Normalization Breaks on Equal Values**:
+
+**1.4.1 Check Normalization Logic**:
+```python
+# File: packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py
+def _normalize_scores(scores):
+    if not scores:
+        return []
+
+    # BUG: When all scores equal, returns [1.0, 1.0, ...]
+    if len(set(scores)) == 1:
+        return [1.0] * len(scores)
+
+    # FIX: Preserve original values when all equal
+    if len(set(scores)) == 1:
+        return scores  # Return as-is, don't normalize
+
+    # Standard min-max normalization
+    min_score = min(scores)
+    max_score = max(scores)
+    range_score = max_score - min_score
+
+    if range_score == 0:
+        return scores  # All equal, return as-is
+
+    return [(s - min_score) / range_score for s in scores]
+```
+
+---
+
+#### Task 1.5: Add E2E Test for Score Variance (2 hours)
+
+**1.5.1 Create New E2E Test**:
+```python
+# File: tests/e2e/test_e2e_search_scoring.py
+
+def test_search_returns_varied_scores():
+    """Search should return varied scores based on relevance."""
+    # Setup: Index diverse codebase
+    subprocess.run(["aur", "mem", "index", "packages/core/"], check=True)
+
+    # Execute: Search with specific query
+    result = subprocess.run(
+        ["aur", "mem", "search", "activation scoring", "--output", "json"],
+        capture_output=True, text=True, check=True
+    )
+
+    results = json.loads(result.stdout)
+
+    # Verify: Scores must vary
+    activation_scores = [r["scores"]["activation"] for r in results]
+    semantic_scores = [r["scores"]["semantic"] for r in results]
+    hybrid_scores = [r["scores"]["hybrid"] for r in results]
+
+    # CRITICAL: Max != Min (scores must vary)
+    assert max(activation_scores) != min(activation_scores), \
+        f"Activation scores all equal: {activation_scores}"
+    assert max(semantic_scores) != min(semantic_scores), \
+        f"Semantic scores all equal: {semantic_scores}"
+    assert max(hybrid_scores) != min(hybrid_scores), \
+        f"Hybrid scores all equal: {hybrid_scores}"
+
+    # Scores should be in valid range
+    for scores in [activation_scores, semantic_scores, hybrid_scores]:
+        assert all(0.0 <= s <= 1.0 for s in scores), \
+            f"Scores out of range: {scores}"
+
+def test_search_ranks_relevant_results_higher():
+    """More relevant results should have higher scores."""
+    # Index code about "activation"
+    subprocess.run(["aur", "mem", "index", "packages/core/src/aurora_core/activation/"])
+
+    # Search for "activation"
+    result = subprocess.run(
+        ["aur", "mem", "search", "activation scoring algorithm", "--output", "json"],
+        capture_output=True, text=True, check=True
+    )
+
+    results = json.loads(result.stdout)
+
+    # Results should be sorted by hybrid score (descending)
+    hybrid_scores = [r["scores"]["hybrid"] for r in results]
+    assert hybrid_scores == sorted(hybrid_scores, reverse=True), \
+        f"Results not sorted by score: {hybrid_scores}"
+
+    # Top result should mention "activation"
+    top_result = results[0]
+    assert "activation" in top_result["content"].lower(), \
+        f"Top result doesn't mention 'activation': {top_result['content'][:100]}"
+```
+
+**1.5.2 Run Test (Should FAIL Before Fix)**:
+```bash
+pytest tests/e2e/test_e2e_search_scoring.py -v
+# Expected: FAIL (proves bug exists)
+```
+
+---
+
+#### Task 1.6: Manual Verification (1 hour)
+
+**1.6.1 Test with Clean Environment**:
+```bash
+# Clean slate
+rm -rf ~/.aurora
+aur init
+
+# Index codebase
+aur mem index packages/core/src/aurora_core/
+
+# Test varied queries
+aur mem search "SOAR reasoning"
+aur mem search "database storage"
+aur mem search "activation scoring"
+
+# VERIFY for each:
+# - Activation scores vary (not all 1.000)
+# - Semantic scores vary
+# - Hybrid scores vary
+# - More relevant results have higher scores
+```
+
+**1.6.2 Update Manual Test Report**:
+```bash
+# Update test status in MANUAL_CLI_TEST_REPORT.md
+# Change TEST 9 from ⚠️ PARTIAL to ✅ PASSED
+```
+
+---
+
+### Sprint Success Criteria
+
+**MUST HAVE** (Sprint cannot be marked complete without these):
+1. ✅ Root cause identified and documented
+2. ✅ Bug fixed in production code (not tests)
+3. ✅ E2E test passes (scores vary)
+4. ✅ Manual testing shows varied scores for different queries
+5. ✅ Top-ranked results are actually most relevant
+6. ✅ No regression (all existing tests still pass)
+
+**EVIDENCE REQUIRED**:
+```bash
+# 1. Test output showing varied scores
+aur mem search "SOAR" | grep "Average scores"
+# Output:
+#   Activation: 0.567  (NOT 1.000)
+#   Semantic:   0.723  (NOT 1.000)
+#   Hybrid:     0.628  (NOT 1.000)
+
+# 2. Database shows activation tracking working
+sqlite3 ~/.aurora/memory.db \
+  "SELECT AVG(base_level), COUNT(DISTINCT base_level) FROM activations WHERE base_level > 0"
+# Output: Average > 0.0, Distinct > 10
+
+# 3. E2E test passes
+pytest tests/e2e/test_e2e_search_scoring.py -v
+# Output: test_search_returns_varied_scores PASSED
+#         test_search_ranks_relevant_results_higher PASSED
+```
+
+---
+
+### What NOT to Fix in This Sprint
+
+**Explicitly OUT OF SCOPE**:
+- ❌ Complexity assessment issues
+- ❌ Single file indexing
+- ❌ Documentation inconsistencies
+- ❌ MCP integration
+- ❌ Any other features
+
+**If tempted to fix other things**: CREATE SEPARATE SPRINT, do not expand scope
+
+---
+
+## SPRINT 2: FIX SINGLE FILE INDEXING (PRIORITY 2 - HIGH)
+
+**Goal**: Make `aur mem index <file.py>` return >0 chunks (not 0)
+
+**Duration**: 0.5-1 day (estimated 4-8 hours)
+
+**Why Second**:
+- Quick win, isolated fix
+- Improves UX immediately
+- Doesn't depend on Sprint 1
+- Can run in parallel if team has capacity
+
+### Issue Summary
+
+**Problem**: Indexing single file returns 0 files, 0 chunks
+
+**Evidence**:
+```bash
+$ aur mem index packages/core/src/aurora_core/storage.py
+
+╭─── Index Summary ───╮
+│ ✓ Indexing complete │
+│                     │
+│ Files indexed: 0    │   ← Should be 1
+│ Chunks created: 0   │   ← Should be >0
+│ Duration: 0.51s     │
+│ Errors: 0           │
+╰─────────────────────╯
+```
+
+**Note**: Directory indexing works fine (TEST 7: ✅ PASSED)
+
+### Root Cause Hypotheses
+
+1. **File Path Handling**: May require trailing slash or directory path
+2. **Tree-sitter Parsing**: May fail silently for single file path
+3. **File Detection Logic**: May expect directory structure with glob patterns
+
+### Sprint Tasks
+
+(Similar structure to Sprint 1: investigate → fix → test → verify)
+
+---
+
+## SPRINT 3: INTEGRATE COMPLEXITY ASSESSOR (PRIORITY 3 - MEDIUM)
+
+**Goal**: Replace production assess.py with proven standalone complexity_assessor.py
+
+**Duration**: 1-2 days (estimated 8-12 hours)
+
+**Why Third**:
+- Standalone version already works (96% accuracy)
+- Integration task, not net-new development
+- Doesn't depend on Sprints 1-2
+- Complexity assessment currently works for single keywords (TEST 10-11: ✅)
+
+### Issue Summary
+
+**Problem**: Multi-keyword queries misclassified
+
+**Evidence**:
+```bash
+$ aur query "Explain the interaction between SOAR phases, ACT-R activation scoring, and Aurora memory retrieval in detail" --dry-run
+
+# Result: MEDIUM (score 0.375)
+# Expected: COMPLEX (score > 0.6)
+```
+
+**Note**: This is the ONLY complexity issue. Single-keyword queries work correctly.
+
+### Sprint Tasks
+
+#### Task 3.0: Pre-Integration Review (1 hour)
+- Read `/docs/development/complexity_assess/README.md`
+- Read `/docs/development/complexity_assess/complexity_assessor.py`
+- Understand current production `packages/soar/src/aurora_soar/phases/assess.py`
+
+#### Task 3.1: Create Integration Adapter (2-3 hours)
+- Map standalone `AssessmentResult` → production `ComplexityResult`
+- Handle imports (standalone → production namespace)
+- Preserve existing API contracts
+
+#### Task 3.2: Replace Production Code (2 hours)
+- Copy `complexity_assessor.py` to `packages/soar/src/aurora_soar/phases/`
+- Update `assess.py` to import and use standalone version
+- Remove old keyword-counting logic
+
+#### Task 3.3: Add Test Corpus to E2E Tests (3 hours)
+- Copy `test_corpus.py` (101 test cases)
+- Create E2E test that runs full corpus
+- Ensure 95%+ accuracy maintained
+
+#### Task 3.4: Manual Verification (1 hour)
+- Test multi-keyword query from manual report
+- Verify now classified as COMPLEX
+- Update MANUAL_CLI_TEST_REPORT.md (TEST 12: ✅ PASSED)
+
+---
+
+## SPRINT 4+: REMAINING ISSUES
+
+Lower priority issues to address in future sprints:
+
+### Sprint 4: Documentation Fixes (2-4 hours)
+- Fix `--verify` → `verify` in help text
+- Remove `--limit` from help or implement option
+- Add `budget status` alias to `show`
+
+### Sprint 5: Config Command (4-6 hours)
+- Implement `aur config show` command
+- Display current config in formatted table
+
+### Sprint 6: Database Pollution (6-8 hours)
+- Make E2E tests use isolated test database
+- Add TEST_DB environment variable support
+- Clean up test fixtures in production DB
+
+---
+
+## Sprint Execution Guidelines
+
+### Before Starting Sprint
+
+1. ✅ Read full sprint plan
+2. ✅ Understand success criteria
+3. ✅ Verify no dependencies on other sprints
+4. ✅ Create feature branch: `fix/search-scoring` or `fix/single-file-indexing`
+
+### During Sprint
+
+1. ✅ Follow task order (investigation → fix → test → verify)
+2. ✅ Document findings in `/docs/development/aurora_fixes/<issue>_investigation.md`
+3. ✅ Create E2E test that FAILS before fix
+4. ✅ Fix production code (NOT tests)
+5. ✅ Verify E2E test PASSES after fix
+6. ✅ Run full test suite (no regressions)
+7. ✅ Manual verification with bash commands
+8. ✅ Update MANUAL_CLI_TEST_REPORT.md
+
+### After Sprint (Before Marking Complete)
+
+1. ✅ All success criteria met (evidence captured)
+2. ✅ Manual testing performed and documented
+3. ✅ No shortcuts, no masking, no test modifications
+4. ✅ Another person verifies it works (if possible)
+5. ✅ Commit with clear message: `fix(search): all scores return 1.000 → now varied based on relevance`
+6. ✅ Update sprint status in this document
+
+### Red Flags (Automatic Sprint Failure)
+
+If ANY of these occur, STOP and reassess:
+
+- ❌ Modifying test parsing instead of production code
+- ❌ Adding `|| true` to mask failures
+- ❌ Skipping manual verification
+- ❌ "Tests pass" but feature doesn't actually work
+- ❌ Expanding scope to include other features
+- ❌ Removing assertions from tests
+- ❌ Adding sleep() or retry logic to make tests pass
+
+---
+
+## Lessons Learned from Phase 2A
+
+### What Went Wrong
+
+1. **Too Much Scope**: Tried to fix everything in one sprint
+2. **Test Masking**: Agent modified test parsing (`console.print()` output) instead of fixing scoring logic
+3. **No Manual Testing**: Declared success based on test pass rates without actually running commands
+4. **Insufficient Monitoring**: Guardrails existed but weren't actively checked during execution
+
+### What Will Prevent This
+
+1. **One Feature Per Sprint**: Can't mask when sprint only has one testable outcome
+2. **Manual Testing Requirement**: Every sprint ends with bash command verification
+3. **Evidence Required**: Screenshot or command output showing feature working
+4. **No Test Modifications**: If test needs changing, it's a red flag
+
+---
+
+## Sprint Priority Justification
+
+### Why Search Scoring First?
+
+**Criticality**:
+- Blocks all retrieval quality
+- Affects both CLI and MCP (shared core)
+- Cannot assess complexity accurately without good retrieval
+- Cannot verify any other feature relies on search
+
+**Self-Contained**:
+- Single code path (memory_manager → retriever → scorer)
+- No external dependencies
+- Clear success metric (scores != 1.000)
+
+**Testable**:
+- Easy to verify manually (`aur mem search`)
+- E2E test is straightforward (assert score variance)
+- Database can be inspected for activation values
+
+### Why Not Complexity Assessment First?
+
+**Less Critical**:
+- Single-keyword queries already work (TEST 10-11: ✅)
+- Only multi-keyword queries broken
+- User can still get answers (bypasses AURORA reasoning but uses Direct LLM)
+
+**Dependency**:
+- Good retrieval helps complexity assessment (relevant context → better classification)
+- Better to fix foundation (search) before higher-level features (complexity)
+
+**Already Solved**:
+- Standalone version exists and works (96% accuracy)
+- Integration task, not debugging task
+
+---
+
+## Summary: Path Forward
+
+1. **Sprint 1** (1-2 days): Fix search scoring → TEST 9: ⚠️ → ✅
+2. **Sprint 2** (0.5-1 day): Fix single file indexing → TEST 6: ❌ → ✅
+3. **Sprint 3** (1-2 days): Integrate complexity assessor → TEST 12: ❌ → ✅
+4. **Sprint 4+**: Documentation fixes, minor UX improvements
+
+**Total Estimated Time**: 4-6 days for all critical issues
+
+**Key Difference from Phase 2A**:
+- Phase 2A: 1 sprint, claimed "complete", actually broke things
+- New approach: 3 focused sprints, manual verification, no masking possible
+
+**Question for User**: Should we proceed with Sprint 1 (Fix Search Scoring) now, or do you want to adjust priorities?

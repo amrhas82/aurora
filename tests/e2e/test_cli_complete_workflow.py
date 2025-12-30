@@ -36,6 +36,8 @@ from aurora_cli.memory_manager import MemoryManager
 from aurora_core.chunks import CodeChunk
 from aurora_core.store import SQLiteStore
 
+from .conftest import run_cli_command
+
 
 pytestmark = pytest.mark.ml
 
@@ -225,20 +227,16 @@ class TestCompleteCLIWorkflow:
         db_path = env_data["db_path"]
 
         # Step 1: Index the project
-        index_result = subprocess.run(
+        index_result = run_cli_command(
             ["aur", "mem", "index", str(project_path), "--db-path", str(db_path)],
             cwd=project_path,
-            capture_output=True,
-            text=True,
         )
         assert index_result.returncode == 0, f"Index failed:\n{index_result.stderr}"
 
         # Step 2: Search for authentication code
-        search_result = subprocess.run(
+        search_result = run_cli_command(
             ["aur", "mem", "search", "authenticate user password", "--db-path", str(db_path)],
             cwd=project_path,
-            capture_output=True,
-            text=True,
         )
         assert search_result.returncode == 0, f"Search failed:\n{search_result.stderr}"
 
@@ -276,7 +274,7 @@ class TestCompleteCLIWorkflow:
         db_path = env_data["db_path"]
 
         # Step 1: Index
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", str(project_path), "--db-path", str(db_path)],
             cwd=project_path,
             capture_output=True,
@@ -284,7 +282,7 @@ class TestCompleteCLIWorkflow:
         )
 
         # Step 2: Search
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "search", "authentication", "--db-path", str(db_path)],
             cwd=project_path,
             capture_output=True,
@@ -303,7 +301,7 @@ class TestCompleteCLIWorkflow:
         db_path = env_data["db_path"]
 
         # Index the project
-        subprocess.run(
+        run_cli_command(
             ["aur", "mem", "index", str(project_path), "--db-path", str(db_path)],
             cwd=project_path,
             capture_output=True,
@@ -311,7 +309,7 @@ class TestCompleteCLIWorkflow:
         )
 
         # Run stats command
-        stats_result = subprocess.run(
+        stats_result = run_cli_command(
             ["aur", "mem", "stats", "--db-path", str(db_path)],
             cwd=project_path,
             capture_output=True,
@@ -357,7 +355,7 @@ class TestNewUserSetupWorkflow:
 
                 # Step 2: Index first project
                 db_path = aurora_home / "memory.db"
-                index_result = subprocess.run(
+                index_result = run_cli_command(
                     ["aur", "mem", "index", str(temp_cli_project), "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -365,7 +363,7 @@ class TestNewUserSetupWorkflow:
                 assert index_result.returncode == 0, f"Index failed: {index_result.stderr}"
 
                 # Step 3: Search indexed content
-                search_result = subprocess.run(
+                search_result = run_cli_command(
                     ["aur", "mem", "search", "AuthManager", "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -374,7 +372,7 @@ class TestNewUserSetupWorkflow:
                 assert "auth" in search_result.stdout.lower(), "Should find authentication code"
 
                 # Step 4: Verify stats
-                stats_result = subprocess.run(
+                stats_result = run_cli_command(
                     ["aur", "mem", "stats", "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -506,7 +504,7 @@ def handle_request(request: dict) -> dict:
         try:
             # Index all three projects
             for project_path in env["projects"]:
-                result = subprocess.run(
+                result = run_cli_command(
                     ["aur", "mem", "index", str(project_path), "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -585,7 +583,7 @@ class TestConfigChangeWorkflow:
 
             try:
                 # Initial index
-                subprocess.run(
+                run_cli_command(
                     ["aur", "mem", "index", str(temp_cli_project), "--db-path", str(db_path)],
                     capture_output=True,
                     check=True,
@@ -598,7 +596,7 @@ class TestConfigChangeWorkflow:
                 config_path.write_text(json.dumps(config_data, indent=2))
 
                 # Re-index with new config (in real scenario, this would use different chunking)
-                result = subprocess.run(
+                result = run_cli_command(
                     ["aur", "mem", "index", str(temp_cli_project), "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -606,7 +604,7 @@ class TestConfigChangeWorkflow:
                 assert result.returncode == 0
 
                 # Verify database still works
-                search_result = subprocess.run(
+                search_result = run_cli_command(
                     ["aur", "mem", "search", "authenticate", "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -659,7 +657,7 @@ class TestErrorRecoveryWorkflow:
             os.environ["AURORA_HOME"] = str(aurora_home)
 
             try:
-                subprocess.run(
+                run_cli_command(
                     ["aur", "mem", "search", "test", "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -789,7 +787,7 @@ class Class_{i}:
 
             try:
                 start_time = time.time()
-                result = subprocess.run(
+                result = run_cli_command(
                     ["aur", "mem", "index", str(large_project), "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,
@@ -801,7 +799,7 @@ class Class_{i}:
                 assert elapsed < 60, f"Should complete within timeout, took {elapsed:.2f}s"
 
                 # Verify stats
-                stats_result = subprocess.run(
+                stats_result = run_cli_command(
                     ["aur", "mem", "stats", "--db-path", str(db_path)],
                     capture_output=True,
                     text=True,

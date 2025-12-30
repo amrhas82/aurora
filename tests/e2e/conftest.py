@@ -8,12 +8,13 @@ import os
 import subprocess
 import sys
 import tempfile
-import pytest
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Generator
+from typing import Any, Dict, Generator, List, Optional
+
+import pytest
 
 
-def get_cli_env() -> Dict[str, str]:
+def get_cli_env() -> dict[str, str]:
     """
     Get environment dict for subprocess CLI calls that preserves PYTHONPATH.
 
@@ -33,12 +34,12 @@ def get_cli_env() -> Dict[str, str]:
 
 
 def run_cli_command(
-    args: List[str],
-    cwd: Optional[Path] = None,
+    args: list[str],
+    cwd: Path | None = None,
     capture_output: bool = True,
     text: bool = True,
     check: bool = False,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> subprocess.CompletedProcess:
     """
     Run CLI command with preserved Python environment.
@@ -60,13 +61,7 @@ def run_cli_command(
         env.update(kwargs.pop("env"))
 
     return subprocess.run(
-        args,
-        cwd=cwd,
-        capture_output=capture_output,
-        text=text,
-        check=check,
-        env=env,
-        **kwargs
+        args, cwd=cwd, capture_output=capture_output, text=text, check=check, env=env, **kwargs
     )
 
 

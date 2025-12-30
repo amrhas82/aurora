@@ -1,0 +1,83 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /home/hamr/PycharmProjects/aurora
+configfile: pytest.ini
+plugins: cov-7.0.0, asyncio-1.3.0, anyio-4.12.0, benchmark-5.2.3, typeguard-4.4.4
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 6 items
+
+tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_1_index_then_multiple_commands_same_db FAILED [ 16%]
+tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_2_all_commands_use_same_database FAILED [ 33%]
+tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_3_data_persists_across_command_invocations FAILED [ 50%]
+tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_4_deleting_local_aurora_db_does_not_affect_operations FAILED [ 66%]
+tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_5_verify_aurora_home_db_contains_expected_chunks FAILED [ 83%]
+tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_6_database_path_consistency_bug_detection FAILED [100%]/home/hamr/.local/lib/python3.10/site-packages/coverage/control.py:946: CoverageWarning: No data was collected. (no-data-collected); see https://coverage.readthedocs.io/en/7.11.0/messages.html#warning-no-data-collected
+  self._warn("No data was collected.", slug="no-data-collected")
+/home/hamr/.local/lib/python3.10/site-packages/pytest_cov/plugin.py:363: CovReportWarning: Failed to generate report: No data to report.
+
+  warnings.warn(CovReportWarning(message), stacklevel=1)
+
+WARNING: Failed to generate report: No data to report.
+
+
+
+=================================== FAILURES ===================================
+___ TestDatabasePersistence.test_1_2_1_index_then_multiple_commands_same_db ____
+tests/e2e/test_e2e_database_persistence.py:128: in test_1_2_1_index_then_multiple_commands_same_db
+    assert index_result.returncode == 0, f"Index failed: {index_result.stderr}"
+E   AssertionError: Index failed: Traceback (most recent call last):
+E       File "/home/hamr/.local/bin/aur", line 5, in <module>
+E         from aurora_cli.main import cli
+E     ModuleNotFoundError: No module named 'aurora_cli'
+E     
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
+______ TestDatabasePersistence.test_1_2_2_all_commands_use_same_database _______
+tests/e2e/test_e2e_database_persistence.py:184: in test_1_2_2_all_commands_use_same_database
+    subprocess.run(
+/usr/lib/python3.10/subprocess.py:526: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+_ TestDatabasePersistence.test_1_2_3_data_persists_across_command_invocations __
+tests/e2e/test_e2e_database_persistence.py:258: in test_1_2_3_data_persists_across_command_invocations
+    subprocess.run(
+/usr/lib/python3.10/subprocess.py:526: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+_ TestDatabasePersistence.test_1_2_4_deleting_local_aurora_db_does_not_affect_operations _
+tests/e2e/test_e2e_database_persistence.py:341: in test_1_2_4_deleting_local_aurora_db_does_not_affect_operations
+    subprocess.run(
+/usr/lib/python3.10/subprocess.py:526: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+_ TestDatabasePersistence.test_1_2_5_verify_aurora_home_db_contains_expected_chunks _
+tests/e2e/test_e2e_database_persistence.py:406: in test_1_2_5_verify_aurora_home_db_contains_expected_chunks
+    subprocess.run(
+/usr/lib/python3.10/subprocess.py:526: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+__ TestDatabasePersistence.test_1_2_6_database_path_consistency_bug_detection __
+tests/e2e/test_e2e_database_persistence.py:481: in test_1_2_6_database_path_consistency_bug_detection
+    subprocess.run(
+/usr/lib/python3.10/subprocess.py:526: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.12-final-0 _______________
+
+=========================== short test summary info ============================
+FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_1_index_then_multiple_commands_same_db - AssertionError: Index failed: Traceback (most recent call last):
+    File "/home/hamr/.local/bin/aur", line 5, in <module>
+      from aurora_cli.main import cli
+  ModuleNotFoundError: No module named 'aurora_cli'
+  
+assert 1 == 0
+ +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
+FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_2_all_commands_use_same_database - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_3_data_persists_across_command_invocations - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_4_deleting_local_aurora_db_does_not_affect_operations - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_5_verify_aurora_home_db_contains_expected_chunks - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_6_database_path_consistency_bug_detection - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
+============================== 6 failed in 3.22s ===============================

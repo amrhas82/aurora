@@ -23,6 +23,7 @@ Usage:
 
 import logging
 import math
+import os
 import re
 import subprocess
 from datetime import datetime, timezone
@@ -52,6 +53,15 @@ class GitSignalExtractor:
             timeout: Timeout in seconds for Git commands (default 10)
         """
         self.timeout = timeout
+        self.available = True
+
+        # Check if Git should be disabled via environment variable
+        if os.getenv("AURORA_SKIP_GIT"):
+            self.available = False
+            logger.warning(
+                "Git disabled via AURORA_SKIP_GIT - BLA will use default activation (0.5)\n"
+                "→ Unset AURORA_SKIP_GIT to enable Git-based activation"
+            )
 
     def get_function_commit_times(
         self, file_path: str, line_start: int, line_end: int
@@ -80,6 +90,10 @@ class GitSignalExtractor:
             >>> times = extractor.get_function_commit_times("file.py", 10, 25)
             >>> print(f"Function has {len(times)} commits")
         """
+        # Check if Git is available
+        if not self.available:
+            return []
+
         path = Path(file_path).resolve()
 
         # Check if file exists

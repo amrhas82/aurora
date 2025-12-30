@@ -42,14 +42,14 @@ pytestmark = [
 class MockChunk:
     """Mock chunk for testing."""
 
-    def __init__(self, chunk_id, content, activation=0.5, embedding=None):
+    def __init__(self, chunk_id, content, activation=0.5, embeddings=None):
         self.id = chunk_id
         self.content = content
         self.type = "code"
         self.name = f"chunk_{chunk_id}"
         self.file_path = f"/path/to/file_{chunk_id}.py"
         self.activation = activation
-        self.embedding = embedding
+        self.embeddings = embeddings
 
 
 class MockStore:
@@ -78,13 +78,16 @@ class TestEmbeddingProviderFailures:
         # Create chunks with valid embeddings and activations
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.9, embedding=np.random.rand(384).astype(np.float32)
+                "1", "chunk one", activation=0.9, embeddings=np.random.rand(384).astype(np.float32)
             ),
             MockChunk(
-                "2", "chunk two", activation=0.7, embedding=np.random.rand(384).astype(np.float32)
+                "2", "chunk two", activation=0.7, embeddings=np.random.rand(384).astype(np.float32)
             ),
             MockChunk(
-                "3", "chunk three", activation=0.5, embedding=np.random.rand(384).astype(np.float32)
+                "3",
+                "chunk three",
+                activation=0.5,
+                embeddings=np.random.rand(384).astype(np.float32),
             ),
         ]
 
@@ -116,7 +119,7 @@ class TestEmbeddingProviderFailures:
         """Test that errors propagate when fallback is disabled."""
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.9, embedding=np.random.rand(384).astype(np.float32)
+                "1", "chunk one", activation=0.9, embeddings=np.random.rand(384).astype(np.float32)
             ),
         ]
 
@@ -139,7 +142,7 @@ class TestEmbeddingProviderFailures:
         """Test fallback when provider raises ValueError (invalid input)."""
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.8, embedding=np.random.rand(384).astype(np.float32)
+                "1", "chunk one", activation=0.8, embeddings=np.random.rand(384).astype(np.float32)
             ),
         ]
 
@@ -165,7 +168,7 @@ class TestEmbeddingProviderFailures:
         """Test fallback when provider has missing attributes."""
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.6, embedding=np.random.rand(384).astype(np.float32)
+                "1", "chunk one", activation=0.6, embeddings=np.random.rand(384).astype(np.float32)
             ),
         ]
 
@@ -192,9 +195,9 @@ class TestChunksMissingEmbeddings:
     def test_all_chunks_missing_embeddings_with_fallback(self):
         """Test retrieval when all chunks lack embeddings (fallback enabled)."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embedding=None),
-            MockChunk("2", "chunk two", activation=0.7, embedding=None),
-            MockChunk("3", "chunk three", activation=0.5, embedding=None),
+            MockChunk("1", "chunk one", activation=0.9, embeddings=None),
+            MockChunk("2", "chunk two", activation=0.7, embeddings=None),
+            MockChunk("3", "chunk three", activation=0.5, embeddings=None),
         ]
 
         store = MockStore(chunks=chunks)
@@ -220,8 +223,8 @@ class TestChunksMissingEmbeddings:
     def test_all_chunks_missing_embeddings_no_fallback(self):
         """Test retrieval when all chunks lack embeddings (fallback disabled)."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embedding=None),
-            MockChunk("2", "chunk two", activation=0.7, embedding=None),
+            MockChunk("1", "chunk one", activation=0.9, embeddings=None),
+            MockChunk("2", "chunk two", activation=0.7, embeddings=None),
         ]
 
         store = MockStore(chunks=chunks)
@@ -244,9 +247,9 @@ class TestChunksMissingEmbeddings:
         chunk1_embedding = provider.embed_chunk("chunk one")
 
         chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embedding=chunk1_embedding),
-            MockChunk("2", "chunk two", activation=0.8, embedding=None),  # No embedding
-            MockChunk("3", "chunk three", activation=0.6, embedding=None),  # No embedding
+            MockChunk("1", "chunk one", activation=0.9, embeddings=chunk1_embedding),
+            MockChunk("2", "chunk two", activation=0.8, embeddings=None),  # No embedding
+            MockChunk("3", "chunk three", activation=0.6, embeddings=None),  # No embedding
         ]
 
         store = MockStore(chunks=chunks)
@@ -288,11 +291,11 @@ class TestChunksMissingEmbeddings:
         chunk3_embedding = provider.embed_chunk("network request handling")
 
         chunks = [
-            MockChunk("1", "database query", activation=0.5, embedding=chunk1_embedding),
+            MockChunk("1", "database query", activation=0.5, embeddings=chunk1_embedding),
             MockChunk(
-                "2", "file operations", activation=0.9, embedding=None
+                "2", "file operations", activation=0.9, embeddings=None
             ),  # High activation, no embedding
-            MockChunk("3", "network request", activation=0.4, embedding=chunk3_embedding),
+            MockChunk("3", "network request", activation=0.4, embeddings=chunk3_embedding),
         ]
 
         store = MockStore(chunks=chunks)
@@ -323,9 +326,9 @@ class TestFallbackResultQuality:
         # The fallback returns the first top_k chunks from the store's retrieve_by_activation
         # In production, the store would sort by activation, but MockStore doesn't
         chunks = [
-            MockChunk("2", "chunk two", activation=0.9, embedding=None),
-            MockChunk("3", "chunk three", activation=0.6, embedding=None),
-            MockChunk("1", "chunk one", activation=0.3, embedding=None),
+            MockChunk("2", "chunk two", activation=0.9, embeddings=None),
+            MockChunk("3", "chunk three", activation=0.6, embeddings=None),
+            MockChunk("1", "chunk one", activation=0.3, embeddings=None),
         ]
 
         store = MockStore(chunks=chunks)
@@ -349,7 +352,7 @@ class TestFallbackResultQuality:
     def test_fallback_results_have_complete_metadata(self):
         """Test that fallback results include all required fields."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.8, embedding=None),
+            MockChunk("1", "chunk one", activation=0.8, embeddings=None),
         ]
 
         store = MockStore(chunks=chunks)
@@ -383,7 +386,7 @@ class TestFallbackResultQuality:
     def test_fallback_respects_top_k_limit(self):
         """Test that fallback returns correct number of results."""
         chunks = [
-            MockChunk(f"{i}", f"chunk {i}", activation=0.9 - i * 0.1, embedding=None)
+            MockChunk(f"{i}", f"chunk {i}", activation=0.9 - i * 0.1, embeddings=None)
             for i in range(10)
         ]
 
@@ -415,7 +418,7 @@ class TestFallbackConfiguration:
         """Test explicit fallback_to_activation=True."""
         config = HybridConfig(fallback_to_activation=True)
 
-        chunks = [MockChunk("1", "chunk", activation=0.5, embedding=None)]
+        chunks = [MockChunk("1", "chunk", activation=0.5, embeddings=None)]
         store = MockStore(chunks=chunks)
         engine = MockActivationEngine()
 
@@ -432,7 +435,7 @@ class TestFallbackConfiguration:
         """Test explicit fallback_to_activation=False."""
         config = HybridConfig(fallback_to_activation=False)
 
-        chunks = [MockChunk("1", "chunk", activation=0.5, embedding=None)]
+        chunks = [MockChunk("1", "chunk", activation=0.5, embeddings=None)]
         store = MockStore(chunks=chunks)
         engine = MockActivationEngine()
 
@@ -460,7 +463,7 @@ class TestFallbackConfiguration:
                     }
                 return default
 
-        chunks = [MockChunk("1", "chunk", activation=0.5, embedding=None)]
+        chunks = [MockChunk("1", "chunk", activation=0.5, embeddings=None)]
         store = MockStore(chunks=chunks)
         engine = MockActivationEngine()
 
@@ -497,7 +500,7 @@ class TestFallbackEdgeCases:
 
     def test_single_chunk_with_fallback(self):
         """Test fallback with single chunk."""
-        chunks = [MockChunk("1", "only chunk", activation=0.7, embedding=None)]
+        chunks = [MockChunk("1", "only chunk", activation=0.7, embeddings=None)]
         store = MockStore(chunks=chunks)
         engine = MockActivationEngine()
 
@@ -516,8 +519,8 @@ class TestFallbackEdgeCases:
     def test_all_chunks_zero_activation_with_fallback(self):
         """Test fallback when all chunks have zero activation."""
         chunks = [
-            MockChunk("1", "chunk one", activation=0.0, embedding=None),
-            MockChunk("2", "chunk two", activation=0.0, embedding=None),
+            MockChunk("1", "chunk one", activation=0.0, embeddings=None),
+            MockChunk("2", "chunk two", activation=0.0, embeddings=None),
         ]
 
         store = MockStore(chunks=chunks)

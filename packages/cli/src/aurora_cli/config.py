@@ -47,7 +47,7 @@ class Config:
     db_path: str = "~/.aurora/memory.db"  # Database path with tilde support
     budget_limit: float = 10.0  # Default budget limit in USD
     budget_tracker_path: str = "~/.aurora/budget_tracker.json"
-    search_min_semantic_score: float = 0.35  # Minimum semantic score threshold for search results
+    search_min_semantic_score: float = 0.50  # Minimum semantic score threshold for search results
 
     def get_db_path(self) -> str:
         """Get expanded absolute database path.
@@ -199,7 +199,7 @@ CONFIG_SCHEMA: dict[str, Any] = {
         "tracker_path": "~/.aurora/budget_tracker.json",
     },
     "search": {
-        "min_semantic_score": 0.35,
+        "min_semantic_score": 0.50,
     },
 }
 

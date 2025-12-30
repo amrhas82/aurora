@@ -213,6 +213,15 @@ class HybridRetriever:
         if not results:
             return []
 
+        # Step 3.5: Filter by RAW semantic score threshold BEFORE normalization
+        # This ensures we filter by absolute similarity, not relative ranking
+        if min_semantic_score is not None:
+            # Filter results where raw_semantic >= threshold
+            # raw_semantic is already normalized to [0,1] from cosine similarity
+            results = [r for r in results if r["raw_semantic"] >= min_semantic_score]
+            if not results:
+                return []  # All results below threshold
+
         # Step 4: Normalize scores to [0, 1] range
         activation_scores_normalized = self._normalize_scores(
             [r["raw_activation"] for r in results]
@@ -275,13 +284,7 @@ class HybridRetriever:
         # Step 6: Sort by hybrid score (descending)
         final_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
 
-        # Step 7: Apply semantic score threshold filter if specified
-        if min_semantic_score is not None:
-            filtered = [r for r in final_results if r["semantic_score"] >= min_semantic_score]
-            if not filtered:
-                return []  # All results below threshold
-            final_results = filtered
-
+        # Step 7: Return top K results (filtering already done in Step 3.5)
         return final_results[:top_k]
 
     def _fallback_to_activation_only(self, chunks: list[Any], top_k: int) -> list[dict[str, Any]]:

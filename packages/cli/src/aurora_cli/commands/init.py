@@ -44,7 +44,7 @@ def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler)
         return True
     except SchemaMismatchError as e:
         # Schema mismatch detected - handle interactively
-        click.echo(f"\n[Schema Migration Required]")
+        click.echo("\n[Schema Migration Required]")
         click.echo(f"  Database: {db_path}")
         click.echo(f"  Found version: v{e.found_version}")
         click.echo(f"  Required version: v{e.expected_version}")
@@ -54,7 +54,9 @@ def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler)
         click.echo("")
 
         # Ask if user wants to proceed
-        if not click.confirm("Reset database and re-index? (your data will need to be re-indexed)", default=True):
+        if not click.confirm(
+            "Reset database and re-index? (your data will need to be re-indexed)", default=True
+        ):
             click.echo("Aborted. Database unchanged.")
             click.echo("Note: You can manually backup and delete the database file to reset.")
             return False
@@ -91,7 +93,7 @@ def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler)
             error_msg = error_handler.handle_memory_error(reset_error, "resetting database")
             click.echo(f"\n{error_msg}", err=True)
             return False
-    except Exception as e:
+    except Exception:
         # Other errors - let them propagate
         raise
 
@@ -216,8 +218,14 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
 
 
 @click.command(name="init")
+@click.option(
+    "--interactive",
+    is_flag=True,
+    default=False,
+    help="Run interactive setup wizard with guided prompts",
+)
 @handle_errors
-def init_command() -> None:
+def init_command(interactive: bool) -> None:
     """Initialize AURORA configuration.
 
     Creates ~/.aurora/config.json with defaults and optional API key.
@@ -229,10 +237,21 @@ def init_command() -> None:
         aur init
 
         \b
+        # Interactive setup wizard (guided experience)
+        aur init --interactive
+
+        \b
         # After initialization, set API key in environment
         export ANTHROPIC_API_KEY=sk-ant-...
         aur query "your question"
     """
+    # If interactive flag is set, run the wizard
+    if interactive:
+        from aurora_cli.wizard import InteractiveWizard
+
+        wizard = InteractiveWizard()
+        wizard.run()
+        return
     from aurora_cli.config import _get_aurora_home
 
     config_dir = _get_aurora_home()
@@ -394,16 +413,38 @@ def init_command() -> None:
             # Memory command not yet implemented - stub for Phase 3
             click.echo("⚠ Memory indexing not yet implemented (Phase 4)")
 
-    # Display summary
-    click.echo("\n" + "=" * 50)
-    click.echo("✓ AURORA CLI initialized successfully!")
-    click.echo("=" * 50)
-    click.echo(f"Config file: {config_path}")
+    # Display summary with rich formatting
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+
+    console.print("\n[bold green]✓ AURORA CLI initialized successfully![/]\n")
+
+    # Configuration summary
+    console.print("[bold]Configuration:[/]")
+    console.print(f"  • Config file: [cyan]{config_path}[/]")
+    console.print(f"  • Database: [cyan]{config_data['database']['path']}[/]")
     if api_key:
-        click.echo("API key: Configured")
+        console.print("  • API key: [green]✓ Configured[/]")
     else:
-        click.echo("API key: Not configured (set ANTHROPIC_API_KEY or edit config)")
-    click.echo("\nNext steps:")
-    click.echo("  1. Run \"aur query 'your question'\" to start")
+        console.print("  • API key: [yellow]⚠ Not configured[/]")
+
+    # Next steps panel
+    next_steps = []
     if not api_key:
-        click.echo("  2. Set API key: export ANTHROPIC_API_KEY=sk-ant-...")
+        next_steps.append(
+            "[yellow]1. Set API key:[/]\n   [cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]"
+        )
+
+    next_steps.extend(
+        [
+            "[bold]2. Verify your installation:[/]\n   [cyan]aur doctor[/]",
+            "[bold]3. Check version info:[/]\n   [cyan]aur version[/]",
+            "[bold]4. Start querying:[/]\n   [cyan]aur query 'your question'[/]",
+        ]
+    )
+
+    console.print(Panel("\n\n".join(next_steps), title="[bold]Next Steps[/]", border_style="green"))
+
+    console.print("\n[dim]For help with any command, use [cyan]aur <command> --help[/][/]\n")

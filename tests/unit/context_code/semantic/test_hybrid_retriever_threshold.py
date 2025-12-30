@@ -5,6 +5,7 @@ search results based on semantic similarity scores.
 """
 
 import inspect
+
 from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
 
 

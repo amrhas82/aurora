@@ -639,7 +639,9 @@ class MemoryManager:
                     results = cursor.fetchall()
                     return {row[0]: row[1] for row in results if row[0] is not None}
             else:
-                logger.warning("Store does not support _transaction(), cannot get language distribution")
+                logger.warning(
+                    "Store does not support _transaction(), cannot get language distribution"
+                )
                 return {}
         except Exception as e:
             logger.warning(f"Failed to get language distribution: {e}")

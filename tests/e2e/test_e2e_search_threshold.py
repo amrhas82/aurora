@@ -5,8 +5,10 @@ and that config values are respected.
 """
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
+
 from tests.e2e.conftest import run_cli_command
 
 
@@ -137,12 +139,8 @@ def test_search_respects_config_threshold(clean_aurora_home, diverse_python_proj
     config_path = clean_aurora_home / "config.json"
     config_data = {
         "version": "1.1.0",
-        "search": {
-            "min_semantic_score": 0.7
-        },
-        "database": {
-            "path": str(clean_aurora_home / "memory.db")
-        }
+        "search": {"min_semantic_score": 0.7},
+        "database": {"path": str(clean_aurora_home / "memory.db")},
     }
     config_path.write_text(json.dumps(config_data, indent=2))
 
@@ -174,9 +172,7 @@ def test_search_cli_option_overrides_config(clean_aurora_home, diverse_python_pr
         "search": {
             "min_semantic_score": 0.9  # Very high threshold
         },
-        "database": {
-            "path": str(clean_aurora_home / "memory.db")
-        }
+        "database": {"path": str(clean_aurora_home / "memory.db")},
     }
     config_path.write_text(json.dumps(config_data, indent=2))
 

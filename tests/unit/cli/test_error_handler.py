@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
 from aurora_cli.errors import (
     EXIT_SUCCESS,
     EXIT_SYSTEM_ERROR,
@@ -235,8 +234,9 @@ class TestHandleErrorsDecorator:
 
     def test_decorator_catches_exception(self):
         """Test that decorator catches and handles exceptions."""
-        import click
         import sys
+
+        import click
 
         @handle_errors
         @click.command()
@@ -246,7 +246,7 @@ class TestHandleErrorsDecorator:
         # The decorator should catch the exception and exit
         with pytest.raises(SystemExit) as excinfo:
             # Patch sys.argv to avoid Click parsing pytest args
-            with patch.object(sys, 'argv', ['test']):
+            with patch.object(sys, "argv", ["test"]):
                 ctx = click.Context(click.Command("test"))
                 ctx.obj = {"debug": False}
                 with ctx:
@@ -256,8 +256,9 @@ class TestHandleErrorsDecorator:
 
     def test_decorator_debug_mode_shows_traceback(self):
         """Test that decorator shows traceback in debug mode."""
-        import click
         import sys
+
+        import click
 
         @handle_errors
         @click.command()
@@ -265,7 +266,7 @@ class TestHandleErrorsDecorator:
             raise ValueError("Test error")
 
         with pytest.raises(SystemExit) as excinfo:
-            with patch.object(sys, 'argv', ['test']):
+            with patch.object(sys, "argv", ["test"]):
                 ctx = click.Context(click.Command("test"))
                 ctx.obj = {"debug": True}
                 with ctx:
@@ -276,8 +277,9 @@ class TestHandleErrorsDecorator:
 
     def test_decorator_respects_aurora_debug_env(self):
         """Test that decorator respects AURORA_DEBUG environment variable."""
-        import click
         import sys
+
+        import click
 
         @handle_errors
         @click.command()
@@ -286,7 +288,7 @@ class TestHandleErrorsDecorator:
 
         with patch.dict(os.environ, {"AURORA_DEBUG": "1"}):
             with pytest.raises(SystemExit) as excinfo:
-                with patch.object(sys, 'argv', ['test']):
+                with patch.object(sys, "argv", ["test"]):
                     ctx = click.Context(click.Command("test"))
                     ctx.obj = {"debug": False}  # Debug flag off in context
                     with ctx:
@@ -298,7 +300,6 @@ class TestHandleErrorsDecorator:
     def test_decorator_system_error_exit_code(self):
         """Test that decorator uses EXIT_SYSTEM_ERROR for system errors."""
         import click
-
         from aurora_cli.errors import MemoryStoreError
 
         @handle_errors
@@ -316,8 +317,9 @@ class TestHandleErrorsDecorator:
 
     def test_decorator_user_error_exit_code(self):
         """Test that decorator uses EXIT_USER_ERROR for user errors."""
-        import click
         import sys
+
+        import click
 
         @handle_errors
         @click.command()
@@ -325,7 +327,7 @@ class TestHandleErrorsDecorator:
             raise ValueError("Invalid input")
 
         with pytest.raises(SystemExit) as excinfo:
-            with patch.object(sys, 'argv', ['test']):
+            with patch.object(sys, "argv", ["test"]):
                 ctx = click.Context(click.Command("test"))
                 ctx.obj = {"debug": False}
                 with ctx:
@@ -352,8 +354,9 @@ class TestHandleErrorsDecorator:
 
     def test_decorator_handles_file_not_found(self):
         """Test that decorator handles FileNotFoundError with user exit code."""
-        import click
         import sys
+
+        import click
 
         @handle_errors
         @click.command()
@@ -361,7 +364,7 @@ class TestHandleErrorsDecorator:
             raise FileNotFoundError("File not found")
 
         with pytest.raises(SystemExit) as excinfo:
-            with patch.object(sys, 'argv', ['test']):
+            with patch.object(sys, "argv", ["test"]):
                 ctx = click.Context(click.Command("test"))
                 ctx.obj = {"debug": False}
                 with ctx:
@@ -399,8 +402,9 @@ class TestHandleErrorsDecorator:
         so we test that the Abort is properly re-raised by the decorator
         and then caught by Click.
         """
-        import click
         import sys
+
+        import click
 
         @handle_errors
         @click.command()
@@ -409,7 +413,7 @@ class TestHandleErrorsDecorator:
 
         # Click will catch the Abort and convert to SystemExit(1)
         with pytest.raises(SystemExit) as excinfo:
-            with patch.object(sys, 'argv', ['test']):
+            with patch.object(sys, "argv", ["test"]):
                 ctx = click.Context(click.Command("test"))
                 ctx.obj = {"debug": False}
                 with ctx:

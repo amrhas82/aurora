@@ -9,6 +9,7 @@ This module provides a production-ready storage backend using SQLite with:
 """
 
 import json
+import shutil
 import sqlite3
 import threading
 from collections.abc import Iterator
@@ -21,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Optional, cast
 
 from aurora_core.exceptions import (
     ChunkNotFoundError,
+    SchemaMismatchError,
     StorageError,
     ValidationError,
 )
@@ -95,14 +97,128 @@ class SQLiteStore(Store):
         return cast(sqlite3.Connection, self._local.connection)
 
     def _init_schema(self) -> None:
-        """Initialize database schema if not exists."""
+        """Initialize database schema if not exists.
+
+        This method first checks if an existing database has a compatible schema.
+        If the database exists but has an incompatible (older) schema, it raises
+        SchemaMismatchError to allow the caller to handle migration or reset.
+
+        Raises:
+            SchemaMismatchError: If database has incompatible schema version
+            StorageError: If schema initialization fails
+        """
         conn = self._get_connection()
+
+        # Check for existing incompatible schema before attempting CREATE statements
+        # This prevents confusing errors when old schema tables conflict with new DDL
+        try:
+            self._check_schema_compatibility()
+        except SchemaMismatchError:
+            # Re-raise to let caller handle (CLI will prompt for reset)
+            raise
+
         try:
             for statement in get_init_statements():
                 conn.execute(statement)
             conn.commit()
         except sqlite3.Error as e:
             raise StorageError("Failed to initialize database schema", details=str(e))
+
+    def _detect_schema_version(self) -> tuple[int, int]:
+        """
+        Detect the schema version of an existing database.
+
+        This method determines the schema version by:
+        1. Checking the schema_version table if it exists
+        2. Falling back to column count detection for legacy databases
+
+        Returns:
+            Tuple of (detected_version, column_count) where:
+            - detected_version: The schema version (0 if unknown legacy)
+            - column_count: Number of columns in chunks table
+
+        Raises:
+            StorageError: If the chunks table doesn't exist or query fails
+        """
+        from aurora_core.store.schema import SCHEMA_VERSION
+
+        conn = self._get_connection()
+
+        try:
+            # First, check if schema_version table exists and has a version
+            cursor = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'"
+            )
+            if cursor.fetchone() is not None:
+                cursor = conn.execute(
+                    "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1"
+                )
+                row = cursor.fetchone()
+                if row is not None:
+                    # Get column count for completeness
+                    cursor = conn.execute("PRAGMA table_info(chunks)")
+                    columns = cursor.fetchall()
+                    return (int(row[0]), len(columns))
+
+            # No schema_version table - check if chunks table exists
+            cursor = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='chunks'"
+            )
+            if cursor.fetchone() is None:
+                # No chunks table - this is a fresh database
+                return (SCHEMA_VERSION, 0)
+
+            # Get column count from chunks table for legacy detection
+            cursor = conn.execute("PRAGMA table_info(chunks)")
+            columns = cursor.fetchall()
+            column_count = len(columns)
+
+            # Determine version based on column count
+            # Current schema (v3) has 9 columns: id, type, content, metadata, embeddings,
+            #   created_at, updated_at, first_access, last_access
+            # Legacy schemas had fewer columns (e.g., 7 columns without first_access/last_access)
+            if column_count >= 9:
+                return (SCHEMA_VERSION, column_count)
+            elif column_count == 7:
+                # Legacy schema without first_access/last_access
+                return (1, column_count)
+            else:
+                # Unknown legacy schema
+                return (0, column_count)
+
+        except sqlite3.Error as e:
+            raise StorageError("Failed to detect schema version", details=str(e))
+
+    def _check_schema_compatibility(self) -> None:
+        """
+        Check if the database schema is compatible with current version.
+
+        This method should be called before attempting to use an existing database.
+        It raises SchemaMismatchError if the database has an incompatible schema,
+        allowing the caller to handle migration or reset.
+
+        Raises:
+            SchemaMismatchError: If database schema version is incompatible
+            StorageError: If schema detection fails
+        """
+        from aurora_core.store.schema import SCHEMA_VERSION
+
+        detected_version, column_count = self._detect_schema_version()
+
+        # If column_count is 0, this is a fresh database - no check needed
+        if column_count == 0:
+            return
+
+        # If detected version matches expected, we're good
+        if detected_version == SCHEMA_VERSION:
+            return
+
+        # Schema mismatch - raise error with details
+        raise SchemaMismatchError(
+            found_version=detected_version,
+            expected_version=SCHEMA_VERSION,
+            db_path=self.db_path if self.db_path != ":memory:" else None,
+        )
 
     @contextmanager
     def _transaction(self) -> Iterator[sqlite3.Connection]:
@@ -375,7 +491,8 @@ class SQLiteStore(Store):
 
             cursor = conn.execute(
                 """
-                SELECT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at
+                SELECT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at,
+                       a.base_level AS activation
                 FROM chunks c
                 JOIN activations a ON c.id = a.chunk_id
                 WHERE a.base_level >= ?
@@ -387,8 +504,13 @@ class SQLiteStore(Store):
 
             chunks = []
             for row in cursor:
-                chunk = self._deserialize_chunk(dict(row))
+                row_dict = dict(row)
+                # Extract activation before deserialization
+                activation_value = row_dict.pop("activation", 0.0)
+                chunk = self._deserialize_chunk(row_dict)
                 if chunk is not None:
+                    # Attach activation score to chunk object
+                    chunk.activation = activation_value  # type: ignore[attr-defined]
                     chunks.append(chunk)
 
             return chunks
@@ -716,5 +838,92 @@ class SQLiteStore(Store):
             except sqlite3.Error as e:
                 raise StorageError("Failed to close database connection", details=str(e))
 
+    def reset_database(self) -> bool:
+        """
+        Reset the database by deleting and recreating it with current schema.
 
-__all__ = ["SQLiteStore"]
+        This method:
+        1. Closes existing connections
+        2. Deletes the database file
+        3. Reinitializes with the current schema
+
+        Returns:
+            True if reset was successful
+
+        Raises:
+            StorageError: If reset operation fails
+        """
+        if self.db_path == ":memory:":
+            # For in-memory databases, just reinitialize
+            self._local.connection = None
+            self._init_schema()
+            return True
+
+        try:
+            # Close existing connection
+            self.close()
+
+            # Delete the database file
+            db_file = Path(self.db_path)
+            if db_file.exists():
+                db_file.unlink()
+
+            # Also remove WAL and SHM files if they exist
+            wal_file = Path(f"{self.db_path}-wal")
+            shm_file = Path(f"{self.db_path}-shm")
+            if wal_file.exists():
+                wal_file.unlink()
+            if shm_file.exists():
+                shm_file.unlink()
+
+            # Reinitialize with current schema
+            self._init_schema()
+            return True
+
+        except OSError as e:
+            raise StorageError(
+                f"Failed to reset database: {self.db_path}",
+                details=str(e),
+            )
+
+
+def backup_database(db_path: str) -> str:
+    """
+    Create a backup of the database file.
+
+    Creates a copy of the database file with a timestamp suffix.
+    Format: {db_path}.bak.{timestamp}
+
+    Args:
+        db_path: Path to the database file to backup
+
+    Returns:
+        Path to the backup file
+
+    Raises:
+        StorageError: If backup operation fails
+    """
+    db_file = Path(db_path)
+
+    if not db_file.exists():
+        raise StorageError(
+            "Cannot backup database: file not found",
+            details=f"Path: {db_path}",
+        )
+
+    # Generate timestamp for backup filename
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    backup_path = f"{db_path}.bak.{timestamp}"
+
+    try:
+        # Use shutil.copy2 to preserve metadata
+        shutil.copy2(db_path, backup_path)
+        return backup_path
+    except OSError as e:
+        raise StorageError(
+            "Failed to create database backup",
+            details=f"Source: {db_path}, Destination: {backup_path}, Error: {e}",
+        )
+
+
+__all__ = ["SQLiteStore", "backup_database"]

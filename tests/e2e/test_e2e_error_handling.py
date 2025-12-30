@@ -68,9 +68,7 @@ class TestErrorHandlingMemoryCommands:
         # Use isolated AURORA_HOME with no database
         env = {"AURORA_HOME": str(tmp_path)}
 
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "mem", "search", "test"], env=env
-        )
+        exit_code, stdout, stderr = run_cli_command(["aur", "mem", "search", "test"], env=env)
 
         # Should fail gracefully
         assert exit_code != 0
@@ -122,9 +120,7 @@ class TestErrorHandlingBudgetCommands:
         """Test budget set with invalid amount."""
         env = {"AURORA_HOME": str(tmp_path)}
 
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "budget", "set", "invalid"], env=env
-        )
+        exit_code, stdout, stderr = run_cli_command(["aur", "budget", "set", "invalid"], env=env)
 
         # Should fail with clear error
         assert exit_code != 0
@@ -135,9 +131,7 @@ class TestErrorHandlingBudgetCommands:
         """Test budget set with negative amount."""
         env = {"AURORA_HOME": str(tmp_path)}
 
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "budget", "set", "-10.0"], env=env
-        )
+        exit_code, stdout, stderr = run_cli_command(["aur", "budget", "set", "-10.0"], env=env)
 
         # Should fail (negative budget not allowed)
         assert exit_code != 0
@@ -175,9 +169,7 @@ class TestDebugMode:
         # Trigger an error with AURORA_DEBUG environment variable
         env = {"AURORA_HOME": str(tmp_path), "AURORA_DEBUG": "1"}
 
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "mem", "search", "test"], env=env
-        )
+        exit_code, stdout, stderr = run_cli_command(["aur", "mem", "search", "test"], env=env)
 
         # Should fail
         assert exit_code != 0
@@ -244,9 +236,7 @@ class TestCorruptedDatabase:
 
         env = {"AURORA_HOME": str(tmp_path)}
 
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "mem", "search", "test"], env=env
-        )
+        exit_code, stdout, stderr = run_cli_command(["aur", "mem", "search", "test"], env=env)
 
         # Should fail gracefully
         assert exit_code != 0
@@ -256,8 +246,7 @@ class TestCorruptedDatabase:
         # Should mention database or corruption
         combined_output = (stdout + stderr).lower()
         assert any(
-            keyword in combined_output
-            for keyword in ["database", "corrupt", "reset", "init"]
+            keyword in combined_output for keyword in ["database", "corrupt", "reset", "init"]
         )
 
 
@@ -307,9 +296,7 @@ class TestSchemaErrorHandling:
         env = {"AURORA_HOME": str(tmp_path)}
 
         # Try to use the old database
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "mem", "search", "test"], env=env
-        )
+        exit_code, stdout, stderr = run_cli_command(["aur", "mem", "search", "test"], env=env)
 
         # Should fail gracefully
         assert exit_code != 0

@@ -108,6 +108,48 @@ class ChunkNotFoundError(StorageError):
         self.chunk_id = chunk_id
 
 
+class SchemaMismatchError(StorageError):
+    """
+    Raised when the database schema version does not match the expected version.
+
+    This error indicates that the database was created with an older version
+    of AURORA and needs to be migrated or reset before use.
+
+    Examples:
+        - Old database with 7-column chunks table vs new 9-column schema
+        - Missing schema_version table in legacy databases
+        - Schema version in database lower than current SCHEMA_VERSION
+    """
+
+    def __init__(
+        self,
+        found_version: int,
+        expected_version: int,
+        db_path: str | None = None,
+    ):
+        """
+        Initialize a schema mismatch error.
+
+        Args:
+            found_version: The schema version found in the database
+            expected_version: The schema version required by the application
+            db_path: Optional path to the database file
+        """
+        self.found_version = found_version
+        self.expected_version = expected_version
+        self.db_path = db_path
+
+        message = f"Database schema outdated (v{found_version} found, v{expected_version} required)"
+        details = (
+            "The database was created with an older version of AURORA. "
+            "Run 'aur init' to reset the database and re-index your codebase."
+        )
+        if db_path:
+            details += f"\nDatabase path: {db_path}"
+
+        super().__init__(message, details)
+
+
 class FatalError(AuroraError):
     """
     Raised when a fatal error occurs that requires immediate termination.
@@ -174,6 +216,7 @@ __all__ = [
     "ConfigurationError",
     "ValidationError",
     "ChunkNotFoundError",
+    "SchemaMismatchError",
     "FatalError",
     "BudgetExceededError",
 ]

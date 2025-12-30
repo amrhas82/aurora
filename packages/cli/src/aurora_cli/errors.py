@@ -79,6 +79,28 @@ class ErrorHandler:
         return formatted
 
     @staticmethod
+    def format_error_with_solution(problem: str, solution: str) -> str:
+        """Format error with one-line problem and one-line solution.
+
+        Args:
+            problem: One-line description of the problem
+            solution: One-line description of how to fix it
+
+        Returns:
+            Formatted error message string
+        """
+        return f"{problem}\n{solution}"
+
+    @staticmethod
+    def suggest_doctor_check() -> str:
+        """Suggest running doctor command for diagnostics.
+
+        Returns:
+            Formatted suggestion message
+        """
+        return "Run 'aur doctor' for diagnostics"
+
+    @staticmethod
     def handle_api_error(error: Exception, operation: str = "API call") -> str:
         """Handle and format API errors with actionable messages.
 
@@ -354,11 +376,23 @@ class ErrorHandler:
                 "Indexing continues with remaining files."
             )
 
+        # No index found
+        if "no index" in error_str or "not indexed" in error_str or "no results" in error_str:
+            return (
+                "[bold red][Memory][/] No index found.\n\n"
+                "[green]Solution:[/] Run 'aur mem index .' to create one"
+            )
+
         # Generic memory error
         return (
             f"[bold red][Memory][/] {operation} failed.\n\n"
             f"[yellow]Error:[/] {error}\n\n"
             "[green]Solutions:[/]\n"
+            "  1. Run diagnostics:\n"
+            "     [cyan]aur doctor[/]\n"
+            "  2. Check logs for details\n"
+            "  3. Report issue on GitHub if problem persists\n\n"
+            "[dim]For more help:[/]\n"
             "  1. Check database file:\n"
             "     [cyan]ls -lh ~/.aurora/memory.db[/]\n"
             "  2. Try re-indexing:\n"
@@ -690,10 +724,14 @@ def handle_errors(f: F) -> F:
                 error_msg = error_handler.handle_memory_error(e)
                 exit_code = EXIT_SYSTEM_ERROR
             elif isinstance(e, PermissionError):
-                error_msg = error_handler.handle_path_error(e, str(getattr(e, "filename", "unknown")), "accessing file")
+                error_msg = error_handler.handle_path_error(
+                    e, str(getattr(e, "filename", "unknown")), "accessing file"
+                )
                 exit_code = EXIT_SYSTEM_ERROR
             elif isinstance(e, FileNotFoundError):
-                error_msg = error_handler.handle_path_error(e, str(getattr(e, "filename", "unknown")), "accessing file")
+                error_msg = error_handler.handle_path_error(
+                    e, str(getattr(e, "filename", "unknown")), "accessing file"
+                )
                 exit_code = EXIT_USER_ERROR
             elif isinstance(e, ValueError):
                 # Value errors are typically user input errors

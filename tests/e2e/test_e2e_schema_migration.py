@@ -136,7 +136,7 @@ class TestSchemaDetectionAndError:
 
         # CRITICAL: Verify NO Python traceback in output
         assert "Traceback" not in output
-        assert "File \"" not in output  # Python traceback format
+        assert 'File "' not in output  # Python traceback format
         assert "line " not in output or "command line" in output.lower()
 
     def test_schema_error_shows_version_info(self, clean_aurora_home: Path, legacy_database: Path):
@@ -158,9 +158,7 @@ class TestSchemaDetectionAndError:
 class TestBackupAndReset:
     """Test backup creation and database reset functionality."""
 
-    def test_reset_with_backup_creates_backup(
-        self, clean_aurora_home: Path, legacy_database: Path
-    ):
+    def test_reset_with_backup_creates_backup(self, clean_aurora_home: Path, legacy_database: Path):
         """Test that reset flow creates backup when requested."""
         # Run with automatic responses: skip API key, yes to reset, yes to backup, no to index
         result = run_cli_command(

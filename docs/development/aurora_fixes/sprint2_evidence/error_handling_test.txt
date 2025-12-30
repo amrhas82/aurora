@@ -1,0 +1,35 @@
+# Manual Verification: Error Handling (Task 5.6)
+
+## Test Setup
+- Corrupted database by replacing with text "CORRUPTED"
+- AURORA_HOME: /tmp/aurora_manual_test
+
+## Test Results
+
+### Test 1: Corrupted database without debug flag
+Command: `aur mem search "test"`
+Result:
+- Shows error message: "Search command failed: Failed to connect to database"
+- Shows full Python traceback (even without debug flag)
+- Exit code: 1
+
+### Test 2: With AURORA_DEBUG=1
+Command: `AURORA_DEBUG=1 aur mem search "test"`
+Result:
+- Same behavior as without debug flag
+- Full traceback shown
+
+## Issues Found
+⚠️ Error handling decorator (@handle_errors) is not being used for memory commands
+- Tracebacks are shown even in production mode (without --debug or AURORA_DEBUG=1)
+- The error handling improvements from Task 2.0 are implemented but not applied to memory commands
+- Exit code is 1 (user error) instead of 2 (system error) for StorageError
+
+## Status
+- Error messages are informative
+- Exit codes work (non-zero)
+- BUT: Tracebacks should be hidden unless debug mode is explicitly enabled
+- This is a minor UX issue but doesn't block functionality
+
+##Conclusion
+⚠️ Partial success - errors are caught and reported, but debug mode behavior not fully working as designed

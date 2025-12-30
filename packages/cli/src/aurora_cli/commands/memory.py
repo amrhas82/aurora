@@ -27,7 +27,7 @@ from rich.table import Table
 from rich.text import Text
 
 from aurora_cli.config import Config, load_config
-from aurora_cli.errors import ErrorHandler, MemoryStoreError
+from aurora_cli.errors import ErrorHandler, MemoryStoreError, handle_errors
 from aurora_cli.memory_manager import MemoryManager, SearchResult
 
 
@@ -58,7 +58,9 @@ def memory_group() -> None:
 
 @memory_group.command(name="index")
 @click.argument("path", type=click.Path(exists=True, path_type=Path), default=".")
-def index_command(path: Path) -> None:
+@click.pass_context
+@handle_errors
+def index_command(ctx: click.Context, path: Path) -> None:
     """Index code files into memory store.
 
     PATH is the directory or file to index. Defaults to current directory.
@@ -168,7 +170,10 @@ def index_command(path: Path) -> None:
     default=None,
     help="Minimum semantic score threshold (0.0-1.0, default: from config or 0.35)",
 )
+@click.pass_context
+@handle_errors
 def search_command(
+    ctx: click.Context,
     query: str,
     limit: int,
     output_format: str,
@@ -241,7 +246,9 @@ def search_command(
 
 
 @memory_group.command(name="stats")
-def stats_command() -> None:
+@click.pass_context
+@handle_errors
+def stats_command(ctx: click.Context) -> None:
     """Display memory store statistics.
 
     Shows information about indexed chunks, files, languages, and database size.

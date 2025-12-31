@@ -383,6 +383,15 @@
 
 ---
 
-**Status**: ✅ **READY FOR IMPLEMENTATION**
+**Status**: ✅ **PARTIALLY COMPLETE - Core Tri-Hybrid Functional**
 
-**Next Step**: Start with Task 1.1 (Write Shell Tests for BM25 Exact Match)
+**Completed**: Tasks 1.0 (BM25 Core) and 2.0 (Staged Retrieval) - 100% complete
+**Remaining**: Tasks 3.0-7.0 (Knowledge/Reasoning chunks, Display features, Configuration UI)
+
+**Current State**:
+- Tri-hybrid BM25 retrieval fully functional with 30/40/30 default weights
+- All 20 unit tests passing (15 BM25 + 5 staged retrieval)
+- Shell tests ST-01 through ST-05 passing
+- Code-aware tokenization working for camelCase, snake_case, acronyms
+- 2-stage architecture (BM25 filter → tri-hybrid re-rank) operational
+- Backward compatible (dual-hybrid mode with bm25_weight=0.0)

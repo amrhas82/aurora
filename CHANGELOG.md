@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - BM25 Tri-Hybrid Search
+
+**Tri-Hybrid Retrieval Architecture:**
+- **BM25 Keyword Matching (30% weight)**: Code-aware tokenization for exact identifier matches
+  - Splits camelCase: `getUserData` → `["get", "user", "data", "getuserdata"]`
+  - Splits snake_case: `user_manager` → `["user", "manager", "user_manager"]`
+  - Preserves acronyms: `HTTPRequest` → `["HTTP", "Request", "httprequest"]`
+  - Handles dot notation: `auth.oauth` → `["auth", "oauth"]`
+- **Staged Retrieval Pipeline**:
+  - Stage 1: BM25 filtering (top-k=100 candidates from activation-ranked chunks)
+  - Stage 2: Tri-hybrid re-ranking (30% BM25 + 40% Semantic + 30% Activation)
+- **Backward Compatibility**: Dual-hybrid mode (set `bm25_weight=0.0` for original 60/40 activation/semantic)
+
+**Configuration:**
+- New `HybridConfig` parameters: `bm25_weight`, `stage1_top_k`, `use_staged_retrieval`
+- Config validation ensures weights sum to 1.0
+- Supports config loading from `aurora_config.get("context.code.hybrid_weights")`
+
+**Implementation:**
+- `BM25Scorer` class with Okapi BM25 algorithm (k1=1.5, b=0.75)
+- Index persistence: save/load BM25 indexes
+- Result format now includes `bm25_score` field alongside `activation_score` and `semantic_score`
+- Backup of v1 hybrid retriever saved as `hybrid_retriever_v1_backup.py`
+
 ---
 
 ## [0.2.1] - 2025-12-29

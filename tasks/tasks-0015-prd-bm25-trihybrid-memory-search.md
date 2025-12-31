@@ -68,40 +68,41 @@
 **Estimated**: 2 hours
 
 ### 2.1 Write Shell Tests for Staged Retrieval (20 min)
-- [ ] Create `tests/shell/test_04_staged_exact_wins.sh` (exact match beats high-activation)
-- [ ] Create `tests/shell/test_05_staged_topk_coverage.sh` (Stage 1 captures diverse results)
-- [ ] Add validation for staged retrieval behavior
+- [x] Create `tests/shell/test_04_staged_exact_wins.sh` (exact match beats high-activation)
+- [x] Create `tests/shell/test_05_staged_topk_coverage.sh` (Stage 1 captures diverse results)
+- [x] Add validation for staged retrieval behavior
 - **Dependencies**: 1.5
 - **Verification**: Tests show PENDING (implementation not ready)
 
 ### 2.2 Write Unit Tests for Staged Architecture (30 min)
-- [ ] Create `tests/unit/test_hybrid_retriever_staged.py`
-- [ ] Implement UT-HYBRID-01: Stage 1 BM25 filtering test
-- [ ] Implement UT-HYBRID-02: Stage 2 re-ranking test
-- [ ] Implement UT-HYBRID-03: Score preservation test (no normalization conflicts)
-- [ ] Implement UT-HYBRID-04: Empty query handling
+- [x] Create `tests/unit/test_hybrid_retriever_staged.py`
+- [x] Implement UT-HYBRID-01: Stage 1 BM25 filtering test
+- [x] Implement UT-HYBRID-02: Stage 2 re-ranking test
+- [x] Implement UT-HYBRID-03: Score preservation test (no normalization conflicts)
+- [x] Implement UT-HYBRID-04: Empty query handling
 - **Dependencies**: 1.5
-- **Verification**: `pytest tests/unit/test_hybrid_retriever_staged.py` shows 4 failures
+- **Verification**: `pytest tests/unit/test_hybrid_retriever_staged.py` passes 5/5
 
 ### 2.3 Backup Current HybridRetriever (10 min)
-- [ ] Copy `hybrid_retriever.py` to `hybrid_retriever_v1_backup.py`
-- [ ] Add docstring: "Backup of 60/40 activation/semantic (pre-BM25)"
-- [ ] Git commit backup
+- [x] Copy `hybrid_retriever.py` to `hybrid_retriever_v1_backup.py`
+- [x] Add docstring: "Backup of 60/40 activation/semantic (pre-BM25)"
+- [x] Git commit backup
 - **Dependencies**: None
 - **Verification**: `git log --oneline -1` shows backup commit
 
 ### 2.4 Refactor HybridRetriever for Staged Retrieval (1 hour)
-- [ ] Modify `retrieve()` method signature to accept `use_staged=True`
-- [ ] Implement Stage 1: BM25 filtering (top_k=100)
-- [ ] Implement Stage 2: Semantic+Activation re-ranking
-- [ ] Update `_combine_scores()` for tri-hybrid (30% BM25 + 40% Semantic + 30% Activation)
-- [ ] Pass UT-HYBRID-01 through UT-HYBRID-04
-- [ ] Run ST-04 and ST-05 shell tests
+- [x] Modify `retrieve()` method signature to accept `use_staged=True`
+- [x] Implement Stage 1: BM25 filtering (top_k=100)
+- [x] Implement Stage 2: Semantic+Activation re-ranking
+- [x] Update `_combine_scores()` for tri-hybrid (30% BM25 + 40% Semantic + 30% Activation)
+- [x] Pass UT-HYBRID-01 through UT-HYBRID-04
+- [x] Run ST-04 and ST-05 shell tests
 - **Dependencies**: 2.2, 2.3
 - **Files Modified**: `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py`
 - **Verification**:
-  - `pytest tests/unit/test_hybrid_retriever_staged.py` passes 4/4
+  - `pytest tests/unit/test_hybrid_retriever_staged.py` passes 5/5
   - `bash tests/shell/test_04_staged_exact_wins.sh` passes
+  - `bash tests/shell/test_05_staged_topk_coverage.sh` passes
 
 ---
 

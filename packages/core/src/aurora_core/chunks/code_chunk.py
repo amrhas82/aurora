@@ -111,6 +111,23 @@ class CodeChunk(Chunk):
         Returns:
             Dictionary in the format expected by the storage layer
         """
+        # Base metadata
+        metadata_dict = {
+            "language": self.language,
+            "created_at": self.created_at.isoformat(),
+            "last_modified": self.updated_at.isoformat(),
+        }
+
+        # Include git metadata if available (commit_count, git_hash, last_modified timestamp)
+        if hasattr(self, "metadata") and self.metadata:
+            # Add git-specific metadata fields
+            if "commit_count" in self.metadata:
+                metadata_dict["commit_count"] = self.metadata["commit_count"]
+            if "git_hash" in self.metadata:
+                metadata_dict["git_hash"] = self.metadata["git_hash"]
+            if "last_modified" in self.metadata:  # Git timestamp
+                metadata_dict["git_last_modified"] = self.metadata["last_modified"]
+
         return {
             "id": self.id,
             "type": "code",
@@ -127,11 +144,7 @@ class CodeChunk(Chunk):
                     "element_type": self.element_type,
                 },
             },
-            "metadata": {
-                "language": self.language,
-                "created_at": self.created_at.isoformat(),
-                "last_modified": self.updated_at.isoformat(),
-            },
+            "metadata": metadata_dict,
         }
 
     @classmethod
@@ -182,6 +195,15 @@ class CodeChunk(Chunk):
             chunk.complexity_score = ast_summary.get("complexity", 0.0)
             chunk.element_type = ast_summary.get("element_type", "function")
             chunk.language = metadata.get("language", "python")
+
+            # Restore git metadata if present
+            chunk.metadata = {}
+            if "commit_count" in metadata:
+                chunk.metadata["commit_count"] = metadata["commit_count"]
+            if "git_hash" in metadata:
+                chunk.metadata["git_hash"] = metadata["git_hash"]
+            if "git_last_modified" in metadata:
+                chunk.metadata["last_modified"] = metadata["git_last_modified"]
 
             # Validate reconstructed chunk
             chunk.validate()

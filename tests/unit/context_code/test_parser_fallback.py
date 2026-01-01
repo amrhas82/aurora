@@ -24,6 +24,7 @@ class TestTreeSitterFallback:
         try:
             # Force reimport
             import importlib
+
             import aurora_context_code.languages.python as python_module
             importlib.reload(python_module)
 
@@ -48,7 +49,6 @@ class TestTreeSitterFallback:
         """Test fallback chunking creates valid chunks."""
         import os
         import tempfile
-        from pathlib import Path
 
         # Temporarily disable tree-sitter
         old_value = os.environ.get("AURORA_SKIP_TREESITTER")
@@ -57,6 +57,7 @@ class TestTreeSitterFallback:
         try:
             # Force reimport
             import importlib
+
             import aurora_context_code.languages.python as python_module
             importlib.reload(python_module)
 
@@ -92,8 +93,8 @@ class TestTreeSitterFallback:
 
     def test_fallback_warning_logged(self, caplog):
         """Test warning is logged when using fallback."""
-        import os
         import logging
+        import os
 
         # Temporarily disable tree-sitter
         old_value = os.environ.get("AURORA_SKIP_TREESITTER")
@@ -102,6 +103,7 @@ class TestTreeSitterFallback:
         try:
             # Force reimport
             import importlib
+
             import aurora_context_code.languages.python as python_module
             importlib.reload(python_module)
 
@@ -138,6 +140,7 @@ class TestEnvironmentVariableOverride:
         try:
             # Force reimport
             import importlib
+
             import aurora_context_code.languages.python as python_module
             importlib.reload(python_module)
 
@@ -171,6 +174,7 @@ class TestEnvironmentVariableOverride:
             try:
                 # Force reimport
                 import importlib
+
                 import aurora_context_code.languages.python as python_module
                 importlib.reload(python_module)
 

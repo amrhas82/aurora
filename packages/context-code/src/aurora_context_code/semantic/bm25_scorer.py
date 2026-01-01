@@ -28,10 +28,11 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, List
 
+
 logger = logging.getLogger(__name__)
 
 
-def tokenize(text: str, _recursion_level: int = 0) -> List[str]:
+def tokenize(text: str, _recursion_level: int = 0) -> list[str]:
     """Tokenize text with code-aware splitting.
 
     Splits identifiers using multiple strategies:
@@ -180,15 +181,15 @@ class BM25Scorer:
         self.b = b
 
         # Index data structures
-        self.idf: Dict[str, float] = {}
-        self.doc_lengths: Dict[str, int] = {}
+        self.idf: dict[str, float] = {}
+        self.doc_lengths: dict[str, int] = {}
         self.avg_doc_length: float = 0.0
         self.corpus_size: int = 0
-        self.term_doc_counts: Dict[str, int] = {}  # n(t): number of docs containing term t
+        self.term_doc_counts: dict[str, int] = {}  # n(t): number of docs containing term t
 
         logger.info(f"Initialized BM25Scorer with k1={k1}, b={b}")
 
-    def build_index(self, documents: List[tuple[str, str]]) -> None:
+    def build_index(self, documents: list[tuple[str, str]]) -> None:
         """Build BM25 index from documents.
 
         Args:
@@ -380,11 +381,11 @@ def calculate_idf(term: str, corpus_size: int, term_doc_count: int) -> float:
 
 
 def calculate_bm25(
-    query_terms: List[str],
-    doc_terms: List[str],
+    query_terms: list[str],
+    doc_terms: list[str],
     doc_length: int,
     avg_doc_length: float,
-    idf_scores: Dict[str, float],
+    idf_scores: dict[str, float],
     k1: float = 1.5,
     b: float = 0.75,
 ) -> float:

@@ -810,6 +810,67 @@ aur mem search "database" --limit 10
 aur mem search "calculate" --show-content
 ```
 
+### Search with Score Breakdown
+
+Show detailed score breakdown (BM25, Semantic, Activation):
+
+```bash
+aur mem search "authentication" --show-scores
+```
+
+**Output:**
+```
+Found 8 results for 'authentication'
+
+┌──────────────────┬──────────┬──────────────────┬──────────┬────────┐
+│ File             │ Type     │ Name             │ Lines    │  Score │
+├──────────────────┼──────────┼──────────────────┼──────────┼────────┤
+│ auth_manager.py  │ function │ authenticate_user│ 45-67    │  0.856 │
+│ tokens.py        │ function │ validate_token   │ 23-41    │  0.782 │
+│ middleware.py    │ class    │ AuthMiddleware   │ 89-145   │  0.734 │
+└──────────────────┴──────────┴──────────────────┴──────────┴────────┘
+
+Score Breakdown:
+┌──────────────────┬────────┬──────────┬────────────┬────────┐
+│ Name             │    BM25│ Semantic │ Activation │ Hybrid │
+├──────────────────┼────────┼──────────┼────────────┼────────┤
+│ authenticate_user│  0.923 │    0.834 │      0.450 │  0.856 │
+│ validate_token   │  0.867 │    0.756 │      0.420 │  0.782 │
+│ AuthMiddleware   │  0.801 │    0.712 │      0.390 │  0.734 │
+└──────────────────┴────────┴──────────┴────────────┴────────┘
+```
+
+The score breakdown shows:
+- **BM25**: Term frequency / document frequency (exact matching)
+- **Semantic**: Embedding similarity (conceptual matching)
+- **Activation**: Frequency + recency (ACT-R cognitive model)
+- **Hybrid**: Weighted combination (30% BM25 + 40% Semantic + 30% Activation)
+
+### Filter by Element Type
+
+Search for specific code element types:
+
+```bash
+# Search for functions only
+aur mem search "calculate" --type function
+
+# Search for classes only
+aur mem search "Manager" --type class
+
+# Search for methods only
+aur mem search "validate" --type method
+
+# Search knowledge/documentation chunks
+aur mem search "architecture" --type knowledge
+```
+
+**Available Types:**
+- `function` - Top-level functions
+- `class` - Class definitions
+- `method` - Class methods
+- `knowledge` - Markdown documentation chunks
+- `document` - Other document types
+
 ### Search with JSON Output
 
 ```bash

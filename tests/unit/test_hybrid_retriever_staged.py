@@ -10,9 +10,10 @@ Test Coverage:
     - UT-HYBRID-04: Empty query handling
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
+
 import numpy as np
+import pytest
 
 
 class MockChunk:
@@ -145,8 +146,8 @@ class TestStagedRetrievalArchitecture:
         4. Stage 1 results are passed to Stage 2 for re-ranking
         """
         from aurora_context_code.semantic.hybrid_retriever import (
-            HybridRetriever,
             HybridConfig,
+            HybridRetriever,
         )
 
         # Setup: Create chunks with known BM25 characteristics
@@ -220,8 +221,8 @@ class TestStagedRetrievalArchitecture:
         4. Results are ranked by tri-hybrid score
         """
         from aurora_context_code.semantic.hybrid_retriever import (
-            HybridRetriever,
             HybridConfig,
+            HybridRetriever,
         )
 
         # Setup: Create chunks with controlled scores
@@ -303,8 +304,8 @@ class TestStagedRetrievalArchitecture:
         5. Final tri-hybrid combination uses properly normalized scores
         """
         from aurora_context_code.semantic.hybrid_retriever import (
-            HybridRetriever,
             HybridConfig,
+            HybridRetriever,
         )
 
         # Setup: Create chunks with known score patterns
@@ -381,8 +382,8 @@ class TestStagedRetrievalArchitecture:
         3. Error message is informative
         """
         from aurora_context_code.semantic.hybrid_retriever import (
-            HybridRetriever,
             HybridConfig,
+            HybridRetriever,
         )
 
         # Use dual-hybrid mode for testing
@@ -415,8 +416,8 @@ class TestStagedRetrievalArchitecture:
         3. Final top_k parameter controls output size
         """
         from aurora_context_code.semantic.hybrid_retriever import (
-            HybridRetriever,
             HybridConfig,
+            HybridRetriever,
         )
 
         # Setup: Create many chunks to test filtering

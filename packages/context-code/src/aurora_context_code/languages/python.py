@@ -10,6 +10,7 @@ import logging
 import os
 from pathlib import Path
 
+
 # Try to import tree-sitter, fall back to text chunking if unavailable
 TREE_SITTER_AVAILABLE = True
 try:

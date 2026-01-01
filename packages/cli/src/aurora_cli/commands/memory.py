@@ -157,6 +157,20 @@ def index_command(ctx: click.Context, path: Path) -> None:
     default=None,
     help="Minimum semantic score threshold (0.0-1.0, default: from config or 0.35)",
 )
+@click.option(
+    "--type",
+    "-t",
+    "chunk_type",
+    type=click.Choice(["function", "class", "method", "knowledge", "document"]),
+    default=None,
+    help="Filter results by chunk type (function, class, method, knowledge, document)",
+)
+@click.option(
+    "--show-scores",
+    is_flag=True,
+    default=False,
+    help="Show detailed score breakdown (BM25, Semantic, Activation)",
+)
 @click.pass_context
 @handle_errors
 def search_command(
@@ -166,6 +180,8 @@ def search_command(
     output_format: str,
     show_content: bool,
     min_score: float | None,
+    chunk_type: str | None,
+    show_scores: bool,
 ) -> None:
     """Search AURORA memory for relevant chunks.
 
@@ -211,11 +227,18 @@ def search_command(
     # Perform search
     results = manager.search(query, limit=limit, min_semantic_score=min_score)
 
+    # Filter by chunk type if specified
+    if chunk_type:
+        results = [r for r in results if r.metadata.get("type") == chunk_type]
+        if not results:
+            console.print(f"\n[yellow]No results found with type='{chunk_type}'[/]\n")
+            return
+
     # Display results
     if output_format == "json":
         _display_json_results(results)
     else:
-        _display_rich_results(results, query, show_content, config)
+        _display_rich_results(results, query, show_content, config, show_scores)
 
 
 @memory_group.command(name="stats")
@@ -272,7 +295,11 @@ def stats_command(ctx: click.Context) -> None:
 
 
 def _display_rich_results(
-    results: list[SearchResult], query: str, show_content: bool, config: Config
+    results: list[SearchResult],
+    query: str,
+    show_content: bool,
+    config: Config,
+    show_scores: bool = False,
 ) -> None:
     """Display search results with rich formatting.
 
@@ -281,6 +308,7 @@ def _display_rich_results(
         query: Original search query
         show_content: Whether to show content preview
         config: Configuration object with threshold settings
+        show_scores: Whether to show detailed score breakdown
     """
     if not results:
         console.print("\n[yellow]No relevant results found.[/]")
@@ -370,6 +398,34 @@ def _display_rich_results(
     console.print(f"  Activation: {avg_activation:.3f}")
     console.print(f"  Semantic:   {avg_semantic:.3f}")
     console.print(f"  Hybrid:     {avg_hybrid:.3f}\n")
+
+    # Show detailed score breakdown if requested
+    if show_scores:
+        console.print("[bold cyan]Score Breakdown:[/]\n")
+        score_table = Table(show_header=True, header_style="bold magenta")
+        score_table.add_column("Rank", style="dim", width=6)
+        score_table.add_column("Name", style="cyan", width=30)
+        score_table.add_column("BM25", justify="right", style="yellow", width=10)
+        score_table.add_column("Semantic", justify="right", style="green", width=10)
+        score_table.add_column("Activation", justify="right", style="blue", width=10)
+        score_table.add_column("Hybrid", justify="right", style="bold magenta", width=10)
+
+        for i, result in enumerate(results, 1):
+            name = result.metadata.get("name", "<unnamed>")
+            # Note: BM25 score not yet available in results (requires hybrid retriever update)
+            # For now, show placeholder
+            bm25_score = result.metadata.get("bm25_score", 0.0)
+            score_table.add_row(
+                str(i),
+                _truncate_text(name, 30),
+                f"{bm25_score:.3f}",
+                f"{result.semantic_score:.3f}",
+                f"{result.activation_score:.3f}",
+                f"{result.hybrid_score:.3f}",
+            )
+
+        console.print(score_table)
+        console.print()
 
 
 def _display_json_results(results: list[SearchResult]) -> None:

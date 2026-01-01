@@ -30,6 +30,39 @@ Last Updated: 2025-12-25 | Version: v0.2.0
 - **docs/actr-activation.md** - ACT-R memory activation scoring details
 - **docs/CI_ARCHITECTURE.md** - CI/CD pipeline design
 
+### BM25 Tri-Hybrid Memory Search (v0.3.0)
+
+**Architecture**: Two-stage retrieval system combining BM25 lexical matching with semantic and activation-based ranking.
+
+**Stage 1: BM25 Filtering**
+- Code-aware tokenization (CamelCase, snake_case, dot notation, acronyms)
+- Okapi BM25 scoring (k1=1.5, b=0.75)
+- Filters top-100 candidates from corpus
+- Optimized for exact identifier matches
+
+**Stage 2: Tri-Hybrid Re-ranking**
+- **BM25 (30%)**: Term frequency / inverse document frequency
+- **Semantic (40%)**: Embedding similarity via sentence-transformers
+- **Activation (30%)**: ACT-R cognitive model (frequency + recency)
+- Final top-K results returned to user
+
+**CLI Features**:
+- `aur mem search "query"` - Default tri-hybrid search
+- `aur mem search "query" --show-scores` - Show score breakdown
+- `aur mem search "query" --type function` - Filter by element type
+
+**Performance Targets**:
+- Simple queries: <2s latency
+- Complex queries: <10s latency
+- Memory usage: <100MB for 10K chunks
+
+**Implementation Files**:
+- `packages/context-code/src/aurora_context_code/semantic/bm25_scorer.py` - BM25 implementation
+- `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` - Staged retrieval
+- `packages/context-code/src/aurora_context_code/knowledge_parser.py` - Markdown chunk parser
+- `tests/unit/test_bm25_tokenizer.py` - 15 BM25 unit tests
+- `tests/integration/test_e2e_search_quality.py` - MRR validation (target: ≥0.85)
+
 ## Development
 
 ### Testing & Quality

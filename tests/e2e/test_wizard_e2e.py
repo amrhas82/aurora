@@ -10,9 +10,8 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from click.testing import CliRunner
-
 from aurora_cli.main import cli
+from click.testing import CliRunner
 
 
 @pytest.fixture

@@ -31,6 +31,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Result format now includes `bm25_score` field alongside `activation_score` and `semantic_score`
 - Backup of v1 hybrid retriever saved as `hybrid_retriever_v1_backup.py`
 
+**CLI Features:**
+- `--show-scores` flag: Display detailed score breakdown (BM25, Semantic, Activation, Hybrid)
+- `--type` filter: Search specific element types (function, class, method, knowledge, document)
+- Knowledge chunk support: Index and search markdown documentation files
+
+**Knowledge & Reasoning Chunk Support:**
+- `KnowledgeParser`: Parse markdown files into searchable chunks (section-based splitting)
+- `MarkdownParser`: Registered in global parser registry for automatic .md file handling
+- `ReasoningChunk`: Support for SOAR reasoning patterns (created during pipeline execution)
+- CodeChunk validation expanded to support "knowledge" and "document" chunk types
+
+**Testing & Quality:**
+- **Unit Tests**: 30 tests (15 BM25 + 5 staged + 6 knowledge + 4 reasoning)
+- **Shell Tests**: 12 acceptance tests covering exact match, CamelCase, staged retrieval, knowledge indexing
+- **Integration Tests**:
+  - `test_e2e_search_quality.py`: MRR validation (target ≥0.85)
+  - `test_index_rebuild.py`: Index rebuild and BM25 IDF recalculation
+  - `test_performance_benchmarks.py`: Query latency and memory usage benchmarks
+- **Type Safety**: MyPy strict mode, all BM25 code type-checked
+- **Lint**: Ruff clean (code formatting and import organization)
+
+**Performance:**
+- Simple queries: <2s latency (exact identifier matches)
+- Complex queries: <10s latency (semantic concept search)
+- Memory usage: <100MB for 10K chunks
+- Indexing throughput: >2 files/sec, >10 chunks/sec
+
+**Documentation:**
+- Updated `docs/cli/CLI_USAGE_GUIDE.md` with --show-scores and --type examples
+- Added BM25 architecture section to `docs/KNOWLEDGE_BASE.md`
+- Comprehensive docstrings in BM25Scorer and HybridRetriever
+
 ---
 
 ## [0.2.1] - 2025-12-29

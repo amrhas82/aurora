@@ -232,7 +232,7 @@ class CodeChunk(Chunk):
             raise ValueError(f"complexity_score must be in [0.0, 1.0], got {self.complexity_score}")
 
         # Validate element type
-        valid_types = {"function", "class", "method"}
+        valid_types = {"function", "class", "method", "knowledge", "document"}
         if self.element_type not in valid_types:
             raise ValueError(
                 f"element_type must be one of {valid_types}, got '{self.element_type}'"

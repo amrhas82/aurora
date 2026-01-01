@@ -160,5 +160,13 @@ def _register_builtin_parsers(registry: ParserRegistry) -> None:
     except Exception as e:
         logger.warning(f"Failed to auto-register PythonParser: {e}")
 
+    try:
+        from aurora_context_code.languages.markdown import MarkdownParser
+
+        registry.register(MarkdownParser())
+        logger.debug("Auto-registered MarkdownParser")
+    except Exception as e:
+        logger.warning(f"Failed to auto-register MarkdownParser: {e}")
+
 
 __all__ = ["ParserRegistry", "get_global_registry"]

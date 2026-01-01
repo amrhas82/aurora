@@ -263,8 +263,9 @@ def test_bm25_idf_calculation():
     - N = total number of documents
     - n(t) = number of documents containing term t
     """
-    from aurora_context_code.semantic.bm25_scorer import BM25Scorer
     import math
+
+    from aurora_context_code.semantic.bm25_scorer import BM25Scorer
 
     scorer = BM25Scorer()
 

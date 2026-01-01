@@ -66,6 +66,7 @@ class TestGitFallback:
     def test_git_fallback_warning_logged(self, caplog):
         """Test warning is logged when Git unavailable."""
         import logging
+
         from aurora_context_code.git import GitSignalExtractor
 
         # Create temporary non-Git directory
@@ -90,7 +91,6 @@ class TestEnvironmentVariableOverride:
 
     def test_skip_git_env_var_forces_fallback(self, caplog):
         """Test AURORA_SKIP_GIT forces fallback mode."""
-        import os
         import logging
 
         # Set environment variable
@@ -100,6 +100,7 @@ class TestEnvironmentVariableOverride:
         try:
             # Force reimport
             import importlib
+
             import aurora_context_code.git as git_module
             importlib.reload(git_module)
 
@@ -133,7 +134,6 @@ class TestEnvironmentVariableOverride:
 
     def test_skip_git_various_values(self):
         """Test various truthy values for AURORA_SKIP_GIT."""
-        import os
 
         test_values = ["true", "True", "TRUE", "yes", "1", "anything"]
 
@@ -145,6 +145,7 @@ class TestEnvironmentVariableOverride:
             try:
                 # Force reimport
                 import importlib
+
                 import aurora_context_code.git as git_module
                 importlib.reload(git_module)
 

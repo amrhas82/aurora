@@ -402,6 +402,14 @@ class HybridRetriever:
                 "line_end": getattr(chunk, "line_end", 0),
             }
 
+            # Include access count from activation stats
+            try:
+                access_stats = self.store.get_access_stats(chunk.id)
+                metadata["access_count"] = access_stats.get("access_count", 0)
+            except Exception:
+                # If access stats unavailable, default to 0
+                metadata["access_count"] = 0
+
             # Include git metadata if available
             if hasattr(chunk, "metadata") and chunk.metadata:
                 if "commit_count" in chunk.metadata:
@@ -419,6 +427,14 @@ class HybridRetriever:
                 "name": getattr(chunk, "name", ""),
                 "file_path": getattr(chunk, "file_path", ""),
             }
+
+            # Include access count from activation stats
+            try:
+                access_stats = self.store.get_access_stats(chunk.id)
+                metadata["access_count"] = access_stats.get("access_count", 0)
+            except Exception:
+                # If access stats unavailable, default to 0
+                metadata["access_count"] = 0
 
             # Include git metadata if available
             if hasattr(chunk, "metadata") and chunk.metadata:

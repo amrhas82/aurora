@@ -263,8 +263,11 @@ class HybridRetriever:
         if not results:
             return []
 
-        # Filter by RAW semantic score threshold BEFORE normalization
-        if min_semantic_score is not None:
+        # NOTE: Semantic threshold filtering is disabled when BM25 is enabled (tri-hybrid mode)
+        # to allow keyword matches with low semantic similarity to be retrieved.
+        # In tri-hybrid mode, the hybrid score (BM25 + semantic + activation) determines relevance.
+        # Only filter by semantic score in dual-hybrid mode (when bm25_weight == 0)
+        if min_semantic_score is not None and self.config.bm25_weight == 0.0:
             results = [r for r in results if r["raw_semantic"] >= min_semantic_score]
             if not results:
                 return []  # All results below threshold

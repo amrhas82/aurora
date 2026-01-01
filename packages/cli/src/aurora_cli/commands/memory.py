@@ -338,7 +338,7 @@ def _display_rich_results(
     # Create results table
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("File", style="yellow", width=30)
-    table.add_column("Type", style="green", width=10)
+    table.add_column("Type", style="green", width=6)
     table.add_column("Name", style="cyan", width=20)
     table.add_column("Lines", style="dim", width=10)
     table.add_column("Commits", style="magenta", width=8, justify="right")
@@ -355,7 +355,8 @@ def _display_rich_results(
 
     for result in results:
         file_path = Path(result.file_path).name  # Just filename
-        element_type = result.metadata.get("type", "unknown")
+        element_type_full = result.metadata.get("type", "unknown")
+        element_type = _get_type_abbreviation(element_type_full)
         name = result.metadata.get("name", "<unnamed>")
         line_start, line_end = result.line_range
         line_range_str = f"{line_start}-{line_end}"
@@ -436,28 +437,17 @@ def _display_rich_results(
 
     # Show detailed score breakdown if requested
     if show_scores:
-        console.print("[bold cyan]Score Breakdown:[/]\n")
-        score_table = Table(show_header=True, header_style="bold magenta")
-        score_table.add_column("Rank", style="dim", width=6)
-        score_table.add_column("Name", style="cyan", width=30)
-        score_table.add_column("BM25", justify="right", style="yellow", width=10)
-        score_table.add_column("Semantic", justify="right", style="green", width=10)
-        score_table.add_column("Activation", justify="right", style="blue", width=10)
-        score_table.add_column("Hybrid", justify="right", style="bold magenta", width=10)
+        console.print("[bold cyan]Detailed Score Breakdown:[/]\n")
+
+        # Detect terminal width (default 80, Rich typically sets this)
+        terminal_width = console.width if hasattr(console, "width") and console.width > 0 else 80
 
         for i, result in enumerate(results, 1):
-            name = result.metadata.get("name", "<unnamed>")
-            score_table.add_row(
-                str(i),
-                _truncate_text(name, 30),
-                f"{result.bm25_score:.3f}",
-                f"{result.semantic_score:.3f}",
-                f"{result.activation_score:.3f}",
-                f"{result.hybrid_score:.3f}",
-            )
-
-        console.print(score_table)
-        console.print()
+            box = _format_score_box(result, rank=i, query=query, terminal_width=terminal_width)
+            console.print(box)
+            # Add spacing between boxes (empty line)
+            if i < len(results):
+                console.print()
 
 
 def _display_json_results(results: list[SearchResult]) -> None:
@@ -517,6 +507,432 @@ def _truncate_text(text: str, max_length: int) -> str:
     if len(text) <= max_length:
         return text
     return text[: max_length - 3] + "..."
+
+
+def _get_type_abbreviation(element_type: str) -> str:
+    """Get abbreviated type name for display.
+
+    Maps full type names to abbreviated forms for improved readability in tables.
+
+    Args:
+        element_type: Full type name (e.g., "function", "knowledge")
+
+    Returns:
+        Abbreviated type (e.g., "func", "know")
+
+    Examples:
+        >>> _get_type_abbreviation("function")
+        'func'
+        >>> _get_type_abbreviation("knowledge")
+        'know'
+        >>> _get_type_abbreviation("UNKNOWN")
+        'unk'
+    """
+    # Mapping of full type names to abbreviations
+    type_mapping = {
+        "function": "func",
+        "method": "meth",
+        "class": "class",
+        "code": "code",
+        "reasoning": "reas",
+        "knowledge": "know",
+        "document": "doc",
+    }
+
+    # Case-insensitive lookup with default to "unk" for unknown types
+    return type_mapping.get(element_type.lower(), "unk")
+
+
+def _format_score_box(
+    result: SearchResult, rank: int, query: str = "", terminal_width: int = 78
+) -> Text:
+    """Format search result with rich box-drawing for score display.
+
+    Creates a visually formatted box containing:
+    - Header with file, type, name, line range
+    - Final hybrid score
+    - Individual score components (BM25, Semantic, Activation) with explanations
+    - Git metadata (commits, last modified) if available
+
+    Args:
+        result: SearchResult object with scores and metadata
+        rank: Result rank (1-based)
+        query: Search query text for explanation generation
+        terminal_width: Terminal width for box sizing (default 78)
+
+    Returns:
+        Rich Text object with formatted box using Unicode box-drawing characters
+
+    Example output:
+        ┌─ auth.py | func | authenticate (Lines 45-67) ─────────┐
+        │ Final Score: 0.856                                     │
+        │   ├─ BM25:       0.950 ⭐ (exact keyword match on "auth") │
+        │   ├─ Semantic:   0.820 (high conceptual relevance)     │
+        │   └─ Activation: 0.650 (accessed 3x, 23 commits, 2 days ago) │
+        │ Git: 23 commits, last modified 2 days ago              │
+        └─────────────────────────────────────────────────────────┘
+    """
+    # Extract metadata
+    file_path = result.metadata.get("file_path", "unknown")
+    element_type_full = result.metadata.get("type", "unknown")
+    element_type = _get_type_abbreviation(element_type_full)
+    name = result.metadata.get("name", "<unnamed>")
+    line_start = result.metadata.get("line_start", 0)
+    line_end = result.metadata.get("line_end", 0)
+
+    # Get just filename from path
+    file_name = Path(file_path).name if file_path != "unknown" else file_path
+
+    # Format line range
+    if line_start > 0 and line_end > 0:
+        line_range = f"Lines {line_start}-{line_end}"
+    else:
+        line_range = "-"
+
+    # Build header content
+    header_content = f"{file_name} | {element_type} | {name} ({line_range})"
+
+    # Calculate padding for header (width - 4 for corners/spaces - content length)
+    content_width = terminal_width - 4
+    if len(header_content) > content_width - 4:
+        # Truncate name if too long
+        available_for_name = content_width - len(file_name) - len(element_type) - len(line_range) - 15
+        if available_for_name > 10:
+            name = _truncate_text(name, available_for_name)
+        else:
+            name = _truncate_text(name, 10)
+        header_content = f"{file_name} | {element_type} | {name} ({line_range})"
+
+    # Truncate again if still too long
+    if len(header_content) > content_width - 4:
+        header_content = _truncate_text(header_content, content_width - 4)
+
+    header_padding = content_width - len(header_content) - 2
+    header_line = f"┌─ {header_content} {'─' * header_padding}┐"
+
+    # Build box lines
+    lines = []
+    lines.append(header_line)
+
+    # Final score line
+    score_text = f"Final Score: {result.hybrid_score:.3f}"
+    score_padding = content_width - len(score_text)
+    lines.append(f"│ {score_text}{' ' * score_padding}│")
+
+    # Generate explanations for each score component
+    bm25_explanation = _explain_bm25_score(query, result.content, result.bm25_score)
+    semantic_explanation = _explain_semantic_score(result.semantic_score)
+    activation_explanation = _explain_activation_score(result.metadata, result.activation_score)
+
+    # BM25 score line with explanation
+    bm25_score_str = f"  ├─ BM25:       {result.bm25_score:.3f}"
+    if bm25_explanation:
+        # Add star emoji for exact matches
+        if "exact keyword match" in bm25_explanation:
+            bm25_text = f"{bm25_score_str} ⭐ ({bm25_explanation})"
+        else:
+            bm25_text = f"{bm25_score_str} ({bm25_explanation})"
+    else:
+        bm25_text = bm25_score_str
+
+    # Truncate if too long to fit
+    if len(bm25_text) > content_width - 2:
+        bm25_text = _truncate_text(bm25_text, content_width - 2)
+    bm25_padding = content_width - len(bm25_text)
+    lines.append(f"│{bm25_text}{' ' * bm25_padding} │")
+
+    # Semantic score line with explanation
+    semantic_score_str = f"  ├─ Semantic:   {result.semantic_score:.3f}"
+    if semantic_explanation:
+        semantic_text = f"{semantic_score_str} ({semantic_explanation})"
+    else:
+        semantic_text = semantic_score_str
+
+    # Truncate if too long to fit
+    if len(semantic_text) > content_width - 2:
+        semantic_text = _truncate_text(semantic_text, content_width - 2)
+    semantic_padding = content_width - len(semantic_text)
+    lines.append(f"│{semantic_text}{' ' * semantic_padding} │")
+
+    # Activation score line (last, uses └) with explanation
+    activation_score_str = f"  └─ Activation: {result.activation_score:.3f}"
+    if activation_explanation:
+        activation_text = f"{activation_score_str} ({activation_explanation})"
+    else:
+        activation_text = activation_score_str
+
+    # Truncate if too long to fit
+    if len(activation_text) > content_width - 2:
+        activation_text = _truncate_text(activation_text, content_width - 2)
+    activation_padding = content_width - len(activation_text)
+    lines.append(f"│{activation_text}{' ' * activation_padding} │")
+
+    # Git metadata line (if available)
+    commit_count = result.metadata.get("commit_count")
+    last_modified = result.metadata.get("last_modified")
+
+    if commit_count is not None or last_modified:
+        git_parts = []
+        if commit_count is not None:
+            plural = "commit" if commit_count == 1 else "commits"
+            git_parts.append(f"{commit_count} {plural}")
+        if last_modified:
+            git_parts.append(f"last modified {last_modified}")
+
+        if git_parts:
+            git_text = f"Git: {', '.join(git_parts)}"
+            # Truncate if too long
+            max_git_length = content_width - 2
+            if len(git_text) > max_git_length:
+                git_text = _truncate_text(git_text, max_git_length)
+            git_padding = content_width - len(git_text)
+            lines.append(f"│ {git_text}{' ' * git_padding}│")
+
+    # Footer line
+    footer_line = f"└{'─' * content_width}┘"
+    lines.append(footer_line)
+
+    # Create Rich Text with styling
+    text = Text()
+    for i, line in enumerate(lines):
+        if i == 0:
+            # Header in cyan
+            text.append(line + "\n", style="cyan")
+        elif "Final Score:" in line:
+            # Final score in bold
+            text.append(line + "\n", style="bold white")
+        elif "BM25:" in line:
+            # BM25 in yellow
+            text.append(line + "\n", style="yellow")
+        elif "Semantic:" in line:
+            # Semantic in green
+            text.append(line + "\n", style="green")
+        elif "Activation:" in line:
+            # Activation in blue
+            text.append(line + "\n", style="blue")
+        elif "Git:" in line:
+            # Git metadata in dim
+            text.append(line + "\n", style="dim")
+        else:
+            # Footer
+            text.append(line + "\n", style="cyan")
+
+    return text
+
+
+def _explain_bm25_score(query: str, chunk_content: str, bm25_score: float) -> str:
+    """Generate human-readable explanation for BM25 score.
+
+    Analyzes query term matching to produce explanations like:
+    - "exact keyword match on 'auth', 'user'"
+    - "strong term overlap (2/3 terms)"
+    - "partial match (1/4 terms)"
+    - "" (empty string for no match)
+
+    Args:
+        query: Search query text
+        chunk_content: Content of chunk that was scored
+        bm25_score: BM25 score value (unused but included for consistency)
+
+    Returns:
+        Human-readable explanation string (may be empty if no match)
+
+    Examples:
+        >>> _explain_bm25_score("authenticate", "authenticate_user() impl", 0.95)
+        "exact keyword match on 'authenticate'"
+
+        >>> _explain_bm25_score("user auth flow", "User authentication...", 0.75)
+        "strong term overlap (2/3 terms)"
+    """
+    # Import tokenizer from BM25Scorer
+    from aurora_context_code.semantic.bm25_scorer import tokenize
+
+    # Handle empty query
+    if not query or not query.strip():
+        return ""
+
+    # Tokenize query and content (tokenizer handles lowercasing internally)
+    query_terms = set(tokenize(query))
+    content_tokens = set(tokenize(chunk_content))
+
+    # Find exact matches
+    exact_matches = query_terms & content_tokens
+
+    # Calculate match ratio
+    if len(query_terms) == 0:
+        return ""
+
+    match_ratio = len(exact_matches) / len(query_terms)
+
+    # Generate explanation based on ratio
+    if match_ratio == 1.0:
+        # All query terms present - exact match
+        if len(exact_matches) == 0:
+            return ""
+        # Format matched terms (limit to first 3 for brevity)
+        matched_list = sorted(list(exact_matches))[:3]
+        if len(exact_matches) == 1:
+            return f"exact keyword match on '{matched_list[0]}'"
+        elif len(exact_matches) <= 3:
+            terms_str = "', '".join(matched_list)
+            return f"exact keyword match on '{terms_str}'"
+        else:
+            terms_str = "', '".join(matched_list)
+            return f"exact keyword match on '{terms_str}', +{len(exact_matches) - 3} more"
+
+    elif match_ratio >= 0.5:
+        # ≥50% query terms present - strong overlap
+        return f"strong term overlap ({len(exact_matches)}/{len(query_terms)} terms)"
+
+    elif match_ratio > 0:
+        # Some terms present but <50% - partial match
+        return f"partial match ({len(exact_matches)}/{len(query_terms)} terms)"
+
+    else:
+        # No matches
+        return ""
+
+
+def _format_relative_time(seconds_ago: float) -> str:
+    """Format timestamp as relative time string.
+
+    Args:
+        seconds_ago: Seconds since the event
+
+    Returns:
+        Human-readable relative time (e.g., "2 days ago", "3 weeks ago")
+    """
+    from datetime import timedelta
+
+    delta = timedelta(seconds=seconds_ago)
+    days = delta.days
+
+    if days == 0:
+        hours = int(delta.seconds / 3600)
+        if hours == 0:
+            minutes = int(delta.seconds / 60)
+            if minutes == 0:
+                return "just now"
+            elif minutes == 1:
+                return "1 minute ago"
+            else:
+                return f"{minutes} minutes ago"
+        elif hours == 1:
+            return "1 hour ago"
+        else:
+            return f"{hours} hours ago"
+    elif days == 1:
+        return "1 day ago"
+    elif days < 7:
+        return f"{days} days ago"
+    elif days < 30:
+        weeks = days // 7
+        if weeks == 1:
+            return "1 week ago"
+        else:
+            return f"{weeks} weeks ago"
+    elif days < 365:
+        months = days // 30
+        if months == 1:
+            return "1 month ago"
+        else:
+            return f"{months} months ago"
+    else:
+        years = days // 365
+        if years == 1:
+            return "1 year ago"
+        else:
+            return f"{years} years ago"
+
+
+def _explain_semantic_score(semantic_score: float) -> str:
+    """Generate human-readable explanation for semantic score.
+
+    Uses threshold-based relevance levels to describe semantic similarity:
+    - ≥0.9: "very high conceptual relevance"
+    - 0.8-0.89: "high conceptual relevance"
+    - 0.7-0.79: "moderate conceptual relevance"
+    - <0.7: "low conceptual relevance"
+
+    Args:
+        semantic_score: Semantic similarity score (0.0-1.0)
+
+    Returns:
+        Human-readable relevance level description
+
+    Examples:
+        >>> _explain_semantic_score(0.95)
+        "very high conceptual relevance"
+
+        >>> _explain_semantic_score(0.75)
+        "moderate conceptual relevance"
+    """
+    if semantic_score >= 0.9:
+        return "very high conceptual relevance"
+    elif semantic_score >= 0.8:
+        return "high conceptual relevance"
+    elif semantic_score >= 0.7:
+        return "moderate conceptual relevance"
+    else:
+        return "low conceptual relevance"
+
+
+def _explain_activation_score(metadata: dict[str, Any], activation_score: float) -> str:
+    """Generate human-readable explanation for activation score.
+
+    Combines access frequency, git commit history, and recency information
+    into a concise explanation string.
+
+    Args:
+        metadata: Chunk metadata dictionary with optional keys:
+            - access_count: Number of times accessed (required, defaults to 0)
+            - commit_count: Number of git commits (optional)
+            - last_modified: Timestamp of last modification (optional)
+        activation_score: Activation score value (unused but included for consistency)
+
+    Returns:
+        Explanation string (e.g., "accessed 3x, 23 commits, last used 2 days ago")
+
+    Examples:
+        >>> metadata = {"access_count": 5, "commit_count": 23}
+        >>> _explain_activation_score(metadata, 0.85)
+        "accessed 5x, 23 commits"
+
+        >>> metadata = {"access_count": 1}
+        >>> _explain_activation_score(metadata, 0.45)
+        "accessed 1x"
+    """
+    from datetime import datetime
+
+    # Extract metadata fields
+    access_count = metadata.get("access_count", 0)
+    commit_count = metadata.get("commit_count")
+    last_modified = metadata.get("last_modified")
+
+    # Build explanation parts
+    parts = []
+
+    # Access count (always present)
+    parts.append(f"accessed {access_count}x")
+
+    # Git commit count (if available)
+    if commit_count is not None and commit_count > 0:
+        plural = "commit" if commit_count == 1 else "commits"
+        parts.append(f"{commit_count} {plural}")
+
+    # Recency (if available)
+    if last_modified is not None:
+        try:
+            # Calculate time ago
+            now = datetime.now().timestamp()
+            seconds_ago = now - last_modified
+            recency_str = _format_relative_time(seconds_ago)
+            parts.append(f"last used {recency_str}")
+        except (ValueError, TypeError):
+            # Invalid timestamp, skip recency
+            pass
+
+    return ", ".join(parts)
 
 
 if __name__ == "__main__":

@@ -412,13 +412,10 @@ def _display_rich_results(
 
         for i, result in enumerate(results, 1):
             name = result.metadata.get("name", "<unnamed>")
-            # Note: BM25 score not yet available in results (requires hybrid retriever update)
-            # For now, show placeholder
-            bm25_score = result.metadata.get("bm25_score", 0.0)
             score_table.add_row(
                 str(i),
                 _truncate_text(name, 30),
-                f"{bm25_score:.3f}",
+                f"{result.bm25_score:.3f}",
                 f"{result.semantic_score:.3f}",
                 f"{result.activation_score:.3f}",
                 f"{result.hybrid_score:.3f}",

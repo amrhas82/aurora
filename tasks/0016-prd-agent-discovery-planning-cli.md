@@ -517,29 +517,59 @@ def decompose_goal(goal: str, context: ContextData, agents: list[AgentInfo]) -> 
     return create_complex_plan(goal, context, agents, complexity)
 ```
 
-**Step 3: Agent Validation**
+**Step 3: Agent Recommendation and Gap Detection**
 ```python
-def validate_plan(plan: Plan, agents: list[AgentInfo]) -> ValidationResult:
+def recommend_agents_for_subgoals(
+    plan: Plan,
+    agents: list[AgentInfo]
+) -> tuple[Plan, list[AgentGap]]:
     """
-    Validate that all referenced agents exist.
+    Recommend agents for each subgoal and detect gaps.
 
-    For missing agents, suggest similar agents:
-    1. Search by capability keywords
-    2. Search by role similarity
-    3. Offer fallback "llm-executor"
+    Algorithm:
+    1. For each subgoal, extract capability keywords from description
+    2. Search agents by capability match (skills field)
+    3. Rank by keyword overlap
+    4. Assign top-ranked agent to subgoal
+    5. If no good match (score < 0.5), mark as gap
+
+    Gap Detection:
+    - Identifies missing agent types (e.g., technical-writer)
+    - Suggests required capabilities for missing agent
+    - Provides fallback recommendations
+    - This is the "golden discovery feature" for agent ecosystem
     """
-    issues = []
+    agent_gaps = []
 
-    for task in plan.tasks:
-        if task.agent_id not in agent_ids:
-            suggestions = find_similar_agents(task.agent_id, agents)
-            issues.append(AgentNotFoundIssue(
-                task_id=task.id,
-                agent_id=task.agent_id,
-                suggestions=suggestions
-            ))
+    for subgoal in plan.subgoals:
+        # Extract capability keywords from subgoal description
+        keywords = extract_capability_keywords(subgoal.description)
 
-    return ValidationResult(issues=issues, suggestions=suggestions)
+        # Find best matching agent
+        best_match, score = find_best_agent_match(keywords, agents)
+
+        if score >= 0.5:
+            # Good match found
+            subgoal.recommended_agent = f"@{best_match.id}"
+            subgoal.agent_exists = True
+        else:
+            # Gap detected - no suitable agent exists
+            gap = AgentGap(
+                subgoal_id=subgoal.id,
+                subgoal_title=subgoal.title,
+                recommended_agent=infer_agent_name(keywords),
+                agent_exists=False,
+                reason=f"No agent found with required capabilities: {keywords}",
+                suggested_capabilities=keywords,
+                fallback=suggest_fallback_agent(keywords, agents)
+            )
+            agent_gaps.append(gap)
+
+            # Mark in subgoal
+            subgoal.recommended_agent = gap.recommended_agent
+            subgoal.agent_exists = False
+
+    return plan, agent_gaps
 ```
 
 **Step 4: Output Formatting**
@@ -561,70 +591,145 @@ def format_plan(plan: Plan, format: str, output_file: Path | None) -> str:
         return format_yaml(plan)
 ```
 
-**Plan Schema**:
+**Plan Schema** (with subgoals and agent gaps):
 ```json
 {
+  "plan_id": "0001-oauth-authentication",
   "goal": "Implement OAuth2 authentication",
   "complexity": "complex",
   "generated_at": "2025-12-31T23:59:59Z",
   "context_sources": ["indexed_memory", "src/auth.py"],
-  "tasks": [
+  "subgoals": [
     {
-      "id": "task-1",
-      "description": "Research OAuth2 providers (Auth0, Okta, Custom)",
-      "agent_id": "business-analyst",
+      "id": "sg-1",
+      "title": "Research and Decision",
+      "description": "Evaluate OAuth2 providers and make architectural decisions",
+      "recommended_agent": "@business-analyst",
       "agent_exists": true,
-      "dependencies": [],
-      "expected_output": "Comparison of providers with recommendation"
+      "tasks": [
+        {
+          "id": "1.1",
+          "description": "Research OAuth2 providers (Auth0, Okta, Custom)",
+          "expected_output": "Comparison table with recommendations"
+        },
+        {
+          "id": "1.2",
+          "description": "Evaluate security implications",
+          "expected_output": "Security assessment document"
+        }
+      ]
     },
     {
-      "id": "task-2",
-      "description": "Design user model with OAuth fields",
-      "agent_id": "full-stack-dev",
+      "id": "sg-2",
+      "title": "Database Design",
+      "description": "Design and implement user model with OAuth fields",
+      "recommended_agent": "@full-stack-dev",
       "agent_exists": true,
-      "dependencies": ["task-1"],
-      "expected_output": "User model schema with OAuth fields"
+      "dependencies": ["sg-1"],
+      "tasks": [
+        {
+          "id": "2.1",
+          "description": "Design user model schema with OAuth fields",
+          "expected_output": "Database migration with oauth_provider, oauth_id, tokens"
+        },
+        {
+          "id": "2.2",
+          "description": "Implement user model with OAuth methods",
+          "expected_output": "User model code with OAuth integration"
+        }
+      ]
     }
   ],
-  "execution_order": ["task-1", "task-2", "task-3"],
-  "parallelizable": [],
+  "agent_gaps": [
+    {
+      "subgoal_id": "sg-3",
+      "subgoal_title": "API Documentation",
+      "recommended_agent": "@technical-writer",
+      "agent_exists": false,
+      "reason": "No agent found with technical writing capabilities",
+      "suggested_capabilities": ["technical-writing", "api-documentation", "user-guides"],
+      "fallback": "Use @full-stack-dev or @business-analyst with documentation focus"
+    }
+  ],
   "validation": {
-    "all_agents_exist": true,
-    "missing_agents": [],
-    "warnings": []
+    "all_agents_exist": false,
+    "missing_agent_count": 1,
+    "total_subgoals": 3,
+    "warnings": ["Consider creating technical-writer agent for documentation tasks"]
   }
 }
 ```
 
-**Markdown Output Format**:
+**Markdown Output Format** (with subgoals):
 ```markdown
 # Execution Plan: Implement OAuth2 authentication
 
+**Plan ID**: 0001-oauth-authentication
 **Generated**: 2025-12-31 23:59:59
 **Complexity**: complex
-**Context**: 5 code files, 2 reasoning patterns
-
-## Tasks
-
-### Task 1: Research OAuth2 providers
-- **Agent**: business-analyst
-- **Dependencies**: None
-- **Expected Output**: Comparison of providers with recommendation
-
-### Task 2: Design user model with OAuth fields
-- **Agent**: full-stack-dev
-- **Dependencies**: Task 1
-- **Expected Output**: User model schema with OAuth fields
-
-### Task 3: Implement token generation
-- **Agent**: full-stack-dev
-- **Dependencies**: Task 2
-- **Expected Output**: Working token generation and validation
+**Context**: 5 code files from indexed memory
 
 ---
 
-**Execution Order**: task-1 → task-2 → task-3
-**Parallelizable**: None
+## Subgoal 1: Research and Decision
+**Recommended Agent**: @business-analyst ✓
+
+Research OAuth2 providers and make architectural decisions.
+
+### Tasks:
+1. **Task 1.1**: Research OAuth2 providers (Auth0, Okta, Custom)
+   - Expected Output: Comparison table with recommendations
+
+2. **Task 1.2**: Evaluate security implications
+   - Expected Output: Security assessment document
+
+---
+
+## Subgoal 2: Database Design
+**Recommended Agent**: @full-stack-dev ✓
+**Dependencies**: Subgoal 1
+
+Design and implement user model with OAuth fields.
+
+### Tasks:
+1. **Task 2.1**: Design user model schema with OAuth fields
+   - Expected Output: Database migration with oauth_provider, oauth_id, tokens
+
+2. **Task 2.2**: Implement user model with OAuth methods
+   - Expected Output: User model code with OAuth integration
+
+---
+
+## Subgoal 3: API Documentation
+**Recommended Agent**: @technical-writer ⚠️ (NOT FOUND)
+**Dependencies**: Subgoal 2
+
+Document OAuth2 API endpoints and integration guide.
+
+### Tasks:
+1. **Task 3.1**: Write API endpoint documentation
+   - Expected Output: OpenAPI spec for OAuth endpoints
+
+2. **Task 3.2**: Create integration guide for developers
+   - Expected Output: Step-by-step OAuth integration guide
+
+**⚠️ Agent Gap Detected**:
+- No agent found with technical writing capabilities
+- Suggested capabilities: technical-writing, api-documentation, user-guides
+- Fallback: Use @business-analyst with documentation focus
+- Consider creating a technical-writer agent for future documentation tasks
+
+---
+
+## Agent Gaps Summary
+
+1 missing agent type detected:
+- **@technical-writer**: Required for Subgoal 3 (API Documentation)
+
+**Next Steps**:
+1. Review plan for accuracy
+2. Create missing @technical-writer agent (or use fallback)
+3. Execute subgoals sequentially using specialized agents
 ```
 
 **Requirements**:
@@ -1160,24 +1265,80 @@ Each acceptance test should:
 
 ## 9. NON-GOALS (OUT OF SCOPE)
 
-### 9.1 Explicitly NOT in This Phase
+### 9.1 Explicitly NOT in MVP (Phase 1)
+
+This MVP focuses on **planning and agent gap discovery** only. Execution is intentionally deferred.
 
 | Feature | Why Not Now | When |
 |---------|-------------|------|
+| **Plan Execution** | Need to validate planning value first | Phase 2 |
+| **Streaming Progress** | Requires subprocess orchestration | Phase 2 |
+| **Pause/Resume** | Requires state management | Phase 2 |
+| **Parallel Execution** | Requires complex coordination | Phase 2 |
 | **CrewAI Adapters** | Requires CrewAI-specific agent format | Future (if needed) |
-| **Agent Execution** | Planning only, not execution | Future (Phase 3?) |
 | **80+ Tools Library** | Focus on discovery, not tooling | Future |
 | **Agent Versioning** | Adds complexity, defer | Future |
 | **Multi-Repo Discovery** | Single-machine focus for MVP | Future |
 | **Agent Marketplace** | Too early, need adoption first | Future |
 | **GUI for Planning** | CLI-first approach | Future |
 
-### 9.2 Technical Constraints (Accepted)
+### 9.2 Phase 2: Execution (Future Work)
+
+**Vision**: `aur execute-plan` command that delegates to specialized agents
+
+**Key Features**:
+- Read plan JSON from `~/.aurora/plans/` directory
+- Execute subgoals sequentially (respecting dependencies)
+- Spawn specialized agents in subprocesses based on recommendations
+- Track state in JSON (current subgoal, completed tasks)
+- Stream progress updates to coordinator
+- Handle agent gaps (prompt user or use fallback)
+
+**Implementation Approach**:
+```python
+# Phase 2 - NOT in current PRD scope
+def execute_plan(plan_path: Path):
+    """
+    Execute a generated plan by delegating to specialized agents.
+
+    For each subgoal:
+    1. Check if recommended agent exists
+    2. If gap: prompt user for fallback or skip
+    3. Spawn agent subprocess with subgoal context
+    4. Collect results and update state
+    5. Move to next subgoal
+    """
+    plan = load_plan(plan_path)
+
+    for subgoal in plan.subgoals:
+        if not subgoal.agent_exists:
+            # Handle gap: prompt or use fallback
+            agent = prompt_for_fallback(subgoal)
+        else:
+            agent = get_agent(subgoal.recommended_agent)
+
+        # Spawn agent subprocess
+        result = spawn_agent_for_subgoal(agent, subgoal)
+
+        # Update state
+        update_plan_state(plan_path, subgoal.id, "completed")
+```
+
+**Why Deferred**:
+- Subprocess orchestration adds significant complexity
+- Need to validate that planning output is valuable first
+- State management requires careful design
+- Want user feedback on plan structure before execution
+- Streaming and pause/resume need robust error handling
+
+**Name Change**: `process-task-list` → `execute-plan` (better reflects functionality)
+
+### 9.3 Technical Constraints (Accepted)
 
 - **No agent sandboxing**: Discovery only, trust local files
 - **No distributed manifest**: Single-machine manifest cache
 - **No real-time refresh**: Interval-based or manual refresh
-- **No plan execution**: Generate plans, don't run them
+- **No plan execution in MVP**: Generate plans only, validate value first
 
 ---
 
@@ -1469,53 +1630,32 @@ The QA Test Architect provides comprehensive test architecture review and qualit
 
 ---
 
-## APPENDIX C: SAMPLE PLAN OUTPUT (MARKDOWN)
+## APPENDIX C: SAMPLE PLAN OUTPUT (MARKDOWN - SIMPLE)
 
 ```markdown
-# Execution Plan: Implement OAuth2 Authentication
+# Execution Plan: Add Logging to Auth Module
 
+**Plan ID**: 0002-add-auth-logging
 **Generated**: 2025-12-31 23:59:59
-**Complexity**: complex
-**Context**: 5 code files, 2 reasoning patterns
-**Estimated Time**: 4-6 hours
+**Complexity**: simple
+**Context**: 2 code files (src/auth.py, src/utils.py)
 
 ---
 
-## Tasks
+## Subgoal 1: Implement Logging
+**Recommended Agent**: @full-stack-dev ✓
 
-### Task 1: Research OAuth2 Providers
-- **ID**: task-1
-- **Agent**: business-analyst ✓
-- **Dependencies**: None
-- **Expected Output**: Comparison of Auth0, Okta, and custom implementation with recommendation
+Add structured logging to authentication module.
 
-### Task 2: Design User Model with OAuth Fields
-- **ID**: task-2
-- **Agent**: full-stack-dev ✓
-- **Dependencies**: task-1
-- **Expected Output**: Database schema with user table including oauth_provider, oauth_id, access_token, refresh_token fields
+### Tasks:
+1. **Task 1.1**: Add logging imports and configure logger
+   - Expected Output: Logger configured with appropriate level and format
 
-### Task 3: Implement Token Generation and Validation
-- **ID**: task-3
-- **Agent**: full-stack-dev ✓
-- **Dependencies**: task-2
-- **Expected Output**: Working token generation endpoint (/auth/token) and validation middleware
+2. **Task 1.2**: Add log statements for authentication events
+   - Expected Output: Login attempts, failures, and successes logged
 
-### Task 4: Write Integration Tests for OAuth Flow
-- **ID**: task-4
-- **Agent**: qa-test-architect ✓
-- **Dependencies**: task-3
-- **Expected Output**: Passing integration tests covering login flow, token refresh, and error cases
-
----
-
-## Execution Strategy
-
-**Execution Order**: task-1 → task-2 → task-3 → task-4
-
-**Parallelizable**: None (sequential dependencies)
-
-**Critical Path**: All tasks (each depends on previous)
+3. **Task 1.3**: Add log statements for token operations
+   - Expected Output: Token generation and validation logged
 
 ---
 
@@ -1523,15 +1663,241 @@ The QA Test Architect provides comprehensive test architecture review and qualit
 
 ✓ All agents exist in registry
 ✓ No circular dependencies
-✓ Execution order satisfies dependencies
+✓ Plan is executable
 
 ---
 
 **Next Steps**:
 1. Review plan for accuracy
-2. Execute tasks in order using `aur execute` (future feature)
-3. Track progress in task management system
+2. Execute using specialized agent: `aur execute-plan 0002-add-auth-logging` (Phase 2 feature)
 ```
+
+---
+
+## APPENDIX D: COMPLETE PLAN EXAMPLE (JSON - WITH AGENT GAPS)
+
+**File**: `~/.aurora/plans/0001-oauth-authentication.json`
+
+This example demonstrates the full plan structure including subgoals, tasks, agent recommendations, and **agent gap detection** (the golden discovery feature).
+
+```json
+{
+  "plan_id": "0001-oauth-authentication",
+  "goal": "Implement OAuth2 authentication with Auth0",
+  "complexity": "complex",
+  "generated_at": "2025-12-31T23:59:59Z",
+  "context_sources": [
+    "src/auth.py",
+    "src/models/user.py",
+    "src/api/routes.py",
+    "docs/architecture.md",
+    "tests/test_auth.py"
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Research and Architecture",
+      "description": "Research OAuth2 providers and design authentication architecture",
+      "recommended_agent": "@business-analyst",
+      "agent_exists": true,
+      "dependencies": [],
+      "tasks": [
+        {
+          "id": "1.1",
+          "description": "Research OAuth2 providers (Auth0, Okta, Custom)",
+          "expected_output": "Comparison table with Auth0 recommendation"
+        },
+        {
+          "id": "1.2",
+          "description": "Design authentication flow diagram",
+          "expected_output": "Sequence diagram showing OAuth2 flow"
+        },
+        {
+          "id": "1.3",
+          "description": "Evaluate security implications and compliance",
+          "expected_output": "Security assessment with GDPR/SOC2 considerations"
+        }
+      ]
+    },
+    {
+      "id": "sg-2",
+      "title": "System Architecture Design",
+      "description": "Design technical architecture for OAuth2 integration",
+      "recommended_agent": "@holistic-architect",
+      "agent_exists": true,
+      "dependencies": ["sg-1"],
+      "tasks": [
+        {
+          "id": "2.1",
+          "description": "Design database schema with OAuth fields",
+          "expected_output": "Migration file with oauth_provider, oauth_id, access_token, refresh_token, expires_at"
+        },
+        {
+          "id": "2.2",
+          "description": "Design API endpoints for OAuth flow",
+          "expected_output": "OpenAPI spec for /auth/login, /auth/callback, /auth/refresh, /auth/logout"
+        },
+        {
+          "id": "2.3",
+          "description": "Design error handling and edge cases",
+          "expected_output": "Error taxonomy with handling strategies"
+        }
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Backend Implementation",
+      "description": "Implement OAuth2 authentication backend",
+      "recommended_agent": "@full-stack-dev",
+      "agent_exists": true,
+      "dependencies": ["sg-2"],
+      "tasks": [
+        {
+          "id": "3.1",
+          "description": "Implement user model with OAuth methods",
+          "expected_output": "User model with get_oauth_token(), refresh_token(), revoke_token()"
+        },
+        {
+          "id": "3.2",
+          "description": "Implement Auth0 SDK integration",
+          "expected_output": "Auth0 client wrapper with error handling"
+        },
+        {
+          "id": "3.3",
+          "description": "Implement authentication middleware",
+          "expected_output": "Middleware that validates OAuth tokens on protected routes"
+        },
+        {
+          "id": "3.4",
+          "description": "Implement token refresh background job",
+          "expected_output": "Cron job that refreshes expiring tokens"
+        }
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Quality Assurance",
+      "description": "Comprehensive testing and quality validation",
+      "recommended_agent": "@qa-test-architect",
+      "agent_exists": true,
+      "dependencies": ["sg-3"],
+      "tasks": [
+        {
+          "id": "4.1",
+          "description": "Design test strategy for OAuth flow",
+          "expected_output": "Test plan covering unit, integration, e2e, security tests"
+        },
+        {
+          "id": "4.2",
+          "description": "Write integration tests for OAuth endpoints",
+          "expected_output": "Passing tests for login, callback, refresh, logout flows"
+        },
+        {
+          "id": "4.3",
+          "description": "Write security tests for token handling",
+          "expected_output": "Tests for token expiration, revocation, CSRF protection"
+        },
+        {
+          "id": "4.4",
+          "description": "Conduct code review and quality gate",
+          "expected_output": "PASS/CONCERNS/FAIL decision with improvement recommendations"
+        }
+      ]
+    }
+  ],
+  "agent_gaps": [],
+  "validation": {
+    "all_agents_exist": true,
+    "missing_agent_count": 0,
+    "total_subgoals": 4,
+    "warnings": []
+  },
+  "metadata": {
+    "estimated_time_hours": "8-12",
+    "complexity_factors": [
+      "External service integration (Auth0)",
+      "Security-critical feature",
+      "Database schema changes",
+      "Multiple API endpoints"
+    ],
+    "risks": [
+      "Auth0 API rate limits",
+      "Token storage security",
+      "Migration complexity"
+    ]
+  }
+}
+```
+
+**Example with Agent Gap** (documentation subgoal removed from above, shown here):
+
+```json
+{
+  "subgoals": [
+    {
+      "id": "sg-5",
+      "title": "Documentation and Onboarding",
+      "description": "Create comprehensive documentation for OAuth2 integration",
+      "recommended_agent": "@technical-writer",
+      "agent_exists": false,
+      "dependencies": ["sg-4"],
+      "tasks": [
+        {
+          "id": "5.1",
+          "description": "Write API documentation for OAuth endpoints",
+          "expected_output": "Complete OpenAPI spec with examples"
+        },
+        {
+          "id": "5.2",
+          "description": "Create developer integration guide",
+          "expected_output": "Step-by-step guide with code snippets"
+        },
+        {
+          "id": "5.3",
+          "description": "Create troubleshooting guide",
+          "expected_output": "Common issues and solutions document"
+        }
+      ]
+    }
+  ],
+  "agent_gaps": [
+    {
+      "subgoal_id": "sg-5",
+      "subgoal_title": "Documentation and Onboarding",
+      "recommended_agent": "@technical-writer",
+      "agent_exists": false,
+      "reason": "No agent found with technical writing and API documentation capabilities",
+      "suggested_capabilities": [
+        "technical-writing",
+        "api-documentation",
+        "developer-guides",
+        "troubleshooting-docs"
+      ],
+      "fallback": "Use @business-analyst with documentation focus, or @full-stack-dev for technical accuracy",
+      "impact": "Medium - Documentation quality may be lower without specialized writer",
+      "recommendation": "Consider creating @technical-writer agent for future documentation tasks"
+    }
+  ],
+  "validation": {
+    "all_agents_exist": false,
+    "missing_agent_count": 1,
+    "total_subgoals": 5,
+    "warnings": [
+      "Agent gap detected for Subgoal 5: @technical-writer not found",
+      "Consider creating technical-writer agent before execution"
+    ]
+  }
+}
+```
+
+**Key Features Demonstrated**:
+1. ✅ **Hierarchical structure**: Subgoals contain multiple tasks
+2. ✅ **Agent recommendations per subgoal**: Not per task (1 subgoal = 1 agent)
+3. ✅ **Agent gap detection**: Identifies missing @technical-writer
+4. ✅ **Suggested capabilities**: Shows what the missing agent should have
+5. ✅ **Fallback recommendations**: Suggests alternatives
+6. ✅ **Context tracking**: Shows which files informed the plan
+7. ✅ **Dependencies**: Sequential subgoal execution
 
 ---
 
@@ -1540,6 +1906,7 @@ The QA Test Architect provides comprehensive test architecture review and qualit
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 1.0 | 2025-12-31 | Initial PRD for Agent Discovery and Planning CLI | Product Team |
+| 1.1 | 2026-01-01 | Updated with subgoals structure, agent gaps, Phase 2 vision | Product Team |
 
 ---
 

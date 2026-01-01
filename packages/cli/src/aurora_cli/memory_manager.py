@@ -87,6 +87,7 @@ class SearchResult:
         content: Code content
         activation_score: ACT-R activation score
         semantic_score: Semantic similarity score
+        bm25_score: BM25 keyword matching score
         hybrid_score: Combined hybrid score
         metadata: Additional metadata dictionary
     """
@@ -97,6 +98,7 @@ class SearchResult:
     content: str
     activation_score: float
     semantic_score: float
+    bm25_score: float
     hybrid_score: float
     metadata: dict[str, str]
 
@@ -435,6 +437,7 @@ class MemoryManager:
                         content=result.get("content", ""),
                         activation_score=result["activation_score"],
                         semantic_score=result["semantic_score"],
+                        bm25_score=result.get("bm25_score", 0.0),
                         hybrid_score=result["hybrid_score"],
                         metadata=metadata,
                     )

@@ -401,6 +401,15 @@ class HybridRetriever:
                 "line_start": getattr(chunk, "line_start", 0),
                 "line_end": getattr(chunk, "line_end", 0),
             }
+
+            # Include git metadata if available
+            if hasattr(chunk, "metadata") and chunk.metadata:
+                if "commit_count" in chunk.metadata:
+                    metadata["commit_count"] = chunk.metadata["commit_count"]
+                if "last_modified" in chunk.metadata:
+                    metadata["last_modified"] = chunk.metadata["last_modified"]
+                if "git_hash" in chunk.metadata:
+                    metadata["git_hash"] = chunk.metadata["git_hash"]
         else:
             # Other chunk types - use to_json() to get content
             chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
@@ -410,6 +419,15 @@ class HybridRetriever:
                 "name": getattr(chunk, "name", ""),
                 "file_path": getattr(chunk, "file_path", ""),
             }
+
+            # Include git metadata if available
+            if hasattr(chunk, "metadata") and chunk.metadata:
+                if "commit_count" in chunk.metadata:
+                    metadata["commit_count"] = chunk.metadata["commit_count"]
+                if "last_modified" in chunk.metadata:
+                    metadata["last_modified"] = chunk.metadata["last_modified"]
+                if "git_hash" in chunk.metadata:
+                    metadata["git_hash"] = chunk.metadata["git_hash"]
 
         return content, metadata
 

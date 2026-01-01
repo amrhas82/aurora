@@ -337,11 +337,13 @@ def _display_rich_results(
 
     # Create results table
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("File", style="yellow", width=40)
-    table.add_column("Type", style="green", width=12)
-    table.add_column("Name", style="cyan", width=25)
-    table.add_column("Lines", style="dim", width=12)
-    table.add_column("Score", justify="right", style="bold blue", width=10)
+    table.add_column("File", style="yellow", width=30)
+    table.add_column("Type", style="green", width=10)
+    table.add_column("Name", style="cyan", width=20)
+    table.add_column("Lines", style="dim", width=10)
+    table.add_column("Commits", style="magenta", width=8, justify="right")
+    table.add_column("Modified", style="dim cyan", width=10)
+    table.add_column("Score", justify="right", style="bold blue", width=8)
 
     if show_content:
         table.add_column("Preview", style="white", width=50)
@@ -357,6 +359,37 @@ def _display_rich_results(
         name = result.metadata.get("name", "<unnamed>")
         line_start, line_end = result.line_range
         line_range_str = f"{line_start}-{line_end}"
+
+        # Get git metadata (may not be available for all chunks)
+        commit_count = result.metadata.get("commit_count")
+        last_modified = result.metadata.get("last_modified")
+
+        # Format git metadata for display
+        commits_text = str(commit_count) if commit_count is not None else "-"
+
+        # Format last_modified timestamp as relative time
+        if last_modified:
+            from datetime import datetime
+            try:
+                # last_modified is a Unix timestamp
+                mod_time = datetime.fromtimestamp(last_modified)
+                now = datetime.now()
+                delta = now - mod_time
+
+                if delta.days > 365:
+                    modified_text = f"{delta.days // 365}y ago"
+                elif delta.days > 30:
+                    modified_text = f"{delta.days // 30}mo ago"
+                elif delta.days > 0:
+                    modified_text = f"{delta.days}d ago"
+                elif delta.seconds > 3600:
+                    modified_text = f"{delta.seconds // 3600}h ago"
+                else:
+                    modified_text = "recent"
+            except (ValueError, OSError):
+                modified_text = "-"
+        else:
+            modified_text = "-"
 
         # Format score with color and low confidence indicator
         score = result.hybrid_score
@@ -374,10 +407,12 @@ def _display_rich_results(
             score_text = _format_score(score)
 
         row = [
-            _truncate_text(file_path, 40),
+            _truncate_text(file_path, 30),
             element_type,
-            _truncate_text(name, 25),
+            _truncate_text(name, 20),
             line_range_str,
+            commits_text,
+            modified_text,
             score_text,
         ]
 

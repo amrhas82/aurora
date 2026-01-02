@@ -144,10 +144,10 @@ Port OpenSpec TypeScript to Python (Aurora), keeping detailed documentation of w
 - [x] 4.2 Implement `aurora/commands/archive.py` - 625 lines ported ✅
 - [x] 4.9 Write `tests/unit/commands/test_update.py` - 6 tests ✅
 - [x] 4.10 Implement `aurora/commands/update.py` - simplified AGENTS.md-only version ✅
+- [x] 4.5 Write `tests/unit/commands/test_list.py` (from list.test.ts) - 13 tests ✅
+- [x] 4.6 Implement `aurora/commands/list.py` - 193 lines ported ✅
 - [ ] 4.3 Write `tests/unit/commands/test_init.py`
 - [ ] 4.4 Implement `aurora/commands/init.py`
-- [ ] 4.5 Write `tests/unit/commands/test_list.py`
-- [ ] 4.6 Implement `aurora/commands/list.py`
 - [ ] 4.7 Write `tests/unit/commands/test_view.py`
 - [ ] 4.8 Implement `aurora/commands/view.py`
 - [ ] 4.11 Run all command tests, update PORT_REPORT.md

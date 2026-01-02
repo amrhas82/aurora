@@ -27,6 +27,7 @@ dependencies = [
     "aurora-soar>=0.1.0",
     "click>=8.1.0",
     "rich>=13.0.0",
+    "python-frontmatter>=1.0.0",
 ]
 
 [project.scripts]

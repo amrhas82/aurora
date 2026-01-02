@@ -16,6 +16,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from aurora_cli.commands.agents import agents_group
 from aurora_cli.commands.budget import budget_group
 from aurora_cli.commands.doctor import doctor_command
 from aurora_cli.commands.headless import headless_command
@@ -140,6 +141,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
 
 
 # Register commands
+cli.add_command(agents_group)
 cli.add_command(budget_group)
 cli.add_command(doctor_command)
 cli.add_command(headless_command)
@@ -192,6 +194,14 @@ cli.add_command(version_command)
     default=False,
     help="Disable interactive prompts for weak retrieval matches (auto-continue)",
 )
+@click.option(
+    "--context",
+    "-c",
+    "context_files",
+    multiple=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Use specific files as context (bypasses indexed memory). Can be specified multiple times.",
+)
 def query_command(
     query_text: str,
     force_aurora: bool,
@@ -201,6 +211,7 @@ def query_command(
     verbose: bool,
     dry_run: bool,
     non_interactive: bool,
+    context_files: tuple[Path, ...],
 ) -> None:
     """Execute a query with automatic escalation.
 
@@ -242,6 +253,14 @@ def query_command(
         \b
         # Non-interactive mode for automation (no prompts)
         aur query "Explain authentication" --non-interactive
+
+        \b
+        # Use specific files as context (bypasses indexed memory)
+        aur query "How does authentication work?" --context src/auth.py
+
+        \b
+        # Multiple context files
+        aur query "Explain the config" -c config.py -c settings.py
     """
     try:
         error_handler = ErrorHandler()
@@ -300,28 +319,43 @@ def query_command(
         from pathlib import Path
 
         from aurora_cli.config import load_config
+        from aurora_cli.memory import MemoryRetriever
         from aurora_core.store import SQLiteStore
 
         config = load_config()
         db_path = Path(config.get_db_path())
         memory_store = None
+        context_from_files: list[Any] | None = None
+
+        # If --context files provided, use MemoryRetriever to load them directly
+        if context_files:
+            console.print(f"[dim]Using {len(context_files)} context file(s)[/]")
+            # Create a retriever just for file loading (no store needed)
+            file_retriever = MemoryRetriever(config=config)
+            context_from_files = file_retriever.load_context_files(list(context_files))
+            if not context_from_files:
+                console.print("[yellow]Warning: No valid context files loaded[/]")
+            else:
+                console.print(f"[dim]Loaded {len(context_from_files)} chunk(s) from context files[/]")
 
         # Initialize memory store for both AURORA and Direct LLM (Issue #15)
         # This allows Direct LLM to use indexed context for better responses
-        if db_path.exists():
-            memory_store = SQLiteStore(str(db_path))
-            # Check if memory is empty (only prompt for AURORA or verbose mode)
-            if (result.use_aurora or verbose) and _is_memory_empty(memory_store):
+        # Skip memory store initialization if context files were provided
+        if not context_from_files:
+            if db_path.exists():
+                memory_store = SQLiteStore(str(db_path))
+                # Check if memory is empty (only prompt for AURORA or verbose mode)
+                if (result.use_aurora or verbose) and _is_memory_empty(memory_store):
+                    should_index = _prompt_auto_index(console)
+                    if should_index:
+                        _perform_auto_index(console, memory_store)
+            elif result.use_aurora or verbose:
+                # No database, prompt to create and index (only for AURORA or verbose)
+                console.print("\n[yellow]No memory database found.[/]")
                 should_index = _prompt_auto_index(console)
                 if should_index:
+                    memory_store = SQLiteStore(str(db_path))
                     _perform_auto_index(console, memory_store)
-        elif result.use_aurora or verbose:
-            # No database, prompt to create and index (only for AURORA or verbose)
-            console.print("\n[yellow]No memory database found.[/]")
-            should_index = _prompt_auto_index(console)
-            if should_index:
-                memory_store = SQLiteStore(str(db_path))
-                _perform_auto_index(console, memory_store)
 
         # Create query executor with interactive mode setting
         # Interactive mode is enabled by default (when non_interactive=False)

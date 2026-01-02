@@ -48,6 +48,18 @@ class Config:
     budget_limit: float = 10.0  # Default budget limit in USD
     budget_tracker_path: str = "~/.aurora/budget_tracker.json"
     search_min_semantic_score: float = 0.70  # Minimum semantic score threshold (0.7 = cosine similarity > 0.4)
+    # Agent discovery configuration
+    agents_auto_refresh: bool = True
+    agents_refresh_interval_hours: int = 24
+    agents_discovery_paths: list[str] = field(
+        default_factory=lambda: [
+            "~/.claude/agents",
+            "~/.config/ampcode/agents",
+            "~/.config/droid/agent",
+            "~/.config/opencode/agent",
+        ]
+    )
+    agents_manifest_path: str = "~/.aurora/cache/agent_manifest.json"
 
     def get_db_path(self) -> str:
         """Get expanded absolute database path.
@@ -63,6 +75,21 @@ class Config:
             '/home/user/.aurora/memory.db'
         """
         return str(Path(self.db_path).expanduser().resolve())
+
+    def get_manifest_path(self) -> str:
+        """Get expanded absolute agent manifest path.
+
+        Expands ~ to home directory and returns absolute path.
+
+        Returns:
+            Absolute path to agent manifest file
+
+        Example:
+            >>> config = Config(agents_manifest_path="~/.aurora/cache/agent_manifest.json")
+            >>> config.get_manifest_path()
+            '/home/user/.aurora/cache/agent_manifest.json'
+        """
+        return str(Path(self.agents_manifest_path).expanduser().resolve())
 
     def get_api_key(self) -> str:
         """Get API key with environment variable override.
@@ -160,6 +187,15 @@ class Config:
             if not expanded_path.exists():
                 print(f"Warning: Path '{path}' does not exist")
 
+        # Validate agent discovery configuration
+        if self.agents_refresh_interval_hours < 1:
+            raise ConfigurationError(
+                f"agents_refresh_interval_hours must be >= 1, got {self.agents_refresh_interval_hours}"
+            )
+
+        if not self.agents_manifest_path or not self.agents_manifest_path.strip():
+            raise ConfigurationError("agents_manifest_path cannot be empty")
+
 
 # Default configuration schema
 CONFIG_SCHEMA: dict[str, Any] = {
@@ -200,6 +236,17 @@ CONFIG_SCHEMA: dict[str, Any] = {
     },
     "search": {
         "min_semantic_score": 0.70,  # 0.7 = cosine similarity > 0.4 (moderate match)
+    },
+    "agents": {
+        "auto_refresh": True,
+        "refresh_interval_hours": 24,
+        "discovery_paths": [
+            "~/.claude/agents",
+            "~/.config/ampcode/agents",
+            "~/.config/droid/agent",
+            "~/.config/opencode/agent",
+        ],
+        "manifest_path": "~/.aurora/cache/agent_manifest.json",
     },
 }
 
@@ -329,6 +376,19 @@ def load_config(path: str | None = None) -> Config:
         "search_min_semantic_score": config_data.get("search", {}).get(
             "min_semantic_score", defaults["search"]["min_semantic_score"]
         ),
+        # Agent discovery settings
+        "agents_auto_refresh": config_data.get("agents", {}).get(
+            "auto_refresh", defaults["agents"]["auto_refresh"]
+        ),
+        "agents_refresh_interval_hours": config_data.get("agents", {}).get(
+            "refresh_interval_hours", defaults["agents"]["refresh_interval_hours"]
+        ),
+        "agents_discovery_paths": config_data.get("agents", {}).get(
+            "discovery_paths", defaults["agents"]["discovery_paths"]
+        ),
+        "agents_manifest_path": config_data.get("agents", {}).get(
+            "manifest_path", defaults["agents"]["manifest_path"]
+        ),
     }
 
     # Apply environment variable overrides
@@ -411,6 +471,12 @@ def save_config(config: Config, path: str | None = None) -> None:
         },
         "search": {
             "min_semantic_score": config.search_min_semantic_score,
+        },
+        "agents": {
+            "auto_refresh": config.agents_auto_refresh,
+            "refresh_interval_hours": config.agents_refresh_interval_hours,
+            "discovery_paths": config.agents_discovery_paths,
+            "manifest_path": config.agents_manifest_path,
         },
     }
 

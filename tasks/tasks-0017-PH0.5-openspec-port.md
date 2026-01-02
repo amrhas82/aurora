@@ -146,10 +146,10 @@ Port OpenSpec TypeScript to Python (Aurora), keeping detailed documentation of w
 - [x] 4.10 Implement `aurora/commands/update.py` - simplified AGENTS.md-only version ✅
 - [x] 4.5 Write `tests/unit/commands/test_list.py` (from list.test.ts) - 13 tests ✅
 - [x] 4.6 Implement `aurora/commands/list.py` - 193 lines ported ✅
-- [ ] 4.3 Write `tests/unit/commands/test_init.py`
-- [ ] 4.4 Implement `aurora/commands/init.py`
-- [ ] 4.7 Write `tests/unit/commands/test_view.py`
-- [ ] 4.8 Implement `aurora/commands/view.py`
+- [x] 4.7 Write `tests/unit/commands/test_view.py` (from view.test.ts) - 2 tests ✅
+- [x] 4.8 Implement `aurora/commands/view.py` - 218 lines ported ✅
+- [x] 4.3 Write `tests/unit/commands/test_init.py` (from init.test.ts) - 8 tests (simplified) ✅
+- [x] 4.4 Implement `aurora/commands/init.py` - simplified core initialization ✅
 - [ ] 4.11 Run all command tests, update PORT_REPORT.md
 
 ---
@@ -241,7 +241,7 @@ Port OpenSpec TypeScript to Python (Aurora), keeping detailed documentation of w
 **Tasks:**
 - [x] 8.1 Implement `aurora/templates/__init__.py` ✅
 - [x] 8.2 Implement `aurora/templates/agents.py` - complete 457-line AGENTS.md template ✅
-- [ ] 8.3 Implement `aurora/templates/project.py`
+- [x] 8.3 Implement `aurora/templates/project.py` - PROJECT_TEMPLATE ✅
 - [ ] 8.4 Implement `aurora/templates/claude.py`
 - [x] 8.5 Update PORT_REPORT.md ✅
 

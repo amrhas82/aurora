@@ -169,7 +169,9 @@ def index_command(ctx: click.Context, path: Path) -> None:
     "--show-scores",
     is_flag=True,
     default=False,
-    help="Show detailed score breakdown (BM25, Semantic, Activation)",
+    help="Display detailed score breakdown with explanations. Shows BM25 (keyword matching), "
+    "Semantic (conceptual relevance), and Activation (recency/frequency) scores in rich "
+    "box-drawing format. Includes intelligent explanations for each score component.",
 )
 @click.pass_context
 @handle_errors
@@ -189,6 +191,10 @@ def search_command(
     (activation + semantic similarity) to find relevant chunks.
 
     \b
+    Note: Type column displays abbreviated type names (func, meth, class, code,
+    reas, know, doc) for improved readability.
+
+    \b
     Examples:
         # Basic search (returns top 5 results)
         aur mem search "authentication"
@@ -204,6 +210,10 @@ def search_command(
         \b
         # Quick alias for search with content
         aur mem search "error handling" -n 3 -c
+
+        \b
+        # Show detailed score explanations
+        aur mem search "authentication" --show-scores
     """
     # Load configuration
     config = load_config()

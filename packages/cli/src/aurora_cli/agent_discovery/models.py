@@ -140,13 +140,13 @@ class AgentInfo(BaseModel):
         v = v.lower().strip()
 
         # Kebab-case pattern: lowercase letters, numbers, hyphens
-        # Must start with letter, no consecutive hyphens
-        pattern = r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+        # Can start with letter or number, no consecutive hyphens
+        pattern = r"^[a-z0-9][a-z0-9]*(-[a-z0-9]+)*$"
 
         if not re.match(pattern, v):
             raise ValueError(
                 f"Agent ID must be kebab-case (lowercase letters, numbers, hyphens). "
-                f"Got: '{v}'. Examples: 'qa-test-architect', 'full-stack-dev'"
+                f"Got: '{v}'. Examples: 'qa-test-architect', '1-create-prd'"
             )
 
         return v

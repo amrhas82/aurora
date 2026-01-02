@@ -32,8 +32,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backup of v1 hybrid retriever saved as `hybrid_retriever_v1_backup.py`
 
 **CLI Features:**
-- `--show-scores` flag: Display detailed score breakdown (BM25, Semantic, Activation, Hybrid)
+- `--show-scores` flag: Display detailed score breakdown with intelligent explanations in rich box-drawing format
+  - BM25 explanations: exact keyword match, strong term overlap, partial match
+  - Semantic explanations: very high/high/moderate/low conceptual relevance
+  - Activation explanations: access count, commit count, last used time
+  - Box-drawing format with Unicode characters for visual clarity
+  - Git metadata display: commit count and last modified time
 - `--type` filter: Search specific element types (function, class, method, knowledge, document)
+- Type abbreviations: Search results display abbreviated types (func, meth, class, code, reas, know, doc) for improved readability
 - Knowledge chunk support: Index and search markdown documentation files
 
 **Knowledge & Reasoning Chunk Support:**
@@ -43,8 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CodeChunk validation expanded to support "knowledge" and "document" chunk types
 
 **Testing & Quality:**
-- **Unit Tests**: 30 tests (15 BM25 + 5 staged + 6 knowledge + 4 reasoning)
-- **Shell Tests**: 12 acceptance tests covering exact match, CamelCase, staged retrieval, knowledge indexing
+- **Unit Tests**: 52 tests (15 BM25 + 5 staged + 6 knowledge + 4 reasoning + 4 type abbreviations + 7 box drawing + 6 BM25 explanations + 5 semantic explanations + 5 activation explanations)
+- **Shell Tests**: 20 acceptance tests covering exact match, CamelCase, staged retrieval, knowledge indexing, type abbreviations, box-drawing format, score explanations
 - **Integration Tests**:
   - `test_e2e_search_quality.py`: MRR validation (target ≥0.85)
   - `test_index_rebuild.py`: Index rebuild and BM25 IDF recalculation

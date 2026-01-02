@@ -124,12 +124,16 @@ goal: Minimal goal
     def test_returns_none_for_missing_required_fields(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        """Returns None and warns when required fields missing."""
+        """Returns None and warns when required fields missing.
+
+        Note: 'role' is auto-derived from 'id' if missing, so only 'goal'
+        will be reported as missing when id is provided.
+        """
         agent_file = tmp_path / "incomplete.md"
         agent_file.write_text(
             """---
 id: incomplete-agent
-# Missing role and goal
+# Missing goal (role auto-derived from id)
 ---
 
 # Incomplete
@@ -143,7 +147,6 @@ id: incomplete-agent
 
         assert result is None
         assert "missing required fields" in caplog.text
-        assert "role" in caplog.text
         assert "goal" in caplog.text
 
     def test_returns_none_for_invalid_id(

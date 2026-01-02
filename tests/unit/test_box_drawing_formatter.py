@@ -35,6 +35,7 @@ def test_format_box_header():
                 "line_start": 45,
                 "line_end": 67,
             }
+            self.content = "def authenticate(user, password): pass"
             self.hybrid_score = 0.856
             self.bm25_score = 0.950
             self.semantic_score = 0.820
@@ -70,6 +71,7 @@ def test_format_box_scores():
     class MockResult:
         def __init__(self):
             self.metadata = {"name": "test_func", "file_path": "test.py", "type": "function"}
+            self.content = "def test_func(): pass"
             self.hybrid_score = 0.856
             self.bm25_score = 0.950
             self.semantic_score = 0.820
@@ -102,6 +104,7 @@ def test_format_box_footer():
     class MockResult:
         def __init__(self):
             self.metadata = {"name": "test", "file_path": "test.py", "type": "function"}
+            self.content = "def test(): pass"
             self.hybrid_score = 0.5
             self.bm25_score = 0.5
             self.semantic_score = 0.5
@@ -139,6 +142,7 @@ def test_format_box_git_metadata():
                 "commit_count": 23,
                 "last_modified": "2 days ago",
             }
+            self.content = "def test_func(): pass"
             self.hybrid_score = 0.5
             self.bm25_score = 0.5
             self.semantic_score = 0.5
@@ -167,6 +171,7 @@ def test_format_box_width_adjustment():
                 "file_path": "extremely_long_file_path_that_should_be_truncated.py",
                 "type": "function",
             }
+            self.content = "def VeryLongFunctionNameThatExceedsDisplayWidth(): pass"
             self.hybrid_score = 0.5
             self.bm25_score = 0.5
             self.semantic_score = 0.5
@@ -202,6 +207,7 @@ def test_format_box_empty_git_metadata():
                 "type": "function",
                 # No commit_count or last_modified
             }
+            self.content = "def test_func(): pass"
             self.hybrid_score = 0.5
             self.bm25_score = 0.5
             self.semantic_score = 0.5
@@ -228,6 +234,7 @@ def test_format_box_returns_rich_text():
     class MockResult:
         def __init__(self):
             self.metadata = {"name": "test", "file_path": "test.py", "type": "function"}
+            self.content = "def test(): pass"
             self.hybrid_score = 0.5
             self.bm25_score = 0.5
             self.semantic_score = 0.5

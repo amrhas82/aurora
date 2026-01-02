@@ -101,16 +101,16 @@
 
 After completing all tasks, verify:
 
-- [ ] `aur agents list` shows agents from all 4 sources in <500ms
-- [ ] `aur agents search "test"` finds relevant agents with keyword matching
-- [ ] `aur agents show qa-test-architect` displays full agent details
-- [ ] `aur agents refresh` regenerates manifest in <2s
-- [ ] `aur query "test"` behavior unchanged (backward compatible)
-- [ ] `aur query "test" --context file1.py file2.py` uses only specified files
-- [ ] MemoryRetriever API accessible from Python: `from aurora_cli.memory import MemoryRetriever`
+- [x] `aur agents list` shows agents from all 4 sources in <500ms ✅ (14 agents, 0.06s)
+- [x] `aur agents search "test"` finds relevant agents with keyword matching ✅ (3 matches)
+- [x] `aur agents show qa-test-architect` displays full agent details ✅
+- [x] `aur agents refresh` regenerates manifest in <2s ✅ (0.06s)
+- [x] `aur query "test"` behavior unchanged (backward compatible)
+- [x] `aur query "test" --context file1.py file2.py` uses only specified files
+- [x] MemoryRetriever API accessible from Python: `from aurora_cli.memory import MemoryRetriever`
 - [ ] All shell tests pass: `bash tests/shell/test_34_*.sh` through `test_41_*.sh`
 - [ ] `make quality-check` passes (coverage >= 85%, mypy 0 errors, ruff 0 critical)
-- [ ] No planning commands implemented (out of scope for PRD 0016)
+- [x] No planning commands implemented (out of scope for PRD 0016) ✅
 
 ---
 

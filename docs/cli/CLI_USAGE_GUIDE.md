@@ -779,24 +779,38 @@ Searching memory from ./aurora.db...
 
 Found 8 results for 'authentication'
 
-┌──────────────────┬──────────┬──────────────────┬──────────┬────────┐
-│ File             │ Type     │ Name             │ Lines    │  Score │
-├──────────────────┼──────────┼──────────────────┼──────────┼────────┤
-│ auth_manager.py  │ function │ authenticate_user│ 45-67    │  0.856 │
-│ tokens.py        │ function │ validate_token   │ 23-41    │  0.782 │
-│ middleware.py    │ class    │ AuthMiddleware   │ 89-145   │  0.734 │
-│ decorators.py    │ function │ require_auth     │ 12-28    │  0.689 │
-│ models.py        │ class    │ User             │ 34-78    │  0.645 │
-│ permissions.py   │ function │ check_permission │ 56-72    │  0.612 │
-│ session.py       │ class    │ SessionManager   │ 23-89    │  0.587 │
-│ oauth.py         │ function │ oauth_callback   │ 123-156  │  0.534 │
-└──────────────────┴──────────┴──────────────────┴──────────┴────────┘
+┌──────────────────┬──────┬──────────────────┬──────────┬────────┐
+│ File             │ Type │ Name             │ Lines    │  Score │
+├──────────────────┼──────┼──────────────────┼──────────┼────────┤
+│ auth_manager.py  │ func │ authenticate_user│ 45-67    │  0.856 │
+│ tokens.py        │ func │ validate_token   │ 23-41    │  0.782 │
+│ middleware.py    │ class│ AuthMiddleware   │ 89-145   │  0.734 │
+│ decorators.py    │ func │ require_auth     │ 12-28    │  0.689 │
+│ models.py        │ class│ User             │ 34-78    │  0.645 │
+│ permissions.py   │ func │ check_permission │ 56-72    │  0.612 │
+│ session.py       │ class│ SessionManager   │ 23-89    │  0.587 │
+│ oauth.py         │ func │ oauth_callback   │ 123-156  │  0.534 │
+└──────────────────┴──────┴──────────────────┴──────────┴────────┘
 
 Average scores:
   Activation: 0.245
   Semantic:   0.673
   Hybrid:     0.654
 ```
+
+#### Type Abbreviations
+
+Search results display abbreviated type names for improved readability:
+
+| Full Type  | Abbreviation | Description                    |
+|------------|--------------|--------------------------------|
+| function   | func         | Function definitions           |
+| method     | meth         | Class method definitions       |
+| class      | class        | Class definitions              |
+| code       | code         | Generic code chunks            |
+| reasoning  | reas         | Reasoning patterns from SOAR   |
+| knowledge  | know         | Knowledge from conversation logs|
+| document   | doc          | Documentation chunks           |
 
 ### Search with More Results
 
@@ -812,7 +826,7 @@ aur mem search "calculate" --show-content
 
 ### Search with Score Breakdown
 
-Show detailed score breakdown (BM25, Semantic, Activation):
+Show detailed score breakdown with intelligent explanations in rich box-drawing format:
 
 ```bash
 aur mem search "authentication" --show-scores
@@ -822,29 +836,55 @@ aur mem search "authentication" --show-scores
 ```
 Found 8 results for 'authentication'
 
-┌──────────────────┬──────────┬──────────────────┬──────────┬────────┐
-│ File             │ Type     │ Name             │ Lines    │  Score │
-├──────────────────┼──────────┼──────────────────┼──────────┼────────┤
-│ auth_manager.py  │ function │ authenticate_user│ 45-67    │  0.856 │
-│ tokens.py        │ function │ validate_token   │ 23-41    │  0.782 │
-│ middleware.py    │ class    │ AuthMiddleware   │ 89-145   │  0.734 │
-└──────────────────┴──────────┴──────────────────┴──────────┴────────┘
+┌─ auth_manager.py | func | authenticate_user (Lines 45-67) ──────────┐
+│ Final Score: 0.856                                                   │
+│   ├─ BM25:       0.923 ⭐ (exact keyword match on 'authenticate')    │
+│   ├─ Semantic:   0.834 (high conceptual relevance)                  │
+│   └─ Activation: 0.450 (accessed 12x, 23 commits, last used 2d ago)│
+│ Git: 23 commits, last modified 2 days ago                           │
+└──────────────────────────────────────────────────────────────────────┘
 
-Score Breakdown:
-┌──────────────────┬────────┬──────────┬────────────┬────────┐
-│ Name             │    BM25│ Semantic │ Activation │ Hybrid │
-├──────────────────┼────────┼──────────┼────────────┼────────┤
-│ authenticate_user│  0.923 │    0.834 │      0.450 │  0.856 │
-│ validate_token   │  0.867 │    0.756 │      0.420 │  0.782 │
-│ AuthMiddleware   │  0.801 │    0.712 │      0.390 │  0.734 │
-└──────────────────┴────────┴──────────┴────────────┴────────┘
+┌─ tokens.py | func | validate_token (Lines 23-41) ──────────────────┐
+│ Final Score: 0.782                                                   │
+│   ├─ BM25:       0.867 (strong term overlap (1/2 terms))           │
+│   ├─ Semantic:   0.756 (moderate conceptual relevance)              │
+│   └─ Activation: 0.420 (accessed 8x, 15 commits, last used 1w ago) │
+│ Git: 15 commits, last modified 1 week ago                           │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-The score breakdown shows:
-- **BM25**: Term frequency / document frequency (exact matching)
-- **Semantic**: Embedding similarity (conceptual matching)
-- **Activation**: Frequency + recency (ACT-R cognitive model)
-- **Hybrid**: Weighted combination (30% BM25 + 40% Semantic + 30% Activation)
+#### Score Explanations
+
+The rich box-drawing format shows three score components with intelligent explanations:
+
+| Score Component | Explanation Types | Example |
+|-----------------|-------------------|---------|
+| **BM25** | exact match, strong overlap, partial match, no match | `⭐ exact keyword match on 'auth'` |
+| **Semantic** | very high, high, moderate, low conceptual relevance | `(high conceptual relevance)` |
+| **Activation** | access count, commits, recency | `(accessed 3x, 23 commits, last used 2 days ago)` |
+
+**Explanation Details:**
+
+- **BM25 (Keyword Matching)**:
+  - Exact match (100% query terms): `⭐ exact keyword match on 'term1', 'term2'...`
+  - Strong overlap (≥50% terms): `(strong term overlap (2/3 terms))`
+  - Partial match (<50% terms): `(partial match (1/3 terms))`
+  - No match (0% terms): `(no keyword match)`
+
+- **Semantic (Conceptual Relevance)**:
+  - ≥0.9: `(very high conceptual relevance)`
+  - 0.8-0.89: `(high conceptual relevance)`
+  - 0.7-0.79: `(moderate conceptual relevance)`
+  - <0.7: `(low conceptual relevance)`
+
+- **Activation (Recency/Frequency)**:
+  - Shows access count, commit count, and last used time
+  - Example: `(accessed 5x, 23 commits, last used 2 days ago)`
+  - Omits unavailable metadata gracefully
+
+**Hybrid Score Calculation:**
+- Weighted combination: 30% BM25 + 40% Semantic + 30% Activation
+- Final score determines result ranking
 
 ### Filter by Element Type
 

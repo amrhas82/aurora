@@ -108,6 +108,21 @@ class AgentParser:
         metadata = dict(post.metadata)
         metadata["source_file"] = str(resolved_path)
 
+        # Map alternative field names to canonical names
+        # Supports both new format (id/role/goal) and existing format (name/description)
+        field_aliases = {
+            "name": "id",           # name -> id
+            "description": "goal",  # description -> goal
+            "title": "role",        # title -> role (alternative)
+        }
+        for old_name, new_name in field_aliases.items():
+            if old_name in metadata and new_name not in metadata:
+                metadata[new_name] = metadata[old_name]
+
+        # If role is missing, derive from id (capitalize, replace hyphens)
+        if "role" not in metadata and "id" in metadata:
+            metadata["role"] = metadata["id"].replace("-", " ").title()
+
         # Validate with Pydantic
         try:
             agent = AgentInfo.model_validate(metadata)

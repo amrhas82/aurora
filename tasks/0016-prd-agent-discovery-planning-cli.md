@@ -1,10 +1,10 @@
-# PRD 0016: Aurora Agent Discovery and Planning CLI
+# PRD 0016: Aurora Agent Discovery & Memory Infrastructure
 ## Product Requirements Document
 
-**Version**: 1.0
-**Date**: December 31, 2025
+**Version**: 2.0
+**Date**: January 2, 2026
 **Status**: Ready for Implementation
-**Phase**: Sprint 3 - Agent Discovery & Planning
+**Phase**: Sprint 3 - Infrastructure Foundations
 **Product**: AURORA CLI
 **Dependencies**: Existing AgentRegistry (aurora_soar), Memory Commands (aur query)
 
@@ -12,9 +12,9 @@
 
 ## DOCUMENT PURPOSE
 
-This PRD defines **Aurora Agent Discovery and Planning CLI** - a comprehensive command-line interface for discovering agents from multiple sources and generating actionable execution plans directly from natural language goals.
+This PRD defines **Aurora Agent Discovery & Memory Infrastructure** - foundational infrastructure that provides agent manifest generation and shared memory retrieval APIs for the Aurora ecosystem.
 
-**Success Criteria**: This phase is complete when developers can discover agents in <500ms, generate execution plans in <10s, and integrate planning seamlessly with existing memory retrieval.
+**Success Criteria**: This phase is complete when developers can discover agents in <500ms, memory retrieval is refactored into reusable API, and both systems are fully tested with <2s memory access latency.
 
 **Related Documents**:
 - Previous Phase: `/tasks/0015-prd-bm25-trihybrid-memory-search.md` (Search foundations)
@@ -25,69 +25,123 @@ This PRD defines **Aurora Agent Discovery and Planning CLI** - a comprehensive c
 
 ## TABLE OF CONTENTS
 
-1. [Executive Summary](#1-executive-summary)
-2. [Goals & Success Metrics](#2-goals--success-metrics)
-3. [User Stories](#3-user-stories)
-4. [Functional Requirements](#4-functional-requirements)
-5. [Architecture & Design](#5-architecture--design)
-6. [Quality Gates & Acceptance Criteria](#6-quality-gates--acceptance-criteria)
-7. [Testing Strategy](#7-testing-strategy)
-8. [Dependencies](#8-dependencies)
-9. [Non-Goals (Out of Scope)](#9-non-goals-out-of-scope)
-10. [Technical Considerations](#10-technical-considerations)
-11. [Delivery Verification Checklist](#11-delivery-verification-checklist)
+1. [Out of Scope](#out-of-scope)
+2. [Executive Summary](#1-executive-summary)
+3. [Goals & Success Metrics](#2-goals--success-metrics)
+4. [User Stories](#3-user-stories)
+5. [Functional Requirements](#4-functional-requirements)
+6. [Architecture & Design](#5-architecture--design)
+7. [Quality Gates & Acceptance Criteria](#6-quality-gates--acceptance-criteria)
+8. [Testing Strategy](#7-testing-strategy)
+9. [Dependencies](#8-dependencies)
+10. [Non-Goals](#9-non-goals)
+11. [Technical Considerations](#10-technical-considerations)
+12. [Delivery Verification Checklist](#11-delivery-verification-checklist)
+
+---
+
+## OUT OF SCOPE
+
+**⚠️ CRITICAL FOR TASK GENERATION**: Planning commands are **NOT part of this PRD's implementation scope**.
+
+### What is Out of Scope?
+
+**Planning System (moved to PRD 0017)**:
+- ❌ `aur plan` command (any form)
+- ❌ Plan generation from natural language goals
+- ❌ SOAR integration for goal decomposition
+- ❌ Plan file creation (plan.md, prd.md, tasks.md, agents.json)
+- ❌ Plan lifecycle management (create, list, show, archive)
+- ❌ Agent assignment to tasks
+- ❌ `/aur:plan` slash command
+
+### Why is Planning Out of Scope?
+
+1. **Moved to PRD 0017**: All planning features are now in `/tasks/0017-prd-aurora-planning-system.md`
+2. **Infrastructure first**: This PRD provides the foundations (agent discovery + memory API)
+3. **PRD 0017 depends on this**: Advanced planning needs agent manifest and memory APIs first
+4. **Single responsibility**: This PRD = infrastructure only
+
+### What THIS PRD Provides (Infrastructure)
+
+**Agent Discovery**:
+- ✅ Agent manifest generation (`~/.aurora/cache/agent_manifest.json`)
+- ✅ Agent discovery commands: `aur agents list/search/show/refresh`
+- ✅ `AgentInfo` model and `AgentManifest` schema
+- ✅ Multi-source agent scanning (claude, ampcode, droid, opencode)
+
+**Shared Memory Infrastructure**:
+- ✅ Refactored `MemoryManager` class (extracted from `aur query`)
+- ✅ Reusable memory retrieval API for SOAR, planning, query commands
+- ✅ Support for `--context` file overrides
+- ✅ Context loading with <2s latency
+
+### Task Generation Instructions
+
+**When generating tasks from this PRD**:
+- ✅ **DO** generate tasks for agent discovery (manifest, search, list, show)
+- ✅ **DO** generate tasks for memory refactoring (extract MemoryManager)
+- ❌ **DO NOT** generate any planning tasks (`aur plan`, plan generation, etc.)
+- ❌ **DO NOT** include SOAR integration for planning (only for future use by PRD 0017)
+- ❌ **DO NOT** implement plan file creation or management
+
+**Planning Task Reference**: For planning implementation tasks, generate them from `/tasks/0017-prd-aurora-planning-system.md` instead.
 
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
-### 1.1 What is Aurora Agent Discovery and Planning CLI?
+### 1.1 What is Aurora Agent Discovery & Memory Infrastructure?
 
-A two-phase CLI enhancement that enables:
+A single-sprint infrastructure implementation (4-5 hours) that provides:
 
-**Phase 1: Agent Discovery** (2-3 hours)
+**Agent Discovery Infrastructure**:
 - Discover agents from multiple configuration sources
 - Search agents by keyword, category, or capability
 - Display detailed agent information
-- Cache agent metadata for fast access
+- Cache agent metadata for fast access (<500ms)
 
-**Phase 2: Direct Planning** (4-6 hours)
-- Generate execution plans from natural language goals
-- Integrate with existing memory retrieval system
-- Validate plans against available agents
-- Export plans in multiple formats (Markdown, JSON, YAML)
+**Shared Memory Infrastructure**:
+- Refactor memory retrieval into reusable `MemoryManager` class
+- Extract from `aur query` into shared module
+- Provide clean API for SOAR orchestrator and planning commands
+- Support `--context` file overrides for custom contexts
 
 ### 1.2 Key Components
 
-1. **Agent Discovery System**:
+1. **Agent Discovery System** (`aurora_cli.agents`):
    - Multi-source agent manifest generation (`~/.claude/agents/`, `~/.config/ampcode/agents/`, etc.)
    - Frontmatter metadata extraction from `.md` agent files
-   - Fast keyword search and category filtering
+   - Fast keyword search and category filtering (<500ms)
    - Auto-refresh with configurable intervals
+   - CLI commands: `aur agents list/search/show/refresh`
 
-2. **Planning Pipeline**:
-   - Goal decomposition using SOAR Phase 3 logic
-   - Agent validation and suggestion system
-   - Context strategy: `--context` overrides indexed memory
-   - Interactive mode with clarifying questions
+2. **Shared Memory Infrastructure** (`aurora_cli.memory`):
+   - Refactored `MemoryManager` class extracted from `aur query`
+   - Reusable API for memory retrieval (SOAR, planning, query commands)
+   - Context strategy: `--context` file overrides OR indexed memory
+   - Clean separation: memory logic vs command logic
+   - Performance: <2s context loading for typical queries
 
-3. **Shared Infrastructure**:
-   - Common memory module shared with `aur query`
-   - Configuration via `~/.aurora/config.json`
+3. **Configuration System**:
+   - Agent discovery settings in `~/.aurora/config.json`
+   - Memory cache configuration
+   - Auto-refresh intervals
    - Error handling and graceful degradation
 
 ### 1.3 Why This Matters
 
 **Current Pain Points**:
-- No centralized agent discovery across different CLI tools
-- No way to generate execution plans without full SOAR pipeline
-- `aur query` requires indexed memory, but planning often needs custom context
+- No centralized agent discovery across different CLI tools (Claude, AmpCode, Droid, OpenCode)
+- Memory retrieval logic embedded in `aur query` command (not reusable)
+- SOAR orchestrator and future planning features can't access memory retrieval
+- No consistent API for context loading
 
-**After This Feature**:
-- Developers discover agents in <500ms (vs manual README scanning)
-- Plans generated in <10s (vs 30s+ full SOAR)
-- Context flexibility: use indexed memory OR provide custom files
-- Seamless integration with existing Aurora CLI workflows
+**After This Feature** (Infrastructure Foundations):
+- **Agent Discovery**: Developers discover agents in <500ms across all sources
+- **Shared Memory API**: SOAR, planning, and query commands share same memory retrieval logic
+- **Reusability**: `MemoryManager` class provides clean API for all features
+- **Future Ready**: PRD 0017 planning system can build on these foundations
 
 ---
 
@@ -95,36 +149,39 @@ A two-phase CLI enhancement that enables:
 
 ### 2.1 Primary Goals
 
-1. **Enable fast agent discovery** across multiple configuration sources
-2. **Generate actionable plans** from natural language goals in <10s
-3. **Share memory logic** between query and planning commands
-4. **Validate plans** against available agents with suggestions
-5. **Support CI/CD workflows** with `--non-interactive` mode
-6. **Maintain backwards compatibility** with existing CLI
+1. **Enable fast agent discovery** across multiple configuration sources (<500ms)
+2. **Refactor memory retrieval** into reusable `MemoryManager` class
+3. **Provide shared memory API** for SOAR, planning, and query commands
+4. **Support context overrides** with `--context` file parameter
+5. **Maintain backwards compatibility** with existing `aur query` command
+6. **Prepare foundations** for PRD 0017 planning system
 
 ### 2.2 Success Metrics
 
 | Metric | Target | Measurement Method |
 |--------|--------|-------------------|
 | **Agent Discovery Latency** | <500ms | Benchmark manifest loading |
-| **Plan Generation Latency** | <10s end-to-end | Benchmark full planning pipeline |
+| **Memory Retrieval Latency** | <2s for 20 chunks | Performance benchmarks |
 | **Manifest Accuracy** | 100% valid agents | Schema validation tests |
-| **Agent Validation** | ≥90% catch missing agents | Test with invalid agent references |
-| **Context Retrieval** | <2s indexed memory | Performance benchmarks |
+| **API Reusability** | Used by 3+ features | Integration verification (query, SOAR, planning) |
+| **Context Override** | <2s custom files | Benchmark --context loading |
 | **Test Coverage** | ≥85% | pytest-cov |
 | **Type Safety** | 0 mypy errors (strict) | mypy |
+| **Backward Compatibility** | `aur query` unchanged | Regression tests |
 
-### 2.3 Phase Completion Criteria
+### 2.3 Sprint Completion Criteria
 
-Phase is **COMPLETE** when:
-- ✅ All 8 agent discovery commands implemented and tested
-- ✅ Planning pipeline operational with context strategy
-- ✅ Agent validation suggests alternatives for missing agents
-- ✅ Shared memory module refactored from `aur query`
-- ✅ Configuration system supports auto-refresh settings
+Sprint is **COMPLETE** when:
+- ✅ Agent discovery commands implemented: `list`, `search`, `show`, `refresh`
+- ✅ Agent manifest generation working (<500ms from 4 sources)
+- ✅ `MemoryManager` class extracted from `aur query` into shared module
+- ✅ Memory API provides clean interface for context loading
+- ✅ `--context` file override parameter functional
+- ✅ `aur query` command still works (backward compatibility)
+- ✅ Configuration system supports agent discovery settings
 - ✅ All quality gates passed (≥85% coverage, 0 mypy errors)
-- ✅ Documentation complete with examples and troubleshooting
-- ✅ Integration tests pass for end-to-end workflows
+- ✅ Shell tests pass (agent discovery + memory retrieval)
+- ✅ Documentation complete with API usage examples
 
 ---
 
@@ -150,63 +207,65 @@ Phase is **COMPLETE** when:
 
 ---
 
-### 3.2 Developer Planning Feature Implementation
+### 3.2 Developer Using Shared Memory Infrastructure
 
-**As a** developer planning a new feature,
-**I want** to generate an execution plan from a natural language goal,
-**So that** I have a structured breakdown of tasks before starting implementation.
+**As a** developer building features that need memory retrieval,
+**I want** a reusable `MemoryManager` API that handles context loading,
+**So that** I don't reimplement memory retrieval in every command.
 
 **Acceptance Criteria**:
-- `aur plan "Implement OAuth2 authentication"` generates multi-step plan
-- Plan includes agent assignments, dependencies, execution order
-- Plan references valid agents from manifest
-- If agent missing, suggests similar agents
-- Plan generated in <10s
-- `--format markdown` outputs readable task list
+- `MemoryManager` class available in `aurora_cli.memory` module
+- Clean API: `manager.retrieve(query, limit, mode='hybrid')`
+- Supports indexed memory retrieval (<2s for 20 chunks)
+- Supports `--context` file overrides (<2s for 10 files)
+- `aur query` command refactored to use `MemoryManager` (backward compatible)
+- No behavior changes to existing `aur query` command
 
 **Testing Requirements**:
-- Unit tests for plan generation logic
-- Integration test with mock LLM responses
-- Acceptance test matching user story exactly
+- Unit tests for `MemoryManager` class methods
+- Integration test verifying `aur query` still works
+- Regression tests for `aur query` output format
+- Performance benchmarks for memory retrieval
 
 ---
 
-### 3.3 Developer Using Custom Context for Planning
+### 3.3 SOAR Orchestrator Using Memory for Context
 
-**As a** developer working on a specific feature,
-**I want** to provide custom context files for planning instead of using indexed memory,
-**So that** the plan focuses only on relevant code without noise from full codebase.
+**As a** SOAR orchestrator developer,
+**I want** to access memory retrieval for goal decomposition context,
+**So that** I can provide relevant codebase chunks when planning subgoals.
 
 **Acceptance Criteria**:
-- `aur plan "Add logging" --context src/auth.py src/utils.py` uses ONLY those files
-- No merging with indexed memory when `--context` provided
-- Warning shown if neither `--context` nor indexed memory available
-- Context loading completes in <2s for 10 files
+- SOAR can import and use `MemoryManager` class
+- `manager.retrieve(goal, limit=20)` returns relevant code chunks
+- Memory retrieval completes in <2s
+- Context chunks include file paths and content
+- No tight coupling to CLI commands
 
 **Testing Requirements**:
-- Unit test verifying context replacement (not merging)
-- Integration test with indexed memory present but overridden
-- Test warning displays when neither available
+- Unit test SOAR calling `MemoryManager.retrieve()`
+- Integration test verifying SOAR + memory flow
+- Mock tests for memory retrieval errors
 
 ---
 
-### 3.4 CI/CD Pipeline Using Planning for Validation
+### 3.4 Future Planning System Using Memory API
 
-**As a** DevOps engineer,
-**I want** to run planning in non-interactive mode for automated workflows,
-**So that** CI/CD pipelines can validate feature feasibility without human input.
+**As a** planning system developer (PRD 0017),
+**I want** the memory infrastructure ready before I start implementation,
+**So that** I can build on proven foundations instead of reinventing.
 
 **Acceptance Criteria**:
-- `aur plan "goal" --non-interactive` never prompts for input
-- Exit code 0 on success, non-zero on failure
-- JSON output via `--format json` machine-parseable
-- Agent validation failures return structured error
-- Budget checks enforced (no runaway costs)
+- `MemoryManager` documented with usage examples
+- API stable and tested (≥85% coverage)
+- Performance verified (<2s retrieval)
+- `--context` override pattern established
+- Agent manifest available for agent recommendations
 
 **Testing Requirements**:
-- Integration test simulating CI/CD environment
-- Test exit codes for success/failure scenarios
-- Validate JSON schema for machine parsing
+- API documentation with code examples
+- Load testing with large codebases
+- Verify agent manifest + memory work together
 
 ---
 
@@ -368,8 +427,8 @@ aur agents refresh
 1. Scan discovery locations:
    - `~/.claude/agents/*.md`
    - `~/.config/ampcode/agents/*.md`
-   - `~/.config/droid/agents/*.md`
-   - `~/.config/opencode/agents/*.md`
+   - `~/.config/droid/agent/*.md`  # Note: droid uses 'agent' (singular)
+   - `~/.config/opencode/agent/*.md`  # Note: opencode uses 'agent' (singular)
 
 2. Extract frontmatter from each `.md` file:
 ```yaml
@@ -390,9 +449,46 @@ dependencies:
 ---
 ```
 
-3. Validate required fields: `id`, `role`, `goal`, `category`, `skills`
-4. Skip files with invalid/missing frontmatter (log warning)
-5. Write manifest to `~/.aurora/agents/manifest.json`
+3. Validate required fields: `id`, `role`, `goal` (see Pydantic schema below)
+4. Skip files with invalid/missing frontmatter (log warning with file path)
+5. Write manifest to `~/.aurora/cache/agent_manifest.json` (atomic write)
+
+**Error Handling Pattern** (OpenSpec lesson - graceful degradation):
+```python
+def parse_agent_file(file_path: Path) -> AgentInfo | None:
+    """
+    Parse agent file with OpenSpec-style graceful degradation.
+    Returns None for malformed files, logs detailed warnings.
+    NEVER crashes - always returns None on error.
+    """
+    try:
+        with open(file_path) as f:
+            post = frontmatter.load(f)
+
+        if not post.metadata:
+            logger.warning(
+                f"No frontmatter in {file_path} - skipping",
+                extra={"file": str(file_path), "error_type": "missing_frontmatter"}
+            )
+            return None
+
+        # Pydantic validation with explicit error messages
+        agent = AgentInfo(**post.metadata, source_file=str(file_path))
+        return agent
+
+    except yaml.YAMLError as e:
+        logger.warning(f"Invalid YAML in {file_path}: {e} - skipping")
+        return None
+    except ValidationError as e:
+        error_fields = [err['loc'][0] for err in e.errors()]
+        logger.warning(f"Validation failed for {file_path}: {', '.join(error_fields)} - skipping")
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error in {file_path}: {e} - skipping", exc_info=True)
+        return None
+```
+
+**Benefits**: Never crashes, detailed logs, users can fix and re-run `aur agents refresh`.
 
 **Manifest Schema**:
 ```json
@@ -402,8 +498,8 @@ dependencies:
   "sources": [
     "~/.claude/agents",
     "~/.config/ampcode/agents",
-    "~/.config/droid/agents",
-    "~/.config/opencode/agents"
+    "~/.config/droid/agent",
+    "~/.config/opencode/agent"
   ],
   "agents": [
     {
@@ -426,320 +522,204 @@ dependencies:
 }
 ```
 
-**Requirements**:
-- Multi-source discovery
-- Frontmatter parsing with `pyyaml`
-- Schema validation
-- Error handling: skip malformed, log warnings
-- Atomic write (temp file + rename)
-- Latency target: <2s for 50 agents
-
----
-
-### 4.2 Planning Commands
-
-**Package**: `packages/cli/src/aurora_cli/commands/plan.py`
-
-#### 4.2.1 Command: `aur plan`
-
-**MUST** generate execution plan from natural language goal:
-
-```bash
-# Basic planning
-aur plan "Implement OAuth2 authentication"
-
-# With output file
-aur plan "Add logging to auth module" --output tasks.md
-
-# With format
-aur plan "Refactor database layer" --format json
-aur plan "Refactor database layer" --format yaml
-aur plan "Refactor database layer" --format markdown  # default
-
-# Interactive mode (asks clarifying questions)
-aur plan "Build user dashboard" --interactive
-
-# Non-interactive (no prompts, for CI/CD)
-aur plan "Validate API endpoints" --non-interactive
-
-# Custom context (overrides indexed memory)
-aur plan "Add auth" --context src/auth.py src/utils.py
-
-# Verbosity control
-aur plan "goal" -v     # verbose
-aur plan "goal" -vv    # very verbose (debug)
-```
-
-**Planning Pipeline**:
-
-**Step 1: Context Retrieval**
+**Pydantic Schema (OpenSpec-inspired validation)**:
 ```python
-def retrieve_context(goal: str, context_paths: list[Path] | None) -> ContextData:
+class AgentInfo(BaseModel):
     """
-    Retrieve context for planning.
-
-    Strategy:
-    1. If --context provided: use ONLY those files (no merging)
-    2. Else if indexed memory available: use retrieval
-    3. Else: warn and proceed with no context
+    Agent metadata from frontmatter.
+    Validation follows OpenSpec patterns: explicit messages, field constraints.
     """
-    if context_paths:
-        # Load from files (no merging)
-        return load_files(context_paths)
+    # Required fields
+    id: str = Field(
+        min_length=1,
+        max_length=50,
+        pattern=r'^[a-z0-9-]+$',
+        description="Kebab-case agent identifier"
+    )
+    role: str = Field(
+        min_length=5,
+        max_length=100,
+        description="Human-readable agent role"
+    )
+    goal: str = Field(
+        min_length=20,
+        max_length=500,
+        description="Primary agent goal/purpose"
+    )
 
-    if memory_index_exists():
-        # Use existing retrieval logic (shared module)
-        return retrieve_from_memory(goal, budget=15)
+    # Optional fields with defaults
+    category: str = Field(
+        default="general",
+        pattern=r'^(eng|qa|product|general)$',
+        description="Agent category for filtering"
+    )
+    skills: list[str] = Field(
+        default_factory=list,
+        max_length=20,  # max 20 skills
+        description="Agent capabilities"
+    )
+    examples: list[str] = Field(default_factory=list)
+    when_to_use: str = Field(default="", max_length=300)
+    dependencies: list[str] = Field(default_factory=list)
+    source_file: str = Field(...)
 
-    warn("No context available. Use --context or run 'aur mem index .'")
-    return ContextData.empty()
-```
-
-**Step 2: Goal Decomposition**
-```python
-def decompose_goal(goal: str, context: ContextData, agents: list[AgentInfo]) -> Plan:
-    """
-    Decompose goal into execution plan using SOAR Phase 3 logic.
-
-    Reuses:
-    - Decomposition prompts from aurora_soar.phases.decompose
-    - LLM client from aurora_reasoning
-    - Complexity assessment (simple goals skip decomposition)
-    """
-    # Assess complexity
-    complexity = assess_complexity(goal)
-
-    if complexity == "simple":
-        # Single-step plan, direct LLM
-        return create_simple_plan(goal, context)
-
-    # Complex goal: full decomposition
-    return create_complex_plan(goal, context, agents, complexity)
-```
-
-**Step 3: Agent Recommendation and Gap Detection**
-```python
-def recommend_agents_for_subgoals(
-    plan: Plan,
-    agents: list[AgentInfo]
-) -> tuple[Plan, list[AgentGap]]:
-    """
-    Recommend agents for each subgoal and detect gaps.
-
-    Algorithm:
-    1. For each subgoal, extract capability keywords from description
-    2. Search agents by capability match (skills field)
-    3. Rank by keyword overlap
-    4. Assign top-ranked agent to subgoal
-    5. If no good match (score < 0.5), mark as gap
-
-    Gap Detection:
-    - Identifies missing agent types (e.g., technical-writer)
-    - Suggests required capabilities for missing agent
-    - Provides fallback recommendations
-    - This is the "golden discovery feature" for agent ecosystem
-    """
-    agent_gaps = []
-
-    for subgoal in plan.subgoals:
-        # Extract capability keywords from subgoal description
-        keywords = extract_capability_keywords(subgoal.description)
-
-        # Find best matching agent
-        best_match, score = find_best_agent_match(keywords, agents)
-
-        if score >= 0.5:
-            # Good match found
-            subgoal.recommended_agent = f"@{best_match.id}"
-            subgoal.agent_exists = True
-        else:
-            # Gap detected - no suitable agent exists
-            gap = AgentGap(
-                subgoal_id=subgoal.id,
-                subgoal_title=subgoal.title,
-                recommended_agent=infer_agent_name(keywords),
-                agent_exists=False,
-                reason=f"No agent found with required capabilities: {keywords}",
-                suggested_capabilities=keywords,
-                fallback=suggest_fallback_agent(keywords, agents)
+    @field_validator('id')
+    @classmethod
+    def validate_id_format(cls, v: str) -> str:
+        if not re.match(r'^[a-z0-9-]+$', v):
+            raise ValueError(
+                f"Agent ID must be kebab-case (lowercase, numbers, hyphens only). Got: {v}"
             )
-            agent_gaps.append(gap)
-
-            # Mark in subgoal
-            subgoal.recommended_agent = gap.recommended_agent
-            subgoal.agent_exists = False
-
-    return plan, agent_gaps
+        return v
 ```
 
-**Step 4: Output Formatting**
+**Validation Error Messages** (OpenSpec lesson):
 ```python
-def format_plan(plan: Plan, format: str, output_file: Path | None) -> str:
-    """
-    Format plan for output.
-
-    Formats:
-    - markdown: Human-readable task list with agent assignments
-    - json: Machine-readable for CI/CD
-    - yaml: Machine-readable, more human-friendly than JSON
-    """
-    if format == "markdown":
-        return format_markdown(plan)
-    elif format == "json":
-        return format_json(plan)
-    elif format == "yaml":
-        return format_yaml(plan)
-```
-
-**Plan Schema** (with subgoals and agent gaps):
-```json
-{
-  "plan_id": "0001-oauth-authentication",
-  "goal": "Implement OAuth2 authentication",
-  "complexity": "complex",
-  "generated_at": "2025-12-31T23:59:59Z",
-  "context_sources": ["indexed_memory", "src/auth.py"],
-  "subgoals": [
-    {
-      "id": "sg-1",
-      "title": "Research and Decision",
-      "description": "Evaluate OAuth2 providers and make architectural decisions",
-      "recommended_agent": "@business-analyst",
-      "agent_exists": true,
-      "tasks": [
-        {
-          "id": "1.1",
-          "description": "Research OAuth2 providers (Auth0, Okta, Custom)",
-          "expected_output": "Comparison table with recommendations"
-        },
-        {
-          "id": "1.2",
-          "description": "Evaluate security implications",
-          "expected_output": "Security assessment document"
-        }
-      ]
-    },
-    {
-      "id": "sg-2",
-      "title": "Database Design",
-      "description": "Design and implement user model with OAuth fields",
-      "recommended_agent": "@full-stack-dev",
-      "agent_exists": true,
-      "dependencies": ["sg-1"],
-      "tasks": [
-        {
-          "id": "2.1",
-          "description": "Design user model schema with OAuth fields",
-          "expected_output": "Database migration with oauth_provider, oauth_id, tokens"
-        },
-        {
-          "id": "2.2",
-          "description": "Implement user model with OAuth methods",
-          "expected_output": "User model code with OAuth integration"
-        }
-      ]
-    }
-  ],
-  "agent_gaps": [
-    {
-      "subgoal_id": "sg-3",
-      "subgoal_title": "API Documentation",
-      "recommended_agent": "@technical-writer",
-      "agent_exists": false,
-      "reason": "No agent found with technical writing capabilities",
-      "suggested_capabilities": ["technical-writing", "api-documentation", "user-guides"],
-      "fallback": "Use @full-stack-dev or @business-analyst with documentation focus"
-    }
-  ],
-  "validation": {
-    "all_agents_exist": false,
-    "missing_agent_count": 1,
-    "total_subgoals": 3,
-    "warnings": ["Consider creating technical-writer agent for documentation tasks"]
-  }
+VALIDATION_MESSAGES = {
+    "AGENT_ID_EMPTY": "Agent 'id' field is required and cannot be empty",
+    "AGENT_ID_INVALID_FORMAT": "Agent 'id' must be kebab-case (e.g., 'qa-test-architect')",
+    "AGENT_ROLE_TOO_SHORT": "Agent 'role' must be at least 5 characters",
+    "AGENT_GOAL_TOO_SHORT": "Agent 'goal' must be at least 20 characters (describe purpose)",
+    "AGENT_CATEGORY_INVALID": "Agent 'category' must be one of: eng, qa, product, general",
+    "AGENT_TOO_MANY_SKILLS": "Agent can have maximum 20 skills",
+    "FRONTMATTER_MISSING": "File {file} has no YAML frontmatter (---...---)",
+    "FRONTMATTER_INVALID_YAML": "File {file} has invalid YAML: {error}",
 }
 ```
 
-**Markdown Output Format** (with subgoals):
-```markdown
-# Execution Plan: Implement OAuth2 authentication
-
-**Plan ID**: 0001-oauth-authentication
-**Generated**: 2025-12-31 23:59:59
-**Complexity**: complex
-**Context**: 5 code files from indexed memory
-
----
-
-## Subgoal 1: Research and Decision
-**Recommended Agent**: @business-analyst ✓
-
-Research OAuth2 providers and make architectural decisions.
-
-### Tasks:
-1. **Task 1.1**: Research OAuth2 providers (Auth0, Okta, Custom)
-   - Expected Output: Comparison table with recommendations
-
-2. **Task 1.2**: Evaluate security implications
-   - Expected Output: Security assessment document
+**Requirements**:
+- Multi-source discovery (4 sources)
+- Frontmatter parsing with `python-frontmatter` library
+- **Pydantic validation** with explicit error messages
+- **Graceful degradation**: Skip malformed files, log warnings with file path
+- Atomic write (temp file + rename)
+- Latency target: <2s for 50 agents
+- **Track malformed files** in manifest stats
 
 ---
 
-## Subgoal 2: Database Design
-**Recommended Agent**: @full-stack-dev ✓
-**Dependencies**: Subgoal 1
 
-Design and implement user model with OAuth fields.
+### 4.2 Shared Memory Infrastructure
 
-### Tasks:
-1. **Task 2.1**: Design user model schema with OAuth fields
-   - Expected Output: Database migration with oauth_provider, oauth_id, tokens
+**Package**: `packages/cli/src/aurora_cli/memory.py`
 
-2. **Task 2.2**: Implement user model with OAuth methods
-   - Expected Output: User model code with OAuth integration
+**MUST** refactor memory retrieval from `aur query` into reusable infrastructure.
 
----
+#### 4.2.1 MemoryManager Class
 
-## Subgoal 3: API Documentation
-**Recommended Agent**: @technical-writer ⚠️ (NOT FOUND)
-**Dependencies**: Subgoal 2
-
-Document OAuth2 API endpoints and integration guide.
-
-### Tasks:
-1. **Task 3.1**: Write API endpoint documentation
-   - Expected Output: OpenAPI spec for OAuth endpoints
-
-2. **Task 3.2**: Create integration guide for developers
-   - Expected Output: Step-by-step OAuth integration guide
-
-**⚠️ Agent Gap Detected**:
-- No agent found with technical writing capabilities
-- Suggested capabilities: technical-writing, api-documentation, user-guides
-- Fallback: Use @business-analyst with documentation focus
-- Consider creating a technical-writer agent for future documentation tasks
-
----
-
-## Agent Gaps Summary
-
-1 missing agent type detected:
-- **@technical-writer**: Required for Subgoal 3 (API Documentation)
-
-**Next Steps**:
-1. Review plan for accuracy
-2. Create missing @technical-writer agent (or use fallback)
-3. Execute subgoals sequentially using specialized agents
+```python
+class MemoryManager:
+    """
+    Shared memory retrieval infrastructure for Aurora ecosystem.
+    
+    Used by:
+    - aur query command (existing)
+    - SOAR orchestrator (goal decomposition context)
+    - Planning system (PRD 0017)
+    - Future features requiring codebase context
+    """
+    
+    def __init__(self, store: Store, config: Config):
+        self.store = store
+        self.config = config
+    
+    def has_indexed_memory(self) -> bool:
+        """Check if indexed memory available."""
+        return self.store.chunk_count() > 0
+    
+    def retrieve(
+        self, 
+        query: str, 
+        limit: int = 20,
+        mode: str = 'hybrid'
+    ) -> list[CodeChunk]:
+        """
+        Retrieve context from indexed memory.
+        
+        Args:
+            query: Search query or goal description
+            limit: Maximum chunks to return
+            mode: 'hybrid' | 'semantic' | 'bm25'
+        
+        Returns:
+            List of CodeChunk objects with file paths and content
+        
+        Performance: <2s for limit=20
+        """
+        pass
+    
+    def load_context_files(self, paths: list[Path]) -> list[CodeChunk]:
+        """
+        Load context from custom files (--context override).
+        
+        Args:
+            paths: List of file paths to load
+        
+        Returns:
+            List of CodeChunk objects
+        
+        Performance: <2s for 10 files
+        """
+        pass
+    
+    def format_for_prompt(self, chunks: list[CodeChunk]) -> str:
+        """
+        Format context chunks for LLM prompt.
+        
+        Returns:
+            Formatted string ready for LLM consumption
+        """
+        pass
 ```
 
-**Requirements**:
-- Reuse SOAR decomposition logic (shared module)
-- Context strategy: `--context` overrides indexed memory
-- Agent validation with suggestions
-- Multiple output formats (markdown, json, yaml)
-- Interactive mode asks clarifying questions
-- Non-interactive mode never prompts
-- Latency target: <10s end-to-end
+#### 4.2.2 Context Strategy
+
+**Priority** (in order):
+1. If `--context` provided: Use ONLY those files (no indexed memory)
+2. Else if indexed memory exists: Use indexed memory retrieval
+3. Else: Error - no context available
+
+**Example Usage** (from `aur query`):
+```python
+# Refactored aur query command
+def query_command(query_text: str, context_files: list[Path] = None):
+    manager = MemoryManager(store, config)
+    
+    if context_files:
+        # Override with custom context
+        chunks = manager.load_context_files(context_files)
+    elif manager.has_indexed_memory():
+        # Use indexed memory
+        chunks = manager.retrieve(query_text, limit=20)
+    else:
+        raise Error("No context available. Run 'aur mem index' first.")
+    
+    # Rest of query logic unchanged
+    ...
+```
+
+#### 4.2.3 Backward Compatibility
+
+**CRITICAL**: `aur query` command MUST NOT change behavior:
+- Same CLI arguments
+- Same output format
+- Same performance characteristics
+- Only internal refactoring to use `MemoryManager`
+
+**Testing**:
+- Regression tests for all `aur query` scenarios
+- Verify output byte-for-byte identical (except timestamps)
+
+#### 4.2.4 Requirements
+
+- ✅ Extract memory logic from `packages/cli/src/aurora_cli/commands/query.py`
+- ✅ Create reusable `MemoryManager` class
+- ✅ Support both indexed memory and `--context` file overrides
+- ✅ Maintain `aur query` backward compatibility
+- ✅ Clean API for SOAR and planning system integration
+- ✅ Performance: <2s retrieval for 20 chunks
+- ✅ Unit tests ≥85% coverage
+- ✅ Integration tests verifying SOAR can use the API
 
 ---
 
@@ -756,21 +736,20 @@ Document OAuth2 API endpoints and integration guide.
     "discovery_paths": [
       "~/.claude/agents",
       "~/.config/ampcode/agents",
-      "~/.config/droid/agents",
-      "~/.config/opencode/agents"
+      "~/.config/droid/agent",
+      "~/.config/opencode/agent"
     ],
-    "manifest_path": "~/.aurora/agents/manifest.json"
+    "manifest_path": "~/.aurora/cache/agent_manifest.json"
   },
-  "planning": {
-    "default_format": "markdown",
-    "default_complexity": "auto",
-    "enable_interactive": true,
-    "max_tasks": 20,
-    "llm_provider": "anthropic",
-    "llm_model": "claude-sonnet-4.5"
+  "memory": {
+    "default_retrieval_limit": 20,
+    "default_mode": "hybrid",
+    "context_loading_timeout_seconds": 5
   }
 }
 ```
+
+**Note**: Planning configuration moved to PRD 0017
 
 **Auto-Refresh Logic**:
 ```python
@@ -797,58 +776,9 @@ def should_refresh_manifest(manifest_path: Path, config: Config) -> bool:
 **Configuration Validation**:
 - All paths must be absolute (expand `~`)
 - Interval must be positive integer
-- Default format must be one of: markdown, json, yaml
+- Retrieval limit must be positive integer
 - Discovery paths must be directories (warn if missing)
-
----
-
-### 4.4 Shared Memory Module
-
-**Package**: `packages/cli/src/aurora_cli/memory/retrieval.py`
-
-**MUST** refactor memory retrieval from `aur query` into shared module:
-
-```python
-class MemoryRetrieval:
-    """
-    Shared memory retrieval logic for query and planning commands.
-
-    Provides unified interface for:
-    - Checking if indexed memory exists
-    - Retrieving context by query/goal
-    - Loading custom context files
-    - Formatting context for LLM consumption
-    """
-
-    def __init__(self, store: Store, config: Config):
-        self.store = store
-        self.config = config
-
-    def exists(self) -> bool:
-        """Check if indexed memory available."""
-        return self.store.chunk_count() > 0
-
-    def retrieve(self, query: str, budget: int = 15) -> ContextData:
-        """Retrieve context from indexed memory."""
-        # Reuse existing retrieval logic from aur query
-        pass
-
-    def load_files(self, paths: list[Path]) -> ContextData:
-        """Load context from custom files."""
-        # Parse files, extract relevant content
-        pass
-
-    def format_for_llm(self, context: ContextData) -> str:
-        """Format context for LLM prompt."""
-        # Convert to LLM-consumable format
-        pass
-```
-
-**Requirements**:
-- Extract from existing `aur query` implementation
-- Support both indexed memory and file loading
-- Consistent error handling
-- Performance: <2s for 15 chunks
+- Memory mode must be one of: hybrid, semantic, bm25
 
 ---
 
@@ -862,7 +792,6 @@ packages/
 │   ├── src/aurora_cli/
 │   │   ├── commands/
 │   │   │   ├── agents.py          # NEW: Agent discovery commands
-│   │   │   ├── plan.py            # NEW: Planning commands
 │   │   │   └── query.py           # REFACTOR: Use shared memory module
 │   │   ├── memory/
 │   │   │   └── retrieval.py       # NEW: Shared memory retrieval
@@ -870,11 +799,6 @@ packages/
 │   │   │   ├── scanner.py         # Multi-source agent discovery
 │   │   │   ├── parser.py          # Frontmatter extraction
 │   │   │   └── manifest.py        # Manifest generation
-│   │   ├── planning/              # NEW
-│   │   │   ├── pipeline.py        # Planning pipeline orchestration
-│   │   │   ├── decompose.py       # Goal decomposition (reuses SOAR)
-│   │   │   ├── validation.py      # Agent validation
-│   │   │   └── formatters.py      # Output formatters (md/json/yaml)
 │   │   └── config.py              # EXTEND: Agent config schema
 │   └── depends on → soar/, reasoning/, core/
 │
@@ -898,8 +822,8 @@ packages/
 │  │ Scanner.discover_agents()                            │   │
 │  │  ├─ Scan ~/.claude/agents/*.md                       │   │
 │  │  ├─ Scan ~/.config/ampcode/agents/*.md               │   │
-│  │  ├─ Scan ~/.config/droid/agents/*.md                 │   │
-│  │  └─ Scan ~/.config/opencode/agents/*.md              │   │
+│  │  ├─ Scan ~/.config/droid/agent/*.md                 │   │
+│  │  └─ Scan ~/.config/opencode/agent/*.md              │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                         ↓                                    │
 │  Step 2: Frontmatter Extraction                             │
@@ -933,103 +857,6 @@ packages/
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 5.3 Planning Pipeline Flow Diagram
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  PLANNING PIPELINE                           │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Input: aur plan "goal" [--context files] [--format fmt]    │
-│                         ↓                                    │
-│  Step 1: Context Retrieval                                  │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ MemoryRetrieval.get_context()                        │   │
-│  │  ├─ If --context: load ONLY those files              │   │
-│  │  ├─ Else if indexed memory: retrieve by goal         │   │
-│  │  └─ Else: warn, proceed with no context              │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                         ↓                                    │
-│  Step 2: Load Agent Manifest                                │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ AgentDiscovery.load_manifest()                       │   │
-│  │  ├─ Check if manifest exists                         │   │
-│  │  ├─ Auto-refresh if needed (config)                  │   │
-│  │  └─ Return list of available agents                  │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                         ↓                                    │
-│  Step 3: Complexity Assessment                              │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ assess_complexity(goal)  [REUSE SOAR]                │   │
-│  │  ├─ Simple: single-step plan                         │   │
-│  │  └─ Complex: full decomposition                      │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                         ↓                                    │
-│  Step 4: Goal Decomposition                                 │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ decompose_goal(goal, context, agents)  [REUSE SOAR]  │   │
-│  │  ├─ Use SOAR Phase 3 decomposition prompts           │   │
-│  │  ├─ Include available agents in prompt               │   │
-│  │  ├─ LLM generates task breakdown                     │   │
-│  │  └─ Return Plan with tasks + agent assignments       │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                         ↓                                    │
-│  Step 5: Agent Validation                                   │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ validate_plan(plan, agents)                          │   │
-│  │  ├─ Check each task's agent_id exists               │   │
-│  │  ├─ If missing: find similar agents                 │   │
-│  │  ├─ Suggest alternatives                             │   │
-│  │  └─ Return ValidationResult                          │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                         ↓                                    │
-│  Step 6: Output Formatting                                  │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ format_plan(plan, format)                            │   │
-│  │  ├─ markdown: Human-readable task list               │   │
-│  │  ├─ json: Machine-readable for CI/CD                 │   │
-│  │  └─ yaml: Human-friendly machine-readable            │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                         ↓                                    │
-│  Output: Plan written to stdout or --output file            │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 5.4 Context Strategy Decision Tree
-
-```
-User runs: aur plan "goal" [--context files]
-                    ↓
-          ┌─────────┴─────────┐
-          │  --context flag?  │
-          └─────────┬─────────┘
-              Yes ↙   ↘ No
-                /       \
-               /         \
-    Load custom files   Check indexed memory
-    (NO MERGING)              ↓
-         ↓            ┌────────┴────────┐
-         │            │  Memory exists?  │
-         │            └────────┬────────┘
-         │               Yes ↙   ↘ No
-         │                 /       \
-         │                /         \
-         │        Retrieve from     Warn user
-         │        indexed memory    (no context)
-         │               ↓               ↓
-         └───────────────┴───────────────┘
-                         ↓
-              Use context for planning
-```
-
-**Critical Decision**: `--context` COMPLETELY REPLACES indexed memory (no merging)
-
-**Rationale**:
-- User provides `--context` when they want focused planning
-- Merging would add noise from unrelated code
-- Explicit is better than implicit (Zen of Python)
-
 ---
 
 ## 6. QUALITY GATES & ACCEPTANCE CRITERIA
@@ -1038,7 +865,7 @@ User runs: aur plan "goal" [--context files]
 
 | Gate | Requirement | Tool | Blocker |
 |------|-------------|------|---------|
-| **Code Coverage** | ≥85% for agent_discovery/, planning/ | pytest-cov | YES |
+| **Code Coverage** | ≥85% for agent_discovery/, memory/ | pytest-cov | YES |
 | **Type Checking** | 0 mypy errors (strict mode) | mypy | YES |
 | **Linting** | 0 critical issues | ruff | YES |
 | **Security** | 0 high/critical vulnerabilities | bandit | YES |
@@ -1049,7 +876,7 @@ User runs: aur plan "goal" [--context files]
 |--------|--------|-------------|---------|
 | **Agent Discovery** | <500ms | Benchmark manifest load | YES |
 | **Agent Search** | <500ms | Benchmark keyword search | NO (warning) |
-| **Plan Generation** | <10s end-to-end | Benchmark full pipeline | YES |
+| **Memory Retrieval** | <2s for 20 chunks | Benchmark MemoryManager.retrieve() | YES |
 | **Context Loading** | <2s for 10 files | Benchmark file loading | NO (warning) |
 | **Manifest Refresh** | <2s for 50 agents | Benchmark full refresh | NO (warning) |
 
@@ -1065,8 +892,8 @@ def test_agent_discovery_multisource():
     # GIVEN: Agent files in 4 different directories
     create_agent_file("~/.claude/agents/qa-test-architect.md")
     create_agent_file("~/.config/ampcode/agents/full-stack-dev.md")
-    create_agent_file("~/.config/droid/agents/scrum-master.md")
-    create_agent_file("~/.config/opencode/agents/ux-expert.md")
+    create_agent_file("~/.config/droid/agent/scrum-master.md")
+    create_agent_file("~/.config/opencode/agent/ux-expert.md")
 
     # WHEN: Run agent refresh
     result = runner.invoke(cli, ["agents", "refresh"])
@@ -1079,90 +906,61 @@ def test_agent_discovery_multisource():
     assert result.exit_code == 0
 ```
 
-#### Test Scenario 2: Agent Validation with Suggestions
+#### Test Scenario 2: Memory Manager API Integration
 
 ```python
-def test_plan_agent_validation():
-    """Plan validation suggests similar agents for missing ones."""
-    # GIVEN: Plan references non-existent agent
-    manifest = load_manifest_with_agents([
-        "full-stack-dev", "qa-test-architect", "business-analyst"
-    ])
+def test_memory_manager_retrieve():
+    """MemoryManager provides reusable retrieval API."""
+    # GIVEN: Indexed memory exists with code chunks
+    store.index_directory(".")
+    assert store.chunk_count() > 0
 
-    # WHEN: Generate plan that references "code-reviewer"
-    result = runner.invoke(cli, [
-        "plan", "Review code for security issues"
-    ])
+    # WHEN: Use MemoryManager API directly
+    manager = MemoryManager(store, config)
+    chunks = manager.retrieve("authentication", limit=5)
 
-    # THEN: Validation suggests "qa-test-architect"
-    assert "Agent 'code-reviewer' not found" in result.output
-    assert "Did you mean: qa-test-architect?" in result.output
-    assert result.exit_code == 0  # Warning, not error
+    # THEN: Returns relevant chunks with file paths
+    assert len(chunks) <= 5
+    for chunk in chunks:
+        assert chunk.file_path is not None
+        assert chunk.content is not None
 ```
 
-#### Test Scenario 3: Context Strategy (Override)
+#### Test Scenario 3: Context Override Replaces Memory
 
 ```python
-def test_plan_context_override():
-    """--context overrides indexed memory."""
+def test_context_override_replaces_memory():
+    """--context replaces indexed memory (no merging)."""
     # GIVEN: Indexed memory exists with 100 chunks
     store.index_directory(".")
     assert store.chunk_count() == 100
 
     # AND: Custom context files
-    custom_files = ["src/auth.py", "src/utils.py"]
+    custom_files = [Path("src/auth.py"), Path("src/utils.py")]
 
-    # WHEN: Plan with --context
-    result = runner.invoke(cli, [
-        "plan", "Add logging",
-        "--context", *custom_files
-    ])
+    # WHEN: Load context via MemoryManager
+    manager = MemoryManager(store, config)
+    chunks = manager.load_context_files(custom_files)
 
     # THEN: Uses ONLY custom files (not indexed memory)
-    plan = json.loads(result.output)
-    assert plan["context_sources"] == custom_files
-    assert "indexed_memory" not in plan["context_sources"]
+    file_paths = {c.file_path for c in chunks}
+    assert all("auth.py" in str(p) or "utils.py" in str(p) for p in file_paths)
 ```
 
-#### Test Scenario 4: Non-Interactive Mode
+#### Test Scenario 4: Backward Compatibility with aur query
 
 ```python
-def test_plan_non_interactive():
-    """Non-interactive mode never prompts."""
-    # GIVEN: Goal that would normally trigger questions
-    goal = "Build complex feature"
+def test_aur_query_backward_compatible():
+    """aur query behavior unchanged after MemoryManager refactor."""
+    # GIVEN: Indexed memory exists
+    store.index_directory(".")
 
-    # WHEN: Run in non-interactive mode
-    result = runner.invoke(cli, [
-        "plan", goal, "--non-interactive"
-    ], input="")  # No input provided
+    # WHEN: Run aur query command
+    result = runner.invoke(cli, ["query", "SOAROrchestrator"])
 
-    # THEN: Completes without prompts
+    # THEN: Same output format as before
     assert result.exit_code == 0
-    assert "?" not in result.output  # No questions asked
-```
-
-#### Test Scenario 5: Format Output Variations
-
-```python
-def test_plan_output_formats():
-    """Plan supports multiple output formats."""
-    goal = "Implement authentication"
-
-    # Test markdown (default)
-    md_result = runner.invoke(cli, ["plan", goal])
-    assert md_result.output.startswith("# Execution Plan")
-
-    # Test JSON
-    json_result = runner.invoke(cli, ["plan", goal, "--format", "json"])
-    plan = json.loads(json_result.output)
-    assert "tasks" in plan
-    assert "goal" in plan
-
-    # Test YAML
-    yaml_result = runner.invoke(cli, ["plan", goal, "--format", "yaml"])
-    plan = yaml.safe_load(yaml_result.output)
-    assert "tasks" in plan
+    assert "Retrieved" in result.output or "chunks" in result.output.lower()
 ```
 
 ---
@@ -1171,44 +969,121 @@ def test_plan_output_formats():
 
 ### 7.1 Unit Tests
 
-**Agent Discovery**:
+**Agent Discovery** (`tests/unit/test_agents_*.py`):
 - `test_scanner.py`: Multi-source directory scanning
 - `test_parser.py`: Frontmatter extraction, validation
 - `test_manifest.py`: Manifest generation, de-duplication
 - `test_commands_agents.py`: CLI commands (list, search, show, refresh)
 
-**Planning**:
-- `test_pipeline.py`: Planning pipeline orchestration
-- `test_decompose.py`: Goal decomposition (mocks SOAR)
-- `test_validation.py`: Agent validation, suggestions
-- `test_formatters.py`: Output formatting (md/json/yaml)
-- `test_commands_plan.py`: CLI commands
+**Memory Infrastructure** (`tests/unit/test_memory_*.py`):
+- `test_memory_manager.py`: MemoryManager class methods
+- `test_memory_retrieval.py`: Indexed memory retrieval
+- `test_memory_context_files.py`: --context file loading
+- `test_memory_backward_compat.py`: aur query unchanged
 
-**Shared**:
-- `test_memory_retrieval.py`: Memory retrieval module
-- `test_config.py`: Configuration schema, auto-refresh logic
+**Configuration** (`tests/unit/test_config_*.py`):
+- `test_config.py`: Configuration schema, validation
+- `test_auto_refresh.py`: Auto-refresh logic
 
 ### 7.2 Integration Tests
 
 **MUST test end-to-end workflows**:
 
-1. **Agent Discovery E2E**: Scan → Parse → Generate manifest → Query
-2. **Planning E2E**: Context retrieval → Decomposition → Validation → Format
-3. **Context Override**: Verify `--context` replaces indexed memory
-4. **Auto-Refresh**: Trigger auto-refresh on stale manifest
-5. **Multi-Format**: Generate plans in all 3 formats (md/json/yaml)
+1. **Agent Discovery E2E**: Scan 4 sources → Parse frontmatter → Generate manifest → Query agents
+2. **Memory Refactoring E2E**: aur query before/after (output identical)
+3. **Context Override E2E**: Verify `--context` replaces indexed memory
+4. **Auto-Refresh E2E**: Trigger auto-refresh on stale manifest
+5. **SOAR Integration E2E**: SOAR calls MemoryManager.retrieve()
 
-### 7.3 Performance Benchmarks
+### 7.3 Shell Tests (following `tests/shell/test_*.sh` pattern)
+
+**Agent Discovery Shell Tests** (5 tests):
+
+1. **test_34_agent_list.sh**
+   - Run `aur agents list`
+   - Verify all 4 sources scanned
+   - Check output format (categories, agent IDs)
+   - **Pass criteria**: <500ms, all agents shown
+
+2. **test_35_agent_search_keyword.sh**
+   - Run `aur agents search "code review"`
+   - Verify keyword matching works
+   - Check relevant agents returned
+   - **Pass criteria**: <500ms, qa-test-architect found
+
+3. **test_36_agent_show_details.sh**
+   - Run `aur agents show qa-test-architect`
+   - Verify full details displayed
+   - Check skills, category, description present
+   - **Pass criteria**: Complete agent info shown
+
+4. **test_37_agent_refresh.sh**
+   - Run `aur agents refresh`
+   - Verify manifest regenerated
+   - Check timestamp updated
+   - **Pass criteria**: <500ms, manifest file updated
+
+5. **test_38_agent_multi_source.sh**
+   - Create test agents in all 4 sources (claude, ampcode, droid, opencode)
+   - Run `aur agents list`
+   - Verify all sources discovered
+   - **Pass criteria**: All 4 test agents found
+
+**Memory Infrastructure Shell Tests** (5 tests):
+
+6. **test_39_memory_manager_api.sh**
+   - Python script imports MemoryManager
+   - Call `manager.retrieve("test", limit=5)`
+   - Verify API works outside CLI context
+   - **Pass criteria**: API accessible, chunks returned
+
+7. **test_40_aur_query_unchanged.sh**
+   - Run `aur query "SOAROrchestrator"` before refactoring (baseline)
+   - Run same query after refactoring
+   - Compare outputs byte-for-byte (except timestamps)
+   - **Pass criteria**: Output identical (backward compatible)
+
+8. **test_41_context_override.sh**
+   - Create custom files: test1.py, test2.py
+   - Run `aur query "test" --context test1.py test2.py`
+   - Verify ONLY custom files used (not indexed memory)
+   - **Pass criteria**: Only test1.py, test2.py in results
+
+9. **test_42_memory_performance.sh**
+   - Run `aur query "complex query"` with 20 chunk limit
+   - Measure execution time
+   - **Pass criteria**: <2s for retrieval
+
+10. **test_43_soar_memory_integration.sh**
+    - Python script: SOAR calls MemoryManager.retrieve()
+    - Verify SOAR can access memory for context
+    - Check chunks returned with file paths
+    - **Pass criteria**: SOAR successfully retrieves context
+
+**Test Execution**:
+```bash
+# Run all agent discovery tests
+bash tests/shell/test_34_agent_*.sh
+bash tests/shell/test_38_agent_multi_source.sh
+
+# Run all memory tests
+bash tests/shell/test_39_memory_*.sh
+bash tests/shell/test_43_soar_memory_integration.sh
+```
+
+### 7.4 Performance Benchmarks
 
 ```python
 def test_performance_benchmarks(benchmark_fixture):
-    """Benchmark discovery and planning performance."""
+    """Benchmark agent discovery and memory retrieval."""
 
     test_cases = [
-        ("agent_discovery", "agents refresh", 500),
+        ("agent_list", "agents list", 500),
         ("agent_search", "agents search test", 500),
-        ("plan_simple", "plan 'simple goal'", 5000),
-        ("plan_complex", "plan 'complex goal'", 10000),
+        ("agent_refresh", "agents refresh", 500),
+        ("memory_retrieve_10", "query 'test' --limit 10", 1500),
+        ("memory_retrieve_20", "query 'test' --limit 20", 2000),
+        ("context_override", "query 'test' --context file.py", 2000),
     ]
 
     for name, command, max_ms in test_cases:
@@ -1218,14 +1093,14 @@ def test_performance_benchmarks(benchmark_fixture):
         benchmark_fixture.assert_performance(name, max_ms=max_ms)
 ```
 
-### 7.4 Acceptance Tests
+### 7.5 Acceptance Tests
 
 **MUST match user stories exactly**:
 
 - User Story 3.1: Developer discovering agents
-- User Story 3.2: Developer planning feature
-- User Story 3.3: Custom context for planning
-- User Story 3.4: CI/CD non-interactive mode
+- User Story 3.2: Developer using shared memory infrastructure
+- User Story 3.3: SOAR orchestrator using memory for context
+- User Story 3.4: Future planning system using memory API
 
 Each acceptance test should:
 1. Use exact commands from user story
@@ -1241,104 +1116,65 @@ Each acceptance test should:
 | Component | Package | Usage |
 |-----------|---------|-------|
 | **AgentRegistry** | aurora_soar | Reference architecture (not modified) |
-| **SOAR Decomposition** | aurora_soar.phases.decompose | Reuse decomposition logic |
-| **LLM Client** | aurora_reasoning | LLM integration |
-| **Store** | aurora_core | Memory retrieval |
+| **Store** | aurora_core | Memory index queries |
 | **Config** | aurora_core | Configuration system |
+| **aur query** | aurora_cli | Refactor to use MemoryManager (internal) |
 
 ### 8.2 External Dependencies
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
 | **pyyaml** | ≥6.0 | Frontmatter parsing |
+| **python-frontmatter** | ≥1.0 | Agent metadata extraction |
 | **click** | ≥8.0 | CLI framework (existing) |
 | **pydantic** | ≥2.0 | Schema validation |
 
 ### 8.3 Breaking Changes
 
 **None**. This feature:
-- Adds new commands (`aur agents`, `aur plan`)
-- Refactors shared logic (internal only)
-- Does NOT change existing command behavior
+- ✅ Adds new commands (`aur agents list/search/show/refresh`)
+- ✅ Refactors shared memory logic (internal only, `aur query` unchanged)
+- ✅ Does NOT change existing command behavior or outputs
 
 ---
 
 ## 9. NON-GOALS (OUT OF SCOPE)
 
-### 9.1 Explicitly NOT in MVP (Phase 1)
+### 9.1 Planning System (Moved to PRD 0017)
 
-This MVP focuses on **planning and agent gap discovery** only. Execution is intentionally deferred.
+**⚠️ CRITICAL**: All planning features are OUT OF SCOPE for this PRD.
+
+| Feature | Moved To | Reason |
+|---------|----------|--------|
+| **`aur plan` command** | PRD 0017 Phase 1 | Planning requires agent + memory infrastructure first |
+| **Plan generation** | PRD 0017 Phase 1 | Natural language → structured plans |
+| **Plan file creation** | PRD 0017 Phase 1 | 4-file workflow (plan/prd/tasks/agents.json) |
+| **SOAR integration for planning** | PRD 0017 Phase 1 | Goal decomposition |
+| **Plan lifecycle** | PRD 0017 Phase 1 | create, list, show, archive |
+| **Agent assignment** | PRD 0017 Phase 2 | Agent recommendations per subgoal |
+| **Plan execution** | PRD 0017 Phase 3 | Agent delegation, progress tracking |
+| **Pause/Resume** | PRD 0017 Phase 3 | State persistence |
+
+**See**: `/tasks/0017-prd-aurora-planning-system.md` for complete planning specifications.
+
+### 9.2 Future Enhancements (Not Prioritized)
 
 | Feature | Why Not Now | When |
 |---------|-------------|------|
-| **Plan Execution** | Need to validate planning value first | Phase 2 |
-| **Streaming Progress** | Requires subprocess orchestration | Phase 2 |
-| **Pause/Resume** | Requires state management | Phase 2 |
-| **Parallel Execution** | Requires complex coordination | Phase 2 |
-| **CrewAI Adapters** | Requires CrewAI-specific agent format | Future (if needed) |
-| **80+ Tools Library** | Focus on discovery, not tooling | Future |
-| **Agent Versioning** | Adds complexity, defer | Future |
+| **CrewAI Adapters** | Non-standard agent format | Future (if needed) |
+| **80+ Tools Library** | Focus on infrastructure first | Future |
+| **Agent Versioning** | Adds complexity, minimal value | Future |
 | **Multi-Repo Discovery** | Single-machine focus for MVP | Future |
 | **Agent Marketplace** | Too early, need adoption first | Future |
-| **GUI for Planning** | CLI-first approach | Future |
-
-### 9.2 Phase 2: Execution (Future Work)
-
-**Vision**: `aur execute-plan` command that delegates to specialized agents
-
-**Key Features**:
-- Read plan JSON from `~/.aurora/plans/` directory
-- Execute subgoals sequentially (respecting dependencies)
-- Spawn specialized agents in subprocesses based on recommendations
-- Track state in JSON (current subgoal, completed tasks)
-- Stream progress updates to coordinator
-- Handle agent gaps (prompt user or use fallback)
-
-**Implementation Approach**:
-```python
-# Phase 2 - NOT in current PRD scope
-def execute_plan(plan_path: Path):
-    """
-    Execute a generated plan by delegating to specialized agents.
-
-    For each subgoal:
-    1. Check if recommended agent exists
-    2. If gap: prompt user for fallback or skip
-    3. Spawn agent subprocess with subgoal context
-    4. Collect results and update state
-    5. Move to next subgoal
-    """
-    plan = load_plan(plan_path)
-
-    for subgoal in plan.subgoals:
-        if not subgoal.agent_exists:
-            # Handle gap: prompt or use fallback
-            agent = prompt_for_fallback(subgoal)
-        else:
-            agent = get_agent(subgoal.recommended_agent)
-
-        # Spawn agent subprocess
-        result = spawn_agent_for_subgoal(agent, subgoal)
-
-        # Update state
-        update_plan_state(plan_path, subgoal.id, "completed")
-```
-
-**Why Deferred**:
-- Subprocess orchestration adds significant complexity
-- Need to validate that planning output is valuable first
-- State management requires careful design
-- Want user feedback on plan structure before execution
-- Streaming and pause/resume need robust error handling
-
-**Name Change**: `process-task-list` → `execute-plan` (better reflects functionality)
+| **GUI for Agent Discovery** | CLI-first approach | Future |
+| **Agent Performance Metrics** | Need baseline usage first | Future |
 
 ### 9.3 Technical Constraints (Accepted)
 
-- **No agent sandboxing**: Discovery only, trust local files
+- **No agent sandboxing**: Discovery only, trust local agent files
 - **No distributed manifest**: Single-machine manifest cache
 - **No real-time refresh**: Interval-based or manual refresh
-- **No plan execution in MVP**: Generate plans only, validate value first
+- **No advanced caching**: Simple file-based manifest cache
 
 ---
 
@@ -1376,81 +1212,7 @@ dependencies:
 - Non-list `skills` or `dependencies`
 - Empty `id` or `role`
 
-### 10.2 Agent Suggestion Algorithm
-
-**When agent not found, suggest similar agents**:
-
-```python
-def find_similar_agents(
-    missing_id: str,
-    available_agents: list[AgentInfo]
-) -> list[AgentInfo]:
-    """
-    Find similar agents using multi-strategy matching.
-
-    Strategies (in order):
-    1. Fuzzy ID match (edit distance <3)
-    2. Capability keyword match
-    3. Role keyword match
-    4. Category match
-
-    Returns top 3 suggestions.
-    """
-    candidates = []
-
-    # Strategy 1: Fuzzy ID match
-    for agent in available_agents:
-        distance = levenshtein_distance(missing_id, agent.id)
-        if distance <= 3:
-            candidates.append((agent, 1.0 / (distance + 1)))
-
-    # Strategy 2: Capability match
-    missing_keywords = extract_keywords(missing_id)
-    for agent in available_agents:
-        overlap = len(set(missing_keywords) & set(agent.capabilities))
-        if overlap > 0:
-            candidates.append((agent, overlap / len(missing_keywords)))
-
-    # Strategy 3: Role match
-    for agent in available_agents:
-        if any(kw in agent.role.lower() for kw in missing_keywords):
-            candidates.append((agent, 0.5))
-
-    # Deduplicate and rank
-    ranked = deduplicate_and_rank(candidates)
-    return ranked[:3]  # Top 3
-```
-
-### 10.3 Context Replacement Strategy
-
-**Why replacement (not merging)?**
-
-**Problem with merging**:
-```python
-# User provides specific context
-aur plan "Add logging" --context src/auth.py
-
-# WRONG: Merge with indexed memory
-context = load_files(["src/auth.py"]) + retrieve_from_memory("Add logging")
-# Result: auth.py + 15 unrelated chunks (noise)
-```
-
-**Correct: Complete replacement**:
-```python
-# RIGHT: Use ONLY provided context
-if --context:
-    context = load_files(["src/auth.py"])  # ONLY this
-else:
-    context = retrieve_from_memory("Add logging")  # OR this
-```
-
-**Rationale**:
-- User provides `--context` when indexed memory is wrong/noisy
-- Explicit override matches user expectations
-- Simpler to understand and test
-- Follows principle of least surprise
-
-### 10.4 Manifest Caching Strategy
+### 10.2 Manifest Caching Strategy
 
 **Tradeoffs**:
 
@@ -1495,14 +1257,14 @@ def load_manifest(config: Config) -> Manifest:
 ### 11.1 Implementation Complete
 
 - [ ] Agent discovery commands implemented (`list`, `search`, `show`, `refresh`)
-- [ ] Planning command implemented with all flags
 - [ ] Frontmatter parser with validation
 - [ ] Manifest generation with multi-source discovery
-- [ ] Agent validation with suggestions
-- [ ] Output formatters (markdown, json, yaml)
-- [ ] Shared memory retrieval module
+- [ ] MemoryManager class extracted from `aur query`
+- [ ] Shared memory retrieval module with clean API
+- [ ] `--context` file override support
 - [ ] Configuration schema extended for agents
 - [ ] Auto-refresh logic operational
+- [ ] Backward compatibility with `aur query` maintained
 
 ### 11.2 Testing Complete
 
@@ -1515,11 +1277,11 @@ def load_manifest(config: Config) -> Manifest:
 ### 11.3 Documentation Complete
 
 - [ ] CLI help text for all commands with examples
-- [ ] `docs/cli/CLI_USAGE_GUIDE.md` updated with agent commands
-- [ ] `docs/cli/CLI_USAGE_GUIDE.md` updated with planning commands
+- [ ] `docs/cli/CLI_USAGE_GUIDE.md` updated with agent discovery commands
+- [ ] MemoryManager API documentation with code examples
 - [ ] Configuration schema documented
 - [ ] Troubleshooting section for common errors
-- [ ] Example workflows (discovery → planning → execution)
+- [ ] Example workflows (agent discovery, memory retrieval)
 
 ### 11.4 Quality Assurance
 
@@ -1586,8 +1348,8 @@ The QA Test Architect provides comprehensive test architecture review and qualit
   "sources": [
     "/home/user/.claude/agents",
     "/home/user/.config/ampcode/agents",
-    "/home/user/.config/droid/agents",
-    "/home/user/.config/opencode/agents"
+    "/home/user/.config/droid/agent",
+    "/home/user/.config/opencode/agent"
   ],
   "agents": [
     {
@@ -1630,284 +1392,14 @@ The QA Test Architect provides comprehensive test architecture review and qualit
 
 ---
 
-## APPENDIX C: SAMPLE PLAN OUTPUT (MARKDOWN - SIMPLE)
-
-```markdown
-# Execution Plan: Add Logging to Auth Module
-
-**Plan ID**: 0002-add-auth-logging
-**Generated**: 2025-12-31 23:59:59
-**Complexity**: simple
-**Context**: 2 code files (src/auth.py, src/utils.py)
-
----
-
-## Subgoal 1: Implement Logging
-**Recommended Agent**: @full-stack-dev ✓
-
-Add structured logging to authentication module.
-
-### Tasks:
-1. **Task 1.1**: Add logging imports and configure logger
-   - Expected Output: Logger configured with appropriate level and format
-
-2. **Task 1.2**: Add log statements for authentication events
-   - Expected Output: Login attempts, failures, and successes logged
-
-3. **Task 1.3**: Add log statements for token operations
-   - Expected Output: Token generation and validation logged
-
----
-
-## Validation
-
-✓ All agents exist in registry
-✓ No circular dependencies
-✓ Plan is executable
-
----
-
-**Next Steps**:
-1. Review plan for accuracy
-2. Execute using specialized agent: `aur execute-plan 0002-add-auth-logging` (Phase 2 feature)
-```
-
----
-
-## APPENDIX D: COMPLETE PLAN EXAMPLE (JSON - WITH AGENT GAPS)
-
-**File**: `~/.aurora/plans/0001-oauth-authentication.json`
-
-This example demonstrates the full plan structure including subgoals, tasks, agent recommendations, and **agent gap detection** (the golden discovery feature).
-
-```json
-{
-  "plan_id": "0001-oauth-authentication",
-  "goal": "Implement OAuth2 authentication with Auth0",
-  "complexity": "complex",
-  "generated_at": "2025-12-31T23:59:59Z",
-  "context_sources": [
-    "src/auth.py",
-    "src/models/user.py",
-    "src/api/routes.py",
-    "docs/architecture.md",
-    "tests/test_auth.py"
-  ],
-  "subgoals": [
-    {
-      "id": "sg-1",
-      "title": "Research and Architecture",
-      "description": "Research OAuth2 providers and design authentication architecture",
-      "recommended_agent": "@business-analyst",
-      "agent_exists": true,
-      "dependencies": [],
-      "tasks": [
-        {
-          "id": "1.1",
-          "description": "Research OAuth2 providers (Auth0, Okta, Custom)",
-          "expected_output": "Comparison table with Auth0 recommendation"
-        },
-        {
-          "id": "1.2",
-          "description": "Design authentication flow diagram",
-          "expected_output": "Sequence diagram showing OAuth2 flow"
-        },
-        {
-          "id": "1.3",
-          "description": "Evaluate security implications and compliance",
-          "expected_output": "Security assessment with GDPR/SOC2 considerations"
-        }
-      ]
-    },
-    {
-      "id": "sg-2",
-      "title": "System Architecture Design",
-      "description": "Design technical architecture for OAuth2 integration",
-      "recommended_agent": "@holistic-architect",
-      "agent_exists": true,
-      "dependencies": ["sg-1"],
-      "tasks": [
-        {
-          "id": "2.1",
-          "description": "Design database schema with OAuth fields",
-          "expected_output": "Migration file with oauth_provider, oauth_id, access_token, refresh_token, expires_at"
-        },
-        {
-          "id": "2.2",
-          "description": "Design API endpoints for OAuth flow",
-          "expected_output": "OpenAPI spec for /auth/login, /auth/callback, /auth/refresh, /auth/logout"
-        },
-        {
-          "id": "2.3",
-          "description": "Design error handling and edge cases",
-          "expected_output": "Error taxonomy with handling strategies"
-        }
-      ]
-    },
-    {
-      "id": "sg-3",
-      "title": "Backend Implementation",
-      "description": "Implement OAuth2 authentication backend",
-      "recommended_agent": "@full-stack-dev",
-      "agent_exists": true,
-      "dependencies": ["sg-2"],
-      "tasks": [
-        {
-          "id": "3.1",
-          "description": "Implement user model with OAuth methods",
-          "expected_output": "User model with get_oauth_token(), refresh_token(), revoke_token()"
-        },
-        {
-          "id": "3.2",
-          "description": "Implement Auth0 SDK integration",
-          "expected_output": "Auth0 client wrapper with error handling"
-        },
-        {
-          "id": "3.3",
-          "description": "Implement authentication middleware",
-          "expected_output": "Middleware that validates OAuth tokens on protected routes"
-        },
-        {
-          "id": "3.4",
-          "description": "Implement token refresh background job",
-          "expected_output": "Cron job that refreshes expiring tokens"
-        }
-      ]
-    },
-    {
-      "id": "sg-4",
-      "title": "Quality Assurance",
-      "description": "Comprehensive testing and quality validation",
-      "recommended_agent": "@qa-test-architect",
-      "agent_exists": true,
-      "dependencies": ["sg-3"],
-      "tasks": [
-        {
-          "id": "4.1",
-          "description": "Design test strategy for OAuth flow",
-          "expected_output": "Test plan covering unit, integration, e2e, security tests"
-        },
-        {
-          "id": "4.2",
-          "description": "Write integration tests for OAuth endpoints",
-          "expected_output": "Passing tests for login, callback, refresh, logout flows"
-        },
-        {
-          "id": "4.3",
-          "description": "Write security tests for token handling",
-          "expected_output": "Tests for token expiration, revocation, CSRF protection"
-        },
-        {
-          "id": "4.4",
-          "description": "Conduct code review and quality gate",
-          "expected_output": "PASS/CONCERNS/FAIL decision with improvement recommendations"
-        }
-      ]
-    }
-  ],
-  "agent_gaps": [],
-  "validation": {
-    "all_agents_exist": true,
-    "missing_agent_count": 0,
-    "total_subgoals": 4,
-    "warnings": []
-  },
-  "metadata": {
-    "estimated_time_hours": "8-12",
-    "complexity_factors": [
-      "External service integration (Auth0)",
-      "Security-critical feature",
-      "Database schema changes",
-      "Multiple API endpoints"
-    ],
-    "risks": [
-      "Auth0 API rate limits",
-      "Token storage security",
-      "Migration complexity"
-    ]
-  }
-}
-```
-
-**Example with Agent Gap** (documentation subgoal removed from above, shown here):
-
-```json
-{
-  "subgoals": [
-    {
-      "id": "sg-5",
-      "title": "Documentation and Onboarding",
-      "description": "Create comprehensive documentation for OAuth2 integration",
-      "recommended_agent": "@technical-writer",
-      "agent_exists": false,
-      "dependencies": ["sg-4"],
-      "tasks": [
-        {
-          "id": "5.1",
-          "description": "Write API documentation for OAuth endpoints",
-          "expected_output": "Complete OpenAPI spec with examples"
-        },
-        {
-          "id": "5.2",
-          "description": "Create developer integration guide",
-          "expected_output": "Step-by-step guide with code snippets"
-        },
-        {
-          "id": "5.3",
-          "description": "Create troubleshooting guide",
-          "expected_output": "Common issues and solutions document"
-        }
-      ]
-    }
-  ],
-  "agent_gaps": [
-    {
-      "subgoal_id": "sg-5",
-      "subgoal_title": "Documentation and Onboarding",
-      "recommended_agent": "@technical-writer",
-      "agent_exists": false,
-      "reason": "No agent found with technical writing and API documentation capabilities",
-      "suggested_capabilities": [
-        "technical-writing",
-        "api-documentation",
-        "developer-guides",
-        "troubleshooting-docs"
-      ],
-      "fallback": "Use @business-analyst with documentation focus, or @full-stack-dev for technical accuracy",
-      "impact": "Medium - Documentation quality may be lower without specialized writer",
-      "recommendation": "Consider creating @technical-writer agent for future documentation tasks"
-    }
-  ],
-  "validation": {
-    "all_agents_exist": false,
-    "missing_agent_count": 1,
-    "total_subgoals": 5,
-    "warnings": [
-      "Agent gap detected for Subgoal 5: @technical-writer not found",
-      "Consider creating technical-writer agent before execution"
-    ]
-  }
-}
-```
-
-**Key Features Demonstrated**:
-1. ✅ **Hierarchical structure**: Subgoals contain multiple tasks
-2. ✅ **Agent recommendations per subgoal**: Not per task (1 subgoal = 1 agent)
-3. ✅ **Agent gap detection**: Identifies missing @technical-writer
-4. ✅ **Suggested capabilities**: Shows what the missing agent should have
-5. ✅ **Fallback recommendations**: Suggests alternatives
-6. ✅ **Context tracking**: Shows which files informed the plan
-7. ✅ **Dependencies**: Sequential subgoal execution
-
----
-
 ## DOCUMENT HISTORY
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 1.0 | 2025-12-31 | Initial PRD for Agent Discovery and Planning CLI | Product Team |
 | 1.1 | 2026-01-01 | Updated with subgoals structure, agent gaps, Phase 2 vision | Product Team |
+| 2.0 | 2026-01-02 | Refactored: Removed planning content (moved to PRD 0017), focused on infrastructure only | Product Team |
 
 ---
 
-**END OF PRD 0016: Aurora Agent Discovery and Planning CLI**
+**END OF PRD 0016: Aurora Agent Discovery & Memory Infrastructure**

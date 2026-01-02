@@ -90,8 +90,39 @@ Last Updated: 2025-12-25 | Version: v0.2.0
 
 - **docs/cli/CLI_USAGE_GUIDE.md** - Complete CLI command reference
   - **[Retrieval Quality Handling](cli/CLI_USAGE_GUIDE.md#retrieval-quality-handling)** - Interactive prompts for weak/missing context
+  - **[Agent Discovery](cli/CLI_USAGE_GUIDE.md#agent-discovery)** - Multi-source agent discovery (`aur agents list/search/show/refresh`)
 - **docs/cli/QUICK_START.md** - Quick start for CLI users
 - **docs/cli/ERROR_CATALOG.md** - Error messages and solutions
+
+### Agent Discovery (v0.3.0)
+
+**Purpose**: Discover and manage AI coding assistant agents from multiple sources.
+
+**Supported Sources**:
+- `~/.claude/agents/` - Claude Code CLI agents
+- `~/.config/ampcode/agents/` - AMP Code agents
+- `~/.config/droid/agent/` - Droid agents
+- `~/.config/opencode/agent/` - OpenCode agents
+
+**CLI Commands**:
+- `aur agents list` - List all agents grouped by category
+- `aur agents search "keyword"` - Search agents by keyword
+- `aur agents show <agent-id>` - Display full agent details
+- `aur agents refresh` - Force regenerate manifest
+
+**Features**:
+- Field aliasing: `name`→`id`, `description`→`goal` (backward compatible)
+- Auto-refresh based on configurable interval (default: 24 hours)
+- Fuzzy suggestions when agent not found
+- Graceful degradation for malformed files
+- Manifest caching for performance (~37ms discovery)
+
+**Implementation Files**:
+- `packages/cli/src/aurora_cli/agent_discovery/models.py` - AgentInfo, AgentManifest Pydantic models
+- `packages/cli/src/aurora_cli/agent_discovery/scanner.py` - Multi-source file discovery
+- `packages/cli/src/aurora_cli/agent_discovery/parser.py` - Frontmatter parsing with validation
+- `packages/cli/src/aurora_cli/agent_discovery/manifest.py` - Manifest generation and caching
+- `packages/cli/src/aurora_cli/commands/agents.py` - CLI commands
 
 ## Troubleshooting
 

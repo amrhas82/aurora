@@ -31,12 +31,13 @@ See [MCP Setup Guide](../MCP_SETUP.md) for MCP integration details.
 4. [Basic Queries](#basic-queries)
 5. [Retrieval Quality Handling](#retrieval-quality-handling)
 6. [Memory Management](#memory-management)
-7. [Budget Management](#budget-management)
-8. [Headless Mode](#headless-mode)
-9. [Health Checks & Diagnostics](#health-checks--diagnostics)
-10. [Graceful Degradation](#graceful-degradation)
-11. [Troubleshooting](#troubleshooting)
-12. [Command Reference](#command-reference)
+7. [Agent Discovery](#agent-discovery)
+8. [Budget Management](#budget-management)
+9. [Headless Mode](#headless-mode)
+10. [Health Checks & Diagnostics](#health-checks--diagnostics)
+11. [Graceful Degradation](#graceful-degradation)
+12. [Troubleshooting](#troubleshooting)
+13. [Command Reference](#command-reference)
 
 ---
 
@@ -413,6 +414,29 @@ Summary:
   Confidence: 0.87
   Overall Score: 0.91
 ```
+
+### Use Specific Files as Context
+
+Override indexed memory with specific files using `--context` (or `-c`):
+
+```bash
+# Single file
+aur query "How does authentication work?" --context src/auth.py
+
+# Multiple files
+aur query "Explain the config" -c config.py -c settings.py
+```
+
+**Behavior:**
+- Bypasses indexed memory completely
+- Uses ONLY the specified files as context
+- Files are read directly (not from index)
+- Useful for focusing on specific files or when memory is not indexed
+
+**Use Cases:**
+- Focus query on specific implementation files
+- Query files not yet indexed
+- Get answers based on exactly what you specify
 
 ### Dry-Run Mode
 
@@ -975,6 +999,204 @@ This will index Python files in the current directory [Y/n]: _
 
 - **Y** or Enter: Index current directory
 - **n**: Skip and continue without memory context
+
+---
+
+## Agent Discovery
+
+AURORA provides agent discovery to find and manage AI coding assistant agents from multiple sources.
+
+### Supported Agent Sources
+
+AURORA scans 4 directories for agent definition files:
+
+| Source | Directory | Description |
+|--------|-----------|-------------|
+| Claude Code | `~/.claude/agents/` | Claude Code CLI agents |
+| AMP Code | `~/.config/ampcode/agents/` | AMP Code agents |
+| Droid | `~/.config/droid/agent/` | Droid agents |
+| OpenCode | `~/.config/opencode/agent/` | OpenCode agents |
+
+### List All Agents
+
+```bash
+aur agents list
+```
+
+**Output:**
+```
+Discovered 14 agent(s)
+
+General (14)
+  1-create-prd - 1 Create Prd
+  business-analyst - Business Analyst
+  full-stack-dev - Full Stack Dev
+  qa-test-architect - Qa Test Architect
+  ...
+```
+
+### Filter by Category
+
+```bash
+aur agents list --category qa
+```
+
+**Available Categories:**
+- `eng` - Engineering/development agents
+- `qa` - Quality assurance/testing agents
+- `product` - Product management agents
+- `general` - General-purpose agents
+
+### Search Agents
+
+Search for agents by keyword across all fields (id, role, goal, skills):
+
+```bash
+aur agents search "test"
+```
+
+**Output:**
+```
+Found 3 agent(s) matching 'test'
+
+┌─────────────────────┬───────┬────────────────────────┬─────────────────┐
+│ Agent ID            │ Cate… │ Role                   │ Match           │
+├─────────────────────┼───────┼────────────────────────┼─────────────────┤
+│ qa-test-architect   │ gene… │ Qa Test Architect      │ partial id match│
+│ 3-process-task-list │ gene… │ 3 Process Task List    │ in goal         │
+│ full-stack-dev      │ gene… │ Full Stack Dev         │ in goal         │
+└─────────────────────┴───────┴────────────────────────┴─────────────────┘
+```
+
+### Show Agent Details
+
+Display full details for a specific agent:
+
+```bash
+aur agents show qa-test-architect
+```
+
+**Output:**
+```
+╭───────────────────────────── qa-test-architect ──────────────────────────────╮
+│ Qa Test Architect                                                            │
+│ Category: general                                                            │
+│                                                                              │
+│ Goal                                                                         │
+│ Use this agent for comprehensive quality assessment, test architecture       │
+│ review, and quality gate decisions...                                        │
+│                                                                              │
+│ Source: /home/user/.claude/agents/qa-test-architect.md                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+**Fuzzy Matching:** If an agent is not found, AURORA suggests similar agents:
+
+```bash
+aur agents show non-existent
+```
+
+**Output:**
+```
+Agent 'non-existent' not found.
+
+Did you mean:
+  - qa-test-architect
+  - holistic-architect
+  - context-initializer
+```
+
+### Refresh Agent Manifest
+
+Force regenerate the agent manifest from all sources:
+
+```bash
+aur agents refresh
+```
+
+**Output:**
+```
+Refreshing agent manifest...
+
+╭──────── Refresh Summary ────────╮
+│ Manifest refreshed successfully │
+│                                 │
+│ Agents found: 14                │
+│ Sources scanned: 2              │
+│ Malformed files: 0              │
+│ Duration: 0.06s                 │
+│                                 │
+│ Agents by category:             │
+│   general: 14                   │
+╰─────────────────────────────────╯
+```
+
+### Agent File Format
+
+Agent files are Markdown with YAML frontmatter:
+
+```markdown
+---
+name: my-agent
+description: Description of what this agent does
+model: inherit
+color: cyan
+category: eng
+skills:
+  - skill1
+  - skill2
+---
+
+# Agent Title
+
+Agent content and instructions...
+```
+
+**Required Fields:**
+- `name` (or `id`): Unique kebab-case identifier
+- `description` (or `goal`): Brief description of agent's purpose
+
+**Optional Fields:**
+- `category`: Agent category (eng/qa/product/general)
+- `skills`: List of agent capabilities
+- `when_to_use`: Guidance on when to invoke this agent
+- `dependencies`: Other agents this agent may invoke
+
+### Configuration
+
+Agent discovery settings in `~/.aurora/config.json`:
+
+```json
+{
+  "agents": {
+    "auto_refresh": true,
+    "refresh_interval_hours": 24,
+    "discovery_paths": [
+      "~/.claude/agents",
+      "~/.config/ampcode/agents",
+      "~/.config/droid/agent",
+      "~/.config/opencode/agent"
+    ],
+    "manifest_path": "~/.aurora/cache/agent_manifest.json"
+  }
+}
+```
+
+**Settings:**
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `auto_refresh` | `true` | Automatically refresh stale manifests |
+| `refresh_interval_hours` | `24` | Hours before manifest is considered stale |
+| `discovery_paths` | 4 paths | Directories to scan for agents |
+| `manifest_path` | `~/.aurora/cache/agent_manifest.json` | Cached manifest location |
+
+### Performance
+
+Agent discovery is optimized for speed:
+- **Discovery**: ~37ms for 14 agents
+- **Refresh**: ~45ms for full manifest regeneration
+- **Manifest caching**: Avoids re-scanning on every command
 
 ---
 
@@ -1740,12 +1962,16 @@ aur query QUERY_TEXT [OPTIONS]
 - `--show-reasoning`: Show escalation analysis
 - `--verbose`: Show SOAR phase trace
 - `--dry-run`: Validate without API calls
+- `--non-interactive`: Disable interactive prompts (for automation)
+- `-c, --context FILE`: Use specific files as context (can be repeated)
 
 **Examples:**
 ```bash
 aur query "What is a decorator?"
 aur query "Refactor auth" --force-aurora --verbose
 aur query "test" --dry-run
+aur query "How does auth work?" --context src/auth.py
+aur query "Explain config" -c config.py -c settings.py
 ```
 
 ---
@@ -1814,6 +2040,84 @@ aur mem stats [OPTIONS]
 ```bash
 aur mem stats
 aur mem stats --db-path ~/.aurora/memory.db
+```
+
+---
+
+#### `aur agents`
+
+Discover and manage AI coding assistant agents.
+
+```bash
+aur agents COMMAND [OPTIONS]
+```
+
+**Commands:**
+
+##### `aur agents list`
+
+List all discovered agents grouped by category.
+
+```bash
+aur agents list [OPTIONS]
+```
+
+**Options:**
+- `-c, --category [eng|qa|product|general]`: Filter by category
+- `-f, --format [rich|simple]`: Output format (default: rich)
+
+**Examples:**
+```bash
+aur agents list
+aur agents list --category qa
+aur agents list --format simple
+```
+
+##### `aur agents search`
+
+Search agents by keyword.
+
+```bash
+aur agents search KEYWORD
+```
+
+**Arguments:**
+- `KEYWORD`: Search term (required)
+
+**Examples:**
+```bash
+aur agents search "test"
+aur agents search "code review"
+```
+
+##### `aur agents show`
+
+Display full details for a specific agent.
+
+```bash
+aur agents show AGENT_ID
+```
+
+**Arguments:**
+- `AGENT_ID`: Agent identifier (required)
+
+**Examples:**
+```bash
+aur agents show qa-test-architect
+aur agents show full-stack-dev
+```
+
+##### `aur agents refresh`
+
+Force regenerate the agent manifest.
+
+```bash
+aur agents refresh
+```
+
+**Examples:**
+```bash
+aur agents refresh
 ```
 
 ---

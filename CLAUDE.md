@@ -60,7 +60,14 @@ aur mem index .            # Index codebase for semantic search
 aur mem search "text"      # Search indexed code
 aur query "text"           # Query with auto-escalation (may prompt if weak match)
 aur query "text" --non-interactive  # For CI/CD (no prompts, auto-continue)
+aur query "text" --context file.py  # Query with specific files as context
 aurora-mcp status          # Check MCP server status
+
+# Agent Discovery
+aur agents list            # List all discovered agents
+aur agents search "test"   # Search agents by keyword
+aur agents show <agent-id> # Show full agent details
+aur agents refresh         # Force regenerate manifest
 
 # Testing
 pytest tests/unit/         # Unit tests (fast)

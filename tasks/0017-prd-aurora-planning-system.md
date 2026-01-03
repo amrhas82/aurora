@@ -1874,6 +1874,1152 @@ def slash_plan(goal: str, **kwargs):
 
 ---
 
+#### FR-2.4: Pydantic Schemas for Phase 2 (OpenSpec-inspired validation)
+
+**Package**: `packages/cli/src/aurora_cli/planning/prd_models.py`
+
+```python
+from pydantic import BaseModel, Field, field_validator
+from datetime import datetime
+from enum import Enum
+import re
+
+
+class RequirementType(str, Enum):
+    """Functional requirement types."""
+    FUNCTIONAL = "functional"
+    NON_FUNCTIONAL = "non_functional"
+    TECHNICAL = "technical"
+    SECURITY = "security"
+
+
+class TestType(str, Enum):
+    """Test category types."""
+    UNIT = "unit"
+    INTEGRATION = "integration"
+    E2E = "e2e"
+    SECURITY = "security"
+
+
+class FilePath(BaseModel):
+    """
+    File path with optional line numbers from memory retrieval.
+    """
+    path: str = Field(
+        min_length=1,
+        description="Relative file path (e.g., 'src/auth/oauth.py')"
+    )
+    line_start: int | None = Field(
+        default=None,
+        ge=1,
+        description="Starting line number (1-indexed)"
+    )
+    line_end: int | None = Field(
+        default=None,
+        ge=1,
+        description="Ending line number (1-indexed)"
+    )
+    exists: bool = Field(
+        default=True,
+        description="Whether file exists in codebase"
+    )
+    confidence: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score from memory retrieval"
+    )
+
+    @field_validator('line_end')
+    @classmethod
+    def validate_line_range(cls, v: int | None, info) -> int | None:
+        if v is not None and info.data.get('line_start') is not None:
+            if v < info.data['line_start']:
+                raise ValueError(
+                    f"line_end ({v}) must be >= line_start ({info.data['line_start']})"
+                )
+        return v
+
+    def format(self) -> str:
+        """Format as 'path:start-end' or 'path' if no lines."""
+        if self.line_start and self.line_end:
+            return f"{self.path}:{self.line_start}-{self.line_end}"
+        elif self.line_start:
+            return f"{self.path}:{self.line_start}"
+        return self.path
+
+
+class AcceptanceCriteria(BaseModel):
+    """Single acceptance criterion."""
+    description: str = Field(
+        min_length=10,
+        max_length=500,
+        description="Clear, testable criterion"
+    )
+    testable: bool = Field(
+        default=True,
+        description="Whether criterion is objectively testable"
+    )
+
+
+class Requirement(BaseModel):
+    """
+    Single functional requirement within a PRD section.
+    """
+    id: str = Field(
+        pattern=r'^FR-\d+\.\d+$',
+        description="Requirement ID (e.g., 'FR-2.1')"
+    )
+    title: str = Field(
+        min_length=5,
+        max_length=100,
+        description="Short requirement title"
+    )
+    description: str = Field(
+        min_length=20,
+        max_length=1000,
+        description="Detailed requirement description"
+    )
+    type: RequirementType = Field(
+        default=RequirementType.FUNCTIONAL,
+        description="Requirement category"
+    )
+    acceptance_criteria: list[AcceptanceCriteria] = Field(
+        min_length=1,
+        max_length=10,
+        description="Testable acceptance criteria"
+    )
+    files_to_modify: list[FilePath] = Field(
+        default_factory=list,
+        description="Files impacted by this requirement"
+    )
+    files_to_create: list[str] = Field(
+        default_factory=list,
+        description="New files to create"
+    )
+
+
+class PRDSection(BaseModel):
+    """
+    PRD section corresponding to one subgoal.
+    """
+    subgoal_id: str = Field(
+        pattern=r'^sg-\d+$',
+        description="Reference to plan subgoal"
+    )
+    title: str = Field(
+        min_length=5,
+        max_length=100,
+        description="Section title"
+    )
+    agent: str = Field(
+        pattern=r'^@[a-z0-9-]+$',
+        description="Assigned agent"
+    )
+    requirements: list[Requirement] = Field(
+        min_length=1,
+        max_length=20,
+        description="Functional requirements"
+    )
+    testing_strategy: dict[TestType, list[str]] = Field(
+        default_factory=dict,
+        description="Test plan per test type"
+    )
+    dependencies: list[str] = Field(
+        default_factory=list,
+        description="Subgoal IDs this depends on"
+    )
+
+
+class PRD(BaseModel):
+    """
+    Complete Product Requirements Document.
+    Validation follows OpenSpec patterns.
+    """
+    plan_id: str = Field(
+        pattern=r'^\d{4}-[a-z0-9-]+$',
+        description="Reference to parent plan"
+    )
+    goal: str = Field(
+        min_length=10,
+        max_length=500,
+        description="Goal from parent plan"
+    )
+    generated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        description="PRD generation timestamp"
+    )
+    executive_summary: str = Field(
+        min_length=50,
+        max_length=2000,
+        description="High-level summary"
+    )
+    sections: list[PRDSection] = Field(
+        min_length=1,
+        max_length=10,
+        description="Sections per subgoal"
+    )
+    total_requirements: int = Field(
+        default=0,
+        description="Total FR count (computed)"
+    )
+    memory_context_used: bool = Field(
+        default=False,
+        description="Whether memory retrieval was used"
+    )
+
+
+class TaskStatus(str, Enum):
+    """Task completion status."""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
+    SKIPPED = "skipped"
+
+
+class Task(BaseModel):
+    """
+    Single implementation task with code awareness.
+    """
+    id: str = Field(
+        pattern=r'^\d+\.\d+$',
+        description="Task ID (e.g., '2.1')"
+    )
+    title: str = Field(
+        min_length=10,
+        max_length=200,
+        description="Task description"
+    )
+    subgoal_id: str = Field(
+        pattern=r'^sg-\d+$',
+        description="Parent subgoal"
+    )
+    status: TaskStatus = Field(
+        default=TaskStatus.PENDING,
+        description="Completion status"
+    )
+    files: list[FilePath] = Field(
+        default_factory=list,
+        description="Files to modify/create"
+    )
+    test_file: str | None = Field(
+        default=None,
+        description="Associated test file"
+    )
+    estimated_minutes: int | None = Field(
+        default=None,
+        ge=5,
+        le=480,
+        description="Time estimate (5 min - 8 hours)"
+    )
+    depends_on: list[str] = Field(
+        default_factory=list,
+        description="Task IDs this depends on"
+    )
+
+
+class TaskList(BaseModel):
+    """
+    Complete task list for a plan.
+    """
+    plan_id: str = Field(
+        pattern=r'^\d{4}-[a-z0-9-]+$',
+        description="Reference to parent plan"
+    )
+    generated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        description="Task list generation timestamp"
+    )
+    tasks: list[Task] = Field(
+        min_length=1,
+        max_length=100,
+        description="All tasks"
+    )
+    total_tasks: int = Field(
+        default=0,
+        description="Total task count"
+    )
+    completed_tasks: int = Field(
+        default=0,
+        description="Completed task count"
+    )
+    memory_paths_resolved: int = Field(
+        default=0,
+        description="File paths resolved from memory"
+    )
+    memory_paths_missing: int = Field(
+        default=0,
+        description="File paths not found"
+    )
+
+    def get_progress_percentage(self) -> float:
+        """Calculate completion percentage."""
+        if self.total_tasks == 0:
+            return 0.0
+        return (self.completed_tasks / self.total_tasks) * 100
+```
+
+---
+
+#### FR-2.5: Validation Error Messages for Phase 2 (OpenSpec lesson)
+
+**Package**: `packages/cli/src/aurora_cli/planning/errors.py` (extend existing)
+
+```python
+# Add to existing VALIDATION_MESSAGES dictionary
+
+VALIDATION_MESSAGES_PHASE2 = {
+    # PRD errors
+    "PRD_PLAN_NOT_FOUND": (
+        "Cannot generate PRD: Plan '{plan_id}' not found. Create plan first with 'aur plan create'."
+    ),
+    "PRD_ALREADY_EXISTS": (
+        "PRD already exists for plan '{plan_id}'. Use --force to overwrite."
+    ),
+    "PRD_NO_SUBGOALS": (
+        "Plan '{plan_id}' has no subgoals. Cannot generate PRD from empty plan."
+    ),
+    "PRD_GENERATION_FAILED": (
+        "PRD generation failed: {error}. Check plan.md for issues."
+    ),
+    "PRD_TEMPLATE_INVALID": (
+        "PRD template validation failed: {errors}. Check template format."
+    ),
+
+    # Task generation errors
+    "TASKS_PRD_NOT_FOUND": (
+        "Cannot generate tasks: PRD not found for plan '{plan_id}'. Run PRD expansion first."
+    ),
+    "TASKS_ALREADY_EXIST": (
+        "Tasks already exist for plan '{plan_id}'. Use --force to regenerate."
+    ),
+    "TASKS_NO_REQUIREMENTS": (
+        "PRD has no requirements. Cannot generate tasks from empty PRD."
+    ),
+    "TASKS_GENERATION_FAILED": (
+        "Task generation failed: {error}. Check prd.md for issues."
+    ),
+
+    # File path resolution errors
+    "FILE_PATH_NOT_RESOLVED": (
+        "Could not resolve file path for '{entity}'. Memory index may need refresh."
+    ),
+    "FILE_PATH_NOT_EXISTS": (
+        "File '{path}' referenced in tasks does not exist. Path may be outdated."
+    ),
+    "FILE_PATH_LINE_INVALID": (
+        "Line numbers {start}-{end} invalid for file '{path}' (file has {total} lines)."
+    ),
+    "MEMORY_INDEX_EMPTY": (
+        "Memory index is empty. Run 'aur mem index .' to index codebase first."
+    ),
+    "MEMORY_SEARCH_FAILED": (
+        "Memory search failed: {error}. File paths will be omitted."
+    ),
+
+    # Requirement errors
+    "REQUIREMENT_ID_INVALID": (
+        "Requirement ID must be 'FR-N.M' format (e.g., 'FR-2.1'). Got: {value}"
+    ),
+    "REQUIREMENT_NO_ACCEPTANCE_CRITERIA": (
+        "Requirement '{req_id}' has no acceptance criteria. Each requirement needs testable criteria."
+    ),
+    "REQUIREMENT_DUPLICATE_ID": (
+        "Duplicate requirement ID '{req_id}' found. IDs must be unique within PRD."
+    ),
+
+    # Expand/tasks command errors
+    "EXPAND_NOT_READY": (
+        "Plan '{plan_id}' not ready for expansion. Ensure plan.md exists and is valid."
+    ),
+    "EXPAND_CHECKPOINT_DECLINED": (
+        "PRD expansion cancelled at checkpoint. Plan remains unchanged."
+    ),
+}
+
+# Merge into main VALIDATION_MESSAGES
+VALIDATION_MESSAGES.update(VALIDATION_MESSAGES_PHASE2)
+
+
+class PRDGenerationError(PlanningError):
+    """PRD generation failed."""
+    pass
+
+
+class TaskGenerationError(PlanningError):
+    """Task generation failed."""
+    pass
+
+
+class FileResolutionError(PlanningError):
+    """File path resolution failed."""
+    pass
+```
+
+---
+
+#### FR-2.6: Result Types for Phase 2 (OpenSpec pattern)
+
+**Package**: `packages/cli/src/aurora_cli/planning/results.py` (extend existing)
+
+```python
+from dataclasses import dataclass
+from pathlib import Path
+from datetime import datetime
+
+
+@dataclass
+class PRDResult:
+    """Result from PRD generation."""
+    success: bool
+    prd: PRD | None = None
+    prd_path: Path | None = None
+    sections_generated: int = 0
+    requirements_generated: int = 0
+    memory_files_resolved: int = 0
+    warnings: list[str] | None = None
+    error: str | None = None
+
+
+@dataclass
+class TaskGenerationResult:
+    """Result from task generation."""
+    success: bool
+    task_list: TaskList | None = None
+    tasks_path: Path | None = None
+    tasks_generated: int = 0
+    files_resolved: int = 0
+    files_missing: int = 0
+    warnings: list[str] | None = None
+    error: str | None = None
+
+
+@dataclass
+class ExpandResult:
+    """Result from full expand operation (PRD + tasks)."""
+    success: bool
+    prd_result: PRDResult | None = None
+    task_result: TaskGenerationResult | None = None
+    plan_dir: Path | None = None
+    checkpoint_confirmed: bool = False
+    warnings: list[str] | None = None
+    error: str | None = None
+
+
+@dataclass
+class FileResolutionResult:
+    """Result from file path resolution."""
+    success: bool
+    resolved_paths: list[FilePath] | None = None
+    missing_entities: list[str] | None = None
+    confidence_avg: float = 0.0
+    memory_queries: int = 0
+    warning: str | None = None
+```
+
+---
+
+#### FR-2.7: Graceful Degradation Patterns for Phase 2 (OpenSpec lesson)
+
+**PRD Generation - Error Handling**:
+```python
+def generate_prd(plan_id: str, force: bool = False) -> PRDResult:
+    """
+    Generate PRD with OpenSpec-style graceful degradation.
+    Returns structured result, never crashes.
+    """
+    warnings = []
+
+    # Load plan
+    show_result = show_plan(plan_id)
+    if not show_result.success:
+        return PRDResult(
+            success=False,
+            error=VALIDATION_MESSAGES["PRD_PLAN_NOT_FOUND"].format(plan_id=plan_id)
+        )
+
+    plan = show_result.plan
+    plan_dir = show_result.plan_dir
+
+    # Check existing PRD
+    prd_path = plan_dir / "prd.md"
+    if prd_path.exists() and not force:
+        return PRDResult(
+            success=False,
+            error=VALIDATION_MESSAGES["PRD_ALREADY_EXISTS"].format(plan_id=plan_id)
+        )
+
+    # Validate plan has subgoals
+    if not plan.subgoals:
+        return PRDResult(
+            success=False,
+            error=VALIDATION_MESSAGES["PRD_NO_SUBGOALS"].format(plan_id=plan_id)
+        )
+
+    # Retrieve memory context (graceful degradation)
+    try:
+        memory_context = retrieve_memory_context(plan.goal)
+        memory_used = True
+    except Exception as e:
+        logger.warning(f"Memory retrieval failed: {e}")
+        memory_context = []
+        memory_used = False
+        warnings.append(f"Memory retrieval failed: {e}. PRD will lack file references.")
+
+    # Generate PRD sections per subgoal
+    sections = []
+    total_requirements = 0
+
+    for subgoal in plan.subgoals:
+        try:
+            section = generate_prd_section(subgoal, memory_context)
+            sections.append(section)
+            total_requirements += len(section.requirements)
+        except Exception as e:
+            logger.error(f"Section generation failed for {subgoal.id}: {e}")
+            warnings.append(f"Section {subgoal.id} generation failed: {e}")
+            # Create minimal section as fallback
+            sections.append(PRDSection(
+                subgoal_id=subgoal.id,
+                title=subgoal.title,
+                agent=subgoal.recommended_agent,
+                requirements=[],
+                testing_strategy={}
+            ))
+
+    # Build PRD
+    try:
+        prd = PRD(
+            plan_id=plan.plan_id,
+            goal=plan.goal,
+            executive_summary=generate_executive_summary(plan),
+            sections=sections,
+            total_requirements=total_requirements,
+            memory_context_used=memory_used
+        )
+    except ValidationError as e:
+        return PRDResult(
+            success=False,
+            error=VALIDATION_MESSAGES["PRD_TEMPLATE_INVALID"].format(
+                errors="; ".join(str(err) for err in e.errors())
+            )
+        )
+
+    # Write PRD file
+    try:
+        prd_markdown = render_prd_markdown(prd)
+        _atomic_write(prd_path, prd_markdown)
+    except Exception as e:
+        return PRDResult(
+            success=False,
+            error=f"Failed to write PRD: {e}"
+        )
+
+    return PRDResult(
+        success=True,
+        prd=prd,
+        prd_path=prd_path,
+        sections_generated=len(sections),
+        requirements_generated=total_requirements,
+        memory_files_resolved=len(memory_context),
+        warnings=warnings if warnings else None
+    )
+```
+
+**Task Generation - Error Handling**:
+```python
+def generate_tasks(plan_id: str, force: bool = False) -> TaskGenerationResult:
+    """
+    Generate code-aware tasks with graceful degradation.
+    """
+    warnings = []
+
+    # Load PRD
+    plan_dir = get_plan_dir(plan_id)
+    prd_path = plan_dir / "prd.md"
+
+    if not prd_path.exists():
+        return TaskGenerationResult(
+            success=False,
+            error=VALIDATION_MESSAGES["TASKS_PRD_NOT_FOUND"].format(plan_id=plan_id)
+        )
+
+    # Check existing tasks
+    tasks_path = plan_dir / "tasks.md"
+    if tasks_path.exists() and not force:
+        return TaskGenerationResult(
+            success=False,
+            error=VALIDATION_MESSAGES["TASKS_ALREADY_EXIST"].format(plan_id=plan_id)
+        )
+
+    # Parse PRD
+    try:
+        prd = PRD.from_markdown(prd_path.read_text())
+    except Exception as e:
+        return TaskGenerationResult(
+            success=False,
+            error=f"Failed to parse PRD: {e}"
+        )
+
+    # Resolve file paths from memory (graceful degradation)
+    files_resolved = 0
+    files_missing = 0
+    tasks = []
+
+    for section in prd.sections:
+        for req in section.requirements:
+            # Try to resolve file paths
+            resolution = resolve_file_paths(req, warnings)
+            files_resolved += resolution.resolved_count
+            files_missing += resolution.missing_count
+
+            # Create task
+            task = Task(
+                id=f"{section.subgoal_id.split('-')[1]}.{req.id.split('.')[1]}",
+                title=req.title,
+                subgoal_id=section.subgoal_id,
+                files=resolution.paths,
+                test_file=infer_test_file(req),
+                depends_on=section.dependencies
+            )
+            tasks.append(task)
+
+    if files_missing > 0:
+        warnings.append(
+            f"{files_missing} file paths could not be resolved. "
+            "Run 'aur mem index .' to refresh memory index."
+        )
+
+    # Build task list
+    task_list = TaskList(
+        plan_id=plan_id,
+        tasks=tasks,
+        total_tasks=len(tasks),
+        memory_paths_resolved=files_resolved,
+        memory_paths_missing=files_missing
+    )
+
+    # Write tasks file
+    try:
+        tasks_markdown = render_tasks_markdown(task_list)
+        _atomic_write(tasks_path, tasks_markdown)
+    except Exception as e:
+        return TaskGenerationResult(
+            success=False,
+            error=f"Failed to write tasks: {e}"
+        )
+
+    return TaskGenerationResult(
+        success=True,
+        task_list=task_list,
+        tasks_path=tasks_path,
+        tasks_generated=len(tasks),
+        files_resolved=files_resolved,
+        files_missing=files_missing,
+        warnings=warnings if warnings else None
+    )
+```
+
+---
+
+#### FR-2.8: Shell Tests for Phase 2 (per parent task)
+
+**Test File**: `tests/shell/test_27_prd_expansion.sh`
+
+```bash
+#!/bin/bash
+# Test: PRD expansion from plan
+set -e
+
+echo "=== Test 27: PRD Expansion ==="
+
+# Setup
+aur plan init --force 2>/dev/null || true
+PLAN_OUTPUT=$(aur plan create "Implement user authentication with OAuth2" --json)
+PLAN_ID=$(echo "$PLAN_OUTPUT" | jq -r '.plan_id')
+PLAN_DIR="$HOME/.aurora/plans/active/$PLAN_ID"
+
+# Test: Expand to PRD
+echo "Expanding plan to PRD..."
+aur plan expand "$PLAN_ID" --to-prd
+
+# Verify PRD exists
+if [[ ! -f "$PLAN_DIR/prd.md" ]]; then
+    echo "FAIL: prd.md not created"
+    exit 1
+fi
+
+# Verify PRD has required sections
+PRD_CONTENT=$(cat "$PLAN_DIR/prd.md")
+
+if ! echo "$PRD_CONTENT" | grep -q "## Executive Summary"; then
+    echo "FAIL: PRD missing Executive Summary"
+    exit 1
+fi
+
+if ! echo "$PRD_CONTENT" | grep -q "## Functional Requirements"; then
+    echo "FAIL: PRD missing Functional Requirements"
+    exit 1
+fi
+
+if ! echo "$PRD_CONTENT" | grep -q "## Testing Strategy"; then
+    echo "FAIL: PRD missing Testing Strategy"
+    exit 1
+fi
+
+# Verify at least 5 sections
+SECTION_COUNT=$(echo "$PRD_CONTENT" | grep -c "^## " || true)
+if [[ $SECTION_COUNT -lt 5 ]]; then
+    echo "FAIL: PRD has only $SECTION_COUNT sections (expected ≥5)"
+    exit 1
+fi
+
+echo "PASS: PRD expansion complete with $SECTION_COUNT sections"
+
+# Cleanup
+rm -rf "$PLAN_DIR"
+```
+
+**Test File**: `tests/shell/test_28_task_generation.sh`
+
+```bash
+#!/bin/bash
+# Test: Task generation with file paths
+set -e
+
+echo "=== Test 28: Task Generation ==="
+
+# Setup
+aur plan init --force 2>/dev/null || true
+PLAN_OUTPUT=$(aur plan create "Add logging to authentication module" --json)
+PLAN_ID=$(echo "$PLAN_OUTPUT" | jq -r '.plan_id')
+PLAN_DIR="$HOME/.aurora/plans/active/$PLAN_ID"
+
+# Expand to PRD first
+aur plan expand "$PLAN_ID" --to-prd
+
+# Generate tasks
+echo "Generating tasks..."
+aur plan tasks "$PLAN_ID"
+
+# Verify tasks.md exists
+if [[ ! -f "$PLAN_DIR/tasks.md" ]]; then
+    echo "FAIL: tasks.md not created"
+    exit 1
+fi
+
+TASKS_CONTENT=$(cat "$PLAN_DIR/tasks.md")
+
+# Verify checkboxes present
+if ! echo "$TASKS_CONTENT" | grep -q "\- \[ \]"; then
+    echo "FAIL: tasks.md missing checkboxes"
+    exit 1
+fi
+
+# Verify file paths included (if memory indexed)
+if echo "$TASKS_CONTENT" | grep -qE "\*\*File\*\*:.*\.py"; then
+    echo "PASS: File paths included in tasks"
+else
+    echo "WARN: No file paths found (memory may not be indexed)"
+fi
+
+# Verify dependencies noted
+if echo "$TASKS_CONTENT" | grep -q "Dependencies:"; then
+    echo "PASS: Dependencies documented"
+fi
+
+# Count tasks
+TASK_COUNT=$(echo "$TASKS_CONTENT" | grep -c "\- \[ \]" || true)
+echo "Generated $TASK_COUNT tasks"
+
+if [[ $TASK_COUNT -lt 3 ]]; then
+    echo "FAIL: Expected at least 3 tasks, got $TASK_COUNT"
+    exit 1
+fi
+
+echo "PASS: Task generation complete"
+
+# Cleanup
+rm -rf "$PLAN_DIR"
+```
+
+**Test File**: `tests/shell/test_29_task_code_aware.sh`
+
+```bash
+#!/bin/bash
+# Test: Code-aware tasks with memory integration
+set -e
+
+echo "=== Test 29: Code-Aware Tasks ==="
+
+# This test requires indexed memory
+if ! aur mem stats 2>/dev/null | grep -q "chunks:"; then
+    echo "SKIP: Memory not indexed. Run 'aur mem index .' first"
+    exit 0
+fi
+
+# Setup
+aur plan init --force 2>/dev/null || true
+PLAN_OUTPUT=$(aur plan create "Add error handling to aurora_cli.config module" --json)
+PLAN_ID=$(echo "$PLAN_OUTPUT" | jq -r '.plan_id')
+PLAN_DIR="$HOME/.aurora/plans/active/$PLAN_ID"
+
+# Full expand
+aur plan expand "$PLAN_ID" --to-prd
+aur plan tasks "$PLAN_ID"
+
+TASKS_CONTENT=$(cat "$PLAN_DIR/tasks.md")
+
+# Verify file paths resolve to actual files
+FILE_PATHS=$(echo "$TASKS_CONTENT" | grep -oE '\*\*File\*\*: `[^`]+`' | sed 's/.*`\([^`]*\)`.*/\1/' || true)
+
+RESOLVED=0
+MISSING=0
+
+for fp in $FILE_PATHS; do
+    # Extract path without line numbers
+    CLEAN_PATH=$(echo "$fp" | sed 's/:.*//')
+    if [[ -f "$CLEAN_PATH" ]]; then
+        ((RESOLVED++))
+    else
+        echo "WARN: File not found: $CLEAN_PATH"
+        ((MISSING++))
+    fi
+done
+
+echo "File paths: $RESOLVED resolved, $MISSING missing"
+
+if [[ $MISSING -gt $RESOLVED ]]; then
+    echo "FAIL: More missing files than resolved"
+    exit 1
+fi
+
+echo "PASS: Code-aware task generation verified"
+
+# Cleanup
+rm -rf "$PLAN_DIR"
+```
+
+**Test File**: `tests/shell/test_30_prd_template_validation.sh`
+
+```bash
+#!/bin/bash
+# Test: PRD template and schema validation
+set -e
+
+echo "=== Test 30: PRD Template Validation ==="
+
+# Setup
+aur plan init --force 2>/dev/null || true
+PLAN_OUTPUT=$(aur plan create "Implement caching layer for API responses" --json)
+PLAN_ID=$(echo "$PLAN_OUTPUT" | jq -r '.plan_id')
+PLAN_DIR="$HOME/.aurora/plans/active/$PLAN_ID"
+
+# Expand to PRD
+aur plan expand "$PLAN_ID" --to-prd
+
+PRD_PATH="$PLAN_DIR/prd.md"
+PRD_CONTENT=$(cat "$PRD_PATH")
+
+# Validate frontmatter YAML
+echo "Checking frontmatter..."
+if ! head -20 "$PRD_PATH" | grep -q "plan_id:"; then
+    echo "FAIL: Missing plan_id in frontmatter"
+    exit 1
+fi
+
+if ! head -20 "$PRD_PATH" | grep -q "generated_at:"; then
+    echo "FAIL: Missing generated_at in frontmatter"
+    exit 1
+fi
+
+# Validate required sections
+REQUIRED_SECTIONS=("Executive Summary" "Goals" "Functional Requirements" "Testing Strategy" "Agent Assignments")
+
+for section in "${REQUIRED_SECTIONS[@]}"; do
+    if ! echo "$PRD_CONTENT" | grep -qi "## $section"; then
+        echo "FAIL: Missing required section: $section"
+        exit 1
+    fi
+done
+
+# Validate FR format (FR-N.M)
+FR_COUNT=$(echo "$PRD_CONTENT" | grep -cE "#### FR-[0-9]+\.[0-9]+" || true)
+if [[ $FR_COUNT -lt 2 ]]; then
+    echo "FAIL: Expected at least 2 FRs, found $FR_COUNT"
+    exit 1
+fi
+
+# Validate acceptance criteria present
+if ! echo "$PRD_CONTENT" | grep -q "Acceptance Criteria"; then
+    echo "FAIL: No acceptance criteria found"
+    exit 1
+fi
+
+echo "PASS: PRD template validation complete"
+echo "  - Frontmatter: Valid"
+echo "  - Required sections: ${#REQUIRED_SECTIONS[@]} present"
+echo "  - Functional requirements: $FR_COUNT"
+
+# Cleanup
+rm -rf "$PLAN_DIR"
+```
+
+---
+
+#### FR-2.9: Unit Test Requirements (TDD approach)
+
+**Test-First Development Pattern**:
+
+For each Phase 2 function, write tests BEFORE implementation:
+
+**File**: `tests/unit/cli/test_prd_generator.py`
+
+```python
+"""
+Unit tests for PRD generation.
+TDD: Write these tests first, then implement to make them pass.
+"""
+import pytest
+from pathlib import Path
+from datetime import datetime
+from aurora_cli.planning.prd_models import (
+    PRD, PRDSection, Requirement, AcceptanceCriteria, FilePath
+)
+from aurora_cli.planning.prd_generator import (
+    generate_prd, generate_prd_section, generate_executive_summary
+)
+from aurora_cli.planning.results import PRDResult
+
+
+class TestPRDModels:
+    """Test Pydantic models for PRD."""
+
+    def test_requirement_valid(self):
+        """Valid requirement creates successfully."""
+        req = Requirement(
+            id="FR-2.1",
+            title="Implement OAuth login",
+            description="The system shall implement OAuth2 login flow",
+            acceptance_criteria=[
+                AcceptanceCriteria(description="User can log in via OAuth provider")
+            ]
+        )
+        assert req.id == "FR-2.1"
+
+    def test_requirement_invalid_id_format(self):
+        """Requirement with invalid ID raises validation error."""
+        with pytest.raises(ValueError, match="FR-N.M"):
+            Requirement(
+                id="invalid",  # Wrong format
+                title="Test requirement",
+                description="Test description here",
+                acceptance_criteria=[]
+            )
+
+    def test_file_path_with_lines(self):
+        """FilePath formats with line numbers."""
+        fp = FilePath(path="src/auth.py", line_start=42, line_end=68)
+        assert fp.format() == "src/auth.py:42-68"
+
+    def test_file_path_invalid_line_range(self):
+        """FilePath validates line_end >= line_start."""
+        with pytest.raises(ValueError, match="line_end"):
+            FilePath(path="src/auth.py", line_start=100, line_end=50)
+
+    def test_prd_section_valid(self):
+        """Valid PRD section creates successfully."""
+        section = PRDSection(
+            subgoal_id="sg-1",
+            title="Authentication Architecture",
+            agent="@holistic-architect",
+            requirements=[
+                Requirement(
+                    id="FR-1.1",
+                    title="Design auth flow",
+                    description="Design complete authentication flow",
+                    acceptance_criteria=[
+                        AcceptanceCriteria(description="Flow diagram created")
+                    ]
+                )
+            ]
+        )
+        assert len(section.requirements) == 1
+
+
+class TestPRDGeneration:
+    """Test PRD generation logic."""
+
+    def test_generate_prd_plan_not_found(self, tmp_path, monkeypatch):
+        """PRD generation fails gracefully when plan not found."""
+        monkeypatch.setenv("AURORA_PLANS_DIR", str(tmp_path))
+
+        result = generate_prd("0001-nonexistent")
+
+        assert result.success is False
+        assert "not found" in result.error.lower()
+
+    def test_generate_prd_already_exists(self, tmp_path, sample_plan):
+        """PRD generation fails if PRD exists without --force."""
+        # Setup: Create plan with existing PRD
+        plan_dir = tmp_path / "active" / sample_plan.plan_id
+        plan_dir.mkdir(parents=True)
+        (plan_dir / "agents.json").write_text(sample_plan.model_dump_json())
+        (plan_dir / "prd.md").write_text("# Existing PRD")
+
+        result = generate_prd(sample_plan.plan_id)
+
+        assert result.success is False
+        assert "already exists" in result.error.lower()
+
+    def test_generate_prd_success(self, tmp_path, sample_plan, mock_memory):
+        """PRD generation succeeds with valid plan."""
+        # Setup
+        plan_dir = tmp_path / "active" / sample_plan.plan_id
+        plan_dir.mkdir(parents=True)
+        (plan_dir / "agents.json").write_text(sample_plan.model_dump_json())
+
+        result = generate_prd(sample_plan.plan_id)
+
+        assert result.success is True
+        assert result.prd is not None
+        assert result.sections_generated >= 1
+        assert (plan_dir / "prd.md").exists()
+
+    def test_generate_prd_memory_failure_graceful(self, tmp_path, sample_plan, failing_memory):
+        """PRD generates with warning when memory fails."""
+        plan_dir = tmp_path / "active" / sample_plan.plan_id
+        plan_dir.mkdir(parents=True)
+        (plan_dir / "agents.json").write_text(sample_plan.model_dump_json())
+
+        result = generate_prd(sample_plan.plan_id)
+
+        assert result.success is True  # Should still succeed
+        assert result.warnings is not None
+        assert any("memory" in w.lower() for w in result.warnings)
+
+
+class TestTaskGeneration:
+    """Test task generation logic."""
+
+    def test_generate_tasks_prd_not_found(self, tmp_path):
+        """Task generation fails when PRD missing."""
+        plan_dir = tmp_path / "active" / "0001-test"
+        plan_dir.mkdir(parents=True)
+        (plan_dir / "agents.json").write_text("{}")  # No PRD
+
+        result = generate_tasks("0001-test")
+
+        assert result.success is False
+        assert "prd not found" in result.error.lower()
+
+    def test_generate_tasks_with_file_resolution(self, tmp_path, sample_prd, mock_memory):
+        """Tasks include resolved file paths from memory."""
+        plan_dir = tmp_path / "active" / sample_prd.plan_id
+        plan_dir.mkdir(parents=True)
+        (plan_dir / "prd.md").write_text(render_prd_markdown(sample_prd))
+
+        result = generate_tasks(sample_prd.plan_id)
+
+        assert result.success is True
+        assert result.files_resolved > 0
+
+    def test_generate_tasks_missing_files_warning(self, tmp_path, sample_prd, empty_memory):
+        """Task generation warns about unresolved file paths."""
+        plan_dir = tmp_path / "active" / sample_prd.plan_id
+        plan_dir.mkdir(parents=True)
+        (plan_dir / "prd.md").write_text(render_prd_markdown(sample_prd))
+
+        result = generate_tasks(sample_prd.plan_id)
+
+        assert result.success is True  # Should still succeed
+        assert result.files_missing > 0
+        assert result.warnings is not None
+
+
+# Fixtures
+@pytest.fixture
+def sample_plan():
+    """Sample plan for testing."""
+    from aurora_cli.planning.models import Plan, Subgoal
+    return Plan(
+        plan_id="0001-test-auth",
+        goal="Implement authentication system",
+        subgoals=[
+            Subgoal(
+                id="sg-1",
+                title="Design auth flow",
+                description="Design the authentication flow",
+                recommended_agent="@holistic-architect"
+            ),
+            Subgoal(
+                id="sg-2",
+                title="Implement auth",
+                description="Implement authentication logic",
+                recommended_agent="@full-stack-dev",
+                dependencies=["sg-1"]
+            )
+        ]
+    )
+
+
+@pytest.fixture
+def sample_prd():
+    """Sample PRD for testing."""
+    return PRD(
+        plan_id="0001-test-auth",
+        goal="Implement authentication system",
+        executive_summary="Implement OAuth2 authentication...",
+        sections=[
+            PRDSection(
+                subgoal_id="sg-1",
+                title="Design auth flow",
+                agent="@holistic-architect",
+                requirements=[
+                    Requirement(
+                        id="FR-1.1",
+                        title="Design OAuth flow",
+                        description="Design complete OAuth2 flow",
+                        acceptance_criteria=[
+                            AcceptanceCriteria(description="Flow diagram exists")
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
+
+
+@pytest.fixture
+def mock_memory(monkeypatch):
+    """Mock memory retrieval that returns sample files."""
+    def mock_retrieve(*args, **kwargs):
+        return [
+            {"path": "src/auth/oauth.py", "confidence": 0.9},
+            {"path": "src/models/user.py", "confidence": 0.85}
+        ]
+    monkeypatch.setattr("aurora_cli.planning.prd_generator.retrieve_memory_context", mock_retrieve)
+
+
+@pytest.fixture
+def empty_memory(monkeypatch):
+    """Mock memory that returns nothing."""
+    def mock_retrieve(*args, **kwargs):
+        return []
+    monkeypatch.setattr("aurora_cli.planning.prd_generator.retrieve_memory_context", mock_retrieve)
+
+
+@pytest.fixture
+def failing_memory(monkeypatch):
+    """Mock memory that fails."""
+    def mock_retrieve(*args, **kwargs):
+        raise Exception("Memory retrieval failed")
+    monkeypatch.setattr("aurora_cli.planning.prd_generator.retrieve_memory_context", mock_retrieve)
+```
+
+---
+
 ### 4.3 Phase 3: Execution & Delegation
 
 #### FR-3.1: Slash Command: `/aur:implement` (Claude Code Integration)

@@ -60,6 +60,11 @@ class Config:
         ]
     )
     agents_manifest_path: str = "~/.aurora/cache/agent_manifest.json"
+    # Planning configuration
+    planning_base_dir: str = "~/.aurora/plans"
+    planning_template_dir: str | None = None  # None = use package default
+    planning_auto_increment: bool = True
+    planning_archive_on_complete: bool = False
 
     def get_db_path(self) -> str:
         """Get expanded absolute database path.
@@ -90,6 +95,54 @@ class Config:
             '/home/user/.aurora/cache/agent_manifest.json'
         """
         return str(Path(self.agents_manifest_path).expanduser().resolve())
+
+    def get_plans_path(self) -> str:
+        """Get expanded absolute plans directory path.
+
+        Expands ~ to home directory and returns absolute path.
+
+        Returns:
+            Absolute path to plans directory
+
+        Example:
+            >>> config = Config(planning_base_dir="~/.aurora/plans")
+            >>> config.get_plans_path()
+            '/home/user/.aurora/plans'
+        """
+        return str(Path(self.planning_base_dir).expanduser().resolve())
+
+    def get_planning_base_dir(self) -> str:
+        """Get expanded absolute planning base directory path.
+
+        Expands ~ to home directory and returns absolute path.
+
+        Returns:
+            Absolute path to planning base directory
+
+        Example:
+            >>> config = Config(planning_base_dir="~/.aurora/plans")
+            >>> config.get_planning_base_dir()
+            '/home/user/.aurora/plans'
+        """
+        return str(Path(self.planning_base_dir).expanduser().resolve())
+
+    def get_planning_template_dir(self) -> str | None:
+        """Get expanded absolute planning template directory path.
+
+        If planning_template_dir is None, returns None (indicating use package default).
+        Otherwise expands ~ to home directory and returns absolute path.
+
+        Returns:
+            Absolute path to template directory or None for package default
+
+        Example:
+            >>> config = Config(planning_template_dir="~/.aurora/templates")
+            >>> config.get_planning_template_dir()
+            '/home/user/.aurora/templates'
+        """
+        if self.planning_template_dir is None:
+            return None
+        return str(Path(self.planning_template_dir).expanduser().resolve())
 
     def get_api_key(self) -> str:
         """Get API key with environment variable override.
@@ -196,6 +249,26 @@ class Config:
         if not self.agents_manifest_path or not self.agents_manifest_path.strip():
             raise ConfigurationError("agents_manifest_path cannot be empty")
 
+        # Validate planning configuration
+        if not self.planning_base_dir or not self.planning_base_dir.strip():
+            raise ConfigurationError("planning_base_dir cannot be empty")
+
+        # Check if planning_base_dir is writable (parent must exist)
+        base_dir_path = Path(self.planning_base_dir).expanduser()
+        if base_dir_path.exists():
+            # Directory exists, check if writable
+            if not os.access(base_dir_path, os.W_OK):
+                raise ConfigurationError(
+                    f"planning_base_dir is not writable: {self.planning_base_dir}"
+                )
+        else:
+            # Directory doesn't exist, check if parent is writable
+            parent_dir = base_dir_path.parent
+            if parent_dir.exists() and not os.access(parent_dir, os.W_OK):
+                raise ConfigurationError(
+                    f"Cannot create planning_base_dir (parent not writable): {self.planning_base_dir}"
+                )
+
 
 # Default configuration schema
 CONFIG_SCHEMA: dict[str, Any] = {
@@ -248,6 +321,12 @@ CONFIG_SCHEMA: dict[str, Any] = {
         ],
         "manifest_path": "~/.aurora/cache/agent_manifest.json",
     },
+    "planning": {
+        "base_dir": "~/.aurora/plans",
+        "template_dir": None,  # None = use package default
+        "auto_increment": True,
+        "archive_on_complete": False,
+    },
 }
 
 
@@ -278,6 +357,10 @@ def load_config(path: str | None = None) -> Config:
     - ANTHROPIC_API_KEY → anthropic_api_key
     - AURORA_ESCALATION_THRESHOLD → escalation_threshold
     - AURORA_LOGGING_LEVEL → logging_level
+    - AURORA_PLANS_DIR → planning_base_dir
+    - AURORA_TEMPLATE_DIR → planning_template_dir
+    - AURORA_PLANNING_AUTO_INCREMENT → planning_auto_increment (true/false)
+    - AURORA_PLANNING_ARCHIVE_ON_COMPLETE → planning_archive_on_complete (true/false)
 
     Args:
         path: Optional explicit path to config file
@@ -389,6 +472,19 @@ def load_config(path: str | None = None) -> Config:
         "agents_manifest_path": config_data.get("agents", {}).get(
             "manifest_path", defaults["agents"]["manifest_path"]
         ),
+        # Planning configuration
+        "planning_base_dir": config_data.get("planning", {}).get(
+            "base_dir", defaults["planning"]["base_dir"]
+        ),
+        "planning_template_dir": config_data.get("planning", {}).get(
+            "template_dir", defaults["planning"]["template_dir"]
+        ),
+        "planning_auto_increment": config_data.get("planning", {}).get(
+            "auto_increment", defaults["planning"]["auto_increment"]
+        ),
+        "planning_archive_on_complete": config_data.get("planning", {}).get(
+            "archive_on_complete", defaults["planning"]["archive_on_complete"]
+        ),
     }
 
     # Apply environment variable overrides
@@ -405,6 +501,35 @@ def load_config(path: str | None = None) -> Config:
 
     if "AURORA_LOGGING_LEVEL" in os.environ:
         flat_config["logging_level"] = os.environ["AURORA_LOGGING_LEVEL"].upper()
+
+    # Apply planning environment variable overrides
+    if "AURORA_PLANS_DIR" in os.environ:
+        flat_config["planning_base_dir"] = os.environ["AURORA_PLANS_DIR"]
+
+    if "AURORA_TEMPLATE_DIR" in os.environ:
+        flat_config["planning_template_dir"] = os.environ["AURORA_TEMPLATE_DIR"]
+
+    if "AURORA_PLANNING_AUTO_INCREMENT" in os.environ:
+        val = os.environ["AURORA_PLANNING_AUTO_INCREMENT"].lower()
+        if val in ("true", "1", "yes"):
+            flat_config["planning_auto_increment"] = True
+        elif val in ("false", "0", "no"):
+            flat_config["planning_auto_increment"] = False
+        else:
+            raise ConfigurationError(
+                f"AURORA_PLANNING_AUTO_INCREMENT must be true/false, got '{os.environ['AURORA_PLANNING_AUTO_INCREMENT']}'"
+            )
+
+    if "AURORA_PLANNING_ARCHIVE_ON_COMPLETE" in os.environ:
+        val = os.environ["AURORA_PLANNING_ARCHIVE_ON_COMPLETE"].lower()
+        if val in ("true", "1", "yes"):
+            flat_config["planning_archive_on_complete"] = True
+        elif val in ("false", "0", "no"):
+            flat_config["planning_archive_on_complete"] = False
+        else:
+            raise ConfigurationError(
+                f"AURORA_PLANNING_ARCHIVE_ON_COMPLETE must be true/false, got '{os.environ['AURORA_PLANNING_ARCHIVE_ON_COMPLETE']}'"
+            )
 
     # Create Config instance
     config = Config(**flat_config)
@@ -477,6 +602,12 @@ def save_config(config: Config, path: str | None = None) -> None:
             "refresh_interval_hours": config.agents_refresh_interval_hours,
             "discovery_paths": config.agents_discovery_paths,
             "manifest_path": config.agents_manifest_path,
+        },
+        "planning": {
+            "base_dir": config.planning_base_dir,
+            "template_dir": config.planning_template_dir,
+            "auto_increment": config.planning_auto_increment,
+            "archive_on_complete": config.planning_archive_on_complete,
         },
     }
 

@@ -1,0 +1,480 @@
+"""MarkdownParser for parsing capability and plan markdown files.
+
+This parser returns "parsed" dataclasses without validation. Validation is done
+separately by the Validator class. This separation allows parsing and validation
+to be independent concerns.
+
+The parser handles:
+- Section extraction with nesting (headers ## through ######)
+- Requirement parsing with scenarios
+- Modification/delta parsing from "What Changes" section
+- Capability and plan metadata
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+
+from aurora_cli.planning.schemas.plan import ModificationOperation
+
+
+@dataclass
+class Section:
+    """A parsed markdown section.
+
+    Attributes:
+        level: Header level (1-6, corresponding to # through ######)
+        title: Section title text
+        content: Section content (text before next same-level header)
+        children: Nested subsections
+    """
+
+    level: int
+    title: str
+    content: str
+    children: list[Section] = field(default_factory=list)
+
+
+@dataclass
+class ParsedScenario:
+    """A parsed scenario (unvalidated).
+
+    Scenarios are parsed but not validated. The Validator class enforces
+    that scenarios are non-empty and properly formatted.
+
+    Attributes:
+        raw_text: Raw scenario content including WHEN/THEN/AND blocks
+    """
+
+    raw_text: str
+
+
+@dataclass
+class ParsedRequirement:
+    """A parsed requirement (unvalidated).
+
+    Requirements are parsed but not validated. The Validator class enforces
+    that requirements contain SHALL/MUST and have at least one scenario.
+
+    Attributes:
+        text: Requirement statement text
+        scenarios: List of parsed scenarios
+    """
+
+    text: str
+    scenarios: list[ParsedScenario] = field(default_factory=list)
+
+
+@dataclass
+class ParsedCapabilityMetadata:
+    """Metadata for a parsed capability.
+
+    Attributes:
+        version: Schema version (default: "1.0.0")
+        format: Format identifier (default: "aurora-capability")
+    """
+
+    version: str = "1.0.0"
+    format: str = "aurora-capability"
+
+
+@dataclass
+class ParsedCapability:
+    """A parsed capability (unvalidated).
+
+    Capabilities define system capabilities with requirements and scenarios.
+
+    Attributes:
+        name: Capability name
+        overview: Purpose/overview text from Purpose section
+        requirements: List of parsed requirements
+        metadata: Optional metadata
+    """
+
+    name: str
+    overview: str
+    requirements: list[ParsedRequirement] = field(default_factory=list)
+    metadata: ParsedCapabilityMetadata | None = None
+
+
+@dataclass
+class ParsedModification:
+    """A parsed modification (unvalidated).
+
+    Modifications describe changes to capabilities (ADDED/MODIFIED/REMOVED/RENAMED).
+
+    Attributes:
+        capability: Capability name being modified
+        operation: Type of modification
+        description: Human-readable description
+        requirement: Single requirement (for single-item operations)
+        requirements: Multiple requirements (for batch operations)
+        rename: Rename information dict with 'from' and 'to' keys
+    """
+
+    capability: str
+    operation: ModificationOperation
+    description: str
+    requirement: ParsedRequirement | None = None
+    requirements: list[ParsedRequirement] | None = None
+    rename: dict[str, str] | None = None  # {from: str, to: str}
+
+
+@dataclass
+class ParsedPlanMetadata:
+    """Metadata for a parsed plan.
+
+    Attributes:
+        version: Schema version (default: "1.0.0")
+        format: Format identifier (default: "aurora-plan")
+    """
+
+    version: str = "1.0.0"
+    format: str = "aurora-plan"
+
+
+@dataclass
+class ParsedPlan:
+    """A parsed plan (unvalidated).
+
+    Plans describe proposed changes to capabilities.
+
+    Attributes:
+        name: Plan name
+        why: Explanation of why changes are needed
+        what_changes: Summary of what will change
+        modifications: List of parsed modifications
+        metadata: Optional metadata
+    """
+
+    name: str
+    why: str
+    what_changes: str
+    modifications: list[ParsedModification] = field(default_factory=list)
+    metadata: ParsedPlanMetadata | None = None
+
+
+class MarkdownParser:
+    """Parser for markdown files containing capabilities or plans.
+
+    This parser uses a line-by-line approach to extract sections, requirements,
+    scenarios, and modifications from markdown content. The parser is permissive
+    and returns unvalidated structures - validation happens separately.
+    """
+
+    def __init__(self, content: str) -> None:
+        """Initialize parser with markdown content.
+
+        Args:
+            content: Raw markdown content to parse
+        """
+        normalized = self._normalize_content(content)
+        self._lines = normalized.split("\n")
+        self._current_line = 0
+
+    @staticmethod
+    def _normalize_content(content: str) -> str:
+        """Normalize line endings to Unix style.
+
+        Converts Windows (CRLF) and old Mac (CR) line endings to Unix (LF).
+
+        Args:
+            content: Content with potentially mixed line endings
+
+        Returns:
+            Content with Unix line endings only
+        """
+        return re.sub(r"\r\n?", "\n", content)
+
+    def parse_capability(self, name: str) -> ParsedCapability:
+        """Parse content as a capability.
+
+        Args:
+            name: Name to assign to the capability
+
+        Returns:
+            ParsedCapability object (unvalidated)
+
+        Raises:
+            ValueError: If required sections (Purpose, Requirements) are missing
+        """
+        sections = self._parse_sections()
+        purpose_section = self._find_section(sections, "Purpose")
+        requirements_section = self._find_section(sections, "Requirements")
+
+        purpose = purpose_section.content if purpose_section else ""
+
+        if not purpose:
+            raise ValueError("Capability must have a Purpose section")
+
+        if not requirements_section:
+            raise ValueError("Capability must have a Requirements section")
+
+        requirements = self._parse_requirements(requirements_section)
+
+        return ParsedCapability(
+            name=name,
+            overview=purpose.strip(),
+            requirements=requirements,
+            metadata=ParsedCapabilityMetadata(
+                version="1.0.0",
+                format="aurora-capability",
+            ),
+        )
+
+    def parse_plan(self, name: str) -> ParsedPlan:
+        """Parse content as a plan.
+
+        Args:
+            name: Name to assign to the plan
+
+        Returns:
+            ParsedPlan object (unvalidated)
+
+        Raises:
+            ValueError: If required sections (Why, What Changes) are missing
+        """
+        sections = self._parse_sections()
+        why_section = self._find_section(sections, "Why")
+        what_changes_section = self._find_section(sections, "What Changes")
+
+        why = why_section.content if why_section else ""
+        what_changes = what_changes_section.content if what_changes_section else ""
+
+        if not why:
+            raise ValueError("Plan must have a Why section")
+
+        if not what_changes:
+            raise ValueError("Plan must have a What Changes section")
+
+        modifications = self._parse_modifications(what_changes)
+
+        return ParsedPlan(
+            name=name,
+            why=why.strip(),
+            what_changes=what_changes.strip(),
+            modifications=modifications,
+            metadata=ParsedPlanMetadata(
+                version="1.0.0",
+                format="aurora-plan",
+            ),
+        )
+
+    def _parse_sections(self) -> list[Section]:
+        """Parse all sections from the markdown content.
+
+        Uses a stack-based approach to handle nested sections. Sections at
+        deeper levels become children of their parent sections.
+
+        Returns:
+            List of top-level sections with nested children
+        """
+        sections: list[Section] = []
+        stack: list[Section] = []
+
+        for i, line in enumerate(self._lines):
+            header_match = re.match(r"^(#{1,6})\s+(.+)$", line)
+
+            if header_match:
+                level = len(header_match.group(1))
+                title = header_match.group(2).strip()
+                content = self._get_content_until_next_header(i + 1, level)
+
+                section = Section(
+                    level=level,
+                    title=title,
+                    content=content,
+                    children=[],
+                )
+
+                # Pop sections at same or deeper level
+                while stack and stack[-1].level >= level:
+                    stack.pop()
+
+                # Add to parent or root
+                if not stack:
+                    sections.append(section)
+                else:
+                    stack[-1].children.append(section)
+
+                stack.append(section)
+
+        return sections
+
+    def _get_content_until_next_header(
+        self, start_line: int, current_level: int
+    ) -> str:
+        """Get content from start_line until next header of same or higher level.
+
+        Args:
+            start_line: Line index to start from
+            current_level: Current header level (1-6)
+
+        Returns:
+            Content as string (stripped)
+        """
+        content_lines: list[str] = []
+
+        for i in range(start_line, len(self._lines)):
+            line = self._lines[i]
+            header_match = re.match(r"^(#{1,6})\s+", line)
+
+            if header_match and len(header_match.group(1)) <= current_level:
+                break
+
+            content_lines.append(line)
+
+        return "\n".join(content_lines).strip()
+
+    def _find_section(
+        self, sections: list[Section], title: str
+    ) -> Section | None:
+        """Find a section by title (case-insensitive).
+
+        Searches recursively through sections and their children.
+
+        Args:
+            sections: List of sections to search
+            title: Title to find
+
+        Returns:
+            Found section or None
+        """
+        for section in sections:
+            if section.title.lower() == title.lower():
+                return section
+            child = self._find_section(section.children, title)
+            if child:
+                return child
+        return None
+
+    def _parse_requirements(self, section: Section) -> list[ParsedRequirement]:
+        """Parse requirements from a section.
+
+        Requirements are child sections (typically ### level) under the
+        Requirements section. Each requirement can have scenarios as its children.
+
+        Args:
+            section: Requirements section to parse
+
+        Returns:
+            List of ParsedRequirement objects (unvalidated)
+        """
+        requirements: list[ParsedRequirement] = []
+
+        for child in section.children:
+            # Extract requirement text from first non-empty content line,
+            # fall back to heading
+            text = child.title
+
+            # Get content before any child sections (scenarios)
+            if child.content.strip():
+                lines = child.content.split("\n")
+                content_before_children: list[str] = []
+
+                for line in lines:
+                    # Stop at child headers (scenarios start with ####)
+                    if line.strip().startswith("#"):
+                        break
+                    content_before_children.append(line)
+
+                # Find first non-empty line
+                direct_content = "\n".join(content_before_children).strip()
+                if direct_content:
+                    first_line = next(
+                        (ln for ln in direct_content.split("\n") if ln.strip()),
+                        None,
+                    )
+                    if first_line:
+                        text = first_line.strip()
+
+            scenarios = self._parse_scenarios(child)
+
+            requirements.append(
+                ParsedRequirement(
+                    text=text,
+                    scenarios=scenarios,
+                )
+            )
+
+        return requirements
+
+    def _parse_scenarios(self, requirement_section: Section) -> list[ParsedScenario]:
+        """Parse scenarios from a requirement section.
+
+        Scenarios are child sections (typically #### level) under each requirement.
+
+        Args:
+            requirement_section: Section containing scenarios as children
+
+        Returns:
+            List of ParsedScenario objects (unvalidated)
+        """
+        scenarios: list[ParsedScenario] = []
+
+        for scenario_section in requirement_section.children:
+            # Store the raw text content of the scenario section
+            if scenario_section.content.strip():
+                scenarios.append(
+                    ParsedScenario(raw_text=scenario_section.content)
+                )
+
+        return scenarios
+
+    def _parse_modifications(self, content: str) -> list[ParsedModification]:
+        """Parse modifications from content.
+
+        Modifications are listed in the "What Changes" section using the format:
+        - **capability-name**: description
+
+        The operation type (ADDED/MODIFIED/REMOVED/RENAMED) is inferred from
+        keywords in the description.
+
+        Args:
+            content: What Changes section content
+
+        Returns:
+            List of ParsedModification objects (unvalidated)
+        """
+        modifications: list[ParsedModification] = []
+        lines = content.split("\n")
+
+        for line in lines:
+            # Match both formats: **capability:** and **capability**:
+            modification_match = re.match(
+                r"^\s*-\s*\*\*([^*:]+)(?::\*\*|\*\*:)\s*(.+)$", line
+            )
+            if modification_match:
+                capability_name = modification_match.group(1).strip()
+                description = modification_match.group(2).strip()
+
+                operation = ModificationOperation.MODIFIED
+                lower_desc = description.lower()
+
+                # Use word boundaries to avoid false matches
+                # Check RENAMED first since it's more specific
+                if re.search(r"\brename[sd]?\b", lower_desc) or re.search(
+                    r"\brenamed\s+(to|from)\b", lower_desc
+                ):
+                    operation = ModificationOperation.RENAMED
+                elif (
+                    re.search(r"\badd[sed]?\b", lower_desc)
+                    or re.search(r"\bcreate[sd]?\b", lower_desc)
+                    or re.search(r"\bnew\b", lower_desc)
+                ):
+                    operation = ModificationOperation.ADDED
+                elif re.search(r"\bremove[sd]?\b", lower_desc) or re.search(
+                    r"\bdelete[sd]?\b", lower_desc
+                ):
+                    operation = ModificationOperation.REMOVED
+
+                modifications.append(
+                    ParsedModification(
+                        capability=capability_name,
+                        operation=operation,
+                        description=description,
+                    )
+                )
+
+        return modifications

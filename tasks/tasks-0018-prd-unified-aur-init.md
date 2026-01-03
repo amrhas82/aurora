@@ -144,7 +144,7 @@
 
 ### 2.0 Implement Helper Functions (Extracted from init_planning.py)
 
-- [ ] 2.1 TEST: Create test_init_helpers.py with failing tests
+- [x] 2.1 TEST: Create test_init_helpers.py with failing tests
   - Create `tests/unit/cli/test_init_helpers.py`
   - Test `detect_git_repository()` with/without .git directory
   - Test `detect_existing_setup()` with/without .aurora directory
@@ -159,7 +159,7 @@
   PYTHONPATH=/home/hamr/PycharmProjects/aurora/packages/cli/src:/home/hamr/PycharmProjects/aurora/packages/core/src python3 -m pytest tests/unit/cli/test_init_helpers.py -v
   ```
 
-- [ ] 2.2 IMPLEMENT: Create init_helpers.py module
+- [x] 2.2 IMPLEMENT: Create init_helpers.py module
   - Extract `detect_existing_setup()` from init_planning.py
   - Extract `detect_configured_tools()` from init_planning.py
   - Extract `create_directory_structure()` from init_planning.py (modify for new structure)
@@ -175,7 +175,7 @@
   PYTHONPATH=/home/hamr/PycharmProjects/aurora/packages/cli/src:/home/hamr/PycharmProjects/aurora/packages/core/src python3 -m pytest tests/unit/cli/test_init_helpers.py -v
   ```
 
-- [ ] 2.3 VERIFY: Type check and lint helpers
+- [x] 2.3 VERIFY: Type check and lint helpers
   ```bash
   # Type check
   mypy packages/cli/src/aurora_cli/commands/init_helpers.py --show-error-codes

@@ -4,12 +4,97 @@ import json
 import os
 import shutil
 import sqlite3
+import subprocess
 from pathlib import Path
 
 import click
+from rich.console import Console
 
+from aurora_cli.commands.init_helpers import (
+    create_directory_structure,
+    create_project_md,
+    detect_git_repository,
+    prompt_git_init,
+)
 from aurora_cli.config import CONFIG_SCHEMA
 from aurora_cli.errors import ErrorHandler, handle_errors
+
+
+console = Console()
+
+
+def run_step_1_planning_setup(project_path: Path) -> bool:
+    """Run Step 1: Planning Setup (Git + Directories).
+
+    This step:
+    1. Detects if git repository exists
+    2. Prompts to initialize git if missing (with benefits explanation)
+    3. Creates Aurora directory structure (.aurora/plans, logs, cache)
+    4. Creates project.md with auto-detected metadata
+
+    Args:
+        project_path: Path to project root directory
+
+    Returns:
+        True if git repository exists or was initialized, False if user declined
+
+    Note:
+        This function is idempotent - safe to run multiple times.
+        Preserves existing project.md if already present.
+    """
+    console.print("\n[bold]Step 1/3: Planning Setup[/]")
+    console.print("[dim]Setting up git and Aurora directory structure...[/]\n")
+
+    git_initialized = False
+
+    # Check for git repository
+    if detect_git_repository(project_path):
+        console.print("[green]✓[/] Git repository detected")
+        git_initialized = True
+    else:
+        # Prompt user to initialize git
+        if prompt_git_init():
+            # Run git init
+            try:
+                subprocess.run(
+                    ["git", "init"],
+                    cwd=project_path,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                console.print("[green]✓[/] Git repository initialized")
+                git_initialized = True
+            except subprocess.CalledProcessError as e:
+                console.print(f"[red]✗[/] Failed to initialize git: {e}")
+                console.print("[yellow]⚠[/] Continuing without git...")
+            except FileNotFoundError:
+                console.print("[red]✗[/] Git command not found")
+                console.print("[yellow]⚠[/] Continuing without git...")
+        else:
+            console.print("[yellow]⚠[/] Skipping git initialization")
+            console.print("[dim]Planning directories will not be created.[/]")
+
+    # Create Aurora directory structure
+    create_directory_structure(project_path)
+    console.print("[green]✓[/] Created Aurora directory structure:")
+    console.print("  • .aurora/plans/active")
+    console.print("  • .aurora/plans/archive")
+    console.print("  • .aurora/logs")
+    console.print("  • .aurora/cache")
+
+    # Create project.md with auto-detected metadata
+    aurora_dir = project_path / ".aurora"
+    project_md = aurora_dir / "project.md"
+
+    if project_md.exists():
+        console.print("[green]✓[/] project.md already exists (preserved)")
+    else:
+        create_project_md(project_path)
+        console.print("[green]✓[/] Created project.md with auto-detected metadata")
+
+    console.print()
+    return git_initialized
 
 
 def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler) -> bool:

@@ -216,7 +216,7 @@
 
 ### 3.0 Implement Step 1: Planning Setup (Git + Directories)
 
-- [ ] 3.1 TEST: Write failing tests for run_step_1_planning_setup()
+- [x] 3.1 TEST: Write failing tests for run_step_1_planning_setup()
   - Create `tests/unit/cli/test_init_unified.py`
   - Test git detection when .git exists
   - Test git detection when .git missing
@@ -232,7 +232,7 @@
   PYTHONPATH=/home/hamr/PycharmProjects/aurora/packages/cli/src:/home/hamr/PycharmProjects/aurora/packages/core/src python3 -m pytest tests/unit/cli/test_init_unified.py::test_run_step_1 -v
   ```
 
-- [ ] 3.2 IMPLEMENT: Create run_step_1_planning_setup() function
+- [x] 3.2 IMPLEMENT: Create run_step_1_planning_setup() function
   - Check for .git directory existence
   - If missing: call prompt_git_init()
   - If user accepts: run subprocess.run(["git", "init"])
@@ -247,7 +247,7 @@
   PYTHONPATH=/home/hamr/PycharmProjects/aurora/packages/cli/src:/home/hamr/PycharmProjects/aurora/packages/core/src python3 -m pytest tests/unit/cli/test_init_unified.py::test_run_step_1 -v
   ```
 
-- [ ] 3.3 VERIFY: Type check and lint
+- [x] 3.3 VERIFY: Type check and lint
   ```bash
   # Type check
   mypy packages/cli/src/aurora_cli/commands/init.py --show-error-codes
@@ -255,7 +255,7 @@
   ruff check packages/cli/src/aurora_cli/commands/init.py
   ```
 
-- [ ] 3.4 VERIFY: Run Step 1 tests with coverage
+- [x] 3.4 VERIFY: Run Step 1 tests with coverage
   ```bash
   # Run Step 1 tests
   PYTHONPATH=/home/hamr/PycharmProjects/aurora/packages/cli/src:/home/hamr/PycharmProjects/aurora/packages/core/src python3 -m pytest tests/unit/cli/test_init_unified.py::test_run_step_1 -v --cov=aurora_cli.commands.init --cov-report=term-missing

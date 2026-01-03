@@ -41,16 +41,26 @@
 
 | Aurora Command | OpenSpec Equivalent | Phase | Status |
 |----------------|---------------------|-------|--------|
-| `aur init` | `openspec init` | Phase 2 | Deferred |
+| `aur plan init` | N/A (Aurora-specific) | **Phase 1** | ✅ In scope |
 | `aur plan create <goal>` | `openspec change create` | **Phase 1** | ✅ In scope |
 | `aur plan list [--archived]` | `openspec list` | **Phase 1** | ✅ In scope |
 | `aur plan view <id>` | `openspec view` | **Phase 1** | ✅ In scope |
 | `aur plan archive <id>` | `openspec archive` | **Phase 1** | ✅ In scope |
+| `aur init` | `openspec init` | Phase 2 | Deferred |
 | `aur plan implement <id>` | `openspec apply` | Phase 3 | Deferred |
 
-**Phase 1 Commands**: create, list, view, archive (4 commands)
-**Phase 2 Adds**: init (tool configuration)
-**Phase 3 Adds**: implement (execution)
+**Phase 1 Commands** (5 total):
+- `aur plan init` - Create `.aurora/plans/` directory structure
+- `aur plan create` - Generate new plan with 8 files
+- `aur plan list` - List active/archived plans
+- `aur plan view` - Display plan dashboard
+- `aur plan archive` - Archive completed plan
+
+**Phase 2 Adds**:
+- `aur init` - Full framework setup (3-step tool selection, adapted from OpenSpec configurator)
+
+**Phase 3 Adds**:
+- `aur plan implement` - Execute plan with agent orchestration
 
 ### File Generation Pattern
 
@@ -159,7 +169,10 @@ Basic planning implementation exists (`tasks/tasks-0017-PH1-aurora-planning-syst
 - Documentation: README, API reference, user guide
 
 **Out of Scope (Deferred to Phase 2/3)**:
-- `aur init` framework configuration (Phase 2)
+- `aur init` tool configuration (Phase 2)
+  - **Note**: `aur plan init` IS in Phase 1 (creates `.aurora/` directory structure)
+  - **Deferred**: Full `aur init` with 3-step tool selection, project setup (Phase 2)
+  - **Implementation**: Adapted from OpenSpec CLI configurator module
 - SOAR-powered goal decomposition (Phase 2)
 - Memory-aware file path resolution (Phase 2)
 - Agent recommendation with manifest integration (Phase 2)
@@ -180,10 +193,11 @@ Basic planning implementation exists (`tasks/tasks-0017-PH1-aurora-planning-syst
 - ✅ Import paths: `from aurora.planning import *`
 
 ### Goal 2: Native Planning Commands
-**Implement** 4 CLI commands that generate and manage plans with Aurora directory structure.
+**Implement** 5 CLI commands that generate and manage plans with Aurora directory structure.
 
 **Success Criteria**:
-- ✅ `aur plan create <goal>` generates 8-file structure
+- ✅ `aur plan init` creates `.aurora/plans/` directory structure
+- ✅ `aur plan create <goal>` generates 8-file structure (auto-inits if needed)
 - ✅ `aur plan list` shows active/archived plans
 - ✅ `aur plan view <id>` displays plan dashboard
 - ✅ `aur plan archive <id>` moves to timestamped archive
@@ -397,6 +411,51 @@ aur plan archive 0001
 ---
 
 ### FR-2: Native Planning Commands
+
+#### FR-2.0: `aur plan init` Command
+
+**Description**: Initialize `.aurora/` directory structure for planning system.
+
+**Acceptance Criteria**:
+- Syntax: `aur plan init [path]` (default: current directory)
+- Creates directory structure:
+  - `.aurora/plans/active/`
+  - `.aurora/plans/archive/`
+- Sets appropriate permissions: directories 0755, files 0644
+- Idempotent: Safe to run multiple times (skips existing directories)
+- Success message shows created paths
+- Does NOT configure tools (that's `aur init` in Phase 2)
+- Performance: <1s execution time
+
+**Distinction from `aur init` (Phase 2)**:
+- `aur plan init`: Creates `.aurora/plans/` directory structure only (Phase 1)
+- `aur init`: Full Aurora framework setup with 3-step tool selection, project config (Phase 2)
+  - Adapted from OpenSpec CLI configurator module
+  - Interactive tool selection (Claude Code, OpenCode, AmpCode, Droid)
+  - Project context setup (project.md editing)
+  - Tool-specific slash command configuration
+
+**Validation**:
+```bash
+aur plan init
+# Output:
+# ✓ Planning directory structure created
+# Location: /home/user/.aurora/plans/
+#   - active/
+#   - archive/
+
+ls -la .aurora/plans/
+# Output: active/ archive/
+
+aur plan init  # Run again
+# Output:
+# ℹ Planning directory already exists at /home/user/.aurora/plans/
+# Nothing to do.
+```
+
+**Note**: First `aur plan create` auto-runs `aur plan init` if directory doesn't exist.
+
+---
 
 #### FR-2.1: `aur plan create` Command
 
@@ -835,11 +894,18 @@ aur plan create "Test"
 
 ### Phase 2 Deferred Items
 
-**`aur init` Command**:
-- Interactive 3-step tool selection (OpenSpec-style)
-- Multi-tool configuration (Claude Code, OpenCode, AmpCode, Droid)
-- Project context setup (`project.md` editing)
-- Tool-specific slash command configuration
+**`aur init` Command** (Full Framework Setup):
+- **Source**: Adapted from OpenSpec CLI configurator module
+- **Implementation**: 3-step interactive flow (OpenSpec-style)
+  - Step 1: Welcome, detect existing Aurora setup
+  - Step 2: Multi-select tool configuration (Claude Code, OpenCode, AmpCode, Droid)
+  - Step 3: Review selections, generate configs
+- **Features**:
+  - Multi-tool slash command configuration
+  - Project context setup (`project.md` editing)
+  - Tool-specific config file generation
+  - Root AGENTS.md stub creation/update
+- **Distinction**: This is FULL framework init, NOT just planning directory (that's `aur plan init` in Phase 1)
 
 **SOAR Integration**:
 - Automatic goal decomposition via `SOAROrchestrator`

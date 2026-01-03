@@ -23,6 +23,105 @@ from aurora_cli.errors import ErrorHandler, handle_errors
 console = Console()
 
 
+def run_step_2_memory_indexing(project_path: Path) -> bool:
+    """Run Step 2: Memory Indexing.
+
+    This step:
+    1. Determines project-specific db_path (.aurora/memory.db)
+    2. Prompts to re-index if memory.db already exists
+    3. Creates backup before re-indexing
+    4. Initializes MemoryManager with project-specific config
+    5. Indexes project files with progress bar
+    6. Displays success statistics
+
+    Args:
+        project_path: Path to project root directory
+
+    Returns:
+        True if indexing succeeded, False if skipped or failed
+
+    Note:
+        This function is idempotent - safe to run multiple times.
+        Creates backup before re-indexing to preserve existing data.
+    """
+    from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+
+    from aurora_cli.config import Config
+    from aurora_cli.memory_manager import MemoryManager
+
+    console.print("\n[bold]Step 2/3: Memory Indexing[/]")
+    console.print("[dim]Indexing codebase for semantic search...[/]\n")
+
+    # Determine project-specific db_path
+    db_path = project_path / ".aurora" / "memory.db"
+
+    # Check if database already exists
+    if db_path.exists():
+        if not click.confirm(
+            f"Memory database exists at {db_path}. Re-index codebase?",
+            default=True
+        ):
+            console.print("[yellow]⚠[/] Skipping memory indexing")
+            return False
+
+        # Create backup before re-indexing
+        backup_path = db_path.with_suffix(".db.backup")
+        try:
+            shutil.copy(db_path, backup_path)
+            console.print(f"[green]✓[/] Created backup at {backup_path}")
+        except Exception as e:
+            console.print(f"[red]✗[/] Failed to create backup: {e}")
+            console.print("[yellow]⚠[/] Continuing without backup...")
+
+    # Create Config with project-specific db_path
+    try:
+        config = Config(db_path=str(db_path))
+
+        # Create MemoryManager with custom config
+        manager = MemoryManager(config=config)
+
+        # Create progress bar
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            console=console,
+        ) as progress:
+            task_id = None
+
+            def progress_callback(current: int, total: int) -> None:
+                nonlocal task_id
+                if task_id is None:
+                    task_id = progress.add_task("Indexing files", total=total)
+                progress.update(task_id, completed=current)
+
+            # Perform indexing
+            stats = manager.index_path(project_path, progress_callback=progress_callback)
+
+        # Show success message with stats
+        if stats.files_indexed > 0:
+            console.print(
+                f"[bold green]✓[/] Indexed {stats.files_indexed} files, "
+                f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s"
+            )
+            return True
+        else:
+            console.print("[yellow]⚠[/] No files found to index")
+            return False
+
+    except Exception as e:
+        console.print(f"[red]✗[/] Indexing failed: {e}")
+
+        # Prompt user for action
+        if click.confirm("Skip this step and continue?", default=False):
+            console.print("[yellow]⚠[/] Skipping memory indexing")
+            return False
+        else:
+            console.print("[red]Aborting initialization[/]")
+            raise SystemExit(1)
+
+
 def run_step_1_planning_setup(project_path: Path) -> bool:
     """Run Step 1: Planning Setup (Git + Directories).
 

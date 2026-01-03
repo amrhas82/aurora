@@ -233,3 +233,214 @@ class TestStep1PlanningSetup:
             # Should print success message
             assert any("created" in str(call).lower() or "detected" in str(call).lower()
                        for call in mock_console.print.call_args_list)
+
+
+class TestStep2MemoryIndexing:
+    """Test Step 2: Memory Indexing."""
+
+    def test_run_step_2_calculates_project_specific_db_path(self, tmp_path):
+        """run_step_2_memory_indexing() should use project-specific db_path."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        # Mock MemoryManager to avoid actual indexing (patch where it's imported)
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config") as mock_config:
+                mock_instance = MagicMock()
+                mock_manager.return_value = mock_instance
+
+                # Mock index_path to return stats
+                from aurora_cli.memory_manager import IndexStats
+                mock_instance.index_path.return_value = IndexStats(
+                    files_indexed=5,
+                    chunks_created=20,
+                    duration_seconds=1.5
+                )
+
+                run_step_2_memory_indexing(tmp_path)
+
+                # Should create Config with project-specific db_path
+                mock_config.assert_called_once()
+                config_call = mock_config.call_args
+
+                # db_path should be project_path / ".aurora" / "memory.db"
+                expected_db = str(tmp_path / ".aurora" / "memory.db")
+                # Check that Config was called with db_path parameter
+                assert config_call[1]["db_path"] == expected_db
+
+    def test_run_step_2_prompts_reindex_when_db_exists(self, tmp_path):
+        """run_step_2_memory_indexing() should prompt to re-index when memory.db exists."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        # Create existing memory.db
+        aurora_dir = tmp_path / ".aurora"
+        aurora_dir.mkdir(parents=True)
+        memory_db = aurora_dir / "memory.db"
+        memory_db.write_text("fake db content", encoding="utf-8")
+
+        with patch("aurora_cli.memory_manager.MemoryManager"):
+            with patch("aurora_cli.config.Config"):
+                with patch("click.confirm", return_value=False) as mock_confirm:
+                    run_step_2_memory_indexing(tmp_path)
+
+                    # Should ask user to confirm re-indexing
+                    mock_confirm.assert_called_once()
+                    args = mock_confirm.call_args
+                    assert "re-index" in str(args).lower() or "reindex" in str(args).lower()
+
+    def test_run_step_2_creates_backup_before_reindexing(self, tmp_path):
+        """run_step_2_memory_indexing() should backup memory.db before re-indexing."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        # Create existing memory.db
+        aurora_dir = tmp_path / ".aurora"
+        aurora_dir.mkdir(parents=True)
+        memory_db = aurora_dir / "memory.db"
+        original_content = "original database content"
+        memory_db.write_text(original_content, encoding="utf-8")
+
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config"):
+                with patch("click.confirm", return_value=True):
+                    mock_instance = MagicMock()
+                    mock_manager.return_value = mock_instance
+
+                    from aurora_cli.memory_manager import IndexStats
+                    mock_instance.index_path.return_value = IndexStats(
+                        files_indexed=1,
+                        chunks_created=5,
+                        duration_seconds=0.5
+                    )
+
+                    run_step_2_memory_indexing(tmp_path)
+
+                    # Should create backup file
+                    backup_file = aurora_dir / "memory.db.backup"
+                    assert backup_file.exists()
+                    assert backup_file.read_text() == original_content
+
+    def test_run_step_2_handles_indexing_errors(self, tmp_path):
+        """run_step_2_memory_indexing() should handle indexing errors gracefully."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config"):
+                mock_instance = MagicMock()
+                mock_manager.return_value = mock_instance
+
+                # Simulate indexing error
+                mock_instance.index_path.side_effect = RuntimeError("Indexing failed")
+
+                with patch("click.confirm", return_value=True) as mock_confirm:
+                    # Should not raise - should handle gracefully (skip=True)
+                    run_step_2_memory_indexing(tmp_path)
+
+                    # Should prompt user for action (skip/abort)
+                    assert mock_confirm.called
+
+    def test_run_step_2_skip_continues_to_next_step(self, tmp_path):
+        """run_step_2_memory_indexing() skip option should return without error."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config"):
+                mock_instance = MagicMock()
+                mock_manager.return_value = mock_instance
+                mock_instance.index_path.side_effect = RuntimeError("Error")
+
+                with patch("click.confirm", return_value=True):  # Yes, skip
+                    # Should return without raising
+                    result = run_step_2_memory_indexing(tmp_path)
+                    # Should return False (skipped)
+                    assert result is False
+
+    def test_run_step_2_abort_exits_cleanly(self, tmp_path):
+        """run_step_2_memory_indexing() abort option should exit."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config"):
+                mock_instance = MagicMock()
+                mock_manager.return_value = mock_instance
+                mock_instance.index_path.side_effect = RuntimeError("Error")
+
+                with patch("click.confirm", return_value=False):  # No, abort
+                    with pytest.raises(SystemExit):
+                        run_step_2_memory_indexing(tmp_path)
+
+    def test_run_step_2_uses_progress_callback(self, tmp_path):
+        """run_step_2_memory_indexing() should use progress bar for indexing."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config"):
+                mock_instance = MagicMock()
+                mock_manager.return_value = mock_instance
+
+                from aurora_cli.memory_manager import IndexStats
+                mock_instance.index_path.return_value = IndexStats(
+                    files_indexed=10,
+                    chunks_created=50,
+                    duration_seconds=2.0
+                )
+
+                with patch("rich.progress.Progress") as mock_progress:
+                    run_step_2_memory_indexing(tmp_path)
+
+                    # Should create progress bar
+                    assert mock_progress.called
+
+                    # Should call index_path with progress_callback
+                    mock_instance.index_path.assert_called_once()
+                    call_kwargs = mock_instance.index_path.call_args[1]
+                    assert "progress_callback" in call_kwargs
+                    assert call_kwargs["progress_callback"] is not None
+
+    def test_run_step_2_shows_success_stats(self, tmp_path):
+        """run_step_2_memory_indexing() should display indexing statistics."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config"):
+                mock_instance = MagicMock()
+                mock_manager.return_value = mock_instance
+
+                from aurora_cli.memory_manager import IndexStats
+                stats = IndexStats(
+                    files_indexed=15,
+                    chunks_created=75,
+                    duration_seconds=3.5
+                )
+                mock_instance.index_path.return_value = stats
+
+                with patch("aurora_cli.commands.init.console") as mock_console:
+                    run_step_2_memory_indexing(tmp_path)
+
+                    # Should print stats
+                    print_calls = [str(call) for call in mock_console.print.call_args_list]
+                    combined = " ".join(print_calls)
+
+                    # Should show file count
+                    assert "15" in combined or "files" in combined.lower()
+
+    def test_run_step_2_skips_prompt_on_fresh_install(self, tmp_path):
+        """run_step_2_memory_indexing() should not prompt when memory.db doesn't exist."""
+        from aurora_cli.commands.init import run_step_2_memory_indexing
+
+        # No memory.db exists yet
+        with patch("aurora_cli.memory_manager.MemoryManager") as mock_manager:
+            with patch("aurora_cli.config.Config"):
+                mock_instance = MagicMock()
+                mock_manager.return_value = mock_instance
+
+                from aurora_cli.memory_manager import IndexStats
+                mock_instance.index_path.return_value = IndexStats(
+                    files_indexed=1,
+                    chunks_created=5,
+                    duration_seconds=0.5
+                )
+
+                with patch("click.confirm") as mock_confirm:
+                    run_step_2_memory_indexing(tmp_path)
+
+                    # Should NOT prompt since db doesn't exist
+                    mock_confirm.assert_not_called()

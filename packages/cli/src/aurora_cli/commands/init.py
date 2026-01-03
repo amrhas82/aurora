@@ -103,31 +103,23 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
             # Perform indexing
             stats = manager.index_path(project_path, progress_callback=progress_callback)
 
-        # Show success summary box
+        # Show success summary
         console.print()
-        console.print("[bold cyan]┌─────────────────────────────────────────────┐[/]")
-        console.print("[bold cyan]│[/]         [bold]Memory Indexing Summary[/]          [bold cyan]│[/]")
-        console.print("[bold cyan]├─────────────────────────────────────────────┤[/]")
+        console.print("[bold green]Memory Indexing Complete[/]")
 
         if stats.files_indexed > 0:
-            console.print(f"[bold cyan]│[/]  [green]✓[/] Files indexed:    {stats.files_indexed:>20} [bold cyan]│[/]")
-            console.print(f"[bold cyan]│[/]  [green]✓[/] Chunks created:   {stats.chunks_created:>20} [bold cyan]│[/]")
-            console.print(f"[bold cyan]│[/]  [dim]⏱[/] Duration:         {stats.duration_seconds:>17.2f}s [bold cyan]│[/]")
+            console.print(f"  [green]✓[/] Files indexed:  {stats.files_indexed}")
+            console.print(f"  [green]✓[/] Chunks created: {stats.chunks_created}")
+            console.print(f"  [dim]⏱[/] Duration:       {stats.duration_seconds:.2f}s")
 
             if stats.errors > 0:
-                console.print(f"[bold cyan]│[/]  [yellow]⚠[/] Skipped (errors): {stats.errors:>20} [bold cyan]│[/]")
+                console.print(f"  [yellow]⚠[/] Skipped:        {stats.errors} (unsupported format)")
             if stats.warnings > 0:
-                console.print(f"[bold cyan]│[/]  [dim]○[/] Warnings:         {stats.warnings:>20} [bold cyan]│[/]")
-
-            console.print("[bold cyan]└─────────────────────────────────────────────┘[/]")
-
-            if stats.errors > 0:
-                console.print(f"[dim]  Note: {stats.errors} file(s) skipped (unsupported format or parse errors)[/]")
+                console.print(f"  [dim]○[/] Warnings:       {stats.warnings}")
 
             return True
         else:
-            console.print("[bold cyan]│[/]  [yellow]⚠[/] No files found to index              [bold cyan]│[/]")
-            console.print("[bold cyan]└─────────────────────────────────────────────┘[/]")
+            console.print("  [yellow]⚠[/] No files found to index")
             return False
 
     except Exception as e:

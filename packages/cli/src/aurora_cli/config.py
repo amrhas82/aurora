@@ -16,6 +16,35 @@ from typing import Any
 from aurora_cli.errors import ConfigurationError, ErrorHandler
 
 
+# List of all 20 AI coding tools supported by Aurora slash command configurators.
+# Each tool has:
+#   - name: Human-readable display name
+#   - value: Tool ID matching SlashCommandRegistry
+#   - available: Always True (all tools are always available per PRD)
+AI_TOOLS: list[dict[str, str | bool]] = [
+    {"name": "Amazon Q", "value": "amazon-q", "available": True},
+    {"name": "Antigravity", "value": "antigravity", "available": True},
+    {"name": "Auggie", "value": "auggie", "available": True},
+    {"name": "Claude Code", "value": "claude", "available": True},
+    {"name": "Cline", "value": "cline", "available": True},
+    {"name": "Codex", "value": "codex", "available": True},
+    {"name": "CodeBuddy", "value": "codebuddy", "available": True},
+    {"name": "CoStrict", "value": "costrict", "available": True},
+    {"name": "Crush", "value": "crush", "available": True},
+    {"name": "Cursor", "value": "cursor", "available": True},
+    {"name": "Factory", "value": "factory", "available": True},
+    {"name": "Gemini CLI", "value": "gemini", "available": True},
+    {"name": "GitHub Copilot", "value": "github-copilot", "available": True},
+    {"name": "iFlow", "value": "iflow", "available": True},
+    {"name": "Kilo Code", "value": "kilocode", "available": True},
+    {"name": "OpenCode", "value": "opencode", "available": True},
+    {"name": "Qoder", "value": "qoder", "available": True},
+    {"name": "Qwen Code", "value": "qwen", "available": True},
+    {"name": "RooCode", "value": "roocode", "available": True},
+    {"name": "Windsurf", "value": "windsurf", "available": True},
+]
+
+
 @dataclass
 class Config:
     """AURORA CLI configuration.

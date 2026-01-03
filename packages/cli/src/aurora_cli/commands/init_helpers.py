@@ -14,6 +14,7 @@ import questionary
 from rich.console import Console
 
 from aurora_cli.configurators import TOOL_OPTIONS, ToolRegistry
+from aurora_cli.configurators.slash import SlashCommandRegistry
 
 
 console = Console()
@@ -105,6 +106,70 @@ def count_configured_tools(project_path: Path) -> int:
     """
     configured = detect_configured_tools(project_path)
     return sum(1 for is_configured in configured.values() if is_configured)
+
+
+def detect_configured_slash_tools(project_path: Path) -> dict[str, bool]:
+    """Detect which slash command tools are already configured.
+
+    Checks for Aurora markers in expected file paths for all 20 AI coding tools
+    in the SlashCommandRegistry. This enables "extend mode" where users can
+    add new tools without reconfiguring existing ones.
+
+    Special handling for Codex: checks global path (~/.codex/prompts/ or
+    $CODEX_HOME/prompts/) instead of project-relative path.
+
+    Args:
+        project_path: Path to project root
+
+    Returns:
+        Dictionary mapping tool IDs to configured status (True if configured)
+    """
+    import os
+
+    configured: dict[str, bool] = {}
+
+    for configurator in SlashCommandRegistry.get_all():
+        tool_id = configurator.tool_id
+        is_configured = False
+
+        # Special handling for Codex (uses global path)
+        if tool_id == "codex":
+            # Get global prompts directory (respects CODEX_HOME env var)
+            codex_home = os.environ.get("CODEX_HOME", "").strip()
+            if codex_home:
+                prompts_dir = Path(codex_home) / "prompts"
+            else:
+                prompts_dir = Path.home() / ".codex" / "prompts"
+
+            # Check for any Aurora-configured file
+            plan_file = prompts_dir / "aurora-plan.md"
+            if plan_file.exists():
+                try:
+                    content = plan_file.read_text(encoding="utf-8")
+                    if "<!-- AURORA:START -->" in content and "<!-- AURORA:END -->" in content:
+                        is_configured = True
+                except Exception:
+                    pass
+        else:
+            # Standard project-relative paths
+            # Check the first target file for this tool (e.g., plan.md)
+            targets = configurator.get_targets()
+            if targets:
+                # Use the first command file to check configuration
+                first_target = targets[0]
+                file_path = project_path / first_target.path
+
+                if file_path.exists():
+                    try:
+                        content = file_path.read_text(encoding="utf-8")
+                        if "<!-- AURORA:START -->" in content and "<!-- AURORA:END -->" in content:
+                            is_configured = True
+                    except Exception:
+                        pass
+
+        configured[tool_id] = is_configured
+
+    return configured
 
 
 def create_directory_structure(project_path: Path) -> None:
@@ -288,6 +353,8 @@ def create_project_md(project_path: Path) -> None:
 async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
     """Prompt user to select tools for configuration.
 
+    Uses SlashCommandRegistry to get all 20 available AI coding tools.
+
     Args:
         configured_tools: Dictionary mapping tool IDs to configured status
 
@@ -296,10 +363,10 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
     """
     choices = []
 
-    # Build checkbox choices
-    for tool_option in TOOL_OPTIONS:
-        tool_id = tool_option["value"]
-        tool_name = tool_option["name"]
+    # Build checkbox choices from SlashCommandRegistry (all 20 tools)
+    for configurator in SlashCommandRegistry.get_all():
+        tool_id = configurator.tool_id
+        tool_name = configurator.name
         is_configured = configured_tools.get(tool_id, False)
 
         if is_configured:
@@ -314,20 +381,6 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
                 checked=is_configured,  # Pre-check if already configured
             )
         )
-
-    # Add Universal AGENTS.md option
-    is_universal_configured = configured_tools.get("universal-agents.md", False)
-    universal_label = "Universal AGENTS.md (for other tools)"
-    if is_universal_configured:
-        universal_label += " (already configured)"
-
-    choices.append(
-        questionary.Choice(
-            title=universal_label,
-            value="universal-agents-md",
-            checked=True,  # Always checked by default
-        )
-    )
 
     # Show selection prompt
     console.print()
@@ -388,6 +441,53 @@ async def configure_tools(
 
         # Track as updated only if it existed AND had markers
         if has_markers:
+            updated.append(configurator.name)
+        else:
+            created.append(configurator.name)
+
+    return created, updated
+
+
+async def configure_slash_commands(
+    project_path: Path,
+    tool_ids: list[str],
+) -> tuple[list[str], list[str]]:
+    """Configure slash commands for selected tools using SlashCommandRegistry.
+
+    Uses the new slash command configurator system with all 20 AI coding tools.
+
+    Args:
+        project_path: Path to project root
+        tool_ids: List of tool IDs to configure (e.g., ["claude", "cursor", "gemini"])
+
+    Returns:
+        Tuple of (created_tools, updated_tools) - lists of tool names
+    """
+    created: list[str] = []
+    updated: list[str] = []
+
+    if not tool_ids:
+        return created, updated
+
+    for tool_id in tool_ids:
+        configurator = SlashCommandRegistry.get(tool_id)
+        if not configurator:
+            # Skip invalid tool IDs
+            continue
+
+        # Check if any files already exist for this tool
+        has_existing = False
+        for target in configurator.get_targets():
+            file_path = project_path / target.path
+            if file_path.exists():
+                has_existing = True
+                break
+
+        # Generate/update all slash command files for this tool
+        configurator.generate_all(str(project_path), AURORA_DIR_NAME)
+
+        # Track as updated if files existed, otherwise created
+        if has_existing:
             updated.append(configurator.name)
         else:
             created.append(configurator.name)

@@ -68,10 +68,22 @@
 #### Test Files (Task 3.0) - COMPLETED
 - `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_markdown_tools.py` - UPDATED: 203 tests for all 15 markdown tools
 
-#### Init Command Files (To Modify)
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py` - Add --tools flag
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py` - Update tool selection wizard
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/config.py` - Add AI_TOOLS list
+#### Init Command Files (Task 5.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py` - MODIFIED: Added --tools flag, parse_tools_flag(), validate_tool_ids(), get_all_tool_ids()
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py` - MODIFIED: Updated prompt_tool_selection() to use SlashCommandRegistry, added configure_slash_commands()
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/base.py` - MODIFIED: Added name property to SlashCommandConfigurator base class
+
+#### Test Files (Task 5.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_tools_flag.py` - 27 tests for --tools flag parsing and validation
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_helpers.py` - 14 tests for tool selection wizard and configure_slash_commands()
+
+#### Config Files (Task 6.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/config.py` - MODIFIED: Added AI_TOOLS constant with all 20 AI coding tools
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py` - MODIFIED: Added detect_configured_slash_tools() for extend mode detection
+
+#### Test Files (Task 6.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_config.py` - 11 tests for AI_TOOLS constant (TestAIToolsConstant)
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_helpers.py` - UPDATED: Added 11 tests for detect_configured_slash_tools() (TestDetectConfiguredSlashTools)
 
 ### Test Files (To Create)
 - `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/__init__.py` - Test package init
@@ -282,8 +294,8 @@
     - **Verify**: `python -c "from aurora_cli.configurators.slash import *; print('All imports OK')"`
     - **Verify**: `cd /home/hamr/PycharmProjects/aurora && make type-check`
 
-- [ ] 5.0 Integrate tool selection wizard into aur init with --tools flag
-  - [ ] 5.1 Write failing tests for --tools flag parsing in `test_init_tools_flag.py`
+- [x] 5.0 Integrate tool selection wizard into aur init with --tools flag
+  - [x] 5.1 Write failing tests for --tools flag parsing in `test_init_tools_flag.py`
     - Test `--tools=all` parses to list of all 20 tool IDs
     - Test `--tools=none` parses to empty list
     - Test `--tools=claude,cursor` parses to `["claude", "cursor"]`
@@ -291,81 +303,81 @@
     - Test `--tools=claude,invalid` shows invalid tool ID in error
     - Test error message lists available tool IDs
     - **Verify (expect failures)**: `pytest tests/unit/cli/test_init_tools_flag.py -v`
-  - [ ] 5.2 Add `--tools` option to init command in `init.py`
+  - [x] 5.2 Add `--tools` option to init command in `init.py`
     - Add `@click.option("--tools", type=str, default=None, help="...")`
     - Add `parse_tools_flag(tools_str: str) -> list[str]` function
     - Add `validate_tool_ids(tool_ids: list[str]) -> None` function
     - Pass parsed tool IDs to tool configuration step
     - **Verify (tests pass)**: `pytest tests/unit/cli/test_init_tools_flag.py -v`
-  - [ ] 5.3 Write failing tests for tool selection wizard in `test_init_helpers.py`
+  - [x] 5.3 Write failing tests for tool selection wizard in `test_init_helpers.py`
     - Test `prompt_tool_selection()` returns list of selected tool IDs
     - Test pre-selection of already configured tools (extend mode)
     - Test grouping: "Natively supported" vs "Universal AGENTS.md"
     - Test all 20 tools appear in selection menu
     - **Verify (expect failures)**: `pytest tests/unit/cli/test_init_helpers.py -v -k "tool_selection"`
-  - [ ] 5.4 Update `prompt_tool_selection()` in `init_helpers.py`
+  - [x] 5.4 Update `prompt_tool_selection()` in `init_helpers.py`
     - Import `SlashCommandRegistry` to get all 20 tools
     - Build checkbox choices from registry (name, value, checked status)
     - Group tools into "Natively supported" section
     - Add "Universal AGENTS.md" as separate option
     - Return list of selected tool IDs
     - **Verify (tests pass)**: `pytest tests/unit/cli/test_init_helpers.py -v -k "tool_selection"`
-  - [ ] 5.5 Write failing tests for `configure_slash_commands()` helper
+  - [x] 5.5 Write failing tests for `configure_slash_commands()` helper
     - Test function accepts list of tool IDs
     - Test function calls `SlashCommandRegistry.get(tool_id).generate_all()` for each
     - Test function returns (created_tools, updated_tools) tuple
     - Test function handles missing/invalid tool IDs gracefully
     - **Verify (expect failures)**: `pytest tests/unit/cli/test_init_helpers.py -v -k "configure_slash"`
-  - [ ] 5.6 Implement `configure_slash_commands()` in `init_helpers.py`
+  - [x] 5.6 Implement `configure_slash_commands()` in `init_helpers.py`
     - Accept `project_path: Path, tool_ids: list[str]` parameters
     - Iterate through tool IDs, get configurator from registry
     - Call `generate_all()` for new tools, `update_existing()` for configured tools
     - Track created vs updated tools
     - Display progress with Rich console
     - **Verify (tests pass)**: `pytest tests/unit/cli/test_init_helpers.py -v -k "configure_slash"`
-  - [ ] 5.7 Integrate into `run_step_3_tool_configuration()` in `init.py`
+  - [x] 5.7 Integrate into `run_step_3_tool_configuration()` in `init.py`
     - Check if `--tools` flag was provided (non-interactive mode)
     - If provided, use parsed tool IDs directly
     - If not provided, call `prompt_tool_selection()`
     - Call `configure_slash_commands()` with selected tool IDs
     - Display summary of created/updated tools
     - **Verify**: `pytest tests/unit/cli/test_init_unified.py -v -k "step_3"`
-  - [ ] 5.8 Manual verification of --tools flag
+  - [x] 5.8 Manual verification of --tools flag
     - **Verify all**: `rm -rf /tmp/test-all && mkdir /tmp/test-all && cd /tmp/test-all && git init && aur init --tools=all`
     - **Verify count**: `find /tmp/test-all -name "*.md" -o -name "*.toml" | wc -l` (expect 140: 20 tools x 7 commands)
     - **Verify specific**: `aur init --tools=claude,cursor,gemini`
     - **Verify none**: `aur init --tools=none` (should skip tool config)
 
-- [ ] 6.0 Add AI_TOOLS configuration and extend mode detection
-  - [ ] 6.1 Write failing tests for AI_TOOLS constant
+- [x] 6.0 Add AI_TOOLS configuration and extend mode detection
+  - [x] 6.1 Write failing tests for AI_TOOLS constant
     - Test `AI_TOOLS` is a list of 20 dicts
     - Test each dict has `name`, `value`, `available` keys
     - Test `value` matches registry tool IDs
     - Test all tools have `available: True`
     - **Verify (expect failures)**: `pytest tests/unit/cli/test_config.py -v -k "ai_tools"`
-  - [ ] 6.2 Add AI_TOOLS to `config.py`
+  - [x] 6.2 Add AI_TOOLS to `config.py`
     - Define `AI_TOOLS` list matching PRD Appendix C format
     - Include all 20 tools with name, value (tool_id), available
     - **Verify (tests pass)**: `pytest tests/unit/cli/test_config.py -v -k "ai_tools"`
-  - [ ] 6.3 Write failing tests for extend mode detection
+  - [x] 6.3 Write failing tests for extend mode detection
     - Test `detect_configured_slash_tools(project_path)` returns dict[str, bool]
     - Test detection works by checking for Aurora markers in expected paths
     - Test Codex detection uses global path
     - Test returns False for tools with files but no markers
     - **Verify (expect failures)**: `pytest tests/unit/cli/test_init_helpers.py -v -k "detect_configured_slash"`
-  - [ ] 6.4 Implement `detect_configured_slash_tools()` in `init_helpers.py`
+  - [x] 6.4 Implement `detect_configured_slash_tools()` in `init_helpers.py`
     - Iterate through all tools in `SlashCommandRegistry.get_all()`
     - For each tool, resolve expected file path
     - Check if file exists and contains Aurora markers
     - Return `{tool_id: is_configured}` dict
     - Handle Codex global path specially
     - **Verify (tests pass)**: `pytest tests/unit/cli/test_init_helpers.py -v -k "detect_configured_slash"`
-  - [ ] 6.5 Update `prompt_tool_selection()` to use extend mode detection
+  - [x] 6.5 Update `prompt_tool_selection()` to use extend mode detection
     - Call `detect_configured_slash_tools()` at start
     - Pre-check already configured tools in checkbox UI
     - Show "(already configured)" label for detected tools
     - **Verify**: `pytest tests/unit/cli/test_init_helpers.py -v -k "tool_selection"`
-  - [ ] 6.6 Manual verification of extend mode
+  - [x] 6.6 Manual verification of extend mode
     - **Setup**: `rm -rf /tmp/test-extend && mkdir /tmp/test-extend && cd /tmp/test-extend && git init && aur init --tools=claude`
     - **Verify Claude configured**: `ls /tmp/test-extend/.claude/commands/aur/`
     - **Re-run init**: `cd /tmp/test-extend && aur init` (Claude should be pre-checked)

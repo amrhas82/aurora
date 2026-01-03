@@ -5,20 +5,22 @@ and path expansion for the Aurora Planning System.
 """
 
 import os
-import pytest
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import sys
+import pytest
+
+
 sys.path.insert(0, str(Path(__file__).parents[3] / "packages" / "planning" / "src"))
 
 from aurora_planning.planning_config import (
+    PLANNING_CONFIG,
+    get_config_value,
     get_plans_dir,
     get_template_dir,
-    validate_plans_dir,
     init_plans_directory,
-    get_config_value,
-    PLANNING_CONFIG,
+    validate_plans_dir,
 )
 
 

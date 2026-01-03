@@ -313,36 +313,3 @@ name = "test"
         assert "tech_stack" in result
         # tech_stack might be empty or minimal
         assert isinstance(result["tech_stack"], str)
-
-
-class TestIntegrationWithExistingFunctions:
-    """Test that helper functions integrate with existing init_planning code."""
-
-    def test_detect_existing_setup_matches_init_planning_behavior(self, tmp_path):
-        """Ensure detect_existing_setup() matches behavior from init_planning.py."""
-        # Import from init_planning to compare
-        from aurora_cli.commands.init_planning import (
-            detect_existing_setup as old_detect_existing_setup,
-        )
-
-        # Test without .aurora
-        assert detect_existing_setup(tmp_path) == old_detect_existing_setup(tmp_path)
-
-        # Test with .aurora
-        (tmp_path / ".aurora").mkdir()
-        assert detect_existing_setup(tmp_path) == old_detect_existing_setup(tmp_path)
-
-    def test_detect_configured_tools_matches_init_planning_behavior(self, tmp_path):
-        """Ensure detect_configured_tools() matches behavior from init_planning.py."""
-        from aurora_cli.commands.init_planning import (
-            detect_configured_tools as old_detect_configured_tools,
-        )
-
-        # Compare results
-        old_result = old_detect_configured_tools(tmp_path)
-        new_result = detect_configured_tools(tmp_path)
-
-        # Should have same keys
-        assert set(old_result.keys()) == set(new_result.keys())
-        # Should have same values
-        assert old_result == new_result

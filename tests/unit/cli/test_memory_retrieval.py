@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_cli.memory.retrieval import MemoryRetriever, _detect_language
+
 from aurora_core.chunks import CodeChunk
 
 

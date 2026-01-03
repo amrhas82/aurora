@@ -1,7 +1,8 @@
 """Tests for ValidateCommand CLI wrapper."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 from aurora_planning.cli.validate_cmd import ValidateCommand
 
 

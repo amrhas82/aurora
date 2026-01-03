@@ -468,232 +468,194 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
 
 @click.command(name="init")
 @click.option(
-    "--interactive",
+    "--config",
     is_flag=True,
     default=False,
-    help="Run interactive setup wizard with guided prompts",
+    help="Configure tools only (skip planning setup and memory indexing)",
 )
 @handle_errors
-def init_command(interactive: bool) -> None:
-    """Initialize AURORA configuration.
+def init_command(config: bool) -> None:
+    """Initialize AURORA in current project (unified 3-step flow).
 
-    Creates ~/.aurora/config.json with defaults and optional API key.
-    Optionally indexes the current directory for memory search.
+    This command sets up Aurora for your project with:
+      1. Planning Setup - Git initialization and directory structure
+      2. Memory Indexing - Semantic search database for codebase
+      3. Tool Configuration - AI tool integrations (Claude Code, etc.)
 
     \b
     Examples:
-        # Basic initialization (will prompt for API key)
+        # Full initialization (all 3 steps)
         aur init
 
         \b
-        # Interactive setup wizard (guided experience)
-        aur init --interactive
+        # Configure tools only (Step 3)
+        aur init --config
 
         \b
-        # After initialization, set API key in environment
-        export ANTHROPIC_API_KEY=sk-ant-...
-        aur query "your question"
+        # After initialization
+        aur plan create "Add user authentication"
+        aur mem search "database connection"
     """
-    # If interactive flag is set, run the wizard
-    if interactive:
-        from aurora_cli.wizard import InteractiveWizard
+    from aurora_cli.commands.init_helpers import detect_existing_setup
 
-        wizard = InteractiveWizard()
-        wizard.run()
+    project_path = Path.cwd()
+
+    # Handle --config flag: fast path for tool configuration only
+    if config:
+        # Check if .aurora exists
+        if not detect_existing_setup(project_path):
+            console.print("[red]Error:[/] Project not initialized")
+            console.print("Run [cyan]aur init[/] first to set up project structure")
+            raise SystemExit(1)
+
+        # Run Step 3 only
+        console.print("[bold]AURORA Tool Configuration[/]")
+        console.print()
+        run_step_3_tool_configuration(project_path)
+        console.print("[bold green]✓[/] Tool configuration complete\n")
         return
-    from aurora_cli.config import _get_aurora_home
 
-    config_dir = _get_aurora_home()
-    config_path = config_dir / "config.json"
-
-    # Check if config already exists
-    if config_path.exists():
-        overwrite = click.confirm(
-            f"Config file already exists at {config_path}. Overwrite?", default=False
+    # Check for existing setup
+    if detect_existing_setup(project_path):
+        from aurora_cli.commands.init_helpers import (
+            prompt_rerun_options,
+            selective_step_selection,
+            show_status_summary,
         )
-        if not overwrite:
-            click.echo("Keeping existing config.")
+
+        # Show current status
+        show_status_summary(project_path)
+
+        # Prompt for re-run options
+        rerun_choice = prompt_rerun_options()
+
+        if rerun_choice == "exit":
+            console.print("[dim]Exiting without changes.[/]")
             return
 
-    # Prompt for API key
-    api_key = click.prompt(
-        "Enter Anthropic API key (or press Enter to skip)",
-        default="",
-        show_default=False,
-    )
-
-    # Validate API key format if provided
-    if api_key and not api_key.startswith("sk-ant-"):
-        click.echo(
-            "⚠ Warning: API key should start with 'sk-ant-'. This may not be a valid Anthropic API key."
-        )
-        if not click.confirm("Continue anyway?", default=True):
-            click.echo("Aborted.")
+        if rerun_choice == "config":
+            # Run Step 3 only
+            console.print()
+            console.print("[bold]AURORA Tool Configuration[/]")
+            console.print()
+            run_step_3_tool_configuration(project_path)
+            console.print("[bold green]✓[/] Tool configuration complete\n")
             return
 
-    # Create config directory
-    error_handler = ErrorHandler()
-    try:
-        config_dir.mkdir(parents=True, exist_ok=True)
-    except PermissionError as e:
-        error_msg = error_handler.handle_path_error(e, str(config_dir), "creating config directory")
-        click.echo(error_msg, err=True)
-        return
-    except Exception as e:
-        error_msg = error_handler.handle_path_error(e, str(config_dir), "creating config directory")
-        click.echo(error_msg, err=True)
-        return
-
-    # Prepare config data
-    config_data = CONFIG_SCHEMA.copy()
-
-    # Set database path to respect AURORA_HOME
-    config_data["database"]["path"] = str(config_dir / "memory.db")
-
-    # Set API key if provided (non-empty)
-    if api_key and api_key.strip():
-        config_data["llm"]["anthropic_api_key"] = api_key.strip()
-    else:
-        # Ensure API key is None if empty
-        config_data["llm"]["anthropic_api_key"] = None
-
-    # Write config file
-    try:
-        with open(config_path, "w") as f:
-            json.dump(config_data, f, indent=2)
-    except PermissionError as e:
-        error_msg = error_handler.handle_path_error(e, str(config_path), "writing config file")
-        click.echo(error_msg, err=True)
-        return
-    except Exception as e:
-        error_msg = error_handler.handle_config_error(e, str(config_path))
-        click.echo(error_msg, err=True)
-        return
-
-    # Set secure file permissions (user read/write only)
-    try:
-        os.chmod(config_path, 0o600)
-    except Exception as e:
-        click.echo(f"⚠ Warning: Could not set secure permissions on {config_path}: {e}")
-
-    click.echo(f"Configuration created at {config_path}")
-
-    # Check for schema migration issues with main database
-    main_db_path = config_dir / "memory.db"
-    if not check_and_handle_schema_mismatch(main_db_path, error_handler):
-        # User aborted schema migration - exit early
-        return
-
-    # Check for local aurora.db and offer migration
-    local_db = detect_local_db()
-    if local_db is not None:
-        from aurora_cli.config import load_config
-
-        config = load_config()
-        dest_db = Path(config.get_db_path())
-
-        click.echo(f"\n⚠ Found local database at {local_db}")
-        if click.confirm(f"Migrate data to {dest_db}?", default=True):
-            try:
-                chunks, activations = migrate_database(local_db, dest_db)
-                click.echo("✓ Migration complete:")
-                click.echo(f"  - Chunks migrated: {chunks}")
-                click.echo(f"  - Activations migrated: {activations}")
-
-                # Rename old database to backup
-                backup_path = local_db.with_suffix(".db.backup")
-                shutil.move(str(local_db), str(backup_path))
-                click.echo(f"  - Original database backed up to: {backup_path}")
-            except sqlite3.Error as e:
-                error_msg = error_handler.handle_memory_error(e, "migrating database")
-                click.echo(f"\n{error_msg}", err=True)
-                click.echo("⚠ Migration failed, keeping original database")
-            except Exception as e:
-                click.echo(f"⚠ Migration failed: {e}", err=True)
-                click.echo("Keeping original database")
+        # Determine which steps to run
+        if rerun_choice == "all":
+            steps_to_run = [1, 2, 3]
+        elif rerun_choice == "selective":
+            steps_to_run = selective_step_selection()
+            if not steps_to_run:
+                console.print("[dim]No steps selected. Exiting.[/]")
+                return
         else:
-            click.echo("Skipping migration. Local database will remain.")
+            # Should not reach here, but handle gracefully
+            console.print("[yellow]Invalid choice. Exiting.[/]")
+            return
 
-    # Prompt to index current directory
-    if click.confirm("Index current directory for memory search?", default=True):
-        # Import memory indexing functionality
-        try:
-            from rich.console import Console
-            from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+        # Display banner for re-run
+        console.print()
+        console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
+        console.print("[bold cyan]║[/]  [bold]AURORA Re-initialization[/]             [bold cyan]║[/]")
+        console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
+        console.print()
+        console.print(f"[dim]Re-running steps: {steps_to_run}[/]")
+        console.print()
 
-            from aurora_cli.config import load_config
-            from aurora_cli.memory_manager import MemoryManager
+        # Run selected steps
+        git_initialized = False
+        indexing_succeeded = False
+        created_tools = []
+        updated_tools = []
 
-            console = Console()
-            console.print("[bold]Indexing current directory...[/]")
+        if 1 in steps_to_run:
+            git_initialized = run_step_1_planning_setup(project_path)
+        else:
+            console.print("[dim]⊘ Skipping Step 1: Planning Setup[/]")
 
-            # Load config and initialize memory manager
-            config = load_config()
-            manager = MemoryManager(config=config)
+        if 2 in steps_to_run:
+            indexing_succeeded = run_step_2_memory_indexing(project_path)
+        else:
+            console.print("[dim]⊘ Skipping Step 2: Memory Indexing[/]")
 
-            # Create progress display
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-                console=console,
-            ) as progress:
-                task_id = None
+        if 3 in steps_to_run:
+            created_tools, updated_tools = run_step_3_tool_configuration(project_path)
+        else:
+            console.print("[dim]⊘ Skipping Step 3: Tool Configuration[/]")
 
-                def progress_callback(current: int, total: int) -> None:
-                    nonlocal task_id
-                    if task_id is None:
-                        task_id = progress.add_task("Indexing files", total=total)
-                    progress.update(task_id, completed=current)
+        # Display success summary
+        console.print()
+        console.print("[bold green]═══════════════════════════════════════════[/]")
+        console.print("[bold green]✓ AURORA Re-initialization Complete[/]")
+        console.print("[bold green]═══════════════════════════════════════════[/]")
+        console.print()
 
-                # Perform indexing
-                stats = manager.index_path(Path.cwd(), progress_callback=progress_callback)
-
-            if stats.files_indexed > 0:
-                console.print(
-                    f"[bold green]✓[/] Indexed {stats.files_indexed} files, "
-                    f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s"
-                )
+        console.print("[bold]Updated Steps:[/]")
+        if 1 in steps_to_run:
+            if git_initialized:
+                console.print("  [green]✓[/] Git repository initialized")
+            console.print("  [green]✓[/] Planning directories created")
+        if 2 in steps_to_run:
+            if indexing_succeeded:
+                console.print("  [green]✓[/] Codebase re-indexed")
             else:
-                console.print("[yellow]⚠[/] No Python files found to index in current directory")
+                console.print("  [yellow]⚠[/] Memory indexing skipped")
+        if 3 in steps_to_run:
+            total_tools = len(created_tools) + len(updated_tools)
+            if total_tools > 0:
+                console.print(f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured")
 
-        except ImportError:
-            # Memory command not yet implemented - stub for Phase 3
-            click.echo("⚠ Memory indexing not yet implemented (Phase 4)")
+        console.print()
+        console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")
+        console.print()
+        return
 
-    # Display summary with rich formatting
-    from rich.console import Console
-    from rich.panel import Panel
+    # Display welcome banner
+    console.print()
+    console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
+    console.print("[bold cyan]║[/]  [bold]AURORA Initialization[/]                [bold cyan]║[/]")
+    console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
+    console.print()
+    console.print("[dim]Setting up Aurora for your project...[/]")
+    console.print()
 
-    console = Console()
+    # Run 3-step initialization flow
+    # Step 1: Planning Setup (Git + Directories)
+    git_initialized = run_step_1_planning_setup(project_path)
 
-    console.print("\n[bold green]✓ AURORA CLI initialized successfully![/]\n")
+    # Step 2: Memory Indexing
+    indexing_succeeded = run_step_2_memory_indexing(project_path)
 
-    # Configuration summary
-    console.print("[bold]Configuration:[/]")
-    console.print(f"  • Config file: [cyan]{config_path}[/]")
-    console.print(f"  • Database: [cyan]{config_data['database']['path']}[/]")
-    if api_key:
-        console.print("  • API key: [green]✓ Configured[/]")
+    # Step 3: Tool Configuration
+    created_tools, updated_tools = run_step_3_tool_configuration(project_path)
+
+    # Display success summary
+    console.print()
+    console.print("[bold green]═══════════════════════════════════════════[/]")
+    console.print("[bold green]✓ AURORA Initialization Complete[/]")
+    console.print("[bold green]═══════════════════════════════════════════[/]")
+    console.print()
+
+    console.print("[bold]Setup Summary:[/]")
+    if git_initialized:
+        console.print("  [green]✓[/] Git repository initialized")
+    console.print("  [green]✓[/] Planning directories created")
+    if indexing_succeeded:
+        console.print("  [green]✓[/] Codebase indexed for semantic search")
     else:
-        console.print("  • API key: [yellow]⚠ Not configured[/]")
+        console.print("  [yellow]⚠[/] Memory indexing skipped")
 
-    # Next steps panel
-    next_steps = []
-    if not api_key:
-        next_steps.append(
-            "[yellow]1. Set API key:[/]\n   [cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]"
-        )
+    total_tools = len(created_tools) + len(updated_tools)
+    if total_tools > 0:
+        console.print(f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured")
 
-    next_steps.extend(
-        [
-            "[bold]2. Verify your installation:[/]\n   [cyan]aur doctor[/]",
-            "[bold]3. Check version info:[/]\n   [cyan]aur version[/]",
-            "[bold]4. Start querying:[/]\n   [cyan]aur query 'your question'[/]",
-        ]
-    )
-
-    console.print(Panel("\n\n".join(next_steps), title="[bold]Next Steps[/]", border_style="green"))
-
-    console.print("\n[dim]For help with any command, use [cyan]aur <command> --help[/][/]\n")
+    console.print()
+    console.print("[bold]Next Steps:[/]")
+    console.print("  1. [cyan]aur plan create \"Your feature\"[/] - Create a plan")
+    console.print("  2. [cyan]aur mem search \"keyword\"[/] - Search your codebase")
+    console.print("  3. [cyan]aur query \"question\"[/] - Query with context")
+    console.print()
+    console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")
+    console.print()

@@ -1,14 +1,15 @@
 """Tests for global_config module."""
 
-import pytest
 import json
 from pathlib import Path
+
+import pytest
 from aurora_planning.global_config import (
+    DEFAULT_CONFIG,
+    get_global_config,
     get_global_config_dir,
     get_global_data_dir,
-    get_global_config,
     save_global_config,
-    DEFAULT_CONFIG,
 )
 
 

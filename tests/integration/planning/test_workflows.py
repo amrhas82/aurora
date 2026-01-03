@@ -9,23 +9,23 @@ Tests end-to-end functionality of planning commands including:
 - Config loading and overrides
 """
 
-import pytest
-import tempfile
-import shutil
-from pathlib import Path
-from click.testing import CliRunner
 import json
 import os
+import shutil
+import tempfile
+from pathlib import Path
 
+import pytest
 from aurora_cli.commands.plan import (
+    archive_plan,
     create_command,
     list_plans,
     show_plan,
-    archive_plan,
 )
 from aurora_planning.id_generator import generate_plan_id
-from aurora_planning.renderer import render_plan_files
 from aurora_planning.planning_config import get_plans_dir
+from aurora_planning.renderer import render_plan_files
+from click.testing import CliRunner
 
 
 @pytest.fixture
@@ -129,7 +129,7 @@ class TestPlanCreationWorkflow:
 
         # Load and validate agents.json
         agents_file = temp_aurora_dir / "active" / "0001-test-validation" / "agents.json"
-        with open(agents_file, "r") as f:
+        with open(agents_file) as f:
             data = json.load(f)
 
         # Verify required fields

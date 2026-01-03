@@ -393,3 +393,145 @@ async def configure_tools(
             created.append(configurator.name)
 
     return created, updated
+
+
+def show_status_summary(project_path: Path) -> None:
+    """Display current initialization status summary.
+
+    Shows:
+    - Step 1: Planning setup status (directories, project.md)
+    - Step 2: Memory indexing status (chunk count if exists)
+    - Step 3: Tool configuration status (tool count)
+
+    Args:
+        project_path: Path to project root
+    """
+    import sqlite3
+    from datetime import datetime
+
+    console.print()
+    console.print("[bold cyan]Current Initialization Status:[/]")
+    console.print()
+
+    aurora_dir = project_path / AURORA_DIR_NAME
+
+    # Check if .aurora exists
+    aurora_exists = aurora_dir.exists()
+
+    if not aurora_exists:
+        console.print("[yellow]Aurora directory not found - project not initialized[/]")
+        # Still check for tools even without .aurora
+    else:
+        # Step 1: Planning Setup
+        plans_active = aurora_dir / "plans" / "active"
+        project_md = aurora_dir / "project.md"
+
+        if plans_active.exists() and project_md.exists():
+            # Get modification time for context
+            mtime = datetime.fromtimestamp(project_md.stat().st_mtime)
+            mtime_str = mtime.strftime("%Y-%m-%d %H:%M")
+            console.print(f"[green]✓[/] Step 1: Planning setup [dim](last modified: {mtime_str})[/]")
+        elif plans_active.exists():
+            # Directory exists but no project.md
+            console.print("[yellow]●[/] Step 1: Planning setup [dim](incomplete - missing project.md)[/]")
+        else:
+            console.print("[yellow]●[/] Step 1: Planning setup [dim](not complete)[/]")
+
+        # Step 2: Memory Indexing
+        memory_db = aurora_dir / "memory.db"
+        if memory_db.exists():
+            try:
+                # Count chunks in database
+                conn = sqlite3.connect(str(memory_db))
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM chunks")
+                chunk_count = cursor.fetchone()[0]
+                conn.close()
+
+                console.print(f"[green]✓[/] Step 2: Memory indexed [dim]({chunk_count} chunks)[/]")
+            except Exception:
+                # Database exists but can't be read
+                console.print("[yellow]●[/] Step 2: Memory database exists but may be corrupted")
+        else:
+            console.print("[yellow]●[/] Step 2: Memory indexing [dim](not complete)[/]")
+
+    # Step 3: Tool Configuration - always check, even without .aurora
+    tool_count = count_configured_tools(project_path)
+    if tool_count > 0:
+        console.print(f"[green]✓[/] Step 3: Tools configured [dim]({tool_count} tools)[/]")
+    else:
+        if aurora_exists:
+            console.print("[yellow]●[/] Step 3: Tool configuration [dim](not complete)[/]")
+        else:
+            console.print("[yellow]●[/] Step 3: Tool configuration [dim](0 tools found)[/]")
+
+    console.print()
+
+
+def prompt_rerun_options() -> str:
+    """Prompt user for re-run option when initialization already exists.
+
+    Displays menu with 4 options:
+    1. Re-run all steps
+    2. Select specific steps
+    3. Configure tools only
+    4. Exit without changes
+
+    Returns:
+        One of: "all", "selective", "config", "exit"
+    """
+    console.print()
+    console.print("[bold cyan]Aurora is already initialized in this project.[/]")
+    console.print()
+    console.print("What would you like to do?")
+    console.print("  [bold]1.[/] Re-run all steps")
+    console.print("  [bold]2.[/] Select specific steps to re-run")
+    console.print("  [bold]3.[/] Configure tools only")
+    console.print("  [bold]4.[/] Exit without changes")
+    console.print()
+
+    while True:
+        choice = click.prompt("Choose an option", type=str, default="4")
+
+        if choice == "1":
+            return "all"
+        elif choice == "2":
+            return "selective"
+        elif choice == "3":
+            return "config"
+        elif choice == "4":
+            return "exit"
+        else:
+            console.print(f"[yellow]Invalid choice: {choice}. Please enter 1, 2, 3, or 4.[/]")
+            console.print()
+
+
+def selective_step_selection() -> list[int]:
+    """Prompt user to select specific initialization steps to re-run.
+
+    Displays checkbox with 3 step options:
+    - Step 1: Planning setup
+    - Step 2: Memory indexing
+    - Step 3: Tool configuration
+
+    Returns:
+        List of selected step numbers (e.g., [1, 3] or [])
+    """
+    choices = [
+        {"name": "Step 1: Planning setup (git, directories, project.md)", "value": "1"},
+        {"name": "Step 2: Memory indexing (index codebase)", "value": "2"},
+        {"name": "Step 3: Tool configuration (Claude, Cursor, etc.)", "value": "3"},
+    ]
+
+    console.print()
+    selected = questionary.checkbox(
+        "Select steps to re-run (Space to select, Enter to confirm):",
+        choices=choices,
+    ).ask()
+
+    if not selected:
+        console.print("[yellow]No steps selected. Nothing will be changed.[/]")
+        return []
+
+    # Convert string values to integers
+    return [int(step) for step in selected]

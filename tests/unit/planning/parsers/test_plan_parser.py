@@ -8,10 +8,10 @@ Task: 3.2 - Write tests/unit/parsers/test_plan_parser.py
 """
 
 import os
-import pytest
 import tempfile
 from pathlib import Path
 
+import pytest
 from aurora_planning.parsers.plan_parser import PlanParser
 from aurora_planning.schemas.plan import ModificationOperation
 

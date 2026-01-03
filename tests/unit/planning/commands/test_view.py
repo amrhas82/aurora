@@ -4,12 +4,12 @@ Tests for aurora.commands.view module.
 Ported from OpenSpec test/core/view.test.ts
 """
 
-import pytest
-from pathlib import Path
-import tempfile
-import shutil
 import re
+import shutil
+import tempfile
+from pathlib import Path
 
+import pytest
 from aurora_planning.commands.view import ViewCommand
 
 

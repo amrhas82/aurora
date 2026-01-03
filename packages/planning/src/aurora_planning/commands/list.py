@@ -75,10 +75,10 @@ class ListCommand:
         # Get all directories in changes (excluding archive)
         try:
             entries = list(changes_dir.iterdir())
-        except OSError:
+        except OSError as err:
             raise RuntimeError(
                 "No OpenSpec changes directory found. Run 'openspec init' first."
-            )
+            ) from err
 
         change_dirs = sorted(
             [e.name for e in entries if e.is_dir() and e.name != 'archive']

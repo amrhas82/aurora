@@ -8,11 +8,10 @@ Task: 3.3 - Write tests/unit/parsers/test_requirements.py
 """
 
 import pytest
-
 from aurora_planning.parsers.requirements import (
+    ModificationPlan,
     RequirementBlock,
     RequirementsSectionParts,
-    ModificationPlan,
     extract_requirements_section,
     normalize_requirement_name,
     parse_modification_spec,

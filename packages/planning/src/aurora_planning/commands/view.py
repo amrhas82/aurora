@@ -219,7 +219,7 @@ class ViewCommand:
         specs_data: list[dict[str, Any]]
     ) -> None:
         """Display summary metrics."""
-        total_changes = (
+        _ = (
             len(changes_data["draft"]) +
             len(changes_data["active"]) +
             len(changes_data["completed"])

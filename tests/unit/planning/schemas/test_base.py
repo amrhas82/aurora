@@ -8,9 +8,8 @@ Task: 1.3 - Write tests/unit/schemas/test_base.py
 """
 
 import pytest
-from pydantic import ValidationError
-
 from aurora_planning.schemas.base import Requirement, Scenario
+from pydantic import ValidationError
 
 
 class TestScenarioSchema:

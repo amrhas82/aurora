@@ -8,7 +8,6 @@ Task: 2.3 - Write tests/unit/validation/test_types.py
 """
 
 import pytest
-
 from aurora_planning.validators.types import ValidationIssue, ValidationLevel, ValidationReport
 
 

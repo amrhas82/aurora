@@ -10,9 +10,8 @@ import logging
 from pathlib import Path
 
 import pytest
-
-from aurora_cli.agent_discovery.parser import AgentParser
 from aurora_cli.agent_discovery.models import AgentCategory
+from aurora_cli.agent_discovery.parser import AgentParser
 
 
 class TestAgentParserParseFile:

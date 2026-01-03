@@ -14,7 +14,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from aurora_cli.agent_discovery.manifest import ManifestManager, should_refresh_manifest
 from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest
 

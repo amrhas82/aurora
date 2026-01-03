@@ -1,15 +1,15 @@
 """Tests for tool configurators."""
 
-import pytest
 from pathlib import Path
 
+import pytest
 from aurora_cli.configurators import (
-    ToolRegistry,
-    ClaudeConfigurator,
-    OpenCodeConfigurator,
-    AmpCodeConfigurator,
-    DroidConfigurator,
     AgentsStandardConfigurator,
+    AmpCodeConfigurator,
+    ClaudeConfigurator,
+    DroidConfigurator,
+    OpenCodeConfigurator,
+    ToolRegistry,
 )
 
 

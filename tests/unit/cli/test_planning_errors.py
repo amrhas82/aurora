@@ -7,7 +7,6 @@ to ensure all error codes produce valid messages.
 from __future__ import annotations
 
 import pytest
-
 from aurora_cli.planning.errors import (
     VALIDATION_MESSAGES,
     ContextError,

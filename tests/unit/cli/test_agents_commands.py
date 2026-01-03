@@ -11,16 +11,15 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
-from click.testing import CliRunner
-
+from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest
 from aurora_cli.commands.agents import (
+    _find_similar_agents,
+    _search_agents,
+    _truncate,
     agents_group,
     get_manifest,
-    _search_agents,
-    _find_similar_agents,
-    _truncate,
 )
-from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest
+from click.testing import CliRunner
 
 
 @pytest.fixture

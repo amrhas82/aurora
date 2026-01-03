@@ -13,8 +13,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from click.testing import CliRunner
-
 from aurora_cli.commands.plan import plan_group
 from aurora_cli.planning.core import (
     archive_plan,
@@ -24,6 +22,7 @@ from aurora_cli.planning.core import (
     show_plan,
 )
 from aurora_cli.planning.models import Complexity, Plan, PlanManifest, PlanStatus, Subgoal
+from click.testing import CliRunner
 
 
 @pytest.fixture

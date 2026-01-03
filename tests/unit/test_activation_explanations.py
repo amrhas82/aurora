@@ -4,8 +4,9 @@ Tests the logic for generating human-readable explanations of activation scores
 including access count, commit count, and recency information.
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 
 def test_explain_activation_full_metadata():

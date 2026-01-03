@@ -8,10 +8,10 @@ Task: 2.5 - Write tests/unit/validation/test_validator.py
 """
 
 import os
-import pytest
 import tempfile
 from pathlib import Path
 
+import pytest
 from aurora_planning.validators.validator import Validator
 
 

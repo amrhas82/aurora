@@ -21,7 +21,6 @@ from aurora_cli.commands.budget import budget_group
 from aurora_cli.commands.doctor import doctor_command
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
-from aurora_cli.commands.init_planning import init_planning_command
 from aurora_cli.commands.memory import memory_group
 from aurora_cli.commands.plan import plan_group
 from aurora_cli.commands.version import version_command
@@ -148,7 +147,6 @@ cli.add_command(budget_group)
 cli.add_command(doctor_command)
 cli.add_command(headless_command)
 cli.add_command(init_command)
-cli.add_command(init_planning_command)
 cli.add_command(memory_group)
 cli.add_command(plan_group)
 cli.add_command(version_command)

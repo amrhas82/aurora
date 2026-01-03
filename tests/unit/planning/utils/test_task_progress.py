@@ -1,12 +1,13 @@
 """Tests for task progress utilities."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 from aurora_planning.utils.task_progress import (
     TaskProgress,
     count_tasks_from_content,
-    get_task_progress_for_plan,
     format_task_status,
+    get_task_progress_for_plan,
 )
 
 

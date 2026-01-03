@@ -1,7 +1,8 @@
 """Tests for JSON converter."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 from aurora_planning.converters.json import JsonConverter
 
 

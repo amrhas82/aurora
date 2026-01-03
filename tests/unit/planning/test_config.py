@@ -1,7 +1,13 @@
 """Tests for config module."""
 
 import pytest
-from aurora_planning.config import AURORA_MARKERS, AURORA_DIR_NAME, AI_TOOLS, AIToolOption, AuroraConfig
+from aurora_planning.config import (
+    AI_TOOLS,
+    AURORA_DIR_NAME,
+    AURORA_MARKERS,
+    AIToolOption,
+    AuroraConfig,
+)
 
 
 class TestConstants:

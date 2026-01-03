@@ -5,11 +5,11 @@ Ported from OpenSpec test/core/init.test.ts - SIMPLIFIED VERSION
 Full configurator support deferred to Phase 7 (CLI Commands).
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
 
+import pytest
 from aurora_planning.commands.init import InitCommand
 
 
@@ -34,24 +34,24 @@ class TestInitCommand:
         """Should create OpenSpec directory structure."""
         init_command.execute(str(temp_dir))
 
-        .aurora/plans_path = temp_dir / ".aurora/plans"
-        assert .aurora/plans_path.exists()
-        assert (.aurora/plans_path / "specs").exists()
-        assert (.aurora/plans_path / "changes").exists()
-        assert (.aurora/plans_path / "changes" / "archive").exists()
+        plans_path = temp_dir / ".aurora/plans"
+        assert plans_path.exists()
+        assert (plans_path / "specs").exists()
+        assert (plans_path / "changes").exists()
+        assert (plans_path / "changes" / "archive").exists()
 
     def test_create_agents_md_and_project_md(self, init_command, temp_dir):
         """Should create AGENTS.md and project.md."""
         init_command.execute(str(temp_dir))
 
-        .aurora/plans_path = temp_dir / ".aurora/plans"
-        assert (.aurora/plans_path / "AGENTS.md").exists()
-        assert (.aurora/plans_path / "project.md").exists()
+        plans_path = temp_dir / ".aurora/plans"
+        assert (plans_path / "AGENTS.md").exists()
+        assert (plans_path / "project.md").exists()
 
-        agents_content = (.aurora/plans_path / "AGENTS.md").read_text()
+        agents_content = (plans_path / "AGENTS.md").read_text()
         assert "OpenSpec Instructions" in agents_content
 
-        project_content = (.aurora/plans_path / "project.md").read_text()
+        project_content = (plans_path / "project.md").read_text()
         assert "Project Context" in project_content
 
     def test_create_root_agents_md_stub(self, init_command, temp_dir):
@@ -141,5 +141,5 @@ class TestInitCommand:
         new_dir = temp_dir / "new-project"
         init_command.execute(str(new_dir))
 
-        .aurora/plans_path = new_dir / ".aurora/plans"
-        assert .aurora/plans_path.exists()
+        plans_path = new_dir / ".aurora/plans"
+        assert plans_path.exists()

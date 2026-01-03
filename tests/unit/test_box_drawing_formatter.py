@@ -10,11 +10,12 @@ from pathlib import Path
 import pytest
 from rich.text import Text
 
+
 # Add CLI package to path for import
 cli_path = Path(__file__).parent.parent.parent / "packages" / "cli" / "src"
 sys.path.insert(0, str(cli_path))
 
-from aurora_cli.commands.memory import _format_score_box
+from aurora_cli.commands.memory import _format_score_box  # noqa: E402
 
 
 def test_format_box_header():

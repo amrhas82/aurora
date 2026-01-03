@@ -8,7 +8,6 @@ Task: 3.1 - Write tests/unit/parsers/test_markdown.py
 """
 
 import pytest
-
 from aurora_planning.parsers.markdown import MarkdownParser
 
 

@@ -145,7 +145,7 @@ def create_command(
         aurora_dir = Path.cwd() / ".aurora"
         if not aurora_dir.exists():
             console.print("[dim]Initializing Aurora directory structure...[/]")
-            from aurora_cli.commands.init_planning import create_directory_structure
+            from aurora_cli.commands.init_helpers import create_directory_structure
             try:
                 create_directory_structure(Path.cwd())
                 console.print("[green]✓[/] Aurora initialized\n")

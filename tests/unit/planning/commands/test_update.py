@@ -5,11 +5,11 @@ Simplified tests focusing on AGENTS.md update.
 Full configurator tests will be added in Phase 7.
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
 
+import pytest
 from aurora_planning.commands.update import UpdateCommand
 from aurora_planning.templates.agents import AGENTS_TEMPLATE
 

@@ -3,8 +3,9 @@
 This tests the CLI interface wrapper around core plan functionality.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 from aurora_planning.cli.plan_cmd import PlanCommand
 
 

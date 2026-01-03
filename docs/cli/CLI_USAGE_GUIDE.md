@@ -70,137 +70,232 @@ aur --help
 
 ## Initial Setup
 
-### Option 1: Interactive Setup Wizard (Recommended)
+### Unified Setup with `aur init`
 
-The `aur init --interactive` command provides a guided 8-step wizard for first-time setup:
-
-```bash
-aur init --interactive
-```
-
-**Wizard Steps:**
-
-1. **Welcome & Environment Detection**
-   - Auto-detects Python version, Git repository, working directory
-
-2. **Memory Indexing** (Step 1/7):
-   ```
-   Index current directory for memory search? [Y/n]:
-   ```
-   - `Y`: Index Python files for semantic search
-   - `n`: Skip (can index later with `aur mem index .`)
-
-3. **LLM Provider Selection** (Step 2/7):
-   ```
-   1. Anthropic (Claude) - Recommended
-   2. OpenAI (GPT)
-   3. Ollama (Local)
-   Select provider [1]:
-   ```
-
-4. **API Key Configuration** (Step 3/7):
-   ```
-   API key (or press Enter to skip):
-   ```
-   - Validates format (`sk-ant-` for Anthropic, `sk-` for OpenAI)
-   - Skipped for Ollama (local model)
-   - Can set via environment variable later
-
-5. **MCP Server Setup** (Step 4/7):
-   ```
-   Enable Model Context Protocol (MCP) server? [y/N]:
-   ```
-   - Enables Claude Desktop integration
-
-6. **Configuration Creation** (Step 5/7):
-   - Creates `~/.aurora/config.json` with secure permissions (0600)
-   - Sets up database path
-
-7. **Indexing** (Step 6/7, if enabled):
-   - Progress bar shows indexing status
-   - Example: "Indexed 47 files, 234 chunks in 3.4s"
-
-8. **Completion Summary** (Step 7/7):
-   - Shows configuration summary
-   - Displays next steps
-
-**Example Session:**
-
-```
-Welcome to AURORA!
-Estimated time: 2 minutes
-
-Environment Detection:
-  • Python version: 3.10.12
-  • Git repository: ✓ Detected
-  • Working directory: /home/user/project
-
-Step 1/7: Memory Indexing
-Index current directory for memory search? [Y/n]: y
-  ✓ Will index current directory
-
-Step 2/7: LLM Provider
-1. Anthropic (Claude) - Recommended
-2. OpenAI (GPT)
-3. Ollama (Local)
-Select provider [1]: 1
-  ✓ Using Anthropic (Claude)
-
-Step 3/7: API Key
-API key (or press Enter to skip): sk-ant-...
-  ✓ Valid Anthropic API key format
-
-Step 4/7: MCP Server
-Enable MCP server? [y/N]: n
-  Skipped - you can enable MCP later
-
-Step 5/7: Creating Configuration
-  ✓ Created directory: ~/.aurora
-  ✓ Created config: ~/.aurora/config.json
-  ✓ Set secure permissions (0600)
-
-Step 6/7: Indexing Codebase
-Indexing files ████████████████████ 100%
-  ✓ Indexed 47 files, 234 chunks in 3.4s
-
-✓ Setup Complete!
-
-Configuration Summary:
-  • Provider: anthropic
-  • API Key: ✓ Configured
-  • Indexing: ✓ Complete
-  • MCP Server: Disabled
-
-Next Steps:
-  2. Verify setup: aur doctor
-  3. Check version: aur version
-  4. Start querying: aur query 'your question'
-```
-
-**Time Estimate:** < 2 minutes
-
-### Option 2: Quick Setup (Non-Interactive)
-
-The `aur init` command provides quick, non-interactive setup:
+AURORA provides a streamlined, project-specific initialization with a 3-step interactive flow:
 
 ```bash
 aur init
 ```
 
-**What It Creates:**
+**The 3-Step Flow:**
 
-- Config file: `~/.aurora/config.json`
-- Database: `./aurora.db` (if indexed)
-- Directory: `~/.aurora/` (if not exists)
-
-**Example Output:**
+#### Step 1: Planning Setup (Git + Directories)
 
 ```
-✓ Configuration created at ~/.aurora/config.json
-✓ Indexed 47 files, 234 chunks in 3.4s
+Step 1/3: Planning Setup
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Next: Run 'aur query "your question"' to start
+Git repository not detected.
+Initialize git repository? [Y/n]: y
+  ✓ Git initialized
+
+Creating project structure...
+  ✓ .aurora/plans/active/
+  ✓ .aurora/plans/archive/
+  ✓ .aurora/logs/
+  ✓ .aurora/cache/
+
+Detecting project metadata...
+  • Python: 3.10.12 (from pyproject.toml)
+  • Package Manager: poetry
+  • Testing Framework: pytest
+  ✓ Created .aurora/project.md
 ```
+
+**What It Does:**
+- Prompts to run `git init` if no `.git` directory detected
+- Creates project-specific directory structure
+- Auto-detects project metadata (Python version, package manager, test framework)
+- Creates `.aurora/project.md` with project context
+
+#### Step 2: Memory Indexing
+
+```
+Step 2/3: Memory Indexing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Index codebase for semantic search? [Y/n]: y
+
+Indexing . ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%
+  ✓ Indexed 47 files, 234 chunks in 3.4s
+  ✓ Database: ./.aurora/memory.db
+```
+
+**What It Does:**
+- Indexes Python files for semantic search
+- Creates project-specific memory database at `./.aurora/memory.db`
+- Progress bar shows indexing status
+- Can be skipped and run later with `aur mem index .`
+
+#### Step 3: Tool Configuration
+
+```
+Step 3/3: Tool Configuration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Select tools to configure:
+❯ ◉ Claude Code (claude_desktop_config.json)
+  ◯ Universal (aurora.mcp.json)
+  ◯ AMP Code (ampcode-mcp-settings.json)
+  ◯ Droid (droid-mcp-settings.json)
+
+  ✓ Claude Code configured
+  ✓ Universal configured
+```
+
+**What It Does:**
+- Interactive checkbox to select AI coding tools
+- Detects existing tool configurations
+- Creates/updates MCP server configurations
+- Updates configs within markers only (preserves custom settings)
+
+#### Success Summary
+
+```
+✓ Initialization Complete!
+
+Summary:
+  • Git: Initialized
+  • Planning: .aurora/plans/ created
+  • Memory: 234 chunks indexed
+  • Tools: 2 configured (Claude Code, Universal)
+
+Next Steps:
+  1. Verify setup: aur doctor
+  2. Create a plan: aur plan create "Feature name"
+  3. Query codebase: aur query "How does auth work?"
+```
+
+**Time Estimate:** < 2 minutes
+
+---
+
+### Quick Tool Configuration (Skip Other Steps)
+
+If you've already initialized AURORA and only want to configure AI coding tools:
+
+```bash
+aur init --config
+```
+
+**What It Does:**
+- Skips Steps 1 and 2 (Planning + Memory)
+- Runs Step 3 only (Tool Configuration)
+- Requires existing `.aurora/` directory
+
+**Example:**
+```
+Step 3/3: Tool Configuration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Current status:
+  ✓ Claude Code (configured 2 days ago)
+  ✗ Universal (not configured)
+
+Select tools to configure:
+❯ ◯ Claude Code (already configured)
+  ◉ Universal (aurora.mcp.json)
+
+  ✓ Universal configured
+```
+
+---
+
+### Re-Running `aur init` (Idempotent)
+
+AURORA detects existing setup and offers selective re-run options:
+
+```bash
+aur init
+```
+
+**Re-Run Menu:**
+
+```
+AURORA is already initialized in this project.
+
+Current Status:
+  ✓ Step 1 (Planning): Completed 2 days ago
+  ✓ Step 2 (Memory):   234 chunks indexed
+  ✓ Step 3 (Tools):    2 tools configured
+
+How would you like to proceed?
+
+1. Re-run all steps
+2. Select specific steps
+3. Configure tools only
+4. Exit
+
+Choice [1-4]: _
+```
+
+**Options:**
+
+1. **Re-run all steps**: Runs Steps 1-3 with safety features:
+   - Git init skipped if `.git` exists
+   - `project.md` custom content preserved
+   - Memory database backed up before re-indexing
+   - Tool configs updated within markers only
+
+2. **Select specific steps**: Interactive checkbox to pick Steps 1, 2, or 3
+
+3. **Configure tools only**: Equivalent to `aur init --config`
+
+4. **Exit**: No changes made
+
+**Safety Features:**
+- Project metadata preserves user edits
+- Tool configurations update only between `<!-- AURORA:START -->` and `<!-- AURORA:END -->` markers
+- Memory database backed up to `memory.db.backup` before re-indexing
+- No data loss on re-runs
+
+---
+
+### Project-Specific vs Global Storage
+
+AURORA v0.3.0+ uses **project-specific storage** by default:
+
+| File | Location | Scope |
+|------|----------|-------|
+| Memory database | `./.aurora/memory.db` | Project-specific |
+| Planning data | `./.aurora/plans/` | Project-specific |
+| Logs | `./.aurora/logs/` | Project-specific |
+| Agent cache | `./.aurora/cache/` | Project-specific |
+| Project metadata | `./.aurora/project.md` | Project-specific |
+| **Budget tracker** | `~/.aurora/budget_tracker.json` | **Global** (user-wide) |
+
+**Benefits:**
+- Multi-project isolation (each project has its own memory)
+- No global config file with API keys (use environment variables only)
+- Easier to share projects (commit `.aurora/` to git)
+- Clean per-project setup
+
+**Migration:** If upgrading from v0.2.x, see [MIGRATION_GUIDE_v0.3.0.md](MIGRATION_GUIDE_v0.3.0.md)
+
+---
+
+### API Key Configuration
+
+**Important:** API keys are **NOT** required for initialization. AURORA uses environment variables only.
+
+```bash
+# Set API key for standalone CLI commands (aur query, aur headless)
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# MCP tools inside Claude Code CLI do NOT require API keys
+```
+
+**Get API Key:**
+- Anthropic: https://console.anthropic.com
+- OpenAI: https://platform.openai.com
+
+**Why No API Key Prompts?**
+- MCP tools provide context to Claude Code CLI's built-in LLM (no API costs)
+- Standalone CLI commands read from environment variables
+- More secure (keys not stored in config files)
+
+See [MCP Setup Guide](../MCP_SETUP.md) for integration details
 
 ---
 

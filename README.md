@@ -93,49 +93,29 @@ pip install -e ".[all]"
 
 AURORA integrates with Claude Code CLI via the Model Context Protocol, enabling you to search and analyze your codebase directly from your development sessions.
 
-#### 1. Install and Index Your Codebase
+#### 1. Install and Initialize AURORA
 
 ```bash
 pip install aurora-actr[all]
 cd /path/to/your/project
-aur mem index .
+aur init
 ```
 
-#### 2. Configure Claude Code CLI
+The unified `aur init` command runs 3 steps:
+- **Step 1:** Sets up Git (if needed) and creates project structure
+- **Step 2:** Indexes your codebase for semantic search
+- **Step 3:** Configures AI coding tools (Claude Code, Universal, etc.)
 
-Create AURORA's MCP configuration:
+**Note:** No API keys required for initialization. AURORA uses environment variables for standalone CLI commands.
 
-**Location:** `~/.claude/plugins/aurora/.mcp.json`
+#### 2. Set API Key (For Standalone CLI Only)
 
-```json
-{
-  "aurora": {
-    "command": "python3",
-    "args": ["-m", "aurora.mcp.server"],
-    "env": {
-      "AURORA_DB_PATH": "${HOME}/.aurora/memory.db",
-      "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}"
-    }
-  }
-}
-```
+MCP tools don't require API keys, but standalone commands do:
 
-Add tool permissions to `~/.claude/settings.local.json`:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "mcp__aurora__aurora_query",
-      "mcp__aurora__aurora_search",
-      "mcp__aurora__aurora_index",
-      "mcp__aurora__aurora_stats",
-      "mcp__aurora__aurora_context",
-      "mcp__aurora__aurora_related",
-      "mcp__aurora__aurora_get"
-    ]
-  }
-}
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export ANTHROPIC_API_KEY=sk-ant-...
+source ~/.bashrc
 ```
 
 #### 3. Use with Claude Code CLI
@@ -234,7 +214,7 @@ aur --help
 
 **Scenario:** You're working on a large codebase and need to quickly understand authentication logic.
 
-1. Index your codebase: `aur mem index .`
+1. Initialize AURORA in your project: `aur init`
 2. Open Claude Desktop
 3. Ask: *"Find all authentication-related functions and explain the flow"*
 4. Claude uses AURORA to search, retrieve relevant code, and explain the implementation

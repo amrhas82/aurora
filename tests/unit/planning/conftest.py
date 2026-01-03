@@ -17,7 +17,7 @@ def temp_plans_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def sample_plan_data() -> Dict[str, Any]:
+def sample_plan_data() -> dict[str, Any]:
     """Sample plan data for testing."""
     return {
         "plan_id": "0001-test-plan",
@@ -47,13 +47,13 @@ def sample_plan_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def sample_agents_json(sample_plan_data: Dict[str, Any]) -> str:
+def sample_agents_json(sample_plan_data: dict[str, Any]) -> str:
     """Sample agents.json content."""
     return json.dumps(sample_plan_data, indent=2)
 
 
 @pytest.fixture
-def sample_plan_dir(temp_plans_dir: Path, sample_plan_data: Dict[str, Any]) -> Path:
+def sample_plan_dir(temp_plans_dir: Path, sample_plan_data: dict[str, Any]) -> Path:
     """Create sample plan directory with files."""
     plan_id = sample_plan_data["plan_id"]
     plan_dir = temp_plans_dir / "active" / plan_id
@@ -96,7 +96,7 @@ FR-1.1: User must authenticate via OAuth 2.0
 
 
 @pytest.fixture
-def mock_config(tmp_path: Path) -> Dict[str, Any]:
+def mock_config(tmp_path: Path) -> dict[str, Any]:
     """Mock configuration for testing."""
     plans_dir = tmp_path / ".aurora" / "plans"
     plans_dir.mkdir(parents=True, exist_ok=True)

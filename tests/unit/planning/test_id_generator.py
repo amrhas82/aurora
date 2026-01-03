@@ -1,9 +1,11 @@
 """Unit tests for plan ID generation."""
 
-import pytest
+import sys
 from pathlib import Path
 
-import sys
+import pytest
+
+
 sys.path.insert(0, str(Path(__file__).parents[4] / "packages" / "planning" / "src"))
 
 from aurora_planning.id_generator import (

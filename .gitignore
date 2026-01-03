@@ -74,3 +74,4 @@ htmlcov/
 coverage.xml
 htmlcov/
 cli_full_test.txt
+openspec-source/

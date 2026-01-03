@@ -1,11 +1,13 @@
 """Unit tests for archive utilities."""
 
 import json
-import pytest
+import sys
 from datetime import datetime
 from pathlib import Path
 
-import sys
+import pytest
+
+
 sys.path.insert(0, str(Path(__file__).parents[4] / "packages" / "planning" / "src"))
 
 from aurora_planning.archive_utils import (

@@ -12,11 +12,10 @@ from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-
 from aurora_cli.agent_discovery.scanner import (
-    AgentScanner,
-    DEFAULT_DISCOVERY_PATHS,
     AGENT_FILE_EXTENSIONS,
+    DEFAULT_DISCOVERY_PATHS,
+    AgentScanner,
 )
 
 

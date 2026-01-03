@@ -15,15 +15,16 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+
 # Import renderer from CLI planning (which imports from aurora_planning)
 try:
     # Try CLI imports first (where renderer is re-exported)
+    from aurora_cli.planning.models import Complexity, Plan, PlanStatus, Subgoal
     from aurora_cli.planning.renderer import (
         TemplateRenderer,
         get_template_dir,
         render_plan_files,
     )
-    from aurora_cli.planning.models import Complexity, Plan, PlanStatus, Subgoal
 except ImportError as e:
     pytest.skip(f"aurora_cli.planning not available: {e}", allow_module_level=True)
 

@@ -1,7 +1,7 @@
 """Tests for fuzzy matching utilities."""
 
 import pytest
-from aurora_planning.utils.match import nearest_matches, levenshtein
+from aurora_planning.utils.match import levenshtein, nearest_matches
 
 
 class TestLevenshtein:

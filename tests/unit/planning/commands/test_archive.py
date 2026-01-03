@@ -4,13 +4,13 @@ Tests for aurora.commands.archive module.
 Ported from OpenSpec test/core/archive.test.ts
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
 from datetime import datetime
-from unittest.mock import Mock, patch, MagicMock
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from aurora_planning.commands.archive import ArchiveCommand
 from aurora_planning.validators.validator import Validator
 

@@ -4,12 +4,12 @@ Tests for aurora.commands.list module.
 Ported from OpenSpec test/core/list.test.ts
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
 from datetime import datetime, timedelta
+from pathlib import Path
 
+import pytest
 from aurora_planning.commands.list import ListCommand
 
 
@@ -30,7 +30,7 @@ class TestListCommand:
         """Create ListCommand instance."""
         return ListCommand()
 
-    def test_missing_.aurora/plans_changes_directory(self, list_command, temp_dir):
+    def test_missing_plans_changes_directory(self, list_command, temp_dir):
         """Should handle missing .aurora/plans/changes directory."""
         with pytest.raises(
             RuntimeError,
@@ -125,13 +125,13 @@ Regular text that should be ignored
         lines = captured.out.split('\n')
 
         # Find lines containing change names
-        change_lines = [l for l in lines if 'alpha' in l or 'middle' in l or 'zebra' in l]
+        change_lines = [line for line in lines if 'alpha' in line or 'middle' in line or 'zebra' in line]
 
         # Verify alphabetical order
         assert len(change_lines) >= 3
-        alpha_idx = next(i for i, l in enumerate(change_lines) if 'alpha' in l)
-        middle_idx = next(i for i, l in enumerate(change_lines) if 'middle' in l)
-        zebra_idx = next(i for i, l in enumerate(change_lines) if 'zebra' in l)
+        alpha_idx = next(i for i, line in enumerate(change_lines) if 'alpha' in line)
+        middle_idx = next(i for i, line in enumerate(change_lines) if 'middle' in line)
+        zebra_idx = next(i for i, line in enumerate(change_lines) if 'zebra' in line)
 
         assert alpha_idx < middle_idx < zebra_idx
 

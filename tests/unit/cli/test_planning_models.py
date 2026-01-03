@@ -10,8 +10,6 @@ import json
 from datetime import datetime, timedelta
 
 import pytest
-from pydantic import ValidationError
-
 from aurora_cli.planning.models import (
     Complexity,
     Plan,
@@ -19,6 +17,7 @@ from aurora_cli.planning.models import (
     PlanStatus,
     Subgoal,
 )
+from pydantic import ValidationError
 
 
 class TestPlanStatusEnum:

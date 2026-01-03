@@ -349,8 +349,9 @@ class MemoryManager:
                     # Re-raise memory store errors (already formatted)
                     raise
                 except Exception as e:
-                    # Log parse errors but continue with other files
-                    logger.warning(f"Failed to index {file_path}: {e}")
+                    # Log parse errors at debug level (suppress verbose warnings)
+                    # Full errors will be shown in summary
+                    logger.debug(f"Failed to index {file_path}: {e}")
                     stats["errors"] += 1
                     continue
 

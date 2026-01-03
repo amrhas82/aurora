@@ -103,15 +103,31 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
             # Perform indexing
             stats = manager.index_path(project_path, progress_callback=progress_callback)
 
-        # Show success message with stats
+        # Show success summary box
+        console.print()
+        console.print("[bold cyan]┌─────────────────────────────────────────────┐[/]")
+        console.print("[bold cyan]│[/]         [bold]Memory Indexing Summary[/]          [bold cyan]│[/]")
+        console.print("[bold cyan]├─────────────────────────────────────────────┤[/]")
+
         if stats.files_indexed > 0:
-            console.print(
-                f"[bold green]✓[/] Indexed {stats.files_indexed} files, "
-                f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s"
-            )
+            console.print(f"[bold cyan]│[/]  [green]✓[/] Files indexed:    {stats.files_indexed:>20} [bold cyan]│[/]")
+            console.print(f"[bold cyan]│[/]  [green]✓[/] Chunks created:   {stats.chunks_created:>20} [bold cyan]│[/]")
+            console.print(f"[bold cyan]│[/]  [dim]⏱[/] Duration:         {stats.duration_seconds:>17.2f}s [bold cyan]│[/]")
+
+            if stats.errors > 0:
+                console.print(f"[bold cyan]│[/]  [yellow]⚠[/] Skipped (errors): {stats.errors:>20} [bold cyan]│[/]")
+            if stats.warnings > 0:
+                console.print(f"[bold cyan]│[/]  [dim]○[/] Warnings:         {stats.warnings:>20} [bold cyan]│[/]")
+
+            console.print("[bold cyan]└─────────────────────────────────────────────┘[/]")
+
+            if stats.errors > 0:
+                console.print(f"[dim]  Note: {stats.errors} file(s) skipped (unsupported format or parse errors)[/]")
+
             return True
         else:
-            console.print("[yellow]⚠[/] No files found to index")
+            console.print("[bold cyan]│[/]  [yellow]⚠[/] No files found to index              [bold cyan]│[/]")
+            console.print("[bold cyan]└─────────────────────────────────────────────┘[/]")
             return False
 
     except Exception as e:
@@ -558,7 +574,7 @@ def init_command(config: bool) -> None:
         # Display banner for re-run
         console.print()
         console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
-        console.print("[bold cyan]║[/]  [bold]AURORA Re-initialization[/]             [bold cyan]║[/]")
+        console.print("[bold cyan]║[/]        [bold]AURORA Re-initialization[/]        [bold cyan]║[/]")
         console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
         console.print()
         console.print(f"[dim]Re-running steps: {steps_to_run}[/]")

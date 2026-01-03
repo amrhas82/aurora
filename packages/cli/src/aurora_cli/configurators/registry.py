@@ -2,12 +2,12 @@
 
 from typing import Dict, List, Optional
 
+from .agents import AgentsStandardConfigurator
+from .ampcode import AmpCodeConfigurator
 from .base import ToolConfigurator
 from .claude import ClaudeConfigurator
-from .opencode import OpenCodeConfigurator
-from .ampcode import AmpCodeConfigurator
 from .droid import DroidConfigurator
-from .agents import AgentsStandardConfigurator
+from .opencode import OpenCodeConfigurator
 
 
 class ToolRegistry:
@@ -17,7 +17,7 @@ class ToolRegistry:
     and accessing tool configurators.
     """
 
-    _tools: Dict[str, ToolConfigurator] = {}
+    _tools: dict[str, ToolConfigurator] = {}
 
     @classmethod
     def _initialize(cls) -> None:
@@ -47,7 +47,7 @@ class ToolRegistry:
         cls._tools[tool_id] = configurator
 
     @classmethod
-    def get(cls, tool_id: str) -> Optional[ToolConfigurator]:
+    def get(cls, tool_id: str) -> ToolConfigurator | None:
         """Get a configurator by tool ID.
 
         Args:
@@ -60,7 +60,7 @@ class ToolRegistry:
         return cls._tools.get(tool_id)
 
     @classmethod
-    def get_all(cls) -> List[ToolConfigurator]:
+    def get_all(cls) -> list[ToolConfigurator]:
         """Get all registered configurators.
 
         Returns:
@@ -70,7 +70,7 @@ class ToolRegistry:
         return list(cls._tools.values())
 
     @classmethod
-    def get_available(cls) -> List[ToolConfigurator]:
+    def get_available(cls) -> list[ToolConfigurator]:
         """Get all available configurators.
 
         Returns:
@@ -86,4 +86,5 @@ TOOL_OPTIONS = [
     {"value": "opencode", "name": "OpenCode", "available": True},
     {"value": "ampcode", "name": "AmpCode", "available": True},
     {"value": "droid", "name": "Droid", "available": True},
+    {"value": "universal-agents.md", "name": "Universal AGENTS.md (for other tools)", "available": True},
 ]

@@ -25,9 +25,20 @@ class ClaudeConfigurator(BaseConfigurator):
         Returns:
             Template content for CLAUDE.md
         """
-        return f"""# Aurora Planning Instructions
+        return f"""<!-- AURORA:START -->
+# Aurora Planning Instructions
 
-These instructions enable Claude Code to work with Aurora's planning system.
+These instructions are for AI assistants working in this project.
+
+Always open `@{aurora_dir}/plans/active/` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts
+- Sounds ambiguous and you need project context before coding
+
+Use `@{aurora_dir}/project.md` to learn:
+- Project overview and tech stack
+- Coding conventions and standards
+- Architecture decisions
 
 ## Directory Structure
 
@@ -43,10 +54,8 @@ Each plan has:
 
 ## Planning Commands
 
-Use these commands to manage plans:
-
 ```bash
-# Initialize Aurora directory structure
+# Initialize Aurora (first time setup)
 aur init
 
 # Create a new plan
@@ -60,12 +69,15 @@ aur plan view <plan-id>
 
 # Archive a plan
 aur plan archive <plan-id>
+
+# Search indexed code
+aur mem search "query"
 ```
 
 ## Workflow
 
 1. **Create Plan**: `aur plan create "Implement OAuth authentication"`
-   - Generates 8-file structure in `{aurora_dir}/plans/active/NNNN-slug/`
+   - Generates plan structure in `{aurora_dir}/plans/active/NNNN-slug/`
    - Plan ID format: `0001-oauth-auth`
 
 2. **Review Plan**: `aur plan view 0001`
@@ -84,7 +96,6 @@ When working on Aurora plans, Claude Code should:
 - Reference requirements from `prd.md`
 - Update agents.json with progress
 
-Always open `@{aurora_dir}/plans/active/<plan-id>/` when the request mentions:
-- "work on plan", "implement plan", "continue with plan"
-- A plan ID like "0001" or "0001-oauth-auth"
+Keep this managed block so 'aur init --config' can refresh instructions.
+<!-- AURORA:END -->
 """

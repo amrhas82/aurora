@@ -40,13 +40,13 @@ class Config:
     memory_chunk_size: int = 1000
     memory_overlap: int = 200
     logging_level: str = "INFO"
-    logging_file: str = "~/.aurora/aurora.log"
+    logging_file: str = "./.aurora/logs/aurora.log"
     mcp_always_on: bool = False
-    mcp_log_file: str = "~/.aurora/mcp.log"
+    mcp_log_file: str = "./.aurora/logs/mcp.log"
     mcp_max_results: int = 10
-    db_path: str = "~/.aurora/memory.db"  # Database path with tilde support
+    db_path: str = "./.aurora/memory.db"  # Database path - project-specific
     budget_limit: float = 10.0  # Default budget limit in USD
-    budget_tracker_path: str = "~/.aurora/budget_tracker.json"
+    budget_tracker_path: str = "~/.aurora/budget_tracker.json"  # ONLY global file
     search_min_semantic_score: float = 0.70  # Minimum semantic score threshold (0.7 = cosine similarity > 0.4)
     # Agent discovery configuration
     agents_auto_refresh: bool = True
@@ -59,9 +59,9 @@ class Config:
             "~/.config/opencode/agent",
         ]
     )
-    agents_manifest_path: str = "~/.aurora/cache/agent_manifest.json"
+    agents_manifest_path: str = "./.aurora/cache/agent_manifest.json"
     # Planning configuration
-    planning_base_dir: str = "~/.aurora/plans"
+    planning_base_dir: str = "./.aurora/plans"
     planning_template_dir: str | None = None  # None = use package default
     planning_auto_increment: bool = True
     planning_archive_on_complete: bool = False
@@ -293,15 +293,15 @@ CONFIG_SCHEMA: dict[str, Any] = {
     },
     "logging": {
         "level": "INFO",
-        "file": "~/.aurora/aurora.log",
+        "file": "./.aurora/logs/aurora.log",
     },
     "mcp": {
         "always_on": False,
-        "log_file": "~/.aurora/mcp.log",
+        "log_file": "./.aurora/logs/mcp.log",
         "max_results": 10,
     },
     "database": {
-        "path": "~/.aurora/memory.db",
+        "path": "./.aurora/memory.db",
     },
     "budget": {
         "limit": 10.0,
@@ -319,10 +319,10 @@ CONFIG_SCHEMA: dict[str, Any] = {
             "~/.config/droid/agent",
             "~/.config/opencode/agent",
         ],
-        "manifest_path": "~/.aurora/cache/agent_manifest.json",
+        "manifest_path": "./.aurora/cache/agent_manifest.json",
     },
     "planning": {
-        "base_dir": "~/.aurora/plans",
+        "base_dir": "./.aurora/plans",
         "template_dir": None,  # None = use package default
         "auto_increment": True,
         "archive_on_complete": False,

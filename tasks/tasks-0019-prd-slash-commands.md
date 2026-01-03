@@ -34,12 +34,19 @@
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/registry.py` - Existing, needs 20-tool registration
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/__init__.py` - Export all configurators
 
-#### High-Priority Tool Configurators (Task 2.0)
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/claude.py` - NEW: Claude Code
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cursor.py` - NEW: Cursor
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codex.py` - NEW: Codex (global paths)
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/gemini.py` - NEW: Gemini CLI (TOML)
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/windsurf.py` - NEW: Windsurf
+#### High-Priority Tool Configurators (Task 2.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/claude.py` - CREATED: Claude Code configurator with YAML frontmatter
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cursor.py` - CREATED: Cursor configurator with /aurora-{cmd} naming
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codex.py` - CREATED: Codex configurator with global ~/.codex/prompts/ paths
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/gemini.py` - CREATED: Gemini CLI configurator with TOML format
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/windsurf.py` - CREATED: Windsurf configurator with auto_execution_mode: 3
+
+#### Test Files (Task 2.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_claude.py` - CREATED: 41 tests for Claude configurator
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_cursor.py` - CREATED: 35 tests for Cursor configurator
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_codex.py` - CREATED: 30 tests for Codex configurator (global paths)
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_gemini.py` - CREATED: 30 tests for Gemini TOML configurator
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_windsurf.py` - CREATED: 30 tests for Windsurf configurator
 
 #### Remaining Tool Configurators (Task 3.0)
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/amazon_q.py` - NEW: Amazon Q Developer
@@ -125,8 +132,8 @@
   - [x] 1.5 Run type checking and linting
     - **Verify**: `cd /home/hamr/PycharmProjects/aurora && make type-check`
 
-- [ ] 2.0 Port high-priority tool configurators (Claude, Cursor, Codex, Gemini, Windsurf)
-  - [ ] 2.1 Write failing tests for ClaudeSlashCommandConfigurator in `test_claude.py`
+- [x] 2.0 Port high-priority tool configurators (Claude, Cursor, Codex, Gemini, Windsurf)
+  - [x] 2.1 Write failing tests for ClaudeSlashCommandConfigurator in `test_claude.py`
     - Test `tool_id` property returns "claude"
     - Test `is_available` property returns True
     - Test `get_relative_path("plan")` returns `.claude/commands/aur/plan.md`
@@ -135,24 +142,24 @@
     - Test `generate_all()` creates 7 command files in `.claude/commands/aur/`
     - Test `update_existing()` preserves custom content outside markers
     - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_claude.py -v`
-  - [ ] 2.2 Implement ClaudeSlashCommandConfigurator in `claude.py`
+  - [x] 2.2 Implement ClaudeSlashCommandConfigurator in `claude.py`
     - Define `FILE_PATHS` dict: `{"plan": ".claude/commands/aur/plan.md", ...}` for all 7 commands
     - Define `FRONTMATTER` dict with YAML for each command (name, description, category, tags)
     - Import `get_command_body` from `aurora_cli.templates.slash_commands`
     - Implement all abstract methods
     - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_claude.py -v`
-  - [ ] 2.3 Write failing tests for CursorSlashCommandConfigurator in `test_cursor.py`
+  - [x] 2.3 Write failing tests for CursorSlashCommandConfigurator in `test_cursor.py`
     - Test `tool_id` property returns "cursor"
     - Test `get_relative_path("plan")` returns `.cursor/commands/aurora-plan.md`
     - Test `get_frontmatter()` returns YAML with name, id, category, description
     - Test frontmatter includes `/aurora-{command}` naming pattern
     - Test `generate_all()` creates files at `.cursor/commands/aurora-*.md`
     - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_cursor.py -v`
-  - [ ] 2.4 Implement CursorSlashCommandConfigurator in `cursor.py`
+  - [x] 2.4 Implement CursorSlashCommandConfigurator in `cursor.py`
     - Define `FILE_PATHS` dict: `{"plan": ".cursor/commands/aurora-plan.md", ...}`
     - Define `FRONTMATTER` dict with Cursor-specific YAML (name, id, category, description)
     - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_cursor.py -v`
-  - [ ] 2.5 Write failing tests for CodexSlashCommandConfigurator in `test_codex.py`
+  - [x] 2.5 Write failing tests for CodexSlashCommandConfigurator in `test_codex.py`
     - Test `tool_id` property returns "codex"
     - Test `_get_global_prompts_dir()` returns `~/.codex/prompts/` by default
     - Test `_get_global_prompts_dir()` respects `CODEX_HOME` environment variable
@@ -160,14 +167,14 @@
     - Test `resolve_absolute_path()` returns global path instead of project path
     - Test `get_frontmatter()` includes `$ARGUMENTS` placeholder and argument-hint
     - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_codex.py -v`
-  - [ ] 2.6 Implement CodexSlashCommandConfigurator in `codex.py`
+  - [x] 2.6 Implement CodexSlashCommandConfigurator in `codex.py`
     - Override `generate_all()` to use global `~/.codex/prompts/` directory
     - Override `update_existing()` to use global directory
     - Implement `_get_global_prompts_dir()` respecting `CODEX_HOME` env var
     - Override `resolve_absolute_path()` to return global path
     - Define `FRONTMATTER` with `$ARGUMENTS` placeholder and argument-hint
     - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_codex.py -v`
-  - [ ] 2.7 Write failing tests for GeminiSlashCommandConfigurator in `test_gemini.py`
+  - [x] 2.7 Write failing tests for GeminiSlashCommandConfigurator in `test_gemini.py`
     - Test `tool_id` property returns "gemini"
     - Test extends `TomlSlashCommandConfigurator` (not base)
     - Test `get_relative_path("plan")` returns `.gemini/commands/aurora/plan.toml`
@@ -176,23 +183,23 @@
     - Test generated TOML has `description = "..."` and `prompt = """..."""`
     - Test markers are inside the prompt triple-quoted string
     - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_gemini.py -v`
-  - [ ] 2.8 Implement GeminiSlashCommandConfigurator in `gemini.py`
+  - [x] 2.8 Implement GeminiSlashCommandConfigurator in `gemini.py`
     - Extend `TomlSlashCommandConfigurator`
     - Define `FILE_PATHS` dict: `{"plan": ".gemini/commands/aurora/plan.toml", ...}`
     - Define `DESCRIPTIONS` dict with description for each command
     - Implement `get_description(command_id)` method
     - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_gemini.py -v`
-  - [ ] 2.9 Write failing tests for WindsurfSlashCommandConfigurator in `test_windsurf.py`
+  - [x] 2.9 Write failing tests for WindsurfSlashCommandConfigurator in `test_windsurf.py`
     - Test `tool_id` property returns "windsurf"
     - Test `get_relative_path("plan")` returns `.windsurf/workflows/aurora-plan.md`
     - Test `get_frontmatter()` includes `auto_execution_mode: 3` in YAML
     - Test `generate_all()` creates files at `.windsurf/workflows/aurora-*.md`
     - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_windsurf.py -v`
-  - [ ] 2.10 Implement WindsurfSlashCommandConfigurator in `windsurf.py`
+  - [x] 2.10 Implement WindsurfSlashCommandConfigurator in `windsurf.py`
     - Define `FILE_PATHS` dict: `{"plan": ".windsurf/workflows/aurora-plan.md", ...}`
     - Define `FRONTMATTER` with `description` and `auto_execution_mode: 3`
     - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_windsurf.py -v`
-  - [ ] 2.11 Run all high-priority tool tests together
+  - [x] 2.11 Run all high-priority tool tests together
     - **Verify**: `pytest tests/unit/cli/configurators/slash/test_claude.py tests/unit/cli/configurators/slash/test_cursor.py tests/unit/cli/configurators/slash/test_codex.py tests/unit/cli/configurators/slash/test_gemini.py tests/unit/cli/configurators/slash/test_windsurf.py -v`
 
 - [ ] 3.0 Port remaining 15 markdown-based tool configurators

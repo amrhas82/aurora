@@ -1,5 +1,6 @@
 """Init command for AURORA CLI setup."""
 
+import asyncio
 import json
 import os
 import shutil
@@ -11,10 +12,13 @@ import click
 from rich.console import Console
 
 from aurora_cli.commands.init_helpers import (
+    configure_tools,
     create_directory_structure,
     create_project_md,
+    detect_configured_tools,
     detect_git_repository,
     prompt_git_init,
+    prompt_tool_selection,
 )
 from aurora_cli.config import CONFIG_SCHEMA
 from aurora_cli.errors import ErrorHandler, handle_errors
@@ -194,6 +198,67 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
 
     console.print()
     return git_initialized
+
+
+def run_step_3_tool_configuration(project_path: Path) -> tuple[list[str], list[str]]:
+    """Run Step 3: Tool Configuration.
+
+    This step:
+    1. Detects existing tool configurations
+    2. Prompts user to select tools (interactive checkbox)
+    3. Configures selected tools using Phase 1 configurator system
+    4. Tracks created vs updated tools
+    5. Displays success message
+
+    Args:
+        project_path: Path to project root directory
+
+    Returns:
+        Tuple of (created_tools, updated_tools) - lists of tool names
+
+    Note:
+        This function is idempotent - safe to run multiple times.
+        Uses marker-based updates to preserve custom content.
+    """
+    console.print("\n[bold]Step 3/3: Tool Configuration[/]")
+    console.print("[dim]Configure AI coding tools with Aurora integration...[/]\n")
+
+    # Detect existing tool configurations
+    configured_tools = detect_configured_tools(project_path)
+
+    # Prompt user for tool selection
+    selected_tool_ids = asyncio.run(
+        prompt_tool_selection(configured_tools=configured_tools)
+    )
+
+    if not selected_tool_ids:
+        console.print("[yellow]⚠[/] No tools selected")
+        return ([], [])
+
+    # Configure selected tools
+    console.print("\n[dim]Configuring tools...[/]")
+    created, updated = asyncio.run(
+        configure_tools(project_path, selected_tool_ids)
+    )
+
+    # Show success message
+    console.print()
+    if created:
+        console.print("[green]✓[/] Created configurations:")
+        for tool_name in created:
+            console.print(f"  [cyan]▌[/] {tool_name}")
+
+    if updated:
+        console.print("[green]✓[/] Updated configurations:")
+        for tool_name in updated:
+            console.print(f"  [dim cyan]▌ {tool_name}[/]")
+
+    total = len(created) + len(updated)
+    if total > 0:
+        console.print(f"\n[bold green]✓[/] Configured {total} tool{'s' if total != 1 else ''}")
+
+    console.print()
+    return (created, updated)
 
 
 def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler) -> bool:

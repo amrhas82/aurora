@@ -444,3 +444,162 @@ class TestStep2MemoryIndexing:
 
                     # Should NOT prompt since db doesn't exist
                     mock_confirm.assert_not_called()
+
+
+class TestStep3ToolConfiguration:
+    """Test Step 3: Tool Configuration."""
+
+    def test_run_step_3_detects_no_configured_tools(self, tmp_path):
+        """run_step_3_tool_configuration() should detect when no tools are configured."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        # Mock the detection and configuration functions (patch where they're imported)
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}) as mock_detect:
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+                    run_step_3_tool_configuration(tmp_path)
+
+                    # Should call detect_configured_tools
+                    mock_detect.assert_called_once_with(tmp_path)
+
+    def test_run_step_3_detects_existing_tools(self, tmp_path):
+        """run_step_3_tool_configuration() should detect existing tool configurations."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        # Simulate 2 tools already configured
+        configured_tools = {
+            "claude": True,
+            "universal-agents.md": True,
+            "opencode": False,
+        }
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value=configured_tools):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+                    run_step_3_tool_configuration(tmp_path)
+
+    def test_run_step_3_calls_prompt_tool_selection(self, tmp_path):
+        """run_step_3_tool_configuration() should call prompt_tool_selection for interactive mode."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude"]) as mock_prompt:
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Claude Code"], [])):
+                    run_step_3_tool_configuration(tmp_path)
+
+                    # Should call prompt_tool_selection with detected tools
+                    mock_prompt.assert_called_once()
+                    call_kwargs = mock_prompt.call_args[1]
+                    assert "configured_tools" in call_kwargs
+
+    def test_run_step_3_calls_configure_tools_with_selected(self, tmp_path):
+        """run_step_3_tool_configuration() should call configure_tools with selected tool IDs."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        selected_tools = ["claude", "universal-agents.md"]
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=selected_tools):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Claude Code", "Universal"], [])) as mock_configure:
+                    run_step_3_tool_configuration(tmp_path)
+
+                    # Should call configure_tools with project_path and selected tools
+                    mock_configure.assert_called_once_with(tmp_path, selected_tools)
+
+    def test_run_step_3_returns_created_and_updated_lists(self, tmp_path):
+        """run_step_3_tool_configuration() should return tuple of (created, updated) tool names."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        created = ["Claude Code", "Universal AGENTS.md"]
+        updated = ["OpenCode"]
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "opencode", "universal-agents.md"]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(created, updated)):
+                    result = run_step_3_tool_configuration(tmp_path)
+
+                    # Should return the tuple from configure_tools
+                    assert result == (created, updated)
+
+    def test_run_step_3_tracks_created_vs_updated(self, tmp_path):
+        """run_step_3_tool_configuration() should distinguish between created and updated tools."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        # Simulate: claude already exists, universal is new
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True, "universal-agents.md": False}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "universal-agents.md"]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Universal AGENTS.md"], ["Claude Code"])):
+                    created, updated = run_step_3_tool_configuration(tmp_path)
+
+                    # Should track separately
+                    assert len(created) == 1
+                    assert len(updated) == 1
+
+    def test_run_step_3_shows_success_message(self, tmp_path):
+        """run_step_3_tool_configuration() should display success message with counts."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude"]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Claude Code"], [])):
+                    with patch("aurora_cli.commands.init.console") as mock_console:
+                        run_step_3_tool_configuration(tmp_path)
+
+                        # Should print success message
+                        print_calls = [str(call) for call in mock_console.print.call_args_list]
+                        combined = " ".join(print_calls)
+
+                        # Should mention tools/configuration
+                        assert any("tool" in call.lower() or "config" in call.lower() for call in print_calls)
+
+    def test_run_step_3_handles_no_tools_selected(self, tmp_path):
+        """run_step_3_tool_configuration() should handle case when user selects no tools."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+                    created, updated = run_step_3_tool_configuration(tmp_path)
+
+                    # Should return empty lists
+                    assert created == []
+                    assert updated == []
+
+    def test_run_step_3_preserves_markers_on_update(self, tmp_path):
+        """run_step_3_tool_configuration() should preserve custom content in marker blocks on update."""
+        # This test verifies that configure_tools is called correctly
+        # The actual marker preservation is tested in configurator tests
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude"]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], ["Claude Code"])) as mock_configure:
+                    run_step_3_tool_configuration(tmp_path)
+
+                    # Should call configure_tools (which handles marker preservation)
+                    mock_configure.assert_called_once()
+
+    def test_run_step_3_shows_step_header(self, tmp_path):
+        """run_step_3_tool_configuration() should display 'Step 3/3' header."""
+        from aurora_cli.commands.init import run_step_3_tool_configuration
+        from unittest.mock import AsyncMock
+
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
+                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+                    with patch("aurora_cli.commands.init.console") as mock_console:
+                        run_step_3_tool_configuration(tmp_path)
+
+                        # Should show step header
+                        print_calls = [str(call) for call in mock_console.print.call_args_list]
+                        combined = " ".join(print_calls)
+                        assert "step 3" in combined.lower() or "3/3" in combined.lower()

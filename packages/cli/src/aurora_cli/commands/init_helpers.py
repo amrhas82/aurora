@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List
 
 import click
+import questionary
 from rich.console import Console
 
 from aurora_cli.configurators import TOOL_OPTIONS, ToolRegistry
@@ -282,3 +283,113 @@ def create_project_md(project_path: Path) -> None:
 """
 
     project_md.write_text(template, encoding="utf-8")
+
+
+async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
+    """Prompt user to select tools for configuration.
+
+    Args:
+        configured_tools: Dictionary mapping tool IDs to configured status
+
+    Returns:
+        List of selected tool IDs
+    """
+    choices = []
+
+    # Build checkbox choices
+    for tool_option in TOOL_OPTIONS:
+        tool_id = tool_option["value"]
+        tool_name = tool_option["name"]
+        is_configured = configured_tools.get(tool_id, False)
+
+        if is_configured:
+            label = f"{tool_name} (already configured)"
+        else:
+            label = tool_name
+
+        choices.append(
+            questionary.Choice(
+                title=label,
+                value=tool_id,
+                checked=is_configured,  # Pre-check if already configured
+            )
+        )
+
+    # Add Universal AGENTS.md option
+    is_universal_configured = configured_tools.get("universal-agents.md", False)
+    universal_label = "Universal AGENTS.md (for other tools)"
+    if is_universal_configured:
+        universal_label += " (already configured)"
+
+    choices.append(
+        questionary.Choice(
+            title=universal_label,
+            value="universal-agents-md",
+            checked=True,  # Always checked by default
+        )
+    )
+
+    # Show selection prompt
+    console.print()
+    console.print("[dim]Select which AI coding tools you want to configure:[/]")
+    console.print()
+
+    selected = await questionary.checkbox(
+        "Select tools (space to toggle, enter to continue):",
+        choices=choices,
+        style=questionary.Style(
+            [
+                ("selected", "fg:cyan bold"),
+                ("pointer", "fg:cyan bold"),
+                ("highlighted", "fg:cyan"),
+                ("checkbox", "fg:white"),
+            ]
+        ),
+    ).ask_async()
+
+    return selected if selected else []
+
+
+async def configure_tools(
+    project_path: Path,
+    selected_tool_ids: list[str],
+) -> tuple[list[str], list[str]]:
+    """Configure selected tools.
+
+    Args:
+        project_path: Path to project root
+        selected_tool_ids: List of selected tool IDs
+
+    Returns:
+        Tuple of (created tools, updated tools)
+    """
+    created = []
+    updated = []
+
+    for tool_id in selected_tool_ids:
+        # Normalize ID
+        if tool_id == "universal-agents-md":
+            tool_id = "universal-agents.md"
+
+        configurator = ToolRegistry.get(tool_id)
+        if not configurator:
+            continue
+
+        config_file = project_path / configurator.config_file_name
+        existed = config_file.exists()
+
+        # Check if it's already configured (has markers)
+        has_markers = False
+        if existed:
+            content = config_file.read_text(encoding="utf-8")
+            has_markers = "<!-- AURORA:START -->" in content and "<!-- AURORA:END -->" in content
+
+        await configurator.configure(project_path, AURORA_DIR_NAME)
+
+        # Track as updated only if it existed AND had markers
+        if has_markers:
+            updated.append(configurator.name)
+        else:
+            created.append(configurator.name)
+
+    return created, updated

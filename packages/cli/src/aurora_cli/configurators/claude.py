@@ -26,7 +26,7 @@ class ClaudeConfigurator(BaseConfigurator):
             Template content for CLAUDE.md
         """
         return f"""<!-- AURORA:START -->
-# Aurora Planning Instructions
+# Aurora Instructions
 
 These instructions are for AI assistants working in this project.
 
@@ -40,61 +40,24 @@ Use `@{aurora_dir}/project.md` to learn:
 - Coding conventions and standards
 - Architecture decisions
 
-## Directory Structure
-
-Aurora stores plans in `{aurora_dir}/plans/`:
-- `{aurora_dir}/plans/active/` - Active plans being worked on
-- `{aurora_dir}/plans/archive/` - Completed/archived plans
-
-Each plan has:
-- `plan.md` - High-level decomposition
-- `prd.md` - Detailed requirements
-- `tasks.md` - Implementation checklist
-- `agents.json` - Machine-readable metadata
-
 ## Planning Commands
 
 ```bash
-# Initialize Aurora (first time setup)
-aur init
-
-# Create a new plan
-aur plan create "Goal description"
-
-# List all plans
-aur plan list
-
-# View plan details
-aur plan view <plan-id>
-
-# Archive a plan
-aur plan archive <plan-id>
-
-# Search indexed code
-aur mem search "query"
+aur init                        # Initialize Aurora
+aur plan create "Goal"          # Create new plan
+aur plan list                   # List all plans
+aur plan view <plan-id>         # View plan details
+aur plan archive <plan-id>      # Archive plan
+aur mem search "query"          # Search indexed code
 ```
 
 ## Workflow
 
-1. **Create Plan**: `aur plan create "Implement OAuth authentication"`
-   - Generates plan structure in `{aurora_dir}/plans/active/NNNN-slug/`
-   - Plan ID format: `0001-oauth-auth`
-
-2. **Review Plan**: `aur plan view 0001`
-   - Shows goal, subgoals, tasks, agents
-
-3. **Work on Tasks**: Edit `tasks.md`, mark items complete `[x]`
-
-4. **Archive When Done**: `aur plan archive 0001`
-   - Moves to `{aurora_dir}/plans/archive/YYYY-MM-DD-NNNN-slug/`
-
-## Integration with AGENTS.md
-
-When working on Aurora plans, Claude Code should:
-- Read the plan files before starting work
-- Follow task order in `tasks.md`
-- Reference requirements from `prd.md`
-- Update agents.json with progress
+When working with Aurora plans:
+1. Read plan files in `{aurora_dir}/plans/active/<plan-id>/`
+2. Follow task checklist in `tasks.md`
+3. Reference requirements from `prd.md`
+4. Update task progress as you work
 
 Keep this managed block so 'aur init --config' can refresh instructions.
 <!-- AURORA:END -->

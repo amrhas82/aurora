@@ -25,15 +25,20 @@ class AmpCodeConfigurator(BaseConfigurator):
         Returns:
             Template content for AMPCODE.md
         """
-        return f"""# Aurora Planning Instructions for AmpCode
+        return f"""<!-- AURORA:START -->
+# Aurora Instructions
 
-These instructions enable AmpCode to work with Aurora's planning system.
+These instructions are for AI assistants working in this project.
 
-## Directory Structure
+Always open `@{aurora_dir}/plans/active/` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts
+- Sounds ambiguous and you need project context before coding
 
-Aurora stores plans in `{aurora_dir}/plans/`:
-- `{aurora_dir}/plans/active/` - Active plans
-- `{aurora_dir}/plans/archive/` - Archived plans
+Use `@{aurora_dir}/project.md` to learn:
+- Project overview and tech stack
+- Coding conventions and standards
+- Architecture decisions
 
 ## Planning Commands
 
@@ -43,9 +48,10 @@ aur plan create "Goal"          # Create new plan
 aur plan list                   # List all plans
 aur plan view <plan-id>         # View plan details
 aur plan archive <plan-id>      # Archive plan
+aur mem search "query"          # Search indexed code
 ```
 
-## Workflow Integration
+## Workflow
 
 When working with Aurora plans:
 1. Read plan files in `{aurora_dir}/plans/active/<plan-id>/`
@@ -53,7 +59,6 @@ When working with Aurora plans:
 3. Reference requirements from `prd.md`
 4. Update task progress as you work
 
-Always check for Aurora plans when the user mentions:
-- Plan IDs (e.g., "0001", "0001-oauth-auth")
-- "work on plan", "continue plan", "implement plan"
+Keep this managed block so 'aur init --config' can refresh instructions.
+<!-- AURORA:END -->
 """

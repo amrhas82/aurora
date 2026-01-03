@@ -29,55 +29,40 @@ class AgentsStandardConfigurator(BaseConfigurator):
         Returns:
             Template content for AGENTS.md
         """
-        return f"""# Aurora Planning System
+        return f"""<!-- AURORA:START -->
+# Aurora Instructions
 
-This project uses Aurora for structured planning and task management.
+These instructions are for AI assistants working in this project.
+
+Always open `@{aurora_dir}/plans/active/` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts
+- Sounds ambiguous and you need project context before coding
+
+Use `@{aurora_dir}/project.md` to learn:
+- Project overview and tech stack
+- Coding conventions and standards
+- Architecture decisions
 
 ## Planning Commands
 
 ```bash
-aur init                        # Initialize Aurora directory structure
-aur plan create "Goal"          # Create a new plan
+aur init                        # Initialize Aurora
+aur plan create "Goal"          # Create new plan
 aur plan list                   # List all plans
 aur plan view <plan-id>         # View plan details
-aur plan archive <plan-id>      # Archive a completed plan
+aur plan archive <plan-id>      # Archive plan
+aur mem search "query"          # Search indexed code
 ```
-
-## Directory Structure
-
-Plans are stored in `{aurora_dir}/plans/`:
-- `{aurora_dir}/plans/active/` - Active plans being worked on
-- `{aurora_dir}/plans/archive/` - Completed/archived plans
-
-## Plan Structure
-
-Each plan contains 8 files:
-1. `plan.md` - High-level decomposition and subgoals
-2. `prd.md` - Detailed requirements and specifications
-3. `tasks.md` - Implementation checklist (GitHub Flavored Markdown)
-4. `agents.json` - Machine-readable metadata
-5-8. Four capability spec files in `specs/` directory
 
 ## Workflow
 
-1. **Create**: `aur plan create "Implement feature X"`
-   - Generates plan in `{aurora_dir}/plans/active/NNNN-slug/`
-   - Plan ID format: `0001-implement-feature-x`
+When working with Aurora plans:
+1. Read plan files in `{aurora_dir}/plans/active/<plan-id>/`
+2. Follow task checklist in `tasks.md`
+3. Reference requirements from `prd.md`
+4. Update task progress as you work
 
-2. **Work**: Open the plan directory and follow `tasks.md`
-   - Mark tasks complete with `[x]`
-   - Reference requirements in `prd.md`
-
-3. **Archive**: `aur plan archive 0001`
-   - Moves to `{aurora_dir}/plans/archive/YYYY-MM-DD-NNNN-slug/`
-
-## AI Assistant Integration
-
-When the user mentions a plan ID or asks to work on a plan:
-1. Check for plan in `{aurora_dir}/plans/active/<plan-id>/`
-2. Read relevant plan files (plan.md, prd.md, tasks.md)
-3. Follow the task checklist systematically
-4. Update progress as you work
-
-For more information, see the Aurora documentation.
+Keep this managed block so 'aur init --config' can refresh instructions.
+<!-- AURORA:END -->
 """

@@ -1,7 +1,7 @@
 """Tool configurators for Aurora initialization.
 
 This module provides configurator classes for various AI coding tools
-to enable OpenSpec-style AGENTS.md integration with Aurora planning.
+to enable Aurora planning integration with AGENTS.md-style instructions.
 """
 
 from .base import ToolConfigurator

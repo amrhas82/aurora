@@ -48,22 +48,25 @@
 - `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_gemini.py` - CREATED: 30 tests for Gemini TOML configurator
 - `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_windsurf.py` - CREATED: 30 tests for Windsurf configurator
 
-#### Remaining Tool Configurators (Task 3.0)
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/amazon_q.py` - NEW: Amazon Q Developer
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/antigravity.py` - NEW: Antigravity
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/auggie.py` - NEW: Auggie
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cline.py` - NEW: Cline
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codebuddy.py` - NEW: CodeBuddy
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/costrict.py` - NEW: CoStrict
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/crush.py` - NEW: Crush
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/factory.py` - NEW: Factory Droid
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/github_copilot.py` - NEW: GitHub Copilot
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/iflow.py` - NEW: iFlow
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/kilocode.py` - NEW: Kilo Code
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/opencode.py` - NEW: OpenCode
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qoder.py` - NEW: Qoder
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qwen.py` - NEW: Qwen Code
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/roocode.py` - NEW: RooCode
+#### Remaining Tool Configurators (Task 3.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/amazon_q.py` - CREATED: Amazon Q Developer with $ARGUMENTS and <UserRequest>
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/antigravity.py` - CREATED: Antigravity with simple description frontmatter
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/auggie.py` - CREATED: Auggie with description + argument-hint
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cline.py` - CREATED: Cline with markdown heading frontmatter
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codebuddy.py` - CREATED: CodeBuddy with name + category + tags
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/costrict.py` - CREATED: CoStrict with description + argument-hint
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/crush.py` - CREATED: Crush with name + category + tags
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/factory.py` - CREATED: Factory Droid with $ARGUMENTS in body
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/github_copilot.py` - CREATED: GitHub Copilot with .prompt.md extension
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/iflow.py` - CREATED: iFlow with name + id + category
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/kilocode.py` - CREATED: Kilo Code (no frontmatter)
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/opencode.py` - CREATED: OpenCode with $ARGUMENTS and <UserRequest>
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qoder.py` - CREATED: Qoder with name + category + tags
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qwen.py` - CREATED: Qwen Code with TOML format
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/roocode.py` - CREATED: RooCode with markdown heading frontmatter
+
+#### Test Files (Task 3.0) - COMPLETED
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_markdown_tools.py` - UPDATED: 203 tests for all 15 markdown tools
 
 #### Init Command Files (To Modify)
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py` - Add --tools flag
@@ -202,8 +205,8 @@
   - [x] 2.11 Run all high-priority tool tests together
     - **Verify**: `pytest tests/unit/cli/configurators/slash/test_claude.py tests/unit/cli/configurators/slash/test_cursor.py tests/unit/cli/configurators/slash/test_codex.py tests/unit/cli/configurators/slash/test_gemini.py tests/unit/cli/configurators/slash/test_windsurf.py -v`
 
-- [ ] 3.0 Port remaining 15 markdown-based tool configurators
-  - [ ] 3.1 Write parametrized tests for simple markdown tools in `test_markdown_tools.py`
+- [x] 3.0 Port remaining 15 markdown-based tool configurators
+  - [x] 3.1 Write parametrized tests for simple markdown tools in `test_markdown_tools.py`
     - Create parametrized test class for tools with similar patterns
     - Test tools: Antigravity, Auggie, CodeBuddy, CoStrict, Crush, iFlow, Qoder, Qwen
     - Parametrize by: tool_id, config_path_pattern, frontmatter_style
@@ -211,49 +214,50 @@
     - Test `get_relative_path()` returns correct pattern
     - Test `generate_all()` creates files in correct directory
     - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v`
-  - [ ] 3.2 Implement 8 simple markdown configurators (batch 1)
-    - Create `antigravity.py`: `.antigravity/commands/aurora-{cmd}.md`, simple markdown frontmatter
-    - Create `auggie.py`: `.augment/prompts/aurora-{cmd}.md`, simple YAML frontmatter
-    - Create `codebuddy.py`: `.codebuddy/prompts/aurora-{cmd}.md`, simple YAML frontmatter
-    - Create `costrict.py`: `.costrict/prompts/aurora-{cmd}.md`, simple YAML frontmatter
-    - Create `crush.py`: `.crush/prompts/aurora-{cmd}.md`, simple YAML frontmatter
-    - Create `iflow.py`: `.iflow/prompts/aurora-{cmd}.md`, simple YAML frontmatter
-    - Create `qoder.py`: `.qoder/prompts/aurora-{cmd}.md`, simple YAML frontmatter
-    - Create `qwen.py`: `.qwen/prompts/aurora-{cmd}.md`, simple YAML frontmatter
-    - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v -k "batch1"`
-  - [ ] 3.3 Write tests for tools with special frontmatter patterns
+  - [x] 3.2 Implement 8 simple markdown configurators (batch 1)
+    - Create `antigravity.py`: `.agent/workflows/aurora-{cmd}.md`, simple description frontmatter
+    - Create `auggie.py`: `.augment/commands/aurora-{cmd}.md`, description + argument-hint
+    - Create `codebuddy.py`: `.codebuddy/commands/aurora/{cmd}.md`, name + description + category + tags
+    - Create `costrict.py`: `.cospec/aurora/commands/aurora-{cmd}.md`, description + argument-hint
+    - Create `crush.py`: `.crush/commands/aurora/{cmd}.md`, name + description + category + tags
+    - Create `iflow.py`: `.iflow/commands/aurora-{cmd}.md`, name + id + category + description
+    - Create `qoder.py`: `.qoder/commands/aurora/{cmd}.md`, name + description + category + tags
+    - Create `qwen.py`: `.qwen/commands/aurora-{cmd}.toml`, TOML format
+    - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v` (140 tests passing)
+  - [x] 3.3 Write tests for tools with special frontmatter patterns
     - Test Amazon Q: `$ARGUMENTS` placeholder, `<UserRequest>` tags
     - Test Cline: Markdown heading frontmatter (`# Aurora: {Command}`)
     - Test RooCode: Markdown heading frontmatter (`# Aurora: {Command}`)
     - Test Factory: `.factory/commands/aurora-{cmd}.md`
-    - Test GitHub Copilot: `.github/copilot-instructions/aurora-{cmd}.md`
-    - Test Kilo Code: `.kilocode/commands/aurora-{cmd}.md`
-    - Test OpenCode: `.opencode/prompts/aurora-{cmd}.md`
-    - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v -k "special"`
-  - [ ] 3.4 Implement Amazon Q configurator in `amazon_q.py`
+    - Test GitHub Copilot: `.github/prompts/aurora-{cmd}.prompt.md`
+    - Test Kilo Code: `.kilocode/workflows/aurora-{cmd}.md`
+    - Test OpenCode: `.opencode/command/aurora-{cmd}.md`
+    - **Verify**: Tests added to `test_markdown_tools.py`
+  - [x] 3.4 Implement Amazon Q configurator in `amazon_q.py`
     - Define `FILE_PATHS`: `.amazonq/prompts/aurora-{cmd}.md`
     - Define `FRONTMATTER` with `$ARGUMENTS` and `<UserRequest>` pattern
-    - **Verify**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v -k "amazon"`
-  - [ ] 3.5 Implement Cline configurator in `cline.py`
+    - **Verify (tests pass)**: Amazon Q tests passing
+  - [x] 3.5 Implement Cline configurator in `cline.py`
     - Define `FILE_PATHS`: `.clinerules/workflows/aurora-{cmd}.md`
     - Define `FRONTMATTER` as markdown heading: `# Aurora: {Command}\n\n{description}`
-    - **Verify**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v -k "cline"`
-  - [ ] 3.6 Implement RooCode configurator in `roocode.py`
+    - **Verify (tests pass)**: Cline tests passing
+  - [x] 3.6 Implement RooCode configurator in `roocode.py`
     - Define `FILE_PATHS`: `.roo/commands/aurora-{cmd}.md`
     - Define `FRONTMATTER` as markdown heading: `# Aurora: {Command}\n\n{description}`
-    - **Verify**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v -k "roocode"`
-  - [ ] 3.7 Implement remaining 4 configurators (Factory, GitHub Copilot, Kilo Code, OpenCode)
-    - Create `factory.py`: `.factory/commands/aurora-{cmd}.md`
-    - Create `github_copilot.py`: `.github/copilot-instructions/aurora-{cmd}.md`
-    - Create `kilocode.py`: `.kilocode/commands/aurora-{cmd}.md`
-    - Create `opencode.py`: `.opencode/prompts/aurora-{cmd}.md`
-    - **Verify**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v`
-  - [ ] 3.8 Run complete markdown tools test suite
-    - **Verify all 15 tools**: `pytest tests/unit/cli/configurators/slash/test_markdown_tools.py -v`
-    - **Verify no regressions**: `pytest tests/unit/cli/configurators/slash/ -v`
+    - **Verify (tests pass)**: RooCode tests passing
+  - [x] 3.7 Implement remaining 4 configurators (Factory, GitHub Copilot, Kilo Code, OpenCode)
+    - Create `factory.py`: `.factory/commands/aurora-{cmd}.md` with `$ARGUMENTS` in body
+    - Create `github_copilot.py`: `.github/prompts/aurora-{cmd}.prompt.md` with `$ARGUMENTS`
+    - Create `kilocode.py`: `.kilocode/workflows/aurora-{cmd}.md` (no frontmatter)
+    - Create `opencode.py`: `.opencode/command/aurora-{cmd}.md` with `$ARGUMENTS` and `<UserRequest>`
+    - **Verify (tests pass)**: All 4 configurator tests passing
+  - [x] 3.8 Run complete markdown tools test suite
+    - **Verify all 15 tools**: 203 tests passing in `test_markdown_tools.py`
+    - **Verify no regressions**: 398 tests passing in full slash configurator suite
+    - **Coverage**: 85.36% overall
 
-- [ ] 4.0 Update SlashCommandRegistry with all 20 tool auto-registration
-  - [ ] 4.1 Write failing tests for expanded registry in `test_registry.py`
+- [x] 4.0 Update SlashCommandRegistry with all 20 tool auto-registration
+  - [x] 4.1 Write failing tests for expanded registry in `test_registry.py`
     - Test `SlashCommandRegistry.get_all()` returns 20 configurators
     - Test `SlashCommandRegistry.get("claude")` returns ClaudeSlashCommandConfigurator
     - Test `SlashCommandRegistry.get("cursor")` returns CursorSlashCommandConfigurator
@@ -263,18 +267,18 @@
     - Test all 20 tool IDs are retrievable
     - Test `get_available()` returns all 20 (all are always available per PRD)
     - **Verify (expect failures)**: `pytest tests/unit/cli/configurators/slash/test_registry.py -v`
-  - [ ] 4.2 Update `registry.py` with all 20 configurator imports and registration
+  - [x] 4.2 Update `registry.py` with all 20 configurator imports and registration
     - Import all 20 configurator classes
     - Update `_ensure_initialized()` to register all 20 configurators
     - Ensure registration happens on first access (lazy loading)
     - **Verify (tests pass)**: `pytest tests/unit/cli/configurators/slash/test_registry.py -v`
-  - [ ] 4.3 Update slash `__init__.py` exports
+  - [x] 4.3 Update slash `__init__.py` exports
     - Export all 20 configurator classes
     - Export `SlashCommandRegistry`
     - Export `SlashCommandConfigurator`, `TomlSlashCommandConfigurator`
     - Export `ALL_COMMANDS`, `AURORA_MARKERS`, `SlashCommandTarget`
     - **Verify**: `python -c "from aurora_cli.configurators.slash import SlashCommandRegistry; print(len(SlashCommandRegistry.get_all()))"`
-  - [ ] 4.4 Verify all configurators load without import errors
+  - [x] 4.4 Verify all configurators load without import errors
     - **Verify**: `python -c "from aurora_cli.configurators.slash import *; print('All imports OK')"`
     - **Verify**: `cd /home/hamr/PycharmProjects/aurora && make type-check`
 

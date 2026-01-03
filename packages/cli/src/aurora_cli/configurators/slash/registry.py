@@ -10,6 +10,7 @@ class SlashCommandRegistry:
     """Central registry for slash command configurators.
 
     Provides a singleton-like interface for managing tool configurators.
+    All 20 supported AI coding tools are registered automatically.
     """
 
     _configurators: dict[str, SlashCommandConfigurator] = {}
@@ -17,14 +18,63 @@ class SlashCommandRegistry:
 
     @classmethod
     def _ensure_initialized(cls) -> None:
-        """Ensure default configurators are registered."""
+        """Ensure all 20 configurators are registered."""
         if cls._initialized:
             return
 
-        # Import here to avoid circular imports
+        # Import all configurators here to avoid circular imports
+        from aurora_cli.configurators.slash.amazon_q import AmazonQSlashCommandConfigurator
+        from aurora_cli.configurators.slash.antigravity import (
+            AntigravitySlashCommandConfigurator,
+        )
+        from aurora_cli.configurators.slash.auggie import AuggieSlashCommandConfigurator
         from aurora_cli.configurators.slash.claude import ClaudeSlashCommandConfigurator
+        from aurora_cli.configurators.slash.cline import ClineSlashCommandConfigurator
+        from aurora_cli.configurators.slash.codex import CodexSlashCommandConfigurator
+        from aurora_cli.configurators.slash.codebuddy import CodeBuddySlashCommandConfigurator
+        from aurora_cli.configurators.slash.costrict import CostrictSlashCommandConfigurator
+        from aurora_cli.configurators.slash.crush import CrushSlashCommandConfigurator
+        from aurora_cli.configurators.slash.cursor import CursorSlashCommandConfigurator
+        from aurora_cli.configurators.slash.factory import FactorySlashCommandConfigurator
+        from aurora_cli.configurators.slash.gemini import GeminiSlashCommandConfigurator
+        from aurora_cli.configurators.slash.github_copilot import (
+            GitHubCopilotSlashCommandConfigurator,
+        )
+        from aurora_cli.configurators.slash.iflow import IflowSlashCommandConfigurator
+        from aurora_cli.configurators.slash.kilocode import KiloCodeSlashCommandConfigurator
+        from aurora_cli.configurators.slash.opencode import OpenCodeSlashCommandConfigurator
+        from aurora_cli.configurators.slash.qoder import QoderSlashCommandConfigurator
+        from aurora_cli.configurators.slash.qwen import QwenSlashCommandConfigurator
+        from aurora_cli.configurators.slash.roocode import RooCodeSlashCommandConfigurator
+        from aurora_cli.configurators.slash.windsurf import WindsurfSlashCommandConfigurator
 
-        cls.register(ClaudeSlashCommandConfigurator())
+        # Register all 20 configurators
+        configurators = [
+            AmazonQSlashCommandConfigurator(),
+            AntigravitySlashCommandConfigurator(),
+            AuggieSlashCommandConfigurator(),
+            ClaudeSlashCommandConfigurator(),
+            ClineSlashCommandConfigurator(),
+            CodexSlashCommandConfigurator(),
+            CodeBuddySlashCommandConfigurator(),
+            CostrictSlashCommandConfigurator(),
+            CrushSlashCommandConfigurator(),
+            CursorSlashCommandConfigurator(),
+            FactorySlashCommandConfigurator(),
+            GeminiSlashCommandConfigurator(),
+            GitHubCopilotSlashCommandConfigurator(),
+            IflowSlashCommandConfigurator(),
+            KiloCodeSlashCommandConfigurator(),
+            OpenCodeSlashCommandConfigurator(),
+            QoderSlashCommandConfigurator(),
+            QwenSlashCommandConfigurator(),
+            RooCodeSlashCommandConfigurator(),
+            WindsurfSlashCommandConfigurator(),
+        ]
+
+        for configurator in configurators:
+            cls.register(configurator)
+
         cls._initialized = True
 
     @classmethod

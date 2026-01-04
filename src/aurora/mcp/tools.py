@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from aurora_cli.agent_discovery.manifest import ManifestManager
 from aurora_cli.memory_manager import MemoryManager
 
 from aurora.mcp.config import log_performance, setup_mcp_logging
@@ -1038,3 +1039,219 @@ class AuroraMCPTools:
             error_dict["error"]["details"] = details
 
         return json.dumps(error_dict, indent=2)
+
+    # ========================================================================
+    # Agent Discovery Tools
+    # ========================================================================
+
+    @log_performance("aurora_list_agents")
+    def aurora_list_agents(self) -> str:
+        """
+        List all discovered agents from configured sources.
+
+        No API key required. Returns local agent directory listing only.
+
+        Returns:
+            JSON string with array of agents containing:
+            - id: Agent identifier (kebab-case)
+            - title: Agent role/title
+            - source_path: Path to agent markdown file
+            - when_to_use: Guidance on when to invoke this agent
+        """
+        try:
+            # Get manifest cache path
+            manifest_path = Path.home() / ".aurora" / "agent_manifest.json"
+
+            # Initialize ManifestManager and get/refresh manifest
+            manifest_manager = ManifestManager()
+            manifest = manifest_manager.get_or_refresh(
+                path=manifest_path,
+                auto_refresh=True,
+                refresh_interval_hours=24 * 365 / 12 / 60,  # 5 minutes as per PRD
+            )
+
+            # Format agents for MCP response
+            agents_list = []
+            for agent in manifest.agents:
+                agents_list.append(
+                    {
+                        "id": agent.id,
+                        "title": agent.role,
+                        "source_path": agent.source_file or "",
+                        "when_to_use": agent.when_to_use or "",
+                    }
+                )
+
+            return json.dumps(agents_list, indent=2)
+
+        except Exception as e:
+            logger.error(f"Error in aurora_list_agents: {e}")
+            return json.dumps({"error": str(e)}, indent=2)
+
+    @log_performance("aurora_search_agents")
+    def aurora_search_agents(self, query: str) -> str:
+        """
+        Search agents by keyword with relevance scoring.
+
+        No API key required. Local substring-based search only.
+
+        Uses substring matching to search agent id, title, and when_to_use
+        fields, returning results sorted by relevance score (0.0-1.0).
+
+        Args:
+            query: Search query string (required, non-empty)
+
+        Returns:
+            JSON string with array of matching agents containing:
+            - id: Agent identifier
+            - title: Agent role/title
+            - source_path: Path to agent markdown file
+            - when_to_use: When to use guidance
+            - relevance_score: Match score from 0.0 to 1.0
+        """
+        try:
+            # Validate query
+            if not query or not query.strip():
+                return json.dumps({"error": "Query cannot be empty or whitespace-only"}, indent=2)
+
+            query_lower = query.strip().lower()
+
+            # Get manifest
+            manifest_path = Path.home() / ".aurora" / "agent_manifest.json"
+            manifest_manager = ManifestManager()
+            manifest = manifest_manager.get_or_refresh(
+                path=manifest_path,
+                auto_refresh=True,
+                refresh_interval_hours=24 * 365 / 12 / 60,  # 5 minutes
+            )
+
+            # Search agents with substring-based relevance scoring
+            results = []
+            for agent in manifest.agents:
+                # Calculate relevance score based on substring matches
+                score = 0.0
+
+                # Check id (highest weight: 0.5)
+                if query_lower in agent.id.lower():
+                    score += 0.5
+
+                # Check title/role (medium weight: 0.3)
+                if query_lower in agent.role.lower():
+                    score += 0.3
+
+                # Check when_to_use (lower weight: 0.2)
+                if agent.when_to_use and query_lower in agent.when_to_use.lower():
+                    score += 0.2
+
+                # Only include if there's a match
+                if score > 0.0:
+                    results.append(
+                        {
+                            "id": agent.id,
+                            "title": agent.role,
+                            "source_path": agent.source_file or "",
+                            "when_to_use": agent.when_to_use or "",
+                            "relevance_score": min(score, 1.0),  # Cap at 1.0
+                        }
+                    )
+
+            # Sort by relevance score descending
+            results.sort(key=lambda x: x["relevance_score"], reverse=True)
+
+            return json.dumps(results, indent=2)
+
+        except Exception as e:
+            logger.error(f"Error in aurora_search_agents: {e}")
+            return json.dumps({"error": str(e)}, indent=2)
+
+    @log_performance("aurora_show_agent")
+    def aurora_show_agent(self, agent_id: str) -> str:
+        """
+        Show full agent details including complete markdown content.
+
+        No API key required. Reads local agent markdown file only.
+
+        Args:
+            agent_id: Agent identifier (required, non-empty)
+
+        Returns:
+            JSON string with full agent details:
+            - id: Agent identifier
+            - title: Agent role/title
+            - source_path: Path to agent markdown file
+            - when_to_use: When to use guidance
+            - content: Complete markdown file content
+
+            Or error JSON if agent not found:
+            - error: "Agent not found"
+            - agent_id: The requested agent ID
+        """
+        try:
+            # Validate agent_id
+            if not agent_id or not agent_id.strip():
+                return json.dumps({"error": "agent_id cannot be empty or whitespace-only"}, indent=2)
+
+            agent_id_clean = agent_id.strip()
+
+            # Get manifest
+            manifest_path = Path.home() / ".aurora" / "agent_manifest.json"
+            manifest_manager = ManifestManager()
+            manifest = manifest_manager.get_or_refresh(
+                path=manifest_path,
+                auto_refresh=True,
+                refresh_interval_hours=24 * 365 / 12 / 60,  # 5 minutes
+            )
+
+            # Find agent by ID
+            agent = manifest.get_agent(agent_id_clean)
+            if agent is None:
+                return json.dumps(
+                    {"error": "Agent not found", "agent_id": agent_id_clean},
+                    indent=2,
+                )
+
+            # Read full markdown content from source file
+            if not agent.source_file:
+                return json.dumps(
+                    {"error": "Agent has no source file", "agent_id": agent_id_clean},
+                    indent=2,
+                )
+
+            source_path = Path(agent.source_file)
+            if not source_path.exists():
+                return json.dumps(
+                    {
+                        "error": "Agent source file not found",
+                        "agent_id": agent_id_clean,
+                        "source_path": str(source_path),
+                    },
+                    indent=2,
+                )
+
+            # Read complete markdown content
+            try:
+                content = source_path.read_text(encoding="utf-8")
+            except Exception as read_error:
+                return json.dumps(
+                    {
+                        "error": f"Failed to read agent file: {read_error}",
+                        "agent_id": agent_id_clean,
+                    },
+                    indent=2,
+                )
+
+            # Return full agent details with content
+            return json.dumps(
+                {
+                    "id": agent.id,
+                    "title": agent.role,
+                    "source_path": agent.source_file,
+                    "when_to_use": agent.when_to_use or "",
+                    "content": content,
+                },
+                indent=2,
+            )
+
+        except Exception as e:
+            logger.error(f"Error in aurora_show_agent: {e}")
+            return json.dumps({"error": str(e)}, indent=2)

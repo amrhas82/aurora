@@ -194,6 +194,128 @@ class AuroraMCPServer:
             """
             return self.tools.aurora_get(index)
 
+        @self.mcp.tool()
+        def aurora_list_agents() -> str:
+            """
+            List all discovered agents from configured sources.
+
+            Use this tool to browse, discover, and find available agents. Returns
+            a complete inventory of all agents accessible in the current environment.
+
+            Primary action keywords: list, show, get, fetch, retrieve, browse, discover
+            Domain keywords: agents, specialists, experts, roles, personas, subagents, assistants
+            Context keywords: available, registered, defined, configured, ready, accessible, discovered
+            Use case keywords: what, which, who, all, every, complete, inventory, catalog
+
+            No API key required. Local agent directory listing only.
+
+            Returns:
+                JSON array of agents containing:
+                - id: Agent identifier (kebab-case)
+                - title: Agent role/title
+                - source_path: Path to agent markdown file
+                - when_to_use: Guidance on when to invoke this agent
+
+            Examples:
+                # List all available agents
+                aurora_list_agents()
+
+                # After listing, you can:
+                # - Use aurora_search_agents() to filter by keyword
+                # - Use aurora_show_agent(id) to view full agent details
+            """
+            return self.tools.aurora_list_agents()
+
+        @self.mcp.tool()
+        def aurora_search_agents(query: str) -> str:
+            """
+            Search agents by keyword with relevance scoring.
+
+            Use this tool to find, search, discover, and filter agents by keywords.
+            Returns matching agents sorted by relevance score (0.0-1.0).
+
+            Primary action keywords: search, find, discover, filter, locate, identify, match
+            Domain keywords: agent, specialist, expert, role, persona, subagent, assistant
+            Context keywords: for, with, about, related, relevant, matching, suitable
+            Use case keywords: help, assist, guide, when, which, who, best, right
+
+            Uses substring matching to search agent id, title, and when_to_use fields.
+            No API key required. Local substring-based search only.
+
+            Args:
+                query: Search query string (required, non-empty)
+
+            Returns:
+                JSON array of matching agents containing:
+                - id: Agent identifier
+                - title: Agent role/title
+                - source_path: Path to agent markdown file
+                - when_to_use: When to use guidance
+                - relevance_score: Match score from 0.0 to 1.0
+
+            Examples:
+                # Search for testing-related agents
+                aurora_search_agents("test")
+
+                # Find agents for code review
+                aurora_search_agents("review")
+
+                # Discover quality assurance specialists
+                aurora_search_agents("quality")
+
+            Note:
+                Returns empty array if no matches found. Results sorted by relevance
+                score descending (best matches first).
+            """
+            return self.tools.aurora_search_agents(query)
+
+        @self.mcp.tool()
+        def aurora_show_agent(agent_id: str) -> str:
+            """
+            Show full agent details including complete markdown content.
+
+            Use this tool to retrieve, view, get, fetch, or display full details for
+            a specific agent by ID. Returns complete agent information including the
+            entire markdown file content with instructions and examples.
+
+            Primary action keywords: show, get, retrieve, fetch, view, display, read, load
+            Domain keywords: agent, specialist, expert, role, persona, details, info
+            Context keywords: full, complete, entire, whole, detailed, comprehensive
+            Use case keywords: about, details, information, content, instructions, guide
+
+            No API key required. Reads local agent markdown file only.
+
+            Args:
+                agent_id: Agent identifier (required, non-empty, kebab-case)
+
+            Returns:
+                JSON with full agent details:
+                - id: Agent identifier
+                - title: Agent role/title
+                - source_path: Path to agent markdown file
+                - when_to_use: When to use guidance
+                - content: Complete markdown file content
+
+                Or error JSON if agent not found:
+                - error: "Agent not found"
+                - agent_id: The requested agent ID
+
+            Examples:
+                # Show full details for QA test architect
+                aurora_show_agent("qa-test-architect")
+
+                # Get complete information for full stack developer
+                aurora_show_agent("full-stack-dev")
+
+                # View orchestrator agent details
+                aurora_show_agent("orchestrator")
+
+            Note:
+                Use aurora_list_agents() or aurora_search_agents() to discover
+                available agent IDs first.
+            """
+            return self.tools.aurora_show_agent(agent_id)
+
     def run(self) -> None:
         """Run the MCP server."""
         self.mcp.run()
@@ -212,6 +334,9 @@ class AuroraMCPServer:
             ("aurora_related", "Find related code using ACT-R spreading activation"),
             ("aurora_query", "Retrieve relevant context without LLM inference"),
             ("aurora_get", "Get full chunk by index from last search results"),
+            ("aurora_list_agents", "List all discovered agents from configured sources"),
+            ("aurora_search_agents", "Search agents by keyword with relevance scoring"),
+            ("aurora_show_agent", "Show full agent details including markdown content"),
         ]
 
         for name, description in tools:

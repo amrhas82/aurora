@@ -101,10 +101,9 @@ class TestClaudeConfigurator:
         config = ClaudeConfigurator()
         content = await config.get_template_content(".aurora")
 
-        assert ".aurora/plans/" in content
-        assert "aur plan create" in content
-        assert "aur plan list" in content
-        assert "CLAUDE.md" not in content  # Shouldn't self-reference
+        # Stub template references AGENTS.md
+        assert ".aurora/AGENTS.md" in content
+        assert "aur plan" in content
 
     @pytest.mark.asyncio
     async def test_configure_creates_file(self, tmp_path: Path):
@@ -118,7 +117,25 @@ class TestClaudeConfigurator:
         content = claude_md.read_text()
         assert "<!-- AURORA:START -->" in content
         assert "<!-- AURORA:END -->" in content
-        assert ".aurora/plans/" in content
+        assert ".aurora/AGENTS.md" in content
+
+    @pytest.mark.asyncio
+    async def test_configure_creates_slash_commands(self, tmp_path: Path):
+        """Test that configure creates slash command files."""
+        config = ClaudeConfigurator()
+        await config.configure(tmp_path, ".aurora")
+
+        # Check that slash command directory was created
+        commands_dir = tmp_path / ".claude" / "commands" / "aur"
+        assert commands_dir.exists()
+
+        # Check that expected command files exist
+        expected_commands = ["init.md", "query.md", "index.md", "search.md", "doctor.md", "agents.md", "plan.md"]
+        for cmd in expected_commands:
+            cmd_file = commands_dir / cmd
+            assert cmd_file.exists(), f"Expected {cmd} to exist"
+            content = cmd_file.read_text()
+            assert "<!-- AURORA:START -->" in content
 
     @pytest.mark.asyncio
     async def test_configure_updates_existing_file(self, tmp_path: Path):
@@ -144,7 +161,7 @@ Old Aurora content
         assert "# My Custom Header" in updated
         assert "# My Custom Footer" in updated
         assert "Old Aurora content" not in updated
-        assert ".aurora/plans/" in updated
+        assert ".aurora/AGENTS.md" in updated
 
 
 class TestOpenCodeConfigurator:
@@ -163,7 +180,8 @@ class TestOpenCodeConfigurator:
         config = OpenCodeConfigurator()
         content = await config.get_template_content(".aurora")
 
-        assert ".aurora/plans/" in content
+        # Stub template references AGENTS.md
+        assert ".aurora/AGENTS.md" in content
         assert "aur plan" in content
 
 
@@ -183,7 +201,8 @@ class TestAmpCodeConfigurator:
         config = AmpCodeConfigurator()
         content = await config.get_template_content(".aurora")
 
-        assert ".aurora/plans/" in content
+        # Stub template references AGENTS.md
+        assert ".aurora/AGENTS.md" in content
         assert "aur plan" in content
 
 
@@ -203,7 +222,8 @@ class TestDroidConfigurator:
         config = DroidConfigurator()
         content = await config.get_template_content(".aurora")
 
-        assert ".aurora/plans/" in content
+        # Stub template references AGENTS.md
+        assert ".aurora/AGENTS.md" in content
         assert "aur plan" in content
 
 
@@ -223,9 +243,9 @@ class TestAgentsStandardConfigurator:
         config = AgentsStandardConfigurator()
         content = await config.get_template_content(".aurora")
 
+        # Full template has plan paths and command references
         assert ".aurora/plans/" in content
         assert "aur plan" in content
-        assert "AGENTS.md" not in content  # Shouldn't self-reference in instructions
 
     @pytest.mark.asyncio
     async def test_configure_creates_root_agents_md(self, tmp_path: Path):
@@ -239,4 +259,78 @@ class TestAgentsStandardConfigurator:
         content = agents_md.read_text()
         assert "<!-- AURORA:START -->" in content
         assert "<!-- AURORA:END -->" in content
-        assert "Aurora Planning System" in content
+        # Comprehensive template has Aurora header
+        assert "Aurora" in content
+
+
+class TestClaudeCommandsConfigurator:
+    """Tests for ClaudeCommandsConfigurator."""
+
+    def test_properties(self):
+        """Test configurator properties."""
+        from aurora_cli.configurators import ClaudeCommandsConfigurator
+
+        config = ClaudeCommandsConfigurator()
+        assert config.name == "Claude Commands"
+        assert config.config_file_name == ".claude/commands/aur"
+        assert config.is_available is True
+
+    def test_get_command_list(self):
+        """Test getting list of available commands."""
+        from aurora_cli.configurators import ClaudeCommandsConfigurator
+
+        config = ClaudeCommandsConfigurator()
+        commands = config.get_command_list()
+
+        expected = ["init", "query", "index", "search", "doctor", "agents", "plan"]
+        for cmd in expected:
+            assert cmd in commands
+
+    @pytest.mark.asyncio
+    async def test_configure_creates_command_files(self, tmp_path: Path):
+        """Test that configure creates all command files."""
+        from aurora_cli.configurators import ClaudeCommandsConfigurator
+
+        config = ClaudeCommandsConfigurator()
+        created_files = await config.configure(tmp_path, ".aurora")
+
+        # Check that files were created
+        commands_dir = tmp_path / ".claude" / "commands" / "aur"
+        assert commands_dir.exists()
+
+        # Check each file
+        for filename in created_files:
+            file_path = commands_dir / filename
+            assert file_path.exists()
+
+            content = file_path.read_text()
+            assert "---" in content  # Frontmatter
+            assert "<!-- AURORA:START -->" in content
+            assert "<!-- AURORA:END -->" in content
+
+    @pytest.mark.asyncio
+    async def test_configure_updates_existing_command(self, tmp_path: Path):
+        """Test that configure updates existing command file."""
+        from aurora_cli.configurators import ClaudeCommandsConfigurator
+
+        # Create existing command file
+        commands_dir = tmp_path / ".claude" / "commands" / "aur"
+        commands_dir.mkdir(parents=True, exist_ok=True)
+
+        init_file = commands_dir / "init.md"
+        init_file.write_text("""---
+name: Custom Init
+description: My custom description
+---
+<!-- AURORA:START -->
+Old content
+<!-- AURORA:END -->
+""")
+
+        config = ClaudeCommandsConfigurator()
+        await config.configure(tmp_path, ".aurora")
+
+        # Check that file was updated
+        updated = init_file.read_text()
+        assert "Aurora Init" in updated  # New name from template
+        assert "Old content" not in updated

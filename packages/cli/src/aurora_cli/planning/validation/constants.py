@@ -11,6 +11,7 @@ Ported from OpenSpec with Aurora-native terminology and directory structure.
 
 from __future__ import annotations
 
+
 # Minimum character lengths
 MIN_WHY_SECTION_LENGTH = 50
 MIN_PURPOSE_LENGTH = 50

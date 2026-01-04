@@ -17,6 +17,7 @@ import logging
 from pathlib import Path
 from typing import Iterator
 
+
 logger = logging.getLogger(__name__)
 
 # Default agent discovery paths (relative to home directory)

@@ -35,6 +35,7 @@ from aurora_cli.planning.core import (
     show_plan,
 )
 
+
 if TYPE_CHECKING:
     pass
 
@@ -181,7 +182,7 @@ def create_command(
     console.print(f"Subgoals:    {len(plan.subgoals)}")
     console.print(f"Location:    {result.plan_dir}/")
 
-    console.print(f"\n[bold]Subgoals:[/]")
+    console.print("\n[bold]Subgoals:[/]")
     for i, sg in enumerate(plan.subgoals, 1):
         agent_status = "[green][/]" if sg.agent_exists else "[yellow]NOT FOUND[/]"
         console.print(f"  {i}. {sg.title} ({sg.recommended_agent} {agent_status})")
@@ -189,11 +190,11 @@ def create_command(
             console.print(f"     [dim]Depends on: {', '.join(sg.dependencies)}[/]")
 
     if result.warnings:
-        console.print(f"\n[yellow]Warnings:[/]")
+        console.print("\n[yellow]Warnings:[/]")
         for warning in result.warnings:
             console.print(f"  - {warning}")
 
-    console.print(f"\n[bold]Files created (8 total):[/]")
+    console.print("\n[bold]Files created (8 total):[/]")
     # Base files
     for fname in ["plan.md", "prd.md", "tasks.md", "agents.json"]:
         console.print(f"  [green][/] {fname}")
@@ -203,10 +204,10 @@ def create_command(
     console.print(f"  [green][/] specs/{plan.plan_id}-validation.md")
     console.print(f"  [green][/] specs/{plan.plan_id}-schemas.md")
 
-    console.print(f"\n[bold]Next steps:[/]")
+    console.print("\n[bold]Next steps:[/]")
     console.print(f"1. Review plan:    aur plan view {plan.plan_id}")
     console.print(f"2. Edit PRD:       {result.plan_dir}/prd.md")
-    console.print(f"3. Start work:     Follow tasks.md checklist")
+    console.print("3. Start work:     Follow tasks.md checklist")
     console.print(f"4. Archive:        aur plan archive {plan.plan_id}")
 
 
@@ -449,18 +450,18 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
         console.print(f"   [dim]Dependencies: {deps}[/]")
 
         if not sg.agent_exists:
-            console.print(f"\n   [yellow]Agent Gap Detected:[/]")
+            console.print("\n   [yellow]Agent Gap Detected:[/]")
             console.print(f"   - Missing: {sg.recommended_agent}")
-            console.print(f"   - Fallback: Use @business-analyst or @full-stack-dev")
+            console.print("   - Fallback: Use @business-analyst or @full-stack-dev")
 
     if result.files_status:
-        console.print(f"\n[bold]Files:[/]")
+        console.print("\n[bold]Files:[/]")
         for fname, exists in result.files_status.items():
             status = "[green][/]" if exists else "[red][/]"
             console.print(f"  {status} {fname}")
 
-    console.print(f"\n[bold]Next Steps:[/]")
-    console.print(f"1. Review plan for accuracy")
+    console.print("\n[bold]Next Steps:[/]")
+    console.print("1. Review plan for accuracy")
     console.print(f"2. Execute: /aur:implement {plan.plan_id}")
     console.print(f"3. Archive: aur plan archive {plan.plan_id}")
 
@@ -511,9 +512,9 @@ def archive_command(plan_id: str, yes: bool) -> None:
     console.print(f"\n[bold green]Plan archived: {result.plan.plan_id}[/]")
     console.print(f"\nArchived to: {result.target_dir}/")
     console.print(f"Duration: {result.duration_days} days")
-    console.print(f"\nFiles archived (8 total):")
+    console.print("\nFiles archived (8 total):")
     for fname in ["plan.md", "prd.md", "tasks.md", "agents.json"]:
         console.print(f"  [green][/] {fname}")
-    console.print(f"  [green][/] specs/ (4 capability specs)")
+    console.print("  [green][/] specs/ (4 capability specs)")
 
-    console.print(f"\nView archived plans: aur plan list --archived")
+    console.print("\nView archived plans: aur plan list --archived")

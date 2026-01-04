@@ -12,11 +12,12 @@ Usage:
     print(result.score)  # 65
 """
 from .complexity_assessor import (
-    ComplexityAssessor,
     AssessmentResult,
-    assess_prompt,
+    ComplexityAssessor,
     ComplexityLevel,
+    assess_prompt,
 )
+
 
 __all__ = [
     'ComplexityAssessor',

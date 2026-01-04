@@ -4,21 +4,24 @@ This module provides configurator classes for various AI coding tools
 to enable Aurora planning integration with AGENTS.md-style instructions.
 """
 
-from .base import ToolConfigurator
-from .registry import ToolRegistry, TOOL_OPTIONS
-from .claude import ClaudeConfigurator
-from .opencode import OpenCodeConfigurator
-from .ampcode import AmpCodeConfigurator
-from .droid import DroidConfigurator
 from .agents import AgentsStandardConfigurator
+from .ampcode import AmpCodeConfigurator
+from .base import ToolConfigurator
+from .claude import ClaudeConfigurator
+from .claude_commands import ClaudeCommandsConfigurator
+from .droid import DroidConfigurator
+from .opencode import OpenCodeConfigurator
+from .registry import TOOL_OPTIONS, ToolRegistry
+
 
 __all__ = [
+    "AgentsStandardConfigurator",
+    "AmpCodeConfigurator",
+    "ClaudeCommandsConfigurator",
+    "ClaudeConfigurator",
+    "DroidConfigurator",
+    "OpenCodeConfigurator",
+    "TOOL_OPTIONS",
     "ToolConfigurator",
     "ToolRegistry",
-    "TOOL_OPTIONS",
-    "ClaudeConfigurator",
-    "OpenCodeConfigurator",
-    "AmpCodeConfigurator",
-    "DroidConfigurator",
-    "AgentsStandardConfigurator",
 ]

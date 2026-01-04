@@ -67,6 +67,9 @@ htmlcov/
 # Claude Code specific
 .claude/
 
+# Session checkpoints (personal, not shared)
+.aurora/session.md
+
 # Build artifacts
 *.whl
 *.tar.gz

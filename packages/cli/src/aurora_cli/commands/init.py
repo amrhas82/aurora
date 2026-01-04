@@ -12,6 +12,7 @@ import click
 from rich.console import Console
 
 from aurora_cli.commands.init_helpers import (
+    configure_slash_commands,
     configure_tools,
     create_directory_structure,
     create_project_md,
@@ -21,10 +22,85 @@ from aurora_cli.commands.init_helpers import (
     prompt_tool_selection,
 )
 from aurora_cli.config import CONFIG_SCHEMA
+from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.errors import ErrorHandler, handle_errors
 
 
 console = Console()
+
+
+def get_all_tool_ids() -> list[str]:
+    """Get list of all valid tool IDs from the slash command registry.
+
+    Returns:
+        List of all 20 tool IDs (e.g., ['amazon-q', 'claude', 'cursor', ...])
+    """
+    return [c.tool_id for c in SlashCommandRegistry.get_all()]
+
+
+def parse_tools_flag(tools_str: str) -> list[str]:
+    """Parse --tools flag value into list of tool IDs.
+
+    Args:
+        tools_str: Value from --tools flag (e.g., 'all', 'none', 'claude,cursor')
+
+    Returns:
+        List of tool IDs to configure
+
+    Examples:
+        >>> parse_tools_flag('all')
+        ['amazon-q', 'antigravity', 'auggie', ...]  # all 20 tools
+        >>> parse_tools_flag('none')
+        []
+        >>> parse_tools_flag('claude,cursor')
+        ['claude', 'cursor']
+    """
+    if not tools_str or tools_str.strip() == "":
+        return []
+
+    normalized = tools_str.strip().lower()
+
+    if normalized == "all":
+        return get_all_tool_ids()
+
+    if normalized == "none":
+        return []
+
+    # Split by comma, strip whitespace, lowercase, and remove duplicates while preserving order
+    tool_ids = []
+    seen = set()
+    for tool_id in normalized.split(","):
+        tool_id = tool_id.strip()
+        if tool_id and tool_id not in seen:
+            tool_ids.append(tool_id)
+            seen.add(tool_id)
+
+    return tool_ids
+
+
+def validate_tool_ids(tool_ids: list[str]) -> None:
+    """Validate that all tool IDs are valid.
+
+    Args:
+        tool_ids: List of tool IDs to validate
+
+    Raises:
+        ValueError: If any tool ID is invalid, with message listing invalid IDs
+                   and available tool IDs
+    """
+    if not tool_ids:
+        return
+
+    valid_ids = set(get_all_tool_ids())
+    invalid_ids = [tid for tid in tool_ids if tid not in valid_ids]
+
+    if invalid_ids:
+        available = ", ".join(sorted(valid_ids))
+        invalid_str = ", ".join(invalid_ids)
+        raise ValueError(
+            f"Invalid tool ID(s): {invalid_str}. "
+            f"Available tools: {available}"
+        )
 
 
 def run_step_2_memory_indexing(project_path: Path) -> bool:
@@ -112,10 +188,39 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
             console.print(f"  [green]✓[/] Chunks created: {stats.chunks_created}")
             console.print(f"  [dim]⏱[/] Duration:       {stats.duration_seconds:.2f}s")
 
-            if stats.errors > 0:
-                console.print(f"  [yellow]⚠[/] Skipped:        {stats.errors} (unsupported format)")
-            if stats.warnings > 0:
-                console.print(f"  [dim]○[/] Warnings:       {stats.warnings}")
+            # Display error/warning summary table
+            if stats.errors > 0 or stats.warnings > 0:
+                console.print()
+                console.print("[bold]Indexing Issues Summary:[/]")
+                console.print("┌─────────────┬───────┬────────────────────────────────────────┐")
+                console.print("│ Issue Type  │ Count │ What To Do                             │")
+                console.print("├─────────────┼───────┼────────────────────────────────────────┤")
+
+                if stats.errors > 0:
+                    console.print(
+                        f"│ [yellow]Errors[/]      │ {stats.errors:5} │ Files that failed to parse             │"
+                    )
+                    console.print(
+                        "│             │       │ → May be corrupted or binary files     │"
+                    )
+                    console.print(
+                        "│             │       │ → Action: Check with aur doctor        │"
+                    )
+
+                if stats.warnings > 0:
+                    if stats.errors > 0:
+                        console.print("├─────────────┼───────┼────────────────────────────────────────┤")
+                    console.print(
+                        f"│ [yellow]Warnings[/]    │ {stats.warnings:5} │ Files with syntax/parse errors         │"
+                    )
+                    console.print(
+                        "│             │       │ → Partial indexing succeeded           │"
+                    )
+                    console.print(
+                        "│             │       │ → Action: Check logs with --verbose    │"
+                    )
+
+                console.print("└─────────────┴───────┴────────────────────────────────────────┘")
 
             return True
         else:
@@ -208,18 +313,22 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
     return git_initialized
 
 
-def run_step_3_tool_configuration(project_path: Path) -> tuple[list[str], list[str]]:
+def run_step_3_tool_configuration(
+    project_path: Path,
+    tool_ids: list[str] | None = None,
+) -> tuple[list[str], list[str]]:
     """Run Step 3: Tool Configuration.
 
     This step:
     1. Detects existing tool configurations
-    2. Prompts user to select tools (interactive checkbox)
+    2. Prompts user to select tools (interactive checkbox) OR uses provided tool_ids
     3. Configures selected tools using Phase 1 configurator system
     4. Tracks created vs updated tools
     5. Displays success message
 
     Args:
         project_path: Path to project root directory
+        tool_ids: Optional list of tool IDs to configure (bypasses interactive prompt)
 
     Returns:
         Tuple of (created_tools, updated_tools) - lists of tool names
@@ -231,22 +340,33 @@ def run_step_3_tool_configuration(project_path: Path) -> tuple[list[str], list[s
     console.print("\n[bold]Step 3/3: Tool Configuration[/]")
     console.print("[dim]Configure AI coding tools with Aurora integration...[/]\n")
 
-    # Detect existing tool configurations
-    configured_tools = detect_configured_tools(project_path)
+    # Use provided tool_ids or prompt user for selection
+    if tool_ids is not None:
+        # Non-interactive mode: use provided tool IDs
+        selected_tool_ids = tool_ids
+        if tool_ids:
+            console.print(f"[dim]Using specified tools: {', '.join(tool_ids)}[/]")
+        else:
+            console.print("[yellow]⚠[/] No tools specified (--tools=none)")
+            return ([], [])
+    else:
+        # Interactive mode: prompt user for selection
+        # Detect existing tool configurations
+        configured_tools = detect_configured_tools(project_path)
 
-    # Prompt user for tool selection
-    selected_tool_ids = asyncio.run(
-        prompt_tool_selection(configured_tools=configured_tools)
-    )
+        # Prompt user for tool selection
+        selected_tool_ids = asyncio.run(
+            prompt_tool_selection(configured_tools=configured_tools)
+        )
 
     if not selected_tool_ids:
         console.print("[yellow]⚠[/] No tools selected")
         return ([], [])
 
-    # Configure selected tools
+    # Configure selected tools using slash command configurators
     console.print("\n[dim]Configuring tools...[/]")
     created, updated = asyncio.run(
-        configure_tools(project_path, selected_tool_ids)
+        configure_slash_commands(project_path, selected_tool_ids)
     )
 
     # Show success message
@@ -481,8 +601,14 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
     default=False,
     help="Configure tools only (skip planning setup and memory indexing)",
 )
+@click.option(
+    "--tools",
+    type=str,
+    default=None,
+    help="Specify tools to configure: 'all', 'none', or comma-separated list (e.g., 'claude,cursor,gemini')",
+)
 @handle_errors
-def init_command(config: bool) -> None:
+def init_command(config: bool, tools: str | None) -> None:
     """Initialize AURORA in current project (unified 3-step flow).
 
     This command sets up Aurora for your project with:
@@ -500,6 +626,18 @@ def init_command(config: bool) -> None:
         aur init --config
 
         \b
+        # Configure specific tools (non-interactive)
+        aur init --tools=claude,cursor,gemini
+
+        \b
+        # Configure all tools
+        aur init --tools=all
+
+        \b
+        # Skip tool configuration
+        aur init --tools=none
+
+        \b
         # After initialization
         aur plan create "Add user authentication"
         aur mem search "database connection"
@@ -507,6 +645,16 @@ def init_command(config: bool) -> None:
     from aurora_cli.commands.init_helpers import detect_existing_setup
 
     project_path = Path.cwd()
+
+    # Parse and validate --tools flag if provided
+    parsed_tool_ids: list[str] | None = None
+    if tools is not None:
+        parsed_tool_ids = parse_tools_flag(tools)
+        try:
+            validate_tool_ids(parsed_tool_ids)
+        except ValueError as e:
+            console.print(f"[red]Error:[/] {e}")
+            raise SystemExit(1)
 
     # Handle --config flag: fast path for tool configuration only
     if config:
@@ -519,7 +667,7 @@ def init_command(config: bool) -> None:
         # Run Step 3 only
         console.print("[bold]AURORA Tool Configuration[/]")
         console.print()
-        run_step_3_tool_configuration(project_path)
+        run_step_3_tool_configuration(project_path, tool_ids=parsed_tool_ids)
         console.print("[bold green]✓[/] Tool configuration complete\n")
         return
 
@@ -546,7 +694,7 @@ def init_command(config: bool) -> None:
             console.print()
             console.print("[bold]AURORA Tool Configuration[/]")
             console.print()
-            run_step_3_tool_configuration(project_path)
+            run_step_3_tool_configuration(project_path, tool_ids=parsed_tool_ids)
             console.print("[bold green]✓[/] Tool configuration complete\n")
             return
 
@@ -589,7 +737,9 @@ def init_command(config: bool) -> None:
             console.print("[dim]⊘ Skipping Step 2: Memory Indexing[/]")
 
         if 3 in steps_to_run:
-            created_tools, updated_tools = run_step_3_tool_configuration(project_path)
+            created_tools, updated_tools = run_step_3_tool_configuration(
+                project_path, tool_ids=parsed_tool_ids
+            )
         else:
             console.print("[dim]⊘ Skipping Step 3: Tool Configuration[/]")
 
@@ -623,7 +773,7 @@ def init_command(config: bool) -> None:
     # Display welcome banner
     console.print()
     console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
-    console.print("[bold cyan]║[/]  [bold]AURORA Initialization[/]                [bold cyan]║[/]")
+    console.print("[bold cyan]║[/]     [bold]AURORA Initialization[/]            [bold cyan]║[/]")
     console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
     console.print()
     console.print("[dim]Setting up Aurora for your project...[/]")
@@ -637,7 +787,9 @@ def init_command(config: bool) -> None:
     indexing_succeeded = run_step_2_memory_indexing(project_path)
 
     # Step 3: Tool Configuration
-    created_tools, updated_tools = run_step_3_tool_configuration(project_path)
+    created_tools, updated_tools = run_step_3_tool_configuration(
+        project_path, tool_ids=parsed_tool_ids
+    )
 
     # Display success summary
     console.print()

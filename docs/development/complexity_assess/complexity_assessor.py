@@ -11,12 +11,12 @@ This mimics how an LLM would assess complexity without requiring API calls.
 Author: Aurora Project
 Version: 1.0.0
 """
-import re
 import json
+import re
 import sys
 from dataclasses import dataclass, field
-from typing import Literal, Optional
 from enum import IntEnum
+from typing import Literal, Optional
 
 
 class ComplexityLevel(IntEnum):

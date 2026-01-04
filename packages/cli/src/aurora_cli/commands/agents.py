@@ -39,6 +39,7 @@ from aurora_cli.agent_discovery import (
 from aurora_cli.config import Config, load_config
 from aurora_cli.errors import handle_errors
 
+
 if TYPE_CHECKING:
     pass
 
@@ -59,8 +60,8 @@ def get_manifest_path(config: Config | None = None) -> Path:
     """
     if config is None:
         # Load config silently for path lookup
-        import sys
         import io
+        import sys
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
@@ -83,8 +84,8 @@ def get_manifest(force_refresh: bool = False, config: Config | None = None) -> A
     """
     if config is None:
         # Load config silently
-        import sys
         import io
+        import sys
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
@@ -359,7 +360,7 @@ def refresh_command() -> None:
 
     # Display summary
     summary_lines = [
-        f"[bold green]Manifest refreshed successfully[/]\n",
+        "[bold green]Manifest refreshed successfully[/]\n",
         f"Agents found: [cyan]{manifest.stats.total}[/]",
         f"Sources scanned: [cyan]{len(manifest.sources)}[/]",
         f"Malformed files: [yellow]{manifest.stats.malformed_files}[/]",

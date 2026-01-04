@@ -10,9 +10,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from click.testing import CliRunner
-
 from aurora_cli.commands.init import init_command
+from click.testing import CliRunner
 
 
 @pytest.fixture
@@ -227,8 +226,9 @@ def test_step_3_performance(temp_project, benchmark):
 @pytest.mark.performance
 def test_memory_usage_during_init(temp_project, mock_git_init):
     """Test memory usage during init (target: <100MB for 10K chunks)."""
-    import psutil
     import os
+
+    import psutil
 
     # Create 100 test files (represents ~1000 chunks)
     create_test_files(temp_project, 100)

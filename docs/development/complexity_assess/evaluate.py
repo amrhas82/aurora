@@ -6,16 +6,17 @@ Runs the assessor against the test corpus and produces detailed metrics,
 identifying misclassifications for algorithm refinement.
 """
 import sys
-from pathlib import Path
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
+
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from complexity_assessor import ComplexityAssessor, AssessmentResult
-from test_corpus import TEST_CORPUS, get_by_level, get_by_category
+from complexity_assessor import AssessmentResult, ComplexityAssessor
+from test_corpus import TEST_CORPUS, get_by_category, get_by_level
 
 
 @dataclass
@@ -30,7 +31,7 @@ class EvaluationResult:
     score_distributions: dict[str, list[int]]
 
 
-def evaluate_corpus(assessor: Optional[ComplexityAssessor] = None,
+def evaluate_corpus(assessor: ComplexityAssessor | None = None,
                    verbose: bool = False) -> EvaluationResult:
     """
     Evaluate assessor against the full test corpus.
@@ -200,7 +201,7 @@ def _analyze_thresholds(result: EvaluationResult):
     # Find optimal thresholds
     print("\n  Threshold optimization:")
     best_simple_thresh, best_medium_thresh, best_acc = _find_optimal_thresholds(result)
-    print(f"  Current: simple<=15, medium<=35")
+    print("  Current: simple<=15, medium<=35")
     print(f"  Optimal: simple<={best_simple_thresh}, medium<={best_medium_thresh} "
           f"(would achieve {best_acc:.1%})")
 

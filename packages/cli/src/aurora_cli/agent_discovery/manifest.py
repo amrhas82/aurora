@@ -29,6 +29,7 @@ from aurora_cli.agent_discovery.models import (
 from aurora_cli.agent_discovery.parser import AgentParser
 from aurora_cli.agent_discovery.scanner import AgentScanner
 
+
 if TYPE_CHECKING:
     from aurora_cli.config import Config
 

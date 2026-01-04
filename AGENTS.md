@@ -1,54 +1,18 @@
-<!-- AURORA:START -->
-# Aurora Planning System
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
 
-This project uses Aurora for structured planning and task management.
+These instructions are for AI assistants working in this project.
 
-## Planning Commands
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
 
-```bash
-aur init                        # Initialize Aurora directory structure
-aur plan create "Goal"          # Create a new plan
-aur plan list                   # List all plans
-aur plan view <plan-id>         # View plan details
-aur plan archive <plan-id>      # Archive a completed plan
-```
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
 
-## Directory Structure
+Keep this managed block so 'openspec update' can refresh the instructions.
 
-Plans are stored in `.aurora/plans/`:
-- `.aurora/plans/active/` - Active plans being worked on
-- `.aurora/plans/archive/` - Completed/archived plans
-
-## Plan Structure
-
-Each plan contains 8 files:
-1. `plan.md` - High-level decomposition and subgoals
-2. `prd.md` - Detailed requirements and specifications
-3. `tasks.md` - Implementation checklist (GitHub Flavored Markdown)
-4. `agents.json` - Machine-readable metadata
-5-8. Four capability spec files in `specs/` directory
-
-## Workflow
-
-1. **Create**: `aur plan create "Implement feature X"`
-   - Generates plan in `.aurora/plans/active/NNNN-slug/`
-   - Plan ID format: `0001-implement-feature-x`
-
-2. **Work**: Open the plan directory and follow `tasks.md`
-   - Mark tasks complete with `[x]`
-   - Reference requirements in `prd.md`
-
-3. **Archive**: `aur plan archive 0001`
-   - Moves to `.aurora/plans/archive/YYYY-MM-DD-NNNN-slug/`
-
-## AI Assistant Integration
-
-When the user mentions a plan ID or asks to work on a plan:
-1. Check for plan in `.aurora/plans/active/<plan-id>/`
-2. Read relevant plan files (plan.md, prd.md, tasks.md)
-3. Follow the task checklist systematically
-4. Update progress as you work
-
-For more information, see the Aurora documentation.
-
-<!-- AURORA:END -->
+<!-- OPENSPEC:END -->

@@ -8,7 +8,6 @@ and special auto_execution_mode: 3 frontmatter.
 from pathlib import Path
 
 import pytest
-
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,

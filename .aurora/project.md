@@ -1,17 +1,15 @@
-# Project Overview
+# Project Overview: aurora
 
-<!-- Fill in details about your project -->
+<!-- Auto-detected by Aurora on 2026-01-04 -->
 
 ## Description
 
-[Brief description of your project]
+[TODO: Add project description]
 
 ## Tech Stack
 
-- **Language**: [e.g., Python 3.10]
-- **Framework**: [e.g., FastAPI, Django, Flask]
-- **Database**: [e.g., PostgreSQL, MongoDB]
-- **Tools**: [e.g., Docker, pytest, mypy]
+- **Language**: Python (detected)
+- **Testing**: pytest (detected)
 
 ## Conventions
 
@@ -22,7 +20,7 @@
 
 ## Architecture
 
-[Brief overview of your system architecture]
+[TODO: Brief system architecture overview]
 
 ## Key Directories
 
@@ -32,4 +30,4 @@
 
 ## Notes
 
-[Any additional context for AI assistants]
+[TODO: Additional context for AI assistants]

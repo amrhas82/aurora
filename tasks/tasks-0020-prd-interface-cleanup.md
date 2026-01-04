@@ -9,13 +9,13 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0020-prd-interface-clea
 - `/home/hamr/PycharmProjects/aurora/tests/integration/mcp/test_agent_tools_integration.py` - Integration tests for MCP agent tools
 - `/home/hamr/PycharmProjects/aurora/docs/INTERFACE_GUIDE.md` - Comprehensive interface documentation
 
-### Files to Modify
-- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/tools.py` - Add 3 agent tools, remove aurora_stats
-- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/server.py` - Register new agent tools with rich descriptions
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/main.py` - Remove aur query command
-- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/commands.py` - Remove 6 slash command templates
-- `/home/hamr/PycharmProjects/aurora/CLAUDE.md` - Remove deleted slash command references
-- `/home/hamr/PycharmProjects/aurora/docs/cli/CLI_USAGE_GUIDE.md` - Remove aur query documentation
+### Files Modified
+- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/tools.py` - Added 3 agent tools (list/search/show), removed aurora_stats
+- `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/server.py` - Registered new agent tools with rich descriptions, removed aurora_stats registration
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/main.py` - Removed aur query command and all helper functions
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/commands.py` - Removed 6 slash command templates (init/query/index/search/doctor/agents), kept 2 (plan/checkpoint)
+- `/home/hamr/PycharmProjects/aurora/CLAUDE.md` - TODO: Remove deleted slash command references
+- `/home/hamr/PycharmProjects/aurora/docs/cli/CLI_USAGE_GUIDE.md` - TODO: Remove aur query documentation
 
 ### Files to Delete
 - Any test files for deleted commands (if they exist):
@@ -71,16 +71,16 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0020-prd-interface-clea
   - [x] 1.9 Write MCP integration tests in `/home/hamr/PycharmProjects/aurora/tests/integration/mcp/test_agent_tools_integration.py` that verify tools work end-to-end through AuroraMCPServer instance (initialize server, call tools, verify JSON output)
   - [x] 1.10 Run all new tests with `pytest tests/unit/mcp/test_agent_tools.py tests/integration/mcp/test_agent_tools_integration.py -v` and verify 100% pass rate
 
-- [ ] 2.0 Phase 2: Delete Redundant Commands and Tests
-  - [ ] 2.1 Remove `aur query` command from `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/main.py` by deleting the query command function, imports, and CLI group registration
-  - [ ] 2.2 Check if `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_query.py` exists and delete it if present
-  - [ ] 2.3 Remove `aurora_stats` tool from `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/tools.py` by deleting the method implementation in AuroraMCPTools class
-  - [ ] 2.4 Remove `aurora_stats` tool registration from `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/server.py` by deleting the `@self.mcp.tool()` decorated function in `_register_tools()`
-  - [ ] 2.5 Check if `/home/hamr/PycharmProjects/aurora/tests/integration/mcp/test_stats.py` exists and delete it if present
-  - [ ] 2.6 Remove 6 slash command templates from `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/commands.py`: delete INIT_COMMAND, QUERY_COMMAND, INDEX_COMMAND, SEARCH_COMMAND, AGENTS_COMMAND, DOCTOR_COMMAND constants and remove them from COMMAND_TEMPLATES dictionary
-  - [ ] 2.7 Update `get_command_template()` and `get_all_command_templates()` functions in templates/commands.py to reflect removed commands
-  - [ ] 2.8 Search for test files referencing deleted slash commands with `grep -r "aur:init\|aur:query\|aur:index\|aur:search\|aur:agents\|aur:doctor" tests/` and delete any found test files
-  - [ ] 2.9 Run shell integration tests with `pytest tests/integration/ -v --tb=short` to verify no runtime errors or import failures from deletions
+- [x] 2.0 Phase 2: Delete Redundant Commands and Tests
+  - [x] 2.1 Remove `aur query` command from `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/main.py` by deleting the query command function, imports, and CLI group registration
+  - [x] 2.2 Check if `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_query.py` exists and delete it if present
+  - [x] 2.3 Remove `aurora_stats` tool from `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/tools.py` by deleting the method implementation in AuroraMCPTools class
+  - [x] 2.4 Remove `aurora_stats` tool registration from `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/server.py` by deleting the `@self.mcp.tool()` decorated function in `_register_tools()`
+  - [x] 2.5 Check if `/home/hamr/PycharmProjects/aurora/tests/integration/mcp/test_stats.py` exists and delete it if present
+  - [x] 2.6 Remove 6 slash command templates from `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/commands.py`: delete INIT_COMMAND, QUERY_COMMAND, INDEX_COMMAND, SEARCH_COMMAND, AGENTS_COMMAND, DOCTOR_COMMAND constants and remove them from COMMAND_TEMPLATES dictionary
+  - [x] 2.7 Update `get_command_template()` and `get_all_command_templates()` functions in templates/commands.py to reflect removed commands
+  - [x] 2.8 Search for test files referencing deleted slash commands with `grep -r "aur:init\|aur:query\|aur:index\|aur:search\|aur:agents\|aur:doctor" tests/` and delete any found test files
+  - [x] 2.9 Run shell integration tests with `pytest tests/integration/ -v --tb=short` to verify no runtime errors or import failures from deletions
 
 - [ ] 3.0 Phase 3: Documentation and Compatibility Audit
   - [ ] 3.1 Create `/home/hamr/PycharmProjects/aurora/docs/INTERFACE_GUIDE.md` with comprehensive table containing: columns (Command Name, Interface Type, Purpose, When To Use, Syntax, Example), all current commands (7 CLI: init/doctor/mem index/mem search/mem stats/agents/plan + 9 MCP: query/search/index/context/related/get/list_agents/search_agents/show_agent + 2 Slash: plan/checkpoint), 2 future slash commands marked as "planned" (archive/implement)

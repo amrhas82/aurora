@@ -1,7 +1,6 @@
 """Tests for SlashCommandRegistry with all 20 configurators."""
 
 import pytest
-
 from aurora_cli.configurators.slash.registry import SlashCommandRegistry
 
 

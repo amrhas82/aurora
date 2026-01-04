@@ -1,7 +1,8 @@
 """Droid configurator."""
 
-from .base import BaseConfigurator
 from aurora_cli.templates import get_claude_template
+
+from .base import BaseConfigurator
 
 
 class DroidConfigurator(BaseConfigurator):

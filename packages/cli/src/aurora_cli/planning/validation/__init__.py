@@ -14,6 +14,7 @@ from aurora_cli.planning.validation.types import (
 )
 from aurora_cli.planning.validation.validator import Validator
 
+
 __all__ = [
     "Validator",
     "ValidationIssue",

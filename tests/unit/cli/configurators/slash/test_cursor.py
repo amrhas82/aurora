@@ -7,7 +7,6 @@ in .cursor/commands/ directory with aurora-{command}.md naming.
 from pathlib import Path
 
 import pytest
-
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,

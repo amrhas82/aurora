@@ -68,8 +68,8 @@ class TestAIToolsConstant:
         from aurora_cli.config import AI_TOOLS
 
         for tool in AI_TOOLS:
-            assert isinstance(tool["value"], str), f"Tool value should be str"
-            assert len(tool["value"]) > 0, f"Tool value should not be empty"
+            assert isinstance(tool["value"], str), "Tool value should be str"
+            assert len(tool["value"]) > 0, "Tool value should not be empty"
 
     def test_all_20_expected_tools_present(self):
         """AI_TOOLS should include all 20 expected AI coding tools."""

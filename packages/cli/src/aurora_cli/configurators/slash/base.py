@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
+
 # Aurora managed block markers
 AURORA_MARKERS = {
     "start": "<!-- AURORA:START -->",
@@ -46,6 +47,16 @@ class SlashCommandConfigurator(ABC):
     def tool_id(self) -> str:
         """Tool identifier (e.g., "claude", "opencode")."""
         ...
+
+    @property
+    def name(self) -> str:
+        """Human-readable tool name.
+
+        Defaults to capitalizing the tool_id. Override in subclasses
+        for custom display names.
+        """
+        # Convert tool_id to title case: "amazon-q" -> "Amazon Q", "github-copilot" -> "GitHub Copilot"
+        return self.tool_id.replace("-", " ").title()
 
     @property
     @abstractmethod

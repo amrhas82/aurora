@@ -45,7 +45,8 @@ from aurora_cli.agent_discovery.models import (
     ManifestStats,
 )
 from aurora_cli.agent_discovery.parser import AgentParser
-from aurora_cli.agent_discovery.scanner import AgentScanner, DEFAULT_DISCOVERY_PATHS
+from aurora_cli.agent_discovery.scanner import DEFAULT_DISCOVERY_PATHS, AgentScanner
+
 
 __all__ = [
     # Scanner

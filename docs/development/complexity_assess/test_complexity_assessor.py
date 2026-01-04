@@ -7,16 +7,18 @@ Tests validate:
 2. Accuracy against test corpus (>85% required)
 3. Specific pattern detection
 """
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
+
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from complexity_assessor import ComplexityAssessor, assess_prompt, AssessmentResult
-from test_corpus import TEST_CORPUS
+from complexity_assessor import AssessmentResult, ComplexityAssessor, assess_prompt
 from evaluate import evaluate_corpus
+from test_corpus import TEST_CORPUS
 
 
 class TestComplexityAssessor:

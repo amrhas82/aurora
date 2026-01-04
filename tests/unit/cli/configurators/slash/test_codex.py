@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,

@@ -7,7 +7,6 @@ in .claude/commands/aur/ directory.
 from pathlib import Path
 
 import pytest
-
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,

@@ -20,6 +20,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from aurora_cli.planning.models import Plan
 
@@ -62,7 +63,7 @@ class PlanResult:
     """
 
     success: bool
-    plan: "Plan | None" = None
+    plan: Plan | None = None
     plan_dir: Path | None = None
     warnings: list[str] | None = None
     error: str | None = None
@@ -80,7 +81,7 @@ class ListResult:
         errors: List of errors encountered while loading plans
     """
 
-    plans: list["PlanSummary"] = field(default_factory=list)
+    plans: list[PlanSummary] = field(default_factory=list)
     warning: str | None = None
     errors: list[str] | None = None
 
@@ -100,7 +101,7 @@ class ShowResult:
     """
 
     success: bool
-    plan: "Plan | None" = None
+    plan: Plan | None = None
     plan_dir: Path | None = None
     files_status: dict[str, bool] | None = None
     error: str | None = None
@@ -122,7 +123,7 @@ class ArchiveResult:
     """
 
     success: bool
-    plan: "Plan | None" = None
+    plan: Plan | None = None
     source_dir: Path | None = None
     target_dir: Path | None = None
     duration_days: int | None = None
@@ -153,7 +154,7 @@ class PlanSummary:
     agent_gaps: int
 
     @classmethod
-    def from_plan(cls, plan: "Plan", status: str) -> "PlanSummary":
+    def from_plan(cls, plan: Plan, status: str) -> PlanSummary:
         """Create summary from a full Plan object.
 
         Args:

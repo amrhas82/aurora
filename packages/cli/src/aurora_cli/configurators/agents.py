@@ -1,7 +1,8 @@
 """Universal AGENTS.md configurator."""
 
-from .base import BaseConfigurator
 from aurora_cli.templates import get_agents_template
+
+from .base import BaseConfigurator
 
 
 class AgentsStandardConfigurator(BaseConfigurator):

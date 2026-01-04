@@ -261,7 +261,7 @@ class Plan(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_subgoal_dependencies(self) -> "Plan":
+    def validate_subgoal_dependencies(self) -> Plan:
         """Validate that all subgoal dependencies reference valid subgoals.
 
         Raises:
@@ -280,7 +280,7 @@ class Plan(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def check_circular_dependencies(self) -> "Plan":
+    def check_circular_dependencies(self) -> Plan:
         """Check for circular dependencies in subgoal graph.
 
         Uses depth-first search to detect cycles.
@@ -331,7 +331,7 @@ class Plan(BaseModel):
         return self.model_dump_json(indent=2)
 
     @classmethod
-    def from_json(cls, data: str) -> "Plan":
+    def from_json(cls, data: str) -> Plan:
         """Deserialize plan from JSON string.
 
         Args:

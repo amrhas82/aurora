@@ -81,16 +81,6 @@ class AuroraMCPServer:
             return self.tools.aurora_index(path, pattern)
 
         @self.mcp.tool()
-        def aurora_stats() -> str:
-            """
-            Get database statistics.
-
-            Returns:
-                JSON string with database stats
-            """
-            return self.tools.aurora_stats()
-
-        @self.mcp.tool()
         def aurora_context(file_path: str, function: str | None = None) -> str:
             """
             Get code context from file.
@@ -329,7 +319,6 @@ class AuroraMCPServer:
         tools = [
             ("aurora_search", "Search indexed codebase with semantic + keyword search"),
             ("aurora_index", "Index a directory of code files"),
-            ("aurora_stats", "Get database statistics (chunks, files, size)"),
             ("aurora_context", "Retrieve code context from a specific file/function"),
             ("aurora_related", "Find related code using ACT-R spreading activation"),
             ("aurora_query", "Retrieve relevant context without LLM inference"),

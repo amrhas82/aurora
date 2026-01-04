@@ -31,6 +31,7 @@ from aurora_cli.planning.results import (
     ShowResult,
 )
 
+
 logger = logging.getLogger(__name__)
 
 # Import renderer for template-based file generation
@@ -223,7 +224,7 @@ def init_planning_directory(
         )
 
 
-def _get_plans_dir(config: "Config | None" = None) -> Path:
+def _get_plans_dir(config: Config | None = None) -> Path:
     """Get plans directory from config or default.
 
     Args:
@@ -354,7 +355,7 @@ def _get_existing_plan_ids(plans_dir: Path) -> list[str]:
 def list_plans(
     archived: bool = False,
     all_plans: bool = False,
-    config: "Config | None" = None,
+    config: Config | None = None,
     use_manifest: bool = True,
 ) -> ListResult:
     """List plans with filtering.
@@ -455,7 +456,7 @@ def list_plans(
 def show_plan(
     plan_id: str,
     archived: bool = False,
-    config: "Config | None" = None,
+    config: Config | None = None,
 ) -> ShowResult:
     """Show plan details with file status.
 
@@ -547,7 +548,7 @@ def show_plan(
 def archive_plan(
     plan_id: str,
     force: bool = False,
-    config: "Config | None" = None,
+    config: Config | None = None,
 ) -> ArchiveResult:
     """Archive plan with atomic move and rollback on failure.
 
@@ -736,11 +737,12 @@ def _check_agent_availability(agent: str) -> bool:
     """
     try:
         # Try to load agent manifest
-        from aurora_cli.agent_discovery import AgentManifest, ManifestManager, AgentScanner
+        import io
 
         # Silent config load
         import sys
-        import io
+
+        from aurora_cli.agent_discovery import AgentManifest, AgentScanner, ManifestManager
         from aurora_cli.config import load_config
 
         old_stdout = sys.stdout
@@ -977,7 +979,7 @@ def create_plan(
     goal: str,
     context_files: list[Path] | None = None,
     auto_decompose: bool = True,
-    config: "Config | None" = None,
+    config: Config | None = None,
 ) -> PlanResult:
     """Create a new plan with SOAR-based goal decomposition.
 

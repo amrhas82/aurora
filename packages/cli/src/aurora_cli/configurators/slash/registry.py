@@ -30,8 +30,8 @@ class SlashCommandRegistry:
         from aurora_cli.configurators.slash.auggie import AuggieSlashCommandConfigurator
         from aurora_cli.configurators.slash.claude import ClaudeSlashCommandConfigurator
         from aurora_cli.configurators.slash.cline import ClineSlashCommandConfigurator
-        from aurora_cli.configurators.slash.codex import CodexSlashCommandConfigurator
         from aurora_cli.configurators.slash.codebuddy import CodeBuddySlashCommandConfigurator
+        from aurora_cli.configurators.slash.codex import CodexSlashCommandConfigurator
         from aurora_cli.configurators.slash.costrict import CostrictSlashCommandConfigurator
         from aurora_cli.configurators.slash.crush import CrushSlashCommandConfigurator
         from aurora_cli.configurators.slash.cursor import CursorSlashCommandConfigurator

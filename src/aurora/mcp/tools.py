@@ -1,12 +1,14 @@
 """
 AURORA MCP Tools - Implementation of MCP tools for code indexing and search.
 
-This module provides the actual implementation of the 5 MCP tools:
+This module provides the actual implementation of the MCP tools:
 - aurora_search: Search indexed codebase
 - aurora_index: Index directory of code files
-- aurora_stats: Get database statistics
 - aurora_context: Retrieve code context from file
 - aurora_related: Find related chunks using ACT-R spreading activation
+- aurora_list_agents: List all discovered agents
+- aurora_search_agents: Search agents by keyword
+- aurora_show_agent: Show full agent details
 """
 
 import json
@@ -196,67 +198,6 @@ class AuroraMCPTools:
 
         except Exception as e:
             logger.error(f"Error in aurora_index: {e}")
-            return json.dumps({"error": str(e)}, indent=2)
-
-    @log_performance("aurora_stats")
-    def aurora_stats(self) -> str:
-        """
-        Get database statistics.
-
-        No API key required. Reads local database statistics only.
-
-        Returns:
-            JSON string with database statistics:
-            - total_chunks: Total number of chunks in database
-            - total_files: Number of unique files indexed
-            - database_size_mb: Size of database file in megabytes
-            - indexed_at: Last modification time (if available)
-        """
-        try:
-            self._ensure_initialized()
-
-            # Get chunk count
-            with self._store._get_connection() as conn:
-                cursor = conn.cursor()
-
-                # Total chunks
-                cursor.execute("SELECT COUNT(*) FROM chunks")
-                total_chunks = cursor.fetchone()[0]
-
-                # Total files - extract from id field (format: "code:file:func")
-                cursor.execute("""
-                    SELECT COUNT(DISTINCT
-                        CASE
-                            WHEN id LIKE 'code:%' THEN substr(id, 6, instr(substr(id, 6), ':') - 1)
-                            ELSE id
-                        END
-                    ) FROM chunks WHERE type = 'code'
-                """)
-                result = cursor.fetchone()
-                total_files = result[0] if result else 0
-
-            # Get database file size
-            db_path = Path(self.db_path)
-            if db_path.exists():
-                size_bytes = db_path.stat().st_size
-                database_size_mb = round(size_bytes / (1024 * 1024), 2)
-                indexed_at = db_path.stat().st_mtime
-            else:
-                database_size_mb = 0.0
-                indexed_at = None
-
-            return json.dumps(
-                {
-                    "total_chunks": total_chunks,
-                    "total_files": total_files,
-                    "database_size_mb": database_size_mb,
-                    "indexed_at": indexed_at,
-                },
-                indent=2,
-            )
-
-        except Exception as e:
-            logger.error(f"Error in aurora_stats: {e}")
             return json.dumps({"error": str(e)}, indent=2)
 
     @log_performance("aurora_context")

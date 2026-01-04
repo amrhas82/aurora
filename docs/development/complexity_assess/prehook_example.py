@@ -18,9 +18,10 @@ Usage in Claude Code hooks config:
 The script reads the prompt from stdin and outputs a JSON object
 with routing recommendations.
 """
-import sys
 import json
+import sys
 from pathlib import Path
+
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))

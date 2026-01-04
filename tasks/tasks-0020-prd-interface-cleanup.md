@@ -14,8 +14,9 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0020-prd-interface-clea
 - `/home/hamr/PycharmProjects/aurora/src/aurora/mcp/server.py` - Registered new agent tools with rich descriptions, removed aurora_stats registration
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/main.py` - Removed aur query command and all helper functions
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/commands.py` - Removed 6 slash command templates (init/query/index/search/doctor/agents), kept 2 (plan/checkpoint)
-- `/home/hamr/PycharmProjects/aurora/CLAUDE.md` - TODO: Remove deleted slash command references
-- `/home/hamr/PycharmProjects/aurora/docs/cli/CLI_USAGE_GUIDE.md` - TODO: Remove aur query documentation
+- `/home/hamr/PycharmProjects/aurora/CLAUDE.md` - Removed aur query references, added INTERFACE_GUIDE.md reference, added note about updating global ~/.claude/CLAUDE.md
+- `/home/hamr/PycharmProjects/aurora/docs/cli/CLI_USAGE_GUIDE.md` - Removed all aur query documentation, removed "Basic Queries" and "Retrieval Quality Handling" sections, updated examples throughout
+- `/home/hamr/PycharmProjects/aurora/docs/INTERFACE_GUIDE.md` - Created comprehensive interface guide with CLI/MCP/Slash command reference, decision criteria, and OpenSpec pattern explanation
 
 ### Files to Delete
 - Any test files for deleted commands (if they exist):
@@ -82,17 +83,17 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0020-prd-interface-clea
   - [x] 2.8 Search for test files referencing deleted slash commands with `grep -r "aur:init\|aur:query\|aur:index\|aur:search\|aur:agents\|aur:doctor" tests/` and delete any found test files
   - [x] 2.9 Run shell integration tests with `pytest tests/integration/ -v --tb=short` to verify no runtime errors or import failures from deletions
 
-- [ ] 3.0 Phase 3: Documentation and Compatibility Audit
-  - [ ] 3.1 Create `/home/hamr/PycharmProjects/aurora/docs/INTERFACE_GUIDE.md` with comprehensive table containing: columns (Command Name, Interface Type, Purpose, When To Use, Syntax, Example), all current commands (7 CLI: init/doctor/mem index/mem search/mem stats/agents/plan + 9 MCP: query/search/index/context/related/get/list_agents/search_agents/show_agent + 2 Slash: plan/checkpoint), 2 future slash commands marked as "planned" (archive/implement)
-  - [ ] 3.2 Add decision criteria section to INTERFACE_GUIDE.md explaining: CLI for human terminal interaction with formatted output, MCP for Claude programmatic access with JSON output, Slash for multi-step workflow orchestration following OpenSpec pattern
-  - [ ] 3.3 Add OpenSpec workflow pattern explanation to INTERFACE_GUIDE.md describing the read state → make decisions → invoke CLI/MCP → write results pattern used by /aur:plan and future /aur:archive and /aur:implement commands
-  - [ ] 3.4 Update `/home/hamr/PycharmProjects/aurora/CLAUDE.md` to remove all references to deleted slash commands (/aur:init, /aur:query, /aur:index, /aur:search, /aur:agents, /aur:doctor) and add reference to new INTERFACE_GUIDE.md
-  - [ ] 3.5 Update `/home/hamr/PycharmProjects/aurora/docs/cli/CLI_USAGE_GUIDE.md` to remove all documentation for `aur query` command including usage examples, flags, and any cross-references
-  - [ ] 3.6 Scan `~/.claude/agents/*.md` files (if they exist) with `grep -r "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor" ~/.claude/agents/` and update any references to use appropriate replacements (CLI commands or MCP tools)
-  - [ ] 3.7 Scan `~/.claude/skills/**/*.md` files (if they exist) with `grep -r "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor" ~/.claude/skills/` and update any references
-  - [ ] 3.8 Scan `~/.claude/resources/task-briefs.md` (if exists) with `grep "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor"` and update any references
-  - [ ] 3.9 Scan all project documentation files with `grep -r "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor\|aur query" /home/hamr/PycharmProjects/aurora/docs/` and update all found references
-  - [ ] 3.10 Add comment in CLAUDE.md noting that global `~/.claude/CLAUDE.md` should be updated to reflect new command structure (for user action, not automated)
+- [x] 3.0 Phase 3: Documentation and Compatibility Audit
+  - [x] 3.1 Create `/home/hamr/PycharmProjects/aurora/docs/INTERFACE_GUIDE.md` with comprehensive table containing: columns (Command Name, Interface Type, Purpose, When To Use, Syntax, Example), all current commands (7 CLI: init/doctor/mem index/mem search/mem stats/agents/plan + 9 MCP: query/search/index/context/related/get/list_agents/search_agents/show_agent + 2 Slash: plan/checkpoint), 2 future slash commands marked as "planned" (archive/implement)
+  - [x] 3.2 Add decision criteria section to INTERFACE_GUIDE.md explaining: CLI for human terminal interaction with formatted output, MCP for Claude programmatic access with JSON output, Slash for multi-step workflow orchestration following OpenSpec pattern
+  - [x] 3.3 Add OpenSpec workflow pattern explanation to INTERFACE_GUIDE.md describing the read state → make decisions → invoke CLI/MCP → write results pattern used by /aur:plan and future /aur:archive and /aur:implement commands
+  - [x] 3.4 Update `/home/hamr/PycharmProjects/aurora/CLAUDE.md` to remove all references to deleted slash commands (/aur:init, /aur:query, /aur:index, /aur:search, /aur:agents, /aur:doctor) and add reference to new INTERFACE_GUIDE.md
+  - [x] 3.5 Update `/home/hamr/PycharmProjects/aurora/docs/cli/CLI_USAGE_GUIDE.md` to remove all documentation for `aur query` command including usage examples, flags, and any cross-references
+  - [x] 3.6 Scan `~/.claude/agents/*.md` files (if they exist) with `grep -r "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor" ~/.claude/agents/` and update any references to use appropriate replacements (CLI commands or MCP tools)
+  - [x] 3.7 Scan `~/.claude/skills/**/*.md` files (if they exist) with `grep -r "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor" ~/.claude/skills/` and update any references
+  - [x] 3.8 Scan `~/.claude/resources/task-briefs.md` (if exists) with `grep "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor"` and update any references
+  - [x] 3.9 Scan all project documentation files with `grep -r "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor\|aur query" /home/hamr/PycharmProjects/aurora/docs/` and update all found references
+  - [x] 3.10 Add comment in CLAUDE.md noting that global `~/.claude/CLAUDE.md` should be updated to reflect new command structure (for user action, not automated)
 
 - [ ] 4.0 Phase 4: Verification and Integration Testing
   - [ ] 4.1 Run full test suite with `make quality-check` and verify all tests pass (allowing existing 14 skipped tests and 6 mypy errors)

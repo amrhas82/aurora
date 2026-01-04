@@ -9,7 +9,7 @@ Complete guide to using the AURORA command-line interface for intelligent code q
 
 ## Important: CLI vs MCP - API Key Requirements
 
-**Standalone CLI commands (`aur query`, `aur headless`):**
+**Standalone CLI commands (`aur headless`):**
 - **REQUIRE** `ANTHROPIC_API_KEY` environment variable
 - Run LLM inference directly in the CLI
 - You pay for API usage
@@ -19,7 +19,9 @@ Complete guide to using the AURORA command-line interface for intelligent code q
 - Provide context/search to Claude Code CLI's built-in LLM
 - No additional API costs beyond your Claude subscription
 
-See [MCP Setup Guide](../MCP_SETUP.md) for MCP integration details.
+**Note**: For querying with LLM responses, use the `aurora_query` MCP tool from within Claude Code, which does not require an API key.
+
+See [MCP Setup Guide](../MCP_SETUP.md) and [INTERFACE_GUIDE.md](../INTERFACE_GUIDE.md) for complete interface details.
 
 ---
 
@@ -28,16 +30,14 @@ See [MCP Setup Guide](../MCP_SETUP.md) for MCP integration details.
 1. [Installation Verification](#installation-verification)
 2. [Initial Setup](#initial-setup)
 3. [Configuration](#configuration)
-4. [Basic Queries](#basic-queries)
-5. [Retrieval Quality Handling](#retrieval-quality-handling)
-6. [Memory Management](#memory-management)
-7. [Agent Discovery](#agent-discovery)
-8. [Budget Management](#budget-management)
-9. [Headless Mode](#headless-mode)
-10. [Health Checks & Diagnostics](#health-checks--diagnostics)
-11. [Graceful Degradation](#graceful-degradation)
-12. [Troubleshooting](#troubleshooting)
-13. [Command Reference](#command-reference)
+4. [Memory Management](#memory-management)
+5. [Agent Discovery](#agent-discovery)
+6. [Budget Management](#budget-management)
+7. [Headless Mode](#headless-mode)
+8. [Health Checks & Diagnostics](#health-checks--diagnostics)
+9. [Graceful Degradation](#graceful-degradation)
+10. [Troubleshooting](#troubleshooting)
+11. [Command Reference](#command-reference)
 
 ---
 
@@ -164,7 +164,7 @@ Summary:
 Next Steps:
   1. Verify setup: aur doctor
   2. Create a plan: aur plan create "Feature name"
-  3. Query codebase: aur query "How does auth work?"
+  3. Search codebase: aur mem search "authentication"
 ```
 
 **Time Estimate:** < 2 minutes
@@ -280,7 +280,7 @@ AURORA v0.3.0+ uses **project-specific storage** by default:
 **Important:** API keys are **NOT** required for initialization. AURORA uses environment variables only.
 
 ```bash
-# Set API key for standalone CLI commands (aur query, aur headless)
+# Set API key for standalone CLI commands (aur headless)
 export ANTHROPIC_API_KEY=sk-ant-...
 
 # MCP tools inside Claude Code CLI do NOT require API keys
@@ -387,458 +387,6 @@ nano ~/.aurora/config.json
 cp ~/.aurora/config.json ./aurora.config.json
 nano ./aurora.config.json
 ```
-
----
-
-## Basic Queries
-
-### Simple Query (Direct LLM)
-
-For simple questions, AURORA automatically uses direct LLM mode:
-
-```bash
-aur query "What is a Python decorator?"
-```
-
-**Output:**
-```
-→ Using Direct LLM (fast mode)
-
-Response:
-┌──────────────────────────────────────────────────────────┐
-│ A Python decorator is a function that modifies the       │
-│ behavior of another function...                          │
-└──────────────────────────────────────────────────────────┘
-```
-
-### Complex Query (AURORA Pipeline)
-
-For complex questions, AURORA automatically escalates to full pipeline:
-
-```bash
-aur query "Refactor the authentication system to use OAuth2"
-```
-
-**Output:**
-```
-→ Using AURORA (full pipeline)
-
-Response:
-┌──────────────────────────────────────────────────────────┐
-│ Based on analysis of your authentication system, here    │
-│ are the steps to implement OAuth2:                       │
-│ 1. Install authlib package                               │
-│ 2. Create OAuth2 configuration...                        │
-└──────────────────────────────────────────────────────────┘
-```
-
-### Force Direct LLM
-
-Skip escalation assessment and use direct LLM:
-
-```bash
-aur query "Explain classes" --force-direct
-```
-
-**Use Case:**
-- You know the query is simple
-- Faster response needed
-- Lower cost acceptable
-
-### Force AURORA Pipeline
-
-Skip escalation assessment and use full AURORA:
-
-```bash
-aur query "What is Python?" --force-aurora
-```
-
-**Use Case:**
-- Want memory context even for simple queries
-- Need SOAR reasoning trace
-- Testing AURORA behavior
-
-### Show Escalation Reasoning
-
-See why AURORA chose direct LLM or full pipeline:
-
-```bash
-aur query "Design a microservices architecture" --show-reasoning
-```
-
-**Output:**
-```
-Escalation Analysis:
-  Query: Design a microservices architecture
-  Complexity: COMPLEX
-  Score: 0.843
-  Confidence: 0.920
-  Method: keyword_assessment
-  Decision: AURORA
-  Reasoning: Query contains architectural planning keywords
-```
-
-### Verbose Mode
-
-Show detailed SOAR phase trace:
-
-```bash
-aur query "Refactor auth" --force-aurora --verbose
-```
-
-**Output:**
-```
-SOAR Phase Trace:
-┌───────────┬──────────┬────────────────────────────────────┐
-│ Phase     │ Duration │ Summary                            │
-├───────────┼──────────┼────────────────────────────────────┤
-│ Assess    │   0.15s  │ Complexity: COMPLEX                │
-│ Retrieve  │   0.42s  │ Retrieved 15 relevant chunks       │
-│ Decompose │   1.23s  │ Created 3 subgoals                 │
-│ Verify    │   0.87s  │ Self-verification passed           │
-│ Route     │   0.34s  │ Selected 2 agents                  │
-│ Collect   │   2.45s  │ Executed subgoals                  │
-│ Synthesize│   1.12s  │ Synthesized final response         │
-│ Record    │   0.05s  │ Cached reasoning pattern           │
-│ Respond   │   0.02s  │ Formatted response                 │
-└───────────┴──────────┴────────────────────────────────────┘
-
-Summary:
-  Total Duration: 6.65s
-  Estimated Cost: $0.0234
-  Confidence: 0.87
-  Overall Score: 0.91
-```
-
-### Use Specific Files as Context
-
-Override indexed memory with specific files using `--context` (or `-c`):
-
-```bash
-# Single file
-aur query "How does authentication work?" --context src/auth.py
-
-# Multiple files
-aur query "Explain the config" -c config.py -c settings.py
-```
-
-**Behavior:**
-- Bypasses indexed memory completely
-- Uses ONLY the specified files as context
-- Files are read directly (not from index)
-- Useful for focusing on specific files or when memory is not indexed
-
-**Use Cases:**
-- Focus query on specific implementation files
-- Query files not yet indexed
-- Get answers based on exactly what you specify
-
-### Dry-Run Mode
-
-Test configuration without making API calls:
-
-```bash
-aur query "test query" --dry-run
-```
-
-**Output:**
-```
-DRY RUN MODE - No API calls will be made
-
-Configuration:
-  Provider:  anthropic
-  Model:     claude-sonnet-4-20250514
-  API Key:   sk-ant-...xyz ✓
-  Threshold: 0.6
-
-Memory Store:
-  Database:  /home/user/project/aurora.db ✓
-  Chunks:    ~234
-
-Escalation Decision:
-  Query:      test query
-  Complexity: SIMPLE
-  Score:      0.245
-  Confidence: 0.872
-  Method:     keyword_assessment
-  Decision:   Would use: Direct LLM
-  Reasoning:  Query is a simple informational question
-
-Estimated Cost:
-  ~$0.002-0.005 (Direct LLM)
-
-Exiting without API calls
-```
-
-**Use Case:**
-- Verify API key is configured
-- Check database state
-- Test escalation logic
-- Estimate costs before running
-
----
-
-## Retrieval Quality Handling
-
-AURORA automatically assesses the quality of memory retrieval to provide better responses when indexed context is weak or missing.
-
-### Quality Levels
-
-| Level | Chunks Retrieved | Groundedness | High-Quality Chunks | Behavior |
-|-------|------------------|--------------|---------------------|----------|
-| **NONE** | 0 | N/A | 0 | Auto-proceed with general knowledge |
-| **WEAK** | >0 | <0.7 | <3 | Interactive prompt (3 options) |
-| **GOOD** | >0 | ≥0.7 | ≥3 | Auto-proceed with chunks |
-
-**Key Metrics:**
-- **Groundedness**: How well the LLM's answer is grounded in retrieved context (0.0-1.0)
-- **High-Quality Chunks**: Chunks with activation score ≥ 0.3 (relevant + recently accessed)
-- **Activation Threshold**: 0.3 (configurable via `AURORA_ACTIVATION_THRESHOLD`)
-
-### Scenario 1: No Match (0 chunks)
-
-When the memory store is empty or has no relevant chunks:
-
-```bash
-aur query "How does the authentication work?"
-```
-
-**Output:**
-```
-→ Using AURORA (full pipeline)
-
-Phase 2: Retrieve
-  Retrieved: 0 chunks (0 high-quality)
-
-Phase 3: Decompose
-  Note: No indexed context available. Using LLM general knowledge.
-
-Response:
-┌──────────────────────────────────────────────────────────┐
-│ Based on general knowledge (no project context):         │
-│ Authentication typically involves...                     │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Behavior**: Automatically proceeds with LLM's general knowledge. No user prompt.
-
-### Scenario 2: Weak Match (low groundedness OR <3 high-quality chunks)
-
-When retrieval finds chunks but they're low-quality or poorly matched:
-
-```bash
-aur query "Explain the payment processing logic"
-```
-
-**Output:**
-```
-→ Using AURORA (full pipeline)
-
-Phase 2: Retrieve
-  Retrieved: 2 chunks (1 high-quality)
-  Files: payment.py, utils.py
-
-Phase 4: Verify
-  Groundedness: 0.62 (below threshold of 0.7)
-  High-quality chunks: 1 (need ≥3 for confidence)
-
-⚠️  Weak Retrieval Quality Detected
-┌──────────────────────────────────────────────────────────┐
-│ The retrieved context may not fully answer your query.   │
-│ Groundedness: 0.62 (threshold: 0.7)                      │
-│ High-quality chunks: 1 (threshold: 3)                    │
-│                                                          │
-│ How would you like to proceed?                          │
-│                                                          │
-│ 1. Start anew - Clear weak context, use general         │
-│    knowledge                                            │
-│ 2. Start over - Rephrase your query for better matches  │
-│ 3. Continue - Proceed with current weak matches         │
-│                                                          │
-│ Enter choice (1-3): _                                    │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Interactive Options:**
-
-1. **Start Anew** - Clears weak chunks and proceeds with LLM general knowledge
-   ```
-   → Clearing weak context, using general knowledge...
-   ```
-
-2. **Start Over** - Exits, prompting you to rephrase the query
-   ```
-   → Please rephrase your query for better matches.
-
-   Suggestions:
-   - Use more specific function/class names
-   - Reference file paths or modules
-   - Include technical keywords from your codebase
-   ```
-
-3. **Continue** - Proceeds with the weak matches anyway
-   ```
-   → Continuing with 2 retrieved chunks...
-   (Response may be less grounded in your codebase)
-   ```
-
-### Scenario 3: Good Match (groundedness ≥0.7 AND ≥3 high-quality chunks)
-
-When retrieval finds strong, relevant context:
-
-```bash
-aur query "How does the User model handle authentication?"
-```
-
-**Output:**
-```
-→ Using AURORA (full pipeline)
-
-Phase 2: Retrieve
-  Retrieved: 5 chunks (5 high-quality)
-  Files: models/user.py, auth/handlers.py, tests/test_auth.py
-
-Phase 4: Verify
-  Groundedness: 0.85 (above threshold ✓)
-  High-quality chunks: 5 (above threshold ✓)
-  Quality: GOOD
-
-Response:
-┌──────────────────────────────────────────────────────────┐
-│ Based on your codebase:                                  │
-│                                                          │
-│ The User model in models/user.py handles authentication  │
-│ through the `check_password()` method...                 │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Behavior**: Automatically proceeds with high-quality chunks. No user prompt.
-
-### Non-Interactive Mode (for Automation)
-
-Disable interactive prompts for CI/CD, scripts, or automated workflows:
-
-```bash
-aur query "Explain auth" --non-interactive
-```
-
-**Behavior with Weak Match:**
-```
-→ Using AURORA (full pipeline)
-
-Phase 4: Verify
-  Groundedness: 0.62 (weak)
-  Note: Non-interactive mode - auto-continuing with weak matches
-
-Response:
-┌──────────────────────────────────────────────────────────┐
-│ (Based on weak context - results may be less accurate)   │
-│ ...                                                      │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Use Cases:**
-- CI/CD pipelines
-- Automated testing
-- Scheduled batch queries
-- Scripted analysis
-
-**Alias:** `--non-interactive` or `-n`
-
-### Understanding Groundedness
-
-**Groundedness Score** (0.0-1.0): Measures how well the LLM's response is grounded in retrieved chunks vs general knowledge.
-
-| Score | Meaning | Recommendation |
-|-------|---------|----------------|
-| 0.9-1.0 | Highly grounded | Excellent context match |
-| 0.7-0.9 | Well grounded | Good context, proceed |
-| 0.5-0.7 | Partially grounded | Weak match, consider rephrasing |
-| 0.0-0.5 | Poorly grounded | Missing context, index more files |
-
-**Factors Affecting Groundedness:**
-1. **Semantic similarity** between query and chunks
-2. **Content overlap** between LLM response and chunks
-3. **Citation density** (how much the LLM references retrieved content)
-
-### Understanding Activation Scores
-
-**Activation Score**: ACT-R metric combining frequency, recency, and semantic relevance.
-
-**Threshold**: 0.3 (configurable via environment variable)
-
-**Calculation:**
-```
-activation = base_level + recency_boost + semantic_similarity
-```
-
-**High Activation (≥0.3) means:**
-- Chunk accessed frequently
-- Chunk accessed recently
-- Chunk semantically relevant to query
-
-**Low Activation (<0.3) means:**
-- Rarely accessed chunk
-- Stale chunk (old access time)
-- Weak semantic match
-
-**Example:**
-```python
-# Chunk A: accessed 10 times yesterday
-activation_A = 0.45  # High (relevant + recent + frequent)
-
-# Chunk B: accessed once 6 months ago
-activation_B = 0.12  # Low (stale + infrequent)
-```
-
-### FAQ
-
-**Q: Why am I seeing weak match warnings?**
-
-A: Common reasons:
-1. **Incomplete indexing**: Run `aur mem index .` to index your full project
-2. **Query too vague**: Use specific function/class names
-3. **Domain mismatch**: Query references code not yet indexed
-4. **Stale chunks**: Chunks haven't been accessed recently (low activation)
-
-**Q: When should I rephrase my query (option 2)?**
-
-A: Rephrase when:
-- You know the code exists but retrieval missed it
-- Your query was vague or used wrong terminology
-- You want more specific results
-
-Don't rephrase when:
-- The code genuinely doesn't exist (use option 1 for general knowledge)
-- You're exploring unfamiliar codebase (use option 3 to proceed)
-
-**Q: What does "start anew" vs "continue" mean?**
-
-A:
-- **Start anew (option 1)**: Clears weak chunks, uses LLM general knowledge (like no retrieval)
-- **Continue (option 3)**: Uses weak chunks anyway (may be partially helpful)
-
-**Q: How do I disable prompts for automation?**
-
-A: Always use `--non-interactive` flag:
-```bash
-aur query "your query" --non-interactive
-```
-
-**Q: Can I configure the thresholds?**
-
-A: Yes, via environment variables:
-```bash
-export AURORA_ACTIVATION_THRESHOLD=0.25  # Default: 0.3
-export AURORA_GROUNDEDNESS_THRESHOLD=0.65  # Default: 0.7
-```
-
-Lower thresholds = more lenient (fewer weak match warnings)
-Higher thresholds = stricter (more weak match warnings)
-
-**Q: Does MCP have retrieval quality prompts?**
-
-A: No. MCP tools (`aurora_search`, `aurora_query`) are non-interactive and always return results regardless of quality. Only the standalone CLI (`aur query`) has interactive prompts.
 
 ---
 
@@ -1077,23 +625,6 @@ Loading statistics from ./aurora.db...
 │   python            │ 234 chunks   │
 └─────────────────────┴──────────────┘
 ```
-
-### Auto-Index Prompt
-
-On first query with empty memory, AURORA prompts:
-
-```bash
-aur query "How does login work?"
-```
-
-**Prompt:**
-```
-Memory is empty. Index current directory?
-This will index Python files in the current directory [Y/n]: _
-```
-
-- **Y** or Enter: Index current directory
-- **n**: Skip and continue without memory context
 
 ---
 
@@ -1398,8 +929,8 @@ AURORA automatically enforces budget limits before making API calls.
 # Set low budget for demo
 aur budget set 0.01
 
-# Attempt expensive query
-aur query "explain everything about Aurora in extreme detail"
+# Attempt expensive operation (e.g., via aur headless with large prompt)
+aur headless expensive_task.md
 ```
 
 **Output:**
@@ -1447,10 +978,10 @@ aur budget history --limit 50
 aur budget reset
 ```
 
-**4. Use Non-Interactive Mode for CI/CD**
+**4. Monitor Budget for Headless Operations**
 ```bash
-# Queries will fail gracefully if budget exceeded
-aur query "test query" --non-interactive
+# Check remaining budget before expensive operations
+aur budget show
 ```
 
 ### Configuration
@@ -1520,7 +1051,7 @@ A: Aurora recreates it with default limit ($15.00) and zero spending. History lo
 
 **Q: Do memory commands count toward budget?**
 
-A: No. Only `aur query` and `aur headless` commands that call LLM APIs count toward budget. `aur mem index/search/stats` are free.
+A: No. Only `aur headless` command that calls LLM APIs counts toward budget. `aur mem index/search/stats` are free.
 
 ---
 
@@ -1815,7 +1346,7 @@ You can explicitly disable features for testing or restricted environments:
 AURORA_SKIP_TREESITTER=1 aur mem index .
 
 # Test without Git
-AURORA_SKIP_GIT=1 aur query "test query"
+AURORA_SKIP_GIT=1 aur mem search "test query"
 
 # Test with all features disabled
 AURORA_SKIP_TREESITTER=1 AURORA_SKIP_GIT=1 aur mem index .
@@ -1862,7 +1393,7 @@ If automatic diagnosis doesn't resolve the issue, see specific troubleshooting s
 Error: ANTHROPIC_API_KEY not found.
 ```
 
-**Important:** This error only occurs with standalone CLI commands like `aur query` and `aur headless`. MCP tools inside Claude Code CLI do NOT require API keys.
+**Important:** This error only occurs with standalone CLI commands like `aur headless`. MCP tools inside Claude Code CLI do NOT require API keys.
 
 **Solution for CLI commands:**
 ```bash
@@ -1926,26 +1457,23 @@ Too many API requests in short time period.
 # 1. Wait a few seconds (automatic retry enabled)
 # AURORA will retry with exponential backoff
 
-# 2. For simple queries, use direct mode
-aur query "question" --force-direct
-
-# 3. Upgrade API tier at console.anthropic.com
+# 2. Upgrade API tier at console.anthropic.com
 ```
 
 ---
 
-### Issue: Slow queries
+### Issue: Slow memory searches
 
 **Symptom:**
-Queries take >10 seconds to complete.
+Memory searches take >5 seconds to complete.
 
 **Solution:**
 ```bash
-# 1. Use direct LLM for simple queries
-aur query "simple question" --force-direct
+# 1. Check index size
+aur mem stats
 
-# 2. Check escalation threshold (increase to prefer direct)
-export AURORA_ESCALATION_THRESHOLD=0.8
+# 2. Reduce search limit
+aur mem search "query" --limit 5
 
 # 3. Index memory for faster context retrieval
 aur mem index
@@ -2036,38 +1564,6 @@ aur init
 - Prompts for API key
 - Prompts to index directory
 - Creates `~/.aurora/config.json`
-
----
-
-#### `aur query`
-
-Execute a query with automatic escalation.
-
-```bash
-aur query QUERY_TEXT [OPTIONS]
-```
-
-**Arguments:**
-- `QUERY_TEXT`: Question or command (required)
-
-**Options:**
-- `--force-aurora`: Force AURORA pipeline
-- `--force-direct`: Force direct LLM
-- `--threshold FLOAT`: Escalation threshold (0.0-1.0, default: 0.6)
-- `--show-reasoning`: Show escalation analysis
-- `--verbose`: Show SOAR phase trace
-- `--dry-run`: Validate without API calls
-- `--non-interactive`: Disable interactive prompts (for automation)
-- `-c, --context FILE`: Use specific files as context (can be repeated)
-
-**Examples:**
-```bash
-aur query "What is a decorator?"
-aur query "Refactor auth" --force-aurora --verbose
-aur query "test" --dry-run
-aur query "How does auth work?" --context src/auth.py
-aur query "Explain config" -c config.py -c settings.py
-```
 
 ---
 
@@ -2280,21 +1776,18 @@ aur headless experiment.md --show-scratchpad
 ### 1. Index Before Querying
 
 ```bash
-# Index project first
+# Index project for semantic search
 aur mem index
 
-# Then query with full context
-aur query "Explain the auth flow"
+# Then search with context-aware retrieval
+aur mem search "authentication flow"
 ```
 
-### 2. Use Dry-Run for Testing
+### 2. Use MCP Tools from Claude Code
 
 ```bash
-# Test configuration without costs
-aur query "test" --dry-run
-
-# Verify escalation behavior
-aur query "complex task" --dry-run --show-reasoning
+# For LLM-powered queries, use aurora_query MCP tool from within Claude Code
+# No API key required, no additional costs beyond Claude subscription
 ```
 
 ### 3. Prefer Environment Variables for API Keys
@@ -2303,15 +1796,14 @@ aur query "complex task" --dry-run --show-reasoning
 # Secure: Doesn't persist key in files
 export ANTHROPIC_API_KEY=sk-ant-...
 
-# Less secure: Key stored in config file
-aur init  # Enter API key when prompted
+# Only needed for aur headless command
 ```
 
-### 4. Use Direct LLM When Possible
+### 4. Monitor Budget for Headless Operations
 
 ```bash
-# Fast and cheap for simple queries
-aur query "What is a list comprehension?" --force-direct
+# Check budget before running expensive headless operations
+aur budget show
 ```
 
 ### 5. Monitor Costs in Headless Mode

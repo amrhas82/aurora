@@ -39,9 +39,6 @@ make type-check            # MyPy strict mode (0 errors required)
 aur --verify               # Check installation health
 aur mem index .            # Index codebase for semantic search
 aur mem search "text"      # Search indexed code
-aur query "text"           # Query with auto-escalation (may prompt if weak match)
-aur query "text" --non-interactive  # For CI/CD (no prompts, auto-continue)
-aur query "text" --context file.py  # Query with specific files as context
 aurora-mcp status          # Check MCP server status
 
 # Agent Discovery
@@ -56,7 +53,6 @@ pytest -m critical         # Critical tests only
 pytest --cov=packages      # Coverage report
 ```
 
-**Retrieval Quality Note**: Queries may prompt for user decisions when context quality is low (groundedness < 0.7 or <3 high-quality chunks). Use `--non-interactive` flag for automated/scripted usage. See [CLI_USAGE_GUIDE.md](docs/cli/CLI_USAGE_GUIDE.md#retrieval-quality-handling) for details.
 
 ## Critical Gotchas
 
@@ -81,6 +77,7 @@ pytest --cov=packages      # Coverage report
 Complete reference: docs/KNOWLEDGE_BASE.md
 
 Key guides:
+- Interface Guide: docs/INTERFACE_GUIDE.md (CLI/MCP/Slash command reference)
 - MCP Setup: docs/MCP_SETUP.md
 - CLI Usage: docs/cli/CLI_USAGE_GUIDE.md
 - Architecture: docs/architecture/SOAR_ARCHITECTURE.md
@@ -98,3 +95,5 @@ Key guides:
 **Cost Tracking**: Budget at `~/.aurora/budget_tracker.json` | API keys via env vars only
 
 **Git**: Main branch `main` | Clean status | Recent: Python 3.12 compat, mypy fixes
+
+**Note**: If you have a global `~/.claude/CLAUDE.md` with Aurora-specific slash commands, please update it to reflect the new simplified interface structure. See [INTERFACE_GUIDE.md](docs/INTERFACE_GUIDE.md) for the current command set. Legacy slash commands (/aur:init, /aur:query, /aur:index, /aur:search, /aur:agents, /aur:doctor) have been removed in favor of direct CLI or MCP tool usage.

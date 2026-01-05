@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aurora-actr"
-version = "0.4.1"
+version = "0.4.2"
 description = "AURORA: Adaptive Unified Reasoning and Orchestration Architecture with MCP Integration"
 readme = "README.md"
 requires-python = ">=3.10"

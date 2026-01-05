@@ -50,9 +50,9 @@ def get_default_plans_path() -> Path:
     """Get the default plans directory path.
 
     Returns:
-        Path to ~/.aurora/plans
+        Path to ./.aurora/plans (project-local)
     """
-    return Path.home() / ".aurora" / "plans"
+    return Path.cwd() / ".aurora" / "plans"
 
 
 def validate_plan_structure(plan_dir: Path, plan_id: str) -> tuple[list[str], list[str]]:

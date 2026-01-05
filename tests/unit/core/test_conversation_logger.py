@@ -60,7 +60,7 @@ class TestConversationLogger:
         """Test logger initializes with default path."""
         logger = ConversationLogger()
 
-        expected_path = Path.home() / ".aurora" / "logs" / "conversations"
+        expected_path = Path.cwd() / ".aurora" / "logs" / "conversations"
         assert logger.base_path == expected_path
         assert logger.enabled is True
 

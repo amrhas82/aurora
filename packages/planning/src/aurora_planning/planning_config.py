@@ -19,7 +19,7 @@ def get_plans_dir() -> Path:
     Priority:
     1. AURORA_PLANS_DIR environment variable
     2. Current project's .aurora/plans/ if it exists
-    3. ~/.aurora/plans/ (default)
+    3. ./.aurora/plans/ (default, project-local)
 
     Returns:
         Path to plans directory
@@ -41,8 +41,8 @@ def get_plans_dir() -> Path:
     if local_plans_dir.exists() and local_plans_dir.is_dir():
         return local_plans_dir
 
-    # Default to ~/.aurora/plans/
-    default_plans_dir = Path.home() / ".aurora" / "plans"
+    # Default to ./.aurora/plans/ (project-local)
+    default_plans_dir = Path.cwd() / ".aurora" / "plans"
     if not default_plans_dir.exists():
         default_plans_dir.mkdir(parents=True, exist_ok=True)
 

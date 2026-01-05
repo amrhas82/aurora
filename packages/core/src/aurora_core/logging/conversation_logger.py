@@ -27,7 +27,7 @@ class ConversationLogger:
     """
     Logs SOAR conversations to markdown files.
 
-    Creates timestamped markdown logs in ~/.aurora/logs/conversations/YYYY/MM/
+    Creates timestamped markdown logs in ./.aurora/logs/conversations/YYYY/MM/
     with structured phase data and execution summary.
 
     Attributes:
@@ -40,11 +40,11 @@ class ConversationLogger:
         Initialize conversation logger.
 
         Args:
-            base_path: Base directory for logs (default: ~/.aurora/logs/conversations)
+            base_path: Base directory for logs (default: ./.aurora/logs/conversations)
             enabled: Whether to enable logging
         """
         if base_path is None:
-            base_path = Path.home() / ".aurora" / "logs" / "conversations"
+            base_path = Path.cwd() / ".aurora" / "logs" / "conversations"
 
         self.base_path = base_path
         self.enabled = enabled

@@ -296,7 +296,7 @@ class PlanDecomposer:
 
         try:
             # Get or create default manifest path
-            manifest_path = Path.home() / ".aurora" / "cache" / "agent_manifest.json"
+            manifest_path = Path.cwd() / ".aurora" / "cache" / "agent_manifest.json"
 
             # Create manifest manager and load/refresh manifest
             manager = ManifestManager()

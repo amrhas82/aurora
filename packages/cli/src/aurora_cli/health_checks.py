@@ -89,7 +89,7 @@ class CoreSystemChecks:
     def _check_permissions(self) -> HealthCheckResult:
         """Check .aurora directory permissions."""
         try:
-            aurora_dir = Path.home() / ".aurora"
+            aurora_dir = Path.cwd() / ".aurora"
             if not aurora_dir.exists():
                 return ("warning", ".aurora directory not found", {"path": str(aurora_dir)})
 
@@ -110,7 +110,7 @@ class CoreSystemChecks:
         issues = []
 
         # Check if .aurora directory missing
-        aurora_dir = Path.home() / ".aurora"
+        aurora_dir = Path.cwd() / ".aurora"
         if not aurora_dir.exists():
             issues.append(
                 {
@@ -155,7 +155,7 @@ class CoreSystemChecks:
             )
 
         # Check directory permissions
-        aurora_dir = Path.home() / ".aurora"
+        aurora_dir = Path.cwd() / ".aurora"
         if aurora_dir.exists() and not os.access(aurora_dir, os.W_OK):
             issues.append(
                 {
@@ -370,7 +370,7 @@ class SearchRetrievalChecks:
     def _check_cache_size(self) -> HealthCheckResult:
         """Check cache directory size."""
         try:
-            cache_dir = Path.home() / ".aurora" / "cache"
+            cache_dir = Path.cwd() / ".aurora" / "cache"
             if not cache_dir.exists():
                 return ("pass", "No cache directory", {"path": str(cache_dir)})
 
@@ -402,7 +402,7 @@ class SearchRetrievalChecks:
         issues = []
 
         # Check if cache is too large
-        cache_dir = Path.home() / ".aurora" / "cache"
+        cache_dir = Path.cwd() / ".aurora" / "cache"
         if cache_dir.exists():
             total_size = sum(f.stat().st_size for f in cache_dir.rglob("*") if f.is_file())
             size_mb = total_size / (1024 * 1024)

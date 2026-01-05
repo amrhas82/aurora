@@ -122,3 +122,199 @@ class TestPlanDecomposerSOARIntegration:
         # Results should be identical
         assert len(subgoals1) == len(subgoals2)
         assert source1 == source2
+
+
+class TestContextSummaryBuilding:
+    """Tests for context summary building (FR-2.2)."""
+
+    def test_build_context_summary_with_code_chunks(self):
+        """Test context summary format with code chunks."""
+        decomposer = PlanDecomposer()
+
+        context = {
+            "code_chunks": [{"file": "a.py"}, {"file": "b.py"}, {"file": "c.py"}],
+            "reasoning_chunks": [],
+        }
+
+        summary = decomposer._build_context_summary(context)
+
+        assert "Available code context: 3 code chunks" in summary
+        assert "covering relevant functions, classes, and modules" in summary
+        assert len(summary) <= 500  # Limit to 500 characters
+
+    def test_build_context_summary_with_reasoning_chunks(self):
+        """Test context summary format with reasoning chunks."""
+        decomposer = PlanDecomposer()
+
+        context = {
+            "code_chunks": [],
+            "reasoning_chunks": [{"pattern": "decomp1"}, {"pattern": "decomp2"}],
+        }
+
+        summary = decomposer._build_context_summary(context)
+
+        assert "Reasoning patterns: 2 previous successful" in summary
+        assert "decompositions and solutions" in summary
+        assert len(summary) <= 500
+
+    def test_build_context_summary_with_both_chunk_types(self):
+        """Test context summary with both code and reasoning chunks."""
+        decomposer = PlanDecomposer()
+
+        context = {
+            "code_chunks": [{"file": "a.py"}, {"file": "b.py"}],
+            "reasoning_chunks": [{"pattern": "decomp1"}],
+        }
+
+        summary = decomposer._build_context_summary(context)
+
+        assert "Available code context: 2 code chunks" in summary
+        assert "Reasoning patterns: 1 previous successful" in summary
+        assert len(summary) <= 500
+
+    def test_build_context_summary_empty(self):
+        """Test context summary with no chunks returns special message."""
+        decomposer = PlanDecomposer()
+
+        context = {
+            "code_chunks": [],
+            "reasoning_chunks": [],
+        }
+
+        summary = decomposer._build_context_summary(context)
+
+        assert summary == "No indexed context available. Using LLM general knowledge."
+
+    def test_build_context_summary_missing_keys(self):
+        """Test context summary handles missing keys gracefully."""
+        decomposer = PlanDecomposer()
+
+        # Empty context dict
+        summary = decomposer._build_context_summary({})
+
+        assert summary == "No indexed context available. Using LLM general knowledge."
+
+
+class TestAvailableAgentsList:
+    """Tests for available agents list loading (FR-2.3)."""
+
+    @patch('aurora_cli.planning.decompose.ManifestManager')
+    def test_load_available_agents(self, mock_manager_class):
+        """Test loading available agents from manifest."""
+        # Setup mock manifest with agents
+        mock_agent1 = Mock()
+        mock_agent1.id = "full-stack-dev"
+        mock_agent2 = Mock()
+        mock_agent2.id = "qa-test-architect"
+        mock_agent3 = Mock()
+        mock_agent3.id = "holistic-architect"
+
+        mock_manifest = Mock()
+        mock_manifest.agents = [mock_agent1, mock_agent2, mock_agent3]
+
+        mock_manager = Mock()
+        mock_manager.get_or_refresh.return_value = mock_manifest
+        mock_manager_class.return_value = mock_manager
+
+        decomposer = PlanDecomposer()
+        agents = decomposer._load_available_agents()
+
+        assert agents is not None
+        assert "@full-stack-dev" in agents
+        assert "@qa-test-architect" in agents
+        assert "@holistic-architect" in agents
+        assert len(agents) == 3
+
+    @patch('aurora_cli.planning.decompose.ManifestManager')
+    def test_load_available_agents_manifest_unavailable(self, mock_manager_class):
+        """Test graceful handling when manifest unavailable."""
+        # Simulate manifest load failure
+        mock_manager = Mock()
+        mock_manager.get_or_refresh.side_effect = Exception("Manifest not found")
+        mock_manager_class.return_value = mock_manager
+
+        decomposer = PlanDecomposer()
+        agents = decomposer._load_available_agents()
+
+        # Should return None gracefully
+        assert agents is None
+
+    @patch('aurora_cli.planning.decompose.ManifestManager')
+    def test_load_available_agents_empty_manifest(self, mock_manager_class):
+        """Test handling of empty manifest."""
+        mock_manifest = Mock()
+        mock_manifest.agents = []
+
+        mock_manager = Mock()
+        mock_manager.get_or_refresh.return_value = mock_manifest
+        mock_manager_class.return_value = mock_manager
+
+        decomposer = PlanDecomposer()
+        agents = decomposer._load_available_agents()
+
+        assert agents == []
+
+
+class TestComplexityMapping:
+    """Tests for complexity assessment and mapping (FR-2.4)."""
+
+    @patch('aurora_cli.planning.decompose.decompose_query')
+    @patch('aurora_cli.planning.decompose.LLMClient')
+    def test_complexity_passed_to_soar(self, mock_llm_client, mock_decompose_query):
+        """Test that complexity is correctly passed to SOAR."""
+        # Setup mock
+        mock_llm_client.return_value = Mock()
+        mock_decomposition = Mock()
+        mock_decomposition.subgoals = []
+        mock_result = Mock()
+        mock_result.decomposition = mock_decomposition
+        mock_decompose_query.return_value = mock_result
+
+        decomposer = PlanDecomposer()
+
+        # Test each complexity level
+        for complexity in [Complexity.SIMPLE, Complexity.MODERATE, Complexity.COMPLEX]:
+            decomposer.decompose("Test goal", complexity=complexity)
+
+            # Verify SOAR was called with correct complexity string
+            call_args = mock_decompose_query.call_args
+            assert call_args[1]['complexity'] == complexity.value
+
+    def test_complexity_fallback_heuristic(self):
+        """Test that heuristic decomposition uses complexity correctly."""
+        decomposer = PlanDecomposer()
+
+        # Test SIMPLE complexity
+        subgoals_simple = decomposer._fallback_to_heuristics("Test goal", Complexity.SIMPLE)
+        assert len(subgoals_simple) == 3  # Plan, Implement, Test
+
+        # Test COMPLEX complexity
+        subgoals_complex = decomposer._fallback_to_heuristics("Test goal", Complexity.COMPLEX)
+        assert len(subgoals_complex) == 4  # Plan, Implement, Test, Document
+
+        # Verify the extra documentation step for COMPLEX
+        doc_subgoal = [sg for sg in subgoals_complex if "document" in sg.title.lower()]
+        assert len(doc_subgoal) == 1
+
+    @patch('aurora_cli.planning.decompose.decompose_query')
+    @patch('aurora_cli.planning.decompose.LLMClient')
+    def test_complexity_enum_value_mapping(self, mock_llm_client, mock_decompose_query):
+        """Test that Complexity enum values map correctly to SOAR strings."""
+        # Setup mock
+        mock_llm_client.return_value = Mock()
+        mock_decomposition = Mock()
+        mock_decomposition.subgoals = []
+        mock_result = Mock()
+        mock_result.decomposition = mock_decomposition
+        mock_decompose_query.return_value = mock_result
+
+        decomposer = PlanDecomposer()
+
+        # Verify enum values are lowercase strings (SOAR accepts both, but we use lowercase)
+        assert Complexity.SIMPLE.value == "simple"
+        assert Complexity.MODERATE.value == "moderate"
+        assert Complexity.COMPLEX.value == "complex"
+
+        # Test that decompose handles the mapping
+        decomposer.decompose("Test", Complexity.SIMPLE)
+        assert mock_decompose_query.called

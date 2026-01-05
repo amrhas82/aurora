@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from pathlib import Path
 from typing import Any
 
 from aurora_cli.planning.models import Complexity, Subgoal
@@ -26,6 +27,14 @@ except ImportError:
     SOAR_AVAILABLE = False
     decompose_query = None  # type: ignore
     LLMClient = None  # type: ignore
+
+# Try to import ManifestManager for agent discovery
+try:
+    from aurora_cli.agent_discovery.manifest import ManifestManager
+    MANIFEST_AVAILABLE = True
+except ImportError:
+    MANIFEST_AVAILABLE = False
+    ManifestManager = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +135,82 @@ class PlanDecomposer:
             "reasoning_chunks": [],
         }
 
+    def _build_context_summary(self, context: dict[str, Any]) -> str:
+        """Build a concise summary of retrieved context for decomposition.
+
+        This method mirrors the logic from aurora_soar.phases.decompose._build_context_summary
+        to provide consistent context summary formatting.
+
+        Args:
+            context: Context dict with code_chunks and reasoning_chunks
+
+        Returns:
+            Summary string describing available context. When no chunks are
+            available (empty retrieval), returns a note indicating that LLM
+            general knowledge will be used. Limited to 500 characters.
+        """
+        code_chunks = context.get("code_chunks", [])
+        reasoning_chunks = context.get("reasoning_chunks", [])
+
+        summary_parts = []
+
+        if code_chunks:
+            summary_parts.append(
+                f"Available code context: {len(code_chunks)} code chunks covering "
+                f"relevant functions, classes, and modules"
+            )
+
+        if reasoning_chunks:
+            summary_parts.append(
+                f"Reasoning patterns: {len(reasoning_chunks)} previous successful "
+                f"decompositions and solutions"
+            )
+
+        # When no context is available (0 code chunks AND 0 reasoning chunks),
+        # return special message to signal retrieval failure to downstream phases
+        if not summary_parts:
+            return "No indexed context available. Using LLM general knowledge."
+
+        # Join parts and limit to 500 characters
+        summary = ". ".join(summary_parts) + "."
+        return summary[:500] if len(summary) > 500 else summary
+
+    def _load_available_agents(self) -> list[str] | None:
+        """Load available agents from manifest.
+
+        Loads the agent manifest and extracts agent IDs with @ prefix for
+        use in SOAR decomposition.
+
+        Returns:
+            List of agent IDs with @ prefix (e.g., ["@full-stack-dev", "@qa-test-architect"])
+            Returns None if manifest cannot be loaded.
+            Returns empty list if manifest is empty.
+        """
+        if not MANIFEST_AVAILABLE or not ManifestManager:
+            logger.debug("ManifestManager not available, agent discovery disabled")
+            return None
+
+        try:
+            # Get or create default manifest path
+            manifest_path = Path.home() / ".aurora" / "cache" / "agent_manifest.json"
+
+            # Create manifest manager and load/refresh manifest
+            manager = ManifestManager()
+            manifest = manager.get_or_refresh(
+                path=manifest_path,
+                auto_refresh=True,
+                refresh_interval_hours=24,
+            )
+
+            # Extract agent IDs with @ prefix
+            agent_ids = [f"@{agent.id}" for agent in manifest.agents]
+            logger.debug(f"Loaded {len(agent_ids)} agents from manifest")
+            return agent_ids
+
+        except Exception as e:
+            logger.warning(f"Failed to load agent manifest: {e}")
+            return None
+
     def _call_soar(
         self, goal: str, context: dict[str, Any], complexity: Complexity
     ) -> list[Subgoal]:
@@ -150,6 +235,9 @@ class PlanDecomposer:
         # Create LLM client if not provided
         llm_client = self._get_llm_client()
 
+        # Load available agents from manifest
+        available_agents = self._load_available_agents()
+
         # Call SOAR decompose_query
         try:
             result = decompose_query(
@@ -157,7 +245,7 @@ class PlanDecomposer:
                 context=context,
                 complexity=complexity.value,
                 llm_client=llm_client,
-                available_agents=None,  # Will add agent discovery in task 2.4
+                available_agents=available_agents,
                 use_cache=True,
             )
 

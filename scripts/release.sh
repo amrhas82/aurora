@@ -27,7 +27,7 @@ BUMP_TYPE="${1:-patch}"
 PUBLISH="${2:-}"
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   Aurora Release Manager v0.3.1        ║${NC}"
+echo -e "${BLUE}║   Aurora Release Manager v0.4.0        ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -117,19 +117,24 @@ for pkg in packages/*/pyproject.toml; do
 done
 
 echo ""
-echo -e "${BLUE}Step 2/7: Reinstalling packages locally...${NC}"
+echo -e "${BLUE}Step 2/7: Reinstalling package locally...${NC}"
 
-# Reinstall all packages
-for pkg in core context-code soar reasoning cli testing planning; do
-    echo "  Installing aurora-$pkg..."
-    pip install --force-reinstall --no-deps -e "packages/$pkg/" > /dev/null 2>&1
-done
+# As of v0.4.0, Aurora is a single bundled package (aurora-actr)
+# The packages/ directory is for development convenience only
+# We only need to install the main package from root
 
-# Install main package
-echo "  Installing aurora-actr..."
-pip install --force-reinstall --no-deps -e . > /dev/null 2>&1
+# Clean old installations first
+pip uninstall -y aurora-actr aurora-cli aurora-context-code aurora-core aurora-reasoning aurora-soar aurora-testing aurora-planning 2>/dev/null || true
 
-echo "  ✓ All packages reinstalled"
+# Remove stale metadata
+find packages/ -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
+rm -rf src/*.egg-info 2>/dev/null || true
+
+# Install main bundled package
+echo "  Installing aurora-actr (single bundled package)..."
+pip install -e . > /dev/null 2>&1
+
+echo "  ✓ Package reinstalled"
 
 echo ""
 echo -e "${BLUE}Step 3/7: Verifying installation...${NC}"

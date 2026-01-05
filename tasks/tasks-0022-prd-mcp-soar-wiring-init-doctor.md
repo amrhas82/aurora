@@ -107,7 +107,7 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0022-prd-mcp-soar-wirin
   - [x] 2.9 Run unit tests to verify phase parameter handling (TDD GREEN phase)
   - [x] 2.10 Refactor for code quality and consistency (TDD REFACTOR phase)
 
-- [ ] 3.0 Implement Phase Handler Functions for All 9 SOAR Phases
+- [x] 3.0 Implement Phase Handler Functions for All 9 SOAR Phases
   - [x] 3.1 Write unit tests for assess phase handler (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_phase_handlers.py` with tests for SIMPLE/MEDIUM/COMPLEX/CRITICAL classification, early_exit flag for SIMPLE queries
   - [x] 3.2 Implement `_handle_assess_phase()` in `AuroraMCPTools` - import `assess_complexity` from `aurora_soar.phases.assess`, call it with query parameter, return JSON with complexity level and next_action ("retrieve_and_respond" for SIMPLE, "Call aurora_query with phase='retrieve'" for others)
   - [x] 3.3 Write unit tests for retrieve phase handler (TDD RED phase) - verify HybridRetriever usage, chunk retrieval, session cache update
@@ -127,7 +127,7 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0022-prd-mcp-soar-wirin
   - [x] 3.17 Write unit tests for respond phase handler (TDD RED phase) - verify response formatting, metadata inclusion
   - [x] 3.18 Implement `_handle_respond_phase()` in `AuroraMCPTools` - accept final_answer parameter, format response using `aurora_soar.phases.respond`, include all metadata (complexity, timing, agent usage), return formatted response in result, set next_action to "Present final answer to user"
   - [x] 3.19 Run all phase handler unit tests to verify implementation (TDD GREEN phase)
-  - [ ] 3.20 Refactor phase handlers for code reuse and consistency (TDD REFACTOR phase)
+  - [x] 3.20 Refactor phase handlers for code reuse and consistency (TDD REFACTOR phase)
 
 - [ ] 4.0 Add MCP Configuration Validation to aur init Command
   - [ ] 4.1 Write unit tests for MCP validation in init (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_validation.py` with tests for JSON syntax validation, server path existence check, soft failure behavior (warnings not errors)

@@ -17,6 +17,7 @@ from aurora_cli.commands.init_helpers import (
     configure_tools,
     create_agents_md,
     create_directory_structure,
+    create_headless_templates,
     create_project_md,
     detect_configured_tools,
     detect_git_repository,
@@ -354,6 +355,17 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
     else:
         create_agents_md(project_path)
         console.print("[green]✓[/] Created AGENTS.md with Aurora instructions")
+
+    # Create headless mode templates
+    headless_dir = aurora_dir / "headless"
+    headless_readme = headless_dir / "README.md"
+    headless_template = headless_dir / "prompt.md.template"
+
+    if headless_readme.exists() and headless_template.exists():
+        console.print("[green]✓[/] Headless templates already exist (preserved)")
+    else:
+        create_headless_templates(project_path)
+        console.print("[green]✓[/] Created headless mode templates")
 
     console.print()
     return git_initialized

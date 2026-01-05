@@ -180,6 +180,7 @@ def create_directory_structure(project_path: Path) -> None:
     - .aurora/plans/archive
     - .aurora/logs
     - .aurora/cache
+    - .aurora/headless
 
     Note: Does NOT create config/tools (legacy directory removed in unified init)
 
@@ -197,6 +198,9 @@ def create_directory_structure(project_path: Path) -> None:
 
     # Create cache directory (NEW in unified init)
     (aurora_dir / "cache").mkdir(parents=True, exist_ok=True)
+
+    # Create headless directory for autonomous experiments
+    (aurora_dir / "headless").mkdir(parents=True, exist_ok=True)
 
     # Note: config/tools directory NOT created (removed in unified init)
 
@@ -372,6 +376,114 @@ def create_agents_md(project_path: Path) -> None:
 
     # Write the full AGENTS.md template
     agents_md.write_text(get_agents_template(), encoding="utf-8")
+
+
+def create_headless_templates(project_path: Path) -> None:
+    """Create headless mode template files in .aurora/headless/.
+
+    Creates:
+    - prompt.md.template - Example prompt structure
+    - README.md - Usage instructions for headless mode
+
+    Does NOT overwrite if files already exist.
+
+    Args:
+        project_path: Path to project root
+    """
+    aurora_dir = project_path / AURORA_DIR_NAME
+    headless_dir = aurora_dir / "headless"
+
+    # Create prompt template
+    prompt_template = headless_dir / "prompt.md.template"
+    if not prompt_template.exists():
+        prompt_content = """# Goal
+[Describe what you want to achieve]
+
+# Success Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
+
+# Constraints (Optional)
+- Constraint 1 (e.g., "Don't modify production code")
+- Constraint 2 (e.g., "Use existing test framework")
+
+# Context (Optional)
+Additional context about the task, relevant files, or background information...
+"""
+        prompt_template.write_text(prompt_content, encoding="utf-8")
+
+    # Create README
+    readme = headless_dir / "README.md"
+    if not readme.exists():
+        readme_content = """# Headless Mode
+
+Run single-iteration autonomous reasoning experiments.
+
+## Quick Start
+
+1. Copy the template to create your prompt:
+   ```bash
+   cp prompt.md.template prompt.md
+   ```
+
+2. Edit `prompt.md` with your goal and criteria
+
+3. Run headless mode:
+   ```bash
+   aur headless prompt.md
+   ```
+
+## How It Works
+
+1. Aurora reads your prompt (goal, success criteria, constraints)
+2. Runs SOAR pipeline for one iteration
+3. Evaluates if goal is achieved
+4. Saves progress to scratchpad.md
+
+## Commands
+
+```bash
+# Default: 30,000 token budget, max 5 iterations
+aur headless prompt.md
+
+# Custom budget (tokens)
+aur headless prompt.md --budget 50000
+
+# More iterations
+aur headless prompt.md --max-iter 10
+
+# Show scratchpad after execution
+aur headless prompt.md --show-scratchpad
+
+# Dry run (validate without executing)
+aur headless prompt.md --dry-run
+```
+
+## Files
+
+- `prompt.md.template` - Example prompt structure (this template)
+- `prompt.md` - Your task definition (copy from template)
+- `scratchpad.md` - Auto-generated execution log
+
+## Safety Features
+
+- **Git branch check**: Prevents running on main/master by default
+- **Token budget**: Stops when budget exceeded
+- **Max iterations**: Prevents runaway execution
+- **Scratchpad log**: Full audit trail
+
+## Prompt Format
+
+Required sections:
+- **Goal**: What you want to achieve
+- **Success Criteria**: Checklist of completion criteria
+
+Optional sections:
+- **Constraints**: Limitations or requirements
+- **Context**: Additional background information
+"""
+        readme.write_text(readme_content, encoding="utf-8")
 
 
 async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:

@@ -12,7 +12,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from aurora_cli.agent_discovery.manifest import ManifestManager
 from aurora_cli.memory_manager import MemoryManager
@@ -159,35 +159,48 @@ class AuroraMCPTools:
         limit: int = 10,
         type_filter: str | None = None,
         verbose: bool = False,
+        phase: Literal["assess", "retrieve", "decompose", "verify", "route", "collect", "synthesize", "record", "respond"] = "assess",
     ) -> str:
         """
-        Retrieve relevant context from AURORA memory without LLM inference.
+        Retrieve relevant context from AURORA memory with SOAR phase orchestration.
 
         No API key required. Returns structured context WITHOUT running any LLM.
         Claude Code CLI's built-in LLM processes the returned context.
 
-        This simplified tool provides intelligent context retrieval with complexity
-        assessment and confidence scoring. It returns structured context that can
-        be used by the LLM client (Claude Code CLI) for further processing.
+        This tool supports multi-turn SOAR pipeline execution through the phase
+        parameter. Each phase returns guidance for Claude to proceed to the next step.
 
         Args:
             query: Natural language query string
             limit: Maximum number of chunks to retrieve (default: 10)
             type_filter: Filter by memory type - "code", "reas", "know", or None (default: None)
             verbose: Include detailed metadata in response (default: False)
+            phase: SOAR pipeline phase to execute (default: "assess")
 
         Returns:
-            JSON string with structured context containing:
-            - context: Retrieved chunks with metadata
-            - assessment: Complexity score, confidence, and suggested approach
-            - metadata: Query info, retrieval time, and index statistics
+            JSON string with phase-specific response containing:
+            - phase: Current phase name
+            - progress: Progress indicator (N/9 phase_name)
+            - status: "complete" or "error"
+            - result: Phase-specific result data
+            - next_action: Human-readable guidance for Claude
+            - metadata: Timing and other metadata
         """
         try:
             import time
 
             start_time = time.time()
 
-            # Validate parameters
+            # Validate phase parameter
+            valid_phases = ["assess", "retrieve", "decompose", "verify", "route", "collect", "synthesize", "record", "respond"]
+            if phase not in valid_phases:
+                return self._format_error(
+                    error_type="InvalidParameter",
+                    message=f"Invalid phase '{phase}'. Must be one of: {', '.join(valid_phases)}",
+                    suggestion=f"Use one of the valid phase names: {', '.join(valid_phases)}\nDefault phase is 'assess'.",
+                )
+
+            # Validate query parameter
             is_valid, error_msg = self._validate_parameters(query, type_filter)
             if not is_valid:
                 # Build suggestion based on error type
@@ -202,26 +215,20 @@ class AuroraMCPTools:
                     suggestion=suggestion,
                 )
 
-            # Retrieve chunks using hybrid retrieval
-            chunks = self._retrieve_chunks(query, limit=limit, type_filter=type_filter)
-
-            # Store results in session cache for aurora_get (Task 7.4)
-            self._last_search_results = chunks
-            self._last_search_timestamp = time.time()
-
-            # Assess complexity using heuristics
-            complexity_score = self._assess_complexity(query)
-
-            # Calculate retrieval time
-            retrieval_time_ms = (time.time() - start_time) * 1000
-
-            # Build structured response
-            response = self._build_context_response(
-                chunks=chunks,
+            # Dispatch to appropriate phase handler
+            response = self._handle_phase(
+                phase=phase,
                 query=query,
-                retrieval_time_ms=retrieval_time_ms,
-                complexity_score=complexity_score,
+                limit=limit,
+                type_filter=type_filter,
+                verbose=verbose
             )
+
+            # Add timing metadata
+            duration_ms = (time.time() - start_time) * 1000
+            if "metadata" not in response:
+                response["metadata"] = {}
+            response["metadata"]["duration_ms"] = round(duration_ms, 1)
 
             return json.dumps(response, indent=2)
 
@@ -323,6 +330,213 @@ class AuroraMCPTools:
                 message=f"An unexpected error occurred: {str(e)}",
                 suggestion="Please check the logs at ~/.aurora/logs/mcp.log for details.",
             )
+
+    # ========================================================================
+    # SOAR Phase Handlers
+    # ========================================================================
+
+    def _handle_phase(
+        self,
+        phase: str,
+        query: str,
+        limit: int = 10,
+        type_filter: str | None = None,
+        verbose: bool = False,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Dispatch to appropriate phase handler based on phase parameter.
+
+        Args:
+            phase: Phase name (assess, retrieve, decompose, verify, route, collect, synthesize, record, respond)
+            query: Query string
+            limit: Maximum chunks to retrieve
+            type_filter: Type filter for memory chunks
+            verbose: Include verbose metadata
+            **kwargs: Additional phase-specific parameters
+
+        Returns:
+            Phase response dictionary with required fields:
+            - phase: Phase name
+            - progress: Progress indicator (N/9 phase_name)
+            - status: "complete" or "error"
+            - result: Phase-specific data
+            - next_action: Guidance for Claude
+            - metadata: Timing and other metadata
+        """
+        # Map phases to handler methods
+        handlers = {
+            "assess": self._handle_assess_phase,
+            "retrieve": self._handle_retrieve_phase,
+            "decompose": self._handle_decompose_phase,
+            "verify": self._handle_verify_phase,
+            "route": self._handle_route_phase,
+            "collect": self._handle_collect_phase,
+            "synthesize": self._handle_synthesize_phase,
+            "record": self._handle_record_phase,
+            "respond": self._handle_respond_phase,
+        }
+
+        handler = handlers.get(phase)
+        if not handler:
+            return {
+                "phase": phase,
+                "progress": f"0/9 {phase}",
+                "status": "error",
+                "result": {},
+                "next_action": f"Invalid phase '{phase}'. Contact support.",
+                "metadata": {}
+            }
+
+        # Call the phase handler
+        return handler(query=query, limit=limit, type_filter=type_filter, verbose=verbose, **kwargs)
+
+    def _handle_assess_phase(
+        self,
+        query: str,
+        limit: int = 10,
+        type_filter: str | None = None,
+        verbose: bool = False,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle assess phase - assess query complexity.
+
+        This is the refactored version of the original aurora_query logic.
+
+        Args:
+            query: Query string
+            limit: Maximum chunks to retrieve
+            type_filter: Type filter for memory chunks
+            verbose: Include verbose metadata
+            **kwargs: Additional parameters (ignored)
+
+        Returns:
+            Assess phase response with complexity assessment
+        """
+        # Retrieve chunks using hybrid retrieval (original logic)
+        chunks = self._retrieve_chunks(query, limit=limit, type_filter=type_filter)
+
+        # Store results in session cache for aurora_get
+        self._last_search_results = chunks
+        self._last_search_timestamp = __import__("time").time()
+
+        # Assess complexity using heuristics (original logic)
+        complexity_score = self._assess_complexity(query)
+
+        # Build context response (original logic)
+        context_response = self._build_context_response(
+            chunks=chunks,
+            query=query,
+            retrieval_time_ms=0,  # Will be set by caller
+            complexity_score=complexity_score,
+        )
+
+        # Convert to phase response format
+        return {
+            "phase": "assess",
+            "progress": "1/9 assess",
+            "status": "complete",
+            "result": {
+                "complexity": context_response["assessment"]["suggested_approach"].upper(),
+                "complexity_score": context_response["assessment"]["complexity_score"],
+                "retrieval_confidence": context_response["assessment"]["retrieval_confidence"],
+                "context": context_response["context"],
+            },
+            "next_action": (
+                "Retrieve and respond directly" if complexity_score < 0.5
+                else "Call aurora_query with phase='retrieve' to get context chunks"
+            ),
+            "metadata": context_response["metadata"]
+        }
+
+    def _handle_retrieve_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for retrieve phase handler."""
+        return {
+            "phase": "retrieve",
+            "progress": "2/9 retrieve",
+            "status": "complete",
+            "result": {},
+            "next_action": "Not yet implemented",
+            "metadata": {}
+        }
+
+    def _handle_decompose_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for decompose phase handler."""
+        return {
+            "phase": "decompose",
+            "progress": "3/9 decompose",
+            "status": "complete",
+            "result": {},
+            "next_action": "Not yet implemented",
+            "metadata": {}
+        }
+
+    def _handle_verify_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for verify phase handler."""
+        return {
+            "phase": "verify",
+            "progress": "4/9 verify",
+            "status": "complete",
+            "result": {},
+            "next_action": "Not yet implemented",
+            "metadata": {}
+        }
+
+    def _handle_route_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for route phase handler."""
+        return {
+            "phase": "route",
+            "progress": "5/9 route",
+            "status": "complete",
+            "result": {},
+            "next_action": "Not yet implemented",
+            "metadata": {}
+        }
+
+    def _handle_collect_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for collect phase handler."""
+        return {
+            "phase": "collect",
+            "progress": "6/9 collect",
+            "status": "complete",
+            "result": {},
+            "next_action": "Not yet implemented",
+            "metadata": {}
+        }
+
+    def _handle_synthesize_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for synthesize phase handler."""
+        return {
+            "phase": "synthesize",
+            "progress": "7/9 synthesize",
+            "status": "complete",
+            "result": {},
+            "next_action": "Not yet implemented",
+            "metadata": {}
+        }
+
+    def _handle_record_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for record phase handler."""
+        return {
+            "phase": "record",
+            "progress": "8/9 record",
+            "status": "complete",
+            "result": {},
+            "next_action": "Not yet implemented",
+            "metadata": {}
+        }
+
+    def _handle_respond_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
+        """Placeholder for respond phase handler."""
+        return {
+            "phase": "respond",
+            "progress": "9/9 respond",
+            "status": "complete",
+            "result": {},
+            "next_action": "Present final answer to user",
+            "metadata": {}
+        }
 
     # ========================================================================
     # Helper Methods for aurora_query

@@ -83,17 +83,17 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0022-prd-mcp-soar-wirin
 
 ## Tasks
 
-- [ ] 1.0 Remove 6 Redundant MCP Tools and Update Server Configuration
+- [x] 1.0 Remove 6 Redundant MCP Tools and Update Server Configuration
   - [x] 1.1 Write unit tests for 3-tool validation (TDD RED phase)
-  - [ ] 1.2 Remove `aurora_index` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
-  - [ ] 1.3 Remove `aurora_context` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
-  - [ ] 1.4 Remove `aurora_related` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
-  - [ ] 1.5 Remove `aurora_list_agents` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
-  - [ ] 1.6 Remove `aurora_search_agents` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
-  - [ ] 1.7 Remove `aurora_show_agent` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
-  - [ ] 1.8 Update `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/server.py` to remove tool registrations for the 6 deleted methods
-  - [ ] 1.9 Verify only 3 tools remain registered: `aurora_search`, `aurora_query`, `aurora_get`
-  - [ ] 1.10 Run unit tests to confirm 3-tool configuration (TDD GREEN phase)
+  - [x] 1.2 Remove `aurora_index` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
+  - [x] 1.3 Remove `aurora_context` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
+  - [x] 1.4 Remove `aurora_related` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
+  - [x] 1.5 Remove `aurora_list_agents` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
+  - [x] 1.6 Remove `aurora_search_agents` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
+  - [x] 1.7 Remove `aurora_show_agent` method from `AuroraMCPTools` class in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
+  - [x] 1.8 Update `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/server.py` to remove tool registrations for the 6 deleted methods
+  - [x] 1.9 Verify only 3 tools remain registered: `aurora_search`, `aurora_query`, `aurora_get`
+  - [x] 1.10 Run unit tests to confirm 3-tool configuration (TDD GREEN phase)
 
 - [ ] 2.0 Refactor aurora_query to Support Multi-Turn SOAR Phase Orchestration
   - [ ] 2.1 Write unit tests for phase parameter validation (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_aurora_query_phases.py` testing invalid phase names, missing phase parameter defaults to "assess"

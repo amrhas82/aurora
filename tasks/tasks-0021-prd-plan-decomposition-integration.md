@@ -73,7 +73,7 @@
 
 ## Tasks
 
-- [ ] 1.0 Port Archive Command from OpenSpec with Aurora Path Conventions (DEFERRED - Independent of core integration work)
+- [x] 1.0 Port Archive Command from OpenSpec with Aurora Path Conventions (COMPLETE)
   - [x] 1.1 Port validation types module from OpenSpec
     - Copy `/home/hamr/PycharmProjects/aurora/openspec-source/aurora/validation/types.py` to `packages/cli/src/aurora_cli/planning/validation/types.py`
     - Verify `ValidationLevel`, `ValidationIssue`, `ValidationSummary`, `ValidationReport` classes exist

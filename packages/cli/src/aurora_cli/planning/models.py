@@ -9,6 +9,9 @@ Models:
     - Subgoal: Individual subgoal with agent assignment
     - Plan: Main plan model with subgoals and metadata
     - PlanManifest: Manifest for fast plan listing
+    - FileResolution: File path with confidence score
+    - AgentGap: Missing agent information
+    - DecompositionSummary: Summary for checkpoint display
 """
 
 from __future__ import annotations
@@ -182,6 +185,9 @@ class Plan(BaseModel):
         context_sources: Where context came from
         archived_at: When plan was archived (if applicable)
         duration_days: Days from creation to archive
+        decomposition_source: Source of decomposition ("soar" or "heuristic")
+        context_summary: Summary of available context
+        file_resolutions: Map of subgoal ID to file resolutions
     """
 
     model_config = ConfigDict(
@@ -233,6 +239,18 @@ class Plan(BaseModel):
     duration_days: int | None = Field(
         default=None,
         description="Days from creation to archive",
+    )
+    decomposition_source: str = Field(
+        default="heuristic",
+        description="Source of decomposition",
+    )
+    context_summary: str | None = Field(
+        default=None,
+        description="Summary of available context",
+    )
+    file_resolutions: dict[str, list[dict[str, Any]]] = Field(
+        default_factory=dict,
+        description="Map of subgoal ID to file resolutions",
     )
 
     @field_validator("plan_id")
@@ -553,3 +571,195 @@ class AgentGap(BaseModel):
         if not re.match(pattern, v):
             raise ValueError(f"Agent must start with '@'. Got: {v}")
         return v
+
+
+class DecompositionSummary(BaseModel):
+    """Summary of plan decomposition for checkpoint display.
+
+    This model is used to show users a summary of the decomposition
+    before generating plan files, allowing them to review and confirm
+    the subgoals, agent assignments, and file resolutions.
+
+    Attributes:
+        goal: Original goal description
+        subgoals: List of decomposed subgoals
+        agents_assigned: Count of subgoals with assigned agents
+        agent_gaps: List of subgoals with missing/low-confidence agents
+        files_resolved: Count of resolved file paths
+        avg_confidence: Average confidence score for file resolutions
+        complexity: Assessed complexity level
+        decomposition_source: Source of decomposition ("soar" or "heuristic")
+        warnings: List of warning messages
+    """
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
+    goal: str = Field(
+        ...,
+        min_length=10,
+        max_length=500,
+        description="Original goal description",
+    )
+    subgoals: list[Subgoal] = Field(
+        ...,
+        min_length=1,
+        max_length=10,
+        description="List of decomposed subgoals",
+    )
+    agents_assigned: int = Field(
+        ...,
+        ge=0,
+        description="Count of subgoals with assigned agents",
+    )
+    agent_gaps: list[AgentGap] = Field(
+        default_factory=list,
+        description="List of subgoals with agent gaps",
+    )
+    files_resolved: int = Field(
+        ...,
+        ge=0,
+        description="Count of resolved file paths",
+    )
+    avg_confidence: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Average confidence score for file resolutions",
+    )
+    complexity: Complexity = Field(
+        ...,
+        description="Assessed complexity level",
+    )
+    decomposition_source: str = Field(
+        ...,
+        description="Source of decomposition",
+    )
+    warnings: list[str] = Field(
+        default_factory=list,
+        description="List of warning messages",
+    )
+
+    @field_validator("decomposition_source")
+    @classmethod
+    def validate_source(cls, v: str) -> str:
+        """Validate decomposition source.
+
+        Args:
+            v: Source to validate
+
+        Returns:
+            The validated source
+
+        Raises:
+            ValueError: If source is not 'soar' or 'heuristic'
+        """
+        valid_sources = {"soar", "heuristic"}
+        if v not in valid_sources:
+            raise ValueError(
+                f"decomposition_source must be one of {valid_sources}. Got: {v}"
+            )
+        return v
+
+    def display(self) -> None:
+        """Display the summary using Rich formatting.
+
+        This method renders the decomposition summary in a user-friendly
+        format with colors and formatting for easy review.
+        """
+        try:
+            from rich.console import Console
+            from rich.panel import Panel
+            from rich.table import Table
+
+            console = Console()
+
+            # Build summary content
+            content = []
+
+            # Goal
+            content.append(f"[bold cyan]Goal:[/bold cyan] {self.goal}\n")
+
+            # Subgoals count
+            content.append(
+                f"[bold cyan]Subgoals:[/bold cyan] {len(self.subgoals)}\n"
+            )
+
+            # List each subgoal
+            for sg in self.subgoals:
+                agent_style = "yellow" if not sg.agent_exists else "green"
+                content.append(
+                    f"  [{sg.id}] {sg.title} ([{agent_style}]{sg.recommended_agent}[/{agent_style}])"
+                )
+
+            content.append("")
+
+            # Agent summary
+            gap_count = len(self.agent_gaps)
+            agent_summary = (
+                f"[bold cyan]Agents:[/bold cyan] {self.agents_assigned} assigned"
+            )
+            if gap_count > 0:
+                agent_summary += f", [yellow]{gap_count} gaps[/yellow]"
+            content.append(agent_summary)
+
+            # File summary
+            file_summary = (
+                f"[bold cyan]Files:[/bold cyan] {self.files_resolved} resolved"
+            )
+            if self.files_resolved > 0:
+                file_summary += f" (avg confidence: {self.avg_confidence:.2f})"
+            content.append(file_summary)
+
+            # Complexity
+            complexity_colors = {
+                Complexity.SIMPLE: "green",
+                Complexity.MODERATE: "yellow",
+                Complexity.COMPLEX: "red",
+            }
+            complexity_color = complexity_colors[self.complexity]
+            content.append(
+                f"[bold cyan]Complexity:[/bold cyan] [{complexity_color}]{self.complexity.value.upper()}[/{complexity_color}]"
+            )
+
+            # Decomposition source
+            source_color = "green" if self.decomposition_source == "soar" else "yellow"
+            content.append(
+                f"[bold cyan]Source:[/bold cyan] [{source_color}]{self.decomposition_source}[/{source_color}]"
+            )
+
+            # Warnings
+            if self.warnings:
+                content.append("")
+                content.append("[bold yellow]Warnings:[/bold yellow]")
+                for warning in self.warnings:
+                    content.append(f"  ⚠ {warning}")
+
+            # Create panel and display
+            panel = Panel(
+                "\n".join(content),
+                title="[bold]Plan Decomposition Summary[/bold]",
+                border_style="cyan",
+            )
+            console.print(panel)
+
+        except ImportError:
+            # Fallback to plain text if Rich not available
+            print("\n" + "=" * 60)
+            print("PLAN DECOMPOSITION SUMMARY")
+            print("=" * 60)
+            print(f"Goal: {self.goal}")
+            print(f"Subgoals: {len(self.subgoals)}")
+            for sg in self.subgoals:
+                print(f"  [{sg.id}] {sg.title} ({sg.recommended_agent})")
+            print(f"Agents: {self.agents_assigned} assigned, {len(self.agent_gaps)} gaps")
+            print(f"Files: {self.files_resolved} resolved (avg confidence: {self.avg_confidence:.2f})")
+            print(f"Complexity: {self.complexity.value.upper()}")
+            print(f"Source: {self.decomposition_source}")
+            if self.warnings:
+                print("Warnings:")
+                for warning in self.warnings:
+                    print(f"  ⚠ {warning}")
+            print("=" * 60 + "\n")

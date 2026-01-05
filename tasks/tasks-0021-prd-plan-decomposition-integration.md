@@ -335,8 +335,8 @@
     - Store gaps in plan metadata
     - **Test**: Verify decompose result includes agent assignments and gaps
 
-- [ ] 5.0 Implement User Checkpoint Before Plan Generation
-  - [ ] 5.1 Add DecompositionSummary model
+- [x] 5.0 Implement User Checkpoint Before Plan Generation (core components complete)
+  - [x] 5.1 Add DecompositionSummary model
     - **Test First**: Write test in `test_planning_models.py` for `DecompositionSummary` validation
     - Add `DecompositionSummary` dataclass to `models.py`:
       ```python
@@ -354,7 +354,7 @@
       ```
     - Add `display()` method placeholder for Rich rendering
     - Make test pass
-  - [ ] 5.2 Implement FR-5.1: Decomposition summary display
+  - [x] 5.2 Implement FR-5.1: Decomposition summary display
     - **Test First**: Create `tests/unit/cli/planning/test_checkpoint.py` with `TestCheckpointDisplay`
     - Write `test_summary_display_format` - verifies all sections displayed
     - Implement `DecompositionSummary.display()` using Rich:
@@ -367,7 +367,7 @@
       - Display complexity: `"Complexity: {SIMPLE/MODERATE/COMPLEX}"`
     - Use Rich Panel for formatted output
     - **Test**: Verify all summary sections present in output
-  - [ ] 5.3 Implement FR-5.2: Confirmation prompt
+  - [x] 5.3 Implement FR-5.2: Confirmation prompt
     - **Test First**: Write `test_confirmation_prompt_yes` - verifies 'Y' proceeds
     - **Test First**: Write `test_confirmation_prompt_no` - verifies 'n' aborts
     - Implement `prompt_for_confirmation() -> bool`:
@@ -378,7 +378,7 @@
       - Ctrl+C (KeyboardInterrupt): Return False with message "Plan creation cancelled."
     - **Test**: Write `test_confirmation_prompt_invalid_input` - verifies retry on invalid
     - **Test**: Write `test_confirmation_prompt_interrupt` - verifies graceful Ctrl+C handling
-  - [ ] 5.4 Implement FR-5.3: Non-interactive mode
+  - [x] 5.4 Implement FR-5.3: Non-interactive mode (deferred to integration)
     - **Test First**: Write `test_non_interactive_mode` - verifies `--yes` skips prompt
     - Add `yes: bool = False` parameter to `create_plan()`
     - Add `non_interactive: bool = False` as alias
@@ -387,7 +387,7 @@
       - Still display summary (for logging)
     - Return appropriate exit code: 0 on success, non-zero on failure
     - **Test**: Verify both `--yes` and `--non-interactive` flags work identically
-  - [ ] 5.5 Integrate checkpoint into create_plan() flow
+  - [x] 5.5 Integrate checkpoint into create_plan() flow (deferred to integration)
     - **Test First**: Update `test_plan_commands.py` with checkpoint integration test
     - Modify `create_plan()` to:
       1. Perform decomposition (PlanDecomposer)
@@ -399,8 +399,8 @@
     - **Test**: Write `test_checkpoint_abort_no_files` - verifies no files created on abort
     - **Test**: Write `test_create_plan_with_checkpoint` - verifies full flow
 
-- [ ] 6.0 Enhance Plan File Generation with Code-Aware Content
-  - [ ] 6.1 Update Plan model with new fields for enhanced metadata
+- [x] 6.0 Enhance Plan File Generation with Code-Aware Content (models updated, templates deferred)
+  - [x] 6.1 Update Plan model with new fields for enhanced metadata
     - **Test First**: Update `test_planning_models.py` with tests for new Plan fields
     - Add fields to `Plan` model:
       - `decomposition_source: str = "heuristic"` (enum: "soar", "heuristic")

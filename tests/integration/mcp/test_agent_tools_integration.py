@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from aurora.mcp.server import AuroraMCPServer
+from aurora_mcp.server import AuroraMCPServer
 
 
 @pytest.mark.mcp

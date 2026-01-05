@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 # Import MCP tools directly for testing
-from aurora.mcp.tools import AuroraMCPTools
+from aurora_mcp.tools import AuroraMCPTools
 
 
 @pytest.mark.ml

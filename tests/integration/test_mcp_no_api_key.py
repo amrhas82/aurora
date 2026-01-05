@@ -24,7 +24,7 @@ from unittest.mock import patch
 
 import pytest
 
-from aurora.mcp.tools import AuroraMCPTools
+from aurora_mcp.tools import AuroraMCPTools
 
 
 # Mark entire module as requiring ML dependencies

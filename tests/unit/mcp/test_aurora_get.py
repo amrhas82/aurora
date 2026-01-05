@@ -22,7 +22,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from aurora.mcp.tools import AuroraMCPTools
+from aurora_mcp.tools import AuroraMCPTools
 
 
 # ==============================================================================

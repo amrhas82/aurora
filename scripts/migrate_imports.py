@@ -36,6 +36,7 @@ PACKAGE_MAPPINGS = {
     "aurora_testing": "aurora.testing",
     "aurora_planning": "aurora.planning",
     "aurora_memory": "aurora.memory",
+    "aurora_mcp": "aurora.mcp",
 }
 
 

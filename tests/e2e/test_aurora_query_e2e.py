@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-from aurora.mcp.tools import AuroraMCPTools
+from aurora_mcp.tools import AuroraMCPTools
 
 
 # Skip all tests if no API key is available

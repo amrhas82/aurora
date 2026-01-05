@@ -15,7 +15,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from aurora.soar.headless.git_enforcer import (
+from aurora_soar.headless.git_enforcer import (
     GitBranchError,
     GitEnforcer,
     GitEnforcerConfig,
@@ -173,8 +173,8 @@ class TestGetCurrentBranch:
 class TestValidate:
     """Test validate method."""
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_success_on_headless_branch(self, mock_is_repo, mock_get_branch):
         """Test successful validation on headless branch."""
         mock_is_repo.return_value = True
@@ -184,8 +184,8 @@ class TestValidate:
         # Should not raise
         enforcer.validate()
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_fails_on_main_branch(self, mock_is_repo, mock_get_branch):
         """Test validation fails on main branch."""
         mock_is_repo.return_value = True
@@ -199,8 +199,8 @@ class TestValidate:
         assert "blocked branch 'main'" in str(exc_info.value).lower()
         assert "git checkout" in str(exc_info.value)
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_fails_on_master_branch(self, mock_is_repo, mock_get_branch):
         """Test validation fails on master branch."""
         mock_is_repo.return_value = True
@@ -213,7 +213,7 @@ class TestValidate:
             enforcer.validate()
         assert "blocked branch 'master'" in str(exc_info.value).lower()
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_fails_not_a_repo(self, mock_is_repo):
         """Test validation fails when not in git repo."""
         mock_is_repo.return_value = False
@@ -225,8 +225,8 @@ class TestValidate:
             enforcer.validate()
         assert "not in a git repository" in str(exc_info.value).lower()
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_fails_wrong_required_branch(self, mock_is_repo, mock_get_branch):
         """Test validation fails when on wrong branch."""
         mock_is_repo.return_value = True
@@ -241,8 +241,8 @@ class TestValidate:
         assert "requires branch 'headless'" in str(exc_info.value).lower()
         assert "currently on 'feature-123'" in str(exc_info.value).lower()
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_success_no_required_branch(self, mock_is_repo, mock_get_branch):
         """Test validation succeeds when no required branch set."""
         mock_is_repo.return_value = True
@@ -257,8 +257,8 @@ class TestValidate:
         # Should not raise
         enforcer.validate()
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_custom_blocked_branches(self, mock_is_repo, mock_get_branch):
         """Test validation with custom blocked branches."""
         mock_is_repo.return_value = True
@@ -276,8 +276,8 @@ class TestValidate:
             enforcer.validate()
         assert "develop" in str(exc_info.value)
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_validate_custom_required_branch(self, mock_is_repo, mock_get_branch):
         """Test validation with custom required branch."""
         mock_is_repo.return_value = True
@@ -293,8 +293,8 @@ class TestValidate:
 class TestGetValidationStatus:
     """Test get_validation_status method."""
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_status_valid(self, mock_is_repo, mock_get_branch):
         """Test validation status when valid."""
         mock_is_repo.return_value = True
@@ -310,8 +310,8 @@ class TestGetValidationStatus:
         assert status["is_valid"] is True
         assert status["error_message"] is None
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_status_invalid_blocked_branch(self, mock_is_repo, mock_get_branch):
         """Test validation status on blocked branch."""
         mock_is_repo.return_value = True
@@ -328,7 +328,7 @@ class TestGetValidationStatus:
         assert status["error_message"] is not None
         assert "blocked branch" in status["error_message"].lower()
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_status_not_a_repo(self, mock_is_repo):
         """Test validation status when not in git repo."""
         mock_is_repo.return_value = False
@@ -343,8 +343,8 @@ class TestGetValidationStatus:
         assert status["is_valid"] is False
         assert status["error_message"] == "Not in a git repository"
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_status_detached_head(self, mock_is_repo, mock_get_branch):
         """Test validation status in detached HEAD."""
         mock_is_repo.return_value = True
@@ -364,8 +364,8 @@ class TestGetValidationStatus:
 class TestErrorMessages:
     """Test error message quality and helpfulness."""
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_error_includes_git_command(self, mock_is_repo, mock_get_branch):
         """Test error message includes helpful git command."""
         mock_is_repo.return_value = True
@@ -380,8 +380,8 @@ class TestErrorMessages:
         error_msg = str(exc_info.value)
         assert "git checkout headless" in error_msg
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_error_lists_blocked_branches(self, mock_is_repo, mock_get_branch):
         """Test error message lists blocked branches."""
         mock_is_repo.return_value = True
@@ -397,8 +397,8 @@ class TestErrorMessages:
         assert "main" in error_msg
         assert "master" in error_msg
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_error_includes_create_branch_hint(self, mock_is_repo, mock_get_branch):
         """Test error message includes hint to create branch."""
         mock_is_repo.return_value = True
@@ -426,8 +426,8 @@ class TestEdgeCases:
         enforcer = GitEnforcer(config)
         assert enforcer.config.blocked_branches == []
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_branch_name_with_special_characters(self, mock_is_repo, mock_get_branch):
         """Test branch name with special characters."""
         mock_is_repo.return_value = True
@@ -439,8 +439,8 @@ class TestEdgeCases:
         # Should not raise
         enforcer.validate()
 
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.get_current_branch")
-    @patch("aurora.soar.headless.git_enforcer.GitEnforcer.is_git_repository")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.get_current_branch")
+    @patch("aurora_soar.headless.git_enforcer.GitEnforcer.is_git_repository")
     def test_case_sensitive_branch_matching(self, mock_is_repo, mock_get_branch):
         """Test that branch matching is case-sensitive."""
         mock_is_repo.return_value = True

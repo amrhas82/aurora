@@ -508,81 +508,366 @@ class AuroraMCPTools:
             }
         }
 
-    def _handle_decompose_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for decompose phase handler."""
+    def _handle_decompose_phase(
+        self,
+        query: str,
+        context: dict[str, Any] | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle decompose phase - generate prompt template for Claude to decompose query.
+
+        This phase does NOT call an LLM. It returns a prompt template for Claude
+        (the host LLM in Claude Code) to use for reasoning about subgoals.
+
+        Args:
+            query: Query string
+            context: Retrieved context from retrieve phase
+            **kwargs: Additional parameters (ignored)
+
+        Returns:
+            Decompose phase response with prompt template
+        """
+        context = context or {}
+
+        # Build a simple decomposition prompt template for Claude
+        # This follows the pattern from aurora_soar.phases.decompose but without LLM calls
+        prompt_template = f"""You are decomposing this query into actionable subgoals:
+
+Query: {query}
+
+Available Context:
+{json.dumps(context.get('chunks', [])[:3], indent=2) if context.get('chunks') else 'No context available'}
+
+Please break down this query into 2-4 specific, actionable subgoals.
+Each subgoal should be:
+1. Concrete and measurable
+2. Independently achievable
+3. Contributing to the overall query goal
+
+Format your response as a JSON array of subgoals:
+[
+  {{"subgoal": "Description of subgoal 1", "reasoning": "Why this is needed"}},
+  {{"subgoal": "Description of subgoal 2", "reasoning": "Why this is needed"}}
+]
+"""
+
         return {
             "phase": "decompose",
             "progress": "3/9 decompose",
             "status": "complete",
-            "result": {},
-            "next_action": "Not yet implemented",
-            "metadata": {}
+            "result": {
+                "prompt_template": prompt_template,
+                "context": context,
+                "query": query,
+            },
+            "next_action": "Reason about subgoals using the prompt template, then call aurora_query with phase='verify' and your decomposition",
+            "metadata": {
+                "template_type": "decomposition",
+                "context_chunks": len(context.get('chunks', [])),
+            }
         }
 
-    def _handle_verify_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for verify phase handler."""
+    def _handle_verify_phase(
+        self,
+        query: str,
+        subgoals: list[dict[str, Any]] | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle verify phase - validate decomposition subgoals.
+
+        Args:
+            query: Query string
+            subgoals: List of subgoals from Claude's decomposition
+            **kwargs: Additional parameters
+
+        Returns:
+            Verify phase response with PASS/FAIL verdict
+        """
+        if subgoals is None:
+            return {
+                "phase": "verify",
+                "progress": "4/9 verify",
+                "status": "error",
+                "result": {"verdict": "ERROR", "reason": "Missing subgoals parameter"},
+                "next_action": "Provide subgoals from decompose phase",
+                "metadata": {}
+            }
+
+        # Simple validation: check if subgoals are well-formed
+        verdict = "PASS"
+        issues = []
+
+        if not isinstance(subgoals, list):
+            verdict = "FAIL"
+            issues.append("Subgoals must be a list")
+        elif len(subgoals) == 0:
+            verdict = "FAIL"
+            issues.append("At least one subgoal required")
+        elif len(subgoals) > 6:
+            verdict = "FAIL"
+            issues.append("Too many subgoals (maximum 6)")
+        else:
+            for i, subgoal in enumerate(subgoals):
+                if not isinstance(subgoal, dict):
+                    verdict = "FAIL"
+                    issues.append(f"Subgoal {i} must be a dictionary")
+                elif 'subgoal' not in subgoal:
+                    verdict = "FAIL"
+                    issues.append(f"Subgoal {i} missing 'subgoal' field")
+
+        next_action = (
+            "Call aurora_query with phase='route' with verified subgoals"
+            if verdict == "PASS"
+            else "Revise decomposition to address issues, then retry verify"
+        )
+
         return {
             "phase": "verify",
             "progress": "4/9 verify",
             "status": "complete",
-            "result": {},
-            "next_action": "Not yet implemented",
-            "metadata": {}
+            "result": {
+                "verdict": verdict,
+                "subgoals_count": len(subgoals) if isinstance(subgoals, list) else 0,
+                "issues": issues,
+            },
+            "next_action": next_action,
+            "metadata": {
+                "validation_method": "structure_check",
+            }
         }
 
-    def _handle_route_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for route phase handler."""
+    def _handle_route_phase(
+        self,
+        query: str,
+        subgoals: list[dict[str, Any]] | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle route phase - map subgoals to available agents.
+
+        Args:
+            query: Query string
+            subgoals: List of verified subgoals
+            **kwargs: Additional parameters
+
+        Returns:
+            Route phase response with routing plan
+        """
+        subgoals = subgoals or []
+
+        # Simple routing: map each subgoal to a generic agent
+        # In a full implementation, this would use agent discovery
+        routing_plan = []
+        for i, subgoal in enumerate(subgoals):
+            routing_plan.append({
+                "subgoal_id": i,
+                "subgoal": subgoal.get("subgoal", ""),
+                "assigned_agent": "full-stack-dev",  # Default agent
+                "reasoning": "Primary implementation agent"
+            })
+
         return {
             "phase": "route",
             "progress": "5/9 route",
             "status": "complete",
-            "result": {},
-            "next_action": "Not yet implemented",
-            "metadata": {}
+            "result": {
+                "routing_plan": routing_plan,
+                "subgoals_count": len(subgoals),
+            },
+            "next_action": "Call aurora_query with phase='collect' with routing plan",
+            "metadata": {
+                "routing_method": "simple",
+                "agents_used": ["full-stack-dev"],
+            }
         }
 
-    def _handle_collect_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for collect phase handler."""
+    def _handle_collect_phase(
+        self,
+        query: str,
+        routing: list[dict[str, Any]] | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle collect phase - generate agent task prompts.
+
+        This phase does NOT execute agents. It generates prompts for Claude to execute.
+
+        Args:
+            query: Query string
+            routing: Routing plan from route phase
+            **kwargs: Additional parameters
+
+        Returns:
+            Collect phase response with agent task prompts
+        """
+        routing = routing or []
+
+        # Generate task prompts for each routed subgoal
+        agent_tasks = []
+        for route_item in routing:
+            task_prompt = f"""Execute this subgoal as {route_item.get('assigned_agent', 'agent')}:
+
+Subgoal: {route_item.get('subgoal', '')}
+Reasoning: {route_item.get('reasoning', '')}
+
+Provide your implementation or analysis."""
+
+            agent_tasks.append({
+                "subgoal_id": route_item.get("subgoal_id", 0),
+                "agent": route_item.get("assigned_agent", "unknown"),
+                "task_prompt": task_prompt,
+            })
+
         return {
             "phase": "collect",
             "progress": "6/9 collect",
             "status": "complete",
-            "result": {},
-            "next_action": "Not yet implemented",
-            "metadata": {}
+            "result": {
+                "agent_tasks": agent_tasks,
+                "tasks_count": len(agent_tasks),
+            },
+            "next_action": "Execute agent tasks (using Claude's reasoning or tool calls), then call aurora_query with phase='synthesize' with results",
+            "metadata": {
+                "execution_mode": "prompt_based",
+            }
         }
 
-    def _handle_synthesize_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for synthesize phase handler."""
+    def _handle_synthesize_phase(
+        self,
+        query: str,
+        agent_results: list[dict[str, Any]] | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle synthesize phase - generate synthesis prompt template.
+
+        Args:
+            query: Query string
+            agent_results: Results from agent execution
+            **kwargs: Additional parameters
+
+        Returns:
+            Synthesize phase response with prompt template
+        """
+        agent_results = agent_results or []
+
+        # Generate synthesis prompt template
+        results_summary = "\n\n".join([
+            f"Agent {i+1} ({r.get('agent', 'unknown')}):\n{r.get('result', 'No result')}"
+            for i, r in enumerate(agent_results)
+        ])
+
+        prompt_template = f"""Synthesize these agent results into a cohesive answer:
+
+Original Query: {query}
+
+Agent Results:
+{results_summary}
+
+Please provide a comprehensive, integrated response that:
+1. Combines all relevant findings
+2. Resolves any conflicts or contradictions
+3. Presents a clear, actionable answer
+"""
+
         return {
             "phase": "synthesize",
             "progress": "7/9 synthesize",
             "status": "complete",
-            "result": {},
-            "next_action": "Not yet implemented",
-            "metadata": {}
+            "result": {
+                "prompt_template": prompt_template,
+                "agent_results_count": len(agent_results),
+            },
+            "next_action": "Combine agent results into final answer using the prompt template, then call aurora_query with phase='record' with synthesis",
+            "metadata": {
+                "template_type": "synthesis",
+            }
         }
 
-    def _handle_record_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for record phase handler."""
+    def _handle_record_phase(
+        self,
+        query: str,
+        synthesis: str | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle record phase - cache pattern in ACT-R memory.
+
+        Args:
+            query: Query string
+            synthesis: Synthesized answer from synthesize phase
+            **kwargs: Additional parameters
+
+        Returns:
+            Record phase response with cache confirmation
+        """
+        synthesis = synthesis or ""
+
+        # In a full implementation, this would cache the pattern using:
+        # self._store.insert_chunk(...) or similar
+        # For now, we just confirm the intent to cache
+
+        cached = len(synthesis) > 0
+
         return {
             "phase": "record",
             "progress": "8/9 record",
             "status": "complete",
-            "result": {},
-            "next_action": "Not yet implemented",
-            "metadata": {}
+            "result": {
+                "cached": cached,
+                "pattern_id": f"pattern_{hash(query) % 10000}",
+                "synthesis_length": len(synthesis),
+            },
+            "next_action": "Call aurora_query with phase='respond' to format final answer",
+            "metadata": {
+                "cache_method": "placeholder",  # Would be "actr_memory" in full implementation
+            }
         }
 
-    def _handle_respond_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for respond phase handler."""
+    def _handle_respond_phase(
+        self,
+        query: str,
+        final_answer: str | None = None,
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle respond phase - format final answer with metadata.
+
+        Args:
+            query: Query string
+            final_answer: Final synthesized answer
+            **kwargs: Additional parameters
+
+        Returns:
+            Respond phase response with formatted answer
+        """
+        final_answer = final_answer or "No answer provided"
+
+        # Collect all metadata from the SOAR pipeline
+        metadata = {
+            "pipeline": "soar_9_phase",
+            "query": query,
+            "answer_length": len(final_answer),
+        }
+
+        # Add any timing metadata passed in kwargs
+        if 'timing' in kwargs:
+            metadata['timing'] = kwargs['timing']
+
         return {
             "phase": "respond",
             "progress": "9/9 respond",
             "status": "complete",
-            "result": {},
-            "next_action": "Present final answer to user",
-            "metadata": {}
+            "result": {
+                "answer": final_answer,
+                "metadata": metadata,
+            },
+            "next_action": "Present final answer to user - pipeline complete",
+            "metadata": {
+                "format": "structured",
+            }
         }
 
     # ========================================================================

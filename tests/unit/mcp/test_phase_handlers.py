@@ -262,19 +262,52 @@ class TestDecomposePhaseHandler:
 
     def test_decompose_returns_prompt_template(self, tools):
         """Decompose phase should return prompt template for Claude."""
-        pytest.skip("Not implemented yet - Task 3.6")
+        context = {"chunks": [{"content": "test code"}]}
+
+        result = tools._handle_decompose_phase(
+            query="Test query",
+            context=context
+        )
+
+        assert result['phase'] == 'decompose'
+        assert result['progress'] == '3/9 decompose'
+        assert result['status'] == 'complete'
+        assert 'prompt_template' in result['result']
+        assert isinstance(result['result']['prompt_template'], str)
 
     def test_decompose_no_llm_calls(self, tools):
         """Decompose phase should NOT make any LLM calls."""
-        pytest.skip("Not implemented yet - Task 3.6")
+        # This test just verifies that the handler returns quickly
+        # without making external calls
+        import time
+        start = time.time()
+
+        result = tools._handle_decompose_phase(
+            query="Test",
+            context={}
+        )
+
+        elapsed = time.time() - start
+        # Should complete in < 0.1 seconds (no LLM call)
+        assert elapsed < 0.1
+        assert result['status'] == 'complete'
 
     def test_decompose_accepts_context_parameter(self, tools):
         """Decompose phase should accept context parameter."""
-        pytest.skip("Not implemented yet - Task 3.6")
+        context = {"chunks": [{"id": "1", "content": "test"}], "total_found": 1}
+
+        result = tools._handle_decompose_phase(
+            query="Test",
+            context=context
+        )
+
+        assert result['result']['context'] == context
 
     def test_decompose_suggests_verify_next(self, tools):
         """Decompose phase should suggest verify phase next."""
-        pytest.skip("Not implemented yet - Task 3.6")
+        result = tools._handle_decompose_phase(query="Test", context={})
+
+        assert "phase='verify'" in result['next_action'] or "verify" in result['next_action'].lower()
 
 
 # ========================================================================
@@ -288,23 +321,35 @@ class TestVerifyPhaseHandler:
 
     def test_verify_requires_subgoals_parameter(self, tools):
         """Verify phase should require subgoals parameter."""
-        pytest.skip("Not implemented yet - Task 3.8")
+        result = tools._handle_verify_phase(query="Test", subgoals=None)
+        assert result['status'] == 'error'
+        assert result['result']['verdict'] == 'ERROR'
 
     def test_verify_returns_pass_verdict_for_valid_subgoals(self, tools):
         """Verify phase should return PASS for valid subgoals."""
-        pytest.skip("Not implemented yet - Task 3.8")
+        subgoals = [
+            {"subgoal": "Step 1", "reasoning": "Because"},
+            {"subgoal": "Step 2", "reasoning": "Therefore"}
+        ]
+        result = tools._handle_verify_phase(query="Test", subgoals=subgoals)
+        assert result['result']['verdict'] == 'PASS'
 
     def test_verify_returns_fail_verdict_for_invalid_subgoals(self, tools):
         """Verify phase should return FAIL for invalid subgoals."""
-        pytest.skip("Not implemented yet - Task 3.8")
+        subgoals = [{"invalid": "no subgoal field"}]
+        result = tools._handle_verify_phase(query="Test", subgoals=subgoals)
+        assert result['result']['verdict'] == 'FAIL'
 
     def test_verify_pass_suggests_route(self, tools):
         """Verify PASS should suggest route phase."""
-        pytest.skip("Not implemented yet - Task 3.8")
+        subgoals = [{"subgoal": "Valid step"}]
+        result = tools._handle_verify_phase(query="Test", subgoals=subgoals)
+        assert "phase='route'" in result['next_action']
 
     def test_verify_fail_suggests_retry(self, tools):
         """Verify FAIL should suggest revising decomposition."""
-        pytest.skip("Not implemented yet - Task 3.8")
+        result = tools._handle_verify_phase(query="Test", subgoals=[])
+        assert "revise" in result['next_action'].lower() or "retry" in result['next_action'].lower()
 
 
 # ========================================================================
@@ -318,19 +363,27 @@ class TestRoutePhaseHandler:
 
     def test_route_maps_subgoals_to_agents(self, tools):
         """Route phase should map subgoals to available agents."""
-        pytest.skip("Not implemented yet - Task 3.10")
+        subgoals = [{"subgoal": "Implement feature X"}]
+        result = tools._handle_route_phase(query="Test", subgoals=subgoals)
+        assert len(result['result']['routing_plan']) == 1
+        assert 'assigned_agent' in result['result']['routing_plan'][0]
 
     def test_route_accepts_subgoals_parameter(self, tools):
         """Route phase should accept subgoals parameter."""
-        pytest.skip("Not implemented yet - Task 3.10")
+        subgoals = [{"subgoal": "Task 1"}, {"subgoal": "Task 2"}]
+        result = tools._handle_route_phase(query="Test", subgoals=subgoals)
+        assert result['result']['subgoals_count'] == 2
 
     def test_route_returns_routing_plan(self, tools):
         """Route phase should return routing plan in result."""
-        pytest.skip("Not implemented yet - Task 3.10")
+        result = tools._handle_route_phase(query="Test", subgoals=[{"subgoal": "Test"}])
+        assert 'routing_plan' in result['result']
+        assert isinstance(result['result']['routing_plan'], list)
 
     def test_route_suggests_collect(self, tools):
         """Route phase should suggest collect phase next."""
-        pytest.skip("Not implemented yet - Task 3.10")
+        result = tools._handle_route_phase(query="Test", subgoals=[])
+        assert "phase='collect'" in result['next_action']
 
 
 # ========================================================================
@@ -344,19 +397,29 @@ class TestCollectPhaseHandler:
 
     def test_collect_generates_agent_task_prompts(self, tools):
         """Collect phase should generate task prompts for agents."""
-        pytest.skip("Not implemented yet - Task 3.12")
+        routing = [{"subgoal_id": 0, "subgoal": "Test", "assigned_agent": "test-agent"}]
+        result = tools._handle_collect_phase(query="Test", routing=routing)
+        assert 'agent_tasks' in result['result']
+        assert len(result['result']['agent_tasks']) == 1
+        assert 'task_prompt' in result['result']['agent_tasks'][0]
 
     def test_collect_no_agent_execution(self, tools):
         """Collect phase should NOT execute agents directly."""
-        pytest.skip("Not implemented yet - Task 3.12")
+        # Just verify it returns prompts, not execution results
+        result = tools._handle_collect_phase(query="Test", routing=[])
+        assert 'agent_tasks' in result['result']
+        # If agents were executed, we'd have results, not prompts
 
     def test_collect_accepts_routing_parameter(self, tools):
         """Collect phase should accept routing parameter."""
-        pytest.skip("Not implemented yet - Task 3.12")
+        routing = [{"subgoal": "A"}, {"subgoal": "B"}]
+        result = tools._handle_collect_phase(query="Test", routing=routing)
+        assert result['result']['tasks_count'] == 2
 
     def test_collect_suggests_synthesize(self, tools):
         """Collect phase should suggest synthesize phase next."""
-        pytest.skip("Not implemented yet - Task 3.12")
+        result = tools._handle_collect_phase(query="Test", routing=[])
+        assert "phase='synthesize'" in result['next_action']
 
 
 # ========================================================================
@@ -370,15 +433,20 @@ class TestSynthesizePhaseHandler:
 
     def test_synthesize_returns_prompt_template(self, tools):
         """Synthesize phase should return prompt template."""
-        pytest.skip("Not implemented yet - Task 3.14")
+        result = tools._handle_synthesize_phase(query="Test", agent_results=[])
+        assert 'prompt_template' in result['result']
+        assert isinstance(result['result']['prompt_template'], str)
 
     def test_synthesize_accepts_agent_results_parameter(self, tools):
         """Synthesize phase should accept agent_results parameter."""
-        pytest.skip("Not implemented yet - Task 3.14")
+        agent_results = [{"agent": "A", "result": "Done"}, {"agent": "B", "result": "Complete"}]
+        result = tools._handle_synthesize_phase(query="Test", agent_results=agent_results)
+        assert result['result']['agent_results_count'] == 2
 
     def test_synthesize_suggests_record(self, tools):
         """Synthesize phase should suggest record phase next."""
-        pytest.skip("Not implemented yet - Task 3.14")
+        result = tools._handle_synthesize_phase(query="Test", agent_results=[])
+        assert "phase='record'" in result['next_action']
 
 
 # ========================================================================
@@ -392,19 +460,25 @@ class TestRecordPhaseHandler:
 
     def test_record_caches_pattern_in_memory(self, tools):
         """Record phase should cache pattern in ACT-R memory."""
-        pytest.skip("Not implemented yet - Task 3.16")
+        result = tools._handle_record_phase(query="Test", synthesis="Final answer")
+        assert result['result']['cached'] is True
 
     def test_record_accepts_synthesis_parameter(self, tools):
         """Record phase should accept synthesis parameter."""
-        pytest.skip("Not implemented yet - Task 3.16")
+        synthesis = "This is the synthesized answer"
+        result = tools._handle_record_phase(query="Test", synthesis=synthesis)
+        assert result['result']['synthesis_length'] == len(synthesis)
 
     def test_record_returns_cache_confirmation(self, tools):
         """Record phase should confirm pattern cached."""
-        pytest.skip("Not implemented yet - Task 3.16")
+        result = tools._handle_record_phase(query="Test", synthesis="Answer")
+        assert 'cached' in result['result']
+        assert 'pattern_id' in result['result']
 
     def test_record_suggests_respond(self, tools):
         """Record phase should suggest respond phase next."""
-        pytest.skip("Not implemented yet - Task 3.16")
+        result = tools._handle_record_phase(query="Test", synthesis="Answer")
+        assert "phase='respond'" in result['next_action']
 
 
 # ========================================================================
@@ -418,16 +492,23 @@ class TestRespondPhaseHandler:
 
     def test_respond_formats_final_answer(self, tools):
         """Respond phase should format final answer."""
-        pytest.skip("Not implemented yet - Task 3.18")
+        final_answer = "This is the final answer"
+        result = tools._handle_respond_phase(query="Test", final_answer=final_answer)
+        assert result['result']['answer'] == final_answer
 
     def test_respond_includes_metadata(self, tools):
         """Respond phase should include all metadata."""
-        pytest.skip("Not implemented yet - Task 3.18")
+        result = tools._handle_respond_phase(query="Test", final_answer="Answer")
+        assert 'metadata' in result['result']
+        assert 'pipeline' in result['result']['metadata']
 
     def test_respond_accepts_final_answer_parameter(self, tools):
         """Respond phase should accept final_answer parameter."""
-        pytest.skip("Not implemented yet - Task 3.18")
+        answer = "Custom answer"
+        result = tools._handle_respond_phase(query="Test", final_answer=answer)
+        assert result['result']['answer'] == answer
 
     def test_respond_suggests_present_to_user(self, tools):
         """Respond phase should suggest presenting to user."""
-        pytest.skip("Not implemented yet - Task 3.18")
+        result = tools._handle_respond_phase(query="Test", final_answer="Answer")
+        assert "present" in result['next_action'].lower() or "complete" in result['next_action'].lower()

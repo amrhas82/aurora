@@ -20,5 +20,10 @@ else
     echo "✓ Installed (wheel mode)"
 fi
 
-echo "  $(pip show aurora-actr | grep Version)"
-echo "  CLI: $(which aur)"
+# Verify installation
+echo ""
+echo "Installed:"
+pip show aurora-actr | grep -E "^(Version|Location):"
+echo ""
+echo "CLI:"
+aur --version

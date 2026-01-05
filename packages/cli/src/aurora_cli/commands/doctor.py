@@ -18,6 +18,7 @@ from aurora_cli.health_checks import (
     ConfigurationChecks,
     CoreSystemChecks,
     SearchRetrievalChecks,
+    ToolIntegrationChecks,
 )
 
 
@@ -32,11 +33,12 @@ console = Console()
 def doctor_command(fix: bool) -> None:
     """Run health checks and diagnostics.
 
-    Checks the health of your AURORA installation across four categories:
+    Checks the health of your AURORA installation across five categories:
     - Core System: CLI version, database, API keys, permissions
     - Code Analysis: tree-sitter parser, index age, chunk quality
     - Search & Retrieval: vector store, Git BLA, cache size
     - Configuration: config file, Git repo, MCP server
+    - Tool Integration: slash commands, MCP servers
 
     \b
     Exit Codes:
@@ -62,6 +64,7 @@ def doctor_command(fix: bool) -> None:
         code_checks = CodeAnalysisChecks(config)
         search_checks = SearchRetrievalChecks(config)
         config_checks = ConfigurationChecks(config)
+        tool_checks = ToolIntegrationChecks(config)
 
         # Run all checks
         console.print("\n[bold cyan]Running AURORA health checks...[/]\n")
@@ -96,6 +99,13 @@ def doctor_command(fix: bool) -> None:
         _display_results(config_results)
         console.print()
 
+        # Tool Integration checks
+        console.print("[bold]TOOL INTEGRATION[/]")
+        tool_results = tool_checks.run_checks()
+        all_results.extend(tool_results)
+        _display_results(tool_results)
+        console.print()
+
         # Calculate summary
         pass_count = sum(1 for r in all_results if r[0] == "pass")
         warning_count = sum(1 for r in all_results if r[0] == "warning")
@@ -106,7 +116,7 @@ def doctor_command(fix: bool) -> None:
 
         # Handle --fix flag if requested
         if fix and (fail_count > 0 or warning_count > 0):
-            _handle_auto_fix(core_checks, code_checks, search_checks, config_checks)
+            _handle_auto_fix(core_checks, code_checks, search_checks, config_checks, tool_checks)
 
         # Determine exit code
         if fail_count > 0:
@@ -176,6 +186,7 @@ def _handle_auto_fix(
     code_checks: CodeAnalysisChecks,
     search_checks: SearchRetrievalChecks,
     config_checks: ConfigurationChecks,
+    tool_checks: ToolIntegrationChecks,
 ) -> None:
     """Handle auto-fix functionality.
 
@@ -184,6 +195,7 @@ def _handle_auto_fix(
         code_checks: Code analysis health checks instance
         search_checks: Search & retrieval health checks instance
         config_checks: Configuration health checks instance
+        tool_checks: Tool integration health checks instance
     """
     console.print()
     console.print("[bold cyan]Analyzing fixable issues...[/]")
@@ -193,7 +205,7 @@ def _handle_auto_fix(
     fixable_issues = []
     manual_issues = []
 
-    for checks in [core_checks, code_checks, search_checks, config_checks]:
+    for checks in [core_checks, code_checks, search_checks, config_checks, tool_checks]:
         if hasattr(checks, "get_fixable_issues"):
             fixable_issues.extend(checks.get_fixable_issues())
         if hasattr(checks, "get_manual_issues"):

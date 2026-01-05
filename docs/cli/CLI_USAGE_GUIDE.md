@@ -1713,6 +1713,179 @@ aur agents refresh
 
 ---
 
+#### `aur plan`
+
+Plan management commands for creating, viewing, listing, and archiving development plans.
+
+Plans use a four-file structure:
+- `plan.md`: Human-readable plan overview
+- `prd.md`: Product requirements document
+- `tasks.md`: Implementation task list with file paths
+- `agents.json`: Machine-readable plan data with agent assignments
+
+```bash
+aur plan COMMAND [OPTIONS]
+```
+
+**Commands:**
+
+##### `aur plan create`
+
+Create a new plan with SOAR-based goal decomposition.
+
+```bash
+aur plan create GOAL [OPTIONS]
+```
+
+**Arguments:**
+- `GOAL`: Clear description of what you want to achieve (10-500 characters)
+
+**Options:**
+- `-c, --context FILE`: Context files for informed decomposition (can be used multiple times)
+- `--no-decompose`: Skip SOAR decomposition (create single-task plan)
+- `-f, --format [rich|json]`: Output format (default: rich)
+- `--no-auto-init`: Disable automatic initialization if `.aurora` doesn't exist
+- `-y, --yes`: Skip confirmation prompt and proceed with plan generation
+- `--non-interactive`: Non-interactive mode (alias for --yes)
+
+**Checkpoint Flow:**
+
+When creating a plan, AURORA displays a decomposition summary before generating files:
+
+```
+╭───────────────────────── Plan Decomposition Summary ─────────────────────────╮
+│ Goal: Implement OAuth2 authentication with JWT tokens                        │
+│                                                                              │
+│ Subgoals: 3                                                                  │
+│                                                                              │
+│    Plan and design approach (@holistic-architect)                            │
+│    Implement solution (@full-stack-dev)                                      │
+│    Test and verify (@qa-test-architect)                                      │
+│                                                                              │
+│ Agents: 3 assigned                                                           │
+│ Files: 3 resolved (avg confidence: 0.85)                                     │
+│ Complexity: MODERATE                                                         │
+│ Source: soar                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Proceed with plan generation? (Y/n):
+```
+
+**What the summary shows:**
+- **Goal**: Your original goal text
+- **Subgoals**: Number of decomposed subgoals with agent assignments
+- **Agents**: Count of agents assigned (shows gaps if any)
+- **Files**: Number of resolved file paths with average confidence score
+- **Complexity**: SIMPLE, MODERATE, or COMPLEX based on analysis
+- **Source**: `soar` (SOAR decomposition) or `heuristic` (fallback)
+
+**Graceful Degradation:**
+
+AURORA automatically falls back to heuristic decomposition if SOAR is unavailable:
+- Missing LLM client → Uses rule-based decomposition
+- API timeout → Falls back after 30 seconds
+- Network issues → Continues with heuristic approach
+- Plan still generates successfully with `decomposition_source: "heuristic"`
+
+**File Path Resolution:**
+
+If memory is indexed (`aur mem index`), AURORA resolves file paths for each subgoal:
+- **High confidence (≥0.8)**: `src/auth/module.py lines 1-50`
+- **Medium confidence (0.6-0.8)**: `src/auth/jwt.py lines 20-80 (suggested)`
+- **Low confidence (<0.6)**: `src/core/utils.py lines 5-30 (low confidence)`
+
+If memory is not indexed:
+- Shows warning: "Memory not indexed. Run 'aur mem index .' for code-aware tasks."
+- Generates generic paths: `src/<domain>/<task-slug>.py`
+- All paths marked with low confidence (0.1)
+
+**Examples:**
+```bash
+# Create authentication plan
+aur plan create "Implement OAuth2 authentication with JWT tokens"
+
+# Create with context files
+aur plan create "Add caching layer" --context src/api.py --context src/config.py
+
+# Skip decomposition (single task)
+aur plan create "Fix bug in login form" --no-decompose
+
+# Non-interactive mode (CI/CD)
+aur plan create "Add rate limiting" --yes
+
+# JSON output
+aur plan create "Add user dashboard" --format json
+```
+
+##### `aur plan list`
+
+List active or archived plans.
+
+```bash
+aur plan list [OPTIONS]
+```
+
+**Options:**
+- `--archived`: Show archived plans instead of active
+- `--all`: Show both active and archived plans
+- `-f, --format [rich|json]`: Output format (default: rich)
+
+**Examples:**
+```bash
+aur plan list                    # List active plans
+aur plan list --archived         # List archived plans
+aur plan list --all              # List all plans
+aur plan list --format json      # JSON output
+```
+
+##### `aur plan view`
+
+Display plan details with file status.
+
+```bash
+aur plan view PLAN_ID [OPTIONS]
+```
+
+**Arguments:**
+- `PLAN_ID`: Full plan ID or partial match
+
+**Options:**
+- `--archived`: View archived plan
+- `-f, --format [rich|json]`: Output format (default: rich)
+
+**Examples:**
+```bash
+aur plan view 0001-oauth-auth
+aur plan view oauth              # Partial match
+aur plan view 0001-oauth --archived
+aur plan view 0001-oauth --format json
+```
+
+##### `aur plan archive`
+
+Archive a completed plan.
+
+```bash
+aur plan archive PLAN_ID [OPTIONS]
+```
+
+**Arguments:**
+- `PLAN_ID`: Full plan ID or partial match
+
+**Options:**
+- `-y, --yes`: Skip confirmation prompt
+
+Moves the plan from `active/` to `archive/` with timestamp prefix (e.g., `2026-01-05-0001-oauth-auth`).
+Updates plan status and records duration from creation.
+
+**Examples:**
+```bash
+aur plan archive 0001-oauth-auth            # With confirmation
+aur plan archive 0001-oauth -y              # Skip confirmation
+```
+
+---
+
 #### `aur headless`
 
 Run autonomous experiment in headless mode.

@@ -241,7 +241,7 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
                         "│             │       │ → May be corrupted or binary files     │"
                     )
                     console.print(
-                        "│             │       │ → Action: Check with aur doctor        │"
+                        "│             │       │ → Action: Check with aur mem stats     │"
                     )
 
                 if stats.warnings > 0:

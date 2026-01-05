@@ -283,8 +283,7 @@ class TestListPlans:
         # Create active plan
         active_plan = sample_plan
         active_path = plans_dir / "active" / active_plan.plan_id
-        active_path.mkdir(parents=True)
-        (active_path / "agents.json").write_text(active_plan.model_dump_json())
+        create_complete_plan_structure(active_path, active_plan)
 
         # Create archived plan
         archived_plan = Plan(
@@ -294,8 +293,7 @@ class TestListPlans:
             status=PlanStatus.ARCHIVED,
         )
         archive_path = plans_dir / "archive" / f"2024-01-15-{archived_plan.plan_id}"
-        archive_path.mkdir(parents=True)
-        (archive_path / "agents.json").write_text(archived_plan.model_dump_json())
+        create_complete_plan_structure(archive_path, archived_plan)
 
         result = list_plans(all_plans=True, config=_mock_config(plans_dir))
 
@@ -345,8 +343,7 @@ class TestListPlans:
             created_at=datetime.utcnow(),
         )
         new_path = plans_dir / "active" / new_plan.plan_id
-        new_path.mkdir(parents=True)
-        (new_path / "agents.json").write_text(new_plan.model_dump_json())
+        create_complete_plan_structure(new_path, new_plan)
 
         result = list_plans(config=_mock_config(plans_dir))
 
@@ -367,7 +364,7 @@ class TestListCommand:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
             result = cli_runner.invoke(plan_group, ["list"])
@@ -385,7 +382,7 @@ class TestListCommand:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
             result = cli_runner.invoke(plan_group, ["list", "--format", "json"])
@@ -408,7 +405,7 @@ class TestShowPlan:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
         (plan_path / "plan.md").write_text("# Plan")
 
         result = show_plan(sample_plan.plan_id, config=_mock_config(plans_dir))
@@ -475,7 +472,7 @@ class TestShowPlan:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
         (plan_path / "plan.md").write_text("# Plan")
         (plan_path / "prd.md").write_text("# PRD")
 
@@ -499,7 +496,7 @@ class TestShowCommand:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
             result = cli_runner.invoke(plan_group, ["show", sample_plan.plan_id])
@@ -517,7 +514,7 @@ class TestShowCommand:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
             result = cli_runner.invoke(
@@ -541,7 +538,7 @@ class TestArchivePlan:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         result = archive_plan(sample_plan.plan_id, config=_mock_config(plans_dir))
 
@@ -571,7 +568,7 @@ class TestArchivePlan:
         sample_plan.status = PlanStatus.ARCHIVED
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         result = archive_plan(sample_plan.plan_id, config=_mock_config(plans_dir))
 
@@ -611,7 +608,7 @@ class TestArchivePlan:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         # Add to manifest
         manifest = PlanManifest(active_plans=[sample_plan.plan_id])
@@ -639,7 +636,7 @@ class TestArchiveCommand:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
             result = cli_runner.invoke(
@@ -658,7 +655,7 @@ class TestArchiveCommand:
 
         plan_path = plans_dir / "active" / sample_plan.plan_id
         plan_path.mkdir(parents=True)
-        (plan_path / "agents.json").write_text(sample_plan.model_dump_json())
+        create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
             result = cli_runner.invoke(
@@ -679,6 +676,7 @@ class TestCreatePlan:
         result = create_plan(
             goal="Implement OAuth2 authentication with JWT tokens",
             config=_mock_config(plans_dir),
+            non_interactive=True,
         )
 
         assert result.success is True
@@ -702,6 +700,7 @@ class TestCreatePlan:
         result = create_plan(
             goal="Implement new feature for testing purposes",
             config=_mock_config(plans_dir),
+            non_interactive=True,
         )
 
         assert result.success is True
@@ -715,6 +714,7 @@ class TestCreatePlan:
         result = create_plan(
             goal="Implement OAuth2 authentication system",
             config=_mock_config(plans_dir),
+            non_interactive=True,
         )
 
         assert result.success is True
@@ -729,6 +729,7 @@ class TestCreatePlan:
         result = create_plan(
             goal="Build a REST API for user management",
             config=_mock_config(plans_dir),
+            non_interactive=True,
         )
 
         assert result.success is True
@@ -742,6 +743,7 @@ class TestCreatePlan:
         result = create_plan(
             goal="Refactor the database access layer for performance",
             config=_mock_config(plans_dir),
+            non_interactive=True,
         )
 
         assert result.success is True
@@ -757,6 +759,7 @@ class TestCreatePlan:
             goal="Simple task that needs a quick fix",
             auto_decompose=False,
             config=_mock_config(plans_dir),
+            non_interactive=True,
         )
 
         assert result.success is True
@@ -812,6 +815,7 @@ class TestCreatePlan:
         result = create_plan(
             goal="Plan that should update manifest",
             config=_mock_config(plans_dir),
+            non_interactive=True,
         )
 
         assert result.success is True

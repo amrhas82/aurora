@@ -377,9 +377,14 @@ def load_config(path: str | None = None) -> Config:
     """Load configuration from file with environment variable overrides.
 
     Search order (if path not provided):
-    1. Current directory: ./aurora.config.json
-    2. Aurora home directory: $AURORA_HOME/config.json or ~/.aurora/config.json
+    1. Project mode (./.aurora exists): ./.aurora/config.json or built-in defaults
+    2. Global mode: ./aurora.config.json or ~/.aurora/config.json
     3. Use built-in defaults
+
+    **Project Isolation**: When ./.aurora directory exists, Aurora operates in
+    "project mode" and uses project-local paths (./.aurora/*) for all artifacts
+    except budget_tracker.json (which remains global). This ensures complete
+    project isolation and prevents interference with global configuration.
 
     Environment variables take precedence over file values:
     - AURORA_HOME → config file location
@@ -403,12 +408,22 @@ def load_config(path: str | None = None) -> Config:
     config_data: dict[str, Any] = {}
     config_source = "defaults"
 
+    # Check if we're in a project (has ./.aurora directory)
+    in_project = Path("./.aurora").exists()
+
     # Search for config file if path not provided
     if path is None:
-        search_paths = [
-            Path("./aurora.config.json"),
-            _get_aurora_home() / "config.json",
-        ]
+        if in_project:
+            # Project mode: only check project-local config
+            search_paths = [
+                Path("./.aurora/config.json"),
+            ]
+        else:
+            # Global mode: check current dir then global
+            search_paths = [
+                Path("./aurora.config.json"),
+                _get_aurora_home() / "config.json",
+            ]
 
         for search_path in search_paths:
             if search_path.exists():

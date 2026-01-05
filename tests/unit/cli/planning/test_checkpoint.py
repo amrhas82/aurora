@@ -277,3 +277,104 @@ class TestConfirmationPrompt:
 
         result = prompt_for_confirmation()
         assert result is False
+
+
+class TestNonInteractiveMode:
+    """Test non-interactive mode functionality."""
+
+    def test_yes_flag_skips_prompt(self, tmp_path, monkeypatch) -> None:
+        """Test that yes=True skips confirmation prompt."""
+        from aurora_cli.planning.core import create_plan
+        from aurora_cli.config import Config
+
+        # Create config
+        config = Config()
+
+        # Mock _get_plans_dir to return temp directory
+        monkeypatch.setattr(
+            "aurora_cli.planning.core._get_plans_dir",
+            lambda cfg: tmp_path / ".aurora" / "plans",
+        )
+
+        # Mock input to ensure it's never called
+        def should_not_be_called(_):
+            raise AssertionError("Prompt should not be called with yes=True")
+
+        monkeypatch.setattr("builtins.input", should_not_be_called)
+
+        # Create plan with yes=True - should not prompt
+        result = create_plan(
+            goal="Test goal for non-interactive mode",
+            yes=True,
+            config=config,
+        )
+
+        # Should succeed without prompting
+        assert result.success is True
+        assert result.plan is not None
+
+    def test_non_interactive_flag_alias(self, tmp_path, monkeypatch) -> None:
+        """Test that non_interactive=True works as alias for yes=True."""
+        from aurora_cli.planning.core import create_plan
+        from aurora_cli.config import Config
+
+        # Create config
+        config = Config()
+
+        # Mock _get_plans_dir to return temp directory
+        monkeypatch.setattr(
+            "aurora_cli.planning.core._get_plans_dir",
+            lambda cfg: tmp_path / ".aurora" / "plans",
+        )
+
+        # Mock input to ensure it's never called
+        def should_not_be_called(_):
+            raise AssertionError("Prompt should not be called with non_interactive=True")
+
+        monkeypatch.setattr("builtins.input", should_not_be_called)
+
+        # Create plan with non_interactive=True - should not prompt
+        result = create_plan(
+            goal="Test goal for non-interactive mode using alias",
+            non_interactive=True,
+            config=config,
+        )
+
+        # Should succeed without prompting
+        assert result.success is True
+        assert result.plan is not None
+
+    def test_interactive_mode_prompts(self, tmp_path, monkeypatch) -> None:
+        """Test that yes=False (default) prompts user."""
+        from aurora_cli.planning.core import create_plan
+        from aurora_cli.config import Config
+
+        # Create config
+        config = Config()
+
+        # Mock _get_plans_dir to return temp directory
+        monkeypatch.setattr(
+            "aurora_cli.planning.core._get_plans_dir",
+            lambda cfg: tmp_path / ".aurora" / "plans",
+        )
+
+        # Track whether prompt was called
+        prompt_called = False
+
+        def mock_input(_):
+            nonlocal prompt_called
+            prompt_called = True
+            return "Y"
+
+        monkeypatch.setattr("builtins.input", mock_input)
+
+        # Create plan without yes flag - should prompt
+        result = create_plan(
+            goal="Test goal for interactive mode",
+            yes=False,
+            config=config,
+        )
+
+        # Should have prompted user
+        assert prompt_called is True
+        assert result.success is True

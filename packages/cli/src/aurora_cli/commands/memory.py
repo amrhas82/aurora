@@ -293,6 +293,27 @@ def stats_command(ctx: click.Context) -> None:
     table.add_row("Total Files", f"[bold]{stats.total_files:,}[/]")
     table.add_row("Database Size", f"[bold]{stats.database_size_mb:.2f} MB[/]")
 
+    # Add indexing metadata if available
+    if stats.last_indexed:
+        from datetime import datetime
+        try:
+            indexed_time = datetime.fromisoformat(stats.last_indexed)
+            time_ago = datetime.now(indexed_time.tzinfo or None) - indexed_time
+            hours_ago = time_ago.total_seconds() / 3600
+            if hours_ago < 1:
+                time_str = f"{int(time_ago.total_seconds() / 60)} minutes ago"
+            elif hours_ago < 24:
+                time_str = f"{int(hours_ago)} hours ago"
+            else:
+                time_str = f"{int(hours_ago / 24)} days ago"
+            table.add_row("Last Indexed", time_str)
+        except Exception:
+            table.add_row("Last Indexed", "Unknown")
+
+    if stats.success_rate < 1.0:
+        success_pct = stats.success_rate * 100
+        table.add_row("Success Rate", f"[yellow]{success_pct:.1f}%[/]")
+
     if stats.languages:
         table.add_row("", "")  # Separator
         table.add_row("[bold]Languages", "")
@@ -302,6 +323,30 @@ def stats_command(ctx: click.Context) -> None:
     console.print()
     console.print(table)
     console.print()
+
+    # Display errors and warnings if present
+    if stats.failed_files or stats.warnings:
+        console.print("[bold yellow]Indexing Issues[/]\n")
+
+        if stats.failed_files:
+            console.print(f"[yellow]⚠ {len(stats.failed_files)} files failed to index[/]\n")
+            console.print("[bold]Failed Files:[/]")
+            for file_path, error in stats.failed_files[:10]:  # Show first 10
+                console.print(f"  • [red]{Path(file_path).name}[/]: {error}")
+            if len(stats.failed_files) > 10:
+                console.print(f"  [dim]... and {len(stats.failed_files) - 10} more[/]")
+            console.print()
+
+        if stats.warnings:
+            console.print(f"[yellow]⚠ {len(stats.warnings)} warnings[/]\n")
+            console.print("[bold]Warnings:[/]")
+            for warning in stats.warnings[:10]:  # Show first 10
+                console.print(f"  • {warning}")
+            if len(stats.warnings) > 10:
+                console.print(f"  [dim]... and {len(stats.warnings) - 10} more[/]")
+            console.print()
+
+        console.print("[dim]💡 Run 'aur mem index .' to re-index[/]\n")
 
 
 def _display_rich_results(

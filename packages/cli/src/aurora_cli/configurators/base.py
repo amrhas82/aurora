@@ -139,7 +139,12 @@ class BaseConfigurator(ABC):
 
                 file_path.write_text(updated, encoding="utf-8")
                 return
+            else:
+                # File exists but no markers - prepend stub to preserve existing content
+                managed_block = f"{start_marker}\n{new_content}\n{end_marker}\n\n"
+                file_path.write_text(managed_block + existing, encoding="utf-8")
+                return
 
-        # File doesn't exist or no markers - write entire content with markers
+        # File doesn't exist - write entire content with markers
         managed_block = f"{start_marker}\n{new_content}\n{end_marker}\n"
         file_path.write_text(managed_block, encoding="utf-8")

@@ -26,6 +26,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from aurora_cli.config import load_config
 from aurora_cli.errors import handle_errors
 from aurora_cli.planning.core import (
     archive_plan,
@@ -104,6 +105,19 @@ def plan_group() -> None:
     default=False,
     help="Disable automatic initialization if .aurora doesn't exist",
 )
+@click.option(
+    "--yes",
+    "-y",
+    is_flag=True,
+    default=False,
+    help="Skip confirmation prompt and proceed with plan generation",
+)
+@click.option(
+    "--non-interactive",
+    is_flag=True,
+    default=False,
+    help="Non-interactive mode (alias for --yes)",
+)
 @handle_errors
 def create_command(
     goal: str,
@@ -111,6 +125,8 @@ def create_command(
     no_decompose: bool,
     output_format: str,
     no_auto_init: bool,
+    yes: bool,
+    non_interactive: bool,
 ) -> None:
     """Create a new plan with SOAR-based goal decomposition.
 
@@ -141,6 +157,9 @@ def create_command(
         # JSON output
         aur plan create "Add user dashboard" --format json
     """
+    # Load config to ensure project-local paths are used
+    config = load_config()
+
     # Auto-initialize if .aurora doesn't exist
     if not no_auto_init:
         aurora_dir = Path.cwd() / ".aurora"
@@ -158,6 +177,8 @@ def create_command(
         goal=goal,
         context_files=list(context_files) if context_files else None,
         auto_decompose=not no_decompose,
+        config=config,
+        yes=yes or non_interactive,
     )
 
     if not result.success:
@@ -311,7 +332,8 @@ def list_command(archived: bool, all_plans: bool, output_format: str) -> None:
         # JSON output for scripting
         aur plan list --format json
     """
-    result = list_plans(archived=archived, all_plans=all_plans)
+    config = load_config()
+    result = list_plans(archived=archived, all_plans=all_plans, config=config)
 
     if result.warning:
         console.print(f"[yellow]{result.warning}[/]")
@@ -414,7 +436,8 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
         # JSON output
         aur plan view 0001-oauth --format json
     """
-    result = show_plan(plan_id, archived=archived)
+    config = load_config()
+    result = show_plan(plan_id, archived=archived, config=config)
 
     if not result.success:
         console.print(f"[red]{result.error}[/]")
@@ -494,12 +517,14 @@ def archive_command(plan_id: str, yes: bool) -> None:
         aur plan archive 0001-oauth -y
     """
     # Confirmation unless --yes
+    config = load_config()
+
     if not yes:
         if not click.confirm(f"Archive plan '{plan_id}'? This will move files to archive/"):
             console.print("[yellow]Archive cancelled.[/]")
             return
 
-    result = archive_plan(plan_id)
+    result = archive_plan(plan_id, config=config)
 
     if not result.success:
         console.print(f"[red]{result.error}[/]")

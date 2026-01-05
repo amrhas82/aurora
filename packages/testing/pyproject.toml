@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aurora-testing"
-version = "0.1.0"
+version = "0.3.0"
 description = "Testing utilities and fixtures for AURORA"
 readme = "README.md"
 requires-python = ">=3.10"

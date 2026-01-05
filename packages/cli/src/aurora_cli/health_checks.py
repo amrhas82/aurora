@@ -5,6 +5,7 @@ This module implements health checks for:
 - Code Analysis: tree-sitter parser, index age, chunk quality
 - Search & Retrieval: vector store, Git BLA, cache size, embeddings
 - Configuration: config file, Git repo, MCP server status
+- Tool Integration: slash commands, MCP servers
 """
 
 from __future__ import annotations
@@ -50,9 +51,6 @@ class CoreSystemChecks:
         # Check database existence
         results.append(self._check_database_exists())
 
-        # Check API key configuration
-        results.append(self._check_api_key())
-
         # Check permissions on .aurora directory
         results.append(self._check_permissions())
 
@@ -84,30 +82,6 @@ class CoreSystemChecks:
                 return ("warning", "Database not found", {"path": str(db_path)})
         except Exception as e:
             return ("fail", f"Database check failed: {e}", {})
-
-    def _check_api_key(self) -> HealthCheckResult:
-        """Check if API key is configured."""
-        # Check environment variable
-        env_key = os.environ.get("ANTHROPIC_API_KEY")
-        if env_key and env_key.strip():
-            # Don't expose key, just check format
-            if env_key.startswith("sk-ant-"):
-                return ("pass", "API key configured (env)", {"source": "environment"})
-            else:
-                return (
-                    "warning",
-                    "API key set but format unexpected",
-                    {"source": "environment"},
-                )
-
-        # Check config file
-        if self.config.anthropic_api_key:
-            if self.config.anthropic_api_key.startswith("sk-ant-"):
-                return ("pass", "API key configured (config)", {"source": "config"})
-            else:
-                return ("warning", "API key set but format unexpected", {"source": "config"})
-
-        return ("fail", "No API key configured", {})
 
     def _check_permissions(self) -> HealthCheckResult:
         """Check .aurora directory permissions."""
@@ -218,12 +192,48 @@ class CodeAnalysisChecks:
         return results
 
     def _check_tree_sitter(self) -> HealthCheckResult:
-        """Check if tree-sitter is available."""
+        """Check if tree-sitter is available and list configured languages."""
         try:
             import tree_sitter
 
-            # tree_sitter doesn't have __version__, just check it imports
-            return ("pass", "Tree-sitter parser available", {})
+            # Check for available language parsers
+            available_languages = []
+            language_modules = [
+                ("python", "tree_sitter_python"),
+                ("javascript", "tree_sitter_javascript"),
+                ("typescript", "tree_sitter_typescript"),
+                ("go", "tree_sitter_go"),
+                ("rust", "tree_sitter_rust"),
+                ("java", "tree_sitter_java"),
+                ("c", "tree_sitter_c"),
+                ("cpp", "tree_sitter_cpp"),
+                ("ruby", "tree_sitter_ruby"),
+                ("php", "tree_sitter_php"),
+            ]
+
+            for lang_name, module_name in language_modules:
+                try:
+                    __import__(module_name)
+                    available_languages.append(lang_name)
+                except ImportError:
+                    pass
+
+            if available_languages:
+                # Show first 5 languages
+                lang_display = ", ".join(available_languages[:5])
+                if len(available_languages) > 5:
+                    lang_display += f" +{len(available_languages) - 5} more"
+                return (
+                    "pass",
+                    f"Tree-sitter parsers available ({len(available_languages)} languages: {lang_display})",
+                    {"languages": available_languages, "count": len(available_languages)},
+                )
+            else:
+                return (
+                    "warning",
+                    "Tree-sitter installed but no language parsers found",
+                    {"languages": [], "count": 0},
+                )
         except ImportError:
             return (
                 "warning",
@@ -467,9 +477,6 @@ class ConfigurationChecks:
         # Check Git repository
         results.append(self._check_git_repo())
 
-        # Check MCP server status (if applicable)
-        results.append(self._check_mcp_server())
-
         return results
 
     def _check_config_file(self) -> HealthCheckResult:
@@ -506,14 +513,6 @@ class ConfigurationChecks:
         except Exception as e:
             return ("fail", f"Git check failed: {e}", {})
 
-    def _check_mcp_server(self) -> HealthCheckResult:
-        """Check MCP server status."""
-        # For now, just check if MCP is enabled in config
-        if self.config.mcp_always_on:
-            return ("pass", "MCP server enabled in config", {"mcp_always_on": True})
-        else:
-            return ("pass", "MCP server disabled", {"mcp_always_on": False})
-
     def get_fixable_issues(self) -> list[dict[str, Any]]:
         """Get list of automatically fixable issues.
 
@@ -531,3 +530,178 @@ class ConfigurationChecks:
         """
         # No manual configuration issues to report yet
         return []
+
+
+class ToolIntegrationChecks:
+    """Tool integration health checks (slash commands + MCP servers)."""
+
+    def __init__(self, config: Config | None = None):
+        """Initialize tool integration checks.
+
+        Args:
+            config: Optional Config object. If None, loads from default location.
+        """
+        self.config = config or load_config()
+
+    def run_checks(self) -> list[HealthCheckResult]:
+        """Run all tool integration checks.
+
+        Returns:
+            List of health check results
+        """
+        results = []
+
+        # Check CLI tools installation
+        results.append(self._check_cli_tools())
+
+        # Check slash command integration
+        results.append(self._check_slash_commands())
+
+        # Check MCP server integration
+        results.append(self._check_mcp_servers())
+
+        return results
+
+    def _check_cli_tools(self) -> HealthCheckResult:
+        """Check CLI tools installation status."""
+        try:
+            # Check for common AI CLI tools
+            import shutil
+
+            tools_to_check = {
+                "claude": "Claude CLI",
+                "cursor": "Cursor CLI",
+                "aider": "Aider",
+                "cline": "Cline CLI",
+            }
+
+            found_tools = []
+            for cmd, name in tools_to_check.items():
+                if shutil.which(cmd):
+                    found_tools.append(name)
+
+            if found_tools:
+                return (
+                    "pass",
+                    f"CLI tools installed ({len(found_tools)} found: {', '.join(found_tools[:3])}{'...' if len(found_tools) > 3 else ''})",
+                    {"found_tools": found_tools, "count": len(found_tools)},
+                )
+            else:
+                return (
+                    "warning",
+                    "No AI CLI tools detected",
+                    {"found_tools": [], "count": 0},
+                )
+        except Exception as e:
+            return ("fail", f"CLI tools check failed: {e}", {})
+
+    def _check_slash_commands(self) -> HealthCheckResult:
+        """Check slash command configuration status."""
+        try:
+            from aurora_cli.commands.init_helpers import detect_configured_slash_tools
+
+            project_path = Path.cwd()
+            configured_tools = detect_configured_slash_tools(project_path)
+
+            # Check if any are configured
+            configured_count = sum(1 for is_configured in configured_tools.values() if is_configured)
+
+            if configured_count == 0:
+                return (
+                    "warning",
+                    "Slash commands not configured",
+                    {"configured": False, "count": 0},
+                )
+            else:
+                return (
+                    "pass",
+                    f"Slash commands configured ({configured_count} tools)",
+                    {"configured": True, "count": configured_count},
+                )
+        except Exception as e:
+            return ("fail", f"Slash command check failed: {e}", {})
+
+    def _check_mcp_servers(self) -> HealthCheckResult:
+        """Check MCP server configuration status."""
+        try:
+            from aurora_cli.commands.init_helpers import detect_configured_mcp_tools
+
+            project_path = Path.cwd()
+            configured_tools = detect_configured_mcp_tools(project_path)
+
+            # Check if any are configured
+            configured_count = sum(1 for is_configured in configured_tools.values() if is_configured)
+
+            if configured_count == 0:
+                return (
+                    "warning",
+                    "MCP servers not configured",
+                    {"configured": False, "count": 0},
+                )
+            else:
+                configured_list = [
+                    tool_id for tool_id, is_configured in configured_tools.items() if is_configured
+                ]
+                return (
+                    "pass",
+                    f"MCP servers configured ({', '.join(configured_list)})",
+                    {"configured": True, "count": configured_count, "tools": configured_list},
+                )
+        except Exception as e:
+            return ("fail", f"MCP server check failed: {e}", {})
+
+    def get_fixable_issues(self) -> list[dict[str, Any]]:
+        """Get list of automatically fixable issues.
+
+        Returns:
+            List of dicts with 'name' and 'fix_func' keys
+        """
+        # Tool integration issues are fixed via 'aur init --config --tools=<tool>'
+        # Not auto-fixable through doctor command
+        return []
+
+    def get_manual_issues(self) -> list[dict[str, Any]]:
+        """Get list of issues requiring manual intervention.
+
+        Returns:
+            List of dicts with 'name' and 'solution' keys
+        """
+        issues = []
+
+        try:
+            from aurora_cli.commands.init_helpers import (
+                detect_configured_mcp_tools,
+                detect_configured_slash_tools,
+            )
+
+            project_path = Path.cwd()
+
+            # Check slash commands
+            slash_tools = detect_configured_slash_tools(project_path)
+            slash_configured = sum(1 for is_configured in slash_tools.values() if is_configured)
+
+            if slash_configured == 0:
+                issues.append(
+                    {
+                        "name": "Slash commands not configured",
+                        "solution": "Run 'aur init --config --tools=all' or specify tools like --tools=claude,cursor",
+                    }
+                )
+
+            # Check MCP servers
+            mcp_tools = detect_configured_mcp_tools(project_path)
+            mcp_configured = sum(1 for is_configured in mcp_tools.values() if is_configured)
+
+            if mcp_configured == 0:
+                issues.append(
+                    {
+                        "name": "MCP servers not configured",
+                        "solution": "Run 'aur init --config' to configure MCP servers",
+                    }
+                )
+
+        except Exception:
+            # If detection fails, don't report as an issue
+            pass
+
+        return issues

@@ -980,6 +980,8 @@ def create_plan(
     context_files: list[Path] | None = None,
     auto_decompose: bool = True,
     config: Config | None = None,
+    yes: bool = False,
+    non_interactive: bool = False,
 ) -> PlanResult:
     """Create a new plan with SOAR-based goal decomposition.
 
@@ -990,6 +992,8 @@ def create_plan(
         context_files: Optional list of context files for informed decomposition
         auto_decompose: Whether to use SOAR for automatic subgoal generation
         config: Optional CLI configuration
+        yes: Skip confirmation prompt and proceed automatically
+        non_interactive: Alias for yes flag (skip confirmation prompt)
 
     Returns:
         PlanResult with plan details or error message
@@ -1016,9 +1020,34 @@ def create_plan(
     # Generate plan ID
     plan_id = _generate_plan_id(goal, plans_dir)
 
-    # Generate subgoals
+    # Assess complexity
+    complexity = _assess_complexity(goal, [])  # Initial assessment before decomposition
+
+    # Generate subgoals using PlanDecomposer
     if auto_decompose:
-        subgoals = _decompose_goal_soar(goal, context_files)
+        from aurora_cli.planning.decompose import PlanDecomposer
+        from aurora_cli.planning.models import AgentGap
+
+        decomposer = PlanDecomposer(config=config)
+
+        # Get store for file resolution
+        store = None
+        try:
+            from aurora_core.store.sqlite import SQLiteStore
+            from aurora_cli.memory import get_default_db_path
+            db_path = get_default_db_path(config)
+            if db_path.exists():
+                store = SQLiteStore(str(db_path))
+        except Exception:
+            pass
+
+        # Decompose with file resolution
+        subgoals, file_resolutions, decomposition_source = decomposer.decompose_with_files(
+            goal=goal,
+            complexity=complexity,
+            context_files=[str(f) for f in context_files] if context_files else None,
+            store=store,
+        )
     else:
         # Single subgoal fallback
         subgoals = [
@@ -1029,32 +1058,90 @@ def create_plan(
                 recommended_agent="@full-stack-dev",
             )
         ]
+        file_resolutions = {}
+        decomposition_source = "heuristic"
 
-    # Assess complexity
-    complexity = _assess_complexity(goal, subgoals)
-
-    # Check agent availability
-    agent_gaps = []
+    # Collect agent gaps
+    from aurora_cli.planning.models import AgentGap
+    agent_gaps: list[AgentGap] = []
+    agents_assigned = 0
     for sg in subgoals:
         if not _check_agent_availability(sg.recommended_agent):
-            agent_gaps.append(sg.recommended_agent)
+            agent_gaps.append(
+                AgentGap(
+                    subgoal_id=sg.id,
+                    recommended_agent=sg.recommended_agent,
+                    agent_exists=False,
+                    fallback="@full-stack-dev",
+                    suggested_capabilities=[],
+                )
+            )
             sg.agent_exists = False
         else:
             sg.agent_exists = True
+            agents_assigned += 1
+
+    # Calculate file resolution statistics
+    files_resolved = sum(len(resolutions) for resolutions in file_resolutions.values())
+    all_confidences = [
+        res.confidence
+        for resolutions in file_resolutions.values()
+        for res in resolutions
+    ]
+    avg_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
+
+    # Build warnings
+    warnings = []
+    if agent_gaps:
+        warnings.append(f"Agent gaps detected: {len(agent_gaps)} subgoals need attention")
+    if not file_resolutions:
+        warnings.append("No file paths resolved. Consider running 'aur mem index .'")
+
+    # Build decomposition summary for checkpoint
+    from aurora_cli.planning.models import DecompositionSummary
+    summary = DecompositionSummary(
+        goal=goal,
+        subgoals=subgoals,
+        agents_assigned=agents_assigned,
+        agent_gaps=agent_gaps,
+        files_resolved=files_resolved,
+        avg_confidence=avg_confidence,
+        complexity=complexity,
+        decomposition_source=decomposition_source,
+        warnings=warnings,
+    )
+
+    # Display summary
+    summary.display()
+
+    # Prompt for confirmation (unless yes flag is set)
+    if not (yes or non_interactive):
+        from aurora_cli.planning.checkpoint import prompt_for_confirmation
+        if not prompt_for_confirmation():
+            return PlanResult(
+                success=False,
+                error="Plan creation cancelled by user.",
+            )
 
     # Determine context sources
     context_sources = []
     if context_files:
         context_sources.append("context_files")
-    else:
-        # Check if indexed memory exists
-        try:
-            from aurora_cli.memory import MemoryRetriever
-            retriever = MemoryRetriever(config=config)
-            if retriever.has_indexed_memory():
-                context_sources.append("indexed_memory")
-        except Exception:
-            pass
+    if files_resolved > 0:
+        context_sources.append("indexed_memory")
+
+    # Convert file_resolutions to dict format for Plan model
+    file_resolutions_dict: dict[str, list[dict[str, Any]]] = {}
+    for subgoal_id, resolutions in file_resolutions.items():
+        file_resolutions_dict[subgoal_id] = [
+            {
+                "path": res.path,
+                "line_start": res.line_start,
+                "line_end": res.line_end,
+                "confidence": res.confidence,
+            }
+            for res in resolutions
+        ]
 
     # Create plan
     plan = Plan(
@@ -1063,8 +1150,10 @@ def create_plan(
         subgoals=subgoals,
         status=PlanStatus.ACTIVE,
         complexity=complexity,
-        agent_gaps=agent_gaps,
+        agent_gaps=[gap.recommended_agent for gap in agent_gaps],  # Keep legacy format
         context_sources=context_sources,
+        decomposition_source=decomposition_source,
+        file_resolutions=file_resolutions_dict,
     )
 
     # Write files

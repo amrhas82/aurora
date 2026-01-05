@@ -1,0 +1,44 @@
+{
+  "plan_id": "0002-refactor-authentication-module",
+  "goal": "Refactor authentication module",
+  "status": "active",
+  "complexity": "complex",
+  "created_at": "2026-01-05 14:05:01",
+  "updated_at": "2026-01-05T14:05:01.387281",
+  "subgoals": [
+{
+      "id": "sg-1",
+      "title": "Plan and design approach",
+      "description": "Analyze requirements and design approach for: Refactor authentication module",
+      "recommended_agent": "@holistic-architect",
+      "agent_exists": true,
+      "dependencies": []
+    },{
+      "id": "sg-2",
+      "title": "Implement solution",
+      "description": "Implement the planned solution for: Refactor authentication module",
+      "recommended_agent": "@full-stack-dev",
+      "agent_exists": true,
+      "dependencies": []
+    },{
+      "id": "sg-3",
+      "title": "Test and verify",
+      "description": "Write tests and verify solution for: Refactor authentication module",
+      "recommended_agent": "@qa-test-architect",
+      "agent_exists": true,
+      "dependencies": []
+    },{
+      "id": "sg-4",
+      "title": "Document changes",
+      "description": "Document implementation and update relevant docs for: Refactor authentication module",
+      "recommended_agent": "@full-stack-dev",
+      "agent_exists": true,
+      "dependencies": []
+    }],
+  "tags": [],
+"decomposition_source": "heuristic",  "metadata": {
+    "generator": "Aurora Planning System",
+    "version": "0.1.0",
+    "plan_format": "eight-file-workflow"
+  }
+}

@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-01-05
+
+## [0.3.0] - 2026-01-05
+
+### Added - Developer Experience & Configuration
+
+**Project-Local Configuration (Breaking Change):**
+- All Aurora artifacts now stored in project-local `./.aurora/` directory (except budget tracker)
+- Plans created in `./.aurora/plans/` with sequential numbering (0001, 0002, etc.)
+- Config loading detects project mode when `./.aurora/` exists
+- Database, plans, and metadata now project-scoped for better isolation
+
+**Enhanced `aur mem stats`:**
+- Added `Last Indexed` timestamp display (e.g., "2 hours ago")
+- Added `Success Rate` percentage when < 100%
+- Displays failed files list (up to 10) with error details
+- Displays warnings list (up to 10) for parse issues
+- Metadata persisted in `.aurora/.indexing_metadata.json`
+
+**Improved `aur doctor` Health Checks:**
+- **New TOOL INTEGRATION section:**
+  - CLI tools detection (checks for claude, cursor, aider, cline)
+  - Slash commands status (configured/not configured)
+  - MCP servers status with tool names listed
+- **Enhanced CODE ANALYSIS section:**
+  - Tree-sitter language parsers detection and listing
+  - Shows available languages (python, javascript, typescript, etc.)
+- **Removed duplicate/unnecessary checks:**
+  - Removed redundant MCP check from CONFIGURATION section
+  - Removed API key check (no longer needed)
+
+**MCP Server Configuration:**
+- MCP servers now configured automatically during `aur init` Step 3
+- Supports Claude, Cursor, Cline, Continue
+- Shows "(+ MCP server)" notation in init output
+
+### Fixed
+
+- Fixed CLAUDE.md stub overwriting existing content (now prepends stub)
+- Fixed error messages to reference `aur mem stats` instead of `aur doctor` for indexing issues
+- Fixed plan numbering to use project-local sequence instead of global
+- Fixed init command to show "Check with aur mem stats" for indexing errors
+
+### Changed
+
+- Updated all package versions from 0.1.0 → 0.2.0
+- Updated main version from 0.2.0 → 0.3.0
+- Doctor output now shows binary status (configured/not) instead of fractions
+
+---
+
 ### Added - BM25 Tri-Hybrid Search
 
 **Tri-Hybrid Retrieval Architecture:**
@@ -143,6 +194,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+
+## [0.3.1] - 2026-01-05
 
 ### Added
 

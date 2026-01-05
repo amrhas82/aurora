@@ -11,7 +11,7 @@ import logging
 import sqlite3
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -112,12 +112,20 @@ class MemoryStats:
         total_files: Number of unique files indexed
         languages: Dictionary mapping language to chunk count
         database_size_mb: Size of database file in megabytes
+        last_indexed: Last indexing timestamp (ISO format) or None
+        failed_files: List of (file_path, error_message) tuples
+        warnings: List of warning messages
+        success_rate: Percentage of files successfully indexed (0.0-1.0)
     """
 
     total_chunks: int
     total_files: int
     languages: dict[str, int]
     database_size_mb: float
+    last_indexed: str | None = None
+    failed_files: list[tuple[str, str]] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    success_rate: float = 1.0
 
 
 class MemoryManager:
@@ -197,6 +205,8 @@ class MemoryManager:
 
         start_time = time.time()
         stats = {"files": 0, "chunks": 0, "errors": 0, "warnings": 0}
+        failed_files: list[tuple[str, str]] = []  # (file_path, error_message)
+        warning_messages: list[str] = []
 
         try:
             # Discover all code files
@@ -253,6 +263,7 @@ class MemoryManager:
                     # Count warnings if detected (before checking chunks)
                     if warning_detected:
                         stats["warnings"] += 1
+                        warning_messages.append(f"Parse warnings in {file_path.name}")
 
                     if not chunks:
                         logger.debug(f"No chunks extracted from {file_path}")
@@ -353,6 +364,9 @@ class MemoryManager:
                     # Full errors will be shown in summary
                     logger.debug(f"Failed to index {file_path}: {e}")
                     stats["errors"] += 1
+                    # Track failed file with error message
+                    error_msg = str(e).split("\n")[0][:100]  # First line, max 100 chars
+                    failed_files.append((str(file_path), error_msg))
                     continue
 
             # Final progress callback
@@ -366,6 +380,12 @@ class MemoryManager:
                 f"{stats['warnings']} warnings, "
                 f"{duration:.2f}s"
             )
+
+            # Calculate success rate
+            success_rate = stats["files"] / total_files if total_files > 0 else 1.0
+
+            # Save indexing metadata for stats command
+            self._save_indexing_metadata(failed_files, warning_messages, success_rate)
 
             return IndexStats(
                 files_indexed=stats["files"],
@@ -499,11 +519,18 @@ class MemoryManager:
             # Get database size
             db_size_mb = self._get_database_size()
 
+            # Load indexing metadata (errors, warnings, timestamp)
+            metadata = self._load_indexing_metadata()
+
             return MemoryStats(
                 total_chunks=total_chunks,
                 total_files=unique_files,
                 languages=languages,
                 database_size_mb=db_size_mb,
+                last_indexed=metadata.get("last_indexed"),
+                failed_files=metadata.get("failed_files", []),
+                warnings=metadata.get("warnings", []),
+                success_rate=metadata.get("success_rate", 1.0),
             )
 
         except Exception as e:
@@ -764,6 +791,61 @@ class MemoryManager:
         if last_error:
             error_msg = self.error_handler.handle_memory_error(last_error, "storing chunk")
             raise MemoryStoreError(error_msg)
+
+    def _get_metadata_path(self) -> Path:
+        """Get path to indexing metadata file.
+
+        Returns:
+            Path to .aurora/.indexing_metadata.json
+        """
+        db_path = Path(self.config.get_db_path())
+        return db_path.parent / ".indexing_metadata.json"
+
+    def _load_indexing_metadata(self) -> dict:
+        """Load indexing metadata from JSON file.
+
+        Returns:
+            Dictionary with metadata or empty dict if not found
+        """
+        import json
+
+        metadata_path = self._get_metadata_path()
+        if not metadata_path.exists():
+            return {}
+
+        try:
+            return json.loads(metadata_path.read_text())
+        except Exception as e:
+            logger.warning(f"Failed to load indexing metadata: {e}")
+            return {}
+
+    def _save_indexing_metadata(
+        self,
+        failed_files: list[tuple[str, str]],
+        warnings: list[str],
+        success_rate: float,
+    ) -> None:
+        """Save indexing metadata to JSON file.
+
+        Args:
+            failed_files: List of (file_path, error_message) tuples
+            warnings: List of warning messages
+            success_rate: Success rate (0.0-1.0)
+        """
+        import json
+
+        metadata = {
+            "last_indexed": datetime.now(timezone.utc).isoformat(),
+            "failed_files": failed_files,
+            "warnings": warnings,
+            "success_rate": success_rate,
+        }
+
+        metadata_path = self._get_metadata_path()
+        try:
+            metadata_path.write_text(json.dumps(metadata, indent=2))
+        except Exception as e:
+            logger.warning(f"Failed to save indexing metadata: {e}")
 
 
 __all__ = ["MemoryManager", "IndexStats", "SearchResult", "MemoryStats"]

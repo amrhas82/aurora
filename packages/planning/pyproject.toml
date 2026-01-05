@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "aurora-planning"
-version = "0.1.0"
+version = "0.3.0"
 description = "Aurora Planning System - Structured plan creation and management"
 authors = [
     {name = "Aurora Contributors", email = "noreply@example.com"}

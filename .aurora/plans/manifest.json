@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-01-05T14:13:14.944618",
+  "active_plans": [
+    "0002-refactor-authentication-module"
+  ],
+  "archived_plans": [
+    "2026-01-05-0001-implement-oauth2-authenticatio"
+  ],
+  "stats": {}
+}

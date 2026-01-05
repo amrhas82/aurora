@@ -45,8 +45,9 @@ rm -f /usr/local/bin/aur /usr/local/bin/aurora /usr/local/bin/aurora-mcp 2>/dev/
 echo ""
 echo "Installing aurora-actr in editable mode..."
 
-# Install main package with dependencies (as actual user, system-wide)
-pip install -e .
+# Install main package with dependencies
+# --no-build-isolation: Use system setuptools (avoids PEP 660 check bug with pip 22.x)
+pip install --no-build-isolation -e .
 
 echo ""
 echo "✓ Installation complete!"
@@ -62,8 +63,8 @@ echo "CLI version:"
 aur --version
 echo ""
 echo "To install dev dependencies:"
-echo "  sudo pip install -e .[dev]"
+echo "  sudo pip install --no-build-isolation -e .[dev]"
 echo ""
 echo "To install ML features:"
-echo "  sudo pip install -e .[ml]"
+echo "  sudo pip install --no-build-isolation -e .[ml]"
 echo ""

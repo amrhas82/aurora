@@ -44,7 +44,7 @@ from typing import Any
 from .config import HeadlessConfig
 from .git_enforcer import GitBranchError, GitEnforcer, GitEnforcerConfig
 from .prompt_loader_simplified import PromptData, PromptLoader, PromptValidationError
-from .scratchpad import Scratchpad
+from .scratchpad import ExecutionStatus, Scratchpad
 
 
 class TerminationReason(Enum):
@@ -159,12 +159,8 @@ class HeadlessOrchestrator:
         self.config = config or HeadlessConfig()
 
         # Initialize components (allow dependency injection for testing)
-        self.git_enforcer = git_enforcer or GitEnforcer(
-            GitEnforcerConfig(
-                required_branch=self.config.required_branch,
-                blocked_branches=self.config.blocked_branches,
-            )
-        )
+        # Git enforcer uses its own default config (blocks main/master)
+        self.git_enforcer = git_enforcer or GitEnforcer()
 
         self.prompt_loader = prompt_loader or PromptLoader(self.prompt_path)
 
@@ -341,9 +337,8 @@ class HeadlessOrchestrator:
                     error_message=str(e),
                 )
 
-            # 3. Initialize scratchpad
-            print("\nStep 3: Initializing scratchpad...")
-            self.scratchpad.initialize(goal=self.prompt_data.goal)
+            # 3. Scratchpad is already initialized in __init__
+            print("\nStep 3: Scratchpad ready...")
             print(f"✓ Scratchpad: {self.scratchpad_path}")
 
             # 4. Execute single SOAR iteration
@@ -369,11 +364,9 @@ class HeadlessOrchestrator:
                 # Log to scratchpad
                 self.scratchpad.append_iteration(
                     iteration=1,
-                    phase="SOAR Execution",
+                    goal=self.prompt_data.goal,
                     action="Executed single SOAR iteration",
-                    result=f"Response: {answer[:500]}... (confidence: {confidence:.2f})",
-                    cost=iteration_cost,
-                    notes=""
+                    result=f"Response: {answer[:500]}... (confidence: {confidence:.2f})"
                 )
 
                 # 5. Evaluate success
@@ -381,11 +374,11 @@ class HeadlessOrchestrator:
                 goal_achieved = self._evaluate_success()
 
                 if goal_achieved:
-                    self.scratchpad.update_status("COMPLETED")
+                    self.scratchpad.update_status(ExecutionStatus.COMPLETED)
                     termination_reason = TerminationReason.SUCCESS
                     print("✓ Goal appears achieved (based on scratchpad analysis)")
                 else:
-                    self.scratchpad.update_status("IN_PROGRESS")
+                    self.scratchpad.update_status(ExecutionStatus.IN_PROGRESS)
                     termination_reason = TerminationReason.SUCCESS  # Still successful execution
                     print("✓ Execution complete (goal not yet achieved)")
 
@@ -396,13 +389,11 @@ class HeadlessOrchestrator:
                 # Log to scratchpad
                 self.scratchpad.append_iteration(
                     iteration=1,
-                    phase="Error",
+                    goal=self.prompt_data.goal if self.prompt_data else "Unknown goal",
                     action="SOAR execution failed",
-                    result=f"Error: {str(e)}",
-                    cost=0.0,
-                    notes=""
+                    result=f"Error: {str(e)}"
                 )
-                self.scratchpad.update_status("BLOCKED")
+                self.scratchpad.update_status(ExecutionStatus.FAILED)
 
                 duration = datetime.now().timestamp() - self.start_time
                 return HeadlessResult(

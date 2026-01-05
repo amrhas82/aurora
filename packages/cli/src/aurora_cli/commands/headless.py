@@ -59,28 +59,16 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--budget",
     "-b",
-    type=float,
-    default=5.0,
-    help="Maximum budget in USD (default: 5.0)",
+    type=int,
+    default=30000,
+    help="Maximum token budget (default: 30000)",
 )
 @click.option(
     "--max-iter",
     "-m",
     type=int,
-    default=10,
-    help="Maximum number of iterations (default: 10)",
-)
-@click.option(
-    "--branch",
-    type=str,
-    default="headless",
-    help="Required git branch for execution (default: headless)",
-)
-@click.option(
-    "--allow-main",
-    is_flag=True,
-    default=False,
-    help="DANGEROUS: Allow running on main/master branch",
+    default=5,
+    help="Maximum number of iterations (default: 5)",
 )
 @click.option(
     "--dry-run",
@@ -97,10 +85,8 @@ logger = logging.getLogger(__name__)
 def headless_command(
     prompt_path: Path,
     scratchpad: Path | None,
-    budget: float,
+    budget: int,
     max_iter: int,
-    branch: str,
-    allow_main: bool,
     dry_run: bool,
     show_scratchpad: bool,
 ) -> None:
@@ -171,10 +157,8 @@ def headless_command(
 
         config_table.add_row("Prompt", str(prompt_path))
         config_table.add_row("Scratchpad", str(scratchpad))
-        config_table.add_row("Budget", f"${budget:.2f}")
+        config_table.add_row("Budget", f"{budget:,} tokens")
         config_table.add_row("Max Iterations", str(max_iter))
-        config_table.add_row("Required Branch", branch)
-        config_table.add_row("Allow Main", "⚠️  Yes (DANGEROUS)" if allow_main else "No")
 
         console.print(config_table)
         console.print()
@@ -190,36 +174,25 @@ def headless_command(
 
         # Create configuration
         config = HeadlessConfig(
+            budget=budget,
             max_iterations=max_iter,
-            budget_limit=budget,
-            required_branch=branch,
-            blocked_branches=[] if allow_main else ["main", "master"],
-            auto_create_scratchpad=True,
-            scratchpad_backup=True,
+            scratchpad_path=str(scratchpad),
+            dry_run=dry_run,
         )
 
         # Dry run mode - validate only
         if dry_run:
             console.print("[bold yellow]→[/] Dry run mode: validating configuration only")
 
-            # Import SOAR orchestrator (or use mock for dry run)
-            try:
-                from aurora_soar.orchestrator import SOAROrchestrator
+            # Create mock orchestrator for validation
+            class MockSOAROrchestrator:
+                """Mock SOAR orchestrator for dry-run validation."""
 
-                # Create mock orchestrator for validation
-                class MockSOAROrchestrator:
-                    """Mock SOAR orchestrator for dry-run validation."""
+                def execute(self, query: str, **kwargs: Any) -> dict[str, Any]:
+                    """Mock execute method."""
+                    return {"response": "mock response", "cost": 0.0}
 
-                    def execute(self, query: str, **kwargs: Any) -> dict[str, Any]:
-                        """Mock execute method."""
-                        return {"response": "mock response", "cost": 0.0}
-
-                soar = MockSOAROrchestrator()
-            except ImportError:
-                console.print("[yellow]Warning:[/] Could not import SOAROrchestrator, using mock")
-
-                # Use the same class definition (avoid redefinition)
-                soar = MockSOAROrchestrator()
+            soar = MockSOAROrchestrator()
 
             # Create orchestrator (this validates git branch and prompt)
             orchestrator = HeadlessOrchestrator(

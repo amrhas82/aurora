@@ -92,8 +92,13 @@ __all__ = [
 # Components will be imported here as they are implemented
 from .config import HeadlessConfig
 from .git_enforcer import GitBranchError, GitEnforcer, GitEnforcerConfig
-from .orchestrator import HeadlessOrchestrator, HeadlessResult, TerminationReason
-from .prompt_loader import PromptData, PromptLoader, PromptValidationError
+from .orchestrator_simplified import HeadlessOrchestrator, HeadlessResult, TerminationReason
+from .prompt_loader_simplified import PromptData, PromptLoader, PromptValidationError
+from .scratchpad import Scratchpad
+
+# Keep old imports available for backwards compatibility (if needed)
+# from .orchestrator import HeadlessOrchestrator as HeadlessOrchestratorOld
+# from .prompt_loader import PromptLoader as PromptLoaderOld
 from .scratchpad_manager import (
     ScratchpadConfig,
     ScratchpadEntry,

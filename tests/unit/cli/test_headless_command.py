@@ -115,15 +115,15 @@ class TestHeadlessCommandDryRun:
                     str(temp_prompt),
                     "--dry-run",
                     "--budget",
-                    "10.0",
+                    "10000",
                     "--max-iter",
-                    "20",
+                    "7",
                 ],
             )
 
             assert result.exit_code == 0
-            assert "10" in result.output  # Budget
-            assert "20" in result.output  # Max iterations
+            assert "10,000" in result.output or "10000" in result.output  # Budget (formatted with commas or not)
+            assert "7" in result.output  # Max iterations
 
     def test_dry_run_custom_scratchpad(self, runner: CliRunner, temp_prompt: Path, tmp_path: Path):
         """Test dry-run with custom scratchpad path."""
@@ -144,25 +144,16 @@ class TestHeadlessCommandDryRun:
             assert result.exit_code == 0
             assert "custom_log" in result.output
 
-    def test_dry_run_custom_branch(self, runner: CliRunner, temp_prompt: Path):
-        """Test dry-run with custom branch requirement."""
+    def test_dry_run_validates_prompt_and_git(self, runner: CliRunner, temp_prompt: Path):
+        """Test dry-run validates prompt loading and git safety."""
         with patch("aurora_soar.headless.HeadlessOrchestrator"):
             result = runner.invoke(
                 cli,
-                ["headless", str(temp_prompt), "--dry-run", "--branch", "test-123"],
+                ["headless", str(temp_prompt), "--dry-run"],
             )
 
             assert result.exit_code == 0
-            assert "test-123" in result.output
-
-    def test_dry_run_allow_main_warning(self, runner: CliRunner, temp_prompt: Path):
-        """Test dry-run shows warning when allowing main branch."""
-        with patch("aurora_soar.headless.HeadlessOrchestrator"):
-            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "--allow-main"])
-
-            assert result.exit_code == 0
-            # Should show warning about dangerous option
-            assert "⚠" in result.output or "DANGEROUS" in result.output
+            assert "Configuration valid" in result.output
 
 
 class TestHeadlessCommandOptions:
@@ -182,18 +173,18 @@ class TestHeadlessCommandOptions:
     def test_short_option_budget(self, runner: CliRunner, temp_prompt: Path):
         """Test short option -b for budget."""
         with patch("aurora_soar.headless.HeadlessOrchestrator"):
-            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "-b", "15.5"])
+            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "-b", "15000"])
 
             assert result.exit_code == 0
-            assert "15.5" in result.output or "15" in result.output
+            assert "15,000" in result.output or "15000" in result.output
 
     def test_short_option_max_iter(self, runner: CliRunner, temp_prompt: Path):
         """Test short option -m for max-iter."""
         with patch("aurora_soar.headless.HeadlessOrchestrator"):
-            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "-m", "25"])
+            result = runner.invoke(cli, ["headless", str(temp_prompt), "--dry-run", "-m", "8"])
 
             assert result.exit_code == 0
-            assert "25" in result.output
+            assert "8" in result.output
 
     def test_short_option_scratchpad(self, runner: CliRunner, temp_prompt: Path, tmp_path: Path):
         """Test short option -s for scratchpad."""
@@ -225,10 +216,10 @@ class TestHeadlessCommandConfiguration:
                 # Verify config was created with defaults
                 mock_config.assert_called_once()
                 call_kwargs = mock_config.call_args.kwargs
-                assert call_kwargs["max_iterations"] == 10
-                assert call_kwargs["budget_limit"] == 5.0
-                assert call_kwargs["required_branch"] == "headless"
-                assert call_kwargs["blocked_branches"] == ["main", "master"]
+                assert call_kwargs["max_iterations"] == 5
+                assert call_kwargs["budget"] == 30000
+                assert call_kwargs["dry_run"] is True
+                assert "scratchpad_path" in call_kwargs
 
     def test_config_creation_custom_values(self, runner: CliRunner, temp_prompt: Path):
         """Test HeadlessConfig created with custom values."""
@@ -244,37 +235,35 @@ class TestHeadlessCommandConfiguration:
                         str(temp_prompt),
                         "--dry-run",
                         "--budget",
-                        "20.0",
+                        "50000",
                         "--max-iter",
-                        "50",
-                        "--branch",
-                        "experiment-1",
+                        "8",
                     ],
                 )
 
                 assert result.exit_code == 0
                 mock_config.assert_called_once()
                 call_kwargs = mock_config.call_args.kwargs
-                assert call_kwargs["max_iterations"] == 50
-                assert call_kwargs["budget_limit"] == 20.0
-                assert call_kwargs["required_branch"] == "experiment-1"
+                assert call_kwargs["max_iterations"] == 8
+                assert call_kwargs["budget"] == 50000
+                assert call_kwargs["dry_run"] is True
 
-    def test_config_allow_main_disables_blocking(self, runner: CliRunner, temp_prompt: Path):
-        """Test --allow-main disables branch blocking."""
+    def test_config_with_custom_scratchpad(self, runner: CliRunner, temp_prompt: Path, tmp_path: Path):
+        """Test config with custom scratchpad path."""
+        scratchpad = tmp_path / "custom.md"
         with patch("aurora_soar.headless.HeadlessOrchestrator") as mock_orch:
             with patch("aurora_soar.headless.HeadlessConfig") as mock_config:
                 mock_config.return_value = MagicMock()
                 mock_orch.return_value = MagicMock()
 
                 result = runner.invoke(
-                    cli, ["headless", str(temp_prompt), "--dry-run", "--allow-main"]
+                    cli, ["headless", str(temp_prompt), "--dry-run", "--scratchpad", str(scratchpad)]
                 )
 
                 assert result.exit_code == 0
                 mock_config.assert_called_once()
                 call_kwargs = mock_config.call_args.kwargs
-                # Should have empty blocked branches
-                assert call_kwargs["blocked_branches"] == []
+                assert str(scratchpad) in call_kwargs["scratchpad_path"]
 
 
 class TestHeadlessCommandExecution:
@@ -417,11 +406,9 @@ class TestHeadlessCommandIntegration:
                     "--scratchpad",
                     str(scratchpad),
                     "--budget",
-                    "7.5",
+                    "20000",
                     "--max-iter",
-                    "15",
-                    "--branch",
-                    "test-branch",
+                    "7",
                 ],
             )
 

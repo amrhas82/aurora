@@ -148,6 +148,17 @@ class Scratchpad:
         with self.path.open("a", encoding="utf-8") as f:
             f.write(entry)
 
+    def read(self) -> str:
+        """
+        Read the full scratchpad content as a string.
+
+        Returns:
+            Full markdown content of the scratchpad file
+        """
+        if not self.path.exists():
+            return ""
+        return self.path.read_text(encoding="utf-8")
+
     def read_entries(self) -> List[ScratchpadEntry]:
         """
         Read all iteration entries from the scratchpad.

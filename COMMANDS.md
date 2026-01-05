@@ -31,7 +31,7 @@ Complete reference for all Aurora CLI commands, MCP tools, and slash commands.
 | `aur mem stats` | Memory statistics | Check indexing status | `aur mem stats` | `aur mem stats` |
 | `aur agents` | Agent discovery | Find/list/show agents | `aur agents <SUBCOMMAND>` | `aur agents search "test"` |
 | `aur plan` | Planning workflows | Create/manage plans | `aur plan <SUBCOMMAND>` | `aur plan create "Feature"` |
-| `aur headless` | Pipe to CLI tool | Multi-iteration experiments | `aur headless <FILE>` | `aur headless prompt.md --tool claude` |
+| `aur headless` | Pipe to CLI tool | Multi-iteration experiments | `aur headless <FILE> [--max-iter N] [--tool TOOL]` | `aur headless prompt.md --max-iter 5 --tool claude` |
 
 ### MCP Tools (3 tools)
 
@@ -269,8 +269,8 @@ aur headless prompt.md --tool cursor
 # Custom iteration limit (default: 10)
 aur headless prompt.md --max-iter 5
 
-# Custom scratchpad location (default: .aurora/headless/scratchpad.md)
-aur headless prompt.md --scratchpad results.md
+# Combine tool and iterations
+aur headless prompt.md --tool cursor --max-iter 3
 
 # Show scratchpad after execution
 cat .aurora/headless/scratchpad.md

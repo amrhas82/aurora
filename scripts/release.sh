@@ -121,6 +121,7 @@ echo -e "${BLUE}Step 2/7: Reinstalling package locally...${NC}"
 
 # Use install.sh which handles all cleanup and installation correctly
 # (single bundled package architecture since v0.4.0)
+# Note: install.sh uses --no-build-isolation for pip 22.x PEP 660 compatibility
 ./install.sh
 
 echo "  ✓ Package reinstalled"

@@ -269,15 +269,15 @@
     - **Test**: Verify decompose result includes file resolutions ✓
     - **Result**: All 11 tests passing (9 FilePathResolver + 2 integration)
 
-- [ ] 4.0 Integrate Agent Discovery for Capability Matching
-  - [ ] 4.1 Create AgentRecommender class skeleton with TDD
+- [x] 4.0 Integrate Agent Discovery for Capability Matching (COMPLETE)
+  - [x] 4.1 Create AgentRecommender class skeleton with TDD
     - **Test First**: Create `tests/unit/cli/planning/test_agent_recommender.py` with `TestAgentRecommender`
     - Write failing test `test_recommender_initialization` - verifies class instantiation
     - Create `packages/cli/src/aurora_cli/planning/agents.py` with `AgentRecommender` class
     - Add `__init__(self, manifest: AgentManifest | None = None, config: Config | None = None)`
     - Add placeholder methods: `recommend_for_subgoal()`, `detect_gaps()`, `get_fallback_agent()`, `_extract_keywords()`
     - Make test pass
-  - [ ] 4.2 Implement keyword extraction from subgoal text
+  - [x] 4.2 Implement keyword extraction from subgoal text
     - **Test First**: Write `test_keyword_extraction` - verifies keywords extracted from title/description
     - Implement `_extract_keywords(subgoal: Subgoal) -> list[str]`:
       - Tokenize title and description (split on whitespace and punctuation)
@@ -285,7 +285,7 @@
       - Remove common stop words (the, a, an, is, are, to, for, etc.)
       - Return unique keywords
     - **Test**: Write test with various subgoal texts
-  - [ ] 4.3 Implement FR-4.1: Agent capability matching
+  - [x] 4.3 Implement FR-4.1: Agent capability matching
     - **Test First**: Write `test_recommend_agent_high_score` - verifies best-matching agent returned
     - Load `AgentManifest` via `ManifestManager.get_or_refresh()` if not provided
     - Implement `recommend_for_subgoal(subgoal: Subgoal) -> tuple[str, float]`:
@@ -295,7 +295,7 @@
       - Return highest-scoring agent with score >= threshold (default 0.5)
       - Return `("@full-stack-dev", 0.0)` as fallback if no match
     - **Test**: Write `test_recommend_agent_no_match_fallback` - verifies fallback agent used
-  - [ ] 4.4 Add AgentGap model to planning models
+  - [x] 4.4 Add AgentGap model to planning models
     - **Test First**: Write test in `test_planning_models.py` for `AgentGap` validation
     - Add `AgentGap` model to `models.py`:
       ```python
@@ -308,7 +308,7 @@
       ```
     - Add `agent_gaps: list[AgentGap]` field to Plan model
     - Make test pass
-  - [ ] 4.5 Implement FR-4.2: Gap detection and recording
+  - [x] 4.5 Implement FR-4.2: Gap detection and recording
     - **Test First**: Write `test_detect_gaps` - verifies gaps recorded when score < threshold
     - Implement `detect_gaps(subgoals: list[Subgoal], recommendations: dict[str, tuple[str, float]]) -> list[AgentGap]`:
       - For each subgoal, if score < threshold (0.5), create AgentGap
@@ -318,7 +318,7 @@
       - Set `suggested_capabilities` from extracted keywords
     - Return list of AgentGap objects
     - **Test**: Write test verifying gap metadata is complete
-  - [ ] 4.6 Implement FR-4.3: Agent existence verification
+  - [x] 4.6 Implement FR-4.3: Agent existence verification
     - **Test First**: Write `test_agent_existence_check` - verifies agent_exists flag set correctly
     - Implement `verify_agent_exists(agent_id: str) -> bool`:
       - Call `manifest.get_agent(agent_id.lstrip("@"))`
@@ -326,7 +326,7 @@
     - Update `recommend_for_subgoal()` to set `subgoal.agent_exists` flag
     - Log warning for non-existent agents
     - **Test**: Write test with mix of existing and non-existing agents
-  - [ ] 4.7 Integrate AgentRecommender into PlanDecomposer
+  - [x] 4.7 Integrate AgentRecommender into PlanDecomposer
     - **Test First**: Update `test_decompose.py` with test for agent recommendation integration
     - After subgoal generation, call `recommender.recommend_for_subgoal()` for each subgoal
     - Assign recommended agent to `subgoal.recommended_agent`

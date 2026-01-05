@@ -16,8 +16,9 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from aurora_cli.planning.models import Complexity, FileResolution, Subgoal
+from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
 from aurora_cli.planning.memory import FilePathResolver
+from aurora_cli.planning.agents import AgentRecommender
 
 # Try to import SOAR - graceful fallback if not available
 try:
@@ -149,6 +150,63 @@ class PlanDecomposer:
                 file_resolutions[subgoal.id] = []
 
         return subgoals, file_resolutions, source
+
+    def decompose_with_agents(
+        self,
+        goal: str,
+        complexity: Complexity | None = None,
+        context_files: list[str] | None = None,
+        config: Any = None,
+    ) -> tuple[list[Subgoal], dict[str, tuple[str, float]], list[AgentGap], str]:
+        """Decompose goal and recommend agents for each subgoal.
+
+        This method extends decompose() by also recommending agents based
+        on capability matching using AgentRecommender.
+
+        Args:
+            goal: The goal to decompose
+            complexity: Optional complexity level (auto-assessed if None)
+            context_files: Optional list of relevant file paths
+            config: Optional configuration object
+
+        Returns:
+            Tuple of (subgoals, agent_recommendations, agent_gaps, decomposition_source)
+            - subgoals: List of Subgoal objects
+            - agent_recommendations: Dict mapping subgoal IDs to (agent_id, score)
+            - agent_gaps: List of AgentGap objects for low-scoring matches
+            - decomposition_source: "soar" or "heuristic"
+        """
+        # First decompose to get subgoals
+        subgoals, source = self.decompose(goal, complexity, context_files)
+
+        # Create agent recommender
+        recommender = AgentRecommender(config=config)
+
+        # Recommend agents for each subgoal
+        agent_recommendations: dict[str, tuple[str, float]] = {}
+
+        for subgoal in subgoals:
+            try:
+                agent_id, score = recommender.recommend_for_subgoal(subgoal)
+                agent_recommendations[subgoal.id] = (agent_id, score)
+
+                # Update subgoal with recommended agent
+                subgoal.recommended_agent = agent_id
+                subgoal.agent_exists = recommender.verify_agent_exists(agent_id)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to recommend agent for subgoal {subgoal.id}: {e}"
+                )
+                # Use fallback
+                fallback = recommender.get_fallback_agent()
+                agent_recommendations[subgoal.id] = (fallback, 0.0)
+                subgoal.recommended_agent = fallback
+                subgoal.agent_exists = True  # Fallback is assumed to exist
+
+        # Detect gaps for low-scoring recommendations
+        agent_gaps = recommender.detect_gaps(subgoals, agent_recommendations)
+
+        return subgoals, agent_recommendations, agent_gaps, source
 
     def _get_cache_key(self, goal: str, complexity: Complexity) -> str:
         """Generate cache key from goal and complexity.

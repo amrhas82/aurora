@@ -408,3 +408,105 @@ class TestFileResolutionIntegration:
         assert len(file_resolutions) == 0 or all(
             len(files) == 0 for files in file_resolutions.values()
         )
+
+
+class TestAgentRecommendationIntegration:
+    """Tests for agent recommendation integration (Task 4.7)."""
+
+    @patch('aurora_cli.planning.decompose.AgentRecommender')
+    @patch('aurora_cli.planning.decompose.decompose_query')
+    @patch('aurora_cli.planning.decompose.LLMClient')
+    def test_agent_recommendation_called_for_subgoals(
+        self, mock_llm_client, mock_decompose_query, mock_recommender_class
+    ):
+        """Test that agent recommendation is called for each subgoal."""
+        # Setup mocks
+        mock_llm_client.return_value = Mock()
+
+        # Mock SOAR decomposition with 2 subgoals
+        mock_decomposition = Mock()
+        mock_decomposition.subgoals = [
+            {
+                "id": "sg-1",
+                "title": "Implement auth",
+                "description": "Add authentication",
+                "agent": "@full-stack-dev",
+                "dependencies": [],
+            },
+            {
+                "id": "sg-2",
+                "title": "Add tests",
+                "description": "Write tests for auth",
+                "agent": "@qa-test-architect",
+                "dependencies": ["sg-1"],
+            },
+        ]
+        mock_result = Mock()
+        mock_result.decomposition = mock_decomposition
+        mock_decompose_query.return_value = mock_result
+
+        # Mock agent recommender
+        from aurora_cli.planning.models import AgentGap
+        mock_recommender = Mock()
+        mock_recommender.recommend_for_subgoal.side_effect = [
+            ("@full-stack-dev", 0.9),  # sg-1
+            ("@qa-test-architect", 0.8),  # sg-2
+        ]
+        mock_recommender.verify_agent_exists.return_value = True
+        mock_recommender.detect_gaps.return_value = []  # No gaps
+        mock_recommender.get_fallback_agent.return_value = "@full-stack-dev"
+        mock_recommender_class.return_value = mock_recommender
+
+        decomposer = PlanDecomposer()
+
+        # Act
+        subgoals, agent_recommendations, agent_gaps, source = decomposer.decompose_with_agents("Test goal")
+
+        # Assert
+        assert len(subgoals) == 2
+        assert source == "soar"
+        # Agent recommender should have been called for each subgoal
+        assert mock_recommender.recommend_for_subgoal.call_count == 2
+        # Agent recommendations should be keyed by subgoal ID
+        assert "sg-1" in agent_recommendations
+        assert "sg-2" in agent_recommendations
+        assert agent_recommendations["sg-1"] == ("@full-stack-dev", 0.9)
+        assert agent_recommendations["sg-2"] == ("@qa-test-architect", 0.8)
+        # Gaps should be empty for high-scoring matches
+        assert len(agent_gaps) == 0
+
+    @patch('aurora_cli.planning.decompose.AgentRecommender')
+    def test_agent_gaps_detected(self, mock_recommender_class):
+        """Test that agent gaps are detected for low-scoring matches."""
+        # Mock agent recommender with low scores
+        from aurora_cli.planning.models import AgentGap
+        mock_gap = AgentGap(
+            subgoal_id="sg-1",
+            recommended_agent="@specialized-agent",
+            agent_exists=False,
+            fallback="@full-stack-dev",
+            suggested_capabilities=["specialized", "task"],
+        )
+
+        mock_recommender = Mock()
+        mock_recommender.recommend_for_subgoal.return_value = ("@specialized-agent", 0.3)
+        mock_recommender.verify_agent_exists.return_value = False
+        mock_recommender.detect_gaps.return_value = [mock_gap]
+        mock_recommender.get_fallback_agent.return_value = "@full-stack-dev"
+        mock_recommender_class.return_value = mock_recommender
+
+        decomposer = PlanDecomposer()
+
+        # Use heuristic fallback
+        subgoals, agent_recommendations, agent_gaps, source = decomposer.decompose_with_agents(
+            "Test goal", complexity=Complexity.SIMPLE
+        )
+
+        # Assert
+        assert len(subgoals) == 3
+        assert source == "heuristic"
+        # Should have detected gaps
+        assert len(agent_gaps) == 1
+        assert agent_gaps[0].subgoal_id == "sg-1"
+        assert agent_gaps[0].agent_exists is False
+        assert agent_gaps[0].fallback == "@full-stack-dev"

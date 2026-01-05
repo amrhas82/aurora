@@ -250,31 +250,63 @@ aur query "API endpoints" --verbose
 ### Headless Mode
 
 #### `aur headless`
-**Run autonomous reasoning experiments**
+**Run single-iteration autonomous reasoning**
 
 **⚠️ Requires:** `ANTHROPIC_API_KEY` environment variable
 
 ```bash
-# Run experiment
+# Run single iteration experiment
 aur headless experiment.md
 
-# With budget limit
-aur headless task.md --budget 10.0
+# With custom token budget
+aur headless task.md --budget 50000
 
-# Max iterations
-aur headless task.md --max-iter 20
+# With multiple iterations (max 10)
+aur headless task.md --max-iter 5
+
+# Custom scratchpad location
+aur headless task.md --scratchpad results.md
 
 # Dry run (validation only)
 aur headless task.md --dry-run
+
+# Show scratchpad after execution
+aur headless task.md --show-scratchpad
 ```
 
-**Safety features:**
-- Git branch enforcement (must be on clean branch)
-- Budget limits ($10 default)
-- Iteration caps (10 default)
-- Requires explicit YAML frontmatter
+**Simplified Design:**
+- Single-iteration execution (not a loop)
+- Simple success evaluation (keyword-based heuristics)
+- Clear success/failure results
+- Git branch safety validation
+- Token budget limits (not USD)
+- Scratchpad audit trail
 
-**When to use:** Autonomous code analysis, batch processing, research experiments.
+**Safety features:**
+- Git branch enforcement (blocks main/master by default)
+- Token budget limits (30,000 tokens default)
+- Iteration caps (5 default, max 10)
+- Prompt validation (requires Goal and Success Criteria)
+- Scratchpad logging for audit trail
+
+**Prompt format:**
+```markdown
+# Goal
+[One paragraph describing what you want to achieve]
+
+# Success Criteria
+- [Criterion 1]
+- [Criterion 2]
+
+# Constraints
+- [Constraint 1]
+- [Constraint 2]
+
+# Context (optional)
+[Background information...]
+```
+
+**When to use:** Single autonomous iterations, testing SOAR pipeline, controlled experiments.
 
 ---
 

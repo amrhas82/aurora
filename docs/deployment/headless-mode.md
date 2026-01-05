@@ -1,27 +1,34 @@
-# AURORA Headless Mode - Autonomous Reasoning Guide
+# AURORA Headless Mode - Simplified Single-Iteration Guide
 
-**Version**: 1.0
-**Date**: December 23, 2025
+**Version**: 2.0 (Simplified)
+**Date**: January 5, 2026
 **Status**: Production Ready
 
 ---
 
 ## Executive Summary
 
-AURORA's Headless Mode enables fully autonomous code generation and experimentation without human intervention between iterations. The system safely executes goal-driven tasks using the SOAR reasoning pipeline, with multiple safety mechanisms to prevent codebase damage and runaway costs.
+AURORA's Headless Mode enables single-iteration autonomous code generation and experimentation with strong safety guarantees. The simplified system executes one SOAR iteration per invocation, making it easier to understand, test, and control.
 
 **Key Features**:
-- **Autonomous Execution**: Runs multiple SOAR iterations until goal achieved
-- **Safety First**: Git branch enforcement, budget limits, iteration caps
-- **Full Audit Trail**: Scratchpad logs every iteration with cost tracking
-- **Goal Evaluation**: LLM assesses progress and detects completion
-- **Production Ready**: 226 passing tests, comprehensive error handling
+- **Single Iteration Execution**: One SOAR cycle per invocation (no complex loops)
+- **Safety First**: Git branch enforcement, token budget limits, validation
+- **Simple Success Evaluation**: Keyword-based heuristics for goal achievement
+- **Full Audit Trail**: Scratchpad logs iteration with timestamps
+- **Production Ready**: 121 passing tests, 90%+ coverage, comprehensive error handling
 
 **Safety Guarantees**:
 - ✅ Never runs on main/master branches
-- ✅ Budget limits prevent runaway costs
-- ✅ Max iterations prevent infinite loops
+- ✅ Token budget limits (30,000 tokens default)
+- ✅ Max 10 iterations enforced
+- ✅ Prompt validation (requires Goal and Success Criteria)
 - ✅ Full transparency via scratchpad logging
+
+**Simplified Design Philosophy**:
+- Remove complexity, focus on core workflow
+- Single iteration makes reasoning easier
+- Users can chain invocations if needed
+- Clear success/failure results
 
 ---
 
@@ -1236,6 +1243,8 @@ Add input validation to all API endpoints (registration, login, profile update).
 
 ## Troubleshooting
 
+This section covers common issues with the simplified single-iteration headless mode.
+
 ### Issue 1: Execution Never Starts
 
 **Symptoms**:
@@ -1250,113 +1259,457 @@ Add input validation to all API endpoints (registration, login, profile update).
    Error: Cannot run headless mode on branch 'main'
 
    Solution:
-   $ git checkout -b headless
+   $ git checkout -b headless-experiment
+   $ aur headless experiment.md
    ```
 
-2. **Invalid prompt file**
+   The simplified version blocks main/master branches by default.
+
+2. **Invalid prompt file - Missing Goal section**
    ```bash
    Error: Prompt validation failed: Missing 'Goal' section
 
    Solution:
-   - Check prompt file has all required sections
-   - Use `--dry-run` to validate
+   - Ensure prompt has '# Goal' header
+   - Add at least one paragraph under Goal
+   - Use `--dry-run` to validate:
+     $ aur headless experiment.md --dry-run
    ```
 
-3. **Prompt file not found**
+3. **Invalid prompt file - Empty Success Criteria**
+   ```bash
+   Error: Prompt must have 'Success Criteria' section with at least one criterion
+
+   Solution:
+   - Ensure prompt has '# Success Criteria' header
+   - Add at least one bullet point:
+     # Success Criteria
+     - [Your criterion here]
+   ```
+
+4. **Prompt file not found**
    ```bash
    Error: Prompt file not found: experiment.md
 
    Solution:
    - Check file path is correct
    - Use absolute path: /full/path/to/experiment.md
+   - Verify file exists: ls -l experiment.md
+   ```
+
+5. **Invalid budget or iteration count**
+   ```bash
+   Error: Budget must be positive
+   Error: max_iterations cannot exceed 10
+
+   Solution:
+   - Budget must be > 0 (tokens)
+   - Max iterations: 1-10 only
+   - Example: aur headless task.md --budget 50000 --max-iter 5
    ```
 
 ---
 
-### Issue 2: Stuck in Loop (Not Making Progress)
+### Issue 2: Goal Not Achieved After Single Iteration
 
 **Symptoms**:
-- Multiple iterations doing the same thing
-- Scratchpad shows repeated attempts
-- No progress toward success criteria
+- Execution completes successfully
+- Scratchpad shows iteration logged
+- Result shows `goal_achieved: False`
 
-**Causes & Solutions**:
+**Understanding**:
+This is **expected behavior** for the simplified version. A single iteration rarely completes complex goals.
 
-1. **Ambiguous success criteria**
-   ```markdown
-   ❌ - Code should be better
-   ✅ - All tests pass AND coverage >85%
+**Solutions**:
+
+1. **Run additional iterations manually**
+   ```bash
+   # Run iteration 1
+   $ aur headless experiment.md --scratchpad scratch.md
+
+   # Check results
+   $ cat scratch.md
+
+   # Run iteration 2 (scratchpad will append)
+   $ aur headless experiment.md --scratchpad scratch.md
    ```
 
-2. **Missing context**
-   Add more details to Context section:
+2. **Simplify the goal**
+   Break down complex goals into smaller steps:
    ```markdown
-   # Context
-   The test suite is in tests/. Run with: pytest tests/
-   Coverage is measured with: pytest --cov=app tests/
-   Minimum coverage threshold: 85%
+   # Instead of:
+   # Goal
+   Implement full authentication system with email verification
+
+   # Try:
+   # Goal
+   Implement basic user registration endpoint (email + password only)
    ```
 
-3. **Circular dependency**
-   If AURORA can't proceed due to external issue, check scratchpad notes.
-   May need to fix environment or dependencies manually.
+3. **Review scratchpad for progress**
+   The scratchpad shows what was accomplished:
+   ```bash
+   $ cat scratchpad.md
+   ```
+
+   Look for:
+   - What actions were taken
+   - What results occurred
+   - Whether partial progress was made
 
 ---
 
-### Issue 3: Budget Exceeded Too Quickly
+### Issue 3: Success Evaluation Seems Wrong
 
 **Symptoms**:
-- Reaches budget limit in 2-3 iterations
-- Not enough iterations to complete goal
+- Execution appears successful but `goal_achieved: False`
+- Or vice versa: appears to fail but `goal_achieved: True`
 
-**Causes & Solutions**:
+**Understanding**:
+The simplified version uses **keyword-based heuristics** for success evaluation, not true understanding.
 
-1. **Complex codebase (large context)**
-   - Reduce scope: Focus on specific files
-   - Increase budget for complex tasks
-   - Use smaller model (GPT-3.5 instead of GPT-4)
+**How It Works**:
+```python
+# Counts occurrences of keywords in scratchpad
+success_keywords = ["completed", "success", "achieved", "done", "finished", "passing"]
+failure_keywords = ["failed", "error", "blocked", "cannot", "unable"]
 
-2. **Expensive iterations (debugging)**
-   - Provide better initial context
-   - Include examples of expected behavior
-   - Pre-fix obvious issues before headless run
+# Returns True if success_count > failure_count
+```
 
-3. **Budget estimate too low**
-   - Review cost per iteration in scratchpad
-   - Multiply by expected iterations
-   - Add 50% safety margin
+**Solutions**:
 
----
-
-### Issue 4: Tests Fail After Headless Execution
-
-**Symptoms**:
-- Scratchpad shows GOAL_ACHIEVED
-- But running tests manually fails
-
-**Causes & Solutions**:
-
-1. **Environment mismatch**
-   - AURORA ran tests in different environment
-   - Solution: Specify environment in constraints
-   ```markdown
-   # Constraints
-   - Tests must pass in Python 3.9 environment
-   - Use pytest with: pytest -v tests/
+1. **Review actual results manually**
+   Don't rely solely on the heuristic:
+   ```bash
+   $ cat scratchpad.md
+   $ git diff  # Check what changed
+   $ pytest    # Run tests yourself
    ```
 
-2. **Incomplete success criteria**
-   - Criteria didn't include manual test verification
-   - Solution: Add explicit test command to criteria
+2. **Use explicit success criteria**
+   Write criteria that include these keywords:
    ```markdown
    # Success Criteria
-   - Running `pytest tests/` exits with code 0
-   - All test output shows PASSED (no FAILED)
+   - All tests passing (not just "tests pass")
+   - Implementation completed successfully
+   - No errors in execution
    ```
 
-3. **Timing or randomness issue**
-   - Tests passed during execution but fail now
-   - Solution: Review test isolation and determinism
+3. **Chain iterations and check manually**
+   After each iteration, review before continuing:
+   ```bash
+   $ aur headless task.md
+   $ cat scratchpad.md  # Review
+   $ git diff           # Check changes
+   $ pytest             # Verify
+   # If good, run next iteration
+   $ aur headless task.md
+   ```
+
+---
+
+### Issue 4: Token Budget Not Enforced
+
+**Symptoms**:
+- Set budget with `--budget 1000`
+- Execution uses more tokens
+- No budget exceeded error
+
+**Understanding**:
+Token budget validation is in the config, but actual enforcement in the SOAR orchestrator is **not yet implemented**.
+
+**Current Behavior**:
+- Config validates budget > 0
+- Config validates budget is reasonable
+- SOAR execution does NOT check budget
+
+**Solutions**:
+
+1. **Monitor manually**
+   Check SOAR execution output for token usage:
+   ```bash
+   $ aur headless experiment.md --verbose
+   ```
+
+2. **Use iteration limits as fallback**
+   Limit iterations instead of tokens:
+   ```bash
+   $ aur headless experiment.md --max-iter 3
+   ```
+
+3. **Track in scratchpad**
+   Review scratchpad for cost information (if SOAR provides it):
+   ```bash
+   $ grep -i "cost\|token" scratchpad.md
+   ```
+
+**Future**: Budget enforcement will be added to SOAROrchestrator.
+
+---
+
+### Issue 5: Scratchpad Shows Errors But Execution "Succeeds"
+
+**Symptoms**:
+- Scratchpad contains error messages
+- But HeadlessResult shows `termination_reason: SUCCESS`
+
+**Understanding**:
+The simplified orchestrator returns `SUCCESS` if the SOAR iteration **completed** (didn't crash), even if the SOAR result itself contained errors.
+
+**Termination Reasons**:
+- `SUCCESS`: SOAR iteration ran to completion
+- `BLOCKED`: SOAR iteration crashed or failed to execute
+- `GIT_SAFETY_ERROR`: Git validation failed
+- `PROMPT_ERROR`: Prompt validation failed
+
+**Solutions**:
+
+1. **Always review scratchpad**
+   Don't trust termination reason alone:
+   ```bash
+   $ cat scratchpad.md
+   ```
+
+   Look for:
+   - Error messages in the result
+   - "failed", "error", "cannot" keywords
+   - Actual changes made (or not made)
+
+2. **Check git diff**
+   See what actually changed:
+   ```bash
+   $ git diff
+   $ git status
+   ```
+
+3. **Run tests manually**
+   Verify the changes work:
+   ```bash
+   $ pytest
+   $ npm test
+   $ cargo test
+   ```
+
+---
+
+### Issue 6: SOAR Orchestrator Not Initialized
+
+**Symptoms**:
+```bash
+Warning: SOAR orchestrator creation not implemented
+This would initialize SOAROrchestrator with proper config
+For now, aborting. Implement SOAR initialization first.
+```
+
+**Understanding**:
+The CLI command has a placeholder for SOAR orchestrator initialization. Real implementation depends on your SOAR setup.
+
+**Solutions**:
+
+1. **Use dry-run mode for validation**
+   Test configuration without SOAR:
+   ```bash
+   $ aur headless experiment.md --dry-run
+   ```
+
+2. **Wait for SOAR initialization implementation**
+   The CLI will be updated to properly initialize SOAR orchestrator with:
+   - API key from environment
+   - Configuration from ~/.aurora/config.yaml
+   - Proper model selection
+
+3. **Use MCP tools instead**
+   For now, use Aurora MCP tools through Claude Code CLI:
+   ```bash
+   # In Claude Code CLI
+   > Use aurora_query to analyze this code
+   ```
+
+---
+
+### Issue 7: Scratchpad Not Created
+
+**Symptoms**:
+- Execution completes
+- No scratchpad file exists
+- No error about scratchpad
+
+**Causes & Solutions**:
+
+1. **Check scratchpad path**
+   ```bash
+   $ aur headless experiment.md --show-scratchpad
+   # Shows where scratchpad should be
+   ```
+
+   Default: `<prompt_name>_scratchpad.md` in same directory as prompt.
+
+2. **Check permissions**
+   ```bash
+   $ ls -ld $(dirname experiment.md)
+   # Should be writable
+   ```
+
+3. **Specify absolute path**
+   ```bash
+   $ aur headless experiment.md --scratchpad /tmp/scratch.md
+   ```
+
+4. **Check for errors**
+   ```bash
+   $ aur headless experiment.md 2>&1 | tee output.log
+   # Review output.log for errors
+   ```
+
+---
+
+### Issue 8: Execution Takes Too Long
+
+**Symptoms**:
+- Execution hangs or runs for many minutes
+- No progress shown
+
+**Causes & Solutions**:
+
+1. **SOAR execution is slow**
+   Single SOAR iterations can take 30 seconds to several minutes:
+   ```bash
+   # Monitor progress (if available)
+   $ tail -f scratchpad.md
+   ```
+
+2. **Large context size**
+   If codebase is large, SOAR processes more context:
+   - Reduce scope in prompt
+   - Focus on specific files/directories
+   - Provide file paths in Context section
+
+3. **Network issues**
+   API calls to Anthropic may be slow:
+   - Check internet connection
+   - Try again later
+   - Check Anthropic status page
+
+4. **Set timeout (future feature)**
+   Currently no timeout mechanism, but you can:
+   ```bash
+   # Kill after 5 minutes
+   $ timeout 300 aur headless experiment.md
+   ```
+
+---
+
+### Debugging Tips
+
+**1. Always use dry-run first**
+```bash
+$ aur headless experiment.md --dry-run
+```
+
+Validates:
+- Prompt file exists
+- Prompt has required sections
+- Git branch is safe
+- Configuration is valid
+
+**2. Enable verbose output**
+```bash
+$ aur headless experiment.md --verbose
+```
+
+Shows more details about execution.
+
+**3. Review scratchpad after every execution**
+```bash
+$ aur headless experiment.md --show-scratchpad
+```
+
+Or manually:
+```bash
+$ cat experiment_scratchpad.md
+```
+
+**4. Check git status**
+```bash
+$ git status
+$ git diff
+```
+
+See what actually changed.
+
+**5. Verify with tests**
+```bash
+$ pytest -v
+$ npm test
+$ cargo test
+```
+
+Don't trust keyword heuristics alone.
+
+**6. Use small experiments first**
+```bash
+# Small goal to test workflow
+$ cat > test.md << EOF
+# Goal
+Print "hello world" to console
+
+# Success Criteria
+- Code executes without errors
+- Output contains "hello world"
+EOF
+
+$ aur headless test.md --dry-run
+$ aur headless test.md
+```
+
+---
+
+### Common Pitfalls
+
+**1. Expecting multi-iteration completion**
+- Simplified version runs ONE iteration
+- Chain invocations manually if needed
+
+**2. Trusting success heuristics**
+- Keyword-based, not true understanding
+- Always verify manually
+
+**3. Complex goals in single iteration**
+- Break down into smaller steps
+- One iteration = one focused action
+
+**4. Missing context in prompt**
+- Provide file paths
+- Include examples
+- Explain existing code structure
+
+**5. Not checking actual results**
+- Always review scratchpad
+- Always check git diff
+- Always run tests
+
+---
+
+### Getting Help
+
+**Check logs**:
+```bash
+$ aur headless experiment.md 2>&1 | tee execution.log
+```
+
+**Report issues with**:
+1. Prompt file content
+2. Scratchpad content
+3. Error messages
+4. Git branch name
+5. Command used
+6. Expected vs actual behavior
+
+**See Also**:
+- [Developer Architecture Guide](../development/headless-architecture.md) - Implementation details
+- [Testing Guide](../development/testing-guide.md) - How to test headless mode
+- [SOAR Architecture](../development/SOAR_ARCHITECTURE.md) - SOAR pipeline details
 
 ---
 

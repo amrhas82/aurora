@@ -1,70 +1,24 @@
 #!/bin/bash
-# Aurora installation script - installs main package in editable mode
-# Use this after making code changes to test locally
-#
-# Usage: sudo ./install.sh
+# Local development install
+# Usage: ./install.sh
 
-set -e  # Exit on error
+set -e
 
-echo "════════════════════════════════════════"
-echo "  Aurora Local Development Install"
-echo "════════════════════════════════════════"
-echo ""
+# Clean stale metadata (prevents permission/timestamp errors)
+rm -rf src/*.egg-info build/ 2>/dev/null || true
 
-# Check if running as root/sudo
-if [ "$EUID" -ne 0 ]; then
-    echo "⚠️  This script requires sudo to uninstall system packages."
-    echo "   Please run: sudo ./install.sh"
-    exit 1
+echo "Installing aurora-actr..."
+
+# Try editable install first, fallback to wheel if pip is old
+if pip install -e . 2>/dev/null; then
+    echo "✓ Installed (editable mode)"
+else
+    echo "Editable install failed (old pip?), building wheel..."
+    python3 -m build -w -q
+    pip install dist/*.whl --force-reinstall
+    rm -rf dist/ build/
+    echo "✓ Installed (wheel mode)"
 fi
 
-# Get the actual user (not root)
-ACTUAL_USER="${SUDO_USER:-$USER}"
-ACTUAL_HOME=$(eval echo ~$ACTUAL_USER)
-
-echo "Installing for user: $ACTUAL_USER"
-echo ""
-
-# Uninstall old installations (system-wide)
-echo "Cleaning old installations..."
-pip uninstall -y aurora-actr aurora-cli aurora-context-code aurora-core aurora-reasoning aurora-soar aurora-testing aurora-planning 2>/dev/null || true
-
-# Remove stale metadata from source directories
-find src/ packages/ -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
-
-# Remove stale metadata from site-packages (both system and user)
-rm -rf /usr/local/lib/python*/dist-packages/aurora*.dist-info 2>/dev/null || true
-rm -rf /usr/local/lib/python*/dist-packages/*aurora*.pth 2>/dev/null || true
-rm -rf $ACTUAL_HOME/.local/lib/python*/site-packages/aurora*.dist-info 2>/dev/null || true
-rm -rf $ACTUAL_HOME/.local/lib/python*/site-packages/*aurora*.pth 2>/dev/null || true
-rm -rf $ACTUAL_HOME/.local/lib/python*/site-packages/*.egg-link 2>/dev/null || true
-
-# Clean up /usr/local/bin
-rm -f /usr/local/bin/aur /usr/local/bin/aurora /usr/local/bin/aurora-mcp 2>/dev/null || true
-
-echo ""
-echo "Installing aurora-actr in editable mode..."
-
-# Install main package with dependencies
-# --no-build-isolation: Use system setuptools (avoids PEP 660 check bug with pip 22.x)
-pip install --no-build-isolation -e .
-
-echo ""
-echo "✓ Installation complete!"
-echo ""
-echo "Installed version:"
-pip show aurora-actr | grep -E "^(Name|Version|Location):"
-echo ""
-echo "CLI commands available:"
-which aur
-which aurora-mcp
-echo ""
-echo "CLI version:"
-aur --version
-echo ""
-echo "To install dev dependencies:"
-echo "  sudo pip install --no-build-isolation -e .[dev]"
-echo ""
-echo "To install ML features:"
-echo "  sudo pip install --no-build-isolation -e .[ml]"
-echo ""
+echo "  $(pip show aurora-actr | grep Version)"
+echo "  CLI: $(which aur)"

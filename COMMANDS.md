@@ -4,6 +4,8 @@ Complete reference for all Aurora CLI commands, MCP tools, and slash commands.
 
 **Version:** 0.4.0
 
+**See Also:** [INTERFACE_GUIDE.md](docs/INTERFACE_GUIDE.md) - Comprehensive table of all commands with type, purpose, syntax, and examples
+
 ---
 
 ## Table of Contents

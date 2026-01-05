@@ -67,7 +67,7 @@ This pattern is used by `/aur:plan` for managing work proposals and will be used
 
 ## Complete Interface Reference
 
-### CLI Commands (7 commands)
+### CLI Commands (8 commands)
 
 | Command Name | Interface Type | Purpose | When To Use | Syntax | Example |
 |--------------|----------------|---------|-------------|--------|---------|
@@ -78,6 +78,7 @@ This pattern is used by `/aur:plan` for managing work proposals and will be used
 | `aur mem stats` | CLI | Show memory database statistics | Understanding index size, checking indexing success | `aur mem stats` | `aur mem stats` |
 | `aur agents` | CLI | Discover and search available agents | Finding agents by keyword, listing all agents | `aur agents list \| aur agents search <QUERY>` | `aur agents search "test"` |
 | `aur plan` | CLI | Manage planning workflows | Creating, listing, validating work plans | `aur plan <SUBCOMMAND> [OPTIONS]` | `aur plan list --active` |
+| `aur headless` | CLI | Pipe prompts to CLI tool for autonomous execution | Multi-iteration experiments, autonomous exploration | `aur headless <PROMPT_FILE> [OPTIONS]` | `aur headless prompt.md --tool claude --max-iter 5` |
 
 ### MCP Tools (9 tools)
 

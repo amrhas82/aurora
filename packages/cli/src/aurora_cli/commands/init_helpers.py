@@ -412,8 +412,9 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
     console.print()
 
     selected = await questionary.checkbox(
-        "Select tools (space to toggle, enter to continue):",
+        "Select tools:",
         choices=choices,
+        instruction="(space=toggle, a=all, enter=confirm)",
         style=questionary.Style(
             [
                 ("selected", "fg:cyan bold"),
@@ -660,8 +661,9 @@ def selective_step_selection() -> list[int]:
 
     console.print()
     selected = questionary.checkbox(
-        "Select steps to re-run (Space to select, Enter to confirm):",
+        "Select steps to re-run:",
         choices=choices,
+        instruction="(space=toggle, enter=confirm)",
     ).ask()
 
     if not selected:

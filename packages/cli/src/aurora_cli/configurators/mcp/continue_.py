@@ -58,10 +58,37 @@ class ContinueMCPConfigurator(MCPConfigurator):
         """
         db_path = project_path / ".aurora" / "memory.db"
 
+        # Build PYTHONPATH for aurora packages (development mode)
+        pythonpath_parts = []
+        aurora_src = project_path / "src"
+        aurora_packages = project_path / "packages"
+
+        if aurora_src.exists():
+            pythonpath_parts.append(str(aurora_src))
+
+        if aurora_packages.exists():
+            for pkg_dir in ["cli", "core", "context-code"]:
+                pkg_src = aurora_packages / pkg_dir / "src"
+                if pkg_src.exists():
+                    pythonpath_parts.append(str(pkg_src))
+
+        # Use python with module path if source found, else fallback to aurora-mcp
+        if pythonpath_parts:
+            return {
+                "aurora": {
+                    "command": "python3",
+                    "args": ["-m", "aurora_mcp.server"],
+                    "env": {
+                        "PYTHONPATH": ":".join(pythonpath_parts),
+                        "AURORA_DB_PATH": str(db_path),
+                    },
+                }
+            }
+
         return {
             "aurora": {
-                "command": "python3",
-                "args": ["-m", "aurora.mcp.server"],
+                "command": "aurora-mcp",
+                "args": [],
                 "env": {
                     "AURORA_DB_PATH": str(db_path),
                 },

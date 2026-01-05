@@ -130,24 +130,60 @@ class MCPConfigurator(ABC):
         """
         db_path = project_path / ".aurora" / "memory.db"
 
+        # Build PYTHONPATH for aurora packages (development mode)
+        pythonpath_parts = []
+        aurora_src = project_path / "src"
+        aurora_packages = project_path / "packages"
+
+        if aurora_src.exists():
+            pythonpath_parts.append(str(aurora_src))
+
+        if aurora_packages.exists():
+            for pkg_dir in ["cli", "core", "context-code"]:
+                pkg_src = aurora_packages / pkg_dir / "src"
+                if pkg_src.exists():
+                    pythonpath_parts.append(str(pkg_src))
+
+        # Use python with module path if source found, else fallback to aurora-mcp
+        if pythonpath_parts:
+            return {
+                "mcpServers": {
+                    "aurora": {
+                        "type": "stdio",
+                        "command": "python3",
+                        "args": ["-m", "aurora_mcp.server"],
+                        "env": {
+                            "PYTHONPATH": ":".join(pythonpath_parts),
+                            "AURORA_DB_PATH": str(db_path),
+                        },
+                    }
+                }
+            }
+
         return {
-            "aurora": {
-                "command": "python3",
-                "args": ["-m", "aurora.mcp.server"],
-                "env": {
-                    "AURORA_DB_PATH": str(db_path),
-                },
+            "mcpServers": {
+                "aurora": {
+                    "type": "stdio",
+                    "command": "aurora-mcp",
+                    "args": [],
+                    "env": {
+                        "AURORA_DB_PATH": str(db_path),
+                    },
+                }
             }
         }
 
     def is_configured(self, project_path: Path) -> bool:
-        """Check if Aurora MCP server is already configured.
+        """Check if Aurora MCP server is correctly configured.
+
+        Validates both presence AND correctness of configuration.
+        Accepts either 'aurora-mcp' command or 'python3 -m aurora_mcp.server'.
 
         Args:
             project_path: Path to project root
 
         Returns:
-            True if Aurora is configured in MCP config
+            True if Aurora is correctly configured in MCP config
         """
         config_path = self.get_config_path(project_path)
 
@@ -158,14 +194,27 @@ class MCPConfigurator(ABC):
             content = config_path.read_text(encoding="utf-8")
             config = json.loads(content)
 
-            # Check for Aurora in mcpServers
+            # Get aurora config from either format
+            aurora_config = None
             if "mcpServers" in config and "aurora" in config["mcpServers"]:
+                aurora_config = config["mcpServers"]["aurora"]
+            elif "aurora" in config:
+                aurora_config = config["aurora"]
+
+            if not aurora_config:
+                return False
+
+            # Validate the command is correct (must be aurora-mcp, not python3 -m ...)
+            command = aurora_config.get("command", "")
+            if command == "aurora-mcp":
                 return True
 
-            # Also check direct format (some tools use this)
-            if "aurora" in config:
+            # Also accept python3 -m aurora_mcp.server (correct module path)
+            args = aurora_config.get("args", [])
+            if command == "python3" and "-m" in args and "aurora_mcp.server" in args:
                 return True
 
+            # Old wrong path (python3 -m aurora.mcp.server) is NOT valid
             return False
         except (json.JSONDecodeError, OSError):
             return False

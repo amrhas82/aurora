@@ -27,8 +27,33 @@ BUMP_TYPE="${1:-patch}"
 PUBLISH="${2:-}"
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   Aurora Release Manager v0.3.0        ║${NC}"
+echo -e "${BLUE}║   Aurora Release Manager v0.3.1        ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
+echo ""
+
+# Check dependencies
+echo -e "${BLUE}Checking dependencies...${NC}"
+
+# Check python3-venv
+if ! dpkg -l | grep -q python3.10-venv; then
+    echo -e "${YELLOW}⚠ python3.10-venv not installed${NC}"
+    read -p "Install python3.10-venv? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        sudo apt install -y python3.10-venv
+    else
+        echo -e "${RED}Error: python3-venv required for building packages${NC}"
+        exit 1
+    fi
+fi
+
+# Check build and twine
+if ! python3 -m pip show build twine > /dev/null 2>&1; then
+    echo -e "${YELLOW}⚠ build and/or twine not installed${NC}"
+    pip install --user build twine
+fi
+
+echo -e "${GREEN}✓ All dependencies installed${NC}"
 echo ""
 
 # Get current version
@@ -151,8 +176,9 @@ echo -e "${BLUE}Step 7/7: Build distribution packages...${NC}"
 rm -rf dist/ build/ *.egg-info packages/*/*.egg-info
 
 # Build packages
-python -m build > /dev/null 2>&1
+python3 -m build
 echo "  ✓ Built distribution packages"
+ls -lh dist/
 
 if [[ "$PUBLISH" == "--publish" ]]; then
     echo ""

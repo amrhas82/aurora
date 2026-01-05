@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-01-05
+
+### BREAKING CHANGES
+
+**Package Structure Simplified:**
+- All sub-packages (`aurora-core`, `aurora-cli`, etc.) now bundled directly into `aurora-actr`
+- Single package installation: `pip install aurora-actr` includes everything
+- No more separate package dependencies on PyPI
+- Package size: ~528KB (still tiny!)
+
+**What This Means:**
+- ✅ Users: Just run `pip install aurora-actr` - everything works
+- ✅ Simpler installation, no verbose sub-package output
+- ✅ All features included by default (CLI, MCP, memory, reasoning, planning, SOAR)
+- ⚠️ If you had `aurora-cli` or other sub-packages installed separately, uninstall them first
+
+**Optional Dependencies:**
+- `[ml]`: Machine learning features (sentence-transformers, torch) for semantic embeddings
+- `[dev]`: Development tools for contributors (pytest, mypy, ruff, etc.)
+
+**Installation:**
+```bash
+# Full installation (recommended)
+pip install aurora-actr
+
+# With ML features
+pip install aurora-actr[ml]
+
+# Development (contributors only)
+pip install aurora-actr[dev]
+```
+
 ## [0.3.1] - 2026-01-05
 
 ## [0.3.0] - 2026-01-05

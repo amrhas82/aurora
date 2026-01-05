@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aurora-actr"
-version = "0.3.1"
+version = "0.4.0"
 description = "AURORA: Adaptive Unified Reasoning and Orchestration Architecture with MCP Integration"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,41 +24,55 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
+# All packages bundled - ~5MB total
 dependencies = [
-    "aurora-core",
-    "aurora-context-code",
-    "aurora-soar",
-    "aurora-reasoning",
-    "aurora-cli",
-    "aurora-testing",
-    "aurora-planning",
+    # Core dependencies
+    "pydantic>=2.0.0",
+    "jsonschema>=4.17.0",
+
+    # CLI dependencies
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "python-frontmatter>=1.0.0",
+    "jinja2>=3.1.0",
+    "python-slugify>=8.0.0",
+    "questionary>=2.0.0",
+    "pyyaml>=6.0.0",
+
+    # Context/code analysis dependencies
+    "tree-sitter>=0.20.0",
+    "tree-sitter-python>=0.20.0",
+    "numpy>=1.24.0",
+
+    # Reasoning dependencies
+    "anthropic>=0.18.0",
+    "openai>=1.0.0",
+    "ollama>=0.1.0",
+    "tenacity>=8.2.0",
+
+    # MCP integration
+    "fastmcp>=0.1.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/aurora"
-Documentation = "https://github.com/yourusername/aurora/blob/main/README.md"
-Repository = "https://github.com/yourusername/aurora"
-Issues = "https://github.com/yourusername/aurora/issues"
-Changelog = "https://github.com/yourusername/aurora/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/hamr/aurora"
+Documentation = "https://github.com/hamr/aurora/blob/main/README.md"
+Repository = "https://github.com/hamr/aurora"
+Issues = "https://github.com/hamr/aurora/issues"
+Changelog = "https://github.com/hamr/aurora/blob/main/CHANGELOG.md"
 
 [project.scripts]
 aur = "aurora_cli.main:cli"
-aurora-mcp = "aurora.mcp.server:main"
-aurora-uninstall = "aurora.scripts.uninstall:main"
+aurora = "aurora_cli.main:cli"
 
 [project.optional-dependencies]
+# ML: Optional machine learning features (semantic embeddings)
 ml = [
     "sentence-transformers>=2.2.0",
     "torch>=2.0.0",
 ]
-mcp = [
-    "fastmcp>=0.1.0",
-]
-all = [
-    "sentence-transformers>=2.2.0",
-    "torch>=2.0.0",
-    "fastmcp>=0.1.0",
-]
+
+# Dev: Testing and development tools (contributors only)
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
@@ -69,7 +83,6 @@ dev = [
     "types-jsonschema>=4.0.0",
     "bandit>=1.7.5",
     "memory-profiler>=0.61.0",
-    "aurora-testing",
 ]
 
 # Tool configurations

@@ -30,42 +30,83 @@ Create a new release with automatic versioning:
 **Use when:** You've made code changes and want to test them
 
 **What it does:**
-1. Reinstalls all aurora packages in editable mode
-2. Updates package metadata
-3. Shows installed versions
+1. Uninstalls all aurora packages
+2. Cleans stale metadata (.egg-info, .dist-info, .pth files)
+3. Reinstalls all aurora packages in editable mode from source
+4. Verifies installation and shows versions
 
 **Usage:**
 ```bash
 sudo ./install.sh
 ```
 
+**Run this after:**
+- Modifying any Python code
+- Updating pyproject.toml versions
+- Adding new packages
+- Fixing bugs or adding features
+
 ### `scripts/release.sh` - Production Release
 **Use when:** You're ready to release a new version
 
 **What it does:**
-1. ✓ Bumps version numbers (main + all sub-packages)
-2. ✓ Updates CLI version in main.py
-3. ✓ Reinstalls all packages locally
-4. ✓ Verifies installation
-5. ✓ Runs test suite
-6. ✓ Updates CHANGELOG.md with release date
-7. ✓ Creates git commit and tag
-8. ✓ Builds distribution packages
-9. ✓ Optionally publishes to PyPI
+1. ✓ Checks dependencies (python3-venv, build, twine) - installs if missing
+2. ✓ Bumps version numbers (main + all sub-packages)
+3. ✓ Updates CLI version in main.py
+4. ✓ Reinstalls all packages locally
+5. ✓ Verifies installation
+6. ✓ Runs test suite
+7. ✓ Updates CHANGELOG.md with release date
+8. ✓ Creates git commit and tag
+9. ✓ Builds distribution packages (.tar.gz and .whl)
+10. ✓ Optionally publishes to PyPI
 
 **Usage:**
 ```bash
-# Patch release (bug fixes)
+# Patch release (0.3.1 → 0.3.2) - Bug fixes only
 ./scripts/release.sh patch
 
-# Minor release (new features)
+# Minor release (0.3.1 → 0.4.0) - New features, backward compatible
 ./scripts/release.sh minor
 
-# Major release (breaking changes)
+# Major release (0.3.1 → 1.0.0) - Breaking changes
 ./scripts/release.sh major
 
-# Publish immediately
+# Publish to PyPI immediately (recommended for quick releases)
 ./scripts/release.sh patch --publish
+./scripts/release.sh minor --publish
+./scripts/release.sh major --publish
+```
+
+**Common Scenarios:**
+
+1. **Quick bug fix release:**
+```bash
+# Fix bug in code
+sudo ./install.sh              # Test locally
+./scripts/release.sh patch --publish    # Release to PyPI
+```
+
+2. **Feature release with testing:**
+```bash
+# Add new feature
+sudo ./install.sh              # Test locally
+pytest tests/                  # Run full test suite
+./scripts/release.sh minor     # Create release (no publish)
+# Review git commit and CHANGELOG
+git push origin main --tags    # Push to GitHub
+python3 -m twine upload dist/* # Publish to PyPI manually
+```
+
+3. **Breaking change release:**
+```bash
+# Make breaking changes
+# Update migration guide
+sudo ./install.sh
+./scripts/release.sh major
+# Carefully review before publishing
+python3 -m twine upload --repository testpypi dist/*  # Test first
+python3 -m twine upload dist/*  # Publish for real
 ```
 
 ## Release Checklist
@@ -104,58 +145,155 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## PyPI Publishing
 
-### First-Time Setup
-```bash
-# Install build tools
-pip install build twine
+### Prerequisites (Automated by release.sh)
 
-# Configure PyPI credentials
-python -m twine upload dist/* --repository testpypi  # Test first
-python -m twine upload dist/*                         # Production
+The release script automatically checks and installs:
+
+1. **System dependency:**
+```bash
+sudo apt install python3.10-venv
 ```
 
-### Authentication
-Create `~/.pypirc`:
+2. **Python tools:**
+```bash
+pip install --user build twine
+```
+
+The script will prompt you to install missing dependencies.
+
+### First-Time Authentication Setup
+
+Create `~/.pypirc` with your PyPI API token:
 ```ini
 [pypi]
 username = __token__
-password = pypi-xxxxxxxxxxxx
+password = pypi-AgEN...your-token-here...
 
 [testpypi]
 username = __token__
-password = pypi-xxxxxxxxxxxx
+password = pypi-AgEN...your-test-token-here...
+```
+
+**Get tokens from:**
+- Production: https://pypi.org/manage/account/token/
+- Test: https://test.pypi.org/manage/account/token/
+
+### Publishing Workflow
+
+**Recommended (fully automated):**
+```bash
+./scripts/release.sh patch --publish
+```
+
+**Manual (more control):**
+```bash
+# 1. Create release locally
+./scripts/release.sh patch
+
+# 2. Review changes
+git log -1
+cat CHANGELOG.md | head -50
+ls -lh dist/
+
+# 3. Test on TestPyPI first (optional but recommended)
+python3 -m twine upload --repository testpypi dist/*
+
+# 4. Test installation from TestPyPI
+pip install --index-url https://test.pypi.org/simple/ aurora-actr --upgrade
+
+# 5. If good, upload to production PyPI
+python3 -m twine upload dist/*
+
+# 6. Push to GitHub
+git push origin main --tags
 ```
 
 ## Troubleshooting
 
+### Build fails with "ensurepip not available"
+**Symptom:** `python3 -m build` fails with venv error
+**Solution:**
+```bash
+sudo apt install python3.10-venv
+```
+
 ### "Permission denied" during install
+**Symptom:** install.sh fails with permission errors
+**Solution:**
 ```bash
 sudo ./install.sh
 ```
 
-### Version not updating
+### Version not updating in pip list
+**Symptom:** `pip list | grep aurora` shows old versions
+**Solution:**
 ```bash
-# Force reinstall
-pip uninstall -y aurora-actr
-./install.sh
+# install.sh now handles this automatically
+sudo ./install.sh
+
+# Or manually:
+find packages/ -name "*.egg-info" -exec rm -rf {} +
+rm -rf ~/.local/lib/python*/site-packages/aurora*.dist-info
+pip uninstall -y aurora-actr aurora-cli aurora-core
+sudo ./install.sh
 ```
 
-### Tests failing
+### Tests failing after changes
+**Solution:**
 ```bash
 # Run tests with verbose output
-pytest tests/ -v
+pytest tests/ -v --tb=short
 
 # Run specific test file
 pytest tests/unit/cli/test_doctor.py -v
+
+# Run with coverage
+pytest tests/ --cov=aurora_cli --cov-report=term-missing
 ```
 
-### PyPI upload fails
+### PyPI upload fails with "Invalid credentials"
+**Solution:**
 ```bash
-# Check credentials
+# Check credentials file exists
 cat ~/.pypirc
 
-# Use test PyPI first
-python -m twine upload --repository testpypi dist/*
+# Get new token from: https://pypi.org/manage/account/token/
+# Update ~/.pypirc with new token
+```
+
+### PyPI upload fails with "File already exists"
+**Symptom:** Can't upload same version twice
+**Solution:**
+```bash
+# Bump version and rebuild
+./scripts/release.sh patch
+python3 -m twine upload dist/*
+```
+
+### Release script fails at build step
+**Symptom:** Build step shows error about dependencies
+**Solution:**
+```bash
+# Install missing system packages
+sudo apt install python3.10-venv
+
+# Install Python packages
+pip install --user build twine
+
+# Run release again
+./scripts/release.sh patch
+```
+
+### Git push fails after release
+**Symptom:** Can't push to GitHub after creating release
+**Solution:**
+```bash
+# Push commit and tags separately
+git push origin main
+git push origin --tags
+
+# Or force push if needed (careful!)
+git push origin main --force-with-lease
 ```
 
 ## Package Structure

@@ -1,0 +1,47 @@
+{
+  "version": "1.1.0",
+  "mode": "standalone",
+  "storage": {
+    "type": "sqlite",
+    "path": "~/.aurora/memory.db",
+    "max_connections": 10,
+    "timeout_seconds": 5
+  },
+  "llm": {
+    "reasoning_provider": "anthropic",
+    "reasoning_model": "claude-3-5-sonnet-20241022",
+    "solving_provider": "anthropic",
+    "solving_model": "claude-opus-4-5-20251101",
+    "api_key_env": "ANTHROPIC_API_KEY",
+    "base_url": null,
+    "timeout_seconds": 30
+  },
+  "context": {
+    "code": {
+      "enabled": true,
+      "languages": ["python"],
+      "max_file_size_kb": 500,
+      "cache_ttl_hours": 24,
+      "hybrid_weights": {
+        "activation": 0.6,
+        "semantic": 0.4,
+        "top_k": 100,
+        "fallback_to_activation": true
+      }
+    }
+  },
+  "agents": {
+    "discovery_paths": [
+      ".aurora/agents.json",
+      "~/.aurora/agents.json"
+    ],
+    "refresh_interval_days": 15,
+    "fallback_mode": "llm_only"
+  },
+  "logging": {
+    "level": "INFO",
+    "path": "~/.aurora/logs/",
+    "max_size_mb": 100,
+    "max_files": 10
+  }
+}

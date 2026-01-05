@@ -73,7 +73,7 @@
 
 ## Tasks
 
-- [ ] 1.0 Port Archive Command from OpenSpec with Aurora Path Conventions
+- [ ] 1.0 Port Archive Command from OpenSpec with Aurora Path Conventions (DEFERRED - Independent of core integration work)
   - [x] 1.1 Port validation types module from OpenSpec
     - Copy `/home/hamr/PycharmProjects/aurora/openspec-source/aurora/validation/types.py` to `packages/cli/src/aurora_cli/planning/validation/types.py`
     - Verify `ValidationLevel`, `ValidationIssue`, `ValidationSummary`, `ValidationReport` classes exist
@@ -166,7 +166,7 @@
     - **Coverage Target**: >= 95% for archive.py
 
 - [ ] 2.0 Integrate SOAR Decomposition into Planning Core
-  - [ ] 2.1 Create PlanDecomposer class skeleton with TDD
+  - [x] 2.1 Create PlanDecomposer class skeleton with TDD
     - **Test First**: Create `tests/unit/cli/planning/test_decompose.py` with test class `TestPlanDecomposer`
     - Write failing test `test_decomposer_initialization` - verifies class can be instantiated with config
     - Create `packages/cli/src/aurora_cli/planning/decompose.py` with `PlanDecomposer` class

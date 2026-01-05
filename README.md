@@ -2,409 +2,386 @@
 
 **Adaptive Unified Reasoning and Orchestration Architecture**
 
-A cognitive architecture framework that brings intelligent memory, reasoning, and orchestration capabilities to AI systems. Built on cognitive science principles (ACT-R, SOAR), AURORA enables AI agents to maintain persistent context, learn from experience, and coordinate complex tasks efficiently.
-
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://img.shields.io/badge/pypi-v0.4.0-blue)](https://pypi.org/project/aurora-actr/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A cognitive architecture framework that brings intelligent memory, reasoning, and orchestration to AI coding tools. Built on cognitive science principles (ACT-R, SOAR), Aurora enables AI assistants to understand your codebase through persistent memory, semantic search, and multi-step reasoning.
 
 ---
 
-## Features
+## What is Aurora?
 
-**MCP Server Integration**
-- Native Claude Code CLI integration via Model Context Protocol
-- 7 powerful tools for seamless codebase search, analysis, and intelligent querying
-- No API key required - MCP tools provide context to Claude Code CLI's built-in LLM
-- Conversation-driven development workflow directly from your terminal
+Aurora is an **AI-powered codebase intelligence system** that:
 
-**Cognitive Reasoning**
-- ACT-R activation-based memory (frequency, recency, semantic similarity)
-- SOAR-inspired 9-phase orchestration pipeline for complex reasoning
-- Intelligent query assessment with automatic escalation
+- **Indexes your code** with semantic understanding (not just text search)
+- **Provides context** to AI coding assistants (Claude Code, Cursor, etc.)
+- **Remembers everything** with persistent memory (frequency, recency, relevance)
+- **Reasons intelligently** using cognitive architecture patterns
+- **No API keys needed** for search and memory features
 
-**Semantic Memory & Context**
-- Persistent memory with sentence-transformer embeddings
-- Hybrid retrieval (60% activation + 40% semantic similarity)
-- Multi-tier caching for sub-500ms retrieval on 10K+ chunks
+Think of it as a "smart memory layer" for AI coding tools that makes them understand your specific codebase.
 
-**Retrieval Quality Handling**
-- Intelligent detection of no match / weak match / good match scenarios
-- Interactive prompts when retrieval quality is low (give users control)
-- Automatic groundedness scoring (prevents hallucination on weak context)
-- Non-interactive mode for CI/CD and automation (`--non-interactive` flag)
+---
 
-**Decision Matrix**:
-| Scenario | Chunks | Groundedness | Action |
-|----------|--------|--------------|--------|
-| **No match** | 0 | N/A | Auto-proceed with general knowledge |
-| **Weak match** | >0 | <0.7 OR <3 high-quality | Prompt user (interactive) / auto-continue (non-interactive) |
-| **Good match** | >0 | ≥0.7 AND ≥3 high-quality | Auto-proceed with retrieved context |
+## Key Features
 
-*See [CLI_USAGE_GUIDE.md](docs/cli/CLI_USAGE_GUIDE.md#retrieval-quality-handling) for detailed examples*
+### 🔍 **Semantic Code Search**
+- Tree-sitter powered parsing (Python, with extensible language support)
+- Hybrid retrieval: activation scoring + semantic embeddings
+- Sub-500ms search on 10K+ code chunks
+- Intelligent ranking by relevance, frequency, and recency
 
-**Agent Orchestration**
-- Discover and coordinate multiple AI agents by capability
-- Parallel and sequential task execution
-- Support for local, remote, and MCP-based agents
+### 🧠 **Persistent Memory**
+- ACT-R activation-based memory (cognitive science principles)
+- Learns from usage patterns (which code gets referenced most)
+- Multi-tier caching for fast retrieval
+- Project-local `.aurora/` directory (safe, isolated)
 
-**Code Understanding**
-- Tree-sitter powered parsing for Python (extensible to other languages)
-- Intelligent chunking with complexity analysis
-- Dependency tracking and docstring extraction
+### 🤖 **AI Tool Integration**
+- **MCP Protocol:** Works with Claude Code CLI, Cursor, Cline, Continue
+- **Slash Commands:** Quick `/aurora-search`, `/aurora-query` commands
+- **No API keys required** for MCP tools (uses host LLM)
+- Native integration with popular AI coding tools
 
-**Production Ready**
-- Cross-platform support (Windows, macOS, Linux)
-- Cost tracking and budget enforcement
-- Comprehensive error handling with actionable messages
-- Retry logic with exponential backoff
+### 🎯 **SOAR Reasoning Pipeline**
+- 9-phase cognitive architecture (Assess → Retrieve → Decompose → ...)
+- Automatic escalation (simple vs complex queries)
+- Multi-agent orchestration and task decomposition
+- Groundedness scoring (prevents hallucination)
+
+### 📋 **Planning System**
+- Project-local plan management (`.aurora/plans/`)
+- Sequential numbering (0001, 0002, etc.)
+- Track features, tasks, and implementation progress
+- Integrated with CLI and MCP tools
+
+### 🔧 **Production Ready**
+- Cross-platform (Windows, macOS, Linux)
+- Comprehensive health checks (`aur doctor`)
+- Budget tracking and cost control
+- Rich terminal output with progress bars
 
 ---
 
 ## Installation
 
-**From PyPI (Recommended)**
+### From PyPI (Recommended)
 
 ```bash
-# Install with all features
-pip install aurora-actr[all]
-
-# Or minimal installation (no ML dependencies)
+# Install Aurora (includes all features)
 pip install aurora-actr
 
 # Verify installation
-aur --verify
+aur --version
 ```
 
-**From Source**
+**Current Version:** 0.4.0
+
+**Package Size:** ~528KB (tiny!)
+
+**What's Included:**
+- CLI commands (`aur`)
+- MCP server (`aurora-mcp`)
+- Memory system (semantic search)
+- Planning system
+- SOAR reasoning engine
+- All dependencies
+
+### Optional Extras
 
 ```bash
-git clone https://github.com/aurora-project/aurora.git
-cd aurora
-pip install -e ".[all]"
+# With ML features (semantic embeddings - requires torch)
+pip install aurora-actr[ml]
+
+# Development tools (for contributors)
+pip install aurora-actr[dev]
 ```
 
-**Note:** Package is published as `aurora-actr` on PyPI, but import as `from aurora.core import ...`
+### From Source
+
+```bash
+git clone https://github.com/your-org/aurora.git
+cd aurora
+pip install -e .
+```
 
 ---
 
 ## Quick Start
 
-### MCP Server with Claude Code CLI (Primary Workflow)
-
-AURORA integrates with Claude Code CLI via the Model Context Protocol, enabling you to search and analyze your codebase directly from your development sessions.
-
-#### 1. Install and Initialize AURORA
+### 1. Initialize Aurora in Your Project
 
 ```bash
-pip install aurora-actr[all]
 cd /path/to/your/project
 aur init
 ```
 
-The unified `aur init` command runs 3 steps:
-- **Step 1:** Sets up Git (if needed) and creates project structure
-- **Step 2:** Indexes your codebase for semantic search
-- **Step 3:** Configures AI coding tools (Claude Code, Universal, etc.)
+This runs 3 unified steps:
+1. **Planning Setup** - Creates `.aurora/` directory structure
+2. **Memory Indexing** - Indexes your codebase for semantic search
+3. **Tool Configuration** - Sets up MCP servers and slash commands for AI tools
 
-**Note:** No API keys required for initialization. AURORA uses environment variables for standalone CLI commands.
+**What gets created:**
+- `.aurora/` directory (project-local, git-ignored)
+- `.aurora/memory.db` (SQLite database for indexed code)
+- `.aurora/plans/` (for feature planning)
+- MCP and slash command configurations
 
-#### 2. Set API Key (For Standalone CLI Only)
+### 2. Use with AI Coding Tools
 
-MCP tools don't require API keys, but standalone commands do:
+**No additional setup required!** Restart your AI tool and Aurora's capabilities are available.
 
-```bash
-# Add to ~/.bashrc or ~/.zshrc
-export ANTHROPIC_API_KEY=sk-ant-...
-source ~/.bashrc
+#### Claude Code CLI Example:
+```
+You: "Search my codebase for authentication logic"
+Claude: [Uses aurora_search tool automatically]
+
+You: "Show me the UserService class"
+Claude: [Uses aurora_context tool to retrieve full code]
+
+You: "How does the payment flow work?"
+Claude: [Uses aurora_query with SOAR reasoning]
 ```
 
-#### 3. Use with Claude Code CLI
+#### Cursor/Cline/Continue:
+Same natural language interaction - tools work automatically via MCP.
 
-Restart Claude Code CLI and AURORA's tools are available in your sessions:
-
-- *"Search my codebase for authentication logic"* → `aurora_search`
-- *"Find all usages of the DatabaseConnection class"* → `aurora_search`
-- *"Show me error handling in payment processing"* → `aurora_context`
-- *"What does the UserService module do?"* → `aurora_context`
-- *"Compare our API patterns with best practices"* → `aurora_query` (auto-escalates to SOAR)
-
-Claude Code CLI automatically uses AURORA's tools to search your indexed codebase and provide contextual answers.
-
-**Important:** MCP tools do NOT require API keys. They provide context/search results that Claude Code CLI's built-in LLM processes. No additional API costs beyond your Claude subscription.
-
-**See:** [MCP Setup Guide](docs/MCP_SETUP.md) for detailed configuration and troubleshooting.
-
----
-
-### Standalone CLI Usage
-
-Use AURORA's CLI directly for queries, memory management, and autonomous reasoning.
-
-**Note:** CLI commands like `aur query` require an `ANTHROPIC_API_KEY` environment variable (they run LLM inference directly). For API-key-free usage, use MCP integration instead.
-
-#### Basic Queries
+### 3. Use CLI Directly (Optional)
 
 ```bash
-# Simple query (fast direct LLM) - requires API key
-aur query "What is a Python decorator?"
-
-# Complex query (full AURORA pipeline with context) - requires API key
-aur query "How does the authentication system work?"
-
-# Force specific mode - requires API key
-aur query "Explain classes" --force-aurora --verbose
-```
-
-#### Memory Management
-
-```bash
-# Index current directory - no API key required
-aur mem index
-
-# Search indexed code - no API key required
+# Search indexed code
 aur mem search "authentication"
 
-# View statistics - no API key required
+# Get memory stats
 aur mem stats
 
-# Advanced search - no API key required
-aur mem search "database" --limit 10 --show-content --format json
+# Create a plan
+aur plan create "Add user authentication"
+
+# Health check
+aur doctor
 ```
 
-#### Headless Mode (Autonomous Reasoning)
-
-```bash
-# Run autonomous experiment
-aur headless experiment.md
-
-# Custom budget and iterations
-aur headless experiment.md --budget 10.0 --max-iter 20
-
-# Dry run (validation only)
-aur headless experiment.md --dry-run
-```
-
-**Safety features:** Git branch enforcement, budget limits, iteration caps
-
-#### Verification and Diagnostics
-
-```bash
-# Check installation health
-aur --verify
-
-# Check MCP server status
-aurora-mcp status
-
-# View help
-aur --help
-```
-
-**CLI Features:**
-- Automatic escalation (direct LLM vs AURORA pipeline)
-- Hybrid search (activation + semantic)
-- Configuration management (env vars, config files)
-- Rich terminal output with progress bars
-- Installation verification and diagnostics
+**See:** [COMMANDS.md](COMMANDS.md) for complete command reference.
 
 ---
 
-## Usage Examples
+## What Aurora Offers
 
-### Example 1: Codebase Q&A with Claude Desktop
+### For AI Coding Assistants:
+- **Accurate code search** instead of guessing file locations
+- **Semantic understanding** of your codebase structure
+- **Context-aware responses** using relevant code chunks
+- **No hallucination** - grounded in actual code
 
-**Scenario:** You're working on a large codebase and need to quickly understand authentication logic.
+### For Developers:
+- **One-time indexing** (`aur mem index`) - then instant search
+- **Project-local setup** - `.aurora/` directory per project
+- **No API keys needed** for search/memory (MCP tools use host LLM)
+- **Works offline** for search and planning features
 
-1. Initialize AURORA in your project: `aur init`
-2. Open Claude Desktop
-3. Ask: *"Find all authentication-related functions and explain the flow"*
-4. Claude uses AURORA to search, retrieve relevant code, and explain the implementation
-
-**Benefits:** No manual file hunting, contextual understanding, instant answers
-
-### Example 2: Autonomous Code Analysis
-
-**Scenario:** You want to analyze code quality across your project autonomously.
-
-1. Create experiment file: `analyze_code_quality.md`
-2. Run: `aur headless analyze_code_quality.md`
-3. AURORA executes reasoning loop, analyzes code, generates report
-4. Safety controls prevent unwanted changes
-
-**Benefits:** Hands-free analysis, systematic coverage, safety guarantees
-
-### Example 3: Multi-Agent Orchestration
-
-**Scenario:** Complex task requiring multiple AI capabilities (code generation, review, testing).
-
-```python
-from aurora_soar import SOAROrchestrator, AgentRegistry
-from aurora_reasoning import AnthropicClient
-
-# Initialize orchestrator with agent registry
-orchestrator = SOAROrchestrator(
-    store=store,
-    agent_registry=AgentRegistry(),
-    reasoning_llm=AnthropicClient()
-)
-
-# Execute complex query - AURORA decomposes, routes to agents, synthesizes
-result = orchestrator.execute(
-    query="Implement JWT authentication with tests and security review"
-)
-
-print(f"Agents used: {result['metadata']['agents_used']}")
-print(f"Confidence: {result['confidence']:.2f}")
-```
-
-**Benefits:** Coordinated multi-agent execution, automatic routing, cost tracking
+### For Teams:
+- **Consistent codebase understanding** across team members
+- **Shared plans** in `.aurora/plans/` (can be committed to git)
+- **Budget tracking** prevents runaway API costs
+- **Audit trail** of queries and reasoning
 
 ---
 
-## Python API
+## Commands Overview
 
-Quick examples for programmatic use:
+Aurora provides three ways to interact with your codebase:
 
-**Parse and Store Code**
+### 1. CLI Commands (`aur`)
 
-```python
-from aurora_core.store import SQLiteStore
-from aurora_context_code import PythonParser
-
-store = SQLiteStore("aurora.db")
-parser = PythonParser()
-chunks = parser.parse_file("example.py")
-
-for chunk in chunks:
-    store.save_chunk(chunk)
+```bash
+aur init              # Initialize Aurora
+aur mem search "..."  # Search code
+aur mem index         # Re-index codebase
+aur mem stats         # Show stats
+aur plan create "..." # Create plan
+aur doctor            # Health check
+aur --version         # Show version
 ```
 
-**Context Retrieval with Scoring**
+### 2. MCP Tools (via AI Assistants)
 
-```python
-from aurora_core.context import CodeContextProvider
+Natural language prompts automatically use:
+- `aurora_search` - Fast code search
+- `aurora_context` - Get code context
+- `aurora_query` - Complex reasoning
+- `aurora_mem_stats` - Memory stats
+- `aurora_doctor` - Health check
 
-provider = CodeContextProvider(store, parser_registry)
-results = provider.retrieve("authentication logic", max_results=5)
+### 3. Slash Commands (Quick Access)
 
-for chunk in results:
-    print(f"{chunk.metadata['name']} (score: {chunk.metadata['_score']:.2f})")
+```bash
+/aurora-search authentication
+/aurora-context UserService
+/aurora-query How does X work?
+/aurora-doctor
 ```
 
-**SOAR Orchestrator**
+**Complete Reference:** [COMMANDS.md](COMMANDS.md)
 
-```python
-from aurora_soar import SOAROrchestrator
+---
 
-orchestrator = SOAROrchestrator(store, agent_registry, reasoning_llm)
-result = orchestrator.execute(query="Analyze security vulnerabilities")
+## How It Works
+
+### Step 1: Indexing (One-Time)
+```bash
+aur mem index
 ```
+- Parses your codebase with tree-sitter
+- Extracts functions, classes, methods, docstrings
+- Creates semantic embeddings (if ML features installed)
+- Stores in local `.aurora/memory.db` SQLite database
 
-**Full API documentation:** [API Reference](docs/architecture/API_CONTRACTS_v1.0.md)
+### Step 2: Activation Scoring (ACT-R)
+When you search or query:
+- **Frequency:** How often this code is referenced
+- **Recency:** When it was last accessed
+- **Semantic Similarity:** How relevant to your query
+- **Context Boost:** Related to current conversation
+
+### Step 3: Retrieval & Reasoning
+- **Simple queries:** Direct memory search (< 2s)
+- **Complex queries:** SOAR 9-phase pipeline (< 10s)
+- **Groundedness check:** Prevents hallucination on weak matches
+- **Multi-step reasoning:** Decomposes complex questions
+
+### Step 4: Integration
+- MCP tools provide context to AI assistant
+- AI assistant uses host LLM to process and respond
+- No extra API calls for search (only for AI reasoning)
 
 ---
 
 ## Architecture
 
-AURORA is organized as a Python monorepo with modular packages:
+Aurora is built as a single bundled Python package with modular components:
 
-**Core Packages:**
+**Core Components:**
+- `aurora_core` - Storage, configuration, data structures
+- `aurora_cli` - CLI commands and initialization
+- `aurora_context_code` - Code parsing and analysis
+- `aurora_soar` - SOAR reasoning pipeline
+- `aurora_reasoning` - LLM integration (Anthropic, OpenAI, Ollama)
+- `aurora_planning` - Plan management
 
-- **aurora-core** - Storage, chunks, configuration, context providers, cost tracking
-- **aurora-context-code** - Code parsing (Python via tree-sitter, extensible)
-- **aurora-soar** - Agent registry, 9-phase orchestration pipeline
-- **aurora-reasoning** - LLM integration (Anthropic, OpenAI, Ollama), reasoning logic
-- **aurora-testing** - Testing utilities, fixtures, mocks, benchmarks
-
-**Key Architecture Patterns:**
-
+**Key Patterns:**
 - **9-Phase SOAR Pipeline:** Assess → Retrieve → Decompose → Verify → Route → Collect → Synthesize → Record → Respond
-- **ACT-R Memory Activation:** Frequency, recency, semantic similarity, context boost
-- **Hybrid Retrieval:** 60% activation scoring + 40% semantic similarity
-- **Multi-Tier Caching:** Hot cache (LRU) + persistent cache + activation scores (10min TTL)
-- **Cost Optimization:** Keyword-based assessment bypasses LLM for 60-70% of simple queries
+- **Hybrid Retrieval:** 60% activation + 40% semantic similarity
+- **Multi-Tier Caching:** LRU cache + persistent cache + activation scores
+- **Cognitive Memory:** ACT-R principles for intelligent retrieval
 
 **Performance:**
-
-- Simple query latency: <2s (achieved: 0.002s)
-- Complex query latency: <10s
-- Memory usage: <100MB for 10K chunks (achieved: 39MB)
-- Retrieval: <500ms for 10K chunks
-
-**Detailed architecture:** [SOAR Architecture](docs/architecture/SOAR_ARCHITECTURE.md), [Verification Checkpoints](docs/reports/quality/VERIFICATION_CHECKPOINTS.md)
+- Simple query: < 2s (measured: 0.002s)
+- Complex query: < 10s
+- Memory usage: < 100MB for 10K chunks (measured: 39MB)
+- Retrieval: < 500ms for 10K chunks
 
 ---
 
 ## Documentation
 
-**Getting Started**
-- [MCP Setup Guide](docs/MCP_SETUP.md) - Claude Desktop integration
-- [Quick Start](docs/cli/QUICK_START.md) - Get started in 5 minutes
-- [CLI Usage Guide](docs/cli/CLI_USAGE_GUIDE.md) - Comprehensive command reference
-- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
+### Getting Started
+- **[COMMANDS.md](COMMANDS.md)** - Complete command reference (CLI, MCP, slash commands)
+- [MCP_SETUP.md](docs/MCP_SETUP.md) - AI tool integration guide
+- [CLI_USAGE_GUIDE.md](docs/cli/CLI_USAGE_GUIDE.md) - Advanced CLI usage
+- [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Common issues
 
-**Architecture & Design**
-- [SOAR Architecture](docs/architecture/SOAR_ARCHITECTURE.md) - 9-phase pipeline details
-- [Verification Checkpoints](docs/reports/quality/VERIFICATION_CHECKPOINTS.md) - Scoring and thresholds
-- [Agent Integration Guide](docs/architecture/AGENT_INTEGRATION.md) - Agent formats and execution
-- [Cost Tracking Guide](docs/guides/COST_TRACKING_GUIDE.md) - Budget management
-- [Prompt Engineering Guide](docs/development/PROMPT_ENGINEERING_GUIDE.md) - Template design
+### Architecture & Design
+- [SOAR_ARCHITECTURE.md](docs/architecture/SOAR_ARCHITECTURE.md) - 9-phase pipeline
+- [AGENT_INTEGRATION.md](docs/architecture/AGENT_INTEGRATION.md) - Agent system
+- [API_CONTRACTS_v1.0.md](docs/architecture/API_CONTRACTS_v1.0.md) - API reference
 
-**Development**
-- [Pre-Push Validation](docs/development/PRE_PUSH_VALIDATION.md) - Local CI/CD checks before pushing
-- [API Contracts](docs/architecture/API_CONTRACTS_v1.0.md) - API reference
-- [Migration Guide](docs/development/PHASE4_MIGRATION_GUIDE.md) - Upgrade guide
-- [Code Review Report](docs/reports/quality/CODE_REVIEW_REPORT_v1.0.0-phase3.md) - Quality analysis
-- [Security Audit](docs/reports/security/SECURITY_AUDIT_REPORT_v1.0.0-phase3.md) - Security review
+### Development
+- [RELEASE.md](RELEASE.md) - Release workflow
+- [PRE_PUSH_VALIDATION.md](docs/development/PRE_PUSH_VALIDATION.md) - Quality checks
+- [CHANGELOG.md](CHANGELOG.md) - Version history
 
-**Project History**
-- [Release Notes](RELEASE_NOTES_v1.0.0-phase3.md) - Version history
-- [Phase Archives](docs/phases/phase3/PHASE3_ARCHIVE_MANIFEST.md) - Development phases
+---
+
+## FAQ
+
+**Q: Do I need an API key?**
+A: No API key needed for search, memory, planning, or MCP tools. Only `aur query` (direct LLM) and `aur headless` (autonomous mode) require `ANTHROPIC_API_KEY`.
+
+**Q: What AI tools work with Aurora?**
+A: Claude Code CLI, Cursor, Cline, Continue - any MCP-compatible tool.
+
+**Q: Does Aurora send my code to the cloud?**
+A: No. Code stays local in `.aurora/memory.db`. Only when you use `aur query` with API key does it send context to LLM.
+
+**Q: How much does it cost?**
+A: Aurora itself is free. If you use `aur query` with Anthropic API, you pay for API usage (~$0.01-0.10 per query depending on size).
+
+**Q: Can I use it offline?**
+A: Yes! Search (`aur mem search`), memory, and planning work offline. Only `aur query` and autonomous mode need internet.
+
+**Q: What languages are supported?**
+A: Python is fully supported. Extensible to other languages via tree-sitter parsers.
+
+**Q: How do I update Aurora?**
+A: `pip install --upgrade aurora-actr`
+
+**Q: Where is my data stored?**
+A: Project-local `.aurora/` directory (can be git-ignored or committed).
 
 ---
 
 ## Development
 
-**Setup Development Environment**
+### Setup
 
 ```bash
-# Clone and install with dev dependencies
-git clone https://github.com/aurora-project/aurora.git
+git clone https://github.com/your-org/aurora.git
 cd aurora
-make install-dev
-
-# Run quality checks
-make quality-check
+pip install -e .[dev]
 ```
 
-**Common Commands**
+### Testing
 
 ```bash
-make test              # Run all tests (1,766+ tests, 97% pass rate)
-make test-unit         # Unit tests only
-make lint              # Ruff linter
-make format            # Format code
-make type-check        # MyPy type checker (100% type safety)
-make benchmark         # Performance benchmarks
-make coverage          # HTML coverage report (81%+ coverage)
+# Run all tests
+pytest tests/
+
+# Unit tests only
+pytest tests/unit/
+
+# Integration tests
+pytest tests/integration/
+
+# With coverage
+pytest tests/ --cov=aurora_cli --cov-report=html
 ```
 
-**Code Quality Standards**
+### Code Quality
 
-- **Linting:** Ruff with comprehensive rules
-- **Type Checking:** MyPy strict mode (zero type errors)
-- **Test Coverage:** 81%+ coverage maintained
-- **Security:** Bandit security scanning
-- **Performance:** Benchmarks for critical operations
+```bash
+# Format code
+ruff check --fix .
 
-**Contributing**
+# Type checking
+mypy packages/cli/src/
 
-Contributions welcome! Please ensure:
+# Security scan
+bandit -r packages/
+```
 
-1. All tests pass (`make test`)
-2. Code is formatted (`make format`)
-3. Type checking passes (`make type-check`)
-4. New features include tests
-5. Documentation updated
+---
+
+## Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with tests
+4. Run quality checks: `ruff check --fix . && mypy packages/*/src/`
+5. Submit a pull request
 
 ---
 
@@ -414,12 +391,12 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## Contact
+## Support
 
-For questions, issues, or discussions:
-- **GitHub Issues:** [aurora-project/aurora/issues](https://github.com/aurora-project/aurora/issues)
-- **Discussions:** [aurora-project/aurora/discussions](https://github.com/aurora-project/aurora/discussions)
+- **Documentation:** [COMMANDS.md](COMMANDS.md), [MCP_SETUP.md](docs/MCP_SETUP.md)
+- **Issues:** [GitHub Issues](https://github.com/your-org/aurora/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/your-org/aurora/discussions)
 
 ---
 
-**AURORA** - Intelligent AI systems with persistent memory and cognitive reasoning
+**Aurora** - Intelligent memory and reasoning for AI coding assistants • Version 0.4.0 • [PyPI](https://pypi.org/project/aurora-actr/)

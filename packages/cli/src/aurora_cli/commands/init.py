@@ -430,10 +430,11 @@ def run_step_3_tool_configuration(
     mcp_capable = get_mcp_capable_from_selection(selected_tool_ids)
     mcp_created: list[str] = []
     mcp_updated: list[str] = []
+    validation_warnings: list[str] = []
 
     if mcp_capable:
         console.print("[dim]Configuring MCP servers...[/]")
-        mcp_created, mcp_updated, _skipped = asyncio.run(
+        mcp_created, mcp_updated, _skipped, validation_warnings = asyncio.run(
             configure_mcp_servers(project_path, mcp_capable)
         )
 
@@ -478,6 +479,15 @@ def run_step_3_tool_configuration(
     if total > 0:
         mcp_note = f" ({mcp_total} with MCP)" if mcp_total > 0 else ""
         console.print(f"\n[bold green]✓[/] Configured {total} tool{'s' if total != 1 else ''}{mcp_note}")
+
+    # Display MCP validation warnings if any
+    if validation_warnings:
+        console.print()
+        console.print("[yellow]⚠ MCP configuration warnings:[/]")
+        for warning in validation_warnings:
+            console.print(f"  [yellow]•[/] {warning}")
+        console.print()
+        console.print("[dim]Run 'aur doctor' for detailed MCP health checks and auto-fix options.[/]")
 
     console.print()
     return (created, updated)

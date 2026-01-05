@@ -713,31 +713,36 @@ def count_configured_mcp_tools(project_path: Path) -> int:
 async def configure_mcp_servers(
     project_path: Path,
     tool_ids: list[str],
-) -> tuple[list[str], list[str], list[str]]:
+) -> tuple[list[str], list[str], list[str], list[str]]:
     """Configure MCP servers for tools that support MCP.
 
     Only configures MCP for tools that:
     1. Were selected by the user (in tool_ids)
     2. Have MCP support (registered in MCPConfigRegistry)
 
+    After configuration, validates each MCP config file with soft failures
+    (warnings instead of errors).
+
     Args:
         project_path: Path to project root
         tool_ids: List of tool IDs selected by user (may include non-MCP tools)
 
     Returns:
-        Tuple of (created_tools, updated_tools, skipped_tools):
+        Tuple of (created_tools, updated_tools, skipped_tools, validation_warnings):
         - created_tools: Tools where MCP config was newly created
         - updated_tools: Tools where MCP config was updated
         - skipped_tools: Tools in tool_ids that don't support MCP
+        - validation_warnings: List of validation warning messages
     """
     from aurora_cli.configurators.mcp import MCPConfigRegistry
 
     created: list[str] = []
     updated: list[str] = []
     skipped: list[str] = []
+    validation_warnings: list[str] = []
 
     if not tool_ids:
-        return created, updated, skipped
+        return created, updated, skipped, validation_warnings
 
     for tool_id in tool_ids:
         configurator = MCPConfigRegistry.get(tool_id)
@@ -759,13 +764,21 @@ async def configure_mcp_servers(
             else:
                 created.append(configurator.name)
 
-            # Log any warnings
+            # Log any warnings from configuration
             for warning in result.warnings:
                 console.print(f"  [yellow]⚠[/] {configurator.name}: {warning}")
+
+            # Validate the configuration after creation/update
+            config_path = configurator.get_config_path(project_path)
+            success, warnings = _validate_mcp_config(config_path, project_path)
+
+            # Add tool-prefixed validation warnings
+            for warning in warnings:
+                validation_warnings.append(f"{configurator.name}: {warning}")
         else:
             console.print(f"  [red]✗[/] {configurator.name}: {result.message}")
 
-    return created, updated, skipped
+    return created, updated, skipped, validation_warnings
 
 
 def get_mcp_capable_from_selection(tool_ids: list[str]) -> list[str]:
@@ -780,3 +793,74 @@ def get_mcp_capable_from_selection(tool_ids: list[str]) -> list[str]:
     from aurora_cli.configurators.mcp import MCPConfigRegistry
 
     return [tid for tid in tool_ids if MCPConfigRegistry.supports_mcp(tid)]
+
+
+def _validate_mcp_config(config_path: Path, project_path: Path) -> tuple[bool, list[str]]:
+    """Validate MCP configuration file with soft failures.
+
+    Performs validation checks:
+    1. JSON syntax validation
+    2. Aurora MCP server presence check
+    3. Server command/path validation
+
+    This function uses soft failures - returns warnings instead of raising
+    exceptions to allow init to complete even with configuration issues.
+
+    Args:
+        config_path: Path to MCP configuration file
+        project_path: Path to project root
+
+    Returns:
+        Tuple of (success: bool, warnings: list[str])
+        - success: False if critical validation failed, True if config is valid
+        - warnings: List of warning messages for non-fatal issues
+    """
+    warnings: list[str] = []
+
+    # Check if file exists
+    if not config_path.exists():
+        return False, [f"MCP config file not found: {config_path}"]
+
+    # Read and parse JSON
+    try:
+        content = config_path.read_text(encoding="utf-8")
+
+        # Handle empty file
+        if not content.strip():
+            return False, ["MCP config file is empty"]
+
+        config = json.loads(content)
+    except json.JSONDecodeError as e:
+        return False, [f"MCP config has invalid JSON syntax: {e}"]
+    except OSError as e:
+        return False, [f"Failed to read MCP config: {e}"]
+
+    # Check for Aurora MCP server
+    aurora_config = None
+    if "mcpServers" in config and "aurora" in config["mcpServers"]:
+        aurora_config = config["mcpServers"]["aurora"]
+    elif "aurora" in config:
+        aurora_config = config["aurora"]
+
+    if not aurora_config:
+        warnings.append("Aurora MCP server not found in configuration")
+        return True, warnings  # Not critical - may be intentional
+
+    # Validate server command format
+    command = aurora_config.get("command", "")
+    args = aurora_config.get("args", [])
+
+    valid_command = False
+    if command == "aurora-mcp":
+        valid_command = True
+    elif command == "python3" and "-m" in args and "aurora_mcp.server" in args:
+        valid_command = True
+
+    if not valid_command and command:
+        warnings.append(f"Aurora MCP server has unexpected command format: {command}")
+
+    # Note: We don't validate actual tool availability here as that would
+    # require importing aurora_mcp which may not be installed yet.
+    # That validation is done in 'aur doctor' command instead.
+
+    return True, warnings

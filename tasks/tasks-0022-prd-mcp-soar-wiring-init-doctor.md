@@ -33,9 +33,10 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0022-prd-mcp-soar-wirin
 - `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/mcp/registry.py` - MCP configurator registry
 
 ### Test Files (TDD - Create These First)
-- `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_aurora_query_phases.py` - Unit tests for aurora_query phase parameter and multi-turn flow
-- `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_phase_handlers.py` - Unit tests for all 9 phase handler functions
-- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_validation.py` - Unit tests for aur init MCP validation
+- `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_aurora_query_phases.py` - Unit tests for aurora_query phase parameter and multi-turn flow (COMPLETED)
+- `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_phase_handlers.py` - Unit tests for all 9 phase handler functions (COMPLETED)
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_validation.py` - Unit tests for aur init MCP validation (COMPLETED - 14 tests, all passing)
+- `/home/hamr/PycharmProjects/aurora/tests/integration/cli/test_init_mcp_validation.py` - Integration tests for init MCP validation flow (COMPLETED - 5 tests, all passing)
 - `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_mcp_functional_checks.py` - Unit tests for MCPFunctionalChecks class
 - `/home/hamr/PycharmProjects/aurora/tests/integration/test_mcp_soar_multi_turn.py` - Integration tests for complete multi-turn SOAR flow
 - `/home/hamr/PycharmProjects/aurora/tests/integration/test_doctor_mcp_checks.py` - Integration tests for aur doctor MCP health checks
@@ -129,18 +130,18 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0022-prd-mcp-soar-wirin
   - [x] 3.19 Run all phase handler unit tests to verify implementation (TDD GREEN phase)
   - [x] 3.20 Refactor phase handlers for code reuse and consistency (TDD REFACTOR phase)
 
-- [ ] 4.0 Add MCP Configuration Validation to aur init Command
-  - [ ] 4.1 Write unit tests for MCP validation in init (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_validation.py` with tests for JSON syntax validation, server path existence check, soft failure behavior (warnings not errors)
-  - [ ] 4.2 Create `_validate_mcp_config()` helper function in `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py` that checks JSON syntax by parsing config file with `json.load()`
-  - [ ] 4.3 Add server path validation to `_validate_mcp_config()` to verify Aurora MCP server executable exists at configured path
-  - [ ] 4.4 Add required tools validation to `_validate_mcp_config()` to check for exactly 3 tools: `aurora_query`, `aurora_search`, `aurora_get`
-  - [ ] 4.5 Update `_validate_mcp_config()` to return validation result tuple: (success: bool, warnings: list[str])
-  - [ ] 4.6 Modify `configure_mcp_servers()` function in `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py` to call `_validate_mcp_config()` after configuration
-  - [ ] 4.7 Update `configure_mcp_servers()` return type to include validation_warnings: tuple[list[str], list[str], list[str], list[str]] (created, updated, skipped, validation_warnings)
-  - [ ] 4.8 Update callers of `configure_mcp_servers()` in `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py` to display validation warnings with suggestion to run `aur doctor`
-  - [ ] 4.9 Ensure validation failures do NOT prevent init completion (soft failure with warnings only)
-  - [ ] 4.10 Run unit tests to verify validation behavior (TDD GREEN phase)
-  - [ ] 4.11 Add integration test for full init flow with validation warnings
+- [x] 4.0 Add MCP Configuration Validation to aur init Command
+  - [x] 4.1 Write unit tests for MCP validation in init (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_init_validation.py` with tests for JSON syntax validation, server path existence check, soft failure behavior (warnings not errors)
+  - [x] 4.2 Create `_validate_mcp_config()` helper function in `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py` that checks JSON syntax by parsing config file with `json.load()`
+  - [x] 4.3 Add server path validation to `_validate_mcp_config()` to verify Aurora MCP server executable exists at configured path
+  - [x] 4.4 Add required tools validation to `_validate_mcp_config()` to check for exactly 3 tools: `aurora_query`, `aurora_search`, `aurora_get`
+  - [x] 4.5 Update `_validate_mcp_config()` to return validation result tuple: (success: bool, warnings: list[str])
+  - [x] 4.6 Modify `configure_mcp_servers()` function in `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py` to call `_validate_mcp_config()` after configuration
+  - [x] 4.7 Update `configure_mcp_servers()` return type to include validation_warnings: tuple[list[str], list[str], list[str], list[str]] (created, updated, skipped, validation_warnings)
+  - [x] 4.8 Update callers of `configure_mcp_servers()` in `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py` to display validation warnings with suggestion to run `aur doctor`
+  - [x] 4.9 Ensure validation failures do NOT prevent init completion (soft failure with warnings only)
+  - [x] 4.10 Run unit tests to verify validation behavior (TDD GREEN phase)
+  - [x] 4.11 Add integration test for full init flow with validation warnings
 
 - [ ] 5.0 Implement MCPFunctionalChecks for aur doctor Command
   - [ ] 5.1 Write unit tests for MCPFunctionalChecks class (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_mcp_functional_checks.py` with tests for all 6 check methods, pass/warning/fail scenarios

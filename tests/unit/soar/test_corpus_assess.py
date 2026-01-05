@@ -149,15 +149,35 @@ TEST_CORPUS = [
     ("configure eslint with our team's rules", "medium", "real", "Config with judgment"),
     ("implement the search feature from the figma design", "complex", "real", "Feature from spec"),
     ("add input validation following owasp guidelines", "complex", "real", "Security feature"),
+
+    # ==================== CRITICAL PROMPTS ====================
+
+    # Critical - Security
+    ("fix security vulnerability in authentication", "critical", "security", "Security keyword override"),
+    ("patch the authentication bypass vulnerability", "critical", "security", "Vulnerability + authentication"),
+    ("investigate data breach in user table", "critical", "security", "Breach keyword"),
+    ("encrypt sensitive payment data", "critical", "security", "Encrypt + payment"),
+
+    # Critical - Production/Emergency
+    ("production outage emergency", "critical", "emergency", "Production + emergency keywords"),
+    ("fix critical bug in production api", "critical", "emergency", "Critical + production"),
+    ("emergency incident response needed", "critical", "emergency", "Emergency + incident"),
+    ("production database corruption detected", "critical", "emergency", "Production + corruption"),
+
+    # Critical - Compliance/Legal
+    ("ensure gdpr compliance for user data", "critical", "compliance", "GDPR keyword"),
+    ("implement hipaa compliant logging", "critical", "compliance", "HIPAA keyword"),
+    ("audit payment transaction security", "critical", "compliance", "Audit + payment + security"),
 ]
 
 # Group prompts by expected level for analysis
-SIMPLE_PROMPTS = [(p, c, n) for p, l, c, n in TEST_CORPUS if l == "simple"]
-MEDIUM_PROMPTS = [(p, c, n) for p, l, c, n in TEST_CORPUS if l == "medium"]
-COMPLEX_PROMPTS = [(p, c, n) for p, l, c, n in TEST_CORPUS if l == "complex"]
+SIMPLE_PROMPTS = [(p, c, n) for p, level, c, n in TEST_CORPUS if level == "simple"]
+MEDIUM_PROMPTS = [(p, c, n) for p, level, c, n in TEST_CORPUS if level == "medium"]
+COMPLEX_PROMPTS = [(p, c, n) for p, level, c, n in TEST_CORPUS if level == "complex"]
+CRITICAL_PROMPTS = [(p, c, n) for p, level, c, n in TEST_CORPUS if level == "critical"]
 
 # Prompts specifically for edge case testing
-EDGE_CASES = [(p, l, c, n) for p, l, c, n in TEST_CORPUS if c == "edge"]
+EDGE_CASES = [(p, level, c, n) for p, level, c, n in TEST_CORPUS if c == "edge"]
 
 def get_corpus() -> list[tuple[str, str, str, str]]:
     """Return the full test corpus."""
@@ -165,15 +185,16 @@ def get_corpus() -> list[tuple[str, str, str, str]]:
 
 def get_by_category(category: str) -> list[tuple[str, str, str, str]]:
     """Get prompts by category."""
-    return [(p, l, c, n) for p, l, c, n in TEST_CORPUS if c == category]
+    return [(p, lvl, c, n) for p, lvl, c, n in TEST_CORPUS if c == category]
 
 def get_by_level(level: str) -> list[tuple[str, str, str, str]]:
     """Get prompts by expected level."""
-    return [(p, l, c, n) for p, l, c, n in TEST_CORPUS if l == level]
+    return [(p, lvl, c, n) for p, lvl, c, n in TEST_CORPUS if lvl == level]
 
 if __name__ == '__main__':
     print(f"Total test cases: {len(TEST_CORPUS)}")
     print(f"  Simple: {len(SIMPLE_PROMPTS)}")
     print(f"  Medium: {len(MEDIUM_PROMPTS)}")
     print(f"  Complex: {len(COMPLEX_PROMPTS)}")
+    print(f"  Critical: {len(CRITICAL_PROMPTS)}")
     print(f"  Edge cases: {len(EDGE_CASES)}")

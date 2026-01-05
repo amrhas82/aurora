@@ -15,6 +15,7 @@ from aurora_cli.commands.init_helpers import (
     configure_mcp_servers,
     configure_slash_commands,
     configure_tools,
+    create_agents_md,
     create_directory_structure,
     create_project_md,
     detect_configured_tools,
@@ -126,6 +127,8 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
         This function is idempotent - safe to run multiple times.
         Creates backup before re-indexing to preserve existing data.
     """
+    import logging
+
     from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
     from aurora_cli.config import Config
@@ -162,24 +165,56 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
         # Create MemoryManager with custom config
         manager = MemoryManager(config=config)
 
-        # Create progress bar
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            console=console,
-        ) as progress:
-            task_id = None
+        # Suppress parse warnings during indexing for cleaner output
+        # Warnings are still counted in stats via WarningDetector, just not displayed to console
+        parser_logger = logging.getLogger("aurora_context_code.languages.python")
+        root_logger = logging.getLogger()
 
-            def progress_callback(current: int, total: int) -> None:
-                nonlocal task_id
-                if task_id is None:
-                    task_id = progress.add_task("Indexing files", total=total)
-                progress.update(task_id, completed=current)
+        # Remove all console/stream handlers temporarily from both parser and root loggers
+        parser_original_handlers = parser_logger.handlers[:]
+        root_original_handlers = root_logger.handlers[:]
 
-            # Perform indexing
-            stats = manager.index_path(project_path, progress_callback=progress_callback)
+        for handler in parser_original_handlers:
+            if isinstance(handler, logging.StreamHandler):
+                parser_logger.removeHandler(handler)
+
+        for handler in root_original_handlers:
+            if isinstance(handler, logging.StreamHandler):
+                root_logger.removeHandler(handler)
+
+        try:
+            # Create progress bar with time remaining estimate
+            from rich.progress import TimeRemainingColumn
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TextColumn("•"),
+                TextColumn("{task.completed}/{task.total} files"),
+                TimeRemainingColumn(),
+                console=console,
+            ) as progress:
+                task_id = None
+
+                def progress_callback(current: int, total: int) -> None:
+                    nonlocal task_id
+                    if task_id is None:
+                        task_id = progress.add_task("Indexing files", total=total)
+                    progress.update(task_id, completed=current)
+
+                # Perform indexing
+                stats = manager.index_path(project_path, progress_callback=progress_callback)
+        finally:
+            # Restore original handlers for both loggers
+            for handler in parser_original_handlers:
+                if handler not in parser_logger.handlers:
+                    parser_logger.addHandler(handler)
+
+            for handler in root_original_handlers:
+                if handler not in root_logger.handlers:
+                    root_logger.addHandler(handler)
 
         # Show success summary
         console.print()
@@ -311,6 +346,15 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
         create_project_md(project_path)
         console.print("[green]✓[/] Created project.md with auto-detected metadata")
 
+    # Create AGENTS.md with Aurora instructions
+    agents_md = aurora_dir / "AGENTS.md"
+
+    if agents_md.exists():
+        console.print("[green]✓[/] AGENTS.md already exists (preserved)")
+    else:
+        create_agents_md(project_path)
+        console.print("[green]✓[/] Created AGENTS.md with Aurora instructions")
+
     console.print()
     return git_initialized
 
@@ -366,11 +410,21 @@ def run_step_3_tool_configuration(
         console.print("[yellow]⚠[/] No tools selected")
         return ([], [])
 
+    # Configure root config files (e.g., CLAUDE.md, AGENTS.md stubs)
+    console.print("\n[dim]Configuring tool instruction files...[/]")
+    config_created, config_updated = asyncio.run(
+        configure_tools(project_path, selected_tool_ids)
+    )
+
     # Configure selected tools using slash command configurators
-    console.print("\n[dim]Configuring slash commands...[/]")
+    console.print("[dim]Configuring slash commands...[/]")
     created, updated = asyncio.run(
         configure_slash_commands(project_path, selected_tool_ids)
     )
+
+    # Merge config file results with slash command results
+    created = list(set(created + config_created))
+    updated = list(set(updated + config_updated))
 
     # Configure MCP servers for tools that support MCP
     mcp_capable = get_mcp_capable_from_selection(selected_tool_ids)
@@ -812,9 +866,8 @@ def init_command(config: bool, tools: str | None) -> None:
 
     # Display welcome banner
     console.print()
-    console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
-    console.print("[bold cyan]║[/]     [bold]AURORA Initialization[/]            [bold cyan]║[/]")
-    console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
+    console.print("[bold cyan]AURORA Initialization[/]")
+    console.print("[bold cyan]═════════════════════[/]")
     console.print()
     console.print("[dim]Setting up Aurora for your project...[/]")
     console.print()

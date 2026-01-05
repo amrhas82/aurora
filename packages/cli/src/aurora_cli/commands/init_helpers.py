@@ -350,6 +350,30 @@ def create_project_md(project_path: Path) -> None:
     project_md.write_text(template, encoding="utf-8")
 
 
+def create_agents_md(project_path: Path) -> None:
+    """Create .aurora/AGENTS.md with Aurora planning instructions.
+
+    Creates the main AGENTS.md file inside .aurora/ directory with full
+    Aurora planning instructions for AI coding assistants.
+
+    Does NOT overwrite if file already exists (preserves custom content).
+
+    Args:
+        project_path: Path to project root
+    """
+    from aurora_cli.templates import get_agents_template
+
+    aurora_dir = project_path / AURORA_DIR_NAME
+    agents_md = aurora_dir / "AGENTS.md"
+
+    # Don't overwrite existing file
+    if agents_md.exists():
+        return
+
+    # Write the full AGENTS.md template
+    agents_md.write_text(get_agents_template(), encoding="utf-8")
+
+
 async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
     """Prompt user to select tools for configuration.
 
@@ -407,24 +431,35 @@ async def configure_tools(
     project_path: Path,
     selected_tool_ids: list[str],
 ) -> tuple[list[str], list[str]]:
-    """Configure selected tools.
+    """Configure selected tools (root config files like CLAUDE.md).
+
+    Maps SlashCommandRegistry IDs to ToolRegistry IDs and configures
+    the corresponding root configuration files.
 
     Args:
         project_path: Path to project root
-        selected_tool_ids: List of selected tool IDs
+        selected_tool_ids: List of selected tool IDs from SlashCommandRegistry
 
     Returns:
         Tuple of (created tools, updated tools)
     """
+    # Map from SlashCommandRegistry ID to ToolRegistry ID
+    # SlashCommandRegistry uses short IDs like "claude"
+    # ToolRegistry uses longer IDs like "claude-code"
+    TOOL_ID_MAP = {
+        "claude": "claude-code",
+        "universal-agents-md": "universal-agents.md",
+        # Add more mappings as needed
+    }
+
     created = []
     updated = []
 
     for tool_id in selected_tool_ids:
-        # Normalize ID
-        if tool_id == "universal-agents-md":
-            tool_id = "universal-agents.md"
+        # Map to ToolRegistry ID if needed
+        registry_id = TOOL_ID_MAP.get(tool_id, tool_id)
 
-        configurator = ToolRegistry.get(tool_id)
+        configurator = ToolRegistry.get(registry_id)
         if not configurator:
             continue
 

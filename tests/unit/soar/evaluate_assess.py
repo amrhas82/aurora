@@ -8,15 +8,10 @@ identifying misclassifications for algorithm refinement.
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional
 
-
-# Add parent to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-
-from complexity_assessor import AssessmentResult, ComplexityAssessor
-from test_corpus import TEST_CORPUS, get_by_category, get_by_level
+from aurora_soar.phases.assess import AssessmentResult, ComplexityAssessor
+from tests.unit.soar.test_corpus_assess import TEST_CORPUS, get_by_category, get_by_level
 
 
 @dataclass
@@ -53,7 +48,8 @@ def evaluate_corpus(assessor: ComplexityAssessor | None = None,
     level_stats = {
         'simple': {'correct': 0, 'total': 0, 'scores': []},
         'medium': {'correct': 0, 'total': 0, 'scores': []},
-        'complex': {'correct': 0, 'total': 0, 'scores': []}
+        'complex': {'correct': 0, 'total': 0, 'scores': []},
+        'critical': {'correct': 0, 'total': 0, 'scores': []}
     }
 
     # Confusion matrix: expected -> predicted -> count
@@ -135,22 +131,25 @@ def print_report(result: EvaluationResult):
     print("\n" + "-" * 40)
     print("PER-LEVEL ACCURACY:")
     print("-" * 40)
-    for level in ['simple', 'medium', 'complex']:
+    for level in ['simple', 'medium', 'complex', 'critical']:
         stats = result.by_level[level]
-        print(f"  {level.upper():8} {stats['accuracy']:6.1%} ({stats['correct']}/{stats['total']})")
-        print(f"           Score range: {stats['min_score']}-{stats['max_score']}, avg: {stats['avg_score']:.1f}")
+        if stats['total'] > 0:  # Only show if we have test cases for this level
+            print(f"  {level.upper():8} {stats['accuracy']:6.1%} ({stats['correct']}/{stats['total']})")
+            print(f"           Score range: {stats['min_score']}-{stats['max_score']}, avg: {stats['avg_score']:.1f}")
 
     # Confusion matrix
     print("\n" + "-" * 40)
     print("CONFUSION MATRIX:")
     print("-" * 40)
-    print(f"{'Expected':<12} {'→ Simple':<12} {'→ Medium':<12} {'→ Complex':<12}")
-    for expected in ['simple', 'medium', 'complex']:
+    print(f"{'Expected':<12} {'→ Simple':<12} {'→ Medium':<12} {'→ Complex':<12} {'→ Critical':<12}")
+    for expected in ['simple', 'medium', 'complex', 'critical']:
         row = result.confusion_matrix.get(expected, {})
-        simple = row.get('simple', 0)
-        medium = row.get('medium', 0)
-        complex_ = row.get('complex', 0)
-        print(f"{expected:<12} {simple:<12} {medium:<12} {complex_:<12}")
+        if sum(row.values()) > 0:  # Only show if we have test cases for this level
+            simple = row.get('simple', 0)
+            medium = row.get('medium', 0)
+            complex_ = row.get('complex', 0)
+            critical = row.get('critical', 0)
+            print(f"{expected:<12} {simple:<12} {medium:<12} {complex_:<12} {critical:<12}")
 
     # Misclassification analysis
     print("\n" + "-" * 40)
@@ -181,7 +180,7 @@ def print_report(result: EvaluationResult):
 
 def _level_order(level: str) -> int:
     """Convert level to numeric for comparison."""
-    return {'simple': 0, 'medium': 1, 'complex': 2}.get(level, -1)
+    return {'simple': 0, 'medium': 1, 'complex': 2, 'critical': 3}.get(level, -1)
 
 
 def _analyze_thresholds(result: EvaluationResult):

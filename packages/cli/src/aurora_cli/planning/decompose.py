@@ -16,7 +16,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from aurora_cli.planning.models import Complexity, Subgoal
+from aurora_cli.planning.models import Complexity, FileResolution, Subgoal
+from aurora_cli.planning.memory import FilePathResolver
 
 # Try to import SOAR - graceful fallback if not available
 try:
@@ -103,6 +104,51 @@ class PlanDecomposer:
         result = (subgoals, "heuristic")
         self._cache[cache_key] = result
         return result
+
+    def decompose_with_files(
+        self,
+        goal: str,
+        complexity: Complexity | None = None,
+        context_files: list[str] | None = None,
+        store: Any = None,
+    ) -> tuple[list[Subgoal], dict[str, list[FileResolution]], str]:
+        """Decompose goal and resolve file paths for each subgoal.
+
+        This method extends decompose() by also resolving file paths from
+        indexed memory for each subgoal using FilePathResolver.
+
+        Args:
+            goal: The goal to decompose
+            complexity: Optional complexity level (auto-assessed if None)
+            context_files: Optional list of relevant file paths
+            store: Optional SQLiteStore for file resolver
+
+        Returns:
+            Tuple of (subgoals, file_resolutions, decomposition_source)
+            - subgoals: List of Subgoal objects
+            - file_resolutions: Dict mapping subgoal IDs to list of FileResolution
+            - decomposition_source: "soar" or "heuristic"
+        """
+        # First decompose to get subgoals
+        subgoals, source = self.decompose(goal, complexity, context_files)
+
+        # Create file path resolver
+        resolver = FilePathResolver(store=store, config=self.config)
+
+        # Resolve file paths for each subgoal
+        file_resolutions: dict[str, list[FileResolution]] = {}
+
+        for subgoal in subgoals:
+            try:
+                resolutions = resolver.resolve_for_subgoal(subgoal, limit=5)
+                file_resolutions[subgoal.id] = resolutions
+            except Exception as e:
+                logger.warning(
+                    f"Failed to resolve files for subgoal {subgoal.id}: {e}"
+                )
+                file_resolutions[subgoal.id] = []
+
+        return subgoals, file_resolutions, source
 
     def _get_cache_key(self, goal: str, complexity: Complexity) -> str:
         """Generate cache key from goal and complexity.

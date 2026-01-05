@@ -318,3 +318,93 @@ class TestComplexityMapping:
         # Test that decompose handles the mapping
         decomposer.decompose("Test", Complexity.SIMPLE)
         assert mock_decompose_query.called
+
+
+class TestFileResolutionIntegration:
+    """Tests for file path resolution integration (Task 3.6)."""
+
+    @patch('aurora_cli.planning.decompose.FilePathResolver')
+    @patch('aurora_cli.planning.decompose.decompose_query')
+    @patch('aurora_cli.planning.decompose.LLMClient')
+    def test_file_resolution_called_for_subgoals(
+        self, mock_llm_client, mock_decompose_query, mock_resolver_class
+    ):
+        """Test that file resolution is called for each subgoal."""
+        # Setup mocks
+        mock_llm_client.return_value = Mock()
+
+        # Mock SOAR decomposition with 2 subgoals
+        mock_decomposition = Mock()
+        mock_decomposition.subgoals = [
+            {
+                "id": "sg-1",
+                "title": "Implement auth",
+                "description": "Add authentication",
+                "agent": "@full-stack-dev",
+                "dependencies": [],
+            },
+            {
+                "id": "sg-2",
+                "title": "Add tests",
+                "description": "Write tests for auth",
+                "agent": "@qa-test-architect",
+                "dependencies": ["sg-1"],
+            },
+        ]
+        mock_result = Mock()
+        mock_result.decomposition = mock_decomposition
+        mock_decompose_query.return_value = mock_result
+
+        # Mock file resolver
+        from aurora_cli.planning.models import FileResolution
+        mock_resolver = Mock()
+        mock_resolver.resolve_for_subgoal.return_value = [
+            FileResolution(
+                path="src/auth.py",
+                line_start=10,
+                line_end=50,
+                confidence=0.9,
+            )
+        ]
+        mock_resolver.has_indexed_memory.return_value = True
+        mock_resolver_class.return_value = mock_resolver
+
+        decomposer = PlanDecomposer()
+
+        # Act
+        subgoals, file_resolutions, source = decomposer.decompose_with_files("Test goal")
+
+        # Assert
+        assert len(subgoals) == 2
+        assert source == "soar"
+        # File resolver should have been called for each subgoal
+        assert mock_resolver.resolve_for_subgoal.call_count == 2
+        # File resolutions should be keyed by subgoal ID
+        assert "sg-1" in file_resolutions
+        assert "sg-2" in file_resolutions
+        assert len(file_resolutions["sg-1"]) == 1
+        assert file_resolutions["sg-1"][0].path == "src/auth.py"
+
+    @patch('aurora_cli.planning.decompose.FilePathResolver')
+    def test_file_resolution_graceful_degradation(self, mock_resolver_class):
+        """Test graceful degradation when memory not indexed."""
+        # Mock file resolver with no indexed memory
+        mock_resolver = Mock()
+        mock_resolver.has_indexed_memory.return_value = False
+        mock_resolver.resolve_for_subgoal.return_value = []
+        mock_resolver_class.return_value = mock_resolver
+
+        decomposer = PlanDecomposer()
+
+        # Use heuristic fallback
+        subgoals, file_resolutions, source = decomposer.decompose_with_files(
+            "Test goal", complexity=Complexity.SIMPLE
+        )
+
+        # Assert - should still succeed
+        assert len(subgoals) == 3
+        assert source == "heuristic"
+        # No file resolutions since memory not indexed
+        assert len(file_resolutions) == 0 or all(
+            len(files) == 0 for files in file_resolutions.values()
+        )

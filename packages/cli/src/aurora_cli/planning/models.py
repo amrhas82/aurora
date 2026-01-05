@@ -411,3 +411,145 @@ class PlanManifest(BaseModel):
     def total_plans(self) -> int:
         """Get total number of plans."""
         return len(self.active_plans) + len(self.archived_plans)
+
+
+class FileResolution(BaseModel):
+    """File path resolution with confidence score.
+
+    Represents a resolved file path from memory retrieval with line
+    ranges and confidence score.
+
+    Attributes:
+        path: File path relative to project root
+        line_start: Starting line number (optional)
+        line_end: Ending line number (optional)
+        confidence: Confidence score from 0.0 to 1.0
+    """
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
+    path: str = Field(
+        ...,
+        description="File path relative to project root",
+        examples=["src/auth/oauth.py", "tests/test_auth.py"],
+    )
+    line_start: int | None = Field(
+        default=None,
+        ge=1,
+        description="Starting line number (1-indexed)",
+    )
+    line_end: int | None = Field(
+        default=None,
+        ge=1,
+        description="Ending line number (1-indexed)",
+    )
+    confidence: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score (0.0-1.0)",
+    )
+
+    @model_validator(mode="after")
+    def validate_line_range(self) -> "FileResolution":
+        """Validate line_end >= line_start if both provided.
+
+        Returns:
+            The validated model
+
+        Raises:
+            ValueError: If line_end < line_start
+        """
+        if (
+            self.line_start is not None
+            and self.line_end is not None
+            and self.line_end < self.line_start
+        ):
+            raise ValueError(
+                f"line_end ({self.line_end}) must be >= line_start ({self.line_start})"
+            )
+        return self
+
+
+class AgentGap(BaseModel):
+    """Agent gap information for unmatched subgoals.
+
+    Represents a subgoal that couldn't be matched to an existing agent
+    with sufficient confidence, requiring manual assignment or agent creation.
+
+    Attributes:
+        subgoal_id: ID of the subgoal with the gap
+        recommended_agent: Best-match agent ID (even if low score)
+        agent_exists: Whether the recommended agent exists in manifest
+        fallback: Fallback agent ID to use
+        suggested_capabilities: Keywords for future agent creation
+    """
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
+    subgoal_id: str = Field(
+        ...,
+        description="ID of subgoal with agent gap",
+        examples=["sg-1", "sg-4"],
+    )
+    recommended_agent: str = Field(
+        ...,
+        description="Best-match agent ID",
+        examples=["@qa-test-architect", "@security-expert"],
+    )
+    agent_exists: bool = Field(
+        default=False,
+        description="Whether recommended agent exists in manifest",
+    )
+    fallback: str = Field(
+        default="@full-stack-dev",
+        description="Fallback agent to use",
+    )
+    suggested_capabilities: list[str] = Field(
+        default_factory=list,
+        description="Keywords for future agent creation",
+    )
+
+    @field_validator("subgoal_id")
+    @classmethod
+    def validate_subgoal_id(cls, v: str) -> str:
+        """Validate subgoal ID format.
+
+        Args:
+            v: Subgoal ID to validate
+
+        Returns:
+            The validated ID
+
+        Raises:
+            ValueError: If format is invalid
+        """
+        pattern = r"^sg-\d+$"
+        if not re.match(pattern, v):
+            raise ValueError(f"Subgoal ID must be 'sg-N' format. Got: {v}")
+        return v
+
+    @field_validator("recommended_agent", "fallback")
+    @classmethod
+    def validate_agent_format(cls, v: str) -> str:
+        """Validate agent ID format.
+
+        Args:
+            v: Agent ID to validate
+
+        Returns:
+            The validated agent ID
+
+        Raises:
+            ValueError: If format is invalid
+        """
+        pattern = r"^@[a-z0-9][a-z0-9-]*$"
+        if not re.match(pattern, v):
+            raise ValueError(f"Agent must start with '@'. Got: {v}")
+        return v

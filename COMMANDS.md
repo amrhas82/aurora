@@ -250,63 +250,58 @@ aur query "API endpoints" --verbose
 ### Headless Mode
 
 #### `aur headless`
-**Run single-iteration autonomous reasoning**
+**Pipe prompts to your preferred CLI tool for autonomous execution**
 
-**⚠️ Requires:** `ANTHROPIC_API_KEY` environment variable
+**⚠️ Note:** Does NOT require Aurora API key. Uses your chosen CLI tool (claude, cursor, etc.) directly.
 
 ```bash
-# Run single iteration experiment
-aur headless experiment.md
+# Run with default tool (claude) and settings
+aur headless prompt.md
 
-# With custom token budget
-aur headless task.md --budget 50000
+# Use different CLI tool
+aur headless prompt.md --tool cursor
 
-# With multiple iterations (max 10)
-aur headless task.md --max-iter 5
+# Custom iteration limit (default: 10)
+aur headless prompt.md --max-iter 5
 
-# Custom scratchpad location
-aur headless task.md --scratchpad results.md
-
-# Dry run (validation only)
-aur headless task.md --dry-run
+# Custom scratchpad location (default: .aurora/headless/scratchpad.md)
+aur headless prompt.md --scratchpad results.md
 
 # Show scratchpad after execution
-aur headless task.md --show-scratchpad
+cat .aurora/headless/scratchpad.md
 ```
 
-**Simplified Design:**
-- Single-iteration execution (not a loop)
-- Simple success evaluation (keyword-based heuristics)
-- Clear success/failure results
-- Git branch safety validation
-- Token budget limits (not USD)
-- Scratchpad audit trail
+**Simple Design:**
+- Pipes your prompt to any CLI tool (e.g., `claude`, `cursor`)
+- Repeats N times (default: 10 iterations)
+- Saves output to scratchpad after each iteration
+- No API key management, no budget tracking, no SOAR orchestration
+- Just a simple wrapper around: `while [ $i -lt N ]; do cat prompt.md | claude -p; done`
 
-**Safety features:**
-- Git branch enforcement (blocks main/master by default)
-- Token budget limits (30,000 tokens default)
-- Iteration caps (5 default, max 10)
-- Prompt validation (requires Goal and Success Criteria)
-- Scratchpad logging for audit trail
+**Tool Support:**
+- **claude** - Claude Code CLI (default)
+- **cursor** - Cursor CLI
+- Any CLI tool that accepts piped input and uses `-p` flag
 
-**Prompt format:**
+**Prompt format:** (created at `.aurora/headless/prompt.md.template`)
 ```markdown
 # Goal
-[One paragraph describing what you want to achieve]
+[Describe what you want to achieve]
 
 # Success Criteria
-- [Criterion 1]
-- [Criterion 2]
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
 
-# Constraints
-- [Constraint 1]
-- [Constraint 2]
+# Constraints (Optional)
+- Constraint 1
+- Constraint 2
 
-# Context (optional)
-[Background information...]
+# Context (Optional)
+Additional context about the task...
 ```
 
-**When to use:** Single autonomous iterations, testing SOAR pipeline, controlled experiments.
+**When to use:** Autonomous exploration, multi-iteration experiments, testing agent capabilities.
 
 ---
 
@@ -541,10 +536,12 @@ MCP integration via JSON configuration. Use natural language prompts; Continue a
 
 ## Environment Variables
 
-### Required for CLI `aur query` and `aur headless`:
+### Required for CLI `aur query`:
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+**Note:** `aur headless` does NOT require Aurora API key - it uses your chosen CLI tool's configuration.
 
 ### Optional Configuration:
 ```bash
@@ -598,7 +595,9 @@ aur --version
 
 **API Key Required:**
 - `aur query` (uses Anthropic API directly)
-- `aur headless` (autonomous reasoning)
+
+**Uses Your CLI Tool's API Key:**
+- `aur headless` (pipes to claude/cursor/etc., uses their API config)
 
 ---
 

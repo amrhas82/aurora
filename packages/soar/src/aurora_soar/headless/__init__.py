@@ -90,8 +90,9 @@ __all__ = [
 ]
 
 # Components will be imported here as they are implemented
+from .config import HeadlessConfig
 from .git_enforcer import GitBranchError, GitEnforcer, GitEnforcerConfig
-from .orchestrator import HeadlessConfig, HeadlessOrchestrator, HeadlessResult, TerminationReason
+from .orchestrator import HeadlessOrchestrator, HeadlessResult, TerminationReason
 from .prompt_loader import PromptData, PromptLoader, PromptValidationError
 from .scratchpad_manager import (
     ScratchpadConfig,

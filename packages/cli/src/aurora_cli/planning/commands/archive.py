@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+import logging
 
 from aurora_cli.planning.parsers.requirements import (
     RequirementBlock,
@@ -16,6 +17,16 @@ from aurora_cli.planning.parsers.requirements import (
     parse_modification_spec,
 )
 from aurora_cli.planning.validation.validator import Validator
+
+# Import manifest functions for tracking
+try:
+    from aurora_cli.planning.core import _update_manifest
+    MANIFEST_AVAILABLE = True
+except ImportError:
+    MANIFEST_AVAILABLE = False
+    _update_manifest = None  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -269,8 +280,19 @@ class ArchiveCommand:
         # Create archive directory if needed
         archive_dir.mkdir(parents=True, exist_ok=True)
 
-        # Move change to archive
+        # Move change to archive (atomic operation)
         change_dir.rename(archive_path)
+
+        # Update manifest to track archived plan
+        if MANIFEST_AVAILABLE and _update_manifest:
+            try:
+                plans_root = target / ".aurora" / "plans"
+                _update_manifest(plans_root, plan_name, "archive", archive_name)
+                logger.info(f"Updated manifest: {plan_name} -> archived as {archive_name}")
+            except Exception as e:
+                # Log error but don't fail the archive operation
+                logger.warning(f"Failed to update manifest: {e}")
+                print(f"\033[33mWarning: Could not update manifest: {e}\033[0m")
 
         print(f"Change '{plan_name}' archived as '{archive_name}'.")
 

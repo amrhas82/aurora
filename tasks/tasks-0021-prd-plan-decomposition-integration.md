@@ -152,12 +152,12 @@
     - Verify flags can be combined (e.g., `--yes --skip-specs`) ✓ (independent boolean checks)
     - Update help text for Aurora CLI (note: CLI integration deferred)
     - **Test**: Implementation verified via code inspection and parameter handling
-  - [ ] 1.12 Integrate ArchiveCommand with Aurora manifest system (DEFERRED - requires manifest API design)
-    - After successful archive, call `_update_manifest(plans_dir, plan_id, "archive", archived_id)`
-    - Ensure `PlanManifest` is updated correctly (active -> archived)
-    - Add logging for archive operation
-    - **Test**: Write test verifying manifest is updated after archive
-    - **Note**: Manifest integration API needs design - can be completed post-MVP
+  - [x] 1.12 Integrate ArchiveCommand with Aurora manifest system
+    - After successful archive, call `_update_manifest(plans_dir, plan_id, "archive", archived_id)` ✓
+    - Ensure `PlanManifest` is updated correctly (active -> archived) ✓
+    - Add logging for archive operation ✓
+    - **Test**: Write test verifying manifest is updated after archive ✓ (2 tests)
+    - Graceful degradation: archive continues even if manifest update fails ✓
   - [ ] 1.13 Port and adapt archive tests from OpenSpec (PARTIAL - core tests exist, 77 tests passing)
     - Create `tests/unit/cli/planning/test_archive_command.py` ✓ (16 tests exist)
     - Port all 25+ tests from `/home/hamr/PycharmProjects/aurora/openspec-source/tests/unit/commands/test_archive.py`

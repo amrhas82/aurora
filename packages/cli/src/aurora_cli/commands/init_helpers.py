@@ -635,3 +635,111 @@ def selective_step_selection() -> list[int]:
 
     # Convert string values to integers
     return [int(step) for step in selected]
+
+
+def detect_configured_mcp_tools(project_path: Path) -> dict[str, bool]:
+    """Detect which MCP tools are already configured.
+
+    Checks MCP configuration status for all MCP-capable tools
+    (Claude, Cursor, Cline, Continue).
+
+    Args:
+        project_path: Path to project root
+
+    Returns:
+        Dictionary mapping tool IDs to configured status (True if configured)
+    """
+    from aurora_cli.configurators.mcp import MCPConfigRegistry
+
+    configured: dict[str, bool] = {}
+
+    for configurator in MCPConfigRegistry.get_all():
+        tool_id = configurator.tool_id
+        configured[tool_id] = configurator.is_configured(project_path)
+
+    return configured
+
+
+def count_configured_mcp_tools(project_path: Path) -> int:
+    """Count how many MCP tools are currently configured.
+
+    Args:
+        project_path: Path to project root
+
+    Returns:
+        Number of configured MCP tools
+    """
+    configured = detect_configured_mcp_tools(project_path)
+    return sum(1 for is_configured in configured.values() if is_configured)
+
+
+async def configure_mcp_servers(
+    project_path: Path,
+    tool_ids: list[str],
+) -> tuple[list[str], list[str], list[str]]:
+    """Configure MCP servers for tools that support MCP.
+
+    Only configures MCP for tools that:
+    1. Were selected by the user (in tool_ids)
+    2. Have MCP support (registered in MCPConfigRegistry)
+
+    Args:
+        project_path: Path to project root
+        tool_ids: List of tool IDs selected by user (may include non-MCP tools)
+
+    Returns:
+        Tuple of (created_tools, updated_tools, skipped_tools):
+        - created_tools: Tools where MCP config was newly created
+        - updated_tools: Tools where MCP config was updated
+        - skipped_tools: Tools in tool_ids that don't support MCP
+    """
+    from aurora_cli.configurators.mcp import MCPConfigRegistry
+
+    created: list[str] = []
+    updated: list[str] = []
+    skipped: list[str] = []
+
+    if not tool_ids:
+        return created, updated, skipped
+
+    for tool_id in tool_ids:
+        configurator = MCPConfigRegistry.get(tool_id)
+
+        if not configurator:
+            # Tool doesn't support MCP (e.g., windsurf, codex)
+            skipped.append(tool_id)
+            continue
+
+        # Check if already configured
+        was_configured = configurator.is_configured(project_path)
+
+        # Configure MCP server
+        result = configurator.configure(project_path)
+
+        if result.success:
+            if was_configured:
+                updated.append(configurator.name)
+            else:
+                created.append(configurator.name)
+
+            # Log any warnings
+            for warning in result.warnings:
+                console.print(f"  [yellow]⚠[/] {configurator.name}: {warning}")
+        else:
+            console.print(f"  [red]✗[/] {configurator.name}: {result.message}")
+
+    return created, updated, skipped
+
+
+def get_mcp_capable_from_selection(tool_ids: list[str]) -> list[str]:
+    """Filter tool IDs to only those that support MCP.
+
+    Args:
+        tool_ids: List of all selected tool IDs
+
+    Returns:
+        List of tool IDs that have MCP support
+    """
+    from aurora_cli.configurators.mcp import MCPConfigRegistry
+
+    return [tid for tid in tool_ids if MCPConfigRegistry.supports_mcp(tid)]

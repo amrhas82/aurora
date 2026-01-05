@@ -12,12 +12,14 @@ import click
 from rich.console import Console
 
 from aurora_cli.commands.init_helpers import (
+    configure_mcp_servers,
     configure_slash_commands,
     configure_tools,
     create_directory_structure,
     create_project_md,
     detect_configured_tools,
     detect_git_repository,
+    get_mcp_capable_from_selection,
     prompt_git_init,
     prompt_tool_selection,
 )
@@ -323,8 +325,9 @@ def run_step_3_tool_configuration(
     1. Detects existing tool configurations
     2. Prompts user to select tools (interactive checkbox) OR uses provided tool_ids
     3. Configures selected tools using Phase 1 configurator system
-    4. Tracks created vs updated tools
-    5. Displays success message
+    4. Configures MCP servers for tools that support MCP (Claude, Cursor, Cline, Continue)
+    5. Tracks created vs updated tools
+    6. Displays success message
 
     Args:
         project_path: Path to project root directory
@@ -364,26 +367,63 @@ def run_step_3_tool_configuration(
         return ([], [])
 
     # Configure selected tools using slash command configurators
-    console.print("\n[dim]Configuring tools...[/]")
+    console.print("\n[dim]Configuring slash commands...[/]")
     created, updated = asyncio.run(
         configure_slash_commands(project_path, selected_tool_ids)
     )
 
+    # Configure MCP servers for tools that support MCP
+    mcp_capable = get_mcp_capable_from_selection(selected_tool_ids)
+    mcp_created: list[str] = []
+    mcp_updated: list[str] = []
+
+    if mcp_capable:
+        console.print("[dim]Configuring MCP servers...[/]")
+        mcp_created, mcp_updated, _skipped = asyncio.run(
+            configure_mcp_servers(project_path, mcp_capable)
+        )
+
     # Show success message
     console.print()
+
+    # Display slash command results
     if created:
-        console.print("[green]✓[/] Created configurations:")
+        console.print("[green]✓[/] Created slash commands:")
         for tool_name in created:
-            console.print(f"  [cyan]▌[/] {tool_name}")
+            # Check if this tool also got MCP config
+            mcp_note = ""
+            if tool_name in mcp_created:
+                mcp_note = " [dim](+ MCP server)[/]"
+            elif tool_name in mcp_updated:
+                mcp_note = " [dim](+ MCP updated)[/]"
+            console.print(f"  [cyan]▌[/] {tool_name}{mcp_note}")
 
     if updated:
-        console.print("[green]✓[/] Updated configurations:")
+        console.print("[green]✓[/] Updated slash commands:")
         for tool_name in updated:
-            console.print(f"  [dim cyan]▌ {tool_name}[/]")
+            mcp_note = ""
+            if tool_name in mcp_created:
+                mcp_note = " [dim](+ MCP server)[/]"
+            elif tool_name in mcp_updated:
+                mcp_note = " [dim](+ MCP updated)[/]"
+            console.print(f"  [dim cyan]▌ {tool_name}{mcp_note}[/]")
+
+    # Display MCP-only results (tools that got MCP but weren't in slash command results)
+    mcp_only_created = [t for t in mcp_created if t not in created and t not in updated]
+    mcp_only_updated = [t for t in mcp_updated if t not in created and t not in updated]
+
+    if mcp_only_created or mcp_only_updated:
+        console.print("[green]✓[/] Configured MCP servers:")
+        for tool_name in mcp_only_created:
+            console.print(f"  [cyan]▌[/] {tool_name} [dim](MCP server created)[/]")
+        for tool_name in mcp_only_updated:
+            console.print(f"  [dim cyan]▌ {tool_name} (MCP server updated)[/]")
 
     total = len(created) + len(updated)
+    mcp_total = len(mcp_created) + len(mcp_updated)
     if total > 0:
-        console.print(f"\n[bold green]✓[/] Configured {total} tool{'s' if total != 1 else ''}")
+        mcp_note = f" ({mcp_total} with MCP)" if mcp_total > 0 else ""
+        console.print(f"\n[bold green]✓[/] Configured {total} tool{'s' if total != 1 else ''}{mcp_note}")
 
     console.print()
     return (created, updated)
@@ -815,7 +855,7 @@ def init_command(config: bool, tools: str | None) -> None:
     console.print("[bold]Next Steps:[/]")
     console.print("  1. [cyan]aur plan create \"Your feature\"[/] - Create a plan")
     console.print("  2. [cyan]aur mem search \"keyword\"[/] - Search your codebase")
-    console.print("  3. [cyan]aur query \"question\"[/] - Query with context")
+    console.print("  3. [cyan]aur agents list[/] - Discover available agents")
     console.print()
     console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")
     console.print()

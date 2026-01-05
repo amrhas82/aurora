@@ -498,21 +498,23 @@ class TestStep3ToolConfiguration:
                     call_kwargs = mock_prompt.call_args[1]
                     assert "configured_tools" in call_kwargs
 
-    def test_run_step_3_calls_configure_tools_with_selected(self, tmp_path):
-        """run_step_3_tool_configuration() should call configure_tools with selected tool IDs."""
+    def test_run_step_3_calls_configure_slash_commands_with_selected(self, tmp_path):
+        """run_step_3_tool_configuration() should call configure_slash_commands with selected tool IDs."""
         from unittest.mock import AsyncMock
 
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
-        selected_tools = ["claude", "universal-agents.md"]
+        selected_tools = ["claude", "cursor"]
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
             with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=selected_tools):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Claude Code", "Universal"], [])) as mock_configure:
-                    run_step_3_tool_configuration(tmp_path)
+                with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=(["Claude", "Cursor"], [])) as mock_configure:
+                    with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude", "cursor"]):
+                        with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+                            run_step_3_tool_configuration(tmp_path)
 
-                    # Should call configure_tools with project_path and selected tools
-                    mock_configure.assert_called_once_with(tmp_path, selected_tools)
+                            # Should call configure_slash_commands with project_path and selected tools
+                            mock_configure.assert_called_once_with(tmp_path, selected_tools)
 
     def test_run_step_3_returns_created_and_updated_lists(self, tmp_path):
         """run_step_3_tool_configuration() should return tuple of (created, updated) tool names."""
@@ -520,16 +522,18 @@ class TestStep3ToolConfiguration:
 
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
-        created = ["Claude Code", "Universal AGENTS.md"]
-        updated = ["OpenCode"]
+        created = ["Claude", "Cursor"]
+        updated = ["Gemini"]
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "opencode", "universal-agents.md"]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(created, updated)):
-                    result = run_step_3_tool_configuration(tmp_path)
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "cursor", "gemini"]):
+                with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=(created, updated)):
+                    with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude", "cursor"]):
+                        with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+                            result = run_step_3_tool_configuration(tmp_path)
 
-                    # Should return the tuple from configure_tools
-                    assert result == (created, updated)
+                            # Should return the tuple from configure_slash_commands
+                            assert result == (created, updated)
 
     def test_run_step_3_tracks_created_vs_updated(self, tmp_path):
         """run_step_3_tool_configuration() should distinguish between created and updated tools."""
@@ -537,15 +541,17 @@ class TestStep3ToolConfiguration:
 
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
-        # Simulate: claude already exists, universal is new
-        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True, "universal-agents.md": False}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "universal-agents.md"]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Universal AGENTS.md"], ["Claude Code"])):
-                    created, updated = run_step_3_tool_configuration(tmp_path)
+        # Simulate: claude already exists, cursor is new
+        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True, "cursor": False}):
+            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "cursor"]):
+                with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=(["Cursor"], ["Claude"])):
+                    with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude", "cursor"]):
+                        with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+                            created, updated = run_step_3_tool_configuration(tmp_path)
 
-                    # Should track separately
-                    assert len(created) == 1
-                    assert len(updated) == 1
+                            # Should track separately
+                            assert len(created) == 1
+                            assert len(updated) == 1
 
     def test_run_step_3_shows_success_message(self, tmp_path):
         """run_step_3_tool_configuration() should display success message with counts."""
@@ -583,7 +589,7 @@ class TestStep3ToolConfiguration:
 
     def test_run_step_3_preserves_markers_on_update(self, tmp_path):
         """run_step_3_tool_configuration() should preserve custom content in marker blocks on update."""
-        # This test verifies that configure_tools is called correctly
+        # This test verifies that configure_slash_commands is called correctly
         # The actual marker preservation is tested in configurator tests
         from unittest.mock import AsyncMock
 
@@ -591,11 +597,13 @@ class TestStep3ToolConfiguration:
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True}):
             with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude"]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], ["Claude Code"])) as mock_configure:
-                    run_step_3_tool_configuration(tmp_path)
+                with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=([], ["Claude"])) as mock_configure:
+                    with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude"]):
+                        with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+                            run_step_3_tool_configuration(tmp_path)
 
-                    # Should call configure_tools (which handles marker preservation)
-                    mock_configure.assert_called_once()
+                            # Should call configure_slash_commands (which handles marker preservation)
+                            mock_configure.assert_called_once()
 
     def test_run_step_3_shows_step_header(self, tmp_path):
         """run_step_3_tool_configuration() should display 'Step 3/3' header."""

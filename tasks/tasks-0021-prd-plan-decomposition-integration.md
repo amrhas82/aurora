@@ -92,7 +92,7 @@
     - Port internal helpers: `_normalize_line_endings`, `_split_top_level_sections`, `_get_section_case_insensitive`, `_parse_requirement_blocks_from_section`, `_parse_removed_names`, `_parse_renamed_pairs`
     - No import changes needed (pure Python, no external dependencies)
     - **Test**: Port tests from `openspec-source/tests/unit/parsers/test_requirements.py`
-  - [ ] 1.4 Port Validator class from OpenSpec
+  - [x] 1.4 Port Validator class from OpenSpec
     - Copy `/home/hamr/PycharmProjects/aurora/openspec-source/aurora/validation/validator.py` (783 lines) to `packages/cli/src/aurora_cli/planning/validation/validator.py`
     - Update imports: `from aurora.parsers...` -> `from aurora_cli.planning.parsers...`
     - Update imports: `from aurora.validation...` -> `from aurora_cli.planning.validation...`

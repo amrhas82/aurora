@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from aurora_planning.validators.validator import Validator
+from aurora_cli.planning.validation.validator import Validator
 
 
 class TestValidatorValidateCapability:

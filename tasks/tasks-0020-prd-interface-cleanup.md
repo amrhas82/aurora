@@ -95,21 +95,21 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0020-prd-interface-clea
   - [x] 3.9 Scan all project documentation files with `grep -r "/aur:init\|/aur:query\|/aur:index\|/aur:search\|/aur:agents\|/aur:doctor\|aur query" /home/hamr/PycharmProjects/aurora/docs/` and update all found references
   - [x] 3.10 Add comment in CLAUDE.md noting that global `~/.claude/CLAUDE.md` should be updated to reflect new command structure (for user action, not automated)
 
-- [ ] 4.0 Phase 4: Verification and Integration Testing
-  - [ ] 4.1 Run full test suite with `make quality-check` and verify all tests pass (allowing existing 14 skipped tests and 6 mypy errors)
-  - [ ] 4.2 Run unit tests specifically for MCP agent tools with `pytest tests/unit/mcp/test_agent_tools.py -v --cov=src/aurora/mcp/tools` and verify ≥80% coverage for new code
-  - [ ] 4.3 Run integration tests with `pytest tests/integration/ -v` and verify no new failures introduced
-  - [ ] 4.4 Manual test: Start MCP server with `python -m aurora.mcp.server` and verify it starts without errors
-  - [ ] 4.5 Manual test: Use Claude Desktop to invoke `aurora_list_agents` and verify it returns JSON array with agent information
-  - [ ] 4.6 Manual test: Use Claude Desktop to invoke `aurora_search_agents` with query "test" and verify it returns relevant agents with scores
-  - [ ] 4.7 Manual test: Use Claude Desktop to invoke `aurora_show_agent` with valid agent_id and verify full content is returned
-  - [ ] 4.8 Manual test: Use Claude Desktop to invoke `aurora_show_agent` with invalid agent_id and verify error JSON is returned
-  - [ ] 4.9 Verify retained CLI commands work: run `aur init --help`, `aur doctor --help`, `aur mem index --help`, `aur mem search --help`, `aur mem stats --help`, `aur agents --help`, `aur plan --help` and verify all display help correctly
-  - [ ] 4.10 Verify retained slash commands: check that `/aur:plan` and `/aur:checkpoint` command files still exist in appropriate locations and are accessible
-  - [ ] 4.11 Run type checking with `mypy packages/cli/src/aurora_cli/ src/aurora/mcp/ --strict` and verify no NEW mypy errors beyond existing 6
-  - [ ] 4.12 Calculate code reduction metric: count lines deleted vs added using `git diff --stat` and verify net reduction ≥200 lines
-  - [ ] 4.13 Verify documentation completeness: review INTERFACE_GUIDE.md table and confirm all 18 current commands (7 CLI + 9 MCP + 2 Slash) are documented with complete information
-  - [ ] 4.14 Final verification: Compare output of retained commands before/after changes to ensure 100% functional parity (run `aur agents list` and compare output format)
+- [x] 4.0 Phase 4: Verification and Integration Testing
+  - [x] 4.1 Run full test suite with `make quality-check` and verify all tests pass (allowing existing 14 skipped tests and 6 mypy errors)
+  - [x] 4.2 Run unit tests specifically for MCP agent tools with `pytest tests/unit/mcp/test_agent_tools.py -v --cov=src/aurora/mcp/tools` and verify ≥80% coverage for new code
+  - [x] 4.3 Run integration tests with `pytest tests/integration/ -v` and verify no new failures introduced
+  - [x] 4.4 Manual test: Start MCP server with `python -m aurora.mcp.server` and verify it starts without errors
+  - [x] 4.5 Manual test: Use Claude Desktop to invoke `aurora_list_agents` and verify it returns JSON array with agent information
+  - [x] 4.6 Manual test: Use Claude Desktop to invoke `aurora_search_agents` with query "test" and verify it returns relevant agents with scores
+  - [x] 4.7 Manual test: Use Claude Desktop to invoke `aurora_show_agent` with valid agent_id and verify full content is returned
+  - [x] 4.8 Manual test: Use Claude Desktop to invoke `aurora_show_agent` with invalid agent_id and verify error JSON is returned
+  - [x] 4.9 Verify retained CLI commands work: run `aur init --help`, `aur doctor --help`, `aur mem index --help`, `aur mem search --help`, `aur mem stats --help`, `aur agents --help`, `aur plan --help` and verify all display help correctly
+  - [x] 4.10 Verify retained slash commands: check that `/aur:plan` and `/aur:checkpoint` command files still exist in appropriate locations and are accessible
+  - [x] 4.11 Run type checking with `mypy packages/cli/src/aurora_cli/ src/aurora/mcp/ --strict` and verify no NEW mypy errors beyond existing 6
+  - [x] 4.12 Calculate code reduction metric: count lines deleted vs added using `git diff --stat` and verify net reduction ≥200 lines
+  - [x] 4.13 Verify documentation completeness: review INTERFACE_GUIDE.md table and confirm all 18 current commands (7 CLI + 9 MCP + 2 Slash) are documented with complete information
+  - [x] 4.14 Final verification: Compare output of retained commands before/after changes to ensure 100% functional parity (run `aur agents list` and compare output format)
 
 ---
 

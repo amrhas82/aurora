@@ -10,6 +10,9 @@ import logging
 import os
 from pathlib import Path
 
+from aurora_context_code.parser import CodeParser
+from aurora_core.chunks.code_chunk import CodeChunk
+
 
 # Try to import tree-sitter, fall back to text chunking if unavailable
 TREE_SITTER_AVAILABLE = True
@@ -22,9 +25,6 @@ except ImportError:
 # Check environment variable override
 if os.getenv("AURORA_SKIP_TREESITTER"):
     TREE_SITTER_AVAILABLE = False
-
-from aurora_context_code.parser import CodeParser
-from aurora_core.chunks.code_chunk import CodeChunk
 
 
 logger = logging.getLogger(__name__)
@@ -650,7 +650,6 @@ class PythonParser(CodeParser):
         chunk_size = 50
 
         for i in range(0, len(lines), chunk_size):
-            chunk_lines = lines[i:i + chunk_size]
             line_start = i + 1
             line_end = min(i + chunk_size, len(lines))
 

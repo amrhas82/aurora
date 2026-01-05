@@ -477,13 +477,13 @@ class ArchiveCommand:
         is_new_spec = False
         try:
             target_content = update.target.read_text()
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             # Target spec does not exist
             if plan.modified or plan.renamed:
                 raise RuntimeError(
                     f"{spec_name}: target spec does not exist; only ADDED requirements are allowed for new specs. "
                     "MODIFIED and RENAMED operations require an existing spec."
-                )
+                ) from e
             # Warn about REMOVED requirements being ignored for new specs
             if plan.removed:
                 print(

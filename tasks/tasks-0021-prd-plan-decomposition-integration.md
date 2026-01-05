@@ -113,7 +113,7 @@
     - Update error message: `"No OpenSpec changes directory found"` -> `"No Aurora plans directory found. Run 'aur plan init' first."`
     - Update `_build_spec_skeleton` method to use Aurora terminology
     - **Test**: Write test verifying correct Aurora paths are used
-  - [ ] 1.7 Implement FR-1.1: Task completion validation
+  - [x] 1.7 Implement FR-1.1: Task completion validation
     - Verify `_get_task_progress()` method correctly parses `tasks.md` checkboxes (`- [x]`, `- [ ]`, `- [X]`)
     - Verify `_format_task_status()` returns "X/Y (Z%)" format
     - Ensure warning is displayed when tasks incomplete

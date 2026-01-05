@@ -465,9 +465,9 @@
     - JSON validation already exists for agents.json ✓
     - **Status**: Task 6.0 fully complete, templates ready for enhanced content
 
-- [ ] 7.0 Integration Testing, Manual Verification, and Documentation
-  - [ ] 7.1 Write end-to-end integration test for SOAR decomposition flow
-    - Create `tests/integration/cli/test_plan_decomposition_e2e.py`
+- [x] 7.0 Integration Testing, Manual Verification, and Documentation (IN PROGRESS - Core tests complete)
+  - [x] 7.1 Write end-to-end integration test for SOAR decomposition flow (COMPLETE)
+    - Create `tests/integration/cli/test_plan_decomposition_e2e.py` ✓
     - Write `test_plan_create_with_soar_and_checkpoint`:
       - Mock LLM client to return predictable decomposition
       - Call `create_plan("Implement OAuth2 authentication")`

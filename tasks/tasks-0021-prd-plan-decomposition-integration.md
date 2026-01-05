@@ -98,7 +98,7 @@
     - Update imports: `from aurora.validation...` -> `from aurora_cli.planning.validation...`
     - Keep all validation methods: `validate_capability`, `validate_capability_content`, `validate_plan`, `validate_plan_modification_specs`
     - **Test**: Port tests from `openspec-source/tests/unit/validation/test_validator.py`
-  - [ ] 1.5 Create commands submodule and port ArchiveCommand structure
+  - [x] 1.5 Create commands submodule and port ArchiveCommand structure
     - Create `packages/cli/src/aurora_cli/planning/commands/__init__.py` with `__all__ = ["ArchiveCommand"]`
     - Copy `/home/hamr/PycharmProjects/aurora/openspec-source/aurora/commands/archive.py` (638 lines) to `packages/cli/src/aurora_cli/planning/commands/archive.py`
     - Update imports at top of file:
@@ -106,7 +106,7 @@
       - `from aurora.validation.validator import Validator` -> `from aurora_cli.planning.validation.validator import Validator`
     - Keep `SpecUpdate` and `OperationCounts` dataclasses unchanged
     - **Test**: Write basic import test to verify module structure
-  - [ ] 1.6 Update ArchiveCommand path conventions for Aurora
+  - [x] 1.6 Update ArchiveCommand path conventions for Aurora
     - Change `target / "openspec" / "changes"` to `target / ".aurora" / "plans" / "active"`
     - Change `target / "openspec" / "changes" / "archive"` to `target / ".aurora" / "plans" / "archive"`
     - Change `target / "openspec" / "specs"` to `target / ".aurora" / "capabilities"`

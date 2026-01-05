@@ -4,16 +4,53 @@ Complete reference for all Aurora CLI commands, MCP tools, and slash commands.
 
 **Version:** 0.4.0
 
-**See Also:** [INTERFACE_GUIDE.md](docs/INTERFACE_GUIDE.md) - Comprehensive table of all commands with type, purpose, syntax, and examples
-
 ---
 
 ## Table of Contents
 
-1. [CLI Commands](#cli-commands)
-2. [MCP Tools](#mcp-tools)
-3. [Slash Commands](#slash-commands)
-4. [Command Comparison](#command-comparison)
+1. [Quick Reference Table](#quick-reference-table)
+2. [CLI Commands](#cli-commands)
+3. [MCP Tools](#mcp-tools)
+4. [Slash Commands](#slash-commands)
+5. [Command Comparison](#command-comparison)
+
+---
+
+## Quick Reference Table
+
+### CLI Commands (8 commands)
+
+| Command | Purpose | When To Use | Syntax | Example |
+|---------|---------|-------------|--------|---------|
+| `aur init` | Initialize Aurora | First-time setup, reconfigure tools | `aur init [OPTIONS]` | `aur init --tools=claude,cursor` |
+| `aur doctor` | Health checks & diagnostics | Troubleshooting, verify setup | `aur doctor [OPTIONS]` | `aur doctor --verbose` |
+| `aur mem index` | Index code for search | After code changes | `aur mem index [PATH]` | `aur mem index packages/` |
+| `aur mem search` | Search indexed code | Find code by query | `aur mem search <QUERY>` | `aur mem search "auth logic"` |
+| `aur mem stats` | Memory statistics | Check indexing status | `aur mem stats` | `aur mem stats` |
+| `aur agents` | Agent discovery | Find/list agents | `aur agents <SUBCOMMAND>` | `aur agents search "test"` |
+| `aur plan` | Planning workflows | Create/manage plans | `aur plan <SUBCOMMAND>` | `aur plan create "Feature"` |
+| `aur headless` | Pipe to CLI tool | Multi-iteration experiments | `aur headless <FILE>` | `aur headless prompt.md --tool claude` |
+
+### MCP Tools (9 tools)
+
+| Tool | Purpose | When To Use | Syntax |
+|------|---------|-------------|--------|
+| `aurora_search` | Search code semantically | Claude needs to find code | `aurora_search(query, limit=10)` |
+| `aurora_index` | Index code directory | Claude needs to index new code | `aurora_index(path, recursive=True)` |
+| `aurora_context` | Get code context | Claude needs specific file/function | `aurora_context(file_path, symbol=None)` |
+| `aurora_related` | Find related code | Claude needs to discover connections | `aurora_related(chunk_id, max_hops=2)` |
+| `aurora_query` | Query with complexity assessment | Claude needs context retrieval | `aurora_query(query, limit=10)` |
+| `aurora_get` | Get full chunk by index | After search, get complete content | `aurora_get(index)` |
+| `aurora_list_agents` | List all agents | Claude needs agent inventory | `aurora_list_agents()` |
+| `aurora_search_agents` | Search agents by keyword | Claude needs to find matching agents | `aurora_search_agents(query)` |
+| `aurora_show_agent` | Show full agent details | Claude needs agent instructions | `aurora_show_agent(agent_id)` |
+
+### Slash Commands (2 commands)
+
+| Command | Purpose | When To Use | Syntax |
+|---------|---------|-------------|--------|
+| `/aur:plan` | Planning workflows | Multi-step plan orchestration | `/aur:plan [create\|list\|show]` |
+| `/aur:checkpoint` | Save session context | Before context compaction | `/aur:checkpoint` |
 
 ---
 

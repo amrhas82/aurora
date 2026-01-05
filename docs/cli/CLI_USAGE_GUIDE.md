@@ -21,7 +21,7 @@ Complete guide to using the AURORA command-line interface for intelligent code q
 
 **Note**: For querying with LLM responses, use the `aurora_query` MCP tool from within Claude Code, which does not require an API key.
 
-See [MCP Setup Guide](../MCP_SETUP.md) and [INTERFACE_GUIDE.md](../INTERFACE_GUIDE.md) for complete interface details.
+See [MCP Setup Guide](../MCP_SETUP.md) and [COMMANDS.md](../../COMMANDS.md) for complete command reference with quick reference tables.
 
 ---
 

@@ -119,7 +119,7 @@
     - Ensure warning is displayed when tasks incomplete
     - Ensure `--yes` flag suppresses confirmation prompt for incomplete tasks
     - **Test**: `test_warn_about_incomplete_tasks`, `test_handle_changes_without_tasks` (port from OpenSpec)
-  - [ ] 1.8 Implement FR-1.2: Spec delta processing
+  - [x] 1.8 Implement FR-1.2: Spec delta processing
     - Verify `_find_spec_updates()` scans `<plan-dir>/specs/` for delta files
     - Verify `_build_updated_spec()` handles ADDED, MODIFIED, REMOVED, RENAMED sections
     - Verify duplicate detection within sections

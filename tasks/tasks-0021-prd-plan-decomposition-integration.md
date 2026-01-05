@@ -177,17 +177,18 @@
     - Add `__init__(self, config: Config | None = None)` method
     - Add placeholder methods: `decompose()`, `_build_context()`, `_call_soar()`, `_fallback_to_heuristics()`
     - Make test pass
-  - [ ] 2.2 Implement FR-2.1: SOAR decompose_query integration
-    - **Test First**: Write `test_decompose_with_soar_success` - mocks SOAR call, verifies subgoals returned
-    - Import `decompose_query` from `aurora_soar.phases.decompose`
-    - Implement `_call_soar()` method:
-      - Build context dict with `code_chunks` and `reasoning_chunks`
-      - Call `decompose_query(query, context, complexity, llm_client, available_agents)`
-      - Convert `DecompositionResult` to list of `Subgoal` objects
-      - Handle caching (same goal/complexity returns cached result)
-    - **Test**: Write `test_decompose_soar_unavailable_fallback` - verifies fallback when ImportError
-    - **Test**: Write `test_decompose_soar_timeout` - verifies 30s timeout handling
-    - **Test**: Write `test_decompose_caching` - verifies cache hit returns immediately
+  - [x] 2.2 Implement FR-2.1: SOAR decompose_query integration
+    - **Test First**: Write `test_decompose_with_soar_success` ✓ - mocks SOAR call, verifies subgoals returned
+    - Import `decompose_query` from `aurora_soar.phases.decompose` ✓
+    - Implement `_call_soar()` method: ✓
+      - Build context dict with `code_chunks` and `reasoning_chunks` ✓
+      - Call `decompose_query(query, context, complexity, llm_client, available_agents)` ✓
+      - Convert `DecompositionResult` to list of `Subgoal` objects ✓
+      - Handle caching (same goal/complexity returns cached result) ✓
+    - **Test**: `test_decompose_soar_unavailable_fallback` ✓ - verifies fallback when ImportError
+    - **Test**: `test_decompose_soar_timeout` ✓ - verifies 30s timeout handling
+    - **Test**: `test_decompose_caching` ✓ - verifies cache hit returns immediately
+    - **Result**: All 7 tests passing, decomposer coverage 85.33%
   - [ ] 2.3 Implement FR-2.2: Context summary building
     - **Test First**: Write `test_build_context_summary_with_chunks` - verifies summary format
     - Implement `_build_context_summary()` using logic from `aurora_soar.phases.decompose._build_context_summary`

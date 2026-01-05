@@ -17,13 +17,13 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from aurora.core.budget import CostTracker
-from aurora.core.config.loader import Config
-from aurora.core.logging import ConversationLogger
-from aurora.core.store.sqlite import SQLiteStore
-from aurora.reasoning.llm_client import LLMClient
-from aurora.soar.agent_registry import AgentRegistry
-from aurora.soar.orchestrator import SOAROrchestrator
+from aurora_core.budget import CostTracker
+from aurora_core.config.loader import Config
+from aurora_core.logging import ConversationLogger
+from aurora_core.store.sqlite import SQLiteStore
+from aurora_reasoning.llm_client import LLMClient
+from aurora_soar.agent_registry import AgentRegistry
+from aurora_soar.orchestrator import SOAROrchestrator
 
 
 @dataclass
@@ -135,7 +135,7 @@ class MockLLMClient(LLMClient):
         Returns:
             LLMResponse object
         """
-        from aurora.reasoning.llm_client import LLMResponse
+        from aurora_reasoning.llm_client import LLMResponse
 
         model = model or self._default_model
         self._call_count += 1
@@ -393,7 +393,7 @@ class E2ETestFramework:
         Args:
             agent: Mock agent to register
         """
-        from aurora.soar.agent_registry import AgentInfo
+        from aurora_soar.agent_registry import AgentInfo
 
         self._mock_agents[agent.agent_id] = agent
         agent_info = AgentInfo(

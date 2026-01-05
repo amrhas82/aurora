@@ -6,14 +6,14 @@ the retry loop and that feedback is properly generated and incorporated.
 """
 
 import pytest
-from aurora.core.budget import CostTracker
-from aurora.core.chunks import CodeChunk
-from aurora.core.config.loader import Config
-from aurora.core.store.memory import MemoryStore
-from aurora.reasoning.llm_client import LLMClient, LLMResponse
-from aurora.soar.orchestrator import SOAROrchestrator
+from aurora_core.budget import CostTracker
+from aurora_core.chunks import CodeChunk
+from aurora_core.config.loader import Config
+from aurora_core.store.memory import MemoryStore
+from aurora_reasoning.llm_client import LLMClient, LLMResponse
+from aurora_soar.orchestrator import SOAROrchestrator
 
-from aurora.soar import AgentInfo, AgentRegistry
+from aurora_soar import AgentInfo, AgentRegistry
 
 
 class MockCostTracker(CostTracker):

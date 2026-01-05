@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 import pytest
-from aurora.context_code.languages.python import PythonParser
+from aurora_context_code.languages.python import PythonParser
 
 
 class TestParserPerformance:

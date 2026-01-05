@@ -3,13 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora.reasoning.decompose import DecompositionResult
-from aurora.reasoning.verify import (
+from aurora_reasoning.decompose import DecompositionResult
+from aurora_reasoning.verify import (
     VerificationOption,
     VerificationResult,
     VerificationVerdict,
 )
-from aurora.soar.phases.verify import (
+from aurora_soar.phases.verify import (
     RetrievalQuality,
     VerifyPhaseResult,
     _generate_retry_feedback,
@@ -61,7 +61,7 @@ class TestGenerateRetryFeedback:
     @pytest.fixture
     def mock_llm_client(self):
         """Create mock LLM client."""
-        from aurora.reasoning.llm_client import LLMResponse
+        from aurora_reasoning.llm_client import LLMResponse
 
         client = MagicMock()
         client.generate.return_value = LLMResponse(
@@ -287,7 +287,7 @@ class TestVerifyDecomposition:
         passing_verification,
     ):
         """Test verification retries and then passes."""
-        from aurora.soar.phases.decompose import DecomposePhaseResult
+        from aurora_soar.phases.decompose import DecomposePhaseResult
 
         # First verification returns RETRY, second returns PASS
         mock_verify_decomposition.side_effect = [retry_verification, passing_verification]
@@ -336,7 +336,7 @@ class TestVerifyDecomposition:
         retry_verification,
     ):
         """Test that max retries are enforced."""
-        from aurora.soar.phases.decompose import DecomposePhaseResult
+        from aurora_soar.phases.decompose import DecomposePhaseResult
 
         # Always return RETRY
         mock_verify_decomposition.return_value = retry_verification

@@ -13,12 +13,12 @@ Tests cover:
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from aurora.core.activation.base_level import AccessHistoryEntry
-from aurora.core.activation.engine import ActivationEngine
-from aurora.core.optimization.query_optimizer import (
+from aurora_core.activation.base_level import AccessHistoryEntry
+from aurora_core.activation.engine import ActivationEngine
+from aurora_core.optimization.query_optimizer import (
     QueryOptimizer,
 )
-from aurora.core.types import ChunkID
+from aurora_core.types import ChunkID
 
 
 # Mock chunk data for testing

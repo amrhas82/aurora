@@ -3,10 +3,10 @@
 from unittest.mock import MagicMock
 
 import pytest
-from aurora.reasoning.llm_client import LLMResponse
+from aurora_reasoning.llm_client import LLMResponse
 
 # Import internal functions for testing
-from aurora.reasoning.synthesize import (
+from aurora_reasoning.synthesize import (
     SynthesisResult,
     _build_synthesis_system_prompt,
     _extract_traceability,

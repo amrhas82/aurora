@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 
 import pytest
-from aurora.core.chunks.base import Chunk
+from aurora_core.chunks.base import Chunk
 
 
 class ConcreteChunk(Chunk):

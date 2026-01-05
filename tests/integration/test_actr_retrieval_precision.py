@@ -19,15 +19,15 @@ Precision Metrics:
 
 from datetime import datetime, timedelta, timezone
 
-from aurora.core.activation.base_level import AccessHistoryEntry
-from aurora.core.activation.engine import ActivationConfig, ActivationEngine
-from aurora.core.activation.retrieval import (
+from aurora_core.activation.base_level import AccessHistoryEntry
+from aurora_core.activation.engine import ActivationConfig, ActivationEngine
+from aurora_core.activation.retrieval import (
     ActivationRetriever,
     RetrievalConfig,
     RetrievalResult,
 )
-from aurora.core.activation.spreading import RelationshipGraph
-from aurora.core.types import ChunkID
+from aurora_core.activation.spreading import RelationshipGraph
+from aurora_core.types import ChunkID
 
 
 class MockChunk:

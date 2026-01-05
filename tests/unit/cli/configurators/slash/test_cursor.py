@@ -51,43 +51,6 @@ class TestCursorSlashCommandConfiguratorPaths:
         config = CursorSlashCommandConfigurator()
         path = config.get_relative_path("plan")
         assert path == ".cursor/commands/aurora-plan.md"
-
-    def test_get_relative_path_query(self):
-        """Test get_relative_path returns correct path for 'query' command."""
-        config = CursorSlashCommandConfigurator()
-        path = config.get_relative_path("query")
-        assert path == ".cursor/commands/aurora-query.md"
-
-    def test_get_relative_path_index(self):
-        """Test get_relative_path returns correct path for 'index' command."""
-        config = CursorSlashCommandConfigurator()
-        path = config.get_relative_path("index")
-        assert path == ".cursor/commands/aurora-index.md"
-
-    def test_get_relative_path_search(self):
-        """Test get_relative_path returns correct path for 'search' command."""
-        config = CursorSlashCommandConfigurator()
-        path = config.get_relative_path("search")
-        assert path == ".cursor/commands/aurora-search.md"
-
-    def test_get_relative_path_init(self):
-        """Test get_relative_path returns correct path for 'init' command."""
-        config = CursorSlashCommandConfigurator()
-        path = config.get_relative_path("init")
-        assert path == ".cursor/commands/aurora-init.md"
-
-    def test_get_relative_path_doctor(self):
-        """Test get_relative_path returns correct path for 'doctor' command."""
-        config = CursorSlashCommandConfigurator()
-        path = config.get_relative_path("doctor")
-        assert path == ".cursor/commands/aurora-doctor.md"
-
-    def test_get_relative_path_agents(self):
-        """Test get_relative_path returns correct path for 'agents' command."""
-        config = CursorSlashCommandConfigurator()
-        path = config.get_relative_path("agents")
-        assert path == ".cursor/commands/aurora-agents.md"
-
     def test_get_relative_path_all_commands(self):
         """Test get_relative_path works for all standard commands."""
         config = CursorSlashCommandConfigurator()
@@ -200,13 +163,13 @@ class TestCursorSlashCommandConfiguratorBody:
 class TestCursorSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method."""
 
-    def test_generate_all_creates_7_files(self, tmp_path: Path):
-        """Test generate_all creates 7 command files (one for each command)."""
+    def test_generate_all_creates_3_files(self, tmp_path: Path):
+        """Test generate_all creates 3 command files (one for each command)."""
         config = CursorSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 7
+        assert len(created) == 3
 
     def test_generate_all_creates_files_in_cursor_directory(self, tmp_path: Path):
         """Test generate_all creates files in .cursor/commands/ directory."""
@@ -328,13 +291,13 @@ class TestCursorSlashCommandConfiguratorUpdateExisting:
 class TestCursorSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_7_targets(self):
-        """Test get_targets returns 7 targets (one per command)."""
+    def test_get_targets_returns_3_targets(self):
+        """Test get_targets returns 3 targets (one per command)."""
         config = CursorSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 7
+        assert len(targets) == 3
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

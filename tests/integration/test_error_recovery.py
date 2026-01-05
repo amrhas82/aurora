@@ -9,7 +9,7 @@ import time
 from unittest.mock import Mock, patch
 
 import pytest
-from aurora.core.resilience import (
+from aurora_core.resilience import (
     Alerting,
     MetricsCollector,
     RateLimiter,
@@ -53,7 +53,7 @@ class TestTransientErrorRecovery:
 
     def test_retry_database_lock(self):
         """Test recovery from database lock (StorageError)."""
-        from aurora.core.exceptions import StorageError
+        from aurora_core.exceptions import StorageError
 
         handler = RetryHandler(max_retries=3, base_delay=0.01)
 
@@ -87,7 +87,7 @@ class TestNonRecoverableErrors:
 
     def test_configuration_error_no_retry(self):
         """Test that configuration errors fail immediately."""
-        from aurora.core.exceptions import ConfigurationError
+        from aurora_core.exceptions import ConfigurationError
 
         handler = RetryHandler(max_retries=3, base_delay=0.01)
 
@@ -102,7 +102,7 @@ class TestNonRecoverableErrors:
 
     def test_budget_exceeded_no_retry(self):
         """Test that budget exceeded errors fail immediately."""
-        from aurora.core.exceptions import BudgetExceededError
+        from aurora_core.exceptions import BudgetExceededError
 
         handler = RetryHandler(max_retries=3, base_delay=0.01)
 
@@ -117,7 +117,7 @@ class TestNonRecoverableErrors:
 
     def test_validation_error_no_retry(self):
         """Test that validation errors fail immediately."""
-        from aurora.core.exceptions import ValidationError
+        from aurora_core.exceptions import ValidationError
 
         handler = RetryHandler(max_retries=3, base_delay=0.01)
 
@@ -394,7 +394,7 @@ class TestRecoveryRateVerification:
     def test_recovery_with_mixed_error_types(self):
         """Test recovery rate with mix of recoverable and non-recoverable errors."""
         retry_handler = RetryHandler(max_retries=3, base_delay=0.01)
-        from aurora.core.exceptions import ConfigurationError
+        from aurora_core.exceptions import ConfigurationError
 
         total_operations = 100
         recoverable_operations = 95  # 95% transient, 5% non-recoverable

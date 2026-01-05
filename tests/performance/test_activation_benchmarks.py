@@ -21,24 +21,24 @@ Test Strategy:
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from aurora.core.activation.base_level import (
+from aurora_core.activation.base_level import (
     AccessHistoryEntry,
     BaseLevelActivation,
     BLAConfig,
 )
-from aurora.core.activation.context_boost import (
+from aurora_core.activation.context_boost import (
     ContextBoost,
     ContextBoostConfig,
 )
-from aurora.core.activation.decay import (
+from aurora_core.activation.decay import (
     DecayCalculator,
     DecayConfig,
 )
-from aurora.core.activation.engine import (
+from aurora_core.activation.engine import (
     ActivationConfig,
     ActivationEngine,
 )
-from aurora.core.activation.spreading import (
+from aurora_core.activation.spreading import (
     RelationshipGraph,
     SpreadingActivation,
     SpreadingConfig,

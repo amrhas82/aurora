@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from aurora.core.budget.tracker import (
+from aurora_core.budget.tracker import (
     MODEL_PRICING,
     BudgetTracker,
     CostTracker,

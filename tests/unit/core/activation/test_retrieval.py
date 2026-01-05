@@ -15,7 +15,7 @@ Tests the ActivationRetriever and BatchRetriever classes including:
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from aurora.core.types import ChunkID
+from aurora_core.types import ChunkID
 
 from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.activation.engine import ActivationEngine

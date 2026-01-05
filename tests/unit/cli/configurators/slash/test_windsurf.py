@@ -52,19 +52,6 @@ class TestWindsurfSlashCommandConfiguratorPaths:
         config = WindsurfSlashCommandConfigurator()
         path = config.get_relative_path("plan")
         assert path == ".windsurf/workflows/aurora-plan.md"
-
-    def test_get_relative_path_query(self):
-        """Test get_relative_path returns correct path for 'query' command."""
-        config = WindsurfSlashCommandConfigurator()
-        path = config.get_relative_path("query")
-        assert path == ".windsurf/workflows/aurora-query.md"
-
-    def test_get_relative_path_index(self):
-        """Test get_relative_path returns correct path for 'index' command."""
-        config = WindsurfSlashCommandConfigurator()
-        path = config.get_relative_path("index")
-        assert path == ".windsurf/workflows/aurora-index.md"
-
     def test_get_relative_path_all_commands(self):
         """Test get_relative_path works for all standard commands."""
         config = WindsurfSlashCommandConfigurator()
@@ -161,13 +148,13 @@ class TestWindsurfSlashCommandConfiguratorBody:
 class TestWindsurfSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method."""
 
-    def test_generate_all_creates_7_files(self, tmp_path: Path):
-        """Test generate_all creates 7 command files (one for each command)."""
+    def test_generate_all_creates_3_files(self, tmp_path: Path):
+        """Test generate_all creates 3 command files (one for each command)."""
         config = WindsurfSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 7
+        assert len(created) == 3
 
     def test_generate_all_creates_files_in_windsurf_directory(self, tmp_path: Path):
         """Test generate_all creates files in .windsurf/workflows/ directory."""
@@ -299,13 +286,13 @@ class TestWindsurfSlashCommandConfiguratorUpdateExisting:
 class TestWindsurfSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_7_targets(self):
-        """Test get_targets returns 7 targets (one per command)."""
+    def test_get_targets_returns_3_targets(self):
+        """Test get_targets returns 3 targets (one per command)."""
         config = WindsurfSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 7
+        assert len(targets) == 3
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

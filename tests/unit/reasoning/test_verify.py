@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from aurora.reasoning.verify import (
+from aurora_reasoning.verify import (
     VerificationOption,
     VerificationResult,
     VerificationVerdict,

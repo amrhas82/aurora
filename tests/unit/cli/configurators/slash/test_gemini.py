@@ -64,13 +64,6 @@ class TestGeminiSlashCommandConfiguratorPaths:
         config = GeminiSlashCommandConfigurator()
         path = config.get_relative_path("plan")
         assert path == ".gemini/commands/aurora/plan.toml"
-
-    def test_get_relative_path_query(self):
-        """Test get_relative_path returns correct path for 'query' command."""
-        config = GeminiSlashCommandConfigurator()
-        path = config.get_relative_path("query")
-        assert path == ".gemini/commands/aurora/query.toml"
-
     def test_get_relative_path_all_commands(self):
         """Test get_relative_path works for all standard commands."""
         config = GeminiSlashCommandConfigurator()
@@ -157,13 +150,13 @@ class TestGeminiSlashCommandConfiguratorBody:
 class TestGeminiSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method with TOML output."""
 
-    def test_generate_all_creates_7_files(self, tmp_path: Path):
-        """Test generate_all creates 7 command files (one for each command)."""
+    def test_generate_all_creates_3_files(self, tmp_path: Path):
+        """Test generate_all creates 3 command files (one for each command)."""
         config = GeminiSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 7
+        assert len(created) == 3
 
     def test_generate_all_creates_toml_files(self, tmp_path: Path):
         """Test generate_all creates .toml files."""
@@ -336,13 +329,13 @@ Body
 class TestGeminiSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_7_targets(self):
-        """Test get_targets returns 7 targets (one per command)."""
+    def test_get_targets_returns_3_targets(self):
+        """Test get_targets returns 3 targets (one per command)."""
         config = GeminiSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 7
+        assert len(targets) == 3
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

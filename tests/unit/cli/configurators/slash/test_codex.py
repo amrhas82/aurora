@@ -222,8 +222,8 @@ class TestCodexSlashCommandConfiguratorBody:
 class TestCodexSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method (writes to global directory)."""
 
-    def test_generate_all_creates_7_files(self, tmp_path: Path):
-        """Test generate_all creates 7 command files."""
+    def test_generate_all_creates_3_files(self, tmp_path: Path):
+        """Test generate_all creates 3 command files."""
         config = CodexSlashCommandConfigurator()
 
         custom_codex_home = str(tmp_path / "codex-home")
@@ -233,7 +233,7 @@ class TestCodexSlashCommandConfiguratorGenerateAll:
             created = config.generate_all(project_path, ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 7
+        assert len(created) == 3
 
     def test_generate_all_writes_to_global_directory(self, tmp_path: Path):
         """Test generate_all writes to global directory, not project directory."""
@@ -377,13 +377,13 @@ class TestCodexSlashCommandConfiguratorUpdateExisting:
 class TestCodexSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_7_targets(self):
-        """Test get_targets returns 7 targets (one per command)."""
+    def test_get_targets_returns_3_targets(self):
+        """Test get_targets returns 3 targets (one per command)."""
         config = CodexSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 7
+        assert len(targets) == 3
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

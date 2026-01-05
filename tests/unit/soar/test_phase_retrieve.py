@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
-from aurora.soar.phases.retrieve import (
+from aurora_soar.phases.retrieve import (
     ACTIVATION_THRESHOLD,
     RETRIEVAL_BUDGETS,
     filter_by_activation,

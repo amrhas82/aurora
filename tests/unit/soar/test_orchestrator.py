@@ -14,23 +14,23 @@ from __future__ import annotations
 from unittest.mock import Mock, patch
 
 import pytest
-from aurora.core.budget import CostTracker
-from aurora.core.config.loader import Config
-from aurora.core.exceptions import BudgetExceededError
-from aurora.core.logging import ConversationLogger
-from aurora.core.store.sqlite import SQLiteStore
-from aurora.reasoning.decompose import DecompositionResult
-from aurora.reasoning.llm_client import LLMClient
-from aurora.reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
-from aurora.soar.agent_registry import AgentInfo, AgentRegistry
-from aurora.soar.orchestrator import SOAROrchestrator
-from aurora.soar.phases.collect import CollectResult
-from aurora.soar.phases.decompose import DecomposePhaseResult
-from aurora.soar.phases.record import RecordResult
-from aurora.soar.phases.respond import ResponseResult
-from aurora.soar.phases.route import RouteResult
-from aurora.soar.phases.synthesize import SynthesisResult
-from aurora.soar.phases.verify import VerifyPhaseResult
+from aurora_core.budget import CostTracker
+from aurora_core.config.loader import Config
+from aurora_core.exceptions import BudgetExceededError
+from aurora_core.logging import ConversationLogger
+from aurora_core.store.sqlite import SQLiteStore
+from aurora_reasoning.decompose import DecompositionResult
+from aurora_reasoning.llm_client import LLMClient
+from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
+from aurora_soar.agent_registry import AgentInfo, AgentRegistry
+from aurora_soar.orchestrator import SOAROrchestrator
+from aurora_soar.phases.collect import CollectResult
+from aurora_soar.phases.decompose import DecomposePhaseResult
+from aurora_soar.phases.record import RecordResult
+from aurora_soar.phases.respond import ResponseResult
+from aurora_soar.phases.route import RouteResult
+from aurora_soar.phases.synthesize import SynthesisResult
+from aurora_soar.phases.verify import VerifyPhaseResult
 
 
 @pytest.fixture

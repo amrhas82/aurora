@@ -7,13 +7,13 @@ different verbosity levels (QUIET, NORMAL, VERBOSE, JSON).
 
 import json
 
-from aurora.soar.phases.record import RecordResult
-from aurora.soar.phases.respond import (
+from aurora_soar.phases.record import RecordResult
+from aurora_soar.phases.respond import (
     ResponseResult,
     Verbosity,
     format_response,
 )
-from aurora.soar.phases.synthesize import SynthesisResult
+from aurora_soar.phases.synthesize import SynthesisResult
 
 
 class TestFormatResponseQuiet:

@@ -8,7 +8,7 @@ serialization, and integration with the chunk system.
 from datetime import datetime
 
 import pytest
-from aurora.core.chunks.reasoning_chunk import ReasoningChunk
+from aurora_core.chunks.reasoning_chunk import ReasoningChunk
 
 
 class TestReasoningChunkInitialization:

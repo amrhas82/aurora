@@ -11,14 +11,14 @@ performance targets specified in the PRD:
 import time
 
 import pytest
-from aurora.core.budget import CostTracker
-from aurora.core.chunks import CodeChunk
-from aurora.core.config.loader import Config
-from aurora.core.store.memory import MemoryStore
-from aurora.reasoning.llm_client import LLMClient
-from aurora.soar.orchestrator import SOAROrchestrator
+from aurora_core.budget import CostTracker
+from aurora_core.chunks import CodeChunk
+from aurora_core.config.loader import Config
+from aurora_core.store.memory import MemoryStore
+from aurora_reasoning.llm_client import LLMClient
+from aurora_soar.orchestrator import SOAROrchestrator
 
-from aurora.soar import AgentInfo, AgentRegistry
+from aurora_soar import AgentInfo, AgentRegistry
 
 
 # Performance targets from PRD
@@ -41,7 +41,7 @@ class MockLLMClientFast(LLMClient):
 
     def generate(self, prompt: str, system: str = "", **kwargs):
         """Generate fast mock response."""
-        from aurora.reasoning.llm_client import LLMResponse
+        from aurora_reasoning.llm_client import LLMResponse
 
         content = ""
         prompt_lower = prompt.lower()
@@ -223,7 +223,7 @@ class TestSOARPerformance:
 
     def test_verification_phase_timing(self, orchestrator):
         """Benchmark verification phase in isolation."""
-        from aurora.reasoning import verify
+        from aurora_reasoning import verify
 
         llm_client = MockLLMClientFast()
         decomposition = {
@@ -307,7 +307,7 @@ class TestPhasePerformance:
 
     def test_assess_phase_timing(self):
         """Benchmark Phase 1 (Assess) timing."""
-        from aurora.soar.phases import assess
+        from aurora_soar.phases import assess
 
         llm_client = MockLLMClientFast()
 
@@ -326,7 +326,7 @@ class TestPhasePerformance:
 
     def test_decompose_phase_timing(self):
         """Benchmark Phase 3 (Decompose) timing."""
-        from aurora.reasoning import decompose
+        from aurora_reasoning import decompose
 
         llm_client = MockLLMClientFast()
 
@@ -347,7 +347,7 @@ class TestPhasePerformance:
 
     def test_synthesis_phase_timing(self):
         """Benchmark Phase 7 (Synthesize) timing."""
-        from aurora.reasoning import synthesize
+        from aurora_reasoning import synthesize
 
         llm_client = MockLLMClientFast()
 

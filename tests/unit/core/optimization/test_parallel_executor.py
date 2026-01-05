@@ -13,7 +13,7 @@ Tests cover:
 import time
 
 import pytest
-from aurora.core.optimization.parallel_executor import (
+from aurora_core.optimization.parallel_executor import (
     AgentPriority,
     AgentTask,
     ParallelAgentExecutor,

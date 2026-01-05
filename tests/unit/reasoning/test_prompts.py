@@ -1,13 +1,13 @@
 """Unit tests for prompt templates."""
 
-from aurora.reasoning.prompts.assess import AssessPromptTemplate
-from aurora.reasoning.prompts.decompose import DecomposePromptTemplate
-from aurora.reasoning.prompts.examples import Complexity, ExamplesLoader, get_loader
-from aurora.reasoning.prompts.retry_feedback import RetryFeedbackPromptTemplate
-from aurora.reasoning.prompts.verify_adversarial import VerifyAdversarialPromptTemplate
-from aurora.reasoning.prompts.verify_agent_output import VerifyAgentOutputPromptTemplate
-from aurora.reasoning.prompts.verify_self import VerifySelfPromptTemplate
-from aurora.reasoning.prompts.verify_synthesis import VerifySynthesisPromptTemplate
+from aurora_reasoning.prompts.assess import AssessPromptTemplate
+from aurora_reasoning.prompts.decompose import DecomposePromptTemplate
+from aurora_reasoning.prompts.examples import Complexity, ExamplesLoader, get_loader
+from aurora_reasoning.prompts.retry_feedback import RetryFeedbackPromptTemplate
+from aurora_reasoning.prompts.verify_adversarial import VerifyAdversarialPromptTemplate
+from aurora_reasoning.prompts.verify_agent_output import VerifyAgentOutputPromptTemplate
+from aurora_reasoning.prompts.verify_self import VerifySelfPromptTemplate
+from aurora_reasoning.prompts.verify_synthesis import VerifySynthesisPromptTemplate
 
 
 class TestAssessPromptTemplate:

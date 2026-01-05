@@ -5,7 +5,7 @@ import sys
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from aurora.reasoning.llm_client import (
+from aurora_reasoning.llm_client import (
     AnthropicClient,
     LLMResponse,
     OllamaClient,
@@ -125,7 +125,7 @@ class TestAnthropicClient:
                         # Force a reload of the module to trigger the import
                         import importlib
 
-                        import aurora.reasoning.llm_client as llm_module
+                        import aurora_reasoning.llm_client as llm_module
 
                         importlib.reload(llm_module)
                         llm_module.AnthropicClient()

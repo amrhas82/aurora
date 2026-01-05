@@ -3,9 +3,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora.reasoning.decompose import DecompositionResult
-from aurora.reasoning.prompts.examples import Complexity
-from aurora.soar.phases.decompose import (
+from aurora_reasoning.decompose import DecompositionResult
+from aurora_reasoning.prompts.examples import Complexity
+from aurora_soar.phases.decompose import (
     DecomposePhaseResult,
     _build_context_summary,
     _compute_query_hash,

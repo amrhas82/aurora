@@ -13,8 +13,8 @@ import os
 from pathlib import Path
 
 import pytest
-from aurora.core.config.loader import Config
-from aurora.core.exceptions import ConfigurationError
+from aurora_core.config.loader import Config
+from aurora_core.exceptions import ConfigurationError
 
 
 class TestConfigurationIntegration:

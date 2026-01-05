@@ -593,7 +593,7 @@ class TestComplexQueryE2E:
     def test_complex_query_with_context(self, e2e_framework):
         """Test that complex queries retrieve appropriate context."""
         # Add test chunks to the store
-        from aurora.core.chunks.code_chunk import CodeChunk
+        from aurora_core.chunks.code_chunk import CodeChunk
 
         test_chunk = CodeChunk(
             chunk_id="code:auth.py:AuthService",

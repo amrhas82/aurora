@@ -18,32 +18,28 @@ Complete reference for all Aurora CLI commands, MCP tools, and slash commands.
 
 ## Quick Reference Table
 
-### CLI Commands (8 commands)
+### CLI Commands (10 commands)
 
 | Command | Purpose | When To Use | Syntax | Example |
 |---------|---------|-------------|--------|---------|
 | `aur init` | Initialize Aurora | First-time setup, reconfigure tools | `aur init [OPTIONS]` | `aur init --tools=claude,cursor` |
 | `aur doctor` | Health checks & diagnostics | Troubleshooting, verify setup | `aur doctor [OPTIONS]` | `aur doctor --verbose` |
+| `aur verify` | Verify installation | Check dependencies | `aur verify` | `aur verify` |
+| `aur version` | Show version info | Check installed version | `aur version` | `aur version` |
 | `aur mem index` | Index code for search | After code changes | `aur mem index [PATH]` | `aur mem index packages/` |
 | `aur mem search` | Search indexed code | Find code by query | `aur mem search <QUERY>` | `aur mem search "auth logic"` |
 | `aur mem stats` | Memory statistics | Check indexing status | `aur mem stats` | `aur mem stats` |
-| `aur agents` | Agent discovery | Find/list agents | `aur agents <SUBCOMMAND>` | `aur agents search "test"` |
+| `aur agents` | Agent discovery | Find/list/show agents | `aur agents <SUBCOMMAND>` | `aur agents search "test"` |
 | `aur plan` | Planning workflows | Create/manage plans | `aur plan <SUBCOMMAND>` | `aur plan create "Feature"` |
 | `aur headless` | Pipe to CLI tool | Multi-iteration experiments | `aur headless <FILE>` | `aur headless prompt.md --tool claude` |
 
-### MCP Tools (9 tools)
+### MCP Tools (3 tools)
 
 | Tool | Purpose | When To Use | Syntax |
 |------|---------|-------------|--------|
 | `aurora_search` | Search code semantically | Claude needs to find code | `aurora_search(query, limit=10)` |
-| `aurora_index` | Index code directory | Claude needs to index new code | `aurora_index(path, recursive=True)` |
-| `aurora_context` | Get code context | Claude needs specific file/function | `aurora_context(file_path, symbol=None)` |
-| `aurora_related` | Find related code | Claude needs to discover connections | `aurora_related(chunk_id, max_hops=2)` |
-| `aurora_query` | Query with complexity assessment | Claude needs context retrieval | `aurora_query(query, limit=10)` |
+| `aurora_query` | Query with complexity assessment | Claude needs context retrieval | `aurora_query(query, limit=10, type_filter=None, verbose=False)` |
 | `aurora_get` | Get full chunk by index | After search, get complete content | `aurora_get(index)` |
-| `aurora_list_agents` | List all agents | Claude needs agent inventory | `aurora_list_agents()` |
-| `aurora_search_agents` | Search agents by keyword | Claude needs to find matching agents | `aurora_search_agents(query)` |
-| `aurora_show_agent` | Show full agent details | Claude needs agent instructions | `aurora_show_agent(agent_id)` |
 
 ### Slash Commands (2 commands)
 
@@ -256,36 +252,6 @@ aur --version
 
 ---
 
-### Query & Reasoning
-
-#### `aur query`
-**Query with LLM reasoning**
-
-**⚠️ Requires:** `ANTHROPIC_API_KEY` environment variable
-
-```bash
-# Simple query
-aur query "What is a Python decorator?"
-
-# Complex query with context
-aur query "How does authentication work in this codebase?"
-
-# Force Aurora pipeline
-aur query "Explain classes" --force-aurora
-
-# Non-interactive mode
-aur query "Show me database models" --non-interactive
-
-# Verbose output
-aur query "API endpoints" --verbose
-```
-
-**When to use:** Asking questions about code, getting AI explanations.
-
-**Note:** For API-key-free usage, use MCP tools instead via Claude Code CLI.
-
----
-
 ### Headless Mode
 
 #### `aur headless`
@@ -384,91 +350,41 @@ Use these tools through Claude Code CLI, Cursor, or other MCP-compatible clients
 
 ---
 
-### `aurora_context`
-**Get detailed context for code elements**
-
-**Purpose:** Retrieve full context (code + metadata) for specific elements.
-
-**Example prompts:**
-- "Show me the UserService class implementation"
-- "Get context for the validate_email function"
-- "What does the DatabaseManager module do?"
-
-**Parameters:**
-- `query` (required): Element to get context for
-- `limit` (optional): Max results (default: 5)
-
-**When to use:** Understanding specific code elements, viewing full implementations.
-
----
-
 ### `aurora_query`
-**Complex queries with SOAR reasoning**
+**Query with complexity assessment**
 
-**Purpose:** Multi-step reasoning with automatic context retrieval and analysis.
+**Purpose:** Retrieve relevant context from memory without LLM inference. Returns structured context for host LLM to reason about.
 
 **Example prompts:**
-- "Compare our API patterns with REST best practices"
-- "Analyze security vulnerabilities in authentication"
-- "How does the payment processing flow work end-to-end?"
+- "What is a Python decorator?"
+- "How does authentication work in this codebase?"
+- "Show me async patterns"
 
 **Parameters:**
-- `query` (required): Complex question
-- `force_aurora` (optional): Force SOAR pipeline (default: auto-detect)
+- `query` (required): Natural language query
+- `limit` (optional): Max results (default: 10)
+- `type_filter` (optional): Filter by type ("code", "reas", "know", or None)
+- `verbose` (optional): Include detailed metadata (default: False)
 
-**When to use:** Complex analysis, multi-step reasoning, architectural questions.
-
----
-
-### `aurora_agents_list`
-**List available agents**
-
-**Purpose:** Discover AI agents and their capabilities.
-
-**Example prompts:**
-- "What agents are available?"
-- "Show me all code generation agents"
-
-**When to use:** Agent discovery, checking available capabilities.
+**When to use:** Claude needs context retrieval with complexity assessment.
 
 ---
 
-### `aurora_agents_scan`
-**Scan for new agents**
+### `aurora_get`
+**Get full chunk by index**
 
-**Purpose:** Update agent manifest with newly added agents.
-
-**Example prompts:**
-- "Scan for new agents"
-- "Update agent list"
-
-**When to use:** After adding new agent definitions.
-
----
-
-### `aurora_mem_stats`
-**Show memory statistics**
-
-**Purpose:** Check indexing status and health.
+**Purpose:** Retrieve complete chunk content from last search results.
 
 **Example prompts:**
-- "Show me indexing stats"
-- "How many files are indexed?"
+- "Get the third search result"
+- "Show me result number 5"
 
-**When to use:** Verify indexing, check memory health.
+**Parameters:**
+- `index` (required): 1-indexed position in last search results
 
----
+**When to use:** After search, when Claude needs complete chunk content.
 
-### `aurora_doctor`
-**Run health checks**
-
-**Purpose:** Full diagnostic report of Aurora configuration.
-
-**Example prompts:**
-- "Run Aurora health check"
-- "Check Aurora configuration"
-
-**When to use:** Troubleshooting, verifying setup.
+**Note:** Session cache expires after 10 minutes.
 
 ---
 
@@ -575,12 +491,9 @@ MCP integration via JSON configuration. Use natural language prompts; Continue a
 
 ## Environment Variables
 
-### Required for CLI `aur query`:
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-```
+**No API Key Required:** Aurora CLI commands do not require API keys.
 
-**Note:** `aur headless` does NOT require Aurora API key - it uses your chosen CLI tool's configuration.
+**Note:** `aur headless` uses your chosen CLI tool's API configuration (e.g., claude uses `~/.config/claude/` settings).
 
 ### Optional Configuration:
 ```bash
@@ -623,20 +536,14 @@ aur --version
 ```
 
 **No API Key Needed:**
-- `aur init`
-- `aur mem index`
-- `aur mem search`
-- `aur mem stats`
-- `aur doctor`
-- `aur plan *`
-- `aur agents *`
-- All MCP tools (use host LLM's API key)
-
-**API Key Required:**
-- `aur query` (uses Anthropic API directly)
+- All CLI commands: `aur init`, `aur doctor`, `aur verify`, `aur version`
+- Memory commands: `aur mem index`, `aur mem search`, `aur mem stats`
+- Agent commands: `aur agents list`, `aur agents search`, `aur agents show`
+- Planning commands: `aur plan *`
+- All MCP tools (use host LLM's API key, not Aurora's)
 
 **Uses Your CLI Tool's API Key:**
-- `aur headless` (pipes to claude/cursor/etc., uses their API config)
+- `aur headless` (pipes to claude/cursor/etc., uses their API configuration)
 
 ---
 
@@ -650,9 +557,10 @@ aur --help
 aur init --help
 aur mem --help
 aur plan --help
-aur query --help
+aur agents --help
+aur headless --help
 
-# MCP tools help
+# MCP server help
 aurora-mcp --help
 ```
 

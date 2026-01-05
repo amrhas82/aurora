@@ -64,6 +64,7 @@ Changelog = "https://github.com/hamr/aurora/blob/main/CHANGELOG.md"
 [project.scripts]
 aur = "aurora_cli.main:cli"
 aurora = "aurora_cli.main:cli"
+aurora-mcp = "aurora_mcp.server:main"
 
 [project.optional-dependencies]
 # ML: Optional machine learning features (semantic embeddings)

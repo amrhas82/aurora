@@ -30,21 +30,23 @@ Create a new release with automatic versioning:
 **Use when:** You've made code changes and want to test them
 
 **What it does:**
-1. Uninstalls all aurora packages
+1. Uninstalls all aurora packages (including old sub-packages)
 2. Cleans stale metadata (.egg-info, .dist-info, .pth files)
-3. Reinstalls all aurora packages in editable mode from source
-4. Verifies installation and shows versions
+3. Reinstalls `aurora-actr` in editable mode from source
+4. Verifies installation and shows version
 
 **Usage:**
 ```bash
-sudo ./install.sh
+./install.sh
 ```
 
 **Run this after:**
-- Modifying any Python code
-- Updating pyproject.toml versions
-- Adding new packages
+- Modifying any Python code in `src/`
+- Updating pyproject.toml dependencies or version
+- Adding new modules or files
 - Fixing bugs or adding features
+
+**Note:** As of v0.4.0, Aurora is a single bundled package. All source code is in `src/` directory.
 
 ### `scripts/release.sh` - Production Release
 **Use when:** You're ready to release a new version
@@ -83,14 +85,14 @@ sudo ./install.sh
 1. **Quick bug fix release:**
 ```bash
 # Fix bug in code
-sudo ./install.sh              # Test locally
+./install.sh                            # Test locally
 ./scripts/release.sh patch --publish    # Release to PyPI
 ```
 
 2. **Feature release with testing:**
 ```bash
 # Add new feature
-sudo ./install.sh              # Test locally
+./install.sh                   # Test locally
 pytest tests/                  # Run full test suite
 ./scripts/release.sh minor     # Create release (no publish)
 # Review git commit and CHANGELOG
@@ -102,7 +104,7 @@ python3 -m twine upload dist/* # Publish to PyPI manually
 ```bash
 # Make breaking changes
 # Update migration guide
-sudo ./install.sh
+./install.sh
 ./scripts/release.sh major
 # Carefully review before publishing
 python3 -m twine upload --repository testpypi dist/*  # Test first
@@ -138,10 +140,11 @@ We follow [Semantic Versioning](https://semver.org/):
 - **MINOR** (0.X.0): New features, backward compatible
 - **PATCH** (0.0.X): Bug fixes, backward compatible
 
-**Main Package vs Sub-Packages:**
-- Main package (`aurora-actr`): Full version (e.g., 0.3.1)
-- Sub-packages: Minor version only (e.g., 0.3.0)
-  - This allows patches to main package without re-releasing all sub-packages
+**Package Structure (as of v0.4.0):**
+- Single bundled package: `aurora-actr`
+- All source code in `src/` directory
+- Version applies to entire package (e.g., 0.4.0)
+- Optional extras: `[ml]` for machine learning, `[dev]` for development
 
 ## PyPI Publishing
 
@@ -296,24 +299,28 @@ git push origin --tags
 git push origin main --force-with-lease
 ```
 
-## Package Structure
+## Package Structure (as of v0.4.0)
 
 ```
 aurora/
 ├── install.sh              # Local development reinstall
 ├── scripts/
 │   └── release.sh          # Production release automation
-├── pyproject.toml          # Main package (aurora-actr)
-├── packages/
-│   ├── cli/                # aurora-cli
-│   ├── core/               # aurora-core
-│   ├── context-code/       # aurora-context-code
-│   ├── soar/               # aurora-soar
-│   ├── reasoning/          # aurora-reasoning
-│   ├── planning/           # aurora-planning
-│   └── testing/            # aurora-testing
+├── pyproject.toml          # Main package configuration
+├── src/                    # All source code (bundled into aurora-actr)
+│   ├── aurora_cli/         # CLI commands and main entry point
+│   ├── aurora_core/        # Core data structures and validation
+│   ├── aurora_context_code/# Code analysis and semantic search
+│   ├── aurora_soar/        # SOAR reasoning architecture
+│   ├── aurora_reasoning/   # LLM reasoning and prompts
+│   └── aurora_planning/    # Planning system
+├── packages/               # Development packages (for local edits)
+│   └── */                  # Sub-packages synced to src/ for publishing
+├── tests/                  # Test suite
 └── CHANGELOG.md            # Release history
 ```
+
+**Note:** As of v0.4.0, Aurora is published as a single bundled package. The `packages/` directory is for development convenience only - the `src/` directory is what gets published to PyPI.
 
 ## Examples
 

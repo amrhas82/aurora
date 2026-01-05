@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aurora-soar"
-version = "0.3.0"
+version = "0.4.0"
 description = "Agent registry and orchestration for AURORA"
 readme = "README.md"
 requires-python = ">=3.10"

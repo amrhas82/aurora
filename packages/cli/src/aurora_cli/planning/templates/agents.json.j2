@@ -19,6 +19,10 @@
 {% endfor -%}
   ],
   "tags": {{ tags | default([]) | tojson }},
+  {% if decomposition_source %}"decomposition_source": "{{ decomposition_source }}",{% endif %}
+  {% if context_summary %}"context_summary": "{{ context_summary }}",{% endif %}
+  {% if agent_gaps_detailed %}"agent_gaps": {{ agent_gaps_detailed | tojson }},{% endif %}
+  {% if file_resolutions_detailed %}"file_resolutions": {{ file_resolutions_detailed | tojson }},{% endif %}
   "metadata": {
     "generator": "Aurora Planning System",
     "version": "0.1.0",

@@ -131,6 +131,10 @@ class TemplateRenderer:
             "archived_at": plan.archived_at.strftime("%Y-%m-%d %H:%M:%S") if plan.archived_at else None,
             "duration_days": plan.duration_days,
 
+            # Enhanced fields from decomposition (Task 6.0+)
+            "decomposition_source": plan.decomposition_source,
+            "context_summary": plan.context_summary,
+
             # Computed fields for templates
             "subgoal_count": len(plan.subgoals),
             "has_dependencies": any(sg.dependencies for sg in plan.subgoals),

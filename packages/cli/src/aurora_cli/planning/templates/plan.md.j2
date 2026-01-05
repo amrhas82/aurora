@@ -31,6 +31,16 @@
 No cross-subgoal dependencies identified.
 {% endif %}
 
+{% if dependency_graph %}
+## Dependency Graph
+
+```
+{{ dependency_graph }}
+```
+
+**Legend**: `->` indicates dependency, tasks must complete left-to-right
+{% endif %}
+
 ## Notes
 
 - This plan follows the Aurora Planning System eight-file workflow

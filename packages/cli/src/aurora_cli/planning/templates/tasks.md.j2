@@ -25,6 +25,21 @@
 **Status**: {{ subgoal.status }}
 {% if subgoal.dependencies %}**Depends on**: {{ subgoal.dependencies | join(', ') }}{% endif %}
 
+{% if file_resolutions and subgoal.id in file_resolutions %}
+**Relevant Files**:
+{% for resolution in file_resolutions[subgoal.id] %}
+{% if resolution.confidence >= 0.8 %}
+- `{{ resolution.path }}` lines {{ resolution.line_start }}-{{ resolution.line_end }}
+{% elif resolution.confidence >= 0.6 %}
+- `{{ resolution.path }}` lines {{ resolution.line_start }}-{{ resolution.line_end }} (suggested)
+{% else %}
+- `{{ resolution.path }}` lines {{ resolution.line_start }}-{{ resolution.line_end }} (low confidence)
+{% endif %}
+{% endfor %}
+{% elif file_resolutions is not defined or (file_resolutions and subgoal.id not in file_resolutions) %}
+**Relevant Files**: TBD - run `aur mem index .` for code-aware file resolution
+{% endif %}
+
 {% for task in subgoal.get('tasks', []) %}
 - [ ] {{ task }}
 {% else %}

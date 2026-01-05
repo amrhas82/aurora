@@ -24,6 +24,7 @@ from aurora_context_code.semantic import EmbeddingProvider
 from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
 from aurora_core.activation.engine import ActivationEngine
 from aurora_core.store.sqlite import SQLiteStore
+from aurora_soar.phases.assess import assess_complexity
 
 
 logger = logging.getLogger(__name__)
@@ -400,9 +401,7 @@ class AuroraMCPTools:
         **kwargs: Any
     ) -> dict[str, Any]:
         """
-        Handle assess phase - assess query complexity.
-
-        This is the refactored version of the original aurora_query logic.
+        Handle assess phase - assess query complexity using SOAR assess_complexity.
 
         Args:
             query: Query string
@@ -414,51 +413,99 @@ class AuroraMCPTools:
         Returns:
             Assess phase response with complexity assessment
         """
-        # Retrieve chunks using hybrid retrieval (original logic)
+        # Use SOAR assess_complexity (Task 3.2)
+        # Pass llm_client=None for keyword-only assessment (no LLM costs)
+        assessment_result = assess_complexity(query=query, llm_client=None)
+
+        # Extract complexity level (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
+        complexity_level = assessment_result.get("complexity", "MEDIUM")
+
+        # Retrieve chunks using hybrid retrieval
         chunks = self._retrieve_chunks(query, limit=limit, type_filter=type_filter)
 
         # Store results in session cache for aurora_get
         self._last_search_results = chunks
         self._last_search_timestamp = __import__("time").time()
 
-        # Assess complexity using heuristics (original logic)
-        complexity_score = self._assess_complexity(query)
+        # Calculate retrieval confidence
+        retrieval_confidence = self._calculate_retrieval_confidence(chunks)
 
-        # Build context response (original logic)
-        context_response = self._build_context_response(
-            chunks=chunks,
-            query=query,
-            retrieval_time_ms=0,  # Will be set by caller
-            complexity_score=complexity_score,
-        )
+        # Determine next action based on complexity
+        if complexity_level == "SIMPLE":
+            next_action = "Retrieve and respond directly - query is simple enough for immediate answer"
+        else:
+            next_action = f"Call aurora_query with phase='retrieve' to get context chunks for {complexity_level} query"
 
-        # Convert to phase response format
+        # Build response
         return {
             "phase": "assess",
             "progress": "1/9 assess",
             "status": "complete",
             "result": {
-                "complexity": context_response["assessment"]["suggested_approach"].upper(),
-                "complexity_score": context_response["assessment"]["complexity_score"],
-                "retrieval_confidence": context_response["assessment"]["retrieval_confidence"],
-                "context": context_response["context"],
+                "complexity": complexity_level,
+                "complexity_score": assessment_result.get("score", 0.5),
+                "confidence": assessment_result.get("confidence", 0.8),
+                "retrieval_confidence": retrieval_confidence,
+                "context": {
+                    "chunks": chunks,
+                    "total_found": len(chunks),
+                },
             },
-            "next_action": (
-                "Retrieve and respond directly" if complexity_score < 0.5
-                else "Call aurora_query with phase='retrieve' to get context chunks"
-            ),
-            "metadata": context_response["metadata"]
+            "next_action": next_action,
+            "metadata": {
+                "assessment_method": assessment_result.get("method", "keyword"),
+                "reasoning": assessment_result.get("reasoning", ""),
+            }
         }
 
-    def _handle_retrieve_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        """Placeholder for retrieve phase handler."""
+    def _handle_retrieve_phase(
+        self,
+        query: str,
+        limit: int = 10,
+        type_filter: str | None = None,
+        complexity: str = "MEDIUM",
+        **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Handle retrieve phase - retrieve context chunks using HybridRetriever.
+
+        Args:
+            query: Query string
+            limit: Maximum chunks to retrieve
+            type_filter: Type filter for memory chunks
+            complexity: Complexity level from assess phase (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
+            **kwargs: Additional parameters (ignored)
+
+        Returns:
+            Retrieve phase response with chunks
+        """
+        # Retrieve chunks using existing _retrieve_chunks method
+        chunks = self._retrieve_chunks(query, limit=limit, type_filter=type_filter)
+
+        # Update session cache for aurora_get
+        self._last_search_results = chunks
+        self._last_search_timestamp = __import__("time").time()
+
+        # Determine next action based on complexity
+        if complexity == "SIMPLE":
+            next_action = "Call aurora_query with phase='respond' to format the final answer"
+        else:
+            next_action = f"Call aurora_query with phase='decompose' to break down the {complexity} query"
+
         return {
             "phase": "retrieve",
             "progress": "2/9 retrieve",
             "status": "complete",
-            "result": {},
-            "next_action": "Not yet implemented",
-            "metadata": {}
+            "result": {
+                "chunks": chunks,
+                "total_found": len(chunks),
+                "complexity": complexity,
+            },
+            "next_action": next_action,
+            "metadata": {
+                "retrieval_method": "hybrid",
+                "limit": limit,
+            }
         }
 
     def _handle_decompose_phase(self, query: str, **kwargs: Any) -> dict[str, Any]:

@@ -95,23 +95,23 @@ Generated from: `/home/hamr/PycharmProjects/aurora/tasks/0022-prd-mcp-soar-wirin
   - [x] 1.9 Verify only 3 tools remain registered: `aurora_search`, `aurora_query`, `aurora_get`
   - [x] 1.10 Run unit tests to confirm 3-tool configuration (TDD GREEN phase)
 
-- [ ] 2.0 Refactor aurora_query to Support Multi-Turn SOAR Phase Orchestration
-  - [ ] 2.1 Write unit tests for phase parameter validation (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_aurora_query_phases.py` testing invalid phase names, missing phase parameter defaults to "assess"
-  - [ ] 2.2 Write unit tests for phase response schema validation (TDD RED phase) - verify each response has phase, progress, status, result, next_action, metadata fields
-  - [ ] 2.3 Add `phase` parameter to `aurora_query` method signature in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py` with default value "assess" and type annotation `Literal["assess", "retrieve", "decompose", "verify", "route", "collect", "synthesize", "record", "respond"]`
-  - [ ] 2.4 Add phase validation logic at the start of `aurora_query` method to check phase is in allowed list, return error JSON if invalid
-  - [ ] 2.5 Create `_handle_phase()` dispatcher method in `AuroraMCPTools` class that routes to appropriate phase handler based on phase parameter
-  - [ ] 2.6 Refactor existing `aurora_query` logic to become `_handle_assess_phase()` private method
-  - [ ] 2.7 Update `aurora_query` method to call `_handle_phase()` dispatcher instead of executing retrieval directly
-  - [ ] 2.8 Ensure all phase handlers return JSON with required fields: phase, progress, status, result, next_action, metadata
-  - [ ] 2.9 Run unit tests to verify phase parameter handling (TDD GREEN phase)
-  - [ ] 2.10 Refactor for code quality and consistency (TDD REFACTOR phase)
+- [x] 2.0 Refactor aurora_query to Support Multi-Turn SOAR Phase Orchestration
+  - [x] 2.1 Write unit tests for phase parameter validation (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_aurora_query_phases.py` testing invalid phase names, missing phase parameter defaults to "assess"
+  - [x] 2.2 Write unit tests for phase response schema validation (TDD RED phase) - verify each response has phase, progress, status, result, next_action, metadata fields
+  - [x] 2.3 Add `phase` parameter to `aurora_query` method signature in `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py` with default value "assess" and type annotation `Literal["assess", "retrieve", "decompose", "verify", "route", "collect", "synthesize", "record", "respond"]`
+  - [x] 2.4 Add phase validation logic at the start of `aurora_query` method to check phase is in allowed list, return error JSON if invalid
+  - [x] 2.5 Create `_handle_phase()` dispatcher method in `AuroraMCPTools` class that routes to appropriate phase handler based on phase parameter
+  - [x] 2.6 Refactor existing `aurora_query` logic to become `_handle_assess_phase()` private method
+  - [x] 2.7 Update `aurora_query` method to call `_handle_phase()` dispatcher instead of executing retrieval directly
+  - [x] 2.8 Ensure all phase handlers return JSON with required fields: phase, progress, status, result, next_action, metadata
+  - [x] 2.9 Run unit tests to verify phase parameter handling (TDD GREEN phase)
+  - [x] 2.10 Refactor for code quality and consistency (TDD REFACTOR phase)
 
 - [ ] 3.0 Implement Phase Handler Functions for All 9 SOAR Phases
-  - [ ] 3.1 Write unit tests for assess phase handler (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_phase_handlers.py` with tests for SIMPLE/MEDIUM/COMPLEX/CRITICAL classification, early_exit flag for SIMPLE queries
-  - [ ] 3.2 Implement `_handle_assess_phase()` in `AuroraMCPTools` - import `assess_complexity` from `aurora_soar.phases.assess`, call it with query parameter, return JSON with complexity level and next_action ("retrieve_and_respond" for SIMPLE, "Call aurora_query with phase='retrieve'" for others)
-  - [ ] 3.3 Write unit tests for retrieve phase handler (TDD RED phase) - verify HybridRetriever usage, chunk retrieval, session cache update
-  - [ ] 3.4 Implement `_handle_retrieve_phase()` in `AuroraMCPTools` - use existing `_retrieve_chunks()` method, return chunks in result field, set next_action based on complexity ("respond" for SIMPLE, "Call aurora_query with phase='decompose'" for others)
+  - [x] 3.1 Write unit tests for assess phase handler (TDD RED phase) - create `/home/hamr/PycharmProjects/aurora/tests/unit/mcp/test_phase_handlers.py` with tests for SIMPLE/MEDIUM/COMPLEX/CRITICAL classification, early_exit flag for SIMPLE queries
+  - [x] 3.2 Implement `_handle_assess_phase()` in `AuroraMCPTools` - import `assess_complexity` from `aurora_soar.phases.assess`, call it with query parameter, return JSON with complexity level and next_action ("retrieve_and_respond" for SIMPLE, "Call aurora_query with phase='retrieve'" for others)
+  - [x] 3.3 Write unit tests for retrieve phase handler (TDD RED phase) - verify HybridRetriever usage, chunk retrieval, session cache update
+  - [x] 3.4 Implement `_handle_retrieve_phase()` in `AuroraMCPTools` - use existing `_retrieve_chunks()` method, return chunks in result field, set next_action based on complexity ("respond" for SIMPLE, "Call aurora_query with phase='decompose'" for others)
   - [ ] 3.5 Write unit tests for decompose phase handler (TDD RED phase) - verify prompt template generation, context parameter handling, no LLM calls
   - [ ] 3.6 Implement `_handle_decompose_phase()` in `AuroraMCPTools` - accept context parameter, generate decomposition prompt template using patterns from `aurora_soar.phases.decompose`, return prompt_template and context in result, set next_action to "Reason about subgoals, then call aurora_query with phase='verify' and your decomposition"
   - [ ] 3.7 Write unit tests for verify phase handler (TDD RED phase) - verify subgoals parameter required, quality threshold validation, PASS/FAIL verdict

@@ -91,7 +91,6 @@ def temp_db_path(tmp_path):
 # ==============================================================================
 
 
-@pytest.mark.e2e
 def test_complete_memory_lifecycle(temp_memory_project, temp_db_path):
     """Test complete memory lifecycle: create → index → search → update → re-search.
 
@@ -180,7 +179,6 @@ def greet(name: str) -> str:
     )
 
 
-@pytest.mark.e2e
 def test_memory_lifecycle_with_file_deletion(temp_memory_project, temp_db_path):
     """Test memory lifecycle when files are deleted: index → delete file → re-index.
 
@@ -228,7 +226,6 @@ def test_memory_lifecycle_with_file_deletion(temp_memory_project, temp_db_path):
     assert len(results) > 0, "Should find Calculator from module2"
 
 
-@pytest.mark.e2e
 def test_memory_lifecycle_incremental_indexing(temp_memory_project, temp_db_path):
     """Test incremental indexing: index → add new file → index again.
 
@@ -293,7 +290,6 @@ class DataProcessor:
     )
 
 
-@pytest.mark.e2e
 def test_memory_lifecycle_concurrent_access(temp_memory_project, temp_db_path):
     """Test memory lifecycle with concurrent read/write operations.
 
@@ -347,7 +343,6 @@ def test():
     assert len(new_results) > 0
 
 
-@pytest.mark.e2e
 def test_memory_lifecycle_stats_accuracy(temp_memory_project, temp_db_path):
     """Test memory store statistics remain accurate throughout lifecycle.
 
@@ -413,7 +408,6 @@ def another_func():
     assert integrity == "ok"
 
 
-@pytest.mark.e2e
 def test_memory_lifecycle_search_ranking_stability(temp_memory_project, temp_db_path):
     """Test search ranking remains stable and relevant across re-indexing.
 

@@ -91,7 +91,6 @@ class Calculator:
 
         return codebase
 
-    @pytest.mark.integration
     def test_full_index_rebuild(self, memory_manager, memory_store, test_codebase):
         """Test full index rebuild clears old data and reindexes."""
         # Step 1: Initial indexing
@@ -147,7 +146,6 @@ def new_function():
         assert final_count == stats2.chunks_created, "Chunk count should match stats"
         assert final_count > 0, "Should have chunks after rebuild"
 
-    @pytest.mark.integration
     def test_incremental_update_detects_changes(self, memory_manager, memory_store, test_codebase):
         """Test that reindexing detects file modifications."""
         # Step 1: Initial indexing
@@ -217,7 +215,6 @@ def function_three():
 
         assert "function_three" in function_names, "Should index new function"
 
-    @pytest.mark.integration
     def test_search_after_rebuild(self, memory_manager, memory_store, test_codebase):
         """Test that search works correctly after index rebuild."""
         # Step 1: Initial index and search
@@ -268,7 +265,6 @@ class TestBM25IdfRecalculation:
             embedding_provider=embedding_provider
         )
 
-    @pytest.mark.integration
     def test_idf_changes_with_corpus_size(self, memory_manager, memory_store, tmp_path):
         """Test that IDF scores change when corpus size changes."""
         # Create small corpus
@@ -332,7 +328,6 @@ def unique_function_{i}():
         file_paths = set(r.file_path for r in results2)
         assert len(file_paths) >= 3, "Results should span multiple files"
 
-    @pytest.mark.integration
     def test_corpus_stats_update_on_rebuild(self, memory_manager, memory_store, tmp_path):
         """Test that corpus statistics are recalculated on rebuild."""
         # Create initial corpus
@@ -388,7 +383,6 @@ def function_beta_{i}():
         for result in results:
             assert "corpus2" in result.file_path, "Results should be from new corpus"
 
-    @pytest.mark.integration
     def test_document_frequency_tracking(self, memory_manager, memory_store, tmp_path):
         """Test that document frequency is tracked correctly for BM25."""
         # Create corpus with varying term frequencies

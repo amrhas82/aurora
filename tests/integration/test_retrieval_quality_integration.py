@@ -31,9 +31,7 @@ class TestRetrievalQualityIntegration:
             yield store
             store.close()
 
-    @pytest.mark.integration
     @pytest.mark.critical
-    @pytest.mark.integration
     def test_no_match_scenario_quality_assessment(self, temp_store):
         """Test NONE quality when retrieval returns 0 chunks."""
         # Empty store - no chunks
@@ -64,7 +62,6 @@ class TestRetrievalQualityIntegration:
 
         assert quality == RetrievalQuality.NONE
 
-    @pytest.mark.integration
     def test_weak_match_low_groundedness(self, temp_store):
         """Test WEAK quality when groundedness < 0.7 even with enough chunks."""
         # Add 5 high-quality chunks (activation >= 0.3)
@@ -112,7 +109,6 @@ class TestRetrievalQualityIntegration:
 
         assert quality == RetrievalQuality.WEAK
 
-    @pytest.mark.integration
     def test_weak_match_insufficient_high_quality_chunks(self, temp_store):
         """Test WEAK quality when < 3 high-quality chunks even with good groundedness."""
         # Add 2 high-quality chunks (not enough)
@@ -160,7 +156,6 @@ class TestRetrievalQualityIntegration:
 
         assert quality == RetrievalQuality.WEAK
 
-    @pytest.mark.integration
     def test_weak_match_many_low_quality_chunks(self, temp_store):
         """Test WEAK quality when many chunks but all have low activation."""
         # Add 10 chunks but all with activation < 0.3
@@ -208,7 +203,6 @@ class TestRetrievalQualityIntegration:
 
         assert quality == RetrievalQuality.WEAK
 
-    @pytest.mark.integration
     def test_good_match_sufficient_quality(self, temp_store):
         """Test GOOD quality when groundedness >= 0.7 AND >= 3 high-quality chunks."""
         # Add 5 high-quality chunks
@@ -256,7 +250,6 @@ class TestRetrievalQualityIntegration:
 
         assert quality == RetrievalQuality.GOOD
 
-    @pytest.mark.integration
     def test_activation_threshold_boundary(self, temp_store):
         """Test that activation exactly at 0.3 counts as high-quality."""
         # Add chunk with activation exactly at threshold
@@ -284,7 +277,6 @@ class TestRetrievalQualityIntegration:
         assert retrieval_result["high_quality_count"] == 1
         assert retrieval_result["total_retrieved"] == 1
 
-    @pytest.mark.integration
     def test_retrieval_quality_with_mixed_activations(self, temp_store):
         """Test retrieval with mix of high and low activation chunks."""
         # Add 3 high-quality and 3 low-quality chunks

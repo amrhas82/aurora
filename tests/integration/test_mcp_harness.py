@@ -67,7 +67,6 @@ def add_numbers(a: int, b: int) -> int:
         return codebase
 
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_aurora_search_valid_json(self, mcp_tools, codebase):
         """Test that aurora_search returns valid JSON."""
         # Index first
@@ -92,7 +91,6 @@ def add_numbers(a: int, b: int) -> int:
                 assert "score" in item, "Should have score"
 
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_aurora_index_returns_stats(self, mcp_tools, codebase):
         """Test that aurora_index successfully indexes and returns stats."""
         result = mcp_tools.aurora_index(str(codebase))
@@ -114,7 +112,6 @@ def add_numbers(a: int, b: int) -> int:
         assert data["duration_seconds"] >= 0, "Duration should be non-negative"
 
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_aurora_stats_returns_counts(self, mcp_tools, codebase):
         """Test that aurora_stats returns valid counts."""
         # Index first
@@ -140,7 +137,6 @@ def add_numbers(a: int, b: int) -> int:
         assert data["database_size_mb"] >= 0, "Database size should be non-negative"
 
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_aurora_context_retrieves_file(self, mcp_tools, codebase):
         """Test that aurora_context retrieves file content correctly."""
         # Get path to sample file

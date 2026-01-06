@@ -73,7 +73,6 @@ def temp_aurora_config(tmp_path):
 # ==============================================================================
 
 
-@pytest.mark.e2e
 class TestAuroraQueryE2E:
     """End-to-end tests for aurora_query with real Anthropic API.
 
@@ -186,7 +185,6 @@ class TestAuroraQueryE2E:
 # ==============================================================================
 
 
-@pytest.mark.e2e
 @pytest.mark.slow
 class TestAuroraQueryPerformanceE2E:
     """Performance tests for aurora_query with real API.

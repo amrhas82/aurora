@@ -339,7 +339,6 @@ class TestAuroraSearch:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_search_returns_valid_json(self, indexed_client):
         """Test 1: Search returns valid JSON format."""
         result = indexed_client.tools.aurora_search("authentication", limit=5)
@@ -358,7 +357,6 @@ class TestAuroraSearch:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_search_finds_function_by_name(self, indexed_client):
         """Test 3: Search finds indexed function by name."""
         result = indexed_client.tools.aurora_search("authenticate_user", limit=10)
@@ -392,7 +390,6 @@ class TestAuroraSearch:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_search_has_required_fields(self, indexed_client):
         """Test 6: Search results include all required fields."""
         result = indexed_client.tools.aurora_search("user", limit=5)
@@ -458,7 +455,6 @@ class TestAuroraIndex:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_index_returns_valid_json(self, test_client):
         """Test 1: Index returns valid JSON with stats."""
         # Create one file
@@ -504,7 +500,6 @@ class TestAuroraIndex:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_index_creates_database_chunks(self, test_client):
         """Test 5: Index successfully creates chunks in database."""
         # Create files
@@ -608,7 +603,6 @@ class TestAuroraStats:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_stats_returns_valid_json(self, test_client):
         """Test 1: Stats returns valid JSON format."""
         result = test_client.tools.aurora_stats()
@@ -626,7 +620,6 @@ class TestAuroraStats:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_stats_after_indexing(self, indexed_client):
         """Test 3: Stats after indexing shows correct counts."""
         result = indexed_client.tools.aurora_stats()
@@ -687,7 +680,6 @@ class TestAuroraContext:
 
     @pytest.mark.critical
     @pytest.mark.mcp
-    @pytest.mark.integration
     def test_context_returns_file_content(self, test_client):
         """Test 1: Context returns file content for valid file."""
         file_path = test_client.create_sample_python_file("test.py", "def foo():\n    pass\n")

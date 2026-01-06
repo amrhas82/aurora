@@ -145,7 +145,6 @@ class TestEndToEndSearchQuality:
 
         return repo_root / "packages"
 
-    @pytest.mark.integration
     @pytest.mark.critical
     def test_index_aurora_subset(self, memory_manager, aurora_subset):
         """Test indexing Aurora codebase subset."""
@@ -158,7 +157,6 @@ class TestEndToEndSearchQuality:
         # Allow small number of errors from large markdown files
         assert stats.errors <= 5, f"Should have ≤5 errors, got {stats.errors}"
 
-    @pytest.mark.integration
     @pytest.mark.critical
     def test_search_quality_mrr(self, memory_manager, memory_store, aurora_subset):
         """Test search quality with MRR >= 0.85."""
@@ -212,7 +210,6 @@ class TestEndToEndSearchQuality:
             f"BM25 tri-hybrid search quality insufficient."
         )
 
-    @pytest.mark.integration
     def test_exact_match_top_rank(self, memory_manager, memory_store, aurora_subset):
         """Test that exact identifier matches rank first."""
         # Index codebase
@@ -247,7 +244,6 @@ class TestEndToEndSearchQuality:
             "\n".join(failures)
         )
 
-    @pytest.mark.integration
     def test_camelcase_splitting_works(self, memory_manager, memory_store, aurora_subset):
         """Test that CamelCase queries find snake_case functions."""
         # Index codebase
@@ -271,7 +267,6 @@ class TestEndToEndSearchQuality:
                 f"Got: {result_names[:5]}"
             )
 
-    @pytest.mark.integration
     def test_semantic_concept_search(self, memory_manager, memory_store, aurora_subset):
         """Test semantic search finds conceptually related functions."""
         # Index codebase
@@ -297,7 +292,6 @@ class TestEndToEndSearchQuality:
                 f"Got names: {result_names[:5]}"
             )
 
-    @pytest.mark.integration
     def test_staged_retrieval_coverage(self, memory_manager, memory_store, aurora_subset):
         """Test that staged retrieval (BM25 → tri-hybrid) provides good coverage."""
         # Index codebase

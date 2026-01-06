@@ -69,7 +69,6 @@ class TestQueryLatency:
         assert stats.chunks_created > 0, "Must have indexed chunks for benchmarking"
         return memory_manager
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     def test_simple_query_latency(self, indexed_manager):
         """Test simple query completes in <2 seconds."""
@@ -93,7 +92,6 @@ class TestQueryLatency:
                 f"BM25 exact match should be fast."
             )
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     def test_complex_query_latency(self, indexed_manager):
         """Test complex query completes in <10 seconds."""
@@ -117,7 +115,6 @@ class TestQueryLatency:
                 f"Tri-hybrid search should complete within target."
             )
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     def test_average_query_latency(self, indexed_manager):
         """Test average latency across diverse queries."""
@@ -157,7 +154,6 @@ class TestQueryLatency:
             f"All moderate queries should complete quickly."
         )
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     def test_batch_query_performance(self, indexed_manager):
         """Test performance of sequential queries (no interference)."""
@@ -227,7 +223,6 @@ class TestMemoryUsage:
 
         return codebase
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     @pytest.mark.slow
     def test_memory_usage_with_10k_chunks(self, memory_manager, memory_store, large_codebase):
@@ -269,7 +264,6 @@ class TestMemoryUsage:
             f"Chunks indexed: {stats.chunks_created}"
         )
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     def test_chunk_storage_efficiency(self, memory_store, tmp_path):
         """Test that chunk storage is efficient (database size)."""
@@ -340,7 +334,6 @@ class TestIndexingPerformance:
             embedding_provider=embedding_provider
         )
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     def test_indexing_throughput(self, memory_manager, tmp_path):
         """Test indexing throughput (files per second)."""
@@ -389,7 +382,6 @@ class Class{i}:
             f"Created {stats.chunks_created} chunks in {elapsed:.2f}s"
         )
 
-    @pytest.mark.integration
     @pytest.mark.benchmark
     def test_aurora_subset_indexing_time(self, memory_manager):
         """Test Aurora subset indexes in reasonable time."""

@@ -1,0 +1,16 @@
+=== MARKER USAGE REPORT ===
+
+unit: 0 uses
+integration: 43 uses
+e2e: 11 uses
+ml: 16 uses
+slow: 4 uses
+real_api: 0 uses
+critical: 61 uses
+safety: 0 uses
+cli: 0 uses
+mcp: 60 uses
+soar: 12 uses
+core: 11 uses
+fast: 18 uses
+performance: 7 uses

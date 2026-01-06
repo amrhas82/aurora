@@ -23,7 +23,6 @@ from aurora_mcp.tools import AuroraMCPTools
 
 
 @pytest.mark.mcp
-@pytest.mark.integration
 @pytest.mark.critical
 class TestMCPSOARMultiTurnFlow:
     """Integration tests for MCP-SOAR multi-turn pipeline."""
@@ -489,7 +488,6 @@ class TestMCPSOARMultiTurnFlow:
 
 
 @pytest.mark.mcp
-@pytest.mark.integration
 class TestMCPSOARErrorHandling:
     """Integration tests for error handling in MCP-SOAR flow."""
 

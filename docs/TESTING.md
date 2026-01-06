@@ -4,12 +4,120 @@ This document provides comprehensive guidelines for writing, organizing, and mai
 
 ## Table of Contents
 
+- [Import Patterns](#import-patterns)
 - [Test Classification](#test-classification)
 - [Test Pyramid](#test-pyramid)
 - [Decision Tree](#decision-tree)
 - [Examples](#examples)
 - [Best Practices](#best-practices)
 - [Markers](#markers)
+- [Migration Lessons Learned](#migration-lessons-learned)
+
+---
+
+## Import Patterns
+
+Aurora uses **underscore-separated package names** (`aurora_*`) instead of dot-separated (`aurora.*`).
+
+### Correct Import Patterns ✅
+
+```python
+# Core packages
+from aurora_core.memory import MemoryStore
+from aurora_core.activation import calculate_activation
+
+# Planning
+from aurora_planning.schemas import Plan, Task, Modification
+from aurora_planning.manager import PlanManager
+
+# CLI
+from aurora_cli.commands import plan_group, query_command
+from aurora_cli.config import load_config
+
+# Reasoning (SOAR)
+from aurora_reasoning.soar import SOARPipeline
+from aurora_reasoning.operators import Operator
+
+# Context/Code
+from aurora_context_code.semantic import SemanticAnalyzer
+from aurora_context_code.chunking import ChunkStore
+```
+
+### Incorrect Import Patterns ❌
+
+```python
+# WRONG - dot-separated (legacy pattern)
+from aurora.memory import MemoryStore       # ❌ Will fail
+from aurora.planning import PlanManager     # ❌ Will fail
+from aurora.cli import query_command        # ❌ Will fail
+
+# WRONG - mixed patterns
+from aurora.core.memory import MemoryStore  # ❌ Will fail
+from aurora_core import memory as mem       # ⚠️  Works but inconsistent
+```
+
+### Why Underscore Separation?
+
+1. **Python namespace package compatibility**: Avoids conflicts with implicit namespace packages
+2. **Clearer package boundaries**: Each `aurora_*` package is independent
+3. **Easier migration**: No nested package resolution issues
+4. **Better IDE support**: Autocomplete works more reliably
+
+### Pre-Commit Hook Validation
+
+Import patterns are validated automatically via pre-commit hook:
+
+```yaml
+# .pre-commit-config.yaml
+- id: validate-imports
+  name: Validate Aurora import patterns
+  entry: python scripts/validate_imports.py
+  language: system
+  pass_filenames: true
+  types: [python]
+```
+
+**What it checks:**
+- Detects old `aurora.*` import patterns
+- Provides line-by-line error messages
+- Suggests correct `aurora_*` replacements
+- Blocks commits with invalid imports
+
+**Testing the hook:**
+```bash
+# Try to commit file with old import
+echo "from aurora.memory import Store" > test.py
+git add test.py
+git commit -m "test"  # Will fail with clear error message
+```
+
+### Migration Guide
+
+If you encounter old import patterns:
+
+1. **Find all occurrences**:
+   ```bash
+   grep -r "from aurora\." packages/ tests/
+   ```
+
+2. **Replace systematically**:
+   ```bash
+   # Use migration script
+   python scripts/migrate_imports.py --path packages/
+   python scripts/migrate_imports.py --path tests/
+   ```
+
+3. **Verify tests pass**:
+   ```bash
+   pytest --collect-only  # Verify no collection errors
+   pytest tests/          # Verify all tests pass
+   ```
+
+4. **Commit changes**:
+   ```bash
+   git add -A
+   git commit -m "fix(imports): migrate from aurora.* to aurora_* pattern"
+   ```
 
 ---
 
@@ -531,6 +639,181 @@ pytest tests/unit/core/test_store_memory.py::test_add_chunk
 - [Pytest Documentation](https://docs.pytest.org/)
 - [Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html)
 - [Aurora Architecture](./ARCHITECTURE.md)
+
+---
+
+## Migration Lessons Learned
+
+These lessons were learned during the **January 2026 Testing Infrastructure Overhaul** (tasks-0023), which restored a broken test suite and improved testing practices.
+
+### What Went Wrong (December 2025)
+
+1. **No Baseline Measurement**
+   - Started refactoring without documenting test count or coverage
+   - Made it impossible to measure progress or detect regressions
+   - **Lesson**: Always establish baseline before any refactoring
+
+2. **Bulk Changes Without Verification**
+   - Applied all import changes at once (73 broken files)
+   - Couldn't isolate which change caused failures
+   - **Lesson**: Work in small batches with verification between each
+
+3. **Incomplete Import Migration**
+   - Migration script missed edge cases in test files
+   - Some files had mixed old/new patterns
+   - **Lesson**: Use dry-run mode, review output, test incrementally
+
+4. **No Pre-Commit Validation**
+   - Regressions not caught until CI failed
+   - Wasted time debugging in CI instead of locally
+   - **Lesson**: Install pre-commit hooks early, validate patterns locally
+
+5. **Test Classification Drift**
+   - Integration tests accumulated in `tests/unit/`
+   - Test pyramid became inverted (97.5% unit, 2% integration)
+   - Slow tests in unit directory slowed down development
+   - **Lesson**: Enforce classification criteria, audit quarterly
+
+6. **Marker Bloat**
+   - 14 markers defined, only ~5% actually used
+   - Redundant markers (`@pytest.mark.unit` in `tests/unit/`)
+   - Cognitive overhead with unclear purpose
+   - **Lesson**: Keep markers minimal and essential (3 is enough)
+
+### What Worked Well (January 2026)
+
+1. **Dry-Run Mode First**
+   - Migration scripts showed changes before applying
+   - Caught false positives and edge cases
+   - Built confidence before making real changes
+   - **Tool**: `python scripts/migrate_imports.py --dry-run`
+
+2. **Batch Migration with Verification**
+   - Applied changes in small batches (5-10 files)
+   - Ran `pytest --collect-only` after each batch
+   - Isolated failures to specific batches
+   - **Pattern**: Apply → Verify → Commit → Repeat
+
+3. **Granular Git Commits**
+   - One commit per batch or logical change
+   - Easy to rollback individual changes
+   - Clear audit trail of what changed when
+   - **Pattern**: `git commit -m "fix(tests): migrate batch 1 (10 files)"`
+
+4. **Parallel CI Strategy**
+   - Created new CI workflow alongside legacy
+   - Validated changes without breaking existing workflow
+   - Zero downtime during migration
+   - **Files**: `testing-infrastructure-new.yml` ran in parallel
+
+5. **Verification Gates Between Phases**
+   - Required explicit verification before proceeding
+   - Forced documentation of progress
+   - Prevented rushing ahead before verifying stability
+   - **Example**: Gate 1 (CI green) → Gate 2 (pyramid correct) → etc.
+
+6. **Automation Scripts with Safety**
+   - All scripts support `--dry-run` and `--help`
+   - Exit with non-zero on errors (fail fast)
+   - Provide actionable error messages
+   - **Scripts**: `validate_imports.py`, `classify_tests.py`, `migrate_tests.py`
+
+7. **Pre-Commit Hooks for Prevention**
+   - Installed hooks to prevent regressions
+   - Validate imports, test classification, marker usage
+   - Fast feedback (<3s total runtime)
+   - Catches issues before commit, not in CI
+   - **Config**: `.pre-commit-config.yaml`
+
+8. **Comprehensive Documentation**
+   - Created migration checklist for future refactorings
+   - Documented lessons learned in detail
+   - Updated TESTING.md with new patterns
+   - Created root cause analysis document
+   - **Docs**: `TEST_MIGRATION_CHECKLIST.md`, `ROOT_CAUSE_ANALYSIS_TESTING_BREAKAGE_2025.md`
+
+### Key Principles
+
+1. **Verify at Every Step**
+   - Never proceed without confirmation tests still pass
+   - Run `pytest --collect-only` after every change
+   - Run full test suite after each batch
+   - Compare results to baseline
+
+2. **Automate When Possible**
+   - Scripts reduce human error
+   - Ensure consistency across large codebases
+   - Dry-run mode builds confidence
+   - Pre-commit hooks prevent regressions
+
+3. **Validate Early and Often**
+   - Pre-commit hooks catch issues before CI
+   - Local validation faster than CI feedback
+   - Failed commit better than failed CI build
+   - Shift left: catch errors as early as possible
+
+4. **Document Everything**
+   - Migration plans with batch details
+   - Test results before/after each phase
+   - Lessons learned from failures
+   - Clear rollback procedures
+
+5. **Small Batches, Frequent Commits**
+   - 5-10 files per batch maximum
+   - One logical change per commit
+   - Easy to identify what broke
+   - Easy to rollback if needed
+
+6. **Parallel Safety Nets**
+   - Run new CI alongside legacy
+   - Keep backup branches
+   - Test in isolation before merging
+   - Gradual rollout reduces risk
+
+### Recommendations for Future Work
+
+1. **Quarterly Test Pyramid Audits**
+   - Run `scripts/classify_tests.py` every quarter
+   - Review pyramid distribution (60/30/10 target)
+   - Migrate misclassified tests promptly
+   - Track trends over time
+
+2. **Regular Marker Usage Review**
+   - Audit marker usage bi-annually
+   - Remove unused markers immediately
+   - Keep to 3 essential markers only
+   - Document purpose of each marker clearly
+
+3. **Pre-Commit Hooks Required**
+   - Make pre-commit hooks mandatory for contributors
+   - Add hook validation to CI (enforce hooks installed)
+   - Keep hook runtime under 5 seconds
+   - Update hooks when new patterns emerge
+
+4. **Coverage Monitoring**
+   - Track coverage trends in CI
+   - Alert on coverage drops >5%
+   - Set per-package coverage targets
+   - Require tests for new code (review process)
+
+5. **Test Isolation Improvements**
+   - Investigate intermittent test failures (see TD-TEST-004)
+   - Add proper fixture cleanup
+   - Eliminate shared state
+   - Add pytest-randomly to catch order dependencies
+
+6. **Integration and E2E Test Expansion**
+   - Current pyramid inverted (97.5% / 2% / 0.5%)
+   - Target: 60% / 30% / 10%
+   - Add 100+ integration tests (see TD-TEST-002)
+   - Set up E2E CI with mock LLM provider (see TD-TEST-003)
+
+### Related Documents
+
+- **Migration Checklist**: `/docs/TEST_MIGRATION_CHECKLIST.md` - Step-by-step guide for future refactorings
+- **Root Cause Analysis**: `/docs/ROOT_CAUSE_ANALYSIS_TESTING_BREAKAGE_2025.md` - Detailed RCA of 2025 breakage
+- **Technical Debt**: `/docs/TESTING_TECHNICAL_DEBT.md` - Current status, coverage metrics, remaining issues
+- **tasks-0023**: `/tasks/tasks-0023-prd-testing-infrastructure-overhaul.md` - Full task breakdown and progress
 
 ---
 

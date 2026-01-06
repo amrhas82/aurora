@@ -11,23 +11,15 @@ from aurora_cli.templates.slash_commands import get_command_body
 # File paths for each command (TOML format)
 FILE_PATHS: dict[str, str] = {
     "plan": ".gemini/commands/aurora/plan.toml",
-    "query": ".gemini/commands/aurora/query.toml",
-    "index": ".gemini/commands/aurora/index.toml",
-    "search": ".gemini/commands/aurora/search.toml",
-    "init": ".gemini/commands/aurora/init.toml",
-    "doctor": ".gemini/commands/aurora/doctor.toml",
-    "agents": ".gemini/commands/aurora/agents.toml",
+    "checkpoint": ".gemini/commands/aurora/checkpoint.toml",
+    "archive": ".gemini/commands/aurora/archive.toml",
 }
 
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
     "plan": "Generate structured plans with agent delegation",
-    "query": "Search codebase using memory system",
-    "index": "Index codebase for semantic search",
-    "search": "Search indexed code",
-    "init": "Initialize Aurora for the project",
-    "doctor": "Run health checks on Aurora installation",
-    "agents": "Browse and search available AI agents",
+    "checkpoint": "Save session context for continuity",
+    "archive": "Archive completed plans with spec processing",
 }
 
 

@@ -17,12 +17,8 @@ from aurora_cli.templates.slash_commands import get_command_body
 # Relative paths (used for get_relative_path, but actual files go to global dir)
 FILE_PATHS: dict[str, str] = {
     "plan": ".codex/prompts/aurora-plan.md",
-    "query": ".codex/prompts/aurora-query.md",
-    "index": ".codex/prompts/aurora-index.md",
-    "search": ".codex/prompts/aurora-search.md",
-    "init": ".codex/prompts/aurora-init.md",
-    "doctor": ".codex/prompts/aurora-doctor.md",
-    "agents": ".codex/prompts/aurora-agents.md",
+    "checkpoint": ".codex/prompts/aurora-checkpoint.md",
+    "archive": ".codex/prompts/aurora-archive.md",
 }
 
 # Frontmatter with $ARGUMENTS placeholder and argument-hint
@@ -33,39 +29,15 @@ argument-hint: request or feature description
 ---
 
 $ARGUMENTS""",
-    "query": """---
-description: Search codebase using memory system
-argument-hint: search query
+    "checkpoint": """---
+description: Save session context for continuity
+argument-hint: optional checkpoint name
 ---
 
 $ARGUMENTS""",
-    "index": """---
-description: Index codebase for semantic search
-argument-hint: path to index
----
-
-$ARGUMENTS""",
-    "search": """---
-description: Search indexed code
-argument-hint: search query
----
-
-$ARGUMENTS""",
-    "init": """---
-description: Initialize Aurora for the project
-argument-hint: project path
----
-
-$ARGUMENTS""",
-    "doctor": """---
-description: Run health checks on Aurora installation
-argument-hint: check type
----
-
-$ARGUMENTS""",
-    "agents": """---
-description: Browse and search available AI agents
-argument-hint: agent name or search term
+    "archive": """---
+description: Archive completed plans with spec processing
+argument-hint: plan ID to archive
 ---
 
 $ARGUMENTS""",

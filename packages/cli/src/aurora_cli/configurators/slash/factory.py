@@ -13,18 +13,21 @@ FRONTMATTER: dict[str, str] = {
     "plan": """---
 name: Aurora: Plan
 description: Generate structured plans with agent delegation
+argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context for continuity
+argument-hint: optional checkpoint name
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
     "archive": """---
 name: Aurora: Archive
 description: Archive completed plans with spec processing
+argument-hint: plan ID to archive
 category: Aurora
 tags: [aurora, planning, archive]
 ---""",

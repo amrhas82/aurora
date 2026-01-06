@@ -11,18 +11,21 @@ from aurora_cli.templates.slash_commands import get_command_body
 FRONTMATTER: dict[str, str] = {
     "plan": """---
 name: Aurora: Plan
+id: /aurora-plan
 description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
+id: /aurora-checkpoint
 description: Save session context for continuity
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
     "archive": """---
 name: Aurora: Archive
+id: /aurora-archive
 description: Archive completed plans with spec processing
 category: Aurora
 tags: [aurora, planning, archive]

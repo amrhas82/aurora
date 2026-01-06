@@ -15,33 +15,13 @@ description: Generate structured plans with agent delegation
 ---
 
 $ARGUMENTS""",
-    "query": """---
-description: Search codebase using memory system
+    "checkpoint": """---
+description: Save session context for continuity
 ---
 
 $ARGUMENTS""",
-    "index": """---
-description: Index codebase for semantic search
----
-
-$ARGUMENTS""",
-    "search": """---
-description: Search indexed code
----
-
-$ARGUMENTS""",
-    "init": """---
-description: Initialize Aurora for the project
----
-
-$ARGUMENTS""",
-    "doctor": """---
-description: Run health checks on Aurora installation
----
-
-$ARGUMENTS""",
-    "agents": """---
-description: Browse and search available AI agents
+    "archive": """---
+description: Archive completed plans with spec processing
 ---
 
 $ARGUMENTS""",
@@ -49,9 +29,9 @@ $ARGUMENTS""",
 
 # File paths for each command - uses .prompt.md extension
 FILE_PATHS: dict[str, str] = {
-    "plan": ".github/prompts/aurora-plan.md",
-    "checkpoint": ".github/prompts/aurora-checkpoint.md",
-    "archive": ".github/prompts/aurora-archive.md",
+    "plan": ".github/prompts/aurora-plan.prompt.md",
+    "checkpoint": ".github/prompts/aurora-checkpoint.prompt.md",
+    "archive": ".github/prompts/aurora-archive.prompt.md",
 }
 
 

@@ -12,18 +12,21 @@ FRONTMATTER: dict[str, str] = {
     "plan": """---
 name: Aurora: Plan
 description: Generate structured plans with agent delegation
+argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context for continuity
+argument-hint: optional checkpoint name
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
     "archive": """---
 name: Aurora: Archive
 description: Archive completed plans with spec processing
+argument-hint: plan ID to archive
 category: Aurora
 tags: [aurora, planning, archive]
 ---""",
@@ -32,12 +35,8 @@ tags: [aurora, planning, archive]
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".augment/commands/aurora-plan.md",
-    "query": ".augment/commands/aurora-query.md",
-    "index": ".augment/commands/aurora-index.md",
-    "search": ".augment/commands/aurora-search.md",
-    "init": ".augment/commands/aurora-init.md",
-    "doctor": ".augment/commands/aurora-doctor.md",
-    "agents": ".augment/commands/aurora-agents.md",
+    "checkpoint": ".augment/commands/aurora-checkpoint.md",
+    "archive": ".augment/commands/aurora-archive.md",
 }
 
 

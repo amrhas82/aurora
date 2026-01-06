@@ -11,30 +11,29 @@ from aurora_cli.templates.slash_commands import get_command_body
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".cursor/commands/aurora-plan.md",
-    "query": ".cursor/commands/aurora-query.md",
-    "index": ".cursor/commands/aurora-index.md",
-    "search": ".cursor/commands/aurora-search.md",
-    "init": ".cursor/commands/aurora-init.md",
-    "doctor": ".cursor/commands/aurora-doctor.md",
-    "agents": ".cursor/commands/aurora-agents.md",
+    "checkpoint": ".cursor/commands/aurora-checkpoint.md",
+    "archive": ".cursor/commands/aurora-archive.md",
 }
 
 # Frontmatter for each command (Cursor uses name, id, category, description)
 FRONTMATTER: dict[str, str] = {
     "plan": """---
 name: Aurora: Plan
+id: /aurora-plan
 description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
+id: /aurora-checkpoint
 description: Save session context for continuity
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
     "archive": """---
 name: Aurora: Archive
+id: /aurora-archive
 description: Archive completed plans with spec processing
 category: Aurora
 tags: [aurora, planning, archive]

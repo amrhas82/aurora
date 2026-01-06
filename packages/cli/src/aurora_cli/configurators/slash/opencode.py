@@ -18,50 +18,18 @@ The user has requested the following plan. Use the aurora instructions to create
   $ARGUMENTS
 </UserRequest>
 """,
-    "query": """---
-description: Search codebase using memory system
+    "checkpoint": """---
+description: Save session context for continuity
 ---
-The user wants to query the codebase. Use the aurora instructions to execute the query.
+The user wants to save session context. Use the aurora instructions to create a checkpoint.
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
 """,
-    "index": """---
-description: Index codebase for semantic search
+    "archive": """---
+description: Archive completed plans with spec processing
 ---
-The user wants to index the codebase. Use the aurora instructions to index the specified path.
-<UserRequest>
-  $ARGUMENTS
-</UserRequest>
-""",
-    "search": """---
-description: Search indexed code
----
-The user wants to search the codebase. Use the aurora instructions to execute the search.
-<UserRequest>
-  $ARGUMENTS
-</UserRequest>
-""",
-    "init": """---
-description: Initialize Aurora for the project
----
-The user wants to initialize Aurora for this project. Use the aurora instructions.
-<UserRequest>
-  $ARGUMENTS
-</UserRequest>
-""",
-    "doctor": """---
-description: Run health checks on Aurora installation
----
-The user wants to run health checks. Use the aurora instructions to diagnose issues.
-<UserRequest>
-  $ARGUMENTS
-</UserRequest>
-""",
-    "agents": """---
-description: Browse and search available AI agents
----
-The user wants to explore available agents. Use the aurora instructions.
+The user wants to archive a completed plan. Use the aurora instructions to archive the plan.
 <UserRequest>
   $ARGUMENTS
 </UserRequest>

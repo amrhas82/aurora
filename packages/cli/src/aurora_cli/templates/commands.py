@@ -127,9 +127,52 @@ Claude: [Reads checkpoints, resumes with context]
 <!-- AURORA:END -->
 """
 
+ARCHIVE_COMMAND = """---
+name: Aurora: Archive
+description: Archive completed plans with spec processing
+category: Aurora
+tags: [aurora, planning, archive]
+---
+<!-- AURORA:START -->
+**What this does:**
+Archive a completed Aurora plan, moving it from active to archive directory
+with timestamp prefix and updating manifest.
+
+**Steps:**
+1. Identify completed plan: `aur plan list`
+2. Archive the plan: `aur plan archive <plan-id>`
+
+**Usage:**
+```bash
+# Archive with confirmation
+aur plan archive 0001-oauth-auth
+
+# Archive without confirmation
+aur plan archive 0001-oauth -y
+```
+
+**What happens:**
+- Plan moved from `.aurora/plans/active/` to `.aurora/plans/archive/`
+- Directory renamed with timestamp: `YYYY-MM-DD-<plan-id>`
+- Plan status updated to "archived"
+- Duration calculated from creation to archive date
+- Manifest updated with archive metadata
+
+**Example:**
+```bash
+# Before archive:
+.aurora/plans/active/0001-oauth-auth/
+
+# After archive:
+.aurora/plans/archive/2024-01-15-0001-oauth-auth/
+```
+<!-- AURORA:END -->
+"""
+
 
 # Dictionary of all command templates
 COMMAND_TEMPLATES: dict[str, str] = {
     "plan": PLAN_COMMAND,
     "checkpoint": CHECKPOINT_COMMAND,
+    "archive": ARCHIVE_COMMAND,
 }

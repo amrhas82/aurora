@@ -581,8 +581,8 @@ def load_config(path: str | None = None) -> Config:
     # Validate configuration
     config.validate()
 
-    # Log which config source was used
-    print(f"Configuration loaded from: {config_source}")
+    # Note: We don't print config source to avoid contaminating stdout
+    # (especially important for JSON output mode in CLI commands)
 
     return config
 

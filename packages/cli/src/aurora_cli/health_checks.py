@@ -720,7 +720,8 @@ class MCPFunctionalChecks:
             config: Optional Config object. If None, loads from default location.
         """
         self.config = config or load_config()
-        self.project_path = self.config.project_dir if config else Path.cwd()
+        # Config doesn't have project_dir, always use cwd
+        self.project_path = Path.cwd()
 
     def run_checks(self) -> list[HealthCheckResult]:
         """Run all MCP functional checks.

@@ -11,23 +11,15 @@ from aurora_cli.templates.slash_commands import get_command_body
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
     "plan": "Generate structured plans with agent delegation",
-    "query": "Search codebase using memory system",
-    "index": "Index codebase for semantic search",
-    "search": "Search indexed code",
-    "init": "Initialize Aurora for the project",
-    "doctor": "Run health checks on Aurora installation",
-    "agents": "Browse and search available AI agents",
+    "checkpoint": "Save session context for continuity",
+    "archive": "Archive completed plans with spec processing",
 }
 
 # File paths for each command (TOML format)
 FILE_PATHS: dict[str, str] = {
     "plan": ".qwen/commands/aurora-plan.toml",
-    "query": ".qwen/commands/aurora-query.toml",
-    "index": ".qwen/commands/aurora-index.toml",
-    "search": ".qwen/commands/aurora-search.toml",
-    "init": ".qwen/commands/aurora-init.toml",
-    "doctor": ".qwen/commands/aurora-doctor.toml",
-    "agents": ".qwen/commands/aurora-agents.toml",
+    "checkpoint": ".qwen/commands/aurora-checkpoint.toml",
+    "archive": ".qwen/commands/aurora-archive.toml",
 }
 
 

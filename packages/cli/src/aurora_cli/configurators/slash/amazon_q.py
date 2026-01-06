@@ -19,60 +19,24 @@ The user has requested the following plan. Use the aurora instructions to create
 <UserRequest>
   $ARGUMENTS
 </UserRequest>""",
-    "query": """---
-description: Search codebase using memory system
+    "checkpoint": """---
+description: Save session context for continuity
 ---
 
-The user wants to query the codebase. Use the aurora instructions to execute the query.
+The user wants to save session context. Use the aurora instructions to create a checkpoint.
 
 <UserRequest>
   $ARGUMENTS
 </UserRequest>""",
-    "index": """---
-description: Index codebase for semantic search
+    "archive": """---
+description: Archive completed plans with spec processing
 ---
 
-The user wants to index the codebase. Use the aurora instructions to index the specified path.
+The user wants to archive a completed plan. Use the aurora instructions to archive the plan.
 
-<IndexPath>
+<UserRequest>
   $ARGUMENTS
-</IndexPath>""",
-    "search": """---
-description: Search indexed code
----
-
-The user wants to search the codebase. Use the aurora instructions to execute the search.
-
-<SearchQuery>
-  $ARGUMENTS
-</SearchQuery>""",
-    "init": """---
-description: Initialize Aurora for the project
----
-
-The user wants to initialize Aurora for this project. Use the aurora instructions to set up the project.
-
-<InitOptions>
-  $ARGUMENTS
-</InitOptions>""",
-    "doctor": """---
-description: Run health checks on Aurora installation
----
-
-The user wants to run health checks. Use the aurora instructions to diagnose issues.
-
-<DoctorOptions>
-  $ARGUMENTS
-</DoctorOptions>""",
-    "agents": """---
-description: Browse and search available AI agents
----
-
-The user wants to explore available agents. Use the aurora instructions to list or search agents.
-
-<AgentQuery>
-  $ARGUMENTS
-</AgentQuery>""",
+</UserRequest>""",
 }
 
 # File paths for each command

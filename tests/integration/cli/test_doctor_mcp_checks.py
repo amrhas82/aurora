@@ -2,19 +2,23 @@
 
 This test module verifies that the doctor command properly validates MCP
 configurations, SOAR phases, and memory database, with auto-fix functionality.
+
+NOTE: MCP functionality is dormant (PRD-0024). These tests are skipped.
 """
 
 import json
 import shutil
 import sqlite3
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.doctor import doctor_command
 from aurora_cli.config import Config
+
+# Skip all tests in this file - MCP functionality is dormant (PRD-0024)
+pytestmark = pytest.mark.skip(reason="MCP functionality dormant - tests deprecated (PRD-0024)")
 
 
 @pytest.fixture
@@ -31,11 +35,7 @@ def isolated_environment(tmp_path):
     db_path = aurora_dir / "memory.db"
     config = Config(db_path=str(db_path))
 
-    return {
-        "project_dir": project_dir,
-        "aurora_dir": aurora_dir,
-        "config": config
-    }
+    return {"project_dir": project_dir, "aurora_dir": aurora_dir, "config": config}
 
 
 @pytest.fixture
@@ -45,14 +45,7 @@ def mock_mcp_config(tmp_path):
     claude_dir.mkdir(parents=True)
 
     config_path = claude_dir / "claude_desktop_config.json"
-    config = {
-        "mcpServers": {
-            "aurora": {
-                "command": "aurora-mcp",
-                "args": []
-            }
-        }
-    }
+    config = {"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}}
 
     config_path.write_text(json.dumps(config), encoding="utf-8")
 
@@ -67,18 +60,15 @@ class TestDoctorMCPChecksIntegration:
         runner = CliRunner()
 
         # Mock home directory to avoid system config pollution
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock imports to avoid dependency on actual packages
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
                 mock_import.side_effect = ImportError("Not installed")
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Doctor should complete even with failures
@@ -97,14 +87,11 @@ class TestDoctorMCPChecksIntegration:
         config_path = claude_dir / "claude_desktop_config.json"
         config_path.write_text("{ invalid json }", encoding="utf-8")
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             result = runner.invoke(
-                doctor_command,
-                [],
-                catch_exceptions=False,
-                obj=isolated_environment["config"]
+                doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
             )
 
         # Should report JSON syntax error
@@ -115,18 +102,17 @@ class TestDoctorMCPChecksIntegration:
         """Doctor should detect missing memory database."""
         runner = CliRunner()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock MCP config check to pass
-            with patch('aurora_cli.health_checks.MCPFunctionalChecks._check_mcp_config_syntax') as mock_check:
+            with patch(
+                "aurora_cli.health_checks.MCPFunctionalChecks._check_mcp_config_syntax"
+            ) as mock_check:
                 mock_check.return_value = ("pass", "MCP config valid", {})
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should report missing database
@@ -136,11 +122,12 @@ class TestDoctorMCPChecksIntegration:
         """Doctor should detect when Aurora MCP tools cannot be imported."""
         runner = CliRunner()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock import to fail for aurora_mcp.tools
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
+
                 def import_side_effect(module_name):
                     if "aurora_mcp.tools" in module_name:
                         raise ImportError(f"Cannot import {module_name}")
@@ -151,10 +138,7 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should report Aurora MCP tools issue
@@ -164,11 +148,12 @@ class TestDoctorMCPChecksIntegration:
         """Doctor should detect when SOAR phase modules cannot be imported."""
         runner = CliRunner()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock import to fail for SOAR phases
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
+
                 def import_side_effect(module_name):
                     if "aurora_soar.phases" in module_name:
                         raise ImportError(f"Cannot import {module_name}")
@@ -179,10 +164,7 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should report SOAR phases issue
@@ -192,11 +174,11 @@ class TestDoctorMCPChecksIntegration:
         """Doctor should validate presence of aurora_query, aurora_search, aurora_get."""
         runner = CliRunner()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock tools class with only 2 methods (missing one)
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
                 mock_module = MagicMock()
                 mock_tools_class = MagicMock()
 
@@ -215,10 +197,7 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should report missing tool
@@ -229,15 +208,17 @@ class TestDoctorMCPChecksIntegration:
         runner = CliRunner()
 
         # Create scenario with fixable issue (missing memory.db)
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock checks to return fixable issue
-            with patch('aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues') as mock_fixable:
+            with patch(
+                "aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues"
+            ) as mock_fixable:
                 mock_fixable.return_value = [
                     {
                         "name": "Missing memory database",
-                        "fix_func": lambda: None  # Mock fix function
+                        "fix_func": lambda: None,  # Mock fix function
                     }
                 ]
 
@@ -247,7 +228,7 @@ class TestDoctorMCPChecksIntegration:
                     ["--fix"],
                     input="n\n",  # Decline fix
                     catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    obj=isolated_environment["config"],
                 )
 
         # Should show fixable issues analysis
@@ -263,17 +244,14 @@ class TestDoctorMCPChecksIntegration:
         def mock_fix():
             fix_called["count"] += 1
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock checks to return fixable issue
-            with patch('aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues') as mock_fixable:
-                mock_fixable.return_value = [
-                    {
-                        "name": "Test fixable issue",
-                        "fix_func": mock_fix
-                    }
-                ]
+            with patch(
+                "aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues"
+            ) as mock_fixable:
+                mock_fixable.return_value = [{"name": "Test fixable issue", "fix_func": mock_fix}]
 
                 # Accept fix
                 result = runner.invoke(
@@ -281,7 +259,7 @@ class TestDoctorMCPChecksIntegration:
                     ["--fix"],
                     input="y\n",  # Accept fix
                     catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    obj=isolated_environment["config"],
                 )
 
         # Fix function should have been called
@@ -292,15 +270,17 @@ class TestDoctorMCPChecksIntegration:
         """Doctor should show manual fix suggestions for non-auto-fixable issues."""
         runner = CliRunner()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock checks to return manual issue
-            with patch('aurora_cli.health_checks.MCPFunctionalChecks.get_manual_issues') as mock_manual:
+            with patch(
+                "aurora_cli.health_checks.MCPFunctionalChecks.get_manual_issues"
+            ) as mock_manual:
                 mock_manual.return_value = [
                     {
                         "name": "Invalid MCP configuration",
-                        "solution": "Run 'aur init --config' to reconfigure MCP server"
+                        "solution": "Run 'aur init --config' to reconfigure MCP server",
                     }
                 ]
 
@@ -309,7 +289,7 @@ class TestDoctorMCPChecksIntegration:
                     ["--fix"],
                     input="n\n",  # Decline any fixable issues
                     catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    obj=isolated_environment["config"],
                 )
 
         # Should show manual fix suggestion
@@ -320,22 +300,26 @@ class TestDoctorMCPChecksIntegration:
         runner = CliRunner()
 
         # Test case 1: All passing - exit code 0
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock all checks to pass
-            with patch('aurora_cli.health_checks.MCPFunctionalChecks.run_checks') as mock_checks:
+            with patch("aurora_cli.health_checks.MCPFunctionalChecks.run_checks") as mock_checks:
                 mock_checks.return_value = [
                     ("pass", "Check 1 passed", {}),
                     ("pass", "Check 2 passed", {}),
                 ]
 
                 # Mock other check classes
-                with patch('aurora_cli.health_checks.CoreSystemChecks.run_checks') as mock_core, \
-                     patch('aurora_cli.health_checks.CodeAnalysisChecks.run_checks') as mock_code, \
-                     patch('aurora_cli.health_checks.SearchRetrievalChecks.run_checks') as mock_search, \
-                     patch('aurora_cli.health_checks.ConfigurationChecks.run_checks') as mock_config, \
-                     patch('aurora_cli.health_checks.ToolIntegrationChecks.run_checks') as mock_tool:
+                with (
+                    patch("aurora_cli.health_checks.CoreSystemChecks.run_checks") as mock_core,
+                    patch("aurora_cli.health_checks.CodeAnalysisChecks.run_checks") as mock_code,
+                    patch(
+                        "aurora_cli.health_checks.SearchRetrievalChecks.run_checks"
+                    ) as mock_search,
+                    patch("aurora_cli.health_checks.ConfigurationChecks.run_checks") as mock_config,
+                    patch("aurora_cli.health_checks.ToolIntegrationChecks.run_checks") as mock_tool,
+                ):
 
                     mock_core.return_value = [("pass", "Core passed", {})]
                     mock_code.return_value = [("pass", "Code passed", {})]
@@ -347,7 +331,7 @@ class TestDoctorMCPChecksIntegration:
                         doctor_command,
                         [],
                         catch_exceptions=False,
-                        obj=isolated_environment["config"]
+                        obj=isolated_environment["config"],
                     )
 
         # All passing should give exit code 0
@@ -357,11 +341,11 @@ class TestDoctorMCPChecksIntegration:
         """Doctor should report partial SOAR phase import failures."""
         runner = CliRunner()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock import to fail for some SOAR phases
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
                 failed_phases = ["decompose", "verify", "route"]
 
                 def import_side_effect(module_name):
@@ -376,10 +360,7 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should report which phases failed
@@ -390,11 +371,11 @@ class TestDoctorMCPChecksIntegration:
         """Doctor should warn if MCP server has extra tools beyond the 3 required."""
         runner = CliRunner()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock tools class with extra methods
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
                 mock_module = MagicMock()
                 mock_tools_class = MagicMock()
 
@@ -408,7 +389,7 @@ class TestDoctorMCPChecksIntegration:
                 def mock_dir_func(obj):
                     return ["aurora_query", "aurora_search", "aurora_get", "aurora_extra"]
 
-                with patch('builtins.dir', side_effect=mock_dir_func):
+                with patch("builtins.dir", side_effect=mock_dir_func):
                     mock_module.AuroraMCPTools = mock_tools_class
 
                     def import_side_effect(module_name):
@@ -422,7 +403,7 @@ class TestDoctorMCPChecksIntegration:
                         doctor_command,
                         [],
                         catch_exceptions=False,
-                        obj=isolated_environment["config"]
+                        obj=isolated_environment["config"],
                     )
 
         # Should detect extra tool
@@ -444,19 +425,16 @@ class TestDoctorMemoryDatabaseChecks:
         conn.commit()
         conn.close()
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock SQLiteStore
-            with patch('aurora.core.store.sqlite.SQLiteStore') as mock_store:
+            with patch("aurora.core.store.sqlite.SQLiteStore") as mock_store:
                 mock_instance = MagicMock()
                 mock_store.return_value = mock_instance
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should attempt to check database
@@ -470,18 +448,15 @@ class TestDoctorMemoryDatabaseChecks:
         db_path = isolated_environment["aurora_dir"] / "memory.db"
         db_path.write_text("corrupted data", encoding="utf-8")
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock SQLiteStore to raise error
-            with patch('aurora.core.store.sqlite.SQLiteStore') as mock_store:
+            with patch("aurora.core.store.sqlite.SQLiteStore") as mock_store:
                 mock_store.side_effect = Exception("Database corrupted")
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should report database error
@@ -503,15 +478,17 @@ class TestDoctorFullFlow:
         conn.close()
 
         # Copy mock MCP config to expected location
-        target_config = isolated_environment["project_dir"] / ".claude" / "claude_desktop_config.json"
+        target_config = (
+            isolated_environment["project_dir"] / ".claude" / "claude_desktop_config.json"
+        )
         target_config.parent.mkdir(parents=True)
         shutil.copy(mock_mcp_config, target_config)
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock successful imports
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
                 mock_module = MagicMock()
                 mock_tools_class = MagicMock()
                 mock_tools_class.aurora_query = MagicMock()
@@ -527,7 +504,7 @@ class TestDoctorFullFlow:
                 mock_import.side_effect = import_side_effect
 
                 # Mock SQLiteStore
-                with patch('aurora.core.store.sqlite.SQLiteStore') as mock_store:
+                with patch("aurora.core.store.sqlite.SQLiteStore") as mock_store:
                     mock_instance = MagicMock()
                     mock_store.return_value = mock_instance
 
@@ -535,7 +512,7 @@ class TestDoctorFullFlow:
                         doctor_command,
                         [],
                         catch_exceptions=False,
-                        obj=isolated_environment["config"]
+                        obj=isolated_environment["config"],
                     )
 
         # Should complete with checks run
@@ -556,18 +533,15 @@ class TestDoctorFullFlow:
         config_path = claude_dir / "claude_desktop_config.json"
         config_path.write_text("{ invalid }", encoding="utf-8")
 
-        with patch('pathlib.Path.home') as mock_home:
+        with patch("pathlib.Path.home") as mock_home:
             mock_home.return_value = isolated_environment["project_dir"]
 
             # Mock imports to fail
-            with patch('importlib.import_module') as mock_import:
+            with patch("importlib.import_module") as mock_import:
                 mock_import.side_effect = ImportError("Import failed")
 
                 result = runner.invoke(
-                    doctor_command,
-                    [],
-                    catch_exceptions=False,
-                    obj=isolated_environment["config"]
+                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
                 )
 
         # Should show multiple failures

@@ -14,58 +14,103 @@ BASE_GUARDRAILS = """**Guardrails**
 SEARCH_TEMPLATE = f"""{BASE_GUARDRAILS}
 
 **Usage**
-Search Aurora's indexed memory for code, documentation, or reasoning patterns.
+Run `aur mem search "<query>"` to search indexed code.
 
-**Command**
+**Argument Parsing**
+User can provide search terms with optional flags in natural order:
+- `/aur:search bm25 limit 5` → `aur mem search "bm25" --limit 5`
+- `/aur:search "exact phrase" type function` → `aur mem search "exact phrase" --type function`
+- `/aur:search authentication` → `aur mem search "authentication"`
+
+Parse intelligently: detect `limit N`, `type X` as flags, rest as query terms.
+
+**Examples**
 ```bash
-aur mem search "query text" --limit 10 --type code
+# Basic search
+aur mem search "authentication handler"
+
+# Search with type filter
+aur mem search "validate" --type function
+
+# Search with more results
+aur mem search "config" --limit 20
+
+# Natural argument order
+aur mem search "bm25" --limit 5
 ```
 
-**What it does**
-1. Searches indexed memory (code, kb, soar chunks)
-2. Uses hybrid scoring: BM25 + ACT-R activation + optional semantic
-3. Returns top N results with relevance scores
-4. Shows file path, chunk name, lines, and score
+**Reference**
+- Returns file paths and line numbers
+- Uses hybrid BM25 + embedding search
+- Shows match scores
+- Type filters: function, class, module
 
-**Options**
-- `--limit N` - Max results (default: 10)
-- `--type TYPE` - Filter by chunk type (code, kb, soar)
+**Output Format (MANDATORY - NEVER DEVIATE)**
 
-**When to use**
-- Find code by functionality ("authentication logic")
-- Locate documentation ("setup guide")
-- Find past reasoning patterns ("how we handled X")
+Every response MUST follow this exact structure:
 
-**Example**
-```bash
-/aur:search authentication functions
-# Returns: login(), verify_token(), authenticate_user()
-```"""
+1. Execute `aur mem search` with parsed args
+2. Display the **FULL TABLE** - never collapse with "... +N lines"
+3. Create a simplified table showing ALL results (not just top 3):
+   ```
+   #  | File:Line           | Type | Name              | Score
+   ---|---------------------|------|-------------------|------
+   1  | memory.py:131       | code | MemoryManager     | 0.81
+   2  | tools.py:789        | code | _handle_record    | 0.79
+   3  | logs/query.md:1     | docs | Execution Summary | 0.58
+   ...
+   ```
+4. Add exactly 2 sentences of guidance on where to look:
+   - Sentence 1: Identify the most relevant result(s) and why
+   - Sentence 2: Suggest what other results might provide useful context
+5. Single line: `Next: /aur:get N`
+
+NO additional explanations or questions beyond these 2 sentences."""
 
 # /aur:get - Get chunk by index
 GET_TEMPLATE = f"""{BASE_GUARDRAILS}
 
 **Usage**
-Retrieve full content of a chunk after search.
+Run `aur mem get <N>` to retrieve the full content of search result N from the last search.
+
+**Examples**
+```bash
+# Get first result from last search
+aur mem get 1
+
+# Get third result
+aur mem get 3
+```
+
+**Note:** The output includes detailed score breakdown (Hybrid, BM25, Semantic, Activation). For access count details, see the Activation score.
 
 **Workflow**
-1. Search: `/aur:search query` or `aur mem search "query"`
-2. Review results (numbered list)
-3. Get: `/aur:get N` to retrieve full chunk N
+1. Run `/aur:search <query>` to search
+2. Review the numbered results
+3. Run `/aur:get <N>` to see full content of result N
 
-**What it does**
-- Retrieves complete chunk content
-- Shows full code/documentation
-- Includes metadata (file path, lines, type)
+**Output**
+- Full code content (not truncated)
+- File path and line numbers
+- Detailed score breakdown (Hybrid, BM25, Semantic, Activation)
+- Syntax highlighting
 
-**Example**
-```
-User: Find login code
-AI: /aur:search login
-    Results: 1) login() 2) verify_login() 3) login_handler()
-AI: /aur:get 1
-    [Retrieves full login() function code]
-```"""
+**Notes**
+- Results cached for 10 minutes after search
+- Index is 1-based (first result = 1)
+- Returns error if no previous search or index out of range
+
+**Output Format (MANDATORY - NEVER DEVIATE)**
+
+Every response MUST follow this exact structure:
+
+1. Execute `aur mem get N`
+2. Display the content box
+3. One sentence: what this is and what it does (include file:line reference from the header)
+4. If not code implementation: note the file type (e.g., "log file", "docs", "config")
+5. Optional: If relevant to other search results, add: "See also: result #X (relationship)"
+
+NO additional explanations, suggestions, or questions."""
 
 # /aur:implement - Plan implementation (placeholder)
 IMPLEMENT_TEMPLATE = f"""{BASE_GUARDRAILS}

@@ -1222,6 +1222,9 @@ def _display_single_result(result: SearchResult, index: int, total: int) -> None
     if result.line_range and result.line_range != (0, 0):
         meta_table.add_row("Lines:", f"{result.line_range[0]}-{result.line_range[1]}")
     meta_table.add_row("Score:", f"{result.hybrid_score:.3f}")
+    meta_table.add_row("  BM25:", f"{result.bm25_score:.3f}")
+    meta_table.add_row("  Semantic:", f"{result.semantic_score:.3f}")
+    meta_table.add_row("  Activation:", f"{result.activation_score:.3f}")
 
     console.print(meta_table)
     console.print()

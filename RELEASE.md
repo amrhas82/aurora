@@ -72,6 +72,8 @@ Releases a specific version to PyPI.
 
 Before releasing, ensure quality by running local CI checks:
 
+**For configurator/template changes:** See `TOOLS_CONFIG_GUIDE.md` § Release Checklist for additional checks specific to slash command configurators and tool integrations.
+
 ### 1. Quick Health Check (30 seconds)
 ```bash
 ./scripts/quick-check.sh
@@ -149,3 +151,11 @@ pip install --upgrade pip
 
 ### PyPI upload "File already exists"
 You can't re-upload the same version. Bump version and try again.
+
+---
+
+## See Also
+
+- **TOOLS_CONFIG_GUIDE.md** - Complete guide for configurator system (slash commands, templates, adding tools)
+- **COMMANDS.md** - User-facing command documentation
+- **README.md** - Project overview and installation

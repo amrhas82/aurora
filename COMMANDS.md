@@ -125,18 +125,36 @@ aur mem search "login" --limit 5
 # Filter by type
 aur mem search "docs" --type kb
 
+# Show detailed score breakdown (ACT-R activation, BM25, semantic)
+aur mem search "memory manager" --show-scores
+
+# Show content preview
+aur mem search "calculate" --show-content
+
+# Combine options
+aur mem search "authentication" --limit 3 --show-scores --show-content
+
 # Custom database
 aur mem search "query" --db-path /tmp/test.db
 ```
 
 **Options:**
-- `--limit N` - Max results (default: 10)
+- `--limit N` - Max results (default: 5)
 - `--type TYPE` - Filter by chunk type (code, kb, soar)
+- `--show-scores` - Display detailed score breakdown with ACT-R activation (access count, recency, git commits)
+- `--show-content` - Show content preview for each result
+- `--format [rich|json]` - Output format (default: rich)
+- `--min-score FLOAT` - Minimum semantic score threshold (0.0-1.0)
 - `--db-path PATH` - Custom database location
 
 **Retrieval strategy:**
 - Default: 40% BM25 + 30% ACT-R activation + 30% Git signals
 - With ML: 30% BM25 + 40% Semantic + 30% ACT-R activation
+
+**Score breakdown (with --show-scores):**
+- **BM25**: Keyword/term matching strength
+- **Semantic**: Conceptual relevance (requires ML embeddings)
+- **Activation**: ACT-R recency/frequency (access count, git commits, last modified)
 
 ---
 
@@ -282,9 +300,20 @@ Search indexed code from AI tool.
 
 ```
 /aur:search authentication logic
+/aur:search act-r memory limit 5
+/aur:search "exact phrase" type function
 ```
 
-**Returns:** Top matching chunks with relevance scores.
+**Arguments:** Flexible natural language parsing
+- Query terms (default: all remaining text)
+- `limit N` - Limit results (e.g., `limit 5`)
+- `type X` - Filter by type (e.g., `type function`)
+
+**Returns:**
+- Full results table
+- Simplified numbered table for easy `/aur:get N` reference
+- 2 sentences of guidance on where to look
+- Score breakdown included in results
 
 **Use when:** AI needs to find specific code during conversation.
 
@@ -292,13 +321,20 @@ Search indexed code from AI tool.
 
 ### `/aur:get`
 
-Get full chunk content by index.
+Get full chunk content by index with detailed scores.
 
 ```
 /aur:get 3
 ```
 
-**Use when:** After `/aur:search`, retrieve complete chunk content.
+**Returns:**
+- Full code content
+- File path and line numbers
+- Detailed score breakdown (Hybrid, BM25, Semantic, Activation)
+- One sentence description of what the code does
+- Cross-references to related results (if applicable)
+
+**Use when:** After `/aur:search`, retrieve complete chunk content with activation details.
 
 **Example workflow:**
 ```
@@ -307,6 +343,12 @@ AI: /aur:search login
 AI: Found 3 results. Let me get the first one.
 AI: /aur:get 1
 ```
+
+**Score details shown:**
+- **Hybrid**: Combined relevance score
+- **BM25**: Keyword matching strength
+- **Semantic**: Conceptual relevance
+- **Activation**: ACT-R score (frequency/recency)
 
 ---
 

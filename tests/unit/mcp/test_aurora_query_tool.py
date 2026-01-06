@@ -15,13 +15,16 @@ NEW TESTS: See test_aurora_query_simplified.py for new simplified behavior tests
 """
 
 import json
-import os
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+import os  # noqa: F401
+from pathlib import Path  # noqa: F401
+from unittest.mock import MagicMock, Mock, patch  # noqa: F401
 
 import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
+
+# Skip all tests in this file - MCP functionality is dormant (PRD-0024)
+pytestmark = pytest.mark.skip(reason="MCP functionality dormant - tests deprecated (PRD-0024)")
 
 
 # ==============================================================================

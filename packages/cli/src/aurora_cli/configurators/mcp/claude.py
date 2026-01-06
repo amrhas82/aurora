@@ -13,15 +13,13 @@ from typing import Any
 
 from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator
 
-
 # Aurora MCP tool permissions for Claude Code
+# Deprecated tools removed (aurora_query, aurora_search, aurora_get) per PRD-0024
+# Use slash commands (/aur:search, /aur:get) or CLI commands (aur soar) instead
 AURORA_MCP_PERMISSIONS = [
-    "mcp__aurora__aurora_query",
-    "mcp__aurora__aurora_search",
     "mcp__aurora__aurora_index",
     "mcp__aurora__aurora_context",
     "mcp__aurora__aurora_related",
-    "mcp__aurora__aurora_get",
     "mcp__aurora__aurora_list_agents",
     "mcp__aurora__aurora_search_agents",
     "mcp__aurora__aurora_show_agent",

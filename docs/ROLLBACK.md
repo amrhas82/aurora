@@ -544,6 +544,155 @@ After any rollback, document:
 
 ---
 
+## Known Issues and Workarounds
+
+**Updated**: 2026-01-06 (Phase 10 Rollback Verification)
+
+### Issue 1: All MCP Tools Removed (Not Just 3)
+
+**What Happened**: The original plan was to deprecate 3 tools (`aurora_query`, `aurora_search`, `aurora_get`) while keeping 6 tools (`aurora_index`, `aurora_context`, `aurora_related`, `aurora_list_agents`, `aurora_search_agents`, `aurora_show_agent`). However, the actual implementation removed ALL MCP tools.
+
+**Evidence**:
+- `server.py` line 63: `_register_tools()` method is empty (just `pass`)
+- No tools are registered with FastMCP server
+- MCP server starts but provides 0 tools
+
+**Impact**:
+- MCP infrastructure is completely dormant
+- Option 1 (feature flag) won't restore any tools
+- Full tool restoration requires code changes, not just configuration
+
+**Workaround**:
+To restore ANY MCP tools, you must:
+1. Check out the git baseline tag: `git checkout mcp-deprecation-baseline`
+2. Or manually restore tool registrations in `server.py` `_register_tools()` method
+
+### Issue 2: Feature Flag (`mcp.enabled`) Not Implemented
+
+**What Happened**: Phase 2 tasks described adding `mcp.enabled` config field and `--enable-mcp` CLI flag. These were marked complete but never actually implemented.
+
+**Evidence**:
+- No `mcp_enabled` field in `config.py` Config dataclass
+- No `--enable-mcp` flag in `init.py` init_command
+- Running `aur init --enable-mcp` produces error: "No such option: --enable-mcp"
+
+**Impact**:
+- Option 1 (feature flag) as described doesn't work
+- MCP configuration is controlled by `--tools` flag instead
+  - `--tools=claude` → MCP configured
+  - `--tools=none` → MCP skipped
+
+**Workaround**:
+Use `--tools` flag to control MCP:
+```bash
+# Enable MCP (configure for Claude)
+aur init --tools=claude
+
+# Disable MCP (skip tool configuration)
+aur init --tools=none
+```
+
+### Issue 3: Permissions File Contains Deprecated Tools
+
+**What Happened**: Configurator does additive updates to permissions file. If you configured MCP before the deprecation, the permissions file still lists all 9 tools (including the 3 deprecated ones).
+
+**Evidence**:
+- `~/.claude/settings.local.json` may list `aurora_query`, `aurora_search`, `aurora_get`
+- Configurator only adds new permissions, doesn't remove old ones
+
+**Impact**:
+- Minor: Permissions list looks incorrect
+- No functional impact: Server doesn't register these tools anyway
+
+**Workaround**:
+Manually edit `~/.claude/settings.local.json` and remove deprecated tools, or leave them (they're harmless since server doesn't provide them).
+
+---
+
+## Lessons Learned
+
+**Phase 10 Rollback Verification - 2026-01-06**
+
+### Key Insights
+
+1. **Verify Implementation Matches Plan**
+   - Several Phase 2 tasks were marked complete without actual implementation
+   - `mcp.enabled` config field and `--enable-mcp` flag were described but never added
+   - Lesson: Run smoke tests after marking phases complete, not just unit tests
+
+2. **"Deprecate" vs "Remove" Terminology**
+   - Plan said "deprecate 3 tools while keeping 6 tools"
+   - Implementation removed ALL tools (more aggressive than planned)
+   - Lesson: Use precise language (deprecate = mark as obsolete, remove = delete code)
+   - Consider: Was this intentional scope change or miscommunication?
+
+3. **Additive Configurators Are Sticky**
+   - Configurators add permissions but don't remove old ones
+   - Result: Old configurations have deprecated tools in permissions list
+   - Lesson: Either make configurators do full cleanup, or document this behavior
+   - Low impact in this case (harmless ghost permissions)
+
+4. **Rollback Options Need Real Testing**
+   - Option 1 (feature flag) described behavior that doesn't exist
+   - Documentation was written based on planned implementation, not actual
+   - Lesson: Test all documented rollback procedures during Phase 10
+
+5. **Git Baseline Tag is Critical**
+   - `mcp-deprecation-baseline` tag provides clean rollback path
+   - Most reliable option when implementation deviates from plan
+   - Lesson: Phase 0 baseline creation is essential, not optional
+
+### Best Practices Confirmed
+
+1. **Keep Infrastructure Dormant**
+   - All MCP configurators preserved (20+ files)
+   - Server infrastructure intact (just empty `_register_tools()`)
+   - Easy to restore by uncommenting code or checking out baseline
+   - This approach validated: can reactivate with minimal effort
+
+2. **Multiple Rollback Options**
+   - Having 3 documented options provides flexibility
+   - Git tag (Option 2) proved most reliable
+   - Feature flag (Option 1) would have been ideal if implemented
+
+3. **Comprehensive Testing Matrix**
+   - Fresh install test (`--tools=none`)
+   - Re-enable test (`--tools=claude`)
+   - Permissions verification
+   - Server startup verification
+   - This matrix caught all discrepancies
+
+### Recommendations for Future Deprecations
+
+1. **Add Implementation Verification Step**
+   - After marking phase complete, run:
+     - `grep` for expected code changes
+     - CLI test of new flags/options
+     - Config file inspection
+   - Don't rely solely on "task says done"
+
+2. **Separate Planning from Implementation Docs**
+   - Keep PRD as source of truth for intent
+   - Mark actual implementation state in task list with "ACTUAL" notes
+   - Update rollback docs based on reality, not plan
+
+3. **Test Rollback Early**
+   - Run Phase 10 verification after Phase 3-4, not after Phase 9
+   - Catch discrepancies while context is fresh
+   - Allows course correction mid-project
+
+4. **Clear Acceptance Criteria**
+   - "Config field added" → Verify with `grep mcp_enabled config.py`
+   - "Flag works" → Verify with `aur init --flag-name`
+   - Make criteria testable, not subjective
+
+5. **Document "Why" Not Just "What"**
+   - Why were all tools removed (not just 3)?
+   - Why skip feature flag implementation?
+   - Future maintainers need context, not just facts
+
+---
+
 ## Support
 
 **Documentation**:

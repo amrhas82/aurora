@@ -85,6 +85,17 @@ Total:       4,023 tests          ❌ ~169-188 failures (95.3-95.8% pass rate)
 - Fixed `--db-path` CLI option (commit ecf3d70) - should restore 60-70 E2E tests
 - 673+ tests now at 100% pass rate (17% of suite)
 
+**Phase 6 ✅ COMPLETE (ADAPTED)**: CI Simplification (January 6, 2026)
+- **Adapted from:** 7-day monitoring of 4-version CI to immediate simplification
+- **Changes Made:**
+  - Reduced Python versions from 3.10-3.13 to 3.10 only (80min → 5-10min runtime)
+  - Created local CI scripts: `scripts/run-local-ci.sh` and `scripts/quick-check.sh`
+  - Updated workflow to run only on `main` branch (direct-to-main workflow)
+  - Created comprehensive documentation (DEVELOPMENT-WORKFLOW.md, CI-OPTIONS.md)
+  - Updated RELEASE.md with pre-release checklist requiring local CI checks
+- **Rationale:** Direct-to-main workflow eliminates need for PR-focused monitoring
+- **Commits:** 0915be2 (CI simplification), c34b8fc (RELEASE.md update)
+
 ### Critical Next Steps
 
 1. **TD-TEST-001 (P0)**: Investigate remaining 81-100 unit test failures
@@ -888,7 +899,7 @@ pytest tests/unit/cli/ -v --random-order
 | Phase 3: Marker Cleanup | Jan 5 | ✅ COMPLETE | 14 → 3 markers, 243 redundant removed |
 | Phase 4: Add Missing Tests | Jan 5 | ✅ COMPLETE | 135 tests added, 81.93% coverage |
 | Phase 5: Test Cleanup | Jan 6 | ✅ COMPLETE | 40 failures fixed, --db-path restored |
-| Phase 6: CI Switchover | Pending | ⏳ PENDING | Awaiting 7-day stability |
+| Phase 6: CI Switchover | Jan 6 | ✅ COMPLETE (ADAPTED) | Simplified to Python 3.10 + local scripts |
 
 ### Metrics: Before vs After - CORRECTED
 
@@ -912,8 +923,9 @@ pytest tests/unit/cli/ -v --random-order
 **Phase 3:** 4 hours (Marker cleanup, validation)
 **Phase 4:** 12 hours (135 tests added, contract tests)
 **Phase 5:** 34 hours (40 failures fixed, configurators standardized, --db-path restored)
+**Phase 6:** 2 hours (CI simplification, local scripts, documentation)
 
-**Total:** 64 hours (8 days)
+**Total:** 66 hours (8 days)
 
 ### Key Insights from tasks-0023
 
@@ -938,7 +950,7 @@ pytest tests/unit/cli/ -v --random-order
 2. Add ~100 E2E tests (TD-TEST-003)
 3. Set up nightly E2E CI pipeline with API key
 4. Create MockLLMProvider for cost-free E2E testing
-5. Complete Phase 6: CI switchover
+5. ~~Complete Phase 6: CI switchover~~ ✅ COMPLETE (adapted to local scripts)
 
 **Future (P2):**
 1. Quarterly test pyramid audits

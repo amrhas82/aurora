@@ -38,7 +38,8 @@ class TestMCPFunctionalChecksInit:
         """Should accept Config parameter and initialize project path."""
         checks = MCPFunctionalChecks(mock_config)
         assert checks.config == mock_config
-        assert checks.project_path == mock_config.project_dir
+        # Config doesn't have project_dir, always uses cwd
+        assert checks.project_path == Path.cwd()
 
     def test_init_without_config(self) -> None:
         """Should handle initialization without config parameter."""

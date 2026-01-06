@@ -53,10 +53,12 @@ class TestClaudeMCPConfigurator:
 
         config = configurator.get_server_config(tmp_path)
 
-        assert "aurora" in config
-        assert config["aurora"]["command"] == "python3"
-        assert config["aurora"]["args"] == ["-m", "aurora.mcp.server"]
-        assert str(tmp_path / ".aurora" / "memory.db") in config["aurora"]["env"]["AURORA_DB_PATH"]
+        assert "mcpServers" in config
+        assert "aurora" in config["mcpServers"]
+        aurora_config = config["mcpServers"]["aurora"]
+        assert aurora_config["command"] == "aurora-mcp"
+        assert aurora_config["args"] == []
+        assert str(tmp_path / ".aurora" / "memory.db") in aurora_config["env"]["AURORA_DB_PATH"]
 
 
 class TestClaudeMCPConfiguratorPermissions:
@@ -184,10 +186,17 @@ class TestClaudeMCPConfiguratorIsConfigured:
         """is_configured returns True when MCP and permissions exist."""
         configurator = ClaudeMCPConfigurator()
 
-        # Create MCP config
+        # Create MCP config with valid aurora-mcp command
         mcp_path = tmp_path / ".claude" / "plugins" / "aurora" / ".mcp.json"
         mcp_path.parent.mkdir(parents=True)
-        mcp_path.write_text(json.dumps({"mcpServers": {"aurora": {}}}))
+        mcp_path.write_text(json.dumps({
+            "mcpServers": {
+                "aurora": {
+                    "command": "aurora-mcp",
+                    "args": []
+                }
+            }
+        }))
 
         # Create permissions with Aurora permission
         settings_path = tmp_path / ".claude" / "settings.local.json"

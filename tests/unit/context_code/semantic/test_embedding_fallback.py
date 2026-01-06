@@ -457,6 +457,7 @@ class TestFallbackConfiguration:
             def get(self, key, default=None):
                 if key == "context.code.hybrid_weights":
                     return {
+                        "bm25": 0.0,
                         "activation": 0.6,
                         "semantic": 0.4,
                         "fallback_to_activation": False,

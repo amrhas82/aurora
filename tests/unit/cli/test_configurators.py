@@ -101,9 +101,10 @@ class TestClaudeConfigurator:
         config = ClaudeConfigurator()
         content = await config.get_template_content(".aurora")
 
-        # Stub template references AGENTS.md
+        # Stub template references AGENTS.md and key concepts
         assert ".aurora/AGENTS.md" in content
-        assert "aur plan" in content
+        assert "Aurora Instructions" in content
+        assert "aur init --config" in content
 
     @pytest.mark.asyncio
     async def test_configure_creates_file(self, tmp_path: Path):
@@ -129,8 +130,8 @@ class TestClaudeConfigurator:
         commands_dir = tmp_path / ".claude" / "commands" / "aur"
         assert commands_dir.exists()
 
-        # Check that expected command files exist
-        expected_commands = ["init.md", "query.md", "index.md", "search.md", "doctor.md", "agents.md", "plan.md"]
+        # Check that standardized command files exist (plan, checkpoint, archive)
+        expected_commands = ["plan.md", "checkpoint.md", "archive.md"]
         for cmd in expected_commands:
             cmd_file = commands_dir / cmd
             assert cmd_file.exists(), f"Expected {cmd} to exist"
@@ -182,7 +183,7 @@ class TestOpenCodeConfigurator:
 
         # Stub template references AGENTS.md
         assert ".aurora/AGENTS.md" in content
-        assert "aur plan" in content
+        assert "Aurora Instructions" in content
 
 
 class TestAmpCodeConfigurator:
@@ -203,7 +204,7 @@ class TestAmpCodeConfigurator:
 
         # Stub template references AGENTS.md
         assert ".aurora/AGENTS.md" in content
-        assert "aur plan" in content
+        assert "Aurora Instructions" in content
 
 
 class TestDroidConfigurator:
@@ -224,7 +225,7 @@ class TestDroidConfigurator:
 
         # Stub template references AGENTS.md
         assert ".aurora/AGENTS.md" in content
-        assert "aur plan" in content
+        assert "Aurora Instructions" in content
 
 
 class TestAgentsStandardConfigurator:
@@ -245,7 +246,7 @@ class TestAgentsStandardConfigurator:
 
         # Full template has plan paths and command references
         assert ".aurora/plans/" in content
-        assert "aur plan" in content
+        assert "Aurora Instructions" in content
 
     @pytest.mark.asyncio
     async def test_configure_creates_root_agents_md(self, tmp_path: Path):
@@ -282,7 +283,8 @@ class TestClaudeCommandsConfigurator:
         config = ClaudeCommandsConfigurator()
         commands = config.get_command_list()
 
-        expected = ["init", "query", "index", "search", "doctor", "agents", "plan"]
+        # After standardization: plan, checkpoint, archive
+        expected = ["plan", "checkpoint", "archive"]
         for cmd in expected:
             assert cmd in commands
 
@@ -313,13 +315,13 @@ class TestClaudeCommandsConfigurator:
         """Test that configure updates existing command file."""
         from aurora_cli.configurators import ClaudeCommandsConfigurator
 
-        # Create existing command file
+        # Create existing command file (using plan.md which now exists)
         commands_dir = tmp_path / ".claude" / "commands" / "aur"
         commands_dir.mkdir(parents=True, exist_ok=True)
 
-        init_file = commands_dir / "init.md"
-        init_file.write_text("""---
-name: Custom Init
+        plan_file = commands_dir / "plan.md"
+        plan_file.write_text("""---
+name: Custom Plan
 description: My custom description
 ---
 <!-- AURORA:START -->
@@ -331,6 +333,6 @@ Old content
         await config.configure(tmp_path, ".aurora")
 
         # Check that file was updated
-        updated = init_file.read_text()
-        assert "Aurora Init" in updated  # New name from template
+        updated = plan_file.read_text()
+        assert "Aurora Plan" in updated  # New name from template
         assert "Old content" not in updated

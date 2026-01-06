@@ -151,11 +151,13 @@ class TestMCPConfiguratorBase:
 
         config = configurator.get_server_config(project_path)
 
-        assert "aurora" in config
-        assert config["aurora"]["command"] == "python3"
-        assert config["aurora"]["args"] == ["-m", "aurora.mcp.server"]
-        assert "AURORA_DB_PATH" in config["aurora"]["env"]
-        assert "/test/project/.aurora/memory.db" in config["aurora"]["env"]["AURORA_DB_PATH"]
+        assert "mcpServers" in config
+        assert "aurora" in config["mcpServers"]
+        aurora_config = config["mcpServers"]["aurora"]
+        assert aurora_config["command"] == "aurora-mcp"
+        assert aurora_config["args"] == []
+        assert "AURORA_DB_PATH" in aurora_config["env"]
+        assert "/test/project/.aurora/memory.db" in aurora_config["env"]["AURORA_DB_PATH"]
 
     def test_is_configured_returns_false_when_no_file(self, tmp_path):
         """is_configured returns False when config file doesn't exist."""
@@ -173,12 +175,12 @@ class TestMCPConfiguratorBase:
         assert configurator.is_configured(tmp_path) is False
 
     def test_is_configured_returns_true_when_aurora_present(self, tmp_path):
-        """is_configured returns True when aurora is in mcpServers."""
+        """is_configured returns True when aurora is correctly configured."""
         configurator = ConcreteMCPConfigurator()
         config_path = tmp_path / ".test-tool" / "mcp.json"
         config_path.parent.mkdir(parents=True)
         config_path.write_text(json.dumps({
-            "mcpServers": {"aurora": {"command": "python3"}}
+            "mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}
         }))
 
         assert configurator.is_configured(tmp_path) is True

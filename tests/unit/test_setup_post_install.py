@@ -1,6 +1,9 @@
 """Unit tests for setup.py post-install message.
 
 Tests the display_install_feedback() function that shows after pip install.
+
+NOTE: These tests are obsolete - the project now uses pyproject.toml instead of setup.py.
+Marked as skip until/unless post-install messaging is reimplemented.
 """
 
 from __future__ import annotations
@@ -12,6 +15,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.skip(reason="setup.py no longer exists - project uses pyproject.toml")
 
 
 def load_setup_module():

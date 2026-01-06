@@ -390,8 +390,8 @@ class TestMarkdownToolUpdateExisting:
         assert len(updated) == 1
 
         # Other files should NOT have been created
-        query_path = tmp_path / config.get_relative_path("query")
-        assert not query_path.exists()
+        checkpoint_path = tmp_path / config.get_relative_path("checkpoint")
+        assert not checkpoint_path.exists()
 
     @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
     def test_update_existing_replaces_body_between_markers(

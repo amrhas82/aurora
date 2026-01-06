@@ -38,6 +38,8 @@ class TestDoctorCommandBasics:
 class TestHealthCheckCategories:
     """Test health check category execution."""
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -48,6 +50,8 @@ class TestHealthCheckCategories:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test all four health check categories are executed."""
@@ -65,6 +69,8 @@ class TestHealthCheckCategories:
         mock_config_checks.return_value.run_checks.return_value = [
             ("pass", "Config file valid", {}),
         ]
+        mock_tool_checks.return_value.run_checks.return_value = []
+        mock_mcp_checks.return_value.run_checks.return_value = []
 
         result = runner.invoke(cli, ["doctor"])
 
@@ -84,6 +90,8 @@ class TestHealthCheckCategories:
 class TestHealthCheckOutput:
     """Test health check output formatting."""
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -94,6 +102,8 @@ class TestHealthCheckOutput:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test output displays status indicators (checkmark, warning, X)."""
@@ -111,6 +121,8 @@ class TestHealthCheckOutput:
         mock_config_checks.return_value.run_checks.return_value = [
             ("pass", "Config file valid", {}),
         ]
+        mock_tool_checks.return_value.run_checks.return_value = []
+        mock_mcp_checks.return_value.run_checks.return_value = []
 
         result = runner.invoke(cli, ["doctor"])
 
@@ -122,6 +134,8 @@ class TestHealthCheckOutput:
         assert "⚠" in output or "warning" in output.lower() or "warn" in output.lower()
         assert "✗" in output or "fail" in output.lower() or "error" in output.lower()
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -132,6 +146,8 @@ class TestHealthCheckOutput:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test output displays summary line with counts."""
@@ -149,6 +165,8 @@ class TestHealthCheckOutput:
         mock_config_checks.return_value.run_checks.return_value = [
             ("pass", "Check 5", {}),
         ]
+        mock_tool_checks.return_value.run_checks.return_value = []
+        mock_mcp_checks.return_value.run_checks.return_value = []
 
         result = runner.invoke(cli, ["doctor"])
 
@@ -163,6 +181,8 @@ class TestHealthCheckOutput:
 class TestHealthCheckExitCodes:
     """Test health check exit codes."""
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -173,6 +193,8 @@ class TestHealthCheckExitCodes:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test exit code 0 when all checks pass."""
@@ -181,11 +203,15 @@ class TestHealthCheckExitCodes:
         mock_code_checks.return_value.run_checks.return_value = [("pass", "Check 2", {})]
         mock_search_checks.return_value.run_checks.return_value = [("pass", "Check 3", {})]
         mock_config_checks.return_value.run_checks.return_value = [("pass", "Check 4", {})]
+        mock_tool_checks.return_value.run_checks.return_value = []
+        mock_mcp_checks.return_value.run_checks.return_value = []
 
         result = runner.invoke(cli, ["doctor"])
 
         assert result.exit_code == 0
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -196,6 +222,8 @@ class TestHealthCheckExitCodes:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test exit code 1 when there are warnings but no failures."""
@@ -204,11 +232,15 @@ class TestHealthCheckExitCodes:
         mock_code_checks.return_value.run_checks.return_value = [("warning", "Check 2", {})]
         mock_search_checks.return_value.run_checks.return_value = [("pass", "Check 3", {})]
         mock_config_checks.return_value.run_checks.return_value = [("warning", "Check 4", {})]
+        mock_tool_checks.return_value.run_checks.return_value = []
+        mock_mcp_checks.return_value.run_checks.return_value = []
 
         result = runner.invoke(cli, ["doctor"])
 
         assert result.exit_code == 1
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -219,6 +251,8 @@ class TestHealthCheckExitCodes:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test exit code 2 when there are failures."""
@@ -227,6 +261,8 @@ class TestHealthCheckExitCodes:
         mock_code_checks.return_value.run_checks.return_value = [("fail", "Check 2", {})]
         mock_search_checks.return_value.run_checks.return_value = [("pass", "Check 3", {})]
         mock_config_checks.return_value.run_checks.return_value = [("pass", "Check 4", {})]
+        mock_tool_checks.return_value.run_checks.return_value = []
+        mock_mcp_checks.return_value.run_checks.return_value = []
 
         result = runner.invoke(cli, ["doctor"])
 
@@ -341,6 +377,8 @@ class TestConfigurationChecks:
 class TestDoctorFixFlag:
     """Test doctor --fix auto-repair functionality."""
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -351,6 +389,8 @@ class TestDoctorFixFlag:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test --fix flag is recognized."""
@@ -361,12 +401,16 @@ class TestDoctorFixFlag:
         mock_code_checks.return_value.run_checks.return_value = []
         mock_search_checks.return_value.run_checks.return_value = []
         mock_config_checks.return_value.run_checks.return_value = []
+        mock_tool_checks.return_value.run_checks.return_value = []
+        mock_mcp_checks.return_value.run_checks.return_value = []
 
         result = runner.invoke(cli, ["doctor", "--fix"], input="n\n")
 
         # Should recognize the flag (not show "no such option" error)
         assert "no such option" not in result.output.lower()
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -377,6 +421,8 @@ class TestDoctorFixFlag:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test --fix prompts user before making changes."""
@@ -399,6 +445,8 @@ class TestDoctorFixFlag:
         # Should show prompt
         assert "fix" in result.output.lower()
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -409,6 +457,8 @@ class TestDoctorFixFlag:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test --fix accepts user confirmation."""
@@ -432,6 +482,8 @@ class TestDoctorFixFlag:
         # Should call fix function when user accepts
         mock_fix_func.assert_called_once()
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -442,6 +494,8 @@ class TestDoctorFixFlag:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test --fix skips fixes when user declines."""
@@ -465,6 +519,8 @@ class TestDoctorFixFlag:
         # Should NOT call fix function when user declines
         mock_fix_func.assert_not_called()
 
+    @patch("aurora_cli.commands.doctor.MCPFunctionalChecks")
+    @patch("aurora_cli.commands.doctor.ToolIntegrationChecks")
     @patch("aurora_cli.commands.doctor.CoreSystemChecks")
     @patch("aurora_cli.commands.doctor.CodeAnalysisChecks")
     @patch("aurora_cli.commands.doctor.SearchRetrievalChecks")
@@ -475,6 +531,8 @@ class TestDoctorFixFlag:
         mock_search_checks,
         mock_code_checks,
         mock_core_checks,
+        mock_tool_checks,
+        mock_mcp_checks,
         runner: CliRunner,
     ):
         """Test --fix shows manual instructions for non-fixable issues."""

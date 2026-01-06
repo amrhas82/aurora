@@ -27,10 +27,9 @@ from rich.table import Table
 from rich.text import Text
 
 from aurora_cli.config import Config, load_config
-from aurora_cli.errors import ErrorHandler, MemoryStoreError, handle_errors
-from aurora_core.metrics.query_metrics import QueryMetrics
+from aurora_cli.errors import ErrorHandler, handle_errors
 from aurora_cli.memory_manager import MemoryManager, SearchResult
-
+from aurora_core.metrics.query_metrics import QueryMetrics
 
 __all__ = ["memory_group"]
 
@@ -59,9 +58,15 @@ def memory_group() -> None:
 
 @memory_group.command(name="index")
 @click.argument("path", type=click.Path(exists=True, path_type=Path), default=".")
+@click.option(
+    "--db-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Database path (overrides config, useful for testing)",
+)
 @click.pass_context
 @handle_errors
-def index_command(ctx: click.Context, path: Path) -> None:
+def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
     """Index code files into memory store.
 
     PATH is the directory or file to index. Defaults to current directory.
@@ -81,13 +86,22 @@ def index_command(ctx: click.Context, path: Path) -> None:
         # Force reindex (run index command again on same path)
         aur mem index .
         # Note: Will update existing chunks and add new ones
+
+        \b
+        # Use custom database path
+        aur mem index . --db-path /tmp/test.db
     """
     # Load configuration
     config = load_config()
-    db_path = config.get_db_path()
+
+    # Override db_path if provided
+    if db_path:
+        config.db_path = str(db_path)
+
+    db_path_str = config.get_db_path()
 
     # Initialize memory manager with config
-    console.print(f"[dim]Using database: {db_path}[/]")
+    console.print(f"[dim]Using database: {db_path_str}[/]")
     manager = MemoryManager(config=config)
 
     # Create progress display
@@ -174,6 +188,12 @@ def index_command(ctx: click.Context, path: Path) -> None:
     "Semantic (conceptual relevance), and Activation (recency/frequency) scores in rich "
     "box-drawing format. Includes intelligent explanations for each score component.",
 )
+@click.option(
+    "--db-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Database path (overrides config, useful for testing)",
+)
 @click.pass_context
 @handle_errors
 def search_command(
@@ -185,6 +205,7 @@ def search_command(
     min_score: float | None,
     chunk_type: str | None,
     show_scores: bool,
+    db_path: Path | None,
 ) -> None:
     """Search AURORA memory for relevant chunks.
 
@@ -218,12 +239,19 @@ def search_command(
     """
     # Load configuration
     config = load_config()
-    db_path = Path(config.get_db_path())
 
-    if not db_path.exists():
+    # Override db_path if provided
+    if db_path:
+        config.db_path = str(db_path)
+
+    db_path_resolved = Path(config.get_db_path())
+
+    if not db_path_resolved.exists():
         error_handler = ErrorHandler()
-        error = FileNotFoundError(f"Database not found at {db_path}")
-        error_msg = error_handler.handle_path_error(error, str(db_path), "opening database")
+        error = FileNotFoundError(f"Database not found at {db_path_resolved}")
+        error_msg = error_handler.handle_path_error(
+            error, str(db_path_resolved), "opening database"
+        )
         console.print(
             f"\n{error_msg}\n\n"
             "[green]Hint:[/] Run [cyan]aur mem index .[/] to create and populate the database.",
@@ -232,7 +260,7 @@ def search_command(
         raise click.Abort()
 
     # Initialize memory manager with config
-    console.print(f"[dim]Searching memory from {db_path}...[/]")
+    console.print(f"[dim]Searching memory from {db_path_resolved}...[/]")
     manager = MemoryManager(config=config)
 
     # Perform search
@@ -257,7 +285,13 @@ def search_command(
 
 @memory_group.command(name="get")
 @click.argument("index", type=int)
-@click.option("--format", "output_format", type=click.Choice(["rich", "json"]), default="rich", help="Output format")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["rich", "json"]),
+    default="rich",
+    help="Output format",
+)
 @click.pass_context
 @handle_errors
 def get_command(ctx: click.Context, index: int, output_format: str) -> None:
@@ -299,9 +333,15 @@ def get_command(ctx: click.Context, index: int, output_format: str) -> None:
 
 
 @memory_group.command(name="stats")
+@click.option(
+    "--db-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Database path (overrides config, useful for testing)",
+)
 @click.pass_context
 @handle_errors
-def stats_command(ctx: click.Context) -> None:
+def stats_command(ctx: click.Context, db_path: Path | None) -> None:
     """Display memory store statistics.
 
     Shows information about indexed chunks, files, languages, and database size.
@@ -311,21 +351,30 @@ def stats_command(ctx: click.Context) -> None:
         \b
         # Show stats for database
         aur mem stats
+
+        \b
+        # Show stats for custom database
+        aur mem stats --db-path /tmp/test.db
     """
     # Load configuration
     config = load_config()
-    db_path = Path(config.get_db_path())
 
-    if not db_path.exists():
+    # Override db_path if provided
+    if db_path:
+        config.db_path = str(db_path)
+
+    db_path_resolved = Path(config.get_db_path())
+
+    if not db_path_resolved.exists():
         console.print(
-            f"[bold red]Error:[/] Database not found at {db_path}\n"
+            f"[bold red]Error:[/] Database not found at {db_path_resolved}\n"
             f"Run 'aur mem index' first to create the database",
             style="red",
         )
         raise click.Abort()
 
     # Initialize memory manager with config
-    console.print(f"[dim]Loading statistics from {db_path}...[/]")
+    console.print(f"[dim]Loading statistics from {db_path_resolved}...[/]")
     manager = MemoryManager(config=config)
 
     # Get statistics
@@ -343,6 +392,7 @@ def stats_command(ctx: click.Context) -> None:
     # Add indexing metadata if available
     if stats.last_indexed:
         from datetime import datetime
+
         try:
             indexed_time = datetime.fromisoformat(stats.last_indexed)
             time_ago = datetime.now(indexed_time.tzinfo or None) - indexed_time
@@ -413,16 +463,26 @@ def stats_command(ctx: click.Context) -> None:
                 metrics_table.add_row("", "")
                 metrics_table.add_row("[bold]This Month", "")
                 metrics_table.add_row("  Queries", f"{metrics_summary.queries_this_month:,}")
-                metrics_table.add_row("  SOAR Queries", f"{metrics_summary.soar_queries_this_month:,}")
+                metrics_table.add_row(
+                    "  SOAR Queries", f"{metrics_summary.soar_queries_this_month:,}"
+                )
 
             if metrics_summary.avg_duration_ms > 0:
                 metrics_table.add_row("", "")
                 metrics_table.add_row("[bold]Performance", "")
-                metrics_table.add_row("  Avg Duration", f"{metrics_summary.avg_duration_ms/1000:.1f}s")
+                metrics_table.add_row(
+                    "  Avg Duration", f"{metrics_summary.avg_duration_ms/1000:.1f}s"
+                )
                 if metrics_summary.avg_soar_duration_ms > 0:
-                    metrics_table.add_row("  Avg SOAR Duration", f"{metrics_summary.avg_soar_duration_ms/1000:.1f}s")
-                metrics_table.add_row("  Min Duration", f"{metrics_summary.min_duration_ms/1000:.1f}s")
-                metrics_table.add_row("  Max Duration", f"{metrics_summary.max_duration_ms/1000:.1f}s")
+                    metrics_table.add_row(
+                        "  Avg SOAR Duration", f"{metrics_summary.avg_soar_duration_ms/1000:.1f}s"
+                    )
+                metrics_table.add_row(
+                    "  Min Duration", f"{metrics_summary.min_duration_ms/1000:.1f}s"
+                )
+                metrics_table.add_row(
+                    "  Max Duration", f"{metrics_summary.max_duration_ms/1000:.1f}s"
+                )
 
             if metrics_summary.success_rate < 1.0:
                 success_pct = metrics_summary.success_rate * 100
@@ -437,7 +497,9 @@ def stats_command(ctx: click.Context) -> None:
             if metrics_summary.model_breakdown:
                 metrics_table.add_row("", "")
                 metrics_table.add_row("[bold]By Model (This Month)", "")
-                for model, count in sorted(metrics_summary.model_breakdown.items(), key=lambda x: x[1], reverse=True):
+                for model, count in sorted(
+                    metrics_summary.model_breakdown.items(), key=lambda x: x[1], reverse=True
+                ):
                     metrics_table.add_row(f"  {model}", f"{count:,}")
 
             console.print(metrics_table)
@@ -524,6 +586,7 @@ def _display_rich_results(
         # Format last_modified timestamp as relative time
         if last_modified:
             from datetime import datetime
+
             try:
                 # last_modified is a Unix timestamp
                 mod_time = datetime.fromtimestamp(last_modified)
@@ -749,7 +812,9 @@ def _format_score_box(
     content_width = terminal_width - 4
     if len(header_content) > content_width - 4:
         # Truncate name if too long
-        available_for_name = content_width - len(file_name) - len(element_type) - len(line_range) - 15
+        available_for_name = (
+            content_width - len(file_name) - len(element_type) - len(line_range) - 15
+        )
         if available_for_name > 10:
             name = _truncate_text(name, available_for_name)
         else:
@@ -1094,8 +1159,8 @@ def _save_search_cache(results: list[SearchResult]) -> None:
     Args:
         results: List of search results to cache
     """
-    import tempfile
     import pickle
+    import tempfile
 
     cache_file = Path(tempfile.gettempdir()) / "aurora_search_cache.pkl"
     try:
@@ -1111,8 +1176,8 @@ def _load_search_cache() -> list[SearchResult] | None:
     Returns:
         List of cached results, or None if cache doesn't exist or is expired
     """
-    import tempfile
     import pickle
+    import tempfile
     import time
 
     cache_file = Path(tempfile.gettempdir()) / "aurora_search_cache.pkl"

@@ -7,18 +7,23 @@ Uses markdown heading format for frontmatter instead of YAML.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
+    "search": "Search indexed code and documentation",
+    "get": "Get full chunk content by index",
     "plan": "Generate structured plans with agent delegation",
     "checkpoint": "Save session context for continuity",
+    "implement": "Plan-based implementation (placeholder)",
     "archive": "Archive completed plans with spec processing",
 }
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".roo/commands/aurora-search.md",
+    "get": ".roo/commands/aurora-get.md",
     "plan": ".roo/commands/aurora-plan.md",
     "checkpoint": ".roo/commands/aurora-checkpoint.md",
+    "implement": ".roo/commands/aurora-implement.md",
     "archive": ".roo/commands/aurora-archive.md",
 }
 

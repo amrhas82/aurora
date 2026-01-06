@@ -7,6 +7,7 @@ in .cursor/commands/ directory with aurora-{command}.md naming.
 from pathlib import Path
 
 import pytest
+
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,
@@ -51,6 +52,7 @@ class TestCursorSlashCommandConfiguratorPaths:
         config = CursorSlashCommandConfigurator()
         path = config.get_relative_path("plan")
         assert path == ".cursor/commands/aurora-plan.md"
+
     def test_get_relative_path_all_commands(self):
         """Test get_relative_path works for all standard commands."""
         config = CursorSlashCommandConfigurator()
@@ -124,7 +126,9 @@ class TestCursorSlashCommandConfiguratorFrontmatter:
             assert "---" in frontmatter, f"Frontmatter for {cmd_id} should have YAML delimiters"
             assert "name:" in frontmatter, f"Frontmatter for {cmd_id} should have name"
             assert "id:" in frontmatter, f"Frontmatter for {cmd_id} should have id"
-            assert "description:" in frontmatter, f"Frontmatter for {cmd_id} should have description"
+            assert (
+                "description:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have description"
 
     def test_frontmatter_includes_aurora_naming_pattern(self):
         """Test frontmatter uses /aurora-{command} naming pattern."""
@@ -133,9 +137,9 @@ class TestCursorSlashCommandConfiguratorFrontmatter:
         for cmd_id in ALL_COMMANDS:
             frontmatter = config.get_frontmatter(cmd_id)
             # The name field should include the /aurora-{command} pattern
-            assert f"/aurora-{cmd_id}" in frontmatter, (
-                f"Frontmatter for {cmd_id} should include /aurora-{cmd_id} naming pattern"
-            )
+            assert (
+                f"/aurora-{cmd_id}" in frontmatter
+            ), f"Frontmatter for {cmd_id} should include /aurora-{cmd_id} naming pattern"
 
 
 class TestCursorSlashCommandConfiguratorBody:
@@ -163,13 +167,13 @@ class TestCursorSlashCommandConfiguratorBody:
 class TestCursorSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method."""
 
-    def test_generate_all_creates_3_files(self, tmp_path: Path):
-        """Test generate_all creates 3 command files (one for each command)."""
+    def test_generate_all_creates_6_files(self, tmp_path: Path):
+        """Test generate_all creates 6 command files (one for each command)."""
         config = CursorSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 3
+        assert len(created) == 6
 
     def test_generate_all_creates_files_in_cursor_directory(self, tmp_path: Path):
         """Test generate_all creates files in .cursor/commands/ directory."""
@@ -247,9 +251,7 @@ class TestCursorSlashCommandConfiguratorUpdateExisting:
 
         custom_line = "\n\n<!-- Custom Cursor-specific note -->\n"
         modified_content = (
-            original_content[:frontmatter_end]
-            + custom_line
-            + original_content[frontmatter_end:]
+            original_content[:frontmatter_end] + custom_line + original_content[frontmatter_end:]
         )
         plan_file.write_text(modified_content)
 
@@ -271,10 +273,7 @@ class TestCursorSlashCommandConfiguratorUpdateExisting:
 
         frontmatter = config.get_frontmatter("plan")
         plan_file.write_text(
-            f"{frontmatter}\n"
-            f"{AURORA_MARKERS['start']}\n"
-            f"Body\n"
-            f"{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n" f"{AURORA_MARKERS['start']}\n" f"Body\n" f"{AURORA_MARKERS['end']}\n"
         )
 
         # Update existing
@@ -291,13 +290,13 @@ class TestCursorSlashCommandConfiguratorUpdateExisting:
 class TestCursorSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_3_targets(self):
-        """Test get_targets returns 3 targets (one per command)."""
+    def test_get_targets_returns_6_targets(self):
+        """Test get_targets returns 6 targets (one per command)."""
         config = CursorSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 3
+        assert len(targets) == 6
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

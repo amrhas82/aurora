@@ -8,6 +8,7 @@ and special auto_execution_mode: 3 frontmatter.
 from pathlib import Path
 
 import pytest
+
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,
@@ -52,6 +53,7 @@ class TestWindsurfSlashCommandConfiguratorPaths:
         config = WindsurfSlashCommandConfigurator()
         path = config.get_relative_path("plan")
         assert path == ".windsurf/workflows/aurora-plan.md"
+
     def test_get_relative_path_all_commands(self):
         """Test get_relative_path works for all standard commands."""
         config = WindsurfSlashCommandConfigurator()
@@ -109,9 +111,9 @@ class TestWindsurfSlashCommandConfiguratorFrontmatter:
         for cmd_id in ALL_COMMANDS:
             frontmatter = config.get_frontmatter(cmd_id)
             assert frontmatter is not None
-            assert "auto_execution_mode: 3" in frontmatter, (
-                f"Frontmatter for {cmd_id} should have auto_execution_mode: 3"
-            )
+            assert (
+                "auto_execution_mode: 3" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have auto_execution_mode: 3"
 
     def test_get_frontmatter_all_commands(self):
         """Test get_frontmatter works for all standard commands."""
@@ -121,7 +123,9 @@ class TestWindsurfSlashCommandConfiguratorFrontmatter:
             frontmatter = config.get_frontmatter(cmd_id)
             assert frontmatter is not None, f"Frontmatter for {cmd_id} should not be None"
             assert "---" in frontmatter, f"Frontmatter for {cmd_id} should have YAML delimiters"
-            assert "description:" in frontmatter, f"Frontmatter for {cmd_id} should have description"
+            assert (
+                "description:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have description"
 
 
 class TestWindsurfSlashCommandConfiguratorBody:
@@ -148,13 +152,13 @@ class TestWindsurfSlashCommandConfiguratorBody:
 class TestWindsurfSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method."""
 
-    def test_generate_all_creates_3_files(self, tmp_path: Path):
-        """Test generate_all creates 3 command files (one for each command)."""
+    def test_generate_all_creates_6_files(self, tmp_path: Path):
+        """Test generate_all creates 6 command files (one for each command)."""
         config = WindsurfSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 3
+        assert len(created) == 6
 
     def test_generate_all_creates_files_in_windsurf_directory(self, tmp_path: Path):
         """Test generate_all creates files in .windsurf/workflows/ directory."""
@@ -242,9 +246,7 @@ class TestWindsurfSlashCommandConfiguratorUpdateExisting:
 
         custom_line = "\n\n<!-- Custom Windsurf workflow note -->\n"
         modified_content = (
-            original_content[:frontmatter_end]
-            + custom_line
-            + original_content[frontmatter_end:]
+            original_content[:frontmatter_end] + custom_line + original_content[frontmatter_end:]
         )
         plan_file.write_text(modified_content)
 
@@ -266,10 +268,7 @@ class TestWindsurfSlashCommandConfiguratorUpdateExisting:
 
         frontmatter = config.get_frontmatter("plan")
         plan_file.write_text(
-            f"{frontmatter}\n"
-            f"{AURORA_MARKERS['start']}\n"
-            f"Body\n"
-            f"{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n" f"{AURORA_MARKERS['start']}\n" f"Body\n" f"{AURORA_MARKERS['end']}\n"
         )
 
         # Update existing
@@ -286,13 +285,13 @@ class TestWindsurfSlashCommandConfiguratorUpdateExisting:
 class TestWindsurfSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_3_targets(self):
-        """Test get_targets returns 3 targets (one per command)."""
+    def test_get_targets_returns_6_targets(self):
+        """Test get_targets returns 6 targets (one per command)."""
         config = WindsurfSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 3
+        assert len(targets) == 6
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Python 3.11+ has tomllib built-in, but Python 3.10 needs tomli
 try:
     import tomllib
@@ -64,6 +63,7 @@ class TestGeminiSlashCommandConfiguratorPaths:
         config = GeminiSlashCommandConfigurator()
         path = config.get_relative_path("plan")
         assert path == ".gemini/commands/aurora/plan.toml"
+
     def test_get_relative_path_all_commands(self):
         """Test get_relative_path works for all standard commands."""
         config = GeminiSlashCommandConfigurator()
@@ -150,13 +150,13 @@ class TestGeminiSlashCommandConfiguratorBody:
 class TestGeminiSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method with TOML output."""
 
-    def test_generate_all_creates_3_files(self, tmp_path: Path):
-        """Test generate_all creates 3 command files (one for each command)."""
+    def test_generate_all_creates_6_files(self, tmp_path: Path):
+        """Test generate_all creates 6 command files (one for each command)."""
         config = GeminiSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 3
+        assert len(created) == 6
 
     def test_generate_all_creates_toml_files(self, tmp_path: Path):
         """Test generate_all creates .toml files."""
@@ -257,14 +257,16 @@ class TestGeminiSlashCommandConfiguratorUpdateExisting:
         plan_dir.mkdir(parents=True, exist_ok=True)
         plan_file = plan_dir / "plan.toml"
 
-        plan_file.write_text(f'''description = "My Custom Description"
+        plan_file.write_text(
+            f'''description = "My Custom Description"
 
 prompt = """
 {AURORA_MARKERS["start"]}
 Old body content
 {AURORA_MARKERS["end"]}
 """
-''')
+'''
+        )
 
         config.update_existing(str(tmp_path), ".aurora")
 
@@ -282,14 +284,16 @@ Old body content
         plan_file = plan_dir / "plan.toml"
 
         old_body = "This is old body content that should be replaced."
-        plan_file.write_text(f'''description = "Test description"
+        plan_file.write_text(
+            f'''description = "Test description"
 
 prompt = """
 {AURORA_MARKERS["start"]}
 {old_body}
 {AURORA_MARKERS["end"]}
 """
-''')
+'''
+        )
 
         config.update_existing(str(tmp_path), ".aurora")
 
@@ -307,14 +311,16 @@ prompt = """
         plan_dir.mkdir(parents=True, exist_ok=True)
         plan_file = plan_dir / "plan.toml"
 
-        plan_file.write_text(f'''description = "Test"
+        plan_file.write_text(
+            f'''description = "Test"
 
 prompt = """
 {AURORA_MARKERS["start"]}
 Body
 {AURORA_MARKERS["end"]}
 """
-''')
+'''
+        )
 
         updated = config.update_existing(str(tmp_path), ".aurora")
 
@@ -329,13 +335,13 @@ Body
 class TestGeminiSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_3_targets(self):
-        """Test get_targets returns 3 targets (one per command)."""
+    def test_get_targets_returns_6_targets(self):
+        """Test get_targets returns 6 targets (one per command)."""
         config = GeminiSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 3
+        assert len(targets) == 6
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

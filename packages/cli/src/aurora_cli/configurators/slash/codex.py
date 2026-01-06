@@ -7,22 +7,33 @@ or $CODEX_HOME/prompts/) rather than project-relative paths like other tools.
 import os
 from pathlib import Path
 
-from aurora_cli.configurators.slash.base import (
-    AURORA_MARKERS,
-    SlashCommandConfigurator,
-)
+from aurora_cli.configurators.slash.base import AURORA_MARKERS, SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
-
 
 # Relative paths (used for get_relative_path, but actual files go to global dir)
 FILE_PATHS: dict[str, str] = {
+    "search": ".codex/prompts/aurora-search.md",
+    "get": ".codex/prompts/aurora-get.md",
     "plan": ".codex/prompts/aurora-plan.md",
     "checkpoint": ".codex/prompts/aurora-checkpoint.md",
+    "implement": ".codex/prompts/aurora-implement.md",
     "archive": ".codex/prompts/aurora-archive.md",
 }
 
 # Frontmatter with $ARGUMENTS placeholder and argument-hint
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+description: Search indexed code and documentation
+argument-hint: search query
+---
+
+$ARGUMENTS""",
+    "get": """---
+description: Get full chunk content by index
+argument-hint: chunk index number
+---
+
+$ARGUMENTS""",
     "plan": """---
 description: Generate structured plans with agent delegation
 argument-hint: request or feature description
@@ -32,6 +43,12 @@ $ARGUMENTS""",
     "checkpoint": """---
 description: Save session context for continuity
 argument-hint: optional checkpoint name
+---
+
+$ARGUMENTS""",
+    "implement": """---
+description: Plan-based implementation (placeholder)
+argument-hint: plan ID to implement
 ---
 
 $ARGUMENTS""",
@@ -171,9 +188,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
                 if frontmatter:
                     sections.append(frontmatter.strip())
 
-                sections.append(
-                    f"{AURORA_MARKERS['start']}\n{body}\n{AURORA_MARKERS['end']}"
-                )
+                sections.append(f"{AURORA_MARKERS['start']}\n{body}\n{AURORA_MARKERS['end']}")
 
                 content = "\n".join(sections) + "\n"
                 file_path.write_text(content, encoding="utf-8")

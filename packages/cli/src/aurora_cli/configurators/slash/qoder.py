@@ -6,9 +6,20 @@ Configures slash commands for Qoder AI in .qoder/commands/aurora/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+name: Aurora: Search
+description: Search indexed code and documentation
+category: Aurora
+tags: [aurora, search, memory]
+---""",
+    "get": """---
+name: Aurora: Get
+description: Get full chunk content by index
+category: Aurora
+tags: [aurora, search, memory]
+---""",
     "plan": """---
 name: Aurora: Plan
 description: Generate structured plans with agent delegation
@@ -21,6 +32,12 @@ description: Save session context for continuity
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
+    "implement": """---
+name: Aurora: Implement
+description: Plan-based implementation (placeholder)
+category: Aurora
+tags: [aurora, planning, implementation]
+---""",
     "archive": """---
 name: Aurora: Archive
 description: Archive completed plans with spec processing
@@ -31,8 +48,11 @@ tags: [aurora, planning, archive]
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".qoder/commands/aurora/search.md",
+    "get": ".qoder/commands/aurora/get.md",
     "plan": ".qoder/commands/aurora/plan.md",
     "checkpoint": ".qoder/commands/aurora/checkpoint.md",
+    "implement": ".qoder/commands/aurora/implement.md",
     "archive": ".qoder/commands/aurora/archive.md",
 }
 

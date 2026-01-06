@@ -552,13 +552,13 @@ def _display_rich_results(
 
     # Create results table
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("File", style="yellow", width=30)
-    table.add_column("Type", style="green", width=6)
-    table.add_column("Name", style="cyan", width=20)
-    table.add_column("Lines", style="dim", width=10)
-    table.add_column("Commits", style="magenta", width=8, justify="right")
-    table.add_column("Modified", style="dim cyan", width=10)
-    table.add_column("Score", justify="right", style="bold blue", width=8)
+    table.add_column("File", style="yellow", width=28)
+    table.add_column("Type", style="green", width=8)
+    table.add_column("Name", style="cyan", width=18)
+    table.add_column("Lines", style="dim", width=9)
+    table.add_column("Commits", style="magenta", width=7, justify="right")
+    table.add_column("Modified", style="dim cyan", width=9)
+    table.add_column("Score", justify="right", style="bold blue", width=7)
 
     if show_content:
         table.add_column("Preview", style="white", width=50)

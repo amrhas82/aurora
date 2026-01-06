@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,
@@ -194,8 +195,12 @@ class TestCodexSlashCommandConfiguratorFrontmatter:
             frontmatter = config.get_frontmatter(cmd_id)
             assert frontmatter is not None, f"Frontmatter for {cmd_id} should not be None"
             assert "$ARGUMENTS" in frontmatter, f"Frontmatter for {cmd_id} should have $ARGUMENTS"
-            assert "description:" in frontmatter, f"Frontmatter for {cmd_id} should have description"
-            assert "argument-hint:" in frontmatter, f"Frontmatter for {cmd_id} should have argument-hint"
+            assert (
+                "description:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have description"
+            assert (
+                "argument-hint:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have argument-hint"
 
 
 class TestCodexSlashCommandConfiguratorBody:
@@ -233,7 +238,7 @@ class TestCodexSlashCommandConfiguratorGenerateAll:
             created = config.generate_all(project_path, ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 3
+        assert len(created) == 6
 
     def test_generate_all_writes_to_global_directory(self, tmp_path: Path):
         """Test generate_all writes to global directory, not project directory."""
@@ -377,13 +382,13 @@ class TestCodexSlashCommandConfiguratorUpdateExisting:
 class TestCodexSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_3_targets(self):
-        """Test get_targets returns 3 targets (one per command)."""
+    def test_get_targets_returns_6_targets(self):
+        """Test get_targets returns 6 targets (one per command)."""
         config = CodexSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 3
+        assert len(targets) == 6
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

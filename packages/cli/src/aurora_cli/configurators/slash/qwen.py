@@ -7,18 +7,23 @@ Uses TOML format instead of markdown.
 from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
+    "search": "Search indexed code and documentation",
+    "get": "Get full chunk content by index",
     "plan": "Generate structured plans with agent delegation",
     "checkpoint": "Save session context for continuity",
+    "implement": "Plan-based implementation (placeholder)",
     "archive": "Archive completed plans with spec processing",
 }
 
 # File paths for each command (TOML format)
 FILE_PATHS: dict[str, str] = {
+    "search": ".qwen/commands/aurora-search.toml",
+    "get": ".qwen/commands/aurora-get.toml",
     "plan": ".qwen/commands/aurora-plan.toml",
     "checkpoint": ".qwen/commands/aurora-checkpoint.toml",
+    "implement": ".qwen/commands/aurora-implement.toml",
     "archive": ".qwen/commands/aurora-archive.toml",
 }
 

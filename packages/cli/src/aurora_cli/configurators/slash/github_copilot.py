@@ -7,9 +7,18 @@ Files use .prompt.md extension and include $ARGUMENTS placeholder.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command - includes $ARGUMENTS placeholder
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+description: Search indexed code and documentation
+---
+
+$ARGUMENTS""",
+    "get": """---
+description: Get full chunk content by index
+---
+
+$ARGUMENTS""",
     "plan": """---
 description: Generate structured plans with agent delegation
 ---
@@ -17,6 +26,11 @@ description: Generate structured plans with agent delegation
 $ARGUMENTS""",
     "checkpoint": """---
 description: Save session context for continuity
+---
+
+$ARGUMENTS""",
+    "implement": """---
+description: Plan-based implementation (placeholder)
 ---
 
 $ARGUMENTS""",
@@ -29,8 +43,11 @@ $ARGUMENTS""",
 
 # File paths for each command - uses .prompt.md extension
 FILE_PATHS: dict[str, str] = {
+    "search": ".github/prompts/aurora-search.prompt.md",
+    "get": ".github/prompts/aurora-get.prompt.md",
     "plan": ".github/prompts/aurora-plan.prompt.md",
     "checkpoint": ".github/prompts/aurora-checkpoint.prompt.md",
+    "implement": ".github/prompts/aurora-implement.prompt.md",
     "archive": ".github/prompts/aurora-archive.prompt.md",
 }
 

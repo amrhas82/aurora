@@ -6,9 +6,22 @@ Configures slash commands for iFlow AI in .iflow/commands/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+name: Aurora: Search
+id: /aurora-search
+description: Search indexed code and documentation
+category: Aurora
+tags: [aurora, search, memory]
+---""",
+    "get": """---
+name: Aurora: Get
+id: /aurora-get
+description: Get full chunk content by index
+category: Aurora
+tags: [aurora, search, memory]
+---""",
     "plan": """---
 name: Aurora: Plan
 id: /aurora-plan
@@ -23,6 +36,13 @@ description: Save session context for continuity
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
+    "implement": """---
+name: Aurora: Implement
+id: /aurora-implement
+description: Plan-based implementation (placeholder)
+category: Aurora
+tags: [aurora, planning, implementation]
+---""",
     "archive": """---
 name: Aurora: Archive
 id: /aurora-archive
@@ -34,8 +54,11 @@ tags: [aurora, planning, archive]
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".iflow/commands/aurora-search.md",
+    "get": ".iflow/commands/aurora-get.md",
     "plan": ".iflow/commands/aurora-plan.md",
     "checkpoint": ".iflow/commands/aurora-checkpoint.md",
+    "implement": ".iflow/commands/aurora-implement.md",
     "archive": ".iflow/commands/aurora-archive.md",
 }
 

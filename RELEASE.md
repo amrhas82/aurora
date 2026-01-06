@@ -68,6 +68,50 @@ Releases a specific version to PyPI.
 
 **Use when:** You're ready to publish a new version to PyPI immediately.
 
+## Pre-Release Checklist
+
+Before releasing, ensure quality by running local CI checks:
+
+### 1. Quick Health Check (30 seconds)
+```bash
+./scripts/quick-check.sh
+```
+
+This runs the test suite quickly to catch obvious issues.
+
+### 2. Full CI Check (3-5 minutes) - **REQUIRED BEFORE RELEASE**
+```bash
+./scripts/run-local-ci.sh
+```
+
+This runs:
+- All tests (same as GitHub CI)
+- Pre-commit hooks (formatting, linting, security)
+- Coverage reporting
+
+**Release Criteria:**
+- ✅ All tests passing
+- ✅ No security issues (bandit)
+- ✅ Code properly formatted (black, isort)
+- ✅ Test coverage meets standards
+
+### 3. Then Release
+```bash
+./scripts/release.sh <version>
+```
+
+**Typical pre-release workflow:**
+```bash
+# 1. Run full local CI
+./scripts/run-local-ci.sh
+
+# 2. If all checks pass, release
+./scripts/release.sh 0.5.1
+
+# 3. Verify on PyPI
+pip install --upgrade aurora-actr
+```
+
 ## Version Strategy
 
 [Semantic Versioning](https://semver.org/):

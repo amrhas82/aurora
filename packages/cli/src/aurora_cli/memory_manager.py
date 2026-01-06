@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_cli.config import Config
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
+from aurora_cli.ignore_patterns import load_ignore_patterns, should_ignore
 from aurora_context_code.git import GitSignalExtractor
 from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import ParserRegistry, get_global_registry
@@ -540,6 +541,8 @@ class MemoryManager:
     def _discover_files(self, root_path: Path) -> list[Path]:
         """Recursively discover all code files in directory.
 
+        Respects .auroraignore file for custom exclusions.
+
         Args:
             root_path: Root directory to search
 
@@ -548,9 +551,16 @@ class MemoryManager:
         """
         files = []
 
+        # Load ignore patterns (defaults + .auroraignore)
+        ignore_patterns = load_ignore_patterns(root_path)
+
         for item in root_path.rglob("*"):
             # Skip directories in SKIP_DIRS
             if any(skip_dir in item.parts for skip_dir in SKIP_DIRS):
+                continue
+
+            # Skip files matching ignore patterns
+            if should_ignore(item, root_path, ignore_patterns):
                 continue
 
             # Check if any parser can handle this file

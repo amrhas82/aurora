@@ -1,0 +1,31 @@
+# Aurora Ignore Patterns
+#
+# Exclude files and directories from indexing.
+# Uses gitignore-style patterns.
+#
+# Default exclusions (always applied):
+#   tasks/**           - Temporary task lists
+#   CHANGELOG.md       - Version history
+#   LICENSE*           - Legal files
+#   node_modules/**    - Dependencies
+#   venv/**            - Virtual environments
+#   .git/**            - Git metadata
+#
+# Add your custom patterns below:
+
+# Example: Exclude all test files
+# tests/**
+
+# Example: Exclude specific documentation
+# docs/archive/**
+
+# Example: Exclude generated files
+# **/generated/**
+
+# Example: Exclude specific file types
+# *.log
+# *.tmp
+
+# Example: Exclude specific files
+# CONTRIBUTING.md
+# CODE_OF_CONDUCT.md

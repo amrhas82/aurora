@@ -1,0 +1,100 @@
+{
+  "total_test_files": 220,
+  "files_analyzed": 60,
+  "circular_dependencies": 0,
+  "circular_details": [],
+  "migration_batches": [
+    [
+      "tests/e2e/test_aurora_query_e2e.py",
+      "tests/e2e/test_doctor_e2e.py",
+      "tests/e2e/test_mcp_e2e.py",
+      "tests/e2e/test_memory_lifecycle_e2e.py",
+      "tests/integration/cli/test_init_flow.py",
+      "tests/integration/mcp/test_mcp_soar_multi_turn.py",
+      "tests/integration/planning/test_workflows.py",
+      "tests/integration/test_actr_retrieval_precision.py",
+      "tests/integration/test_agent_execution.py",
+      "tests/integration/test_archive_command_e2e.py",
+      "tests/integration/test_complex_query_e2e.py",
+      "tests/integration/test_complexity_assessment_integration.py",
+      "tests/integration/test_context_retrieval.py",
+      "tests/integration/test_e2e_framework.py",
+      "tests/integration/test_error_recovery.py",
+      "tests/integration/test_escalation_integration.py",
+      "tests/integration/test_medium_query_e2e.py",
+      "tests/integration/test_query_executor_integration.py",
+      "tests/integration/test_semantic_retrieval.py",
+      "tests/integration/test_simple_query_e2e.py",
+      "tests/integration/test_verification_retry.py",
+      "tests/unit/cli/configurators/slash/test_claude.py",
+      "tests/unit/cli/configurators/slash/test_cursor.py",
+      "tests/unit/cli/configurators/slash/test_gemini.py",
+      "tests/unit/cli/configurators/slash/test_markdown_tools.py",
+      "tests/unit/cli/configurators/slash/test_toml_base.py",
+      "tests/unit/cli/configurators/slash/test_windsurf.py",
+      "tests/unit/cli/planning/test_checkpoint.py",
+      "tests/unit/cli/planning/test_enhanced_generation.py",
+      "tests/unit/cli/planning/test_file_path_resolver.py",
+      "tests/unit/cli/test_agent_parser.py",
+      "tests/unit/cli/test_configurators.py",
+      "tests/unit/cli/test_headless_simple.py",
+      "tests/unit/cli/test_init_helpers.py",
+      "tests/unit/cli/test_init_tools_flag.py",
+      "tests/unit/cli/test_init_unified.py",
+      "tests/unit/cli/test_init_validation.py",
+      "tests/unit/cli/test_mcp_functional_checks.py",
+      "tests/unit/cli/test_memory_retrieval.py",
+      "tests/unit/context_code/test_git_fallback.py",
+      "tests/unit/context_code/test_python_parser.py",
+      "tests/unit/core/store/test_sqlite_schema_migration.py",
+      "tests/unit/core/test_chunk_store_integration.py",
+      "tests/unit/core/test_config_loader.py",
+      "tests/unit/core/test_conversation_logger.py",
+      "tests/unit/core/test_store_sqlite.py",
+      "tests/unit/mcp/test_agent_tools.py",
+      "tests/unit/mcp/test_aurora_query_phases.py",
+      "tests/unit/mcp/test_aurora_query_tool.py",
+      "tests/unit/mcp/test_phase_handlers.py",
+      "tests/unit/planning/converters/test_json.py",
+      "tests/unit/planning/test_global_config.py",
+      "tests/unit/planning/test_plan_cmd.py",
+      "tests/unit/planning/test_templates.py",
+      "tests/unit/planning/test_validate_cmd.py",
+      "tests/unit/planning/utils/test_filesystem.py",
+      "tests/unit/planning/utils/test_task_progress.py",
+      "tests/unit/soar/test_agent_registry.py",
+      "tests/unit/soar/test_orchestrator.py",
+      "tests/unit/test_git_extractor.py"
+    ]
+  ],
+  "batch_count": 1,
+  "dependencies": {
+    "e2e/test_e2e_search_accuracy.py": [
+      "conftest"
+    ],
+    "e2e/test_e2e_complexity_assessment.py": [
+      "conftest"
+    ],
+    "e2e/test_e2e_git_bla_initialization.py": [
+      "conftest"
+    ],
+    "e2e/test_e2e_new_user_workflow.py": [
+      "conftest"
+    ],
+    "e2e/test_cli_complete_workflow.py": [
+      "conftest"
+    ],
+    "e2e/test_e2e_search_scoring.py": [
+      "conftest"
+    ],
+    "e2e/test_e2e_schema_migration.py": [
+      "conftest"
+    ],
+    "e2e/test_e2e_query_uses_index.py": [
+      "conftest"
+    ],
+    "e2e/test_e2e_database_persistence.py": [
+      "conftest"
+    ]
+  }
+}

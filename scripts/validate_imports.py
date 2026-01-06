@@ -25,23 +25,34 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
-
 # Old patterns that should be migrated to new package names
 OLD_IMPORT_PATTERNS = [
-    (r'from aurora\.memory', 'Use "from aurora_memory" instead of "from aurora.memory"'),
-    (r'from aurora\.planning', 'Use "from aurora_planning" instead of "from aurora.planning"'),
-    (r'from aurora\.cli', 'Use "from aurora_cli" instead of "from aurora.cli"'),
-    (r'from aurora\.core', 'Use "from aurora_core" instead of "from aurora.core"'),
-    (r'from aurora\.reasoning', 'Use "from aurora_reasoning" instead of "from aurora.reasoning"'),
-    (r'from aurora\.context_code', 'Use "from aurora_context_code" instead of "from aurora.context_code"'),
-    (r'from aurora\.soar', 'Use "from aurora_soar" instead of "from aurora.soar"'),
-    (r'import aurora\.memory', 'Use "import aurora_memory" instead of "import aurora.memory"'),
-    (r'import aurora\.planning', 'Use "import aurora_planning" instead of "import aurora.planning"'),
-    (r'import aurora\.cli', 'Use "import aurora_cli" instead of "import aurora.cli"'),
-    (r'import aurora\.core', 'Use "import aurora_core" instead of "import aurora.core"'),
-    (r'import aurora\.reasoning', 'Use "import aurora_reasoning" instead of "import aurora.reasoning"'),
-    (r'import aurora\.context_code', 'Use "import aurora_context_code" instead of "import aurora.context_code"'),
-    (r'import aurora\.soar', 'Use "import aurora_soar" instead of "import aurora.soar"'),
+    (r"from aurora\.memory", 'Use "from aurora_memory" instead of "from aurora.memory"'),
+    (r"from aurora\.planning", 'Use "from aurora_planning" instead of "from aurora.planning"'),
+    (r"from aurora\.cli", 'Use "from aurora_cli" instead of "from aurora.cli"'),
+    (r"from aurora\.core", 'Use "from aurora_core" instead of "from aurora.core"'),
+    (r"from aurora\.reasoning", 'Use "from aurora_reasoning" instead of "from aurora.reasoning"'),
+    (
+        r"from aurora\.context_code",
+        'Use "from aurora_context_code" instead of "from aurora.context_code"',
+    ),
+    (r"from aurora\.soar", 'Use "from aurora_soar" instead of "from aurora.soar"'),
+    (r"import aurora\.memory", 'Use "import aurora_memory" instead of "import aurora.memory"'),
+    (
+        r"import aurora\.planning",
+        'Use "import aurora_planning" instead of "import aurora.planning"',
+    ),
+    (r"import aurora\.cli", 'Use "import aurora_cli" instead of "import aurora.cli"'),
+    (r"import aurora\.core", 'Use "import aurora_core" instead of "import aurora.core"'),
+    (
+        r"import aurora\.reasoning",
+        'Use "import aurora_reasoning" instead of "import aurora.reasoning"',
+    ),
+    (
+        r"import aurora\.context_code",
+        'Use "import aurora_context_code" instead of "import aurora.context_code"',
+    ),
+    (r"import aurora\.soar", 'Use "import aurora_soar" instead of "import aurora.soar"'),
 ]
 
 
@@ -58,9 +69,9 @@ def validate_file(filepath: Path) -> List[Tuple[int, str, str]]:
     violations = []
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             lines = f.readlines()
-    except (UnicodeDecodeError, IOError) as e:
+    except (UnicodeDecodeError, IOError):
         # Skip binary files or files that can't be read
         return violations
 
@@ -68,7 +79,7 @@ def validate_file(filepath: Path) -> List[Tuple[int, str, str]]:
         line_stripped = line.strip()
 
         # Skip comments and docstrings
-        if line_stripped.startswith('#'):
+        if line_stripped.startswith("#"):
             continue
 
         # Check each old pattern
@@ -91,15 +102,15 @@ def get_staged_python_files() -> List[Path]:
 
     try:
         result = subprocess.run(
-            ['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'],
+            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
         files = []
-        for line in result.stdout.strip().split('\n'):
-            if line and line.endswith('.py'):
+        for line in result.stdout.strip().split("\n"):
+            if line and line.endswith(".py"):
                 path = Path(line)
                 if path.exists():
                     files.append(path)
@@ -121,14 +132,14 @@ def find_python_files(path: Path) -> List[Path]:
         List of Path objects for .py files
     """
     if path.is_file():
-        return [path] if path.suffix == '.py' else []
+        return [path] if path.suffix == ".py" else []
 
-    return list(path.rglob('*.py'))
+    return list(path.rglob("*.py"))
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Validate import patterns in Python files',
+        description="Validate import patterns in Python files",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -143,20 +154,16 @@ Examples:
 
   # Check all Python files in project
   python scripts/validate_imports.py --path .
-        """
+        """,
     )
 
     parser.add_argument(
-        'files',
-        nargs='*',
-        help='Specific files to validate (if not using --path or pre-commit mode)'
+        "files",
+        nargs="*",
+        help="Specific files to validate (if not using --path or pre-commit mode)",
     )
 
-    parser.add_argument(
-        '--path',
-        type=Path,
-        help='Directory path to recursively validate'
-    )
+    parser.add_argument("--path", type=Path, help="Directory path to recursively validate")
 
     args = parser.parse_args()
 
@@ -198,7 +205,9 @@ Examples:
     # Summary
     if has_violations:
         print("\n" + "=" * 80)
-        print(f"❌ FAILED: Found {total_violations} invalid import(s) in {len([f for f in files if validate_file(f)])} file(s)")
+        print(
+            f"❌ FAILED: Found {total_violations} invalid import(s) in {len([f for f in files if validate_file(f)])} file(s)"
+        )
         print("\nCorrect import patterns:")
         print("  from aurora_memory import ...")
         print("  from aurora_planning import ...")
@@ -214,5 +223,5 @@ Examples:
         return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

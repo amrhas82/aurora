@@ -1,0 +1,215 @@
+{
+  "session_id": "query-1767662871899",
+  "query": "Test project-local storage",
+  "current_phase": 9,
+  "phase_data": {
+    "phase_1": {
+      "complexity": "MEDIUM",
+      "confidence": 0.6882352941176471,
+      "method": "keyword",
+      "reasoning": "Keyword-based classification (borderline or low confidence). LLM verification recommended but not available.",
+      "score": 0.48,
+      "llm_verification_needed": true
+    },
+    "phase_2": {
+      "chunks": [
+        {
+          "chunk_id": "code:python:d1d3c03d4cc09fbe",
+          "content": "SQLiteStore(Store)\nSQLite-based storage implementation with connection pooling.\n\n    This implementation provides thread-safe storage with:\n    - Connection per thread (thread-local storage)\n    - Automatic schema initialization\n    - Transaction support with rollback on errors\n    - JSON serialization/deserialization\n    - Relationship graph traversal\n\n    Args:\n        db_path: Path to SQLite database file (\":memory:\" for in-memory)\n        timeout: Connection timeout in seconds (default: 5.0)\n        wal_mode: Enable Write-Ahead Logging for better concurrency (default: True)",
+          "bm25_score": 1.0,
+          "activation_score": 0.9182851275798566,
+          "semantic_score": 0.6945449350576749,
+          "hybrid_score": 0.853303512297027,
+          "metadata": {
+            "type": "code",
+            "name": "SQLiteStore",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/core/src/aurora_core/store/sqlite.py",
+            "line_start": 38,
+            "line_end": 887,
+            "access_count": 20
+          }
+        },
+        {
+          "chunk_id": "code:python:6b88148b033c0a03",
+          "content": "MemoryStore(Store)\nIn-memory storage implementation for testing.\n\n    This implementation provides the same interface as SQLiteStore but stores\n    all data in memory using Python dictionaries. It's fast, thread-safe for\n    single-threaded tests, and can be quickly reset between tests.\n\n    Features:\n    - No file I/O (pure in-memory)\n    - Fast reset between tests\n    - Same interface as SQLiteStore\n    - Relationship graph traversal support\n\n    Note: This implementation is NOT thread-safe and should only be used\n    in single-threaded test environments.",
+          "bm25_score": 0.5891767203898902,
+          "activation_score": 0.9157533164755739,
+          "semantic_score": 1.0,
+          "hybrid_score": 0.8514790110596392,
+          "metadata": {
+            "type": "code",
+            "name": "MemoryStore",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/core/src/aurora_core/store/memory.py",
+            "line_start": 27,
+            "line_end": 408,
+            "access_count": 13
+          }
+        },
+        {
+          "chunk_id": "code:python:62dabc5916ebbfec",
+          "content": "TestHybridRetrieverRetrieve\nTest HybridRetriever retrieve() method.",
+          "bm25_score": 0.7532421332294816,
+          "activation_score": 0.9145833730141003,
+          "semantic_score": 0.7740389268299551,
+          "hybrid_score": 0.8099632226050566,
+          "metadata": {
+            "type": "code",
+            "name": "TestHybridRetrieverRetrieve",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/context-code/tests/unit/semantic/test_hybrid_retriever.py",
+            "line_start": 278,
+            "line_end": 361,
+            "access_count": 9
+          }
+        },
+        {
+          "chunk_id": "code:python:eb59112673a37d4f",
+          "content": "TestVerifyCommand\nTest the verify command function.",
+          "bm25_score": 0.7616708031276107,
+          "activation_score": 0.9142831873418317,
+          "semantic_score": 0.6784791402012974,
+          "hybrid_score": 0.7741778532213517,
+          "metadata": {
+            "type": "code",
+            "name": "TestVerifyCommand",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/cli/tests/unit/test_main_cli.py",
+            "line_start": 238,
+            "line_end": 274,
+            "access_count": 8
+          }
+        },
+        {
+          "chunk_id": "code:python:cabbdf552b1a6f96",
+          "content": "TestVerifyCommand.test_verify_command_detects_missing_packages(\n        self, mock_exit: Mock, mock_import: Mock, mock_which: Mock\n    )\nTest verify_command() detects missing packages.",
+          "bm25_score": 0.7568528414859249,
+          "activation_score": 0.9139711518547081,
+          "semantic_score": 0.6286442084463535,
+          "hybrid_score": 0.7527048813807313,
+          "metadata": {
+            "type": "code",
+            "name": "TestVerifyCommand.test_verify_command_detects_missing_packages",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/cli/tests/unit/test_main_cli.py",
+            "line_start": 258,
+            "line_end": 274,
+            "access_count": 7
+          }
+        },
+        {
+          "chunk_id": "code:python:019d4fa1a7e1c721",
+          "content": "TestStatsCommand\nTest the stats_command function.",
+          "bm25_score": 0.7588403653605069,
+          "activation_score": 0.9139711518547081,
+          "semantic_score": 0.5911100580715308,
+          "hybrid_score": 0.7382874783931769,
+          "metadata": {
+            "type": "code",
+            "name": "TestStatsCommand",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/cli/tests/unit/test_memory_commands.py",
+            "line_start": 526,
+            "line_end": 669,
+            "access_count": 7
+          }
+        },
+        {
+          "chunk_id": "code:python:656e3ae6526ba974",
+          "content": "CodeChunk.to_json(self)\nSerialize chunk to JSON-compatible dict.\n\n        Follows the schema defined in PRD Section 4.2.2.\n\n        Returns:\n            Dictionary in the format expected by the storage layer",
+          "bm25_score": 0.35142213736734557,
+          "activation_score": 0.9130394651894886,
+          "semantic_score": 0.5243560383915417,
+          "hybrid_score": 0.5890808961236669,
+          "metadata": {
+            "type": "code",
+            "name": "CodeChunk.to_json",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/core/src/aurora_core/chunks/code_chunk.py",
+            "line_start": 105,
+            "line_end": 148,
+            "access_count": 5,
+            "commit_count": 4,
+            "last_modified": 1767297031,
+            "git_hash": 1767297031
+          }
+        },
+        {
+          "chunk_id": "code:python:efd82ab900f85879",
+          "content": "SQLiteStore.record_access(\n        self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None\n    )\nRecord an access to a chunk for ACT-R activation tracking.\n\n        This method updates the chunk's access history in the activations table,\n        which is used to calculate Base-Level Activation (BLA) based on frequency\n        and recency of access.\n\n        Args:\n            chunk_id: The chunk that was accessed\n            access_time: Timestamp of access (defaults to current time)\n            context: Optional context information (e.g., query keywords)\n\n        Raises:\n            StorageError: If storage operation fails\n            ChunkNotFoundError: If chunk_id does not exist",
+          "bm25_score": 0.34240866824395455,
+          "activation_score": 0.9656915660072086,
+          "semantic_score": 0.47583379245462054,
+          "hybrid_score": 0.5827635872571971,
+          "metadata": {
+            "type": "code",
+            "name": "SQLiteStore.record_access",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/core/src/aurora_core/store/sqlite.py",
+            "line_start": 625,
+            "line_end": 720,
+            "access_count": 15
+          }
+        },
+        {
+          "chunk_id": "code:python:fa55b37138a55369",
+          "content": "SQLiteStore._deserialize_chunk(self, row_data: dict[str, Any])\nDeserialize a chunk from database row.\n\n        Args:\n            row_data: Dictionary containing chunk data from database\n\n        Returns:\n            Deserialized Chunk object or None\n\n        Raises:\n            StorageError: If deserialization fails",
+          "bm25_score": 0.33121542683511374,
+          "activation_score": 0.9693615404813362,
+          "semantic_score": 0.441189544812637,
+          "hybrid_score": 0.5666489081199898,
+          "metadata": {
+            "type": "code",
+            "name": "SQLiteStore._deserialize_chunk",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/core/src/aurora_core/store/sqlite.py",
+            "line_start": 353,
+            "line_end": 404,
+            "access_count": 11
+          }
+        },
+        {
+          "chunk_id": "code:python:55b3c1ab0ed47b0a",
+          "content": "CodeChunk.from_json(cls, data: dict[str, Any])\nDeserialize chunk from JSON dict.\n\n        Args:\n            data: Dictionary containing chunk data in storage format\n\n        Returns:\n            Reconstructed CodeChunk instance\n\n        Raises:\n            ValueError: If required fields are missing or invalid",
+          "bm25_score": 0.335502388568796,
+          "activation_score": 0.9130394651894886,
+          "semantic_score": 0.4621503668364198,
+          "hybrid_score": 0.5594227028620533,
+          "metadata": {
+            "type": "code",
+            "name": "CodeChunk.from_json",
+            "file_path": "/home/hamr/PycharmProjects/aurora/packages/core/src/aurora_core/chunks/code_chunk.py",
+            "line_start": 151,
+            "line_end": 216,
+            "access_count": 5,
+            "commit_count": 4,
+            "last_modified": 1767297031,
+            "git_hash": 1767297031
+          }
+        }
+      ],
+      "total": 10
+    },
+    "phase_3": {
+      "subgoals": [
+        "test"
+      ]
+    },
+    "phase_4": {
+      "verdict": "PASS"
+    },
+    "phase_5": {
+      "routing": [
+        "test"
+      ]
+    },
+    "phase_6": {
+      "findings": [
+        "test"
+      ]
+    },
+    "phase_7": {
+      "synthesis": "test"
+    },
+    "phase_8": {
+      "pattern": "None"
+    },
+    "phase_9": {
+      "answer": "Project-local test complete"
+    }
+  },
+  "created_at": "2026-01-06T02:27:51.899112",
+  "updated_at": "2026-01-06T02:29:16.837917"
+}

@@ -287,8 +287,10 @@ Aurora is built as a single bundled Python package with modular components:
 ## Documentation
 
 ### Getting Started
-- **[COMMANDS.md](COMMANDS.md)** - Complete command reference (CLI, MCP, slash commands)
-- [MCP_SETUP.md](docs/MCP_SETUP.md) - AI tool integration guide
+- **[COMMANDS.md](COMMANDS.md)** - Complete command reference (CLI, slash commands)
+- **[MIGRATION.md](docs/MIGRATION.md)** - MCP deprecation and migration guide (v1.2.0)
+- **[MCP_DEPRECATION.md](docs/MCP_DEPRECATION.md)** - Architecture rationale for MCP deprecation
+- [MCP_SETUP.md](docs/MCP_SETUP.md) - AI tool integration guide (deprecated - MCP tools removed)
 - [CLI_USAGE_GUIDE.md](docs/cli/CLI_USAGE_GUIDE.md) - Advanced CLI usage
 - [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Common issues
 
@@ -307,10 +309,10 @@ Aurora is built as a single bundled Python package with modular components:
 ## FAQ
 
 **Q: Do I need an API key?**
-A: No API key needed for search, memory, planning, or MCP tools. Only `aur query` (direct LLM) and `aur headless` (autonomous mode) require `ANTHROPIC_API_KEY`.
+A: No API key needed for search, memory, or planning. Only `aur soar` and `aur query` commands that make direct LLM calls require `ANTHROPIC_API_KEY`.
 
 **Q: What AI tools work with Aurora?**
-A: Claude Code CLI, Cursor, Cline, Continue - any MCP-compatible tool.
+A: Claude Code CLI (via slash commands). MCP tools deprecated in v1.2.0 - see [MIGRATION.md](docs/MIGRATION.md).
 
 **Q: Does Aurora send my code to the cloud?**
 A: No. Code stays local in `.aurora/memory.db`. Only when you use `aur query` with API key does it send context to LLM.

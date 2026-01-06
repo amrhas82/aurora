@@ -8,8 +8,6 @@ Provides Model Context Protocol server for AURORA codebase indexing and search.
 import argparse
 import sys
 from pathlib import Path
-from typing import Optional
-
 
 try:
     from fastmcp import FastMCP
@@ -50,54 +48,19 @@ class AuroraMCPServer:
             self.mcp = None
 
     def _register_tools(self) -> None:
-        """Register MCP tools with the server."""
+        """Register MCP tools with the server.
 
-        @self.mcp.tool()
-        def aurora_search(query: str, limit: int = 10) -> str:
-            """
-            Search AURORA indexed codebase.
+        NOTE: aurora_search, aurora_get, and aurora_query have been deprecated.
+        Use slash commands instead:
+        - /aur:search <query> - Search indexed codebase
+        - /aur:get <N> - Get full content of result N
+        - aur soar "question" - Multi-turn SOAR query (terminal command)
 
-            Args:
-                query: Search query string
-                limit: Maximum number of results (default: 10)
-
-            Returns:
-                JSON string with search results
-            """
-            return self.tools.aurora_search(query, limit)
-
-        @self.mcp.tool()
-        def aurora_get(index: int) -> str:
-            """
-            Retrieve a full chunk by index from the last search results.
-
-            This tool allows you to get the complete content of a specific result
-            from your last aurora_search or aurora_query call. Results are numbered
-            starting from 1 (1-indexed).
-
-            Workflow:
-            1. Call aurora_search or aurora_query to get numbered results
-            2. Review the list and choose which result you want
-            3. Call aurora_get(N) to retrieve the full chunk for result N
-
-            Args:
-                index: 1-indexed position in last search results (must be >= 1)
-
-            Returns:
-                JSON string with:
-                - chunk: Complete chunk with all metadata (id, type, content, file_path, etc.)
-                - metadata: Index position and total count
-
-            Examples:
-                After aurora_search("async patterns"):
-                    aurora_get(1)  # Get first result
-                    aurora_get(3)  # Get third result
-
-            Note:
-                Session cache expires after 10 minutes. Results are stored per-session
-                and cleared when a new search is performed.
-            """
-            return self.tools.aurora_get(index)
+        Remaining tools (preserved for future use):
+        - aurora_index, aurora_context, aurora_related
+        - aurora_list_agents, aurora_search_agents, aurora_show_agent
+        """
+        pass  # No tools registered - MCP deprecated in favor of slash commands
 
     def run(self) -> None:
         """Run the MCP server."""
@@ -105,24 +68,20 @@ class AuroraMCPServer:
 
     def list_tools(self) -> None:
         """List all available tools (for testing)."""
-        print("AURORA MCP Server - Available Tools:")
+        print("AURORA MCP Server - Status:")
         print("=" * 50)
-
-        # Get registered tools from FastMCP
-        tools = [
-            ("aurora_search", "Search indexed codebase with semantic + keyword search"),
-            ("aurora_get", "Get full chunk by index from last search results"),
-        ]
-
-        for name, description in tools:
-            print(f"\n{name}:")
-            print(f"  {description}")
-
+        print("\nMCP tools have been deprecated in favor of slash commands.")
+        print("\nUse these slash commands instead:")
+        print("  /aur:search <query>  - Search indexed codebase")
+        print("  /aur:get <N>         - Get full content of result N")
+        print("\nCLI commands:")
+        print('  aur soar "question" - Multi-turn SOAR query')
+        print('  aur query "question" - Local context retrieval')
+        print("  aur mem stats        - Enhanced memory statistics")
         print("\n" + "=" * 50)
-        print(f"Total tools: {len(tools)}")
         print(f"Database: {self.db_path}")
         print(f"Config: {self.config_path}")
-        print("\nNote: For multi-turn SOAR queries, use: aur soar \"your question\"")
+        print("\nNote: MCP infrastructure preserved for future use")
 
 
 def main() -> None:

@@ -1,6 +1,6 @@
 # AURORA
 
-**Version 0.5.0** | [PyPI](https://pypi.org/project/aurora-actr/) | [Commands](COMMANDS.md) | [SOAR Reasoning](docs/SOAR.md) | [ML Models](docs/ML_MODELS.md)
+**Version 0.5.1** | [PyPI](https://pypi.org/project/aurora-actr/) | [Commands](COMMANDS.md) | [SOAR Reasoning](docs/SOAR.md) | [ML Models](docs/ML_MODELS.md)
 
 Adaptive Unified Reasoning and Orchestration Architecture - Project-based AI memory and reasoning system.
 

@@ -7,14 +7,10 @@ including memory commands, headless mode, and auto-escalation.
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
-from typing import Any
 
 import click
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
 
 from aurora_cli.commands.agents import agents_group
 from aurora_cli.commands.budget import budget_group
@@ -26,7 +22,6 @@ from aurora_cli.commands.plan import plan_group
 from aurora_cli.commands.query import query_command
 from aurora_cli.commands.soar import soar_command
 from aurora_cli.commands.version import version_command
-from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler
 
 __all__ = ["cli"]
 
@@ -76,10 +71,10 @@ def _show_first_run_welcome_if_needed() -> None:
     default=None,
     help="Run headless mode with specified prompt file (shorthand for 'aur headless <file>')",
 )
-@click.version_option(version="0.5.0")
+@click.version_option(version="0.5.1")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -> None:
-    """AURORA: Adaptive Unified Reasoning and Orchestration Architecture.
+    r"""AURORA: Adaptive Unified Reasoning and Orchestration Architecture.
 
     A cognitive architecture framework for intelligent context management,
     reasoning, and agent orchestration.

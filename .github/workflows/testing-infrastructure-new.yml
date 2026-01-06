@@ -27,6 +27,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Configure git for E2E tests
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
       - name: Run tests with coverage (excluding ML and real API tests)
         run: |
           pytest -m "not ml and not real_api" --cov=packages --cov-report=xml --cov-report=term -v

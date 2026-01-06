@@ -25,21 +25,18 @@ import ast
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple, Set
-
+from typing import List, Set, Tuple
 
 # Heuristics for detecting integration tests
 INTEGRATION_INDICATORS = [
     # subprocess usage (real process execution)
-    (r'subprocess\.run\(', 'Uses subprocess.run() - likely integration test'),
-    (r'subprocess\.Popen\(', 'Uses subprocess.Popen() - likely integration test'),
-    (r'subprocess\.call\(', 'Uses subprocess.call() - likely integration test'),
-    (r'subprocess\.check_output\(', 'Uses subprocess.check_output() - likely integration test'),
-
+    (r"subprocess\.run\(", "Uses subprocess.run() - likely integration test"),
+    (r"subprocess\.Popen\(", "Uses subprocess.Popen() - likely integration test"),
+    (r"subprocess\.call\(", "Uses subprocess.call() - likely integration test"),
+    (r"subprocess\.check_output\(", "Uses subprocess.check_output() - likely integration test"),
     # Real database usage (not mocked)
-    (r'SQLiteStore\([^)]*\)', 'Uses real SQLiteStore - likely integration test'),
-    (r'sqlite3\.connect\(', 'Uses real SQLite connection - likely integration test'),
-
+    (r"SQLiteStore\([^)]*\)", "Uses real SQLiteStore - likely integration test"),
+    (r"sqlite3\.connect\(", "Uses real SQLite connection - likely integration test"),
     # Docstring explicitly says integration
     (r'""".*[Ii]ntegration.*"""', 'Docstring mentions "integration"'),
     (r"'''.*[Ii]ntegration.*'''", 'Docstring mentions "integration"'),
@@ -52,13 +49,11 @@ E2E_INDICATORS = [
     (r"'''.*[Ee]2[Ee].*'''", 'Docstring mentions "e2e" or "end-to-end"'),
     (r'""".*end.to.end.*"""', 'Docstring mentions "end-to-end"'),
     (r"'''.*end.to.end.*'''", 'Docstring mentions "end-to-end"'),
-
     # API key usage (external service calls)
-    (r'ANTHROPIC_API_KEY', 'Uses ANTHROPIC_API_KEY - likely E2E test'),
-    (r'os\.environ.*API.*KEY', 'Uses API key from environment - likely E2E test'),
-
+    (r"ANTHROPIC_API_KEY", "Uses ANTHROPIC_API_KEY - likely E2E test"),
+    (r"os\.environ.*API.*KEY", "Uses API key from environment - likely E2E test"),
     # Real CLI invocation
-    (r'CliRunner\(\)\.invoke\(', 'Uses Click CliRunner - might be E2E'),
+    (r"CliRunner\(\)\.invoke\(", "Uses Click CliRunner - might be E2E"),
 ]
 
 
@@ -82,18 +77,18 @@ class TestClassificationChecker:
         """
         # Determine expected location from content
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
         except (UnicodeDecodeError, IOError):
             return []  # Skip files that can't be read
 
         # Check if file is in tests/ directory
         parts = filepath.parts
-        if 'tests' not in parts:
+        if "tests" not in parts:
             return []  # Not a test file
 
         # Determine current location
-        tests_idx = parts.index('tests')
+        tests_idx = parts.index("tests")
         if tests_idx + 1 >= len(parts):
             return []  # File directly in tests/
 
@@ -114,19 +109,21 @@ class TestClassificationChecker:
         # Determine violations
         violations = []
 
-        if current_location == 'unit':
+        if current_location == "unit":
             # Unit tests should not have integration or e2e indicators
             if e2e_reasons:
-                violations.append(('e2e', e2e_reasons))
+                violations.append(("e2e", e2e_reasons))
             elif integration_reasons:
                 # Only flag if multiple integration indicators (to avoid false positives)
-                if len(integration_reasons) >= 2 or any('SQLiteStore' in r for r in integration_reasons):
-                    violations.append(('integration', integration_reasons))
+                if len(integration_reasons) >= 2 or any(
+                    "SQLiteStore" in r for r in integration_reasons
+                ):
+                    violations.append(("integration", integration_reasons))
 
-        elif current_location == 'integration':
+        elif current_location == "integration":
             # Integration tests should not have e2e indicators
             if e2e_reasons:
-                violations.append(('e2e', e2e_reasons))
+                violations.append(("e2e", e2e_reasons))
 
         # Note: E2E tests can have any indicators, so no checks needed
 
@@ -143,17 +140,17 @@ class TestClassificationChecker:
             True if file uses mocks, False otherwise
         """
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Check for mock imports and decorators
             mock_patterns = [
-                r'from unittest\.mock import',
-                r'from unittest import mock',
-                r'@mock\.patch',
-                r'@patch\(',
-                r'Mock\(',
-                r'MagicMock\(',
+                r"from unittest\.mock import",
+                r"from unittest import mock",
+                r"@mock\.patch",
+                r"@patch\(",
+                r"Mock\(",
+                r"MagicMock\(",
             ]
 
             for pattern in mock_patterns:
@@ -176,15 +173,15 @@ def get_staged_test_files() -> List[Path]:
 
     try:
         result = subprocess.run(
-            ['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'],
+            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
         files = []
-        for line in result.stdout.strip().split('\n'):
-            if line and line.startswith('tests/') and line.endswith('.py'):
+        for line in result.stdout.strip().split("\n"):
+            if line and line.startswith("tests/") and line.endswith(".py"):
                 path = Path(line)
                 if path.exists():
                     files.append(path)
@@ -205,10 +202,10 @@ def find_test_files(path: Path) -> List[Path]:
         List of Path objects for test_*.py files
     """
     if path.is_file():
-        return [path] if path.name.startswith('test_') and path.suffix == '.py' else []
+        return [path] if path.name.startswith("test_") and path.suffix == ".py" else []
 
     test_files = []
-    for pattern in ['**/test_*.py', '**/*_test.py']:
+    for pattern in ["**/test_*.py", "**/*_test.py"]:
         test_files.extend(path.glob(pattern))
 
     return test_files
@@ -216,7 +213,7 @@ def find_test_files(path: Path) -> List[Path]:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Validate test classification (unit/integration/e2e)',
+        description="Validate test classification (unit/integration/e2e)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -238,25 +235,17 @@ Indicators:
   - subprocess.run(), SQLiteStore() without mocks → integration
   - API keys, full CLI workflows → e2e
   - Multiple integration indicators → likely misclassified
-        """
+        """,
     )
 
-    parser.add_argument(
-        'files',
-        nargs='*',
-        help='Specific files to validate'
-    )
+    parser.add_argument("files", nargs="*", help="Specific files to validate")
+
+    parser.add_argument("--path", type=Path, help="Directory path to recursively validate")
 
     parser.add_argument(
-        '--path',
-        type=Path,
-        help='Directory path to recursively validate'
-    )
-
-    parser.add_argument(
-        '--strict',
-        action='store_true',
-        help='Enable strict mode (flag single integration indicators)'
+        "--strict",
+        action="store_true",
+        help="Enable strict mode (flag single integration indicators)",
     )
 
     args = parser.parse_args()
@@ -291,14 +280,18 @@ Indicators:
             print("=" * 80)
 
             for suggested_location, reasons in violations:
-                print(f"  Should be in tests/{suggested_location}/ (currently in tests/{filepath.parts[filepath.parts.index('tests') + 1]}/)")
+                print(
+                    f"  Should be in tests/{suggested_location}/ (currently in tests/{filepath.parts[filepath.parts.index('tests') + 1]}/)"
+                )
                 print(f"  Reasons:")
                 for reason in reasons:
                     print(f"    - {reason}")
 
                 # Check if it uses mocks (suggests it's a unit test after all)
-                if suggested_location == 'integration' and checker.check_for_mock_usage(filepath):
-                    print(f"  ℹ️  Note: File uses mocks - may be acceptable as unit test with edge case")
+                if suggested_location == "integration" and checker.check_for_mock_usage(filepath):
+                    print(
+                        f"  ℹ️  Note: File uses mocks - may be acceptable as unit test with edge case"
+                    )
 
     # Summary
     if has_violations:
@@ -318,5 +311,5 @@ Indicators:
         return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

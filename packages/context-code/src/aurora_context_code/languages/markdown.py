@@ -108,8 +108,8 @@ class MarkdownParser(CodeParser):
                         },
                     )
 
-                    # Override chunk type to "knowledge" (CodeChunk defaults to "code")
-                    code_chunk.type = "knowledge"
+                    # Override chunk type to "kb" (CodeChunk defaults to "code")
+                    code_chunk.type = "kb"
 
                     code_chunks.append(code_chunk)
 

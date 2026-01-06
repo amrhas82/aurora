@@ -62,7 +62,7 @@ class ReasoningChunk(Chunk):
             success_score: Overall success score [0.0, 1.0]
             metadata: Additional metadata
         """
-        super().__init__(chunk_id=chunk_id, chunk_type="reasoning")
+        super().__init__(chunk_id=chunk_id, chunk_type="soar")
 
         self.pattern = pattern
         self.complexity = complexity

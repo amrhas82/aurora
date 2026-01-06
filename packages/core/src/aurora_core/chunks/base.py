@@ -15,9 +15,9 @@ class Chunk(ABC):
     Base class for all AURORA chunks.
 
     A chunk represents a unit of knowledge in the AURORA system, such as:
-    - Code elements (functions, classes, methods)
-    - Reasoning patterns
-    - Knowledge facts
+    - Code elements (functions, classes, methods) - type: "code"
+    - Knowledge documents (markdown, docs) - type: "kb"
+    - SOAR reasoning patterns - type: "soar"
 
     All chunks must have a unique ID, type, and support serialization.
     """
@@ -28,7 +28,7 @@ class Chunk(ABC):
 
         Args:
             chunk_id: Unique identifier for this chunk
-            chunk_type: Type of chunk (e.g., "code", "reasoning", "knowledge")
+            chunk_type: Type of chunk ("code", "kb", "soar")
         """
         self.id = chunk_id
         self.type = chunk_type

@@ -19,7 +19,6 @@ import pytest
 from aurora_mcp.server import AuroraMCPServer
 
 
-@pytest.mark.mcp
 class TestAgentToolsIntegration:
     """Integration tests for agent discovery MCP tools."""
 

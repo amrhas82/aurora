@@ -32,7 +32,7 @@ class SlashCommandTarget:
 
 
 # All Aurora slash commands
-ALL_COMMANDS = ["plan", "query", "index", "search", "init", "doctor", "agents"]
+ALL_COMMANDS = ["plan", "checkpoint", "archive"]
 
 
 class SlashCommandConfigurator(ABC):

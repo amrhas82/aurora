@@ -47,7 +47,6 @@ class ConcreteChunk(Chunk):
 class TestChunkInterface:
     """Test suite for Chunk interface contract."""
 
-    @pytest.mark.fast
     def test_chunk_initialization(self):
         """Test that chunk initializes with correct attributes."""
         chunk = ConcreteChunk("test-id", "test-type")
@@ -57,7 +56,6 @@ class TestChunkInterface:
         assert isinstance(chunk.created_at, datetime)
         assert isinstance(chunk.updated_at, datetime)
 
-    @pytest.mark.fast
     def test_chunk_timestamps_are_utc(self):
         """Test that timestamps are in UTC."""
         chunk = ConcreteChunk("test-id", "test-type")
@@ -69,7 +67,6 @@ class TestChunkInterface:
         assert abs((chunk.created_at - now).total_seconds()) < 1
         assert abs((chunk.updated_at - now).total_seconds()) < 1
 
-    @pytest.mark.fast
     def test_chunk_to_json_must_be_implemented(self):
         """Test that to_json() must be implemented by subclasses."""
         chunk = ConcreteChunk("test-id", "test-type", "test-data")
@@ -80,7 +77,6 @@ class TestChunkInterface:
         assert result["type"] == "test-type"
         assert result["data"] == "test-data"
 
-    @pytest.mark.fast
     def test_chunk_from_json_must_be_implemented(self):
         """Test that from_json() must be implemented by subclasses."""
         data = {"id": "test-id", "type": "test-type", "data": "test-data"}
@@ -91,7 +87,6 @@ class TestChunkInterface:
         assert chunk.type == "test-type"
         assert chunk.data == "test-data"
 
-    @pytest.mark.fast
     def test_chunk_validate_must_be_implemented(self):
         """Test that validate() must be implemented by subclasses."""
         chunk = ConcreteChunk("test-id", "test-type")

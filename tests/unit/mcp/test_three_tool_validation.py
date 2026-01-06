@@ -27,8 +27,6 @@ from aurora_mcp.tools import AuroraMCPTools
 class TestThreeToolConfiguration:
     """Test that only 3 essential tools remain after redundant tool removal."""
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_aurora_mcp_tools_has_only_three_methods(self):
         """AuroraMCPTools should only have 3 public tool methods."""
         # Get all public methods (not starting with _)
@@ -46,8 +44,6 @@ class TestThreeToolConfiguration:
             f"Expected exactly 3 tool methods, found {len(tool_methods)}: {tool_methods}"
         )
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_essential_tools_present(self):
         """Essential tools (aurora_search, aurora_query, aurora_get) must be present."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -62,8 +58,6 @@ class TestThreeToolConfiguration:
         assert callable(tools.aurora_query), "aurora_query is not callable"
         assert callable(tools.aurora_get), "aurora_get is not callable"
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_redundant_tool_aurora_index_removed(self):
         """aurora_index method should be removed from AuroraMCPTools."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -72,8 +66,6 @@ class TestThreeToolConfiguration:
             "aurora_index method should be removed (redundant - use CLI 'aur mem index' instead)"
         )
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_redundant_tool_aurora_context_removed(self):
         """aurora_context method should be removed from AuroraMCPTools."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -82,8 +74,6 @@ class TestThreeToolConfiguration:
             "aurora_context method should be removed (redundant - use Claude's Read tool instead)"
         )
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_redundant_tool_aurora_related_removed(self):
         """aurora_related method should be removed from AuroraMCPTools."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -92,8 +82,6 @@ class TestThreeToolConfiguration:
             "aurora_related method should be removed (redundant - use CLI 'aur mem related' instead)"
         )
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_redundant_tool_aurora_list_agents_removed(self):
         """aurora_list_agents method should be removed from AuroraMCPTools."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -102,8 +90,6 @@ class TestThreeToolConfiguration:
             "aurora_list_agents method should be removed (redundant - use CLI 'aur agents list' instead)"
         )
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_redundant_tool_aurora_search_agents_removed(self):
         """aurora_search_agents method should be removed from AuroraMCPTools."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -112,8 +98,6 @@ class TestThreeToolConfiguration:
             "aurora_search_agents method should be removed (redundant - use CLI 'aur agents search' instead)"
         )
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_redundant_tool_aurora_show_agent_removed(self):
         """aurora_show_agent method should be removed from AuroraMCPTools."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -146,8 +130,6 @@ class TestThreeToolConfiguration:
 class TestMCPServerRegistration:
     """Test that MCP server only registers 3 tools."""
 
-    @pytest.mark.critical
-    @pytest.mark.mcp
     def test_server_registers_only_three_tools(self):
         """MCP server should only register aurora_search, aurora_query, aurora_get."""
         # This will be tested by checking the server.py file

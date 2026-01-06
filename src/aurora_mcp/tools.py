@@ -160,51 +160,33 @@ class AuroraMCPTools:
         limit: int = 10,
         type_filter: str | None = None,
         verbose: bool = False,
-        phase: Literal["assess", "retrieve", "decompose", "verify", "route", "collect", "synthesize", "record", "respond"] = "assess",
     ) -> str:
         """
-        Retrieve relevant context from AURORA memory with SOAR phase orchestration.
+        Retrieve relevant context from AURORA memory without LLM inference.
 
-        No API key required. Returns structured context WITHOUT running any LLM.
-        Claude Code CLI's built-in LLM processes the returned context.
-
-        This tool supports multi-turn SOAR pipeline execution through the phase
-        parameter. Each phase returns guidance for Claude to proceed to the next step.
+        No API key required. Returns structured context with SOAR reasoning guidance.
 
         Args:
             query: Natural language query string
             limit: Maximum number of chunks to retrieve (default: 10)
-            type_filter: Filter by memory type - "code", "reas", "know", or None (default: None)
+            type_filter: Filter by memory type - "code", "reas", "know", or None
             verbose: Include detailed metadata in response (default: False)
-            phase: SOAR pipeline phase to execute (default: "assess")
 
         Returns:
-            JSON string with phase-specific response containing:
-            - phase: Current phase name
-            - progress: Progress indicator (N/9 phase_name)
-            - status: "complete" or "error"
-            - result: Phase-specific result data
-            - next_action: Human-readable guidance for Claude
-            - metadata: Timing and other metadata
+            JSON string with:
+            - context: Retrieved chunks with metadata
+            - assessment: Complexity and confidence scores
+            - soar_guidance: Instructions for 9-phase reasoning
+            - metadata: Timing and database stats
         """
         try:
             import time
 
             start_time = time.time()
 
-            # Validate phase parameter
-            valid_phases = ["assess", "retrieve", "decompose", "verify", "route", "collect", "synthesize", "record", "respond"]
-            if phase not in valid_phases:
-                return self._format_error(
-                    error_type="InvalidParameter",
-                    message=f"Invalid phase '{phase}'. Must be one of: {', '.join(valid_phases)}",
-                    suggestion=f"Use one of the valid phase names: {', '.join(valid_phases)}\nDefault phase is 'assess'.",
-                )
-
             # Validate query parameter
             is_valid, error_msg = self._validate_parameters(query, type_filter)
             if not is_valid:
-                # Build suggestion based on error type
                 suggestion = "Please check parameter values and try again.\n\nValid values:\n"
                 suggestion += "- query: Non-empty string\n"
                 suggestion += "- limit: Positive integer\n"
@@ -216,20 +198,40 @@ class AuroraMCPTools:
                     suggestion=suggestion,
                 )
 
-            # Dispatch to appropriate phase handler
-            response = self._handle_phase(
-                phase=phase,
+            # Assess complexity (keyword-based, no LLM)
+            assessment_result = assess_complexity(query=query, llm_client=None)
+            complexity_level = assessment_result.get("complexity", "MEDIUM")
+
+            # Retrieve chunks
+            chunks = self._retrieve_chunks(query, limit=limit, type_filter=type_filter)
+
+            # Store in session cache for aurora_get
+            self._last_search_results = chunks
+            self._last_search_timestamp = time.time()
+
+            # Calculate retrieval confidence
+            retrieval_confidence = self._calculate_retrieval_confidence(chunks)
+
+            # Build response with SOAR guidance
+            duration_ms = (time.time() - start_time) * 1000
+
+            response = self._build_context_response(
+                chunks=chunks,
                 query=query,
-                limit=limit,
-                type_filter=type_filter,
-                verbose=verbose
+                retrieval_time_ms=duration_ms,
+                complexity_score=assessment_result.get("score", 0.5),
             )
 
-            # Add timing metadata
-            duration_ms = (time.time() - start_time) * 1000
-            if "metadata" not in response:
-                response["metadata"] = {}
-            response["metadata"]["duration_ms"] = round(duration_ms, 1)
+            # Add assessment details
+            response["assessment"]["complexity"] = complexity_level
+            response["assessment"]["confidence"] = assessment_result.get("confidence", 0.8)
+
+            # Add SOAR reasoning guidance
+            response["soar_guidance"] = self._build_soar_guidance(complexity_level, len(chunks))
+
+            if verbose:
+                response["assessment"]["reasoning"] = assessment_result.get("reasoning", "")
+                response["assessment"]["method"] = assessment_result.get("method", "keyword")
 
             return json.dumps(response, indent=2)
 
@@ -1303,6 +1305,71 @@ Please provide a comprehensive, integrated response that:
             error_dict["error"]["details"] = details
 
         return json.dumps(error_dict, indent=2)
+
+    def _build_soar_guidance(self, complexity: str, chunk_count: int) -> dict[str, Any]:
+        """
+        Build SOAR reasoning guidance for Claude.
+
+        Args:
+            complexity: Query complexity level
+            chunk_count: Number of chunks retrieved
+
+        Returns:
+            Dictionary with phase-by-phase instructions
+        """
+        guidance = {
+            "instruction": "Follow the 9-phase SOAR process below. Output '## Phase N: NAME' headers as you work through each phase.",
+            "phases": [
+                {
+                    "phase": 1,
+                    "name": "ASSESS",
+                    "instruction": f"Review assessment: Complexity={complexity}, Chunks={chunk_count}. Output: '## Phase 1: ASSESS\\nComplexity: {complexity}\\nChunks: {chunk_count}'"
+                },
+                {
+                    "phase": 2,
+                    "name": "RETRIEVE",
+                    "instruction": "Review the chunks in context section. Output: '## Phase 2: RETRIEVE\\nReviewing N chunks: [list top 3-5 with file:line]'"
+                },
+                {
+                    "phase": 3,
+                    "name": "DECOMPOSE",
+                    "instruction": "Break query into 2-5 subgoals. Output: '## Phase 3: DECOMPOSE\\nSubgoals:\\n1. [subgoal]\\n2. [subgoal]...'"
+                },
+                {
+                    "phase": 4,
+                    "name": "VERIFY",
+                    "instruction": "Check decomposition completeness. Output: '## Phase 4: VERIFY\\n- Completeness: PASS/FAIL\\n- Consistency: PASS/FAIL\\nVerdict: PASS/RETRY'"
+                },
+                {
+                    "phase": 5,
+                    "name": "ROUTE",
+                    "instruction": "Map subgoals to approaches. Output: '## Phase 5: ROUTE\\n1. [Subgoal] -> [approach]\\n2. [Subgoal] -> [approach]...'"
+                },
+                {
+                    "phase": 6,
+                    "name": "COLLECT",
+                    "instruction": "Execute subgoals using context. Output: '## Phase 6: COLLECT\\n### Subgoal 1\\n[findings]\\n### Subgoal 2\\n[findings]...'"
+                },
+                {
+                    "phase": 7,
+                    "name": "SYNTHESIZE",
+                    "instruction": "Combine findings into coherent answer. Output: '## Phase 7: SYNTHESIZE\\n[integrated answer]'"
+                },
+                {
+                    "phase": 8,
+                    "name": "RECORD",
+                    "instruction": "Note any patterns. Output: '## Phase 8: RECORD\\nPattern: [description or None]'"
+                },
+                {
+                    "phase": 9,
+                    "name": "RESPOND",
+                    "instruction": "Format final answer. Output: '## Phase 9: RESPOND\\n[final answer]'"
+                }
+            ],
+            "shortcut": f"If complexity is SIMPLE and confidence > 0.7, you may skip phases 3-6 and go directly from Phase 2 to Phase 7." if complexity == "SIMPLE" else None
+        }
+
+        return guidance
 
 
 

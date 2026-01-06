@@ -68,7 +68,6 @@ class TestGitSignalExtractor:
         yield Path(temp_dir)
         shutil.rmtree(temp_dir, ignore_errors=True)
 
-    @pytest.mark.fast
     def test_get_function_commit_times_with_history(self, temp_git_repo):
         """
         Test extracting commit times for functions with different edit histories.
@@ -189,7 +188,6 @@ def func_c():
         assert func_b_times == sorted(func_b_times, reverse=True)
         assert func_c_times == sorted(func_c_times, reverse=True)
 
-    @pytest.mark.fast
     def test_calculate_bla_from_commits(self, temp_git_repo):
         """
         Test that BLA calculation reflects frequency: more commits = higher BLA.
@@ -262,7 +260,6 @@ def rarely_edited():
         difference = frequently_edited_bla - rarely_edited_bla
         assert difference > 0.5, f"Expected substantial BLA difference, got {difference:.4f}"
 
-    @pytest.mark.fast
     def test_non_git_directory_graceful_fallback(self, temp_non_git_dir):
         """
         Test that non-Git directories return empty list and fallback BLA.
@@ -282,21 +279,18 @@ def rarely_edited():
         bla = extractor.calculate_bla(commit_times)
         assert bla == 0.5
 
-    @pytest.mark.fast
     def test_nonexistent_file_returns_empty(self):
         """Test that nonexistent files return empty commit list."""
         extractor = GitSignalExtractor()
         commit_times = extractor.get_function_commit_times("/nonexistent/file.py", 1, 10)
         assert commit_times == []
 
-    @pytest.mark.fast
     def test_calculate_bla_with_empty_commits(self):
         """Test that empty commit list returns fallback BLA of 0.5."""
         extractor = GitSignalExtractor()
         bla = extractor.calculate_bla([])
         assert bla == 0.5
 
-    @pytest.mark.fast
     def test_calculate_bla_with_single_commit(self, temp_git_repo):
         """Test BLA calculation with a single commit."""
         file_path = temp_git_repo / "single_commit.py"
@@ -323,7 +317,6 @@ def rarely_edited():
         assert isinstance(bla, float)
         assert -10 <= bla <= 10
 
-    @pytest.mark.fast
     def test_parse_blame_output(self):
         """Test parsing of git blame --line-porcelain output."""
         extractor = GitSignalExtractor()
@@ -365,7 +358,6 @@ filename test.py
         assert shas[0] == "abc123def456789012345678901234567890abcd"
         assert shas[1] == "def456789abc012345678901234567890abcdef1"
 
-    @pytest.mark.fast
     def test_parse_blame_output_deduplicates(self):
         """Test that repeated SHAs in blame output are deduplicated."""
         extractor = GitSignalExtractor()
@@ -386,7 +378,6 @@ abc123def456789012345678901234567890abcd 3 3
         assert len(shas) == 1
         assert shas[0] == "abc123def456789012345678901234567890abcd"
 
-    @pytest.mark.fast
     def test_bla_decay_parameter(self):
         """Test that decay parameter affects BLA calculation."""
         extractor = GitSignalExtractor()
@@ -415,7 +406,6 @@ abc123def456789012345678901234567890abcd 3 3
         assert bla_decay_03 != bla_decay_05, "Different decay rates should produce different BLA"
         assert bla_decay_05 != bla_decay_07, "Different decay rates should produce different BLA"
 
-    @pytest.mark.fast
     def test_timeout_parameter(self):
         """Test that timeout parameter is respected."""
         # Create extractor with very short timeout
@@ -426,7 +416,6 @@ abc123def456789012345678901234567890abcd 3 3
         result = extractor.get_function_commit_times("/tmp/test.py", 1, 10)
         assert isinstance(result, list)
 
-    @pytest.mark.fast
     def test_functions_in_same_file_have_different_bla(self, temp_git_repo):
         """
         CRITICAL TEST: Verify functions in same file can have DIFFERENT BLA values.
@@ -495,7 +484,6 @@ def actively_developed_function():
 class TestGitSignalExtractorEdgeCases:
     """Test edge cases and error handling."""
 
-    @pytest.mark.fast
     def test_git_not_installed(self, monkeypatch, tmp_path):
         """Test graceful handling when Git is not installed."""
         # Mock subprocess to raise FileNotFoundError
@@ -519,7 +507,6 @@ class TestGitSignalExtractorEdgeCases:
         # Should return empty list, not crash
         assert result == []
 
-    @pytest.mark.fast
     def test_invalid_line_range(self, tmp_path):
         """Test handling of invalid line ranges."""
         file_path = tmp_path / "test.py"

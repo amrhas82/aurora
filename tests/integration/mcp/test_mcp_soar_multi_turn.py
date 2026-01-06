@@ -22,8 +22,6 @@ import pytest
 from aurora_mcp.tools import AuroraMCPTools
 
 
-@pytest.mark.mcp
-@pytest.mark.critical
 class TestMCPSOARMultiTurnFlow:
     """Integration tests for MCP-SOAR multi-turn pipeline."""
 
@@ -487,7 +485,6 @@ class TestMCPSOARMultiTurnFlow:
             assert len(mcp_tools._session_cache) == initial_cache_size
 
 
-@pytest.mark.mcp
 class TestMCPSOARErrorHandling:
     """Integration tests for error handling in MCP-SOAR flow."""
 

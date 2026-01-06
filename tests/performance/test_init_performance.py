@@ -80,7 +80,6 @@ class Class{i}:
     return files
 
 
-@pytest.mark.performance
 def test_init_performance_100_files(
     temp_project, mock_git_init, mock_memory_manager, mock_config, benchmark
 ):
@@ -113,7 +112,6 @@ def test_init_performance_100_files(
     assert benchmark.stats.mean < 10.0, f"Init took {benchmark.stats.mean:.2f}s (target: <7s)"
 
 
-@pytest.mark.performance
 @pytest.mark.slow
 def test_init_performance_1000_files(
     temp_project, mock_git_init, mock_memory_manager, mock_config, benchmark
@@ -147,7 +145,6 @@ def test_init_performance_1000_files(
     assert benchmark.stats.mean < 45.0, f"Init took {benchmark.stats.mean:.2f}s (target: <30s)"
 
 
-@pytest.mark.performance
 def test_step_1_performance(temp_project, mock_git_init, benchmark):
     """Test Step 1 (Planning Setup) performance (target: <1s)."""
     from aurora_cli.commands.init import run_step_1_planning_setup
@@ -171,7 +168,6 @@ def test_step_1_performance(temp_project, mock_git_init, benchmark):
     assert (temp_project / ".aurora" / "cache").exists()
 
 
-@pytest.mark.performance
 def test_step_2_performance_100_files(
     temp_project, mock_memory_manager, mock_config, benchmark
 ):
@@ -198,7 +194,6 @@ def test_step_2_performance_100_files(
     assert mock_memory_manager.index_path.called
 
 
-@pytest.mark.performance
 def test_step_3_performance(temp_project, benchmark):
     """Test Step 3 (Tool Configuration) performance (target: <2s)."""
     from aurora_cli.commands.init import run_step_3_tool_configuration
@@ -223,7 +218,6 @@ def test_step_3_performance(temp_project, benchmark):
     assert benchmark.stats.mean < 2.0, f"Step 3 took {benchmark.stats.mean:.2f}s (target: <2s)"
 
 
-@pytest.mark.performance
 def test_memory_usage_during_init(temp_project, mock_git_init):
     """Test memory usage during init (target: <100MB for 10K chunks)."""
     import os
@@ -273,7 +267,6 @@ def test_memory_usage_during_init(temp_project, mock_git_init):
     assert memory_increase < 50.0, f"Memory increase: {memory_increase:.2f}MB (target: <10MB for 1K chunks)"
 
 
-@pytest.mark.performance
 def test_progress_bar_updates_smoothly(temp_project, mock_git_init):
     """Test progress bar updates smoothly during indexing."""
     from aurora_cli.commands.init import run_step_2_memory_indexing

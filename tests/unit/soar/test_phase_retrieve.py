@@ -34,8 +34,6 @@ class TestRetrievalBudgets:
 class TestRetrieveContext:
     """Tests for context retrieval function."""
 
-    @pytest.mark.soar
-    @pytest.mark.critical
     def test_retrieve_simple_query(self):
         """Test retrieval for SIMPLE query respects budget."""
         # Mock store
@@ -55,8 +53,6 @@ class TestRetrieveContext:
         assert len(result["code_chunks"]) == 3
         assert len(result["reasoning_chunks"]) == 0
 
-    @pytest.mark.soar
-    @pytest.mark.critical
     def test_retrieve_medium_query(self):
         """Test retrieval for MEDIUM query respects budget."""
         mock_store = Mock()
@@ -72,8 +68,6 @@ class TestRetrieveContext:
         assert result["budget"] == 10
         assert result["total_retrieved"] == 8
 
-    @pytest.mark.soar
-    @pytest.mark.critical
     def test_retrieve_complex_query(self):
         """Test retrieval for COMPLEX query respects budget."""
         mock_store = Mock()

@@ -10,44 +10,30 @@ from aurora_cli.templates.slash_commands import get_command_body
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
     "plan": """---
-description: "Generate structured plans with agent delegation"
-argument-hint: feature description or request
+name: Aurora: Plan
+description: Generate structured plans with agent delegation
+category: Aurora
+tags: [aurora, planning]
 ---""",
-    "query": """---
-description: "Search codebase using memory system"
-argument-hint: your question about the codebase
+    "checkpoint": """---
+name: Aurora: Checkpoint
+description: Save session context for continuity
+category: Aurora
+tags: [aurora, session, checkpoint]
 ---""",
-    "index": """---
-description: "Index codebase for semantic search"
-argument-hint: path to index
----""",
-    "search": """---
-description: "Search indexed code"
-argument-hint: search query
----""",
-    "init": """---
-description: "Initialize Aurora for the project"
-argument-hint: (optional) flags
----""",
-    "doctor": """---
-description: "Run health checks on Aurora installation"
-argument-hint: (optional) flags
----""",
-    "agents": """---
-description: "Browse and search available AI agents"
-argument-hint: (optional) search term
+    "archive": """---
+name: Aurora: Archive
+description: Archive completed plans with spec processing
+category: Aurora
+tags: [aurora, planning, archive]
 ---""",
 }
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".cospec/aurora/commands/aurora-plan.md",
-    "query": ".cospec/aurora/commands/aurora-query.md",
-    "index": ".cospec/aurora/commands/aurora-index.md",
-    "search": ".cospec/aurora/commands/aurora-search.md",
-    "init": ".cospec/aurora/commands/aurora-init.md",
-    "doctor": ".cospec/aurora/commands/aurora-doctor.md",
-    "agents": ".cospec/aurora/commands/aurora-agents.md",
+    "checkpoint": ".cospec/aurora/commands/aurora-checkpoint.md",
+    "archive": ".cospec/aurora/commands/aurora-archive.md",
 }
 
 

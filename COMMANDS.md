@@ -41,12 +41,13 @@ Complete reference for all Aurora CLI commands, MCP tools, and slash commands.
 | `aurora_query` | Query with complexity assessment | Claude needs context retrieval | `aurora_query(query, limit=10, type_filter=None, verbose=False)` |
 | `aurora_get` | Get full chunk by index | After search, get complete content | `aurora_get(index)` |
 
-### Slash Commands (2 commands)
+### Slash Commands (3 commands)
 
 | Command | Purpose | When To Use | Syntax |
 |---------|---------|-------------|--------|
 | `/aur:plan` | Planning workflows | Multi-step plan orchestration | `/aur:plan [create\|list\|show]` |
 | `/aur:checkpoint` | Save session context | Before context compaction | `/aur:checkpoint` |
+| `/aur:archive` | Archive completed plans | After plan completion | `/aur:archive [plan-id]` |
 
 ---
 
@@ -398,34 +399,25 @@ Slash commands are configured during `aur init` for various AI coding tools.
 
 Located in: `~/.config/claude/commands/`
 
-**`/aurora-search`**
+**`/aur:plan`**
 ```bash
-Search codebase: /aurora-search authentication functions
+Create plan: /aur:plan "Implement OAuth2 authentication"
+List plans: /aur:plan list
+Show plan: /aur:plan show 0001-oauth-auth
 ```
 
-**`/aurora-context`**
+**`/aur:checkpoint`**
 ```bash
-Get context: /aurora-context UserService class
+Save checkpoint: /aur:checkpoint
+Save with name: /aur:checkpoint "feature-investigation"
+List checkpoints: /aur:checkpoint list
 ```
 
-**`/aurora-query`**
+**`/aur:archive`**
 ```bash
-Complex query: /aurora-query How does auth flow work?
-```
-
-**`/aurora-agents`**
-```bash
-List agents: /aurora-agents list
-```
-
-**`/aurora-mem`**
-```bash
-Memory stats: /aurora-mem stats
-```
-
-**`/aurora-doctor`**
-```bash
-Health check: /aurora-doctor
+Archive plan: /aur:archive 0001-oauth-auth
+Interactive: /aur:archive
+With flags: /aur:archive 0001 --yes --skip-specs
 ```
 
 ---
@@ -458,12 +450,14 @@ MCP integration via JSON configuration. Use natural language prompts; Continue a
 
 | Task | CLI Command | MCP Tool | Slash Command |
 |------|-------------|----------|---------------|
-| **Search code** | `aur mem search "auth"` | Natural: "Search for auth" → `aurora_search` | `/aurora-search auth` |
-| **Get context** | `aur mem search "UserService" --show-content` | Natural: "Show UserService" → `aurora_context` | `/aurora-context UserService` |
-| **Complex query** | `aur query "How does X work?"` (needs API key) | Natural: "Explain X" → `aurora_query` | `/aurora-query Explain X` |
-| **Health check** | `aur doctor` | Natural: "Run health check" → `aurora_doctor` | `/aurora-doctor` |
-| **Index code** | `aur mem index` | N/A (use CLI) | N/A |
-| **Create plan** | `aur plan create "Feature"` | N/A (use CLI) | N/A |
+| **Search code** | `aur mem search "auth"` | Natural: "Search for auth" → `aurora_search` | N/A (use CLI or MCP) |
+| **Get context** | `aur mem search "UserService" --show-content` | Natural: "Show UserService" → `aurora_query` | N/A (use CLI or MCP) |
+| **Complex query** | N/A | Natural: "Explain X" → `aurora_query` | N/A (use MCP) |
+| **Health check** | `aur doctor` | Natural: "Run health check" | N/A (use CLI) |
+| **Index code** | `aur mem index` | N/A (use CLI) | N/A (use CLI) |
+| **Create plan** | `aur plan create "Feature"` | N/A (use CLI or slash) | `/aur:plan "Feature"` |
+| **Save checkpoint** | `aur checkpoint save` | N/A (use CLI or slash) | `/aur:checkpoint` |
+| **Archive plan** | `aur plan archive 0001` | N/A (use CLI or slash) | `/aur:archive 0001` |
 
 ---
 

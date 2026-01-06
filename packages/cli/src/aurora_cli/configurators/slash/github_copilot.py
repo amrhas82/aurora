@@ -49,13 +49,9 @@ $ARGUMENTS""",
 
 # File paths for each command - uses .prompt.md extension
 FILE_PATHS: dict[str, str] = {
-    "plan": ".github/prompts/aurora-plan.prompt.md",
-    "query": ".github/prompts/aurora-query.prompt.md",
-    "index": ".github/prompts/aurora-index.prompt.md",
-    "search": ".github/prompts/aurora-search.prompt.md",
-    "init": ".github/prompts/aurora-init.prompt.md",
-    "doctor": ".github/prompts/aurora-doctor.prompt.md",
-    "agents": ".github/prompts/aurora-agents.prompt.md",
+    "plan": ".github/prompts/aurora-plan.md",
+    "checkpoint": ".github/prompts/aurora-checkpoint.md",
+    "archive": ".github/prompts/aurora-archive.md",
 }
 
 

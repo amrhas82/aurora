@@ -31,7 +31,6 @@ from aurora_mcp.tools import AuroraMCPTools
 class TestAuroraListAgents:
     """Test aurora_list_agents MCP tool."""
 
-    @pytest.mark.mcp
     def test_list_agents_success_with_agents(self):
         """Should return JSON array of agents when agents are discovered."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -78,7 +77,6 @@ class TestAuroraListAgents:
         assert "source_path" in agent2
         assert "when_to_use" in agent2
 
-    @pytest.mark.mcp
     def test_list_agents_empty_when_no_agents(self):
         """Should return empty array when no agents are discovered."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -97,7 +95,6 @@ class TestAuroraListAgents:
         assert isinstance(response, list)
         assert len(response) == 0
 
-    @pytest.mark.mcp
     def test_list_agents_json_structure_validation(self):
         """Should validate JSON structure has all required fields."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -135,7 +132,6 @@ class TestAuroraListAgents:
 class TestAuroraSearchAgents:
     """Test aurora_search_agents MCP tool."""
 
-    @pytest.mark.mcp
     def test_search_agents_success_with_matches(self):
         """Should return matching agents sorted by relevance score."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -180,7 +176,6 @@ class TestAuroraSearchAgents:
         assert response[0]["id"] == "qa-test-architect"
         assert response[0]["relevance_score"] > 0.0
 
-    @pytest.mark.mcp
     def test_search_agents_no_matches_returns_empty(self):
         """Should return empty array when no agents match the query."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -205,7 +200,6 @@ class TestAuroraSearchAgents:
         assert isinstance(response, list)
         assert len(response) == 0
 
-    @pytest.mark.mcp
     def test_search_agents_relevance_scoring_substring_matching(self):
         """Should score agents based on substring matches in id/title/when_to_use."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -248,7 +242,6 @@ class TestAuroraSearchAgents:
         # Verify id match has highest weight
         assert response[0]["id"] == "qa-test-architect"
 
-    @pytest.mark.mcp
     def test_search_agents_empty_query_validation(self):
         """Should return error JSON for empty query."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -258,7 +251,6 @@ class TestAuroraSearchAgents:
         assert "error" in response
         assert "empty" in response["error"].lower()
 
-    @pytest.mark.mcp
     def test_search_agents_whitespace_query_validation(self):
         """Should return error JSON for whitespace-only query."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -277,7 +269,6 @@ class TestAuroraSearchAgents:
 class TestAuroraShowAgent:
     """Test aurora_show_agent MCP tool."""
 
-    @pytest.mark.mcp
     def test_show_agent_success_with_valid_id(self):
         """Should return full agent details including markdown content."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -328,7 +319,6 @@ class TestAuroraShowAgent:
         finally:
             Path(tmp_path).unlink()
 
-    @pytest.mark.mcp
     def test_show_agent_error_when_agent_not_found(self):
         """Should return error JSON when agent ID not found."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -348,7 +338,6 @@ class TestAuroraShowAgent:
         assert response["error"] == "Agent not found"
         assert response["agent_id"] == "nonexistent-agent"
 
-    @pytest.mark.mcp
     def test_show_agent_full_content_includes_markdown(self):
         """Should include complete markdown file content in response."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -403,7 +392,6 @@ Invoke with @test-agent
         finally:
             Path(tmp_path).unlink()
 
-    @pytest.mark.mcp
     def test_show_agent_empty_agent_id_validation(self):
         """Should return error for empty agent_id parameter."""
         tools = AuroraMCPTools(db_path=":memory:")
@@ -413,7 +401,6 @@ Invoke with @test-agent
         assert "error" in response
         assert "agent_id" in response["error"].lower() or "empty" in response["error"].lower()
 
-    @pytest.mark.mcp
     def test_show_agent_whitespace_agent_id_validation(self):
         """Should return error for whitespace-only agent_id parameter."""
         tools = AuroraMCPTools(db_path=":memory:")

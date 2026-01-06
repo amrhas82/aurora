@@ -71,12 +71,8 @@ The user wants to explore available agents. Use the aurora instructions.
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".opencode/command/aurora-plan.md",
-    "query": ".opencode/command/aurora-query.md",
-    "index": ".opencode/command/aurora-index.md",
-    "search": ".opencode/command/aurora-search.md",
-    "init": ".opencode/command/aurora-init.md",
-    "doctor": ".opencode/command/aurora-doctor.md",
-    "agents": ".opencode/command/aurora-agents.md",
+    "checkpoint": ".opencode/command/aurora-checkpoint.md",
+    "archive": ".opencode/command/aurora-archive.md",
 }
 
 

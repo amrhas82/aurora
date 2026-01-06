@@ -26,159 +26,90 @@ PLAN_TEMPLATE = f"""{BASE_GUARDRAILS}
 **Reference**
 - Use `aur plan list` to see existing plans
 - Use `aur agents list` to see available agents
-- Search codebase with memory system: `aur query <question>`"""
+- Search codebase with memory system: `aurora_query` MCP tool or `aur mem search`"""
 
-# /aur:query - Codebase query with memory
-QUERY_TEMPLATE = f"""{BASE_GUARDRAILS}
-
-**Usage**
-Run `aur query "<your question>"` to search the codebase using Aurora's memory system.
-
-**Features**
-- Semantic search across indexed code
-- Hybrid BM25 + embedding search
-- Context-aware results with file paths and line numbers
-- Automatic quality scoring (groundedness)
-
-**Flags**
-- `--context FILE` - Use specific files as context
-- `--show-reasoning` - Display complexity assessment
-- `--force-aurora` - Use full SOAR pipeline
-- `--non-interactive` - No prompts (for CI/CD)
-
-**Reference**
-- Use `aur mem index` to index the codebase first
-- Use `aur query --context file.py` to add specific files as context"""
-
-# /aur:index - Index codebase for semantic search
-INDEX_TEMPLATE = f"""{BASE_GUARDRAILS}
+# /aur:checkpoint - Save session context
+CHECKPOINT_TEMPLATE = f"""{BASE_GUARDRAILS}
 
 **Usage**
-Run `aur mem index <path>` to index codebase for semantic search.
+Save current session context to preserve conversation state across compaction or handoffs.
 
-**Examples**
-```bash
-# Index entire project
-aur mem index .
+**What it does**
+1. Captures current conversation context and key decisions
+2. Records active work in progress
+3. Stores important findings and insights
+4. Creates checkpoint file in `.aurora/checkpoints/`
+5. Enables context restoration after compaction
 
-# Index specific directories
-aur mem index src/ tests/
-
-# Index with verbose output
-aur mem index . --verbose
-```
-
-**Reference**
-- Indexes Python files by default
-- Creates chunks for semantic search
-- Enables `aur query` functionality
-- Index is stored in `.aurora/memory.db`"""
-
-# /aur:search - Search indexed code
-SEARCH_TEMPLATE = f"""{BASE_GUARDRAILS}
-
-**Usage**
-Run `aur mem search "<query>"` to search indexed code.
-
-**Examples**
-```bash
-# Basic search
-aur mem search "authentication handler"
-
-# Search with type filter
-aur mem search "validate" --type function
-
-# Search with more results
-aur mem search "config" --limit 20
-```
-
-**Reference**
-- Returns file paths and line numbers
-- Uses hybrid BM25 + embedding search
-- Shows match scores
-- Type filters: function, class, module"""
-
-# /aur:init - Initialize Aurora
-INIT_TEMPLATE = f"""{BASE_GUARDRAILS}
-
-**Usage**
-Run `aur init` to set up Aurora for the current project.
-
-**What it creates**
-- `.aurora/` directory with project-specific configuration
-- Memory index for semantic code search
-- Tool configurations (AGENTS.md, CLAUDE.md, etc.)
-
-**Steps**
-1. Run `aur init` in the project root
-2. Follow the interactive prompts to:
-   - Set up planning directories (requires git)
-   - Index code for semantic search
-   - Configure AI tool integrations
-3. Verify setup with `aur doctor`
-
-**Reference**
-- Use `aur init --config` to reconfigure tools only"""
-
-# /aur:doctor - Health checks
-DOCTOR_TEMPLATE = f"""{BASE_GUARDRAILS}
-
-**Usage**
-Run `aur doctor` to check Aurora installation health.
-
-**What it checks**
-- Package installation status
-- Python version compatibility
-- Configuration files
-- Memory database health
-- API key configuration
-- MCP server status
+**When to use**
+- Before long-running tasks that may trigger compaction
+- When handing off work to another agent or session
+- After completing major investigation or analysis
+- Before taking a break from complex multi-step work
 
 **Commands**
 ```bash
-# Run health checks
-aur doctor
+# Create checkpoint with auto-generated name
+aur checkpoint save
 
-# Auto-repair issues
-aur doctor --fix
-```"""
+# Create checkpoint with custom name
+aur checkpoint save "feature-auth-investigation"
 
-# /aur:agents - Agent discovery
-AGENTS_TEMPLATE = f"""{BASE_GUARDRAILS}
+# List available checkpoints
+aur checkpoint list
+
+# Restore from checkpoint
+aur checkpoint restore <checkpoint-name>
+```
+
+**Reference**
+- Checkpoints stored in `.aurora/checkpoints/`
+- Automatically includes: timestamp, active plan, recent decisions
+- Maximum context retention with minimal token usage"""
+
+# /aur:archive - Archive completed plans
+ARCHIVE_TEMPLATE = f"""{BASE_GUARDRAILS}
 
 **Usage**
-Browse and search available AI agents.
+Archive completed plans with spec delta processing and validation.
+
+**What it does**
+1. Validates plan structure and task completion
+2. Processes capability specification deltas (ADDED/MODIFIED/REMOVED/RENAMED)
+3. Updates capability specs in `.aurora/capabilities/`
+4. Moves plan to archive with timestamp: `.aurora/plans/archive/YYYY-MM-DD-<plan-id>/`
+5. Updates agents.json with `archived_at` timestamp
 
 **Commands**
 ```bash
-# List all agents
-aur agents list
+# Archive specific plan
+aur plan archive 0001-oauth-auth
 
-# Search agents by keyword
-aur agents search "test"
+# Interactive selection (lists all active plans)
+aur plan archive
 
-# Show full agent details
-aur agents show qa-test-architect
-
-# Force refresh agent manifest
-aur agents refresh
+# Archive with flags
+aur plan archive 0001 --yes              # Skip confirmations
+aur plan archive 0001 --skip-specs       # Skip spec delta processing
+aur plan archive 0001 --no-validate      # Skip validation (with warning)
 ```
 
-**Agent types**
-- Product agents: product-manager, product-owner
-- Development agents: full-stack-dev, qa-test-architect
-- Architecture agents: holistic-architect
-- Process agents: scrum-master, orchestrator"""
+**Validation checks**
+- Task completion status (warns if < 100%)
+- Plan directory structure
+- Spec delta conflicts and duplicates
+- Agent assignments and gaps
+
+**Reference**
+- Plans archived to `.aurora/plans/archive/`
+- Specs updated in `.aurora/capabilities/<capability>/spec.md`
+- Incomplete plans can be archived with explicit confirmation"""
 
 # Command templates dictionary
 COMMAND_TEMPLATES: dict[str, str] = {
     "plan": PLAN_TEMPLATE,
-    "query": QUERY_TEMPLATE,
-    "index": INDEX_TEMPLATE,
-    "search": SEARCH_TEMPLATE,
-    "init": INIT_TEMPLATE,
-    "doctor": DOCTOR_TEMPLATE,
-    "agents": AGENTS_TEMPLATE,
+    "checkpoint": CHECKPOINT_TEMPLATE,
+    "archive": ARCHIVE_TEMPLATE,
 }
 
 

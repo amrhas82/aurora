@@ -10,58 +10,30 @@ from aurora_cli.templates.slash_commands import get_command_body
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
     "plan": """---
-name: /aurora-plan
-id: aurora-plan
-category: Aurora
+name: Aurora: Plan
 description: Generate structured plans with agent delegation
----""",
-    "query": """---
-name: /aurora-query
-id: aurora-query
 category: Aurora
-description: Search codebase using memory system
+tags: [aurora, planning]
 ---""",
-    "index": """---
-name: /aurora-index
-id: aurora-index
+    "checkpoint": """---
+name: Aurora: Checkpoint
+description: Save session context for continuity
 category: Aurora
-description: Index codebase for semantic search
+tags: [aurora, session, checkpoint]
 ---""",
-    "search": """---
-name: /aurora-search
-id: aurora-search
+    "archive": """---
+name: Aurora: Archive
+description: Archive completed plans with spec processing
 category: Aurora
-description: Search indexed code
----""",
-    "init": """---
-name: /aurora-init
-id: aurora-init
-category: Aurora
-description: Initialize Aurora for the project
----""",
-    "doctor": """---
-name: /aurora-doctor
-id: aurora-doctor
-category: Aurora
-description: Run health checks on Aurora installation
----""",
-    "agents": """---
-name: /aurora-agents
-id: aurora-agents
-category: Aurora
-description: Browse and search available AI agents
+tags: [aurora, planning, archive]
 ---""",
 }
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".iflow/commands/aurora-plan.md",
-    "query": ".iflow/commands/aurora-query.md",
-    "index": ".iflow/commands/aurora-index.md",
-    "search": ".iflow/commands/aurora-search.md",
-    "init": ".iflow/commands/aurora-init.md",
-    "doctor": ".iflow/commands/aurora-doctor.md",
-    "agents": ".iflow/commands/aurora-agents.md",
+    "checkpoint": ".iflow/commands/aurora-checkpoint.md",
+    "archive": ".iflow/commands/aurora-archive.md",
 }
 
 

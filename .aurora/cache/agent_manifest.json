@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-01-05T11:44:41.584402+01:00",
+  "generated_at": "2026-01-06T01:33:04.318862+01:00",
   "sources": [
     "/home/hamr/.claude/agents",
     "/home/hamr/.config/opencode/agent"
@@ -150,6 +150,17 @@
       "source_file": "/home/hamr/.claude/agents/scrum-master.md"
     },
     {
+      "id": "test-soar",
+      "role": "Test Soar",
+      "goal": "POC agent to test if system instructions can enforce 3-phase workflow. Tests whether subprocess isolation improves phase compliance.",
+      "category": "general",
+      "skills": [],
+      "examples": [],
+      "when_to_use": null,
+      "dependencies": [],
+      "source_file": "/home/hamr/.claude/agents/test-soar.md"
+    },
+    {
       "id": "ux-expert",
       "role": "Ux Expert",
       "goal": "Use this agent for UI/UX design tasks, wireframes, prototypes, front-end specifications, user experience optimization, AI UI tool prompts (v0, Lovable), user research analysis, interaction patterns, and accessibility improvements.",
@@ -162,12 +173,12 @@
     }
   ],
   "stats": {
-    "total": 14,
+    "total": 15,
     "by_category": {
       "eng": 0,
       "qa": 0,
       "product": 0,
-      "general": 14
+      "general": 15
     },
     "malformed_files": 0
   }

@@ -31,7 +31,6 @@ class TestRetrievalQualityIntegration:
             yield store
             store.close()
 
-    @pytest.mark.critical
     def test_no_match_scenario_quality_assessment(self, temp_store):
         """Test NONE quality when retrieval returns 0 chunks."""
         # Empty store - no chunks

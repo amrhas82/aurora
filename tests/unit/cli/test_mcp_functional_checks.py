@@ -410,8 +410,6 @@ class TestGetManualIssues:
                   for issue in manual)
 
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestMCPFunctionalChecksIntegration:
     """Integration tests for MCPFunctionalChecks class."""
 

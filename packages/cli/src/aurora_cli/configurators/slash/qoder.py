@@ -15,53 +15,25 @@ description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "query": """---
-name: Aurora: Query
-description: Search codebase using memory system
+    "checkpoint": """---
+name: Aurora: Checkpoint
+description: Save session context for continuity
 category: Aurora
-tags: [aurora, search, memory]
+tags: [aurora, session, checkpoint]
 ---""",
-    "index": """---
-name: Aurora: Index
-description: Index codebase for semantic search
+    "archive": """---
+name: Aurora: Archive
+description: Archive completed plans with spec processing
 category: Aurora
-tags: [aurora, memory]
----""",
-    "search": """---
-name: Aurora: Search
-description: Search indexed code
-category: Aurora
-tags: [aurora, search, memory]
----""",
-    "init": """---
-name: Aurora: Init
-description: Initialize Aurora for the project
-category: Aurora
-tags: [aurora, setup]
----""",
-    "doctor": """---
-name: Aurora: Doctor
-description: Run health checks on Aurora installation
-category: Aurora
-tags: [aurora, diagnostics]
----""",
-    "agents": """---
-name: Aurora: Agents
-description: Browse and search available AI agents
-category: Aurora
-tags: [aurora, agents]
+tags: [aurora, planning, archive]
 ---""",
 }
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".qoder/commands/aurora/plan.md",
-    "query": ".qoder/commands/aurora/query.md",
-    "index": ".qoder/commands/aurora/index.md",
-    "search": ".qoder/commands/aurora/search.md",
-    "init": ".qoder/commands/aurora/init.md",
-    "doctor": ".qoder/commands/aurora/doctor.md",
-    "agents": ".qoder/commands/aurora/agents.md",
+    "checkpoint": ".qoder/commands/aurora/checkpoint.md",
+    "archive": ".qoder/commands/aurora/archive.md",
 }
 
 

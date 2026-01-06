@@ -11,12 +11,8 @@ from aurora_cli.templates.slash_commands import get_command_body
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".kilocode/workflows/aurora-plan.md",
-    "query": ".kilocode/workflows/aurora-query.md",
-    "index": ".kilocode/workflows/aurora-index.md",
-    "search": ".kilocode/workflows/aurora-search.md",
-    "init": ".kilocode/workflows/aurora-init.md",
-    "doctor": ".kilocode/workflows/aurora-doctor.md",
-    "agents": ".kilocode/workflows/aurora-agents.md",
+    "checkpoint": ".kilocode/workflows/aurora-checkpoint.md",
+    "archive": ".kilocode/workflows/aurora-archive.md",
 }
 
 

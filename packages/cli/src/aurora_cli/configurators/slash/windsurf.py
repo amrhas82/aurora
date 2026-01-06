@@ -11,23 +11,15 @@ from aurora_cli.templates.slash_commands import get_command_body
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".windsurf/workflows/aurora-plan.md",
-    "query": ".windsurf/workflows/aurora-query.md",
-    "index": ".windsurf/workflows/aurora-index.md",
-    "search": ".windsurf/workflows/aurora-search.md",
-    "init": ".windsurf/workflows/aurora-init.md",
-    "doctor": ".windsurf/workflows/aurora-doctor.md",
-    "agents": ".windsurf/workflows/aurora-agents.md",
+    "checkpoint": ".windsurf/workflows/aurora-checkpoint.md",
+    "archive": ".windsurf/workflows/aurora-archive.md",
 }
 
 # Descriptions for each command (used in frontmatter)
 DESCRIPTIONS: dict[str, str] = {
     "plan": "Generate structured plans with agent delegation",
-    "query": "Search codebase using memory system",
-    "index": "Index codebase for semantic search",
-    "search": "Search indexed code",
-    "init": "Initialize Aurora for the project",
-    "doctor": "Run health checks on Aurora installation",
-    "agents": "Browse and search available AI agents",
+    "checkpoint": "Save session context for continuity",
+    "archive": "Archive completed plans with spec processing",
 }
 
 

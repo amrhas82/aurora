@@ -51,8 +51,6 @@ def tools(mock_db_path):
 # Task 3.1: Assess Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestAssessPhaseHandler:
     """Tests for _handle_assess_phase method."""
 
@@ -187,8 +185,6 @@ class TestAssessPhaseHandler:
 # Task 3.3: Retrieve Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestRetrievePhaseHandler:
     """Tests for _handle_retrieve_phase method."""
 
@@ -255,8 +251,6 @@ class TestRetrievePhaseHandler:
 # Task 3.5: Decompose Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestDecomposePhaseHandler:
     """Tests for _handle_decompose_phase method."""
 
@@ -314,8 +308,6 @@ class TestDecomposePhaseHandler:
 # Task 3.7: Verify Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestVerifyPhaseHandler:
     """Tests for _handle_verify_phase method."""
 
@@ -356,8 +348,6 @@ class TestVerifyPhaseHandler:
 # Task 3.9: Route Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestRoutePhaseHandler:
     """Tests for _handle_route_phase method."""
 
@@ -390,8 +380,6 @@ class TestRoutePhaseHandler:
 # Task 3.11: Collect Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestCollectPhaseHandler:
     """Tests for _handle_collect_phase method."""
 
@@ -426,8 +414,6 @@ class TestCollectPhaseHandler:
 # Task 3.13: Synthesize Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestSynthesizePhaseHandler:
     """Tests for _handle_synthesize_phase method."""
 
@@ -453,8 +439,6 @@ class TestSynthesizePhaseHandler:
 # Task 3.15: Record Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestRecordPhaseHandler:
     """Tests for _handle_record_phase method."""
 
@@ -485,8 +469,6 @@ class TestRecordPhaseHandler:
 # Task 3.17: Respond Phase Tests (TDD RED phase)
 # ========================================================================
 
-@pytest.mark.critical
-@pytest.mark.mcp
 class TestRespondPhaseHandler:
     """Tests for _handle_respond_phase method."""
 

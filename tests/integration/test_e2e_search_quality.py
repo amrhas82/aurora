@@ -145,7 +145,6 @@ class TestEndToEndSearchQuality:
 
         return repo_root / "packages"
 
-    @pytest.mark.critical
     def test_index_aurora_subset(self, memory_manager, aurora_subset):
         """Test indexing Aurora codebase subset."""
         # Index the packages directory
@@ -157,7 +156,6 @@ class TestEndToEndSearchQuality:
         # Allow small number of errors from large markdown files
         assert stats.errors <= 5, f"Should have ≤5 errors, got {stats.errors}"
 
-    @pytest.mark.critical
     def test_search_quality_mrr(self, memory_manager, memory_store, aurora_subset):
         """Test search quality with MRR >= 0.85."""
         # Step 1: Index Aurora subset

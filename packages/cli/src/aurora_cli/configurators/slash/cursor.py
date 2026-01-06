@@ -22,46 +22,22 @@ FILE_PATHS: dict[str, str] = {
 # Frontmatter for each command (Cursor uses name, id, category, description)
 FRONTMATTER: dict[str, str] = {
     "plan": """---
-name: /aurora-plan
-id: aurora-plan
-category: Aurora
+name: Aurora: Plan
 description: Generate structured plans with agent delegation
----""",
-    "query": """---
-name: /aurora-query
-id: aurora-query
 category: Aurora
-description: Search codebase using memory system
+tags: [aurora, planning]
 ---""",
-    "index": """---
-name: /aurora-index
-id: aurora-index
+    "checkpoint": """---
+name: Aurora: Checkpoint
+description: Save session context for continuity
 category: Aurora
-description: Index codebase for semantic search
+tags: [aurora, session, checkpoint]
 ---""",
-    "search": """---
-name: /aurora-search
-id: aurora-search
+    "archive": """---
+name: Aurora: Archive
+description: Archive completed plans with spec processing
 category: Aurora
-description: Search indexed code
----""",
-    "init": """---
-name: /aurora-init
-id: aurora-init
-category: Aurora
-description: Initialize Aurora for the project
----""",
-    "doctor": """---
-name: /aurora-doctor
-id: aurora-doctor
-category: Aurora
-description: Run health checks on Aurora installation
----""",
-    "agents": """---
-name: /aurora-agents
-id: aurora-agents
-category: Aurora
-description: Browse and search available AI agents
+tags: [aurora, planning, archive]
 ---""",
 }
 

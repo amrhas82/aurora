@@ -78,12 +78,8 @@ The user wants to explore available agents. Use the aurora instructions to list 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "plan": ".amazonq/prompts/aurora-plan.md",
-    "query": ".amazonq/prompts/aurora-query.md",
-    "index": ".amazonq/prompts/aurora-index.md",
-    "search": ".amazonq/prompts/aurora-search.md",
-    "init": ".amazonq/prompts/aurora-init.md",
-    "doctor": ".amazonq/prompts/aurora-doctor.md",
-    "agents": ".amazonq/prompts/aurora-agents.md",
+    "checkpoint": ".amazonq/prompts/aurora-checkpoint.md",
+    "archive": ".amazonq/prompts/aurora-archive.md",
 }
 
 

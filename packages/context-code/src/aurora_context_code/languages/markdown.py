@@ -13,7 +13,6 @@ from aurora_context_code.knowledge_parser import KnowledgeParser
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -83,15 +82,12 @@ class MarkdownParser(CodeParser):
             for i, kchunk in enumerate(knowledge_chunks):
                 try:
                     # Generate chunk ID from content hash
-                    content_hash = hashlib.sha256(
-                        kchunk.content.encode("utf-8")
-                    ).hexdigest()[:16]
+                    content_hash = hashlib.sha256(kchunk.content.encode("utf-8")).hexdigest()[:16]
 
                     chunk_id = f"{file_path.stem}_section_{i}_{content_hash}"
 
                     # Create CodeChunk with knowledge-specific metadata
-                    # Note: chunk_type is hardcoded to "code" in CodeChunk,
-                    # so we use metadata to mark as knowledge
+                    # CodeChunk is reused for storage compatibility (code, knowledge, reasoning)
                     code_chunk = CodeChunk(
                         chunk_id=chunk_id,
                         file_path=str(file_path),
@@ -111,6 +107,9 @@ class MarkdownParser(CodeParser):
                             "is_knowledge": True,  # Flag for filtering
                         },
                     )
+
+                    # Override chunk type to "knowledge" (CodeChunk defaults to "code")
+                    code_chunk.type = "knowledge"
 
                     code_chunks.append(code_chunk)
 

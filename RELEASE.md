@@ -18,13 +18,34 @@
 Installs aurora-actr in editable mode for development.
 
 ```bash
-./install.sh
+./install.sh           # Install current version
+./install.sh 0.5.1     # Bump to 0.5.1 and install
 ```
 
 **What it does:**
-1. Cleans stale egg-info metadata
-2. Tries editable install (`pip install -e .`)
-3. Falls back to wheel install if pip is old
+1. Optionally bumps version if parameter provided
+2. Cleans stale egg-info metadata
+3. Tries editable install (`pip install -e .`)
+4. Falls back to wheel install if pip is old
+
+### `scripts/bump-version.sh` - Version Bump (No Release)
+Updates version in all files without releasing.
+
+```bash
+./scripts/bump-version.sh <version>
+```
+
+**Example:**
+```bash
+./scripts/bump-version.sh 0.5.1
+```
+
+**What it does:**
+1. Updates version in pyproject.toml
+2. Updates CLI version in main.py
+3. Shows next steps (test, commit, release)
+
+**Use when:** You want to bump version for testing without releasing to PyPI yet.
 
 ### `scripts/release.sh` - PyPI Release
 Releases a specific version to PyPI.
@@ -35,7 +56,7 @@ Releases a specific version to PyPI.
 
 **Example:**
 ```bash
-./scripts/release.sh 0.4.3
+./scripts/release.sh 0.5.1
 ```
 
 **What it does:**
@@ -44,6 +65,8 @@ Releases a specific version to PyPI.
 3. Cleans and builds distribution
 4. Uploads to PyPI
 5. Commits, tags, and pushes to git
+
+**Use when:** You're ready to publish a new version to PyPI immediately.
 
 ## Version Strategy
 

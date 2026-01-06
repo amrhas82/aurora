@@ -10,6 +10,24 @@ from aurora_cli.templates.slash_commands import get_command_body
 
 # Frontmatter for each command - includes $ARGUMENTS and <UserRequest> tags
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+description: Search indexed code and documentation
+---
+
+The user wants to search indexed memory. Use the aurora instructions to search.
+
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>""",
+    "get": """---
+description: Get full chunk content by index
+---
+
+The user wants to retrieve a specific chunk. Use the aurora instructions to get the chunk.
+
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>""",
     "plan": """---
 description: Generate structured plans with agent delegation
 ---
@@ -28,6 +46,15 @@ The user wants to save session context. Use the aurora instructions to create a 
 <UserRequest>
   $ARGUMENTS
 </UserRequest>""",
+    "implement": """---
+description: Plan-based implementation (placeholder)
+---
+
+The user wants to implement a plan. Use the aurora instructions for implementation.
+
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>""",
     "archive": """---
 description: Archive completed plans with spec processing
 ---
@@ -41,8 +68,11 @@ The user wants to archive a completed plan. Use the aurora instructions to archi
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".amazonq/prompts/aurora-search.md",
+    "get": ".amazonq/prompts/aurora-get.md",
     "plan": ".amazonq/prompts/aurora-plan.md",
     "checkpoint": ".amazonq/prompts/aurora-checkpoint.md",
+    "implement": ".amazonq/prompts/aurora-implement.md",
     "archive": ".amazonq/prompts/aurora-archive.md",
 }
 

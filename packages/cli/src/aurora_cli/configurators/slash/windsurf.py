@@ -7,18 +7,23 @@ with aurora-{command}.md naming and special auto_execution_mode: 3 frontmatter.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".windsurf/workflows/aurora-search.md",
+    "get": ".windsurf/workflows/aurora-get.md",
     "plan": ".windsurf/workflows/aurora-plan.md",
     "checkpoint": ".windsurf/workflows/aurora-checkpoint.md",
+    "implement": ".windsurf/workflows/aurora-implement.md",
     "archive": ".windsurf/workflows/aurora-archive.md",
 }
 
 # Descriptions for each command (used in frontmatter)
 DESCRIPTIONS: dict[str, str] = {
+    "search": "Search indexed code and documentation",
+    "get": "Get full chunk content by index",
     "plan": "Generate structured plans with agent delegation",
     "checkpoint": "Save session context for continuity",
+    "implement": "Plan-based implementation (placeholder)",
     "archive": "Archive completed plans with spec processing",
 }
 

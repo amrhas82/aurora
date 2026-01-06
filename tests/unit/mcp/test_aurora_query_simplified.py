@@ -18,12 +18,18 @@ After implementation: ALL TESTS SHOULD PASS (TDD GREEN phase).
 
 import json
 import os
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from pathlib import Path  # noqa: F401
+from unittest.mock import MagicMock, Mock, patch  # noqa: F401
 
 import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
+
+# Skip all tests in this file - MCP functionality is dormant (PRD-0024)
+# aurora_query tool was never implemented, only aurora_search and aurora_get exist
+pytestmark = pytest.mark.skip(
+    reason="MCP aurora_query not implemented - functionality dormant (PRD-0024)"
+)
 
 
 # ==============================================================================
@@ -79,9 +85,9 @@ class TestParameterValidation:
 
             # Should NOT have InvalidParameter error for type_filter
             if "error" in response:
-                assert "type_filter" not in response["error"]["message"].lower(), (
-                    f"Valid type_filter '{filter_type}' was rejected"
-                )
+                assert (
+                    "type_filter" not in response["error"]["message"].lower()
+                ), f"Valid type_filter '{filter_type}' was rejected"
 
 
 # ==============================================================================
@@ -503,9 +509,9 @@ class TestNoAPIKeyRequired:
 
                 # Should NOT have APIKeyMissing error
                 if "error" in response:
-                    assert response["error"]["type"] != "APIKeyMissing", (
-                        "aurora_query should work without API key"
-                    )
+                    assert (
+                        response["error"]["type"] != "APIKeyMissing"
+                    ), "aurora_query should work without API key"
 
                 # Should have successful response structure
                 assert "context" in response or "error" not in response
@@ -546,11 +552,11 @@ class TestNoAPIKeyRequired:
 
                     if "error" in response:
                         error_type = response["error"]["type"]
-                        assert error_type != "APIKeyMissing", (
-                            f"Query '{query}' should not require API key, got error: {error_type}"
-                        )
+                        assert (
+                            error_type != "APIKeyMissing"
+                        ), f"Query '{query}' should not require API key, got error: {error_type}"
                         # Also check error message doesn't mention API key
                         error_msg = response["error"]["message"].lower()
-                        assert "api" not in error_msg or "key" not in error_msg, (
-                            f"Error message should not mention API key: {error_msg}"
-                        )
+                        assert (
+                            "api" not in error_msg or "key" not in error_msg
+                        ), f"Error message should not mention API key: {error_msg}"

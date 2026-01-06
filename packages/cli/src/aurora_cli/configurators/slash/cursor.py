@@ -7,16 +7,32 @@ with aurora-{command}.md naming pattern.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".cursor/commands/aurora-search.md",
+    "get": ".cursor/commands/aurora-get.md",
     "plan": ".cursor/commands/aurora-plan.md",
     "checkpoint": ".cursor/commands/aurora-checkpoint.md",
+    "implement": ".cursor/commands/aurora-implement.md",
     "archive": ".cursor/commands/aurora-archive.md",
 }
 
 # Frontmatter for each command (Cursor uses name, id, category, description)
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+name: Aurora: Search
+id: /aurora-search
+description: Search indexed code and documentation
+category: Aurora
+tags: [aurora, search, memory]
+---""",
+    "get": """---
+name: Aurora: Get
+id: /aurora-get
+description: Get full chunk content by index
+category: Aurora
+tags: [aurora, search, memory]
+---""",
     "plan": """---
 name: Aurora: Plan
 id: /aurora-plan
@@ -30,6 +46,13 @@ id: /aurora-checkpoint
 description: Save session context for continuity
 category: Aurora
 tags: [aurora, session, checkpoint]
+---""",
+    "implement": """---
+name: Aurora: Implement
+id: /aurora-implement
+description: Plan-based implementation (placeholder)
+category: Aurora
+tags: [aurora, planning, implementation]
 ---""",
     "archive": """---
 name: Aurora: Archive

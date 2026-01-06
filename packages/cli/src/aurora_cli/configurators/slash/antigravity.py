@@ -9,15 +9,21 @@ from aurora_cli.templates.slash_commands import get_command_body
 
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
+    "search": "Search indexed code and documentation",
+    "get": "Get full chunk content by index",
     "plan": "Generate structured plans with agent delegation",
     "checkpoint": "Save session context for continuity",
+    "implement": "Plan-based implementation (placeholder)",
     "archive": "Archive completed plans with spec processing",
 }
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".agent/workflows/aurora-search.md",
+    "get": ".agent/workflows/aurora-get.md",
     "plan": ".agent/workflows/aurora-plan.md",
     "checkpoint": ".agent/workflows/aurora-checkpoint.md",
+    "implement": ".agent/workflows/aurora-implement.md",
     "archive": ".agent/workflows/aurora-archive.md",
 }
 

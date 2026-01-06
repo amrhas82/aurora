@@ -10,6 +10,22 @@ from aurora_cli.templates.slash_commands import get_command_body
 
 # Frontmatter for each command - includes $ARGUMENTS and <UserRequest> tags
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+description: Search indexed code and documentation
+---
+The user wants to search indexed memory. Use the aurora instructions to search.
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>
+""",
+    "get": """---
+description: Get full chunk content by index
+---
+The user wants to retrieve a specific chunk. Use the aurora instructions to get the chunk.
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>
+""",
     "plan": """---
 description: Generate structured plans with agent delegation
 ---
@@ -26,6 +42,14 @@ The user wants to save session context. Use the aurora instructions to create a 
   $ARGUMENTS
 </UserRequest>
 """,
+    "implement": """---
+description: Plan-based implementation (placeholder)
+---
+The user wants to implement a plan. Use the aurora instructions for implementation.
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>
+""",
     "archive": """---
 description: Archive completed plans with spec processing
 ---
@@ -38,8 +62,11 @@ The user wants to archive a completed plan. Use the aurora instructions to archi
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".opencode/command/aurora-search.md",
+    "get": ".opencode/command/aurora-get.md",
     "plan": ".opencode/command/aurora-plan.md",
     "checkpoint": ".opencode/command/aurora-checkpoint.md",
+    "implement": ".opencode/command/aurora-implement.md",
     "archive": ".opencode/command/aurora-archive.md",
 }
 

@@ -9,6 +9,18 @@ from aurora_cli.templates.slash_commands import get_command_body
 
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+name: Aurora: Search
+description: Search indexed code and documentation
+category: Aurora
+tags: [aurora, search, memory]
+---""",
+    "get": """---
+name: Aurora: Get
+description: Get full chunk content by index
+category: Aurora
+tags: [aurora, search, memory]
+---""",
     "plan": """---
 name: Aurora: Plan
 description: Generate structured plans with agent delegation
@@ -21,6 +33,12 @@ description: Save session context for continuity
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
+    "implement": """---
+name: Aurora: Implement
+description: Plan-based implementation (placeholder)
+category: Aurora
+tags: [aurora, planning, implementation]
+---""",
     "archive": """---
 name: Aurora: Archive
 description: Archive completed plans with spec processing
@@ -31,8 +49,11 @@ tags: [aurora, planning, archive]
 
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".crush/commands/aurora/search.md",
+    "get": ".crush/commands/aurora/get.md",
     "plan": ".crush/commands/aurora/plan.md",
     "checkpoint": ".crush/commands/aurora/checkpoint.md",
+    "implement": ".crush/commands/aurora/implement.md",
     "archive": ".crush/commands/aurora/archive.md",
 }
 

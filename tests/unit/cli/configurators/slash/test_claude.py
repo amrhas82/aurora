@@ -6,7 +6,6 @@ in .claude/commands/aur/ directory.
 
 from pathlib import Path
 
-import pytest
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,
@@ -136,7 +135,9 @@ class TestClaudeSlashCommandConfiguratorFrontmatter:
             assert frontmatter is not None, f"Frontmatter for {cmd_id} should not be None"
             assert "---" in frontmatter, f"Frontmatter for {cmd_id} should have YAML delimiters"
             assert "name:" in frontmatter, f"Frontmatter for {cmd_id} should have name"
-            assert "description:" in frontmatter, f"Frontmatter for {cmd_id} should have description"
+            assert (
+                "description:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have description"
 
     def test_get_frontmatter_checkpoint_has_session_tags(self):
         """Test checkpoint command frontmatter includes session-related tags."""
@@ -186,13 +187,13 @@ class TestClaudeSlashCommandConfiguratorBody:
 class TestClaudeSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method."""
 
-    def test_generate_all_creates_3_files(self, tmp_path: Path):
-        """Test generate_all creates 3 command files (one for each command)."""
+    def test_generate_all_creates_6_files(self, tmp_path: Path):
+        """Test generate_all creates 6 command files (one for each command)."""
         config = ClaudeSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 3
+        assert len(created) == 6
 
     def test_generate_all_creates_files_in_claude_directory(self, tmp_path: Path):
         """Test generate_all creates files in .claude/commands/aur/ directory."""
@@ -257,13 +258,18 @@ class TestClaudeSlashCommandConfiguratorGenerateAll:
             assert not Path(path).is_absolute()
             assert path.startswith(".claude/commands/aur/")
 
-    def test_generate_all_creates_all_3_command_files(self, tmp_path: Path):
-        """Test generate_all creates all 3 command files."""
+    def test_generate_all_creates_all_6_command_files(self, tmp_path: Path):
+        """Test generate_all creates all 6 command files."""
         config = ClaudeSlashCommandConfigurator()
         config.generate_all(str(tmp_path), ".aurora")
 
         expected_files = [
-            "plan.md", "checkpoint.md", "archive.md"
+            "search.md",
+            "get.md",
+            "plan.md",
+            "checkpoint.md",
+            "implement.md",
+            "archive.md",
         ]
 
         aur_dir = tmp_path / ".claude" / "commands" / "aur"
@@ -292,9 +298,7 @@ class TestClaudeSlashCommandConfiguratorUpdateExisting:
         # Insert custom content between frontmatter and markers
         custom_line = "\n\n<!-- Custom user note: Do not delete! -->\n"
         modified_content = (
-            original_content[:frontmatter_end]
-            + custom_line
-            + original_content[frontmatter_end:]
+            original_content[:frontmatter_end] + custom_line + original_content[frontmatter_end:]
         )
         plan_file.write_text(modified_content)
 
@@ -388,10 +392,7 @@ custom_field: custom_value
 
         frontmatter = config.get_frontmatter("plan")
         plan_file.write_text(
-            f"{frontmatter}\n"
-            f"{AURORA_MARKERS['start']}\n"
-            f"Body\n"
-            f"{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n" f"{AURORA_MARKERS['start']}\n" f"Body\n" f"{AURORA_MARKERS['end']}\n"
         )
 
         # Update existing
@@ -409,13 +410,13 @@ custom_field: custom_value
 class TestClaudeSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
-    def test_get_targets_returns_3_targets(self):
-        """Test get_targets returns 3 targets (one per command)."""
+    def test_get_targets_returns_6_targets(self):
+        """Test get_targets returns 6 targets (one per command)."""
         config = ClaudeSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 3
+        assert len(targets) == 6
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

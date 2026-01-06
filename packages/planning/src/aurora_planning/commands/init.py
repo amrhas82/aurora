@@ -12,29 +12,29 @@ from pathlib import Path
 from aurora_planning.templates.agents import AGENTS_TEMPLATE
 from aurora_planning.templates.project import PROJECT_TEMPLATE
 
-# OpenSpec managed block markers
-OPENSPEC_START = "<!-- OPENSPEC:START -->"
-OPENSPEC_END = "<!-- OPENSPEC:END -->"
+# Aurora managed block markers
+AURORA_START = "<!-- AURORA:START -->"
+AURORA_END = "<!-- AURORA:END -->"
 
 # Root stub instructions
-ROOT_STUB_TEMPLATE = f"""{OPENSPEC_START}
-# OpenSpec Instructions
+ROOT_STUB_TEMPLATE = f"""{AURORA_START}
+# Aurora Instructions
 
 These instructions are for AI assistants working in this project.
 
-Always open `@/.aurora/plans/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
+Always open `@/.aurora/AGENTS.md` when the request:
+- Mentions planning or proposals (words like plan, create, implement)
+- Introduces new capabilities, breaking changes, or architecture shifts
+- Sounds ambiguous and you need authoritative guidance before coding
 
-Use `@/.aurora/plans/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
+Use `@/.aurora/AGENTS.md` to learn:
+- How to create and work with plans
+- Aurora workflow and conventions
 - Project structure and guidelines
 
-Keep this managed block so 'openspec update' can refresh the instructions.
+Keep this managed block so 'aur init --config' can refresh the instructions.
 
-{OPENSPEC_END}
+{AURORA_END}
 """
 
 
@@ -49,7 +49,7 @@ class InitCommand:
             target_path: Target directory path (default: current directory)
         """
         target = Path(target_path)
-        openspec_dir = target / "openspec"
+        openspec_dir = target / ".aurora" / "plans"
 
         # Determine if this is extend mode (openspec dir already exists)
         extend_mode = openspec_dir.exists()
@@ -68,10 +68,10 @@ class InitCommand:
 
         # Success message
         if extend_mode:
-            print("\\nOpenSpec updated successfully")
+            print("\\nAurora planning updated successfully")
             print("Checked for missing files and refreshed root configuration")
         else:
-            print("\\nOpenSpec initialized successfully")
+            print("\\nAurora planning initialized successfully")
             print("Created directory structure and core files")
 
         print("\\nNext steps:")
@@ -117,14 +117,14 @@ class InitCommand:
             content = root_stub_path.read_text()
 
             # Check if managed block already exists
-            if OPENSPEC_START in content:
+            if AURORA_START in content:
                 # Replace existing managed block
-                start_idx = content.find(OPENSPEC_START)
-                end_idx = content.find(OPENSPEC_END)
+                start_idx = content.find(AURORA_START)
+                end_idx = content.find(AURORA_END)
 
                 if end_idx != -1:
                     # Replace the managed block
-                    end_idx += len(OPENSPEC_END)
+                    end_idx += len(AURORA_END)
                     new_content = (
                         content[:start_idx] +
                         ROOT_STUB_TEMPLATE +

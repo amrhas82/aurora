@@ -539,13 +539,17 @@ class SOAROrchestrator:
             "tokens_used": metadata.get("tokens_used", {}),
         }
 
-        self.conversation_logger.log_interaction(
+        log_path = self.conversation_logger.log_interaction(
             query=self._query,
             query_id=self._query_id,
             phase_data=metadata.get("phases", {}),
             execution_summary=execution_summary,
             metadata=metadata,
         )
+
+        # Auto-index the conversation log as knowledge chunk
+        if log_path and self.store:
+            self._index_conversation_log(log_path)
 
         return response.to_dict()
 
@@ -788,3 +792,43 @@ class SOAROrchestrator:
             "phases": self._phase_metadata,
             "timestamp": time.time(),
         }
+
+    def _index_conversation_log(self, log_path) -> None:
+        """Index conversation log as knowledge chunk for future retrieval.
+
+        Args:
+            log_path: Path to the conversation log markdown file
+        """
+        try:
+            from pathlib import Path
+            from aurora_context_code.languages.markdown import MarkdownParser
+            from aurora_context_code.semantic import EmbeddingProvider
+
+            # Parse markdown log into chunks (ensure absolute path)
+            parser = MarkdownParser()
+            chunks = parser.parse(Path(log_path).resolve())
+
+            if not chunks:
+                logger.debug(f"No chunks extracted from {log_path}")
+                return
+
+            # Generate embeddings and store chunks
+            embedding_provider = EmbeddingProvider()
+            for chunk in chunks:
+                try:
+                    # Generate embedding from docstring (where markdown content is stored)
+                    embedding = embedding_provider.embed_chunk(chunk.docstring)
+                    chunk.embeddings = embedding
+
+                    # Save to store
+                    self.store.save_chunk(chunk)
+                    logger.debug(f"Indexed conversation chunk: {chunk.id}")
+                except Exception as e:
+                    logger.warning(f"Failed to index chunk {chunk.id}: {e}")
+                    continue
+
+            logger.info(f"Indexed conversation log: {log_path} ({len(chunks)} chunks)")
+
+        except Exception as e:
+            logger.warning(f"Failed to auto-index conversation log: {e}")
+            # Don't fail the query if indexing fails

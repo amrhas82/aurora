@@ -378,7 +378,7 @@ class TestCostTracker:
         assert tracker.budget.consumed_usd == 0.0
         assert len(tracker.budget.entries) == 0
 
-    @patch("aurora.core.budget.tracker.datetime")
+    @patch("aurora_core.budget.tracker.datetime")
     def test_period_rollover(self, mock_datetime, temp_tracker_path):
         """Test monthly period rollover."""
         # Start in December 2025

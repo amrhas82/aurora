@@ -28,12 +28,12 @@ class UpdateCommand:
             verbose: Enable verbose output (default: False)
         """
         project = Path(project_path).resolve()
-        openspec_dir = project / "openspec"
+        openspec_dir = project / ".aurora/plans"
 
         # 1. Check openspec directory exists
         if not openspec_dir.is_dir():
             raise RuntimeError(
-                "No OpenSpec directory found. Run 'openspec init' first."
+                "No Aurora plans directory found. Run 'aur init' first."
             )
 
         # 2. Update .aurora/plans/AGENTS.md (full replacement)
@@ -57,6 +57,6 @@ class UpdateCommand:
 
         # Print summary
         summary_parts = []
-        summary_parts.append(f"Updated OpenSpec instructions ({', '.join(updated_files)})")
+        summary_parts.append(f"Updated Aurora instructions ({', '.join(updated_files)})")
 
         print(" | ".join(summary_parts))

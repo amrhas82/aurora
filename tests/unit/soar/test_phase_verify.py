@@ -149,7 +149,7 @@ class TestVerifyPhaseResult:
         assert len(data["all_attempts"]) == 1
 
 
-@patch("aurora.reasoning.verify.verify_decomposition")
+@patch("aurora_reasoning.verify.verify_decomposition")
 class TestVerifyDecomposition:
     """Tests for verify_decomposition function."""
 
@@ -274,8 +274,8 @@ class TestVerifyDecomposition:
         assert len(result.all_attempts) == 1
         assert result.verification.verdict == VerificationVerdict.FAIL
 
-    @patch("aurora.soar.phases.decompose.decompose_query")
-    @patch("aurora.soar.phases.verify._generate_retry_feedback")
+    @patch("aurora_soar.phases.decompose.decompose_query")
+    @patch("aurora_soar.phases.verify._generate_retry_feedback")
     def test_retry_then_pass(
         self,
         mock_generate_feedback,
@@ -324,8 +324,8 @@ class TestVerifyDecomposition:
             assert call_args.kwargs["retry_feedback"] == "Fix these issues"
             assert call_args.kwargs["use_cache"] is False
 
-    @patch("aurora.soar.phases.decompose.decompose_query")
-    @patch("aurora.soar.phases.verify._generate_retry_feedback")
+    @patch("aurora_soar.phases.decompose.decompose_query")
+    @patch("aurora_soar.phases.verify._generate_retry_feedback")
     def test_max_retries_exhausted(
         self,
         mock_generate_feedback,

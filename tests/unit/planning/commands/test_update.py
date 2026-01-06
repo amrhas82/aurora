@@ -28,7 +28,7 @@ class TestUpdateCommand:
 
     @pytest.fixture
     def setup_openspec_structure(self, temp_dir):
-        """Create OpenSpec directory structure."""
+        """Create Aurora directory structure."""
         openspec_dir = temp_dir / ".aurora/plans"
         openspec_dir.mkdir(parents=True)
         return temp_dir
@@ -52,11 +52,11 @@ class TestUpdateCommand:
         # Verify content matches template
         content = agents_path.read_text()
         assert content == AGENTS_TEMPLATE
-        assert "# OpenSpec Instructions" in content
+        assert "# Aurora Instructions" in content
 
         # Check console output
         captured = capsys.readouterr()
-        assert "Updated OpenSpec instructions" in captured.out
+        assert "Updated Aurora instructions" in captured.out
         assert ".aurora/plans/AGENTS.md" in captured.out
 
     def test_update_replaces_existing_agents_md(
@@ -65,7 +65,7 @@ class TestUpdateCommand:
         """Should replace existing AGENTS.md with new template."""
         # Create existing AGENTS.md with old content
         agents_path = temp_dir / ".aurora/plans" / "AGENTS.md"
-        old_content = "# Old OpenSpec Instructions\n\nOld content here."
+        old_content = "# Old Aurora Instructions\n\nOld content here."
         agents_path.write_text(old_content)
 
         # Execute update command
@@ -74,12 +74,12 @@ class TestUpdateCommand:
         # Check that AGENTS.md was replaced
         new_content = agents_path.read_text()
         assert new_content == AGENTS_TEMPLATE
-        assert "# OpenSpec Instructions" in new_content
+        assert "# Aurora Instructions" in new_content
         assert "Old content here" not in new_content
 
         # Check console output
         captured = capsys.readouterr()
-        assert "Updated OpenSpec instructions" in captured.out
+        assert "Updated Aurora instructions" in captured.out
 
     def test_error_if_openspec_directory_missing(
         self, update_command, temp_dir
@@ -87,7 +87,7 @@ class TestUpdateCommand:
         """Should throw error if .aurora/plans directory does not exist."""
         with pytest.raises(
             RuntimeError,
-            match="No OpenSpec directory found. Run '.aurora/plans init' first."
+            match="No Aurora plans directory found. Run .aur init' first."
         ):
             update_command.execute(str(temp_dir))
 
@@ -149,5 +149,5 @@ class TestUpdateCommand:
 
         # Validation tips
         assert "### Validation Tips" in content
-        assert ".aurora/plans validate" in content
+        assert "aur validate" in content
         assert "--strict" in content

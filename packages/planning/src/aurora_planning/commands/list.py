@@ -64,12 +64,12 @@ class ListCommand:
         json_output: bool
     ) -> None:
         """List active changes."""
-        changes_dir = target / "openspec" / "changes"
+        changes_dir = target / ".aurora/plans" / "changes"
 
         # Check if changes directory exists
         if not changes_dir.exists():
             raise RuntimeError(
-                "No OpenSpec changes directory found. Run 'openspec init' first."
+                "No Aurora plans directory found. Run 'aur init' first."
             )
 
         # Get all directories in changes (excluding archive)
@@ -77,7 +77,7 @@ class ListCommand:
             entries = list(changes_dir.iterdir())
         except OSError as err:
             raise RuntimeError(
-                "No OpenSpec changes directory found. Run 'openspec init' first."
+                "No Aurora plans directory found. Run 'aur init' first."
             ) from err
 
         change_dirs = sorted(
@@ -141,7 +141,7 @@ class ListCommand:
 
     def _list_specs(self, target: Path) -> None:
         """List specifications."""
-        specs_dir = target / "openspec" / "specs"
+        specs_dir = target / ".aurora/plans" / "specs"
 
         if not specs_dir.exists():
             print("No specs found.")

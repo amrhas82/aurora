@@ -1,7 +1,7 @@
 """
 Tests for aurora.commands.archive module.
 
-Ported from OpenSpec test/core/archive.test.ts
+Ported from Aurora test/core/archive.test.ts
 """
 
 import shutil
@@ -29,7 +29,7 @@ class TestArchiveCommand:
 
     @pytest.fixture
     def setup_openspec_structure(self, temp_dir):
-        """Create OpenSpec directory structure."""
+        """Create Aurora directory structure."""
         openspec_dir = temp_dir / ".aurora/plans"
         (openspec_dir / "changes").mkdir(parents=True)
         (openspec_dir / "specs").mkdir(parents=True)
@@ -745,7 +745,7 @@ E1 updated"""
 
         with pytest.raises(
             RuntimeError,
-            match="No OpenSpec changes directory found. Run '.aurora/plans init' first.",
+            match="No Aurora plans directory found. Run .aur init' first.",
         ):
             archive_command.execute("any-change", target_path=str(temp_dir), yes=True)
 

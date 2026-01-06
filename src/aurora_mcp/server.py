@@ -67,49 +67,6 @@ class AuroraMCPServer:
             return self.tools.aurora_search(query, limit)
 
         @self.mcp.tool()
-        def aurora_query(
-            query: str,
-            limit: int = 10,
-            type_filter: str | None = None,
-            verbose: bool = False,
-        ) -> str:
-            """
-            Retrieve relevant context from AURORA memory without LLM inference.
-
-            This tool provides intelligent context retrieval with complexity assessment
-            and confidence scoring. It returns structured context for the host LLM
-            (Claude Code CLI) to reason about, rather than calling external LLM APIs.
-
-            Args:
-                query: Natural language query string (required)
-                limit: Maximum number of chunks to retrieve (default: 10)
-                type_filter: Filter by memory type - "code", "reas", "know", or None (default: None)
-                verbose: Include detailed metadata in response (default: False)
-
-            Returns:
-                JSON string with:
-                - context: Retrieved memory chunks with content, metadata, and relevance scores
-                - assessment: Complexity assessment and retrieval confidence score
-                - metadata: Database stats and result counts
-
-            Examples:
-                Basic retrieval:
-                    aurora_query("What is a Python decorator?")
-
-                Type-filtered retrieval:
-                    aurora_query("async patterns", type_filter="code", limit=5)
-
-                Detailed metadata:
-                    aurora_query("SOAR pipeline", verbose=True)
-
-            Note:
-                No API key required. This tool runs inside Claude Code CLI which
-                provides the LLM reasoning capabilities. For standalone usage with
-                LLM responses, use the CLI command: $ aur query "your question"
-            """
-            return self.tools.aurora_query(query, limit, type_filter, verbose)
-
-        @self.mcp.tool()
         def aurora_get(index: int) -> str:
             """
             Retrieve a full chunk by index from the last search results.
@@ -154,7 +111,6 @@ class AuroraMCPServer:
         # Get registered tools from FastMCP
         tools = [
             ("aurora_search", "Search indexed codebase with semantic + keyword search"),
-            ("aurora_query", "Retrieve relevant context with SOAR pipeline orchestration"),
             ("aurora_get", "Get full chunk by index from last search results"),
         ]
 
@@ -166,6 +122,7 @@ class AuroraMCPServer:
         print(f"Total tools: {len(tools)}")
         print(f"Database: {self.db_path}")
         print(f"Config: {self.config_path}")
+        print("\nNote: For multi-turn SOAR queries, use: aur soar \"your question\"")
 
 
 def main() -> None:

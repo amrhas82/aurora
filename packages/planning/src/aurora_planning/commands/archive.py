@@ -61,14 +61,14 @@ class ArchiveCommand:
             validate: Explicit validation flag
         """
         target = Path(target_path)
-        changes_dir = target / "openspec" / "changes"
+        changes_dir = target / ".aurora/plans" / "changes"
         archive_dir = changes_dir / "archive"
-        main_specs_dir = target / "openspec" / "specs"
+        main_specs_dir = target / ".aurora/plans" / "specs"
 
         # Check if changes directory exists
         if not changes_dir.exists():
             raise RuntimeError(
-                "No OpenSpec changes directory found. Run 'openspec init' first."
+                "No Aurora plans directory found. Run 'aur init' first."
             )
 
         # Get plan name interactively if not provided

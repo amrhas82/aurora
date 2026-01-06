@@ -4,7 +4,6 @@ Conversation logging for Aurora SOAR pipeline.
 Logs SOAR interactions to markdown files with structured phase data.
 """
 
-import asyncio
 import json
 import re
 import sys
@@ -12,6 +11,8 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
+from aurora_core.paths import get_conversations_dir
 
 
 class VerbosityLevel(str, Enum):
@@ -40,11 +41,11 @@ class ConversationLogger:
         Initialize conversation logger.
 
         Args:
-            base_path: Base directory for logs (default: ./.aurora/logs/conversations)
+            base_path: Base directory for logs (default: project-local .aurora/logs/conversations)
             enabled: Whether to enable logging
         """
         if base_path is None:
-            base_path = Path.cwd() / ".aurora" / "logs" / "conversations"
+            base_path = get_conversations_dir()
 
         self.base_path = base_path
         self.enabled = enabled
@@ -93,12 +94,8 @@ class ConversationLogger:
                 metadata=metadata,
             )
 
-            # Write asynchronously (non-blocking)
-            try:
-                asyncio.create_task(self._write_async(log_path, content))
-            except RuntimeError:
-                # No running event loop - write synchronously
-                log_path.write_text(content)
+            # Write synchronously (fast enough for logging)
+            log_path.write_text(content)
 
             return log_path
 
@@ -321,21 +318,6 @@ class ConversationLogger:
             lines.append("")
 
         return "\n".join(lines)
-
-    async def _write_async(self, path: Path, content: str) -> None:
-        """
-        Write log file asynchronously.
-
-        Args:
-            path: File path
-            content: File content
-        """
-        try:
-            # Run file write in executor to avoid blocking
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, path.write_text, content)
-        except Exception as e:
-            print(f"Warning: Failed to write log file {path}: {e}", file=sys.stderr)
 
     def rotate_logs(self, max_files_per_month: int = 100) -> None:
         """

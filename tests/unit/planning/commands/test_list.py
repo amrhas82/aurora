@@ -1,7 +1,7 @@
 """
 Tests for aurora.commands.list module.
 
-Ported from OpenSpec test/core/list.test.ts
+Ported from Aurora test/core/list.test.ts
 """
 
 import shutil
@@ -34,7 +34,7 @@ class TestListCommand:
         """Should handle missing .aurora/plans/changes directory."""
         with pytest.raises(
             RuntimeError,
-            match="No OpenSpec changes directory found. Run '.aurora/plans init' first."
+            match="No Aurora plans directory found. Run 'aur init' first."
         ):
             list_command.execute(str(temp_dir), mode='changes')
 

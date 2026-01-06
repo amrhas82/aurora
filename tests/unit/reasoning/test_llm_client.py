@@ -325,7 +325,7 @@ class TestAnthropicClient:
         tokens = client.count_tokens("This is a test")
         assert tokens == len("This is a test") // 4
 
-    @patch("aurora.reasoning.llm_client.time")
+    @patch("aurora_reasoning.llm_client.time")
     def test_rate_limiting(self, mock_time, mock_anthropic_module):
         """Test rate limiting between requests."""
         mock_module, mock_client_instance = mock_anthropic_module

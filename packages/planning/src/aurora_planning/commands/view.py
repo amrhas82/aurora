@@ -36,7 +36,7 @@ class ViewCommand:
             target_path: Target directory path (default: current directory)
         """
         target = Path(target_path)
-        openspec_dir = target / "openspec"
+        openspec_dir = target / ".aurora/plans"
 
         if not openspec_dir.exists():
             print("No openspec directory found")

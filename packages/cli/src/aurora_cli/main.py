@@ -23,6 +23,8 @@ from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
 from aurora_cli.commands.plan import plan_group
+from aurora_cli.commands.query import query_command
+from aurora_cli.commands.soar import soar_command
 from aurora_cli.commands.version import version_command
 from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler
 
@@ -144,6 +146,8 @@ cli.add_command(headless_command)
 cli.add_command(init_command)
 cli.add_command(memory_group)
 cli.add_command(plan_group)
+cli.add_command(query_command)
+cli.add_command(soar_command)
 cli.add_command(version_command)
 
 

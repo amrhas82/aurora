@@ -1,7 +1,7 @@
 """
 Tests for aurora.commands.init module.
 
-Ported from OpenSpec test/core/init.test.ts - SIMPLIFIED VERSION
+Ported from Aurora test/core/init.test.ts - SIMPLIFIED VERSION
 Full configurator support deferred to Phase 7 (CLI Commands).
 """
 
@@ -31,7 +31,7 @@ class TestInitCommand:
         return InitCommand()
 
     def test_create_openspec_directory_structure(self, init_command, temp_dir):
-        """Should create OpenSpec directory structure."""
+        """Should create Aurora directory structure."""
         init_command.execute(str(temp_dir))
 
         plans_path = temp_dir / ".aurora/plans"
@@ -49,7 +49,7 @@ class TestInitCommand:
         assert (plans_path / "project.md").exists()
 
         agents_content = (plans_path / "AGENTS.md").read_text()
-        assert "OpenSpec Instructions" in agents_content
+        assert "Aurora Instructions" in agents_content
 
         project_content = (plans_path / "project.md").read_text()
         assert "Project Context" in project_content
@@ -62,10 +62,10 @@ class TestInitCommand:
         assert root_agents_path.exists()
 
         content = root_agents_path.read_text()
-        assert "<!-- OPENSPEC:START -->" in content
-        assert "@/.aurora/plans/AGENTS.md" in content
-        assert ".aurora/plans update" in content
-        assert "<!-- OPENSPEC:END -->" in content
+        assert "<!-- AURORA:START -->" in content
+        assert "@/.aurora/AGENTS.md" in content
+        assert "aur init --config" in content
+        assert "<!-- AURORA:END -->" in content
 
     def test_update_existing_root_agents_md_with_markers(self, init_command, temp_dir):
         """Should update existing root AGENTS.md with markers."""
@@ -76,10 +76,10 @@ class TestInitCommand:
         init_command.execute(str(temp_dir))
 
         updated_content = root_agents_path.read_text()
-        assert "<!-- OPENSPEC:START -->" in updated_content
-        assert "@/.aurora/plans/AGENTS.md" in updated_content
-        assert ".aurora/plans update" in updated_content
-        assert "<!-- OPENSPEC:END -->" in updated_content
+        assert "<!-- AURORA:START -->" in updated_content
+        assert "@/.aurora/AGENTS.md" in updated_content
+        assert "aur init --config" in updated_content
+        assert "<!-- AURORA:END -->" in updated_content
         assert "Custom instructions here" in updated_content
 
     def test_extend_mode_preserves_existing_template_files(self, init_command, temp_dir):
@@ -96,7 +96,7 @@ class TestInitCommand:
 
         content = agents_path.read_text()
         assert content == custom_content
-        assert "OpenSpec Instructions" not in content
+        assert "Aurora Instructions" not in content
 
     def test_recreate_deleted_agents_md_in_extend_mode(self, init_command, temp_dir):
         """Should recreate deleted .aurora/plans/AGENTS.md in extend mode."""
@@ -115,7 +115,7 @@ class TestInitCommand:
         assert agents_path.exists()
 
         content = agents_path.read_text()
-        assert "OpenSpec Instructions" in content
+        assert "Aurora Instructions" in content
 
     def test_recreate_deleted_project_md_in_extend_mode(self, init_command, temp_dir):
         """Should recreate deleted .aurora/plans/project.md in extend mode."""

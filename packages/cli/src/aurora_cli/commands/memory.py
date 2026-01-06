@@ -28,6 +28,7 @@ from rich.text import Text
 
 from aurora_cli.config import Config, load_config
 from aurora_cli.errors import ErrorHandler, MemoryStoreError, handle_errors
+from aurora_core.metrics.query_metrics import QueryMetrics
 from aurora_cli.memory_manager import MemoryManager, SearchResult
 
 
@@ -250,6 +251,52 @@ def search_command(
     else:
         _display_rich_results(results, query, show_content, config, show_scores)
 
+    # Save results to cache for 'aur mem get' command
+    _save_search_cache(results)
+
+
+@memory_group.command(name="get")
+@click.argument("index", type=int)
+@click.option("--format", "output_format", type=click.Choice(["rich", "json"]), default="rich", help="Output format")
+@click.pass_context
+@handle_errors
+def get_command(ctx: click.Context, index: int, output_format: str) -> None:
+    """Retrieve full content of a search result by index.
+
+    INDEX is the 1-based result number from the last search.
+
+    \b
+    Examples:
+        # Get first result from last search
+        aur mem get 1
+
+        \b
+        # Get third result with JSON output
+        aur mem get 3 --format json
+    """
+    # Load cached results
+    results = _load_search_cache()
+
+    if not results:
+        console.print("\n[yellow]No search results cached.[/]")
+        console.print("[dim]Run 'aur mem search <query>' first.[/]\n")
+        raise click.Abort()
+
+    # Validate index (1-based)
+    if index < 1 or index > len(results):
+        console.print(f"\n[red]Index {index} out of range.[/]")
+        console.print(f"[dim]Last search had {len(results)} results (valid: 1-{len(results)})[/]\n")
+        raise click.Abort()
+
+    # Get result (convert to 0-based)
+    result = results[index - 1]
+
+    # Display
+    if output_format == "json":
+        click.echo(json.dumps(result.__dict__, indent=2, default=str))
+    else:
+        _display_single_result(result, index, len(results))
+
 
 @memory_group.command(name="stats")
 @click.pass_context
@@ -347,6 +394,57 @@ def stats_command(ctx: click.Context) -> None:
             console.print()
 
         console.print("[dim]💡 Run 'aur mem index .' to re-index[/]\n")
+
+    # Display query metrics (QueryMetrics auto-detects project-local .aurora)
+    try:
+        query_metrics = QueryMetrics()
+        metrics_summary = query_metrics.get_summary()
+
+        if metrics_summary.total_queries > 0:
+            metrics_table = Table(title="Query Metrics", show_header=False)
+            metrics_table.add_column("Metric", style="cyan", width=30)
+            metrics_table.add_column("Value", style="white")
+
+            metrics_table.add_row("Total Queries", f"[bold]{metrics_summary.total_queries:,}[/]")
+            metrics_table.add_row("  SOAR Queries", f"{metrics_summary.total_soar_queries:,}")
+            metrics_table.add_row("  Simple Queries", f"{metrics_summary.total_simple_queries:,}")
+
+            if metrics_summary.queries_this_month > 0:
+                metrics_table.add_row("", "")
+                metrics_table.add_row("[bold]This Month", "")
+                metrics_table.add_row("  Queries", f"{metrics_summary.queries_this_month:,}")
+                metrics_table.add_row("  SOAR Queries", f"{metrics_summary.soar_queries_this_month:,}")
+
+            if metrics_summary.avg_duration_ms > 0:
+                metrics_table.add_row("", "")
+                metrics_table.add_row("[bold]Performance", "")
+                metrics_table.add_row("  Avg Duration", f"{metrics_summary.avg_duration_ms/1000:.1f}s")
+                if metrics_summary.avg_soar_duration_ms > 0:
+                    metrics_table.add_row("  Avg SOAR Duration", f"{metrics_summary.avg_soar_duration_ms/1000:.1f}s")
+                metrics_table.add_row("  Min Duration", f"{metrics_summary.min_duration_ms/1000:.1f}s")
+                metrics_table.add_row("  Max Duration", f"{metrics_summary.max_duration_ms/1000:.1f}s")
+
+            if metrics_summary.success_rate < 1.0:
+                success_pct = metrics_summary.success_rate * 100
+                metrics_table.add_row("Success Rate", f"[yellow]{success_pct:.1f}%[/]")
+
+            if metrics_summary.complexity_breakdown:
+                metrics_table.add_row("", "")
+                metrics_table.add_row("[bold]By Complexity (This Month)", "")
+                for complexity, count in sorted(metrics_summary.complexity_breakdown.items()):
+                    metrics_table.add_row(f"  {complexity}", f"{count:,}")
+
+            if metrics_summary.model_breakdown:
+                metrics_table.add_row("", "")
+                metrics_table.add_row("[bold]By Model (This Month)", "")
+                for model, count in sorted(metrics_summary.model_breakdown.items(), key=lambda x: x[1], reverse=True):
+                    metrics_table.add_row(f"  {model}", f"{count:,}")
+
+            console.print(metrics_table)
+            console.print()
+    except Exception as e:
+        # Silently skip if metrics table doesn't exist yet
+        logger.debug(f"Query metrics not available: {e}")
 
 
 def _display_rich_results(
@@ -988,6 +1086,90 @@ def _explain_activation_score(metadata: dict[str, Any], activation_score: float)
             pass
 
     return ", ".join(parts)
+
+
+def _save_search_cache(results: list[SearchResult]) -> None:
+    """Save search results to cache file for 'aur mem get' command.
+
+    Args:
+        results: List of search results to cache
+    """
+    import tempfile
+    import pickle
+
+    cache_file = Path(tempfile.gettempdir()) / "aurora_search_cache.pkl"
+    try:
+        with open(cache_file, "wb") as f:
+            pickle.dump(results, f)
+    except Exception as e:
+        logger.warning(f"Failed to cache search results: {e}")
+
+
+def _load_search_cache() -> list[SearchResult] | None:
+    """Load cached search results from file.
+
+    Returns:
+        List of cached results, or None if cache doesn't exist or is expired
+    """
+    import tempfile
+    import pickle
+    import time
+
+    cache_file = Path(tempfile.gettempdir()) / "aurora_search_cache.pkl"
+
+    if not cache_file.exists():
+        return None
+
+    # Check if cache is expired (10 minutes)
+    cache_age = time.time() - cache_file.stat().st_mtime
+    if cache_age > 600:
+        return None
+
+    try:
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+    except Exception as e:
+        logger.warning(f"Failed to load search cache: {e}")
+        return None
+
+
+def _display_single_result(result: SearchResult, index: int, total: int) -> None:
+    """Display a single search result with full content.
+
+    Args:
+        result: Search result to display
+        index: 1-based index in result list
+        total: Total number of results
+    """
+    # Header
+    console.print()
+    console.print(f"[bold cyan]Result #{index} of {total}[/]")
+    console.print()
+
+    # Metadata table
+    meta_table = Table(show_header=False, box=None, padding=(0, 2))
+    meta_table.add_column("Key", style="dim")
+    meta_table.add_column("Value")
+
+    meta_table.add_row("File:", result.file_path)
+    if result.metadata.get("name"):
+        meta_table.add_row("Name:", result.metadata["name"])
+    if result.line_range and result.line_range != (0, 0):
+        meta_table.add_row("Lines:", f"{result.line_range[0]}-{result.line_range[1]}")
+    meta_table.add_row("Score:", f"{result.hybrid_score:.3f}")
+
+    console.print(meta_table)
+    console.print()
+
+    # Content with syntax highlighting
+    # Detect language from file extension
+    file_ext = Path(result.file_path).suffix.lstrip(".")
+    lang_map = {"py": "python", "js": "javascript", "ts": "typescript", "md": "markdown"}
+    language = lang_map.get(file_ext, file_ext or "text")
+
+    syntax = Syntax(result.content, language, theme="monokai", line_numbers=False)
+    console.print(Panel(syntax, border_style="dim"))
+    console.print()
 
 
 if __name__ == "__main__":

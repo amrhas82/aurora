@@ -1,24 +1,24 @@
 """
 AGENTS.md template for Aurora planning system.
 
-Ported from OpenSpec src/core/templates/agents-template.ts
+Ported from Aurora src/core/templates/agents-template.ts
 
 This template contains the instructions for AI coding assistants using
-Aurora/OpenSpec for spec-driven development.
+Aurora/Aurora for spec-driven development.
 """
 
-AGENTS_TEMPLATE = """# OpenSpec Instructions
+AGENTS_TEMPLATE = """# Aurora Instructions
 
-Instructions for AI coding assistants using OpenSpec for spec-driven development.
+Instructions for AI coding assistants using Aurora for spec-driven development.
 
 ## TL;DR Quick Checklist
 
-- Search existing work: `openspec spec list --long`, `openspec list` (use `rg` only for full-text search)
+- Search existing work: `aur spec list --long`, `aur list` (use `rg` only for full-text search)
 - Decide scope: new capability vs modify existing capability
 - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
 - Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
 - Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include at least one `#### Scenario:` per requirement
-- Validate: `openspec validate [change-id] --strict` and fix issues
+- Validate: `aur validate [change-id] --strict` and fix issues
 - Request approval: Do not start implementation until proposal is approved
 
 ## Three-Stage Workflow
@@ -50,10 +50,10 @@ Skip proposal for:
 - Tests for existing behavior
 
 **Workflow**
-1. Review `openspec/project.md`, `openspec list`, and `openspec list --specs` to understand current context.
-2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `openspec/changes/<id>/`.
+1. Review `.aurora/plans/project.md`, `aur list`, and `aur list --specs` to understand current context.
+2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `.aurora/plans/changes/<id>/`.
 3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement.
-4. Run `openspec validate <id> --strict` and resolve any issues before sharing the proposal.
+4. Run `aur validate <id> --strict` and resolve any issues before sharing the proposal.
 
 ### Stage 2: Implementing Changes
 Track these steps as TODOs and complete them one by one.
@@ -69,31 +69,31 @@ Track these steps as TODOs and complete them one by one.
 After deployment, create separate PR to:
 - Move `changes/[name]/` → `changes/archive/YYYY-MM-DD-[name]/`
 - Update `specs/` if capabilities changed
-- Use `openspec archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
-- Run `openspec validate --strict` to confirm the archived change passes checks
+- Use `aur archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
+- Run `aur validate --strict` to confirm the archived change passes checks
 
 ## Before Any Task
 
 **Context Checklist:**
 - [ ] Read relevant specs in `specs/[capability]/spec.md`
 - [ ] Check pending changes in `changes/` for conflicts
-- [ ] Read `openspec/project.md` for conventions
-- [ ] Run `openspec list` to see active changes
-- [ ] Run `openspec list --specs` to see existing capabilities
+- [ ] Read `.aurora/plans/project.md` for conventions
+- [ ] Run `aur list` to see active changes
+- [ ] Run `aur list --specs` to see existing capabilities
 
 **Before Creating Specs:**
 - Always check if capability already exists
 - Prefer modifying existing specs over creating duplicates
-- Use `openspec show [spec]` to review current state
+- Use `aur show [spec]` to review current state
 - If request is ambiguous, ask 1–2 clarifying questions before scaffolding
 
 ### Search Guidance
-- Enumerate specs: `openspec spec list --long` (or `--json` for scripts)
-- Enumerate changes: `openspec list` (or `openspec change list --json` - deprecated but available)
+- Enumerate specs: `aur spec list --long` (or `--json` for scripts)
+- Enumerate changes: `aur list` (or `aur change list --json` - deprecated but available)
 - Show details:
-  - Spec: `openspec show <spec-id> --type spec` (use `--json` for filters)
-  - Change: `openspec show <change-id> --json --deltas-only`
-- Full-text search (use ripgrep): `rg -n "Requirement:|Scenario:" openspec/specs`
+  - Spec: `aur show <spec-id> --type spec` (use `--json` for filters)
+  - Change: `aur show <change-id> --json --deltas-only`
+- Full-text search (use ripgrep): `rg -n "Requirement:|Scenario:" aur/specs`
 
 ## Quick Start
 
@@ -101,23 +101,23 @@ After deployment, create separate PR to:
 
 ```bash
 # Essential commands
-openspec list                  # List active changes
-openspec list --specs          # List specifications
-openspec show [item]           # Display change or spec
-openspec validate [item]       # Validate changes or specs
-openspec archive <change-id> [--yes|-y]   # Archive after deployment (add --yes for non-interactive runs)
+aur list                  # List active changes
+aur list --specs          # List specifications
+aur show [item]           # Display change or spec
+aur validate [item]       # Validate changes or specs
+aur archive <change-id> [--yes|-y]   # Archive after deployment (add --yes for non-interactive runs)
 
 # Project management
-openspec init [path]           # Initialize OpenSpec
-openspec update [path]         # Update instruction files
+aur init [path]           # Initialize Aurora
+aur update [path]         # Update instruction files
 
 # Interactive mode
-openspec show                  # Prompts for selection
-openspec validate              # Bulk validation mode
+aur show                  # Prompts for selection
+aur validate              # Bulk validation mode
 
 # Debugging
-openspec show [change] --json --deltas-only
-openspec validate [change] --strict
+aur show [change] --json --deltas-only
+aur validate [change] --strict
 ```
 
 ### Command Flags
@@ -132,7 +132,7 @@ openspec validate [change] --strict
 ## Directory Structure
 
 ```
-openspec/
+aur/
 ├── project.md              # Project conventions
 ├── specs/                  # Current truth - what IS built
 │   └── [capability]/       # Single focused capability
@@ -283,7 +283,7 @@ Headers matched with `trim(header)` - whitespace ignored.
 Common pitfall: Using MODIFIED to add a new concern without including the previous text. This causes loss of detail at archive time. If you aren't explicitly changing the existing requirement, add a new requirement under ADDED instead.
 
 Authoring a MODIFIED requirement correctly:
-1) Locate the existing requirement in `openspec/specs/<capability>/spec.md`.
+1) Locate the existing requirement in `.aurora/plans/specs/<capability>/spec.md`.
 2) Copy the entire requirement block (from `### Requirement: ...` through its scenarios).
 3) Paste it under `## MODIFIED Requirements` and edit to reflect the new behavior.
 4) Ensure the header text matches exactly (whitespace-insensitive) and keep at least one `#### Scenario:`.
@@ -309,39 +309,39 @@ Example for RENAMED:
 
 **Silent scenario parsing failures**
 - Exact format required: `#### Scenario: Name`
-- Debug with: `openspec show [change] --json --deltas-only`
+- Debug with: `aur show [change] --json --deltas-only`
 
 ### Validation Tips
 
 ```bash
 # Always use strict mode for comprehensive checks
-openspec validate [change] --strict
+aur validate [change] --strict
 
 # Debug delta parsing
-openspec show [change] --json | jq '.deltas'
+aur show [change] --json | jq '.deltas'
 
 # Check specific requirement
-openspec show [spec] --json -r 1
+aur show [spec] --json -r 1
 ```
 
 ## Happy Path Script
 
 ```bash
 # 1) Explore current state
-openspec spec list --long
-openspec list
+aur spec list --long
+aur list
 # Optional full-text search:
-# rg -n "Requirement:|Scenario:" openspec/specs
-# rg -n "^#|Requirement:" openspec/changes
+# rg -n "Requirement:|Scenario:" aur/specs
+# rg -n "^#|Requirement:" aur/changes
 
 # 2) Choose change id and scaffold
 CHANGE=add-two-factor-auth
-mkdir -p openspec/changes/$CHANGE/{specs/auth}
-printf "## Why\\n...\\n\\n## What Changes\\n- ...\\n\\n## Impact\\n- ...\\n" > openspec/changes/$CHANGE/proposal.md
-printf "## 1. Implementation\\n- [ ] 1.1 ...\\n" > openspec/changes/$CHANGE/tasks.md
+mkdir -p aur/changes/$CHANGE/{specs/auth}
+printf "## Why\\n...\\n\\n## What Changes\\n- ...\\n\\n## Impact\\n- ...\\n" > aur/changes/$CHANGE/proposal.md
+printf "## 1. Implementation\\n- [ ] 1.1 ...\\n" > aur/changes/$CHANGE/tasks.md
 
 # 3) Add deltas (example)
-cat > openspec/changes/$CHANGE/specs/auth/spec.md << 'EOF'
+cat > aur/changes/$CHANGE/specs/auth/spec.md << 'EOF'
 ## ADDED Requirements
 ### Requirement: Two-Factor Authentication
 Users MUST provide a second factor during login.
@@ -352,13 +352,13 @@ Users MUST provide a second factor during login.
 EOF
 
 # 4) Validate
-openspec validate $CHANGE --strict
+aur validate $CHANGE --strict
 ```
 
 ## Multi-Capability Example
 
 ```
-openspec/changes/add-2fa-notify/
+aur/changes/add-2fa-notify/
 ├── proposal.md
 ├── tasks.md
 └── specs/
@@ -424,7 +424,7 @@ Only add complexity with:
 ## Error Recovery
 
 ### Change Conflicts
-1. Run `openspec list` to see active changes
+1. Run `aur list` to see active changes
 2. Check for overlapping specs
 3. Coordinate with change owners
 4. Consider combining proposals
@@ -456,10 +456,10 @@ Only add complexity with:
 
 ### CLI Essentials
 ```bash
-openspec list              # What's in progress?
-openspec show [item]       # View details
-openspec validate --strict # Is it correct?
-openspec archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
+aur list              # What's in progress?
+aur show [item]       # View details
+aur validate --strict # Is it correct?
+aur archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
 ```
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.

@@ -1,7 +1,7 @@
 """
 Tests for aurora.commands.view module.
 
-Ported from OpenSpec test/core/view.test.ts
+Ported from Aurora test/core/view.test.ts
 """
 
 import re

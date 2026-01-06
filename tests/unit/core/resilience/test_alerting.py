@@ -328,7 +328,7 @@ class TestAlertingEvaluation:
 class TestAlertingNotifications:
     """Test alert notification system."""
 
-    @patch("aurora.core.resilience.alerting.logger")
+    @patch("aurora_core.resilience.alerting.logger")
     def test_notification_logs_alert(self, mock_logger):
         """Test that alerts are logged."""
         alerting = Alerting()
@@ -354,7 +354,7 @@ class TestAlertingNotifications:
 
         assert len(alerting.notification_handlers) == 1
 
-    @patch("aurora.core.resilience.alerting.logger")
+    @patch("aurora_core.resilience.alerting.logger")
     def test_custom_handler_called(self, mock_logger):
         """Test custom handler is called for alerts."""
         alerting = Alerting()
@@ -376,7 +376,7 @@ class TestAlertingNotifications:
         # Handler should receive Alert object
         assert isinstance(handler.call_args[0][0], Alert)
 
-    @patch("aurora.core.resilience.alerting.logger")
+    @patch("aurora_core.resilience.alerting.logger")
     def test_handler_exception_logged(self, mock_logger):
         """Test that handler exceptions are logged and don't propagate."""
         alerting = Alerting()

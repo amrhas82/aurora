@@ -10,6 +10,93 @@ BASE_GUARDRAILS = """**Guardrails**
 - Keep changes tightly scoped to the requested outcome.
 - Refer to `.aurora/AGENTS.md` if you need additional Aurora conventions or clarifications."""
 
+# /aur:search - Search indexed code
+SEARCH_TEMPLATE = f"""{BASE_GUARDRAILS}
+
+**Usage**
+Search Aurora's indexed memory for code, documentation, or reasoning patterns.
+
+**Command**
+```bash
+aur mem search "query text" --limit 10 --type code
+```
+
+**What it does**
+1. Searches indexed memory (code, kb, soar chunks)
+2. Uses hybrid scoring: BM25 + ACT-R activation + optional semantic
+3. Returns top N results with relevance scores
+4. Shows file path, chunk name, lines, and score
+
+**Options**
+- `--limit N` - Max results (default: 10)
+- `--type TYPE` - Filter by chunk type (code, kb, soar)
+
+**When to use**
+- Find code by functionality ("authentication logic")
+- Locate documentation ("setup guide")
+- Find past reasoning patterns ("how we handled X")
+
+**Example**
+```bash
+/aur:search authentication functions
+# Returns: login(), verify_token(), authenticate_user()
+```"""
+
+# /aur:get - Get chunk by index
+GET_TEMPLATE = f"""{BASE_GUARDRAILS}
+
+**Usage**
+Retrieve full content of a chunk after search.
+
+**Workflow**
+1. Search: `/aur:search query` or `aur mem search "query"`
+2. Review results (numbered list)
+3. Get: `/aur:get N` to retrieve full chunk N
+
+**What it does**
+- Retrieves complete chunk content
+- Shows full code/documentation
+- Includes metadata (file path, lines, type)
+
+**Example**
+```
+User: Find login code
+AI: /aur:search login
+    Results: 1) login() 2) verify_login() 3) login_handler()
+AI: /aur:get 1
+    [Retrieves full login() function code]
+```"""
+
+# /aur:implement - Plan implementation (placeholder)
+IMPLEMENT_TEMPLATE = f"""{BASE_GUARDRAILS}
+
+**Status:** Placeholder in v0.5.0
+
+**Future Vision**
+Plan-based implementation that executes changes from Aurora plans.
+
+**Current Workaround**
+1. View plan: `aur plan show plan-001`
+2. Read tasks: Open `.aurora/plans/active/plan-001/tasks.md`
+3. Implement manually following task list
+4. Archive when done: `/aur:archive plan-001`
+
+**Planned Features**
+- Execute plan-based changes automatically
+- Validate against acceptance criteria
+- Track task completion
+- Generate implementation reports
+
+**Aurora Workflow (Manual for now)**
+1. `aur plan create "Feature"` - Create plan
+2. Review and refine plan
+3. Implement tasks manually
+4. `aur plan archive plan-001` - Archive completed
+
+**Reference**
+- `aur plan list` - See available plans
+- `aur plan show <id>` - View plan details"""
+
 # /aur:plan - Plan generation command
 PLAN_TEMPLATE = f"""{BASE_GUARDRAILS}
 - Identify any vague or ambiguous details and ask the necessary follow-up questions before creating the plan.
@@ -107,8 +194,11 @@ aur plan archive 0001 --no-validate      # Skip validation (with warning)
 
 # Command templates dictionary
 COMMAND_TEMPLATES: dict[str, str] = {
+    "search": SEARCH_TEMPLATE,
+    "get": GET_TEMPLATE,
     "plan": PLAN_TEMPLATE,
     "checkpoint": CHECKPOINT_TEMPLATE,
+    "implement": IMPLEMENT_TEMPLATE,
     "archive": ARCHIVE_TEMPLATE,
 }
 

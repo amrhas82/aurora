@@ -6,16 +6,30 @@ Configures slash commands for Claude Code in .claude/commands/aur/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
+    "search": ".claude/commands/aur/search.md",
+    "get": ".claude/commands/aur/get.md",
     "plan": ".claude/commands/aur/plan.md",
     "checkpoint": ".claude/commands/aur/checkpoint.md",
+    "implement": ".claude/commands/aur/implement.md",
     "archive": ".claude/commands/aur/archive.md",
 }
 
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
+    "search": """---
+name: Aurora: Search
+description: Search indexed code and documentation
+category: Aurora
+tags: [aurora, search, memory]
+---""",
+    "get": """---
+name: Aurora: Get
+description: Get full chunk content by index
+category: Aurora
+tags: [aurora, search, memory]
+---""",
     "plan": """---
 name: Aurora: Plan
 description: Generate structured plans with agent delegation
@@ -27,6 +41,12 @@ name: Aurora: Checkpoint
 description: Save session context for continuity
 category: Aurora
 tags: [aurora, session, checkpoint]
+---""",
+    "implement": """---
+name: Aurora: Implement
+description: Plan-based implementation (placeholder)
+category: Aurora
+tags: [aurora, planning, implementation]
 ---""",
     "archive": """---
 name: Aurora: Archive

@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
-
 # Aurora managed block markers
 AURORA_MARKERS = {
     "start": "<!-- AURORA:START -->",
@@ -32,7 +31,7 @@ class SlashCommandTarget:
 
 
 # All Aurora slash commands
-ALL_COMMANDS = ["plan", "checkpoint", "archive"]
+ALL_COMMANDS = ["search", "get", "plan", "checkpoint", "implement", "archive"]
 
 
 class SlashCommandConfigurator(ABC):
@@ -71,9 +70,7 @@ class SlashCommandConfigurator(ABC):
             List of SlashCommandTarget objects
         """
         return [
-            SlashCommandTarget(
-                command_id=cmd_id, path=self.get_relative_path(cmd_id), kind="slash"
-            )
+            SlashCommandTarget(command_id=cmd_id, path=self.get_relative_path(cmd_id), kind="slash")
             for cmd_id in ALL_COMMANDS
         ]
 
@@ -106,9 +103,7 @@ class SlashCommandConfigurator(ABC):
                 if frontmatter:
                     sections.append(frontmatter.strip())
 
-                sections.append(
-                    f"{AURORA_MARKERS['start']}\n{body}\n{AURORA_MARKERS['end']}"
-                )
+                sections.append(f"{AURORA_MARKERS['start']}\n{body}\n{AURORA_MARKERS['end']}")
 
                 content = "\n".join(sections) + "\n"
                 file_path.write_text(content, encoding="utf-8")

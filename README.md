@@ -91,12 +91,50 @@ aur --version
 ### Optional Extras
 
 ```bash
-# With ML features (semantic embeddings - requires torch)
-pip install aurora-actr[ml]
+# With ML features (semantic embeddings)
+pip install aurora-actr[ml]  # Adds ~1.9GB (PyTorch + models)
 
 # Development tools (for contributors)
 pip install aurora-actr[dev]
 ```
+
+#### ML Features (Optional)
+
+**When to use ML:**
+- Large codebases (10K+ files)
+- Need conceptual/semantic search ("authentication" finds login(), verify_token(), etc.)
+- Searching documentation semantically
+- Want best possible search quality
+
+**When to skip ML:**
+- Small to medium projects (BM25 + Activation works great!)
+- Keyword search is sufficient
+- Disk/bandwidth constraints (~1.9GB additional)
+
+**Customizing the embedding model:**
+
+Aurora uses `all-MiniLM-L6-v2` by default (general-purpose, 384-dim, ~80MB model). You can use any [sentence-transformers model](https://www.sbert.net/docs/pretrained_models.html):
+
+```python
+from aurora_context_code.semantic import EmbeddingProvider
+
+# Code-optimized model (better for code, weaker for docs)
+provider = EmbeddingProvider(model_name="microsoft/codebert-base")
+
+# Smaller/faster model
+provider = EmbeddingProvider(model_name="paraphrase-MiniLM-L3-v2")
+
+# Multilingual model (50+ languages)
+provider = EmbeddingProvider(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+```
+
+**Popular model options:**
+- `all-MiniLM-L6-v2` - Default, balanced for code + docs + reasoning (80MB)
+- `all-MiniLM-L12-v2` - Better quality, slower (120MB)
+- `paraphrase-MiniLM-L3-v2` - Faster, smaller (60MB)
+- `microsoft/codebert-base` - Code-specific (500MB)
+
+See [sentence-transformers documentation](https://www.sbert.net/docs/pretrained_models.html) for complete model list and benchmarks.
 
 ### From Source
 
@@ -127,6 +165,34 @@ This runs 3 unified steps:
 - `.aurora/memory.db` (SQLite database for indexed code)
 - `.aurora/plans/` (for feature planning)
 - MCP and slash command configurations
+
+**Controlling what gets indexed:**
+
+Aurora automatically excludes common noise (venv/, node_modules/, tasks/, CHANGELOG.md, etc.). Customize exclusions with `.auroraignore`:
+
+```bash
+# Create .auroraignore in your project root
+cat > .auroraignore <<EOF
+# Exclude test files
+tests/**
+
+# Exclude generated docs
+docs/archive/**
+
+# Exclude specific files
+CONTRIBUTING.md
+EOF
+
+# Re-index to apply changes
+aur mem index .
+```
+
+**What Aurora indexes:**
+- **Code** (type: `code`) - Python files, functions, classes, methods
+- **Knowledge** (type: `kb`) - Markdown docs (README.md, docs/, PRDs)
+- **SOAR** (type: `soar`) - Reasoning patterns (auto-indexed after `aur soar`)
+
+**Default exclusions:** tasks/, CHANGELOG.md, LICENSE*, venv/, node_modules/, build/, .git/
 
 ### 2. Use with AI Coding Tools
 

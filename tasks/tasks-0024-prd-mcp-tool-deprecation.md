@@ -92,69 +92,69 @@ REMAINING_MCP_TOOLS = [
 
 ## Tasks
 
-- [ ] 0.0 Phase 0: Pre-Implementation Setup (Safety Baseline)
-  - [ ] 0.1 Create git rollback tag before any code changes
+- [x] 0.0 Phase 0: Pre-Implementation Setup (Safety Baseline)
+  - [x] 0.1 Create git rollback tag before any code changes
     - **Action**: Run `git tag -a mcp-deprecation-baseline -m "State before MCP tool deprecation (PRD-0024)"`
     - **Verify**: Run `git tag -l mcp-deprecation-baseline` to confirm tag exists
     - **Verify**: Run `git show mcp-deprecation-baseline` to see tagged commit details
     - **Acceptance**: Tag created pointing to current HEAD commit
-  - [ ] 0.2 Push tag to remote repository for team access
+  - [x] 0.2 Push tag to remote repository for team access
     - **Action**: Run `git push origin mcp-deprecation-baseline`
     - **Verify**: Check GitHub/remote to confirm tag appears
     - **Acceptance**: Tag visible on remote repository
-  - [ ] 0.3 Document rollback procedure in implementation notes
+  - [x] 0.3 Document rollback procedure in implementation notes
     - **Action**: Create `/home/hamr/PycharmProjects/aurora/tasks/0024-rollback-procedure.md`
     - **Content**: Document three rollback options (see PRD Appendix D)
     - **Include**: Commands for each option, decision matrix, verification steps
     - **Acceptance**: Rollback procedure file created with all three options documented
-  - [ ] 0.4 Verify clean working directory
+  - [x] 0.4 Verify clean working directory
     - **Action**: Run `git status` and check for uncommitted changes
     - **Action**: Run `git diff` to verify no unstaged changes
     - **Acceptance**: Working directory clean with no uncommitted changes
-  - [ ] 0.5 Create feature branch from current state
+  - [x] 0.5 Create feature branch from current state
     - **Action**: Run `git checkout -b feature/mcp-deprecation`
     - **Verify**: Run `git branch --show-current` shows `feature/mcp-deprecation`
     - **Acceptance**: Feature branch created and checked out
 
-- [ ] 1.0 Phase 1: Preparation and Baseline Audit
-  - [ ] 1.1 Audit SOAR phase handlers and confirm preservation
+- [x] 1.0 Phase 1: Preparation and Baseline Audit
+  - [x] 1.1 Audit SOAR phase handlers and confirm preservation
     - **Action**: Count phase handler files in `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/`
     - **Expected**: 9 Python files (assess, collect, decompose, record, respond, retrieve, route, synthesize, verify) + `__init__.py`
     - **Action**: Add "DO NOT DELETE" comment to each phase handler file header
     - **Acceptance**: 9 phase handler files identified, preservation confirmed
-  - [ ] 1.2 Verify 9 phase handler unit tests exist and pass
+  - [x] 1.2 Verify 9 phase handler unit tests exist and pass
     - **Action**: Run `pytest tests/unit/soar/test_phase_*.py -v`
     - **Expected**: 9 test files pass (test_phase_assess.py, test_phase_collect.py, etc.)
     - **Acceptance**: All 9 phase handler tests passing
-  - [ ] 1.3 Document dual orchestration approach
+  - [x] 1.3 Document dual orchestration approach
     - **Location**: Add to `/home/hamr/PycharmProjects/aurora/docs/ARCHITECTURE.md` (create if needed)
     - **Content**: Explain bash orchestration (`aur soar` terminal command) vs Python orchestration (SOAROrchestrator library)
     - **Content**: Note that phase handlers serve Python library use case
     - **Acceptance**: Documentation section created explaining both approaches
-  - [ ] 1.4 Grep codebase for deprecated tool references
+  - [x] 1.4 Grep codebase for deprecated tool references
     - **Action**: Run `grep -r "aurora_query" --include="*.py" /home/hamr/PycharmProjects/aurora/`
     - **Action**: Run `grep -r "aurora_search" --include="*.py" /home/hamr/PycharmProjects/aurora/`
     - **Action**: Run `grep -r "aurora_get" --include="*.py" /home/hamr/PycharmProjects/aurora/`
     - **Action**: Document all references found (expected: server.py, tools.py, configurators, tests)
     - **Acceptance**: Complete list of files referencing deprecated tools documented
-  - [ ] 1.5 Review all MCP configurators for update scope
+  - [x] 1.5 Review all MCP configurators for update scope
     - **Action**: Run `ls /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/mcp/*.py`
     - **Action**: Count configurator files (expected: 20+ files)
     - **Action**: Identify which configurators have AURORA_MCP_PERMISSIONS or allowed_tools lists
     - **Acceptance**: List of all MCP configurator files created with update scope identified
-  - [ ] 1.6 Create "Keep Dormant" preservation checklist
+  - [x] 1.6 Create "Keep Dormant" preservation checklist
     - **Action**: Create `/home/hamr/PycharmProjects/aurora/tasks/0024-preservation-checklist.md`
     - **Content**: List all files to preserve (MCP configurators, phase handlers, session cache, helper methods)
     - **Content**: Mark each item with preservation reason
     - **Acceptance**: Checklist file created with all preservation items
-  - [ ] 1.7 Document audit findings
+  - [x] 1.7 Document audit findings
     - **Action**: Create `/home/hamr/PycharmProjects/aurora/tasks/0024-audit-findings.md`
     - **Content**: Summary of phase handler audit, tool reference grep results, configurator scope
     - **Content**: Risk assessment and mitigation notes
     - **Acceptance**: Audit findings document complete with all audit results
 
-- [ ] 2.0 Phase 2: Configuration Architecture (Config Schema and Flag)
-  - [ ] 2.1 Add `mcp` section to CONFIG_SCHEMA in config.py
+- [x] 2.0 Phase 2: Configuration Architecture (Config Schema and Flag)
+  - [x] 2.1 Add `mcp` section to CONFIG_SCHEMA in config.py
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/config.py`
     - **Action**: Add to CONFIG_SCHEMA (if schema dict exists)
     - **Schema**:
@@ -167,38 +167,38 @@ REMAINING_MCP_TOOLS = [
       }
       ```
     - **Acceptance**: Schema updated with mcp section
-  - [ ] 2.2 Update Config dataclass with mcp_enabled field
+  - [x] 2.2 Update Config dataclass with mcp_enabled field
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/config.py`
     - **Action**: Add field `mcp_enabled: bool = False` to Config dataclass (around line 58)
     - **Action**: Add docstring explaining purpose
     - **Acceptance**: Config dataclass has mcp_enabled field with default False
-  - [ ] 2.3 Add `--enable-mcp` CLI flag to init_command
+  - [x] 2.3 Add `--enable-mcp` CLI flag to init_command
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py`
     - **Action**: Add `@click.option("--enable-mcp", is_flag=True, help="Enable MCP server configuration (for testing/development)")` above init_command (around line 725)
     - **Action**: Add `enable_mcp: bool` parameter to init_command function
     - **Acceptance**: --enable-mcp flag added to init command
-  - [ ] 2.4 Implement MCP skip logic in init command
+  - [x] 2.4 Implement MCP skip logic in init command
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py`
     - **Action**: Wrap MCP configuration calls in `if enable_mcp:` conditional
     - **Location**: In `run_step_3_tool_configuration()` function around lines 441-451
     - **Action**: Skip `configure_mcp_servers()` call unless enable_mcp=True
     - **Acceptance**: MCP configuration skipped by default, only runs with flag
-  - [ ] 2.5 Update config file generation to include mcp.enabled
+  - [x] 2.5 Update config file generation to include mcp.enabled
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py`
     - **Action**: Ensure generated config.json includes `"mcp": {"enabled": false}` by default
     - **Action**: If `--enable-mcp` flag set, write `"mcp": {"enabled": true}`
     - **Acceptance**: Generated config files contain mcp.enabled field
-  - [ ] 2.6 Add validation logic for mcp.enabled config value
+  - [x] 2.6 Add validation logic for mcp.enabled config value
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/config.py`
     - **Action**: Add validation in Config class or load_config() function
     - **Logic**: If mcp.enabled is invalid type, default to False and log warning
     - **Acceptance**: Invalid mcp.enabled values safely default to False
-  - [ ] 2.7 Add inline comments explaining mcp.enabled flag
+  - [x] 2.7 Add inline comments explaining mcp.enabled flag
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/config.py`
     - **Action**: Add docstring to mcp_enabled field
     - **Content**: "Enable MCP server configuration. Set to true for testing or if using MCP-based tools. Most users should leave this false and use slash commands instead."
     - **Acceptance**: Clear inline documentation for mcp.enabled field
-  - [ ] 2.8 Write unit tests for config flag parsing
+  - [x] 2.8 Write unit tests for config flag parsing
     - **File**: Create `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_config_mcp.py`
     - **Tests**:
       - `test_config_mcp_enabled_default_false()` - Verify default is False
@@ -206,46 +206,46 @@ REMAINING_MCP_TOOLS = [
       - `test_config_mcp_enabled_invalid_defaults_false()` - Verify invalid values default to False
       - `test_init_enable_mcp_flag_parsing()` - Verify --enable-mcp flag works
     - **Acceptance**: 4+ unit tests written and passing
-  - [ ] 2.9 Test config generation with and without flag
+  - [x] 2.9 Test config generation with and without flag
     - **Test**: Run `aur init --tools=none` (no flag) and verify no MCP config
     - **Test**: Run `aur init --enable-mcp --tools=none` and verify MCP configured
     - **Verify**: Check generated config.json has correct mcp.enabled value
     - **Acceptance**: Both flag states work correctly
 
-- [ ] 3.0 Phase 3: MCP Tool Removal (Server and Tools)
-  - [ ] 3.1 Remove aurora_search tool from server.py
+- [x] 3.0 Phase 3: MCP Tool Removal (Server and Tools)
+  - [x] 3.1 Remove aurora_search tool from server.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/server.py`
     - **Action**: Delete entire `@self.mcp.tool()` decorator and `aurora_search()` function (lines 55-67)
     - **Verify**: Function no longer exists in file
     - **Acceptance**: aurora_search tool registration removed
-  - [ ] 3.2 Remove aurora_get tool from server.py
+  - [x] 3.2 Remove aurora_get tool from server.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/server.py`
     - **Action**: Delete entire `@self.mcp.tool()` decorator and `aurora_get()` function (lines 69-100)
     - **Verify**: Function no longer exists in file
     - **Acceptance**: aurora_get tool registration removed
-  - [ ] 3.3 Update list_tools() method in server.py
+  - [x] 3.3 Update list_tools() method in server.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/server.py`
     - **Action**: Update tools list around line 112-115
     - **Before**: Lists 3 tools (aurora_search, aurora_get, possibly aurora_query)
     - **After**: Remove deprecated tools from list, update total count
     - **Action**: Update line 122 `print(f"Total tools: {len(tools)}")` to reflect new count
     - **Acceptance**: list_tools() reflects only remaining tools
-  - [ ] 3.4 Add note about slash command replacement in server.py
+  - [x] 3.4 Add note about slash command replacement in server.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/server.py`
     - **Action**: Add comment in list_tools() around line 125
     - **Content**: "Note: aurora_search, aurora_get, and aurora_query have been replaced by slash commands (/aur:search, /aur:get) and CLI commands (aur soar). Use those for better UX."
     - **Acceptance**: Helpful comment added directing users to replacements
-  - [ ] 3.5 Remove aurora_search() method from tools.py
+  - [x] 3.5 Remove aurora_search() method from tools.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
     - **Action**: Delete `aurora_search()` method (lines 82-148)
     - **Preserve**: Keep `_last_search_results` and `_last_search_timestamp` attributes (lines 54-56)
     - **Acceptance**: Method removed, session cache preserved
-  - [ ] 3.6 Remove aurora_get() method from tools.py
+  - [x] 3.6 Remove aurora_get() method from tools.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
     - **Action**: Delete `aurora_get()` method (lines 152-241)
     - **Preserve**: Keep `_format_error()` helper method if used by other tools
     - **Acceptance**: Method removed
-  - [ ] 3.7 Add preservation comments to session cache in tools.py
+  - [x] 3.7 Add preservation comments to session cache in tools.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
     - **Action**: Add comment above `_last_search_results` (line 54)
     - **Content**:
@@ -255,70 +255,70 @@ REMAINING_MCP_TOOLS = [
       # Previously used by deprecated aurora_search/aurora_get tools
       ```
     - **Acceptance**: Clear comments explaining preservation
-  - [ ] 3.8 Verify all helper methods preserved in tools.py
+  - [x] 3.8 Verify all helper methods preserved in tools.py
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
     - **Preserve**: `_ensure_initialized()` (line 58)
     - **Preserve**: `_format_error()` (line 247)
     - **Verify**: No helper methods accidentally deleted
     - **Acceptance**: All helper infrastructure remains intact
-  - [ ] 3.9 Add comment explaining dual SOAR orchestration
+  - [x] 3.9 Add comment explaining dual SOAR orchestration
     - **File**: `/home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py`
     - **Action**: Add comment at top of file around line 8
     - **Content**: "For multi-turn SOAR queries, use: aur soar 'your question' (bash orchestration). SOAR phase handlers in packages/soar/src/aurora_soar/phases/ serve Python library use via SOAROrchestrator."
     - **Acceptance**: Clear explanation of both approaches
-  - [ ] 3.10 Verify 9 SOAR phase handler unit tests still pass
+  - [x] 3.10 Verify 9 SOAR phase handler unit tests still pass
     - **Action**: Run `pytest tests/unit/soar/ -v`
     - **Expected**: All tests in tests/unit/soar/ directory pass
     - **Expected**: 9+ tests covering phase handlers
     - **Acceptance**: All SOAR phase tests passing (no files deleted)
-  - [ ] 3.11 Test MCP server starts successfully
+  - [x] 3.11 Test MCP server starts successfully
     - **Action**: Run `python -m aurora_mcp.server --test` (test mode)
     - **Expected**: Server initializes without errors
     - **Expected**: list_tools() output shows reduced tool count
     - **Acceptance**: MCP server starts and lists remaining tools correctly
 
-- [ ] 4.0 Phase 4: Doctor Command Updates (Remove MCP Checks)
-  - [ ] 4.1 Remove MCPFunctionalChecks instantiation from doctor.py
+- [x] 4.0 Phase 4: Doctor Command Updates (Remove MCP Checks)
+  - [x] 4.1 Remove MCPFunctionalChecks instantiation from doctor.py
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/doctor.py`
     - **Action**: Comment out line 70 `mcp_checks = MCPFunctionalChecks(config)`
     - **Action**: Add comment: "# MCP checks removed per PRD-0024 (tools deprecated)"
     - **Acceptance**: MCPFunctionalChecks no longer instantiated
-  - [ ] 4.2 Remove MCP FUNCTIONAL output section from doctor.py
+  - [x] 4.2 Remove MCP FUNCTIONAL output section from doctor.py
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/doctor.py`
     - **Action**: Comment out or remove lines 112-117 (MCP FUNCTIONAL section)
     - **Action**: Comment out line 114 `mcp_results = mcp_checks.run_checks()`
     - **Action**: Comment out line 116 `_display_results(mcp_results)`
     - **Acceptance**: MCP FUNCTIONAL section no longer appears in output
-  - [ ] 4.3 Update doctor help text to remove MCP references
+  - [x] 4.3 Update doctor help text to remove MCP references
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/doctor.py`
     - **Action**: Update docstring around line 37
     - **Remove**: "- MCP Functional: MCP config validation, SOAR phases, memory database" from list
     - **Updated docstring**: Remove MCP Functional from checks list
     - **Acceptance**: Help text no longer mentions MCP checks
-  - [ ] 4.4 Handle MCPFunctionalChecks in auto-fix logic
+  - [x] 4.4 Handle MCPFunctionalChecks in auto-fix logic
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/doctor.py`
     - **Action**: Update `_handle_auto_fix()` function around line 220
     - **Action**: Remove `mcp_checks` from parameters and loop (line 220)
     - **Acceptance**: Auto-fix no longer processes MCP checks
-  - [ ] 4.5 Comment out MCPFunctionalChecks class in health_checks.py
+  - [x] 4.5 Comment out MCPFunctionalChecks class in health_checks.py
     - **File**: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/health_checks.py`
     - **Action**: Add skip decorator or comment to MCPFunctionalChecks class
     - **Option 1**: Add `@pytest.mark.skip(reason="MCP tools deprecated per PRD-0024")` above class
     - **Option 2**: Add large comment block explaining preservation for re-enablement
     - **Acceptance**: MCPFunctionalChecks class preserved but not executed
-  - [ ] 4.6 Test aur doctor output shows no MCP checks
+  - [x] 4.6 Test aur doctor output shows no MCP checks
     - **Action**: Run `aur doctor`
     - **Verify**: No "MCP FUNCTIONAL" section in output
     - **Verify**: No errors about missing MCP configuration
     - **Verify**: Summary shows correct count of checks (excluding MCP)
     - **Acceptance**: Clean doctor output with no MCP references
-  - [ ] 4.7 Update doctor command tests
+  - [x] 4.7 Update doctor command tests
     - **Files**: `/home/hamr/PycharmProjects/aurora/tests/unit/cli/test_doctor.py`
     - **Action**: Update tests expecting MCP checks to reflect removal
     - **Action**: Remove assertions about "MCP FUNCTIONAL" output
     - **Action**: Update expected check counts
     - **Acceptance**: All doctor tests passing with updated expectations
-  - [ ] 4.8 Verify exit code behavior unchanged
+  - [x] 4.8 Verify exit code behavior unchanged
     - **Test**: Run `aur doctor` with only warnings (non-MCP)
     - **Expected**: Exit code 1 (warnings)
     - **Test**: Run `aur doctor` with failures (non-MCP)

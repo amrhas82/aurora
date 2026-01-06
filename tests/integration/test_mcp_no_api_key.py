@@ -18,17 +18,21 @@ Total: 14+ integration tests covering all 7 MCP tools
 
 import json
 import os
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
-
-# Mark entire module as requiring ML dependencies
-pytestmark = pytest.mark.ml
+# Skip all tests in this module unless MCP is explicitly enabled (PRD-0024)
+# Also mark as requiring ML dependencies
+pytestmark = [
+    pytest.mark.skipif(
+        not os.environ.get("AURORA_ENABLE_MCP"),
+        reason="MCP not enabled (use AURORA_ENABLE_MCP=1 to run)",
+    ),
+    pytest.mark.ml,
+]
 
 
 # ==============================================================================
@@ -64,7 +68,8 @@ def tools_no_api_key(tmp_path, no_api_key):
 
     # Create test Python file
     test_file = test_code_dir / "example.py"
-    test_file.write_text("""
+    test_file.write_text(
+        """
 def hello_world():
     '''Say hello to the world.'''
     return "Hello, World!"
@@ -79,7 +84,8 @@ class Calculator:
     def multiply(self, x: float, y: float) -> float:
         '''Multiply two numbers.'''
         return x * y
-""")
+"""
+    )
 
     # Index the test code
     tools.aurora_index(str(test_code_dir))
@@ -269,13 +275,15 @@ class TestAuroraContextNoAPIKey:
 
         # Create test file
         test_file = tmp_path / "test.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def func1():
     return 1
 
 def func2():
     return 2
-""")
+"""
+        )
 
         result = tools.aurora_context(str(test_file), function="func2")
 

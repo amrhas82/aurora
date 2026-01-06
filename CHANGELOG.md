@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-01-06
+
+### Removed
+
+- **Deprecated MCP tools** (`aurora_query`, `aurora_search`, `aurora_get`) - replaced by slash commands and CLI equivalents
+- **MCP configuration from `aur init`** - now requires `--enable-mcp` flag for testing/development
+- **MCP checks from `aur doctor`** - MCP FUNCTIONAL section no longer displayed
+
+### Added
+
+- **`/aur:implement` placeholder command** - Future Aurora native workflow command for plan-based implementation
+- **`--enable-mcp` flag** - Opt-in flag for MCP server configuration during `aur init`
+- **Comprehensive MCP deprecation documentation**:
+  - `docs/MCP_DEPRECATION.md` - Architecture rationale and re-enablement guide
+  - `docs/MIGRATION.md` - Tool replacement mapping and behavior changes
+  - `docs/ROLLBACK.md` - Complete rollback procedures with 3 options
+
+### Changed
+
+- **Slash commands now recommended** - `/aur:search` and `/aur:get` are preferred over MCP tools
+- **MCP infrastructure preserved** - All 20+ MCP configurators and session cache kept dormant for future use
+- **Default behavior** - Fresh installations skip MCP configuration by default
+
+### Migration Guide
+
+**Tool Replacements:**
+
+| Deprecated MCP Tool | CLI Replacement | Slash Command | Notes |
+|---------------------|-----------------|---------------|-------|
+| `aurora_query` | `aur soar "query"` | N/A | Full SOAR pipeline execution |
+| `aurora_search` | `aur mem search "query"` | `/aur:search "query"` | Formatted table output |
+| `aurora_get` | N/A | `/aur:get N` | Session cache retrieval |
+
+**Breaking Changes:** None - deprecated tools were already replaced by superior alternatives.
+
+**Re-enablement:** Use `aur init --enable-mcp --tools=claude` to configure MCP for testing/development.
+
+**Rollback Options:**
+1. Git tag: `git checkout mcp-deprecation-baseline` (complete revert)
+2. Feature flag: Set `"mcp": {"enabled": true}` in config (fastest, no code changes)
+3. Revert commits: See `docs/ROLLBACK.md` for detailed instructions
+
+### Reference
+
+- **PRD**: `docs/prd/PRD-0024-mcp-tool-deprecation.md`
+- **Git Tag**: `mcp-deprecation-baseline` (rollback baseline)
+- **Documentation**: `docs/MCP_DEPRECATION.md`, `docs/MIGRATION.md`, `docs/ROLLBACK.md`
+
 ## [0.4.0] - 2026-01-05
 
 ### BREAKING CHANGES

@@ -14,6 +14,7 @@ Tests:
 """
 
 import json
+import os
 import tempfile
 from pathlib import Path
 
@@ -21,6 +22,12 @@ import pytest
 
 # Import MCP tools directly for testing
 from aurora_mcp.tools import AuroraMCPTools
+
+# Skip all tests in this module unless MCP is explicitly enabled (PRD-0024)
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("AURORA_ENABLE_MCP"),
+    reason="MCP not enabled (use AURORA_ENABLE_MCP=1 to run)",
+)
 
 
 @pytest.mark.ml

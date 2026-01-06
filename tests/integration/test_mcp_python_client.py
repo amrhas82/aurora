@@ -25,7 +25,6 @@ import shutil
 import sqlite3
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -34,14 +33,21 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
-
 # Check if fastmcp is available (required for MCP server tests)
+HAS_FASTMCP = False
 try:
-    import fastmcp
+    import fastmcp  # noqa: F401
 
     HAS_FASTMCP = True
 except ImportError:
-    HAS_FASTMCP = False
+    pass
+
+
+# Skip all tests in this module unless MCP is explicitly enabled (PRD-0024)
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("AURORA_ENABLE_MCP"),
+    reason="MCP not enabled (use AURORA_ENABLE_MCP=1 to run)",
+)
 
 
 # ==============================================================================
@@ -1232,8 +1238,6 @@ class TestMCPErrorHandling:
     def test_tools_handle_filesystem_failures(self, test_client):
         """Test 7: Tools handle network/filesystem failures during indexing."""
         # Try to index a path with no read permissions
-        import stat
-
         no_read_dir = test_client.temp_dir / "no_read"
         no_read_dir.mkdir()
 

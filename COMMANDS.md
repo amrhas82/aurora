@@ -1,566 +1,440 @@
 # Aurora Commands Reference
 
-Complete reference for all Aurora CLI commands, MCP tools, and slash commands.
+Complete reference for all Aurora CLI and slash commands.
 
-**Version:** 0.4.0
-
----
-
-## Table of Contents
-
-1. [Quick Reference Table](#quick-reference-table)
-2. [CLI Commands](#cli-commands)
-3. [MCP Tools](#mcp-tools)
-4. [Slash Commands](#slash-commands)
-5. [Command Comparison](#command-comparison)
+**Version:** 0.5.0
 
 ---
 
 ## Quick Reference Table
 
-### CLI Commands (10 commands)
-
-| Command | Purpose | When To Use | Syntax | Example |
-|---------|---------|-------------|--------|---------|
-| `aur init` | Initialize Aurora | First-time setup, reconfigure tools | `aur init [OPTIONS]` | `aur init --tools=claude,cursor` |
-| `aur doctor` | Health checks & diagnostics | Troubleshooting, verify setup | `aur doctor [OPTIONS]` | `aur doctor --verbose` |
-| `aur verify` | Verify installation | Check dependencies | `aur verify` | `aur verify` |
-| `aur version` | Show version info | Check installed version | `aur version` | `aur version` |
-| `aur mem index` | Index code for search | After code changes | `aur mem index [PATH]` | `aur mem index packages/` |
-| `aur mem search` | Search indexed code | Find code by query | `aur mem search <QUERY>` | `aur mem search "auth logic"` |
-| `aur mem stats` | Memory statistics | Check indexing status | `aur mem stats` | `aur mem stats` |
-| `aur agents` | Agent discovery | Find/list/show agents | `aur agents <SUBCOMMAND>` | `aur agents search "test"` |
-| `aur plan` | Planning workflows | Create/manage plans | `aur plan <SUBCOMMAND>` | `aur plan create "Feature"` |
-| `aur headless` | Pipe to CLI tool | Multi-iteration experiments | `aur headless <FILE> [--max-iter N] [--tool TOOL]` | `aur headless prompt.md --max-iter 5 --tool claude` |
-
-### MCP Tools (3 tools)
-
-| Tool | Purpose | When To Use | Syntax |
-|------|---------|-------------|--------|
-| `aurora_search` | Search code semantically | Claude needs to find code | `aurora_search(query, limit=10)` |
-| `aurora_query` | Query with complexity assessment | Claude needs context retrieval | `aurora_query(query, limit=10, type_filter=None, verbose=False)` |
-| `aurora_get` | Get full chunk by index | After search, get complete content | `aurora_get(index)` |
-
-### Slash Commands (3 commands)
-
-| Command | Purpose | When To Use | Syntax |
-|---------|---------|-------------|--------|
-| `/aur:plan` | Planning workflows | Multi-step plan orchestration | `/aur:plan [create\|list\|show]` |
-| `/aur:checkpoint` | Save session context | Before context compaction | `/aur:checkpoint` |
-| `/aur:archive` | Archive completed plans | After plan completion | `/aur:archive [plan-id]` |
+| Command | Type | Purpose | Syntax | Example |
+|---------|------|---------|--------|---------|
+| `aur init` | CLI | Initialize Aurora in project | `aur init [OPTIONS]` | `aur init --tools=claude` |
+| `aur doctor` | CLI | Health checks & diagnostics | `aur doctor [OPTIONS]` | `aur doctor --verbose` |
+| `aur mem index` | CLI | Index codebase | `aur mem index [PATH]` | `aur mem index .` |
+| `aur mem search` | CLI | Search indexed code | `aur mem search <QUERY>` | `aur mem search "auth"` |
+| `aur mem stats` | CLI | Memory statistics | `aur mem stats` | `aur mem stats` |
+| `aur soar` | CLI | Multi-turn SOAR reasoning | `aur soar <QUERY>` | `aur soar "explain flow"` |
+| `aur query` | CLI | Simple context query | `aur query <QUERY>` | `aur query "login function"` |
+| `aur plan` | CLI | Plan management | `aur plan <SUBCOMMAND>` | `aur plan create "Feature"` |
+| `aur agents` | CLI | Agent discovery | `aur agents <SUBCOMMAND>` | `aur agents search "test"` |
+| `/aur:search` | Slash | Search code (Claude/Cursor) | `/aur:search <query>` | `/aur:search authentication` |
+| `/aur:get` | Slash | Get chunk by index | `/aur:get <index>` | `/aur:get 3` |
+| `/aur:plan` | Slash | Plan workflows | `/aur:plan [subcommand]` | `/aur:plan create` |
+| `/aur:checkpoint` | Slash | Save session context | `/aur:checkpoint` | `/aur:checkpoint` |
+| `/aur:implement` | Slash | Plan implementation | `/aur:implement [plan-name]` | `/aur:implement plan-001` |
+| `/aur:archive` | Slash | Archive completed plan | `/aur:archive [plan-id]` | `/aur:archive plan-001` |
 
 ---
 
 ## CLI Commands
 
-Use these commands directly in your terminal with the `aur` command.
-
 ### Initialization & Setup
 
 #### `aur init`
-**Initialize Aurora in your project**
 
-Runs 3 unified setup steps:
-1. **Planning setup** - Creates `.aurora/` directory structure
-2. **Memory indexing** - Indexes codebase for semantic search
-3. **Tool configuration** - Sets up MCP servers and slash commands
+Initialize Aurora in your project.
+
+**Runs 3 steps:**
+1. Planning setup - Creates `.aurora/` directory
+2. Memory indexing - Indexes codebase
+3. Tool configuration - Sets up slash commands
 
 ```bash
-# Interactive mode (default)
+# Interactive mode
 aur init
 
-# Non-interactive mode (uses defaults)
+# Non-interactive (uses defaults)
 aur init --non-interactive
-
-# Configure tools only
-aur init --config
 
 # Select specific tools
 aur init --tools=claude,cursor
-
-# Select all tools
-aur init --tools=all
 
 # Skip tool configuration
 aur init --tools=none
 ```
 
-**When to use:** First time setup in a new project, or to reconfigure tools.
+**Options:**
+- `--config` - Configure tools only (skip indexing)
+- `--tools=TOOLS` - Comma-separated list or "all" or "none"
+- `--non-interactive` - Use defaults, no prompts
+- `--db-path PATH` - Custom database location
+
+---
+
+#### `aur doctor`
+
+Health checks and diagnostics.
+
+```bash
+# Run all checks
+aur doctor
+
+# Verbose output
+aur doctor --verbose
+```
+
+**Checks:**
+- Python version (>= 3.10)
+- Database connectivity
+- Indexing status
+- Configuration validity
 
 ---
 
 ### Memory Management
 
 #### `aur mem index`
-**Index codebase for semantic search**
+
+Index codebase for semantic search.
 
 ```bash
 # Index current directory
 aur mem index
 
-# Index specific directory
-aur mem index /path/to/project
+# Index specific path
+aur mem index src/
 
-# With progress updates
-aur mem index --verbose
+# Use custom database
+aur mem index . --db-path /tmp/test.db
 ```
 
-**When to use:** After initial setup, or when codebase changes significantly.
+**What gets indexed:**
+- **code** - Python functions, classes, methods (tree-sitter AST)
+- **kb** - Markdown docs (README.md, docs/, PRDs)
+- **soar** - Reasoning patterns (auto-indexed after `aur soar`)
+
+**Default exclusions:** `.git/`, `venv/`, `node_modules/`, `tasks/`, `CHANGELOG.md`, `LICENSE*`
+
+**Custom exclusions:** Create `.auroraignore` in project root (gitignore-style patterns).
 
 ---
 
 #### `aur mem search`
-**Search indexed code**
+
+Search indexed code semantically.
 
 ```bash
 # Basic search
-aur mem search "authentication"
+aur mem search "authentication logic"
 
 # Limit results
-aur mem search "database" --limit 10
-
-# Show code content
-aur mem search "api" --show-content
-
-# JSON output
-aur mem search "class UserService" --format json
+aur mem search "login" --limit 5
 
 # Filter by type
-aur mem search "validate" --type function
+aur mem search "docs" --type kb
+
+# Custom database
+aur mem search "query" --db-path /tmp/test.db
 ```
 
-**When to use:** Quick code search without LLM, finding specific functions/classes.
+**Options:**
+- `--limit N` - Max results (default: 10)
+- `--type TYPE` - Filter by chunk type (code, kb, soar)
+- `--db-path PATH` - Custom database location
+
+**Retrieval strategy:**
+- Default: 40% BM25 + 30% ACT-R activation + 30% Git signals
+- With ML: 30% BM25 + 40% Semantic + 30% ACT-R activation
 
 ---
 
 #### `aur mem stats`
-**Show memory statistics**
+
+Display memory database statistics.
 
 ```bash
+# Show stats
 aur mem stats
+
+# Custom database
+aur mem stats --db-path /tmp/test.db
 ```
 
-Shows:
-- Total chunks indexed
-- File count and language breakdown
+**Output:**
+- Total chunks (code, kb, soar)
+- Total files indexed
+- Language distribution
+- Database size
 - Last indexed timestamp
-- Success rate
-- Failed files (if any)
-- Warnings (if any)
-
-**When to use:** Check indexing status, diagnose indexing issues.
+- Query performance metrics
 
 ---
 
-### Planning Commands
+### Reasoning & Query
 
-#### `aur plan create`
-**Create a new plan**
+#### `aur soar`
+
+Multi-turn SOAR reasoning for complex queries.
 
 ```bash
-# Interactive creation
+# SOAR query
+aur soar "How does the payment flow work?"
+
+# Force complexity level
+aur soar "explain architecture" --complexity COMPLEX
+```
+
+**When to use:**
+- Complex system analysis
+- Architecture understanding
+- Multi-step reasoning
+- "How does X work?" questions
+
+**9-phase pipeline:**
+1. Assess - Determine complexity
+2. Retrieve - Gather context
+3. Decompose - Break into subgoals
+4. Verify - Validate groundedness
+5. Route - Assign to handlers
+6. Collect - Execute subgoals
+7. Synthesize - Integrate results
+8. Record - Cache patterns
+9. Respond - Format answer
+
+**Performance:** 10-60 seconds (depends on complexity)
+
+See [docs/SOAR.md](docs/SOAR.md) for detailed explanation.
+
+---
+
+#### `aur query`
+
+Simple context query (local, no LLM).
+
+```bash
+# Local query (SOAR phases 1-2 only)
+aur query "authentication logic"
+
+# No API calls, no costs
+# Returns relevant chunks only
+```
+
+**When to use:**
+- Quick code lookup
+- No reasoning needed
+- Want raw chunks, not synthesis
+
+**vs aur soar:**
+- `aur query` - Fast, local, returns chunks only (~1s)
+- `aur soar` - Multi-turn, synthesis, full reasoning (~30s)
+
+---
+
+### Planning & Agents
+
+#### `aur plan`
+
+Plan management (OpenSpec-adapted workflow).
+
+```bash
+# Create plan
 aur plan create "Add user authentication"
 
-# Non-interactive
-aur plan create "Feature XYZ" --non-interactive
-```
-
-**When to use:** Starting a new feature, tracking implementation tasks.
-
----
-
-#### `aur plan list`
-**List all plans**
-
-```bash
-# List all plans
+# List plans
 aur plan list
 
-# Show active plans only
-aur plan list --status active
+# Show plan details
+aur plan show plan-001
+
+# Archive completed plan
+aur plan archive plan-001
 ```
 
-**When to use:** Review existing plans, check plan status.
+**Subcommands:**
+- `create TITLE` - Create new plan
+- `list` - List all plans
+- `show PLAN_ID` - Show plan details
+- `archive PLAN_ID` - Archive completed plan
 
 ---
 
-#### `aur plan show`
-**Show plan details**
+#### `aur agents`
 
-```bash
-aur plan show 0001-add-auth
-```
-
-**When to use:** View specific plan content and tasks.
-
----
-
-### Agent Discovery
-
-#### `aur agents list`
-**List available AI agents**
+Agent discovery and search.
 
 ```bash
 # List all agents
 aur agents list
 
-# JSON output
-aur agents list --format json
+# Search agents
+aur agents search "test"
+
+# Show agent details
+aur agents show qa-test-architect
 ```
 
-**When to use:** Discover available agents, check agent capabilities.
-
----
-
-#### `aur agents scan`
-**Scan for new agents**
-
-```bash
-aur agents scan
-```
-
-**When to use:** After adding new agents, updating agent manifest.
-
----
-
-### Health & Diagnostics
-
-#### `aur doctor`
-**Run health checks**
-
-```bash
-aur doctor
-```
-
-Shows:
-- **Configuration:** Database, plans directory, budget tracker
-- **Memory System:** Indexing status, chunk count
-- **Code Analysis:** Tree-sitter languages, parsers
-- **Tool Integration:** CLI tools, slash commands, MCP servers
-
-**When to use:** Diagnose setup issues, verify configuration.
-
----
-
-#### `aur --version`
-**Show version**
-
-```bash
-aur --version
-```
-
-**When to use:** Check installed version, verify installation.
-
----
-
-### Headless Mode
-
-#### `aur headless`
-**Pipe prompts to your preferred CLI tool for autonomous execution**
-
-**⚠️ Note:** Does NOT require Aurora API key. Uses your chosen CLI tool (claude, cursor, etc.) directly.
-
-```bash
-# Run with default tool (claude) and settings
-aur headless prompt.md
-
-# Use different CLI tool
-aur headless prompt.md --tool cursor
-
-# Custom iteration limit (default: 10)
-aur headless prompt.md --max-iter 5
-
-# Combine tool and iterations
-aur headless prompt.md --tool cursor --max-iter 3
-
-# Show scratchpad after execution
-cat .aurora/headless/scratchpad.md
-```
-
-**Simple Design:**
-- Pipes your prompt to any CLI tool (e.g., `claude`, `cursor`)
-- Repeats N times (default: 10 iterations)
-- Saves output to scratchpad after each iteration
-- No API key management, no budget tracking, no SOAR orchestration
-- Just a simple wrapper around: `while [ $i -lt N ]; do cat prompt.md | claude -p; done`
-
-**Tool Support:**
-- **claude** - Claude Code CLI (default)
-- **cursor** - Cursor CLI
-- Any CLI tool that accepts piped input and uses `-p` flag
-
-**Prompt format:** (created at `.aurora/headless/prompt.md.template`)
-```markdown
-# Goal
-[Describe what you want to achieve]
-
-# Success Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-# Constraints (Optional)
-- Constraint 1
-- Constraint 2
-
-# Context (Optional)
-Additional context about the task...
-```
-
-**When to use:** Autonomous exploration, multi-iteration experiments, testing agent capabilities.
-
----
-
-### Budget Tracking
-
-#### `aur budget show`
-**Show current budget usage**
-
-```bash
-aur budget show
-```
-
-**When to use:** Monitor API costs, check budget remaining.
-
----
-
-## MCP Tools
-
-Use these tools through Claude Code CLI, Cursor, or other MCP-compatible clients.
-
-**⚠️ Important:** MCP tools do NOT require API keys. They provide search/context that the host LLM processes.
-
----
-
-### `aurora_search`
-**Search indexed codebase**
-
-**Purpose:** Fast keyword/semantic search across indexed code.
-
-**Example prompts:**
-- "Search for authentication functions"
-- "Find all database connection code"
-- "Show me error handling patterns"
-
-**Parameters:**
-- `query` (required): Search query
-- `limit` (optional): Max results (default: 10)
-- `type_filter` (optional): Filter by type (function, class, method)
-
-**When to use:** Finding specific code patterns, locating functions/classes.
-
----
-
-### `aurora_query`
-**Query with complexity assessment**
-
-**Purpose:** Retrieve relevant context from memory without LLM inference. Returns structured context for host LLM to reason about.
-
-**Example prompts:**
-- "What is a Python decorator?"
-- "How does authentication work in this codebase?"
-- "Show me async patterns"
-
-**Parameters:**
-- `query` (required): Natural language query
-- `limit` (optional): Max results (default: 10)
-- `type_filter` (optional): Filter by type ("code", "reas", "know", or None)
-- `verbose` (optional): Include detailed metadata (default: False)
-
-**When to use:** Claude needs context retrieval with complexity assessment.
-
----
-
-### `aurora_get`
-**Get full chunk by index**
-
-**Purpose:** Retrieve complete chunk content from last search results.
-
-**Example prompts:**
-- "Get the third search result"
-- "Show me result number 5"
-
-**Parameters:**
-- `index` (required): 1-indexed position in last search results
-
-**When to use:** After search, when Claude needs complete chunk content.
-
-**Note:** Session cache expires after 10 minutes.
+**Subcommands:**
+- `list` - List all available agents
+- `search QUERY` - Search agents by capabilities
+- `show AGENT_ID` - Show agent details
 
 ---
 
 ## Slash Commands
 
-Slash commands are configured during `aur init` for various AI coding tools.
+Slash commands work in Claude Code, Cursor, Cline, and other supported AI tools.
 
----
+### `/aur:search`
 
-### Claude Code CLI
+Search indexed code from AI tool.
 
-Located in: `~/.config/claude/commands/`
-
-**`/aur:plan`**
-```bash
-Create plan: /aur:plan "Implement OAuth2 authentication"
-List plans: /aur:plan list
-Show plan: /aur:plan show 0001-oauth-auth
+```
+/aur:search authentication logic
 ```
 
-**`/aur:checkpoint`**
-```bash
-Save checkpoint: /aur:checkpoint
-Save with name: /aur:checkpoint "feature-investigation"
-List checkpoints: /aur:checkpoint list
+**Returns:** Top matching chunks with relevance scores.
+
+**Use when:** AI needs to find specific code during conversation.
+
+---
+
+### `/aur:get`
+
+Get full chunk content by index.
+
+```
+/aur:get 3
 ```
 
-**`/aur:archive`**
-```bash
-Archive plan: /aur:archive 0001-oauth-auth
-Interactive: /aur:archive
-With flags: /aur:archive 0001 --yes --skip-specs
+**Use when:** After `/aur:search`, retrieve complete chunk content.
+
+**Example workflow:**
+```
+User: Find login code
+AI: /aur:search login
+AI: Found 3 results. Let me get the first one.
+AI: /aur:get 1
 ```
 
 ---
 
-### Cursor
+### `/aur:plan`
 
-Located in: `.cursorrules`
+Plan workflow orchestration.
 
-Same commands as Claude Code CLI, but configured in project-local `.cursorrules` file.
+```
+/aur:plan create Add OAuth integration
+/aur:plan list
+/aur:plan show plan-001
+```
+
+**Subcommands:**
+- `create TITLE` - Create new plan
+- `list` - List plans
+- `show PLAN_ID` - Show plan
 
 ---
 
-### Cline
+### `/aur:checkpoint`
 
-Located in: `~/.cline/mcp_settings.json`
+Save session context before compaction.
 
-MCP integration via JSON configuration. Use natural language prompts; Cline automatically uses Aurora tools.
+```
+/aur:checkpoint
+```
+
+**Use when:**
+- Before context window fills
+- Before major conversation pivot
+- Want to preserve reasoning state
 
 ---
 
-### Continue
+### `/aur:implement`
 
-Located in: `~/.continue/config.json`
+Plan-based implementation (placeholder).
 
-MCP integration via JSON configuration. Use natural language prompts; Continue automatically uses Aurora tools.
+```
+/aur:implement plan-001
+```
+
+**Status:** Placeholder in v0.5.0. Shows Aurora workflow guidance.
+
+**Future:** Will execute plan-based changes automatically.
+
+---
+
+### `/aur:archive`
+
+Archive completed plan.
+
+```
+/aur:archive plan-001
+```
+
+**Use when:** Plan is completed and ready for archival.
 
 ---
 
 ## Command Comparison
 
-| Task | CLI Command | MCP Tool | Slash Command |
-|------|-------------|----------|---------------|
-| **Search code** | `aur mem search "auth"` | Natural: "Search for auth" → `aurora_search` | N/A (use CLI or MCP) |
-| **Get context** | `aur mem search "UserService" --show-content` | Natural: "Show UserService" → `aurora_query` | N/A (use CLI or MCP) |
-| **Complex query** | N/A | Natural: "Explain X" → `aurora_query` | N/A (use MCP) |
-| **Health check** | `aur doctor` | Natural: "Run health check" | N/A (use CLI) |
-| **Index code** | `aur mem index` | N/A (use CLI) | N/A (use CLI) |
-| **Create plan** | `aur plan create "Feature"` | N/A (use CLI or slash) | `/aur:plan "Feature"` |
-| **Save checkpoint** | `aur checkpoint save` | N/A (use CLI or slash) | `/aur:checkpoint` |
-| **Archive plan** | `aur plan archive 0001` | N/A (use CLI or slash) | `/aur:archive 0001` |
+### Search: CLI vs Slash
+
+| Feature | `aur mem search` | `/aur:search` |
+|---------|-----------------|---------------|
+| Where | Terminal | AI tool (Claude/Cursor) |
+| Output | Terminal table | AI tool response |
+| Use case | Manual search | AI-assisted search |
+
+### Reasoning: soar vs query
+
+| Feature | `aur soar` | `aur query` |
+|---------|-----------|-------------|
+| Complexity | Multi-turn reasoning | Simple lookup |
+| Speed | 10-60s | ~1s |
+| Output | Synthesized answer | Raw chunks |
+| LLM calls | Multiple (SOAR phases) | None |
+| Cost | API costs | Free (local only) |
+
+### Planning: CLI vs Slash
+
+| Feature | `aur plan` | `/aur:plan` |
+|---------|-----------|-------------|
+| Where | Terminal | AI tool |
+| Create | `aur plan create` | `/aur:plan create` |
+| List | `aur plan list` | `/aur:plan list` |
+| Show | `aur plan show ID` | `/aur:plan show ID` |
 
 ---
 
-## When to Use Each Interface
+## Configuration
 
-### Use CLI Commands When:
-- Setting up Aurora (`aur init`)
-- Indexing codebase (`aur mem index`)
-- Managing plans (`aur plan create/list`)
-- Running diagnostics (`aur doctor`)
-- Batch processing or scripts
+### Database Location
 
-### Use MCP Tools When:
-- Working in Claude Code CLI/Cursor/Cline/Continue
-- Want natural language interaction
-- Don't want to leave your editor
-- No API key available (host LLM handles reasoning)
+Default: `.aurora/memory.db` (project-local)
 
-### Use Slash Commands When:
-- Quick access in supported editors
-- Muscle memory for specific commands
-- Explicit tool invocation preferred
-
----
-
-## Environment Variables
-
-**No API Key Required:** Aurora CLI commands do not require API keys.
-
-**Note:** `aur headless` uses your chosen CLI tool's API configuration (e.g., claude uses `~/.config/claude/` settings).
-
-### Optional Configuration:
+Custom location:
 ```bash
-# Custom database location
-export AURORA_DB_PATH=/path/to/aurora.db
+# Per-command
+aur mem search "query" --db-path /tmp/test.db
 
-# Custom plans directory
-export AURORA_PLANS_DIR=/path/to/plans
-
-# Budget limits
-export AURORA_BUDGET_LIMIT=10.0
-
-# Debug logging
-export AURORA_DEBUG=1
+# Via environment
+export AURORA_DB_PATH=/tmp/test.db
+aur mem search "query"
 ```
 
----
+### Indexing Exclusions
 
-## Quick Reference
+Create `.auroraignore` in project root:
 
-**Most Common Commands:**
-```bash
-# First-time setup
-aur init
-
-# Index code
-aur mem index
-
-# Search code
-aur mem search "function_name"
-
-# Health check
-aur doctor
-
-# Create plan
-aur plan create "Feature name"
-
-# Check version
-aur --version
+```
+# Exclude patterns (gitignore-style)
+tests/**
+docs/archive/**
+*.tmp
 ```
 
-**No API Key Needed:**
-- All CLI commands: `aur init`, `aur doctor`, `aur verify`, `aur version`
-- Memory commands: `aur mem index`, `aur mem search`, `aur mem stats`
-- Agent commands: `aur agents list`, `aur agents search`, `aur agents show`
-- Planning commands: `aur plan *`
-- All MCP tools (use host LLM's API key, not Aurora's)
+### ML Model Selection
 
-**Uses Your CLI Tool's API Key:**
-- `aur headless` (pipes to claude/cursor/etc., uses their API configuration)
+See [docs/ML_MODELS.md](docs/ML_MODELS.md) for custom embedding models.
 
 ---
 
-## Getting Help
+## See Also
 
-```bash
-# General help
-aur --help
-
-# Command-specific help
-aur init --help
-aur mem --help
-aur plan --help
-aur agents --help
-aur headless --help
-
-# MCP server help
-aurora-mcp --help
-```
-
----
-
-**See Also:**
-- [README.md](README.md) - Main documentation
-- [MCP_SETUP.md](docs/MCP_SETUP.md) - MCP integration guide
-- [CLI_USAGE_GUIDE.md](docs/cli/CLI_USAGE_GUIDE.md) - Detailed CLI usage
+- [README.md](README.md) - Overview and installation
+- [docs/SOAR.md](docs/SOAR.md) - SOAR reasoning pipeline
+- [docs/ML_MODELS.md](docs/ML_MODELS.md) - Custom ML models
+- [docs/MCP_DEPRECATION.md](docs/MCP_DEPRECATION.md) - MCP tool deprecation (v0.5.0)

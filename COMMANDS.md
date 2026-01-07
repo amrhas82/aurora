@@ -15,7 +15,7 @@ Complete reference for all Aurora CLI and slash commands.
 | `aur mem index` | CLI | Index codebase | `aur mem index [PATH]` | `aur mem index .` |
 | `aur mem search` | CLI | Search indexed code | `aur mem search <QUERY>` | `aur mem search "auth"` |
 | `aur mem stats` | CLI | Memory statistics | `aur mem stats` | `aur mem stats` |
-| `aur soar` | CLI | Multi-turn SOAR reasoning | `aur soar <QUERY>` | `aur soar "explain flow"` |
+| `aur soar` | CLI | Multi-turn SOAR reasoning | `aur soar <QUERY> [--tool]` | `aur soar "explain flow" -t cursor` |
 | `aur query` | CLI | Simple context query | `aur query <QUERY>` | `aur query "login function"` |
 | `aur plan` | CLI | Plan management | `aur plan <SUBCOMMAND>` | `aur plan create "Feature"` |
 | `aur agents` | CLI | Agent discovery | `aur agents <SUBCOMMAND>` | `aur agents search "test"` |
@@ -184,15 +184,41 @@ aur mem stats --db-path /tmp/test.db
 
 #### `aur soar`
 
-Multi-turn SOAR reasoning for complex queries.
+Multi-turn SOAR reasoning for complex queries. Routes queries through external CLI tools (claude, cursor, etc.) via subprocess piping.
 
 ```bash
-# SOAR query
+# Basic SOAR query (uses claude by default)
 aur soar "How does the payment flow work?"
 
-# Force complexity level
-aur soar "explain architecture" --complexity COMPLEX
+# Use a different CLI tool
+aur soar "explain architecture" --tool cursor
+aur soar "what is 2+2?" -t claude
+
+# Use opus model instead of sonnet
+aur soar "complex analysis" --model opus
+
+# Verbose output
+aur soar "explain flow" --verbose
 ```
+
+**Options:**
+- `-t, --tool TEXT` - CLI tool to pipe to (default: claude, or `AURORA_SOAR_TOOL` env var)
+- `-m, --model [sonnet|opus]` - Model to use (default: sonnet)
+- `-v, --verbose` - Show verbose output
+
+**Setting a default tool:**
+```bash
+# Set default tool via environment variable
+export AURORA_SOAR_TOOL=cursor
+
+# Now all soar commands use cursor by default
+aur soar "my query"  # uses cursor
+
+# CLI flag still overrides env var
+aur soar "my query" --tool claude  # uses claude
+```
+
+**Supported tools:** Any CLI tool that accepts piped input (claude, cursor, etc.)
 
 **When to use:**
 - Complex system analysis
@@ -201,17 +227,17 @@ aur soar "explain architecture" --complexity COMPLEX
 - "How does X work?" questions
 
 **9-phase pipeline:**
-1. Assess - Determine complexity
-2. Retrieve - Gather context
-3. Decompose - Break into subgoals
-4. Verify - Validate groundedness
-5. Route - Assign to handlers
-6. Collect - Execute subgoals
-7. Synthesize - Integrate results
-8. Record - Cache patterns
-9. Respond - Format answer
+1. Assess - Determine complexity (ORCHESTRATOR)
+2. Retrieve - Gather context (ORCHESTRATOR)
+3. Decompose - Break into subgoals (LLM)
+4. Verify - Validate groundedness (LLM)
+5. Route - Assign to handlers (ORCHESTRATOR)
+6. Collect - Execute subgoals (LLM)
+7. Synthesize - Integrate results (LLM)
+8. Record - Cache patterns (ORCHESTRATOR)
+9. Respond - Format answer (LLM)
 
-**Performance:** 10-60 seconds (depends on complexity)
+**Performance:** 10-60 seconds (depends on complexity). Simple queries may skip phases 3-8.
 
 See [docs/SOAR.md](docs/SOAR.md) for detailed explanation.
 

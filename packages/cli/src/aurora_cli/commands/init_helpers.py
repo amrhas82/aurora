@@ -16,7 +16,6 @@ from rich.console import Console
 from aurora_cli.configurators import TOOL_OPTIONS, ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
 
-
 console = Console()
 
 AURORA_DIR_NAME = ".aurora"
@@ -87,7 +86,9 @@ def detect_configured_tools(project_path: Path) -> dict[str, bool]:
             is_configured = False
             if config_file.exists():
                 content = config_file.read_text(encoding="utf-8")
-                is_configured = "<!-- AURORA:START -->" in content and "<!-- AURORA:END -->" in content
+                is_configured = (
+                    "<!-- AURORA:START -->" in content and "<!-- AURORA:END -->" in content
+                )
             configured[tool_id] = is_configured
         else:
             configured[tool_id] = False
@@ -152,18 +153,17 @@ def detect_configured_slash_tools(project_path: Path) -> dict[str, bool]:
                     pass
         else:
             # Standard project-relative paths
-            # Check the first target file for this tool (e.g., plan.md)
+            # Check ANY target file for this tool (not just first)
             targets = configurator.get_targets()
-            if targets:
-                # Use the first command file to check configuration
-                first_target = targets[0]
-                file_path = project_path / first_target.path
+            for target in targets:
+                file_path = project_path / target.path
 
                 if file_path.exists():
                     try:
                         content = file_path.read_text(encoding="utf-8")
                         if "<!-- AURORA:START -->" in content and "<!-- AURORA:END -->" in content:
                             is_configured = True
+                            break  # Found one configured file, that's enough
                     except Exception:
                         pass
 
@@ -262,7 +262,9 @@ def detect_project_metadata(project_path: Path) -> dict:
 
     # Detect pytest
     pytest_ini = project_path / "pytest.ini"
-    if pytest_ini.exists() or (pyproject_path.exists() and "[tool.pytest" in pyproject_path.read_text()):
+    if pytest_ini.exists() or (
+        pyproject_path.exists() and "[tool.pytest" in pyproject_path.read_text()
+    ):
         tech_stack_lines.append("- **Testing**: pytest (detected)")
 
     # Detect JavaScript/Node.js
@@ -315,7 +317,11 @@ def create_project_md(project_path: Path) -> None:
     metadata = detect_project_metadata(project_path)
 
     # Build template with detected metadata
-    tech_stack_section = metadata["tech_stack"] if metadata["tech_stack"] else "[No tech stack detected - fill in manually]"
+    tech_stack_section = (
+        metadata["tech_stack"]
+        if metadata["tech_stack"]
+        else "[No tech stack detected - fill in manually]"
+    )
 
     template = f"""# Project Overview: {metadata["name"]}
 
@@ -678,10 +684,14 @@ def show_status_summary(project_path: Path) -> None:
             # Get modification time for context
             mtime = datetime.fromtimestamp(project_md.stat().st_mtime)
             mtime_str = mtime.strftime("%Y-%m-%d %H:%M")
-            console.print(f"[green]✓[/] Step 1: Planning setup [dim](last modified: {mtime_str})[/]")
+            console.print(
+                f"[green]✓[/] Step 1: Planning setup [dim](last modified: {mtime_str})[/]"
+            )
         elif plans_active.exists():
             # Directory exists but no project.md
-            console.print("[yellow]●[/] Step 1: Planning setup [dim](incomplete - missing project.md)[/]")
+            console.print(
+                "[yellow]●[/] Step 1: Planning setup [dim](incomplete - missing project.md)[/]"
+            )
         else:
             console.print("[yellow]●[/] Step 1: Planning setup [dim](not complete)[/]")
 

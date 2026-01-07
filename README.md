@@ -1,6 +1,6 @@
 # AURORA
 
-**Version 0.5.1** | [PyPI](https://pypi.org/project/aurora-actr/) | [Commands](COMMANDS.md) | [SOAR Reasoning](docs/SOAR.md) | [ML Models](docs/ML_MODELS.md)
+**Version 0.5.1** | [PyPI](https://pypi.org/project/aurora-actr/) | [Commands](COMMANDS.md) | [Configuration](docs/CONFIG_REFERENCE.md) | [SOAR Reasoning](docs/SOAR.md)
 
 Adaptive Unified Reasoning and Orchestration Architecture - Project-based AI memory and reasoning system.
 
@@ -101,6 +101,7 @@ docs/archive/**
 ## Documentation
 
 - [Commands Reference](COMMANDS.md) - Complete CLI command documentation
+- [Configuration Reference](docs/CONFIG_REFERENCE.md) - All config settings, file locations, and environment variables
 - [SOAR Reasoning](docs/SOAR.md) - 9-phase cognitive pipeline details
 - [ML Models Guide](docs/ML_MODELS.md) - Custom embedding model configuration
 - [MCP Deprecation](docs/MCP_DEPRECATION.md) - Why MCP tools were deprecated
@@ -121,13 +122,37 @@ docs/archive/**
 
 ## Configuration
 
-**Indexing:** `aur init` or `aur mem index .`
+Aurora stores configuration in JSON files with environment variable overrides.
 
-**Excluding files:** Create `.auroraignore` in project root
+**File locations:**
+- `~/.aurora/config.json` - Global user settings
+- `.aurora/config.json` - Project-specific settings (takes precedence)
 
-**Changing ML model:** See [ML Models Guide](docs/ML_MODELS.md)
+**Quick example:**
+```json
+{
+  "soar": {
+    "default_tool": "cursor",
+    "default_model": "opus"
+  },
+  "logging": {
+    "level": "DEBUG"
+  }
+}
+```
 
-**MCP integration:** Deprecated in v0.5.0, use slash commands instead
+**Environment variables:**
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+export AURORA_SOAR_TOOL=cursor
+export AURORA_LOGGING_LEVEL=DEBUG
+```
+
+See [Configuration Reference](docs/CONFIG_REFERENCE.md) for all settings.
+
+**Other configuration:**
+- **Excluding files:** Create `.auroraignore` in project root
+- **ML models:** See [ML Models Guide](docs/ML_MODELS.md)
 
 ## Requirements
 

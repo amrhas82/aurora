@@ -31,13 +31,10 @@ from typing import Dict, Optional
 
 import pytest
 
-# These tests require real API access (calls aur query which needs Anthropic API key)
-pytestmark = pytest.mark.real_api
-
 from .conftest import run_cli_command
 
 # Mark all tests in this file as E2E tests
-pytestmark = [pytest.mark.e2e]
+pytestmark = [pytest.mark.skip(reason="Tests deleted 'aur query' command"), pytest.mark.e2e]
 
 
 @pytest.fixture

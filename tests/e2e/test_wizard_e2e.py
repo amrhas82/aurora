@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-# These tests require real API access (LLM calls for query/reasoning)
-pytestmark = pytest.mark.real_api
+# Skip: Tests wizard using 'aur query' which was deleted
+pytestmark = pytest.mark.skip(reason="Tests wizard using 'aur query' which was deleted")
 from click.testing import CliRunner
 
 from aurora_cli.main import cli

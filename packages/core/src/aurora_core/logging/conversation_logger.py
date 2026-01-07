@@ -257,22 +257,22 @@ class ConversationLogger:
         lines.append("---")
         lines.append("")
 
-        # Phase sections
+        # Phase sections with numbers
         phase_order = [
-            "assess",
-            "retrieve",
-            "decompose",
-            "verify",
-            "route",
-            "collect",
-            "synthesize",
-            "record",
-            "respond",
+            ("assess", 1),
+            ("retrieve", 2),
+            ("decompose", 3),
+            ("verify", 4),
+            ("route", 5),
+            ("collect", 6),
+            ("synthesize", 7),
+            ("record", 8),
+            ("respond", 9),
         ]
 
-        for phase_name in phase_order:
+        for phase_name, phase_num in phase_order:
             if phase_name in phase_data:
-                lines.append(f"## Phase: {phase_name.capitalize()}")
+                lines.append(f"## Phase {phase_num}: {phase_name.capitalize()}")
                 lines.append("")
 
                 # Format phase data as JSON block

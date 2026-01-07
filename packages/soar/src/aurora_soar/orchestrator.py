@@ -28,13 +28,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import TYPE_CHECKING, Any
-
-from aurora_reasoning.decompose import DecompositionResult
+from typing import TYPE_CHECKING, Any, Callable
 
 from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.logging import ConversationLogger
+from aurora_reasoning.decompose import DecompositionResult
 from aurora_soar.phases import (
     assess,
     collect,
@@ -48,12 +47,10 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
-
 if TYPE_CHECKING:
-    from aurora_reasoning.llm_client import LLMClient
-
     from aurora_core.config.loader import Config
     from aurora_core.store.base import Store
+    from aurora_reasoning.llm_client import LLMClient
     from aurora_soar.agent_registry import AgentRegistry
 
 
@@ -84,6 +81,7 @@ class SOAROrchestrator:
         cost_tracker: CostTracker | None = None,
         conversation_logger: ConversationLogger | None = None,
         interactive_mode: bool = False,
+        phase_callback: Callable[[str, str, dict[str, Any]], None] | None = None,
     ):
         """Initialize SOAR orchestrator.
 
@@ -96,6 +94,11 @@ class SOAROrchestrator:
             cost_tracker: Optional cost tracker (creates default if not provided)
             conversation_logger: Optional conversation logger (creates default if not provided)
             interactive_mode: If True, prompt user for weak retrieval matches (CLI only, default: False)
+            phase_callback: Optional callback invoked before/after each phase.
+                Signature: callback(phase_name, status, result_summary)
+                - phase_name: str - Name of the phase (e.g., "assess", "decompose")
+                - status: str - Either "before" or "after"
+                - result_summary: dict - Summary of phase result (empty for "before")
         """
         self.store = store
         self.agent_registry = agent_registry
@@ -103,6 +106,7 @@ class SOAROrchestrator:
         self.interactive_mode = interactive_mode
         self.reasoning_llm = reasoning_llm
         self.solving_llm = solving_llm
+        self.phase_callback = phase_callback
 
         # Initialize cost tracker
         if cost_tracker is None:
@@ -125,6 +129,26 @@ class SOAROrchestrator:
         self._query: str = ""
 
         logger.info("SOAR orchestrator initialized")
+
+    def _invoke_callback(
+        self, phase_name: str, status: str, result_summary: dict[str, Any] | None = None
+    ) -> None:
+        """Invoke phase callback if configured.
+
+        Exceptions from the callback are caught and logged, not propagated.
+
+        Args:
+            phase_name: Name of the phase (e.g., "assess", "decompose")
+            status: Either "before" or "after"
+            result_summary: Summary of phase result (empty dict for "before")
+        """
+        if self.phase_callback is None:
+            return
+
+        try:
+            self.phase_callback(phase_name, status, result_summary or {})
+        except Exception as e:
+            logger.warning(f"Phase callback failed for {phase_name}/{status}: {e}")
 
     def execute(
         self,
@@ -280,44 +304,58 @@ class SOAROrchestrator:
     def _phase1_assess(self, query: str) -> dict[str, Any]:
         """Execute Phase 1: Complexity Assessment."""
         logger.info("Phase 1: Assessing complexity")
+        self._invoke_callback("assess", "before", {})
         start_time = time.time()
         try:
             result = assess.assess_complexity(query, llm_client=self.reasoning_llm)
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
+            self._invoke_callback(
+                "assess", "after", {"complexity": result.get("complexity", "UNKNOWN")}
+            )
             return result
         except Exception as e:
             logger.error(f"Phase 1 failed: {e}")
-            return {
+            result = {
                 "complexity": "MEDIUM",
                 "confidence": 0.0,
                 "_timing_ms": (time.time() - start_time) * 1000,
                 "_error": str(e),
             }
+            self._invoke_callback("assess", "after", {"complexity": "MEDIUM", "error": str(e)})
+            return result
 
     def _phase2_retrieve(self, query: str, complexity: str) -> dict[str, Any]:
         """Execute Phase 2: Context Retrieval."""
         logger.info("Phase 2: Retrieving context")
+        self._invoke_callback("retrieve", "before", {})
         start_time = time.time()
         try:
             result = retrieve.retrieve_context(query, complexity, self.store)
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
+            chunks_count = len(result.get("code_chunks", [])) + len(
+                result.get("reasoning_chunks", [])
+            )
+            self._invoke_callback("retrieve", "after", {"chunks_retrieved": chunks_count})
             return result
         except Exception as e:
             logger.error(f"Phase 2 failed: {e}")
-            return {
+            result = {
                 "code_chunks": [],
                 "reasoning_chunks": [],
                 "_timing_ms": (time.time() - start_time) * 1000,
                 "_error": str(e),
             }
+            self._invoke_callback("retrieve", "after", {"chunks_retrieved": 0, "error": str(e)})
+            return result
 
     def _phase3_decompose(
         self, query: str, context: dict[str, Any], complexity: str
     ) -> dict[str, Any]:
         """Execute Phase 3: Query Decomposition."""
         logger.info("Phase 3: Decomposing query")
+        self._invoke_callback("decompose", "before", {})
         start_time = time.time()
         try:
             # Get available agents from registry
@@ -336,15 +374,18 @@ class SOAROrchestrator:
             result["subgoals_total"] = len(result["decomposition"]["subgoals"])
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
+            self._invoke_callback("decompose", "after", {"subgoal_count": result["subgoals_total"]})
             return result
         except Exception as e:
             logger.error(f"Phase 3 failed: {e}")
-            return {
+            result = {
                 "goal": query,
                 "subgoals": [],
                 "_timing_ms": (time.time() - start_time) * 1000,
                 "_error": str(e),
             }
+            self._invoke_callback("decompose", "after", {"subgoal_count": 0, "error": str(e)})
+            return result
 
     def _phase4_verify(
         self,
@@ -355,6 +396,7 @@ class SOAROrchestrator:
     ) -> dict[str, Any]:
         """Execute Phase 4: Decomposition Verification."""
         logger.info("Phase 4: Verifying decomposition")
+        self._invoke_callback("verify", "before", {})
         start_time = time.time()
         try:
             # Get available agents from registry
@@ -386,10 +428,13 @@ class SOAROrchestrator:
             result = phase_result.to_dict()
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
+            self._invoke_callback(
+                "verify", "after", {"verdict": result.get("final_verdict", "UNKNOWN")}
+            )
             return result
         except Exception as e:
             logger.error(f"Phase 4 failed: {e}")
-            return {
+            result = {
                 "final_verdict": "FAIL",
                 "overall_score": 0.0,
                 "verification": {
@@ -408,6 +453,8 @@ class SOAROrchestrator:
                 "_timing_ms": (time.time() - start_time) * 1000,
                 "_error": str(e),
             }
+            self._invoke_callback("verify", "after", {"verdict": "FAIL", "error": str(e)})
+            return result
 
     def _phase5_route(self, decomposition: dict[str, Any]) -> route.RouteResult:
         """Execute Phase 5: Agent Routing.
@@ -415,14 +462,21 @@ class SOAROrchestrator:
         Returns RouteResult object (not dict) for use by phase 6.
         """
         logger.info("Phase 5: Routing to agents")
+        self._invoke_callback("route", "before", {})
         time.time()
         try:
-            return route.route_subgoals(decomposition, self.agent_registry)
+            result = route.route_subgoals(decomposition, self.agent_registry)
+            agents = (
+                [a.agent_id for a in result.agent_assignments] if result.agent_assignments else []
+            )
+            self._invoke_callback("route", "after", {"agents": agents})
+            return result
         except Exception as e:
             logger.error(f"Phase 5 failed: {e}")
             # Return empty RouteResult on failure
             from aurora_soar.phases.route import RouteResult
 
+            self._invoke_callback("route", "after", {"agents": [], "error": str(e)})
             return RouteResult(
                 agent_assignments=[], execution_plan=[], routing_metadata={"error": str(e)}
             )
@@ -435,15 +489,20 @@ class SOAROrchestrator:
         Returns CollectResult object (not dict) for use by phase 7.
         """
         logger.info("Phase 6: Executing agents")
+        self._invoke_callback("collect", "before", {})
         time.time()
         try:
             # Execute agents asynchronously
-            return asyncio.run(collect.execute_agents(routing, context))
+            result = asyncio.run(collect.execute_agents(routing, context))
+            findings_count = len(result.agent_outputs) if result.agent_outputs else 0
+            self._invoke_callback("collect", "after", {"findings_count": findings_count})
+            return result
         except Exception as e:
             logger.error(f"Phase 6 failed: {e}")
             # Return empty CollectResult on failure
             from aurora_soar.phases.collect import CollectResult
 
+            self._invoke_callback("collect", "after", {"findings_count": 0, "error": str(e)})
             return CollectResult(
                 agent_outputs=[], execution_metadata={"error": str(e)}, user_interactions=[]
             )
@@ -453,6 +512,7 @@ class SOAROrchestrator:
     ) -> synthesize.SynthesisResult:
         """Execute Phase 7: Result Synthesis."""
         logger.info("Phase 7: Synthesizing results")
+        self._invoke_callback("synthesize", "before", {})
         start_time = time.time()
         try:
             result = synthesize.synthesize_results(
@@ -468,10 +528,12 @@ class SOAROrchestrator:
                 result.timing.get("output_tokens", 0),
                 "synthesize",
             )
+            self._invoke_callback("synthesize", "after", {"confidence": result.confidence})
             return result
         except Exception as e:
             logger.error(f"Phase 7 failed: {e}")
             # Return error synthesis result
+            self._invoke_callback("synthesize", "after", {"confidence": 0.0, "error": str(e)})
             return synthesize.SynthesisResult(
                 answer=f"Synthesis failed: {str(e)}",
                 confidence=0.0,
@@ -490,9 +552,10 @@ class SOAROrchestrator:
     ) -> record.RecordResult:
         """Execute Phase 8: Pattern Recording."""
         logger.info("Phase 8: Recording pattern")
+        self._invoke_callback("record", "before", {})
         start_time = time.time()
         try:
-            return record.record_pattern(
+            result = record.record_pattern(
                 store=self.store,
                 query=query,
                 complexity=complexity,
@@ -500,8 +563,11 @@ class SOAROrchestrator:
                 collect_result=collect_result,
                 synthesis_result=synthesis_result,
             )
+            self._invoke_callback("record", "after", {"cached": result.cached})
+            return result
         except Exception as e:
             logger.error(f"Phase 8 failed: {e}")
+            self._invoke_callback("record", "after", {"cached": False, "error": str(e)})
             return record.RecordResult(
                 cached=False,
                 reasoning_chunk_id=None,
@@ -518,6 +584,7 @@ class SOAROrchestrator:
     ) -> dict[str, Any]:
         """Execute Phase 9: Response Formatting."""
         logger.info("Phase 9: Formatting response")
+        self._invoke_callback("respond", "before", {})
 
         # Add phase 9 metadata
         self._phase_metadata["phase9_respond"] = {
@@ -551,6 +618,7 @@ class SOAROrchestrator:
         if log_path and self.store:
             self._index_conversation_log(log_path)
 
+        self._invoke_callback("respond", "after", {"formatted": True})
         return response.to_dict()
 
     def _execute_simple_path(
@@ -801,6 +869,7 @@ class SOAROrchestrator:
         """
         try:
             from pathlib import Path
+
             from aurora_context_code.languages.markdown import MarkdownParser
             from aurora_context_code.semantic import EmbeddingProvider
 

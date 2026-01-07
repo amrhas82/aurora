@@ -1,140 +1,213 @@
-"""AURORA SOAR Command - Multi-turn orchestration via claude CLI.
+"""AURORA SOAR Command - Terminal orchestrator wrapper.
 
-This module provides true multi-turn SOAR execution where Python controls
-the conversation loop, making separate LLM calls for each phase.
+This module provides a thin wrapper around SOAROrchestrator that:
+1. Creates a CLIPipeLLMClient for piping to external CLI tools
+2. Displays terminal UX with phase ownership ([ORCHESTRATOR] vs [LLM -> tool])
+3. Delegates all phase logic to SOAROrchestrator
+
+The actual phase implementations live in aurora_soar.orchestrator.
 """
 
 from __future__ import annotations
 
-import logging
-import subprocess
+import json
+import os
+import re
 import shutil
 import time
-import uuid
-from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import click
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from aurora_core.logging.conversation_logger import ConversationLogger
-from aurora_core.metrics.query_metrics import QueryMetrics
+from aurora_core.paths import get_aurora_dir
 
 console = Console()
-logger = logging.getLogger(__name__)
 
 
-def _run_claude(prompt: str, model: str = "sonnet", timeout: int = 120) -> str:
-    """
-    Run claude CLI with prompt and return output.
+# Phase ownership mapping - which phases are pure Python vs need LLM
+PHASE_OWNERS = {
+    "assess": "ORCHESTRATOR",
+    "retrieve": "ORCHESTRATOR",
+    "decompose": "LLM",
+    "verify": "LLM",
+    "route": "ORCHESTRATOR",
+    "collect": "LLM",
+    "synthesize": "LLM",
+    "record": "ORCHESTRATOR",
+    "respond": "LLM",
+}
+
+# Phase numbers
+PHASE_NUMBERS = {
+    "assess": 1,
+    "retrieve": 2,
+    "decompose": 3,
+    "verify": 4,
+    "route": 5,
+    "collect": 6,
+    "synthesize": 7,
+    "record": 8,
+    "respond": 9,
+}
+
+# Phase descriptions shown during execution
+PHASE_DESCRIPTIONS = {
+    "assess": "Analyzing query complexity...",
+    "retrieve": "Looking up memory index...",
+    "decompose": "Breaking query into subgoals...",
+    "verify": "Validating decomposition...",
+    "route": "Assigning agents to subgoals...",
+    "collect": "Researching subgoals...",
+    "synthesize": "Combining findings...",
+    "record": "Caching reasoning pattern...",
+    "respond": "Formatting response...",
+}
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+
+def _extract_json(text: str) -> dict:
+    """Extract JSON from LLM response.
+
+    Handles:
+    - Plain JSON
+    - JSON wrapped in ```json blocks
+    - JSON with surrounding commentary
 
     Args:
-        prompt: The prompt to send
-        model: Model to use (sonnet or opus)
-        timeout: Timeout in seconds
+        text: LLM response text
 
     Returns:
-        Claude's response text
+        Parsed JSON dict
+
+    Raises:
+        ValueError: If no valid JSON found
     """
-    try:
-        result = subprocess.run(
-            ["claude", "-p", "--model", model],
-            input=prompt,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-        return result.stdout.strip() if result.returncode == 0 else result.stderr.strip()
-    except subprocess.TimeoutExpired:
-        return "[ERROR: Claude timed out]"
-    except FileNotFoundError:
-        return "[ERROR: claude CLI not found - install Claude Code]"
-    except Exception as e:
-        return f"[ERROR: {e}]"
+    # Try to find ```json blocks first
+    json_block_match = re.search(r"```json\s*([\s\S]*?)\s*```", text)
+    if json_block_match:
+        try:
+            return json.loads(json_block_match.group(1))
+        except json.JSONDecodeError:
+            pass
+
+    # Try to find raw JSON object
+    json_match = re.search(r"\{[\s\S]*\}", text)
+    if json_match:
+        try:
+            return json.loads(json_match.group(0))
+        except json.JSONDecodeError:
+            pass
+
+    raise ValueError(f"No valid JSON found in response: {text[:200]}...")
 
 
-def _run_aur_query(query: str) -> str:
+def _ensure_soar_dir() -> Path:
+    """Ensure .aurora/soar/ directory exists.
+
+    Returns:
+        Path to soar directory
     """
-    Run local aur query for phase 1-2 context retrieval.
+    aurora_dir = get_aurora_dir()
+    soar_dir = aurora_dir / "soar"
+    soar_dir.mkdir(parents=True, exist_ok=True)
+    return soar_dir
+
+
+def _print_phase(owner: str, phase_num: int, name: str, description: str, tool: str = "") -> None:
+    """Print phase header with owner information.
 
     Args:
-        query: The query string
+        owner: "ORCHESTRATOR" or "LLM"
+        phase_num: Phase number (1-9)
+        name: Phase name
+        description: Brief description
+        tool: Tool name for LLM phases
+    """
+    if owner == "ORCHESTRATOR":
+        console.print(f"\n[blue][ORCHESTRATOR][/] Phase {phase_num}: {name}")
+    else:
+        console.print(f"\n[green][LLM → {tool}][/] Phase {phase_num}: {name}")
+    console.print(f"  {description}")
+
+
+def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
+    """Print phase result summary.
+
+    Args:
+        phase_num: Phase number (1-9)
+        result: Phase result dictionary
+    """
+    if phase_num == 1:
+        # Assess phase
+        complexity = result.get("complexity", "UNKNOWN")
+        console.print(f"  [cyan]Complexity: {complexity}[/]")
+    elif phase_num == 2:
+        # Retrieve phase
+        chunks = result.get("chunks_retrieved", 0)
+        console.print(f"  [cyan]Matched: {chunks} chunks from memory[/]")
+    elif phase_num == 3:
+        # Decompose phase
+        count = result.get("subgoal_count", 0)
+        console.print(f"  [cyan]✓ {count} subgoals identified[/]")
+    elif phase_num == 4:
+        # Verify phase
+        verdict = result.get("verdict", "UNKNOWN")
+        console.print(f"  [cyan]✓ {verdict}[/]")
+    elif phase_num == 5:
+        # Route phase
+        agents = result.get("agents", [])
+        console.print(f"  [cyan]Assigned: {', '.join(agents) if agents else 'no agents'}[/]")
+    elif phase_num == 6:
+        # Collect phase
+        count = result.get("findings_count", 0)
+        console.print(f"  [cyan]✓ Research complete ({count} findings)[/]")
+    elif phase_num == 7:
+        # Synthesize phase
+        confidence = result.get("confidence", 0.0)
+        console.print(f"  [cyan]✓ Answer ready (confidence: {confidence:.0%})[/]")
+    elif phase_num == 8:
+        # Record phase
+        cached = result.get("cached", False)
+        console.print(f"  [cyan]✓ Pattern {'cached' if cached else 'recorded'}[/]")
+    elif phase_num == 9:
+        # Respond phase
+        console.print("  [cyan]✓ Response formatted[/]")
+
+
+def _create_phase_callback(tool: str):
+    """Create a phase callback for terminal display.
+
+    Args:
+        tool: CLI tool name for LLM phases
 
     Returns:
-        Local context from memory index
+        Callback function for SOAROrchestrator
     """
-    try:
-        result = subprocess.run(
-            ["aur", "query", query, "--json"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        # Return first 40 lines to keep context manageable
-        lines = result.stdout.strip().split("\n")[:40]
-        return "\n".join(lines)
-    except Exception as e:
-        logger.warning(f"aur query failed: {e}")
-        return f"[No local context: {e}]"
+
+    def callback(phase_name: str, status: str, result_summary: dict[str, Any]) -> None:
+        """Display phase information in terminal."""
+        owner = PHASE_OWNERS.get(phase_name, "ORCHESTRATOR")
+        phase_num = PHASE_NUMBERS.get(phase_name, 0)
+        description = PHASE_DESCRIPTIONS.get(phase_name, "Processing...")
+
+        if status == "before":
+            _print_phase(owner, phase_num, phase_name.capitalize(), description, tool)
+        else:  # status == "after"
+            _print_phase_result(phase_num, result_summary)
+
+    return callback
 
 
-def _save_log(
-    query: str,
-    model: str,
-    context: str,
-    phase3: str,
-    phase4: str,
-    phase5: str,
-    phase6: str,
-    final: str,
-    duration_ms: float,
-) -> Path | None:
-    """Save SOAR query log using ConversationLogger."""
-    # Use ConversationLogger for consistent logging
-    conv_logger = ConversationLogger()
-
-    # Generate unique query ID
-    query_id = f"soar-{uuid.uuid4().hex[:8]}"
-
-    # Build phase data in the format ConversationLogger expects
-    phase_data = {
-        "assess": {"context_retrieved": len(context.split("\n")), "method": "local_aur_query"},
-        "retrieve": {"raw_context": context[:1000] + "..." if len(context) > 1000 else context},
-        "decompose": {"subgoals": phase3},
-        "verify": {"verdict": phase4},
-        "collect": {"research": phase5[:2000] + "..." if len(phase5) > 2000 else phase5},
-        "synthesize": {"synthesis": phase6},
-        "respond": {"final_answer": final},
-    }
-
-    # Build execution summary
-    execution_summary = {
-        "duration_ms": round(duration_ms),
-        "overall_score": 0.85,  # Placeholder - could calculate based on phase success
-        "cached": False,
-        "model": model,
-        "method": "multi_turn_cli",
-        "claude_calls": 5,
-    }
-
-    # Additional metadata
-    metadata = {
-        "orchestration_type": "bash_cli",
-        "model": model,
-        "timestamp": datetime.now().isoformat(),
-    }
-
-    log_path = conv_logger.log_interaction(
-        query=query,
-        query_id=query_id,
-        phase_data=phase_data,
-        execution_summary=execution_summary,
-        metadata=metadata,
-    )
-
-    return log_path
+# ============================================================================
+# Main Command
+# ============================================================================
 
 
 @click.command(name="soar")
@@ -147,177 +220,120 @@ def _save_log(
     help="Model to use (default: sonnet)",
 )
 @click.option(
+    "--tool",
+    "-t",
+    type=str,
+    default=None,
+    help="CLI tool to pipe to (default: claude, or AURORA_SOAR_TOOL env var)",
+)
+@click.option(
     "--verbose",
     "-v",
     is_flag=True,
     default=False,
     help="Show verbose output",
 )
-def soar_command(query: str, model: str, verbose: bool) -> None:
-    """Execute multi-turn SOAR query with separate LLM calls per phase.
+def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> None:
+    r"""Execute 9-phase SOAR query with terminal orchestration.
 
-    This command runs TRUE multi-turn orchestration where Python controls
-    the conversation loop, making 5 separate claude CLI calls:
+    Runs the SOAR pipeline via SOAROrchestrator, piping to external LLM tools:
 
     \b
-    - Phase 1-2: Local retrieval (aur query, no LLM)
-    - Phase 3: DECOMPOSE (claude call 1)
-    - Phase 4: VERIFY (claude call 2)
-    - Phase 5: COLLECT (claude call 3 - may use web search)
-    - Phase 6: SYNTHESIZE (claude call 4)
-    - Phase 7: RESPOND (claude call 5)
+    [ORCHESTRATOR] Phase 1: ASSESS    - Complexity assessment (Python)
+    [ORCHESTRATOR] Phase 2: RETRIEVE  - Memory lookup (Python)
+    [LLM]          Phase 3: DECOMPOSE - Break into subgoals
+    [LLM]          Phase 4: VERIFY    - Validate decomposition
+    [ORCHESTRATOR] Phase 5: ROUTE     - Agent assignment (Python)
+    [LLM]          Phase 6: COLLECT   - Research/execute
+    [LLM]          Phase 7: SYNTHESIZE - Combine results
+    [ORCHESTRATOR] Phase 8: RECORD    - Cache pattern (Python)
+    [LLM]          Phase 9: RESPOND   - Format answer
 
     \b
     Examples:
         aur soar "What is SOAR orchestrator?"
-        aur soar "State of AI datacenters in space?" --model opus
+        aur soar "Explain ACT-R memory" --tool cursor
+        aur soar "State of AI?" --model opus --verbose
     """
-    # Check claude CLI is available
-    if not shutil.which("claude"):
-        console.print("[red]Error: claude CLI not found[/]")
-        console.print("Install Claude Code first: https://claude.ai/download")
+    # Resolve tool from CLI flag -> env var -> default
+    if tool is None:
+        tool = os.environ.get("AURORA_SOAR_TOOL", "claude")
+
+    # Validate tool exists in PATH
+    if not shutil.which(tool):
+        console.print(f"[red]Error: Tool '{tool}' not found in PATH[/]")
+        console.print(f"Install {tool} or use --tool to specify another")
         raise SystemExit(1)
 
-    console.print(Panel(f"[bold cyan]SOAR Query[/]\n{query}", title="Aurora"))
+    # Display header
+    console.print("[bold]╭─────────── Aurora SOAR ───────────╮[/]")
+    console.print(f"[bold]│[/] Query: {query[:40]}{'...' if len(query) > 40 else ''}")
+    console.print("[bold]╰───────────────────────────────────╯[/]")
 
-    # Track execution time
     start_time = time.time()
+    soar_dir = _ensure_soar_dir()
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
+    # Import here to avoid circular imports and allow lazy loading
+    from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+    from aurora_core.config.loader import Config
+    from aurora_core.store.memory import MemoryStore
+    from aurora_soar.agent_registry import AgentRegistry
+    from aurora_soar.orchestrator import SOAROrchestrator
 
-        # ===== PHASE 1-2: Local retrieval =====
-        task = progress.add_task("Phase 1-2: ASSESS & RETRIEVE (local)...", total=None)
-        context = _run_aur_query(query)
-        progress.update(task, completed=True, description="Phase 1-2: ✓ Local context retrieved")
-
-        if verbose:
-            console.print("\n[dim]## Phase 1-2: ASSESS & RETRIEVE[/]")
-            console.print(f"[dim]{context[:500]}...[/]" if len(context) > 500 else f"[dim]{context}[/]")
-
-        # ===== PHASE 3: DECOMPOSE =====
-        task = progress.add_task("Phase 3: DECOMPOSE...", total=None)
-        phase3_prompt = f"""You are a helpful assistant. Answer concisely.
-
-Query: {query}
-
-Break this query into 2-4 specific subgoals that need to be answered. List them as a numbered list:
-
-1. [subgoal]
-2. [subgoal]
-..."""
-        phase3 = _run_claude(phase3_prompt, model)
-        progress.update(task, completed=True, description="Phase 3: ✓ Decomposed into subgoals")
-
-        if verbose:
-            console.print("\n[dim]## Phase 3: DECOMPOSE[/]")
-            console.print(f"[dim]{phase3}[/]")
-
-        # ===== PHASE 4: VERIFY =====
-        task = progress.add_task("Phase 4: VERIFY...", total=None)
-        phase4_prompt = f"""You are a helpful assistant. Answer with just PASS or FAIL and one sentence.
-
-Query: {query}
-
-Subgoals:
-{phase3}
-
-Do these subgoals completely cover all aspects of the query? Answer PASS or FAIL with brief reason."""
-        phase4 = _run_claude(phase4_prompt, model)
-        progress.update(task, completed=True, description="Phase 4: ✓ Verified subgoals")
-
-        if verbose:
-            console.print("\n[dim]## Phase 4: VERIFY[/]")
-            console.print(f"[dim]{phase4}[/]")
-
-        # ===== PHASE 5: COLLECT =====
-        task = progress.add_task("Phase 5: COLLECT (researching, may take 30-60s)...", total=None)
-        phase5_prompt = f"""You are a helpful research assistant. Be thorough but concise.
-
-Query: {query}
-
-Subgoals:
-{phase3}
-
-Research and answer each subgoal. Use web search if needed for current information. Provide specific facts, names, dates, and sources where possible."""
-        phase5 = _run_claude(phase5_prompt, model, timeout=180)  # Longer timeout for research
-        progress.update(task, completed=True, description="Phase 5: ✓ Collected research")
-
-        if verbose:
-            console.print("\n[dim]## Phase 5: COLLECT[/]")
-            console.print(f"[dim]{phase5[:1000]}...[/]" if len(phase5) > 1000 else f"[dim]{phase5}[/]")
-
-        # ===== PHASE 6: SYNTHESIZE =====
-        task = progress.add_task("Phase 6: SYNTHESIZE...", total=None)
-        phase6_prompt = f"""You are a helpful assistant. Synthesize concisely.
-
-Query: {query}
-
-Research findings:
-{phase5}
-
-Combine these findings into a coherent, well-organized answer. Resolve any conflicts. Be factual."""
-        phase6 = _run_claude(phase6_prompt, model)
-        progress.update(task, completed=True, description="Phase 6: ✓ Synthesized findings")
-
-        if verbose:
-            console.print("\n[dim]## Phase 6: SYNTHESIZE[/]")
-            console.print(f"[dim]{phase6}[/]")
-
-        # ===== PHASE 7: RESPOND =====
-        task = progress.add_task("Phase 7: RESPOND (formatting)...", total=None)
-        phase7_prompt = f"""You are a helpful assistant. Give a clear, actionable answer.
-
-Query: {query}
-
-Synthesized answer:
-{phase6}
-
-Format a clear final answer for the user. Use headers, bullet points, and structure. Include key facts and dates."""
-        final = _run_claude(phase7_prompt, model)
-        progress.update(task, completed=True, description="Phase 7: ✓ Formatted response")
-
-    # Calculate duration
-    duration_ms = (time.time() - start_time) * 1000
-
-    # Show final answer
-    console.print("\n")
-    console.print(Panel(final, title="[bold green]Final Answer[/]", border_style="green"))
-
-    # Generate query ID for tracking
-    query_id = f"soar-{uuid.uuid4().hex[:8]}"
-
-    # Save log using ConversationLogger
-    log_path = _save_log(query, model, context, phase3, phase4, phase5, phase6, final, duration_ms)
-    if log_path:
-        console.print(f"\n[dim]Log saved: {log_path}[/]")
-
-    # Record metrics (QueryMetrics auto-detects project-local .aurora)
+    # Create CLI-based LLM client
     try:
-        metrics = QueryMetrics()
+        llm_client = CLIPipeLLMClient(tool=tool, soar_dir=soar_dir)
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/]")
+        raise SystemExit(1)
 
-        # Determine complexity from verify phase output
-        complexity = "MEDIUM"  # Default
-        if "PASS" in phase4.upper():
-            complexity = "COMPLEX" if len(phase3.split("\n")) > 3 else "MEDIUM"
-        elif "FAIL" in phase4.upper():
-            complexity = "COMPLEX"
+    # Create phase callback for terminal display
+    phase_callback = _create_phase_callback(tool)
 
-        metrics.record_query(
-            query_id=query_id,
-            query_type="soar",
-            duration_ms=duration_ms,
-            query_text=query,
-            complexity=complexity,
-            model=model,
-            success=True,
-            phase_count=7,  # Phases 1-7
-            claude_calls=5,
-        )
+    # Load dependencies
+    config = Config.load()
+    store = MemoryStore()  # Use in-memory store for CLI
+    agent_registry = AgentRegistry()
+
+    # Create orchestrator with CLI client and callback
+    orchestrator = SOAROrchestrator(
+        store=store,
+        agent_registry=agent_registry,
+        config=config,
+        reasoning_llm=llm_client,
+        solving_llm=llm_client,
+        phase_callback=phase_callback,
+    )
+
+    # Execute SOAR pipeline
+    try:
+        verbosity = "verbose" if verbose else "normal"
+        result = orchestrator.execute(query, verbosity=verbosity)
     except Exception as e:
-        logger.debug(f"Failed to record metrics: {e}")
+        console.print(f"\n[red]Error during SOAR execution: {e}[/]")
+        if verbose:
+            import traceback
 
-    console.print(f"[dim]SOAR complete (5 claude calls, model: {model}, {duration_ms/1000:.1f}s)[/]")
+            console.print(traceback.format_exc())
+        raise SystemExit(1)
+
+    # Display final answer
+    elapsed_time = time.time() - start_time
+    answer = result.get("formatted_answer", result.get("answer", "No answer generated"))
+
+    console.print()
+    console.print(
+        Panel(
+            answer,
+            title="[bold]Final Answer[/]",
+            border_style="green",
+        )
+    )
+
+    # Show metadata
+    console.print(f"\n[dim]Completed in {elapsed_time:.1f}s[/]")
+
+    # Show log path if available
+    log_path = result.get("metadata", {}).get("log_path")
+    if log_path:
+        console.print(f"[dim]Log: {log_path}[/]")

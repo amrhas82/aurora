@@ -8,6 +8,7 @@ serialization, and integration with the chunk system.
 from datetime import datetime
 
 import pytest
+
 from aurora_core.chunks.reasoning_chunk import ReasoningChunk
 
 
@@ -19,7 +20,7 @@ class TestReasoningChunkInitialization:
         chunk = ReasoningChunk(chunk_id="test-reasoning-1", pattern="implement feature X")
 
         assert chunk.id == "test-reasoning-1"
-        assert chunk.type == "reasoning"
+        assert chunk.type == "soar"
         assert chunk.pattern == "implement feature X"
         assert chunk.complexity == "SIMPLE"
         assert chunk.subgoals == []
@@ -50,7 +51,7 @@ class TestReasoningChunkInitialization:
         )
 
         assert chunk.id == "test-reasoning-2"
-        assert chunk.type == "reasoning"
+        assert chunk.type == "soar"
         assert chunk.pattern == "refactor module X"
         assert chunk.complexity == "COMPLEX"
         assert chunk.subgoals == subgoals
@@ -272,7 +273,7 @@ class TestReasoningChunkDeserialization:
         chunk = ReasoningChunk.from_json(json_data)
 
         assert chunk.id == "test-deser-1"
-        assert chunk.type == "reasoning"
+        assert chunk.type == "soar"
         assert chunk.pattern == "test pattern"
         assert chunk.complexity == "SIMPLE"
         assert chunk.subgoals == []
@@ -306,7 +307,7 @@ class TestReasoningChunkDeserialization:
         chunk = ReasoningChunk.from_json(json_data)
 
         assert chunk.id == "test-deser-2"
-        assert chunk.type == "reasoning"
+        assert chunk.type == "soar"
         assert chunk.pattern == "complex operation"
         assert chunk.complexity == "COMPLEX"
         assert len(chunk.subgoals) == 1

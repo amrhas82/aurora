@@ -10,8 +10,12 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from aurora_cli.main import cli
+
+# These tests require real API access (LLM calls for query/reasoning)
+pytestmark = pytest.mark.real_api
 from click.testing import CliRunner
+
+from aurora_cli.main import cli
 
 
 @pytest.fixture
@@ -50,7 +54,7 @@ def test_wizard_complete_flow_skip_indexing(runner: CliRunner, temp_aurora_home:
     assert config_file.exists()
 
     # Verify config has correct permissions
-    if os.name != 'nt':  # Skip on Windows
+    if os.name != "nt":  # Skip on Windows
         stat_info = config_file.stat()
         permissions = oct(stat_info.st_mode)[-3:]
         assert permissions == "600"

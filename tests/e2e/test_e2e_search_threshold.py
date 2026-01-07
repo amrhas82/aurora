@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+# These tests require real API access (LLM calls for query/reasoning)
+pytestmark = pytest.mark.real_api
+
 from tests.e2e.conftest import run_cli_command
 
 
@@ -169,9 +172,7 @@ def test_search_cli_option_overrides_config(clean_aurora_home, diverse_python_pr
     config_path = clean_aurora_home / "config.json"
     config_data = {
         "version": "1.1.0",
-        "search": {
-            "min_semantic_score": 0.9  # Very high threshold
-        },
+        "search": {"min_semantic_score": 0.9},  # Very high threshold
         "database": {"path": str(clean_aurora_home / "memory.db")},
     }
     config_path.write_text(json.dumps(config_data, indent=2))

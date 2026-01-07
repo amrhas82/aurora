@@ -1,11 +1,11 @@
 """E2E Test: Complexity Assessment (Task 1.5)
 
 This test suite validates that Aurora correctly assesses query complexity
-and triggers SOAR pipeline for complex queries.
+using the word-based complexity assessment algorithm.
 
 Test Scenario: Complexity Assessment
 1. Test multi-part query: "research X? who are Y? what features Z?"
-2. Run `aur query --dry-run` to see complexity assessment
+2. Run `aur query` to see complexity assessment (Phase 1 output)
 3. Parse output to extract complexity level and confidence score
 4. Assert complexity is MEDIUM or COMPLEX (not SIMPLE)
 5. Assert confidence score >= 0.4
@@ -13,9 +13,10 @@ Test Scenario: Complexity Assessment
 7. Verify domain queries classified as MEDIUM/COMPLEX
 8. Test simple query remains SIMPLE ("what is Python?")
 
-Expected: These tests will FAIL initially due to Issue #6 (complexity assessment broken)
-- Current behavior: All queries classified as SIMPLE
-- Expected behavior: Domain queries and multi-part queries classified as MEDIUM/COMPLEX
+Current Implementation:
+- `aur query` runs phases 1-2 (ASSESS + RETRIEVE) without LLM API
+- Phase 1 shows complexity: SIMPLE/MEDIUM/COMPLEX with confidence score
+- No --dry-run flag needed (default behavior is local-only assessment)
 
 Reference: PRD-0010 Section 3 (User Stories), US-4 (Accurate Complexity Assessment)
 """
@@ -34,7 +35,7 @@ import pytest
 from .conftest import run_cli_command
 
 # Mark all tests in this file as E2E tests
-pytestmark = [pytest.mark.skip(reason="Tests deleted 'aur query' command"), pytest.mark.e2e]
+pytestmark = pytest.mark.e2e
 
 
 @pytest.fixture
@@ -57,6 +58,15 @@ def clean_aurora_home() -> Generator[Path, None, None]:
             "db_path": str(aurora_home / "memory.db"),
         }
         config_path.write_text(json.dumps(config_data, indent=2))
+
+        # Create minimal memory database for query command
+        # (query needs database to run RETRIEVE phase)
+        db_path = aurora_home / "memory.db"
+        from aurora_core.store.sqlite import SQLiteStore
+
+        store = SQLiteStore(str(db_path))
+        # Just need database to exist - empty is fine for complexity assessment tests
+        store.close()
 
         yield aurora_home
 
@@ -128,7 +138,7 @@ class TestComplexityAssessment:
 
         Query: "research X? who are Y? what features Z?"
 
-        EXPECTED TO FAIL: Classified as SIMPLE instead of COMPLEX (Issue #6).
+        Tests word-based complexity assessment for multi-part queries.
         """
         # Multi-part query with 3+ questions
         query = (
@@ -138,9 +148,9 @@ class TestComplexityAssessment:
             "when should i choose agentic ai with code vs persona md files?"
         )
 
-        # Run with --dry-run to see assessment without API call
+        # Run aur query (Phase 1 shows complexity assessment)
         result = run_cli_command(
-            ["aur", "query", query, "--dry-run"],
+            ["aur", "query", query],
             capture_output=True,
             text=True,
             timeout=30,
@@ -160,15 +170,15 @@ class TestComplexityAssessment:
             f"Expected: Query with 4 questions should trigger MEDIUM or COMPLEX"
         )
 
-    def test_1_5_2_dry_run_shows_complexity_assessment(self, clean_aurora_home: Path) -> None:
-        """Test 1.5.2: Run `aur query --dry-run` to see complexity assessment.
+    def test_1_5_2_query_shows_complexity_assessment(self, clean_aurora_home: Path) -> None:
+        """Test 1.5.2: Run `aur query` to see complexity assessment.
 
-        Verifies --dry-run shows assessment details.
+        Verifies Phase 1 output shows assessment details.
         """
         query = "explain SOAR reasoning phases in Aurora"
 
         result = run_cli_command(
-            ["aur", "query", query, "--dry-run"],
+            ["aur", "query", query],
             capture_output=True,
             text=True,
             timeout=30,
@@ -182,7 +192,7 @@ class TestComplexityAssessment:
         found = [ind for ind in assessment_indicators if ind in output]
 
         assert len(found) > 0, (
-            f"--dry-run should show complexity assessment!\n"
+            f"aur query should show complexity assessment!\n"
             f"Expected indicators: {assessment_indicators}\n"
             f"Found: {found}\n"
             f"Output: {result.stdout}"
@@ -196,7 +206,7 @@ class TestComplexityAssessment:
         query = "research machine learning frameworks and compare features"
 
         result = run_cli_command(
-            ["aur", "query", query, "--dry-run"],
+            ["aur", "query", query],
             capture_output=True,
             text=True,
             timeout=30,
@@ -215,9 +225,7 @@ class TestComplexityAssessment:
     def test_1_5_4_complexity_not_always_simple(self, clean_aurora_home: Path) -> None:
         """Test 1.5.4: Assert complexity is MEDIUM or COMPLEX (not SIMPLE).
 
-        For queries that are clearly complex.
-
-        EXPECTED TO FAIL: All queries assessed as SIMPLE (Issue #6).
+        For queries that are clearly complex. Tests word-based assessment.
         """
         # Various complex queries
         complex_queries = [
@@ -230,7 +238,7 @@ class TestComplexityAssessment:
         results = []
         for query in complex_queries:
             result = run_cli_command(
-                ["aur", "query", query, "--dry-run"],
+                ["aur", "query", query],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -244,7 +252,7 @@ class TestComplexityAssessment:
         non_simple = [r for r in results if r[1]["complexity"] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            "Complex queries should not all be SIMPLE (Issue #6)!\n"
+            "Complex queries should not all be SIMPLE!\n"
             + "\n".join(f"  - {q[:50]}... → {a['complexity']}" for q, a in results)
             + f"\n\nAt least 2 should be MEDIUM/COMPLEX, got {len(non_simple)}"
         )
@@ -257,7 +265,7 @@ class TestComplexityAssessment:
         query = "research SOAR cognitive architecture and compare with ACT-R"
 
         result = run_cli_command(
-            ["aur", "query", query, "--dry-run"],
+            ["aur", "query", query],
             capture_output=True,
             text=True,
             timeout=30,
@@ -281,7 +289,7 @@ class TestComplexityAssessment:
     def test_1_5_6_domain_specific_queries_soar(self, clean_aurora_home: Path) -> None:
         """Test 1.5.6: Test domain-specific queries (SOAR, ACT-R, agentic AI).
 
-        EXPECTED TO FAIL: Domain terms not in keyword list (Issue #6).
+        Tests that domain terminology affects complexity assessment.
         """
         domain_queries = [
             "explain SOAR reasoning phases",
@@ -293,7 +301,7 @@ class TestComplexityAssessment:
         results = []
         for query in domain_queries:
             result = run_cli_command(
-                ["aur", "query", query, "--dry-run"],
+                ["aur", "query", query],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -307,7 +315,7 @@ class TestComplexityAssessment:
         non_simple = [r for r in results if r[1]["complexity"] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            "Domain-specific queries should be MEDIUM/COMPLEX (Issue #6)!\n"
+            "Domain-specific queries should be MEDIUM/COMPLEX!\n"
             + "\n".join(f"  - {q[:50]}... → {a['complexity']}" for q, a in results)
             + "\n\nDomain terms (SOAR, ACT-R, agentic, Aurora) should trigger MEDIUM"
         )
@@ -315,14 +323,12 @@ class TestComplexityAssessment:
     def test_1_5_7_domain_queries_classified_correctly(self, clean_aurora_home: Path) -> None:
         """Test 1.5.7: Verify domain queries classified as MEDIUM/COMPLEX.
 
-        Specifically tests Aurora-related terminology.
-
-        EXPECTED TO FAIL: Domain keywords missing from assess.py (Issue #6).
+        Specifically tests Aurora-related terminology using word-based assessment.
         """
         query = "how does Aurora's hybrid retrieval combine activation and semantic scoring?"
 
         result = run_cli_command(
-            ["aur", "query", query, "--dry-run"],
+            ["aur", "query", query],
             capture_output=True,
             text=True,
             timeout=30,
@@ -334,7 +340,7 @@ class TestComplexityAssessment:
         # Query has domain terms: Aurora, hybrid, retrieval, activation, semantic
         # Should be MEDIUM at minimum
         assert assessment["complexity"] in ["MEDIUM", "COMPLEX"], (
-            f"Domain query should be MEDIUM/COMPLEX (Issue #6)!\n"
+            f"Domain query should be MEDIUM/COMPLEX!\n"
             f"Query: {query}\n"
             f"Assessed as: {assessment['complexity']}\n"
             f"Domain terms present: Aurora, hybrid, retrieval, activation, semantic\n"
@@ -355,7 +361,7 @@ class TestComplexityAssessment:
         results = []
         for query in simple_queries:
             result = run_cli_command(
-                ["aur", "query", query, "--dry-run"],
+                ["aur", "query", query],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -375,17 +381,11 @@ class TestComplexityAssessment:
         )
 
     def test_1_5_9_comprehensive_complexity_assessment_check(self, clean_aurora_home: Path) -> None:
-        """Test 1.5.9: Expected - Test FAILS because complexity always SIMPLE (Issue #6).
+        """Test 1.5.9: Comprehensive complexity assessment check.
 
-        Comprehensive test documenting Issue #6.
+        Tests word-based complexity assessment across various query types.
 
-        Current broken behavior:
-        - All queries classified as SIMPLE
-        - Domain keywords not in assessment (SOAR, ACT-R, agentic, Aurora)
-        - Multi-question detection missing (doesn't count ?)
-        - Confidence scores too low
-
-        Expected behavior after fix:
+        Expected behavior:
         - Domain queries → MEDIUM
         - Multi-part queries (2+ ?) → COMPLEX
         - Research/analyze/compare → MEDIUM
@@ -411,7 +411,7 @@ class TestComplexityAssessment:
         failures = []
         for query, expected_min, reason in test_cases:
             result = run_cli_command(
-                ["aur", "query", query, "--dry-run"],
+                ["aur", "query", query],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -435,17 +435,15 @@ class TestComplexityAssessment:
 
         if failures:
             pytest.fail(
-                f"ISSUE #6 CONFIRMED: Complexity assessment broken!\n\n"
+                f"Complexity assessment failed some test cases!\n\n"
                 f"Failed {len(failures)}/{len(test_cases)} test cases:\n\n"
                 + "\n\n".join(failures)
                 + "\n\n"
-                "Root causes:\n"
-                "1. Missing domain keywords in assess.py:\n"
-                "   - MEDIUM_KEYWORDS needs: soar, actr, activation, retrieval,\n"
-                "     reasoning, agentic, marketplace, aurora\n"
-                "2. No multi-question detection (should count '?')\n"
-                "3. Missing scope keywords: research, analyze, compare\n\n"
-                "Fix location: packages/soar/src/aurora_soar/phases/assess.py"
+                "Potential improvements:\n"
+                "1. Add more domain keywords if needed\n"
+                "2. Tune multi-question detection\n"
+                "3. Adjust scope keyword weights\n\n"
+                "Implementation: packages/soar/src/aurora_soar/phases/assess.py"
             )
 
 
@@ -455,7 +453,7 @@ class TestComplexityAssessmentEdgeCases:
     def test_multiple_questions_boost_complexity(self, clean_aurora_home: Path) -> None:
         """Queries with 2+ question marks should be boosted to MEDIUM/COMPLEX.
 
-        EXPECTED TO FAIL: Multi-question detection not implemented (Issue #6).
+        Tests multi-question detection in word-based complexity assessment.
         """
         # Same base query, but with different question counts
         base = "explain SOAR reasoning"
@@ -466,7 +464,7 @@ class TestComplexityAssessmentEdgeCases:
         results = []
         for query, q_count in [(single_q, 1), (double_q, 2), (triple_q, 3)]:
             result = run_cli_command(
-                ["aur", "query", query, "--dry-run"],
+                ["aur", "query", query],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -481,7 +479,7 @@ class TestComplexityAssessmentEdgeCases:
         triple_q_complexity = results[2][1]
 
         assert triple_q_complexity in ["MEDIUM", "COMPLEX"], (
-            f"Query with 3 questions should be MEDIUM/COMPLEX (Issue #6)!\n"
+            f"Query with 3 questions should be MEDIUM/COMPLEX!\n"
             f"Results:\n"
             f"  1 question: {results[0][1]}\n"
             f"  2 questions: {results[1][1]}\n"
@@ -492,7 +490,7 @@ class TestComplexityAssessmentEdgeCases:
     def test_scope_keywords_trigger_medium(self, clean_aurora_home: Path) -> None:
         """Queries with scope keywords (research, analyze, compare) should be MEDIUM.
 
-        EXPECTED TO FAIL: Scope keywords missing from assess.py (Issue #6).
+        Tests scope keyword detection in word-based complexity assessment.
         """
         scope_queries = [
             "research machine learning frameworks",
@@ -504,7 +502,7 @@ class TestComplexityAssessmentEdgeCases:
         results = []
         for query in scope_queries:
             result = run_cli_command(
-                ["aur", "query", query, "--dry-run"],
+                ["aur", "query", query],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -518,7 +516,7 @@ class TestComplexityAssessmentEdgeCases:
         non_simple = [r for r in results if r[1] in ["MEDIUM", "COMPLEX"]]
 
         assert len(non_simple) >= 2, (
-            "Scope keywords should trigger MEDIUM (Issue #6)!\n"
+            "Scope keywords should trigger MEDIUM!\n"
             + "\n".join(f"  - {q[:50]}... → {c}" for q, c in results)
             + "\n\nKeywords: research, analyze, compare, design should trigger MEDIUM"
         )

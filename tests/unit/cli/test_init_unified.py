@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+
 from aurora_cli.commands.init import run_step_1_planning_setup
 
 
@@ -194,8 +195,10 @@ class TestStep1PlanningSetup:
                     result = run_step_1_planning_setup(tmp_path)
 
                     # Should print error message
-                    assert any("failed" in str(call).lower() or "error" in str(call).lower()
-                               for call in mock_console.print.call_args_list)
+                    assert any(
+                        "failed" in str(call).lower() or "error" in str(call).lower()
+                        for call in mock_console.print.call_args_list
+                    )
 
                     # Should still create directories
                     assert (tmp_path / ".aurora" / "plans" / "active").exists()
@@ -231,8 +234,10 @@ class TestStep1PlanningSetup:
             run_step_1_planning_setup(tmp_path)
 
             # Should print success message
-            assert any("created" in str(call).lower() or "detected" in str(call).lower()
-                       for call in mock_console.print.call_args_list)
+            assert any(
+                "created" in str(call).lower() or "detected" in str(call).lower()
+                for call in mock_console.print.call_args_list
+            )
 
 
 class TestStep2MemoryIndexing:
@@ -250,10 +255,9 @@ class TestStep2MemoryIndexing:
 
                 # Mock index_path to return stats
                 from aurora_cli.memory_manager import IndexStats
+
                 mock_instance.index_path.return_value = IndexStats(
-                    files_indexed=5,
-                    chunks_created=20,
-                    duration_seconds=1.5
+                    files_indexed=5, chunks_created=20, duration_seconds=1.5
                 )
 
                 run_step_2_memory_indexing(tmp_path)
@@ -305,10 +309,9 @@ class TestStep2MemoryIndexing:
                     mock_manager.return_value = mock_instance
 
                     from aurora_cli.memory_manager import IndexStats
+
                     mock_instance.index_path.return_value = IndexStats(
-                        files_indexed=1,
-                        chunks_created=5,
-                        duration_seconds=0.5
+                        files_indexed=1, chunks_created=5, duration_seconds=0.5
                     )
 
                     run_step_2_memory_indexing(tmp_path)
@@ -377,10 +380,9 @@ class TestStep2MemoryIndexing:
                 mock_manager.return_value = mock_instance
 
                 from aurora_cli.memory_manager import IndexStats
+
                 mock_instance.index_path.return_value = IndexStats(
-                    files_indexed=10,
-                    chunks_created=50,
-                    duration_seconds=2.0
+                    files_indexed=10, chunks_created=50, duration_seconds=2.0
                 )
 
                 with patch("rich.progress.Progress") as mock_progress:
@@ -405,11 +407,8 @@ class TestStep2MemoryIndexing:
                 mock_manager.return_value = mock_instance
 
                 from aurora_cli.memory_manager import IndexStats
-                stats = IndexStats(
-                    files_indexed=15,
-                    chunks_created=75,
-                    duration_seconds=3.5
-                )
+
+                stats = IndexStats(files_indexed=15, chunks_created=75, duration_seconds=3.5)
                 mock_instance.index_path.return_value = stats
 
                 with patch("aurora_cli.commands.init.console") as mock_console:
@@ -433,10 +432,9 @@ class TestStep2MemoryIndexing:
                 mock_manager.return_value = mock_instance
 
                 from aurora_cli.memory_manager import IndexStats
+
                 mock_instance.index_path.return_value = IndexStats(
-                    files_indexed=1,
-                    chunks_created=5,
-                    duration_seconds=0.5
+                    files_indexed=1, chunks_created=5, duration_seconds=0.5
                 )
 
                 with patch("click.confirm") as mock_confirm:
@@ -456,9 +454,19 @@ class TestStep3ToolConfiguration:
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
         # Mock the detection and configuration functions (patch where they're imported)
-        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}) as mock_detect:
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+        with patch(
+            "aurora_cli.commands.init.detect_configured_tools", return_value={}
+        ) as mock_detect:
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=[],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=([], []),
+                ):
                     run_step_3_tool_configuration(tmp_path)
 
                     # Should call detect_configured_tools
@@ -477,9 +485,19 @@ class TestStep3ToolConfiguration:
             "opencode": False,
         }
 
-        with patch("aurora_cli.commands.init.detect_configured_tools", return_value=configured_tools):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+        with patch(
+            "aurora_cli.commands.init.detect_configured_tools", return_value=configured_tools
+        ):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=[],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=([], []),
+                ):
                     run_step_3_tool_configuration(tmp_path)
 
     def test_run_step_3_calls_prompt_tool_selection(self, tmp_path):
@@ -489,8 +507,16 @@ class TestStep3ToolConfiguration:
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude"]) as mock_prompt:
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Claude Code"], [])):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=["claude"],
+            ) as mock_prompt:
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=(["Claude Code"], []),
+                ):
                     run_step_3_tool_configuration(tmp_path)
 
                     # Should call prompt_tool_selection with detected tools
@@ -507,10 +533,25 @@ class TestStep3ToolConfiguration:
         selected_tools = ["claude", "cursor"]
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=selected_tools):
-                with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=(["Claude", "Cursor"], [])) as mock_configure:
-                    with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude", "cursor"]):
-                        with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=selected_tools,
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_slash_commands",
+                    new_callable=AsyncMock,
+                    return_value=(["Claude", "Cursor"], []),
+                ) as mock_configure:
+                    with patch(
+                        "aurora_cli.commands.init.get_mcp_capable_from_selection",
+                        return_value=["claude", "cursor"],
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.configure_mcp_servers",
+                            new_callable=AsyncMock,
+                            return_value=([], [], [], []),
+                        ):
                             run_step_3_tool_configuration(tmp_path)
 
                             # Should call configure_slash_commands with project_path and selected tools
@@ -526,11 +567,30 @@ class TestStep3ToolConfiguration:
         slash_updated = ["Gemini"]
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "cursor", "gemini"]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
-                    with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=(slash_created, slash_updated)):
-                        with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude", "cursor"]):
-                            with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=["claude", "cursor", "gemini"],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=([], []),
+                ):
+                    with patch(
+                        "aurora_cli.commands.init.configure_slash_commands",
+                        new_callable=AsyncMock,
+                        return_value=(slash_created, slash_updated),
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.get_mcp_capable_from_selection",
+                            return_value=["claude", "cursor"],
+                        ):
+                            with patch(
+                                "aurora_cli.commands.init.configure_mcp_servers",
+                                new_callable=AsyncMock,
+                                return_value=([], [], [], []),
+                            ):
                                 result = run_step_3_tool_configuration(tmp_path)
 
                                 # Should return merged results (order may vary due to set deduplication)
@@ -545,12 +605,34 @@ class TestStep3ToolConfiguration:
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
         # Simulate: claude already exists, cursor is new
-        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True, "cursor": False}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude", "cursor"]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
-                    with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=(["Cursor"], ["Claude"])):
-                        with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude", "cursor"]):
-                            with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+        with patch(
+            "aurora_cli.commands.init.detect_configured_tools",
+            return_value={"claude": True, "cursor": False},
+        ):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=["claude", "cursor"],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=([], []),
+                ):
+                    with patch(
+                        "aurora_cli.commands.init.configure_slash_commands",
+                        new_callable=AsyncMock,
+                        return_value=(["Cursor"], ["Claude"]),
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.get_mcp_capable_from_selection",
+                            return_value=["claude", "cursor"],
+                        ):
+                            with patch(
+                                "aurora_cli.commands.init.configure_mcp_servers",
+                                new_callable=AsyncMock,
+                                return_value=([], [], [], []),
+                            ):
                                 created, updated = run_step_3_tool_configuration(tmp_path)
 
                                 # Should track separately
@@ -564,8 +646,16 @@ class TestStep3ToolConfiguration:
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude"]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=(["Claude Code"], [])):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=["claude"],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=(["Claude Code"], []),
+                ):
                     with patch("aurora_cli.commands.init.console") as mock_console:
                         run_step_3_tool_configuration(tmp_path)
 
@@ -574,7 +664,10 @@ class TestStep3ToolConfiguration:
                         combined = " ".join(print_calls)
 
                         # Should mention tools/configuration
-                        assert any("tool" in call.lower() or "config" in call.lower() for call in print_calls)
+                        assert any(
+                            "tool" in call.lower() or "config" in call.lower()
+                            for call in print_calls
+                        )
 
     def test_run_step_3_handles_no_tools_selected(self, tmp_path):
         """run_step_3_tool_configuration() should handle case when user selects no tools."""
@@ -583,8 +676,16 @@ class TestStep3ToolConfiguration:
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=[],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=([], []),
+                ):
                     created, updated = run_step_3_tool_configuration(tmp_path)
 
                     # Should return empty lists
@@ -599,11 +700,28 @@ class TestStep3ToolConfiguration:
 
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
-        with patch("aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=["claude"]):
-                with patch("aurora_cli.commands.init.configure_slash_commands", new_callable=AsyncMock, return_value=([], ["Claude"])) as mock_configure:
-                    with patch("aurora_cli.commands.init.get_mcp_capable_from_selection", return_value=["claude"]):
-                        with patch("aurora_cli.commands.init.configure_mcp_servers", new_callable=AsyncMock, return_value=([], [], [])):
+        with patch(
+            "aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True}
+        ):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=["claude"],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_slash_commands",
+                    new_callable=AsyncMock,
+                    return_value=([], ["Claude"]),
+                ) as mock_configure:
+                    with patch(
+                        "aurora_cli.commands.init.get_mcp_capable_from_selection",
+                        return_value=["claude"],
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.configure_mcp_servers",
+                            new_callable=AsyncMock,
+                            return_value=([], [], [], []),
+                        ):
                             run_step_3_tool_configuration(tmp_path)
 
                             # Should call configure_slash_commands (which handles marker preservation)
@@ -616,8 +734,16 @@ class TestStep3ToolConfiguration:
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
         with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
-            with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock, return_value=[]):
-                with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
+            with patch(
+                "aurora_cli.commands.init.prompt_tool_selection",
+                new_callable=AsyncMock,
+                return_value=[],
+            ):
+                with patch(
+                    "aurora_cli.commands.init.configure_tools",
+                    new_callable=AsyncMock,
+                    return_value=([], []),
+                ):
                     with patch("aurora_cli.commands.init.console") as mock_console:
                         run_step_3_tool_configuration(tmp_path)
 
@@ -634,8 +760,9 @@ class TestInitCommandMain:
         """init_command() with --config flag should run Step 3 only."""
         from unittest.mock import AsyncMock
 
-        from aurora_cli.commands.init import init_command
         from click.testing import CliRunner
+
+        from aurora_cli.commands.init import init_command
 
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
@@ -645,7 +772,10 @@ class TestInitCommandMain:
 
             with patch("aurora_cli.commands.init.run_step_1_planning_setup") as mock_step1:
                 with patch("aurora_cli.commands.init.run_step_2_memory_indexing") as mock_step2:
-                    with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])) as mock_step3:
+                    with patch(
+                        "aurora_cli.commands.init.run_step_3_tool_configuration",
+                        return_value=([], []),
+                    ) as mock_step3:
                         result = runner.invoke(init_command, ["--config"])
 
                         # Should NOT call Step 1 or Step 2
@@ -660,8 +790,9 @@ class TestInitCommandMain:
 
     def test_init_command_config_flag_errors_without_aurora_dir(self, tmp_path):
         """init_command() with --config flag should error if .aurora doesn't exist."""
-        from aurora_cli.commands.init import init_command
         from click.testing import CliRunner
+
+        from aurora_cli.commands.init import init_command
 
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
@@ -676,15 +807,25 @@ class TestInitCommandMain:
         """init_command() should call all 3 steps in order for full initialization."""
         from unittest.mock import AsyncMock
 
-        from aurora_cli.commands.init import init_command
         from click.testing import CliRunner
+
+        from aurora_cli.commands.init import init_command
 
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
-                with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True) as mock_step1:
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True) as mock_step2:
-                        with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])) as mock_step3:
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
+                with patch(
+                    "aurora_cli.commands.init.run_step_1_planning_setup", return_value=True
+                ) as mock_step1:
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ) as mock_step2:
+                        with patch(
+                            "aurora_cli.commands.init.run_step_3_tool_configuration",
+                            return_value=([], []),
+                        ) as mock_step3:
                             result = runner.invoke(init_command, [])
 
                             # Should call all 3 steps in order
@@ -699,34 +840,53 @@ class TestInitCommandMain:
         """init_command() should display success summary after completion."""
         from unittest.mock import AsyncMock
 
-        from aurora_cli.commands.init import init_command
         from click.testing import CliRunner
+
+        from aurora_cli.commands.init import init_command
 
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                        with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=(["Claude Code"], [])):
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.run_step_3_tool_configuration",
+                            return_value=(["Claude Code"], []),
+                        ):
                             result = runner.invoke(init_command, [])
 
                             # Should show success message
-                            assert "success" in result.output.lower() or "complete" in result.output.lower()
+                            assert (
+                                "success" in result.output.lower()
+                                or "complete" in result.output.lower()
+                            )
                             assert result.exit_code == 0
 
     def test_init_command_shows_step_numbering(self, tmp_path):
         """init_command() should display step numbers (1/3, 2/3, 3/3)."""
         from unittest.mock import AsyncMock
 
-        from aurora_cli.commands.init import init_command
         from click.testing import CliRunner
+
+        from aurora_cli.commands.init import init_command
 
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                        with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])):
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.run_step_3_tool_configuration",
+                            return_value=([], []),
+                        ):
                             result = runner.invoke(init_command, [])
 
                             # Step numbering is in the step functions, but verify they're called
@@ -735,8 +895,9 @@ class TestInitCommandMain:
 
     def test_init_command_detects_existing_setup(self, tmp_path):
         """init_command() should detect when .aurora already exists and prompt for re-run."""
-        from aurora_cli.commands.init import init_command
         from click.testing import CliRunner
+
+        from aurora_cli.commands.init import init_command
 
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
@@ -746,28 +907,43 @@ class TestInitCommandMain:
 
             # Mock the re-run behavior to return "exit" (user chooses to exit)
             with patch("aurora_cli.commands.init_helpers.show_status_summary"):
-                with patch("aurora_cli.commands.init_helpers.prompt_rerun_options", return_value="exit"):
+                with patch(
+                    "aurora_cli.commands.init_helpers.prompt_rerun_options", return_value="exit"
+                ):
                     result = runner.invoke(init_command, [])
 
                     # Should show status summary and exit cleanly when user chooses exit
-                    assert "already initialized" in result.output.lower() or "exiting" in result.output.lower()
+                    assert (
+                        "already initialized" in result.output.lower()
+                        or "exiting" in result.output.lower()
+                    )
                     assert result.exit_code == 0
 
     def test_init_command_displays_welcome_banner(self, tmp_path):
         """init_command() should display welcome banner on first run."""
-        from aurora_cli.commands.init import init_command
         from click.testing import CliRunner
+
+        from aurora_cli.commands.init import init_command
 
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                        with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])):
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.run_step_3_tool_configuration",
+                            return_value=([], []),
+                        ):
                             result = runner.invoke(init_command, [])
 
                             # Should show welcome banner
-                            assert "aurora" in result.output.lower() or "init" in result.output.lower()
+                            assert (
+                                "aurora" in result.output.lower() or "init" in result.output.lower()
+                            )
 
     def test_init_command_handles_error_decorator(self, tmp_path):
         """init_command() should have @handle_errors decorator for error handling."""
@@ -793,10 +969,12 @@ class TestShowStatusSummary:
 
         # Create memory.db with some data
         import sqlite3
+
         db_path = aurora_dir / "memory.db"
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE chunks (
                 chunk_id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
@@ -806,13 +984,16 @@ class TestShowStatusSummary:
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """)
-        cursor.execute("""
+        """
+        )
+        cursor.execute(
+            """
             INSERT INTO chunks VALUES
             ('chunk1', 'content1', 'file1.py', 1, 10, '{}', 1.0),
             ('chunk2', 'content2', 'file2.py', 1, 20, '{}', 2.0),
             ('chunk3', 'content3', 'file3.py', 1, 30, '{}', 3.0)
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 
@@ -856,7 +1037,9 @@ class TestShowStatusSummary:
             # Should show Step 1 complete
             assert "✓" in output or "✔" in output or "step" in output.lower()
             # Should indicate Step 2 not complete
-            assert "not" in output.lower() or "missing" in output.lower() or "skip" in output.lower()
+            assert (
+                "not" in output.lower() or "missing" in output.lower() or "skip" in output.lower()
+            )
 
     def test_show_status_summary_counts_chunks_from_memory_db(self, tmp_path):
         """show_status_summary() should query memory.db and display chunk count."""
@@ -867,10 +1050,12 @@ class TestShowStatusSummary:
         aurora_dir.mkdir()
 
         import sqlite3
+
         db_path = aurora_dir / "memory.db"
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE chunks (
                 chunk_id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
@@ -880,11 +1065,12 @@ class TestShowStatusSummary:
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """)
+        """
+        )
         for i in range(42):
             cursor.execute(
                 "INSERT INTO chunks VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (f"chunk{i}", f"content{i}", f"file{i}.py", 1, 10, "{}", float(i))
+                (f"chunk{i}", f"content{i}", f"file{i}.py", 1, 10, "{}", float(i)),
             )
         conn.commit()
         conn.close()
@@ -947,7 +1133,6 @@ class TestShowStatusSummary:
         from aurora_cli.commands.init_helpers import show_status_summary
 
         # Don't create .aurora directory
-
         # Call function - should not raise exception
         with patch("aurora_cli.commands.init_helpers.console") as mock_console:
             show_status_summary(tmp_path)
@@ -956,7 +1141,11 @@ class TestShowStatusSummary:
             output_calls = [str(call) for call in mock_console.print.call_args_list]
             output = " ".join(output_calls)
 
-            assert "not" in output.lower() or "missing" in output.lower() or "initialize" in output.lower()
+            assert (
+                "not" in output.lower()
+                or "missing" in output.lower()
+                or "initialize" in output.lower()
+            )
 
 
 class TestPromptRerunOptions:
@@ -1096,7 +1285,11 @@ class TestSelectiveStepSelection:
                 assert mock_console.print.called
                 output_calls = [str(call) for call in mock_console.print.call_args_list]
                 output = " ".join(output_calls)
-                assert "no" in output.lower() or "warning" in output.lower() or "nothing" in output.lower()
+                assert (
+                    "no" in output.lower()
+                    or "warning" in output.lower()
+                    or "nothing" in output.lower()
+                )
 
 
 class TestRerunSafety:
@@ -1132,7 +1325,8 @@ class TestRerunSafety:
 
         # Create tool config with custom content outside markers
         config_file = tmp_path / "CLAUDE.md"
-        config_file.write_text("""# My Custom Header
+        config_file.write_text(
+            """# My Custom Header
 
 Some custom content here.
 
@@ -1141,7 +1335,8 @@ Original Aurora content
 <!-- AURORA:END -->
 
 More custom content below.
-""")
+"""
+        )
 
         # Run configure_tools - should update markers but preserve custom content
         # Note: We need to mock the configurator behavior
@@ -1158,9 +1353,11 @@ More custom content below.
         memory_db = aurora_dir / "memory.db"
 
         import sqlite3
+
         conn = sqlite3.connect(str(memory_db))
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE chunks (
                 chunk_id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
@@ -1170,8 +1367,11 @@ More custom content below.
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """)
-        cursor.execute("INSERT INTO chunks VALUES ('test1', 'content1', 'file1.py', 1, 10, '{}', 1.0)")
+        """
+        )
+        cursor.execute(
+            "INSERT INTO chunks VALUES ('test1', 'content1', 'file1.py', 1, 10, '{}', 1.0)"
+        )
         conn.commit()
         conn.close()
 

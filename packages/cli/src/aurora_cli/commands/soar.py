@@ -255,9 +255,29 @@ def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> Non
         aur soar "Explain ACT-R memory" --tool cursor
         aur soar "State of AI?" --model opus --verbose
     """
-    # Resolve tool from CLI flag -> env var -> default
+    # Load config for defaults
+    from aurora_cli.config import load_config
+
+    try:
+        cli_config = load_config()
+    except Exception:
+        # If config loading fails, use hardcoded defaults
+        cli_config = None
+
+    # Resolve tool from CLI flag -> env var -> config -> default
     if tool is None:
-        tool = os.environ.get("AURORA_SOAR_TOOL", "claude")
+        tool = os.environ.get(
+            "AURORA_SOAR_TOOL",
+            cli_config.soar_default_tool if cli_config else "claude",
+        )
+
+    # Resolve model from CLI flag -> env var -> config -> default
+    if model == "sonnet":  # Check if it's the Click default
+        env_model = os.environ.get("AURORA_SOAR_MODEL")
+        if env_model and env_model.lower() in ("sonnet", "opus"):
+            model = env_model.lower()
+        elif cli_config and cli_config.soar_default_model:
+            model = cli_config.soar_default_model
 
     # Validate tool exists in PATH
     if not shutil.which(tool):

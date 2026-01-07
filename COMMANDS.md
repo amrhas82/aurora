@@ -207,16 +207,28 @@ aur soar "explain flow" --verbose
 - `-v, --verbose` - Show verbose output
 
 **Setting a default tool:**
-```bash
-# Set default tool via environment variable
-export AURORA_SOAR_TOOL=cursor
 
-# Now all soar commands use cursor by default
-aur soar "my query"  # uses cursor
-
-# CLI flag still overrides env var
-aur soar "my query" --tool claude  # uses claude
+Option 1: Via config file (`~/.aurora/config.json` or `.aurora/config.json`):
+```json
+{
+  "soar": {
+    "default_tool": "cursor",
+    "default_model": "opus"
+  }
+}
 ```
+
+Option 2: Via environment variable:
+```bash
+export AURORA_SOAR_TOOL=cursor
+export AURORA_SOAR_MODEL=opus
+```
+
+**Precedence (highest to lowest):**
+1. CLI flag (`--tool`, `--model`)
+2. Environment variable (`AURORA_SOAR_TOOL`, `AURORA_SOAR_MODEL`)
+3. Config file (`soar.default_tool`, `soar.default_model`)
+4. Default (`claude`, `sonnet`)
 
 **Supported tools:** Any CLI tool that accepts piped input (claude, cursor, etc.)
 

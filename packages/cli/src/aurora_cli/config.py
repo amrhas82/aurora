@@ -94,6 +94,9 @@ class Config:
     planning_template_dir: str | None = None  # None = use package default
     planning_auto_increment: bool = True
     planning_archive_on_complete: bool = False
+    # SOAR configuration
+    soar_default_tool: str = "claude"  # Default CLI tool for aur soar
+    soar_default_model: str = "sonnet"  # Default model (sonnet or opus)
 
     def get_db_path(self) -> str:
         """Get expanded absolute database path.
@@ -356,6 +359,10 @@ CONFIG_SCHEMA: dict[str, Any] = {
         "auto_increment": True,
         "archive_on_complete": False,
     },
+    "soar": {
+        "default_tool": "claude",  # CLI tool for aur soar (claude, cursor, etc.)
+        "default_model": "sonnet",  # Model to use (sonnet or opus)
+    },
 }
 
 
@@ -529,6 +536,13 @@ def load_config(path: str | None = None) -> Config:
         "planning_archive_on_complete": config_data.get("planning", {}).get(
             "archive_on_complete", defaults["planning"]["archive_on_complete"]
         ),
+        # SOAR configuration
+        "soar_default_tool": config_data.get("soar", {}).get(
+            "default_tool", defaults["soar"]["default_tool"]
+        ),
+        "soar_default_model": config_data.get("soar", {}).get(
+            "default_model", defaults["soar"]["default_model"]
+        ),
     }
 
     # Apply environment variable overrides
@@ -573,6 +587,19 @@ def load_config(path: str | None = None) -> Config:
         else:
             raise ConfigurationError(
                 f"AURORA_PLANNING_ARCHIVE_ON_COMPLETE must be true/false, got '{os.environ['AURORA_PLANNING_ARCHIVE_ON_COMPLETE']}'"
+            )
+
+    # Apply SOAR environment variable overrides
+    if "AURORA_SOAR_TOOL" in os.environ:
+        flat_config["soar_default_tool"] = os.environ["AURORA_SOAR_TOOL"]
+
+    if "AURORA_SOAR_MODEL" in os.environ:
+        val = os.environ["AURORA_SOAR_MODEL"].lower()
+        if val in ("sonnet", "opus"):
+            flat_config["soar_default_model"] = val
+        else:
+            raise ConfigurationError(
+                f"AURORA_SOAR_MODEL must be 'sonnet' or 'opus', got '{os.environ['AURORA_SOAR_MODEL']}'"
             )
 
     # Create Config instance
@@ -652,6 +679,10 @@ def save_config(config: Config, path: str | None = None) -> None:
             "template_dir": config.planning_template_dir,
             "auto_increment": config.planning_auto_increment,
             "archive_on_complete": config.planning_archive_on_complete,
+        },
+        "soar": {
+            "default_tool": config.soar_default_tool,
+            "default_model": config.soar_default_model,
         },
     }
 

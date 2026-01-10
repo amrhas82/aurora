@@ -17,9 +17,10 @@
 - `/home/hamr/PycharmProjects/aurora/packages/spawner/tests/test_spawner.py` - Added 7 tests for retry/fallback logic, 3 tests for spawn_parallel progress
 - `/home/hamr/PycharmProjects/aurora/packages/spawner/tests/test_models.py` - Added 3 tests for new SpawnResult fields
 
-### Phase 2: Verify Phase
-- `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/verify.py` - Replace with verify_lite (~100 lines)
-- `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/` - TDD tests for verify_lite (no test_verify.py exists currently)
+### Phase 2: Verify Phase (COMPLETED)
+- `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/verify.py` - Added verify_lite function with validation + agent assignment (~80 lines)
+- `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_verify_lite.py` - Added 8 tests for verify_lite function
+- Old verify_decomposition function kept temporarily with DEPRECATED comment
 
 ### Phase 3: Collect Phase
 - `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/collect.py` - Add streaming, new timeout, use retry logic
@@ -133,8 +134,8 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Command: `cd /home/hamr/PycharmProjects/aurora/packages/spawner && pytest tests/test_spawner.py -k "retry" -v`
     - Verify all retry tests pass
 
-- [ ] **2.0 Phase 2: Verify Lite Implementation**
-  - [ ] 2.1 Write TDD tests for verify_lite function
+- [x] **2.0 Phase 2: Verify Lite Implementation**
+  - [x] 2.1 Write TDD tests for verify_lite function
     - Create test file: `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_verify_lite.py`
     - Create test class `TestVerifyLite`
     - Write test: `test_valid_decomposition_passes` - all agents exist, no circular deps
@@ -146,14 +147,14 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Write test: `test_issues_list_returned` - verify issues contain helpful messages
     - Write test: `test_at_least_one_subgoal_required` - zero subgoals fails
     - All tests should FAIL initially (RED phase)
-  - [ ] 2.2 Implement verify_lite function skeleton
+  - [x] 2.2 Implement verify_lite function skeleton
     - Open `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/verify.py`
     - Add new function `verify_lite()` with signature from PRD
     - Add docstring with checks listed: agents exist, no circular deps, at least one subgoal, valid structure
     - Return tuple: (bool, list[tuple[int, AgentInfo]], list[str])
     - Initialize empty lists for agent_assignments and issues
     - Return (False, [], ["Not implemented"]) to fail tests initially
-  - [ ] 2.3 Implement verify_lite validation checks
+  - [x] 2.3 Implement verify_lite validation checks
     - Check 1: Validate decomposition has "subgoals" key
     - Check 2: Validate at least one subgoal exists
     - Check 3: For each subgoal, validate required fields (description, agent_id)
@@ -162,25 +163,25 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Check 5: Detect circular dependencies in subgoal dependencies
     - If any checks fail, return (False, [], issues)
     - Run tests - should start passing (GREEN phase)
-  - [ ] 2.4 Implement verify_lite agent assignment logic (from route.py)
+  - [x] 2.4 Implement verify_lite agent assignment logic (from route.py)
     - For each valid subgoal, create agent assignment tuple
     - Lookup AgentInfo from registry using agent_id
     - Build list of (subgoal_index, AgentInfo) tuples
     - This replaces route.py agent lookup functionality
     - Return (True, agent_assignments, []) on success
     - Run tests - all should PASS (GREEN phase)
-  - [ ] 2.5 Add helper function for circular dependency detection
+  - [x] 2.5 Add helper function for circular dependency detection
     - Extract circular dependency check into `_check_circular_deps()` helper
     - Use graph traversal (DFS or BFS) to detect cycles
     - Return list of circular dependency issues
     - Write unit tests for this helper function
     - Verify tests pass
-  - [ ] 2.6 Update verify.py exports and keep old function temporarily
+  - [x] 2.6 Update verify.py exports and keep old function temporarily
     - Add `verify_lite` to `__all__` list in verify.py
     - Keep existing `verify_decomposition()` function for comparison
     - Add comment: "# DEPRECATED: Will be removed in Phase 6"
     - Do NOT remove VerifyPhaseResult, RetrievalQuality yet (used by orchestrator)
-  - [ ] 2.7 Verify: Run verify phase tests and check new function
+  - [x] 2.7 Verify: Run verify phase tests and check new function
     - Command: `cd /home/hamr/PycharmProjects/aurora/packages/soar && pytest tests/test_phases/test_verify_lite.py -v`
     - Verify all verify_lite tests pass
     - Command: `cd /home/hamr/PycharmProjects/aurora/packages/soar && pytest tests/test_phases/test_verify.py -v`

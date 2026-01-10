@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-01-10
+
+### Fixed
+
+**Critical Dependency Fixes:**
+- Fixed `aurora-implement` package name (was incorrectly named "implement")
+- Added missing dependencies to `aurora-cli` package:
+  - `aurora-reasoning>=0.1.0`
+  - `aurora-planning>=0.1.0`
+  - `aurora-spawner>=0.1.0`
+  - `aurora-implement>=0.1.0`
+- Updated all sub-package versions to 0.6.0 for consistency
+- Fixes `ModuleNotFoundError: No module named 'aurora_spawner'` when installing from PyPI
+
+**CI/CD Fixes:**
+- Updated Makefile install targets to include all packages
+- Updated GitHub Actions workflow to install spawner, implement, and planning packages
+- Fixes 26 import errors in CI test suite
+
+**What this means for users:**
+- `pip install aurora-actr` now correctly installs all required packages
+- Sprint 4 features (`aur goals`, `aur spawn`) now work out of the box
+- No manual package installation required
+
 ## [0.6.0] - 2026-01-10
 
 ### Added - Planning Flow & Execution (PRD-0026: All 4 Sprints)

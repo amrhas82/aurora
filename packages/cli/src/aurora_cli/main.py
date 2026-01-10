@@ -73,7 +73,7 @@ def _show_first_run_welcome_if_needed() -> None:
     default=None,
     help="Run headless mode with specified prompt file (shorthand for 'aur headless <file>')",
 )
-@click.version_option(version="0.6.1")
+@click.version_option(version="0.6.2")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -> None:
     r"""AURORA: Adaptive Unified Reasoning and Orchestration Architecture.

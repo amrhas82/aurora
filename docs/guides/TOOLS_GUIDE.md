@@ -32,35 +32,35 @@ Aurora is a cognitive architecture system that combines memory, reasoning, and a
 ### Architecture Components
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Aurora Tooling Stack                     │
-├─────────────────────────────────────────────────────────────┤
-│  CLI Commands (aur)                                          │
-│    ├─ aur goals     ─┐                                       │
-│    ├─ aur soar      ─┼─ Use CLIPipeLLMClient                │
-│    ├─ aur spawn     ─┤                                       │
-│    ├─ aur mem       ─┘                                       │
-│    └─ aur agents                                             │
-├─────────────────────────────────────────────────────────────┤
-│  Core Systems                                                │
-│    ├─ Memory (ACT-R): Code indexing & retrieval             │
-│    ├─ SOAR: 9-phase reasoning pipeline                      │
-│    ├─ Spawner: Parallel agent execution                     │
-│    ├─ Planning: Goal decomposition & agent matching         │
-│    └─ Discovery: Agent capability matching                  │
-├─────────────────────────────────────────────────────────────┤
-│  Integration Layer                                           │
-│    ├─ CLIPipeLLMClient: CLI-agnostic LLM interface          │
-│    ├─ ManifestManager: Agent discovery & registration       │
-│    ├─ TaskParser: Markdown task file parsing                │
-│    └─ ConfigManager: Multi-tier configuration               │
-├─────────────────────────────────────────────────────────────┤
-│  External Tools (20+ supported)                              │
-│    ├─ claude (CLI)                                           │
-│    ├─ cursor                                                 │
-│    ├─ aider                                                  │
-│    └─ ... (any tool supporting -p flag)                     │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|                     Aurora Tooling Stack                     |
++-------------------------------------------------------------+
+|  CLI Commands (aur)                                          |
+|    +- aur goals     -+                                       |
+|    +- aur soar      -+- Use CLIPipeLLMClient                |
+|    +- aur spawn     -+                                       |
+|    +- aur mem       -+                                       |
+|    +- aur agents                                             |
++-------------------------------------------------------------+
+|  Core Systems                                                |
+|    +- Memory (ACT-R): Code indexing & retrieval             |
+|    +- SOAR: 9-phase reasoning pipeline                      |
+|    +- Spawner: Parallel agent execution                     |
+|    +- Planning: Goal decomposition & agent matching         |
+|    +- Discovery: Agent capability matching                  |
++-------------------------------------------------------------+
+|  Integration Layer                                           |
+|    +- CLIPipeLLMClient: CLI-agnostic LLM interface          |
+|    +- ManifestManager: Agent discovery & registration       |
+|    +- TaskParser: Markdown task file parsing                |
+|    +- ConfigManager: Multi-tier configuration               |
++-------------------------------------------------------------+
+|  External Tools (20+ supported)                              |
+|    +- claude (CLI)                                           |
+|    +- cursor                                                 |
+|    +- aider                                                  |
+|    +- ... (any tool supporting -p flag)                     |
++-------------------------------------------------------------+
 ```
 
 ---
@@ -84,23 +84,23 @@ Choose the right tool for your task:
 
 ```
 Task: "I have a complex question"
-  └─> Use: aur soar
+  +-> Use: aur soar
       Why: SOAR handles research, decomposition, parallel agents
 
 Task: "I want to plan a feature"
-  └─> Use: aur goals → /plan → aur implement
+  +-> Use: aur goals -> /plan -> aur implement
       Why: Planning flow provides structured approach
 
 Task: "I have a task list to execute"
-  └─> Use: aur spawn
+  +-> Use: aur spawn
       Why: Parallel execution for independent tasks
 
 Task: "I need to find code"
-  └─> Use: aur mem search
+  +-> Use: aur mem search
       Why: Semantic + keyword search of indexed code
 
 Task: "I want to understand agent capabilities"
-  └─> Use: aur agents list
+  +-> Use: aur agents list
       Why: Shows all available agents and their skills
 ```
 
@@ -114,21 +114,21 @@ Task: "I want to understand agent capabilities"
 
 **Architecture**:
 ```
-┌──────────────────────────────────────────────┐
-│           Memory System (ACT-R)              │
-├──────────────────────────────────────────────┤
-│  Indexing Pipeline:                          │
-│    1. File scanning (recursive)              │
-│    2. Chunking (semantic + structural)       │
-│    3. Embedding generation (local or API)    │
-│    4. SQLite storage (.aurora/memory.db)     │
-│                                              │
-│  Retrieval Pipeline:                         │
-│    1. Query embedding                        │
-│    2. Hybrid search (vector + keyword)       │
-│    3. Relevance scoring (0.0-1.0)            │
-│    4. Result ranking                         │
-└──────────────────────────────────────────────┘
++----------------------------------------------+
+|           Memory System (ACT-R)              |
++----------------------------------------------+
+|  Indexing Pipeline:                          |
+|    1. File scanning (recursive)              |
+|    2. Chunking (semantic + structural)       |
+|    3. Embedding generation (local or API)    |
+|    4. SQLite storage (.aurora/memory.db)     |
+|                                              |
+|  Retrieval Pipeline:                         |
+|    1. Query embedding                        |
+|    2. Hybrid search (vector + keyword)       |
+|    3. Relevance scoring (0.0-1.0)            |
+|    4. Result ranking                         |
++----------------------------------------------+
 ```
 
 **Commands**:
@@ -176,30 +176,30 @@ aur mem search "config" --threshold 0.7
 
 **The 9 Phases**:
 ```
-1. ASSESS     → Determine query complexity (SIMPLE/MEDIUM/COMPLEX/CRITICAL)
-2. RETRIEVE   → Search memory for relevant context
-3. DECOMPOSE  → Break into sub-questions (if complex)
-4. VERIFY     → Validate decomposition quality
-5. ROUTE      → Assign agents to sub-questions
-6. COLLECT    → Execute agents in parallel (spawn_parallel)
-7. SYNTHESIZE → Combine results coherently
-8. RECORD     → Store reasoning trace
-9. RESPOND    → Format final answer
+1. ASSESS     -> Determine query complexity (SIMPLE/MEDIUM/COMPLEX/CRITICAL)
+2. RETRIEVE   -> Search memory for relevant context
+3. DECOMPOSE  -> Break into sub-questions (if complex)
+4. VERIFY     -> Validate decomposition quality
+5. ROUTE      -> Assign agents to sub-questions
+6. COLLECT    -> Execute agents in parallel (spawn_parallel)
+7. SYNTHESIZE -> Combine results coherently
+8. RECORD     -> Store reasoning trace
+9. RESPOND    -> Format final answer
 ```
 
 **Complexity Routing**:
 ```python
 SIMPLE (score ≤ 11):
-  → Single-step reasoning, no spawning
+  -> Single-step reasoning, no spawning
 
 MEDIUM (score 12-28):
-  → Multi-step with subgoals, some spawning
+  -> Multi-step with subgoals, some spawning
 
 COMPLEX (score ≥ 29):
-  → Full decomposition, parallel research (spawn_parallel)
+  -> Full decomposition, parallel research (spawn_parallel)
 
 CRITICAL (score ≥ 35):
-  → High-stakes with adversarial verification
+  -> High-stakes with adversarial verification
 ```
 
 **Usage Examples**:
@@ -332,17 +332,17 @@ results = await spawn_sequential(
 **Components**:
 ```
 GoalDecomposer
-  ├─ Memory search (find relevant context)
-  ├─ LLM decomposition (via CLIPipeLLMClient)
-  ├─ AgentRecommender (keyword + LLM fallback)
-  ├─ GapDetector (missing agent capabilities)
-  └─ goals.json generator
+  +- Memory search (find relevant context)
+  +- LLM decomposition (via CLIPipeLLMClient)
+  +- AgentRecommender (keyword + LLM fallback)
+  +- GapDetector (missing agent capabilities)
+  +- goals.json generator
 
 TaskGenerator (/plan skill)
-  ├─ goals.json reader
-  ├─ PRD generator
-  ├─ tasks.md generator (with agent metadata)
-  └─ specs/ generator
+  +- goals.json reader
+  +- PRD generator
+  +- tasks.md generator (with agent metadata)
+  +- specs/ generator
 ```
 
 **AgentRecommender Algorithm**:
@@ -535,9 +535,9 @@ aur soar "Document the API" --save api-docs.md
   Quality score: 0.92 (good)
 
 [PHASE 5: ROUTE] Assigning agents...
-  Sub-Q1 → @researcher (0.85)
-  Sub-Q2 → @researcher (0.88)
-  Sub-Q3 → @researcher (0.91)
+  Sub-Q1 -> @researcher (0.85)
+  Sub-Q2 -> @researcher (0.88)
+  Sub-Q3 -> @researcher (0.91)
 
 [PHASE 6: COLLECT] Executing agents in parallel...
   Spawning 3 agents (max_concurrent=5)
@@ -779,13 +779,13 @@ cd .aurora/plans/0001-implement-user-auth/
 **Generated Files**:
 ```
 .aurora/plans/0001-implement-user-auth/
-├── goals.json              # Created by: aur goals
-├── prd.md                  # Created by: /plan
-├── tasks.md                # Created by: /plan
-└── specs/                  # Created by: /plan
-    ├── api-spec.md
-    ├── auth-flow.md
-    └── test-plan.md
++-- goals.json              # Created by: aur goals
++-- prd.md                  # Created by: /plan
++-- tasks.md                # Created by: /plan
++-- specs/                  # Created by: /plan
+    +-- api-spec.md
+    +-- auth-flow.md
+    +-- test-plan.md
 ```
 
 **tasks.md Format**:
@@ -950,15 +950,15 @@ def llm_classify(task_description, available_agents):
 **Combined Approach**:
 ```
 1. Try keyword matching
-   ├─ If score >= 0.5: Use that agent
-   └─ If score < 0.5: Continue to step 2
+   +- If score >= 0.5: Use that agent
+   +- If score < 0.5: Continue to step 2
 
 2. Try LLM classification
-   ├─ If score >= 0.5: Use that agent
-   └─ If score < 0.5: Continue to step 3
+   +- If score >= 0.5: Use that agent
+   +- If score < 0.5: Continue to step 3
 
 3. Use default fallback agent
-   └─ Return: "full-stack-dev" with low confidence
+   +- Return: "full-stack-dev" with low confidence
 ```
 
 ### Gap Detection
@@ -1117,13 +1117,13 @@ def validate_tool(tool: str) -> bool:
 User runs: aur goals "Goal text"
 
 1. Check CLI flag: --tool cursor
-   └─ If provided: use cursor
+   +- If provided: use cursor
 
 2. Check environment variable: AURORA_GOALS_TOOL=cursor
-   └─ If set: use cursor
+   +- If set: use cursor
 
 3. Check config file: goals.default_tool = "cursor"
-   └─ If set: use cursor
+   +- If set: use cursor
 
 4. Use default: "claude"
 
@@ -1823,7 +1823,7 @@ aur goals "Refactor authentication" \
 - [ ] 3. Task C
 <!-- depends: 2 -->
 
-# Diamond dependency (A → B,C → D)
+# Diamond dependency (A -> B,C -> D)
 - [ ] 1. Task A
 - [ ] 2. Task B
 <!-- depends: 1 -->

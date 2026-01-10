@@ -4,7 +4,7 @@ Complete reference for all Aurora CLI commands.
 
 ## What's New
 
-**🚀 Sprint 4 - Planning Flow (PRD-0026)**
+** Sprint 4 - Planning Flow (PRD-0026)**
 
 The modern planning workflow is now available! Use `aur goals` to decompose high-level goals into actionable subgoals with automatic agent matching.
 
@@ -16,13 +16,13 @@ cd .aurora/plans/0001-add-user-auth/
 aur spawn tasks.md                       # Execute in parallel
 
 # Key features:
-✓ CLI-agnostic execution (works with 20+ tools)
-✓ Intelligent goal decomposition using SOAR
-✓ Automatic agent matching with confidence scores
-✓ LLM fallback for complex agent selection
-✓ Gap detection for missing capabilities
-✓ Memory-aware context integration
-✓ User review flow before committing
+[OK] CLI-agnostic execution (works with 20+ tools)
+[OK] Intelligent goal decomposition using SOAR
+[OK] Automatic agent matching with confidence scores
+[OK] LLM fallback for complex agent selection
+[OK] Gap detection for missing capabilities
+[OK] Memory-aware context integration
+[OK] User review flow before committing
 ```
 
 **Quick comparison:**
@@ -44,14 +44,14 @@ aur spawn tasks.md                       # Execute in parallel
 
 **Core Commands:**
 - [Memory & Indexing](#memory--indexing) - `aur mem index`, `aur mem search`
-- [Reasoning & Orchestration](#reasoning--orchestration) - `aur soar`, `aur spawn`
-- [Planning & Agents](#planning--agents) - `aur goals` ⭐, `aur plan`, `aur agents`
-- [Configuration](#configuration--management) - `aur init`, `aur doctor`, `aur version`
+- [Reasoning & Orchestration](#reasoning--orchestration) - `aur soar`, `aur spawn`, `aur query`
+- [Planning & Agents](#planning--agents) - `aur goals` , `aur plan`, `aur agents`
+- [Configuration](#configuration--management) - `aur init`, `aur doctor`, `aur version`, `aur verify`, `aur headless`, `aur budget`
 
 **Workflows:**
-- [Research Workflow](#research-workflow) - Memory → Search → SOAR
-- [Planning Flow (Modern)](#planning-flow-workflow-modern---recommended) ⭐ - goals → /plan → spawn
-- [Legacy Implementation](#legacy-implementation-workflow) - plan → soar → spawn
+- [Research Workflow](#research-workflow) - Memory -> Search -> SOAR
+- [Planning Flow (Modern)](#planning-flow-workflow-modern---recommended)  - goals -> /plan -> spawn
+- [Legacy Implementation](#legacy-implementation-workflow) - plan -> soar -> spawn
 - [Multi-Agent Workflow](#multi-agent-workflow) - Parallel agent execution
 
 **Configuration:**
@@ -61,12 +61,12 @@ aur spawn tasks.md                       # Execute in parallel
 
 **Reference:**
 - [Task File Format](#task-file-format) - Markdown checklist format
-- [goals.json Format](#goalsjson-format) ⭐ - Complete specification with examples
+- [goals.json Format](#goalsjson-format)  - Complete specification with examples
 - [Quick Reference](#quick-reference) - Command cheat sheet
 - [Getting Help](#getting-help) - Help commands and common scenarios
 - [Troubleshooting](#troubleshooting) - Common issues and solutions
 
-⭐ = New in Sprint 4
+ = New in Sprint 4
 
 ---
 
@@ -204,9 +204,9 @@ aur goals "Add real-time notifications" \
 #    Using: claude (sonnet)
 #
 # 🤖 Agent matching results:
-#    ✓ sg-1: @full-stack-dev (exists)
-#    ✓ sg-2: @ux-expert (exists)
-#    ⚠️ sg-3: @devops-engineer (NOT FOUND)
+#    [OK] sg-1: @full-stack-dev (exists)
+#    [OK] sg-2: @ux-expert (exists)
+#    [WARN] sg-3: @devops-engineer (NOT FOUND)
 #
 # 📁 Plan directory:
 #    .aurora/plans/0001-add-real-time-notifications/
@@ -215,7 +215,7 @@ aur goals "Add real-time notifications" \
 # (Opens editor for review)
 #
 # Proceed with saving goals? [Y/n]: y
-# ✅ Goals saved.
+# [OK] Goals saved.
 #
 # Next steps:
 # 1. Review goals:   cat .aurora/plans/0001-add-real-time-notifications/goals.json
@@ -242,23 +242,23 @@ $ aur goals "Add user authentication" --verbose
    Using: claude (sonnet)
 
 [bold]🤖 Agent matching results:[/]
-   ✓ sg-1: @full-stack-dev (exists)
-   ✓ sg-2: @security-engineer (exists)
-   ⚠️ sg-3: @compliance-specialist (NOT FOUND - will use @full-stack-dev)
+   [OK] sg-1: @full-stack-dev (exists)
+   [OK] sg-2: @security-engineer (exists)
+   [WARN] sg-3: @compliance-specialist (NOT FOUND - will use @full-stack-dev)
 
 [bold]📁 Plan directory:[/]
    .aurora/plans/0001-add-user-authentication/
 
 [bold]Files created (9 total):[/]
-  ✓ goals.json
-  ✓ plan.md
-  ✓ prd.md
-  ✓ tasks.md
-  ✓ agents.json
-  ✓ specs/0001-add-user-authentication-planning.md
-  ✓ specs/0001-add-user-authentication-commands.md
-  ✓ specs/0001-add-user-authentication-validation.md
-  ✓ specs/0001-add-user-authentication-schemas.md
+  [OK] goals.json
+  [OK] plan.md
+  [OK] prd.md
+  [OK] tasks.md
+  [OK] agents.json
+  [OK] specs/0001-add-user-authentication-planning.md
+  [OK] specs/0001-add-user-authentication-commands.md
+  [OK] specs/0001-add-user-authentication-validation.md
+  [OK] specs/0001-add-user-authentication-schemas.md
 ```
 
 **Planning Flow Position:**
@@ -270,7 +270,7 @@ $ aur goals "Add user authentication" --verbose
 │ + Agents    │     │ + tasks.md   │     │ implement   │
 └─────────────┘     └──────────────┘     └─────────────┘
       │                    │                     │
-      ▼                    ▼                     ▼
+      v                    v                     ▼
   goals.json          PRD + tasks           Execute tasks
   (structured)        (detailed)            (parallel/seq)
 ```
@@ -351,6 +351,43 @@ aur version                        # Display version
 aur --version                      # Alternative syntax
 ```
 
+#### `aur verify`
+Verify Aurora installation and dependencies.
+
+```bash
+aur verify                         # Check installation
+aur --verify                       # Alternative syntax
+```
+
+#### `aur headless`
+Run autonomous iterations with external CLI tools.
+
+```bash
+aur headless prompt.md             # Execute with prompt file
+aur headless --tool cursor         # Use different CLI tool
+aur headless --max-iter 20         # Set iteration limit
+aur headless --allow-main          # Allow on main branch
+```
+
+#### `aur budget`
+Manage API usage budget and spending.
+
+```bash
+aur budget set 100                 # Set monthly budget ($100)
+aur budget status                  # View current spending
+aur budget history                 # Show spending history
+aur budget reset                   # Reset monthly counter
+```
+
+#### `aur query`
+Execute SOAR query orchestration (legacy interface).
+
+```bash
+aur query "How does auth work?"    # Execute SOAR query
+```
+
+**Note:** `aur soar` is the recommended interface for SOAR queries.
+
 ## Command Workflows
 
 ### Research Workflow
@@ -368,7 +405,7 @@ aur soar "Explain how payment processing works"
 
 ### Planning Flow Workflow (Modern - Recommended)
 
-Complete workflow from idea to implementation using `aur goals` → `/plan` → execution.
+Complete workflow from idea to implementation using `aur goals` -> `/plan` -> execution.
 
 ```bash
 # STEP 1: Index your codebase for context-aware planning
@@ -384,14 +421,14 @@ aur goals "Add user authentication with JWT tokens" \
 # Output:
 # 📋 Decomposing goal into subgoals...
 # 🤖 Agent matching results:
-#    ✓ sg-1: Implement JWT middleware (@full-stack-dev)
-#    ✓ sg-2: Create login endpoints (@full-stack-dev)
-#    ✓ sg-3: Add token refresh logic (@full-stack-dev)
+#    [OK] sg-1: Implement JWT middleware (@full-stack-dev)
+#    [OK] sg-2: Create login endpoints (@full-stack-dev)
+#    [OK] sg-3: Add token refresh logic (@full-stack-dev)
 #
 # 📁 Plan directory:
 #    .aurora/plans/0001-add-user-authentication-with-jwt/
 #
-# ✅ Goals saved.
+# [OK] Goals saved.
 
 # STEP 3: Review generated goals.json
 cat .aurora/plans/0001-add-user-authentication-with-jwt/goals.json
@@ -436,7 +473,7 @@ aur plan archive 0001-add-user-authentication-with-jwt
 
 # 1. Start with indexed codebase
 $ aur mem index .
-✓ Indexed 2,431 chunks from 342 files
+[OK] Indexed 2,431 chunks from 342 files
 
 # 2. Create goals with context
 $ aur goals "Implement Stripe payment processing" \
@@ -452,21 +489,21 @@ Using tool: claude (model: opus)
    Using: claude (opus)
 
 Memory search found 8 relevant files:
-  • src/checkout/cart.py (0.92)
-  • src/orders/models.py (0.87)
-  • src/api/payments.py (0.81)
+  - src/checkout/cart.py (0.92)
+  - src/orders/models.py (0.87)
+  - src/api/payments.py (0.81)
   ...
 
 🤖 Agent matching results:
-   ✓ sg-1: Set up Stripe SDK integration (@full-stack-dev, confidence: 0.89)
-   ✓ sg-2: Create payment endpoints (@full-stack-dev, confidence: 0.91)
-   ✓ sg-3: Add webhook handlers (@full-stack-dev, confidence: 0.85)
-   ✓ sg-4: Implement payment UI (@ux-expert, confidence: 0.78)
-   ⚠️ sg-5: Configure PCI compliance (@security-engineer, NOT FOUND)
+   [OK] sg-1: Set up Stripe SDK integration (@full-stack-dev, confidence: 0.89)
+   [OK] sg-2: Create payment endpoints (@full-stack-dev, confidence: 0.91)
+   [OK] sg-3: Add webhook handlers (@full-stack-dev, confidence: 0.85)
+   [OK] sg-4: Implement payment UI (@ux-expert, confidence: 0.78)
+   [WARN] sg-5: Configure PCI compliance (@security-engineer, NOT FOUND)
 
 Agent gaps detected:
-  • Missing @security-engineer for sg-5 (PCI compliance)
-  • Fallback: @full-stack-dev (review required)
+  - Missing @security-engineer for sg-5 (PCI compliance)
+  - Fallback: @full-stack-dev (review required)
 
 📁 Plan directory:
    .aurora/plans/0001-implement-stripe-payment-processing/
@@ -478,18 +515,18 @@ Review goals before saving? [Y/n]: y
 
 Proceed with saving goals? [Y/n]: y
 
-✅ Goals saved.
+[OK] Goals saved.
 
 Files created (9 total):
-  ✓ goals.json
-  ✓ plan.md
-  ✓ prd.md (placeholder)
-  ✓ tasks.md (placeholder)
-  ✓ agents.json
-  ✓ specs/0001-implement-stripe-payment-processing-planning.md
-  ✓ specs/0001-implement-stripe-payment-processing-commands.md
-  ✓ specs/0001-implement-stripe-payment-processing-validation.md
-  ✓ specs/0001-implement-stripe-payment-processing-schemas.md
+  [OK] goals.json
+  [OK] plan.md
+  [OK] prd.md (placeholder)
+  [OK] tasks.md (placeholder)
+  [OK] agents.json
+  [OK] specs/0001-implement-stripe-payment-processing-planning.md
+  [OK] specs/0001-implement-stripe-payment-processing-commands.md
+  [OK] specs/0001-implement-stripe-payment-processing-validation.md
+  [OK] specs/0001-implement-stripe-payment-processing-schemas.md
 
 Next steps:
 1. Review goals:   cat .aurora/plans/0001-implement-stripe-payment-processing/goals.json
@@ -538,8 +575,8 @@ $ /plan
 # /plan reads goals.json and generates detailed PRD + tasks
 # This takes 2-3 minutes...
 
-✓ Generated prd.md (1,234 lines)
-✓ Generated tasks.md (456 lines)
+[OK] Generated prd.md (1,234 lines)
+[OK] Generated tasks.md (456 lines)
 
 # 5. Review generated artifacts
 $ cat prd.md | head -50
@@ -560,22 +597,22 @@ Task 4.0 COMPLETE (67s)
 Task 2.0 RUNNING...
 ...
 
-All tasks complete! ✓
+All tasks complete! [OK]
 
 # 7. Re-index and verify
 $ cd ../../..  # Back to project root
 $ aur mem index .
-✓ Indexed 2,498 chunks from 351 files (+9 files)
+[OK] Indexed 2,498 chunks from 351 files (+9 files)
 
 $ pytest tests/payments/
 ========================= 24 passed in 3.21s =========================
 
 $ aur doctor
-✓ All checks passed
+[OK] All checks passed
 
 # 8. Archive completed plan
 $ aur plan archive 0001-implement-stripe-payment-processing
-✓ Plan archived to .aurora/plans/archive/0001-implement-stripe-payment-processing/
+[OK] Plan archived to .aurora/plans/archive/0001-implement-stripe-payment-processing/
 ```
 
 **Key Benefits of Planning Flow:**
@@ -584,7 +621,7 @@ $ aur plan archive 0001-implement-stripe-payment-processing
 2. **Agent Matching**: Optimal agent assignment with confidence scores
 3. **Gap Detection**: Identifies missing capabilities early
 4. **User Review**: Edit goals before committing to implementation
-5. **Structured Output**: goals.json → PRD → tasks provides clear path
+5. **Structured Output**: goals.json -> PRD -> tasks provides clear path
 6. **Flexible Execution**: Choose sequential (careful) or parallel (fast)
 7. **Traceability**: Full audit trail from goal to implementation
 
@@ -1121,12 +1158,16 @@ cd .aurora/plans/0001-add-feature/
 | `aur mem index` | Index codebase | `aur mem index .` |
 | `aur mem search` | Search memory | `aur mem search "auth"` |
 | `aur soar` | SOAR reasoning | `aur soar "Query"` |
+| `aur query` | SOAR query (legacy) | `aur query "Query"` |
 | `aur goals` | Decompose goals | `aur goals "Add feature"` |
 | `aur spawn` | Execute tasks | `aur spawn tasks.md` |
 | `aur plan create` | Create plan (legacy) | `aur plan create "Feature"` |
 | `aur agents list` | List agents | `aur agents list` |
+| `aur headless` | Autonomous iterations | `aur headless prompt.md` |
+| `aur budget` | Manage budget | `aur budget status` |
 | `aur doctor` | Health check | `aur doctor` |
 | `aur version` | Show version | `aur version` |
+| `aur verify` | Verify installation | `aur verify` |
 
 ## Getting Help
 
@@ -1265,7 +1306,7 @@ aur goals "Your goal"
 
 #### Agent gaps detected
 
-**Warning:** `⚠️ sg-3: @security-engineer (NOT FOUND)`
+**Warning:** `[WARN] sg-3: @security-engineer (NOT FOUND)`
 
 **What it means:** No agent matches the required capabilities.
 
@@ -1293,7 +1334,7 @@ aur goals "Your goal"
    nano .aurora/plans/0001-your-goal/goals.json
 
    # Change agent field:
-   # "agent": "@security-engineer"  →  "agent": "@full-stack-dev"
+   # "agent": "@security-engineer"  ->  "agent": "@full-stack-dev"
    ```
 
 #### Low confidence scores
@@ -1510,7 +1551,7 @@ Handle missing agent capabilities systematically:
 aur goals "Implement secure payment system" --verbose
 
 # Output:
-# ⚠️ sg-4: @security-engineer (NOT FOUND)
+# [WARN] sg-4: @security-engineer (NOT FOUND)
 # Gap: ["PCI compliance", "security audit"]
 # Fallback: @full-stack-dev
 
@@ -1641,8 +1682,8 @@ smart_goals() {
   GOAL="$1"
   WORD_COUNT=$(echo "$GOAL" | wc -w)
 
-  # Simple goals (<5 words) → sonnet
-  # Complex goals (≥5 words) → opus
+  # Simple goals (<5 words) -> sonnet
+  # Complex goals (≥5 words) -> opus
   if [ "$WORD_COUNT" -lt 5 ]; then
     MODEL="sonnet"
   else
@@ -1666,7 +1707,7 @@ Continuously improve agent matching:
 cd .aurora/plans/0001-completed-plan/
 
 # Extract successful patterns
-cat goals.json | jq -r '.subgoals[] | "\(.title) → \(.agent) (confidence: \(.confidence))"' \
+cat goals.json | jq -r '.subgoals[] | "\(.title) -> \(.agent) (confidence: \(.confidence))"' \
   >> ~/.aurora/agent-matching-history.txt
 
 # Review low-confidence matches

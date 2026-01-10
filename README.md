@@ -14,7 +14,7 @@ Built on planning principles adapted from [OpenSpec](https://github.com/openspec
 
 Aurora provides three core capabilities:
 
-### 🧠 Memory (ACT-R)
+### Memory (ACT-R)
 Intelligent code indexing that learns from usage patterns. Your codebase's memory works like human memory—frequently accessed code stays "hot", rarely used code fades.
 
 **Technology:**
@@ -24,21 +24,21 @@ Intelligent code indexing that learns from usage patterns. Your codebase's memor
 - Tree-sitter parsing (understands code structure)
 - Optional semantic search (if you want it)
 
-**Use case:** `aur mem index .` → `aur mem search "authentication"`
+**Use case:** `aur mem index .` ->`aur mem search "authentication"`
 
-### 📋 Planning (SOAR + OpenSpec)
+### Planning (SOAR + OpenSpec)
 Systematic goal decomposition with agent matching and gap detection. Breaks high-level goals into actionable subgoals with automatic agent assignment.
 
 **Technology:**
-- SOAR 9-phase pipeline (assess → retrieve → decompose → verify → route)
+- SOAR 9-phase pipeline (assess ->retrieve ->decompose ->verify ->route)
 - Agent capability matching with LLM fallback
 - Gap detection (identifies missing agent capabilities early)
 - Memory-aware (uses indexed code to inform planning)
-- OpenSpec-inspired workflow (goals → PRD → tasks)
+- OpenSpec-inspired workflow (goals ->PRD ->tasks)
 
-**Use case:** `aur goals "Add OAuth2 auth"` → `/plan` → `/implement`
+**Use case:** `aur goals "Add OAuth2 auth"` ->`/plan` ->`/implement`
 
-### 🤖 Orchestration (Multi-Agent)
+### Orchestration (Multi-Agent)
 CLI-agnostic agent execution with parallel/sequential coordination. Routes tasks to specialized agents without API lock-in.
 
 **Technology:**
@@ -53,10 +53,10 @@ CLI-agnostic agent execution with parallel/sequential coordination. Routes tasks
 
 ## What Aurora Is NOT
 
-❌ **Not deep reasoning** - Aurora uses structured decomposition, not chain-of-thought reasoning like o1
-❌ **Not API-dependent** - Core functionality works locally with any CLI tool
-❌ **Not magical AI** - It's systematic orchestration, not AGI
-❌ **Not a replacement for thinking** - It's a framework for organizing development work
+**Not deep reasoning** - Aurora uses structured decomposition, not chain-of-thought reasoning like o1
+**Not API-dependent** - Core functionality works locally with any CLI tool
+**Not magical AI** - It's systematic orchestration, not AGI
+**Not a replacement for thinking** - It's a framework for organizing development work
 
 ---
 
@@ -79,7 +79,7 @@ aur mem search "authentication logic"
 # Answer complex questions with SOAR reasoning
 aur soar "How does the payment flow work?"
 
-# Planning flow: Goal → PRD → Tasks → Implementation
+# Planning flow: Goal ->PRD ->Tasks ->Implementation
 aur goals "Add Stripe payment processing" \
   --context src/checkout/ \
   --verbose
@@ -108,37 +108,37 @@ aur doctor
 ## The Planning Flow
 
 ```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  aur goals   │ --> │  /plan       │ --> │  /implement  │
-│              │     │              │     │              │
-│ SOAR         │     │ OpenSpec     │     │ Sequential   │
-│ decomposes   │     │ generates    │     │ execution    │
-│ goal into    │     │ PRD +        │     │ with         │
-│ subgoals     │     │ tasks.md     │     │ specialized  │
-│ with agents  │     │              │     │ agents       │
-└──────────────┘     └──────────────┘     └──────────────┘
-      │                    │                     │
-      ▼                    ▼                     ▼
-  goals.json          PRD + tasks           Implemented
-  (structured)        (detailed)            (tested)
++---------------+     +---------------+     +---------------+
+|  aur goals    | --> |  /plan        | --> |  /implement   |
+|               |     |               |     |               |
+| SOAR          |     | OpenSpec      |     | Sequential    |
+| decomposes    |     | generates     |     | execution     |
+| goal into     |     | PRD +         |     | with          |
+| subgoals      |     | tasks.md      |     | specialized   |
+| with agents   |     |               |     | agents        |
++---------------+     +---------------+     +---------------+
+      |                     |                      |
+      v                     v                      v
+  goals.json           PRD + tasks            Implemented
+  (structured)         (detailed)             (tested)
 
 Alternative parallel execution:
-                                          ┌──────────────┐
-                                          │  aur spawn   │
-                                          │              │
-                                          │ Parallel     │
-                                          │ execution    │
-                                          │ (faster)     │
-                                          └──────────────┘
+                                          +---------------+
+                                          |  aur spawn    |
+                                          |               |
+                                          | Parallel      |
+                                          | execution     |
+                                          | (faster)      |
+                                          +---------------+
 ```
 
 **Primary workflow:**
-- `aur goals` → SOAR decomposition with agent matching
-- `/plan` → Generate PRD and tasks (Claude Code skill)
-- `/implement` → Execute tasks sequentially, one by one
+- `aur goals` ->SOAR decomposition with agent matching
+- `/plan` ->Generate PRD and tasks (Claude Code skill)
+- `/implement` ->Execute tasks sequentially, one by one
 
 **Alternative:**
-- `aur spawn tasks.md` → Execute tasks in parallel (faster, less control)
+- `aur spawn tasks.md` ->Execute tasks in parallel (faster, less control)
 
 ---
 
@@ -147,7 +147,7 @@ Alternative parallel execution:
 ```bash
 # 1. Index codebase
 $ aur mem index .
-✓ Indexed 2,431 chunks from 342 files
+[OK] Indexed 2,431 chunks from 342 files
 
 # 2. Decompose goal with SOAR
 $ aur goals "Add Stripe payment processing" \
@@ -160,23 +160,23 @@ Using tool: claude (model: sonnet)
    Goal: Add Stripe payment processing
 
 Memory search found 8 relevant files:
-  • src/checkout/cart.py (0.92)
-  • src/orders/models.py (0.87)
-  • src/api/payments.py (0.81)
+  - src/checkout/cart.py (0.92)
+  - src/orders/models.py (0.87)
+  - src/api/payments.py (0.81)
 
 🤖 Agent matching results:
-   ✓ sg-1: Set up Stripe SDK (@full-stack-dev, 0.89)
-   ✓ sg-2: Create payment endpoints (@full-stack-dev, 0.91)
-   ✓ sg-3: Add webhook handlers (@full-stack-dev, 0.85)
-   ✓ sg-4: Implement payment UI (@ux-expert, 0.78)
-   ⚠️ sg-5: PCI compliance (@security-engineer, NOT FOUND)
+   [OK] sg-1: Set up Stripe SDK (@full-stack-dev, 0.89)
+   [OK] sg-2: Create payment endpoints (@full-stack-dev, 0.91)
+   [OK] sg-3: Add webhook handlers (@full-stack-dev, 0.85)
+   [OK] sg-4: Implement payment UI (@ux-expert, 0.78)
+   [WARN] sg-5: PCI compliance (@security-engineer, NOT FOUND)
 
 Agent gaps detected:
-  • Missing @security-engineer for sg-5
-  • Suggested capabilities: ["PCI DSS", "security audit"]
-  • Fallback: @full-stack-dev (review required)
+  - Missing @security-engineer for sg-5
+  - Suggested capabilities: ["PCI DSS", "security audit"]
+  - Fallback: @full-stack-dev (review required)
 
-✅ Goals saved to .aurora/plans/0001-add-stripe-payment/goals.json
+[OK] Goals saved to .aurora/plans/0001-add-stripe-payment/goals.json
 
 Next steps:
 1. Review goals:   cat .aurora/plans/0001-add-stripe-payment/goals.json
@@ -187,19 +187,19 @@ Next steps:
 $ cd .aurora/plans/0001-add-stripe-payment/
 $ /plan  # In Claude Code
 
-✓ Generated prd.md (1,234 lines)
-✓ Generated tasks.md (24 tasks)
+[OK] Generated prd.md (1,234 lines)
+[OK] Generated tasks.md (24 tasks)
 
 # 4. Execute tasks sequentially (recommended)
 $ /implement
 
-Task 1/24: Set up Stripe SDK... COMPLETE ✓
-Task 2/24: Create payment models... COMPLETE ✓
-Task 3/24: Add API endpoints... COMPLETE ✓
+Task 1/24: Set up Stripe SDK... COMPLETE [OK]
+Task 2/24: Create payment models... COMPLETE [OK]
+Task 3/24: Add API endpoints... COMPLETE [OK]
 ...
-Task 24/24: Update documentation... COMPLETE ✓
+Task 24/24: Update documentation... COMPLETE [OK]
 
-All tasks complete! ✓
+All tasks complete! [OK]
 
 # Alternative: Execute in parallel (faster)
 $ aur spawn tasks.md --verbose
@@ -210,7 +210,7 @@ Spawning 5 tasks across 3 agents:
   [@ux-expert] Task 4.0: Payment UI... COMPLETE (89s)
   ...
 
-All tasks complete! ✓
+All tasks complete! [OK]
 ```
 
 ---
@@ -238,7 +238,7 @@ All tasks complete! ✓
 - **Specialized agents** - @full-stack-dev, @ux-expert, @qa-architect, etc.
 
 ### Configuration
-- **Multi-tier resolution** - CLI flag → env var → project config → global config → default
+- **Multi-tier resolution** - CLI flag ->env var ->project config ->global config ->default
 - **Tool/model selection** - Per-command configuration
 - **Project-local** - `.aurora/config.json` overrides global settings
 
@@ -404,7 +404,7 @@ export AURORA_GOALS_MODEL=sonnet
 export AURORA_LOGGING_LEVEL=DEBUG
 ```
 
-**Resolution order:** CLI flag → env var → project config → global config → default
+**Resolution order:** CLI flag ->env var ->project config ->global config ->default
 
 [Configuration Reference →](docs/reference/CONFIG_REFERENCE.md)
 

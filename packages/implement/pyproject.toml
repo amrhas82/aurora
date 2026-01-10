@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "implement"
-version = "0.1.0"
+name = "aurora-implement"
+version = "0.6.0"
 description = "Task parser and executor for Aurora framework"
 readme = "README.md"
 requires-python = ">=3.10"

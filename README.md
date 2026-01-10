@@ -256,6 +256,8 @@ pip install aurora-actr  # ~520KB, BM25 + activation only
 pip install aurora-actr[ml]  # +1.9GB, adds sentence-transformers
 ```
 
+**Note:** The ML package uses `all-MiniLM-L6-v2` by default. To use different embedding models (OpenAI, Cohere, custom models), see the [ML Models Guide](docs/reference/ML_MODELS.md).
+
 ### Development
 ```bash
 git clone https://github.com/amrhas82/aurora.git
@@ -299,6 +301,8 @@ docs/archive/**
 - 30% ACT-R activation
 
 **Speed:** Sub-500ms on 10K+ chunks.
+
+**Custom models:** See [ML Models Guide](docs/reference/ML_MODELS.md) for using OpenAI, Cohere, or custom embedding models.
 
 ---
 

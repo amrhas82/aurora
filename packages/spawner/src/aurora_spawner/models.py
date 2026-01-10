@@ -29,6 +29,9 @@ class SpawnResult:
     output: str
     error: str | None
     exit_code: int
+    fallback: bool = False
+    original_agent: str | None = None
+    retry_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
@@ -37,4 +40,7 @@ class SpawnResult:
             "output": self.output,
             "error": self.error,
             "exit_code": self.exit_code,
+            "fallback": self.fallback,
+            "original_agent": self.original_agent,
+            "retry_count": self.retry_count,
         }

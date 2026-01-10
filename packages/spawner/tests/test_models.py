@@ -1,6 +1,5 @@
 """TDD Tests for SpawnTask and SpawnResult models."""
 
-import pytest
 from aurora_spawner.models import SpawnResult, SpawnTask
 
 
@@ -63,3 +62,41 @@ class TestSpawnResult:
         assert result_dict["output"] == "test output"
         assert result_dict["error"] is None
         assert result_dict["exit_code"] == 0
+
+    def test_spawn_result_with_fallback_metadata(self):
+        """Test SpawnResult with fallback tracking fields."""
+        result = SpawnResult(
+            success=True,
+            output="fallback output",
+            error=None,
+            exit_code=0,
+            fallback=True,
+            original_agent="failing-agent",
+            retry_count=2,
+        )
+        assert result.fallback is True
+        assert result.original_agent == "failing-agent"
+        assert result.retry_count == 2
+
+    def test_spawn_result_fallback_metadata_in_to_dict(self):
+        """Test SpawnResult.to_dict() includes fallback metadata fields."""
+        result = SpawnResult(
+            success=True,
+            output="output",
+            error=None,
+            exit_code=0,
+            fallback=True,
+            original_agent="test-agent",
+            retry_count=2,
+        )
+        result_dict = result.to_dict()
+        assert result_dict["fallback"] is True
+        assert result_dict["original_agent"] == "test-agent"
+        assert result_dict["retry_count"] == 2
+
+    def test_spawn_result_defaults_no_fallback(self):
+        """Test SpawnResult defaults: fallback=False, original_agent=None, retry_count=0."""
+        result = SpawnResult(success=True, output="output", error=None, exit_code=0)
+        assert result.fallback is False
+        assert result.original_agent is None
+        assert result.retry_count == 0

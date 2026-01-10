@@ -1,11 +1,14 @@
 """Spawner functions for aurora-spawner package."""
 
 import asyncio
+import logging
 import os
 import shutil
 from typing import Any, Callable
 
 from aurora_spawner.models import SpawnResult, SpawnTask
+
+logger = logging.getLogger(__name__)
 
 
 async def spawn(
@@ -114,13 +117,17 @@ async def spawn(
 
 
 async def spawn_parallel(
-    tasks: list[SpawnTask], max_concurrent: int = 5, **kwargs: Any
+    tasks: list[SpawnTask],
+    max_concurrent: int = 5,
+    on_progress: Callable[[int, int, str, str], None] | None = None,
+    **kwargs: Any,
 ) -> list[SpawnResult]:
     """Spawn subprocesses in parallel with concurrency limiting.
 
     Args:
         tasks: List of tasks to execute in parallel
         max_concurrent: Maximum number of concurrent tasks (default: 5)
+        on_progress: Optional callback(idx, total, agent_id, status)
         **kwargs: Additional arguments passed to spawn()
 
     Returns:
@@ -131,12 +138,28 @@ async def spawn_parallel(
 
     # Create semaphore for concurrency limiting
     semaphore = asyncio.Semaphore(max_concurrent)
+    total = len(tasks)
 
-    async def spawn_with_semaphore(task: SpawnTask) -> SpawnResult:
+    async def spawn_with_semaphore(idx: int, task: SpawnTask) -> SpawnResult:
         """Wrapper that acquires semaphore before spawning."""
+        import time
+
         async with semaphore:
             try:
-                return await spawn(task, **kwargs)
+                # Call progress callback on start
+                agent_id = task.agent or "llm"
+                if on_progress:
+                    on_progress(idx + 1, total, agent_id, "Starting")
+
+                start_time = time.time()
+                result = await spawn(task, **kwargs)
+                elapsed = time.time() - start_time
+
+                # Call progress callback on complete
+                if on_progress:
+                    on_progress(idx + 1, total, agent_id, f"Completed ({elapsed:.1f}s)")
+
+                return result
             except Exception as e:
                 # Best-effort: convert exceptions to failed results
                 return SpawnResult(
@@ -147,7 +170,7 @@ async def spawn_parallel(
                 )
 
     # Execute all tasks in parallel and gather results
-    coros = [spawn_with_semaphore(task) for task in tasks]
+    coros = [spawn_with_semaphore(idx, task) for idx, task in enumerate(tasks)]
     results = await asyncio.gather(*coros, return_exceptions=False)
 
     return list(results)
@@ -198,3 +221,88 @@ async def spawn_sequential(
             break
 
     return results
+
+
+async def spawn_with_retry_and_fallback(
+    task: SpawnTask,
+    on_progress: Callable[[int, int, str], None] | None = None,
+    **kwargs: Any,
+) -> SpawnResult:
+    """Spawn subprocess with automatic retry and fallback to LLM.
+
+    Implements three-tier retry logic to improve reliability:
+    1. First attempt with specified agent
+    2. If failure, retry once with same agent (handles transient failures)
+    3. If second failure, fallback to direct LLM (agent=None)
+
+    The fallback mechanism ensures that queries always get a response, even when
+    specialized agents fail. This improves overall system reliability and user
+    experience by preventing silent failures.
+
+    Args:
+        task: The task to execute. If task.agent is None, goes directly to LLM.
+        on_progress: Optional callback(attempt, max_attempts, status) for tracking
+                     retry/fallback progress in UI or logs.
+        **kwargs: Additional arguments passed to spawn() (tool, model, config, etc.)
+
+    Returns:
+        SpawnResult with retry/fallback metadata:
+        - retry_count: Number of retries performed (0-2)
+        - fallback: True if fallback to LLM was used
+        - original_agent: The agent_id that was attempted before fallback
+
+    Example:
+        >>> task = SpawnTask(prompt="Analyze code", agent="qa-expert")
+        >>> result = await spawn_with_retry_and_fallback(task)
+        >>> if result.fallback:
+        ...     print(f"Agent {result.original_agent} failed, used LLM fallback")
+    """
+    max_attempts = 3  # 2 agent attempts + 1 fallback
+
+    # Attempt 1: Original task
+    logger.debug(f"Spawn attempt 1/3 for task with agent={task.agent}")
+    result = await spawn(task, **kwargs)
+    if result.success:
+        logger.debug("Spawn succeeded on first attempt")
+        result.retry_count = 0
+        result.fallback = False
+        return result
+
+    logger.debug("Spawn attempt 1 failed: %s", result.error)
+
+    # Attempt 2: Retry with same agent
+    if on_progress:
+        on_progress(2, max_attempts, "Retrying")
+
+    logger.debug(f"Spawn attempt 2/3 (retry) for task with agent={task.agent}")
+    result = await spawn(task, **kwargs)
+    if result.success:
+        logger.debug("Spawn succeeded on retry")
+        result.retry_count = 1
+        result.fallback = False
+        return result
+
+    logger.debug("Spawn attempt 2 failed: %s", result.error)
+
+    # Attempt 3: Fallback to LLM (agent=None)
+    if on_progress:
+        on_progress(3, max_attempts, "Fallback to LLM")
+
+    logger.info(f"Agent {task.agent} failed twice, falling back to direct LLM")
+    fallback_task = SpawnTask(
+        prompt=task.prompt,
+        agent=None,
+        timeout=task.timeout,
+    )
+
+    result = await spawn(fallback_task, **kwargs)
+    result.fallback = True
+    result.original_agent = task.agent
+    result.retry_count = 2
+
+    if result.success:
+        logger.info("Fallback to LLM succeeded")
+    else:
+        logger.error("Fallback to LLM also failed: %s", result.error)
+
+    return result

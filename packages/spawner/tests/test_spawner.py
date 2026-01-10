@@ -2,10 +2,10 @@
 
 import asyncio
 import os
-import shutil
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from aurora_spawner.models import SpawnResult, SpawnTask
 from aurora_spawner.spawner import spawn, spawn_parallel, spawn_sequential
 
@@ -464,6 +464,77 @@ class TestSpawnParallel:
         # Should use default of 5
         assert max_concurrent_running <= 5
 
+    @pytest.mark.asyncio
+    async def test_spawn_parallel_progress_callback_on_start(self):
+        """Test spawn_parallel invokes on_progress when agent starts."""
+        tasks = [
+            SpawnTask(prompt="task 1", agent="agent-1"),
+            SpawnTask(prompt="task 2", agent="agent-2"),
+        ]
+
+        progress_calls = []
+
+        def on_progress(idx: int, total: int, agent_id: str, status: str):
+            progress_calls.append((idx, total, agent_id, status))
+
+        async def mock_spawn(task, **kwargs):
+            await asyncio.sleep(0.01)
+            return SpawnResult(success=True, output="output", error=None, exit_code=0)
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            await spawn_parallel(tasks, on_progress=on_progress)
+
+        # Should have "Starting" calls for each agent
+        starting_calls = [c for c in progress_calls if "Starting" in c[3]]
+        assert len(starting_calls) == 2
+
+    @pytest.mark.asyncio
+    async def test_spawn_parallel_progress_callback_on_complete(self):
+        """Test spawn_parallel invokes on_progress when agent completes."""
+        tasks = [
+            SpawnTask(prompt="task 1", agent="agent-1"),
+            SpawnTask(prompt="task 2", agent="agent-2"),
+        ]
+
+        progress_calls = []
+
+        def on_progress(idx: int, total: int, agent_id: str, status: str):
+            progress_calls.append((idx, total, agent_id, status))
+
+        async def mock_spawn(task, **kwargs):
+            await asyncio.sleep(0.01)
+            return SpawnResult(success=True, output="output", error=None, exit_code=0)
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            await spawn_parallel(tasks, on_progress=on_progress)
+
+        # Should have "Completed" calls for each agent
+        completed_calls = [c for c in progress_calls if "Completed" in c[3]]
+        assert len(completed_calls) == 2
+
+    @pytest.mark.asyncio
+    async def test_spawn_parallel_progress_format(self):
+        """Test spawn_parallel progress callback has correct format."""
+        tasks = [SpawnTask(prompt="task 1", agent="test-agent")]
+
+        progress_calls = []
+
+        def on_progress(idx: int, total: int, agent_id: str, status: str):
+            progress_calls.append((idx, total, agent_id, status))
+
+        async def mock_spawn(task, **kwargs):
+            return SpawnResult(success=True, output="output", error=None, exit_code=0)
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            await spawn_parallel(tasks, on_progress=on_progress)
+
+        # Verify callback signature: (idx, total, agent_id, status)
+        for call in progress_calls:
+            assert isinstance(call[0], int)  # idx
+            assert isinstance(call[1], int)  # total
+            assert isinstance(call[2], str)  # agent_id
+            assert isinstance(call[3], str)  # status
+
 
 class TestSpawnSequential:
     """Tests for spawn_sequential() function."""
@@ -653,3 +724,242 @@ class TestSpawnSequential:
         assert len(results) == 2
         assert results[0].success is True
         assert results[1].success is False
+
+
+class TestSpawnWithRetryAndFallback:
+    """TDD Tests for spawn_with_retry_and_fallback() function."""
+
+    @pytest.mark.asyncio
+    async def test_success_on_first_attempt(self):
+        """Test spawn_with_retry_and_fallback succeeds on first attempt."""
+        task = SpawnTask(prompt="test prompt", agent="test-agent")
+
+        # Mock spawn to succeed immediately
+        async def mock_spawn(t, **kwargs):
+            return SpawnResult(
+                success=True,
+                output="success output",
+                error=None,
+                exit_code=0,
+            )
+
+        from aurora_spawner.spawner import spawn_with_retry_and_fallback
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            result = await spawn_with_retry_and_fallback(task)
+
+        assert result.success is True
+        assert result.output == "success output"
+        assert result.fallback is False
+        assert result.retry_count == 0
+
+    @pytest.mark.asyncio
+    async def test_success_on_retry(self):
+        """Test spawn_with_retry_and_fallback succeeds on second attempt (retry)."""
+        task = SpawnTask(prompt="test prompt", agent="test-agent")
+
+        call_count = 0
+
+        async def mock_spawn(t, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # First attempt fails
+                return SpawnResult(
+                    success=False,
+                    output="",
+                    error="Temporary failure",
+                    exit_code=1,
+                )
+            else:
+                # Second attempt succeeds
+                return SpawnResult(
+                    success=True,
+                    output="retry success",
+                    error=None,
+                    exit_code=0,
+                )
+
+        from aurora_spawner.spawner import spawn_with_retry_and_fallback
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            result = await spawn_with_retry_and_fallback(task)
+
+        assert result.success is True
+        assert result.output == "retry success"
+        assert result.fallback is False
+        assert result.retry_count == 1
+        assert call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_fallback_after_two_failures(self):
+        """Test spawn_with_retry_and_fallback falls back to LLM after two failures."""
+        task = SpawnTask(prompt="test prompt", agent="failing-agent")
+
+        call_count = 0
+
+        async def mock_spawn(t, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                # First two attempts fail
+                return SpawnResult(
+                    success=False,
+                    output="",
+                    error=f"Failure {call_count}",
+                    exit_code=1,
+                )
+            else:
+                # Fallback to LLM succeeds
+                return SpawnResult(
+                    success=True,
+                    output="fallback llm output",
+                    error=None,
+                    exit_code=0,
+                )
+
+        from aurora_spawner.spawner import spawn_with_retry_and_fallback
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            result = await spawn_with_retry_and_fallback(task)
+
+        assert result.success is True
+        assert result.output == "fallback llm output"
+        assert result.fallback is True
+        assert result.retry_count == 2
+        assert call_count == 3
+
+    @pytest.mark.asyncio
+    async def test_fallback_preserves_original_agent(self):
+        """Test spawn_with_retry_and_fallback preserves original agent in metadata."""
+        task = SpawnTask(prompt="test prompt", agent="test-agent")
+
+        call_count = 0
+
+        async def mock_spawn(t, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                return SpawnResult(success=False, output="", error="Fail", exit_code=1)
+            else:
+                # Verify fallback task has agent=None
+                assert t.agent is None
+                return SpawnResult(
+                    success=True,
+                    output="fallback output",
+                    error=None,
+                    exit_code=0,
+                )
+
+        from aurora_spawner.spawner import spawn_with_retry_and_fallback
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            result = await spawn_with_retry_and_fallback(task)
+
+        assert result.original_agent == "test-agent"
+        assert result.fallback is True
+
+    @pytest.mark.asyncio
+    async def test_progress_callback_called(self):
+        """Test spawn_with_retry_and_fallback invokes on_progress callback."""
+        task = SpawnTask(prompt="test prompt", agent="test-agent")
+
+        progress_calls = []
+
+        def on_progress(attempt: int, max_attempts: int, status: str):
+            progress_calls.append((attempt, max_attempts, status))
+
+        call_count = 0
+
+        async def mock_spawn(t, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                return SpawnResult(success=False, output="", error="Fail", exit_code=1)
+            else:
+                return SpawnResult(
+                    success=True,
+                    output="fallback output",
+                    error=None,
+                    exit_code=0,
+                )
+
+        from aurora_spawner.spawner import spawn_with_retry_and_fallback
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            await spawn_with_retry_and_fallback(task, on_progress=on_progress)
+
+        # Should have progress calls for: retry and fallback
+        assert len(progress_calls) >= 2
+        # Verify progress call structure (attempt, max_attempts, status)
+        assert all(isinstance(c[0], int) for c in progress_calls)
+        assert all(isinstance(c[1], int) for c in progress_calls)
+        assert all(isinstance(c[2], str) for c in progress_calls)
+
+    @pytest.mark.asyncio
+    async def test_timeout_triggers_retry(self):
+        """Test spawn_with_retry_and_fallback treats timeout as failure requiring retry."""
+        task = SpawnTask(prompt="test prompt", agent="test-agent", timeout=10)
+
+        call_count = 0
+
+        async def mock_spawn(t, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # First attempt times out
+                return SpawnResult(
+                    success=False,
+                    output="",
+                    error="Process timed out after 10 seconds",
+                    exit_code=-1,
+                )
+            else:
+                # Retry succeeds
+                return SpawnResult(
+                    success=True,
+                    output="retry success",
+                    error=None,
+                    exit_code=0,
+                )
+
+        from aurora_spawner.spawner import spawn_with_retry_and_fallback
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            result = await spawn_with_retry_and_fallback(task)
+
+        assert result.success is True
+        assert result.retry_count == 1
+        assert call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_fallback_uses_none_agent(self):
+        """Test spawn_with_retry_and_fallback creates fallback task with agent=None."""
+        task = SpawnTask(prompt="test prompt", agent="failing-agent")
+
+        call_count = 0
+        fallback_task_agent = "NOT_SET"
+
+        async def mock_spawn(t, **kwargs):
+            nonlocal call_count, fallback_task_agent
+            call_count += 1
+            if call_count <= 2:
+                return SpawnResult(success=False, output="", error="Fail", exit_code=1)
+            else:
+                # Capture agent value on fallback attempt
+                fallback_task_agent = t.agent
+                return SpawnResult(
+                    success=True,
+                    output="fallback output",
+                    error=None,
+                    exit_code=0,
+                )
+
+        from aurora_spawner.spawner import spawn_with_retry_and_fallback
+
+        with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):
+            result = await spawn_with_retry_and_fallback(task)
+
+        # Fallback task should have agent=None
+        assert fallback_task_agent is None
+        assert result.fallback is True

@@ -1,16 +1,20 @@
 """SOAR Pipeline Phases.
 
-This module contains the 9-phase SOAR orchestration pipeline:
+This module contains the simplified 7-phase SOAR orchestration pipeline:
 
 Phase 1: Assess - Complexity assessment using keyword and LLM-based classification
 Phase 2: Retrieve - Context retrieval from ACT-R memory
 Phase 3: Decompose - Query decomposition into subgoals
-Phase 4: Verify - Decomposition verification with retry loop
-Phase 5: Route - Agent routing and capability matching
-Phase 6: Collect - Agent execution with parallel support
-Phase 7: Synthesize - Result synthesis and traceability
-Phase 8: Record - ACT-R pattern caching
-Phase 9: Respond - Response formatting and verbosity control
+Phase 4: Verify - Decomposition verification + agent assignment (combined with routing)
+Phase 5: Collect - Agent execution with parallel support and retry/fallback
+Phase 6: Synthesize - Result synthesis and traceability
+Phase 7: Record - ACT-R pattern caching (lightweight)
+Phase 8: Respond - Response formatting and verbosity control
+
+Key simplifications:
+- Phase 4 (Verify) now includes agent assignment using verify_lite
+- Route phase removed (functionality integrated into verify)
+- Record phase uses lightweight caching for improved performance
 
 Each phase is implemented as a separate module for testability and maintainability.
 """
@@ -22,7 +26,6 @@ __all__ = [
     "retrieve",
     "decompose",
     "verify",
-    "route",
     "collect",
     "synthesize",
     "record",

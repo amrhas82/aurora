@@ -289,14 +289,6 @@ class TestOrchestratorSimplified:
             "_phase3_decompose",
             lambda q, ctx, c: {"decomposition": {"subgoals": []}},
         )
-
-        # Mock remaining phases to avoid full execution
-        def mock_verify(*args):
-            # This should call verify_lite internally
-            result = verify.verify_lite({"subgoals": []}, [])
-            return {"final_verdict": "PASS", "agent_assignments": result[1]}
-
-        monkeypatch.setattr(orchestrator, "_phase4_verify", mock_verify)
         monkeypatch.setattr(
             orchestrator,
             "_phase5_collect",
@@ -326,6 +318,8 @@ class TestOrchestratorSimplified:
         Verifies that when verify_lite fails, the orchestrator generates
         retry feedback and calls decompose again.
         """
+        from aurora_soar.phases import verify
+
         decompose_calls = []
         verify_calls = []
 
@@ -333,19 +327,23 @@ class TestOrchestratorSimplified:
             decompose_calls.append({"retry_feedback": retry_feedback})
             return {"decomposition": {"subgoals": []}}
 
-        def mock_verify(*args):
+        def mock_verify_lite(decomposition, available_agents):
             verify_calls.append(True)
             if len(verify_calls) == 1:
                 # First call fails
-                return {"final_verdict": "FAIL", "issues": ["missing agent"]}
+                return (
+                    False,
+                    [],
+                    ["missing agent"],
+                )  # passed=False, agent_assignments=[], issues=[...]
             else:
                 # Second call passes
-                return {"final_verdict": "PASS", "agent_assignments": []}
+                return (True, [], [])  # passed=True, agent_assignments=[], issues=[]
 
         monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
         monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
         monkeypatch.setattr(orchestrator, "_phase3_decompose", mock_decompose)
-        monkeypatch.setattr(orchestrator, "_phase4_verify", mock_verify)
+        monkeypatch.setattr(verify, "verify_lite", mock_verify_lite)
         monkeypatch.setattr(
             orchestrator,
             "_phase5_collect",
@@ -379,6 +377,8 @@ class TestOrchestratorSimplified:
         Verifies that the orchestrator creates and wires a progress callback
         to the collect phase for streaming progress updates.
         """
+        from aurora_soar.phases import verify
+
         progress_messages = []
 
         def mock_execute_agents(agent_assignments, subgoals, context, on_progress=None, **kwargs):
@@ -402,10 +402,15 @@ class TestOrchestratorSimplified:
             "_phase3_decompose",
             lambda q, ctx, c: {"decomposition": {"subgoals": []}},
         )
+        # Mock verify_lite instead of _phase4_verify (which no longer exists)
         monkeypatch.setattr(
-            orchestrator,
-            "_phase4_verify",
-            lambda *args: {"final_verdict": "PASS", "agent_assignments": []},
+            verify,
+            "verify_lite",
+            lambda decomposition, available_agents: (
+                True,
+                [],
+                [],
+            ),  # passed=True, agent_assignments=[], issues=[]
         )
 
         # Mock collect phase to use our mock execute_agents
@@ -509,6 +514,8 @@ class TestOrchestratorSimplified:
         Verifies that the orchestrator passes the agent assignments list
         (not RouteResult) directly to execute_agents.
         """
+        from aurora_soar.phases import verify
+
         collect_calls = []
 
         def mock_execute_agents(agent_assignments, subgoals, context, **kwargs):
@@ -529,13 +536,15 @@ class TestOrchestratorSimplified:
         # Return agent_assignments in verify result
         test_agent = MagicMock()
         test_agent.id = "test-agent"
+        # Mock verify_lite instead of _phase4_verify (which no longer exists)
         monkeypatch.setattr(
-            orchestrator,
-            "_phase4_verify",
-            lambda *args: {
-                "final_verdict": "PASS",
-                "agent_assignments": [(0, test_agent)],
-            },
+            verify,
+            "verify_lite",
+            lambda decomposition, available_agents: (
+                True,  # passed
+                [(0, test_agent)],  # agent_assignments
+                [],  # issues
+            ),
         )
 
         # Mock collect to use our tracking function

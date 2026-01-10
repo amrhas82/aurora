@@ -39,7 +39,6 @@ from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.logging import ConversationLogger
 from aurora_core.metrics.query_metrics import QueryMetrics
-from aurora_reasoning.decompose import DecompositionResult
 from aurora_soar import discovery_adapter
 from aurora_soar.phases import (
     assess,
@@ -532,76 +531,9 @@ class SOAROrchestrator:
             self._invoke_callback("decompose", "after", {"subgoal_count": 0, "error": str(e)})
             return result
 
-    def _phase4_verify(
-        self,
-        decomposition_dict: dict[str, Any],
-        query: str,
-        complexity: str,
-        retrieval_result: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Execute Phase 4: Decomposition Verification."""
-        logger.info("Phase 4: Verifying decomposition")
-        self._invoke_callback("verify", "before", {})
-        start_time = time.time()
-        try:
-            # Get available agents from registry or discovery
-            agents = self._list_agents()
-            available_agents = [agent.id for agent in agents]
-
-            # Convert decomposition dict to DecompositionResult object
-            # The dict contains a nested "decomposition" key from phase 3
-            decomposition_data = decomposition_dict.get("decomposition", decomposition_dict)
-            decomposition = DecompositionResult.from_dict(decomposition_data)
-
-            # Build retrieval context for quality assessment
-            retrieval_context = None
-            if retrieval_result is not None:
-                retrieval_context = {
-                    "high_quality_count": retrieval_result.get("high_quality_count", 0),
-                    "total_retrieved": retrieval_result.get("total_retrieved", 0),
-                }
-
-            phase_result = verify.verify_decomposition(
-                decomposition=decomposition,
-                complexity=complexity,
-                llm_client=self.reasoning_llm,
-                query=query,
-                available_agents=available_agents,
-                interactive_mode=self.interactive_mode,
-                retrieval_context=retrieval_context,
-            )
-            result = phase_result.to_dict()
-            result["_timing_ms"] = (time.time() - start_time) * 1000
-            result["_error"] = None
-            self._invoke_callback(
-                "verify", "after", {"verdict": result.get("final_verdict", "UNKNOWN")}
-            )
-            return result
-        except Exception as e:
-            logger.error(f"Phase 4 failed: {e}")
-            result = {
-                "final_verdict": "FAIL",
-                "overall_score": 0.0,
-                "verification": {
-                    "completeness": 0.0,
-                    "consistency": 0.0,
-                    "groundedness": 0.0,
-                    "routability": 0.0,
-                    "overall_score": 0.0,
-                    "verdict": "FAIL",
-                    "issues": [str(e)],
-                    "suggestions": [],
-                },
-                "retry_count": 0,
-                "all_attempts": [],
-                "method": "error",
-                "_timing_ms": (time.time() - start_time) * 1000,
-                "_error": str(e),
-            }
-            self._invoke_callback("verify", "after", {"verdict": "FAIL", "error": str(e)})
-            return result
-
-    # NOTE: _phase5_route removed (Task 5.2) - routing now integrated into verify_lite
+    # NOTE: Old _phase4_verify and _phase5_route removed (Tasks 5.2, 6.3)
+    # - Verification now uses verify_lite directly in execute() method
+    # - Routing functionality integrated into verify_lite
 
     def _phase5_collect(
         self,

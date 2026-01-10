@@ -24,6 +24,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install -e packages/core
+          pip install -e packages/context-code
+          pip install -e packages/soar
+          pip install -e packages/reasoning
+          pip install -e packages/planning
+          pip install -e packages/spawner
+          pip install -e packages/implement
+          pip install -e packages/cli
+          pip install -e packages/testing
           pip install -e ".[dev,ml]"
 
       - name: Configure git for E2E tests

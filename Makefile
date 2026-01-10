@@ -23,6 +23,9 @@ install:
 	pip install -e packages/context-code
 	pip install -e packages/soar
 	pip install -e packages/reasoning
+	pip install -e packages/planning
+	pip install -e packages/spawner
+	pip install -e packages/implement
 	pip install -e packages/cli
 	pip install -e packages/testing
 	pip install -e .
@@ -32,6 +35,9 @@ install-dev:
 	pip install -e "packages/context-code[dev]"
 	pip install -e "packages/soar[dev]"
 	pip install -e "packages/reasoning[dev]"
+	pip install -e "packages/planning[dev]"
+	pip install -e "packages/spawner[dev]"
+	pip install -e "packages/implement[dev]"
 	pip install -e "packages/cli[dev]"
 	pip install -e "packages/testing[dev]"
 	pip install -e ".[dev]"

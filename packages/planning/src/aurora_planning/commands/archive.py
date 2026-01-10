@@ -67,9 +67,7 @@ class ArchiveCommand:
 
         # Check if changes directory exists
         if not changes_dir.exists():
-            raise RuntimeError(
-                "No Aurora plans directory found. Run 'aur init' first."
-            )
+            raise RuntimeError("No Aurora plans directory found. Run 'aur init' first.")
 
         # Get plan name interactively if not provided
         if not plan_name:
@@ -125,9 +123,7 @@ class ArchiveCommand:
                                 break
 
             if has_delta_specs:
-                delta_report = validator.validate_plan_modification_specs(
-                    str(change_dir)
-                )
+                delta_report = validator.validate_plan_modification_specs(str(change_dir))
                 if not delta_report.valid:
                     has_validation_errors = True
                     print("\033[31m")  # Red
@@ -245,9 +241,7 @@ class ArchiveCommand:
                                 print("Aborted. No files were changed.")
                                 return
 
-                        self._write_updated_spec(
-                            p["update"], p["rebuilt"], p["counts"]
-                        )
+                        self._write_updated_spec(p["update"], p["rebuilt"], p["counts"])
                         totals.added += p["counts"].added
                         totals.modified += p["counts"].modified
                         totals.removed += p["counts"].removed
@@ -278,9 +272,7 @@ class ArchiveCommand:
         """Select a plan interactively."""
         # Get all directories in changes (excluding archive)
         entries = list(changes_dir.iterdir())
-        change_dirs = sorted(
-            [e.name for e in entries if e.is_dir() and e.name != "archive"]
-        )
+        change_dirs = sorted([e.name for e in entries if e.is_dir() and e.name != "archive"])
 
         if not change_dirs:
             print("No active changes found.")
@@ -319,9 +311,7 @@ class ArchiveCommand:
 
         return None
 
-    def _get_task_progress(
-        self, changes_dir: Path, plan_id: str
-    ) -> dict[str, int]:
+    def _get_task_progress(self, changes_dir: Path, plan_id: str) -> dict[str, int]:
         """Get task progress for a plan."""
         tasks_path = changes_dir / plan_id / "tasks.md"
         if not tasks_path.exists():
@@ -352,9 +342,7 @@ class ArchiveCommand:
         percent = int((completed / total) * 100) if total > 0 else 0
         return f"{completed}/{total} ({percent}%)"
 
-    def _find_spec_updates(
-        self, change_dir: Path, main_specs_dir: Path
-    ) -> list[SpecUpdate]:
+    def _find_spec_updates(self, change_dir: Path, main_specs_dir: Path) -> list[SpecUpdate]:
         """Find specs that need updating."""
         updates: list[SpecUpdate] = []
         change_specs_dir = change_dir / "specs"
@@ -369,15 +357,11 @@ class ArchiveCommand:
 
                 if spec_file.exists():
                     exists = target_file.exists()
-                    updates.append(
-                        SpecUpdate(source=spec_file, target=target_file, exists=exists)
-                    )
+                    updates.append(SpecUpdate(source=spec_file, target=target_file, exists=exists))
 
         return updates
 
-    def _build_updated_spec(
-        self, update: SpecUpdate, plan_name: str
-    ) -> dict[str, Any]:
+    def _build_updated_spec(self, update: SpecUpdate, plan_name: str) -> dict[str, Any]:
         """Build updated spec content."""
         # Read change spec content (delta-format expected)
         change_content = update.source.read_text()
@@ -462,10 +446,7 @@ class ArchiveCommand:
             )
 
         has_any_delta = (
-            len(plan.added)
-            + len(plan.modified)
-            + len(plan.removed)
-            + len(plan.renamed)
+            len(plan.added) + len(plan.modified) + len(plan.removed) + len(plan.renamed)
         ) > 0
         if not has_any_delta:
             raise RuntimeError(

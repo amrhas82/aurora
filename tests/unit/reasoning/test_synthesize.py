@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from aurora_reasoning.llm_client import LLMResponse
 
 # Import internal functions for testing

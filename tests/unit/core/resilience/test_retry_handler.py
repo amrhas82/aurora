@@ -8,6 +8,7 @@ import time
 from unittest.mock import Mock, patch
 
 import pytest
+
 from aurora_core.exceptions import (
     AuroraError,
     BudgetExceededError,

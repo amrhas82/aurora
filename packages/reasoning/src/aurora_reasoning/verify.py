@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any
 from .prompts.verify_adversarial import VerifyAdversarialPromptTemplate
 from .prompts.verify_self import VerifySelfPromptTemplate
 
-
 if TYPE_CHECKING:
     from .llm_client import LLMClient
 
@@ -29,8 +28,8 @@ __all__ = [
 class VerificationVerdict(str, Enum):
     """Verification verdict outcomes."""
 
-    PASS = "PASS"  # Score ≥ 0.7, proceed with decomposition
-    RETRY = "RETRY"  # 0.5 ≤ score < 0.7, revise and retry
+    PASS = "PASS"  # Score ≥ 0.6, proceed with decomposition
+    RETRY = "RETRY"  # 0.5 ≤ score < 0.6, revise and retry
     FAIL = "FAIL"  # Score < 0.5, fundamental issues
 
 
@@ -221,8 +220,8 @@ def verify_decomposition(
         # Correct the score if LLM made calculation error
         verification["overall_score"] = expected_score
 
-    # Validate verdict matches score thresholds
-    _validate_verdict_consistency(verdict, verification["overall_score"])
+    # Auto-correct verdict if it doesn't match score thresholds
+    verdict = _auto_correct_verdict(verdict, verification["overall_score"])
 
     # Extract issues and suggestions (different fields for adversarial vs self)
     if option == VerificationOption.ADVERSARIAL:
@@ -270,33 +269,43 @@ def _calculate_overall_score(
     return 0.4 * completeness + 0.2 * consistency + 0.2 * groundedness + 0.2 * routability
 
 
-def _validate_verdict_consistency(verdict: VerificationVerdict, score: float) -> None:
-    """Validate that verdict is consistent with score thresholds.
+def _auto_correct_verdict(verdict: VerificationVerdict, score: float) -> VerificationVerdict:
+    """Auto-correct verdict to match score thresholds if inconsistent.
 
     Thresholds:
-    - PASS: score ≥ 0.7
-    - RETRY: 0.5 ≤ score < 0.7
+    - PASS: score ≥ 0.6
+    - RETRY: 0.5 ≤ score < 0.6
     - FAIL: score < 0.5
+
+    Note: Scores in [0.60, 0.70) are in "devil's advocate" territory - they pass
+    but warrant extra scrutiny. The verification result will include detailed
+    issues and suggestions for these marginal cases.
 
     Args:
         verdict: The verdict from LLM
         score: The overall score
 
-    Raises:
-        ValueError: If verdict doesn't match score thresholds
+    Returns:
+        Corrected verdict based on score thresholds
     """
-    if score >= 0.7 and verdict != VerificationVerdict.PASS:
-        raise ValueError(
-            f"Verdict {verdict} inconsistent with score {score:.2f} (score ≥ 0.7 should be PASS)"
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Determine correct verdict based on score
+    if score >= 0.6:
+        correct_verdict = VerificationVerdict.PASS
+    elif score >= 0.5:
+        correct_verdict = VerificationVerdict.RETRY
+    else:
+        correct_verdict = VerificationVerdict.FAIL
+
+    # Auto-correct if needed
+    if verdict != correct_verdict:
+        logger.warning(
+            f"Auto-correcting verdict from {verdict.value} to {correct_verdict.value} "
+            f"(score={score:.2f})"
         )
-    if 0.5 <= score < 0.7 and verdict not in [VerificationVerdict.RETRY, VerificationVerdict.PASS]:
-        # Allow PASS for borderline cases, but not FAIL
-        raise ValueError(
-            f"Verdict {verdict} inconsistent with score {score:.2f} "
-            f"(0.5 ≤ score < 0.7 should be RETRY or PASS)"
-        )
-    if score < 0.5 and verdict == VerificationVerdict.PASS:
-        raise ValueError(
-            f"Verdict {verdict} inconsistent with score {score:.2f} "
-            f"(score < 0.5 should not be PASS)"
-        )
+        return correct_verdict
+
+    return verdict

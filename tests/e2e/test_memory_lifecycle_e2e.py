@@ -25,12 +25,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from aurora_cli.memory_manager import IndexStats, MemoryManager, SearchResult
 
+from aurora_cli.memory_manager import IndexStats, MemoryManager, SearchResult
 from aurora_context_code.languages.python import PythonParser
 from aurora_core.chunks import CodeChunk
 from aurora_core.store.sqlite import SQLiteStore
-
 
 pytestmark = pytest.mark.ml
 
@@ -47,7 +46,8 @@ def temp_memory_project(tmp_path):
     project_dir.mkdir()
 
     # Create initial Python files
-    (project_dir / "module1.py").write_text('''"""Module 1 - Initial version."""
+    (project_dir / "module1.py").write_text(
+        '''"""Module 1 - Initial version."""
 
 def hello():
     """Say hello."""
@@ -56,9 +56,11 @@ def hello():
 def goodbye():
     """Say goodbye."""
     return "Goodbye, world!"
-''')
+'''
+    )
 
-    (project_dir / "module2.py").write_text('''"""Module 2 - Initial version."""
+    (project_dir / "module2.py").write_text(
+        '''"""Module 2 - Initial version."""
 
 class Calculator:
     """Simple calculator."""
@@ -70,7 +72,8 @@ class Calculator:
     def subtract(self, a: int, b: int) -> int:
         """Subtract two numbers."""
         return a - b
-''')
+'''
+    )
 
     return {
         "project_dir": project_dir,
@@ -126,7 +129,8 @@ def test_complete_memory_lifecycle(temp_memory_project, temp_db_path):
     assert hello_result is not None
 
     # Step 4: Modify module1.py (add new function, modify existing)
-    module1.write_text('''"""Module 1 - Updated version."""
+    module1.write_text(
+        '''"""Module 1 - Updated version."""
 
 def hello():
     """Say hello with enthusiasm!"""
@@ -139,7 +143,8 @@ def goodbye():
 def greet(name: str) -> str:
     """Greet someone by name."""
     return f"Hello, {name}!"
-''')
+'''
+    )
 
     # Small delay to ensure filesystem timestamp changes
     time.sleep(0.1)
@@ -174,9 +179,9 @@ def greet(name: str) -> str:
     # Should have similar count to initial (updated, not accumulated)
     # Module1: 3 chunks (hello, goodbye, greet), Module2: 3 chunks (Calculator + 2 methods)
     # Total: ~6 chunks (allowing for variance in parsing)
-    assert total_chunks_after_update >= initial_chunk_count, (
-        f"Expected >= {initial_chunk_count} chunks, got {total_chunks_after_update}"
-    )
+    assert (
+        total_chunks_after_update >= initial_chunk_count
+    ), f"Expected >= {initial_chunk_count} chunks, got {total_chunks_after_update}"
 
 
 def test_memory_lifecycle_with_file_deletion(temp_memory_project, temp_db_path):
@@ -247,7 +252,8 @@ def test_memory_lifecycle_incremental_indexing(temp_memory_project, temp_db_path
 
     # Step 2: Add new file
     module3 = project_dir / "module3.py"
-    module3.write_text('''"""Module 3 - New file."""
+    module3.write_text(
+        '''"""Module 3 - New file."""
 
 class DataProcessor:
     """Process data efficiently."""
@@ -259,7 +265,8 @@ class DataProcessor:
     def filter_data(self, data: list, threshold: int) -> list:
         """Filter data by threshold."""
         return [x for x in data if x > threshold]
-''')
+'''
+    )
 
     # Step 3: Re-index (should detect new file)
     incremental_stats = manager.index_path(str(project_dir))
@@ -271,9 +278,9 @@ class DataProcessor:
     cursor = store._get_connection().cursor()
     cursor.execute("SELECT COUNT(*) FROM chunks")
     final_chunk_count = cursor.fetchone()[0]
-    assert final_chunk_count > initial_chunk_count, (
-        f"Should have more chunks after adding module3: {final_chunk_count} > {initial_chunk_count}"
-    )
+    assert (
+        final_chunk_count > initial_chunk_count
+    ), f"Should have more chunks after adding module3: {final_chunk_count} > {initial_chunk_count}"
     # Should have chunks from all 3 modules
     assert final_chunk_count == incremental_stats.chunks_created
 
@@ -285,9 +292,9 @@ class DataProcessor:
     cursor = store._get_connection().cursor()
     cursor.execute("SELECT COUNT(*) FROM chunks")
     total_chunks = cursor.fetchone()[0]
-    assert total_chunks == incremental_stats.chunks_created, (
-        f"DB count {total_chunks} should match stats {incremental_stats.chunks_created}"
-    )
+    assert (
+        total_chunks == incremental_stats.chunks_created
+    ), f"DB count {total_chunks} should match stats {incremental_stats.chunks_created}"
 
 
 def test_memory_lifecycle_concurrent_access(temp_memory_project, temp_db_path):
@@ -328,10 +335,12 @@ def test_memory_lifecycle_concurrent_access(temp_memory_project, temp_db_path):
 
     # Step 5: Add new file and index (simulating concurrent write)
     module4 = project_dir / "module4.py"
-    module4.write_text('''"""Module 4."""
+    module4.write_text(
+        '''"""Module 4."""
 def test():
     return "test"
-''')
+'''
+    )
 
     # Index new file
     manager.index_path(str(project_dir))
@@ -373,13 +382,15 @@ def test_memory_lifecycle_stats_accuracy(temp_memory_project, temp_db_path):
     assert actual_chunk_count > 0
 
     # Step 2: Modify file and re-index (add more functions)
-    module1.write_text('''"""Modified."""
+    module1.write_text(
+        '''"""Modified."""
 def new_func():
     return "new"
 
 def another_func():
     return "another"
-''')
+'''
+    )
     time.sleep(0.1)
     manager.index_path(str(project_dir))
 
@@ -432,7 +443,8 @@ def test_memory_lifecycle_search_ranking_stability(temp_memory_project, temp_db_
     assert calc_found
 
     # Step 2: Modify module1 to also have math operations
-    module1.write_text('''"""Module 1 with math."""
+    module1.write_text(
+        '''"""Module 1 with math."""
 
 def add_numbers(x, y):
     """Add two numbers together."""
@@ -441,7 +453,8 @@ def add_numbers(x, y):
 def subtract_numbers(x, y):
     """Subtract two numbers."""
     return x - y
-''')
+'''
+    )
     time.sleep(0.1)
     manager.index_path(str(project_dir))
 

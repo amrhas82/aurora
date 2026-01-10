@@ -34,6 +34,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
 
@@ -49,7 +50,8 @@ class TestDatabasePathConsistency:
 
         # Create sample Python file
         sample_file = workspace / "example.py"
-        sample_file.write_text("""
+        sample_file.write_text(
+            """
 def greet(name):
     \"\"\"Greet a person by name.\"\"\"
     return f"Hello, {name}!"
@@ -60,7 +62,8 @@ class Calculator:
     def add(self, a, b):
         \"\"\"Add two numbers.\"\"\"
         return a + b
-""")
+"""
+        )
 
         return workspace
 
@@ -300,13 +303,15 @@ class TestDatabaseMigration:
         cursor = conn.cursor()
 
         # Create tables (simplified)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS chunks (
                 id TEXT PRIMARY KEY,
                 name TEXT,
                 content TEXT
             )
-        """)
+        """
+        )
 
         # Insert sample data
         cursor.execute(

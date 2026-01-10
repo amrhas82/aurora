@@ -6,16 +6,15 @@ Tests the complete wizard flow in a real environment.
 from __future__ import annotations
 
 import os
-import tempfile
 from pathlib import Path
 
 import pytest
-
-# Skip: Wizard tests need separate investigation (unrelated to aur query changes)
-pytestmark = pytest.mark.skip(reason="Wizard tests failing - needs separate investigation")
 from click.testing import CliRunner
 
 from aurora_cli.main import cli
+
+# Skip: Wizard tests need separate investigation (unrelated to aur query changes)
+pytestmark = pytest.mark.skip(reason="Wizard tests failing - needs separate investigation")
 
 
 @pytest.fixture

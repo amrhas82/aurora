@@ -53,12 +53,28 @@ class TestRunChecks:
 
     def test_run_checks_returns_list(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should return list of HealthCheckResult tuples."""
-        with patch.object(mcp_checks, "_check_mcp_config_syntax", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_aurora_mcp_tools_importable", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_soar_phases_importable", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_memory_database_accessible", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_slash_command_mcp_consistency", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_mcp_server_tools_complete", return_value=("pass", "Valid", {})):
+        with (
+            patch.object(
+                mcp_checks, "_check_mcp_config_syntax", return_value=("pass", "Valid", {})
+            ),
+            patch.object(
+                mcp_checks, "_check_aurora_mcp_tools_importable", return_value=("pass", "Valid", {})
+            ),
+            patch.object(
+                mcp_checks, "_check_soar_phases_importable", return_value=("pass", "Valid", {})
+            ),
+            patch.object(
+                mcp_checks, "_check_memory_database_accessible", return_value=("pass", "Valid", {})
+            ),
+            patch.object(
+                mcp_checks,
+                "_check_slash_command_mcp_consistency",
+                return_value=("pass", "Valid", {}),
+            ),
+            patch.object(
+                mcp_checks, "_check_mcp_server_tools_complete", return_value=("pass", "Valid", {})
+            ),
+        ):
             results = mcp_checks.run_checks()
 
         assert isinstance(results, list)
@@ -151,7 +167,10 @@ class TestCheckAuroraMCPToolsImportable:
 
     def test_import_error(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should fail when aurora_mcp.tools cannot be imported."""
-        with patch("aurora_cli.health_checks.importlib.import_module", side_effect=ImportError("Module not found")):
+        with patch(
+            "aurora_cli.health_checks.importlib.import_module",
+            side_effect=ImportError("Module not found"),
+        ):
             status, message, details = mcp_checks._check_aurora_mcp_tools_importable()
 
         assert status == "fail"
@@ -171,19 +190,31 @@ class TestCheckSoarPhasesImportable:
         assert status == "pass"
         assert "9" in message or "all" in message.lower()
         assert details is not None
-        expected_phases = ["assess", "retrieve", "decompose", "verify", "route",
-                          "collect", "synthesize", "record", "respond"]
+        expected_phases = [
+            "assess",
+            "retrieve",
+            "decompose",
+            "verify",
+            "route",
+            "collect",
+            "synthesize",
+            "record",
+            "respond",
+        ]
         for phase in expected_phases:
             assert phase in str(details)
 
     def test_some_phases_missing(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should fail when some phase modules cannot be imported."""
+
         def mock_import_side_effect(name: str):
             if "decompose" in name or "verify" in name:
                 raise ImportError(f"Cannot import {name}")
             return Mock()
 
-        with patch("aurora_cli.health_checks.importlib.import_module", side_effect=mock_import_side_effect):
+        with patch(
+            "aurora_cli.health_checks.importlib.import_module", side_effect=mock_import_side_effect
+        ):
             status, message, details = mcp_checks._check_soar_phases_importable()
 
         assert status == "fail"
@@ -192,7 +223,10 @@ class TestCheckSoarPhasesImportable:
 
     def test_all_phases_fail_import(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should fail when no phase modules can be imported."""
-        with patch("aurora_cli.health_checks.importlib.import_module", side_effect=ImportError("Module not found")):
+        with patch(
+            "aurora_cli.health_checks.importlib.import_module",
+            side_effect=ImportError("Module not found"),
+        ):
             status, message, details = mcp_checks._check_soar_phases_importable()
 
         assert status == "fail"
@@ -215,6 +249,7 @@ class TestCheckMemoryDatabaseAccessible:
 
         # Create a mock module for SQLiteStore
         import sys
+
         mock_sqlite_module = Mock()
         mock_sqlite_module.SQLiteStore = Mock(return_value=mock_store)
 
@@ -234,7 +269,9 @@ class TestCheckMemoryDatabaseAccessible:
         assert status == "warning"
         assert "not found" in message.lower() or "missing" in message.lower()
 
-    def test_database_connection_error(self, mcp_checks: MCPFunctionalChecks, tmp_path: Path) -> None:
+    def test_database_connection_error(
+        self, mcp_checks: MCPFunctionalChecks, tmp_path: Path
+    ) -> None:
         """Should fail when database connection fails."""
         mcp_checks.project_path = tmp_path
         db_path = tmp_path / ".aurora" / "memory.db"
@@ -243,6 +280,7 @@ class TestCheckMemoryDatabaseAccessible:
 
         # Create a mock module that raises an exception
         import sys
+
         mock_sqlite_module = Mock()
         mock_sqlite_module.SQLiteStore = Mock(side_effect=Exception("Connection failed"))
 
@@ -258,8 +296,10 @@ class TestCheckSlashCommandMCPConsistency:
 
     def test_all_commands_consistent(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should pass when all slash commands reference valid MCP servers."""
-        with patch("aurora_cli.health_checks.Path.exists", return_value=True), \
-             patch("aurora_cli.health_checks.Path.glob", return_value=[]):
+        with (
+            patch("aurora_cli.health_checks.Path.exists", return_value=True),
+            patch("aurora_cli.health_checks.Path.glob", return_value=[]),
+        ):
             status, message, details = mcp_checks._check_slash_command_mcp_consistency()
 
         # For now, we expect pass when no issues found
@@ -344,33 +384,40 @@ class TestGetFixableIssues:
             assert "problem" in issue
             assert "fix" in issue
 
-    def test_missing_aurora_directory(self, mcp_checks: MCPFunctionalChecks, tmp_path: Path) -> None:
+    def test_missing_aurora_directory(
+        self, mcp_checks: MCPFunctionalChecks, tmp_path: Path
+    ) -> None:
         """Should detect missing .aurora directory as fixable."""
         # Remove .aurora directory
         aurora_dir = tmp_path / ".aurora"
         if aurora_dir.exists():
             import shutil
+
             shutil.rmtree(aurora_dir)
 
-        with patch.object(mcp_checks, "run_checks", return_value=[
-            ("warning", "Database not found", {})
-        ]):
+        with patch.object(
+            mcp_checks, "run_checks", return_value=[("warning", "Database not found", {})]
+        ):
             fixable = mcp_checks.get_fixable_issues()
 
         assert len(fixable) > 0
-        assert any("aurora" in issue["problem"].lower() or "directory" in issue["problem"].lower()
-                  for issue in fixable)
+        assert any(
+            "aurora" in issue["problem"].lower() or "directory" in issue["problem"].lower()
+            for issue in fixable
+        )
 
     def test_missing_memory_database(self, mcp_checks: MCPFunctionalChecks, tmp_path: Path) -> None:
         """Should detect missing memory.db as fixable."""
-        with patch.object(mcp_checks, "run_checks", return_value=[
-            ("warning", "Database not found", {})
-        ]):
+        with patch.object(
+            mcp_checks, "run_checks", return_value=[("warning", "Database not found", {})]
+        ):
             fixable = mcp_checks.get_fixable_issues()
 
         assert len(fixable) > 0
-        assert any("database" in issue["problem"].lower() or "memory" in issue["problem"].lower()
-                  for issue in fixable)
+        assert any(
+            "database" in issue["problem"].lower() or "memory" in issue["problem"].lower()
+            for issue in fixable
+        )
 
 
 class TestGetManualIssues:
@@ -388,27 +435,37 @@ class TestGetManualIssues:
 
     def test_invalid_json_syntax(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should detect invalid JSON syntax as manual issue."""
-        with patch.object(mcp_checks, "run_checks", return_value=[
-            ("fail", "Invalid JSON syntax", {"error": "JSONDecodeError"})
-        ]):
+        with patch.object(
+            mcp_checks,
+            "run_checks",
+            return_value=[("fail", "Invalid JSON syntax", {"error": "JSONDecodeError"})],
+        ):
             manual = mcp_checks.get_manual_issues()
 
         assert len(manual) > 0
-        assert any("json" in issue["problem"].lower() or "syntax" in issue["problem"].lower()
-                  for issue in manual)
-        assert any("aur init" in issue["solution"].lower() or "config" in issue["solution"].lower()
-                  for issue in manual)
+        assert any(
+            "json" in issue["problem"].lower() or "syntax" in issue["problem"].lower()
+            for issue in manual
+        )
+        assert any(
+            "aur init" in issue["solution"].lower() or "config" in issue["solution"].lower()
+            for issue in manual
+        )
 
     def test_missing_soar_phases(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should detect missing SOAR phases as manual issue."""
-        with patch.object(mcp_checks, "run_checks", return_value=[
-            ("fail", "SOAR phases missing", {"failed": ["decompose", "verify"]})
-        ]):
+        with patch.object(
+            mcp_checks,
+            "run_checks",
+            return_value=[("fail", "SOAR phases missing", {"failed": ["decompose", "verify"]})],
+        ):
             manual = mcp_checks.get_manual_issues()
 
         assert len(manual) > 0
-        assert any("phase" in issue["problem"].lower() or "soar" in issue["problem"].lower()
-                  for issue in manual)
+        assert any(
+            "phase" in issue["problem"].lower() or "soar" in issue["problem"].lower()
+            for issue in manual
+        )
 
 
 class TestMCPFunctionalChecksIntegration:
@@ -417,12 +474,32 @@ class TestMCPFunctionalChecksIntegration:
     def test_complete_check_flow(self, mcp_checks: MCPFunctionalChecks) -> None:
         """Should execute all checks and categorize issues."""
         # Mock all checks to return various statuses
-        with patch.object(mcp_checks, "_check_mcp_config_syntax", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_aurora_mcp_tools_importable", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_soar_phases_importable", return_value=("warning", "Some missing", {"missing": ["decompose"]})), \
-             patch.object(mcp_checks, "_check_memory_database_accessible", return_value=("fail", "Not found", {})), \
-             patch.object(mcp_checks, "_check_slash_command_mcp_consistency", return_value=("pass", "Valid", {})), \
-             patch.object(mcp_checks, "_check_mcp_server_tools_complete", return_value=("pass", "Valid", {})):
+        with (
+            patch.object(
+                mcp_checks, "_check_mcp_config_syntax", return_value=("pass", "Valid", {})
+            ),
+            patch.object(
+                mcp_checks, "_check_aurora_mcp_tools_importable", return_value=("pass", "Valid", {})
+            ),
+            patch.object(
+                mcp_checks,
+                "_check_soar_phases_importable",
+                return_value=("warning", "Some missing", {"missing": ["decompose"]}),
+            ),
+            patch.object(
+                mcp_checks,
+                "_check_memory_database_accessible",
+                return_value=("fail", "Not found", {}),
+            ),
+            patch.object(
+                mcp_checks,
+                "_check_slash_command_mcp_consistency",
+                return_value=("pass", "Valid", {}),
+            ),
+            patch.object(
+                mcp_checks, "_check_mcp_server_tools_complete", return_value=("pass", "Valid", {})
+            ),
+        ):
             results = mcp_checks.run_checks()
             fixable = mcp_checks.get_fixable_issues()
             manual = mcp_checks.get_manual_issues()

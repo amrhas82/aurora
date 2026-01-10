@@ -32,20 +32,21 @@ def benchmark_single_prompt():
         times.append((end - start) * 1000)  # Convert to ms
 
     return {
-        'mean': mean(times),
-        'median': median(times),
-        'min': min(times),
-        'max': max(times),
-        'stdev': stdev(times),
-        'p95': sorted(times)[int(len(times) * 0.95)],
-        'p99': sorted(times)[int(len(times) * 0.99)],
+        "mean": mean(times),
+        "median": median(times),
+        "min": min(times),
+        "max": max(times),
+        "stdev": stdev(times),
+        "p95": sorted(times)[int(len(times) * 0.95)],
+        "p99": sorted(times)[int(len(times) * 0.99)],
     }
 
 
 def benchmark_long_prompt():
     """Benchmark long prompt (500+ chars) latency."""
     assessor = ComplexityAssessor()
-    prompt = """
+    prompt = (
+        """
     Implement a comprehensive user authentication system with the following requirements:
     1. Support for multiple authentication methods (OAuth, SAML, local credentials)
     2. Multi-factor authentication with SMS and TOTP support
@@ -57,7 +58,9 @@ def benchmark_long_prompt():
     8. Comprehensive unit and integration tests
     9. Documentation including API specs and deployment guide
     10. Performance optimization for high-concurrency scenarios
-    """ * 2  # Double it to ensure 500+ chars
+    """
+        * 2
+    )  # Double it to ensure 500+ chars
 
     assert len(prompt) > 500, f"Prompt length: {len(prompt)}"
 
@@ -74,14 +77,14 @@ def benchmark_long_prompt():
         times.append((end - start) * 1000)  # Convert to ms
 
     return {
-        'mean': mean(times),
-        'median': median(times),
-        'min': min(times),
-        'max': max(times),
-        'stdev': stdev(times),
-        'p95': sorted(times)[int(len(times) * 0.95)],
-        'p99': sorted(times)[int(len(times) * 0.99)],
-        'prompt_length': len(prompt),
+        "mean": mean(times),
+        "median": median(times),
+        "min": min(times),
+        "max": max(times),
+        "stdev": stdev(times),
+        "p95": sorted(times)[int(len(times) * 0.95)],
+        "p99": sorted(times)[int(len(times) * 0.99)],
+        "prompt_length": len(prompt),
     }
 
 
@@ -115,9 +118,9 @@ def benchmark_throughput():
     throughput = count / elapsed
 
     return {
-        'total_prompts': count,
-        'elapsed_seconds': elapsed,
-        'prompts_per_second': throughput,
+        "total_prompts": count,
+        "elapsed_seconds": elapsed,
+        "prompts_per_second": throughput,
     }
 
 
@@ -136,7 +139,7 @@ def main():
     print(f"  P95:    {single_stats['p95']:.3f} ms")
     print(f"  P99:    {single_stats['p99']:.3f} ms")
 
-    if single_stats['p95'] < 1.0:
+    if single_stats["p95"] < 1.0:
         print(f"  ✓ PASS: P95 latency {single_stats['p95']:.3f}ms < 1ms target")
     else:
         print(f"  ✗ FAIL: P95 latency {single_stats['p95']:.3f}ms > 1ms target")
@@ -152,7 +155,7 @@ def main():
     print(f"  P95:    {long_stats['p95']:.3f} ms")
     print(f"  P99:    {long_stats['p99']:.3f} ms")
 
-    if long_stats['p95'] < 5.0:
+    if long_stats["p95"] < 5.0:
         print(f"  ✓ PASS: P95 latency {long_stats['p95']:.3f}ms < 5ms target")
     else:
         print(f"  ✗ FAIL: P95 latency {long_stats['p95']:.3f}ms > 5ms target")
@@ -163,18 +166,22 @@ def main():
     print(f"  Elapsed time:   {throughput_stats['elapsed_seconds']:.2f} seconds")
     print(f"  Throughput:     {throughput_stats['prompts_per_second']:.0f} prompts/sec")
 
-    if throughput_stats['prompts_per_second'] > 1000:
-        print(f"  ✓ PASS: Throughput {throughput_stats['prompts_per_second']:.0f} > 1000/sec target")
+    if throughput_stats["prompts_per_second"] > 1000:
+        print(
+            f"  ✓ PASS: Throughput {throughput_stats['prompts_per_second']:.0f} > 1000/sec target"
+        )
     else:
-        print(f"  ✗ FAIL: Throughput {throughput_stats['prompts_per_second']:.0f} < 1000/sec target")
+        print(
+            f"  ✗ FAIL: Throughput {throughput_stats['prompts_per_second']:.0f} < 1000/sec target"
+        )
 
     print("\n" + "=" * 70)
 
     # Overall pass/fail
     all_pass = (
-        single_stats['p95'] < 1.0 and
-        long_stats['p95'] < 5.0 and
-        throughput_stats['prompts_per_second'] > 1000
+        single_stats["p95"] < 1.0
+        and long_stats["p95"] < 5.0
+        and throughput_stats["prompts_per_second"] > 1000
     )
 
     if all_pass:
@@ -185,6 +192,7 @@ def main():
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     sys.exit(main())

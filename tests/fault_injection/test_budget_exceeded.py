@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+
 from aurora_core.budget import CostTracker
 from aurora_core.config.loader import Config
 from aurora_core.exceptions import BudgetExceededError
@@ -59,13 +60,7 @@ def agent_registry():
 @pytest.fixture
 def config():
     """Create test config."""
-    return Config(
-        {
-            "budget": {
-                "monthly_limit_usd": 1.0  # Very low limit for testing
-            }
-        }
-    )
+    return Config({"budget": {"monthly_limit_usd": 1.0}})  # Very low limit for testing
 
 
 class TestBudgetExceededFaultInjection:

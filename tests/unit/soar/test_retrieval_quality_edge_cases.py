@@ -11,9 +11,9 @@ Tests boundary conditions, error handling, and unusual scenarios:
 from unittest.mock import MagicMock, Mock
 
 import pytest
-from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 
 from aurora_core.chunks.code_chunk import CodeChunk
+from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 from aurora_soar.phases.retrieve import ACTIVATION_THRESHOLD, filter_by_activation
 from aurora_soar.phases.verify import RetrievalQuality, assess_retrieval_quality
 

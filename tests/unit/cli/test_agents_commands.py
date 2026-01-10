@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
+from click.testing import CliRunner
+
 from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest
 from aurora_cli.commands.agents import (
     _find_similar_agents,
@@ -19,7 +21,6 @@ from aurora_cli.commands.agents import (
     agents_group,
     get_manifest,
 )
-from click.testing import CliRunner
 
 
 @pytest.fixture
@@ -78,9 +79,7 @@ def sample_manifest(tmp_path: Path) -> AgentManifest:
 class TestAgentsListCommand:
     """Tests for aur agents list command."""
 
-    def test_list_all_agents(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
-    ) -> None:
+    def test_list_all_agents(self, cli_runner: CliRunner, sample_manifest: AgentManifest) -> None:
         """Lists all agents grouped by category."""
         with patch(
             "aurora_cli.commands.agents.get_manifest",
@@ -140,9 +139,7 @@ class TestAgentsListCommand:
 class TestAgentsSearchCommand:
     """Tests for aur agents search command."""
 
-    def test_search_by_keyword(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
-    ) -> None:
+    def test_search_by_keyword(self, cli_runner: CliRunner, sample_manifest: AgentManifest) -> None:
         """Searches and finds agents matching keyword."""
         with patch(
             "aurora_cli.commands.agents.get_manifest",
@@ -154,9 +151,7 @@ class TestAgentsSearchCommand:
         assert "qa-test-architect" in result.output
         assert "Found" in result.output
 
-    def test_search_no_results(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
-    ) -> None:
+    def test_search_no_results(self, cli_runner: CliRunner, sample_manifest: AgentManifest) -> None:
         """Shows message when no agents match."""
         with patch(
             "aurora_cli.commands.agents.get_manifest",
@@ -167,9 +162,7 @@ class TestAgentsSearchCommand:
         assert result.exit_code == 0
         assert "No agents found matching" in result.output
 
-    def test_search_with_limit(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
-    ) -> None:
+    def test_search_with_limit(self, cli_runner: CliRunner, sample_manifest: AgentManifest) -> None:
         """Respects result limit."""
         with patch(
             "aurora_cli.commands.agents.get_manifest",
@@ -248,9 +241,7 @@ class TestAgentsRefreshCommand:
 class TestSearchAgentsFunction:
     """Tests for _search_agents helper function."""
 
-    def test_exact_id_match_highest_priority(
-        self, sample_manifest: AgentManifest
-    ) -> None:
+    def test_exact_id_match_highest_priority(self, sample_manifest: AgentManifest) -> None:
         """Exact ID matches rank highest."""
         results = _search_agents(sample_manifest, "orchestrator", limit=10)
 
@@ -330,9 +321,7 @@ class TestGetManifest:
 
     def test_loads_manifest(self, tmp_path: Path) -> None:
         """Loads manifest from cache."""
-        with patch(
-            "aurora_cli.commands.agents.ManifestManager"
-        ) as MockManager:
+        with patch("aurora_cli.commands.agents.ManifestManager") as MockManager:
             mock_manager = MagicMock()
             mock_manifest = AgentManifest()
             mock_manager.get_or_refresh.return_value = mock_manifest
@@ -349,9 +338,7 @@ class TestGetManifest:
 
     def test_force_refresh(self, tmp_path: Path) -> None:
         """Force refresh regenerates manifest."""
-        with patch(
-            "aurora_cli.commands.agents.ManifestManager"
-        ) as MockManager:
+        with patch("aurora_cli.commands.agents.ManifestManager") as MockManager:
             mock_manager = MagicMock()
             mock_manifest = AgentManifest()
             mock_manager.generate.return_value = mock_manifest

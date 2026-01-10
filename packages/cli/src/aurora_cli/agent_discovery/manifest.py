@@ -20,15 +20,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from aurora_cli.agent_discovery.models import (
-    AgentCategory,
-    AgentInfo,
-    AgentManifest,
-    ManifestStats,
-)
+from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest, ManifestStats
 from aurora_cli.agent_discovery.parser import AgentParser
 from aurora_cli.agent_discovery.scanner import AgentScanner
-
 
 if TYPE_CHECKING:
     from aurora_cli.config import Config
@@ -331,9 +325,7 @@ class ManifestManager:
             >>> print(f"Got {manifest.stats.total} agents")
         """
         # Check if we should refresh
-        needs_refresh = (
-            auto_refresh and self.should_refresh(path, refresh_interval_hours)
-        )
+        needs_refresh = auto_refresh and self.should_refresh(path, refresh_interval_hours)
 
         # Try to load existing manifest
         if not needs_refresh:

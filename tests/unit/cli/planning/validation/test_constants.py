@@ -109,16 +109,16 @@ class TestValidationMessages:
 
         # Should NOT contain OpenSpec terminology
         assert "openspec" not in all_text, "Messages should not reference 'openspec'"
-        assert "change" not in all_text or "changes" in all_text, (
-            "Should use 'plan' or 'changes' (as a verb), not 'change' (as a noun)"
-        )
+        assert (
+            "change" not in all_text or "changes" in all_text
+        ), "Should use 'plan' or 'changes' (as a verb), not 'change' (as a noun)"
         # Note: "spec" might appear in "inspect", so we check for specific phrases
 
         # Should contain Aurora terminology
         assert "plan" in all_text, "Messages should reference 'plan'"
-        assert "capability" in all_text or "capabilities" in all_text, (
-            "Messages should reference 'capability'"
-        )
+        assert (
+            "capability" in all_text or "capabilities" in all_text
+        ), "Messages should reference 'capability'"
 
     def test_messages_include_threshold_values(self):
         """Verify messages that reference thresholds include the actual values."""
@@ -159,9 +159,9 @@ class TestValidationMessages:
         ]
 
         for guidance in all_guidance:
-            assert "openspec/" not in guidance.lower(), (
-                f"Should not reference 'openspec/' directory: {guidance}"
-            )
+            assert (
+                "openspec/" not in guidance.lower()
+            ), f"Should not reference 'openspec/' directory: {guidance}"
             # Check for Aurora-specific paths
             if "directory" in guidance.lower() or "specs/" in guidance.lower():
                 # Should reference Aurora paths if mentioning directories

@@ -125,11 +125,7 @@ class InitCommand:
                 if end_idx != -1:
                     # Replace the managed block
                     end_idx += len(AURORA_END)
-                    new_content = (
-                        content[:start_idx] +
-                        ROOT_STUB_TEMPLATE +
-                        content[end_idx:]
-                    )
+                    new_content = content[:start_idx] + ROOT_STUB_TEMPLATE + content[end_idx:]
                 else:
                     # Malformed - append new block
                     new_content = content + "\\n\\n" + ROOT_STUB_TEMPLATE

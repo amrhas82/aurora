@@ -27,11 +27,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from tests.integration.test_e2e_framework import (
-    E2ETestFramework,
-    MockAgent,
-    MockLLMResponse,
-)
+from tests.integration.test_e2e_framework import E2ETestFramework, MockAgent, MockLLMResponse
 
 
 @pytest.fixture
@@ -212,9 +208,9 @@ class TestComplexQueryE2E:
         verify_meta = response["metadata"]["phases"]["phase4_verify"]
 
         # For COMPLEX queries, should use Option B (adversarial)
-        assert verify_meta["method"] == "adversarial", (
-            "COMPLEX queries should use adversarial verification (Option B)"
-        )
+        assert (
+            verify_meta["method"] == "adversarial"
+        ), "COMPLEX queries should use adversarial verification (Option B)"
 
         # Verify verification passed
         assert verify_meta["final_verdict"] == "PASS"

@@ -19,7 +19,6 @@ from pydantic import ValidationError
 
 from aurora_cli.agent_discovery.models import AgentInfo
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -112,9 +111,9 @@ class AgentParser:
         # Map alternative field names to canonical names
         # Supports both new format (id/role/goal) and existing format (name/description)
         field_aliases = {
-            "name": "id",           # name -> id
+            "name": "id",  # name -> id
             "description": "goal",  # description -> goal
-            "title": "role",        # title -> role (alternative)
+            "title": "role",  # title -> role (alternative)
         }
         for old_name, new_name in field_aliases.items():
             if old_name in metadata and new_name not in metadata:
@@ -137,18 +136,16 @@ class AgentParser:
         except ValidationError as e:
             # Extract missing/invalid fields for clear error message
             errors = e.errors()
-            missing_fields = [
-                err["loc"][0] for err in errors
-                if err["type"] == "missing"
-            ]
+            missing_fields = [err["loc"][0] for err in errors if err["type"] == "missing"]
             invalid_fields = [
-                (err["loc"][0], err["msg"]) for err in errors
-                if err["type"] != "missing"
+                (err["loc"][0], err["msg"]) for err in errors if err["type"] != "missing"
             ]
 
             error_details = []
             if missing_fields:
-                error_details.append(f"missing required fields: {', '.join(str(f) for f in missing_fields)}")
+                error_details.append(
+                    f"missing required fields: {', '.join(str(f) for f in missing_fields)}"
+                )
             for field, msg in invalid_fields:
                 error_details.append(f"invalid '{field}': {msg}")
 
@@ -196,9 +193,7 @@ class AgentParser:
             return None
 
         if not post.metadata:
-            logger.warning(
-                "No frontmatter found in content - expected YAML between --- delimiters"
-            )
+            logger.warning("No frontmatter found in content - expected YAML between --- delimiters")
             return None
 
         # Add source_file if provided
@@ -213,10 +208,7 @@ class AgentParser:
 
         except ValidationError as e:
             errors = e.errors()
-            missing_fields = [
-                err["loc"][0] for err in errors
-                if err["type"] == "missing"
-            ]
+            missing_fields = [err["loc"][0] for err in errors if err["type"] == "missing"]
 
             if missing_fields:
                 logger.warning(

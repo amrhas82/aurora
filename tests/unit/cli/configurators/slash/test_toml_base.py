@@ -8,18 +8,13 @@ from pathlib import Path
 
 import pytest
 
-
 # Python 3.11+ has tomllib built-in, but Python 3.10 needs tomli
 try:
     import tomllib
 except ImportError:
     import tomli as tomllib  # type: ignore[import-not-found]
 
-from aurora_cli.configurators.slash.base import (
-    ALL_COMMANDS,
-    AURORA_MARKERS,
-    SlashCommandTarget,
-)
+from aurora_cli.configurators.slash.base import ALL_COMMANDS, AURORA_MARKERS, SlashCommandTarget
 from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurator
 
 
@@ -358,14 +353,16 @@ class TestTomlSlashCommandConfiguratorUpdateExisting:
         # Create only one file manually
         plan_path = tmp_path / config.get_relative_path("plan")
         plan_path.parent.mkdir(parents=True, exist_ok=True)
-        plan_path.write_text(f'''description = "Old description"
+        plan_path.write_text(
+            f'''description = "Old description"
 
 prompt = """
 {AURORA_MARKERS["start"]}
 Old body content
 {AURORA_MARKERS["end"]}
 """
-''')
+'''
+        )
 
         # update_existing should only update the one file that exists
         updated = config.update_existing(str(tmp_path), ".aurora")
@@ -384,14 +381,16 @@ Old body content
         # Create file with custom description
         plan_path = tmp_path / config.get_relative_path("plan")
         plan_path.parent.mkdir(parents=True, exist_ok=True)
-        plan_path.write_text(f'''description = "My Custom Description"
+        plan_path.write_text(
+            f'''description = "My Custom Description"
 
 prompt = """
 {AURORA_MARKERS["start"]}
 Old body content
 {AURORA_MARKERS["end"]}
 """
-''')
+'''
+        )
 
         config.update_existing(str(tmp_path), ".aurora")
 

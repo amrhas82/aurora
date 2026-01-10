@@ -453,8 +453,9 @@ Duration: 28.7s
 |------------|---------------|---------|
 | 0.9-1.0 | Excellent | Use as-is |
 | 0.8-0.9 | Good | Review minor issues |
-| 0.7-0.8 | Acceptable | Review key decisions |
-| 0.5-0.7 | Partial | Verify thoroughly, may need rework |
+| 0.7-0.8 | Strong | Review key decisions |
+| 0.6-0.7 | Acceptable (devil's advocate) | Verify thoroughly, review concerns |
+| 0.5-0.6 | Needs revision | Rework based on feedback |
 | 0.0-0.5 | Low | Likely needs significant rework |
 
 ## Common Issues and Solutions

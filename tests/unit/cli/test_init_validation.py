@@ -10,9 +10,10 @@ Test-Driven Development (TDD):
 
 import json
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+
 from aurora_cli.commands.init_helpers import configure_mcp_servers
 
 
@@ -30,15 +31,12 @@ class TestMCPValidationHelpers:
         # Create valid MCP config
         config_path = tmp_path / ".cursor" / "mcp.json"
         config_path.parent.mkdir(parents=True)
-        config_path.write_text(json.dumps({
-            "mcpServers": {
-                "aurora": {
-                    "type": "stdio",
-                    "command": "aurora-mcp",
-                    "args": []
-                }
-            }
-        }), encoding="utf-8")
+        config_path.write_text(
+            json.dumps(
+                {"mcpServers": {"aurora": {"type": "stdio", "command": "aurora-mcp", "args": []}}}
+            ),
+            encoding="utf-8",
+        )
 
         success, warnings = _validate_mcp_config(config_path, tmp_path)
 
@@ -67,13 +65,9 @@ class TestMCPValidationHelpers:
         # Create config without aurora server
         config_path = tmp_path / ".cursor" / "mcp.json"
         config_path.parent.mkdir(parents=True)
-        config_path.write_text(json.dumps({
-            "mcpServers": {
-                "other-server": {
-                    "command": "other"
-                }
-            }
-        }), encoding="utf-8")
+        config_path.write_text(
+            json.dumps({"mcpServers": {"other-server": {"command": "other"}}}), encoding="utf-8"
+        )
 
         success, warnings = _validate_mcp_config(config_path, tmp_path)
 
@@ -88,18 +82,15 @@ class TestMCPValidationHelpers:
         # Create valid config with aurora server
         config_path = tmp_path / ".cursor" / "mcp.json"
         config_path.parent.mkdir(parents=True)
-        config_path.write_text(json.dumps({
-            "mcpServers": {
-                "aurora": {
-                    "type": "stdio",
-                    "command": "aurora-mcp",
-                    "args": []
-                }
-            }
-        }), encoding="utf-8")
+        config_path.write_text(
+            json.dumps(
+                {"mcpServers": {"aurora": {"type": "stdio", "command": "aurora-mcp", "args": []}}}
+            ),
+            encoding="utf-8",
+        )
 
         # Mock the tools import to verify checking happens
-        with patch('aurora_cli.commands.init_helpers.Path.exists') as mock_exists:
+        with patch("aurora_cli.commands.init_helpers.Path.exists") as mock_exists:
             # Assume server path exists for this test
             mock_exists.return_value = True
 
@@ -116,15 +107,20 @@ class TestMCPValidationHelpers:
         # Create config with python module format
         config_path = tmp_path / ".cursor" / "mcp.json"
         config_path.parent.mkdir(parents=True)
-        config_path.write_text(json.dumps({
-            "mcpServers": {
-                "aurora": {
-                    "type": "stdio",
-                    "command": "python3",
-                    "args": ["-m", "aurora_mcp.server"]
+        config_path.write_text(
+            json.dumps(
+                {
+                    "mcpServers": {
+                        "aurora": {
+                            "type": "stdio",
+                            "command": "python3",
+                            "args": ["-m", "aurora_mcp.server"],
+                        }
+                    }
                 }
-            }
-        }), encoding="utf-8")
+            ),
+            encoding="utf-8",
+        )
 
         success, warnings = _validate_mcp_config(config_path, tmp_path)
 
@@ -168,8 +164,10 @@ class TestConfigureMCPServersValidation:
     @pytest.mark.asyncio
     async def test_configure_mcp_servers_returns_validation_warnings(self, tmp_path):
         """configure_mcp_servers() should return validation warnings in tuple."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock configurator
             mock_configurator = MagicMock()
@@ -203,8 +201,10 @@ class TestConfigureMCPServersValidation:
     @pytest.mark.asyncio
     async def test_configure_mcp_servers_validation_does_not_prevent_completion(self, tmp_path):
         """configure_mcp_servers() should complete even with validation warnings (soft failure)."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock configurator
             mock_configurator = MagicMock()
@@ -235,8 +235,10 @@ class TestConfigureMCPServersValidation:
     @pytest.mark.asyncio
     async def test_configure_mcp_servers_includes_json_syntax_warnings(self, tmp_path):
         """configure_mcp_servers() should include JSON syntax errors in validation warnings."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock configurator
             mock_configurator = MagicMock()
@@ -269,8 +271,10 @@ class TestConfigureMCPServersValidation:
     @pytest.mark.asyncio
     async def test_configure_mcp_servers_validates_all_configured_tools(self, tmp_path):
         """configure_mcp_servers() should validate each configured tool."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock multiple configurators
             tools = []
@@ -322,7 +326,7 @@ class TestValidationWarningDisplay:
 
         sample_warnings = [
             "claude: MCP config has invalid JSON syntax",
-            "cursor: Aurora MCP server not found in configuration"
+            "cursor: Aurora MCP server not found in configuration",
         ]
 
         # Expected pattern: suggest aur doctor when warnings exist
@@ -342,8 +346,10 @@ class TestSoftFailureBehavior:
     @pytest.mark.asyncio
     async def test_validation_warnings_do_not_raise_exceptions(self, tmp_path):
         """Validation warnings should not raise exceptions or prevent init completion."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             mock_configurator = MagicMock()
             mock_configurator.tool_id = "claude"
@@ -352,7 +358,7 @@ class TestSoftFailureBehavior:
 
             config_path = tmp_path / ".claude" / "mcp.json"
             config_path.parent.mkdir(parents=True)
-            config_path.write_text('COMPLETELY INVALID', encoding="utf-8")
+            config_path.write_text("COMPLETELY INVALID", encoding="utf-8")
 
             mock_result = MagicMock()
             mock_result.success = True
@@ -373,8 +379,10 @@ class TestSoftFailureBehavior:
     @pytest.mark.asyncio
     async def test_validation_allows_partial_success(self, tmp_path):
         """Validation should allow init to succeed even if some tools have issues."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock two configurators: one valid, one with issues
             tools = []
@@ -386,11 +394,9 @@ class TestSoftFailureBehavior:
             mock_valid.is_configured.return_value = False
             valid_path = tmp_path / ".claude" / "mcp.json"
             valid_path.parent.mkdir(parents=True)
-            valid_path.write_text(json.dumps({
-                "mcpServers": {
-                    "aurora": {"command": "aurora-mcp"}
-                }
-            }), encoding="utf-8")
+            valid_path.write_text(
+                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}), encoding="utf-8"
+            )
             mock_result_valid = MagicMock()
             mock_result_valid.success = True
             mock_result_valid.warnings = []
@@ -405,7 +411,7 @@ class TestSoftFailureBehavior:
             mock_invalid.is_configured.return_value = False
             invalid_path = tmp_path / ".cursor" / "mcp.json"
             invalid_path.parent.mkdir(parents=True)
-            invalid_path.write_text('INVALID JSON', encoding="utf-8")
+            invalid_path.write_text("INVALID JSON", encoding="utf-8")
             mock_result_invalid = MagicMock()
             mock_result_invalid.success = True
             mock_result_invalid.warnings = []

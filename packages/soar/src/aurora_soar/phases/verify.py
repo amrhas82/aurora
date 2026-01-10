@@ -11,12 +11,10 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_reasoning.verify import VerificationOption
 
-
 if TYPE_CHECKING:
+    from aurora.reasoning import LLMClient
     from aurora_reasoning.decompose import DecompositionResult
     from aurora_reasoning.verify import VerificationResult
-
-    from aurora.reasoning import LLMClient
 
 __all__ = [
     "verify_decomposition",

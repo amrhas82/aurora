@@ -7,8 +7,8 @@ and that the orchestrator properly routes them based on complexity level.
 
 import pytest
 
-from aurora_soar.phases.assess import assess_complexity
 from aurora_soar.orchestrator import SOAROrchestrator
+from aurora_soar.phases.assess import assess_complexity
 
 
 class TestComplexityAssessmentIntegration:
@@ -28,16 +28,13 @@ class TestComplexityAssessmentIntegration:
             result = assess_complexity(query, llm_client=None)
 
             assert result["complexity"] == "SIMPLE", (
-                f"Query '{query}' should be classified as SIMPLE, "
-                f"got {result['complexity']}"
+                f"Query '{query}' should be classified as SIMPLE, " f"got {result['complexity']}"
             )
             assert result["confidence"] >= 0.5, (
-                f"Confidence should be >= 0.5 for SIMPLE query, "
-                f"got {result['confidence']}"
+                f"Confidence should be >= 0.5 for SIMPLE query, " f"got {result['confidence']}"
             )
             assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for SIMPLE query, "
-                f"got {result['method']}"
+                f"Method should be 'keyword' for SIMPLE query, " f"got {result['method']}"
             )
 
     def test_medium_query_classification(self):
@@ -54,16 +51,13 @@ class TestComplexityAssessmentIntegration:
             result = assess_complexity(query, llm_client=None)
 
             assert result["complexity"] == "MEDIUM", (
-                f"Query '{query}' should be classified as MEDIUM, "
-                f"got {result['complexity']}"
+                f"Query '{query}' should be classified as MEDIUM, " f"got {result['complexity']}"
             )
             assert result["confidence"] >= 0.5, (
-                f"Confidence should be >= 0.5 for MEDIUM query, "
-                f"got {result['confidence']}"
+                f"Confidence should be >= 0.5 for MEDIUM query, " f"got {result['confidence']}"
             )
             assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for MEDIUM query, "
-                f"got {result['method']}"
+                f"Method should be 'keyword' for MEDIUM query, " f"got {result['method']}"
             )
 
     def test_complex_query_classification(self):
@@ -80,16 +74,13 @@ class TestComplexityAssessmentIntegration:
             result = assess_complexity(query, llm_client=None)
 
             assert result["complexity"] == "COMPLEX", (
-                f"Query '{query}' should be classified as COMPLEX, "
-                f"got {result['complexity']}"
+                f"Query '{query}' should be classified as COMPLEX, " f"got {result['complexity']}"
             )
             assert result["confidence"] >= 0.5, (
-                f"Confidence should be >= 0.5 for COMPLEX query, "
-                f"got {result['confidence']}"
+                f"Confidence should be >= 0.5 for COMPLEX query, " f"got {result['confidence']}"
             )
             assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for COMPLEX query, "
-                f"got {result['method']}"
+                f"Method should be 'keyword' for COMPLEX query, " f"got {result['method']}"
             )
 
     def test_critical_query_classification(self):
@@ -107,16 +98,13 @@ class TestComplexityAssessmentIntegration:
             result = assess_complexity(query, llm_client=None)
 
             assert result["complexity"] == "CRITICAL", (
-                f"Query '{query}' should be classified as CRITICAL, "
-                f"got {result['complexity']}"
+                f"Query '{query}' should be classified as CRITICAL, " f"got {result['complexity']}"
             )
             assert result["confidence"] >= 0.9, (
-                f"Confidence should be >= 0.9 for CRITICAL query, "
-                f"got {result['confidence']}"
+                f"Confidence should be >= 0.9 for CRITICAL query, " f"got {result['confidence']}"
             )
             assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for CRITICAL query, "
-                f"got {result['method']}"
+                f"Method should be 'keyword' for CRITICAL query, " f"got {result['method']}"
             )
 
     def test_orchestrator_receives_correct_format(self):
@@ -140,19 +128,20 @@ class TestComplexityAssessmentIntegration:
         assert isinstance(result["score"], (int, float)), "score must be numeric"
 
         # Verify complexity is uppercase
-        assert result["complexity"] in ["SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL"], (
-            f"complexity must be uppercase level, got {result['complexity']}"
-        )
+        assert result["complexity"] in [
+            "SIMPLE",
+            "MEDIUM",
+            "COMPLEX",
+            "CRITICAL",
+        ], f"complexity must be uppercase level, got {result['complexity']}"
 
         # Verify confidence is in valid range
-        assert 0.0 <= result["confidence"] <= 1.0, (
-            f"confidence must be 0.0-1.0, got {result['confidence']}"
-        )
+        assert (
+            0.0 <= result["confidence"] <= 1.0
+        ), f"confidence must be 0.0-1.0, got {result['confidence']}"
 
         # Verify score is in valid range
-        assert 0.0 <= result["score"] <= 1.0, (
-            f"score must be 0.0-1.0, got {result['score']}"
-        )
+        assert 0.0 <= result["score"] <= 1.0, f"score must be 0.0-1.0, got {result['score']}"
 
     def test_routing_decision_simple_query(self):
         """Verify SIMPLE queries trigger early exit in orchestrator."""
@@ -207,8 +196,7 @@ class TestComplexityAssessmentIntegration:
 
         # Should complete in under 2ms (target from task 7.12)
         assert latency_ms < 2.0, (
-            f"Complexity assessment took {latency_ms:.2f}ms, "
-            f"should be < 2ms"
+            f"Complexity assessment took {latency_ms:.2f}ms, " f"should be < 2ms"
         )
 
         # Verify result is valid
@@ -253,6 +241,5 @@ class TestComplexityLevelCoverage:
         result = assess_complexity(query, llm_client=None)
 
         assert result["complexity"] == expected_level, (
-            f"Query '{query}' should be {expected_level}, "
-            f"got {result['complexity']}"
+            f"Query '{query}' should be {expected_level}, " f"got {result['complexity']}"
         )

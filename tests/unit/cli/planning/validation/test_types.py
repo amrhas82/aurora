@@ -36,11 +36,7 @@ class TestValidationIssue:
 
     def test_validation_issue_creation_minimal(self):
         """Test creating a ValidationIssue with minimal required fields."""
-        issue = ValidationIssue(
-            level=ValidationLevel.ERROR,
-            path="test.md",
-            message="Test error"
-        )
+        issue = ValidationIssue(level=ValidationLevel.ERROR, path="test.md", message="Test error")
         assert issue.level == ValidationLevel.ERROR
         assert issue.path == "test.md"
         assert issue.message == "Test error"
@@ -54,7 +50,7 @@ class TestValidationIssue:
             path="docs/spec.md",
             message="Deprecated field used",
             line=42,
-            column=10
+            column=10,
         )
         assert issue.level == ValidationLevel.WARNING
         assert issue.path == "docs/spec.md"
@@ -67,7 +63,7 @@ class TestValidationIssue:
         with pytest.raises(ValidationError) as exc_info:
             ValidationIssue(
                 level=ValidationLevel.ERROR,
-                path="test.md"
+                path="test.md",
                 # Missing 'message' field
             )
         assert "message" in str(exc_info.value)
@@ -76,9 +72,7 @@ class TestValidationIssue:
         """Test ValidationIssue raises error with invalid level."""
         with pytest.raises(ValidationError) as exc_info:
             ValidationIssue(
-                level="CRITICAL",  # Not a valid ValidationLevel
-                path="test.md",
-                message="Test"
+                level="CRITICAL", path="test.md", message="Test"  # Not a valid ValidationLevel
             )
         assert "validation error" in str(exc_info.value).lower()
 
@@ -88,7 +82,7 @@ class TestValidationIssue:
             level=ValidationLevel.INFO,
             path="README.md",
             message="Consider adding examples",
-            line=15
+            line=15,
         )
         data = issue.model_dump()
         assert data["level"] == "INFO"
@@ -104,7 +98,7 @@ class TestValidationIssue:
             path="src/main.py",
             message="Syntax error",
             line=10,
-            column=5
+            column=5,
         )
         json_str = issue.model_dump_json()
         assert '"level":"ERROR"' in json_str
@@ -153,16 +147,8 @@ class TestValidationReport:
     def test_validation_report_with_errors(self):
         """Test ValidationReport with error issues."""
         issues = [
-            ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="test1.md",
-                message="Error 1"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="test2.md",
-                message="Error 2"
-            )
+            ValidationIssue(level=ValidationLevel.ERROR, path="test1.md", message="Error 1"),
+            ValidationIssue(level=ValidationLevel.ERROR, path="test2.md", message="Error 2"),
         ]
         report = ValidationReport(valid=False, issues=issues)
         assert report.valid is False
@@ -174,36 +160,12 @@ class TestValidationReport:
     def test_validation_report_with_mixed_issues(self):
         """Test ValidationReport with mixed issue levels."""
         issues = [
-            ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="test.md",
-                message="Error"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.WARNING,
-                path="test.md",
-                message="Warning 1"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.WARNING,
-                path="test.md",
-                message="Warning 2"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.INFO,
-                path="test.md",
-                message="Info 1"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.INFO,
-                path="test.md",
-                message="Info 2"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.INFO,
-                path="test.md",
-                message="Info 3"
-            )
+            ValidationIssue(level=ValidationLevel.ERROR, path="test.md", message="Error"),
+            ValidationIssue(level=ValidationLevel.WARNING, path="test.md", message="Warning 1"),
+            ValidationIssue(level=ValidationLevel.WARNING, path="test.md", message="Warning 2"),
+            ValidationIssue(level=ValidationLevel.INFO, path="test.md", message="Info 1"),
+            ValidationIssue(level=ValidationLevel.INFO, path="test.md", message="Info 2"),
+            ValidationIssue(level=ValidationLevel.INFO, path="test.md", message="Info 3"),
         ]
         report = ValidationReport(valid=False, issues=issues)
         assert len(report.issues) == 6
@@ -219,11 +181,7 @@ class TestValidationReport:
 
         # Add issues directly to the list
         report.issues.append(
-            ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="test.md",
-                message="New error"
-            )
+            ValidationIssue(level=ValidationLevel.ERROR, path="test.md", message="New error")
         )
         # Summary should update automatically on next access
         assert report.summary.errors == 1
@@ -232,10 +190,7 @@ class TestValidationReport:
         """Test ValidationReport serialization includes summary."""
         issues = [
             ValidationIssue(
-                level=ValidationLevel.WARNING,
-                path="test.md",
-                message="Warning",
-                line=10
+                level=ValidationLevel.WARNING, path="test.md", message="Warning", line=10
             )
         ]
         report = ValidationReport(valid=True, issues=issues)
@@ -252,10 +207,7 @@ class TestValidationReport:
         """Test ValidationReport JSON serialization."""
         issues = [
             ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="src/main.py",
-                message="Syntax error",
-                line=5
+                level=ValidationLevel.ERROR, path="src/main.py", message="Syntax error", line=5
             )
         ]
         report = ValidationReport(valid=False, issues=issues)
@@ -276,9 +228,9 @@ class TestValidationReport:
                     "path": "test.md",
                     "message": "Test error",
                     "line": 10,
-                    "column": None
+                    "column": None,
                 }
-            ]
+            ],
         }
         report = ValidationReport(**data)
         assert report.valid is False

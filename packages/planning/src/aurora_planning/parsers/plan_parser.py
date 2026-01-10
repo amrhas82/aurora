@@ -294,14 +294,8 @@ class PlanParser(MarkdownParser):
         current_rename: dict[str, str] = {}
 
         for line in lines:
-            from_match = re.match(
-                r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$",
-                line
-            )
-            to_match = re.match(
-                r"^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$",
-                line
-            )
+            from_match = re.match(r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
+            to_match = re.match(r"^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
 
             if from_match:
                 current_rename["from"] = from_match.group(1).strip()
@@ -309,10 +303,12 @@ class PlanParser(MarkdownParser):
                 current_rename["to"] = to_match.group(1).strip()
 
                 if current_rename.get("from") and current_rename.get("to"):
-                    renames.append({
-                        "from": current_rename["from"],
-                        "to": current_rename["to"],
-                    })
+                    renames.append(
+                        {
+                            "from": current_rename["from"],
+                            "to": current_rename["to"],
+                        }
+                    )
                     current_rename = {}
 
         return renames
@@ -339,9 +335,7 @@ class PlanParser(MarkdownParser):
             if header_match:
                 level = len(header_match.group(1))
                 title = header_match.group(2).strip()
-                content_lines = self._get_content_until_next_header_from_lines(
-                    lines, i + 1, level
-                )
+                content_lines = self._get_content_until_next_header_from_lines(lines, i + 1, level)
 
                 section = Section(
                     level=level,

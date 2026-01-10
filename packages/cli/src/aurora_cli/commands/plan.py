@@ -36,7 +36,6 @@ from aurora_cli.planning.core import (
     show_plan,
 )
 
-
 if TYPE_CHECKING:
     pass
 
@@ -166,6 +165,7 @@ def create_command(
         if not aurora_dir.exists():
             console.print("[dim]Initializing Aurora directory structure...[/]")
             from aurora_cli.commands.init_helpers import create_directory_structure
+
             try:
                 create_directory_structure(Path.cwd())
                 console.print("[green]✓[/] Aurora initialized\n")
@@ -283,7 +283,7 @@ def init_command(path: str | None, force: bool) -> None:
         console.print(f"[green]{result.message}[/]")
         console.print(f"  - Active plans: {result.path}/active/")
         console.print(f"  - Archived plans: {result.path}/archive/")
-        console.print("\n[bold]Ready to create plans with:[/] /aur:plan \"goal\"")
+        console.print('\n[bold]Ready to create plans with:[/] /aur:plan "goal"')
 
 
 @plan_group.command(name="list")
@@ -358,7 +358,7 @@ def list_command(archived: bool, all_plans: bool, output_format: str) -> None:
         label = "archived" if archived else "active"
         console.print(f"[yellow]No {label} plans found.[/]")
         if not archived:
-            console.print("Create a plan with: /aur:plan \"your goal\"")
+            console.print('Create a plan with: /aur:plan "your goal"')
         return
 
     # Rich table output
@@ -372,7 +372,9 @@ def list_command(archived: bool, all_plans: bool, output_format: str) -> None:
     table.add_column("Agents", style="yellow")
 
     for p in result.plans:
-        agent_status = "[green]All found[/]" if p.agent_gaps == 0 else f"[yellow]{p.agent_gaps} gap(s)[/]"
+        agent_status = (
+            "[green]All found[/]" if p.agent_gaps == 0 else f"[yellow]{p.agent_gaps} gap(s)[/]"
+        )
         status_style = "[green]active[/]" if p.status == "active" else "[dim]archived[/]"
         table.add_row(
             p.plan_id,

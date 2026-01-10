@@ -24,7 +24,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 
 def run_command(cmd: List[str], check: bool = True) -> Tuple[int, str, str]:
@@ -42,8 +42,7 @@ def verify_tests_pass(test_path: Path) -> bool:
     """Run pytest on a specific test file to verify it passes."""
     print(f"  🧪 Verifying tests in {test_path}...")
     returncode, stdout, stderr = run_command(
-        ["pytest", str(test_path), "-v", "--tb=short"],
-        check=False
+        ["pytest", str(test_path), "-v", "--tb=short"], check=False
     )
 
     if returncode == 0:
@@ -72,8 +71,7 @@ def move_test_file(source: Path, dest_dir: Path, dry_run: bool = False) -> bool:
 
     # Execute git mv
     returncode, stdout, stderr = run_command(
-        ["git", "mv", str(source), str(dest_path)],
-        check=False
+        ["git", "mv", str(source), str(dest_path)], check=False
     )
 
     if returncode != 0:
@@ -85,9 +83,7 @@ def move_test_file(source: Path, dest_dir: Path, dry_run: bool = False) -> bool:
 
 
 def migrate_from_manual_list(
-    migrations: List[Tuple[Path, Path]],
-    verify: bool = True,
-    dry_run: bool = False
+    migrations: List[Tuple[Path, Path]], verify: bool = True, dry_run: bool = False
 ) -> bool:
     """Migrate tests from a manual list of (source, dest_dir) tuples."""
     print(f"\n{'='*70}")
@@ -133,10 +129,7 @@ def migrate_from_manual_list(
 
 
 def migrate_from_json_plan(
-    plan_path: Path,
-    batch_index: int = 0,
-    verify: bool = True,
-    dry_run: bool = False
+    plan_path: Path, batch_index: int = 0, verify: bool = True, dry_run: bool = False
 ) -> bool:
     """Migrate tests from a JSON migration plan."""
     with open(plan_path) as f:
@@ -173,43 +166,23 @@ def main():
     parser = argparse.ArgumentParser(
         description="Migrate test files between directories with verification"
     )
+    parser.add_argument("--plan", type=Path, help="JSON migration plan file")
     parser.add_argument(
-        "--plan",
-        type=Path,
-        help="JSON migration plan file"
+        "--batch", type=int, default=0, help="Batch index to migrate (0-based, default: 0)"
     )
-    parser.add_argument(
-        "--batch",
-        type=int,
-        default=0,
-        help="Batch index to migrate (0-based, default: 0)"
-    )
-    parser.add_argument(
-        "--file",
-        type=Path,
-        help="Single file to migrate (manual mode)"
-    )
-    parser.add_argument(
-        "--to",
-        type=Path,
-        help="Destination directory (manual mode)"
-    )
+    parser.add_argument("--file", type=Path, help="Single file to migrate (manual mode)")
+    parser.add_argument("--to", type=Path, help="Destination directory (manual mode)")
     parser.add_argument(
         "--verify",
         action="store_true",
         default=True,
-        help="Verify tests pass after each move (default: True)"
+        help="Verify tests pass after each move (default: True)",
     )
     parser.add_argument(
-        "--no-verify",
-        dest="verify",
-        action="store_false",
-        help="Skip test verification"
+        "--no-verify", dest="verify", action="store_false", help="Skip test verification"
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be moved without actually moving"
+        "--dry-run", action="store_true", help="Show what would be moved without actually moving"
     )
 
     args = parser.parse_args()
@@ -220,12 +193,7 @@ def main():
         success = migrate_from_manual_list(migrations, args.verify, args.dry_run)
     # JSON plan mode: batch migration
     elif args.plan:
-        success = migrate_from_json_plan(
-            args.plan,
-            args.batch,
-            args.verify,
-            args.dry_run
-        )
+        success = migrate_from_json_plan(args.plan, args.batch, args.verify, args.dry_run)
     else:
         parser.print_help()
         print("\n❌ Must specify either --plan or (--file and --to)")

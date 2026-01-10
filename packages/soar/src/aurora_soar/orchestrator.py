@@ -34,6 +34,7 @@ from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.logging import ConversationLogger
 from aurora_reasoning.decompose import DecompositionResult
+from aurora_soar import discovery_adapter
 from aurora_soar.phases import (
     assess,
     collect,
@@ -74,10 +75,10 @@ class SOAROrchestrator:
     def __init__(
         self,
         store: Store,
-        agent_registry: AgentRegistry,
         config: Config,
         reasoning_llm: LLMClient,
         solving_llm: LLMClient,
+        agent_registry: AgentRegistry | None = None,
         cost_tracker: CostTracker | None = None,
         conversation_logger: ConversationLogger | None = None,
         interactive_mode: bool = False,
@@ -87,10 +88,10 @@ class SOAROrchestrator:
 
         Args:
             store: ACT-R memory store instance
-            agent_registry: Agent registry instance
             config: System configuration
             reasoning_llm: LLM client for reasoning tasks (Tier 2 model: Sonnet/GPT-4)
             solving_llm: LLM client for solving tasks (Tier 1 model: Haiku/GPT-3.5)
+            agent_registry: Optional agent registry instance. If None, uses discovery_adapter.
             cost_tracker: Optional cost tracker (creates default if not provided)
             conversation_logger: Optional conversation logger (creates default if not provided)
             interactive_mode: If True, prompt user for weak retrieval matches (CLI only, default: False)
@@ -107,6 +108,11 @@ class SOAROrchestrator:
         self.reasoning_llm = reasoning_llm
         self.solving_llm = solving_llm
         self.phase_callback = phase_callback
+
+        # Initialize ManifestManager if agent_registry not provided
+        self._use_discovery = agent_registry is None
+        if self._use_discovery:
+            self._manifest_manager = discovery_adapter.get_manifest_manager()
 
         # Initialize cost tracker
         if cost_tracker is None:
@@ -129,6 +135,42 @@ class SOAROrchestrator:
         self._query: str = ""
 
         logger.info("SOAR orchestrator initialized")
+
+    def _list_agents(self):
+        """List all available agents using registry or discovery adapter.
+
+        Returns:
+            List of AgentInfo objects (from either registry or discovery)
+        """
+        if self._use_discovery:
+            return discovery_adapter.list_agents()
+        else:
+            return self.agent_registry.list_all()
+
+    def _get_agent(self, agent_id: str):
+        """Get agent by ID using registry or discovery adapter.
+
+        Args:
+            agent_id: Agent identifier
+
+        Returns:
+            AgentInfo object if found, None otherwise
+        """
+        if self._use_discovery:
+            return discovery_adapter.get_agent(agent_id)
+        else:
+            return self.agent_registry.get(agent_id)
+
+    def _get_or_create_fallback_agent(self):
+        """Get or create a fallback agent when no suitable agent is found.
+
+        Returns:
+            AgentInfo object for fallback agent
+        """
+        if self._use_discovery:
+            return discovery_adapter.create_fallback_agent()
+        else:
+            return self.agent_registry.create_fallback_agent()
 
     def _invoke_callback(
         self, phase_name: str, status: str, result_summary: dict[str, Any] | None = None
@@ -236,6 +278,12 @@ class SOAROrchestrator:
                 query, phase2_result, phase1_result["complexity"]
             )
             self._phase_metadata["phase3_decompose"] = phase3_result
+
+            # Check if Phase 3 failed before proceeding
+            if phase3_result.get("_error") is not None:
+                logger.error(f"Phase 3 decomposition failed: {phase3_result['_error']}")
+                # Return partial results with error indication
+                return self._handle_decomposition_failure(query, phase3_result, verbosity)
 
             # Phase 4: Verify decomposition
             phase4_result = self._phase4_verify(
@@ -358,8 +406,8 @@ class SOAROrchestrator:
         self._invoke_callback("decompose", "before", {})
         start_time = time.time()
         try:
-            # Get available agents from registry
-            agents = self.agent_registry.list_all()
+            # Get available agents from registry or discovery
+            agents = self._list_agents()
             available_agents = [agent.id for agent in agents]
 
             phase_result = decompose.decompose_query(
@@ -399,8 +447,8 @@ class SOAROrchestrator:
         self._invoke_callback("verify", "before", {})
         start_time = time.time()
         try:
-            # Get available agents from registry
-            agents = self.agent_registry.list_all()
+            # Get available agents from registry or discovery
+            agents = self._list_agents()
             available_agents = [agent.id for agent in agents]
 
             # Convert decomposition dict to DecompositionResult object
@@ -465,7 +513,13 @@ class SOAROrchestrator:
         self._invoke_callback("route", "before", {})
         time.time()
         try:
-            result = route.route_subgoals(decomposition, self.agent_registry)
+            # Pass agent_registry if available, otherwise route will use discovery
+            if self._use_discovery:
+                # For now, route.py still needs agent_registry, so create a wrapper
+                # This will be fully updated in Task 2.4
+                result = route.route_subgoals(decomposition, None)
+            else:
+                result = route.route_subgoals(decomposition, self.agent_registry)
             agents = (
                 [a.agent_id for a in result.agent_assignments] if result.agent_assignments else []
             )
@@ -770,6 +824,48 @@ class SOAROrchestrator:
 
         return self._phase9_respond(synthesis, record, verbosity)
 
+    def _handle_decomposition_failure(
+        self, query: str, decomposition_result: dict[str, Any], verbosity: str
+    ) -> dict[str, Any]:
+        """Handle decomposition failure (Phase 3 error).
+
+        Args:
+            query: Original query
+            decomposition_result: Decomposition result with error
+            verbosity: Output verbosity
+
+        Returns:
+            Error response with partial results
+        """
+        error_msg = decomposition_result.get("_error", "Unknown decomposition error")
+        logger.error(f"Returning partial results due to decomposition failure: {error_msg}")
+        from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
+
+        synthesis = SynthesisResult(
+            answer="Unable to decompose query successfully. Please rephrase or simplify.",
+            confidence=0.0,
+            traceability=[],
+            metadata={
+                "error": "decomposition_failed",
+                "details": error_msg,
+            },
+            timing={"synthesis_ms": 0},
+        )
+
+        record = RecordResult(
+            cached=False,
+            reasoning_chunk_id=None,
+            pattern_marked=False,
+            activation_update=0.0,
+            timing={"record_ms": 0},
+        )
+
+        # Add decomposition failure to phase metadata before response formatting
+        self._phase_metadata["decomposition_failure"] = decomposition_result
+
+        return self._phase9_respond(synthesis, record, verbosity)
+
     def _handle_execution_error(self, error: Exception, verbosity: str) -> dict[str, Any]:
         """Handle execution errors with graceful degradation.
 
@@ -861,6 +957,76 @@ class SOAROrchestrator:
             "timestamp": time.time(),
         }
 
+    def _split_large_chunk_by_sections(self, chunk, max_chars: int = 2048):
+        """Split a large chunk by H2 markdown sections.
+
+        Args:
+            chunk: CodeChunk to split
+            max_chars: Maximum characters per chunk
+
+        Returns:
+            List of smaller chunks split by sections
+        """
+        from aurora_core.chunks import CodeChunk
+
+        text = chunk.docstring or ""
+        if len(text) <= max_chars:
+            return [chunk]
+
+        # Split by H2 headers (##)
+        sections = []
+        current_section = []
+        current_header = None
+
+        for line in text.split("\n"):
+            if line.strip().startswith("## "):
+                # Save previous section
+                if current_section:
+                    sections.append((current_header, "\n".join(current_section)))
+                # Start new section
+                current_header = line.strip()[3:]
+                current_section = [line]
+            else:
+                current_section.append(line)
+
+        # Save last section
+        if current_section:
+            sections.append((current_header, "\n".join(current_section)))
+
+        # Create chunks from sections
+        split_chunks = []
+        for i, (header, content) in enumerate(sections, 1):
+            if len(content) > max_chars:
+                # Section still too large, truncate with warning
+                logger.warning(
+                    f"Section '{header}' still exceeds {max_chars} chars after splitting, truncating"
+                )
+                content = content[:max_chars] + "\n\n[... content truncated ...]"
+
+            # Create new chunk with section suffix
+            section_chunk = CodeChunk(
+                chunk_id=f"{chunk.id}_section_{i}",
+                file_path=chunk.file_path,
+                name=f"{chunk.name} - {header or 'Section ' + str(i)}",
+                signature=chunk.signature,
+                docstring=content,
+                implementation=chunk.implementation,
+                language=chunk.language,
+                start_line=chunk.start_line,
+                end_line=chunk.end_line,
+                metadata={
+                    **chunk.metadata,
+                    "section_index": i,
+                    "section_header": header,
+                    "is_split_section": True,
+                    "parent_chunk_id": chunk.id,
+                },
+            )
+            split_chunks.append(section_chunk)
+
+        logger.info(f"Split chunk {chunk.id} into {len(split_chunks)} sections")
+        return split_chunks
+
     def _index_conversation_log(self, log_path) -> None:
         """Index conversation log as knowledge chunk for future retrieval.
 
@@ -883,20 +1049,44 @@ class SOAROrchestrator:
 
             # Generate embeddings and store chunks
             embedding_provider = EmbeddingProvider()
+            indexed_count = 0
+            split_count = 0
+
             for chunk in chunks:
                 try:
-                    # Generate embedding from docstring (where markdown content is stored)
-                    embedding = embedding_provider.embed_chunk(chunk.docstring)
-                    chunk.embeddings = embedding
+                    # Check if chunk is too large and needs splitting
+                    if len(chunk.docstring or "") > 2048:
+                        # Split by H2 sections
+                        section_chunks = self._split_large_chunk_by_sections(chunk)
+                        split_count += len(section_chunks) - 1
 
-                    # Save to store
-                    self.store.save_chunk(chunk)
-                    logger.debug(f"Indexed conversation chunk: {chunk.id}")
+                        # Index each section
+                        for section_chunk in section_chunks:
+                            try:
+                                embedding = embedding_provider.embed_chunk(section_chunk.docstring)
+                                section_chunk.embeddings = embedding
+                                self.store.save_chunk(section_chunk)
+                                indexed_count += 1
+                                logger.debug(f"Indexed section chunk: {section_chunk.id}")
+                            except Exception as e:
+                                logger.warning(f"Failed to index section {section_chunk.id}: {e}")
+                                continue
+                    else:
+                        # Chunk is small enough, index directly
+                        embedding = embedding_provider.embed_chunk(chunk.docstring)
+                        chunk.embeddings = embedding
+                        self.store.save_chunk(chunk)
+                        indexed_count += 1
+                        logger.debug(f"Indexed conversation chunk: {chunk.id}")
+
                 except Exception as e:
                     logger.warning(f"Failed to index chunk {chunk.id}: {e}")
                     continue
 
-            logger.info(f"Indexed conversation log: {log_path} ({len(chunks)} chunks)")
+            logger.info(
+                f"Indexed conversation log: {log_path} "
+                f"({indexed_count} chunks, {split_count} sections created from large chunks)"
+            )
 
         except Exception as e:
             logger.warning(f"Failed to auto-index conversation log: {e}")

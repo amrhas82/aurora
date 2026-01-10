@@ -5,8 +5,9 @@ This tool makes SEPARATE API calls for each phase, controlling the flow
 from Python - not relying on Claude to "follow instructions".
 """
 
-import os
 import json
+import os
+
 import anthropic
 
 
@@ -36,7 +37,7 @@ def run_multiturn_soar(query: str, api_key: str | None = None) -> dict:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
             max_tokens=max_tokens,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
         return response.content[0].text
 
@@ -51,7 +52,7 @@ Output format:
     phase1_raw = call_llm(phase1_prompt, max_tokens=200)
     try:
         # Extract JSON from response
-        phase1 = json.loads(phase1_raw.strip().strip('```json').strip('```'))
+        phase1 = json.loads(phase1_raw.strip().strip("```json").strip("```"))
     except:
         phase1 = {"complexity": "MEDIUM", "reasoning": phase1_raw}
     context["phases"]["assess"] = phase1
@@ -67,7 +68,7 @@ Output format:
 
     phase2_raw = call_llm(phase2_prompt, max_tokens=300)
     try:
-        phase2 = json.loads(phase2_raw.strip().strip('```json').strip('```'))
+        phase2 = json.loads(phase2_raw.strip().strip("```json").strip("```"))
     except:
         phase2 = {"subgoals": [phase2_raw]}
     context["phases"]["decompose"] = phase2
@@ -83,7 +84,7 @@ Output format:
 
     phase3_raw = call_llm(phase3_prompt, max_tokens=200)
     try:
-        phase3 = json.loads(phase3_raw.strip().strip('```json').strip('```'))
+        phase3 = json.loads(phase3_raw.strip().strip("```json").strip("```"))
     except:
         phase3 = {"verdict": "PASS", "missing": None}
     context["phases"]["verify"] = phase3
@@ -99,7 +100,7 @@ Output format:
 
     phase4_raw = call_llm(phase4_prompt, max_tokens=1500)
     try:
-        phase4 = json.loads(phase4_raw.strip().strip('```json').strip('```'))
+        phase4 = json.loads(phase4_raw.strip().strip("```json").strip("```"))
     except:
         phase4 = {"findings": [{"subgoal": "all", "answer": phase4_raw}]}
     context["phases"]["collect"] = phase4
@@ -115,7 +116,7 @@ Output format:
 
     phase5_raw = call_llm(phase5_prompt, max_tokens=1000)
     try:
-        phase5 = json.loads(phase5_raw.strip().strip('```json').strip('```'))
+        phase5 = json.loads(phase5_raw.strip().strip("```json").strip("```"))
     except:
         phase5 = {"synthesis": phase5_raw}
     context["phases"]["synthesize"] = phase5

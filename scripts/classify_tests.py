@@ -24,6 +24,7 @@ from typing import Dict, List, Set
 @dataclass
 class TestClassification:
     """Result of test classification analysis."""
+
     file_path: str
     current_location: str  # unit, integration, or e2e
     suggested_location: str  # unit, integration, or e2e
@@ -141,7 +142,7 @@ class TestClassifier:
         cli_patterns = [
             r'subprocess\.run\(\["aur"',
             r'subprocess\.run\(\["aurora"',
-            r'run_cli_command\(',
+            r"run_cli_command\(",
         ]
         for pattern in cli_patterns:
             if re.search(pattern, content):
@@ -166,15 +167,16 @@ class TestClassifier:
             analysis["uses_real_database"] = True
 
         # Count tests
-        test_functions = [node for node in ast.walk(tree)
-                         if isinstance(node, ast.FunctionDef)
-                         and node.name.startswith("test_")]
+        test_functions = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+        ]
         analysis["test_count"] = len(test_functions)
 
         # Calculate average test length
         if test_functions:
-            total_lines = sum(len(ast.unparse(func).split('\n'))
-                            for func in test_functions)
+            total_lines = sum(len(ast.unparse(func).split("\n")) for func in test_functions)
             analysis["avg_test_length"] = total_lines // len(test_functions)
 
         return analysis
@@ -254,9 +256,11 @@ class TestClassifier:
             heuristics.append("short_tests")
 
         # No I/O indicators suggest unit test
-        no_io = (not analysis.get("uses_subprocess") and
-                not analysis.get("uses_sqlite_store") and
-                not analysis.get("uses_tmp_path"))
+        no_io = (
+            not analysis.get("uses_subprocess")
+            and not analysis.get("uses_sqlite_store")
+            and not analysis.get("uses_tmp_path")
+        )
         if no_io:
             unit_score += 7
             reasons.append("No I/O operations detected")
@@ -321,9 +325,7 @@ class TestClassifier:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Classify tests and detect misclassifications"
-    )
+    parser = argparse.ArgumentParser(description="Classify tests and detect misclassifications")
     parser.add_argument(
         "--path",
         type=Path,
@@ -353,9 +355,11 @@ def main():
 
     # Filter if needed
     if args.misclassified_only:
-        results = [r for r in results
-                  if r.current_location != r.suggested_location
-                  and r.current_location != "unknown"]
+        results = [
+            r
+            for r in results
+            if r.current_location != r.suggested_location and r.current_location != "unknown"
+        ]
 
     # Generate report
     report_lines = []
@@ -368,7 +372,10 @@ def main():
     by_type = {"unit": [], "integration": [], "e2e": []}
 
     for result in results:
-        if result.current_location != result.suggested_location and result.current_location != "unknown":
+        if (
+            result.current_location != result.suggested_location
+            and result.current_location != "unknown"
+        ):
             misclassified_count += 1
 
             # Categorize by suggested location

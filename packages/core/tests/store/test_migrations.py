@@ -21,11 +21,7 @@ from unittest import mock
 import pytest
 
 from aurora_core.exceptions import StorageError
-from aurora_core.store.migrations import (
-    Migration,
-    MigrationManager,
-    get_migration_manager,
-)
+from aurora_core.store.migrations import Migration, MigrationManager, get_migration_manager
 
 
 class TestMigration:
@@ -199,22 +195,26 @@ class TestMigrationV1ToV2:
     def _create_v1_schema(self, conn: sqlite3.Connection) -> None:
         """Create a v1 schema database."""
         # V1 schema has chunks and activations tables without new columns
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE chunks (
                 id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
                 metadata TEXT
             )
-        """)
+        """
+        )
 
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE activations (
                 chunk_id TEXT PRIMARY KEY,
                 activation REAL NOT NULL,
                 last_access TIMESTAMP,
                 FOREIGN KEY (chunk_id) REFERENCES chunks (id)
             )
-        """)
+        """
+        )
 
         conn.execute("CREATE TABLE schema_version (version INTEGER)")
         conn.execute("INSERT INTO schema_version (version) VALUES (1)")
@@ -462,9 +462,9 @@ class TestMigrationRollback:
         error_msg = str(exc_info.value)
         assert "v5 -> v6" in error_msg, "Error should include version numbers"
         # Check for the sqlite error message
-        assert "no such table" in error_msg.lower() or "table" in error_msg.lower(), (
-            "Error should include original error details"
-        )
+        assert (
+            "no such table" in error_msg.lower() or "table" in error_msg.lower()
+        ), "Error should include original error details"
 
         conn.close()
 
@@ -660,21 +660,25 @@ class TestMigrationManager:
             conn = sqlite3.connect(str(db_path))
 
             # Create a minimal v1 schema that won't fail migration
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE chunks (
                     id TEXT PRIMARY KEY,
                     content TEXT NOT NULL,
                     metadata TEXT
                 )
-            """)
-            conn.execute("""
+            """
+            )
+            conn.execute(
+                """
                 CREATE TABLE activations (
                     chunk_id TEXT PRIMARY KEY,
                     activation REAL NOT NULL,
                     last_access TIMESTAMP,
                     FOREIGN KEY (chunk_id) REFERENCES chunks (id)
                 )
-            """)
+            """
+            )
             conn.execute("CREATE TABLE schema_version (version INTEGER)")
             conn.execute("INSERT INTO schema_version (version) VALUES (1)")
             conn.commit()
@@ -714,7 +718,8 @@ class TestMigrationV2ToV3:
 
     def _create_v2_schema(self, conn: sqlite3.Connection) -> None:
         """Create a v2 schema database."""
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE chunks (
                 id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
@@ -722,9 +727,11 @@ class TestMigrationV2ToV3:
                 first_access TIMESTAMP,
                 last_access TIMESTAMP
             )
-        """)
+        """
+        )
 
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE activations (
                 chunk_id TEXT PRIMARY KEY,
                 activation REAL NOT NULL,
@@ -732,7 +739,8 @@ class TestMigrationV2ToV3:
                 access_history JSON,
                 FOREIGN KEY (chunk_id) REFERENCES chunks (id)
             )
-        """)
+        """
+        )
 
         conn.execute("CREATE TABLE schema_version (version INTEGER)")
         conn.execute("INSERT INTO schema_version (version) VALUES (2)")

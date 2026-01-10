@@ -467,9 +467,9 @@ def actively_developed_function():
         active_bla = extractor.calculate_bla(active_times)
 
         # CRITICAL ASSERTION: BLAs must be DIFFERENT
-        assert stable_bla != active_bla, (
-            "Functions in same file MUST have different BLA based on edit history"
-        )
+        assert (
+            stable_bla != active_bla
+        ), "Functions in same file MUST have different BLA based on edit history"
 
         # Active function should have more commits
         assert len(active_times) > len(stable_times)

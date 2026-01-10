@@ -2,14 +2,28 @@
 Agent Registry and Discovery System.
 
 Provides agent registration, discovery, validation, and capability-based queries.
+
+DEPRECATION NOTICE:
+    AgentRegistry is deprecated and will be removed in a future version.
+    Please use aurora_cli.agent_discovery.ManifestManager instead.
+
+    Migration Guide:
+        Old: from aurora_soar.agent_registry import AgentRegistry
+             registry = AgentRegistry(discovery_paths=[...])
+             agent = registry.get(agent_id)
+
+        New: from aurora_cli.agent_discovery.manifest import ManifestManager
+             from aurora_soar.discovery_adapter import get_agent
+             manager = ManifestManager()  # Auto-discovers from default paths
+             agent = get_agent(agent_id)  # Uses discovery_adapter helper
 """
 
 import json
 import logging
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +55,8 @@ class AgentInfo:
             raise ValueError("Agent ID cannot be empty")
         if not self.name:
             raise ValueError("Agent name cannot be empty")
-        if not self.capabilities:
-            logger.warning(f"Agent {self.id} has no capabilities defined")
+        # Note: capabilities are optional - agents describe capabilities in their description
+        # Suppress warning as it's expected for agents loaded from markdown files
         if self.agent_type not in ["local", "remote", "mcp"]:
             raise ValueError(
                 f"Invalid agent type: {self.agent_type}. Must be one of: local, remote, mcp"
@@ -55,6 +69,10 @@ class AgentRegistry:
 
     Manages agent registration, discovery from config files,
     validation, and capability-based queries.
+
+    .. deprecated::
+        AgentRegistry is deprecated. Use `aurora_cli.agent_discovery.ManifestManager`
+        with `aurora_soar.discovery_adapter` helper functions instead.
     """
 
     VALID_AGENT_TYPES = {"local", "remote", "mcp"}
@@ -65,7 +83,15 @@ class AgentRegistry:
 
         Args:
             discovery_paths: Optional list of directories to scan for agent configs
+
+        .. deprecated::
+            AgentRegistry is deprecated. Use ManifestManager with discovery_adapter instead.
         """
+        warnings.warn(
+            "AgentRegistry is deprecated. Use aurora_cli.agent_discovery.ManifestManager instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.agents: dict[str, AgentInfo] = {}
         self.discovery_paths: list[Path] = discovery_paths or []
         self._file_mtimes: dict[Path, float] = {}

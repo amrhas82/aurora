@@ -12,6 +12,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.parsers.plan_parser import PlanParser
 from aurora_planning.schemas.plan import ModificationOperation
 
@@ -81,7 +82,9 @@ Then the request is executed normally
             # Should have modifications from delta spec file
             assert len(plan.modifications) >= 1
             # First modification should be from delta spec
-            added_mods = [m for m in plan.modifications if m.operation == ModificationOperation.ADDED]
+            added_mods = [
+                m for m in plan.modifications if m.operation == ModificationOperation.ADDED
+            ]
             assert len(added_mods) >= 1
 
     def test_handles_missing_specs_directory(self):
@@ -211,7 +214,9 @@ Then works correctly
             parser = PlanParser(content, str(plan_dir))
             plan = parser.parse_plan_with_modifications("modify-feature")
 
-            modified = [m for m in plan.modifications if m.operation == ModificationOperation.MODIFIED]
+            modified = [
+                m for m in plan.modifications if m.operation == ModificationOperation.MODIFIED
+            ]
             assert len(modified) >= 1
 
     def test_parses_removed_requirements(self):
@@ -241,7 +246,9 @@ The system no longer supports the old behavior.
             parser = PlanParser(content, str(plan_dir))
             plan = parser.parse_plan_with_modifications("remove-feature")
 
-            removed = [m for m in plan.modifications if m.operation == ModificationOperation.REMOVED]
+            removed = [
+                m for m in plan.modifications if m.operation == ModificationOperation.REMOVED
+            ]
             assert len(removed) >= 1
 
     def test_parses_renamed_requirements(self):
@@ -271,5 +278,7 @@ Renaming feature for clarity.
             parser = PlanParser(content, str(plan_dir))
             plan = parser.parse_plan_with_modifications("rename-feature")
 
-            renamed = [m for m in plan.modifications if m.operation == ModificationOperation.RENAMED]
+            renamed = [
+                m for m in plan.modifications if m.operation == ModificationOperation.RENAMED
+            ]
             assert len(renamed) >= 1

@@ -146,9 +146,9 @@ class TestPostInstallMessage:
         assert "Collecting" not in output
         assert "Downloading" not in output
         assert "Installing" not in output
-        assert "Successfully installed" not in output.lower() or output.count(
-            "successfully"
-        ) == 1  # Only our message
+        assert (
+            "Successfully installed" not in output.lower() or output.count("successfully") == 1
+        )  # Only our message
 
         # Should be concise
         line_count = len(output.strip().split("\n"))

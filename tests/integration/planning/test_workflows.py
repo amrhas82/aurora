@@ -16,16 +16,12 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from aurora_cli.commands.plan import (
-    archive_plan,
-    create_command,
-    list_plans,
-    show_plan,
-)
+from click.testing import CliRunner
+
+from aurora_cli.commands.plan import archive_plan, create_command, list_plans, show_plan
 from aurora_planning.id_generator import generate_plan_id
 from aurora_planning.planning_config import get_plans_dir
 from aurora_planning.renderer import render_plan_files
-from click.testing import CliRunner
 
 
 @pytest.fixture
@@ -70,11 +66,18 @@ class TestPlanCreationWorkflow:
 
         # Verify success
         assert result.exit_code == 0
-        assert "Plan created:" in result.output or "implement-oauth2-authentication" in result.output.lower()
+        assert (
+            "Plan created:" in result.output
+            or "implement-oauth2-authentication" in result.output.lower()
+        )
 
         # Find the plan directory (ID may vary)
         active_dir = temp_aurora_dir / "active"
-        plan_dirs = [d for d in active_dir.iterdir() if d.is_dir() and "implement-oauth2-authentication" in d.name.lower()]
+        plan_dirs = [
+            d
+            for d in active_dir.iterdir()
+            if d.is_dir() and "implement-oauth2-authentication" in d.name.lower()
+        ]
         assert len(plan_dirs) > 0, "Plan directory not found"
         plan_dir = plan_dirs[0]
 

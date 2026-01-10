@@ -21,10 +21,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from tests.integration.test_e2e_framework import (
-    E2ETestFramework,
-    MockLLMResponse,
-)
+from tests.integration.test_e2e_framework import E2ETestFramework, MockLLMResponse
 
 
 @pytest.fixture
@@ -73,18 +70,18 @@ class TestSimpleQueryE2E:
         e2e_framework.assert_phase_executed(response, "phase2_retrieve")
 
         # Verify decomposition phases SKIPPED
-        assert "phase3_decompose" not in response["metadata"]["phases"], (
-            "SIMPLE query should skip decomposition"
-        )
-        assert "phase4_verify" not in response["metadata"]["phases"], (
-            "SIMPLE query should skip verification"
-        )
-        assert "phase5_route" not in response["metadata"]["phases"], (
-            "SIMPLE query should skip routing"
-        )
-        assert "phase6_collect" not in response["metadata"]["phases"], (
-            "SIMPLE query should skip agent execution"
-        )
+        assert (
+            "phase3_decompose" not in response["metadata"]["phases"]
+        ), "SIMPLE query should skip decomposition"
+        assert (
+            "phase4_verify" not in response["metadata"]["phases"]
+        ), "SIMPLE query should skip verification"
+        assert (
+            "phase5_route" not in response["metadata"]["phases"]
+        ), "SIMPLE query should skip routing"
+        assert (
+            "phase6_collect" not in response["metadata"]["phases"]
+        ), "SIMPLE query should skip agent execution"
 
         # Verify response phase executed
         e2e_framework.assert_phase_executed(response, "phase9_respond")

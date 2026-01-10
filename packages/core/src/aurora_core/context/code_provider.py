@@ -16,7 +16,6 @@ from aurora_core.context.provider import ContextProvider
 from aurora_core.store.base import Store
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_context_code.registry import ParserRegistry
 

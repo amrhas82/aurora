@@ -1,8 +1,8 @@
 """Tests for SlashCommandRegistry with all 20 configurators."""
 
 import pytest
-from aurora_cli.configurators.slash.registry import SlashCommandRegistry
 
+from aurora_cli.configurators.slash.registry import SlashCommandRegistry
 
 # All 20 expected tool IDs
 ALL_TOOL_IDS = [
@@ -114,9 +114,7 @@ class TestSlashCommandRegistryRemainingTools:
 
     def test_get_antigravity_returns_antigravity_configurator(self):
         """get('antigravity') should return AntigravitySlashCommandConfigurator."""
-        from aurora_cli.configurators.slash.antigravity import (
-            AntigravitySlashCommandConfigurator,
-        )
+        from aurora_cli.configurators.slash.antigravity import AntigravitySlashCommandConfigurator
 
         configurator = SlashCommandRegistry.get("antigravity")
         assert configurator is not None
@@ -143,9 +141,7 @@ class TestSlashCommandRegistryRemainingTools:
 
     def test_get_codebuddy_returns_codebuddy_configurator(self):
         """get('codebuddy') should return CodeBuddySlashCommandConfigurator."""
-        from aurora_cli.configurators.slash.codebuddy import (
-            CodeBuddySlashCommandConfigurator,
-        )
+        from aurora_cli.configurators.slash.codebuddy import CodeBuddySlashCommandConfigurator
 
         configurator = SlashCommandRegistry.get("codebuddy")
         assert configurator is not None
@@ -291,9 +287,9 @@ class TestSlashCommandRegistryAvailability:
         """All 20 configurators should have is_available=True."""
         configurators = SlashCommandRegistry.get_all()
         for configurator in configurators:
-            assert configurator.is_available is True, (
-                f"Configurator '{configurator.tool_id}' should be available"
-            )
+            assert (
+                configurator.is_available is True
+            ), f"Configurator '{configurator.tool_id}' should be available"
 
 
 class TestSlashCommandRegistryClear:

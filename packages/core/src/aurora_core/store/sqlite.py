@@ -30,7 +30,6 @@ from aurora_core.store.base import Store
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 

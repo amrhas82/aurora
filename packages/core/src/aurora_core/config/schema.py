@@ -7,7 +7,6 @@ configuration files according to PRD Section 4.6.
 
 from typing import Any
 
-
 # JSON Schema Draft 7 for AURORA Configuration
 CONFIG_SCHEMA: dict[str, Any] = {
     "$schema": "http://json-schema.org/draft-07/schema#",

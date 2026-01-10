@@ -10,14 +10,9 @@ import json
 from datetime import datetime, timedelta
 
 import pytest
-from aurora_cli.planning.models import (
-    Complexity,
-    Plan,
-    PlanManifest,
-    PlanStatus,
-    Subgoal,
-)
 from pydantic import ValidationError
+
+from aurora_cli.planning.models import Complexity, Plan, PlanManifest, PlanStatus, Subgoal
 
 
 class TestPlanStatusEnum:
@@ -528,6 +523,7 @@ class TestPlanManifestModel:
 
         # Small delay to ensure time difference
         import time
+
         time.sleep(0.01)
 
         manifest.add_active_plan("0001-test")

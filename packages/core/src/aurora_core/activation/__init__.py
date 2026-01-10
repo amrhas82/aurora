@@ -92,12 +92,7 @@ __all__ = [
 ]
 
 # Import implemented components
-from .base_level import (
-    AccessHistoryEntry,
-    BaseLevelActivation,
-    BLAConfig,
-    calculate_bla,
-)
+from .base_level import AccessHistoryEntry, BaseLevelActivation, BLAConfig, calculate_bla
 from .context_boost import (
     ContextBoost,
     ContextBoostConfig,

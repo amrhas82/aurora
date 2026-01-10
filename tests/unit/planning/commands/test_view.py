@@ -10,13 +10,14 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.commands.view import ViewCommand
 
 
 def strip_ansi(text: str) -> str:
     """Remove ANSI color codes from text."""
-    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-    return ansi_escape.sub('', text)
+    ansi_escape = re.compile(r"\x1b\[[0-9;]*m")
+    return ansi_escape.sub("", text)
 
 
 class TestViewCommand:
@@ -46,15 +47,11 @@ class TestViewCommand:
 
         # Change with tasks.md but no tasks - should show in Draft
         (changes_dir / "no-tasks-change").mkdir(parents=True)
-        (changes_dir / "no-tasks-change" / "tasks.md").write_text(
-            "# Tasks\n\nNo tasks yet."
-        )
+        (changes_dir / "no-tasks-change" / "tasks.md").write_text("# Tasks\n\nNo tasks yet.")
 
         # Change with all tasks complete - should show in Completed
         (changes_dir / "completed-change").mkdir(parents=True)
-        (changes_dir / "completed-change" / "tasks.md").write_text(
-            "- [x] Done task\n"
-        )
+        (changes_dir / "completed-change" / "tasks.md").write_text("- [x] Done task\n")
 
         view_command.execute(str(temp_dir))
 
@@ -71,14 +68,14 @@ class TestViewCommand:
         assert "completed-change" in output
 
         # Verify empty-change and no-tasks-change are in Draft section (marked with ○)
-        draft_lines = [line for line in output.split('\n') if '○' in line]
-        draft_names = [line.strip().replace('○ ', '').strip() for line in draft_lines]
+        draft_lines = [line for line in output.split("\n") if "○" in line]
+        draft_names = [line.strip().replace("○ ", "").strip() for line in draft_lines]
         assert "empty-change" in draft_names
         assert "no-tasks-change" in draft_names
 
         # Verify completed-change is in Completed section (marked with ✓)
-        completed_lines = [line for line in output.split('\n') if '✓' in line]
-        completed_names = [line.strip().replace('✓ ', '').strip() for line in completed_lines]
+        completed_lines = [line for line in output.split("\n") if "✓" in line]
+        completed_names = [line.strip().replace("✓ ", "").strip() for line in completed_lines]
         assert "completed-change" in completed_names
         assert "empty-change" not in completed_names
         assert "no-tasks-change" not in completed_names
@@ -98,21 +95,15 @@ class TestViewCommand:
 
         # beta-change: 1/2 = 50%
         (changes_dir / "beta-change").mkdir(parents=True)
-        (changes_dir / "beta-change" / "tasks.md").write_text(
-            "- [x] Task 1\n- [ ] Task 2\n"
-        )
+        (changes_dir / "beta-change" / "tasks.md").write_text("- [x] Task 1\n- [ ] Task 2\n")
 
         # delta-change: 1/2 = 50% (same as beta, should come after alphabetically)
         (changes_dir / "delta-change").mkdir(parents=True)
-        (changes_dir / "delta-change" / "tasks.md").write_text(
-            "- [x] Task 1\n- [ ] Task 2\n"
-        )
+        (changes_dir / "delta-change" / "tasks.md").write_text("- [x] Task 1\n- [ ] Task 2\n")
 
         # alpha-change: 0/2 = 0%
         (changes_dir / "alpha-change").mkdir(parents=True)
-        (changes_dir / "alpha-change" / "tasks.md").write_text(
-            "- [ ] Task 1\n- [ ] Task 2\n"
-        )
+        (changes_dir / "alpha-change" / "tasks.md").write_text("- [ ] Task 1\n- [ ] Task 2\n")
 
         view_command.execute(str(temp_dir))
 
@@ -120,22 +111,17 @@ class TestViewCommand:
         output = strip_ansi(captured.out)
 
         # Get active changes lines (marked with ◉)
-        active_lines = [line for line in output.split('\n') if '◉' in line]
+        active_lines = [line for line in output.split("\n") if "◉" in line]
 
         # Extract change names from active lines
         active_order = []
         for line in active_lines:
             # Split on bullet and extract name before progress bar
-            after_bullet = line.split('◉')[1] if '◉' in line else ''
+            after_bullet = line.split("◉")[1] if "◉" in line else ""
             # Extract the name (before the progress bar [)
-            name = after_bullet.split('[')[0].strip() if '[' in after_bullet else ''
+            name = after_bullet.split("[")[0].strip() if "[" in after_bullet else ""
             if name:
                 active_order.append(name)
 
         # Expected order: 0% (alpha), 50% (beta, delta alphabetically), 66.67% (gamma)
-        assert active_order == [
-            "alpha-change",
-            "beta-change",
-            "delta-change",
-            "gamma-change"
-        ]
+        assert active_order == ["alpha-change", "beta-change", "delta-change", "gamma-change"]

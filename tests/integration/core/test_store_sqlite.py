@@ -11,11 +11,11 @@ These tests verify SQLite-specific functionality including:
 from pathlib import Path
 
 import pytest
+
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.exceptions import ValidationError
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
-
 from tests.unit.core.test_store_base import StoreContractTests
 
 
@@ -261,20 +261,22 @@ class TestSQLiteStore(StoreContractTests):
 
         # Retrieve and verify order
         conn = store._get_connection()
-        cursor = conn.execute("""
+        cursor = conn.execute(
+            """
             SELECT c.id, a.base_level
             FROM chunks c
             JOIN activations a ON c.id = a.chunk_id
             ORDER BY a.base_level DESC
-        """)
+        """
+        )
 
         rows = cursor.fetchall()
         activations = [row[1] for row in rows]
 
         # Check that activations are in descending order
-        assert activations == sorted(activations, reverse=True), (
-            "Results should be ordered by activation (highest first)"
-        )
+        assert activations == sorted(
+            activations, reverse=True
+        ), "Results should be ordered by activation (highest first)"
 
     def test_get_related_chunks_depth_limit(self, store):
         """Test that relationship traversal respects max_depth."""

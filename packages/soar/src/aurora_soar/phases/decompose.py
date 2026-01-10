@@ -9,11 +9,9 @@ from __future__ import annotations
 import hashlib
 from typing import TYPE_CHECKING, Any
 
-
 if TYPE_CHECKING:
-    from aurora_reasoning.decompose import DecompositionResult
-
     from aurora.reasoning import LLMClient
+    from aurora_reasoning.decompose import DecompositionResult
 
 __all__ = ["decompose_query", "DecomposePhaseResult"]
 

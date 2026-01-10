@@ -5,6 +5,7 @@ Tests the complete flow: Parse → Store → Retrieve
 """
 
 import pytest
+
 from aurora_context_code.registry import get_global_registry
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.context.code_provider import CodeContextProvider

@@ -1,0 +1,366 @@
+Rearranged Architecture (Post-Zeroshot Learning)
+
+  What we learned: Zeroshot's value is just imperative parallel spawning (~30 lines). The rest (bus, triggers, conductors) is overkill.
+
+  ---
+ Aurora Simplified (Final View)
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                         AURORA SIMPLIFIED                                │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │                                                                         │
+  │  TRACK 1: aur soar (Research/Questions) - TERMINAL                      │
+  │  ═══════════════════════════════════════════════════                    │
+  │                                                                         │
+  │  $ aur soar "question"                                                  │
+  │       │                                                                 │
+  │       ├── 1. ASSESS (trivial → answer directly, complex → continue)     │
+  │       ├── 2. Memory Search                                              │
+  │       ├── 3. Decompose (sub-questions)                                  │
+  │       ├── 4. Parallel Spawn (simple spawner)                            │
+  │       ├── 5. Collect Results                                            │
+  │       └── 6. Synthesize Answer                                          │
+  │                                                                         │
+  │  OUTPUT: Answer in terminal                                             │
+  │                                                                         │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │                                                                         │
+  │  TRACK 2: aur plan (Prepare Implementation) - TERMINAL                  │
+  │  ══════════════════════════════════════════════════════                 │
+  │                                                                         │
+  │  $ aur plan "goal"                                                      │
+  │       │                                                                 │
+  │       ├── 1. Memory Search (relevant files)                             │
+  │       ├── 2. Decompose (subgoals)                                       │
+  │       ├── 3. Agent Match (subgoals → agents)                            │
+  │       ├── 4. USER REVIEW (approve/modify)                               │
+  │       └── OUTPUT: plan.json (subgoals + agent assignments)              │
+  │                                                                         │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │                                                                         │
+  │  TRACK 3: /openspec (Generate + Execute) - CLAUDE CODE                  │
+  │  ══════════════════════════════════════════════════════                 │
+  │                                                                         │
+  │  /openspec plan <plan.json>                                             │
+  │       │                                                                 │
+  │       ├── Read plan.json (subgoals + agents from aur plan)              │
+  │       ├── Generate PRD (sections per subgoal)                           │
+  │       └── Generate tasks.md (with <!-- agent: X --> per task)           │
+  │                                                                         │
+  │  /openspec implement                      ← MODIFIED APPLY PROMPT       │
+  │       │                                                                 │
+  │       ├── Read tasks.md                                                 │
+  │       ├── For each task:                                                │
+  │       │     ├── agent != "self" → Task tool (subagent_type=agent)       │
+  │       │     └── agent == "self" → execute directly                      │
+  │       └── Mark complete, next task                                      │
+  │                                                                         │
+  │  (Sequential execution inside Claude Code via Task tool)                │
+  │                                                                         │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │                                                                         │
+  │  TRACK 4: aur spawn (Parallel Execute) - TERMINAL                       │
+  │  ══════════════════════════════════════════════════                     │
+  │                                                                         │
+  │  $ aur spawn <tasks.md>                                                 │
+  │       │                                                                 │
+  │       ├── Read tasks.md (with agent metadata)                           │
+  │       ├── Parallel spawn Claude CLI per task                            │
+  │       ├── Collect results                                               │
+  │       └── Report completion                                             │
+  │                                                                         │
+  │  (Parallel execution outside Claude Code via subprocess)                │
+  │  (Simple foundation to build on)                                        │
+  │                                                                         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ---
+  Two Execution Paths (Same Input)
+
+                      tasks.md (with agent metadata)
+                                │
+                ┌───────────────┴───────────────┐
+                │                               │
+                ▼                               ▼
+      /openspec implement                  aur spawn
+      (Claude Code)                        (Terminal)
+                │                               │
+                ▼                               ▼
+      Sequential via Task tool         Parallel via subprocess
+      (stays in Claude session)        (spawns Claude CLIs)
+
+  User chooses based on need:
+  - Want to stay in Claude Code? → /openspec implement
+  - Want parallel execution? → aur spawn
+  - Want terminal-based workflow to build on? → aur spawn
+
+  ---
+  What We Build
+  ┌───────────────────┬───────┬─────────────────────────────────┐
+  │     Component     │ Lines │              Notes              │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ Assess            │ ~50   │ Complexity gate for aur soar    │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ Simple Spawner    │ ~50   │ Core subprocess spawn           │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ Agent Matching    │ ~100  │ Match subgoals → agents         │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ aur soar CLI      │ ~150  │ Research flow                   │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ aur plan CLI      │ ~150  │ Decompose + match → plan.json   │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ aur spawn CLI     │ ~80   │ Read tasks.md, parallel spawn   │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ /openspec plan    │ ~100  │ Read plan.json → PRD + tasks.md │
+  ├───────────────────┼───────┼─────────────────────────────────┤
+  │ Modified apply.md │ ~20   │ Add agent-aware spawning logic  │
+  └───────────────────┴───────┴─────────────────────────────────┘
+  Total: ~700 lines of new code
+
+  ---
+  Devil's Advocate
+
+  "Why two execution paths? Isn't that redundant?"
+
+  No. Different use cases:
+  - /openspec implement: You're already in Claude Code, want integrated flow
+  - aur spawn: You want parallel execution, or building automation on top
+
+  "What if task order matters but user runs aur spawn (parallel)?"
+
+  Tasks with dependencies should use /openspec implement (sequential). Or aur spawn can respect depends_on metadata if we add it:
+  - [ ] 1. Design API
+    <!-- agent: architect -->
+
+  - [ ] 2. Implement API
+    <!-- agent: full-stack-dev -->
+    <!-- depends_on: 1 -->
+
+  But that's a future enhancement. Start simple: parallel = independent tasks.
+
+  "Is aur spawn just a wrapper around asyncio.gather?"
+
+  Basically, yes. That's the point. Simple foundation:
+  async def spawn_tasks(tasks):
+      return await asyncio.gather(*[
+          spawn_claude(t["prompt"], agent=t.get("agent"))
+          for t in tasks
+      ])
+
+  ~50 lines. User can build complex workflows on top.
+
+  "What about the 5,000 line Zeroshot port?"
+
+  Reference material. We extracted the one insight we needed: subprocess spawning. The rest was solving problems we don't have.
+
+  ---
+  Summary
+  ┌─────────────────────┬─────────────┬────────────────────────┬───────────────────────────┐
+  │        Track        │    Where    │       Execution        │      Agent Selection      │
+  ├─────────────────────┼─────────────┼────────────────────────┼───────────────────────────┤
+  │ aur soar            │ Terminal    │ Parallel spawn         │ Auto (research agents)    │
+  ├─────────────────────┼─────────────┼────────────────────────┼───────────────────────────┤
+  │ aur plan            │ Terminal    │ No execution           │ Outputs agent assignments │
+  ├─────────────────────┼─────────────┼────────────────────────┼───────────────────────────┤
+  │ /openspec implement │ Claude Code │ Sequential (Task tool) │ From tasks.md metadata    │
+  ├─────────────────────┼─────────────┼────────────────────────┼───────────────────────────┤
+  │ aur spawn           │ Terminal    │ Parallel (subprocess)  │ From tasks.md metadata    │
+  └─────────────────────┴─────────────┴────────────────────────┴───────────────────────────┘
+  Shared artifacts:
+  - plan.json - subgoals + agent assignments (from aur plan)
+  - tasks.md - tasks with <!-- agent: X --> (from /openspec plan)
+
+  Shared code:
+  - Simple spawner (~50 lines)
+  - Agent matching (~100 lines)
+
+  ---
+  Does this capture everything the simplest way?
+
+✻ Churned for 40s
+
+  ---
+  Does This Capture Everything?
+  ┌───────────────────────────────────────────┬──────────┐
+  │                   Need                    │ Covered? │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Research questions (aur soar)             │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Complexity gating (assess)                │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Memory search                             │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Decomposition                             │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Agent discovery/matching                  │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ User review (aur plan)                    │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ PRD generation (openspec)                 │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Task generation (openspec)                │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Sequential execution (openspec implement) │ ✅       │
+  ├───────────────────────────────────────────┼──────────┤
+  │ Parallel execution (aur spawn)            │ ✅       │
+  └───────────────────────────────────────────┴──────────┘
+  What's NOT included:
+  - Mid-execution agent communication (not needed)
+  - Complex triggers/hooks (not needed)
+  - Persistent message bus (not needed)
+
+  ---
+  What We DON'T Need (From Zeroshot)
+
+  - ❌ Message bus
+  - ❌ Triggers/hooks
+  - ❌ Conductors
+  - ❌ Completion detectors
+  - ❌ SQLite persistence for messages
+  - ❌ PTY sockets
+  - ❌ Watch TUI
+  - ❌ 5,000 lines of orchestration
+
+  ---
+  The Simple Spawner (What We Borrow)
+
+  # aurora_cli/spawner.py (~50 lines total)
+
+  import asyncio
+
+  async def spawn_claude(prompt: str, model: str = "sonnet") -> str:
+      """Spawn Claude CLI, return output."""
+      proc = await asyncio.create_subprocess_exec(
+          "claude", "-p", prompt, "--model", model, "--output-format", "text",
+          stdout=asyncio.subprocess.PIPE,
+          stderr=asyncio.subprocess.PIPE,
+      )
+      stdout, _ = await proc.communicate()
+      return stdout.decode()
+
+  async def spawn_parallel(tasks: list[dict]) -> list[str]:
+      """Run tasks in parallel, collect results."""
+      return await asyncio.gather(*[
+          spawn_claude(t["prompt"], t.get("model", "sonnet"))
+          for t in tasks
+      ])
+
+  async def spawn_sequential(tasks: list[dict]) -> list[str]:
+      """Run tasks in sequence, each sees previous context."""
+      results = []
+      context = ""
+      for t in tasks:
+          prompt = t["prompt"]
+          if context:
+              prompt += f"\n\nPrevious context:\n{context}"
+          result = await spawn_claude(prompt, t.get("model", "sonnet"))
+          results.append(result)
+          context += f"\n---\n{result}"
+      return results
+
+  That's it. That's what we need from Zeroshot. ~50 lines.
+
+  ---
+  Devil's Advocate
+
+  "What if we need agents to communicate mid-execution?"
+
+  For aur soar: No. Research agents work independently, results combined at end.
+
+  For aur plan: No. Tasks execute sequentially with user review between major phases.
+
+  "What about error handling and retries?"
+
+  async def spawn_with_retry(prompt: str, retries: int = 2) -> str:
+      for attempt in range(retries + 1):
+          try:
+              return await spawn_claude(prompt)
+          except Exception as e:
+              if attempt == retries:
+                  raise
+              await asyncio.sleep(1)
+
+  Add 10 lines. Done.
+
+  "What about the 5,000 line Zeroshot port?"
+
+  Keep it as reference. Don't use it. We learned from it. The actual need is ~50 lines.
+
+  ---
+  Summary: The New Plan
+
+  1. aur soar - Terminal research with parallel spawning
+  2. aur plan - Terminal decomposition, outputs plan.json
+  3. /openspec plan - Claude Code reads plan.json → PRD + tasks
+  4. /openspec implement - Claude Code executes tasks (or aur spawn for parallel)
+
+  Shared component: Simple spawner (~50 lines)
+
+  What we deprecate from Zeroshot: Everything except the core subprocess spawn idea.
+
+  ---
+  Does this match what you're thinking?
+
+✻ Crunched for 38s
+
+  Your Understanding is Accurate
+
+  OpenSpec's implement is just a prompt that tells Claude to iterate through tasks.md. If tasks.md contains agent metadata per task, and we modify the apply prompt to spawn the right agent, it works.
+
+  Aurora (upfront)              OpenSpec (runtime)
+  ─────────────────             ──────────────────
+  decompose query        →      proposal.md
+  discover agents        →      tasks.md (with agent per task)
+  match agent to task    →      /openspec:apply (agent-aware)
+                                │
+                                ├─ task 1 → spawn full-stack-dev
+                                ├─ task 2 → spawn qa-test-architect
+                                └─ task 3 → spawn full-stack-dev
+
+  What Needs to Change
+
+  1. tasks.md format (add agent field):
+  ## Tasks
+  - [ ] 1. Implement user authentication endpoint
+    <!-- agent: full-stack-dev -->
+
+  - [ ] 2. Write integration tests for auth
+    <!-- agent: qa-test-architect -->
+
+  - [ ] 3. Update API documentation
+    <!-- agent: self -->
+
+  2. Modified apply prompt (the only real change):
+  **Steps**
+  For each uncompleted task in `tasks.md`:
+  1. Read the task description and agent assignment (in <!-- agent: X --> comment)
+  2. If agent is NOT "self":
+     - Use Task tool to spawn subagent with subagent_type = agent value
+     - Pass task description as prompt
+     - Wait for completion
+  3. If agent is "self" or unspecified:
+     - Execute directly
+  4. Mark task `[x]` after verified completion
+  5. Continue to next task until all complete
+
+  Why This Works
+
+  OpenSpec's implement doesn't know or care about agents - it just follows instructions. The instructions currently say "do tasks sequentially." We change them to say "spawn appropriate agent per task."
+
+  Claude Code's Task tool already supports subagent_type parameter. The mapping is direct:
+  - <!-- agent: full-stack-dev --> → Task(subagent_type="full-stack-dev", ...)
+
+  What Aurora Does Upfront
+
+  # Terminal-side (Aurora CLI)
+  1. aur plan create "Add user auth"
+  2. SOAR assess + decompose → subgoals with agent assignments
+  3. Generate tasks.md with agent metadata baked in
+  4. User runs /openspec:apply
+  5. Apply iterates tasks, spawning correct agent per task
+
+  You're not reinventing anything. You're just:
+  1. Adding a field to tasks.md
+  2. Modifying one prompt (apply.md)
+
+  That's it. Should I draft the exact apply.md modification?

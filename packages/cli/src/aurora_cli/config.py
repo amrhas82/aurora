@@ -15,7 +15,6 @@ from typing import Any
 
 from aurora_cli.errors import ConfigurationError, ErrorHandler
 
-
 # List of all 20 AI coding tools supported by Aurora slash command configurators.
 # Each tool has:
 #   - name: Human-readable display name
@@ -76,7 +75,9 @@ class Config:
     db_path: str = "./.aurora/memory.db"  # Database path - project-specific
     budget_limit: float = 10.0  # Default budget limit in USD
     budget_tracker_path: str = "~/.aurora/budget_tracker.json"  # ONLY global file
-    search_min_semantic_score: float = 0.70  # Minimum semantic score threshold (0.7 = cosine similarity > 0.4)
+    search_min_semantic_score: float = (
+        0.70  # Minimum semantic score threshold (0.7 = cosine similarity > 0.4)
+    )
     # Agent discovery configuration
     agents_auto_refresh: bool = True
     agents_refresh_interval_hours: int = 24

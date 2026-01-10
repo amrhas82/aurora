@@ -7,10 +7,7 @@ files instead of markdown with YAML frontmatter.
 from abc import abstractmethod
 from pathlib import Path
 
-from aurora_cli.configurators.slash.base import (
-    AURORA_MARKERS,
-    SlashCommandConfigurator,
-)
+from aurora_cli.configurators.slash.base import AURORA_MARKERS, SlashCommandConfigurator
 
 
 class TomlSlashCommandConfigurator(SlashCommandConfigurator):

@@ -21,7 +21,6 @@ import jsonschema
 from aurora_core.config.schema import get_schema
 from aurora_core.exceptions import ConfigurationError
 
-
 # Environment variable to config key mapping
 ENV_VAR_MAPPING = {
     "AURORA_STORAGE_PATH": "storage.path",

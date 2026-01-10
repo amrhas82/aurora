@@ -14,6 +14,7 @@ from typing import Any, Literal
 @dataclass
 class ChangeInfo:
     """Information about a change/plan."""
+
     name: str
     completed_tasks: int
     total_tasks: int
@@ -23,6 +24,7 @@ class ChangeInfo:
 @dataclass
 class SpecInfo:
     """Information about a specification."""
+
     id: str
     requirement_count: int
 
@@ -33,8 +35,8 @@ class ListCommand:
     def execute(
         self,
         target_path: str = ".",
-        mode: Literal['changes', 'specs'] = 'changes',
-        options: dict[str, Any] | None = None
+        mode: Literal["changes", "specs"] = "changes",
+        options: dict[str, Any] | None = None,
     ) -> None:
         """
         Execute the list command.
@@ -47,42 +49,31 @@ class ListCommand:
         if options is None:
             options = {}
 
-        sort = options.get('sort', 'recent')
-        json_output = options.get('json', False)
+        sort = options.get("sort", "recent")
+        json_output = options.get("json", False)
 
         target = Path(target_path)
 
-        if mode == 'changes':
+        if mode == "changes":
             self._list_changes(target, sort, json_output)
         else:
             self._list_specs(target)
 
-    def _list_changes(
-        self,
-        target: Path,
-        sort: str,
-        json_output: bool
-    ) -> None:
+    def _list_changes(self, target: Path, sort: str, json_output: bool) -> None:
         """List active changes."""
         changes_dir = target / ".aurora/plans" / "changes"
 
         # Check if changes directory exists
         if not changes_dir.exists():
-            raise RuntimeError(
-                "No Aurora plans directory found. Run 'aur init' first."
-            )
+            raise RuntimeError("No Aurora plans directory found. Run 'aur init' first.")
 
         # Get all directories in changes (excluding archive)
         try:
             entries = list(changes_dir.iterdir())
         except OSError as err:
-            raise RuntimeError(
-                "No Aurora plans directory found. Run 'aur init' first."
-            ) from err
+            raise RuntimeError("No Aurora plans directory found. Run 'aur init' first.") from err
 
-        change_dirs = sorted(
-            [e.name for e in entries if e.is_dir() and e.name != 'archive']
-        )
+        change_dirs = sorted([e.name for e in entries if e.is_dir() and e.name != "archive"])
 
         if len(change_dirs) == 0:
             if json_output:
@@ -98,15 +89,17 @@ class ListCommand:
             progress = self._get_task_progress(changes_dir, change_dir)
             change_path = changes_dir / change_dir
             last_modified = self._get_last_modified(change_path)
-            changes.append(ChangeInfo(
-                name=change_dir,
-                completed_tasks=progress['completed'],
-                total_tasks=progress['total'],
-                last_modified=last_modified
-            ))
+            changes.append(
+                ChangeInfo(
+                    name=change_dir,
+                    completed_tasks=progress["completed"],
+                    total_tasks=progress["total"],
+                    last_modified=last_modified,
+                )
+            )
 
         # Sort by preference (default: recent first)
-        if sort == 'recent':
+        if sort == "recent":
             changes.sort(key=lambda c: c.last_modified, reverse=True)
         else:
             changes.sort(key=lambda c: c.name)
@@ -115,17 +108,21 @@ class ListCommand:
         if json_output:
             json_output_data = []
             for c in changes:
-                status = 'no-tasks' if c.total_tasks == 0 else (
-                    'complete' if c.completed_tasks == c.total_tasks else 'in-progress'
+                status = (
+                    "no-tasks"
+                    if c.total_tasks == 0
+                    else ("complete" if c.completed_tasks == c.total_tasks else "in-progress")
                 )
-                json_output_data.append({
-                    'name': c.name,
-                    'completedTasks': c.completed_tasks,
-                    'totalTasks': c.total_tasks,
-                    'lastModified': c.last_modified.isoformat(),
-                    'status': status
-                })
-            print(json.dumps({'changes': json_output_data}, indent=2))
+                json_output_data.append(
+                    {
+                        "name": c.name,
+                        "completedTasks": c.completed_tasks,
+                        "totalTasks": c.total_tasks,
+                        "lastModified": c.last_modified.isoformat(),
+                        "status": status,
+                    }
+                )
+            print(json.dumps({"changes": json_output_data}, indent=2))
             return
 
         # Display results
@@ -166,8 +163,7 @@ class ListCommand:
                 content = spec_path.read_text()
                 # Count requirements (lines starting with ### Requirement:)
                 req_count = sum(
-                    1 for line in content.split('\n')
-                    if line.strip().startswith('### Requirement:')
+                    1 for line in content.split("\n") if line.strip().startswith("### Requirement:")
                 )
                 specs.append(SpecInfo(id=spec_id, requirement_count=req_count))
             except (FileNotFoundError, OSError):
@@ -184,34 +180,30 @@ class ListCommand:
             padded = spec.id.ljust(name_width)
             print(f"{padding}{padded}     requirements {spec.requirement_count}")
 
-    def _get_task_progress(
-        self,
-        changes_dir: Path,
-        change_name: str
-    ) -> dict[str, int]:
+    def _get_task_progress(self, changes_dir: Path, change_name: str) -> dict[str, int]:
         """Get task progress for a change."""
         tasks_path = changes_dir / change_name / "tasks.md"
 
         if not tasks_path.exists():
-            return {'total': 0, 'completed': 0}
+            return {"total": 0, "completed": 0}
 
         try:
             content = tasks_path.read_text()
         except OSError:
-            return {'total': 0, 'completed': 0}
+            return {"total": 0, "completed": 0}
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         total = 0
         completed = 0
 
         for line in lines:
             line = line.strip()
-            if line.startswith('- ['):
+            if line.startswith("- ["):
                 total += 1
-                if line.startswith('- [x]') or line.startswith('- [X]'):
+                if line.startswith("- [x]") or line.startswith("- [X]"):
                     completed += 1
 
-        return {'total': total, 'completed': completed}
+        return {"total": total, "completed": completed}
 
     def _format_task_status(self, total: int, completed: int) -> str:
         """Format task status string."""

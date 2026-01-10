@@ -16,6 +16,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from aurora_cli.commands.init_helpers import (
     count_configured_tools,
     create_directory_structure,
@@ -133,7 +134,9 @@ More custom content
         """count_configured_tools() should count tools with Aurora markers."""
         # Create two configured tools
         claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->", encoding="utf-8")
+        claude_md.write_text(
+            "<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->", encoding="utf-8"
+        )
 
         opencode_md = tmp_path / "OPENCODE.md"
         opencode_md.write_text(
@@ -498,9 +501,7 @@ class TestConfigureSlashCommands:
         from aurora_cli.commands.init_helpers import configure_slash_commands
 
         # Should not raise for valid tool IDs
-        created, updated = await configure_slash_commands(
-            tmp_path, ["claude", "cursor", "gemini"]
-        )
+        created, updated = await configure_slash_commands(tmp_path, ["claude", "cursor", "gemini"])
 
         assert isinstance(created, list)
         assert isinstance(updated, list)
@@ -521,9 +522,7 @@ class TestConfigureSlashCommands:
         from aurora_cli.commands.init_helpers import configure_slash_commands
 
         # Should not raise, just skip invalid tools
-        created, updated = await configure_slash_commands(
-            tmp_path, ["not-a-real-tool", "claude"]
-        )
+        created, updated = await configure_slash_commands(tmp_path, ["not-a-real-tool", "claude"])
 
         # Should still configure valid tools
         assert isinstance(created, list)
@@ -550,9 +549,7 @@ class TestConfigureSlashCommands:
         from aurora_cli.commands.init_helpers import configure_slash_commands
         from aurora_cli.configurators.slash import SlashCommandRegistry
 
-        with patch.object(
-            SlashCommandRegistry, "get"
-        ) as mock_get:
+        with patch.object(SlashCommandRegistry, "get") as mock_get:
             mock_configurator = MagicMock()
             mock_configurator.generate_all = AsyncMock()
             mock_configurator.name = "Test Tool"

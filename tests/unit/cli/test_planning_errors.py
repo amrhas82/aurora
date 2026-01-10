@@ -7,6 +7,7 @@ to ensure all error codes produce valid messages.
 from __future__ import annotations
 
 import pytest
+
 from aurora_cli.planning.errors import (
     VALIDATION_MESSAGES,
     ContextError,
@@ -296,9 +297,9 @@ class TestExceptionHierarchy:
         ]
 
         for exc_class in exception_classes:
-            assert issubclass(exc_class, PlanningError), (
-                f"{exc_class.__name__} does not inherit from PlanningError"
-            )
+            assert issubclass(
+                exc_class, PlanningError
+            ), f"{exc_class.__name__} does not inherit from PlanningError"
 
     def test_all_exceptions_inherit_from_exception(self) -> None:
         """All custom exceptions inherit from Exception."""
@@ -313,9 +314,9 @@ class TestExceptionHierarchy:
         ]
 
         for exc_class in exception_classes:
-            assert issubclass(exc_class, Exception), (
-                f"{exc_class.__name__} does not inherit from Exception"
-            )
+            assert issubclass(
+                exc_class, Exception
+            ), f"{exc_class.__name__} does not inherit from Exception"
 
     def test_exceptions_can_be_caught_by_planning_error(self) -> None:
         """All specific exceptions can be caught by PlanningError."""

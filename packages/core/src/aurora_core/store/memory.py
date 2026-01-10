@@ -11,14 +11,9 @@ from datetime import datetime, timezone
 # Forward reference for type checking
 from typing import TYPE_CHECKING, Any, Optional
 
-from aurora_core.exceptions import (
-    ChunkNotFoundError,
-    StorageError,
-    ValidationError,
-)
+from aurora_core.exceptions import ChunkNotFoundError, StorageError, ValidationError
 from aurora_core.store.base import Store
 from aurora_core.types import ChunkID
-
 
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
@@ -372,9 +367,9 @@ class MemoryStore(Store):
                 "access_count": activation["access_count"],
                 "last_access": activation["last_access"],
                 "first_access": activation["first_access"],
-                "created_at": chunk.metadata.get("created_at")
-                if hasattr(chunk, "metadata")
-                else None,
+                "created_at": (
+                    chunk.metadata.get("created_at") if hasattr(chunk, "metadata") else None
+                ),
             }
         return {
             "access_count": 0,

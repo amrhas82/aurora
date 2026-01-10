@@ -22,9 +22,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from aurora_cli.main import cli
 from click.testing import CliRunner
 
+from aurora_cli.main import cli
 
 pytestmark = pytest.mark.integration
 
@@ -575,7 +575,11 @@ class TestEdgeCases:
         )
 
         # Should fail with error
-        assert result.exit_code != 0 or "Invalid" in result.output or "not-a-real-tool" in result.output
+        assert (
+            result.exit_code != 0
+            or "Invalid" in result.output
+            or "not-a-real-tool" in result.output
+        )
 
     def test_edge_mixed_valid_invalid_tools(self, temp_project, runner):
         """Mix of valid and invalid tool IDs shows error for invalid ones."""

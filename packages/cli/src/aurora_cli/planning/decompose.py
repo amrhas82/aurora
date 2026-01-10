@@ -16,14 +16,15 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
-from aurora_cli.planning.memory import FilePathResolver
 from aurora_cli.planning.agents import AgentRecommender
+from aurora_cli.planning.memory import FilePathResolver
+from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
 
 # Try to import SOAR - graceful fallback if not available
 try:
-    from aurora_soar.phases.decompose import decompose_query
     from aurora_reasoning.llm_client import LLMClient
+    from aurora_soar.phases.decompose import decompose_query
+
     SOAR_AVAILABLE = True
 except ImportError:
     SOAR_AVAILABLE = False
@@ -33,6 +34,7 @@ except ImportError:
 # Try to import ManifestManager for agent discovery
 try:
     from aurora_cli.agent_discovery.manifest import ManifestManager
+
     MANIFEST_AVAILABLE = True
 except ImportError:
     MANIFEST_AVAILABLE = False
@@ -144,9 +146,7 @@ class PlanDecomposer:
                 resolutions = resolver.resolve_for_subgoal(subgoal, limit=5)
                 file_resolutions[subgoal.id] = resolutions
             except Exception as e:
-                logger.warning(
-                    f"Failed to resolve files for subgoal {subgoal.id}: {e}"
-                )
+                logger.warning(f"Failed to resolve files for subgoal {subgoal.id}: {e}")
                 file_resolutions[subgoal.id] = []
 
         return subgoals, file_resolutions, source
@@ -194,9 +194,7 @@ class PlanDecomposer:
                 subgoal.recommended_agent = agent_id
                 subgoal.agent_exists = recommender.verify_agent_exists(agent_id)
             except Exception as e:
-                logger.warning(
-                    f"Failed to recommend agent for subgoal {subgoal.id}: {e}"
-                )
+                logger.warning(f"Failed to recommend agent for subgoal {subgoal.id}: {e}")
                 # Use fallback
                 fallback = recommender.get_fallback_agent()
                 agent_recommendations[subgoal.id] = (fallback, 0.0)
@@ -221,9 +219,7 @@ class PlanDecomposer:
         content = f"{goal}::{complexity.value}"
         return hashlib.md5(content.encode()).hexdigest()
 
-    def _build_context(
-        self, context_files: list[str] | None = None
-    ) -> dict[str, Any]:
+    def _build_context(self, context_files: list[str] | None = None) -> dict[str, Any]:
         """Build context dictionary for SOAR decomposition.
 
         Args:

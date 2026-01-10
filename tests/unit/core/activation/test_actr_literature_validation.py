@@ -33,28 +33,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from aurora_core.activation.base_level import (
-    AccessHistoryEntry,
-    BaseLevelActivation,
-    BLAConfig,
-)
-from aurora_core.activation.context_boost import (
-    ContextBoost,
-    ContextBoostConfig,
-)
-from aurora_core.activation.decay import (
-    DecayCalculator,
-    DecayConfig,
-)
-from aurora_core.activation.engine import (
-    ActivationConfig,
-    ActivationEngine,
-)
-from aurora_core.activation.spreading import (
-    RelationshipGraph,
-    SpreadingActivation,
-    SpreadingConfig,
-)
+from aurora_core.activation.base_level import AccessHistoryEntry, BaseLevelActivation, BLAConfig
+from aurora_core.activation.context_boost import ContextBoost, ContextBoostConfig
+from aurora_core.activation.decay import DecayCalculator, DecayConfig
+from aurora_core.activation.engine import ActivationConfig, ActivationEngine
+from aurora_core.activation.spreading import RelationshipGraph, SpreadingActivation, SpreadingConfig
 
 
 class TestBaseLevelActivationLiterature:
@@ -93,12 +76,12 @@ class TestBaseLevelActivationLiterature:
         t_seconds = 86400
         expected = -0.5 * math.log(t_seconds)
 
-        assert activation == pytest.approx(expected, abs=0.01), (
-            f"Expected BLA={expected:.3f} for single access 1 day ago, got {activation:.3f}"
-        )
-        assert expected == pytest.approx(-5.686, abs=0.01), (
-            "Sanity check: Anderson's published value"
-        )
+        assert activation == pytest.approx(
+            expected, abs=0.01
+        ), f"Expected BLA={expected:.3f} for single access 1 day ago, got {activation:.3f}"
+        assert expected == pytest.approx(
+            -5.686, abs=0.01
+        ), "Sanity check: Anderson's published value"
 
     def test_anderson_1998_multiple_access_example(self):
         """Anderson & Lebiere (1998), p. 47: Multiple access example.
@@ -129,20 +112,20 @@ class TestBaseLevelActivationLiterature:
         sum_powers = math.pow(t1, -0.5) + math.pow(t2, -0.5) + math.pow(t3, -0.5)
         expected = math.log(sum_powers)
 
-        assert activation == pytest.approx(expected, abs=0.01), (
-            f"Expected BLA={expected:.3f} for 3 accesses, got {activation:.3f}"
-        )
+        assert activation == pytest.approx(
+            expected, abs=0.01
+        ), f"Expected BLA={expected:.3f} for 3 accesses, got {activation:.3f}"
 
         # Verify intermediate calculations
         # Calculated: t1^-0.5 + t2^-0.5 + t3^-0.5
         #   = 3600^-0.5 + 86400^-0.5 + 604800^-0.5
         #   = 0.01667 + 0.00340 + 0.00129 = 0.02135
-        assert sum_powers == pytest.approx(0.02135, abs=0.001), (
-            f"Sum of power terms should be ~0.02135, got {sum_powers}"
-        )
-        assert expected == pytest.approx(-3.846, abs=0.05), (
-            f"Final activation should be ~-3.846, got {expected}"
-        )
+        assert sum_powers == pytest.approx(
+            0.02135, abs=0.001
+        ), f"Sum of power terms should be ~0.02135, got {sum_powers}"
+        assert expected == pytest.approx(
+            -3.846, abs=0.05
+        ), f"Final activation should be ~-3.846, got {expected}"
 
     def test_anderson_2004_power_law_of_practice(self):
         """Anderson et al. (2004): Power law of practice validation.
@@ -184,12 +167,12 @@ class TestBaseLevelActivationLiterature:
 
         expected_increment = math.log(4)  # For same-time accesses
 
-        assert diff_1_to_4 == pytest.approx(expected_increment, abs=0.01), (
-            f"1→4 accesses should increase by {expected_increment:.3f}, got {diff_1_to_4:.3f}"
-        )
-        assert diff_4_to_16 == pytest.approx(expected_increment, abs=0.01), (
-            f"4→16 accesses should increase by {expected_increment:.3f}, got {diff_4_to_16:.3f}"
-        )
+        assert diff_1_to_4 == pytest.approx(
+            expected_increment, abs=0.01
+        ), f"1→4 accesses should increase by {expected_increment:.3f}, got {diff_1_to_4:.3f}"
+        assert diff_4_to_16 == pytest.approx(
+            expected_increment, abs=0.01
+        ), f"4→16 accesses should increase by {expected_increment:.3f}, got {diff_4_to_16:.3f}"
 
     def test_anderson_2007_power_law_of_forgetting(self):
         """Anderson (2007), p. 76: Power law of forgetting.
@@ -218,12 +201,12 @@ class TestBaseLevelActivationLiterature:
         diff_1d_to_10d = activation_1d - activation_10d
         diff_10d_to_100d = activation_10d - activation_100d
 
-        assert diff_1d_to_10d == pytest.approx(expected_decrement, abs=0.01), (
-            f"1d→10d should decrease by {expected_decrement:.3f}, got {diff_1d_to_10d:.3f}"
-        )
-        assert diff_10d_to_100d == pytest.approx(expected_decrement, abs=0.01), (
-            f"10d→100d should decrease by {expected_decrement:.3f}, got {diff_10d_to_100d:.3f}"
-        )
+        assert diff_1d_to_10d == pytest.approx(
+            expected_decrement, abs=0.01
+        ), f"1d→10d should decrease by {expected_decrement:.3f}, got {diff_1d_to_10d:.3f}"
+        assert diff_10d_to_100d == pytest.approx(
+            expected_decrement, abs=0.01
+        ), f"10d→100d should decrease by {expected_decrement:.3f}, got {diff_10d_to_100d:.3f}"
 
 
 class TestSpreadingActivationLiterature:
@@ -259,9 +242,9 @@ class TestSpreadingActivationLiterature:
         activations = spreading.calculate(["A"], graph)
 
         expected = 1.0 * 0.7  # W × F^1
-        assert activations["B"] == pytest.approx(expected, abs=0.001), (
-            f"Expected spreading={expected:.3f}, got {activations['B']:.3f}"
-        )
+        assert activations["B"] == pytest.approx(
+            expected, abs=0.001
+        ), f"Expected spreading={expected:.3f}, got {activations['B']:.3f}"
 
     def test_anderson_1983_distance_decay(self):
         """Anderson (1983), p. 272: Distance-dependent decay.
@@ -317,9 +300,9 @@ class TestSpreadingActivationLiterature:
         expected_per_path = 0.7**2  # Distance 2
         expected_total = 2 * expected_per_path
 
-        assert activations["D"] == pytest.approx(expected_total, abs=0.001), (
-            f"Expected D={expected_total:.3f}, got {activations['D']:.3f}"
-        )
+        assert activations["D"] == pytest.approx(
+            expected_total, abs=0.001
+        ), f"Expected D={expected_total:.3f}, got {activations['D']:.3f}"
 
     def test_anderson_1983_fan_effect(self):
         """Anderson (1983), p. 278: Fan effect on spreading.
@@ -454,9 +437,9 @@ class TestDecayPenaltyLiterature:
         penalty_100d = decay.calculate(now - timedelta(days=100), now)
 
         # Verify logarithmic growth: penalty becomes more negative over time
-        assert penalty_1d > penalty_10d > penalty_100d, (
-            "Penalty should become more negative (lower) over time"
-        )
+        assert (
+            penalty_1d > penalty_10d > penalty_100d
+        ), "Penalty should become more negative (lower) over time"
 
         # Log10 scale: 10× time = +1.0 in log10
         # Penalty increment = -decay_factor × 1.0 = -0.5
@@ -566,9 +549,9 @@ class TestTotalActivationFormula:
         )
 
         # Verify low total activation
-        assert result.total < -5.0, (
-            "Old, distant, low-context chunk should have very low activation"
-        )
+        assert (
+            result.total < -5.0
+        ), "Old, distant, low-context chunk should have very low activation"
 
         # Verify BLA dominates (most negative)
         assert abs(result.bla) > abs(result.spreading + result.context_boost)
@@ -660,9 +643,9 @@ class TestACTRPrincipleValidation:
             access_history=history_high, last_access=now - timedelta(days=1)
         )
 
-        assert result_high.total > result_low.total, (
-            "More frequent access should result in higher activation"
-        )
+        assert (
+            result_high.total > result_low.total
+        ), "More frequent access should result in higher activation"
 
     def test_recency_principle(self):
         """ACT-R Principle: More recent use → Higher activation.
@@ -686,9 +669,9 @@ class TestACTRPrincipleValidation:
             access_history=history_recent, last_access=now - timedelta(hours=1)
         )
 
-        assert result_recent.total > result_old.total, (
-            "More recent access should result in higher activation"
-        )
+        assert (
+            result_recent.total > result_old.total
+        ), "More recent access should result in higher activation"
 
     def test_context_principle(self):
         """ACT-R Principle: Contextually relevant items are more available.
@@ -716,9 +699,9 @@ class TestACTRPrincipleValidation:
             chunk_keywords={"database", "optimize", "performance"},  # Perfect match
         )
 
-        assert result_high_context.total > result_low_context.total, (
-            "Higher context match should result in higher activation"
-        )
+        assert (
+            result_high_context.total > result_low_context.total
+        ), "Higher context match should result in higher activation"
 
     def test_associative_principle(self):
         """ACT-R Principle: Associated items receive spreading activation.
@@ -745,9 +728,9 @@ class TestACTRPrincipleValidation:
             spreading_activation=0.7,  # 1 hop away
         )
 
-        assert result_with_spread.total > result_no_spread.total, (
-            "Associated chunks should receive spreading activation boost"
-        )
+        assert (
+            result_with_spread.total > result_no_spread.total
+        ), "Associated chunks should receive spreading activation boost"
 
         # Verify spread component contributed
         spread_contribution = result_with_spread.total - result_no_spread.total

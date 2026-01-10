@@ -22,7 +22,6 @@ from aurora_cli.health_checks import (
     ToolIntegrationChecks,
 )
 
-
 __all__ = ["doctor_command"]
 
 logger = logging.getLogger(__name__)
@@ -129,7 +128,9 @@ def doctor_command(fix: bool) -> None:
 
         # Handle --fix flag if requested
         if fix and (fail_count > 0 or warning_count > 0):
-            _handle_auto_fix(core_checks, code_checks, search_checks, config_checks, tool_checks, mcp_checks)
+            _handle_auto_fix(
+                core_checks, code_checks, search_checks, config_checks, tool_checks, mcp_checks
+            )
 
         # Determine exit code
         if fail_count > 0:

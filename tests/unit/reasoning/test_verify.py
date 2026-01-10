@@ -3,12 +3,13 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from aurora_reasoning.verify import (
     VerificationOption,
     VerificationResult,
     VerificationVerdict,
+    _auto_correct_verdict,
     _calculate_overall_score,
-    _validate_verdict_consistency,
     verify_decomposition,
 )
 
@@ -86,38 +87,38 @@ class TestCalculateOverallScore:
 
 
 class TestValidateVerdictConsistency:
-    """Tests for _validate_verdict_consistency function."""
+    """Tests for _auto_correct_verdict function."""
 
     def test_pass_with_high_score(self):
         """Test PASS verdict with score ≥ 0.7."""
         # Should not raise
-        _validate_verdict_consistency(VerificationVerdict.PASS, 0.7)
-        _validate_verdict_consistency(VerificationVerdict.PASS, 0.85)
-        _validate_verdict_consistency(VerificationVerdict.PASS, 1.0)
+        _auto_correct_verdict(VerificationVerdict.PASS, 0.7)
+        _auto_correct_verdict(VerificationVerdict.PASS, 0.85)
+        _auto_correct_verdict(VerificationVerdict.PASS, 1.0)
 
     def test_retry_with_medium_score(self):
         """Test RETRY verdict with 0.5 ≤ score < 0.7."""
         # Should not raise
-        _validate_verdict_consistency(VerificationVerdict.RETRY, 0.5)
-        _validate_verdict_consistency(VerificationVerdict.RETRY, 0.6)
-        _validate_verdict_consistency(VerificationVerdict.RETRY, 0.69)
+        _auto_correct_verdict(VerificationVerdict.RETRY, 0.5)
+        _auto_correct_verdict(VerificationVerdict.RETRY, 0.6)
+        _auto_correct_verdict(VerificationVerdict.RETRY, 0.69)
 
     def test_fail_with_low_score(self):
         """Test FAIL verdict with score < 0.5."""
         # Should not raise
-        _validate_verdict_consistency(VerificationVerdict.FAIL, 0.0)
-        _validate_verdict_consistency(VerificationVerdict.FAIL, 0.3)
-        _validate_verdict_consistency(VerificationVerdict.FAIL, 0.49)
+        _auto_correct_verdict(VerificationVerdict.FAIL, 0.0)
+        _auto_correct_verdict(VerificationVerdict.FAIL, 0.3)
+        _auto_correct_verdict(VerificationVerdict.FAIL, 0.49)
 
     def test_invalid_pass_with_low_score(self):
         """Test PASS verdict with score < 0.5 raises error."""
         with pytest.raises(ValueError, match=r"Verdict.*PASS inconsistent"):
-            _validate_verdict_consistency(VerificationVerdict.PASS, 0.3)
+            _auto_correct_verdict(VerificationVerdict.PASS, 0.3)
 
     def test_invalid_fail_with_medium_score(self):
         """Test FAIL verdict with medium score raises error."""
         with pytest.raises(ValueError, match=r"Verdict.*FAIL inconsistent"):
-            _validate_verdict_consistency(VerificationVerdict.FAIL, 0.6)
+            _auto_correct_verdict(VerificationVerdict.FAIL, 0.6)
 
 
 class TestVerifyDecomposition:

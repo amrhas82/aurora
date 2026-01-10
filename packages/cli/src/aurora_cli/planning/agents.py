@@ -12,7 +12,8 @@ from aurora_cli.planning.models import AgentGap, Subgoal
 
 # Try to import ManifestManager - graceful fallback if not available
 try:
-    from aurora_cli.agent_discovery.manifest import ManifestManager, AgentManifest
+    from aurora_cli.agent_discovery.manifest import AgentManifest, ManifestManager
+
     MANIFEST_AVAILABLE = True
 except ImportError:
     MANIFEST_AVAILABLE = False
@@ -86,6 +87,7 @@ class AgentRecommender:
         config: Optional[any] = None,
         score_threshold: float = 0.5,
         default_fallback: str = "@full-stack-dev",
+        llm_client: Optional[any] = None,  # CLIPipeLLMClient
     ) -> None:
         """Initialize agent recommender.
 
@@ -94,15 +96,15 @@ class AgentRecommender:
             config: Optional configuration object
             score_threshold: Minimum score for agent match (default 0.5)
             default_fallback: Default fallback agent ID
+            llm_client: Optional LLM client for fallback classification
         """
         self.manifest = manifest
         self.config = config
         self.score_threshold = score_threshold
         self.default_fallback = default_fallback
+        self.llm_client = llm_client
 
-    def recommend_for_subgoal(
-        self, subgoal: Subgoal
-    ) -> tuple[str, float]:
+    def recommend_for_subgoal(self, subgoal: Subgoal) -> tuple[str, float]:
         """Recommend best agent for a subgoal based on capability matching.
 
         Extracts keywords from subgoal and scores agents based on keyword
@@ -147,6 +149,144 @@ class AgentRecommender:
 
         # Return fallback if no good match
         return (self.default_fallback, best_score)
+
+    async def recommend_for_subgoal_async(self, subgoal: Subgoal) -> tuple[str, float]:
+        """Recommend best agent with LLM fallback for low-scoring matches.
+
+        First tries keyword-based matching. If score < threshold and LLM client
+        is available, uses LLM to classify the subgoal.
+
+        Args:
+            subgoal: Subgoal to recommend agent for
+
+        Returns:
+            Tuple of (agent_id, score)
+            - agent_id: Recommended agent ID with @ prefix
+            - score: Match score from 0.0 to 1.0
+        """
+        # Try keyword matching first
+        agent_id, score = self.recommend_for_subgoal(subgoal)
+
+        # If score meets threshold, return immediately
+        if score >= self.score_threshold:
+            return (agent_id, score)
+
+        # Try LLM fallback if available
+        if self.llm_client is not None:
+            try:
+                llm_agent_id, llm_score = await self._llm_classify(subgoal)
+
+                # Use LLM result if it meets threshold
+                if llm_score >= self.score_threshold:
+                    return (llm_agent_id, llm_score)
+            except Exception as e:
+                logger.warning(f"LLM classification failed: {e}")
+                # Fall through to return keyword result
+
+        # Return keyword-based result (may be below threshold)
+        return (agent_id, score)
+
+    async def _llm_classify(self, subgoal: Subgoal) -> tuple[str, float]:
+        """Use LLM to suggest agent when keyword matching fails.
+
+        Args:
+            subgoal: Subgoal to classify
+
+        Returns:
+            Tuple of (agent_id, confidence)
+
+        Raises:
+            ValueError: If LLM response is invalid
+        """
+        if self.llm_client is None:
+            raise ValueError("LLM client not available")
+
+        # Load manifest if needed
+        if self.manifest is None:
+            try:
+                self.manifest = self._load_manifest()
+            except Exception as e:
+                logger.warning(f"Failed to load manifest for LLM classification: {e}")
+                raise
+
+        # Format agent list for prompt
+        agent_list = self._format_agents()
+
+        # Build classification prompt
+        prompt = f"""Task: {subgoal.title}
+Description: {subgoal.description}
+
+Available agents:
+{agent_list}
+
+Which agent is best suited for this task?
+
+Return JSON with this exact structure:
+{{
+    "agent_id": "@agent-id",
+    "confidence": 0.85,
+    "reasoning": "brief explanation"
+}}
+
+Important:
+- agent_id must match one of the available agents (with @ prefix)
+- confidence must be between 0.0 and 1.0
+- reasoning should be 1-2 sentences"""
+
+        # Call LLM
+        response = await self.llm_client.generate(prompt, phase_name="agent_matching")
+
+        # Parse JSON response
+        import json
+
+        try:
+            # Clean up response
+            text = response.content.strip()
+            if text.startswith("```json"):
+                text = text[7:]
+            if text.startswith("```"):
+                text = text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+            text = text.strip()
+
+            data = json.loads(text)
+
+            agent_id = data.get("agent_id", "")
+            confidence = float(data.get("confidence", 0.0))
+
+            # Validate
+            if not agent_id.startswith("@"):
+                raise ValueError(f"Invalid agent_id format: {agent_id}")
+            if not (0.0 <= confidence <= 1.0):
+                raise ValueError(f"Invalid confidence: {confidence}")
+
+            return (agent_id, confidence)
+
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            logger.error(f"Failed to parse LLM classification: {e}")
+            raise ValueError(f"Invalid LLM response: {e}")
+
+    def _format_agents(self) -> str:
+        """Format agent list for LLM prompt.
+
+        Returns:
+            Formatted string with agent IDs and descriptions
+        """
+        if self.manifest is None or not self.manifest.agents:
+            return "- @full-stack-dev: General development tasks"
+
+        lines = []
+        for agent in self.manifest.agents:
+            desc = ""
+            if hasattr(agent, "when_to_use") and agent.when_to_use:
+                desc = agent.when_to_use
+            elif hasattr(agent, "capabilities") and agent.capabilities:
+                desc = ", ".join(agent.capabilities[:3])
+
+            lines.append(f"- @{agent.id}: {desc}")
+
+        return "\n".join(lines)
 
     def detect_gaps(
         self,
@@ -246,9 +386,7 @@ class AgentRecommender:
 
         # Filter out stop words and empty strings
         keywords = {
-            token
-            for token in tokens
-            if token and len(token) > 2 and token not in STOP_WORDS
+            token for token in tokens if token and len(token) > 2 and token not in STOP_WORDS
         }
 
         return keywords
@@ -275,9 +413,7 @@ class AgentRecommender:
             when_to_use_text = agent.when_to_use.lower()
 
         when_to_use_tokens = re.split(r"[^a-z0-9]+", when_to_use_text)
-        when_to_use_keywords = {
-            token for token in when_to_use_tokens if token and len(token) > 2
-        }
+        when_to_use_keywords = {token for token in when_to_use_tokens if token and len(token) > 2}
 
         # Extract capabilities keywords (lower weight)
         capabilities_text = ""
@@ -285,9 +421,7 @@ class AgentRecommender:
             capabilities_text = " ".join(agent.capabilities).lower()
 
         capabilities_tokens = re.split(r"[^a-z0-9]+", capabilities_text)
-        capabilities_keywords = {
-            token for token in capabilities_tokens if token and len(token) > 2
-        }
+        capabilities_keywords = {token for token in capabilities_tokens if token and len(token) > 2}
 
         # Calculate weighted overlap
         # when_to_use matches count as 2x, capabilities as 1x

@@ -8,9 +8,10 @@ Task: 1.7 - Write tests/unit/schemas/test_capability.py
 """
 
 import pytest
+from pydantic import ValidationError
+
 from aurora_planning.schemas.base import Requirement, Scenario
 from aurora_planning.schemas.capability import Capability
-from pydantic import ValidationError
 
 
 class TestCapabilitySchema:

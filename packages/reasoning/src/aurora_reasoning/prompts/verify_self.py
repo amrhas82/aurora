@@ -41,9 +41,14 @@ Your task is to verify that a decomposition meets quality standards across four 
 Calculate overall score as: 0.4*completeness + 0.2*consistency + 0.2*groundedness + 0.2*routability
 
 Provide verdict:
-- PASS: score ≥ 0.7 (high quality, proceed)
-- RETRY: 0.5 ≤ score < 0.7 (issues found, needs revision)
+- PASS: score ≥ 0.6 (acceptable quality, proceed - note: scores 0.60-0.70 warrant detailed explanation)
+- RETRY: 0.5 ≤ score < 0.6 (issues found, needs revision)
 - FAIL: score < 0.5 (fundamental problems, cannot proceed)
+
+For scores in [0.60, 0.70):
+- Still mark as PASS (threshold met)
+- But provide detailed explanation of concerns in issues list
+- Provide actionable suggestions to strengthen the decomposition
 
 You MUST respond with valid JSON only. Use this exact format:
 {

@@ -13,11 +13,13 @@ from aurora_cli.planning.validation.types import (
     ValidationSummary,
 )
 
+
 # Avoid circular import: validator imports from parsers which imports from schemas which imports constants
 # Use lazy import for Validator
 def __getattr__(name: str):
     if name == "Validator":
         from aurora_cli.planning.validation.validator import Validator
+
         return Validator
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

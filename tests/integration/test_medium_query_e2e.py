@@ -25,10 +25,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from tests.integration.test_e2e_framework import (
-    E2ETestFramework,
-    MockAgent,
-)
+from tests.integration.test_e2e_framework import E2ETestFramework, MockAgent
 
 
 @pytest.fixture
@@ -201,9 +198,9 @@ class TestMediumQueryE2E:
         verify_meta = response["metadata"]["phases"]["phase4_verify"]
 
         # For MEDIUM queries, should use Option A (self-verification)
-        assert verify_meta["method"] == "self", (
-            "MEDIUM queries should use self-verification (Option A)"
-        )
+        assert (
+            verify_meta["method"] == "self"
+        ), "MEDIUM queries should use self-verification (Option A)"
 
         # Verify verification passed
         assert verify_meta["final_verdict"] == "PASS"

@@ -24,9 +24,7 @@ class SlashCommandRegistry:
 
         # Import all configurators here to avoid circular imports
         from aurora_cli.configurators.slash.amazon_q import AmazonQSlashCommandConfigurator
-        from aurora_cli.configurators.slash.antigravity import (
-            AntigravitySlashCommandConfigurator,
-        )
+        from aurora_cli.configurators.slash.antigravity import AntigravitySlashCommandConfigurator
         from aurora_cli.configurators.slash.auggie import AuggieSlashCommandConfigurator
         from aurora_cli.configurators.slash.claude import ClaudeSlashCommandConfigurator
         from aurora_cli.configurators.slash.cline import ClineSlashCommandConfigurator

@@ -19,6 +19,7 @@ try:
 except ImportError:
     # Fallback for type checking
     from typing import TYPE_CHECKING
+
     if TYPE_CHECKING:
         from aurora_cli.planning.models import Plan  # type: ignore
 
@@ -96,7 +97,9 @@ class TemplateRenderer:
         plan_name = plan.plan_id.split("-", 1)[1] if "-" in plan.plan_id else plan.plan_id
 
         # Build ISO 8601 timestamps for JSON
-        created_iso = plan.created_at.isoformat() if plan.created_at else datetime.utcnow().isoformat()
+        created_iso = (
+            plan.created_at.isoformat() if plan.created_at else datetime.utcnow().isoformat()
+        )
 
         context = {
             # Basic plan info
@@ -108,7 +111,6 @@ class TemplateRenderer:
             "created_at": plan.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "updated_at": created_iso,  # For agents.json template
             "tags": [],  # Empty tags list for now
-
             # Subgoals
             "subgoals": [
                 {
@@ -122,15 +124,14 @@ class TemplateRenderer:
                 }
                 for sg in plan.subgoals
             ],
-
             # Metadata
             "agent_gaps": plan.agent_gaps,
             "context_sources": plan.context_sources,
-
             # Optional fields
-            "archived_at": plan.archived_at.strftime("%Y-%m-%d %H:%M:%S") if plan.archived_at else None,
+            "archived_at": (
+                plan.archived_at.strftime("%Y-%m-%d %H:%M:%S") if plan.archived_at else None
+            ),
             "duration_days": plan.duration_days,
-
             # Computed fields for templates
             "subgoal_count": len(plan.subgoals),
             "has_dependencies": any(sg.dependencies for sg in plan.subgoals),
@@ -175,7 +176,6 @@ def render_plan_files(
         ("prd.md.j2", "prd.md"),
         ("tasks.md.j2", "tasks.md"),
         ("agents.json.j2", "agents.json"),
-
         # Capability specs (4) - in specs/ subdirectory
         ("planning.md.j2", f"specs/{context['plan_id']}-planning.md"),
         ("commands.md.j2", f"specs/{context['plan_id']}-commands.md"),

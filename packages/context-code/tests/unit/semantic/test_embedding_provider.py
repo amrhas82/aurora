@@ -17,10 +17,7 @@ Tests cosine_similarity() function including:
 import numpy as np
 import pytest
 
-from aurora_context_code.semantic.embedding_provider import (
-    EmbeddingProvider,
-    cosine_similarity,
-)
+from aurora_context_code.semantic.embedding_provider import EmbeddingProvider, cosine_similarity
 
 
 class TestEmbedChunk:
@@ -555,9 +552,9 @@ class TestQueryChunkSimilarity:
         sim_less_relevant = np.dot(chunk_emb, query_less_rel_emb)
 
         # More relevant query should have higher similarity
-        assert sim_relevant > sim_less_relevant, (
-            f"Expected relevant query ({sim_relevant}) > less relevant ({sim_less_relevant})"
-        )
+        assert (
+            sim_relevant > sim_less_relevant
+        ), f"Expected relevant query ({sim_relevant}) > less relevant ({sim_less_relevant})"
 
 
 class TestCosineSimilarity:

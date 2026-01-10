@@ -164,9 +164,7 @@ ModificationDescription = Annotated[str, BeforeValidator(validate_modification_d
 PlanName = Annotated[str, BeforeValidator(validate_plan_name)]
 WhySection = Annotated[str, BeforeValidator(validate_why_section)]
 WhatChanges = Annotated[str, BeforeValidator(validate_what_changes)]
-ModificationsList = Annotated[
-    list["Modification"], BeforeValidator(validate_modifications_list)
-]
+ModificationsList = Annotated[list["Modification"], BeforeValidator(validate_modifications_list)]
 
 
 class RenameInfo(BaseModel):

@@ -13,6 +13,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from aurora_cli.config import CONFIG_SCHEMA, Config, load_config
 
 
@@ -197,18 +198,13 @@ class TestLoadConfigWithProjectPaths:
             config_path = Path(tmpdir) / "test_config.json"
             config_data = {
                 "version": "1.1.0",
-                "logging": {
-                    "file": "./.aurora/logs/custom.log"
-                },
-                "database": {
-                    "path": "./.aurora/custom_memory.db"
-                },
-                "planning": {
-                    "base_dir": "./.aurora/custom_plans"
-                }
+                "logging": {"file": "./.aurora/logs/custom.log"},
+                "database": {"path": "./.aurora/custom_memory.db"},
+                "planning": {"base_dir": "./.aurora/custom_plans"},
             }
 
             import json
+
             with open(config_path, "w") as f:
                 json.dump(config_data, f)
 
@@ -260,7 +256,7 @@ class TestBackwardsCompatibility:
             mcp_log_file="~/.aurora/mcp.log",
             db_path="~/.aurora/memory.db",
             agents_manifest_path="~/.aurora/cache/agent_manifest.json",
-            planning_base_dir="~/.aurora/plans"
+            planning_base_dir="~/.aurora/plans",
         )
 
         # Should not raise during validation
@@ -280,15 +276,12 @@ class TestBackwardsCompatibility:
             config_path = Path(tmpdir) / "old_config.json"
             config_data = {
                 "version": "1.1.0",
-                "logging": {
-                    "file": "~/.aurora/aurora.log"
-                },
-                "database": {
-                    "path": "~/.aurora/memory.db"
-                }
+                "logging": {"file": "~/.aurora/aurora.log"},
+                "database": {"path": "~/.aurora/memory.db"},
             }
 
             import json
+
             with open(config_path, "w") as f:
                 json.dump(config_data, f)
 

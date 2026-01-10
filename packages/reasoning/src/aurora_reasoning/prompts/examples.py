@@ -34,8 +34,11 @@ class ExamplesLoader:
         """
         if examples_dir is None:
             # Default to examples directory relative to this file
-            pkg_root = Path(__file__).parent.parent.parent.parent.parent
-            examples_dir = pkg_root / "examples"
+            # Path structure: reasoning/src/aurora_reasoning/prompts/examples.py
+            # Use resolve() to handle symlinks (src/ symlinks to packages/*/src/)
+            # Go up 4 levels to reach reasoning package root, then into examples/
+            reasoning_pkg_root = Path(__file__).resolve().parent.parent.parent.parent
+            examples_dir = reasoning_pkg_root / "examples"
 
         self.examples_dir = Path(examples_dir)
         self._cache: dict[str, list[dict[str, Any]]] = {}

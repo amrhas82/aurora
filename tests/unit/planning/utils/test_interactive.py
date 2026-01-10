@@ -3,6 +3,7 @@
 import os
 
 import pytest
+
 from aurora_planning.utils.interactive import is_interactive
 
 

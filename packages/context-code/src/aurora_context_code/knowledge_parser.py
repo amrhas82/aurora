@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +61,7 @@ class KnowledgeParser:
 
         # Read file content
         try:
-            content = file_path.read_text(encoding='utf-8')
+            content = file_path.read_text(encoding="utf-8")
         except Exception as e:
             self.logger.error(f"Failed to read {file_path}: {e}")
             return []
@@ -93,13 +92,10 @@ class KnowledgeParser:
         """
         filename = file_path.stem  # Without extension
 
-        metadata: dict[str, Any] = {
-            "source_file": str(file_path),
-            "keywords": []
-        }
+        metadata: dict[str, Any] = {"source_file": str(file_path), "keywords": []}
 
         # Try to extract date (YYYY-MM-DD pattern at start)
-        date_match = re.match(r'^(\d{4}-\d{2}-\d{2})_(.+)$', filename)
+        date_match = re.match(r"^(\d{4}-\d{2}-\d{2})_(.+)$", filename)
         if date_match:
             metadata["date"] = date_match.group(1)
             keywords_part = date_match.group(2)
@@ -109,7 +105,7 @@ class KnowledgeParser:
         # Extract keywords from filename (split by underscore, filter short words)
         keywords = [
             word.lower()
-            for word in re.split(r'[_\-\s]+', keywords_part)
+            for word in re.split(r"[_\-\s]+", keywords_part)
             if len(word) > 2  # Skip very short words
         ]
 
@@ -118,10 +114,7 @@ class KnowledgeParser:
         return metadata
 
     def _split_by_sections(
-        self,
-        content: str,
-        base_metadata: dict[str, Any],
-        file_path: Path
+        self, content: str, base_metadata: dict[str, Any], file_path: Path
     ) -> list[KnowledgeChunk]:
         """
         Split content by markdown ## headers.
@@ -138,7 +131,7 @@ class KnowledgeParser:
 
         # Split by ## headers (but not # single header)
         # Pattern: Match ## at start of line followed by space and title
-        section_pattern = r'^## (.+)$'
+        section_pattern = r"^## (.+)$"
         sections = re.split(section_pattern, content, flags=re.MULTILINE)
 
         # Handle content before first section
@@ -147,10 +140,7 @@ class KnowledgeParser:
             chunk_metadata = base_metadata.copy()
             chunk_metadata["section"] = "Introduction"
 
-            chunks.append(KnowledgeChunk(
-                content=sections[0].strip(),
-                metadata=chunk_metadata
-            ))
+            chunks.append(KnowledgeChunk(content=sections[0].strip(), metadata=chunk_metadata))
 
         # Process pairs of (section_title, section_content)
         for i in range(1, len(sections), 2):
@@ -165,21 +155,13 @@ class KnowledgeParser:
                     # Include section title in content for better searchability
                     full_content = f"## {section_title}\n\n{section_content}"
 
-                    chunks.append(KnowledgeChunk(
-                        content=full_content,
-                        metadata=chunk_metadata
-                    ))
+                    chunks.append(KnowledgeChunk(content=full_content, metadata=chunk_metadata))
 
         # If no sections found, treat entire content as one chunk
         if not chunks and content.strip():
-            chunks.append(KnowledgeChunk(
-                content=content.strip(),
-                metadata=base_metadata
-            ))
+            chunks.append(KnowledgeChunk(content=content.strip(), metadata=base_metadata))
 
-        self.logger.debug(
-            f"Parsed {len(chunks)} sections from {file_path.name}"
-        )
+        self.logger.debug(f"Parsed {len(chunks)} sections from {file_path.name}")
 
         return chunks
 

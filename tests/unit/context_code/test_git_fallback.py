@@ -28,9 +28,7 @@ class TestGitFallback:
             extractor = GitSignalExtractor()
 
             # Should return empty list for non-Git directory
-            commit_times = extractor.get_function_commit_times(
-                str(test_file), 1, 1
-            )
+            commit_times = extractor.get_function_commit_times(str(test_file), 1, 1)
             assert commit_times == []
 
             # calculate_bla should return default value
@@ -50,9 +48,7 @@ class TestGitFallback:
             # Mock subprocess to raise FileNotFoundError
             with patch("subprocess.run", side_effect=FileNotFoundError("git not found")):
                 extractor = GitSignalExtractor()
-                commit_times = extractor.get_function_commit_times(
-                    str(test_file), 1, 1
-                )
+                commit_times = extractor.get_function_commit_times(str(test_file), 1, 1)
 
                 # Should return empty list
                 assert commit_times == []
@@ -77,9 +73,7 @@ class TestGitFallback:
             extractor = GitSignalExtractor()
 
             with caplog.at_level(logging.DEBUG):
-                commit_times = extractor.get_function_commit_times(
-                    str(test_file), 1, 1
-                )
+                commit_times = extractor.get_function_commit_times(str(test_file), 1, 1)
 
             # Should log debug message about Git failure
             assert commit_times == []
@@ -102,6 +96,7 @@ class TestEnvironmentVariableOverride:
             import importlib
 
             import aurora_context_code.git as git_module
+
             importlib.reload(git_module)
 
             from aurora_context_code.git import GitSignalExtractor
@@ -113,7 +108,9 @@ class TestEnvironmentVariableOverride:
             assert extractor.available is False
 
             # Should have logged warning
-            assert any("Git disabled via AURORA_SKIP_GIT" in record.message for record in caplog.records)
+            assert any(
+                "Git disabled via AURORA_SKIP_GIT" in record.message for record in caplog.records
+            )
 
             # get_function_commit_times should return empty list
             commit_times = extractor.get_function_commit_times("test.py", 1, 10)
@@ -147,6 +144,7 @@ class TestEnvironmentVariableOverride:
                 import importlib
 
                 import aurora_context_code.git as git_module
+
                 importlib.reload(git_module)
 
                 from aurora_context_code.git import GitSignalExtractor

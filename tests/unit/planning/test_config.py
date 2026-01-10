@@ -1,6 +1,7 @@
 """Tests for config module."""
 
 import pytest
+
 from aurora_planning.config import (
     AI_TOOLS,
     AURORA_DIR_NAME,

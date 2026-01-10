@@ -11,6 +11,7 @@ Usage:
     print(result.level)  # 'complex'
     print(result.score)  # 65
 """
+
 from .complexity_assessor import (
     AssessmentResult,
     ComplexityAssessor,
@@ -18,10 +19,9 @@ from .complexity_assessor import (
     assess_prompt,
 )
 
-
 __all__ = [
-    'ComplexityAssessor',
-    'AssessmentResult',
-    'assess_prompt',
-    'ComplexityLevel',
+    "ComplexityAssessor",
+    "AssessmentResult",
+    "assess_prompt",
+    "ComplexityLevel",
 ]

@@ -24,7 +24,6 @@ from aurora_core.store.memory import MemoryStore
 # Import core components
 from aurora_core.store.sqlite import SQLiteStore
 
-
 # ============================================================================
 # Storage Fixtures
 # ============================================================================
@@ -297,7 +296,8 @@ def sample_python_file(tmp_path: Path) -> Path:
         Path: Path to created Python file.
     """
     test_file = tmp_path / "sample.py"
-    test_file.write_text('''
+    test_file.write_text(
+        '''
 def simple_function(x, y):
     """Add two numbers."""
     return x + y
@@ -319,7 +319,8 @@ class SimpleClass:
             if item:
                 result.append(item)
         return result
-''')
+'''
+    )
     return test_file
 
 
@@ -334,7 +335,8 @@ def complex_python_file(tmp_path: Path) -> Path:
         Path: Path to created Python file.
     """
     test_file = tmp_path / "complex.py"
-    test_file.write_text('''
+    test_file.write_text(
+        '''
 """Module docstring."""
 
 import os
@@ -408,7 +410,8 @@ def standalone_function(data: Dict[str, Any]) -> bool:
         return False
 
     return True
-''')
+'''
+    )
     return test_file
 
 
@@ -423,7 +426,8 @@ def broken_python_file(tmp_path: Path) -> Path:
         Path: Path to created Python file with syntax errors.
     """
     test_file = tmp_path / "broken.py"
-    test_file.write_text("""
+    test_file.write_text(
+        """
 def broken_function(x, y)
     # Missing colon
     return x + y
@@ -435,7 +439,8 @@ class BrokenClass
 
 # Unclosed string
 message = "this string is not closed
-""")
+"""
+    )
     return test_file
 
 
@@ -455,13 +460,16 @@ def python_file_collection(tmp_path: Path) -> Path:
     # Create module structure
     (project_dir / "__init__.py").write_text("")
 
-    (project_dir / "utils.py").write_text('''
+    (project_dir / "utils.py").write_text(
+        '''
 def helper_function(x):
     """Helper utility."""
     return x * 2
-''')
+'''
+    )
 
-    (project_dir / "models.py").write_text('''
+    (project_dir / "models.py").write_text(
+        '''
 class DataModel:
     """Data model class."""
 
@@ -470,16 +478,19 @@ class DataModel:
 
     def validate(self):
         return bool(self.name)
-''')
+'''
+    )
 
     subdir = project_dir / "submodule"
     subdir.mkdir()
     (subdir / "__init__.py").write_text("")
-    (subdir / "processor.py").write_text('''
+    (subdir / "processor.py").write_text(
+        '''
 def process(data):
     """Process data."""
     return [x for x in data if x]
-''')
+'''
+    )
 
     return project_dir
 
@@ -533,7 +544,8 @@ def large_python_file(tmp_path: Path) -> Path:
     lines = []
 
     for i in range(100):
-        lines.append(f'''
+        lines.append(
+            f'''
 class LargeClass_{i}:
     """Large class {i}."""
 
@@ -550,7 +562,8 @@ class LargeClass_{i}:
             else:
                 result.append(0)
         return result
-''')
+'''
+        )
 
     test_file.write_text("\n".join(lines))
     return test_file
@@ -580,7 +593,8 @@ def scalable_python_file_factory(tmp_path: Path) -> Callable[[int], Path]:
         lines = []
 
         for i in range(num_functions):
-            lines.append(f'''
+            lines.append(
+                f'''
 def function_{i}(x, y):
     """Function {i}."""
     if x > y:
@@ -589,7 +603,8 @@ def function_{i}(x, y):
         return y
     else:
         return 0
-''')
+'''
+            )
 
         test_file.write_text("\n".join(lines))
         return test_file

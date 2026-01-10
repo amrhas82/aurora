@@ -34,9 +34,9 @@ Priority: P1 (High)
 from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
+
 from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
-
 from aurora_soar.phases.assess import assess_complexity
 
 
@@ -399,11 +399,13 @@ class TestEscalationWithMemoryStore:
         workspace.mkdir()
 
         sample_file = workspace / "example.py"
-        sample_file.write_text("""
+        sample_file.write_text(
+            """
 def process_data(data):
     \"\"\"Process input data.\"\"\"
     return [x * 2 for x in data]
-""")
+"""
+        )
 
         db_path = tmp_path / "test_memory.db"
         config = Config(anthropic_api_key="test-key", db_path=str(db_path), budget_limit=10.0)

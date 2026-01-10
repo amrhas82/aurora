@@ -244,9 +244,7 @@ class MarkdownParser:
 
         return sections
 
-    def _get_content_until_next_header(
-        self, start_line: int, current_level: int
-    ) -> str:
+    def _get_content_until_next_header(self, start_line: int, current_level: int) -> str:
         """Get content from start_line until next header of same or higher level.
 
         Args:
@@ -269,9 +267,7 @@ class MarkdownParser:
 
         return "\n".join(content_lines).strip()
 
-    def _find_section(
-        self, sections: list[Section], title: str
-    ) -> Section | None:
+    def _find_section(self, sections: list[Section], title: str) -> Section | None:
         """Find a section by title (case-insensitive).
 
         Args:
@@ -351,9 +347,7 @@ class MarkdownParser:
         for scenario_section in requirement_section.children:
             # Store the raw text content of the scenario section
             if scenario_section.content.strip():
-                scenarios.append(
-                    ParsedScenario(raw_text=scenario_section.content)
-                )
+                scenarios.append(ParsedScenario(raw_text=scenario_section.content))
 
         return scenarios
 
@@ -371,9 +365,7 @@ class MarkdownParser:
 
         for line in lines:
             # Match both formats: **spec:** and **spec**:
-            modification_match = re.match(
-                r"^\s*-\s*\*\*([^*:]+)(?::\*\*|\*\*:)\s*(.+)$", line
-            )
+            modification_match = re.match(r"^\s*-\s*\*\*([^*:]+)(?::\*\*|\*\*:)\s*(.+)$", line)
             if modification_match:
                 capability_name = modification_match.group(1).strip()
                 description = modification_match.group(2).strip()

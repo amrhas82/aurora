@@ -37,9 +37,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
-
 from aurora_core.chunks.base import Chunk
 
 
@@ -54,7 +54,8 @@ class TestActivationTracking:
 
         # Create file with multiple functions
         sample_file = workspace / "utils.py"
-        sample_file.write_text("""
+        sample_file.write_text(
+            """
 def calculate_sum(numbers):
     \"\"\"Calculate the sum of a list of numbers.\"\"\"
     return sum(numbers)
@@ -72,7 +73,8 @@ def calculate_median(numbers):
     if n % 2 == 0:
         return (sorted_nums[n//2-1] + sorted_nums[n//2]) / 2
     return sorted_nums[n//2]
-""")
+"""
+        )
 
         return workspace
 
@@ -153,11 +155,13 @@ def calculate_median(numbers):
         # Get initial activation state
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT chunk_id, access_count
             FROM activations
             ORDER BY chunk_id
-        """)
+        """
+        )
         initial_counts = {row[0]: row[1] for row in cursor.fetchall()}
 
         # Perform search
@@ -165,11 +169,13 @@ def calculate_median(numbers):
         result_ids = {r.chunk_id for r in results}
 
         # Get updated activation state
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT chunk_id, access_count
             FROM activations
             ORDER BY chunk_id
-        """)
+        """
+        )
         updated_counts = {row[0]: row[1] for row in cursor.fetchall()}
         conn.close()
 
@@ -197,10 +203,12 @@ def calculate_median(numbers):
         # Get initial base_level values
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT chunk_id, base_level, access_count
             FROM activations
-        """)
+        """
+        )
         initial_state = {
             row[0]: {"base_level": row[1], "access_count": row[2]} for row in cursor.fetchall()
         }
@@ -213,10 +221,12 @@ def calculate_median(numbers):
         time.sleep(0.1)
 
         # Get updated state
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT chunk_id, base_level, access_count
             FROM activations
-        """)
+        """
+        )
         updated_state = {
             row[0]: {"base_level": row[1], "access_count": row[2]} for row in cursor.fetchall()
         }
@@ -267,7 +277,9 @@ def calculate_median(numbers):
             SELECT chunk_id, last_access
             FROM activations
             WHERE chunk_id IN ({})
-        """.format(",".join("?" * len(result_ids))),
+        """.format(
+                ",".join("?" * len(result_ids))
+            ),
             tuple(result_ids),
         )
 
@@ -409,7 +421,8 @@ class TestActivationCalculationIntegrity:
 
         # Create sample file
         sample_file = workspace / "functions.py"
-        sample_file.write_text("""
+        sample_file.write_text(
+            """
 def rarely_used():
     \"\"\"This function is rarely accessed.\"\"\"
     pass
@@ -421,7 +434,8 @@ def frequently_used():
 def moderately_used():
     \"\"\"This function is moderately accessed.\"\"\"
     pass
-""")
+"""
+        )
 
         db_path = tmp_path / "test_memory.db"
         config = Config(anthropic_api_key="test-key", db_path=str(db_path), budget_limit=10.0)
@@ -454,12 +468,14 @@ def moderately_used():
         # Get activation scores
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, a.base_level, a.access_count
             FROM chunks c
             JOIN activations a ON c.id = a.chunk_id
             ORDER BY a.access_count DESC
-        """)
+        """
+        )
         results = cursor.fetchall()
         conn.close()
 

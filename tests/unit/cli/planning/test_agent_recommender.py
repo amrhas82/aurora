@@ -3,11 +3,12 @@
 Tests agent capability matching for planning subgoals.
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
+import pytest
+
 from aurora_cli.planning.agents import AgentRecommender
-from aurora_cli.planning.models import Subgoal, AgentGap
+from aurora_cli.planning.models import AgentGap, Subgoal
 
 
 class TestAgentRecommender:
@@ -236,9 +237,7 @@ class TestAgentRecommender:
         assert fallback == "@full-stack-dev"
 
     @patch("aurora_cli.planning.agents.ManifestManager")
-    def test_recommend_for_subgoal_manifest_unavailable(
-        self, mock_manager_class
-    ) -> None:
+    def test_recommend_for_subgoal_manifest_unavailable(self, mock_manager_class) -> None:
         """Test graceful handling when manifest unavailable."""
         # Arrange
         mock_manager = Mock()

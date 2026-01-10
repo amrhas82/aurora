@@ -31,12 +31,12 @@ from aurora_cli.planning.results import (
     ShowResult,
 )
 
-
 logger = logging.getLogger(__name__)
 
 # Import renderer for template-based file generation
 try:
     from aurora_cli.planning.renderer import render_plan_files
+
     USE_TEMPLATES = True
 except ImportError:
     USE_TEMPLATES = False
@@ -169,9 +169,7 @@ def init_planning_directory(
             return InitResult(
                 success=False,
                 path=target,
-                error=VALIDATION_MESSAGES["PLANS_DIR_NO_WRITE_PERMISSION"].format(
-                    path=str(parent)
-                ),
+                error=VALIDATION_MESSAGES["PLANS_DIR_NO_WRITE_PERMISSION"].format(path=str(parent)),
             )
         except OSError as e:
             return InitResult(
@@ -185,9 +183,7 @@ def init_planning_directory(
         return InitResult(
             success=False,
             path=target,
-            error=VALIDATION_MESSAGES["PLANS_DIR_NO_WRITE_PERMISSION"].format(
-                path=str(parent)
-            ),
+            error=VALIDATION_MESSAGES["PLANS_DIR_NO_WRITE_PERMISSION"].format(path=str(parent)),
         )
 
     try:
@@ -212,9 +208,7 @@ def init_planning_directory(
         return InitResult(
             success=False,
             path=target,
-            error=VALIDATION_MESSAGES["PLANS_DIR_NO_WRITE_PERMISSION"].format(
-                path=str(target)
-            ),
+            error=VALIDATION_MESSAGES["PLANS_DIR_NO_WRITE_PERMISSION"].format(path=str(target)),
         )
     except OSError as e:
         return InitResult(
@@ -325,8 +319,11 @@ def rebuild_manifest(plans_dir: Path) -> PlanManifest:
                 manifest.archived_plans.append(plan_path.name)
 
     _save_manifest(plans_dir, manifest)
-    logger.info("Rebuilt manifest with %d active and %d archived plans",
-                len(manifest.active_plans), len(manifest.archived_plans))
+    logger.info(
+        "Rebuilt manifest with %d active and %d archived plans",
+        len(manifest.active_plans),
+        len(manifest.archived_plans),
+    )
     return manifest
 
 
@@ -531,10 +528,18 @@ def show_plan(
         "tasks.md": (plan_dir / "tasks.md").exists(),
         "agents.json": True,
         # Capability specs
-        f"specs/{plan.plan_id}-planning.md": (plan_dir / "specs" / f"{plan.plan_id}-planning.md").exists(),
-        f"specs/{plan.plan_id}-commands.md": (plan_dir / "specs" / f"{plan.plan_id}-commands.md").exists(),
-        f"specs/{plan.plan_id}-validation.md": (plan_dir / "specs" / f"{plan.plan_id}-validation.md").exists(),
-        f"specs/{plan.plan_id}-schemas.md": (plan_dir / "specs" / f"{plan.plan_id}-schemas.md").exists(),
+        f"specs/{plan.plan_id}-planning.md": (
+            plan_dir / "specs" / f"{plan.plan_id}-planning.md"
+        ).exists(),
+        f"specs/{plan.plan_id}-commands.md": (
+            plan_dir / "specs" / f"{plan.plan_id}-commands.md"
+        ).exists(),
+        f"specs/{plan.plan_id}-validation.md": (
+            plan_dir / "specs" / f"{plan.plan_id}-validation.md"
+        ).exists(),
+        f"specs/{plan.plan_id}-schemas.md": (
+            plan_dir / "specs" / f"{plan.plan_id}-schemas.md"
+        ).exists(),
     }
 
     return ShowResult(
@@ -802,7 +807,9 @@ def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
 
             # Render all files to temp directory
             created_files = render_plan_files(plan, temp_dir)
-            logger.debug("Generated %d files using templates for plan %s", len(created_files), plan.plan_id)
+            logger.debug(
+                "Generated %d files using templates for plan %s", len(created_files), plan.plan_id
+            )
 
             # Validate all files were created and have content
             for file_path in created_files:
@@ -813,6 +820,7 @@ def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
                 # Validate JSON if it's agents.json
                 if file_path.name == "agents.json":
                     import json
+
                     try:
                         json.loads(file_path.read_text())
                     except json.JSONDecodeError as e:
@@ -821,7 +829,10 @@ def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
             # Atomic move: rename temp dir to final location
             if plan_dir.exists():
                 # Backup existing directory if it exists (shouldn't happen normally)
-                backup_dir = plan_dir.parent / f".backup-{plan.plan_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                backup_dir = (
+                    plan_dir.parent
+                    / f".backup-{plan.plan_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                )
                 shutil.move(str(plan_dir), str(backup_dir))
                 logger.warning("Backed up existing plan to %s", backup_dir)
 
@@ -975,6 +986,67 @@ def _generate_tasks_md(plan: Plan) -> str:
     return "\n".join(lines)
 
 
+def generate_goals_json(
+    plan_id: str,
+    goal: str,
+    subgoals: list[Subgoal],
+    memory_context: list[tuple[str, float]],
+    gaps: list["AgentGap"],
+) -> "Goals":
+    """Generate Goals object for goals.json output.
+
+    Converts plan data into the Goals format matching FR-6.2 from PRD-0026.
+
+    Args:
+        plan_id: Plan ID (NNNN-slug format)
+        goal: High-level goal description
+        subgoals: List of Subgoal objects
+        memory_context: List of (file_path, relevance) tuples
+        gaps: List of AgentGap objects
+
+    Returns:
+        Goals object ready for JSON serialization
+
+    Example:
+        >>> subgoals = [Subgoal(id="sg-1", title="Task", ...)]
+        >>> memory = [("src/api.py", 0.85)]
+        >>> goals = generate_goals_json("0001-test", "Test goal", subgoals, memory, [])
+        >>> print(goals.model_dump_json(indent=2))
+    """
+    from aurora_cli.planning.models import Goals, MemoryContext, SubgoalData
+
+    # Convert memory context tuples to MemoryContext objects
+    memory_objects = [
+        MemoryContext(file=file_path, relevance=score) for file_path, score in memory_context
+    ]
+
+    # Convert Subgoal objects to SubgoalData for goals.json format
+    subgoal_objects = [
+        SubgoalData(
+            id=sg.id,
+            title=sg.title,
+            description=sg.description,
+            agent=sg.recommended_agent,
+            confidence=getattr(sg, "confidence", 0.0),  # Default if not set
+            dependencies=sg.dependencies,
+        )
+        for sg in subgoals
+    ]
+
+    # Create Goals object
+    goals = Goals(
+        id=plan_id,
+        title=goal,
+        created_at=datetime.utcnow(),
+        status="ready_for_planning",
+        memory_context=memory_objects,
+        subgoals=subgoal_objects,
+        gaps=gaps,
+    )
+
+    return goals
+
+
 def create_plan(
     goal: str,
     context_files: list[Path] | None = None,
@@ -1023,6 +1095,35 @@ def create_plan(
     # Assess complexity
     complexity = _assess_complexity(goal, [])  # Initial assessment before decomposition
 
+    # Search memory for goal-level context (NEW - for Task 2.2)
+    from aurora_cli.planning.memory import search_memory_for_goal
+
+    memory_context = search_memory_for_goal(goal, config=config, limit=10, threshold=0.3)
+
+    # Display memory search results (NEW - for Task 2.2)
+    if memory_context:
+        from rich.console import Console
+
+        console = Console()
+        console.print(f"\n[bold]🔍 Found {len(memory_context)} relevant context files:[/]")
+        for file_path, score in memory_context:
+            # Color code by relevance
+            if score >= 0.8:
+                color = "green"
+            elif score >= 0.6:
+                color = "yellow"
+            else:
+                color = "dim"
+            console.print(f"   [{color}]{file_path} ({score:.2f})[/{color}]")
+        console.print("")
+    else:
+        from rich.console import Console
+
+        console = Console()
+        console.print(
+            "[dim]No relevant context found in memory. Run 'aur mem index .' to index codebase.[/]\n"
+        )
+
     # Generate subgoals using PlanDecomposer
     if auto_decompose:
         from aurora_cli.planning.decompose import PlanDecomposer
@@ -1033,8 +1134,9 @@ def create_plan(
         # Get store for file resolution
         store = None
         try:
-            from aurora_core.store.sqlite import SQLiteStore
             from aurora_cli.memory import get_default_db_path
+            from aurora_core.store.sqlite import SQLiteStore
+
             db_path = get_default_db_path(config)
             if db_path.exists():
                 store = SQLiteStore(str(db_path))
@@ -1063,6 +1165,7 @@ def create_plan(
 
     # Collect agent gaps
     from aurora_cli.planning.models import AgentGap
+
     agent_gaps: list[AgentGap] = []
     agents_assigned = 0
     for sg in subgoals:
@@ -1084,9 +1187,7 @@ def create_plan(
     # Calculate file resolution statistics
     files_resolved = sum(len(resolutions) for resolutions in file_resolutions.values())
     all_confidences = [
-        res.confidence
-        for resolutions in file_resolutions.values()
-        for res in resolutions
+        res.confidence for resolutions in file_resolutions.values() for res in resolutions
     ]
     avg_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
 
@@ -1099,6 +1200,7 @@ def create_plan(
 
     # Build decomposition summary for checkpoint
     from aurora_cli.planning.models import DecompositionSummary
+
     summary = DecompositionSummary(
         goal=goal,
         subgoals=subgoals,
@@ -1117,6 +1219,7 @@ def create_plan(
     # Prompt for confirmation (unless yes flag is set)
     if not (yes or non_interactive):
         from aurora_cli.planning.checkpoint import prompt_for_confirmation
+
         if not prompt_for_confirmation():
             return PlanResult(
                 success=False,
@@ -1404,3 +1507,151 @@ def _decompose_generic_goal(goal: str) -> list[Subgoal]:
             dependencies=["sg-3"],
         ),
     ]
+
+
+async def decompose_goal(
+    goal: str,
+    context_files: list[tuple[str, float]],
+    llm_client: Any,  # CLIPipeLLMClient
+) -> list[Subgoal]:
+    """Decompose goal into subgoals using LLM.
+
+    This function uses an LLM to intelligently decompose a high-level goal
+    into 2-7 concrete, actionable subgoals with proper dependencies.
+
+    Args:
+        goal: High-level goal description (10-500 chars)
+        context_files: Relevant files from memory search [(path, score), ...]
+        llm_client: CLI-agnostic LLM client (CLIPipeLLMClient)
+
+    Returns:
+        List of Subgoal objects with dependencies
+
+    Raises:
+        ValueError: If LLM output is invalid or missing required fields
+        KeyError: If JSON parsing fails
+
+    Example:
+        >>> from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+        >>> client = CLIPipeLLMClient(tool="claude", model="sonnet")
+        >>> context = [("src/auth.py", 0.85), ("tests/test_auth.py", 0.72)]
+        >>> subgoals = await decompose_goal("Add OAuth2", context, client)
+        >>> len(subgoals)
+        4
+    """
+    # Build context section
+    context_section = ""
+    if context_files:
+        context_section = "\n\nRelevant context files:\n"
+        for path, score in context_files[:10]:  # Top 10 only
+            context_section += f"- {path} (relevance: {score:.2f})\n"
+
+    # Build decomposition prompt
+    prompt = f"""Goal: {goal}
+{context_section}
+
+Decompose this goal into 2-7 concrete subgoals. Each subgoal should:
+- Have a clear, actionable title (5-100 chars)
+- Include detailed description (10-500 chars)
+- Specify recommended agent in @agent-id format
+- List dependencies on other subgoals (if any)
+
+Available agents:
+- @full-stack-dev: General development tasks
+- @holistic-architect: System design and architecture
+- @qa-test-architect: Testing and quality assurance
+- @ux-expert: UI/UX design
+- @business-analyst: Requirements analysis
+- @product-manager: Product strategy
+- @product-owner: Backlog management
+
+Return ONLY a JSON array with this exact structure:
+[
+  {{
+    "id": "sg-1",
+    "title": "Short title",
+    "description": "Detailed description of what this subgoal accomplishes",
+    "recommended_agent": "@agent-id",
+    "dependencies": []
+  }},
+  {{
+    "id": "sg-2",
+    "title": "Another title",
+    "description": "Another description",
+    "recommended_agent": "@agent-id",
+    "dependencies": ["sg-1"]
+  }}
+]
+
+Important:
+- IDs must be sg-1, sg-2, sg-3, etc. (sequential)
+- Dependencies must reference valid subgoal IDs
+- No circular dependencies
+- Agent IDs must start with @
+- Return ONLY valid JSON, no markdown formatting"""
+
+    # Call LLM via CLI pipe
+    response = await llm_client.generate(prompt, phase_name="decompose")
+
+    # Parse JSON response
+    try:
+        # Clean up response text (remove markdown if present)
+        text = response.content.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        text = text.strip()
+
+        # Parse JSON
+        import json
+
+        subgoals_data = json.loads(text)
+
+        if not isinstance(subgoals_data, list):
+            raise ValueError("LLM response must be a JSON array")
+
+        # Validate and construct Subgoal objects
+        subgoals = []
+        for sg_data in subgoals_data:
+            # Validate required fields
+            if "id" not in sg_data:
+                raise KeyError("Subgoal missing required field: id")
+            if "title" not in sg_data:
+                raise KeyError("Subgoal missing required field: title")
+            if "description" not in sg_data:
+                raise KeyError("Subgoal missing required field: description")
+            if "recommended_agent" not in sg_data:
+                raise KeyError("Subgoal missing required field: recommended_agent")
+
+            # Create Subgoal (Pydantic will validate)
+            subgoal = Subgoal(
+                id=sg_data["id"],
+                title=sg_data["title"],
+                description=sg_data["description"],
+                recommended_agent=sg_data["recommended_agent"],
+                dependencies=sg_data.get("dependencies", []),
+            )
+            subgoals.append(subgoal)
+
+        # Validate we got 2-7 subgoals
+        if len(subgoals) < 2:
+            logger.warning("LLM returned only %d subgoal(s), expected 2-7", len(subgoals))
+        if len(subgoals) > 7:
+            logger.warning("LLM returned %d subgoals, expected 2-7. Using first 7.", len(subgoals))
+            subgoals = subgoals[:7]
+
+        return subgoals
+
+    except json.JSONDecodeError as e:
+        logger.error("Failed to parse LLM response as JSON: %s", e)
+        logger.debug("LLM response content: %s", response.content[:500])
+        raise ValueError(f"Invalid JSON in LLM response: {e}")
+    except KeyError as e:
+        logger.error("LLM response missing required field: %s", e)
+        raise
+    except Exception as e:
+        logger.error("Failed to decompose goal: %s", e)
+        raise ValueError(f"Goal decomposition failed: {e}")

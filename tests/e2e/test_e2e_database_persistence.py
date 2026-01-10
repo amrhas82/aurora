@@ -30,7 +30,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -68,7 +67,8 @@ def sample_python_project() -> Generator[Path, None, None]:
         project_path = Path(tmp_project)
 
         # Create simple Python files
-        (project_path / "main.py").write_text('''"""Main module."""
+        (project_path / "main.py").write_text(
+            '''"""Main module."""
 
 def main():
     """Entry point."""
@@ -77,9 +77,11 @@ def main():
 
 if __name__ == "__main__":
     main()
-''')
+'''
+        )
 
-        (project_path / "helpers.py").write_text('''"""Helper functions."""
+        (project_path / "helpers.py").write_text(
+            '''"""Helper functions."""
 
 def helper_one():
     """First helper function."""
@@ -89,7 +91,8 @@ def helper_one():
 def helper_two():
     """Second helper function."""
     return "helper2"
-''')
+'''
+        )
 
         yield project_path
 
@@ -202,9 +205,9 @@ class TestDatabasePersistence:
         db_chunk_count = cursor.fetchone()[0]
         conn.close()
 
-        assert db_chunk_count > 0, (
-            f"Database should have chunks after indexing, got {db_chunk_count}"
-        )
+        assert (
+            db_chunk_count > 0
+        ), f"Database should have chunks after indexing, got {db_chunk_count}"
 
         # Run stats and parse output
         stats_result = run_cli_command(
@@ -290,9 +293,9 @@ class TestDatabasePersistence:
 
         # Stats should show non-zero chunks
         stats_output = stats_result.stdout.lower()
-        assert "0" not in stats_output or "chunk" in stats_output, (
-            f"Stats should show persisted data:\n{stats_result.stdout}"
-        )
+        assert (
+            "0" not in stats_output or "chunk" in stats_output
+        ), f"Stats should show persisted data:\n{stats_result.stdout}"
 
         # Third command invocation - search
         search_result = run_cli_command(
@@ -305,9 +308,9 @@ class TestDatabasePersistence:
         )
 
         # Search should find results from persisted data
-        assert "main" in search_result.stdout.lower() or len(search_result.stdout) > 50, (
-            f"Search should find persisted data:\n{search_result.stdout}"
-        )
+        assert (
+            "main" in search_result.stdout.lower() or len(search_result.stdout) > 50
+        ), f"Search should find persisted data:\n{search_result.stdout}"
 
         # Verify DB still has same chunk count (data not lost)
         conn = sqlite3.connect(expected_db)
@@ -316,9 +319,9 @@ class TestDatabasePersistence:
         final_count = cursor.fetchone()[0]
         conn.close()
 
-        assert final_count == initial_count, (
-            f"Chunk count should persist: initial={initial_count}, final={final_count}"
-        )
+        assert (
+            final_count == initial_count
+        ), f"Chunk count should persist: initial={initial_count}, final={final_count}"
 
     def test_1_2_4_deleting_local_aurora_db_does_not_affect_operations(
         self, clean_aurora_home: Path, sample_python_project: Path
@@ -455,9 +458,9 @@ class TestDatabasePersistence:
         # Check activations table exists and has data
         cursor.execute("SELECT COUNT(*) FROM activations")
         activation_count = cursor.fetchone()[0]
-        assert activation_count > 0, (
-            f"Should have activations in {expected_db}, got {activation_count}"
-        )
+        assert (
+            activation_count > 0
+        ), f"Should have activations in {expected_db}, got {activation_count}"
 
         conn.close()
 

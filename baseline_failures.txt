@@ -1415,9 +1415,9 @@ tests/e2e/test_cli_complete_workflow.py:234: in test_e2e_index_search_workflow
 E   AssertionError: Index failed:
 E     Usage: aur mem index [OPTIONS] [PATH]
 E     Try 'aur mem index --help' for help.
-E     
+E
 E     Error: No such option: --db-path
-E     
+E
 E   assert 2 == 0
 E    +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpewiip35d/aurora_test_project', '--db-path', '/tmp/tmpf8511dwt/.aurora/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 __________ TestCompleteCLIWorkflow.test_e2e_cli_stats_after_indexing ___________
@@ -1431,9 +1431,9 @@ tests/e2e/test_cli_complete_workflow.py:365: in test_e2e_new_user_setup_init_ind
     assert index_result.returncode == 0, f"Index failed: {index_result.stderr}"
 E   AssertionError: Index failed: Usage: aur mem index [OPTIONS] [PATH]
 E     Try 'aur mem index --help' for help.
-E     
+E
 E     Error: No such option: --db-path
-E     
+E
 E   assert 2 == 0
 E    +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpvqzkknj0/aurora_test_project', '--db-path', '/tmp/tmpamadf2ai/.aurora/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 _ TestMultiDirectoryIndexing.test_e2e_multi_directory_indexing_merged_results __
@@ -1441,9 +1441,9 @@ tests/e2e/test_cli_complete_workflow.py:514: in test_e2e_multi_directory_indexin
     assert result.returncode == 0, f"Index failed: {result.stderr}"
 E   AssertionError: Index failed: Usage: aur mem index [OPTIONS] [PATH]
 E     Try 'aur mem index --help' for help.
-E     
+E
 E     Error: No such option: --db-path
-E     
+E
 E   assert 2 == 0
 E    +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpa9nxfwg0/auth_service', '--db-path', '/tmp/tmpa9nxfwg0/.aurora/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 ___________ TestConfigChangeWorkflow.test_e2e_config_change_reindex ____________
@@ -1475,9 +1475,9 @@ tests/e2e/test_cli_complete_workflow.py:800: in test_e2e_large_project_subproces
     assert result.returncode == 0, f"Indexing failed: {result.stderr}"
 E   AssertionError: Indexing failed: Usage: aur mem index [OPTIONS] [PATH]
 E     Try 'aur mem index --help' for help.
-E     
+E
 E     Error: No such option: --db-path
-E     
+E
 E   assert 2 == 0
 E    +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpwp84hvux/large_project', '--db-path', '/tmp/tmp8xlhigtn/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 __ TestComplexityAssessment.test_1_5_1_multi_part_query_classified_as_complex __
@@ -1501,7 +1501,7 @@ tests/e2e/test_e2e_complexity_assessment.py:183: in test_1_5_2_dry_run_shows_com
 E   AssertionError: --dry-run should show complexity assessment!
 E     Expected indicators: ['complexity', 'score', 'confidence', 'assess']
 E     Found: []
-E     Output: 
+E     Output:
 E   assert 0 > 0
 E    +  where 0 = len([])
 __ TestComplexityAssessment.test_1_5_3_parse_complexity_level_and_confidence ___
@@ -1523,7 +1523,7 @@ E       - research and compare agentic AI frameworks... → None
 E       - analyze the architecture of SOAR and ACT-R systems... → None
 E       - design a cognitive reasoning pipeline with multipl... → None
 E       - what are the differences between activation spread... → None
-E     
+E
 E     At least 2 should be MEDIUM/COMPLEX, got 0
 E   assert 0 >= 2
 E    +  where 0 = len([])
@@ -1535,7 +1535,7 @@ E       - explain SOAR reasoning phases... → None
 E       - how does ACT-R activation spreading work?... → None
 E       - what is agentic AI and how does it differ from tra... → None
 E       - describe the Aurora cognitive architecture... → None
-E     
+E
 E     Domain terms (SOAR, ACT-R, agentic, Aurora) should trigger MEDIUM
 E   assert 0 >= 2
 E    +  where 0 = len([])
@@ -1555,39 +1555,39 @@ E   AssertionError: Simple queries should be classified as SIMPLE!
 E       - what is Python? → None
 E       - define variable → None
 E       - explain function → None
-E     
+E
 E     At least 2 should be SIMPLE, got 0
 E   assert 0 >= 2
 _ TestComplexityAssessment.test_1_5_9_comprehensive_complexity_assessment_check _
 tests/e2e/test_e2e_complexity_assessment.py:436: in test_1_5_9_comprehensive_complexity_assessment_check
     pytest.fail(
 E   Failed: ISSUE #6 CONFIRMED: Complexity assessment broken!
-E   
+E
 E   Failed 4/5 test cases:
-E   
+E
 E     ❌ 'research agentic AI market? who are top players? what featur...'
 E        Expected: >= MEDIUM, Got: None
 E        Reason: Multi-part (3 questions) + research keyword
-E   
+E
 E     ❌ 'explain SOAR reasoning phases...'
 E        Expected: >= MEDIUM, Got: None
 E        Reason: Domain keyword: SOAR
-E   
+E
 E     ❌ 'how does ACT-R activation work?...'
 E        Expected: >= MEDIUM, Got: None
 E        Reason: Domain keyword: ACT-R
-E   
+E
 E     ❌ 'analyze and compare Aurora with traditional systems...'
 E        Expected: >= MEDIUM, Got: None
 E        Reason: Analyze + compare keywords + domain (Aurora)
-E   
+E
 E   Root causes:
 E   1. Missing domain keywords in assess.py:
 E      - MEDIUM_KEYWORDS needs: soar, actr, activation, retrieval,
 E        reasoning, agentic, marketplace, aurora
 E   2. No multi-question detection (should count '?')
 E   3. Missing scope keywords: research, analyze, compare
-E   
+E
 E   Fix location: packages/soar/src/aurora_soar/phases/assess.py
 __ TestComplexityAssessmentEdgeCases.test_multiple_questions_boost_complexity __
 tests/e2e/test_e2e_complexity_assessment.py:482: in test_multiple_questions_boost_complexity
@@ -1607,7 +1607,7 @@ E       - research machine learning frameworks... → None
 E       - analyze the performance of different algorithms... → None
 E       - compare Python and JavaScript for web development... → None
 E       - design a scalable architecture for microservices... → None
-E     
+E
 E     Keywords: research, analyze, compare, design should trigger MEDIUM
 E   assert 0 >= 2
 E    +  where 0 = len([])
@@ -1618,7 +1618,7 @@ E   AssertionError: Index failed: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 ______ TestDatabasePersistence.test_1_2_2_all_commands_use_same_database _______
@@ -1666,7 +1666,7 @@ E     stderr: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 _ TestGitBasedBLAInitialization.test_1_6_4_query_activation_scores_from_database _
@@ -1713,7 +1713,7 @@ E     stderr: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 ____ TestGitBasedBLAInitialization.test_1_6_11_comprehensive_git_bla_check _____
@@ -1726,24 +1726,24 @@ _______ TestNewUserWorkflowE2E.test_1_1_2_aur_init_creates_config_and_db _______
 tests/e2e/test_e2e_new_user_workflow.py:228: in test_1_1_2_aur_init_creates_config_and_db
     assert result.returncode == 0, (
 E   AssertionError: aur init failed:
-E     stdout: 
+E     stdout:
 E     stderr: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'init'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 ____ TestNewUserWorkflowE2E.test_1_1_3_aur_mem_index_writes_to_aurora_home _____
 tests/e2e/test_e2e_new_user_workflow.py:277: in test_1_1_3_aur_mem_index_writes_to_aurora_home
     assert result.returncode == 0, (
 E   AssertionError: aur mem index failed:
-E     stdout: 
+E     stdout:
 E     stderr: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 _____ TestNewUserWorkflowE2E.test_1_1_4_aur_mem_stats_shows_correct_count ______
@@ -1753,7 +1753,7 @@ E   AssertionError: Index failed: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 _______ TestNewUserWorkflowE2E.test_1_1_5_aur_mem_search_returns_results _______
@@ -1763,7 +1763,7 @@ E   AssertionError: Index failed: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 ___ TestNewUserWorkflowE2E.test_1_1_6_aur_query_retrieves_from_indexed_data ____
@@ -1773,7 +1773,7 @@ E   AssertionError: Index failed: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 ______ TestNewUserWorkflowE2E.test_1_1_7_subprocess_commands_return_zero _______
@@ -1783,7 +1783,7 @@ E   AssertionError: aur --help failed: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', '--help'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 _________ TestNewUserWorkflowE2E.test_1_1_8_no_local_aurora_db_created _________
@@ -1801,7 +1801,7 @@ E   AssertionError: Index failed: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.', '--db-path', '/tmp/tmpuzdzylyg/.aurora/memory.db'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 _____ TestQueryUsesIndex.test_1_4_1_index_codebase_with_specific_patterns ______
@@ -1812,7 +1812,7 @@ E     stderr: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 ____________ TestQueryUsesIndex.test_1_4_2_query_for_existing_code _____________
@@ -1865,7 +1865,7 @@ E     stderr: Traceback (most recent call last):
 E       File "/home/hamr/.local/bin/aur", line 5, in <module>
 E         from aurora_cli.main import cli
 E     ModuleNotFoundError: No module named 'aurora_cli'
-E     
+E
 E   assert 1 == 0
 E    +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 ___ TestSearchAccuracy.test_1_3_2_different_queries_return_different_results ___
@@ -2135,7 +2135,7 @@ _________________ TestAuroraGetNoAPIKey.test_get_invalid_index _________________
 tests/integration/test_mcp_no_api_key.py:444: in test_get_invalid_index
     assert response["error"]["type"] == "InvalidParameter"
 E   AssertionError: assert 'NoSearchResults' == 'InvalidParameter'
-E     
+E
 E     - InvalidParameter
 E     + NoSearchResults
 ------------------------------ Captured log setup ------------------------------
@@ -2161,7 +2161,7 @@ ______________ TestAuroraGetNoAPIKey.test_get_index_out_of_range _______________
 tests/integration/test_mcp_no_api_key.py:456: in test_get_index_out_of_range
     assert response["error"]["type"] == "InvalidParameter"
 E   AssertionError: assert 'NoSearchResults' == 'InvalidParameter'
-E     
+E
 E     - InvalidParameter
 E     + NoSearchResults
 ------------------------------ Captured log setup ------------------------------
@@ -2624,42 +2624,42 @@ ____ TestQueryExecutorWithRealStore.test_execute_direct_llm_with_real_store ____
 tests/integration/test_query_executor_integration.py:144: in test_execute_direct_llm_with_real_store
     assert prompt_arg == "fibonacci"
 E   AssertionError: assert 'Context:\n[1] /test/fibonacci.py (lines 1-4):\ndef calculate_fibonacci(n)\nCalculate fibonacci number recursively\n\n[2] /test/processor.py (lines 1-5):\nclass DataProcessor\nProcess data by doubling values\n\n[3] /test/config.py (lines 1-4):\ndef load_config()\nLoad configuration settings\n\n\nQuery: fibonacci' == 'fibonacci'
-E     
+E
 E     - fibonacci
 E     + Context:
 E     + [1] /test/fibonacci.py (lines 1-4):
 E     + def calculate_fibonacci(n)
 E     + Calculate fibonacci number recursively
-E     + 
+E     +
 E     + [2] /test/processor.py (lines 1-5):
 E     + class DataProcessor
 E     + Process data by doubling values
-E     + 
+E     +
 E     + [3] /test/config.py (lines 1-4):
 E     + def load_config()
 E     + Load configuration settings
-E     + 
-E     + 
+E     +
+E     +
 E     + Query: fibonacci
 __ TestQueryExecutorWithRealStore.test_execute_direct_llm_no_matching_context __
 tests/integration/test_query_executor_integration.py:177: in test_execute_direct_llm_no_matching_context
     assert prompt_arg == "quantum entanglement"
 E   AssertionError: assert 'Context:\n[1] /test/fibonacci.py (lines 1-4):\ndef calculate_fibonacci(n)\nCalculate fibonacci number recursively\n\n[2] /test/processor.py (lines 1-5):\nclass DataProcessor\nProcess data by doubling values\n\n[3] /test/config.py (lines 1-4):\ndef load_config()\nLoad configuration settings\n\n\nQuery: quantum entanglement' == 'quantum entanglement'
-E     
+E
 E     + Context:
 E     + [1] /test/fibonacci.py (lines 1-4):
 E     + def calculate_fibonacci(n)
 E     + Calculate fibonacci number recursively
-E     + 
+E     +
 E     + [2] /test/processor.py (lines 1-5):
 E     + class DataProcessor
 E     + Process data by doubling values
-E     + 
+E     +
 E     + [3] /test/config.py (lines 1-4):
 E     + def load_config()
 E     + Load configuration settings
-E     + 
-E     + 
+E     +
+E     +
 E     - quantum entanglement
 E     + Query: quantum entanglement
 E     ? +++++++
@@ -2942,24 +2942,24 @@ ERROR tests/integration/test_mcp_python_client.py::TestMCPPerformanceAndLogging:
 FAILED tests/e2e/test_cli_complete_workflow.py::TestCompleteCLIWorkflow::test_e2e_index_search_workflow - AssertionError: Index failed:
   Usage: aur mem index [OPTIONS] [PATH]
   Try 'aur mem index --help' for help.
-  
+
   Error: No such option: --db-path
-  
+
 assert 2 == 0
  +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpewiip35d/aurora_test_project', '--db-path', '/tmp/tmpf8511dwt/.aurora/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 FAILED tests/e2e/test_cli_complete_workflow.py::TestCompleteCLIWorkflow::test_e2e_cli_stats_after_indexing - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '/tmp/tmpahx7fnq7/aurora_test_project', '--db-path', '/tmp/tmpe6h1f30j/.aurora/memory.db']' returned non-zero exit status 2.
 FAILED tests/e2e/test_cli_complete_workflow.py::TestNewUserSetupWorkflow::test_e2e_new_user_setup_init_index_search - AssertionError: Index failed: Usage: aur mem index [OPTIONS] [PATH]
   Try 'aur mem index --help' for help.
-  
+
   Error: No such option: --db-path
-  
+
 assert 2 == 0
  +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpvqzkknj0/aurora_test_project', '--db-path', '/tmp/tmpamadf2ai/.aurora/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 FAILED tests/e2e/test_cli_complete_workflow.py::TestMultiDirectoryIndexing::test_e2e_multi_directory_indexing_merged_results - AssertionError: Index failed: Usage: aur mem index [OPTIONS] [PATH]
   Try 'aur mem index --help' for help.
-  
+
   Error: No such option: --db-path
-  
+
 assert 2 == 0
  +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpa9nxfwg0/auth_service', '--db-path', '/tmp/tmpa9nxfwg0/.aurora/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 FAILED tests/e2e/test_cli_complete_workflow.py::TestConfigChangeWorkflow::test_e2e_config_change_reindex - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '/tmp/tmpr2l3r89w/aurora_test_project', '--db-path', '/tmp/tmpm5yyp3j_/.aurora/memory.db']' returned non-zero exit status 2.
@@ -2968,9 +2968,9 @@ FAILED tests/e2e/test_cli_complete_workflow.py::TestErrorRecoveryWorkflow::test_
 FAILED tests/e2e/test_cli_complete_workflow.py::TestLargeProjectIndexing::test_e2e_large_project_indexing_progress - AttributeError: 'SQLiteStore' object has no attribute 'get_db_path'
 FAILED tests/e2e/test_cli_complete_workflow.py::TestLargeProjectIndexing::test_e2e_large_project_subprocess - AssertionError: Indexing failed: Usage: aur mem index [OPTIONS] [PATH]
   Try 'aur mem index --help' for help.
-  
+
   Error: No such option: --db-path
-  
+
 assert 2 == 0
  +  where 2 = CompletedProcess(args=['aur', 'mem', 'index', '/tmp/tmpwp84hvux/large_project', '--db-path', '/tmp/tmp8xlhigtn/memory.db'], returncode=2, stdout='', stderr="Usage: aur mem index [OPTIONS] [PATH]\nTry 'aur mem index --help' for help.\n\nError: No such option: --db-path\n").returncode
 FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessment::test_1_5_1_multi_part_query_classified_as_complex - AssertionError: Multi-part query should be MEDIUM/COMPLEX (Issue #6)!
@@ -2988,7 +2988,7 @@ assert None in ['MEDIUM', 'COMPLEX']
 FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessment::test_1_5_2_dry_run_shows_complexity_assessment - AssertionError: --dry-run should show complexity assessment!
   Expected indicators: ['complexity', 'score', 'confidence', 'assess']
   Found: []
-  Output: 
+  Output:
 assert 0 > 0
  +  where 0 = len([])
 FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessment::test_1_5_3_parse_complexity_level_and_confidence - AssertionError: Should be able to parse complexity level from output!
@@ -3004,7 +3004,7 @@ FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessment::te
     - analyze the architecture of SOAR and ACT-R systems... → None
     - design a cognitive reasoning pipeline with multipl... → None
     - what are the differences between activation spread... → None
-  
+
   At least 2 should be MEDIUM/COMPLEX, got 0
 assert 0 >= 2
  +  where 0 = len([])
@@ -3013,7 +3013,7 @@ FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessment::te
     - how does ACT-R activation spreading work?... → None
     - what is agentic AI and how does it differ from tra... → None
     - describe the Aurora cognitive architecture... → None
-  
+
   Domain terms (SOAR, ACT-R, agentic, Aurora) should trigger MEDIUM
 assert 0 >= 2
  +  where 0 = len([])
@@ -3027,7 +3027,7 @@ FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessment::te
     - what is Python? → None
     - define variable → None
     - explain function → None
-  
+
   At least 2 should be SIMPLE, got 0
 assert 0 >= 2
 FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessment::test_1_5_9_comprehensive_complexity_assessment_check - Failed: ISSUE #6 CONFIRMED: Complexity assessment broken!
@@ -3070,7 +3070,7 @@ FAILED tests/e2e/test_e2e_complexity_assessment.py::TestComplexityAssessmentEdge
     - analyze the performance of different algorithms... → None
     - compare Python and JavaScript for web development... → None
     - design a scalable architecture for microservices... → None
-  
+
   Keywords: research, analyze, compare, design should trigger MEDIUM
 assert 0 >= 2
  +  where 0 = len([])
@@ -3078,7 +3078,7 @@ FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_database_persistence.py::TestDatabasePersistence::test_1_2_2_all_commands_use_same_database - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
@@ -3095,7 +3095,7 @@ FAILED tests/e2e/test_e2e_git_bla_initialization.py::TestGitBasedBLAInitializati
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_git_bla_initialization.py::TestGitBasedBLAInitialization::test_1_6_4_query_activation_scores_from_database - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
@@ -3109,54 +3109,54 @@ FAILED tests/e2e/test_e2e_git_bla_initialization.py::TestGitBasedBLAInitializati
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_git_bla_initialization.py::TestGitBasedBLAInitialization::test_1_6_11_comprehensive_git_bla_check - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
 FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowE2E::test_1_1_2_aur_init_creates_config_and_db - AssertionError: aur init failed:
-  stdout: 
+  stdout:
   stderr: Traceback (most recent call last):
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'init'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowE2E::test_1_1_3_aur_mem_index_writes_to_aurora_home - AssertionError: aur mem index failed:
-  stdout: 
+  stdout:
   stderr: Traceback (most recent call last):
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowE2E::test_1_1_4_aur_mem_stats_shows_correct_count - AssertionError: Index failed: Traceback (most recent call last):
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowE2E::test_1_1_5_aur_mem_search_returns_results - AssertionError: Index failed: Traceback (most recent call last):
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowE2E::test_1_1_6_aur_query_retrieves_from_indexed_data - AssertionError: Index failed: Traceback (most recent call last):
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowE2E::test_1_1_7_subprocess_commands_return_zero - AssertionError: aur --help failed: Traceback (most recent call last):
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', '--help'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowE2E::test_1_1_8_no_local_aurora_db_created - AssertionError: Expected database at /tmp/tmp8tdw77bj/.aurora/memory.db but it doesn't exist.
@@ -3168,7 +3168,7 @@ FAILED tests/e2e/test_e2e_new_user_workflow.py::TestNewUserWorkflowWithExplicitD
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.', '--db-path', '/tmp/tmpuzdzylyg/.aurora/memory.db'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_query_uses_index.py::TestQueryUsesIndex::test_1_4_1_index_codebase_with_specific_patterns - AssertionError: Indexing failed:
@@ -3176,7 +3176,7 @@ FAILED tests/e2e/test_e2e_query_uses_index.py::TestQueryUsesIndex::test_1_4_1_in
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_query_uses_index.py::TestQueryUsesIndex::test_1_4_2_query_for_existing_code - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
@@ -3191,7 +3191,7 @@ FAILED tests/e2e/test_e2e_search_accuracy.py::TestSearchAccuracy::test_1_3_1_ind
     File "/home/hamr/.local/bin/aur", line 5, in <module>
       from aurora_cli.main import cli
   ModuleNotFoundError: No module named 'aurora_cli'
-  
+
 assert 1 == 0
  +  where 1 = CompletedProcess(args=['aur', 'mem', 'index', '.'], returncode=1, stdout='', stderr='Traceback (most recent call last):\n  File "/home/hamr/.local/bin/aur", line 5, in <module>\n    from aurora_cli.main import cli\nModuleNotFoundError: No module named \'aurora_cli\'\n').returncode
 FAILED tests/e2e/test_e2e_search_accuracy.py::TestSearchAccuracy::test_1_3_2_different_queries_return_different_results - subprocess.CalledProcessError: Command '['aur', 'mem', 'index', '.']' returned non-zero exit status 1.
@@ -3244,11 +3244,11 @@ FAILED tests/integration/test_mcp_harness.py::TestMCPHarnessPerformance::test_se
 FAILED tests/integration/test_mcp_no_api_key.py::TestAuroraIndexNoAPIKey::test_index_directory - assert 'files_indexed' in {'error': "[bold yellow][Memory][/] Parse error during indexing.\n\n[yellow]Error:[/] 'EmbeddingProvider' object has no attribute 'get_parser_for_file'\n\n[green]Note:[/] This is usually non-fatal.\nIndexing continues with remaining files."}
 FAILED tests/integration/test_mcp_no_api_key.py::TestAuroraStatsNoAPIKey::test_stats_basic - assert 0 > 0
 FAILED tests/integration/test_mcp_no_api_key.py::TestAuroraGetNoAPIKey::test_get_invalid_index - AssertionError: assert 'NoSearchResults' == 'InvalidParameter'
-  
+
   - InvalidParameter
   + NoSearchResults
 FAILED tests/integration/test_mcp_no_api_key.py::TestAuroraGetNoAPIKey::test_get_index_out_of_range - AssertionError: assert 'NoSearchResults' == 'InvalidParameter'
-  
+
   - InvalidParameter
   + NoSearchResults
 FAILED tests/integration/test_mcp_python_client.py::TestAuroraIndex::test_index_returns_valid_json - assert 'files_indexed' in {'error': "[bold yellow][Memory][/] Parse error during indexing.\n\n[yellow]Error:[/] 'EmbeddingProvider' object has no attribute 'get_parser_for_file'\n\n[green]Note:[/] This is usually non-fatal.\nIndexing continues with remaining files."}
@@ -3289,39 +3289,39 @@ FAILED tests/integration/test_mcp_python_client.py::TestPlatformCompatibility::t
  +  where 0 = <built-in method get of dict object at 0x74cce10a54c0>('files_indexed', 0)
  +    where <built-in method get of dict object at 0x74cce10a54c0> = {'error': "[bold yellow][Memory][/] Parse error during indexing.\n\n[yellow]Error:[/] 'EmbeddingProvider' object has no attribute 'get_parser_for_file'\n\n[green]Note:[/] This is usually non-fatal.\nIndexing continues with remaining files."}.get
 FAILED tests/integration/test_query_executor_integration.py::TestQueryExecutorWithRealStore::test_execute_direct_llm_with_real_store - AssertionError: assert 'Context:\n[1] /test/fibonacci.py (lines 1-4):\ndef calculate_fibonacci(n)\nCalculate fibonacci number recursively\n\n[2] /test/processor.py (lines 1-5):\nclass DataProcessor\nProcess data by doubling values\n\n[3] /test/config.py (lines 1-4):\ndef load_config()\nLoad configuration settings\n\n\nQuery: fibonacci' == 'fibonacci'
-  
+
   - fibonacci
   + Context:
   + [1] /test/fibonacci.py (lines 1-4):
   + def calculate_fibonacci(n)
   + Calculate fibonacci number recursively
-  + 
+  +
   + [2] /test/processor.py (lines 1-5):
   + class DataProcessor
   + Process data by doubling values
-  + 
+  +
   + [3] /test/config.py (lines 1-4):
   + def load_config()
   + Load configuration settings
-  + 
-  + 
+  +
+  +
   + Query: fibonacci
 FAILED tests/integration/test_query_executor_integration.py::TestQueryExecutorWithRealStore::test_execute_direct_llm_no_matching_context - AssertionError: assert 'Context:\n[1] /test/fibonacci.py (lines 1-4):\ndef calculate_fibonacci(n)\nCalculate fibonacci number recursively\n\n[2] /test/processor.py (lines 1-5):\nclass DataProcessor\nProcess data by doubling values\n\n[3] /test/config.py (lines 1-4):\ndef load_config()\nLoad configuration settings\n\n\nQuery: quantum entanglement' == 'quantum entanglement'
-  
+
   + Context:
   + [1] /test/fibonacci.py (lines 1-4):
   + def calculate_fibonacci(n)
   + Calculate fibonacci number recursively
-  + 
+  +
   + [2] /test/processor.py (lines 1-5):
   + class DataProcessor
   + Process data by doubling values
-  + 
+  +
   + [3] /test/config.py (lines 1-4):
   + def load_config()
   + Load configuration settings
-  + 
-  + 
+  +
+  +
   - quantum entanglement
   + Query: quantum entanglement
   ? +++++++

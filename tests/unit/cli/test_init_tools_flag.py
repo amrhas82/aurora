@@ -182,13 +182,21 @@ class TestToolsFlagIntegration:
             (Path.cwd() / ".git").mkdir()
 
             with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])):
+                with patch(
+                    "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                ):
+                    with patch(
+                        "aurora_cli.commands.init.run_step_3_tool_configuration",
+                        return_value=([], []),
+                    ):
                         # Should accept --tools flag without error
                         result = runner.invoke(init_command, ["--tools=claude"])
 
                         # Should not fail due to unrecognized option
-                        assert "--tools" not in result.output or "unrecognized" not in result.output.lower()
+                        assert (
+                            "--tools" not in result.output
+                            or "unrecognized" not in result.output.lower()
+                        )
 
     def test_init_command_with_tools_all_configures_all_20_tools(self, tmp_path):
         """init --tools=all should configure all 20 tools."""
@@ -198,10 +206,17 @@ class TestToolsFlagIntegration:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             (Path.cwd() / ".git").mkdir()
 
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                        with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=(["all tools"], [])) as mock_step3:
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.run_step_3_tool_configuration",
+                            return_value=(["all tools"], []),
+                        ) as mock_step3:
                             result = runner.invoke(init_command, ["--tools=all"])
 
                             # Step 3 should be called (verify integration)
@@ -215,10 +230,17 @@ class TestToolsFlagIntegration:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             (Path.cwd() / ".git").mkdir()
 
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                        with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])) as mock_step3:
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.run_step_3_tool_configuration",
+                            return_value=([], []),
+                        ) as mock_step3:
                             result = runner.invoke(init_command, ["--tools=none"])
 
                             # Should complete successfully
@@ -232,12 +254,25 @@ class TestToolsFlagIntegration:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             (Path.cwd() / ".git").mkdir()
 
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                        with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
-                            with patch("aurora_cli.commands.init.configure_tools", new_callable=AsyncMock, return_value=([], [])):
-                                with patch("aurora_cli.commands.init.detect_configured_tools", return_value={}):
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+                        ) as mock_prompt:
+                            with patch(
+                                "aurora_cli.commands.init.configure_tools",
+                                new_callable=AsyncMock,
+                                return_value=([], []),
+                            ):
+                                with patch(
+                                    "aurora_cli.commands.init.detect_configured_tools",
+                                    return_value={},
+                                ):
                                     result = runner.invoke(init_command, ["--tools=claude"])
 
                                     # prompt_tool_selection should NOT be called when --tools is provided
@@ -251,11 +286,17 @@ class TestToolsFlagIntegration:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             (Path.cwd() / ".git").mkdir()
 
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 result = runner.invoke(init_command, ["--tools=not-a-real-tool"])
 
                 # Should show error about invalid tool
-                assert result.exit_code != 0 or "invalid" in result.output.lower() or "not-a-real-tool" in result.output.lower()
+                assert (
+                    result.exit_code != 0
+                    or "invalid" in result.output.lower()
+                    or "not-a-real-tool" in result.output.lower()
+                )
 
     def test_init_command_with_mixed_valid_invalid_tools_shows_error(self, tmp_path):
         """init --tools=claude,invalid should show error for invalid tool."""
@@ -265,7 +306,9 @@ class TestToolsFlagIntegration:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             (Path.cwd() / ".git").mkdir()
 
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 result = runner.invoke(init_command, ["--tools=claude,invalid-tool"])
 
                 # Should show error about invalid tool
@@ -279,10 +322,17 @@ class TestToolsFlagIntegration:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             (Path.cwd() / ".git").mkdir()
 
-            with patch("aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False):
+            with patch(
+                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+            ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
-                    with patch("aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True):
-                        with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=(["Claude", "Cursor"], [])) as mock_step3:
+                    with patch(
+                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    ):
+                        with patch(
+                            "aurora_cli.commands.init.run_step_3_tool_configuration",
+                            return_value=(["Claude", "Cursor"], []),
+                        ) as mock_step3:
                             result = runner.invoke(init_command, ["--tools=claude,cursor"])
 
                             # Verify step 3 was called
@@ -301,7 +351,10 @@ class TestToolsFlagWithConfigOption:
             # Create .aurora to satisfy --config pre-condition
             (Path.cwd() / ".aurora").mkdir()
 
-            with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=(["Claude"], [])) as mock_step3:
+            with patch(
+                "aurora_cli.commands.init.run_step_3_tool_configuration",
+                return_value=(["Claude"], []),
+            ) as mock_step3:
                 result = runner.invoke(init_command, ["--config", "--tools=claude"])
 
                 # Should only run step 3
@@ -315,7 +368,9 @@ class TestToolsFlagWithConfigOption:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             (Path.cwd() / ".aurora").mkdir()
 
-            with patch("aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])) as mock_step3:
+            with patch(
+                "aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])
+            ) as mock_step3:
                 result = runner.invoke(init_command, ["--config", "--tools=none"])
 
                 # Should complete but configure no tools

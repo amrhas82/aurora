@@ -6,9 +6,10 @@ configurations with soft failures (warnings instead of errors).
 
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from aurora_cli.commands.init_helpers import configure_mcp_servers
 
 
@@ -22,8 +23,10 @@ class TestInitMCPValidationIntegration:
         This tests the critical soft-failure requirement: validation issues
         should NOT prevent initialization from completing.
         """
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock configurator
             mock_configurator = MagicMock()
@@ -45,16 +48,12 @@ class TestInitMCPValidationIntegration:
             mock_get_all.return_value = []
 
             # Write valid JSON first (configure will create it)
-            config_path.write_text(json.dumps({
-                "mcpServers": {
-                    "aurora": {"command": "aurora-mcp"}
-                }
-            }), encoding="utf-8")
+            config_path.write_text(
+                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}), encoding="utf-8"
+            )
 
             # Run configuration
-            created, updated, skipped, warnings = await configure_mcp_servers(
-                tmp_path, ["claude"]
-            )
+            created, updated, skipped, warnings = await configure_mcp_servers(tmp_path, ["claude"])
 
             # Verify init completed successfully
             assert len(created) + len(updated) > 0
@@ -66,8 +65,10 @@ class TestInitMCPValidationIntegration:
     @pytest.mark.asyncio
     async def test_init_shows_validation_warnings_with_aur_doctor_suggestion(self, tmp_path):
         """Init should display validation warnings and suggest 'aur doctor'."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock configurator
             mock_configurator = MagicMock()
@@ -88,16 +89,12 @@ class TestInitMCPValidationIntegration:
             mock_get_all.return_value = []
 
             # Write config without Aurora server (will trigger warning)
-            config_path.write_text(json.dumps({
-                "mcpServers": {
-                    "other-server": {"command": "other"}
-                }
-            }), encoding="utf-8")
+            config_path.write_text(
+                json.dumps({"mcpServers": {"other-server": {"command": "other"}}}), encoding="utf-8"
+            )
 
             # Run configuration
-            created, updated, skipped, warnings = await configure_mcp_servers(
-                tmp_path, ["claude"]
-            )
+            created, updated, skipped, warnings = await configure_mcp_servers(tmp_path, ["claude"])
 
             # Should have validation warning about missing aurora server
             assert len(warnings) > 0
@@ -106,8 +103,10 @@ class TestInitMCPValidationIntegration:
     @pytest.mark.asyncio
     async def test_init_handles_multiple_tools_with_mixed_validation(self, tmp_path):
         """Init should handle multiple tools where some have validation issues."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Mock two configurators
             tools = []
@@ -119,11 +118,9 @@ class TestInitMCPValidationIntegration:
             mock_valid.is_configured.return_value = False
             valid_path = tmp_path / ".claude" / "mcp.json"
             valid_path.parent.mkdir(parents=True)
-            valid_path.write_text(json.dumps({
-                "mcpServers": {
-                    "aurora": {"command": "aurora-mcp"}
-                }
-            }), encoding="utf-8")
+            valid_path.write_text(
+                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}), encoding="utf-8"
+            )
             mock_result_valid = MagicMock()
             mock_result_valid.success = True
             mock_result_valid.warnings = []
@@ -138,9 +135,7 @@ class TestInitMCPValidationIntegration:
             mock_warning.is_configured.return_value = False
             warning_path = tmp_path / ".cursor" / "mcp.json"
             warning_path.parent.mkdir(parents=True)
-            warning_path.write_text(json.dumps({
-                "mcpServers": {}
-            }), encoding="utf-8")
+            warning_path.write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
             mock_result_warning = MagicMock()
             mock_result_warning.success = True
             mock_result_warning.warnings = []
@@ -175,33 +170,25 @@ class TestInitMCPValidationIntegration:
     @pytest.mark.asyncio
     async def test_init_validation_accepts_both_command_formats(self, tmp_path):
         """Init validation should accept both 'aurora-mcp' and 'python3 -m' formats."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Test both command formats
             test_configs = [
                 {
                     "name": "aurora-mcp command",
-                    "config": {
-                        "mcpServers": {
-                            "aurora": {
-                                "command": "aurora-mcp",
-                                "args": []
-                            }
-                        }
-                    }
+                    "config": {"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}},
                 },
                 {
                     "name": "python3 module command",
                     "config": {
                         "mcpServers": {
-                            "aurora": {
-                                "command": "python3",
-                                "args": ["-m", "aurora_mcp.server"]
-                            }
+                            "aurora": {"command": "python3", "args": ["-m", "aurora_mcp.server"]}
                         }
-                    }
-                }
+                    },
+                },
             ]
 
             for test_config in test_configs:
@@ -224,10 +211,7 @@ class TestInitMCPValidationIntegration:
                 mock_get_all.return_value = []
 
                 # Write test configuration
-                config_path.write_text(
-                    json.dumps(test_config["config"]),
-                    encoding="utf-8"
-                )
+                config_path.write_text(json.dumps(test_config["config"]), encoding="utf-8")
 
                 # Run configuration
                 created, updated, skipped, warnings = await configure_mcp_servers(
@@ -236,26 +220,34 @@ class TestInitMCPValidationIntegration:
 
                 # Should NOT have warnings about command format
                 command_warnings = [
-                    w for w in warnings
-                    if "command" in w.lower() and "unexpected" in w.lower()
+                    w for w in warnings if "command" in w.lower() and "unexpected" in w.lower()
                 ]
-                assert len(command_warnings) == 0, \
-                    f"{test_config['name']} should be accepted but got warnings: {command_warnings}"
+                assert (
+                    len(command_warnings) == 0
+                ), f"{test_config['name']} should be accepted but got warnings: {command_warnings}"
 
     @pytest.mark.asyncio
     async def test_init_validation_reports_all_issues_together(self, tmp_path):
         """Init should collect and report all validation issues for all tools."""
-        with patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get') as mock_get, \
-             patch('aurora_cli.configurators.mcp.MCPConfigRegistry.get_all') as mock_get_all:
+        with (
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
+            patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
+        ):
 
             # Create 3 tools with different validation issues
             tools = []
 
-            for idx, (tool_id, tool_name, config) in enumerate([
-                ("claude", "Claude Code", {"mcpServers": {}}),  # Missing aurora
-                ("cursor", "Cursor", {"mcpServers": {"aurora": {"command": "wrong"}}}),  # Wrong command
-                ("cline", "Cline", {"mcpServers": {}}),  # Missing aurora
-            ]):
+            for idx, (tool_id, tool_name, config) in enumerate(
+                [
+                    ("claude", "Claude Code", {"mcpServers": {}}),  # Missing aurora
+                    (
+                        "cursor",
+                        "Cursor",
+                        {"mcpServers": {"aurora": {"command": "wrong"}}},
+                    ),  # Wrong command
+                    ("cline", "Cline", {"mcpServers": {}}),  # Missing aurora
+                ]
+            ):
                 mock_conf = MagicMock()
                 mock_conf.tool_id = tool_id
                 mock_conf.name = tool_name
@@ -292,5 +284,6 @@ class TestInitMCPValidationIntegration:
 
             # Each tool should have its name in at least one warning
             for tool_name in ["Claude Code", "Cursor", "Cline"]:
-                assert any(tool_name in w for w in warnings), \
-                    f"Expected warning for {tool_name} but got: {warnings}"
+                assert any(
+                    tool_name in w for w in warnings
+                ), f"Expected warning for {tool_name} but got: {warnings}"

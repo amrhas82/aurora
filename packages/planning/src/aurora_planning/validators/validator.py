@@ -22,11 +22,7 @@ from aurora_planning.validators.constants import (
     MIN_PURPOSE_LENGTH,
     VALIDATION_MESSAGES,
 )
-from aurora_planning.validators.types import (
-    ValidationIssue,
-    ValidationLevel,
-    ValidationReport,
-)
+from aurora_planning.validators.types import ValidationIssue, ValidationLevel, ValidationReport
 
 
 class Validator:
@@ -71,23 +67,25 @@ class Validator:
         except ValueError as e:
             # Parser errors (missing sections, etc.)
             enriched = self._enrich_top_level_error(capability_name, str(e))
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="file",
-                message=enriched,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="file",
+                    message=enriched,
+                )
+            )
         except Exception as e:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="file",
-                message=str(e),
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="file",
+                    message=str(e),
+                )
+            )
 
         return self._create_report(issues)
 
-    def validate_capability_content(
-        self, capability_name: str, content: str
-    ) -> ValidationReport:
+    def validate_capability_content(self, capability_name: str, content: str) -> ValidationReport:
         """Validate capability content from a string.
 
         Used for pre-write validation of rebuilt capabilities.
@@ -113,17 +111,21 @@ class Validator:
 
         except ValueError as e:
             enriched = self._enrich_top_level_error(capability_name, str(e))
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="file",
-                message=enriched,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="file",
+                    message=enriched,
+                )
+            )
         except Exception as e:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="file",
-                message=str(e),
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="file",
+                    message=str(e),
+                )
+            )
 
         return self._create_report(issues)
 
@@ -155,17 +157,21 @@ class Validator:
 
         except ValueError as e:
             enriched = self._enrich_top_level_error(plan_name, str(e))
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="file",
-                message=enriched,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="file",
+                    message=enriched,
+                )
+            )
         except Exception as e:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="file",
-                message=str(e),
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="file",
+                    message=str(e),
+                )
+            )
 
         return self._create_report(issues)
 
@@ -193,14 +199,15 @@ class Validator:
 
         try:
             if not specs_dir.exists():
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    path="file",
-                    message=self._enrich_top_level_error(
-                        "plan",
-                        VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS
-                    ),
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.ERROR,
+                        path="file",
+                        message=self._enrich_top_level_error(
+                            "plan", VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS
+                        ),
+                    )
+                )
                 return self._create_report(issues)
 
             for entry in specs_dir.iterdir():
@@ -234,16 +241,12 @@ class Validator:
 
                 has_sections = len(section_names) > 0
                 has_entries = (
-                    len(plan.added) + len(plan.modified) +
-                    len(plan.removed) + len(plan.renamed)
+                    len(plan.added) + len(plan.modified) + len(plan.removed) + len(plan.renamed)
                 ) > 0
 
                 if not has_entries:
                     if has_sections:
-                        empty_section_specs.append({
-                            "path": entry_path,
-                            "sections": section_names
-                        })
+                        empty_section_specs.append({"path": entry_path, "sections": section_names})
                     else:
                         missing_header_specs.append(entry_path)
 
@@ -260,35 +263,43 @@ class Validator:
                     total_modifications += 1
 
                     if key in added_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Duplicate requirement in ADDED: "{block.name}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Duplicate requirement in ADDED: "{block.name}"',
+                            )
+                        )
                     else:
                         added_names.add(key)
 
                     req_text = self._extract_requirement_text(block.raw)
                     if not req_text:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'ADDED "{block.name}" is missing requirement text',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'ADDED "{block.name}" is missing requirement text',
+                            )
+                        )
                     elif not self._contains_shall_or_must(req_text):
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'ADDED "{block.name}" must contain SHALL or MUST',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'ADDED "{block.name}" must contain SHALL or MUST',
+                            )
+                        )
 
                     scenario_count = self._count_scenarios(block.raw)
                     if scenario_count < 1:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'ADDED "{block.name}" must include at least one scenario',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'ADDED "{block.name}" must include at least one scenario',
+                            )
+                        )
 
                 # Validate MODIFIED
                 for block in plan.modified:
@@ -296,35 +307,43 @@ class Validator:
                     total_modifications += 1
 
                     if key in modified_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Duplicate requirement in MODIFIED: "{block.name}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Duplicate requirement in MODIFIED: "{block.name}"',
+                            )
+                        )
                     else:
                         modified_names.add(key)
 
                     req_text = self._extract_requirement_text(block.raw)
                     if not req_text:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'MODIFIED "{block.name}" is missing requirement text',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'MODIFIED "{block.name}" is missing requirement text',
+                            )
+                        )
                     elif not self._contains_shall_or_must(req_text):
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'MODIFIED "{block.name}" must contain SHALL or MUST',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'MODIFIED "{block.name}" must contain SHALL or MUST',
+                            )
+                        )
 
                     scenario_count = self._count_scenarios(block.raw)
                     if scenario_count < 1:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'MODIFIED "{block.name}" must include at least one scenario',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'MODIFIED "{block.name}" must include at least one scenario',
+                            )
+                        )
 
                 # Validate REMOVED
                 for name in plan.removed:
@@ -332,11 +351,13 @@ class Validator:
                     total_modifications += 1
 
                     if key in removed_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Duplicate requirement in REMOVED: "{name}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Duplicate requirement in REMOVED: "{name}"',
+                            )
+                        )
                     else:
                         removed_names.add(key)
 
@@ -347,62 +368,76 @@ class Validator:
                     total_modifications += 1
 
                     if from_key in renamed_from:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Duplicate FROM in RENAMED: "{rename["from"]}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Duplicate FROM in RENAMED: "{rename["from"]}"',
+                            )
+                        )
                     else:
                         renamed_from.add(from_key)
 
                     if to_key in renamed_to:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Duplicate TO in RENAMED: "{rename["to"]}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Duplicate TO in RENAMED: "{rename["to"]}"',
+                            )
+                        )
                     else:
                         renamed_to.add(to_key)
 
                 # Cross-section conflicts
                 for n in modified_names:
                     if n in removed_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Requirement present in both MODIFIED and REMOVED: "{n}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Requirement present in both MODIFIED and REMOVED: "{n}"',
+                            )
+                        )
                     if n in added_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Requirement present in both MODIFIED and ADDED: "{n}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Requirement present in both MODIFIED and ADDED: "{n}"',
+                            )
+                        )
 
                 for n in added_names:
                     if n in removed_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'Requirement present in both ADDED and REMOVED: "{n}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'Requirement present in both ADDED and REMOVED: "{n}"',
+                            )
+                        )
 
                 for rename in plan.renamed:
                     from_key = normalize_requirement_name(rename["from"])
                     to_key = normalize_requirement_name(rename["to"])
 
                     if from_key in modified_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'MODIFIED references old name from RENAMED. Use new header for "{rename["to"]}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'MODIFIED references old name from RENAMED. Use new header for "{rename["to"]}"',
+                            )
+                        )
                     if to_key in added_names:
-                        issues.append(ValidationIssue(
-                            level=ValidationLevel.ERROR,
-                            path=entry_path,
-                            message=f'RENAMED TO collides with ADDED for "{rename["to"]}"',
-                        ))
+                        issues.append(
+                            ValidationIssue(
+                                level=ValidationLevel.ERROR,
+                                path=entry_path,
+                                message=f'RENAMED TO collides with ADDED for "{rename["to"]}"',
+                            )
+                        )
 
         except OSError:
             # If specs dir can't be read, treat as no modifications
@@ -410,43 +445,46 @@ class Validator:
 
         # Report empty sections
         for spec in empty_section_specs:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path=str(spec["path"]),
-                message=(
-                    f"Delta sections {self._format_section_list(list(spec['sections']))} were found, "
-                    f"but no requirement entries parsed. Ensure each section includes at least one "
-                    f'"### Requirement:" block (REMOVED may use bullet list syntax).'
-                ),
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path=str(spec["path"]),
+                    message=(
+                        f"Delta sections {self._format_section_list(list(spec['sections']))} were found, "
+                        f"but no requirement entries parsed. Ensure each section includes at least one "
+                        f'"### Requirement:" block (REMOVED may use bullet list syntax).'
+                    ),
+                )
+            )
 
         # Report missing headers
         for path in missing_header_specs:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path=path,
-                message=(
-                    'No delta sections found. Add headers such as "## ADDED Requirements" '
-                    'or move non-delta notes outside specs/.'
-                ),
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path=path,
+                    message=(
+                        'No delta sections found. Add headers such as "## ADDED Requirements" '
+                        "or move non-delta notes outside specs/."
+                    ),
+                )
+            )
 
         # Check for at least one modification
         if total_modifications == 0:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="file",
-                message=self._enrich_top_level_error(
-                    "plan",
-                    VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS
-                ),
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="file",
+                    message=self._enrich_top_level_error(
+                        "plan", VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS
+                    ),
+                )
+            )
 
         return self._create_report(issues)
 
-    def _validate_capability_schema(
-        self, capability: ParsedCapability
-    ) -> list[ValidationIssue]:
+    def _validate_capability_schema(self, capability: ParsedCapability) -> list[ValidationIssue]:
         """Validate capability against schema rules.
 
         Validates that parsed capability meets schema requirements without
@@ -462,44 +500,54 @@ class Validator:
 
         # Name validation
         if not capability.name or not capability.name.strip():
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="name",
-                message=VALIDATION_MESSAGES.CAPABILITY_NAME_EMPTY,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="name",
+                    message=VALIDATION_MESSAGES.CAPABILITY_NAME_EMPTY,
+                )
+            )
 
         # Overview validation
         if not capability.overview or not capability.overview.strip():
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="overview",
-                message=VALIDATION_MESSAGES.CAPABILITY_PURPOSE_EMPTY,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="overview",
+                    message=VALIDATION_MESSAGES.CAPABILITY_PURPOSE_EMPTY,
+                )
+            )
 
         # Requirements validation
         if not capability.requirements:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="requirements",
-                message=VALIDATION_MESSAGES.CAPABILITY_NO_REQUIREMENTS,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="requirements",
+                    message=VALIDATION_MESSAGES.CAPABILITY_NO_REQUIREMENTS,
+                )
+            )
         else:
             for i, req in enumerate(capability.requirements):
                 # Check SHALL/MUST
                 if "SHALL" not in req.text and "MUST" not in req.text:
-                    issues.append(ValidationIssue(
-                        level=ValidationLevel.ERROR,
-                        path=f"requirements[{i}].text",
-                        message=VALIDATION_MESSAGES.REQUIREMENT_NO_SHALL,
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            level=ValidationLevel.ERROR,
+                            path=f"requirements[{i}].text",
+                            message=VALIDATION_MESSAGES.REQUIREMENT_NO_SHALL,
+                        )
+                    )
 
                 # Check scenarios
                 if not req.scenarios:
-                    issues.append(ValidationIssue(
-                        level=ValidationLevel.ERROR,
-                        path=f"requirements[{i}].scenarios",
-                        message=VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS,
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            level=ValidationLevel.ERROR,
+                            path=f"requirements[{i}].scenarios",
+                            message=VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS,
+                        )
+                    )
 
         return issues
 
@@ -516,37 +564,46 @@ class Validator:
 
         # Name validation
         if not plan.name or not plan.name.strip():
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="name",
-                message=VALIDATION_MESSAGES.PLAN_NAME_EMPTY,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="name",
+                    message=VALIDATION_MESSAGES.PLAN_NAME_EMPTY,
+                )
+            )
 
         # Why validation (length check)
         from aurora_planning.validators.constants import (
             MAX_WHY_SECTION_LENGTH,
             MIN_WHY_SECTION_LENGTH,
         )
+
         if len(plan.why) < MIN_WHY_SECTION_LENGTH:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="why",
-                message=VALIDATION_MESSAGES.PLAN_WHY_TOO_SHORT,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="why",
+                    message=VALIDATION_MESSAGES.PLAN_WHY_TOO_SHORT,
+                )
+            )
         elif len(plan.why) > MAX_WHY_SECTION_LENGTH:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="why",
-                message=VALIDATION_MESSAGES.PLAN_WHY_TOO_LONG,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="why",
+                    message=VALIDATION_MESSAGES.PLAN_WHY_TOO_LONG,
+                )
+            )
 
         # What changes validation
         if not plan.what_changes or not plan.what_changes.strip():
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                path="what_changes",
-                message=VALIDATION_MESSAGES.PLAN_WHAT_EMPTY,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    path="what_changes",
+                    message=VALIDATION_MESSAGES.PLAN_WHAT_EMPTY,
+                )
+            )
 
         return issues
 
@@ -566,32 +623,38 @@ class Validator:
 
         # Warn about brief purpose
         if len(capability.overview) < MIN_PURPOSE_LENGTH:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.WARNING,
-                path="overview",
-                message=VALIDATION_MESSAGES.PURPOSE_TOO_BRIEF,
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.WARNING,
+                    path="overview",
+                    message=VALIDATION_MESSAGES.PURPOSE_TOO_BRIEF,
+                )
+            )
 
         # Check requirements
         for i, req in enumerate(capability.requirements):
             # Info about long requirements
             if len(req.text) > MAX_REQUIREMENT_TEXT_LENGTH:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.INFO,
-                    path=f"requirements[{i}]",
-                    message=VALIDATION_MESSAGES.REQUIREMENT_TOO_LONG,
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.INFO,
+                        path=f"requirements[{i}]",
+                        message=VALIDATION_MESSAGES.REQUIREMENT_TOO_LONG,
+                    )
+                )
 
             # Warn about missing scenarios
             if not req.scenarios:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.WARNING,
-                    path=f"requirements[{i}].scenarios",
-                    message=(
-                        f"{VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS}. "
-                        f"{VALIDATION_MESSAGES.GUIDE_SCENARIO_FORMAT}"
-                    ),
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.WARNING,
+                        path=f"requirements[{i}].scenarios",
+                        message=(
+                            f"{VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS}. "
+                            f"{VALIDATION_MESSAGES.GUIDE_SCENARIO_FORMAT}"
+                        ),
+                    )
+                )
 
         return issues
 
@@ -609,28 +672,30 @@ class Validator:
 
         for i, mod in enumerate(plan.modifications):
             # Check modification description length
-            if (
-                not mod.description or
-                len(mod.description) < MIN_MODIFICATION_DESCRIPTION_LENGTH
-            ):
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.WARNING,
-                    path=f"modifications[{i}].description",
-                    message=VALIDATION_MESSAGES.MODIFICATION_DESCRIPTION_TOO_BRIEF,
-                ))
+            if not mod.description or len(mod.description) < MIN_MODIFICATION_DESCRIPTION_LENGTH:
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.WARNING,
+                        path=f"modifications[{i}].description",
+                        message=VALIDATION_MESSAGES.MODIFICATION_DESCRIPTION_TOO_BRIEF,
+                    )
+                )
 
             # Check for requirements on ADDED/MODIFIED
             from aurora_planning.schemas.plan import ModificationOperation
+
             if mod.operation in (ModificationOperation.ADDED, ModificationOperation.MODIFIED):
                 if not mod.requirements or len(mod.requirements) == 0:
-                    issues.append(ValidationIssue(
-                        level=ValidationLevel.WARNING,
-                        path=f"modifications[{i}].requirements",
-                        message=(
-                            f"{mod.operation.value} "
-                            f"{VALIDATION_MESSAGES.MODIFICATION_MISSING_REQUIREMENTS}"
-                        ),
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            level=ValidationLevel.WARNING,
+                            path=f"modifications[{i}].requirements",
+                            message=(
+                                f"{mod.operation.value} "
+                                f"{VALIDATION_MESSAGES.MODIFICATION_MISSING_REQUIREMENTS}"
+                            ),
+                        )
+                    )
 
         return issues
 
@@ -649,7 +714,10 @@ class Validator:
         if msg == VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS:
             return f"{msg}. {VALIDATION_MESSAGES.GUIDE_NO_MODIFICATIONS}"
 
-        if "Capability must have a Purpose section" in msg or "Capability must have a Requirements section" in msg:
+        if (
+            "Capability must have a Purpose section" in msg
+            or "Capability must have a Requirements section" in msg
+        ):
             return f"{msg}. {VALIDATION_MESSAGES.GUIDE_MISSING_CAPABILITY_SECTIONS}"
 
         if "Plan must have a Why section" in msg or "Plan must have a What Changes section" in msg:

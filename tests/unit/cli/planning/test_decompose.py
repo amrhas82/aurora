@@ -4,11 +4,12 @@ Tests the integration of SOAR decomposition into the planning workflow,
 including context building, agent loading, and graceful fallback.
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 from aurora_cli.planning.decompose import PlanDecomposer
-from aurora_cli.planning.models import Subgoal, Complexity
+from aurora_cli.planning.models import Complexity, Subgoal
 
 
 class TestPlanDecomposer:
@@ -18,10 +19,10 @@ class TestPlanDecomposer:
         """Test that PlanDecomposer can be instantiated with config."""
         decomposer = PlanDecomposer()
         assert decomposer is not None
-        assert hasattr(decomposer, 'decompose')
-        assert hasattr(decomposer, '_build_context')
-        assert hasattr(decomposer, '_call_soar')
-        assert hasattr(decomposer, '_fallback_to_heuristics')
+        assert hasattr(decomposer, "decompose")
+        assert hasattr(decomposer, "_build_context")
+        assert hasattr(decomposer, "_call_soar")
+        assert hasattr(decomposer, "_fallback_to_heuristics")
 
     def test_decomposer_initialization_with_config(self):
         """Test PlanDecomposer initialization with explicit config."""
@@ -47,8 +48,8 @@ class TestPlanDecomposer:
 class TestPlanDecomposerSOARIntegration:
     """Tests for SOAR decompose_query integration."""
 
-    @patch('aurora_cli.planning.decompose.LLMClient')
-    @patch('aurora_cli.planning.decompose.decompose_query')
+    @patch("aurora_cli.planning.decompose.LLMClient")
+    @patch("aurora_cli.planning.decompose.decompose_query")
     def test_decompose_with_soar_success(self, mock_decompose_query, mock_llm_client):
         """Test successful SOAR decomposition."""
         # Setup mock LLM client
@@ -57,8 +58,18 @@ class TestPlanDecomposerSOARIntegration:
         # Setup mock SOAR response with proper structure
         mock_decomposition = Mock()
         mock_decomposition.subgoals = [
-            {"id": "sg-1", "title": "Setup auth", "description": "Configure auth system", "agent": "@full-stack-dev"},
-            {"id": "sg-2", "title": "Add tests", "description": "Write unit tests", "agent": "@qa-test-architect"},
+            {
+                "id": "sg-1",
+                "title": "Setup auth",
+                "description": "Configure auth system",
+                "agent": "@full-stack-dev",
+            },
+            {
+                "id": "sg-2",
+                "title": "Add tests",
+                "description": "Write unit tests",
+                "agent": "@qa-test-architect",
+            },
         ]
 
         mock_result = Mock()
@@ -66,7 +77,7 @@ class TestPlanDecomposerSOARIntegration:
         mock_decompose_query.return_value = mock_result
 
         # Mock SOAR_AVAILABLE flag
-        with patch('aurora_cli.planning.decompose.SOAR_AVAILABLE', True):
+        with patch("aurora_cli.planning.decompose.SOAR_AVAILABLE", True):
             decomposer = PlanDecomposer()
             subgoals, source = decomposer.decompose("Implement OAuth2 authentication")
 
@@ -76,7 +87,7 @@ class TestPlanDecomposerSOARIntegration:
             assert subgoals[0].title == "Setup auth"
             assert mock_decompose_query.called
 
-    @patch('aurora_cli.planning.decompose.decompose_query')
+    @patch("aurora_cli.planning.decompose.decompose_query")
     def test_decompose_soar_unavailable_fallback(self, mock_decompose_query):
         """Test fallback to heuristics when SOAR raises ImportError."""
         mock_decompose_query.side_effect = ImportError("SOAR module not found")
@@ -88,7 +99,7 @@ class TestPlanDecomposerSOARIntegration:
         # Should still return valid subgoals from heuristic
         assert isinstance(subgoals, list)
 
-    @patch('aurora_cli.planning.decompose.decompose_query')
+    @patch("aurora_cli.planning.decompose.decompose_query")
     def test_decompose_soar_timeout(self, mock_decompose_query):
         """Test timeout handling for SOAR calls."""
         mock_decompose_query.side_effect = TimeoutError("SOAR call timed out")
@@ -104,7 +115,7 @@ class TestPlanDecomposerSOARIntegration:
         decomposer = PlanDecomposer()
 
         # First call - should hit SOAR (or heuristic)
-        with patch('aurora_cli.planning.decompose.decompose_query') as mock_soar:
+        with patch("aurora_cli.planning.decompose.decompose_query") as mock_soar:
             mock_result = Mock()
             mock_result.subgoals = [{"id": "sg-1", "title": "Task 1", "description": "Desc"}]
             mock_result.complexity = "SIMPLE"
@@ -113,7 +124,7 @@ class TestPlanDecomposerSOARIntegration:
             subgoals1, source1 = decomposer.decompose("Test goal", Complexity.SIMPLE)
 
         # Second call with same goal - should use cache
-        with patch('aurora_cli.planning.decompose.decompose_query') as mock_soar2:
+        with patch("aurora_cli.planning.decompose.decompose_query") as mock_soar2:
             subgoals2, source2 = decomposer.decompose("Test goal", Complexity.SIMPLE)
 
             # SOAR should not be called again
@@ -198,7 +209,7 @@ class TestContextSummaryBuilding:
 class TestAvailableAgentsList:
     """Tests for available agents list loading (FR-2.3)."""
 
-    @patch('aurora_cli.planning.decompose.ManifestManager')
+    @patch("aurora_cli.planning.decompose.ManifestManager")
     def test_load_available_agents(self, mock_manager_class):
         """Test loading available agents from manifest."""
         # Setup mock manifest with agents
@@ -225,7 +236,7 @@ class TestAvailableAgentsList:
         assert "@holistic-architect" in agents
         assert len(agents) == 3
 
-    @patch('aurora_cli.planning.decompose.ManifestManager')
+    @patch("aurora_cli.planning.decompose.ManifestManager")
     def test_load_available_agents_manifest_unavailable(self, mock_manager_class):
         """Test graceful handling when manifest unavailable."""
         # Simulate manifest load failure
@@ -239,7 +250,7 @@ class TestAvailableAgentsList:
         # Should return None gracefully
         assert agents is None
 
-    @patch('aurora_cli.planning.decompose.ManifestManager')
+    @patch("aurora_cli.planning.decompose.ManifestManager")
     def test_load_available_agents_empty_manifest(self, mock_manager_class):
         """Test handling of empty manifest."""
         mock_manifest = Mock()
@@ -258,8 +269,8 @@ class TestAvailableAgentsList:
 class TestComplexityMapping:
     """Tests for complexity assessment and mapping (FR-2.4)."""
 
-    @patch('aurora_cli.planning.decompose.decompose_query')
-    @patch('aurora_cli.planning.decompose.LLMClient')
+    @patch("aurora_cli.planning.decompose.decompose_query")
+    @patch("aurora_cli.planning.decompose.LLMClient")
     def test_complexity_passed_to_soar(self, mock_llm_client, mock_decompose_query):
         """Test that complexity is correctly passed to SOAR."""
         # Setup mock
@@ -278,7 +289,7 @@ class TestComplexityMapping:
 
             # Verify SOAR was called with correct complexity string
             call_args = mock_decompose_query.call_args
-            assert call_args[1]['complexity'] == complexity.value
+            assert call_args[1]["complexity"] == complexity.value
 
     def test_complexity_fallback_heuristic(self):
         """Test that heuristic decomposition uses complexity correctly."""
@@ -296,8 +307,8 @@ class TestComplexityMapping:
         doc_subgoal = [sg for sg in subgoals_complex if "document" in sg.title.lower()]
         assert len(doc_subgoal) == 1
 
-    @patch('aurora_cli.planning.decompose.decompose_query')
-    @patch('aurora_cli.planning.decompose.LLMClient')
+    @patch("aurora_cli.planning.decompose.decompose_query")
+    @patch("aurora_cli.planning.decompose.LLMClient")
     def test_complexity_enum_value_mapping(self, mock_llm_client, mock_decompose_query):
         """Test that Complexity enum values map correctly to SOAR strings."""
         # Setup mock
@@ -323,9 +334,9 @@ class TestComplexityMapping:
 class TestFileResolutionIntegration:
     """Tests for file path resolution integration (Task 3.6)."""
 
-    @patch('aurora_cli.planning.decompose.FilePathResolver')
-    @patch('aurora_cli.planning.decompose.decompose_query')
-    @patch('aurora_cli.planning.decompose.LLMClient')
+    @patch("aurora_cli.planning.decompose.FilePathResolver")
+    @patch("aurora_cli.planning.decompose.decompose_query")
+    @patch("aurora_cli.planning.decompose.LLMClient")
     def test_file_resolution_called_for_subgoals(
         self, mock_llm_client, mock_decompose_query, mock_resolver_class
     ):
@@ -357,6 +368,7 @@ class TestFileResolutionIntegration:
 
         # Mock file resolver
         from aurora_cli.planning.models import FileResolution
+
         mock_resolver = Mock()
         mock_resolver.resolve_for_subgoal.return_value = [
             FileResolution(
@@ -385,7 +397,7 @@ class TestFileResolutionIntegration:
         assert len(file_resolutions["sg-1"]) == 1
         assert file_resolutions["sg-1"][0].path == "src/auth.py"
 
-    @patch('aurora_cli.planning.decompose.FilePathResolver')
+    @patch("aurora_cli.planning.decompose.FilePathResolver")
     def test_file_resolution_graceful_degradation(self, mock_resolver_class):
         """Test graceful degradation when memory not indexed."""
         # Mock file resolver with no indexed memory
@@ -413,9 +425,9 @@ class TestFileResolutionIntegration:
 class TestAgentRecommendationIntegration:
     """Tests for agent recommendation integration (Task 4.7)."""
 
-    @patch('aurora_cli.planning.decompose.AgentRecommender')
-    @patch('aurora_cli.planning.decompose.decompose_query')
-    @patch('aurora_cli.planning.decompose.LLMClient')
+    @patch("aurora_cli.planning.decompose.AgentRecommender")
+    @patch("aurora_cli.planning.decompose.decompose_query")
+    @patch("aurora_cli.planning.decompose.LLMClient")
     def test_agent_recommendation_called_for_subgoals(
         self, mock_llm_client, mock_decompose_query, mock_recommender_class
     ):
@@ -447,6 +459,7 @@ class TestAgentRecommendationIntegration:
 
         # Mock agent recommender
         from aurora_cli.planning.models import AgentGap
+
         mock_recommender = Mock()
         mock_recommender.recommend_for_subgoal.side_effect = [
             ("@full-stack-dev", 0.9),  # sg-1
@@ -460,7 +473,9 @@ class TestAgentRecommendationIntegration:
         decomposer = PlanDecomposer()
 
         # Act
-        subgoals, agent_recommendations, agent_gaps, source = decomposer.decompose_with_agents("Test goal")
+        subgoals, agent_recommendations, agent_gaps, source = decomposer.decompose_with_agents(
+            "Test goal"
+        )
 
         # Assert
         assert len(subgoals) == 2
@@ -475,11 +490,12 @@ class TestAgentRecommendationIntegration:
         # Gaps should be empty for high-scoring matches
         assert len(agent_gaps) == 0
 
-    @patch('aurora_cli.planning.decompose.AgentRecommender')
+    @patch("aurora_cli.planning.decompose.AgentRecommender")
     def test_agent_gaps_detected(self, mock_recommender_class):
         """Test that agent gaps are detected for low-scoring matches."""
         # Mock agent recommender with low scores
         from aurora_cli.planning.models import AgentGap
+
         mock_gap = AgentGap(
             subgoal_id="sg-1",
             recommended_agent="@specialized-agent",

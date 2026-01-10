@@ -29,12 +29,14 @@ class CLIPipeLLMClient(LLMClient):
     def __init__(
         self,
         tool: str = "claude",
+        model: str = "sonnet",
         soar_dir: Path | None = None,
     ):
         """Initialize CLI pipe client.
 
         Args:
             tool: CLI tool name to pipe to (default: "claude")
+            model: Model to use - "sonnet" or "opus" (default: "sonnet")
             soar_dir: Directory for JSON placeholder files (default: .aurora/soar/)
 
         Raises:
@@ -48,6 +50,7 @@ class CLIPipeLLMClient(LLMClient):
             )
 
         self._tool = tool
+        self._model = model
         self._soar_dir = soar_dir
 
     def _ensure_soar_dir(self) -> Path:
@@ -119,7 +122,7 @@ class CLIPipeLLMClient(LLMClient):
         if system:
             full_prompt = f"{system}\n\n{prompt}"
 
-        # Write input.json before call
+        # Write input.json (transitory placeholder, overwritten each call)
         input_file = soar_dir / "input.json"
         input_data = {
             "prompt": prompt,
@@ -134,8 +137,10 @@ class CLIPipeLLMClient(LLMClient):
 
         # Pipe to tool
         try:
+            # Build command with model flag
+            cmd = [self._tool, "-p", "--model", self._model]
             result = subprocess.run(
-                [self._tool, "-p"],
+                cmd,
                 input=full_prompt,
                 capture_output=True,
                 text=True,
@@ -148,14 +153,14 @@ class CLIPipeLLMClient(LLMClient):
         # Check for errors
         if result.returncode != 0:
             self._write_state(phase_name, "failed")
-            error_msg = (
-                result.stderr or f"Tool {self._tool} failed with exit code {result.returncode}"
-            )
+            # Include both stderr and stdout in error message for debugging
+            error_details = result.stderr or result.stdout or "(no output)"
+            error_msg = f"Tool {self._tool} failed with exit code {result.returncode}: {error_details[:500]}"
             raise RuntimeError(error_msg)
 
         content = result.stdout
 
-        # Write output.json after call
+        # Write output.json (transitory placeholder, overwritten each call)
         output_file = soar_dir / "output.json"
         output_data = {
             "content": content,

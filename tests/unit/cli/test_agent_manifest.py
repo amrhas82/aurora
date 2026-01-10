@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from aurora_cli.agent_discovery.manifest import ManifestManager, should_refresh_manifest
 from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest
 
@@ -398,9 +399,7 @@ class TestShouldRefreshManifestFunction:
         assert result is False  # File exists, no refresh needed
 
         # Now with missing file
-        result = should_refresh_manifest(
-            tmp_path / "missing.json", mock_config
-        )
+        result = should_refresh_manifest(tmp_path / "missing.json", mock_config)
         assert result is True  # File missing, refresh needed
 
     def test_uses_config_interval(self, tmp_path: Path) -> None:

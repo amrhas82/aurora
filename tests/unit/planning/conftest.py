@@ -32,7 +32,7 @@ def sample_plan_data() -> dict[str, Any]:
                 "description": "Configure OAuth 2.0 provider settings",
                 "agent_id": "@backend-dev",
                 "status": "pending",
-                "dependencies": []
+                "dependencies": [],
             },
             {
                 "id": "sg-2",
@@ -40,9 +40,9 @@ def sample_plan_data() -> dict[str, Any]:
                 "description": "Implement secure token exchange flow",
                 "agent_id": "@security-expert",
                 "status": "pending",
-                "dependencies": ["sg-1"]
-            }
-        ]
+                "dependencies": ["sg-1"],
+            },
+        ],
     }
 
 
@@ -65,7 +65,8 @@ def sample_plan_dir(temp_plans_dir: Path, sample_plan_data: dict[str, Any]) -> P
 
     # Create plan.md
     plan_md = plan_dir / "plan.md"
-    plan_md.write_text(f"""# {sample_plan_data['goal']}
+    plan_md.write_text(
+        f"""# {sample_plan_data['goal']}
 
 ## Subgoals
 
@@ -74,23 +75,28 @@ Configure OAuth 2.0 provider settings
 
 ### SG-2: Implement Token Exchange
 Implement secure token exchange flow
-""")
+"""
+    )
 
     # Create prd.md
     prd_md = plan_dir / "prd.md"
-    prd_md.write_text(f"""# PRD: {sample_plan_data['goal']}
+    prd_md.write_text(
+        f"""# PRD: {sample_plan_data['goal']}
 
 ## FR-1: Authentication
 FR-1.1: User must authenticate via OAuth 2.0
-""")
+"""
+    )
 
     # Create tasks.md
     tasks_md = plan_dir / "tasks.md"
-    tasks_md.write_text("""# Task Checklist
+    tasks_md.write_text(
+        """# Task Checklist
 
 - [ ] Setup OAuth provider
 - [ ] Implement token exchange
-""")
+"""
+    )
 
     return plan_dir
 

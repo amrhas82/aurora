@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.utils.task_progress import (
     TaskProgress,
     count_tasks_from_content,
@@ -83,13 +84,15 @@ class TestGetTaskProgressForPlan:
         plan_dir = tmp_path / "plans" / "test-plan"
         plan_dir.mkdir(parents=True)
         tasks_file = plan_dir / "tasks.md"
-        tasks_file.write_text("""# Tasks
+        tasks_file.write_text(
+            """# Tasks
 
 - [x] Setup
 - [x] Implement
 - [ ] Test
 - [ ] Deploy
-""")
+"""
+        )
 
         progress = get_task_progress_for_plan(str(tmp_path / "plans"), "test-plan")
 

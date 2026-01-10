@@ -4,7 +4,6 @@ Provides Levenshtein distance and nearest match finding.
 """
 
 
-
 def levenshtein(a: str, b: str) -> int:
     """Calculate Levenshtein distance between two strings.
 

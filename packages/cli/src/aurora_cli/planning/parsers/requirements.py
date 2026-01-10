@@ -255,9 +255,7 @@ def _split_top_level_sections(content: str) -> dict[str, str]:
     return result
 
 
-def _get_section_case_insensitive(
-    sections: dict[str, str], desired: str
-) -> tuple[str, bool]:
+def _get_section_case_insensitive(sections: dict[str, str], desired: str) -> tuple[str, bool]:
     """Get a section by title (case-insensitive).
 
     Args:
@@ -391,9 +389,7 @@ def _parse_renamed_pairs(section_body: str) -> list[dict[str, str]]:
     current: dict[str, str] = {}
 
     for line in lines:
-        from_match = re.match(
-            r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line
-        )
+        from_match = re.match(r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
         to_match = re.match(r"^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
 
         if from_match:
@@ -455,18 +451,10 @@ def parse_modification_spec(content: str) -> ModificationPlan:
     normalized = _normalize_line_endings(content)
     sections = _split_top_level_sections(normalized)
 
-    added_body, added_found = _get_section_case_insensitive(
-        sections, "ADDED Requirements"
-    )
-    modified_body, modified_found = _get_section_case_insensitive(
-        sections, "MODIFIED Requirements"
-    )
-    removed_body, removed_found = _get_section_case_insensitive(
-        sections, "REMOVED Requirements"
-    )
-    renamed_body, renamed_found = _get_section_case_insensitive(
-        sections, "RENAMED Requirements"
-    )
+    added_body, added_found = _get_section_case_insensitive(sections, "ADDED Requirements")
+    modified_body, modified_found = _get_section_case_insensitive(sections, "MODIFIED Requirements")
+    removed_body, removed_found = _get_section_case_insensitive(sections, "REMOVED Requirements")
+    renamed_body, renamed_found = _get_section_case_insensitive(sections, "RENAMED Requirements")
 
     return ModificationPlan(
         added=_parse_requirement_blocks_from_section(added_body),

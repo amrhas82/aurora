@@ -25,7 +25,6 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
-
 # ==============================================================================
 # Task 1.4: API Key and Budget Tests (TDD)
 # ==============================================================================
@@ -577,9 +576,9 @@ class TestProgressTracking:
                 response = json.loads(result)
 
                 for phase in response["phases"]:
-                    assert isinstance(phase["duration"], (int, float)), (
-                        f"Phase duration should be numeric, got {type(phase['duration'])}"
-                    )
+                    assert isinstance(
+                        phase["duration"], (int, float)
+                    ), f"Phase duration should be numeric, got {type(phase['duration'])}"
                     assert phase["duration"] >= 0, "Phase duration should be non-negative"
 
     def test_phase_status_is_completed(self):
@@ -592,9 +591,9 @@ class TestProgressTracking:
                 response = json.loads(result)
 
                 for phase in response["phases"]:
-                    assert phase["status"] == "completed", (
-                        f"Expected 'completed' status, got '{phase['status']}'"
-                    )
+                    assert (
+                        phase["status"] == "completed"
+                    ), f"Expected 'completed' status, got '{phase['status']}'"
 
     def test_progress_not_included_for_direct_llm(self):
         """Direct LLM execution should not include SOAR phases."""

@@ -23,7 +23,6 @@ from aurora_core.activation.engine import ActivationEngine
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_soar.phases.assess import assess_complexity
 
-
 console = Console()
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,9 @@ logger = logging.getLogger(__name__)
 @click.command(name="query")
 @click.argument("query_text", required=True)
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed output")
-@click.option("--interactive", "-i", is_flag=True, help="Run blocking interactive SOAR (reads stdin)")
+@click.option(
+    "--interactive", "-i", is_flag=True, help="Run blocking interactive SOAR (reads stdin)"
+)
 def query_command(
     query_text: str,
     verbose: bool,
@@ -228,15 +229,17 @@ def _run_interactive(query_text: str, verbose: bool) -> None:
 
         # Auto-index the conversation log as knowledge chunk
         try:
-            from aurora_cli.memory_manager import MemoryManager
             from aurora_cli.config import Config
+            from aurora_cli.memory_manager import MemoryManager
 
             db_path = Path.cwd() / ".aurora" / "memory.db"
             if db_path.exists():
                 config = Config(db_path=str(db_path))
                 manager = MemoryManager(config=config)
                 stats = manager.index_path(log_path)
-                logger.debug(f"Indexed conversation log: {log_path} ({stats.chunks_created} chunks)")
+                logger.debug(
+                    f"Indexed conversation log: {log_path} ({stats.chunks_created} chunks)"
+                )
         except Exception as e:
             logger.warning(f"Failed to auto-index conversation log: {e}")
             # Don't fail the query if indexing fails

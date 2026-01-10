@@ -12,7 +12,6 @@ from .llm_client import (
 )
 from .synthesize import SynthesisResult, synthesize_results, verify_synthesis
 
-
 __all__ = [
     "LLMClient",
     "LLMResponse",

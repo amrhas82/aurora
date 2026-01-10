@@ -8,6 +8,7 @@ Task: 2.3 - Write tests/unit/validation/test_types.py
 """
 
 import pytest
+
 from aurora_planning.validators.types import ValidationIssue, ValidationLevel, ValidationReport
 
 
@@ -93,15 +94,9 @@ class TestValidationReport:
     def test_creates_report_with_mixed_issues(self):
         """Should create report with mixed issue levels."""
         issues = [
-            ValidationIssue(
-                level=ValidationLevel.ERROR, path="name", message="Name empty"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.WARNING, path="overview", message="Too brief"
-            ),
-            ValidationIssue(
-                level=ValidationLevel.INFO, path="metadata", message="Info note"
-            ),
+            ValidationIssue(level=ValidationLevel.ERROR, path="name", message="Name empty"),
+            ValidationIssue(level=ValidationLevel.WARNING, path="overview", message="Too brief"),
+            ValidationIssue(level=ValidationLevel.INFO, path="metadata", message="Info note"),
         ]
         report = ValidationReport(valid=False, issues=issues)
         assert report.summary.errors == 1

@@ -145,10 +145,7 @@ class TestStagedRetrievalArchitecture:
         3. Top-K candidates are selected by BM25 score
         4. Stage 1 results are passed to Stage 2 for re-ranking
         """
-        from aurora_context_code.semantic.hybrid_retriever import (
-            HybridConfig,
-            HybridRetriever,
-        )
+        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
         # Setup: Create chunks with known BM25 characteristics
         chunks = [
@@ -220,10 +217,7 @@ class TestStagedRetrievalArchitecture:
         3. Tri-hybrid score combines: 30% BM25 + 40% Semantic + 30% Activation
         4. Results are ranked by tri-hybrid score
         """
-        from aurora_context_code.semantic.hybrid_retriever import (
-            HybridConfig,
-            HybridRetriever,
-        )
+        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
         # Setup: Create chunks with controlled scores
         # Chunk 1: High BM25, low semantic, medium activation
@@ -260,7 +254,9 @@ class TestStagedRetrievalArchitecture:
         mock_embedding_provider.embed_query.return_value = np.array([0.9, 0.9, 0.9, 0.9])
 
         # Create retriever with dual-hybrid for testing (bm25_weight=0.0)
-        config = HybridConfig(bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False)
+        config = HybridConfig(
+            bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False
+        )
         retriever = HybridRetriever(
             mock_store, mock_activation_engine, mock_embedding_provider, config
         )
@@ -303,10 +299,7 @@ class TestStagedRetrievalArchitecture:
         4. No cross-contamination between score types during normalization
         5. Final tri-hybrid combination uses properly normalized scores
         """
-        from aurora_context_code.semantic.hybrid_retriever import (
-            HybridConfig,
-            HybridRetriever,
-        )
+        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
         # Setup: Create chunks with known score patterns
         chunks = [
@@ -339,7 +332,9 @@ class TestStagedRetrievalArchitecture:
         mock_store.retrieve_by_activation.return_value = chunks
         mock_embedding_provider.embed_query.return_value = np.array([0.7, 0.3, 0.0, 0.0])
 
-        config = HybridConfig(bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False)
+        config = HybridConfig(
+            bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False
+        )
         retriever = HybridRetriever(
             mock_store, mock_activation_engine, mock_embedding_provider, config
         )
@@ -351,25 +346,30 @@ class TestStagedRetrievalArchitecture:
         # Verify: All scores are in [0, 1] range
         for result in results:
             # Check score ranges
-            assert 0.0 <= result["activation_score"] <= 1.0, \
-                f"Activation score out of range: {result['activation_score']}"
-            assert 0.0 <= result["semantic_score"] <= 1.0, \
-                f"Semantic score out of range: {result['semantic_score']}"
-            assert 0.0 <= result["hybrid_score"] <= 1.0, \
-                f"Hybrid score out of range: {result['hybrid_score']}"
+            assert (
+                0.0 <= result["activation_score"] <= 1.0
+            ), f"Activation score out of range: {result['activation_score']}"
+            assert (
+                0.0 <= result["semantic_score"] <= 1.0
+            ), f"Semantic score out of range: {result['semantic_score']}"
+            assert (
+                0.0 <= result["hybrid_score"] <= 1.0
+            ), f"Hybrid score out of range: {result['hybrid_score']}"
 
             # Verify hybrid score is weighted combination
             expected_hybrid = (
                 config.activation_weight * result["activation_score"]
                 + config.semantic_weight * result["semantic_score"]
             )
-            assert abs(result["hybrid_score"] - expected_hybrid) < 0.01, \
-                f"Hybrid score mismatch: {result['hybrid_score']} != {expected_hybrid}"
+            assert (
+                abs(result["hybrid_score"] - expected_hybrid) < 0.01
+            ), f"Hybrid score mismatch: {result['hybrid_score']} != {expected_hybrid}"
 
         # Verify: Results are sorted by hybrid score (descending)
         for i in range(len(results) - 1):
-            assert results[i]["hybrid_score"] >= results[i + 1]["hybrid_score"], \
-                "Results not sorted by hybrid score"
+            assert (
+                results[i]["hybrid_score"] >= results[i + 1]["hybrid_score"]
+            ), "Results not sorted by hybrid score"
 
     def test_empty_query_handling(
         self, mock_store, mock_activation_engine, mock_embedding_provider
@@ -381,13 +381,12 @@ class TestStagedRetrievalArchitecture:
         2. Whitespace-only query raises ValueError
         3. Error message is informative
         """
-        from aurora_context_code.semantic.hybrid_retriever import (
-            HybridConfig,
-            HybridRetriever,
-        )
+        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
         # Use dual-hybrid mode for testing
-        config = HybridConfig(bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False)
+        config = HybridConfig(
+            bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False
+        )
         retriever = HybridRetriever(
             mock_store, mock_activation_engine, mock_embedding_provider, config
         )
@@ -415,10 +414,7 @@ class TestStagedRetrievalArchitecture:
         2. Stage 2 re-ranks only the Stage 1 candidates
         3. Final top_k parameter controls output size
         """
-        from aurora_context_code.semantic.hybrid_retriever import (
-            HybridConfig,
-            HybridRetriever,
-        )
+        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
         # Setup: Create many chunks to test filtering
         chunks = [

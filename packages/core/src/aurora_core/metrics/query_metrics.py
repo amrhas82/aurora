@@ -78,7 +78,8 @@ class QueryMetrics:
         try:
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
             with sqlite3.connect(str(self.db_path)) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS query_metrics (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         query_id TEXT NOT NULL,
@@ -95,16 +96,21 @@ class QueryMetrics:
                         year_month TEXT NOT NULL,  -- 'YYYY-MM' for fast monthly queries
                         metadata TEXT  -- JSON for extensibility
                     )
-                """)
+                """
+                )
                 # Index for monthly aggregations
-                conn.execute("""
+                conn.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_query_metrics_year_month
                     ON query_metrics(year_month)
-                """)
-                conn.execute("""
+                """
+                )
+                conn.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_query_metrics_query_type
                     ON query_metrics(query_type)
-                """)
+                """
+                )
                 conn.commit()
         except Exception as e:
             logger.warning(f"Failed to create query_metrics table: {e}")
@@ -197,9 +203,7 @@ class QueryMetrics:
                 conn.row_factory = sqlite3.Row
 
                 # Total counts (all time)
-                row = conn.execute(
-                    "SELECT COUNT(*) as total FROM query_metrics"
-                ).fetchone()
+                row = conn.execute("SELECT COUNT(*) as total FROM query_metrics").fetchone()
                 summary.total_queries = row["total"] if row else 0
 
                 row = conn.execute(

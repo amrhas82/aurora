@@ -16,7 +16,6 @@ Exceptions:
 
 from __future__ import annotations
 
-
 # All error codes with actionable message templates
 VALIDATION_MESSAGES: dict[str, str] = {
     # Plan ID errors
@@ -27,70 +26,42 @@ VALIDATION_MESSAGES: dict[str, str] = {
         "Plan ID '{plan_id}' already exists. Use 'aur plan show {plan_id}' to view it."
     ),
     # Plan lifecycle errors
-    "PLAN_NOT_FOUND": (
-        "Plan '{plan_id}' not found. Use 'aur plan list' to see available plans."
-    ),
+    "PLAN_NOT_FOUND": ("Plan '{plan_id}' not found. Use 'aur plan list' to see available plans."),
     "PLAN_ALREADY_ARCHIVED": (
         "Plan '{plan_id}' is already archived. Use 'aur plan list --archived' to view."
     ),
     # Goal validation errors
-    "GOAL_TOO_SHORT": (
-        "Goal must be at least 10 characters. Provide a clear description."
-    ),
-    "GOAL_TOO_LONG": (
-        "Goal exceeds 500 characters. Consider breaking into multiple plans."
-    ),
+    "GOAL_TOO_SHORT": ("Goal must be at least 10 characters. Provide a clear description."),
+    "GOAL_TOO_LONG": ("Goal exceeds 500 characters. Consider breaking into multiple plans."),
     # Subgoal errors
-    "SUBGOAL_ID_INVALID": (
-        "Subgoal ID must be 'sg-N' format (e.g., 'sg-1'). Got: {value}"
-    ),
+    "SUBGOAL_ID_INVALID": ("Subgoal ID must be 'sg-N' format (e.g., 'sg-1'). Got: {value}"),
     "SUBGOAL_DEPENDENCY_INVALID": (
         "Subgoal '{subgoal_id}' references unknown dependency: {dependency}"
     ),
-    "SUBGOAL_CIRCULAR_DEPENDENCY": (
-        "Circular dependency detected: {cycle}"
-    ),
-    "TOO_MANY_SUBGOALS": (
-        "Plan has {count} subgoals (max 10). Consider splitting."
-    ),
+    "SUBGOAL_CIRCULAR_DEPENDENCY": ("Circular dependency detected: {cycle}"),
+    "TOO_MANY_SUBGOALS": ("Plan has {count} subgoals (max 10). Consider splitting."),
     # Agent errors
-    "AGENT_FORMAT_INVALID": (
-        "Agent must start with '@' (e.g., '@full-stack-dev'). Got: {value}"
-    ),
+    "AGENT_FORMAT_INVALID": ("Agent must start with '@' (e.g., '@full-stack-dev'). Got: {value}"),
     "AGENT_NOT_FOUND": (
         "Agent '{agent}' not found. Use 'aur agents list' to see available agents."
     ),
     # Directory errors
-    "PLANS_DIR_NOT_INITIALIZED": (
-        "Planning directory not initialized. Run 'aur plan init' first."
-    ),
-    "PLANS_DIR_NO_WRITE_PERMISSION": (
-        "Cannot write to {path}. Check directory permissions."
-    ),
+    "PLANS_DIR_NOT_INITIALIZED": ("Planning directory not initialized. Run 'aur plan init' first."),
+    "PLANS_DIR_NO_WRITE_PERMISSION": ("Cannot write to {path}. Check directory permissions."),
     "PLANS_DIR_ALREADY_EXISTS": (
         "Planning directory already exists at {path}. Use --force to reinitialize."
     ),
     # File errors
-    "PLAN_FILE_CORRUPT": (
-        "Plan file '{file}' is corrupt or invalid JSON. Try regenerating."
-    ),
-    "PLAN_FILE_MISSING": (
-        "Expected file '{file}' not found in plan directory."
-    ),
+    "PLAN_FILE_CORRUPT": ("Plan file '{file}' is corrupt or invalid JSON. Try regenerating."),
+    "PLAN_FILE_MISSING": ("Expected file '{file}' not found in plan directory."),
     # Context errors
-    "CONTEXT_FILE_NOT_FOUND": (
-        "Context file '{file}' not found. Check the path."
-    ),
+    "CONTEXT_FILE_NOT_FOUND": ("Context file '{file}' not found. Check the path."),
     "NO_INDEXED_MEMORY": (
         "No indexed memory available. Run 'aur mem index .' or use '--context <file>'."
     ),
     # Archive errors
-    "ARCHIVE_FAILED": (
-        "Failed to archive plan: {error}. Plan remains in active state."
-    ),
-    "ARCHIVE_ROLLBACK": (
-        "Archive failed, rolled back to original state. Error: {error}"
-    ),
+    "ARCHIVE_FAILED": ("Failed to archive plan: {error}. Plan remains in active state."),
+    "ARCHIVE_ROLLBACK": ("Archive failed, rolled back to original state. Error: {error}"),
 }
 
 

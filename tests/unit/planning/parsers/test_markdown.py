@@ -8,6 +8,7 @@ Task: 3.1 - Write tests/unit/parsers/test_markdown.py
 """
 
 import pytest
+
 from aurora_planning.parsers.markdown import MarkdownParser
 
 
@@ -189,15 +190,17 @@ Some general description of changes without specific deltas"""
 
     def test_parses_crlf_line_endings(self):
         """Parses plan documents saved with CRLF line endings."""
-        content = "\r\n".join([
-            "# CRLF Change",
-            "",
-            "## Why",
-            "Reasons on Windows editors should parse like POSIX environments.",
-            "",
-            "## What Changes",
-            "- **alpha:** Add cross-platform parsing coverage",
-        ])
+        content = "\r\n".join(
+            [
+                "# CRLF Change",
+                "",
+                "## Why",
+                "Reasons on Windows editors should parse like POSIX environments.",
+                "",
+                "## What Changes",
+                "- **alpha:** Add cross-platform parsing coverage",
+            ]
+        )
 
         parser = MarkdownParser(content)
         plan = parser.parse_plan("crlf-change")
@@ -280,7 +283,9 @@ Then result"""
         parser = MarkdownParser(content)
         capability = parser.parse_capability("test")
 
-        assert capability.requirements[0].text == "The system SHALL use heading text when no content"
+        assert (
+            capability.requirements[0].text == "The system SHALL use heading text when no content"
+        )
 
     def test_extracts_requirement_text_from_first_content_line(self):
         """Should extract requirement text from first non-empty content line."""

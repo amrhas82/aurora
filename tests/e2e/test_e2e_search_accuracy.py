@@ -32,7 +32,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -78,7 +77,8 @@ def diverse_python_project() -> Generator[Path, None, None]:
         project_path = Path(tmp_project)
 
         # Create database module
-        (project_path / "database.py").write_text('''"""Database management with SQLite."""
+        (project_path / "database.py").write_text(
+            '''"""Database management with SQLite."""
 import sqlite3
 from typing import List, Dict, Any
 
@@ -119,10 +119,12 @@ class DatabaseManager:
         """Close database connection."""
         if self.connection:
             self.connection.close()
-''')
+'''
+        )
 
         # Create HTTP/API module
-        (project_path / "api_client.py").write_text('''"""HTTP API client for external services."""
+        (project_path / "api_client.py").write_text(
+            '''"""HTTP API client for external services."""
 import requests
 from typing import Dict, Any, Optional
 
@@ -178,10 +180,12 @@ class APIClient:
         response = self.session.post(url, json=data, headers=headers)
         response.raise_for_status()
         return response.json()
-''')
+'''
+        )
 
         # Create file I/O module
-        (project_path / "file_handler.py").write_text('''"""File handling and I/O operations."""
+        (project_path / "file_handler.py").write_text(
+            '''"""File handling and I/O operations."""
 import os
 import json
 from pathlib import Path
@@ -247,12 +251,12 @@ class FileHandler:
             List of matching file paths
         """
         return list(self.base_dir.glob(pattern))
-''')
+'''
+        )
 
         # Create math/algorithm module
-        (
-            project_path / "algorithms.py"
-        ).write_text('''"""Mathematical algorithms and computations."""
+        (project_path / "algorithms.py").write_text(
+            '''"""Mathematical algorithms and computations."""
 from typing import List
 
 
@@ -312,7 +316,8 @@ def factorial(n: int) -> int:
     for i in range(2, n + 1):
         result *= i
     return result
-''')
+'''
+        )
 
         yield project_path
 
@@ -343,9 +348,9 @@ class TestSearchAccuracy:
         assert result.returncode == 0, f"Indexing failed:\nstderr: {result.stderr}"
 
         # Verify indexed multiple files
-        assert "database.py" in result.stdout.lower() or "indexed" in result.stdout.lower(), (
-            f"Should have indexed files:\n{result.stdout}"
-        )
+        assert (
+            "database.py" in result.stdout.lower() or "indexed" in result.stdout.lower()
+        ), f"Should have indexed files:\n{result.stdout}"
 
     def test_1_3_2_different_queries_return_different_results(
         self, clean_aurora_home: Path, diverse_python_project: Path
@@ -456,9 +461,9 @@ class TestSearchAccuracy:
 
                     # At least some expected fields should be present
                     present_fields = set(first.keys()) & expected_fields
-                    assert len(present_fields) > 0, (
-                        f"Result should have expected fields like {expected_fields}, got {first.keys()}"
-                    )
+                    assert (
+                        len(present_fields) > 0
+                    ), f"Result should have expected fields like {expected_fields}, got {first.keys()}"
             except json.JSONDecodeError as e:
                 pytest.fail(f"JSON output is not parseable:\n{result.stdout}\nError: {e}")
         else:

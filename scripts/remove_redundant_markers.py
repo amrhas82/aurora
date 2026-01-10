@@ -22,9 +22,7 @@ def find_python_test_files(root_path: Path) -> List[Path]:
     return list(root_path.rglob("test_*.py"))
 
 
-def remove_redundant_markers_from_file(
-    file_path: Path, dry_run: bool = False
-) -> tuple[int, int]:
+def remove_redundant_markers_from_file(file_path: Path, dry_run: bool = False) -> tuple[int, int]:
     """
     Remove redundant markers from a single test file.
 
@@ -39,9 +37,7 @@ def remove_redundant_markers_from_file(
     redundant_marker = None
     if "/tests/unit/" in str(file_path) or str(file_path).startswith("tests/unit/"):
         redundant_marker = "unit"
-    elif "/tests/integration/" in str(file_path) or str(file_path).startswith(
-        "tests/integration/"
-    ):
+    elif "/tests/integration/" in str(file_path) or str(file_path).startswith("tests/integration/"):
         redundant_marker = "integration"
     elif "/tests/e2e/" in str(file_path) or str(file_path).startswith("tests/e2e/"):
         redundant_marker = "e2e"
@@ -102,9 +98,7 @@ def remove_redundant_markers_from_file(
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Remove redundant pytest markers from test files"
-    )
+    parser = argparse.ArgumentParser(description="Remove redundant pytest markers from test files")
     parser.add_argument(
         "--path",
         type=Path,
@@ -124,9 +118,7 @@ def main():
         sys.exit(1)
 
     print(f"{'=' * 70}")
-    print(
-        f"Remove Redundant Pytest Markers {'(DRY RUN)' if args.dry_run else ''}"
-    )
+    print(f"Remove Redundant Pytest Markers {'(DRY RUN)' if args.dry_run else ''}")
     print(f"{'=' * 70}")
     print(f"Searching in: {args.path.absolute()}")
     print()

@@ -74,7 +74,10 @@ def main():
                 print(f"✓ {pkg} removed")
             else:
                 # Package might not be installed - that's okay
-                if "not installed" in result.stdout.lower() or "not installed" in result.stderr.lower():
+                if (
+                    "not installed" in result.stdout.lower()
+                    or "not installed" in result.stderr.lower()
+                ):
                     print(f"  {pkg} was not installed (skipping)")
                 else:
                     print(f"⚠ Failed to remove {pkg}: {result.stderr}")
@@ -88,6 +91,7 @@ def main():
             print(f"\n→ Removing configuration directory...")
             try:
                 import shutil
+
                 shutil.rmtree(config_dir)
                 print(f"✓ Removed {config_dir}")
             except Exception as e:

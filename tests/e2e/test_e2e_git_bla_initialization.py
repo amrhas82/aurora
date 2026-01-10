@@ -38,7 +38,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -315,13 +314,15 @@ class TestGitBasedBLAInitialization:
         cursor = conn.cursor()
 
         # Get chunks with their activations
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, a.base_level, a.access_count
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY c.name
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         conn.close()
@@ -352,12 +353,14 @@ class TestGitBasedBLAInitialization:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, a.base_level, a.access_count
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         conn.close()
@@ -397,13 +400,15 @@ class TestGitBasedBLAInitialization:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, a.base_level, a.access_count
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY c.name
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         conn.close()
@@ -454,13 +459,15 @@ class TestGitBasedBLAInitialization:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, a.base_level, a.access_count
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY a.base_level DESC
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         conn.close()
@@ -504,12 +511,14 @@ class TestGitBasedBLAInitialization:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, c.metadata
             FROM chunks c
             WHERE c.file_path LIKE '%module.py%'
             LIMIT 3
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         conn.close()
@@ -555,12 +564,14 @@ class TestGitBasedBLAInitialization:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, c.metadata, a.access_count
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         conn.close()
@@ -603,12 +614,14 @@ class TestGitBasedBLAInitialization:
             project_path = Path(tmp_dir)
 
             # Create Python file (no git repo)
-            (project_path / "simple.py").write_text('''"""Simple module."""
+            (project_path / "simple.py").write_text(
+                '''"""Simple module."""
 
 def hello():
     """Say hello."""
     return "Hello"
-''')
+'''
+            )
 
             # Index (should not crash)
             result = run_cli_command(
@@ -620,9 +633,9 @@ def hello():
             )
 
             # Should succeed (not crash on missing Git)
-            assert result.returncode == 0, (
-                f"Indexing non-Git directory should not crash:\nstderr: {result.stderr}"
-            )
+            assert (
+                result.returncode == 0
+            ), f"Indexing non-Git directory should not crash:\nstderr: {result.stderr}"
 
             # Query database
             db_path = clean_aurora_home / "memory.db"
@@ -630,13 +643,15 @@ def hello():
                 conn = sqlite3.connect(db_path)
                 cursor = conn.cursor()
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT a.base_level
                     FROM chunks c
                     JOIN activations a ON c.chunk_id = a.chunk_id
                     WHERE c.file_path LIKE '%simple.py%'
                     LIMIT 1
-                """)
+                """
+                )
 
                 result_row = cursor.fetchone()
                 conn.close()
@@ -646,9 +661,9 @@ def hello():
 
                     # Should have fallback value (0.5 or similar)
                     # Not 0.0 (which indicates not initialized at all)
-                    assert base_level >= 0.0, (
-                        f"Non-Git file should have default base_level\nGot: {base_level}"
-                    )
+                    assert (
+                        base_level >= 0.0
+                    ), f"Non-Git file should have default base_level\nGot: {base_level}"
 
     def test_1_6_11_comprehensive_git_bla_check(
         self, clean_aurora_home: Path, git_repo_with_history: Path
@@ -685,13 +700,15 @@ def hello():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT c.name, c.metadata, a.base_level, a.access_count
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY a.base_level DESC
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         conn.close()

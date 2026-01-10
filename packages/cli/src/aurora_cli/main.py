@@ -15,12 +15,14 @@ from rich.console import Console
 from aurora_cli.commands.agents import agents_group
 from aurora_cli.commands.budget import budget_group
 from aurora_cli.commands.doctor import doctor_command
+from aurora_cli.commands.goals import goals_command
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
 from aurora_cli.commands.plan import plan_group
 from aurora_cli.commands.query import query_command
 from aurora_cli.commands.soar import soar_command
+from aurora_cli.commands.spawn import spawn_command
 from aurora_cli.commands.version import version_command
 
 __all__ = ["cli"]
@@ -71,7 +73,7 @@ def _show_first_run_welcome_if_needed() -> None:
     default=None,
     help="Run headless mode with specified prompt file (shorthand for 'aur headless <file>')",
 )
-@click.version_option(version="0.5.1")
+@click.version_option(version="0.6.0")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -> None:
     r"""AURORA: Adaptive Unified Reasoning and Orchestration Architecture.
@@ -136,12 +138,14 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
 cli.add_command(agents_group)
 cli.add_command(budget_group)
 cli.add_command(doctor_command)
+cli.add_command(goals_command)
 cli.add_command(headless_command)
 cli.add_command(init_command)
 cli.add_command(memory_group)
 cli.add_command(plan_group)
 cli.add_command(query_command)
 cli.add_command(soar_command)
+cli.add_command(spawn_command)
 cli.add_command(version_command)
 
 

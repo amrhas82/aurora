@@ -27,7 +27,6 @@ from typing import TYPE_CHECKING, Any, Protocol
 from aurora_core.activation.spreading import RelationshipGraph
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_core.activation.spreading import SpreadingActivation
 

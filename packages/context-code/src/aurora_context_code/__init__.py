@@ -19,7 +19,6 @@ from aurora_context_code.semantic import (
     cosine_similarity,
 )
 
-
 __all__ = [
     "EmbeddingProvider",
     "HybridRetriever",

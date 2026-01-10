@@ -18,42 +18,48 @@ class DecomposePromptTemplate(PromptTemplate):
 
     def build_system_prompt(self, **kwargs: Any) -> str:
         """Build system prompt for query decomposition."""
-        return """You are a query decomposition expert for a code reasoning system.
+        available_agents = kwargs.get("available_agents", [])
+
+        if available_agents:
+            agents_text = f"Available agents: {', '.join(available_agents)}"
+        else:
+            agents_text = "No specific agents available - use 'llm' as fallback for all subgoals"
+
+        return f"""You are a query decomposition expert for a code reasoning system.
 
 Your task is to break down complex queries into concrete, actionable subgoals that can be
 executed by specialized agents.
 
 For each subgoal, specify:
 1. A clear, specific goal statement
-2. The suggested agent to execute it (from available agents)
+2. The suggested agent to execute it (from available agents, or 'llm' as fallback)
 3. Whether the subgoal is critical to the overall query
 4. Dependencies on other subgoals (by index)
 
 Organize subgoals into an execution order, marking which can run in parallel.
 
-Available agent types: code-analyzer, test-runner, refactoring-engine, documentation-generator,
-dependency-tracker, security-scanner, llm-executor (general purpose)
+{agents_text}
 
 You MUST respond with valid JSON only. Use this exact schema:
-{
+{{
   "goal": "High-level goal summarizing what we're trying to achieve",
   "subgoals": [
-    {
+    {{
       "description": "Specific subgoal description",
       "suggested_agent": "agent-name",
       "is_critical": true/false,
       "depends_on": [0, 1]  // indices of prerequisite subgoals
-    }
+    }}
   ],
   "execution_order": [
-    {
+    {{
       "phase": 1,
       "parallelizable": [0, 1],  // subgoal indices that can run in parallel
       "sequential": [2]  // subgoals that must run after this phase
-    }
+    }}
   ],
   "expected_tools": ["list", "of", "expected", "tool", "types"]
-}"""
+}}"""
 
     def build_user_prompt(self, **kwargs: Any) -> str:
         """Build user prompt for query decomposition.

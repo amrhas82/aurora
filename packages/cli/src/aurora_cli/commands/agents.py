@@ -39,7 +39,6 @@ from aurora_cli.agent_discovery import (
 from aurora_cli.config import Config, load_config
 from aurora_cli.errors import handle_errors
 
-
 if TYPE_CHECKING:
     pass
 
@@ -62,6 +61,7 @@ def get_manifest_path(config: Config | None = None) -> Path:
         # Load config silently for path lookup
         import io
         import sys
+
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
@@ -86,6 +86,7 @@ def get_manifest(force_refresh: bool = False, config: Config | None = None) -> A
         # Load config silently
         import io
         import sys
+
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
@@ -206,10 +207,7 @@ def list_command(category: str | None, output_format: str) -> None:
         )
     else:
         # Group all agents by category
-        agents_by_category = {
-            cat: manifest.get_agents_by_category(cat)
-            for cat in AgentCategory
-        }
+        agents_by_category = {cat: manifest.get_agents_by_category(cat) for cat in AgentCategory}
 
         _display_agents_list(
             agents_by_category,
@@ -373,11 +371,13 @@ def refresh_command() -> None:
             if count > 0:
                 summary_lines.append(f"  {cat}: [cyan]{count}[/]")
 
-    console.print(Panel.fit(
-        "\n".join(summary_lines),
-        title="Refresh Summary",
-        border_style="green",
-    ))
+    console.print(
+        Panel.fit(
+            "\n".join(summary_lines),
+            title="Refresh Summary",
+            border_style="green",
+        )
+    )
     console.print()
 
 
@@ -476,11 +476,13 @@ def _display_agent_details(agent: AgentInfo) -> None:
         sections.append(f"[dim]Source: {agent.source_file}[/]")
 
     console.print()
-    console.print(Panel.fit(
-        "\n".join(sections),
-        title=f"[bold green]{agent.id}[/]",
-        border_style="green",
-    ))
+    console.print(
+        Panel.fit(
+            "\n".join(sections),
+            title=f"[bold green]{agent.id}[/]",
+            border_style="green",
+        )
+    )
     console.print()
 
 

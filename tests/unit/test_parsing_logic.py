@@ -14,7 +14,6 @@ import pytest
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.context.code_provider import CodeContextProvider
 
-
 # ==============================================================================
 # Query Parsing Tests
 # ==============================================================================
@@ -231,7 +230,7 @@ def test_clean_docstring_mixed_quotes():
     raw = '''"""It's a "test" docstring"""'''
     result = parser._clean_docstring(raw)
 
-    assert result == '''It's a "test" docstring'''
+    assert result == """It's a "test" docstring"""
 
 
 def test_clean_docstring_unicode():

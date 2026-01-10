@@ -36,15 +36,8 @@ See Also:
     - tests/integration/test_semantic_retrieval.py: Integration tests
 """
 
-from aurora_context_code.semantic.embedding_provider import (
-    EmbeddingProvider,
-    cosine_similarity,
-)
-from aurora_context_code.semantic.hybrid_retriever import (
-    HybridConfig,
-    HybridRetriever,
-)
-
+from aurora_context_code.semantic.embedding_provider import EmbeddingProvider, cosine_similarity
+from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
 __all__ = [
     "EmbeddingProvider",

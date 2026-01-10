@@ -268,7 +268,8 @@ class TestSchemaErrorHandling:
         cursor = conn.cursor()
 
         # Old schema (without git_commit_hash and last_modified)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE chunks (
                 chunk_id TEXT PRIMARY KEY,
                 content TEXT NOT NULL,
@@ -278,9 +279,11 @@ class TestSchemaErrorHandling:
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """)
+        """
+        )
 
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE activations (
                 chunk_id TEXT PRIMARY KEY,
                 base_level REAL NOT NULL DEFAULT 0.0,
@@ -288,7 +291,8 @@ class TestSchemaErrorHandling:
                 last_access_time REAL,
                 FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
             )
-        """)
+        """
+        )
 
         conn.commit()
         conn.close()

@@ -15,7 +15,6 @@ Exit codes:
 import sys
 from unittest.mock import MagicMock, Mock
 
-
 try:
     from aurora_core.store.memory import MemoryStore
     from aurora_soar.agent_registry import AgentInfo, AgentRegistry
@@ -55,9 +54,7 @@ def run_smoke_test() -> bool:
         # Mock config
         config = {
             "budget": {"monthly_limit_usd": 100.0},
-            "logging": {
-                "conversation_logging_enabled": False  # Disable logging for test
-            },
+            "logging": {"conversation_logging_enabled": False},  # Disable logging for test
         }
 
         # Mock LLM clients
@@ -87,9 +84,9 @@ def run_smoke_test() -> bool:
         print("  Testing: Verify orchestrator components...")
         assert hasattr(orchestrator, "execute"), "Orchestrator should have execute method"
         assert hasattr(orchestrator, "cost_tracker"), "Orchestrator should have cost tracker"
-        assert hasattr(orchestrator, "conversation_logger"), (
-            "Orchestrator should have conversation logger"
-        )
+        assert hasattr(
+            orchestrator, "conversation_logger"
+        ), "Orchestrator should have conversation logger"
         print("    ✓ Components verified")
 
         # Test 4: Verify agent registry works

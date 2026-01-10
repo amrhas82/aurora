@@ -4,14 +4,16 @@ Performance tests for unified init command.
 Tests init performance with various file counts to ensure
 initialization completes within acceptable time limits.
 """
+
 import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora_cli.commands.init import init_command
 from click.testing import CliRunner
+
+from aurora_cli.commands.init import init_command
 
 
 @pytest.fixture
@@ -168,9 +170,7 @@ def test_step_1_performance(temp_project, mock_git_init, benchmark):
     assert (temp_project / ".aurora" / "cache").exists()
 
 
-def test_step_2_performance_100_files(
-    temp_project, mock_memory_manager, mock_config, benchmark
-):
+def test_step_2_performance_100_files(temp_project, mock_memory_manager, mock_config, benchmark):
     """Test Step 2 (Memory Indexing) performance with 100 files."""
     from aurora_cli.commands.init import run_step_2_memory_indexing
 
@@ -264,7 +264,9 @@ def test_memory_usage_during_init(temp_project, mock_git_init):
 
     # Verify memory constraint (100MB target for 10K chunks, scale down for 100 files)
     # 100 files ≈ 1000 chunks, so expect <10MB increase
-    assert memory_increase < 50.0, f"Memory increase: {memory_increase:.2f}MB (target: <10MB for 1K chunks)"
+    assert (
+        memory_increase < 50.0
+    ), f"Memory increase: {memory_increase:.2f}MB (target: <10MB for 1K chunks)"
 
 
 def test_progress_bar_updates_smoothly(temp_project, mock_git_init):

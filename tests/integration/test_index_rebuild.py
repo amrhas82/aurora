@@ -17,11 +17,10 @@ import time
 from pathlib import Path
 
 import pytest
-from aurora_cli.memory_manager import MemoryManager
 
+from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
-
 
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 
@@ -46,10 +45,7 @@ class TestIndexRebuild:
     def memory_manager(self, memory_store):
         """Create MemoryManager with real components."""
         embedding_provider = EmbeddingProvider()
-        return MemoryManager(
-            memory_store=memory_store,
-            embedding_provider=embedding_provider
-        )
+        return MemoryManager(memory_store=memory_store, embedding_provider=embedding_provider)
 
     @pytest.fixture
     def test_codebase(self, tmp_path):
@@ -260,10 +256,7 @@ class TestBM25IdfRecalculation:
     def memory_manager(self, memory_store):
         """Create MemoryManager."""
         embedding_provider = EmbeddingProvider()
-        return MemoryManager(
-            memory_store=memory_store,
-            embedding_provider=embedding_provider
-        )
+        return MemoryManager(memory_store=memory_store, embedding_provider=embedding_provider)
 
     def test_idf_changes_with_corpus_size(self, memory_manager, memory_store, tmp_path):
         """Test that IDF scores change when corpus size changes."""

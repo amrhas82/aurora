@@ -21,12 +21,12 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
+
 from aurora_context_code.semantic.embedding_provider import (
     HAS_SENTENCE_TRANSFORMERS,
     EmbeddingProvider,
 )
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
-
 
 # Mark all tests as requiring ML dependencies
 pytestmark = [

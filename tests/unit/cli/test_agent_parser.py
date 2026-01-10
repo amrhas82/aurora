@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 
 import pytest
+
 from aurora_cli.agent_discovery.models import AgentCategory
 from aurora_cli.agent_discovery.parser import AgentParser
 
@@ -280,9 +281,7 @@ goal: Has source file
         assert agent is not None
         assert agent.source_file == "/path/to/agent.md"
 
-    def test_returns_none_for_missing_frontmatter(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_returns_none_for_missing_frontmatter(self, caplog: pytest.LogCaptureFixture) -> None:
         """Returns None for content without frontmatter."""
         content = "# Just markdown\n\nNo frontmatter here."
 

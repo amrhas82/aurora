@@ -49,12 +49,14 @@ class ModificationPlan:
     modified: list[RequirementBlock] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)  # requirement names
     renamed: list[dict[str, str]] = field(default_factory=list)  # {from, to}
-    section_presence: dict[str, bool] = field(default_factory=lambda: {
-        "added": False,
-        "modified": False,
-        "removed": False,
-        "renamed": False,
-    })
+    section_presence: dict[str, bool] = field(
+        default_factory=lambda: {
+            "added": False,
+            "modified": False,
+            "removed": False,
+            "renamed": False,
+        }
+    )
 
 
 # Regex pattern for requirement headers
@@ -128,7 +130,7 @@ def extract_requirements_section(content: str) -> RequirementsSectionParts:
 
     before = "\n".join(lines[:req_header_index])
     header_line = lines[req_header_index]
-    section_body_lines = lines[req_header_index + 1:end_index]
+    section_body_lines = lines[req_header_index + 1 : end_index]
 
     # Parse requirement blocks within section body
     blocks: list[RequirementBlock] = []
@@ -166,11 +168,13 @@ def extract_requirements_section(content: str) -> RequirementsSectionParts:
             cursor += 1
 
         raw = "\n".join(body_lines).rstrip()
-        blocks.append(RequirementBlock(
-            header_line=header_line_candidate,
-            name=name,
-            raw=raw,
-        ))
+        blocks.append(
+            RequirementBlock(
+                header_line=header_line_candidate,
+                name=name,
+                raw=raw,
+            )
+        )
 
     after = "\n".join(lines[end_index:])
     preamble = "\n".join(preamble_lines).rstrip()
@@ -209,15 +213,13 @@ def _split_top_level_sections(content: str) -> dict[str, str]:
         else:
             end_idx = len(lines)
 
-        body = "\n".join(lines[start_idx + 1:end_idx])
+        body = "\n".join(lines[start_idx + 1 : end_idx])
         result[title] = body
 
     return result
 
 
-def _get_section_case_insensitive(
-    sections: dict[str, str], desired: str
-) -> tuple[str, bool]:
+def _get_section_case_insensitive(sections: dict[str, str], desired: str) -> tuple[str, bool]:
     """Get a section by title (case-insensitive).
 
     Args:
@@ -234,9 +236,7 @@ def _get_section_case_insensitive(
     return "", False
 
 
-def _parse_requirement_blocks_from_section(
-    section_body: str
-) -> list[RequirementBlock]:
+def _parse_requirement_blocks_from_section(section_body: str) -> list[RequirementBlock]:
     """Parse requirement blocks from a section body.
 
     Args:
@@ -280,11 +280,13 @@ def _parse_requirement_blocks_from_section(
             buf.append(line)
             i += 1
 
-        blocks.append(RequirementBlock(
-            header_line=header_line,
-            name=name,
-            raw="\n".join(buf).rstrip(),
-        ))
+        blocks.append(
+            RequirementBlock(
+                header_line=header_line,
+                name=name,
+                raw="\n".join(buf).rstrip(),
+            )
+        )
 
     return blocks
 
@@ -314,10 +316,7 @@ def _parse_removed_names(section_body: str) -> list[str]:
             continue
 
         # Match bullet list format
-        bullet_match = re.match(
-            r"^\s*-\s*`?###\s*Requirement:\s*(.+?)`?\s*$",
-            line
-        )
+        bullet_match = re.match(r"^\s*-\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
         if bullet_match:
             names.append(normalize_requirement_name(bullet_match.group(1)))
 
@@ -345,14 +344,8 @@ def _parse_renamed_pairs(section_body: str) -> list[dict[str, str]]:
     current: dict[str, str] = {}
 
     for line in lines:
-        from_match = re.match(
-            r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$",
-            line
-        )
-        to_match = re.match(
-            r"^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$",
-            line
-        )
+        from_match = re.match(r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
+        to_match = re.match(r"^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
 
         if from_match:
             current["from"] = normalize_requirement_name(from_match.group(1))
@@ -360,10 +353,12 @@ def _parse_renamed_pairs(section_body: str) -> list[dict[str, str]]:
             current["to"] = normalize_requirement_name(to_match.group(1))
 
             if current.get("from") and current.get("to"):
-                pairs.append({
-                    "from": current["from"],
-                    "to": current["to"],
-                })
+                pairs.append(
+                    {
+                        "from": current["from"],
+                        "to": current["to"],
+                    }
+                )
                 current = {}
 
     return pairs
@@ -384,18 +379,10 @@ def parse_modification_spec(content: str) -> ModificationPlan:
     normalized = _normalize_line_endings(content)
     sections = _split_top_level_sections(normalized)
 
-    added_body, added_found = _get_section_case_insensitive(
-        sections, "ADDED Requirements"
-    )
-    modified_body, modified_found = _get_section_case_insensitive(
-        sections, "MODIFIED Requirements"
-    )
-    removed_body, removed_found = _get_section_case_insensitive(
-        sections, "REMOVED Requirements"
-    )
-    renamed_body, renamed_found = _get_section_case_insensitive(
-        sections, "RENAMED Requirements"
-    )
+    added_body, added_found = _get_section_case_insensitive(sections, "ADDED Requirements")
+    modified_body, modified_found = _get_section_case_insensitive(sections, "MODIFIED Requirements")
+    removed_body, removed_found = _get_section_case_insensitive(sections, "REMOVED Requirements")
+    renamed_body, renamed_found = _get_section_case_insensitive(sections, "RENAMED Requirements")
 
     return ModificationPlan(
         added=_parse_requirement_blocks_from_section(added_body),

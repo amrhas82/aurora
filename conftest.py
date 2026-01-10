@@ -14,7 +14,6 @@ This configuration supports:
 import sys
 from pathlib import Path
 
-
 # Get project root directory
 PROJECT_ROOT = Path(__file__).parent
 

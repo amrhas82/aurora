@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 import pytest
+
 from aurora_context_code.languages.python import PythonParser
 
 
@@ -28,7 +29,8 @@ class TestParserPerformance:
         test_file = tmp_path / "small.py"
         lines = []
         for i in range(10):
-            lines.append(f"""
+            lines.append(
+                f"""
 def function_{i}(x, y):
     \"\"\"Function {i}.\"\"\"
     if x > y:
@@ -37,7 +39,8 @@ def function_{i}(x, y):
         return y
     else:
         return 0
-""")
+"""
+            )
         test_file.write_text("\n".join(lines))
         return test_file
 
@@ -47,7 +50,8 @@ def function_{i}(x, y):
         test_file = tmp_path / "medium.py"
         lines = []
         for i in range(50):
-            lines.append(f"""
+            lines.append(
+                f"""
 class Class_{i}:
     \"\"\"Class {i}.\"\"\"
 
@@ -61,7 +65,8 @@ class Class_{i}:
             if i % 2 == 0:
                 x += i
         return x + y
-""")
+"""
+            )
         test_file.write_text("\n".join(lines))
         return test_file
 
@@ -71,7 +76,8 @@ class Class_{i}:
         test_file = tmp_path / "large.py"
         lines = []
         for i in range(100):
-            lines.append(f"""
+            lines.append(
+                f"""
 class LargeClass_{i}:
     \"\"\"Large class {i}.\"\"\"
 
@@ -88,7 +94,8 @@ class LargeClass_{i}:
             else:
                 result.append(0)
         return result
-""")
+"""
+            )
         test_file.write_text("\n".join(lines))
         return test_file
 
@@ -143,9 +150,9 @@ class LargeClass_{i}:
         # Allow for reasonable variance due to system load and GC (up to 2x the avg)
         variance = max_duration - min_duration
         max_allowed_variance = avg_duration * 2.0
-        assert variance < max_allowed_variance, (
-            f"Performance variance too high: {variance:.3f}s (allowed: {max_allowed_variance:.3f}s)"
-        )
+        assert (
+            variance < max_allowed_variance
+        ), f"Performance variance too high: {variance:.3f}s (allowed: {max_allowed_variance:.3f}s)"
 
     def test_parse_returns_correct_count(self, parser, large_file):
         """Verify parser extracts expected number of elements."""
@@ -163,12 +170,14 @@ class LargeClass_{i}:
         test_file = tmp_path / f"scale_{file_size}.py"
         lines = []
         for i in range(file_size):
-            lines.append(f"""
+            lines.append(
+                f"""
 def function_{i}(x):
     if x > 0:
         return x * 2
     return 0
-""")
+"""
+            )
         test_file.write_text("\n".join(lines))
 
         start = time.time()
@@ -289,10 +298,12 @@ class TestColdStartPerformance:
     def test_first_parse_not_significantly_slower(self, tmp_path):
         """Test that first parse is not much slower than subsequent parses."""
         test_file = tmp_path / "test.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def test():
     return 42
-""")
+"""
+        )
 
         parser = PythonParser()
 

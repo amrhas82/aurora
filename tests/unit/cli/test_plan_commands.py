@@ -13,6 +13,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from click.testing import CliRunner
+
 from aurora_cli.commands.plan import plan_group
 from aurora_cli.planning.core import (
     archive_plan,
@@ -22,7 +24,6 @@ from aurora_cli.planning.core import (
     show_plan,
 )
 from aurora_cli.planning.models import Complexity, Plan, PlanManifest, PlanStatus, Subgoal
-from click.testing import CliRunner
 
 
 @pytest.fixture
@@ -89,7 +90,8 @@ def create_complete_plan_structure(plan_dir: Path, plan: Plan) -> None:
     (plan_dir / "agents.json").write_text(plan.model_dump_json(indent=2))
 
     # Create plan.md
-    (plan_dir / "plan.md").write_text(f"""# Plan: {plan.plan_id}
+    (plan_dir / "plan.md").write_text(
+        f"""# Plan: {plan.plan_id}
 
 **Goal:** {plan.goal}
 
@@ -99,10 +101,12 @@ def create_complete_plan_structure(plan_dir: Path, plan: Plan) -> None:
 ## Subgoals
 
 {chr(10).join(f"### {i}. {sg.title}" + chr(10) + sg.description for i, sg in enumerate(plan.subgoals, 1))}
-""")
+"""
+    )
 
     # Create prd.md
-    (plan_dir / "prd.md").write_text(f"""# Product Requirements: {plan.plan_id}
+    (plan_dir / "prd.md").write_text(
+        f"""# Product Requirements: {plan.plan_id}
 
 ## Overview
 
@@ -115,17 +119,20 @@ def create_complete_plan_structure(plan_dir: Path, plan: Plan) -> None:
 ## Functional Requirements
 
 <!-- Add functional requirements here -->
-""")
+"""
+    )
 
     # Create tasks.md
-    (plan_dir / "tasks.md").write_text(f"""# Tasks: {plan.plan_id}
+    (plan_dir / "tasks.md").write_text(
+        f"""# Tasks: {plan.plan_id}
 
 Goal: {plan.goal}
 
 ## Implementation Tasks
 
 {chr(10).join(f"- [ ] {i}.0 {sg.title}" for i, sg in enumerate(plan.subgoals, 1))}
-""")
+"""
+    )
 
 
 class TestInitPlanningDirectory:
@@ -199,21 +206,15 @@ class TestInitPlanningDirectory:
 class TestInitCommand:
     """Tests for aur plan init CLI command."""
 
-    def test_init_cli_creates_structure(
-        self, cli_runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_cli_creates_structure(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """aur plan init creates directory structure."""
-        result = cli_runner.invoke(
-            plan_group, ["init", "--path", str(tmp_path / "plans")]
-        )
+        result = cli_runner.invoke(plan_group, ["init", "--path", str(tmp_path / "plans")])
 
         assert result.exit_code == 0
         assert "initialized" in result.output.lower() or "Active plans" in result.output
         assert (tmp_path / "plans" / "active").is_dir()
 
-    def test_init_cli_already_exists_warning(
-        self, cli_runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_cli_already_exists_warning(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """aur plan init shows warning when already initialized."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -223,9 +224,7 @@ class TestInitCommand:
         assert result.exit_code == 0
         assert "already exists" in result.output.lower()
 
-    def test_init_cli_custom_path(
-        self, cli_runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_cli_custom_path(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """aur plan init uses --path option."""
         custom_path = tmp_path / "custom" / "plans"
 
@@ -238,9 +237,7 @@ class TestInitCommand:
 class TestListPlans:
     """Tests for list_plans core function."""
 
-    def test_list_active_plans(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_list_active_plans(self, tmp_path: Path, sample_plan: Plan) -> None:
         """list_plans returns active plans by default."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -255,9 +252,7 @@ class TestListPlans:
         assert result.plans[0].plan_id == "0001-oauth-auth"
         assert result.plans[0].status == "active"
 
-    def test_list_archived_plans(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_list_archived_plans(self, tmp_path: Path, sample_plan: Plan) -> None:
         """list_plans --archived returns archived plans."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -273,9 +268,7 @@ class TestListPlans:
         assert len(result.plans) == 1
         assert result.plans[0].status == "archived"
 
-    def test_list_all_plans(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_list_all_plans(self, tmp_path: Path, sample_plan: Plan) -> None:
         """list_plans --all returns both active and archived."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -317,9 +310,7 @@ class TestListPlans:
         assert result.warning is not None
         assert "init" in result.warning.lower()
 
-    def test_list_sorted_by_date(
-        self, tmp_path: Path, sample_subgoals: list[Subgoal]
-    ) -> None:
+    def test_list_sorted_by_date(self, tmp_path: Path, sample_subgoals: list[Subgoal]) -> None:
         """list_plans returns newest first."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -393,9 +384,7 @@ class TestListCommand:
 class TestShowPlan:
     """Tests for show_plan core function."""
 
-    def test_show_existing_plan(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_show_existing_plan(self, tmp_path: Path, sample_plan: Plan) -> None:
         """show_plan returns full plan details."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -413,9 +402,7 @@ class TestShowPlan:
         assert result.files_status["plan.md"] is True
         assert result.files_status["prd.md"] is True  # Complete structure creates all files
 
-    def test_show_archived_plan(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_show_archived_plan(self, tmp_path: Path, sample_plan: Plan) -> None:
         """show_plan --archived finds archived plan."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -441,9 +428,7 @@ class TestShowPlan:
         assert result.error is not None
         assert "not found" in result.error.lower()
 
-    def test_show_wrong_location_hint(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_show_wrong_location_hint(self, tmp_path: Path, sample_plan: Plan) -> None:
         """show_plan suggests correct flag when plan in other location."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -459,9 +444,7 @@ class TestShowPlan:
         assert result.success is False
         assert "--archived" in result.error
 
-    def test_show_file_status(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_show_file_status(self, tmp_path: Path, sample_plan: Plan) -> None:
         """show_plan includes file status for all 4 files."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -522,9 +505,7 @@ class TestShowCommand:
 class TestArchivePlan:
     """Tests for archive_plan core function."""
 
-    def test_archive_plan_success(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_archive_plan_success(self, tmp_path: Path, sample_plan: Plan) -> None:
         """archive_plan moves plan to archive directory."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -549,9 +530,7 @@ class TestArchivePlan:
         assert result.success is False
         assert "not found" in result.error.lower()
 
-    def test_archive_already_archived(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_archive_already_archived(self, tmp_path: Path, sample_plan: Plan) -> None:
         """archive_plan returns error when already archived."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -589,9 +568,7 @@ class TestArchivePlan:
         assert result.duration_days is not None
         assert result.duration_days >= 5
 
-    def test_archive_updates_manifest(
-        self, tmp_path: Path, sample_plan: Plan
-    ) -> None:
+    def test_archive_updates_manifest(self, tmp_path: Path, sample_plan: Plan) -> None:
         """archive_plan updates manifest.json."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -627,9 +604,7 @@ class TestArchiveCommand:
         create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
-            result = cli_runner.invoke(
-                plan_group, ["archive", sample_plan.plan_id], input="y\n"
-            )
+            result = cli_runner.invoke(plan_group, ["archive", sample_plan.plan_id], input="y\n")
 
         assert result.exit_code == 0
         assert "archived" in result.output.lower()
@@ -645,9 +620,7 @@ class TestArchiveCommand:
         create_complete_plan_structure(plan_path, sample_plan)
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
-            result = cli_runner.invoke(
-                plan_group, ["archive", sample_plan.plan_id, "--yes"]
-            )
+            result = cli_runner.invoke(plan_group, ["archive", sample_plan.plan_id, "--yes"])
 
         assert result.exit_code == 0
         assert "archived" in result.output.lower()
@@ -739,7 +712,11 @@ class TestCreatePlan:
         # In tests, SOAR fails and falls back to heuristics (3 subgoals, SIMPLE complexity)
         assert len(result.plan.subgoals) >= 3
         # Heuristics give SIMPLE complexity for most goals
-        assert result.plan.complexity in [Complexity.SIMPLE, Complexity.MODERATE, Complexity.COMPLEX]
+        assert result.plan.complexity in [
+            Complexity.SIMPLE,
+            Complexity.MODERATE,
+            Complexity.COMPLEX,
+        ]
 
     def test_create_plan_no_decompose(self, tmp_path: Path) -> None:
         """create_plan --no-decompose creates single subgoal."""
@@ -811,18 +788,14 @@ class TestCreatePlan:
         )
 
         assert result.success is True
-        manifest = PlanManifest.model_validate_json(
-            (plans_dir / "manifest.json").read_text()
-        )
+        manifest = PlanManifest.model_validate_json((plans_dir / "manifest.json").read_text())
         assert result.plan.plan_id in manifest.active_plans
 
 
 class TestCreateCommand:
     """Tests for aur plan create CLI command."""
 
-    def test_create_cli_success(
-        self, cli_runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_create_cli_success(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """aur plan create creates plan and shows output."""
         plans_dir = tmp_path / "plans"
 
@@ -837,9 +810,7 @@ class TestCreateCommand:
         assert "Plan created" in result.output
         assert "Subgoals" in result.output
 
-    def test_create_cli_json_output(
-        self, cli_runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_create_cli_json_output(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """aur plan create --format json outputs valid JSON."""
         plans_dir = tmp_path / "plans"
         init_planning_directory(path=plans_dir)
@@ -856,7 +827,7 @@ class TestCreateCommand:
         # Extract JSON from output (skip warning messages at the beginning)
         output = result.output.strip()
         # Find the start of JSON (first '{' character)
-        json_start = output.find('{')
+        json_start = output.find("{")
         assert json_start >= 0, f"No JSON found in output: {output[:200]}"
         json_str = output[json_start:]
         data = json.loads(json_str)
@@ -864,9 +835,7 @@ class TestCreateCommand:
         assert "goal" in data
         assert "subgoals" in data
 
-    def test_create_cli_goal_too_short(
-        self, cli_runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_create_cli_goal_too_short(self, cli_runner: CliRunner, tmp_path: Path) -> None:
         """aur plan create rejects short goals."""
         plans_dir = tmp_path / "plans"
 

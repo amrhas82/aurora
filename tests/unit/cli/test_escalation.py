@@ -12,11 +12,8 @@ from __future__ import annotations
 from unittest.mock import Mock, patch
 
 import pytest
-from aurora_cli.escalation import (
-    AutoEscalationHandler,
-    EscalationConfig,
-    EscalationResult,
-)
+
+from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig, EscalationResult
 
 
 class TestEscalationConfig:

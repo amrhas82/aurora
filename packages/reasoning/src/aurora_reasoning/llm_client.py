@@ -8,12 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Any, cast
 
 from pydantic import BaseModel
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 
 class LLMResponse(BaseModel):

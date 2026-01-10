@@ -11,12 +11,9 @@ Tests how the verification system handles intentionally bad decompositions:
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from aurora_reasoning.decompose import DecompositionResult
-from aurora_reasoning.verify import (
-    VerificationOption,
-    VerificationResult,
-    VerificationVerdict,
-)
+from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict
 from aurora_soar.phases.verify import verify_decomposition
 
 

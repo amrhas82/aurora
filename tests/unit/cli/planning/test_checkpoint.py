@@ -284,8 +284,8 @@ class TestNonInteractiveMode:
 
     def test_yes_flag_skips_prompt(self, tmp_path, monkeypatch) -> None:
         """Test that yes=True skips confirmation prompt."""
-        from aurora_cli.planning.core import create_plan
         from aurora_cli.config import Config
+        from aurora_cli.planning.core import create_plan
 
         # Create config
         config = Config()
@@ -315,8 +315,8 @@ class TestNonInteractiveMode:
 
     def test_non_interactive_flag_alias(self, tmp_path, monkeypatch) -> None:
         """Test that non_interactive=True works as alias for yes=True."""
-        from aurora_cli.planning.core import create_plan
         from aurora_cli.config import Config
+        from aurora_cli.planning.core import create_plan
 
         # Create config
         config = Config()
@@ -346,8 +346,8 @@ class TestNonInteractiveMode:
 
     def test_interactive_mode_prompts(self, tmp_path, monkeypatch) -> None:
         """Test that yes=False (default) prompts user."""
-        from aurora_cli.planning.core import create_plan
         from aurora_cli.config import Config
+        from aurora_cli.planning.core import create_plan
 
         # Create config
         config = Config()

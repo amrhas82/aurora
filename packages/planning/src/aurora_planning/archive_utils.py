@@ -69,9 +69,7 @@ def archive_plan(
     # Validate source path
     source_dir = plans_dir / "active" / plan_id
     if not source_dir.exists():
-        raise FileNotFoundError(
-            f"Plan {plan_id} not found in active directory: {source_dir}"
-        )
+        raise FileNotFoundError(f"Plan {plan_id} not found in active directory: {source_dir}")
 
     if not source_dir.is_dir():
         raise ValueError(f"Path exists but is not a directory: {source_dir}")
@@ -151,16 +149,12 @@ def restore_plan(
     # Validate source path
     source_dir = plans_dir / "archive" / archive_name
     if not source_dir.exists():
-        raise FileNotFoundError(
-            f"Archived plan not found: {source_dir}"
-        )
+        raise FileNotFoundError(f"Archived plan not found: {source_dir}")
 
     # Check destination
     dest_dir = plans_dir / "active" / plan_id
     if dest_dir.exists():
-        raise FileExistsError(
-            f"Plan {plan_id} already exists in active directory: {dest_dir}"
-        )
+        raise FileExistsError(f"Plan {plan_id} already exists in active directory: {dest_dir}")
 
     # Ensure active directory exists
     (plans_dir / "active").mkdir(parents=True, exist_ok=True)

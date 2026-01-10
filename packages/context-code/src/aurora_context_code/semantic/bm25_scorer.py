@@ -28,7 +28,6 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, List
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +67,7 @@ def tokenize(text: str, _recursion_level: int = 0) -> list[str]:
 
     # Step 1: Split by whitespace and special characters (except _ and .)
     # This handles: "user@email.com" → ["user", "email.com"]
-    parts = re.split(r'[^\w\.\-]+', text)
+    parts = re.split(r"[^\w\.\-]+", text)
 
     for part in parts:
         if not part:
@@ -76,8 +75,8 @@ def tokenize(text: str, _recursion_level: int = 0) -> list[str]:
 
         # Step 2: Split by dots (but preserve original)
         # "auth.oauth.client" → ["auth", "oauth", "client"]
-        if '.' in part:
-            dot_parts = part.split('.')
+        if "." in part:
+            dot_parts = part.split(".")
             # Recursively tokenize each dot part
             for dot_part in dot_parts:
                 if dot_part:
@@ -86,9 +85,9 @@ def tokenize(text: str, _recursion_level: int = 0) -> list[str]:
                     tokens.extend(sub_tokens)
             # Also preserve the full dotted name
             tokens.append(part)
-        elif '_' in part:
+        elif "_" in part:
             # Step 3: Handle snake_case (preserve original)
-            snake_parts = part.split('_')
+            snake_parts = part.split("_")
             # Recursively tokenize each snake_case part
             for snake_part in snake_parts:
                 if snake_part:
@@ -104,7 +103,7 @@ def tokenize(text: str, _recursion_level: int = 0) -> list[str]:
             # - [A-Z][a-z]+ : Capitalized words like "Request"
             # - [a-z]+ : Lowercase words like "get", "user"
             # - [0-9]+ : Numbers
-            camel_pattern = r'([A-Z]+(?=[A-Z][a-z]|\b)|[A-Z][a-z]+|[a-z]+|[0-9]+)'
+            camel_pattern = r"([A-Z]+(?=[A-Z][a-z]|\b)|[A-Z][a-z]+|[a-z]+|[0-9]+)"
             camel_parts = re.findall(camel_pattern, part)
 
             if camel_parts and len(camel_parts) > 1:
@@ -228,9 +227,7 @@ class BM25Scorer:
         self.idf = {}
         for term, doc_count in self.term_doc_counts.items():
             # IDF formula: log((N - n(t) + 0.5) / (n(t) + 0.5) + 1)
-            idf_score = math.log(
-                (self.corpus_size - doc_count + 0.5) / (doc_count + 0.5) + 1
-            )
+            idf_score = math.log((self.corpus_size - doc_count + 0.5) / (doc_count + 0.5) + 1)
             self.idf[term] = idf_score
 
         logger.info(
@@ -274,9 +271,7 @@ class BM25Scorer:
 
             # BM25 formula
             numerator = freq * (self.k1 + 1)
-            denominator = freq + self.k1 * (
-                1 - self.b + self.b * doc_length / self.avg_doc_length
-            )
+            denominator = freq + self.k1 * (1 - self.b + self.b * doc_length / self.avg_doc_length)
 
             term_score = idf_score * (numerator / denominator)
             bm25_score += term_score
@@ -337,9 +332,7 @@ class BM25Scorer:
         # Validate version
         version = index_data.get("version", "unknown")
         if version != "1.0":
-            logger.warning(
-                f"BM25 index version mismatch: got {version}, expected 1.0"
-            )
+            logger.warning(f"BM25 index version mismatch: got {version}, expected 1.0")
 
         # Restore index data
         self.k1 = index_data["k1"]

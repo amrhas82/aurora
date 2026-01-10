@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
 from aurora_planning.commands.archive import ArchiveCommand
 from aurora_planning.validators.validator import Validator
 
@@ -41,9 +42,7 @@ class TestArchiveCommand:
         """Create ArchiveCommand instance."""
         return ArchiveCommand()
 
-    def test_archive_change_successfully(
-        self, archive_command, setup_openspec_structure, temp_dir
-    ):
+    def test_archive_change_successfully(self, archive_command, setup_openspec_structure, temp_dir):
         """Should archive a change successfully."""
         # Create a test change
         change_name = "test-feature"
@@ -108,23 +107,16 @@ Then expected result happens"""
         (change_spec_dir / "spec.md").write_text(spec_content)
 
         # Execute archive with yes flag and skip validation for speed
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         # Verify spec was created from skeleton and ADDED requirement applied
-        main_spec_path = (
-            temp_dir / ".aurora/plans" / "specs" / "test-capability" / "spec.md"
-        )
+        main_spec_path = temp_dir / ".aurora/plans" / "specs" / "test-capability" / "spec.md"
         updated_content = main_spec_path.read_text()
         assert "# test-capability Specification" in updated_content
         assert "## Purpose" in updated_content
         assert f"created by archiving change {change_name}" in updated_content
         assert "## Requirements" in updated_content
-        assert (
-            "### Requirement: The system SHALL provide test capability"
-            in updated_content
-        )
+        assert "### Requirement: The system SHALL provide test capability" in updated_content
         assert "#### Scenario: Basic test" in updated_content
 
     def test_allow_removed_requirements_for_new_spec(
@@ -155,16 +147,11 @@ The system SHALL support logo and backgroundColor fields for gift cards.
         (change_spec_dir / "spec.md").write_text(spec_content)
 
         # Execute archive - should succeed with warning about REMOVED requirements
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         # Verify warning was logged about REMOVED requirements being ignored
         captured = capsys.readouterr()
-        assert (
-            "2 REMOVED requirement(s) ignored for new spec (nothing to remove)"
-            in captured.out
-        )
+        assert "2 REMOVED requirement(s) ignored for new spec (nothing to remove)" in captured.out
 
         # Verify spec was created with only ADDED requirements
         main_spec_path = temp_dir / ".aurora/plans" / "specs" / "gift-card" / "spec.md"
@@ -206,9 +193,7 @@ Modified content."""
         (change_spec_dir / "spec.md").write_text(spec_content)
 
         # Execute archive - should abort with error message
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         # Verify error message mentions MODIFIED not allowed for new specs
         captured = capsys.readouterr()
@@ -219,9 +204,7 @@ Modified content."""
         assert "Aborted. No files were changed." in captured.out
 
         # Verify spec was NOT created
-        main_spec_path = (
-            temp_dir / ".aurora/plans" / "specs" / "new-capability" / "spec.md"
-        )
+        main_spec_path = temp_dir / ".aurora/plans" / "specs" / "new-capability" / "spec.md"
         assert not main_spec_path.exists()
 
         # Verify change was NOT archived
@@ -250,9 +233,7 @@ New feature description.
         (change_spec_dir / "spec.md").write_text(spec_content)
 
         # Execute archive - should abort with error message
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         # Verify error message mentions RENAMED not allowed for new specs
         captured = capsys.readouterr()
@@ -263,22 +244,16 @@ New feature description.
         assert "Aborted. No files were changed." in captured.out
 
         # Verify spec was NOT created
-        main_spec_path = (
-            temp_dir / ".aurora/plans" / "specs" / "another-capability" / "spec.md"
-        )
+        main_spec_path = temp_dir / ".aurora/plans" / "specs" / "another-capability" / "spec.md"
         assert not main_spec_path.exists()
 
         # Verify change was NOT archived
         assert change_dir.exists()
 
-    def test_error_if_change_not_found(
-        self, archive_command, setup_openspec_structure, temp_dir
-    ):
+    def test_error_if_change_not_found(self, archive_command, setup_openspec_structure, temp_dir):
         """Should throw error if change does not exist."""
         with pytest.raises(RuntimeError, match="Change 'non-existent-change' not found"):
-            archive_command.execute(
-                "non-existent-change", target_path=str(temp_dir), yes=True
-            )
+            archive_command.execute("non-existent-change", target_path=str(temp_dir), yes=True)
 
     def test_error_if_archive_already_exists(
         self, archive_command, setup_openspec_structure, temp_dir
@@ -290,9 +265,7 @@ New feature description.
 
         # Create existing archive with same date
         date = datetime.now().strftime("%Y-%m-%d")
-        archive_path = (
-            temp_dir / ".aurora/plans" / "changes" / "archive" / f"{date}-{change_name}"
-        )
+        archive_path = temp_dir / ".aurora/plans" / "changes" / "archive" / f"{date}-{change_name}"
         archive_path.mkdir(parents=True)
 
         # Try to archive
@@ -339,9 +312,7 @@ New feature description.
         archives = list(archive_dir.iterdir())
         assert len(archives) == 1
 
-    def test_skip_specs_flag(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
-    ):
+    def test_skip_specs_flag(self, archive_command, setup_openspec_structure, temp_dir, capsys):
         """Should skip spec updates when --skip-specs flag is used."""
         change_name = "skip-specs-feature"
         change_dir = temp_dir / ".aurora/plans" / "changes" / change_name
@@ -366,9 +337,7 @@ New feature description.
         assert "Skipping spec updates (--skip-specs flag provided)." in captured.out
 
         # Verify spec was NOT copied to main specs
-        main_spec_path = (
-            temp_dir / ".aurora/plans" / "specs" / "test-capability" / "spec.md"
-        )
+        main_spec_path = temp_dir / ".aurora/plans" / "specs" / "test-capability" / "spec.md"
         assert not main_spec_path.exists()
 
         # Verify change was still archived
@@ -426,9 +395,7 @@ The system will log all events.
         assert len(archives) == 1
         assert change_name in archives[0].name
 
-    def test_header_normalization(
-        self, archive_command, setup_openspec_structure, temp_dir
-    ):
+    def test_header_normalization(self, archive_command, setup_openspec_structure, temp_dir):
         """Should support header trim-only normalization for matching."""
         change_name = "normalize-headers"
         change_dir = temp_dir / ".aurora/plans" / "changes" / change_name
@@ -458,17 +425,13 @@ Some details."""
 Updated details."""
         (change_spec_dir / "spec.md").write_text(delta_content)
 
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         updated = (main_spec_dir / "spec.md").read_text()
         assert "### Requirement: Important Rule" in updated
         assert "Updated details." in updated
 
-    def test_operations_applied_in_order(
-        self, archive_command, setup_openspec_structure, temp_dir
-    ):
+    def test_operations_applied_in_order(self, archive_command, setup_openspec_structure, temp_dir):
         """Should apply operations in order: RENAMED → REMOVED → MODIFIED → ADDED."""
         change_name = "apply-order"
         change_dir = temp_dir / ".aurora/plans" / "changes" / change_name
@@ -511,9 +474,7 @@ updated C
 content D"""
         (change_spec_dir / "spec.md").write_text(delta_content)
 
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         updated = (main_spec_dir / "spec.md").read_text()
         assert "### Requirement: C" in updated
@@ -553,9 +514,7 @@ new text
 ### Requirement: Another Missing"""
         (change_spec_dir / "spec.md").write_text(delta_content)
 
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         # Should not change the main spec and should not archive the change dir
         still = (main_spec_dir / "spec.md").read_text()
@@ -598,9 +557,7 @@ old body"""
 new body"""
         (change_spec_dir / "spec.md").write_text(bad_delta)
 
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
         unchanged = (main_spec_dir / "spec.md").read_text()
         assert unchanged == main_content
         # Assert error message format and abort notice
@@ -620,17 +577,13 @@ new body"""
 new body"""
         (change_spec_dir / "spec.md").write_text(good_delta)
 
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
         updated = (main_spec_dir / "spec.md").read_text()
         assert "### Requirement: New" in updated
         assert "new body" in updated
         assert "### Requirement: Old" not in updated
 
-    def test_multiple_specs_atomic(
-        self, archive_command, setup_openspec_structure, temp_dir
-    ):
+    def test_multiple_specs_atomic(self, archive_command, setup_openspec_structure, temp_dir):
         """Should process multiple specs atomically (any failure aborts all)."""
         change_name = "multi-spec-atomic"
         change_dir = temp_dir / ".aurora/plans" / "changes" / change_name
@@ -684,9 +637,7 @@ E1 updated"""
 ### Requirement: Missing"""
         )
 
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         e1 = epsilon_main.read_text()
         z1 = zeta_main.read_text()
@@ -728,9 +679,7 @@ E1 updated"""
             "# Psi - Changes\n\n## RENAMED Requirements\n- FROM: `### Requirement: P1`\n- TO: `### Requirement: P2`\n\n## MODIFIED Requirements\n### Requirement: P2\nupdated"
         )
 
-        archive_command.execute(
-            change_name, target_path=str(temp_dir), yes=True, no_validate=True
-        )
+        archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
 
         # Verify aggregated totals line was printed
         captured = capsys.readouterr()

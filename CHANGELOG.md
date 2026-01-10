@@ -7,6 +7,94 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-01-10
+
+### Added - Planning Flow & Execution (PRD-0026: All 4 Sprints)
+
+**`aur goals` Command:**
+- New command for decomposing high-level goals into actionable subgoals with agent assignments
+- SOAR-based goal decomposition with 2-7 subgoals per goal
+- Automatic agent matching using keyword patterns and LLM fallback
+- Memory context integration with ACT-R activation-based search
+- Generates `goals.json` in `.aurora/plans/NNNN-slug/` for `/plan` skill integration
+- Interactive user review flow with `$EDITOR` integration
+- Validation: 10-500 character goals, CLI tool existence checking
+- **Options:**
+  - `--tool`, `-t`: CLI tool selection (claude/cursor/windsurf)
+  - `--model`, `-m`: Model selection (sonnet/opus)
+  - `--context`, `-c`: Context files for informed decomposition
+  - `--no-decompose`: Skip decomposition for simple single-task goals
+  - `--format`, `-f`: Output format (rich/json)
+  - `--yes`, `-y`: Skip confirmation prompts
+  - `--verbose`, `-v`: Show detailed progress
+
+**Planning Flow Workflow:**
+1. `aur goals "feature description"` - Decompose goal → creates `goals.json`
+2. `/plan` skill in Claude Code - Generate PRD and tasks from `goals.json`
+3. `aur implement` or `aur spawn` - Execute tasks sequentially or in parallel
+
+**Documentation:**
+- `docs/commands/aur-goals.md` - Comprehensive command reference (200+ lines)
+- `docs/workflows/planning-flow.md` - Complete workflow guide (400+ lines)
+- `examples/goals/goals-example.json` - Reference OAuth2 authentication example
+- Updated `README.md` with planning flow quick start
+- Updated `COMMANDS.md` with goals command and goals.json format specification
+
+**Test Coverage:**
+- 24 unit tests for goals command (100% coverage of core functionality)
+- 4 E2E tests for command workflow
+- 5 E2E tests for goals → /plan integration
+- **Total: 33 new tests passing**
+
+**Related Files:**
+- Core implementation: `packages/cli/src/aurora_cli/commands/goals.py`
+- Planning models: Extended `packages/cli/src/aurora_cli/planning/models.py`
+- Planning core: Extended `packages/cli/src/aurora_cli/planning/core.py`
+- Tests: `packages/cli/tests/test_commands/test_goals.py`
+- E2E tests: `tests/e2e/test_goals_command.py`, `tests/e2e/test_goals_plan_flow.py`
+
+**Configuration:**
+- Environment variables: `AURORA_GOALS_TOOL`, `AURORA_GOALS_MODEL`
+- Config file support: `[goals]` section with `default_tool` and `default_model`
+- Resolution order: CLI flag → env var → config file → default
+
+**`aur spawn` Command (Sprint 3):**
+- New command for parallel task execution from terminal
+- Reads `tasks.md` with agent metadata comments (`<!-- agent: X -->`)
+- Parallel spawns CLI tools (claude, cursor, aider, etc.) per task
+- Reports completion status with rich progress display
+- Lightweight ~100-line spawning primitive (90% reduction vs complex orchestration)
+
+**Enhanced `aur soar` Command (Sprint 3):**
+- CLI-agnostic execution using `CLIPipeLLMClient`
+- Parallel spawning for research sub-questions
+- Terminal-based orchestrator for complex queries
+- Tool/model resolution: CLI flag → env var → config → default
+
+**Infrastructure (Sprints 1-2):**
+- New `aurora-spawner` package: Core spawning primitives
+- New `implement` package: In-Claude execution for `/implement` skill
+- SOAR collect phase now uses real agent spawning (replaced `_mock_agent_execution()`)
+- Deprecated `AgentRegistry`, unified on `agent_discovery` module
+- Agent gap detection with LLM fallback for capability matching
+
+### Changed
+
+**Documentation Reorganization:**
+- Consolidated 280+ scattered files into organized structure
+- Created 4 main directories: `reference/`, `guides/`, `development/`, `archive/`
+- Added 3 specialized directories: `commands/`, `workflows/`, `examples/`
+- Created README.md index for each section
+- Updated all internal documentation cross-references
+- Moved root-level completion summaries to archive
+- Comprehensive Sprint 4 documentation (1,695 lines COMMANDS.md, 1,954 lines TOOLS_GUIDE.md)
+
+### Removed
+
+**Test Artifacts:**
+- Removed accidentally committed `MagicMock/` test fixtures from repository root
+- Added to `.gitignore` to prevent future commits
+
 ## [0.5.0] - 2026-01-06
 
 ### Removed

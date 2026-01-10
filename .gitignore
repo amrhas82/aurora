@@ -78,3 +78,8 @@ coverage.xml
 htmlcov/
 cli_full_test.txt
 openspec-source/
+
+# Test artifacts that should use tmp directories
+MagicMock/
+test_plans/
+fixtures/

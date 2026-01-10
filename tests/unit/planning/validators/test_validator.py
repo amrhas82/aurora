@@ -12,6 +12,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from aurora_cli.planning.validation.validator import Validator
 
 
@@ -398,5 +399,7 @@ The system MUST support mixed case delta headers.
 
             # Should fail because no deltas found
             assert report.valid is False
-            assert any("no deltas" in issue.message.lower() or "no modifications" in issue.message.lower()
-                      for issue in report.issues)
+            assert any(
+                "no deltas" in issue.message.lower() or "no modifications" in issue.message.lower()
+                for issue in report.issues
+            )

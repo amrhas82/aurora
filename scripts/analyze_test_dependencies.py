@@ -58,10 +58,10 @@ class TestDependencyAnalyzer:
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
                     for alias in node.names:
-                        imports.add(alias.name.split('.')[0])
+                        imports.add(alias.name.split(".")[0])
                 elif isinstance(node, ast.ImportFrom):
                     if node.module:
-                        imports.add(node.module.split('.')[0])
+                        imports.add(node.module.split(".")[0])
 
         except Exception as e:
             print(f"Error parsing {file_path}: {e}", file=sys.stderr)
@@ -177,7 +177,7 @@ class TestDependencyAnalyzer:
                 batch = list(remaining)
                 print(
                     f"Warning: Batch {len(batches) + 1} may have circular dependencies",
-                    file=sys.stderr
+                    file=sys.stderr,
                 )
 
             batches.append(sorted(batch))
@@ -219,9 +219,7 @@ class TestDependencyAnalyzer:
             "circular_details": [{"file1": c[0], "file2": c[1]} for c in circular],
             "migration_batches": batches,
             "batch_count": len(batches),
-            "dependencies": {
-                file: list(deps) for file, deps in self.dependencies.items()
-            },
+            "dependencies": {file: list(deps) for file, deps in self.dependencies.items()},
         }
 
 
@@ -259,7 +257,7 @@ def main():
         if not args.files.exists():
             print(f"Error: File list {args.files} does not exist", file=sys.stderr)
             sys.exit(1)
-        files_to_analyze = args.files.read_text().strip().split('\n')
+        files_to_analyze = args.files.read_text().strip().split("\n")
         files_to_analyze = [f.strip() for f in files_to_analyze if f.strip()]
 
     # Perform analysis
@@ -283,8 +281,11 @@ def main():
     if files_to_analyze:
         print(f"Files to migrate: {results['files_analyzed']}", file=sys.stderr)
         print(f"Migration batches: {results['batch_count']}", file=sys.stderr)
-    if results['circular_dependencies'] > 0:
-        print(f"⚠️  Circular dependencies detected: {results['circular_dependencies']}", file=sys.stderr)
+    if results["circular_dependencies"] > 0:
+        print(
+            f"⚠️  Circular dependencies detected: {results['circular_dependencies']}",
+            file=sys.stderr,
+        )
     else:
         print("✓ No circular dependencies detected", file=sys.stderr)
     print(f"{'=' * 70}", file=sys.stderr)

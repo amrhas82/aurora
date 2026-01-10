@@ -17,6 +17,7 @@ from tests.unit.soar.test_corpus_assess import TEST_CORPUS, get_by_category, get
 @dataclass
 class EvaluationResult:
     """Result of evaluation run."""
+
     total: int
     correct: int
     accuracy: float
@@ -26,8 +27,9 @@ class EvaluationResult:
     score_distributions: dict[str, list[int]]
 
 
-def evaluate_corpus(assessor: ComplexityAssessor | None = None,
-                   verbose: bool = False) -> EvaluationResult:
+def evaluate_corpus(
+    assessor: ComplexityAssessor | None = None, verbose: bool = False
+) -> EvaluationResult:
     """
     Evaluate assessor against the full test corpus.
 
@@ -46,10 +48,10 @@ def evaluate_corpus(assessor: ComplexityAssessor | None = None,
 
     # Track per-level stats
     level_stats = {
-        'simple': {'correct': 0, 'total': 0, 'scores': []},
-        'medium': {'correct': 0, 'total': 0, 'scores': []},
-        'complex': {'correct': 0, 'total': 0, 'scores': []},
-        'critical': {'correct': 0, 'total': 0, 'scores': []}
+        "simple": {"correct": 0, "total": 0, "scores": []},
+        "medium": {"correct": 0, "total": 0, "scores": []},
+        "complex": {"correct": 0, "total": 0, "scores": []},
+        "critical": {"correct": 0, "total": 0, "scores": []},
     }
 
     # Confusion matrix: expected -> predicted -> count
@@ -62,26 +64,28 @@ def evaluate_corpus(assessor: ComplexityAssessor | None = None,
         result = assessor.assess(prompt)
         predicted = result.level
 
-        level_stats[expected]['total'] += 1
-        level_stats[expected]['scores'].append(result.score)
+        level_stats[expected]["total"] += 1
+        level_stats[expected]["scores"].append(result.score)
 
         confusion[expected][predicted] += 1
 
         if predicted == expected:
             correct += 1
-            level_stats[expected]['correct'] += 1
+            level_stats[expected]["correct"] += 1
         else:
-            misclassifications.append({
-                'prompt': prompt,
-                'expected': expected,
-                'predicted': predicted,
-                'score': result.score,
-                'confidence': result.confidence,
-                'signals': result.signals,
-                'category': category,
-                'notes': notes,
-                'breakdown': result.breakdown
-            })
+            misclassifications.append(
+                {
+                    "prompt": prompt,
+                    "expected": expected,
+                    "predicted": predicted,
+                    "score": result.score,
+                    "confidence": result.confidence,
+                    "signals": result.signals,
+                    "category": category,
+                    "notes": notes,
+                    "breakdown": result.breakdown,
+                }
+            )
 
             if verbose:
                 print(f"\n{'='*60}")
@@ -94,18 +98,16 @@ def evaluate_corpus(assessor: ComplexityAssessor | None = None,
     by_level = {}
     for level, stats in level_stats.items():
         by_level[level] = {
-            'accuracy': stats['correct'] / stats['total'] if stats['total'] > 0 else 0,
-            'correct': stats['correct'],
-            'total': stats['total'],
-            'avg_score': sum(stats['scores']) / len(stats['scores']) if stats['scores'] else 0,
-            'min_score': min(stats['scores']) if stats['scores'] else 0,
-            'max_score': max(stats['scores']) if stats['scores'] else 0
+            "accuracy": stats["correct"] / stats["total"] if stats["total"] > 0 else 0,
+            "correct": stats["correct"],
+            "total": stats["total"],
+            "avg_score": sum(stats["scores"]) / len(stats["scores"]) if stats["scores"] else 0,
+            "min_score": min(stats["scores"]) if stats["scores"] else 0,
+            "max_score": max(stats["scores"]) if stats["scores"] else 0,
         }
 
     # Score distributions
-    score_distributions = {
-        level: stats['scores'] for level, stats in level_stats.items()
-    }
+    score_distributions = {level: stats["scores"] for level, stats in level_stats.items()}
 
     return EvaluationResult(
         total=total,
@@ -114,7 +116,7 @@ def evaluate_corpus(assessor: ComplexityAssessor | None = None,
         by_level=by_level,
         misclassifications=misclassifications,
         confusion_matrix=dict(confusion),
-        score_distributions=score_distributions
+        score_distributions=score_distributions,
     )
 
 
@@ -131,24 +133,30 @@ def print_report(result: EvaluationResult):
     print("\n" + "-" * 40)
     print("PER-LEVEL ACCURACY:")
     print("-" * 40)
-    for level in ['simple', 'medium', 'complex', 'critical']:
+    for level in ["simple", "medium", "complex", "critical"]:
         stats = result.by_level[level]
-        if stats['total'] > 0:  # Only show if we have test cases for this level
-            print(f"  {level.upper():8} {stats['accuracy']:6.1%} ({stats['correct']}/{stats['total']})")
-            print(f"           Score range: {stats['min_score']}-{stats['max_score']}, avg: {stats['avg_score']:.1f}")
+        if stats["total"] > 0:  # Only show if we have test cases for this level
+            print(
+                f"  {level.upper():8} {stats['accuracy']:6.1%} ({stats['correct']}/{stats['total']})"
+            )
+            print(
+                f"           Score range: {stats['min_score']}-{stats['max_score']}, avg: {stats['avg_score']:.1f}"
+            )
 
     # Confusion matrix
     print("\n" + "-" * 40)
     print("CONFUSION MATRIX:")
     print("-" * 40)
-    print(f"{'Expected':<12} {'→ Simple':<12} {'→ Medium':<12} {'→ Complex':<12} {'→ Critical':<12}")
-    for expected in ['simple', 'medium', 'complex', 'critical']:
+    print(
+        f"{'Expected':<12} {'→ Simple':<12} {'→ Medium':<12} {'→ Complex':<12} {'→ Critical':<12}"
+    )
+    for expected in ["simple", "medium", "complex", "critical"]:
         row = result.confusion_matrix.get(expected, {})
         if sum(row.values()) > 0:  # Only show if we have test cases for this level
-            simple = row.get('simple', 0)
-            medium = row.get('medium', 0)
-            complex_ = row.get('complex', 0)
-            critical = row.get('critical', 0)
+            simple = row.get("simple", 0)
+            medium = row.get("medium", 0)
+            complex_ = row.get("complex", 0)
+            critical = row.get("critical", 0)
             print(f"{expected:<12} {simple:<12} {medium:<12} {complex_:<12} {critical:<12}")
 
     # Misclassification analysis
@@ -158,18 +166,28 @@ def print_report(result: EvaluationResult):
 
     if result.misclassifications:
         # Group by error type
-        over_classified = [m for m in result.misclassifications
-                         if _level_order(m['predicted']) > _level_order(m['expected'])]
-        under_classified = [m for m in result.misclassifications
-                          if _level_order(m['predicted']) < _level_order(m['expected'])]
+        over_classified = [
+            m
+            for m in result.misclassifications
+            if _level_order(m["predicted"]) > _level_order(m["expected"])
+        ]
+        under_classified = [
+            m
+            for m in result.misclassifications
+            if _level_order(m["predicted"]) < _level_order(m["expected"])
+        ]
 
         print(f"\n  Over-classified (predicted too complex): {len(over_classified)}")
         for m in over_classified[:5]:  # Show first 5
-            print(f"    [{m['expected']}→{m['predicted']}] score={m['score']:3} \"{m['prompt'][:50]}...\"")
+            print(
+                f"    [{m['expected']}→{m['predicted']}] score={m['score']:3} \"{m['prompt'][:50]}...\""
+            )
 
         print(f"\n  Under-classified (predicted too simple): {len(under_classified)}")
         for m in under_classified[:5]:  # Show first 5
-            print(f"    [{m['expected']}→{m['predicted']}] score={m['score']:3} \"{m['prompt'][:50]}...\"")
+            print(
+                f"    [{m['expected']}→{m['predicted']}] score={m['score']:3} \"{m['prompt'][:50]}...\""
+            )
 
     # Score threshold analysis
     print("\n" + "-" * 40)
@@ -180,29 +198,37 @@ def print_report(result: EvaluationResult):
 
 def _level_order(level: str) -> int:
     """Convert level to numeric for comparison."""
-    return {'simple': 0, 'medium': 1, 'complex': 2, 'critical': 3}.get(level, -1)
+    return {"simple": 0, "medium": 1, "complex": 2, "critical": 3}.get(level, -1)
 
 
 def _analyze_thresholds(result: EvaluationResult):
     """Analyze if threshold adjustments would improve accuracy."""
-    simple_scores = result.score_distributions['simple']
-    medium_scores = result.score_distributions['medium']
-    complex_scores = result.score_distributions['complex']
+    simple_scores = result.score_distributions["simple"]
+    medium_scores = result.score_distributions["medium"]
+    complex_scores = result.score_distributions["complex"]
 
-    print(f"  Simple scores:  min={min(simple_scores):3}, max={max(simple_scores):3}, "
-          f"p90={sorted(simple_scores)[int(len(simple_scores)*0.9)]:3}")
-    print(f"  Medium scores:  min={min(medium_scores):3}, max={max(medium_scores):3}, "
-          f"p10={sorted(medium_scores)[int(len(medium_scores)*0.1)]:3}, "
-          f"p90={sorted(medium_scores)[int(len(medium_scores)*0.9)]:3}")
-    print(f"  Complex scores: min={min(complex_scores):3}, max={max(complex_scores):3}, "
-          f"p10={sorted(complex_scores)[int(len(complex_scores)*0.1)]:3}")
+    print(
+        f"  Simple scores:  min={min(simple_scores):3}, max={max(simple_scores):3}, "
+        f"p90={sorted(simple_scores)[int(len(simple_scores)*0.9)]:3}"
+    )
+    print(
+        f"  Medium scores:  min={min(medium_scores):3}, max={max(medium_scores):3}, "
+        f"p10={sorted(medium_scores)[int(len(medium_scores)*0.1)]:3}, "
+        f"p90={sorted(medium_scores)[int(len(medium_scores)*0.9)]:3}"
+    )
+    print(
+        f"  Complex scores: min={min(complex_scores):3}, max={max(complex_scores):3}, "
+        f"p10={sorted(complex_scores)[int(len(complex_scores)*0.1)]:3}"
+    )
 
     # Find optimal thresholds
     print("\n  Threshold optimization:")
     best_simple_thresh, best_medium_thresh, best_acc = _find_optimal_thresholds(result)
     print("  Current: simple<=15, medium<=35")
-    print(f"  Optimal: simple<={best_simple_thresh}, medium<={best_medium_thresh} "
-          f"(would achieve {best_acc:.1%})")
+    print(
+        f"  Optimal: simple<={best_simple_thresh}, medium<={best_medium_thresh} "
+        f"(would achieve {best_acc:.1%})"
+    )
 
 
 def _find_optimal_thresholds(result: EvaluationResult) -> tuple[int, int, float]:
@@ -222,11 +248,11 @@ def _find_optimal_thresholds(result: EvaluationResult) -> tuple[int, int, float]
             correct = 0
             for score, expected in all_scores:
                 if score <= simple_thresh:
-                    predicted = 'simple'
+                    predicted = "simple"
                 elif score <= medium_thresh:
-                    predicted = 'medium'
+                    predicted = "medium"
                 else:
-                    predicted = 'complex'
+                    predicted = "complex"
 
                 if predicted == expected:
                     correct += 1
@@ -259,11 +285,13 @@ def analyze_misclassifications(result: EvaluationResult):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description='Evaluate complexity assessor')
-    parser.add_argument('--verbose', '-v', action='store_true',
-                       help='Show details during evaluation')
-    parser.add_argument('--analyze', '-a', action='store_true',
-                       help='Deep analysis of misclassifications')
+    parser = argparse.ArgumentParser(description="Evaluate complexity assessor")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show details during evaluation"
+    )
+    parser.add_argument(
+        "--analyze", "-a", action="store_true", help="Deep analysis of misclassifications"
+    )
 
     args = parser.parse_args()
 
@@ -283,5 +311,5 @@ def main():
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

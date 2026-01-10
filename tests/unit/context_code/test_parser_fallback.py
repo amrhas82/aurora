@@ -18,6 +18,7 @@ class TestTreeSitterFallback:
         """Test parser handles tree-sitter import failure gracefully."""
         # Temporarily disable tree-sitter
         import os
+
         old_value = os.environ.get("AURORA_SKIP_TREESITTER")
         os.environ["AURORA_SKIP_TREESITTER"] = "1"
 
@@ -26,6 +27,7 @@ class TestTreeSitterFallback:
             import importlib
 
             import aurora_context_code.languages.python as python_module
+
             importlib.reload(python_module)
 
             # Check that TREE_SITTER_AVAILABLE is False
@@ -33,6 +35,7 @@ class TestTreeSitterFallback:
 
             # Parser should initialize without crashing
             from aurora_context_code.languages.python import PythonParser
+
             parser = PythonParser()
             assert parser.parser is None
         finally:
@@ -59,9 +62,11 @@ class TestTreeSitterFallback:
             import importlib
 
             import aurora_context_code.languages.python as python_module
+
             importlib.reload(python_module)
 
             from aurora_context_code.languages.python import PythonParser
+
             parser = PythonParser()
 
             # Create test file with 100 lines
@@ -78,7 +83,10 @@ class TestTreeSitterFallback:
                 assert len(chunks) >= 2
                 assert all(chunk.element_type == "function" for chunk in chunks)
                 assert all(chunk.name.startswith("fallback_lines_") for chunk in chunks)
-                assert all(chunk.docstring == "Fallback text chunk (tree-sitter unavailable)" for chunk in chunks)
+                assert all(
+                    chunk.docstring == "Fallback text chunk (tree-sitter unavailable)"
+                    for chunk in chunks
+                )
             finally:
                 test_file.unlink()
         finally:
@@ -105,11 +113,13 @@ class TestTreeSitterFallback:
             import importlib
 
             import aurora_context_code.languages.python as python_module
+
             importlib.reload(python_module)
 
             # Capture logs at WARNING level
             with caplog.at_level(logging.WARNING):
                 from aurora_context_code.languages.python import PythonParser
+
                 parser = PythonParser()
 
             # Should have logged warning about fallback
@@ -142,12 +152,14 @@ class TestEnvironmentVariableOverride:
             import importlib
 
             import aurora_context_code.languages.python as python_module
+
             importlib.reload(python_module)
 
             # Should be disabled
             assert python_module.TREE_SITTER_AVAILABLE is False
 
             from aurora_context_code.languages.python import PythonParser
+
             parser = PythonParser()
             assert parser.parser is None
         finally:
@@ -176,12 +188,14 @@ class TestEnvironmentVariableOverride:
                 import importlib
 
                 import aurora_context_code.languages.python as python_module
+
                 importlib.reload(python_module)
 
                 # Should be disabled for any truthy value
                 assert python_module.TREE_SITTER_AVAILABLE is False, f"Failed for value: {value}"
 
                 from aurora_context_code.languages.python import PythonParser
+
                 parser = PythonParser()
                 assert parser.parser is None, f"Failed for value: {value}"
             finally:

@@ -3,6 +3,7 @@
 import time
 
 import pytest
+
 from aurora_soar.agent_registry import AgentInfo
 from aurora_soar.phases.collect import (
     AgentOutput,

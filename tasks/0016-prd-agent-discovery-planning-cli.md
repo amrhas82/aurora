@@ -611,61 +611,61 @@ VALIDATION_MESSAGES = {
 class MemoryManager:
     """
     Shared memory retrieval infrastructure for Aurora ecosystem.
-    
+
     Used by:
     - aur query command (existing)
     - SOAR orchestrator (goal decomposition context)
     - Planning system (PRD 0017)
     - Future features requiring codebase context
     """
-    
+
     def __init__(self, store: Store, config: Config):
         self.store = store
         self.config = config
-    
+
     def has_indexed_memory(self) -> bool:
         """Check if indexed memory available."""
         return self.store.chunk_count() > 0
-    
+
     def retrieve(
-        self, 
-        query: str, 
+        self,
+        query: str,
         limit: int = 20,
         mode: str = 'hybrid'
     ) -> list[CodeChunk]:
         """
         Retrieve context from indexed memory.
-        
+
         Args:
             query: Search query or goal description
             limit: Maximum chunks to return
             mode: 'hybrid' | 'semantic' | 'bm25'
-        
+
         Returns:
             List of CodeChunk objects with file paths and content
-        
+
         Performance: <2s for limit=20
         """
         pass
-    
+
     def load_context_files(self, paths: list[Path]) -> list[CodeChunk]:
         """
         Load context from custom files (--context override).
-        
+
         Args:
             paths: List of file paths to load
-        
+
         Returns:
             List of CodeChunk objects
-        
+
         Performance: <2s for 10 files
         """
         pass
-    
+
     def format_for_prompt(self, chunks: list[CodeChunk]) -> str:
         """
         Format context chunks for LLM prompt.
-        
+
         Returns:
             Formatted string ready for LLM consumption
         """
@@ -684,7 +684,7 @@ class MemoryManager:
 # Refactored aur query command
 def query_command(query_text: str, context_files: list[Path] = None):
     manager = MemoryManager(store, config)
-    
+
     if context_files:
         # Override with custom context
         chunks = manager.load_context_files(context_files)
@@ -693,7 +693,7 @@ def query_command(query_text: str, context_files: list[Path] = None):
         chunks = manager.retrieve(query_text, limit=20)
     else:
         raise Error("No context available. Run 'aur mem index' first.")
-    
+
     # Rest of query logic unchanged
     ...
 ```

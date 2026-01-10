@@ -32,9 +32,7 @@ class UpdateCommand:
 
         # 1. Check openspec directory exists
         if not openspec_dir.is_dir():
-            raise RuntimeError(
-                "No Aurora plans directory found. Run 'aur init' first."
-            )
+            raise RuntimeError("No Aurora plans directory found. Run 'aur init' first.")
 
         # 2. Update .aurora/plans/AGENTS.md (full replacement)
         agents_path = openspec_dir / "AGENTS.md"

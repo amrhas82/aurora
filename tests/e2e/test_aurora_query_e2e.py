@@ -20,7 +20,6 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
-
 # Skip all tests if no API key is available
 pytestmark = pytest.mark.skipif(
     not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY environment variable not set"
@@ -54,9 +53,7 @@ def temp_aurora_config(tmp_path):
                     "complexity_threshold": 0.6,
                     "verbosity": "normal",
                 },
-                "budget": {
-                    "monthly_limit_usd": 100.0  # High limit for testing
-                },
+                "budget": {"monthly_limit_usd": 100.0},  # High limit for testing
             }
         )
     )

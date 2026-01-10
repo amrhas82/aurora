@@ -31,7 +31,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -77,9 +76,8 @@ def project_with_unique_patterns() -> Generator[Path, None, None]:
         project_path = Path(tmp_project)
 
         # Create a module with unique class and methods
-        (
-            project_path / "hybrid_retriever.py"
-        ).write_text('''"""Hybrid retrieval combining activation and semantic search."""
+        (project_path / "hybrid_retriever.py").write_text(
+            '''"""Hybrid retrieval combining activation and semantic search."""
 
 
 class HybridRetriever:
@@ -141,12 +139,12 @@ class HybridRetriever:
         """Calculate semantic similarity scores."""
         # Placeholder for actual implementation
         return {}
-''')
+'''
+        )
 
         # Create another unique module
-        (
-            project_path / "complexity_assessment.py"
-        ).write_text('''"""Complexity assessment for query routing."""
+        (project_path / "complexity_assessment.py").write_text(
+            '''"""Complexity assessment for query routing."""
 
 
 class ComplexityAssessor:
@@ -197,7 +195,8 @@ class ComplexityAssessor:
             "confidence": confidence,
             "question_count": question_count,
         }
-''')
+'''
+        )
 
         yield project_path
 
@@ -343,9 +342,9 @@ class TestQueryUsesIndex:
         )
 
         # Search should find it
-        assert "hybrid" in search_result.stdout.lower(), (
-            f"Search should find HybridRetriever:\n{search_result.stdout}"
-        )
+        assert (
+            "hybrid" in search_result.stdout.lower()
+        ), f"Search should find HybridRetriever:\n{search_result.stdout}"
 
         # Now query should also find it (but currently doesn't - Issue #15)
 

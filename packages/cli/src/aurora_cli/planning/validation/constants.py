@@ -11,7 +11,6 @@ Ported from OpenSpec with Aurora-native terminology and directory structure.
 
 from __future__ import annotations
 
-
 # Minimum character lengths
 MIN_WHY_SECTION_LENGTH = 50
 MIN_PURPOSE_LENGTH = 50
@@ -42,25 +41,18 @@ class VALIDATION_MESSAGES:
     CAPABILITY_PURPOSE_EMPTY = "Purpose section cannot be empty"
     CAPABILITY_NO_REQUIREMENTS = "Capability must have at least one requirement"
     PLAN_NAME_EMPTY = "Plan name cannot be empty"
-    PLAN_WHY_TOO_SHORT = (
-        f"Why section must be at least {MIN_WHY_SECTION_LENGTH} characters"
-    )
-    PLAN_WHY_TOO_LONG = (
-        f"Why section should not exceed {MAX_WHY_SECTION_LENGTH} characters"
-    )
+    PLAN_WHY_TOO_SHORT = f"Why section must be at least {MIN_WHY_SECTION_LENGTH} characters"
+    PLAN_WHY_TOO_LONG = f"Why section should not exceed {MAX_WHY_SECTION_LENGTH} characters"
     PLAN_WHAT_EMPTY = "What Changes section cannot be empty"
     PLAN_NO_MODIFICATIONS = "Plan must have at least one modification"
     PLAN_TOO_MANY_MODIFICATIONS = (
-        f"Consider splitting plans with more than {MAX_MODIFICATIONS_PER_PLAN} "
-        "modifications"
+        f"Consider splitting plans with more than {MAX_MODIFICATIONS_PER_PLAN} " "modifications"
     )
     MODIFICATION_CAPABILITY_EMPTY = "Capability name cannot be empty"
     MODIFICATION_DESCRIPTION_EMPTY = "Modification description cannot be empty"
 
     # Warnings
-    PURPOSE_TOO_BRIEF = (
-        f"Purpose section is too brief (less than {MIN_PURPOSE_LENGTH} characters)"
-    )
+    PURPOSE_TOO_BRIEF = f"Purpose section is too brief (less than {MIN_PURPOSE_LENGTH} characters)"
     REQUIREMENT_TOO_LONG = (
         f"Requirement text is very long (>{MAX_REQUIREMENT_TEXT_LENGTH} characters). "
         "Consider breaking it down."

@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora_cli.memory.retrieval import MemoryRetriever, _detect_language
 
+from aurora_cli.memory.retrieval import MemoryRetriever, _detect_language
 from aurora_core.chunks import CodeChunk
 
 
@@ -104,9 +104,7 @@ class TestMemoryRetrieverHasIndexedMemory:
         self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
     ) -> None:
         """Returns True when store has chunks."""
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.return_value = sample_chunks[:1]
             mock_get_retriever.return_value = mock_hybrid
@@ -120,9 +118,7 @@ class TestMemoryRetrieverHasIndexedMemory:
         self, mock_store: MagicMock, mock_config: MagicMock
     ) -> None:
         """Returns False when store is empty."""
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.return_value = []
             mock_get_retriever.return_value = mock_hybrid
@@ -132,13 +128,9 @@ class TestMemoryRetrieverHasIndexedMemory:
 
             assert result is False
 
-    def test_returns_false_on_error(
-        self, mock_store: MagicMock, mock_config: MagicMock
-    ) -> None:
+    def test_returns_false_on_error(self, mock_store: MagicMock, mock_config: MagicMock) -> None:
         """Returns False on retrieval error."""
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.side_effect = Exception("DB error")
             mock_get_retriever.return_value = mock_hybrid
@@ -156,9 +148,7 @@ class TestMemoryRetrieverRetrieve:
         self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
     ) -> None:
         """Retrieves chunks using hybrid retriever."""
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.return_value = sample_chunks
             mock_get_retriever.return_value = mock_hybrid
@@ -169,15 +159,11 @@ class TestMemoryRetrieverRetrieve:
             assert len(result) == 2
             mock_hybrid.retrieve.assert_called_once()
 
-    def test_uses_config_threshold(
-        self, mock_store: MagicMock, mock_config: MagicMock
-    ) -> None:
+    def test_uses_config_threshold(self, mock_store: MagicMock, mock_config: MagicMock) -> None:
         """Uses config semantic threshold by default."""
         mock_config.search_min_semantic_score = 0.5
 
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.return_value = []
             mock_get_retriever.return_value = mock_hybrid
@@ -188,15 +174,11 @@ class TestMemoryRetrieverRetrieve:
             call_kwargs = mock_hybrid.retrieve.call_args.kwargs
             assert call_kwargs["semantic_threshold"] == 0.5
 
-    def test_overrides_threshold(
-        self, mock_store: MagicMock, mock_config: MagicMock
-    ) -> None:
+    def test_overrides_threshold(self, mock_store: MagicMock, mock_config: MagicMock) -> None:
         """Allows threshold override."""
         mock_config.search_min_semantic_score = 0.5
 
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.return_value = []
             mock_get_retriever.return_value = mock_hybrid
@@ -207,13 +189,9 @@ class TestMemoryRetrieverRetrieve:
             call_kwargs = mock_hybrid.retrieve.call_args.kwargs
             assert call_kwargs["semantic_threshold"] == 0.3
 
-    def test_returns_empty_on_error(
-        self, mock_store: MagicMock, mock_config: MagicMock
-    ) -> None:
+    def test_returns_empty_on_error(self, mock_store: MagicMock, mock_config: MagicMock) -> None:
         """Returns empty list on retrieval error."""
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.side_effect = Exception("Error")
             mock_get_retriever.return_value = mock_hybrid
@@ -242,8 +220,11 @@ class TestMemoryRetrieverLoadContextFiles:
         assert chunks[0].language == "python"
 
     def test_skips_missing_files(
-        self, tmp_path: Path, mock_store: MagicMock, mock_config: MagicMock,
-        caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Skips and warns for missing files."""
         missing_file = tmp_path / "nonexistent.py"
@@ -257,8 +238,11 @@ class TestMemoryRetrieverLoadContextFiles:
         assert "not found" in caplog.text
 
     def test_skips_directories(
-        self, tmp_path: Path, mock_store: MagicMock, mock_config: MagicMock,
-        caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Skips and warns for directories."""
         retriever = MemoryRetriever(mock_store, mock_config)
@@ -329,9 +313,7 @@ class TestMemoryRetrieverGetContext:
         self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
     ) -> None:
         """Uses indexed memory when no context files (priority 2)."""
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.return_value = sample_chunks
             mock_get_retriever.return_value = mock_hybrid
@@ -346,9 +328,7 @@ class TestMemoryRetrieverGetContext:
         self, mock_store: MagicMock, mock_config: MagicMock
     ) -> None:
         """Returns error when no context available."""
-        with patch.object(
-            MemoryRetriever, "_get_retriever"
-        ) as mock_get_retriever:
+        with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
             mock_hybrid = MagicMock()
             mock_hybrid.retrieve.return_value = []
             mock_get_retriever.return_value = mock_hybrid

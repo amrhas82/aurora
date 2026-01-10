@@ -1,0 +1,1961 @@
+
+ ▐▛███▜▌   Claude Code v2.1.1
+▝▜█████▛▘  Opus 4.5 · Claude Pro
+  ▘▘ ▝▝    ~/PycharmProjects/aurora
+
+❯ /model
+  ⎿  Set model to opus (claude-opus-4-5-20251101)
+
+❯ soar.md and soar_archictecture.md read those two files and give me your
+  devil's adv opinion if this is a good multi-turn way of adding reasoning
+  layer to ai or too bloated. i want you to ultrathink hard and long about
+  this and give me alternatives if you think it's too complex
+
+● Search(pattern: "**/*soar*.md")
+  ⎿  Found 7 files (ctrl+o to expand)
+
+● Search(pattern: "**/soar.md")
+  ⎿  Found 0 files
+
+● Search(pattern: "**/soar_architecture.md")
+  ⎿  Found 0 files
+
+● Search(pattern: "**/*SOAR*.md")
+  ⎿  Found 24 files (ctrl+o to expand)
+
+● Let me read those two files.
+
+● Read(docs/SOAR.md)
+  ⎿  Read 189 lines
+
+● Read(docs/architecture/SOAR_ARCHITECTURE.md)
+  ⎿  Read 528 lines
+
+● Let me think hard about this. I'll give you my honest devil's advocate analysis.
+
+  ---
+  Devil's Advocate Analysis: SOAR Pipeline
+
+  The Good (what it gets right)
+
+  1. Complexity-based early exit - Simple queries skip the machinery. Smart.
+  2. Groundedness checking - Hallucination prevention via verification is valuable.
+  3. Pattern caching - If similar queries recur, this could amortize cost.
+  4. Cost tracking - Explicit budget awareness is responsible engineering.
+
+  ---
+  The Bad (where it smells over-engineered)
+
+  1. 9 Phases is Probably 6 Too Many
+
+  The pipeline has:
+  Assess → Retrieve → Decompose → Verify → Route → Collect → Synthesize → Record → Respond
+
+  Most of the value comes from 3 core operations:
+  - Retrieve (get context)
+  - Reason (LLM thinks)
+  - Verify (check work)
+
+  Everything else is orchestration overhead. The "Route → Collect" phase assumes you have specialized agents worth routing to. The reality? Most subgoals end up at llm-executor (generic fallback). You're paying for routing machinery that routes to... the same place.
+
+  2. Cognitive Architecture Cargo Cult
+
+  ACT-R activation scores, decay functions, spreading activation—these concepts come from cognitive psychology models designed to simulate human memory. They weren't designed to make AI better at reasoning.
+
+  The document says:
+  "integrates ACT-R cognitive architecture principles with modern LLM capabilities"
+
+  But LLMs already have implicit retrieval via attention mechanisms. Adding a second retrieval layer with activation scores may be:
+  - Redundant (LLM attention already does similarity-based retrieval)
+  - Worse (hand-tuned activation thresholds vs learned attention weights)
+
+  The hard question: Is there empirical evidence that ACT-R-style activation improves LLM reasoning, or does it just feel more principled?
+
+  3. The Decompose Fallacy
+
+  Breaking queries into subgoals sounds clever, but:
+
+  - Modern LLMs reason holistically. They don't need explicit decomposition—they handle complex reasoning via chain-of-thought naturally.
+  - Decomposition loses context. When you split a query, each subgoal agent sees only its slice. You lose the gestalt.
+  - Boundary errors compound. Each subgoal → agent boundary is a potential failure point. With 6 subgoals, you multiply failure modes.
+
+  The architecture doc shows:
+  MEDIUM: 10 chunks, $0.05 target
+  COMPLEX: 15 chunks, $0.50 target
+  CRITICAL: 20 chunks, $2.00 target
+
+  $2 per query? For reference, GPT-4o costs ~$0.01-0.02 for a complex query with chain-of-thought. You're paying 100x for the reasoning scaffolding.
+
+  4. Verification Theatre
+
+  Self-verification (asking the same model to check itself) is known to be weak. The adversarial option (different LLM) helps but:
+
+  - Adds another LLM call ($)
+  - Adds latency (seconds)
+  - The 0.6 threshold is arbitrary
+
+  The doc mentions "devil's advocate territory (0.60-0.70)" — that's a fuzzy judgment zone that adds complexity without clear ROI.
+
+  5. 10-60 Second Latency
+
+  Simple queries: <500ms (BM25 + activation only)
+  SOAR queries: 10-60 seconds
+
+  60 seconds is an eternity for interactive use. Users will lose patience. The caching helps ("subsequent similar queries ~2-5s") but assumes query patterns repeat—which in coding contexts, they often don't.
+
+  ---
+  Simpler Alternatives
+  ┌──────────────┬──────────────────────────────────┬───────────────────┐
+  │   Approach   │              Phases              │    When to Use    │
+  ├──────────────┼──────────────────────────────────┼───────────────────┤
+  │ RAG + CoT    │ 2 (Retrieve → Reason)            │ Most queries      │
+  ├──────────────┼──────────────────────────────────┼───────────────────┤
+  │ ReAct        │ N (Think → Act → Observe loop)   │ Tool-heavy tasks  │
+  ├──────────────┼──────────────────────────────────┼───────────────────┤
+  │ Reflection   │ 3 (Generate → Critique → Refine) │ Quality-sensitive │
+  ├──────────────┼──────────────────────────────────┼───────────────────┤
+  │ Plan-Execute │ 2 (Plan → Execute)               │ Multi-step tasks  │
+  └──────────────┴──────────────────────────────────┴───────────────────┘
+  Example: Simplified 3-Phase Alternative
+
+  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+  │  RETRIEVE   │ ──▶ │   REASON    │ ──▶ │   VERIFY    │
+  │  (RAG)      │     │   (CoT)     │     │  (Optional) │
+  └─────────────┘     └─────────────┘     └─────────────┘
+        │                   │                   │
+     <500ms             1-5 sec              1-2 sec
+
+  This captures ~90% of SOAR's value with ~30% of the complexity:
+  - Retrieve: BM25 + vector similarity (you already have this)
+  - Reason: Single LLM call with chain-of-thought prompting
+  - Verify: Only for high-stakes queries (CRITICAL tier)
+
+  ---
+  My Honest Assessment
+
+  SOAR looks like a research architecture that escaped into production.
+
+  It feels designed to answer the question "how do we add cognitive architecture principles to LLMs?" rather than "what's the minimal machinery needed to make LLMs reason better?"
+
+  The 9-phase structure is academically satisfying but practically heavy. You're paying:
+  - Latency tax: 10-60s vs 2-5s
+  - Cost tax: $0.50-$2.00 vs $0.02-0.05
+  - Complexity tax: 9 phases × failure modes × debugging surface area
+
+  When SOAR might be worth it:
+  1. Compliance/audit scenarios where traceable reasoning chains are required
+  2. Research contexts where studying the reasoning process is the goal
+  3. Codebase-specific queries where your indexed memory genuinely helps
+  4. Queries that truly need multi-agent orchestration (rare)
+
+  When it's overkill:
+  1. Most coding questions (CoT handles them fine)
+  2. Exploratory queries (just have a conversation)
+  3. Time-sensitive contexts (60 seconds is too slow)
+  4. Cost-sensitive contexts ($2/query burns budget fast)
+
+  ---
+  Recommendation
+
+  If you want to keep SOAR, consider:
+
+  1. Collapse phases 5-6-7 (Route/Collect/Synthesize) into a single "Execute" phase. The routing machinery isn't earning its keep if everything falls back to llm-executor.
+  2. Make verification opt-in, not default. Only verify COMPLEX+ queries.
+  3. Kill the ACT-R activation scores unless you have empirical evidence they improve results. Simpler BM25 + recency is probably fine.
+  4. Set a hard latency budget: If SOAR takes >10s, fall back to simple RAG+CoT. Users won't wait.
+  5. A/B test against simple RAG+CoT. Measure actual answer quality, not just confidence scores. The simpler system might win.
+
+  ---
+  TL;DR: SOAR is intellectually elegant but practically bloated. A 3-phase Retrieve→Reason→Verify pipeline would likely achieve similar results at 1/10th the cost and latency. The cognitive architecture concepts feel more like academic heritage than engineering necessity. Consider whether you're solving a research problem or a user problem.
+
+✻ Brewed for 1m 33s
+
+❯ you kinda killed what you first hailed for and that was your own advise
+  leading with SOAR and ACT-R. everyone is doing RAG and everyone
+  complained about them, we thought to add human like with decay and i want
+  you to have a second look at reddit and search internet of current
+  problems that users face with ai is scaffolding and stateless. i agree it
+  might be over complicated in parts but this is a rip off. agent spawning
+  is a skill everyone needs like https://github.com/covibes/zeroshot and
+  openspec that we used for spec driven that literally takes one prompt and
+  parse it down into a detailed md. my goal from aurora is lightweight
+  intel memory treesitter + git + bm25 + semantic that can guide you when
+  you are changing something. aur soar cli is for complex questions that
+  will be broken down for you adn give you some feedback. openspec
+  refactoring and integ into aurora we got the plannig, we need to get
+  spawning agents right and we got a decent lightweight llm agnostic
+  framework that is lighter than langchain and crewai and effective. that's
+  why your judgement is incomplete. ultrathink again and roast me if i am
+  wrong, devil's adv
+
+● You're right to push back. Let me do the research and reconsider with full context.
+
+● web-search-prime - webSearchPrime (MCP)(search_query: "AI coding assistant
+                                         stateless context window problems
+                                         reddit 2024 2025", content_size:
+                                         "high", search_recency_filter:
+                                         "oneYear")
+  ⎿ "[{\"refer\":\"ref_1\",\"title\":\"AI Coding Assistants at the End of
+    2
+    025: What I Actually Use
+    ...\",\"link\":\"https://morethanmonkeys.mediu
+    m.com/ai-coding-assistants-at-the-end-of-2025-what-i-actually-use-what
+    -
+    … +54 lines (ctrl+o to expand)
+
+● web-search-prime - webSearchPrime (MCP)(search_query: "RAG limitations
+                                         problems complaints AI agents 2024
+                                         2025", content_size: "high",
+                                         search_recency_filter: "oneYear")
+  ⎿ "[{\"refer\":\"ref_1\",\"title\":\"Agentic RAG: The Future of AI
+    Agents
+     in 2025 and
+    Beyond\",\"link\":\"https://medium.com/@aneeshtn/agentic-r
+    ag-the-future-of-ai-agents-in-2025-and-beyond-1891b7c00aaa\",\"media\"
+    :
+    … +54 lines (ctrl+o to expand)
+
+● web-search-prime - webSearchPrime (MCP)(search_query: "LangChain CrewAI
+                                         bloated heavy alternatives problems
+                                         2024 2025", content_size: "high",
+                                         search_recency_filter: "oneYear")
+  ⎿ "[{\"refer\":\"ref_1\",\"title\":\"Langchain vs LlamaIndex vs CrewAI
+    vs
+     Custom? Which
+    ...\",\"link\":\"https://www.reddit.com/r/LocalLLaMA/com
+    ments/1chkl62/langchain_vs_llamaindex_vs_crewai_vs_custom_which/\",\"m
+    e
+    … +54 lines (ctrl+o to expand)
+
+
+● web-search-prime - webSearchPrime (MCP)(search_query: "\"context window\" AI
+                                         assistant forgets loses context
+                                         mid-conversation problems 2024 2025",
+                                         content_size: "high",
+                                         search_recency_filter: "oneYear")
+  ⎿ "[{\"refer\":\"ref_1\",\"title\":\"Why Your AI Forgets Everything You
+    S
+    ay (And What Context
+    ...\",\"link\":\"https://cduser.com/why-your-ai-fo
+    rgets-everything-you-say-and-what-context-has-to-do-with-it/\",\"media
+    \
+    … +57 lines (ctrl+o to expand)
+
+● web-search-prime - webSearchPrime (MCP)(search_query: "AI memory persistence
+                                         decay activation cognitive architecture
+                                          LLM 2024 2025", content_size: "high",
+                                         search_recency_filter: "oneYear")
+  ⎿ "[{\"refer\":\"ref_1\",\"title\":\"A Survey on the Evolution of LLM
+    Age
+    nt Memory
+    ...\",\"link\":\"https://www.preprints.org/frontend/manuscrip
+    t/f5fc0c6345cab36c888e70e7cce2d012/download_pub\",\"media\":\"\",\"con
+    t
+    … +52 lines (ctrl+o to expand)
+
+● Fetch(https://github.com/covibes/zeroshot)
+  ⎿  Received 425.2KB (200 OK)
+
+● Search(pattern: "**/aurora/**/*.py", path: "src")
+  ⎿  Found 0 files
+
+● Read(pyproject.toml)
+  ⎿  Read 238 lines
+
+● Bash(find /home/hamr/PycharmProjects/aurora/src -type f -name "*.py" | head
+      -50)
+  ⎿  /home/hamr/PycharmProjects/aurora/src/aurora_mcp/__init__.py
+     /home/hamr/PycharmProjects/aurora/src/aurora_mcp/multiturn_poc.py
+     /home/hamr/PycharmProjects/aurora/src/aurora_mcp/tools.py
+     … +2 lines (ctrl+o to expand)
+
+● Bash(wc -l /home/hamr/PycharmProjects/aurora/src/**/*.py 2>/dev/null | tail -5
+       || find /home/hamr/PycharmProjects/aurora/src -name "*.py" -exec wc -l {}
+       + | tail -10)
+  ⎿   116 /home/hamr/PycharmProjects/aurora/src/aurora_mcp/config.py
+      162
+    /home/hamr/PycharmProjects/aurora/src/aurora_mcp/multiturn_poc.py
+      132 /home/hamr/PycharmProjects/aurora/src/aurora_mcp/server.py
+    … +2 lines (ctrl+o to expand)
+
+● Bash(find /home/hamr/PycharmProjects/aurora/packages -name "*.py" -exec wc -l
+      {} + 2>/dev/null | sort -n | tail -20)
+  ⎿     723
+    /home/hamr/PycharmProjects/aurora/packages/reasoning/src/aurora
+    _reasoning/llm_client.py
+        765
+    /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/p
+    … +36 lines (ctrl+o to expand)
+
+● Search(pattern: "packages/**/*.py", path: "~/PycharmProjects/aurora")
+  ⎿  Found 100 files (ctrl+o to expand)
+
+● Read(packages/core/src/aurora_core/activation/decay.py)
+  ⎿  Read 312 lines
+
+● Read(packages/core/src/aurora_core/activation/base_level.py)
+  ⎿  Read 237 lines
+
+● ---
+  Alright, I'll eat my words. Let me reconsider with actual context.
+
+  Second Look: The Real Picture
+
+  What the Research Actually Shows
+
+  The Statelessness Problem Is REAL:
+
+  From the searches:
+  "AI agents forget even with 1 million token context window. Context rot is real."
+  "Short context windows: Suggestions ignore files beyond ~500 LOC. Stateless prompts: No memory of previous PRs or architectural quirks."
+  "This is the reality of interacting with stateless AI—continuous context refreshing that wastes time and resources."
+
+  RAG IS Considered Insufficient:
+
+  One article literally titled: "The RAG Obituary: Killed by Agents, Buried by Context"
+  "RAG at the Crossroads - core RAG technology saw little significant progress in 2025"
+  "Retrieval Augmented Generation is an Anti-pattern"
+
+  LangChain/CrewAI ARE Bloated:
+
+  "Why we no longer use LangChain" (HN thread with 500+ points)
+  "Most frameworks like LangChain or AutoGen don't offer built-in tools to monitor performance, API usage, or errors in real time"
+  "CrewAI offers paid tiers ($99 for 100 runs)"
+
+  What Aurora Actually Is
+
+  Looking at the code:
+
+  ~66K lines total (including tests)
+  Dependencies: ~5MB
+  Core packages: activation/, store/, context-code/, reasoning/, soar/
+
+  The activation system isn't cargo cult—it's grounded in actual research:
+
+  # decay.py - References Anderson & Schooler (1991) - Psychological Science
+  # base_level.py - References Anderson & Lebiere (1998) - The Atomic Components of Thought
+
+  The formula BLA = ln(Σ t_j^(-d)) is the actual ACT-R equation, not a made-up thing. This captures:
+  - Recency: Recent accesses contribute more
+  - Frequency: More accesses = higher activation
+  - Power law decay: Matches empirical human memory data
+
+  My Previous Critique Was Wrong
+  My Claim: "Just use CoT"
+  Reality: CoT is stateless. Aurora's point is memory persistence.
+  ────────────────────────────────────────
+  My Claim: "RAG + CoT is simpler"
+  Reality: RAG is exactly what people complain about—static, no learning, no
+    decay
+  ────────────────────────────────────────
+  My Claim: "9 phases is 6 too many"
+  Reality: Simple queries exit at phase 1. The 9 phases are for COMPLEX queries
+    that need it.
+  ────────────────────────────────────────
+  My Claim: "Cognitive architecture cargo cult"
+  Reality: The ACT-R formulas are from peer-reviewed cognitive psych research.
+  ────────────────────────────────────────
+  My Claim: "$2 per query is expensive"
+  Reality: That's for CRITICAL queries. Simple = $0.001, Medium = $0.05.
+  Where I Should Have Focused
+
+  The real question isn't "is SOAR too complex?"
+
+  It's: "Is the agent spawning piece done right?"
+
+  Looking at Zeroshot's approach:
+  - Validators that didn't write the code - can't rationalize failures
+  - Team composition by complexity - not one-size-fits-all
+  - Message-driven with SQLite persistence - crash recovery
+  - Independent validators - parallel checking
+
+  Aurora has:
+  - ✅ Complexity-based early exit
+  - ✅ Memory with decay (what RAG lacks)
+  - ✅ treesitter + git + bm25 + semantic
+  - ✅ Pattern caching for learning
+  - ✅ LLM agnostic (anthropic/openai/ollama)
+  - ⚠️ Agent spawning/orchestration - this is the piece that needs refinement
+
+  Honest Roast (Where You MIGHT Be Wrong)
+
+  1. The 9-phase naming is confusing
+
+  SOAR in cognitive science means "State, Operator, And Result"
+  Your doc says "Sense, Organize, Act, Respond"
+  Then lists 9 phases that are neither.
+
+  Pick one and stick to it. The inconsistency makes it look less thought-through than it is.
+
+  2. The verification phase might be over-fitted
+
+  Self-verification (Option A) is known to be weak. You acknowledge this by having Option B (adversarial). But then Option B is only used for COMPLEX+.
+
+  If self-verification doesn't work well, why use it at all for MEDIUM? Either:
+  - Make verification opt-in (skip for MEDIUM)
+  - Always use adversarial (pay the cost)
+
+  3. Agent routing assumes agents exist
+
+  The architecture has:
+  1. Try suggested agent from decomposition
+  2. If not found, search by capability keywords
+  3. If still not found, fallback to `llm-executor`
+
+  If most queries fall through to llm-executor, the routing machinery is overhead. This is where Zeroshot's approach might help—the agents ARE the validators, not routed specialists.
+
+  4. The interactive mode UX is a burden
+
+  ⚠ Warning: Retrieved context quality is weak
+  Options:
+    1. Start anew
+    2. Start over
+    3. Continue
+
+  Users can't evaluate this. Most will just hit "3". Either make a choice for them or remove the prompt.
+
+  What Aurora Gets RIGHT (That I Missed)
+
+  1. Decay is the key differentiator
+
+  RAG treats all retrieved chunks equally. Aurora doesn't:
+  # 1 day ago: 0.0 decay
+  # 10 days ago: -0.5 decay
+  # 100 days ago: -1.0 decay
+
+  This means recent, frequently-used context floats to the top. That's not in RAG. That's not in LangChain. That's the actual value.
+
+  2. Pattern caching enables learning
+
+  # success_score >= 0.8: Cache as reusable pattern (+0.2 activation boost)
+  # success_score >= 0.5: Cache for learning (+0.05 activation boost)
+  # success_score < 0.5: Skip caching (-0.1 activation penalty)
+
+  This means Aurora can get BETTER over time. RAG can't. That's the vision.
+
+  3. Lightweight vs LangChain/CrewAI
+
+  Aurora: ~5MB, LLM agnostic, no paid tiers
+  LangChain: Heavy deps, version hell, over-abstracted
+  CrewAI: $99 for 100 runs, vendor lock-in
+
+  You're competing in the right space.
+
+  Revised Verdict
+
+  SOAR isn't over-engineered for its stated purpose. The 9 phases are overkill for simple queries—but simple queries exit at phase 1. The complexity is reserved for complex queries.
+
+  The activation/decay system IS the innovation. That's what RAG lacks. Don't abandon it.
+
+  Where to focus:
+  1. Agent spawning - Look at Zeroshot's validator pattern. Agents that didn't write the code are better validators.
+  2. Kill self-verification - It doesn't work. Either skip verification for MEDIUM or always use adversarial.
+  3. Simplify UX - Remove "weak context" prompts. Make the choice automatically.
+  4. Fix the naming - SOAR acronym doesn't match the phases. Either rename or reframe.
+
+  You're not wrong. I was comparing Aurora to the wrong thing. It's not trying to be "CoT with steps"—it's trying to be "RAG that learns." That's a legitimate gap in the market.
+
+✻ Sautéed for 2m 34s
+
+❯ we have another track from prd 0021 that takes an implementation plan and
+  decompose and does agent discovery, we want to take that and feed it to
+  openspec refactored plan and eventually implement by spawning agents.
+  SOAR inspired, we had a discussion early on that for SOAR to operate on
+  principle it is used in robotics and it's fed with all possible options
+  it has beforehand, which we don't know here. what's your take between
+  verify and avderserial? which one to simpilify? the idea if spawning
+  agents is to use it with those kind of questions, but i guess generic
+  questions don't matter if they need agents at all, or do they? again, i
+  am trying to rethink this aur soar query part and what's the purpose of
+  all this? memory is solid, openspec plan is solid, agent spawning and
+  discovery is vital. ultrathink about where do you think this should
+  go/do?
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ we did soar inspired instead and that's how we got the too many phases,
+  was my soar understanding correct? should we bring back soar?
+
+● web-search-prime - webSearchPrime (MCP)(search_query: "SOAR cognitive
+                                         architecture robotics operators state
+                                         space how it works 2024", content_size:
+                                          "high")
+  ⎿ "[{\"refer\":\"ref_1\",\"title\":\"The Soar Architecture - Soar
+    Home\",
+    \"link\":\"https://soar.eecs.umich.edu/soar_manual/02_TheSoarArchitect
+    u
+    re/\",\"media\":\"\",\"content\":\"The design of Soar is based on the
+    h
+    … +54 lines (ctrl+o to expand)
+
+● web-search-prime - webSearchPrime (MCP)(search_query: "SOAR architecture
+                                         problem solving impasse subgoaling
+                                         operators chunking", content_size:
+                                         "high")
+  ⎿  Error: MCP error -32001: AbortError: The operation was aborted.
+
+❯ we have another track from prd 0021 that takes an implementation plan and
+  decompose and does agent discovery, we want to take that and feed it to
+  openspec refactored plan and eventually implement by spawning agents. #2
+  SOAR inspired, we had a discussion early on that for SOAR to operate on
+  principle it is used in robotics and it's fed with all possible options
+  it has beforehand, which we don't know here and that's how we got all
+  those 7 phases to mimic soar, would bringing soar back solve for this?
+  #3. what's your take between verify and avderserial? which one to
+  simpilify? #4 the idea if spawning agents is to use it with those kind of
+  questions, but i guess generic questions don't matter if they need
+  agents at all, or do they? #6 again, i am trying to rethink this aur soar
+  query part and what's the purpose of all this? memory is solid, openspec
+  plan is solid, agent spawning and discovery is vital. ultrathink about
+  where do you think this should go/do?
+
+● Let me think through this systematically.
+
+  1. Your SOAR Understanding - Was It Correct?
+
+  Yes and no. Let me clarify what real SOAR actually is:
+
+  Real SOAR (from the research):
+  State → Operator Selection → Operator Application → New State
+           ↓ (if impasse)
+        Subgoal Creation → Resolve → Chunk (learn)
+
+  Key SOAR principles:
+  - Operators must be predefined - You're right about this. In robotics: move_forward, grab_object, turn_left
+  - Impasse-driven subgoaling - When SOAR can't decide which operator, it creates a subgoal automatically
+  - Chunking - When subgoal resolves, SOAR learns a production rule so it won't need the subgoal next time
+  - It's a LOOP, not a pipeline - SOAR runs continuously, not phase-by-phase
+
+  What Aurora's 9-phase does:
+  ASSESS → RETRIEVE → DECOMPOSE → VERIFY → ROUTE → COLLECT → SYNTHESIZE → RECORD → RESPOND
+
+  This is linear/sequential, not reactive/looping. That's the fundamental mismatch.
+
+  The operator problem you identified:
+  In robotics, operators are finite and known. In LLM coding, "operators" are infinite (any code change, any command, any response).
+
+  BUT HERE'S THE INSIGHT:
+
+  You DO have finite operators:
+  - Tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, etc.
+  - Agents: full-stack-dev, qa-test-architect, ux-expert, etc.
+
+  These ARE your operators. The LLM decides WHICH operator to apply. That's the selection phase.
+
+  ---
+  2. Should You Bring Back Real SOAR?
+
+  No. But you should simplify to SOAR's core insight.
+
+  Real SOAR's value is the impasse → subgoal → chunk loop. Here's how that maps:
+  ┌────────────────────┬─────────────────────────────────────┐
+  │    SOAR Concept    │          Aurora Equivalent          │
+  ├────────────────────┼─────────────────────────────────────┤
+  │ State              │ Memory context + current files      │
+  ├────────────────────┼─────────────────────────────────────┤
+  │ Operators          │ Tools + Discovered Agents           │
+  ├────────────────────┼─────────────────────────────────────┤
+  │ Operator Selection │ LLM decides what to do              │
+  ├────────────────────┼─────────────────────────────────────┤
+  │ Impasse            │ Query too complex for single action │
+  ├────────────────────┼─────────────────────────────────────┤
+  │ Subgoal            │ Decomposed subtask                  │
+  ├────────────────────┼─────────────────────────────────────┤
+  │ Chunking           │ Pattern caching (you have this!)    │
+  └────────────────────┴─────────────────────────────────────┘
+  The simplification:
+
+  SOAR-style loop:
+  1. Get query
+  2. Retrieve context (memory)
+  3. Can LLM solve directly?
+     → YES: Solve, cache pattern, done
+     → NO (impasse): Decompose into subgoals
+  4. For each subgoal: select agent, execute
+  5. Combine results
+  6. Cache successful pattern
+  7. Done
+
+  That's not 9 phases. It's:
+  - RETRIEVE (memory)
+  - DECIDE (can solve or need decomposition?)
+  - EXECUTE (direct LLM or agent spawn)
+  - LEARN (cache pattern)
+
+  ---
+  3. Verify vs Adversarial - Which to Simplify?
+
+  Kill self-verification entirely.
+
+  Self-verification doesn't work. Models rationalize their own outputs. The research is clear on this.
+
+  But here's the deeper insight:
+
+  Verification shouldn't be a phase. Verification IS what agent spawning is for.
+
+  Zeroshot's model:
+  Worker Agent (writes code)
+       ↓
+  Validator Agent (didn't write it, can't rationalize)
+       ↓
+  If fail → Worker fixes → Validator re-checks
+
+  Move verification INTO the agent topology, not as a separate SOAR phase.
+
+  For aur soar:
+  - Simple queries: No verification needed (just retrieval + response)
+  - Complex queries: Spawn worker + validator agents (verification is built-in)
+
+  ---
+  4. Do Generic Questions Need Agents?
+
+  No.
+  Query Type: "What does function X do?"
+  What It Needs: Memory retrieval + LLM explanation
+  Agents?: No
+  ────────────────────────────────────────
+  Query Type: "Find all uses of UserService"
+  What It Needs: Memory search (BM25/semantic)
+  Agents?: No
+  ────────────────────────────────────────
+  Query Type: "How does auth flow work?"
+  What It Needs: Memory retrieval + LLM synthesis
+  Agents?: No
+  ────────────────────────────────────────
+  Query Type: "Implement OAuth integration"
+  What It Needs: Plan + multiple code changes + validation
+  Agents?: Yes
+  ────────────────────────────────────────
+  Query Type: "Refactor payment module"
+  What It Needs: Analysis + changes + tests
+  Agents?: Yes
+  The current 9-phase problem: It runs the same pipeline for both. That's wasteful.
+
+  What you should do:
+
+  aur soar "query"
+    ├─ SIMPLE → Memory + LLM (no agents, fast)
+    └─ COMPLEX → Memory + OpenSpec Plan + Agent Spawn (full orchestration)
+
+  You already have complexity assessment. Use it to ROUTE, not to decide how many phases to run.
+
+  ---
+  5. What Should aur soar Actually Be?
+
+  Let me think about what you actually have:
+  Component: Memory (activation/decay)
+  Status: ✅ Solid
+  Purpose: Intelligent retrieval that learns
+  ────────────────────────────────────────
+  Component: OpenSpec Planning
+  Status: ✅ Solid
+  Purpose: Spec → detailed plan decomposition
+  ────────────────────────────────────────
+  Component: Agent Discovery
+  Status: 🔨 In progress
+  Purpose: Find available agents/tools
+  ────────────────────────────────────────
+  Component: Agent Spawning
+  Status: 🔨 In progress
+  Purpose: Execute with workers + validators
+  ────────────────────────────────────────
+  Component: SOAR 9-phase
+  Status: ❓ Questionable
+  Purpose: ???
+  The question: What gap does aur soar fill?
+
+  Option A: aur soar = Intelligent Query Router
+
+  aur soar "query"
+    → Assess complexity
+    → SIMPLE: aur mem search + LLM response
+    → COMPLEX: aur plan (OpenSpec) → agent spawn
+
+  This makes aur soar the entry point that delegates to existing solid components.
+
+  Option B: aur soar = Complex Query Handler Only
+
+  aur soar "implement feature X"
+    → Retrieve context (memory)
+    → Generate plan (OpenSpec)
+    → Discover agents
+    → Spawn agents with plan
+    → Validate results
+    → Cache pattern
+
+  Simple queries don't use aur soar at all. They use aur mem search.
+
+  Option C: Merge Into aur plan --execute
+
+  If OpenSpec already decomposes plans, and agent spawning executes them, then:
+
+  aur plan "feature X" --execute
+    → OpenSpec generates plan
+    → Agent discovery finds executors
+    → Agents spawn and execute
+    → Validators check
+    → Pattern cached
+
+  This eliminates aur soar as a separate concept. It's just aur plan with execution.
+
+  ---
+  My Recommendation: Radical Simplification
+
+  Kill the 9-phase SOAR pipeline. Replace with:
+
+  New Architecture
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                     aur soar "query"                        │
+  └─────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+                      ┌─────────────────┐
+                      │     ASSESS      │
+                      │  (complexity)   │
+                      └────────┬────────┘
+                               │
+                ┌──────────────┴──────────────┐
+                ▼                              ▼
+          ┌───────────┐                 ┌─────────────┐
+          │  SIMPLE   │                 │   COMPLEX   │
+          └─────┬─────┘                 └──────┬──────┘
+                │                              │
+                ▼                              ▼
+      ┌─────────────────┐           ┌─────────────────────┐
+      │ Memory Retrieve │           │   Memory Retrieve   │
+      │ + LLM Response  │           └──────────┬──────────┘
+      │ + Cache Pattern │                      │
+      └────────┬────────┘                      ▼
+               │                    ┌─────────────────────┐
+               │                    │   OpenSpec Plan     │
+               │                    │   (decompose)       │
+               │                    └──────────┬──────────┘
+               │                               │
+               │                               ▼
+               │                    ┌─────────────────────┐
+               │                    │  Agent Discovery    │
+               │                    │  (find executors)   │
+               │                    └──────────┬──────────┘
+               │                               │
+               │                               ▼
+               │                    ┌─────────────────────┐
+               │                    │   Agent Spawn       │
+               │                    │  Worker + Validator │
+               │                    └──────────┬──────────┘
+               │                               │
+               │                               ▼
+               │                    ┌─────────────────────┐
+               │                    │   Cache Pattern     │
+               │                    └──────────┬──────────┘
+               │                               │
+               └───────────────┬───────────────┘
+                               ▼
+                      ┌─────────────────┐
+                      │     RESPOND     │
+                      └─────────────────┘
+
+  What This Means
+  ┌────────────┬──────────────────────┬────────────────────────────────────────┐
+  │    Old     │      New Model       │                 Notes                  │
+  │  9-Phase   │                      │                                        │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ ASSESS     │ Keep                 │ Routes to SIMPLE or COMPLEX path       │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ RETRIEVE   │ Keep                 │ Memory with activation/decay           │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ DECOMPOSE  │ → OpenSpec           │ You already have this!                 │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ VERIFY     │ → Built into agent   │ Validators ARE verification            │
+  │            │ spawn                │                                        │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ ROUTE      │ → Agent Discovery    │ You already have this!                 │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ COLLECT    │ → Agent Spawn        │ Workers execute                        │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ SYNTHESIZE │ → Agent Spawn        │ Combine in orchestration               │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ RECORD     │ Keep                 │ Pattern caching (the SOAR chunking     │
+  │            │                      │ equivalent)                            │
+  ├────────────┼──────────────────────┼────────────────────────────────────────┤
+  │ RESPOND    │ Keep                 │ Format output                          │
+  └────────────┴──────────────────────┴────────────────────────────────────────┘
+  That's 3 phases (ASSESS, EXECUTE, RECORD) + reuse of existing components (Memory, OpenSpec, Agent Discovery, Agent Spawn).
+
+  The SOAR Principles You Keep
+
+  1. Impasse → Subgoal: Complex queries get decomposed (OpenSpec)
+  2. Operator Selection: Agent Discovery finds who can execute
+  3. Chunking: Pattern caching learns from success
+  4. Activation/Decay: Memory prioritizes relevant context
+
+  What You Delete
+
+  1. DECOMPOSE phase → OpenSpec already does this
+  2. VERIFY phase → Validators in agent spawn do this
+  3. ROUTE phase → Agent discovery does this
+  4. COLLECT phase → Agent spawn does this
+  5. SYNTHESIZE phase → Agent orchestration does this
+
+  ---
+  TL;DR Answers
+
+  1. Your SOAR understanding was correct - SOAR needs predefined operators. But your operators ARE definable (tools + agents). The 9-phase pipeline is the wrong abstraction - SOAR is a loop, not a sequence.
+  2. Don't bring back "real SOAR" - Bring back SOAR's core insight (impasse → subgoal → chunk) but implement it via OpenSpec + Agent Spawn, not via 9 linear phases.
+  3. Kill self-verification - It doesn't work. Move verification INTO agent topology (workers + validators).
+  4. Generic questions don't need agents - Use memory + LLM directly. Only spawn agents for complex/multi-step tasks.
+  5. aur soar should be: Intelligent router that delegates SIMPLE queries to memory+LLM and COMPLEX queries to OpenSpec+AgentSpawn. Not a 9-phase pipeline.
+
+  The 9 phases were solving a problem you already solved elsewhere. Memory handles retrieval. OpenSpec handles decomposition. Agent discovery handles routing. Agent spawn handles execution. SOAR's job is just to assess complexity and delegate.
+
+✻ Brewed for 1m 43s
+
+❯ we are getting somewhere, i need you to understand the full pic first,
+  devil's adv   SOAR-style loop:
+
+  1. Get query        phase 0
+
+  2. Retrieve context (memory)  phase 2
+
+  3. Can LLM solve directly?    phase 1 word assess?
+
+  → YES: Solve, cache pattern, done    simple
+
+  → NO (impasse): Decompose into subgoals    medium, complex, critical
+
+  4. For each subgoal: select agent, execute    which part of soar
+
+  5. Combine results            phase 9 respond phase
+
+  6. Cache successful pattern        cache in memory?
+
+  7. Done
+
+
+
+  how does verification works? spawn another specialised agent?
+
+  openspec has plan (writes prd, tasks) and has implement that doesn't
+  assign agents, it uses general llm. my idea was to take query, decompose,
+  assign to correct subagents, then trigger plan, then we modify implement
+  to take and spaw agents. because openspec generated a plan from any
+  prompt and i though decompose and agent gap discovery/matching would
+  help. aur soar could be to trigger plans if implementation or for general
+  questions that needs decomposition
+
+● 1. They're mapping the SOAR-style loop to phases
+  2. They're asking about verification - spawn specialized agent?
+  3. They're explaining OpenSpec's current state:
+    - Plan: writes PRD, tasks
+    - Implement: uses general LLM (not agents)
+  4. Their idea:
+    - Query → Decompose → Assign to subagents → Trigger plan → Modify implement to spawn agents
+  5. OpenSpec can generate a plan from any prompt
+  6. Decompose + agent discovery/matching would help
+  7. aur soar could trigger plans for implementation OR for general questions needing decomposition
+
+  Let me think about this holistically:
+
+  Current State:
+  - Memory: solid (activation/decay)
+  - OpenSpec Plan: generates PRD, tasks from prompt
+  - OpenSpec Implement: uses general LLM (not specialized agents)
+  - Agent Discovery: exists (from PRD 0021)
+  - SOAR 9-phase: exists but questioned
+
+  The Gap:
+  OpenSpec implement doesn't use specialized agents. It just uses generic LLM.
+
+  User's Vision:
+  1. Query comes in
+  2. Assess complexity
+  3. If complex: Decompose into subgoals
+  4. Match subgoals to discovered agents
+  5. Trigger OpenSpec plan (generates detailed plan)
+  6. Modify OpenSpec implement to spawn matched agents
+  7. Agents execute their parts
+  8. Combine results
+
+  The question about verification:
+  How does verification work? Spawn another specialized agent?
+
+  My thinking on verification:
+  Yes - verification should be a specialized agent role. Like Zeroshot:
+  - Worker agent does the work
+  - Validator agent (specialized) checks the work
+  - If fail, worker fixes
+
+  For Aurora:
+  - full-stack-dev implements
+  - qa-test-architect validates
+  - If issues, full-stack-dev fixes
+
+  Let me map out what they're describing:
+
+  User Query
+      │
+      ▼
+  Phase 0: GET QUERY
+      │
+      ▼
+  Phase 1: ASSESS (complexity)
+      │
+      ├─ SIMPLE → Memory + LLM → Cache → Done
+      │
+      └─ MEDIUM/COMPLEX/CRITICAL
+             │
+             ▼
+      Phase 2: RETRIEVE (memory context)
+             │
+             ▼
+      DECOMPOSE (into subgoals)
+             │
+             ▼
+      AGENT DISCOVERY (match subgoals to agents)
+             │
+             ▼
+      OPENSPEC PLAN (generate detailed plan for each subgoal)
+             │
+             ▼
+      AGENT SPAWN (execute with matched agents)
+             │
+             ├─ Worker executes
+             │
+             └─ Validator verifies (specialized agent)
+                     │
+                     ├─ PASS → Continue
+                     └─ FAIL → Worker fixes → Re-verify
+             │
+             ▼
+      COMBINE RESULTS
+             │
+             ▼
+      CACHE PATTERN (in memory)
+             │
+             ▼
+      RESPOND
+
+  Key insights:
+
+  1. Verification = Specialized agent spawn
+    - qa-test-architect for code quality
+    - Could be domain-specific validators
+  2. OpenSpec's role:
+    - Plan: Generate detailed plan/tasks from decomposed subgoals
+    - Implement: Modified to spawn matched agents instead of generic LLM
+  3. aur soar's role:
+    - Entry point for complex queries
+    - Triggers the decompose → agent match → plan → implement flow
+    - Also handles simple queries with direct LLM
+  4. The SOAR mapping:
+    - State = Memory context
+    - Operators = Discovered agents
+    - Operator Selection = Agent matching
+    - Impasse = Query too complex (triggers decomposition)
+    - Subgoaling = OpenSpec plan generation
+    - Execution = Agent spawn
+    - Chunking = Pattern caching
+
+  Let me provide a clear devil's advocate response on this architecture.
+
+
+  Now I'm getting it. Let me map this out properly and devil's advocate it.
+
+  Your SOAR Loop Mapped
+
+  SOAR-style loop              │ Aurora Mapping
+  ─────────────────────────────┼─────────────────────────────
+  1. Get query                 │ Phase 0: Input
+  2. Retrieve context (memory) │ Phase 2: Memory retrieve
+  3. Can LLM solve directly?   │ Phase 1: ASSESS
+     → YES: Solve, cache, done │   → SIMPLE path
+     → NO (impasse): Decompose │   → MEDIUM/COMPLEX/CRITICAL
+  4. For each subgoal:         │ SOAR's "Operator Selection
+     select agent, execute     │   + Operator Application"
+  5. Combine results           │ Phase 9: RESPOND
+  6. Cache successful pattern  │ SOAR's "Chunking" → Memory
+  7. Done                      │
+
+  Your mapping is correct. Step 4 is SOAR's core operator cycle.
+
+  ---
+  Verification = Spawn Specialized Agent
+
+  Yes. That's exactly right.
+
+  Subgoal: "Implement OAuth login"
+      │
+      ▼
+  Worker Agent: full-stack-dev
+      │ (implements)
+      ▼
+  Validator Agent: qa-test-architect
+      │ (reviews)
+      ├─ PASS → Continue to next subgoal
+      └─ FAIL → Feedback to full-stack-dev → Re-implement → Re-verify
+
+  This IS verification. No separate "verify phase" needed. The validator agent IS the verification.
+
+  For different subgoal types, different validators:
+  ┌───────────────────────┬────────────────────┬───────────────────┐
+  │     Subgoal Type      │       Worker       │     Validator     │
+  ├───────────────────────┼────────────────────┼───────────────────┤
+  │ Code implementation   │ full-stack-dev     │ qa-test-architect │
+  ├───────────────────────┼────────────────────┼───────────────────┤
+  │ UI design             │ ux-expert          │ qa-test-architect │
+  ├───────────────────────┼────────────────────┼───────────────────┤
+  │ Architecture decision │ holistic-architect │ product-owner     │
+  ├───────────────────────┼────────────────────┼───────────────────┤
+  │ Documentation         │ scrum-master       │ product-owner     │
+  └───────────────────────┴────────────────────┴───────────────────┘
+  ---
+  OpenSpec's Current State vs Your Vision
+
+  Current OpenSpec:
+  Prompt → Plan (PRD, tasks) → Implement (generic LLM)
+
+  Your Vision:
+  Query
+    │
+    ▼
+  ASSESS (complexity)
+    │
+    ├─ SIMPLE → Memory + generic LLM → Done
+    │
+    └─ COMPLEX
+         │
+         ▼
+       DECOMPOSE (into subgoals)
+         │
+         ▼
+       AGENT DISCOVERY (match subgoals → agents)
+         │
+         ▼
+       OPENSPEC PLAN (detailed plan for matched agents)
+         │
+         ▼
+       MODIFIED IMPLEMENT (spawn matched agents, not generic LLM)
+         │
+         ▼
+       VALIDATION (spawn validator agent per subgoal)
+         │
+         ▼
+       CACHE + RESPOND
+
+  ---
+  Devil's Advocate: Where This Could Go Wrong
+
+  1. Decomposition Quality Problem
+
+  If decomposition is bad, everything downstream fails.
+
+  Bad decomposition:
+    "Implement OAuth" →
+      Subgoal 1: "Do the OAuth thing"
+      Subgoal 2: "Make it work"
+
+  Fix: Decomposition needs to be grounded in:
+  - Retrieved memory context (what patterns exist in codebase?)
+  - Agent capabilities (what can agents actually do?)
+
+  This is why you need memory BEFORE decomposition, not after.
+
+  2. Agent Discovery Mismatch
+
+  What if no agent matches a subgoal?
+
+  Subgoal: "Optimize database queries"
+  Available agents: full-stack-dev, ux-expert, qa-test-architect
+  Match: ??? (no DB specialist)
+
+  Options:
+  - Fallback to generic LLM (current behavior)
+  - Flag for human intervention
+  - Create composite task for closest match (full-stack-dev)
+
+  My take: Fallback to generic LLM is fine. Don't over-engineer.
+
+  3. Circular Dependencies in Subgoals
+
+  Subgoal A: "Design API schema" (needs B's output)
+  Subgoal B: "Define data models" (needs A's output)
+
+  Fix: Decomposition must produce a DAG (directed acyclic graph), not arbitrary subgoals. OpenSpec plan should handle execution order.
+
+  4. Validator Agent Overhead
+
+  For every worker execution, you spawn a validator. That's 2x the agent calls.
+
+  5 subgoals × (1 worker + 1 validator) = 10 agent spawns
+
+  Options:
+  - Only validate COMPLEX/CRITICAL subgoals
+  - Batch validation (validate multiple at once)
+  - Skip validation for low-risk subgoals
+
+  My take: Only validate code changes. Don't validate documentation or planning subgoals.
+
+  ---
+  What aur soar Should Actually Be
+
+  Given your vision:
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                   aur soar "query"                          │
+  ├─────────────────────────────────────────────────────────────┤
+  │                                                             │
+  │  PURPOSE:                                                   │
+  │  1. Complex questions needing decomposition                 │
+  │  2. Trigger implementation plans with agent spawn           │
+  │                                                             │
+  │  FLOW:                                                      │
+  │                                                             │
+  │  ┌─────────┐                                                │
+  │  │ ASSESS  │ ← Is this simple or complex?                   │
+  │  └────┬────┘                                                │
+  │       │                                                     │
+  │       ├─ SIMPLE ──→ Memory + LLM → Cache → Respond          │
+  │       │                                                     │
+  │       └─ COMPLEX                                            │
+  │            │                                                │
+  │            ▼                                                │
+  │       ┌─────────┐                                           │
+  │       │RETRIEVE │ ← Memory context (activation/decay)       │
+  │       └────┬────┘                                           │
+  │            │                                                │
+  │            ▼                                                │
+  │       ┌──────────┐                                          │
+  │       │DECOMPOSE │ ← Break into subgoals (grounded in ctx)  │
+  │       └────┬─────┘                                          │
+  │            │                                                │
+  │            ▼                                                │
+  │       ┌────────────┐                                        │
+  │       │AGENT MATCH │ ← Discover & match agents to subgoals  │
+  │       └────┬───────┘                                        │
+  │            │                                                │
+  │            ▼                                                │
+  │       ┌────────────┐                                        │
+  │       │OPENSPEC    │ ← Generate detailed plan per subgoal   │
+  │       │PLAN        │                                        │
+  │       └────┬───────┘                                        │
+  │            │                                                │
+  │            ▼                                                │
+  │       ┌────────────┐                                        │
+  │       │SPAWN &     │ ← Worker executes, Validator checks    │
+  │       │EXECUTE     │   (this IS verification)               │
+  │       └────┬───────┘                                        │
+  │            │                                                │
+  │            ▼                                                │
+  │       ┌────────────┐                                        │
+  │       │CACHE       │ ← Pattern to memory (SOAR chunking)    │
+  │       └────┬───────┘                                        │
+  │            │                                                │
+  │            ▼                                                │
+  │       ┌────────────┐                                        │
+  │       │RESPOND     │ ← Combined results to user             │
+  │       └────────────┘                                        │
+  │                                                             │
+  └─────────────────────────────────────────────────────────────┘
+
+  ---
+  Revised Phase Count
+  ┌─────────────┬───────────────────┬──────────────────────────────────────┐
+  │ Old 9-Phase │        New        │                Notes                 │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ ASSESS      │ ✅ Keep           │ Routes SIMPLE vs COMPLEX             │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ RETRIEVE    │ ✅ Keep           │ Memory with activation/decay         │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ DECOMPOSE   │ ✅ Keep           │ But grounded in retrieved context    │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ VERIFY      │ ❌ Kill           │ Merged into SPAWN (validator agents) │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ ROUTE       │ → AGENT MATCH     │ Combined with discovery              │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ COLLECT     │ → SPAWN & EXECUTE │ Workers + validators                 │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ SYNTHESIZE  │ → SPAWN & EXECUTE │ Part of orchestration                │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ RECORD      │ ✅ Keep as CACHE  │ Pattern caching                      │
+  ├─────────────┼───────────────────┼──────────────────────────────────────┤
+  │ RESPOND     │ ✅ Keep           │ Output formatting                    │
+  └─────────────┴───────────────────┴──────────────────────────────────────┘
+  New phases: 6 (vs old 9)
+  1. ASSESS
+  2. RETRIEVE
+  3. DECOMPOSE
+  4. AGENT MATCH (discovery + routing)
+  5. SPAWN & EXECUTE (OpenSpec plan + worker + validator)
+  6. CACHE & RESPOND
+
+  Or even 5 if you merge CACHE into SPAWN:
+  1. ASSESS
+  2. RETRIEVE
+  3. DECOMPOSE
+  4. AGENT MATCH
+  5. EXECUTE (OpenSpec + spawn + validate + cache + respond)
+
+  ---
+  The Key Question You're Asking
+
+  "aur soar could be to trigger plans if implementation or for general questions that needs decomposition"
+
+  Yes. That's exactly right.
+
+  aur soar has two modes:
+
+  Mode 1: General Question (needs decomposition)
+
+  aur soar "How does the payment system work?"
+  → ASSESS: COMPLEX (needs multi-part answer)
+  → RETRIEVE: Get payment-related code chunks
+  → DECOMPOSE:
+     - Subgoal 1: Explain payment initiation
+     - Subgoal 2: Explain payment processing
+     - Subgoal 3: Explain payment completion
+  → AGENT MATCH: All → generic LLM (no code changes)
+  → EXECUTE: LLM answers each, combine
+  → CACHE: Store reasoning pattern
+  → RESPOND: Combined explanation
+
+  Mode 2: Implementation (needs agent spawn)
+
+  aur soar "Implement OAuth login"
+  → ASSESS: COMPLEX (needs code changes)
+  → RETRIEVE: Get auth-related code chunks
+  → DECOMPOSE:
+     - Subgoal 1: Design OAuth flow
+     - Subgoal 2: Implement OAuth endpoints
+     - Subgoal 3: Add OAuth UI components
+     - Subgoal 4: Write OAuth tests
+  → AGENT MATCH:
+     - Subgoal 1 → holistic-architect
+     - Subgoal 2 → full-stack-dev (validator: qa-test-architect)
+     - Subgoal 3 → ux-expert + full-stack-dev
+     - Subgoal 4 → qa-test-architect
+  → OPENSPEC PLAN: Generate detailed plan for each
+  → EXECUTE: Spawn agents with plans
+  → VALIDATE: qa-test-architect reviews code subgoals
+  → CACHE: Store successful pattern
+  → RESPOND: "OAuth implemented. Files changed: ..."
+
+  ---
+  Final Architecture Clarity
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                    AURORA STACK                             │
+  ├─────────────────────────────────────────────────────────────┤
+  │                                                             │
+  │  ┌─────────────────────────────────────────────────────┐   │
+  │  │ aur soar                                            │   │
+  │  │ (Entry point for complex queries & implementations) │   │
+  │  └─────────────────────────────────────────────────────┘   │
+  │                          │                                  │
+  │                          ▼                                  │
+  │  ┌─────────────────────────────────────────────────────┐   │
+  │  │ ASSESS + RETRIEVE                                   │   │
+  │  │ (Complexity check + Memory context)                 │   │
+  │  └─────────────────────────────────────────────────────┘   │
+  │                          │                                  │
+  │         ┌────────────────┴────────────────┐                │
+  │         ▼                                  ▼                │
+  │  ┌──────────────┐                  ┌──────────────┐        │
+  │  │ SIMPLE PATH  │                  │ COMPLEX PATH │        │
+  │  │ Memory + LLM │                  │ Decompose +  │        │
+  │  │              │                  │ Agent Match  │        │
+  │  └──────────────┘                  └──────┬───────┘        │
+  │                                           │                 │
+  │                                           ▼                 │
+  │                                  ┌──────────────────┐       │
+  │                                  │ OPENSPEC PLAN    │       │
+  │                                  │ (Detailed tasks) │       │
+  │                                  └────────┬─────────┘       │
+  │                                           │                 │
+  │                                           ▼                 │
+  │                                  ┌──────────────────┐       │
+  │                                  │ AGENT SPAWN      │       │
+  │                                  │ Worker+Validator │       │
+  │                                  └────────┬─────────┘       │
+  │                                           │                 │
+  │                                           ▼                 │
+  │                                  ┌──────────────────┐       │
+  │                                  │ CACHE + RESPOND  │       │
+  │                                  │ (Learn + Output) │       │
+  │                                  └──────────────────┘       │
+  │                                                             │
+  │  ════════════════════════════════════════════════════════  │
+  │                     FOUNDATION LAYER                        │
+  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
+  │  │ MEMORY      │ │ OPENSPEC    │ │ AGENT DISCOVERY     │   │
+  │  │ (ACT-R      │ │ (Plan +     │ │ (Find + Match       │   │
+  │  │ activation) │ │ Implement)  │ │ agents to tasks)    │   │
+  │  └─────────────┘ └─────────────┘ └─────────────────────┘   │
+  │                                                             │
+  └─────────────────────────────────────────────────────────────┘
+
+  Does this match your vision?
+
+✻ Worked for 1m 12s
+
+❯ not quite, still exploring, i like the structure.#1 aur soar is for
+  questions and spawning agents that do research not implementation, i like
+  the simpler structure you suggested, i don't want to have plan, exuecute
+  all at once. #2 we currently have openspec (plan, implement archive) (i
+  still haven't figured out this part yet) aur plan should be aur soar
+  equivalent for implementation, it takes prompt/file and decompose and
+  does agent gap discovery (since this is a multi-turn so it will be
+  terminal we know claude can't handle multiturn with slash commands) so
+  aur plan terminal (user reviews) > /plan claude code openspec runs it
+  along with suggested subagents in specs (user reviews) > implement (has
+  to be integrated first) should use our spawning agent (probably terminal
+  for the same reason) how do you imagine this complex awful flow? devil's
+  adv ultrathink
+
+● Let me map out what you're describing and then tear it apart.
+
+  What You're Describing
+
+  ┌─────────────────────────────────────────────────────────────────┐
+  │ TWO PARALLEL TRACKS                                             │
+  ├─────────────────────────────────────────────────────────────────┤
+  │                                                                 │
+  │  TRACK 1: aur soar                 TRACK 2: aur plan            │
+  │  (Questions + Research)            (Implementation)             │
+  │                                                                 │
+  │  "How does auth work?"             "Implement OAuth"            │
+  │       │                                  │                      │
+  │       ▼                                  ▼                      │
+  │  Decompose question              Decompose implementation       │
+  │       │                                  │                      │
+  │       ▼                                  ▼                      │
+  │  Spawn research agents           Agent gap discovery            │
+  │       │                                  │                      │
+  │       ▼                                  ▼                      │
+  │  Combine answers                 USER REVIEWS (terminal)        │
+  │       │                                  │                      │
+  │       ▼                                  ▼                      │
+  │  Cache + Respond                 /plan in Claude Code           │
+  │                                  (OpenSpec with subagents)      │
+  │                                          │                      │
+  │                                          ▼                      │
+  │                                  USER REVIEWS                   │
+  │                                          │                      │
+  │                                          ▼                      │
+  │                                  implement (terminal)           │
+  │                                  (spawn agents)                 │
+  │                                          │                      │
+  │                                          ▼                      │
+  │                                  Done                           │
+  │                                                                 │
+  └─────────────────────────────────────────────────────────────────┘
+
+  The Awful Flow You're Describing (Implementation Track)
+
+  Step 1: aur plan terminal
+          ├─ Takes prompt or file
+          ├─ Decomposes into subgoals
+          ├─ Does agent gap discovery/matching
+          └─ USER REVIEWS
+                 │
+                 │ (context handoff somehow?)
+                 ▼
+  Step 2: /plan in Claude Code
+          ├─ OpenSpec generates detailed plan
+          ├─ Specs include suggested subagents
+          └─ USER REVIEWS
+                 │
+                 │ (context handoff somehow?)
+                 ▼
+  Step 3: implement (terminal)
+          ├─ Reads plan + agent assignments
+          ├─ Spawns agents per subgoal
+          └─ Execution
+
+  ---
+  Devil's Advocate: Why This Is Awful
+
+  Problem 1: Three Context Boundaries
+
+  Terminal Session 1 → Claude Code Session → Terminal Session 2
+       (aur plan)         (/plan)              (implement)
+           │                  │                     │
+           └──────────────────┴─────────────────────┘
+                      CONTEXT LOSS
+
+  Each transition loses context. You need to persist state between them.
+
+  Question: What carries the context? Files? Database? Environment variables?
+
+  Problem 2: Terminal → Claude Code → Terminal = UX Hell
+
+  User mental model:
+  "I started in terminal, now I'm in Claude Code, now I'm back in terminal.
+  Where am I? What step am I on? What did I approve already?"
+
+  This is modal confusion. Users will get lost.
+
+  Problem 3: Claude Code /plan Can't See Terminal State
+
+  When user runs /plan in Claude Code, it doesn't know:
+  - What decomposition was done in terminal
+  - What agents were discovered
+  - What the user approved/modified
+
+  You need explicit handoff. Either:
+  - Files written to .aurora/plans/
+  - Arguments passed to /plan
+  - Some shared state store
+
+  Problem 4: Two Review Points Before Any Execution
+
+  User: "Implement OAuth"
+
+  10 minutes later: "Here's the decomposition. Approve?"
+  User: "Yes"
+
+  5 minutes later: "Here's the detailed plan. Approve?"
+  User: "Yes"
+
+  Finally: Execution starts
+
+  15 minutes of review before anything happens. Users will abandon.
+
+  Problem 5: Who Manages the Agent Assignments?
+
+  aur plan terminal: "Subgoal 2 should use full-stack-dev"
+  /plan OpenSpec: "Here's the spec for subgoal 2"
+  implement: "Who executes subgoal 2 again? Let me check... somewhere..."
+
+  The agent assignment lives where? In the spec file? In a separate manifest? In memory?
+
+  ---
+  The Core Issue
+
+  You're fighting against a fundamental constraint:
+
+  Claude Code slash commands can't do multi-turn with state.
+
+  Your solution is to chain separate sessions with file handoffs. That works but it's ugly.
+
+  ---
+  Alternative: All-Terminal Flow
+
+  What if aur plan does everything in ONE terminal session?
+
+  aur plan "Implement OAuth"
+      │
+      │ ┌─────────────────────────────────────────┐
+      │ │ PHASE 1: UNDERSTAND                     │
+      │ │                                         │
+      │ │ Retrieving context from memory...       │
+      │ │ Decomposing into subgoals...            │
+      │ │                                         │
+      │ │ Subgoals:                               │
+      │ │   1. Design OAuth flow (architecture)   │
+      │ │   2. Implement OAuth endpoints (code)   │
+      │ │   3. Add OAuth UI (frontend)            │
+      │ │   4. Write OAuth tests (testing)        │
+      │ │                                         │
+      │ │ [a]pprove  [e]dit  [s]kip  [q]uit       │
+      │ └─────────────────────────────────────────┘
+      │
+      │ User: a
+      │
+      │ ┌─────────────────────────────────────────┐
+      │ │ PHASE 2: DISCOVER AGENTS                │
+      │ │                                         │
+      │ │ Matching agents to subgoals...          │
+      │ │                                         │
+      │ │ Assignments:                            │
+      │ │   1. holistic-architect                 │
+      │ │   2. full-stack-dev → qa-test-architect │
+      │ │   3. ux-expert → full-stack-dev         │
+      │ │   4. qa-test-architect                  │
+      │ │                                         │
+      │ │ [a]pprove  [e]dit  [s]kip  [q]uit       │
+      │ └─────────────────────────────────────────┘
+      │
+      │ User: a
+      │
+      │ ┌─────────────────────────────────────────┐
+      │ │ PHASE 3: GENERATE PLAN                  │
+      │ │                                         │
+      │ │ Generating OpenSpec plan...             │
+      │ │                                         │
+      │ │ Plan written to:                        │
+      │ │   .aurora/plans/oauth/plan.md           │
+      │ │   .aurora/plans/oauth/tasks.md          │
+      │ │   .aurora/plans/oauth/agents.json       │
+      │ │                                         │
+      │ │ [a]pprove  [v]iew  [e]dit  [q]uit       │
+      │ └─────────────────────────────────────────┘
+      │
+      │ User: a
+      │
+      │ ┌─────────────────────────────────────────┐
+      │ │ PHASE 4: EXECUTE                        │
+      │ │                                         │
+      │ │ Spawning agents...                      │
+      │ │                                         │
+      │ │ [1/4] holistic-architect: Designing...  │
+      │ │       ✓ Complete                        │
+      │ │                                         │
+      │ │ [2/4] full-stack-dev: Implementing...   │
+      │ │       qa-test-architect: Validating...  │
+      │ │       ✓ Passed                          │
+      │ │                                         │
+      │ │ [3/4] ux-expert: Designing UI...        │
+      │ │       full-stack-dev: Implementing...   │
+      │ │       ✓ Complete                        │
+      │ │                                         │
+      │ │ [4/4] qa-test-architect: Writing tests..│
+      │ │       ✓ Complete                        │
+      │ │                                         │
+      │ │ All subgoals complete.                  │
+      │ └─────────────────────────────────────────┘
+      │
+      ▼
+  Done. Pattern cached to memory.
+
+  Benefits:
+  - Single session - no context loss
+  - User reviews at each phase - but within same flow
+  - State maintained - no file handoffs between tools
+  - Clear progress - user always knows where they are
+
+  The /plan slash command becomes:
+  Just a shortcut that runs aur plan with current file context.
+
+  ---
+  Hybrid Alternative: File-Based State
+
+  If you MUST have separate commands, use files as the handoff:
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │ FILE-BASED STATE MACHINE                                    │
+  ├─────────────────────────────────────────────────────────────┤
+  │                                                             │
+  │  aur plan init "Implement OAuth"                            │
+  │       │                                                     │
+  │       ▼                                                     │
+  │  Creates: .aurora/plans/0042-oauth/                         │
+  │       ├─ state.json (phase: "decompose", status: "pending") │
+  │       ├─ prompt.md (original request)                       │
+  │       └─ context.json (retrieved memory)                    │
+  │       │                                                     │
+  │       ▼                                                     │
+  │  aur plan decompose 0042                                    │
+  │       │ (reads state, writes decomposition)                 │
+  │       ▼                                                     │
+  │  Updates: .aurora/plans/0042-oauth/                         │
+  │       ├─ state.json (phase: "discover", status: "pending")  │
+  │       ├─ subgoals.json                                      │
+  │       │                                                     │
+  │  USER: Reviews subgoals.json, edits if needed               │
+  │       │                                                     │
+  │       ▼                                                     │
+  │  aur plan discover 0042                                     │
+  │       │ (reads subgoals, matches agents)                    │
+  │       ▼                                                     │
+  │  Updates: .aurora/plans/0042-oauth/                         │
+  │       ├─ state.json (phase: "plan", status: "pending")      │
+  │       ├─ agents.json                                        │
+  │       │                                                     │
+  │  USER: Reviews agents.json                                  │
+  │       │                                                     │
+  │       ▼                                                     │
+  │  aur plan generate 0042                                     │
+  │       │ (generates OpenSpec plan with agents)               │
+  │       ▼                                                     │
+  │  Updates: .aurora/plans/0042-oauth/                         │
+  │       ├─ state.json (phase: "execute", status: "pending")   │
+  │       ├─ plan.md                                            │
+  │       ├─ tasks.md                                           │
+  │       ├─ specs/*.md                                         │
+  │       │                                                     │
+  │  USER: Reviews plan                                         │
+  │       │                                                     │
+  │       ▼                                                     │
+  │  aur plan execute 0042                                      │
+  │       │ (spawns agents per spec)                            │
+  │       ▼                                                     │
+  │  Execution with progress                                    │
+  │                                                             │
+  └─────────────────────────────────────────────────────────────┘
+
+  Benefits:
+  - State persisted in files - survives session crashes
+  - User can edit files directly - full control
+  - Each command is idempotent - can re-run if needed
+  - Clear audit trail - everything in .aurora/plans/
+
+  Drawbacks:
+  - More commands - user must remember sequence
+  - Manual progression - user drives each step
+
+  ---
+  My Recommendation
+
+  Option A: All-Terminal Interactive Flow
+
+  For users who want guided experience:
+  aur plan "Implement OAuth" --interactive
+  # Walks through all phases with prompts
+
+  Option B: File-Based Step-by-Step
+
+  For users who want control:
+  aur plan init "Implement OAuth"    # Creates plan directory
+  aur plan decompose 0042            # Generates subgoals
+  aur plan discover 0042             # Matches agents
+  aur plan generate 0042             # Creates specs
+  aur plan execute 0042              # Spawns agents
+
+  Option C: One-Shot (Risky but Fast)
+
+  For users who trust the system:
+  aur plan "Implement OAuth" --execute
+  # Does everything without stopping for review
+
+  ---
+  The Two Tracks Clarified
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                                                             │
+  │  aur soar                          aur plan                 │
+  │  ════════                          ════════                 │
+  │                                                             │
+  │  PURPOSE:                          PURPOSE:                 │
+  │  Questions + Research              Implementation           │
+  │                                                             │
+  │  SPAWNS:                           SPAWNS:                  │
+  │  Research agents                   Worker + Validator       │
+  │  (gather info, analyze)            agents (build, verify)   │
+  │                                                             │
+  │  OUTPUT:                           OUTPUT:                  │
+  │  Answers + explanations            Code changes + artifacts │
+  │                                                             │
+  │  FLOW:                             FLOW:                    │
+  │  Retrieve → Decompose →            Decompose → Discover →   │
+  │  Research → Synthesize             Plan → Execute → Verify  │
+  │                                                             │
+  │  REVIEW POINTS:                    REVIEW POINTS:           │
+  │  None (fast)                       Multiple (careful)       │
+  │                                                             │
+  └─────────────────────────────────────────────────────────────┘
+
+  ---
+  Devil's Advocate Summary
+  Issue: Context loss
+  Your Current Approach: Three separate sessions
+  Better Alternative: Single terminal session OR file-based state
+  ────────────────────────────────────────
+  Issue: UX confusion
+  Your Current Approach: Terminal → Claude Code → Terminal
+  Better Alternative: Pick one mode
+  ────────────────────────────────────────
+  Issue: Review fatigue
+  Your Current Approach: Two reviews before execution
+  Better Alternative: Combine into single flow with phase prompts
+  ────────────────────────────────────────
+  Issue: Agent assignment persistence
+  Your Current Approach: Unclear
+  Better Alternative: Explicit agents.json in plan directory
+  ────────────────────────────────────────
+  Issue: Claude Code limitation
+  Your Current Approach: Work around with handoffs
+  Better Alternative: Embrace terminal for multi-turn
+  The "awful flow" is awful because it fights the constraints instead of designing around them.
+
+  My vote: All-terminal interactive flow (aur plan --interactive) with file-based state for persistence. No Claude Code slash commands in the implementation path.
+
+  The /plan slash command becomes a quick launcher that opens terminal with aur plan pre-configured.
+
+  What do you think?
+
+✻ Worked for 1m 26s
+
+❯ i know it's a ux hell but you left me no choice, we tried mcp, slash and
+  skills and they are all suggestive to you in multi-turn implemenation and
+  we agreed terminal script with piping is the only way and that's what
+  langchain and crewai do. pass piece by piece to llms. do you have other
+  solutions? what's the revised final flow for aur soar now? ultrathink
+  Or even 5 if you merge CACHE into SPAWN:
+  1. ASSESS
+  2. RETRIEVE
+  3. DECOMPOSE
+  4. AGENT MATCH
+  5. EXECUTE (OpenSpec + spawn + validate + cache + respond)
+
+● You're right. I've been fighting the constraint instead of accepting it.
+
+  The reality:
+  - MCP = stateless per call
+  - Slash commands = suggestive, not controllable in multi-turn
+  - Skills = same issue
+  - Terminal + piping = the only reliable multi-turn orchestration
+
+  That's what LangChain and CrewAI do. You pass structured outputs between LLM calls programmatically. There's no magic.
+
+  ---
+  Revised Final Flow for aur soar
+
+  Purpose: Questions + Research (spawns research agents, NOT implementation)
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                     aur soar "query"                        │
+  └─────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │ PHASE 1: ASSESS                                             │
+  │                                                             │
+  │ Input:  Query string                                        │
+  │ Action: Classify complexity (SIMPLE | COMPLEX)              │
+  │ Output: { complexity, reasoning }                           │
+  │                                                             │
+  │ If SIMPLE → Skip to EXECUTE (direct LLM answer)             │
+  └─────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │ PHASE 2: RETRIEVE                                           │
+  │                                                             │
+  │ Input:  Query + complexity                                  │
+  │ Action: Search memory (BM25 + activation/decay)             │
+  │ Output: { chunks[], context_summary }                       │
+  │                                                             │
+  │ Budget: SIMPLE=5, COMPLEX=15 chunks                         │
+  └─────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │ PHASE 3: DECOMPOSE (skip for SIMPLE)                        │
+  │                                                             │
+  │ Input:  Query + context_summary                             │
+  │ Action: Break into research sub-questions                   │
+  │ Output: { subgoals[], dependencies }                        │
+  │                                                             │
+  │ Example:                                                    │
+  │   Query: "How does payment work?"                           │
+  │   Subgoals:                                                 │
+  │     1. "What are the payment entry points?"                 │
+  │     2. "What is the payment processing flow?"               │
+  │     3. "What states can a payment be in?"                   │
+  │     4. "How are payment errors handled?"                    │
+  └─────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │ PHASE 4: AGENT MATCH (skip for SIMPLE)                      │
+  │                                                             │
+  │ Input:  Subgoals + available agents                         │
+  │ Action: Match subgoals to research approach                 │
+  │ Output: { assignments[] }                                   │
+  │                                                             │
+  │ For research, "agents" are:                                 │
+  │   - code-searcher (Glob, Grep, Read focused)                │
+  │   - architecture-analyzer (structure analysis)              │
+  │   - doc-searcher (KB, docs focused)                         │
+  │   - generic-llm (fallback)                                  │
+  │                                                             │
+  │ Or simply: parallel LLM calls with different context slices │
+  └─────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │ PHASE 5: EXECUTE                                            │
+  │                                                             │
+  │ Input:  Assignments + chunks                                │
+  │ Action:                                                     │
+  │   1. Spawn research agents (parallel if independent)        │
+  │   2. Collect results from each                              │
+  │   3. Synthesize into coherent answer                        │
+  │   4. Cache successful pattern to memory                     │
+  │   5. Format and respond                                     │
+  │ Output: { answer, confidence, sources[], pattern_cached }   │
+  │                                                             │
+  └─────────────────────────────────────────────────────────────┘
+
+  ---
+  The SIMPLE vs COMPLEX Branch
+
+  ASSESS
+    │
+    ├─ SIMPLE ──→ RETRIEVE ──→ EXECUTE (direct LLM answer)
+    │                              │
+    │                              ├─ LLM answers with context
+    │                              ├─ Cache pattern
+    │                              └─ Respond
+    │
+    └─ COMPLEX ─→ RETRIEVE ─→ DECOMPOSE ─→ AGENT MATCH ─→ EXECUTE
+                                                             │
+                                                             ├─ Spawn parallel
+                                                             ├─ Collect results
+                                                             ├─ Synthesize
+                                                             ├─ Cache pattern
+                                                             └─ Respond
+
+  ---
+  Terminal Implementation (The Piping)
+
+  # Pseudocode for aur soar orchestration
+
+  def aur_soar(query: str):
+      # Phase 1: ASSESS
+      assessment = llm_call(
+          prompt=ASSESS_PROMPT,
+          input={"query": query}
+      )
+
+      # Phase 2: RETRIEVE
+      chunks = memory.retrieve(
+          query=query,
+          limit=5 if assessment.complexity == "SIMPLE" else 15
+      )
+
+      if assessment.complexity == "SIMPLE":
+          # Skip to direct answer
+          answer = llm_call(
+              prompt=ANSWER_PROMPT,
+              input={"query": query, "context": chunks}
+          )
+          memory.cache_pattern(query, answer)
+          return answer
+
+      # Phase 3: DECOMPOSE
+      decomposition = llm_call(
+          prompt=DECOMPOSE_PROMPT,
+          input={"query": query, "context_summary": summarize(chunks)}
+      )
+
+      # Phase 4: AGENT MATCH
+      assignments = match_agents(
+          subgoals=decomposition.subgoals,
+          available_agents=discover_agents()
+      )
+
+      # Phase 5: EXECUTE
+      results = []
+      for subgoal, agent in assignments:
+          # Spawn agent (subprocess or LLM call)
+          result = spawn_agent(
+              agent=agent,
+              task=subgoal,
+              context=filter_chunks(chunks, subgoal)
+          )
+          results.append(result)
+
+      # Synthesize
+      answer = llm_call(
+          prompt=SYNTHESIZE_PROMPT,
+          input={"query": query, "results": results}
+      )
+
+      # Cache
+      memory.cache_pattern(query, decomposition, answer)
+
+      return answer
+
+  ---
+  What "Spawn Agent" Actually Means
+
+  For aur soar (research), spawning an agent is:
+
+  def spawn_agent(agent: str, task: str, context: list):
+      if agent == "code-searcher":
+          # Focused on finding code
+          return llm_call(
+              prompt=CODE_SEARCH_PROMPT,
+              input={"task": task, "context": context},
+              tools=["Glob", "Grep", "Read"]
+          )
+      elif agent == "architecture-analyzer":
+          # Focused on structure analysis
+          return llm_call(
+              prompt=ARCHITECTURE_PROMPT,
+              input={"task": task, "context": context}
+          )
+      else:
+          # Generic research
+          return llm_call(
+              prompt=RESEARCH_PROMPT,
+              input={"task": task, "context": context}
+          )
+
+  It's LLM calls with different system prompts and tool access. That's all agents are.
+
+  ---
+  Final Comparison: Old 9-Phase vs New 5-Phase
+  ┌────────────┬────────────────┬───────────────────────────────────────┐
+  │ Old Phase  │   New Phase    │                 Notes                 │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ ASSESS     │ 1. ASSESS      │ Keep as-is                            │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ RETRIEVE   │ 2. RETRIEVE    │ Keep as-is                            │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ DECOMPOSE  │ 3. DECOMPOSE   │ Keep, skip for SIMPLE                 │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ VERIFY     │ ❌ Deleted     │ Moved into EXECUTE (validator agents) │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ ROUTE      │ 4. AGENT MATCH │ Simplified                            │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ COLLECT    │ 5. EXECUTE     │ Merged                                │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ SYNTHESIZE │ 5. EXECUTE     │ Merged                                │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ RECORD     │ 5. EXECUTE     │ Merged (cache)                        │
+  ├────────────┼────────────────┼───────────────────────────────────────┤
+  │ RESPOND    │ 5. EXECUTE     │ Merged (output)                       │
+  └────────────┴────────────────┴───────────────────────────────────────┘
+  9 phases → 5 phases
+
+  ---
+  The Two Tracks (Final)
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                                                             │
+  │  aur soar (5 phases)               aur plan (5 phases)      │
+  │  ══════════════════                ══════════════════       │
+  │                                                             │
+  │  1. ASSESS                         1. ASSESS                │
+  │  2. RETRIEVE                       2. RETRIEVE              │
+  │  3. DECOMPOSE                      3. DECOMPOSE             │
+  │  4. AGENT MATCH                    4. AGENT MATCH           │
+  │  5. EXECUTE                        5. EXECUTE               │
+  │     └─ research agents                └─ worker + validator │
+  │     └─ synthesize answer              └─ OpenSpec plan      │
+  │     └─ cache pattern                  └─ spawn & execute    │
+  │     └─ respond                        └─ cache & respond    │
+  │                                                             │
+  │  PURPOSE:                          PURPOSE:                 │
+  │  Questions + Research              Implementation           │
+  │                                                             │
+  │  USER REVIEW:                      USER REVIEW:             │
+  │  None (automatic)                  At each phase (terminal) │
+  │                                                             │
+  └─────────────────────────────────────────────────────────────┘
+
+  ---
+  Answer to Your Question
+
+  Do you have other solutions?
+
+  No. Terminal + piping is the only reliable way for multi-turn orchestration. You've correctly identified this.
+
+  The "UX hell" is the price of stateful multi-turn. LangChain and CrewAI pay the same price—they just hide it in Python abstractions. You're being explicit about it, which is actually more honest.
+
+  ---
+  The 5-Phase aur soar Summary
+
+  1. ASSESS     - Is this simple or complex?
+  2. RETRIEVE   - Get memory context (activation/decay)
+  3. DECOMPOSE  - Break into research sub-questions (skip for SIMPLE)
+  4. AGENT MATCH - Assign to research agents (skip for SIMPLE)
+  5. EXECUTE    - Spawn, synthesize, cache, respond
+
+  For SIMPLE: 1 → 2 → 5
+  For COMPLEX: 1 → 2 → 3 → 4 → 5
+
+  That's the flow. Clean, traceable, implementable in terminal with piping.
+
+✻ Worked for 1m 13s

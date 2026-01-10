@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+
 from aurora_cli.errors import (
     EXIT_SUCCESS,
     EXIT_SYSTEM_ERROR,
@@ -300,6 +301,7 @@ class TestHandleErrorsDecorator:
     def test_decorator_system_error_exit_code(self):
         """Test that decorator uses EXIT_SYSTEM_ERROR for system errors."""
         import click
+
         from aurora_cli.errors import MemoryStoreError
 
         @handle_errors

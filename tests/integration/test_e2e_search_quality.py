@@ -14,11 +14,10 @@ from pathlib import Path
 from typing import List, Tuple
 
 import pytest
-from aurora_cli.memory_manager import MemoryManager
 
+from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
-
 
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 
@@ -32,30 +31,24 @@ SEARCH_QUERIES = [
     ("HybridRetriever", "HybridRetriever"),
     ("retrieve_context", "retrieve_context"),
     ("assess_retrieval_quality", "assess_retrieval_quality"),
-
     # CamelCase splitting tests
     ("getUserData", "get_user_data"),  # Should find via CamelCase tokenization
     ("ProcessQuery", "process_query"),
-
     # Semantic concept search (should find related functions)
     ("calculate activation score", "calculate_activation"),
     ("embed text with model", "generate_embeddings"),
     ("verify context quality", "assess_retrieval_quality"),
-
     # Class method search
     ("SQLiteStore save", "save_chunk"),
     ("MemoryManager index", "index_path"),
-
     # Architecture concepts
     ("SOAR orchestration pipeline", "SOAROrchestrator"),
     ("hybrid search retrieval", "HybridRetriever"),
-
     # Domain-specific terms
     ("activation frequency recency", "calculate_activation"),
     ("semantic similarity search", "semantic_search"),
     ("BM25 scoring algorithm", "BM25Scorer"),
     ("code chunk parsing", "parse_file"),
-
     # Multi-word exact matches
     ("retrieval quality assessment", "assess_retrieval_quality"),
     ("context window management", "manage_context"),
@@ -113,10 +106,7 @@ class TestEndToEndSearchQuality:
     def memory_manager(self, memory_store):
         """Create MemoryManager with real components."""
         embedding_provider = EmbeddingProvider()
-        return MemoryManager(
-            memory_store=memory_store,
-            embedding_provider=embedding_provider
-        )
+        return MemoryManager(memory_store=memory_store, embedding_provider=embedding_provider)
 
     @pytest.fixture
     def aurora_subset(self) -> Path:
@@ -167,11 +157,7 @@ class TestEndToEndSearchQuality:
 
         for query, expected_name in SEARCH_QUERIES:
             # Search with default top_k=10
-            search_results = memory_manager.search(
-                query=query,
-                top_k=10,
-                complexity="MEDIUM"
-            )
+            search_results = memory_manager.search(query=query, top_k=10, complexity="MEDIUM")
 
             # Extract result names (function/class/method names)
             result_names = [r.name for r in search_results]
@@ -204,8 +190,7 @@ class TestEndToEndSearchQuality:
 
         # Assert MRR meets threshold
         assert mrr >= 0.85, (
-            f"MRR {mrr:.3f} below threshold 0.85. "
-            f"BM25 tri-hybrid search quality insufficient."
+            f"MRR {mrr:.3f} below threshold 0.85. " f"BM25 tri-hybrid search quality insufficient."
         )
 
     def test_exact_match_top_rank(self, memory_manager, memory_store, aurora_subset):
@@ -233,13 +218,11 @@ class TestEndToEndSearchQuality:
             top_result = results[0]
             if top_result.name != expected_name:
                 failures.append(
-                    f"{query}: expected '{expected_name}' at rank 1, "
-                    f"got '{top_result.name}'"
+                    f"{query}: expected '{expected_name}' at rank 1, " f"got '{top_result.name}'"
                 )
 
-        assert not failures, (
-            "Exact match queries must rank target at position 1:\n" +
-            "\n".join(failures)
+        assert not failures, "Exact match queries must rank target at position 1:\n" + "\n".join(
+            failures
         )
 
     def test_camelcase_splitting_works(self, memory_manager, memory_store, aurora_subset):
@@ -305,12 +288,10 @@ class TestEndToEndSearchQuality:
 
         # Check that results span multiple files (not all from one file)
         file_paths = set(r.file_path for r in results)
-        assert len(file_paths) >= 3, (
-            f"Results should span multiple files, got {len(file_paths)} files"
-        )
+        assert (
+            len(file_paths) >= 3
+        ), f"Results should span multiple files, got {len(file_paths)} files"
 
         # Check that results span multiple element types
         element_types = set(r.element_type for r in results)
-        assert len(element_types) >= 2, (
-            f"Results should span multiple types, got {element_types}"
-        )
+        assert len(element_types) >= 2, f"Results should span multiple types, got {element_types}"

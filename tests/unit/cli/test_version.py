@@ -9,8 +9,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora_cli.main import cli
 from click.testing import CliRunner
+
+from aurora_cli.main import cli
 
 
 @pytest.fixture

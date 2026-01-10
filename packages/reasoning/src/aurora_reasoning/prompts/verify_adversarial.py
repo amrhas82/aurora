@@ -47,12 +47,18 @@ Evaluate across four dimensions:
 
 Calculate overall score as: 0.4*completeness + 0.2*consistency + 0.2*groundedness + 0.2*routability
 
-Provide verdict with HIGH STANDARDS:
-- PASS: score ≥ 0.7 AND no critical issues found
-- RETRY: 0.5 ≤ score < 0.7 OR minor issues that can be fixed
-- FAIL: score < 0.5 OR critical flaws that cannot be easily fixed
+Provide verdict:
+- PASS: score ≥ 0.6 (note: scores 0.60-0.70 are "devil's advocate" territory - acceptable but warrant detailed explanation)
+- RETRY: 0.5 ≤ score < 0.6, issues exist BUT suggestions can fix them
+- FAIL: score < 0.5, fundamentally broken with NO path to fix (e.g., query is nonsensical, impossible task)
 
-Be thorough and specific in identifying issues. The bar for PASS should be high.
+For scores in [0.60, 0.70):
+- Still mark as PASS (threshold met)
+- But provide EXTRA detailed explanation of concerns in critical_issues/minor_issues
+- List specific edge cases that could cause problems
+- Provide actionable suggestions to strengthen the decomposition
+
+Be thorough and specific in identifying issues. The bar for strong PASS (≥0.7) should be high.
 
 You MUST respond with valid JSON only. Use this exact format:
 {

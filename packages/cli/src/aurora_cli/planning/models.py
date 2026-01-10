@@ -119,9 +119,7 @@ class Subgoal(BaseModel):
         """
         pattern = r"^sg-\d+$"
         if not re.match(pattern, v):
-            raise ValueError(
-                f"Subgoal ID must be 'sg-N' format (e.g., 'sg-1'). Got: {v}"
-            )
+            raise ValueError(f"Subgoal ID must be 'sg-N' format (e.g., 'sg-1'). Got: {v}")
         return v
 
     @field_validator("recommended_agent")
@@ -140,9 +138,7 @@ class Subgoal(BaseModel):
         """
         pattern = r"^@[a-z0-9][a-z0-9-]*$"
         if not re.match(pattern, v):
-            raise ValueError(
-                f"Agent must start with '@' (e.g., '@full-stack-dev'). Got: {v}"
-            )
+            raise ValueError(f"Agent must start with '@' (e.g., '@full-stack-dev'). Got: {v}")
         return v
 
     @field_validator("dependencies", mode="before")
@@ -334,9 +330,7 @@ class Plan(BaseModel):
             if sg_id not in visited:
                 cycle = has_cycle(sg_id, [])
                 if cycle:
-                    raise ValueError(
-                        f"Circular dependency detected: {' -> '.join(cycle)}"
-                    )
+                    raise ValueError(f"Circular dependency detected: {' -> '.join(cycle)}")
 
         return self
 
@@ -658,9 +652,7 @@ class DecompositionSummary(BaseModel):
         """
         valid_sources = {"soar", "heuristic"}
         if v not in valid_sources:
-            raise ValueError(
-                f"decomposition_source must be one of {valid_sources}. Got: {v}"
-            )
+            raise ValueError(f"decomposition_source must be one of {valid_sources}. Got: {v}")
         return v
 
     def display(self) -> None:
@@ -683,9 +675,7 @@ class DecompositionSummary(BaseModel):
             content.append(f"[bold cyan]Goal:[/bold cyan] {self.goal}\n")
 
             # Subgoals count
-            content.append(
-                f"[bold cyan]Subgoals:[/bold cyan] {len(self.subgoals)}\n"
-            )
+            content.append(f"[bold cyan]Subgoals:[/bold cyan] {len(self.subgoals)}\n")
 
             # List each subgoal
             for sg in self.subgoals:
@@ -698,17 +688,13 @@ class DecompositionSummary(BaseModel):
 
             # Agent summary
             gap_count = len(self.agent_gaps)
-            agent_summary = (
-                f"[bold cyan]Agents:[/bold cyan] {self.agents_assigned} assigned"
-            )
+            agent_summary = f"[bold cyan]Agents:[/bold cyan] {self.agents_assigned} assigned"
             if gap_count > 0:
                 agent_summary += f", [yellow]{gap_count} gaps[/yellow]"
             content.append(agent_summary)
 
             # File summary
-            file_summary = (
-                f"[bold cyan]Files:[/bold cyan] {self.files_resolved} resolved"
-            )
+            file_summary = f"[bold cyan]Files:[/bold cyan] {self.files_resolved} resolved"
             if self.files_resolved > 0:
                 file_summary += f" (avg confidence: {self.avg_confidence:.2f})"
             content.append(file_summary)
@@ -755,7 +741,9 @@ class DecompositionSummary(BaseModel):
             for sg in self.subgoals:
                 print(f"  [{sg.id}] {sg.title} ({sg.recommended_agent})")
             print(f"Agents: {self.agents_assigned} assigned, {len(self.agent_gaps)} gaps")
-            print(f"Files: {self.files_resolved} resolved (avg confidence: {self.avg_confidence:.2f})")
+            print(
+                f"Files: {self.files_resolved} resolved (avg confidence: {self.avg_confidence:.2f})"
+            )
             print(f"Complexity: {self.complexity.value.upper()}")
             print(f"Source: {self.decomposition_source}")
             if self.warnings:
@@ -763,3 +751,144 @@ class DecompositionSummary(BaseModel):
                 for warning in self.warnings:
                     print(f"  ⚠ {warning}")
             print("=" * 60 + "\n")
+
+
+class MemoryContext(BaseModel):
+    """Memory context file with relevance score.
+
+    Represents a file from memory search that's relevant to the goal.
+
+    Attributes:
+        file: File path
+        relevance: Relevance score (0.0-1.0)
+    """
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
+    file: str = Field(
+        ...,
+        description="File path from memory search",
+        examples=["src/auth.py", "docs/architecture.md"],
+        min_length=1,
+    )
+    relevance: float = Field(
+        ...,
+        description="Relevance score from memory search",
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class SubgoalData(BaseModel):
+    """Subgoal data for goals.json format.
+
+    Represents a subgoal with agent assignment and dependencies.
+    This is the format used in goals.json for the /plan skill.
+
+    Attributes:
+        id: Subgoal ID (sg-1, sg-2, etc.)
+        title: Short title
+        description: Detailed description
+        agent: Recommended agent ID with @ prefix
+        confidence: Confidence score of agent match (0.0-1.0)
+        dependencies: List of dependent subgoal IDs
+    """
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
+    id: str = Field(
+        ...,
+        description="Subgoal ID",
+        pattern=r"^sg-\d+$",
+        examples=["sg-1", "sg-2"],
+    )
+    title: str = Field(
+        ...,
+        description="Short subgoal title",
+        min_length=5,
+        max_length=100,
+    )
+    description: str = Field(
+        ...,
+        description="Detailed subgoal description",
+        min_length=10,
+        max_length=500,
+    )
+    agent: str = Field(
+        ...,
+        description="Recommended agent ID with @ prefix",
+        pattern=r"^@[a-z0-9-]+$",
+        examples=["@full-stack-dev", "@qa-test-architect"],
+    )
+    confidence: float = Field(
+        ...,
+        description="Confidence score of agent match",
+        ge=0.0,
+        le=1.0,
+    )
+    dependencies: list[str] = Field(
+        default_factory=list,
+        description="List of dependent subgoal IDs",
+    )
+
+
+class Goals(BaseModel):
+    """Goals format for goals.json file.
+
+    This is the main format used by the /plan skill to generate PRD and tasks.
+    Matches FR-6.2 format from PRD-0026.
+
+    Attributes:
+        id: Plan ID (NNNN-slug format)
+        title: Goal title
+        created_at: Creation timestamp
+        status: Status (always "ready_for_planning" initially)
+        memory_context: Relevant files from memory search
+        subgoals: List of subgoals with agent assignments
+        gaps: List of agent gaps (missing agents)
+    """
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
+    id: str = Field(
+        ...,
+        description="Plan ID in NNNN-slug format",
+        pattern=r"^\d{4}-[a-z0-9-]+$",
+        examples=["0001-add-oauth2", "0042-refactor-api"],
+    )
+    title: str = Field(
+        ...,
+        description="Goal title",
+        min_length=10,
+        max_length=500,
+    )
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        description="Creation timestamp",
+    )
+    status: str = Field(
+        default="ready_for_planning",
+        description="Status (always ready_for_planning initially)",
+    )
+    memory_context: list[MemoryContext] = Field(
+        default_factory=list,
+        description="Relevant files from memory search",
+    )
+    subgoals: list[SubgoalData] = Field(
+        ...,
+        description="List of subgoals with agent assignments",
+        min_length=1,
+    )
+    gaps: list[AgentGap] = Field(
+        default_factory=list,
+        description="List of agent gaps (missing agents)",
+    )

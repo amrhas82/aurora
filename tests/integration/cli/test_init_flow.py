@@ -26,9 +26,9 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from aurora_cli.main import cli
 from click.testing import CliRunner
 
+from aurora_cli.main import cli
 
 pytestmark = pytest.mark.integration
 
@@ -90,6 +90,7 @@ def run_in_dir(runner: CliRunner, directory: Path, *args, **kwargs):
         Result from runner.invoke
     """
     import os
+
     original_dir = os.getcwd()
     try:
         os.chdir(directory)
@@ -121,16 +122,13 @@ def test_first_time_init_full_flow(temp_project, runner):
     user_input = "y\n"  # y for git init
 
     # Mock the async prompt_tool_selection function
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = ["claude-code"]  # User selects Claude Code
 
         result = run_in_dir(
-            runner,
-            temp_project,
-            cli,
-            ["init"],
-            input=user_input,
-            catch_exceptions=False
+            runner, temp_project, cli, ["init"], input=user_input, catch_exceptions=False
         )
 
     # Verify command succeeded
@@ -188,13 +186,18 @@ def test_init_without_git(temp_project, runner):
     # Simulate user input: no to git
     user_input = "n\n"
 
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []  # No tools
 
-        result = run_in_dir(runner, temp_project, cli, ["init"],
+        result = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input=user_input,
             catch_exceptions=False,
-
         )
 
     assert result.exit_code == 0
@@ -236,12 +239,17 @@ def test_config_flag_skips_early_steps(temp_project, runner):
     aurora_dir.mkdir()
     (aurora_dir / "logs").mkdir()
 
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = ["Claude Code"]
 
-        result = run_in_dir(runner, temp_project, cli, ["init", "--config"],
+        result = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init", "--config"],
             catch_exceptions=False,
-
         )
 
     assert result.exit_code == 0
@@ -269,9 +277,12 @@ def test_config_flag_errors_without_aurora(temp_project, runner):
     5. Suggests running aur init first
     """
 
-    result = run_in_dir(runner, temp_project, cli, ["init", "--config"],
+    result = run_in_dir(
+        runner,
+        temp_project,
+        cli,
+        ["init", "--config"],
         catch_exceptions=False,
-
     )
 
     # Verify error
@@ -302,13 +313,18 @@ def test_idempotent_rerun_exit_option(temp_project, runner):
     """
 
     # First run
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result1 = run_in_dir(runner, temp_project, cli, ["init"],
+        result1 = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input="y\n",  # Accept git
             catch_exceptions=False,
-
         )
 
     assert result1.exit_code == 0
@@ -318,16 +334,22 @@ def test_idempotent_rerun_exit_option(temp_project, runner):
     initial_mtime = memory_db.stat().st_mtime
 
     # Second run - select exit
-    result2 = run_in_dir(runner, temp_project, cli, ["init"],
+    result2 = run_in_dir(
+        runner,
+        temp_project,
+        cli,
+        ["init"],
         input="4\n",  # Option 4: Exit
         catch_exceptions=False,
-
     )
 
     assert result2.exit_code == 0
 
     # Verify status summary shown
-    assert "current status" in result2.output.lower() or "already initialized" in result2.output.lower()
+    assert (
+        "current status" in result2.output.lower()
+        or "already initialized" in result2.output.lower()
+    )
 
     # Verify no changes made
     assert memory_db.stat().st_mtime == initial_mtime
@@ -353,13 +375,18 @@ def test_rerun_all_steps_with_backup(temp_project, runner):
     """
 
     # First run
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result1 = run_in_dir(runner, temp_project, cli, ["init"],
+        result1 = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input="y\n",
             catch_exceptions=False,
-
         )
 
     assert result1.exit_code == 0
@@ -371,13 +398,18 @@ def test_rerun_all_steps_with_backup(temp_project, runner):
     project_md.write_text(custom_content)
 
     # Second run - re-run all
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result2 = run_in_dir(runner, temp_project, cli, ["init"],
+        result2 = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input="1\ny\n",  # Option 1: Re-run all, y to confirm re-index
             catch_exceptions=False,
-
         )
 
     assert result2.exit_code == 0
@@ -405,25 +437,35 @@ def test_selective_step_rerun(temp_project, runner):
     """
 
     # First run
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result1 = run_in_dir(runner, temp_project, cli, ["init"],
+        result1 = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input="y\n",
             catch_exceptions=False,
-
         )
 
     assert result1.exit_code == 0
 
     # Second run - exit immediately to avoid complex mocking
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result2 = run_in_dir(runner, temp_project, cli, ["init"],
+        result2 = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input="4\n",  # Option 4: Exit
             catch_exceptions=False,
-
         )
 
     assert result2.exit_code == 0
@@ -444,13 +486,18 @@ def test_indexing_failure_recovery(temp_project, runner):
     This test verifies normal flow works end-to-end.
     """
 
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result = run_in_dir(runner, temp_project, cli, ["init"],
+        result = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input="y\n",  # y for git
             catch_exceptions=False,
-
         )
 
     # Verify command succeeded
@@ -472,7 +519,9 @@ def test_init_preserves_existing_git_history(temp_project, runner):
 
     # Initialize git manually and make a commit
     subprocess.run(["git", "init"], cwd=temp_project, check=True)
-    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=temp_project, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"], cwd=temp_project, check=True
+    )
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_project, check=True)
     (temp_project / "test.txt").write_text("test")
     subprocess.run(["git", "add", "."], cwd=temp_project, check=True)
@@ -480,31 +529,28 @@ def test_init_preserves_existing_git_history(temp_project, runner):
 
     # Get commit count before
     log_before = subprocess.run(
-        ["git", "log", "--oneline"],
-        cwd=temp_project,
-        capture_output=True,
-        text=True,
-        check=True
+        ["git", "log", "--oneline"], cwd=temp_project, capture_output=True, text=True, check=True
     )
 
     # Run init
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result = run_in_dir(runner, temp_project, cli, ["init"],
+        result = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             catch_exceptions=False,
-
         )
 
     assert result.exit_code == 0
 
     # Verify git history preserved
     log_after = subprocess.run(
-        ["git", "log", "--oneline"],
-        cwd=temp_project,
-        capture_output=True,
-        text=True,
-        check=True
+        ["git", "log", "--oneline"], cwd=temp_project, capture_output=True, text=True, check=True
     )
     assert "Initial commit" in log_after.stdout
 
@@ -512,13 +558,18 @@ def test_init_preserves_existing_git_history(temp_project, runner):
 def test_init_detects_project_metadata(temp_project, runner):
     """Test project.md includes detected metadata."""
 
-    with patch("aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock) as mock_prompt:
+    with patch(
+        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+    ) as mock_prompt:
         mock_prompt.return_value = []
 
-        result = run_in_dir(runner, temp_project, cli, ["init"],
+        result = run_in_dir(
+            runner,
+            temp_project,
+            cli,
+            ["init"],
             input="y\n",
             catch_exceptions=False,
-
         )
 
     assert result.exit_code == 0

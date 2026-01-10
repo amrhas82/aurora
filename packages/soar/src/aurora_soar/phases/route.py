@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from aurora_soar import discovery_adapter
 
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo, AgentRegistry
@@ -54,12 +55,14 @@ class RouteResult:
         }
 
 
-def route_subgoals(decomposition: dict[str, Any], agent_registry: AgentRegistry) -> RouteResult:
+def route_subgoals(
+    decomposition: dict[str, Any], agent_registry: AgentRegistry | None = None
+) -> RouteResult:
     """Route subgoals to agents based on suggested agents and capabilities.
 
     This function:
     1. Validates decomposition structure
-    2. For each subgoal, looks up suggested agent in registry
+    2. For each subgoal, looks up suggested agent in registry or discovery
     3. Falls back to capability-based search if agent not found
     4. Uses fallback llm-executor agent if no match found
     5. Parses execution order from decomposition
@@ -67,7 +70,7 @@ def route_subgoals(decomposition: dict[str, Any], agent_registry: AgentRegistry)
 
     Args:
         decomposition: Verified decomposition from Phase 4
-        agent_registry: AgentRegistry instance for agent lookup
+        agent_registry: Optional AgentRegistry instance. If None, uses discovery_adapter.
 
     Returns:
         RouteResult with agent assignments and execution plan
@@ -82,11 +85,15 @@ def route_subgoals(decomposition: dict[str, Any], agent_registry: AgentRegistry)
     subgoals = decomposition["subgoals"]
     execution_order = decomposition.get("execution_order", [])
 
+    # Determine whether to use discovery adapter
+    use_discovery = agent_registry is None
+
     agent_assignments: list[tuple[int, AgentInfo]] = []
     routing_metadata: dict[str, Any] = {
         "fallback_count": 0,
         "capability_searches": 0,
         "warnings": [],
+        "use_discovery": use_discovery,
     }
 
     # Route each subgoal to an agent
@@ -145,7 +152,7 @@ def _validate_decomposition(decomposition: dict[str, Any]) -> None:
 def _route_single_subgoal(
     idx: int,
     subgoal: dict[str, Any],
-    agent_registry: AgentRegistry,
+    agent_registry: AgentRegistry | None,
     metadata: dict[str, Any],
 ) -> AgentInfo:
     """Route a single subgoal to an appropriate agent.
@@ -158,16 +165,21 @@ def _route_single_subgoal(
     Args:
         idx: Subgoal index
         subgoal: Subgoal dictionary with suggested_agent field
-        agent_registry: AgentRegistry for lookups
+        agent_registry: Optional AgentRegistry for lookups. If None, uses discovery_adapter.
         metadata: Routing metadata to update
 
     Returns:
         AgentInfo for the assigned agent
     """
     suggested_agent_id = subgoal["suggested_agent"]
+    use_discovery = metadata.get("use_discovery", False)
 
     # Try direct lookup first
-    agent = agent_registry.get(suggested_agent_id)
+    if use_discovery:
+        agent = discovery_adapter.get_agent(suggested_agent_id)
+    else:
+        agent = agent_registry.get(suggested_agent_id)
+
     if agent is not None:
         logger.debug(f"Subgoal {idx}: Found suggested agent '{agent.id}'")
         return agent
@@ -183,7 +195,13 @@ def _route_single_subgoal(
     # e.g., "code-analyzer" -> "code" capability
     capability = _extract_capability_from_agent_id(suggested_agent_id)
     if capability:
-        agents = agent_registry.find_by_capability(capability)
+        if use_discovery:
+            # Get all agents and filter by capability
+            all_agents = discovery_adapter.list_agents()
+            agents = [a for a in all_agents if capability in a.capabilities]
+        else:
+            agents = agent_registry.find_by_capability(capability)
+
         if agents:
             agent = agents[0]  # Use first matching agent
             logger.info(f"Subgoal {idx}: Found agent '{agent.id}' with capability '{capability}'")
@@ -202,7 +220,10 @@ def _route_single_subgoal(
         f"Subgoal {idx}: Using fallback agent instead of '{suggested_agent_id}'"
     )
 
-    return agent_registry.create_fallback_agent()
+    if use_discovery:
+        return discovery_adapter.create_fallback_agent()
+    else:
+        return agent_registry.create_fallback_agent()
 
 
 def _extract_capability_from_agent_id(agent_id: str) -> str | None:

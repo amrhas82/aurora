@@ -8,6 +8,7 @@ to ACT-R memory.
 from unittest.mock import MagicMock
 
 import pytest
+
 from aurora_core.chunks import ReasoningChunk
 from aurora_core.store.base import Store
 from aurora_soar.phases.collect import AgentOutput, CollectResult

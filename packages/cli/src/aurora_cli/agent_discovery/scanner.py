@@ -17,7 +17,6 @@ import logging
 from pathlib import Path
 from typing import Iterator
 
-
 logger = logging.getLogger(__name__)
 
 # Default agent discovery paths (relative to home directory)
@@ -139,7 +138,8 @@ class AgentScanner:
         try:
             # Get all files with agent extensions, sorted for consistent ordering
             agent_files = sorted(
-                f for f in directory.iterdir()
+                f
+                for f in directory.iterdir()
                 if f.is_file() and f.suffix.lower() in AGENT_FILE_EXTENSIONS
             )
 

@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 from rich.text import Text
 
-
 # Add CLI package to path for import
 cli_path = Path(__file__).parent.parent.parent / "packages" / "cli" / "src"
 sys.path.insert(0, str(cli_path))
@@ -26,6 +25,7 @@ def test_format_box_header():
 
     Width should be 78 characters (terminal standard).
     """
+
     # Mock SearchResult
     class MockResult:
         def __init__(self):
@@ -69,6 +69,7 @@ def test_format_box_scores():
 
     Scores should have 3 decimal places precision.
     """
+
     class MockResult:
         def __init__(self):
             self.metadata = {"name": "test_func", "file_path": "test.py", "type": "function"}
@@ -102,6 +103,7 @@ def test_format_box_footer():
 
     Width should match header width.
     """
+
     class MockResult:
         def __init__(self):
             self.metadata = {"name": "test", "file_path": "test.py", "type": "function"}
@@ -134,6 +136,7 @@ def test_format_box_git_metadata():
     Expected format:
     │ Git: 23 commits, last modified 2 days ago │
     """
+
     class MockResult:
         def __init__(self):
             self.metadata = {
@@ -165,6 +168,7 @@ def test_format_box_width_adjustment():
 
     Long names should truncate without breaking box structure.
     """
+
     class MockResult:
         def __init__(self):
             self.metadata = {
@@ -200,6 +204,7 @@ def test_format_box_empty_git_metadata():
 
     When git metadata is unavailable, line should be omitted or show dashes.
     """
+
     class MockResult:
         def __init__(self):
             self.metadata = {
@@ -232,6 +237,7 @@ def test_format_box_returns_rich_text():
 
     Function should return Rich Text object for proper styling.
     """
+
     class MockResult:
         def __init__(self):
             self.metadata = {"name": "test", "file_path": "test.py", "type": "function"}

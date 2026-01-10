@@ -17,9 +17,10 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
+from click.testing import CliRunner
+
 from aurora_cli.main import cli
 from aurora_reasoning.llm_client import LLMResponse
-from click.testing import CliRunner
 
 
 @pytest.fixture

@@ -30,7 +30,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -68,7 +67,8 @@ def legacy_database(clean_aurora_home: Path) -> Path:
 
     # Create legacy schema with 7 columns (missing first_access, last_access)
     conn = sqlite3.connect(str(db_path))
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE chunks (
             id TEXT PRIMARY KEY,
             type TEXT NOT NULL,
@@ -78,15 +78,18 @@ def legacy_database(clean_aurora_home: Path) -> Path:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-    conn.execute("""
+    """
+    )
+    conn.execute(
+        """
         CREATE TABLE activations (
             chunk_id TEXT PRIMARY KEY,
             base_level REAL NOT NULL,
             last_access TIMESTAMP NOT NULL,
             access_count INTEGER DEFAULT 1
         )
-    """)
+    """
+    )
     # Add some test data
     conn.execute(
         "INSERT INTO chunks (id, type, content, metadata) VALUES (?, ?, ?, ?)",
@@ -105,12 +108,14 @@ def sample_python_project() -> Generator[Path, None, None]:
         project_path = Path(tmp_project)
 
         # Create simple Python file
-        (project_path / "test.py").write_text('''"""Test module."""
+        (project_path / "test.py").write_text(
+            '''"""Test module."""
 
 def test_function():
     """A test function."""
     return 42
-''')
+'''
+        )
 
         yield project_path
 

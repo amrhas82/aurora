@@ -35,8 +35,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora_cli.execution import QueryExecutor
 
+from aurora_cli.execution import QueryExecutor
 from aurora_core.cost.tracker import BudgetExceededError, CostTracker
 
 
@@ -310,9 +310,9 @@ class TestBudgetCommands:
         tracker.set_budget(new_budget)
 
         # ASSERTION: Budget should be updated
-        assert tracker.total_budget == new_budget, (
-            f"Budget not updated\nExpected: ${new_budget}\nActual: ${tracker.total_budget}"
-        )
+        assert (
+            tracker.total_budget == new_budget
+        ), f"Budget not updated\nExpected: ${new_budget}\nActual: ${tracker.total_budget}"
 
         # Verify persisted to file
         tracker2 = CostTracker(budget_file=str(budget_path))
@@ -338,9 +338,9 @@ class TestBudgetCommands:
         tracker.reset_spending()
 
         # ASSERTION: Spending should be cleared
-        assert tracker.get_total_spent() == 0, (
-            f"Spending not reset\nExpected: $0.00\nActual: ${tracker.get_total_spent()}"
-        )
+        assert (
+            tracker.get_total_spent() == 0
+        ), f"Spending not reset\nExpected: $0.00\nActual: ${tracker.get_total_spent()}"
 
     def test_budget_history_command_shows_queries(self, budget_tracker_with_history):
         """

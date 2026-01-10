@@ -42,18 +42,16 @@ class TestAIToolsConstant:
         registry_tool_ids = {c.tool_id for c in SlashCommandRegistry.get_all()}
 
         for tool in AI_TOOLS:
-            assert tool["value"] in registry_tool_ids, (
-                f"Tool value '{tool['value']}' not found in SlashCommandRegistry"
-            )
+            assert (
+                tool["value"] in registry_tool_ids
+            ), f"Tool value '{tool['value']}' not found in SlashCommandRegistry"
 
     def test_all_tools_have_available_true(self):
         """All tools should have available: True (all are always available per PRD)."""
         from aurora_cli.config import AI_TOOLS
 
         for tool in AI_TOOLS:
-            assert tool["available"] is True, (
-                f"Tool '{tool['value']}' should have available=True"
-            )
+            assert tool["available"] is True, f"Tool '{tool['value']}' should have available=True"
 
     def test_tool_name_is_non_empty_string(self):
         """Tool 'name' field should be a non-empty string."""
@@ -129,6 +127,7 @@ class TestAIToolsConstant:
         """AI_TOOLS should be importable from aurora_cli.config."""
         try:
             from aurora_cli.config import AI_TOOLS
+
             assert AI_TOOLS is not None
         except ImportError as e:
             pytest.fail(f"Failed to import AI_TOOLS: {e}")

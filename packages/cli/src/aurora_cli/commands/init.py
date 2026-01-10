@@ -29,7 +29,6 @@ from aurora_cli.config import CONFIG_SCHEMA
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.errors import ErrorHandler, handle_errors
 
-
 console = Console()
 
 
@@ -101,10 +100,7 @@ def validate_tool_ids(tool_ids: list[str]) -> None:
     if invalid_ids:
         available = ", ".join(sorted(valid_ids))
         invalid_str = ", ".join(invalid_ids)
-        raise ValueError(
-            f"Invalid tool ID(s): {invalid_str}. "
-            f"Available tools: {available}"
-        )
+        raise ValueError(f"Invalid tool ID(s): {invalid_str}. " f"Available tools: {available}")
 
 
 def run_step_2_memory_indexing(project_path: Path) -> bool:
@@ -144,8 +140,7 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
     # Check if database already exists
     if db_path.exists():
         if not click.confirm(
-            f"Memory database exists at {db_path}. Re-index codebase?",
-            default=True
+            f"Memory database exists at {db_path}. Re-index codebase?", default=True
         ):
             console.print("[yellow]⚠[/] Skipping memory indexing")
             return False
@@ -247,7 +242,9 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
 
                 if stats.warnings > 0:
                     if stats.errors > 0:
-                        console.print("├─────────────┼───────┼────────────────────────────────────────┤")
+                        console.print(
+                            "├─────────────┼───────┼────────────────────────────────────────┤"
+                        )
                     console.print(
                         f"│ [yellow]Warnings[/]    │ {stats.warnings:5} │ Files with syntax/parse errors         │"
                     )
@@ -414,9 +411,7 @@ def run_step_3_tool_configuration(
         configured_tools = detect_configured_tools(project_path)
 
         # Prompt user for tool selection
-        selected_tool_ids = asyncio.run(
-            prompt_tool_selection(configured_tools=configured_tools)
-        )
+        selected_tool_ids = asyncio.run(prompt_tool_selection(configured_tools=configured_tools))
 
     if not selected_tool_ids:
         console.print("[yellow]⚠[/] No tools selected")
@@ -424,15 +419,11 @@ def run_step_3_tool_configuration(
 
     # Configure root config files (e.g., CLAUDE.md, AGENTS.md stubs)
     console.print("\n[dim]Configuring tool instruction files...[/]")
-    config_created, config_updated = asyncio.run(
-        configure_tools(project_path, selected_tool_ids)
-    )
+    config_created, config_updated = asyncio.run(configure_tools(project_path, selected_tool_ids))
 
     # Configure selected tools using slash command configurators
     console.print("[dim]Configuring slash commands...[/]")
-    created, updated = asyncio.run(
-        configure_slash_commands(project_path, selected_tool_ids)
-    )
+    created, updated = asyncio.run(configure_slash_commands(project_path, selected_tool_ids))
 
     # Merge config file results with slash command results
     created = list(set(created + config_created))
@@ -490,7 +481,9 @@ def run_step_3_tool_configuration(
     mcp_total = len(mcp_created) + len(mcp_updated)
     if total > 0:
         mcp_note = f" ({mcp_total} with MCP)" if mcp_total > 0 else ""
-        console.print(f"\n[bold green]✓[/] Configured {total} tool{'s' if total != 1 else ''}{mcp_note}")
+        console.print(
+            f"\n[bold green]✓[/] Configured {total} tool{'s' if total != 1 else ''}{mcp_note}"
+        )
 
     # Display MCP validation warnings if any
     if validation_warnings:
@@ -499,7 +492,9 @@ def run_step_3_tool_configuration(
         for warning in validation_warnings:
             console.print(f"  [yellow]•[/] {warning}")
         console.print()
-        console.print("[dim]Run 'aur doctor' for detailed MCP health checks and auto-fix options.[/]")
+        console.print(
+            "[dim]Run 'aur doctor' for detailed MCP health checks and auto-fix options.[/]"
+        )
 
     console.print()
     return (created, updated)
@@ -639,7 +634,8 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
         # Copy chunks table if exists
         if "chunks" in tables:
             # Create chunks table in destination if not exists
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS chunks (
                     chunk_id TEXT PRIMARY KEY,
                     content TEXT NOT NULL,
@@ -649,19 +645,23 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                     metadata TEXT,
                     created_at REAL NOT NULL
                 )
-            """)
+            """
+            )
 
             # Copy data
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO chunks
                 SELECT * FROM source.chunks
-            """)
+            """
+            )
             chunks_migrated = cursor.rowcount
 
         # Copy activations table if exists
         if "activations" in tables:
             # Create activations table in destination if not exists
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS activations (
                     chunk_id TEXT PRIMARY KEY,
                     base_level REAL NOT NULL DEFAULT 0.0,
@@ -669,18 +669,22 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                     last_access_time REAL,
                     FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
                 )
-            """)
+            """
+            )
 
             # Copy data
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO activations
                 SELECT * FROM source.activations
-            """)
+            """
+            )
             activations_migrated = cursor.rowcount
 
         # Copy embeddings table if exists
         if "embeddings" in tables:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS embeddings (
                     chunk_id TEXT PRIMARY KEY,
                     embedding BLOB NOT NULL,
@@ -688,12 +692,15 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                     created_at REAL NOT NULL,
                     FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
                 )
-            """)
+            """
+            )
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO embeddings
                 SELECT * FROM source.embeddings
-            """)
+            """
+            )
 
         # Detach source database
         cursor.execute("DETACH DATABASE source")
@@ -830,7 +837,9 @@ def init_command(config: bool, tools: str | None) -> None:
         # Display banner for re-run
         console.print()
         console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
-        console.print("[bold cyan]║[/]        [bold]AURORA Re-initialization[/]        [bold cyan]║[/]")
+        console.print(
+            "[bold cyan]║[/]        [bold]AURORA Re-initialization[/]        [bold cyan]║[/]"
+        )
         console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
         console.print()
         console.print(f"[dim]Re-running steps: {steps_to_run}[/]")
@@ -879,7 +888,9 @@ def init_command(config: bool, tools: str | None) -> None:
         if 3 in steps_to_run:
             total_tools = len(created_tools) + len(updated_tools)
             if total_tools > 0:
-                console.print(f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured")
+                console.print(
+                    f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured"
+                )
 
         console.print()
         console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")
@@ -924,12 +935,14 @@ def init_command(config: bool, tools: str | None) -> None:
 
     total_tools = len(created_tools) + len(updated_tools)
     if total_tools > 0:
-        console.print(f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured")
+        console.print(
+            f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured"
+        )
 
     console.print()
     console.print("[bold]Next Steps:[/]")
-    console.print("  1. [cyan]aur plan create \"Your feature\"[/] - Create a plan")
-    console.print("  2. [cyan]aur mem search \"keyword\"[/] - Search your codebase")
+    console.print('  1. [cyan]aur plan create "Your feature"[/] - Create a plan')
+    console.print('  2. [cyan]aur mem search "keyword"[/] - Search your codebase')
     console.print("  3. [cyan]aur agents list[/] - Discover available agents")
     console.print()
     console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")

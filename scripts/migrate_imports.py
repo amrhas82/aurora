@@ -24,7 +24,6 @@ import re
 import sys
 from pathlib import Path
 
-
 # Mapping of package names (underscore form to dot form)
 # Used bidirectionally based on --reverse flag
 PACKAGE_MAPPINGS = {

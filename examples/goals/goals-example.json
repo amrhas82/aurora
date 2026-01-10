@@ -1,0 +1,67 @@
+{
+  "id": "0001-add-oauth2",
+  "title": "Implement OAuth2 authentication with JWT tokens",
+  "created_at": "2026-01-10T12:00:00Z",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "src/auth/login.py",
+      "relevance": 0.85
+    },
+    {
+      "file": "src/auth/middleware.py",
+      "relevance": 0.78
+    },
+    {
+      "file": "docs/auth-design.md",
+      "relevance": 0.72
+    },
+    {
+      "file": "src/config/oauth_providers.py",
+      "relevance": 0.68
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Implement OAuth provider integration",
+      "description": "Add Google and GitHub OAuth providers with proper callback handling. Configure OAuth client credentials, implement authorization flow, and handle callback responses. Store user profile data from OAuth providers.",
+      "agent": "@full-stack-dev",
+      "confidence": 0.85,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Implement JWT token generation and validation",
+      "description": "Create JWT utility functions for token lifecycle management. Generate access tokens with 15-minute expiry and refresh tokens with 7-day expiry. Implement token signature validation and claims verification.",
+      "agent": "@full-stack-dev",
+      "confidence": 0.90,
+      "dependencies": ["sg-1"]
+    },
+    {
+      "id": "sg-3",
+      "title": "Add token refresh endpoint",
+      "description": "Implement API endpoint for refreshing expired access tokens. Accept refresh token, validate it, and issue new access token. Handle token rotation and revocation.",
+      "agent": "@full-stack-dev",
+      "confidence": 0.88,
+      "dependencies": ["sg-2"]
+    },
+    {
+      "id": "sg-4",
+      "title": "Write OAuth integration tests",
+      "description": "Test OAuth authorization flow end-to-end for both Google and GitHub providers. Test token generation, validation, and refresh mechanisms. Test error handling for invalid tokens and expired sessions.",
+      "agent": "@qa-test-architect",
+      "confidence": 0.92,
+      "dependencies": ["sg-1", "sg-2", "sg-3"]
+    },
+    {
+      "id": "sg-5",
+      "title": "Update authentication documentation",
+      "description": "Document OAuth setup, configuration, and usage. Include provider registration steps, environment variable configuration, and code examples for common authentication scenarios.",
+      "agent": "@full-stack-dev",
+      "confidence": 0.87,
+      "dependencies": ["sg-4"]
+    }
+  ],
+  "gaps": []
+}

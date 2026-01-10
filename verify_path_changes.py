@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Quick verification script for path locality changes."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
+
 
 def test_conversation_logger():
     """Test ConversationLogger uses project-local path."""
@@ -17,12 +18,14 @@ def test_conversation_logger():
     print(f"✓ ConversationLogger uses project-local path: {logger.base_path}")
     return True
 
+
 def test_planning_config():
     """Test planning config uses project-local path."""
-    from packages.planning.src.aurora_planning.planning_config import get_plans_dir
-
     # Clear environment variable to test default
     import os
+
+    from packages.planning.src.aurora_planning.planning_config import get_plans_dir
+
     old_val = os.environ.pop("AURORA_PLANS_DIR", None)
 
     try:
@@ -38,6 +41,7 @@ def test_planning_config():
         if old_val:
             os.environ["AURORA_PLANS_DIR"] = old_val
 
+
 def test_planning_core():
     """Test planning core default path."""
     from packages.cli.src.aurora_cli.planning.core import get_default_plans_path
@@ -50,6 +54,7 @@ def test_planning_core():
         return False
     print(f"✓ Planning core uses project-local path: {path}")
     return True
+
 
 def test_cli_config():
     """Test CLI config defaults."""
@@ -84,6 +89,7 @@ def test_cli_config():
 
     return all_passed
 
+
 def test_budget_tracker():
     """Test budget tracker uses global path."""
     from packages.core.src.aurora_core.budget.tracker import CostTracker
@@ -92,10 +98,13 @@ def test_budget_tracker():
     expected_prefix = str(Path.home() / ".aurora")
 
     if not str(tracker.tracker_path).startswith(expected_prefix):
-        print(f"❌ Budget tracker: Expected path starting with {expected_prefix}, got {tracker.tracker_path}")
+        print(
+            f"❌ Budget tracker: Expected path starting with {expected_prefix}, got {tracker.tracker_path}"
+        )
         return False
     print(f"✓ Budget tracker uses global path: {tracker.tracker_path}")
     return True
+
 
 def main():
     """Run all verification tests."""
@@ -122,6 +131,7 @@ def main():
         except Exception as e:
             print(f"❌ {name} failed with error: {e}")
             import traceback
+
             traceback.print_exc()
             results.append((name, False))
 
@@ -147,6 +157,7 @@ def main():
     else:
         print(f"\n❌ {total_count - passed_count} test(s) failed")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -38,15 +38,9 @@ Example:
 """
 
 from aurora_cli.agent_discovery.manifest import ManifestManager, should_refresh_manifest
-from aurora_cli.agent_discovery.models import (
-    AgentCategory,
-    AgentInfo,
-    AgentManifest,
-    ManifestStats,
-)
+from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest, ManifestStats
 from aurora_cli.agent_discovery.parser import AgentParser
 from aurora_cli.agent_discovery.scanner import DEFAULT_DISCOVERY_PATHS, AgentScanner
-
 
 __all__ = [
     # Scanner

@@ -6,6 +6,7 @@ Tests the complete flow from routing to agent execution:
 """
 
 import pytest
+
 from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 from aurora_soar.phases.collect import execute_agents
 from aurora_soar.phases.route import route_subgoals

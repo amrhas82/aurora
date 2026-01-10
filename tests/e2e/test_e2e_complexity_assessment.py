@@ -24,11 +24,9 @@ Reference: PRD-0010 Section 3 (User Stories), US-4 (Accurate Complexity Assessme
 import json
 import os
 import re
-import subprocess
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
-from typing import Dict, Optional
 
 import pytest
 

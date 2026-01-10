@@ -9,8 +9,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aurora_cli.wizard import InteractiveWizard
 from click.testing import CliRunner
+
+from aurora_cli.wizard import InteractiveWizard
 
 
 @pytest.fixture
@@ -261,8 +262,8 @@ class TestConfigCreation:
         mock_home.exists.return_value = False
         mock_config = MagicMock(spec=Path)
         mock_config.exists.return_value = False
-        mock_home.__truediv__ = (
-            lambda self, other: mock_config if other == "config.json" else mock_home
+        mock_home.__truediv__ = lambda self, other: (
+            mock_config if other == "config.json" else mock_home
         )
         mock_get_home.return_value = mock_home
 

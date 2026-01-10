@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.commands.list import ListCommand
 
 
@@ -33,17 +34,16 @@ class TestListCommand:
     def test_missing_plans_changes_directory(self, list_command, temp_dir):
         """Should handle missing .aurora/plans/changes directory."""
         with pytest.raises(
-            RuntimeError,
-            match="No Aurora plans directory found. Run 'aur init' first."
+            RuntimeError, match="No Aurora plans directory found. Run 'aur init' first."
         ):
-            list_command.execute(str(temp_dir), mode='changes')
+            list_command.execute(str(temp_dir), mode="changes")
 
     def test_empty_changes_directory(self, list_command, temp_dir, capsys):
         """Should handle empty changes directory."""
         changes_dir = temp_dir / ".aurora/plans" / "changes"
         changes_dir.mkdir(parents=True)
 
-        list_command.execute(str(temp_dir), mode='changes')
+        list_command.execute(str(temp_dir), mode="changes")
 
         captured = capsys.readouterr()
         assert "No active changes found." in captured.out
@@ -55,11 +55,9 @@ class TestListCommand:
         (changes_dir / "my-change").mkdir(parents=True)
 
         # Create tasks.md with some tasks
-        (changes_dir / "my-change" / "tasks.md").write_text(
-            "- [x] Task 1\n- [ ] Task 2\n"
-        )
+        (changes_dir / "my-change" / "tasks.md").write_text("- [x] Task 1\n- [ ] Task 2\n")
 
-        list_command.execute(str(temp_dir), mode='changes')
+        list_command.execute(str(temp_dir), mode="changes")
 
         captured = capsys.readouterr()
         assert "Changes:" in captured.out
@@ -82,7 +80,7 @@ Regular text that should be ignored
 """
         )
 
-        list_command.execute(str(temp_dir), mode='changes')
+        list_command.execute(str(temp_dir), mode="changes")
 
         captured = capsys.readouterr()
         assert "2/5" in captured.out
@@ -96,7 +94,7 @@ Regular text that should be ignored
             "- [x] Task 1\n- [x] Task 2\n- [x] Task 3\n"
         )
 
-        list_command.execute(str(temp_dir), mode='changes')
+        list_command.execute(str(temp_dir), mode="changes")
 
         captured = capsys.readouterr()
         assert "✓ Complete" in captured.out or "Complete" in captured.out
@@ -106,7 +104,7 @@ Regular text that should be ignored
         changes_dir = temp_dir / ".aurora/plans" / "changes"
         (changes_dir / "no-tasks").mkdir(parents=True)
 
-        list_command.execute(str(temp_dir), mode='changes')
+        list_command.execute(str(temp_dir), mode="changes")
 
         captured = capsys.readouterr()
         assert "no-tasks" in captured.out
@@ -119,19 +117,21 @@ Regular text that should be ignored
         (changes_dir / "alpha").mkdir(parents=True)
         (changes_dir / "middle").mkdir(parents=True)
 
-        list_command.execute(str(temp_dir), mode='changes', options={'sort': 'name'})
+        list_command.execute(str(temp_dir), mode="changes", options={"sort": "name"})
 
         captured = capsys.readouterr()
-        lines = captured.out.split('\n')
+        lines = captured.out.split("\n")
 
         # Find lines containing change names
-        change_lines = [line for line in lines if 'alpha' in line or 'middle' in line or 'zebra' in line]
+        change_lines = [
+            line for line in lines if "alpha" in line or "middle" in line or "zebra" in line
+        ]
 
         # Verify alphabetical order
         assert len(change_lines) >= 3
-        alpha_idx = next(i for i, line in enumerate(change_lines) if 'alpha' in line)
-        middle_idx = next(i for i, line in enumerate(change_lines) if 'middle' in line)
-        zebra_idx = next(i for i, line in enumerate(change_lines) if 'zebra' in line)
+        alpha_idx = next(i for i, line in enumerate(change_lines) if "alpha" in line)
+        middle_idx = next(i for i, line in enumerate(change_lines) if "middle" in line)
+        zebra_idx = next(i for i, line in enumerate(change_lines) if "zebra" in line)
 
         assert alpha_idx < middle_idx < zebra_idx
 
@@ -141,9 +141,7 @@ Regular text that should be ignored
 
         # Complete change
         (changes_dir / "completed").mkdir(parents=True)
-        (changes_dir / "completed" / "tasks.md").write_text(
-            "- [x] Task 1\n- [x] Task 2\n"
-        )
+        (changes_dir / "completed" / "tasks.md").write_text("- [x] Task 1\n- [x] Task 2\n")
 
         # Partial change
         (changes_dir / "partial").mkdir(parents=True)
@@ -167,11 +165,9 @@ Regular text that should be ignored
         """Should output JSON when json=True."""
         changes_dir = temp_dir / ".aurora/plans" / "changes"
         (changes_dir / "test-change").mkdir(parents=True)
-        (changes_dir / "test-change" / "tasks.md").write_text(
-            "- [x] Task 1\n- [ ] Task 2\n"
-        )
+        (changes_dir / "test-change" / "tasks.md").write_text("- [x] Task 1\n- [ ] Task 2\n")
 
-        list_command.execute(str(temp_dir), mode='changes', options={'json': True})
+        list_command.execute(str(temp_dir), mode="changes", options={"json": True})
 
         captured = capsys.readouterr()
         assert '"changes"' in captured.out
@@ -199,7 +195,7 @@ Users can log in.
 """
         )
 
-        list_command.execute(str(temp_dir), mode='specs')
+        list_command.execute(str(temp_dir), mode="specs")
 
         captured = capsys.readouterr()
         assert "Specs:" in captured.out
@@ -207,7 +203,7 @@ Users can log in.
 
     def test_list_specs_no_specs_directory(self, list_command, temp_dir, capsys):
         """Should handle missing specs directory."""
-        list_command.execute(str(temp_dir), mode='specs')
+        list_command.execute(str(temp_dir), mode="specs")
 
         captured = capsys.readouterr()
         assert "No specs found." in captured.out
@@ -217,7 +213,7 @@ Users can log in.
         specs_dir = temp_dir / ".aurora/plans" / "specs"
         specs_dir.mkdir(parents=True)
 
-        list_command.execute(str(temp_dir), mode='specs')
+        list_command.execute(str(temp_dir), mode="specs")
 
         captured = capsys.readouterr()
         assert "No specs found." in captured.out
@@ -238,7 +234,7 @@ Users can log in.
         (new_change / "tasks.md").write_text("- [ ] Task 1\n")
 
         # Default sort should be by recent
-        list_command.execute(str(temp_dir), mode='changes')
+        list_command.execute(str(temp_dir), mode="changes")
 
         captured = capsys.readouterr()
         assert "Changes:" in captured.out

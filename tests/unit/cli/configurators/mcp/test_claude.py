@@ -1,14 +1,12 @@
 """Unit tests for Claude MCP configurator."""
 
 import json
-import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-from aurora_cli.configurators.mcp.claude import (
-    ClaudeMCPConfigurator,
-    AURORA_MCP_PERMISSIONS,
-)
+import pytest
+
+from aurora_cli.configurators.mcp.claude import AURORA_MCP_PERMISSIONS, ClaudeMCPConfigurator
 
 
 class TestClaudeMCPConfigurator:
@@ -189,22 +187,21 @@ class TestClaudeMCPConfiguratorIsConfigured:
         # Create MCP config with valid aurora-mcp command
         mcp_path = tmp_path / ".claude" / "plugins" / "aurora" / ".mcp.json"
         mcp_path.parent.mkdir(parents=True)
-        mcp_path.write_text(json.dumps({
-            "mcpServers": {
-                "aurora": {
-                    "command": "aurora-mcp",
-                    "args": []
-                }
-            }
-        }))
+        mcp_path.write_text(
+            json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}})
+        )
 
         # Create permissions with Aurora permission
         settings_path = tmp_path / ".claude" / "settings.local.json"
-        settings_path.write_text(json.dumps({
-            "permissions": {
-                "allow": [AURORA_MCP_PERMISSIONS[0]],
-            }
-        }))
+        settings_path.write_text(
+            json.dumps(
+                {
+                    "permissions": {
+                        "allow": [AURORA_MCP_PERMISSIONS[0]],
+                    }
+                }
+            )
+        )
 
         with patch.object(Path, "home", return_value=tmp_path):
             assert configurator.is_configured(tmp_path) is True

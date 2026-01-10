@@ -9,12 +9,13 @@ Contract tests ensure:
 - API backward compatibility
 """
 
-import pytest
 from datetime import datetime, timezone
 
-from aurora_core.store import MemoryStore, SQLiteStore
+import pytest
+
 from aurora_core.chunks import CodeChunk
 from aurora_core.exceptions import ChunkNotFoundError, StorageError, ValidationError
+from aurora_core.store import MemoryStore, SQLiteStore
 from aurora_core.types import ChunkID
 
 
@@ -264,10 +265,7 @@ class TestStoreContractRelationships:
         store.save_chunk(chunk2)
 
         result = store.add_relationship(
-            from_id="code:caller.py:func",
-            to_id="code:callee.py:func",
-            rel_type="calls",
-            weight=1.0
+            from_id="code:caller.py:func", to_id="code:callee.py:func", rel_type="calls", weight=1.0
         )
         assert isinstance(result, bool), "add_relationship must return bool"
 
@@ -286,17 +284,13 @@ class TestStoreContractRelationships:
         # Missing source chunk
         with pytest.raises(ChunkNotFoundError):
             store.add_relationship(
-                from_id="code:missing.py:func",
-                to_id="code:exists.py:func",
-                rel_type="calls"
+                from_id="code:missing.py:func", to_id="code:exists.py:func", rel_type="calls"
             )
 
         # Missing target chunk
         with pytest.raises(ChunkNotFoundError):
             store.add_relationship(
-                from_id="code:exists.py:func",
-                to_id="code:missing.py:func",
-                rel_type="calls"
+                from_id="code:exists.py:func", to_id="code:missing.py:func", rel_type="calls"
             )
 
     def test_get_related_chunks_returns_list(self, store):
@@ -358,9 +352,7 @@ class TestStoreContractAccessTracking:
 
         # With both - should not raise
         store.record_access(
-            "code:test.py:func",
-            access_time=datetime.now(timezone.utc),
-            context="another query"
+            "code:test.py:func", access_time=datetime.now(timezone.utc), context="another query"
         )
 
         # Verify at least one access was recorded

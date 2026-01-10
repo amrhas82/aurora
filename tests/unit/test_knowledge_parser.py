@@ -45,9 +45,7 @@ Implement tri-hybrid: BM25 + Semantic + Activation scoring
 def temp_knowledge_file(sample_conversation_log):
     """Create a temporary knowledge file."""
     with tempfile.NamedTemporaryFile(
-        mode='w',
-        suffix='_semantic_search_bm25.md',
-        delete=False
+        mode="w", suffix="_semantic_search_bm25.md", delete=False
     ) as f:
         f.write(sample_conversation_log)
         temp_path = Path(f.name)
@@ -73,8 +71,8 @@ def test_parse_markdown_sections(temp_knowledge_file):
         assert isinstance(chunk, KnowledgeChunk)
 
     # Should capture section titles
-    sections = [chunk.metadata.get('section') for chunk in chunks if chunk.metadata.get('section')]
-    assert any('Context' in s or 'Key Points' in s or 'Decision' in s for s in sections)
+    sections = [chunk.metadata.get("section") for chunk in chunks if chunk.metadata.get("section")]
+    assert any("Context" in s or "Key Points" in s or "Decision" in s for s in sections)
 
 
 def test_extract_metadata_from_filename(temp_knowledge_file):
@@ -89,13 +87,13 @@ def test_extract_metadata_from_filename(temp_knowledge_file):
     assert first_chunk.metadata is not None
 
     # Should extract keywords from filename
-    keywords = first_chunk.metadata.get('keywords', [])
+    keywords = first_chunk.metadata.get("keywords", [])
     assert isinstance(keywords, list)
     # Filename contains "semantic_search_bm25"
-    assert any(kw in ['semantic', 'search', 'bm25', 'semantic_search_bm25'] for kw in keywords)
+    assert any(kw in ["semantic", "search", "bm25", "semantic_search_bm25"] for kw in keywords)
 
     # Should have source file
-    assert first_chunk.metadata.get('source_file') is not None
+    assert first_chunk.metadata.get("source_file") is not None
 
 
 def test_chunk_splitting_by_headers(temp_knowledge_file):
@@ -109,7 +107,7 @@ def test_chunk_splitting_by_headers(temp_knowledge_file):
     # Each chunk should contain only its section content
     for chunk in chunks:
         # Content shouldn't contain multiple ##  headers (each chunk is one section)
-        section_count = chunk.content.count('\n## ')
+        section_count = chunk.content.count("\n## ")
         assert section_count <= 1, f"Chunk has {section_count} sections, should be 1 or 0"
 
 
@@ -118,7 +116,7 @@ def test_empty_file_handling():
     parser = KnowledgeParser()
 
     # Create empty temp file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
         temp_path = Path(f.name)
 
     try:
@@ -140,8 +138,8 @@ def test_knowledge_chunk_structure():
         metadata={
             "keywords": ["test", "knowledge"],
             "source_file": "test.md",
-            "section": "Test Section"
-        }
+            "section": "Test Section",
+        },
     )
 
     assert chunk.content == "Test content"
@@ -157,15 +155,10 @@ def test_multiple_files_parsing():
     # Create two temp files
     files = []
     try:
-        for i, content in enumerate([
-            "# File 1\n## Section A\nContent A",
-            "# File 2\n## Section B\nContent B"
-        ]):
-            with tempfile.NamedTemporaryFile(
-                mode='w',
-                suffix=f'_file{i}.md',
-                delete=False
-            ) as f:
+        for i, content in enumerate(
+            ["# File 1\n## Section A\nContent A", "# File 2\n## Section B\nContent B"]
+        ):
+            with tempfile.NamedTemporaryFile(mode="w", suffix=f"_file{i}.md", delete=False) as f:
                 f.write(content)
                 files.append(Path(f.name))
 
@@ -179,7 +172,7 @@ def test_multiple_files_parsing():
         assert len(all_chunks) >= 2
 
         # Each chunk should track its source
-        sources = set(chunk.metadata.get('source_file') for chunk in all_chunks)
+        sources = set(chunk.metadata.get("source_file") for chunk in all_chunks)
         assert len(sources) == 2
 
     finally:

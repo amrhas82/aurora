@@ -33,12 +33,12 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
 from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
 from aurora_cli.memory_manager import MemoryManager
-from aurora_reasoning.llm_client import LLMClient
-
 from aurora_core.chunks.base import Chunk
+from aurora_reasoning.llm_client import LLMClient
 
 
 class TestRetrievalBeforeLLM:
@@ -52,7 +52,8 @@ class TestRetrievalBeforeLLM:
 
         # Create Python file with specific patterns
         sample_file = workspace / "database.py"
-        sample_file.write_text("""
+        sample_file.write_text(
+            """
 class DatabaseConnection:
     \"\"\"
     Manages database connections using SQLite.
@@ -89,7 +90,8 @@ class DatabaseConnection:
         cursor = self.connection.cursor()
         cursor.execute(query, params or ())
         return cursor.fetchall()
-""")
+"""
+        )
 
         return workspace
 

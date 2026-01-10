@@ -15,16 +15,11 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-
 # Import renderer from CLI planning (which imports from aurora_planning)
 try:
     # Try CLI imports first (where renderer is re-exported)
     from aurora_cli.planning.models import Complexity, Plan, PlanStatus, Subgoal
-    from aurora_cli.planning.renderer import (
-        TemplateRenderer,
-        get_template_dir,
-        render_plan_files,
-    )
+    from aurora_cli.planning.renderer import TemplateRenderer, get_template_dir, render_plan_files
 except ImportError as e:
     pytest.skip(f"aurora_cli.planning not available: {e}", allow_module_level=True)
 
@@ -159,8 +154,8 @@ class TestFileGeneration:
         plan_md = (output_dir / "plan.md").read_text()
         assert "0001-test-plan" in plan_md
         assert "Test goal" in plan_md
-        assert ("sg-1" in plan_md or "SG-1" in plan_md)
-        assert ("sg-2" in plan_md or "SG-2" in plan_md)
+        assert "sg-1" in plan_md or "SG-1" in plan_md
+        assert "sg-2" in plan_md or "SG-2" in plan_md
 
         # Check prd.md has expected content
         prd_md = (output_dir / "prd.md").read_text()
@@ -234,9 +229,9 @@ class TestVariableSubstitution:
         plan_md = (output_dir / "plan.md").read_text()
 
         # Check both subgoals appear (case-insensitive)
-        assert ("sg-1" in plan_md or "SG-1" in plan_md)
+        assert "sg-1" in plan_md or "SG-1" in plan_md
         assert "First subgoal" in plan_md
-        assert ("sg-2" in plan_md or "SG-2" in plan_md)
+        assert "sg-2" in plan_md or "SG-2" in plan_md
         assert "Second subgoal" in plan_md
         assert "@full-stack-dev" in plan_md
         assert "@qa-test-architect" in plan_md

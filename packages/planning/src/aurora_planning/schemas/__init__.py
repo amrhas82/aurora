@@ -8,12 +8,7 @@ This module defines the data models for plans:
 
 from aurora_planning.schemas.base import Requirement, Scenario
 from aurora_planning.schemas.capability import Capability, CapabilityMetadata
-from aurora_planning.schemas.plan import (
-    Modification,
-    ModificationOperation,
-    Plan,
-    PlanMetadata,
-)
+from aurora_planning.schemas.plan import Modification, ModificationOperation, Plan, PlanMetadata
 
 __all__ = [
     "Requirement",

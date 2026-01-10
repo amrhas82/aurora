@@ -6,10 +6,11 @@ validating that all components work together correctly.
 Task 1.13: Verify archive command works end-to-end
 """
 
-import pytest
 import tempfile
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 from aurora_cli.planning.commands import ArchiveCommand
 
@@ -34,21 +35,25 @@ class TestArchiveCommandEndToEnd:
             plan_dir.mkdir()
 
             # Create tasks.md
-            (plan_dir / "tasks.md").write_text("""# Tasks
+            (plan_dir / "tasks.md").write_text(
+                """# Tasks
 - [x] Task 1
 - [x] Task 2
 - [ ] Task 3
-""")
+"""
+            )
 
             # Create proposal.md
-            (plan_dir / "proposal.md").write_text("""# Test Plan
+            (plan_dir / "proposal.md").write_text(
+                """# Test Plan
 
 ## Why
 This is a test plan to verify archive functionality works end-to-end.
 
 ## What Changes
 Test changes for verification.
-""")
+"""
+            )
 
             # Execute archive command
             command = ArchiveCommand()
@@ -56,7 +61,7 @@ Test changes for verification.
                 plan_name=plan_id,
                 target_path=str(target),
                 yes=True,  # Skip confirmations
-                skip_specs=True  # Skip spec updates for this test
+                skip_specs=True,  # Skip spec updates for this test
             )
 
             # Verify plan was moved to archive
@@ -95,7 +100,8 @@ Test changes for verification.
             # Create existing capability spec
             capability_dir = capabilities_dir / "test-feature"
             capability_dir.mkdir()
-            (capability_dir / "spec.md").write_text("""# Test Feature Specification
+            (capability_dir / "spec.md").write_text(
+                """# Test Feature Specification
 
 ## Purpose
 Existing test feature.
@@ -109,12 +115,14 @@ The system SHALL have existing functionality.
 Given existing setup
 When using feature
 Then it works
-""")
+"""
+            )
 
             # Create plan with spec updates
             spec_dir = plan_dir / "specs" / "test-feature"
             spec_dir.mkdir(parents=True)
-            (spec_dir / "spec.md").write_text("""# Test Feature Specification
+            (spec_dir / "spec.md").write_text(
+                """# Test Feature Specification
 
 ## ADDED Requirements
 
@@ -125,7 +133,8 @@ The system SHALL implement new feature.
 Given new setup
 When using new feature
 Then new result
-""")
+"""
+            )
 
             # Execute archive with spec updates
             command = ArchiveCommand()
@@ -133,7 +142,7 @@ Then new result
                 plan_name=plan_id,
                 target_path=str(target),
                 yes=True,
-                skip_specs=False  # Include spec updates
+                skip_specs=False,  # Include spec updates
             )
 
             # Verify capability spec was updated
@@ -158,12 +167,7 @@ Then new result
             plan_dir.mkdir()
 
             command = ArchiveCommand()
-            command.execute(
-                plan_name=plan_id,
-                target_path=str(target),
-                yes=True,
-                skip_specs=True
-            )
+            command.execute(plan_name=plan_id, target_path=str(target), yes=True, skip_specs=True)
 
             # Create second plan with same ID
             plan_dir.mkdir()
@@ -171,10 +175,7 @@ Then new result
             # Try to archive again - should fail
             with pytest.raises(RuntimeError) as exc_info:
                 command.execute(
-                    plan_name=plan_id,
-                    target_path=str(target),
-                    yes=True,
-                    skip_specs=True
+                    plan_name=plan_id, target_path=str(target), yes=True, skip_specs=True
                 )
 
             assert "already exists" in str(exc_info.value)
@@ -195,7 +196,7 @@ Then new result
                     plan_name="non-existent-plan",
                     target_path=str(target),
                     yes=True,
-                    skip_specs=True
+                    skip_specs=True,
                 )
 
             assert "not found" in str(exc_info.value).lower()
@@ -209,10 +210,7 @@ Then new result
             command = ArchiveCommand()
             with pytest.raises(RuntimeError) as exc_info:
                 command.execute(
-                    plan_name="any-plan",
-                    target_path=str(target),
-                    yes=True,
-                    skip_specs=True
+                    plan_name="any-plan", target_path=str(target), yes=True, skip_specs=True
                 )
 
             assert "Aurora plans directory" in str(exc_info.value)
@@ -233,13 +231,15 @@ Then new result
             plan_dir.mkdir()
 
             # Create tasks with 2/5 complete
-            (plan_dir / "tasks.md").write_text("""# Tasks
+            (plan_dir / "tasks.md").write_text(
+                """# Tasks
 - [x] Task 1
 - [x] Task 2
 - [ ] Task 3
 - [ ] Task 4
 - [ ] Task 5
-""")
+"""
+            )
 
             command = ArchiveCommand()
 
@@ -249,12 +249,7 @@ Then new result
             assert progress["completed"] == 2
 
             # Archive the plan
-            command.execute(
-                plan_name=plan_id,
-                target_path=str(target),
-                yes=True,
-                skip_specs=True
-            )
+            command.execute(plan_name=plan_id, target_path=str(target), yes=True, skip_specs=True)
 
             # Verify archived plan still has tasks.md
             archive_dir = target / ".aurora" / "plans" / "archive"
@@ -281,10 +276,7 @@ class TestArchiveCommandFlagCombinations:
             # Execute with both flags
             command = ArchiveCommand()
             command.execute(
-                plan_name="test-plan",
-                target_path=str(target),
-                yes=True,
-                skip_specs=True
+                plan_name="test-plan", target_path=str(target), yes=True, skip_specs=True
             )
 
             # Verify archived
@@ -312,7 +304,7 @@ class TestArchiveCommandFlagCombinations:
                 target_path=str(target),
                 yes=True,
                 skip_specs=True,
-                no_validate=True
+                no_validate=True,
             )
 
             # Verify archived despite invalid content

@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.commands.update import UpdateCommand
 from aurora_planning.templates.agents import AGENTS_TEMPLATE
 
@@ -81,19 +82,14 @@ class TestUpdateCommand:
         captured = capsys.readouterr()
         assert "Updated Aurora instructions" in captured.out
 
-    def test_error_if_openspec_directory_missing(
-        self, update_command, temp_dir
-    ):
+    def test_error_if_openspec_directory_missing(self, update_command, temp_dir):
         """Should throw error if .aurora/plans directory does not exist."""
         with pytest.raises(
-            RuntimeError,
-            match="No Aurora plans directory found. Run .aur init' first."
+            RuntimeError, match="No Aurora plans directory found. Run .aur init' first."
         ):
             update_command.execute(str(temp_dir))
 
-    def test_verbose_output(
-        self, update_command, setup_openspec_structure, temp_dir, capsys
-    ):
+    def test_verbose_output(self, update_command, setup_openspec_structure, temp_dir, capsys):
         """Should show detailed output in verbose mode."""
         # Execute with verbose flag
         update_command.execute(str(temp_dir), verbose=True)

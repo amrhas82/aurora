@@ -3,9 +3,10 @@
 Tests basic import structure and Aurora path conventions.
 """
 
-import pytest
 import tempfile
 from pathlib import Path
+
+import pytest
 
 from aurora_cli.planning.commands import ArchiveCommand
 from aurora_cli.planning.commands.archive import OperationCounts, SpecUpdate
@@ -21,7 +22,7 @@ class TestArchiveCommandImport:
     def test_archive_command_has_execute_method(self):
         """Verify ArchiveCommand has execute method."""
         command = ArchiveCommand()
-        assert hasattr(command, 'execute')
+        assert hasattr(command, "execute")
         assert callable(command.execute)
 
     def test_spec_update_dataclass_exists(self):
@@ -67,7 +68,9 @@ class TestArchiveCommandAuroraPaths:
         assert "Capability Specification" in skeleton
         # Should reference "plan" not "change"
         assert "plan plan-001" in skeleton
-        assert "change" not in skeleton.lower() or "changes" in skeleton.lower()  # Allow "Changes" in "What Changes"
+        assert (
+            "change" not in skeleton.lower() or "changes" in skeleton.lower()
+        )  # Allow "Changes" in "What Changes"
 
 
 class TestArchiveCommandTaskValidation:
@@ -162,7 +165,9 @@ class TestArchiveCommandSpecDeltaProcessing:
             (specs_dir / "auth" / "spec.md").write_text("# Auth Spec\n## ADDED Requirements")
 
             (specs_dir / "storage").mkdir()
-            (specs_dir / "storage" / "spec.md").write_text("# Storage Spec\n## MODIFIED Requirements")
+            (specs_dir / "storage" / "spec.md").write_text(
+                "# Storage Spec\n## MODIFIED Requirements"
+            )
 
             # Main specs directory (target)
             main_specs_dir = Path(tmpdir) / "main-specs"
@@ -195,7 +200,8 @@ class TestArchiveCommandSpecDeltaProcessing:
             source_dir = Path(tmpdir) / "source"
             source_dir.mkdir()
             source_spec = source_dir / "spec.md"
-            source_spec.write_text("""# Test Spec
+            source_spec.write_text(
+                """# Test Spec
 
 ## ADDED Requirements
 
@@ -206,7 +212,8 @@ The system SHALL implement new feature.
 Given setup
 When action
 Then result
-""")
+"""
+            )
 
             # Create target directory
             target_dir = Path(tmpdir) / "target" / "test-capability"
@@ -231,7 +238,8 @@ Then result
             source_dir.mkdir()
             source_spec = source_dir / "spec.md"
             # Duplicate requirement names in ADDED
-            source_spec.write_text("""# Test Spec
+            source_spec.write_text(
+                """# Test Spec
 
 ## ADDED Requirements
 
@@ -240,7 +248,8 @@ Content 1
 
 ### Requirement: Feature A
 Content 2 (duplicate!)
-""")
+"""
+            )
 
             target_dir = Path(tmpdir) / "target" / "test"
             target_dir.mkdir(parents=True)
@@ -262,7 +271,8 @@ Content 2 (duplicate!)
             source_dir.mkdir()
             source_spec = source_dir / "spec.md"
             # Same requirement in ADDED and REMOVED - conflict!
-            source_spec.write_text("""# Test Spec
+            source_spec.write_text(
+                """# Test Spec
 
 ## ADDED Requirements
 
@@ -272,12 +282,14 @@ New content
 ## REMOVED Requirements
 
 ### Requirement: Conflicted Feature
-""")
+"""
+            )
 
             target_dir = Path(tmpdir) / "target" / "test"
             target_dir.mkdir(parents=True)
             target_spec = target_dir / "spec.md"
-            target_spec.write_text("""# Test Spec
+            target_spec.write_text(
+                """# Test Spec
 
 ## Purpose
 Test
@@ -286,7 +298,8 @@ Test
 
 ### Requirement: Conflicted Feature
 Old content
-""")
+"""
+            )
 
             update = SpecUpdate(source=source_spec, target=target_spec, exists=True)
 
@@ -310,7 +323,7 @@ class TestArchiveCommandManifestIntegration:
 
     def test_manifest_updated_after_archive(self):
         """Verify manifest is updated when plan is archived."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
 
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir)
@@ -324,7 +337,7 @@ class TestArchiveCommandManifestIntegration:
             plan_dir.mkdir()
 
             # Mock the _update_manifest function
-            with patch('aurora_cli.planning.commands.archive._update_manifest') as mock_update:
+            with patch("aurora_cli.planning.commands.archive._update_manifest") as mock_update:
                 command = ArchiveCommand()
 
                 # Execute archive
@@ -360,9 +373,11 @@ class TestArchiveCommandManifestIntegration:
             plan_dir.mkdir()
 
             # Mock _update_manifest to raise an exception
-            with patch('aurora_cli.planning.commands.archive._update_manifest',
-                      side_effect=RuntimeError("Manifest error")):
-                with patch('aurora_cli.planning.commands.archive.MANIFEST_AVAILABLE', True):
+            with patch(
+                "aurora_cli.planning.commands.archive._update_manifest",
+                side_effect=RuntimeError("Manifest error"),
+            ):
+                with patch("aurora_cli.planning.commands.archive.MANIFEST_AVAILABLE", True):
                     command = ArchiveCommand()
 
                     # Execute archive - should not raise even though manifest update fails

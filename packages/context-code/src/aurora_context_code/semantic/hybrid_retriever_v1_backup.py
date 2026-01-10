@@ -193,9 +193,7 @@ class HybridRetriever:
             # Calculate semantic similarity
             chunk_embedding = getattr(chunk, "embeddings", None)
             if chunk_embedding is not None:
-                from aurora_context_code.semantic.embedding_provider import (
-                    cosine_similarity,
-                )
+                from aurora_context_code.semantic.embedding_provider import cosine_similarity
 
                 # Convert embedding bytes to numpy array if needed
                 if isinstance(chunk_embedding, bytes):

@@ -38,12 +38,12 @@ class TestComplexityAssessor:
     def test_result_has_all_fields(self, assessor):
         """Result should have all expected fields."""
         result = assessor.assess("test prompt")
-        assert hasattr(result, 'level')
-        assert hasattr(result, 'score')
-        assert hasattr(result, 'confidence')
-        assert hasattr(result, 'signals')
-        assert hasattr(result, 'breakdown')
-        assert result.level in ('simple', 'medium', 'complex')
+        assert hasattr(result, "level")
+        assert hasattr(result, "score")
+        assert hasattr(result, "confidence")
+        assert hasattr(result, "signals")
+        assert hasattr(result, "breakdown")
+        assert result.level in ("simple", "medium", "complex")
         assert 0 <= result.confidence <= 1
 
     def test_to_dict_serialization(self, assessor):
@@ -51,21 +51,24 @@ class TestComplexityAssessor:
         result = assessor.assess("implement authentication")
         d = result.to_dict()
         assert isinstance(d, dict)
-        assert 'level' in d
-        assert 'score' in d
-        assert 'confidence' in d
-        assert 'signals' in d
+        assert "level" in d
+        assert "score" in d
+        assert "confidence" in d
+        assert "signals" in d
 
     # ==================== Simple Prompts ====================
 
-    @pytest.mark.parametrize("prompt", [
-        "what is python",
-        "show me the readme",
-        "list all files",
-        "where is the config",
-        "run the tests",
-        "check if tests pass",
-    ])
+    @pytest.mark.parametrize(
+        "prompt",
+        [
+            "what is python",
+            "show me the readme",
+            "list all files",
+            "where is the config",
+            "run the tests",
+            "check if tests pass",
+        ],
+    )
     def test_simple_prompts(self, assessor, prompt):
         """Basic lookup/display prompts should be simple."""
         result = assessor.assess(prompt)
@@ -73,13 +76,16 @@ class TestComplexityAssessor:
 
     # ==================== Medium Prompts ====================
 
-    @pytest.mark.parametrize("prompt", [
-        "explain how the caching works",
-        "debug the login issue",
-        "compare these two approaches",
-        "add logging to the function",
-        "fix the validation bug",  # Changed from "authentication" to avoid critical trigger
-    ])
+    @pytest.mark.parametrize(
+        "prompt",
+        [
+            "explain how the caching works",
+            "debug the login issue",
+            "compare these two approaches",
+            "add logging to the function",
+            "fix the validation bug",  # Changed from "authentication" to avoid critical trigger
+        ],
+    )
     def test_medium_prompts(self, assessor, prompt):
         """Analysis and moderate edit prompts should be medium."""
         result = assessor.assess(prompt)
@@ -87,13 +93,16 @@ class TestComplexityAssessor:
 
     # ==================== Complex Prompts ====================
 
-    @pytest.mark.parametrize("prompt", [
-        "implement user authentication with oauth",
-        "design a caching system for the api",
-        "build a real-time notification system",
-        "refactor the entire authentication module",
-        "migrate the database from mysql to postgres",
-    ])
+    @pytest.mark.parametrize(
+        "prompt",
+        [
+            "implement user authentication with oauth",
+            "design a caching system for the api",
+            "build a real-time notification system",
+            "refactor the entire authentication module",
+            "migrate the database from mysql to postgres",
+        ],
+    )
     def test_complex_prompts(self, assessor, prompt):
         """Major implementation/architecture prompts should be complex."""
         result = assessor.assess(prompt)
@@ -175,7 +184,7 @@ class TestComplexityAssessor:
         """Each level should have some correct predictions."""
         result = evaluate_corpus()
         for level, stats in result.by_level.items():
-            assert stats['accuracy'] > 0, f"{level} has 0% accuracy"
+            assert stats["accuracy"] > 0, f"{level} has 0% accuracy"
 
     # ==================== Convenience Function ====================
 
@@ -183,23 +192,26 @@ class TestComplexityAssessor:
         """assess_complexity convenience function should work."""
         result = assess_complexity("implement auth")
         assert isinstance(result, dict)
-        assert 'complexity' in result
-        assert result['complexity'] in ('SIMPLE', 'MEDIUM', 'COMPLEX', 'CRITICAL')
+        assert "complexity" in result
+        assert result["complexity"] in ("SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL")
 
     # ==================== CRITICAL Level Tests ====================
 
-    @pytest.mark.parametrize("prompt", [
-        "fix security vulnerability in authentication",
-        "patch the authentication bypass vulnerability",
-        "investigate data breach in user table",
-        "encrypt sensitive payment data",
-        "production outage emergency",
-        "fix critical bug in production api",
-        "emergency incident response needed",
-        "production database corruption detected",
-        "ensure gdpr compliance for user data",
-        "implement hipaa compliant logging",
-    ])
+    @pytest.mark.parametrize(
+        "prompt",
+        [
+            "fix security vulnerability in authentication",
+            "patch the authentication bypass vulnerability",
+            "investigate data breach in user table",
+            "encrypt sensitive payment data",
+            "production outage emergency",
+            "fix critical bug in production api",
+            "emergency incident response needed",
+            "production database corruption detected",
+            "ensure gdpr compliance for user data",
+            "implement hipaa compliant logging",
+        ],
+    )
     def test_critical_keyword_detection(self, assessor, prompt):
         """CRITICAL keywords should trigger critical level with high confidence."""
         result = assessor.assess(prompt)
@@ -241,12 +253,12 @@ class TestEdgeCases:
     def test_unicode_prompt(self, assessor):
         """Unicode characters should be handled."""
         result = assessor.assess("what is the résumé status")
-        assert result.level in ('simple', 'medium', 'complex')
+        assert result.level in ("simple", "medium", "complex")
 
     def test_special_characters(self, assessor):
         """Special characters should be handled."""
         result = assessor.assess("fix bug #123 in src/main.py")
-        assert result.level in ('simple', 'medium', 'complex')
+        assert result.level in ("simple", "medium", "complex")
 
     def test_code_block_in_prompt(self, assessor):
         """Code blocks should be detected."""
@@ -269,6 +281,7 @@ class TestLLMFallback:
 
     def test_llm_fallback_triggered_low_confidence(self):
         """LLM fallback should be triggered when keyword confidence < 0.8."""
+
         # Create a mock LLM client
         class MockLLMClient:
             def generate_json(self, prompt, system, temperature, max_tokens):
@@ -276,7 +289,7 @@ class TestLLMFallback:
                     "complexity": "MEDIUM",
                     "confidence": 0.85,
                     "reasoning": "This is a medium complexity query",
-                    "indicators": ["analysis_required"]
+                    "indicators": ["analysis_required"],
                 }
 
         # Create a borderline query that should have low confidence
@@ -294,6 +307,7 @@ class TestLLMFallback:
 
     def test_llm_fallback_triggered_borderline_score(self):
         """LLM fallback should be triggered when score in [0.4, 0.6] range."""
+
         # Create a mock LLM client
         class MockLLMClient:
             def generate_json(self, prompt, system, temperature, max_tokens):
@@ -301,7 +315,7 @@ class TestLLMFallback:
                     "complexity": "MEDIUM",
                     "confidence": 0.85,
                     "reasoning": "Borderline case resolved to medium",
-                    "indicators": ["borderline_case"]
+                    "indicators": ["borderline_case"],
                 }
 
         # Create a borderline query (medium-length, some analysis words)
@@ -335,6 +349,7 @@ class TestLLMFallback:
 
     def test_llm_fallback_critical_keywords(self):
         """CRITICAL keywords should have high confidence and NOT trigger LLM fallback."""
+
         # Create a mock LLM client that should NOT be called
         class MockLLMClient:
             def generate_json(self, prompt, system, temperature, max_tokens):

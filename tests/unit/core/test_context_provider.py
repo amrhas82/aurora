@@ -8,6 +8,7 @@ implementations follow the contract.
 from pathlib import Path
 
 import pytest
+
 from aurora_core.chunks.base import Chunk
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.context.provider import ContextProvider

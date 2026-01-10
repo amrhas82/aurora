@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from aurora_cli.configurators.slash.base import (
     ALL_COMMANDS,
     AURORA_MARKERS,
@@ -18,7 +19,6 @@ from aurora_cli.configurators.slash.base import (
     SlashCommandTarget,
 )
 from aurora_cli.templates.slash_commands import get_command_body
-
 
 # Tool configuration data for parametrized tests
 # Each tool defines: tool_id, directory pattern, file naming, extension
@@ -115,27 +115,35 @@ def get_configurator(tool_id: str) -> SlashCommandConfigurator:
     """
     if tool_id == "antigravity":
         from aurora_cli.configurators.slash.antigravity import AntigravitySlashCommandConfigurator
+
         return AntigravitySlashCommandConfigurator()
     elif tool_id == "auggie":
         from aurora_cli.configurators.slash.auggie import AuggieSlashCommandConfigurator
+
         return AuggieSlashCommandConfigurator()
     elif tool_id == "codebuddy":
         from aurora_cli.configurators.slash.codebuddy import CodeBuddySlashCommandConfigurator
+
         return CodeBuddySlashCommandConfigurator()
     elif tool_id == "costrict":
         from aurora_cli.configurators.slash.costrict import CostrictSlashCommandConfigurator
+
         return CostrictSlashCommandConfigurator()
     elif tool_id == "crush":
         from aurora_cli.configurators.slash.crush import CrushSlashCommandConfigurator
+
         return CrushSlashCommandConfigurator()
     elif tool_id == "iflow":
         from aurora_cli.configurators.slash.iflow import IflowSlashCommandConfigurator
+
         return IflowSlashCommandConfigurator()
     elif tool_id == "qoder":
         from aurora_cli.configurators.slash.qoder import QoderSlashCommandConfigurator
+
         return QoderSlashCommandConfigurator()
     elif tool_id == "qwen":
         from aurora_cli.configurators.slash.qwen import QwenSlashCommandConfigurator
+
         return QwenSlashCommandConfigurator()
     else:
         raise ValueError(f"Unknown tool: {tool_id}")
@@ -144,7 +152,9 @@ def get_configurator(tool_id: str) -> SlashCommandConfigurator:
 class TestMarkdownToolProperties:
     """Tests for basic properties of markdown-based configurators."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_tool_id_property(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -152,7 +162,9 @@ class TestMarkdownToolProperties:
         config = get_configurator(tool_id)
         assert config.tool_id == tool_id
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_is_available_property(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -160,7 +172,9 @@ class TestMarkdownToolProperties:
         config = get_configurator(tool_id)
         assert config.is_available is True
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_inherits_from_slash_command_configurator(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -172,7 +186,9 @@ class TestMarkdownToolProperties:
 class TestMarkdownToolPaths:
     """Tests for path-related methods."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_relative_path_returns_correct_directory(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -183,7 +199,9 @@ class TestMarkdownToolPaths:
             path = config.get_relative_path(cmd_id)
             assert path.startswith(dir_pattern), f"Path {path} should start with {dir_pattern}"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_relative_path_has_md_extension(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -194,10 +212,16 @@ class TestMarkdownToolPaths:
             path = config.get_relative_path(cmd_id)
             assert path.endswith(".md"), f"Path {path} should end with .md"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_resolve_absolute_path(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test resolve_absolute_path returns absolute path."""
         config = get_configurator(tool_id)
@@ -211,7 +235,9 @@ class TestMarkdownToolPaths:
 class TestMarkdownToolFrontmatter:
     """Tests for frontmatter generation."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_frontmatter_returns_value(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -223,7 +249,9 @@ class TestMarkdownToolFrontmatter:
             # Should return either None or a string (both are valid per the interface)
             assert frontmatter is None or isinstance(frontmatter, str)
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_frontmatter_has_yaml_delimiters_if_not_none(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -236,11 +264,13 @@ class TestMarkdownToolFrontmatter:
                 # Should have YAML delimiters (---) OR be a markdown header format
                 has_yaml = frontmatter.startswith("---")
                 has_markdown_header = frontmatter.startswith("#")
-                assert has_yaml or has_markdown_header, (
-                    f"Frontmatter for {tool_id}/{cmd_id} should have YAML delimiters or markdown header"
-                )
+                assert (
+                    has_yaml or has_markdown_header
+                ), f"Frontmatter for {tool_id}/{cmd_id} should have YAML delimiters or markdown header"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_frontmatter_has_expected_fields(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -254,15 +284,18 @@ class TestMarkdownToolFrontmatter:
                 expected = frontmatter_fields["plan"]
                 for field, should_exist in expected.items():
                     if should_exist:
-                        assert field in frontmatter.lower() or field.replace("-", "") in frontmatter.lower(), (
-                            f"Frontmatter for {tool_id}/plan should contain {field}"
-                        )
+                        assert (
+                            field in frontmatter.lower()
+                            or field.replace("-", "") in frontmatter.lower()
+                        ), f"Frontmatter for {tool_id}/plan should contain {field}"
 
 
 class TestMarkdownToolBody:
     """Tests for body content generation."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_body_returns_template(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -278,10 +311,16 @@ class TestMarkdownToolBody:
 class TestMarkdownToolGenerateAll:
     """Tests for generate_all method."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_generate_all_creates_all_command_files(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test generate_all creates files for all commands."""
         config = get_configurator(tool_id)
@@ -293,10 +332,16 @@ class TestMarkdownToolGenerateAll:
             file_path = tmp_path / config.get_relative_path(cmd_id)
             assert file_path.exists(), f"File for {tool_id}/{cmd_id} should exist"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_generate_all_files_have_aurora_markers(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test generated files contain Aurora markers."""
         config = get_configurator(tool_id)
@@ -306,17 +351,23 @@ class TestMarkdownToolGenerateAll:
             file_path = tmp_path / config.get_relative_path(cmd_id)
             content = file_path.read_text()
 
-            assert AURORA_MARKERS["start"] in content, (
-                f"File for {tool_id}/{cmd_id} should have start marker"
-            )
-            assert AURORA_MARKERS["end"] in content, (
-                f"File for {tool_id}/{cmd_id} should have end marker"
-            )
+            assert (
+                AURORA_MARKERS["start"] in content
+            ), f"File for {tool_id}/{cmd_id} should have start marker"
+            assert (
+                AURORA_MARKERS["end"] in content
+            ), f"File for {tool_id}/{cmd_id} should have end marker"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_generate_all_files_have_body_between_markers(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test generated files have body content between markers."""
         config = get_configurator(tool_id)
@@ -332,14 +383,20 @@ class TestMarkdownToolGenerateAll:
             between_markers = content[start_idx:end_idx].strip()
             expected_body = get_command_body(cmd_id)
 
-            assert expected_body in between_markers or expected_body.strip() in between_markers, (
-                f"File for {tool_id}/{cmd_id} should have body between markers"
-            )
+            assert (
+                expected_body in between_markers or expected_body.strip() in between_markers
+            ), f"File for {tool_id}/{cmd_id} should have body between markers"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_generate_all_returns_relative_paths(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test generate_all returns relative paths."""
         config = get_configurator(tool_id)
@@ -348,10 +405,16 @@ class TestMarkdownToolGenerateAll:
         for path in created:
             assert not Path(path).is_absolute(), f"Path {path} should be relative"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_generate_all_creates_directory_structure(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test generate_all creates the directory structure."""
         config = get_configurator(tool_id)
@@ -365,10 +428,16 @@ class TestMarkdownToolGenerateAll:
 class TestMarkdownToolUpdateExisting:
     """Tests for update_existing method."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_update_existing_only_updates_existing_files(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test update_existing does not create new files."""
         config = get_configurator(tool_id)
@@ -393,10 +462,16 @@ class TestMarkdownToolUpdateExisting:
         checkpoint_path = tmp_path / config.get_relative_path("checkpoint")
         assert not checkpoint_path.exists()
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_update_existing_replaces_body_between_markers(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        frontmatter_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test update_existing replaces body content between markers."""
         config = get_configurator(tool_id)
@@ -415,9 +490,7 @@ class TestMarkdownToolUpdateExisting:
         end_idx = original_content.find(end_marker)
 
         old_body = "\nThis is OLD body content.\n"
-        modified_content = (
-            original_content[:start_idx] + old_body + original_content[end_idx:]
-        )
+        modified_content = original_content[:start_idx] + old_body + original_content[end_idx:]
         plan_path.write_text(modified_content)
 
         # Verify old content is there
@@ -437,7 +510,9 @@ class TestMarkdownToolUpdateExisting:
 class TestMarkdownToolTargets:
     """Tests for get_targets method."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_targets_returns_all_commands(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -450,7 +525,9 @@ class TestMarkdownToolTargets:
         command_ids = {t.command_id for t in targets}
         assert command_ids == set(ALL_COMMANDS)
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_targets_returns_slash_command_targets(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -462,7 +539,9 @@ class TestMarkdownToolTargets:
             assert isinstance(target, SlashCommandTarget)
             assert target.kind == "slash"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
+    )
     def test_get_targets_paths_match_get_relative_path(
         self, tool_id: str, dir_pattern: str, file_pattern: str, frontmatter_fields: dict[str, Any]
     ) -> None:
@@ -548,26 +627,33 @@ def get_special_configurator(tool_id: str) -> SlashCommandConfigurator:
     """
     if tool_id == "amazon-q":
         from aurora_cli.configurators.slash.amazon_q import AmazonQSlashCommandConfigurator
+
         return AmazonQSlashCommandConfigurator()
     elif tool_id == "cline":
         from aurora_cli.configurators.slash.cline import ClineSlashCommandConfigurator
+
         return ClineSlashCommandConfigurator()
     elif tool_id == "roocode":
         from aurora_cli.configurators.slash.roocode import RooCodeSlashCommandConfigurator
+
         return RooCodeSlashCommandConfigurator()
     elif tool_id == "factory":
         from aurora_cli.configurators.slash.factory import FactorySlashCommandConfigurator
+
         return FactorySlashCommandConfigurator()
     elif tool_id == "github-copilot":
         from aurora_cli.configurators.slash.github_copilot import (
             GitHubCopilotSlashCommandConfigurator,
         )
+
         return GitHubCopilotSlashCommandConfigurator()
     elif tool_id == "kilocode":
         from aurora_cli.configurators.slash.kilocode import KiloCodeSlashCommandConfigurator
+
         return KiloCodeSlashCommandConfigurator()
     elif tool_id == "opencode":
         from aurora_cli.configurators.slash.opencode import OpenCodeSlashCommandConfigurator
+
         return OpenCodeSlashCommandConfigurator()
     else:
         raise ValueError(f"Unknown special tool: {tool_id}")
@@ -576,7 +662,9 @@ def get_special_configurator(tool_id: str) -> SlashCommandConfigurator:
 class TestSpecialFrontmatterToolProperties:
     """Tests for properties of tools with special frontmatter patterns."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS
+    )
     def test_tool_id_property(
         self, tool_id: str, dir_pattern: str, file_pattern: str, special_fields: dict[str, Any]
     ) -> None:
@@ -584,7 +672,9 @@ class TestSpecialFrontmatterToolProperties:
         config = get_special_configurator(tool_id)
         assert config.tool_id == tool_id
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS
+    )
     def test_is_available_property(
         self, tool_id: str, dir_pattern: str, file_pattern: str, special_fields: dict[str, Any]
     ) -> None:
@@ -592,7 +682,9 @@ class TestSpecialFrontmatterToolProperties:
         config = get_special_configurator(tool_id)
         assert config.is_available is True
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS
+    )
     def test_inherits_from_slash_command_configurator(
         self, tool_id: str, dir_pattern: str, file_pattern: str, special_fields: dict[str, Any]
     ) -> None:
@@ -604,7 +696,9 @@ class TestSpecialFrontmatterToolProperties:
 class TestSpecialFrontmatterToolPaths:
     """Tests for path-related methods of special frontmatter tools."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS
+    )
     def test_get_relative_path_returns_correct_directory(
         self, tool_id: str, dir_pattern: str, file_pattern: str, special_fields: dict[str, Any]
     ) -> None:
@@ -615,7 +709,9 @@ class TestSpecialFrontmatterToolPaths:
             path = config.get_relative_path(cmd_id)
             assert path.startswith(dir_pattern), f"Path {path} should start with {dir_pattern}"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS
+    )
     def test_get_relative_path_has_md_extension(
         self, tool_id: str, dir_pattern: str, file_pattern: str, special_fields: dict[str, Any]
     ) -> None:
@@ -633,6 +729,7 @@ class TestAmazonQSpecialFrontmatter:
     def test_frontmatter_contains_arguments_placeholder(self) -> None:
         """Test Amazon Q frontmatter contains $ARGUMENTS placeholder."""
         from aurora_cli.configurators.slash.amazon_q import AmazonQSlashCommandConfigurator
+
         config = AmazonQSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -642,6 +739,7 @@ class TestAmazonQSpecialFrontmatter:
     def test_frontmatter_contains_user_request_tags(self) -> None:
         """Test Amazon Q frontmatter contains <UserRequest> tags."""
         from aurora_cli.configurators.slash.amazon_q import AmazonQSlashCommandConfigurator
+
         config = AmazonQSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -655,6 +753,7 @@ class TestClineSpecialFrontmatter:
     def test_frontmatter_is_markdown_heading(self) -> None:
         """Test Cline frontmatter is a markdown heading format."""
         from aurora_cli.configurators.slash.cline import ClineSlashCommandConfigurator
+
         config = ClineSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -664,6 +763,7 @@ class TestClineSpecialFrontmatter:
     def test_frontmatter_contains_command_name(self) -> None:
         """Test Cline frontmatter contains the command name."""
         from aurora_cli.configurators.slash.cline import ClineSlashCommandConfigurator
+
         config = ClineSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -674,6 +774,7 @@ class TestClineSpecialFrontmatter:
     def test_frontmatter_has_description_after_heading(self) -> None:
         """Test Cline frontmatter has description after the heading."""
         from aurora_cli.configurators.slash.cline import ClineSlashCommandConfigurator
+
         config = ClineSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -689,6 +790,7 @@ class TestRooCodeSpecialFrontmatter:
     def test_frontmatter_is_markdown_heading(self) -> None:
         """Test RooCode frontmatter is a markdown heading format."""
         from aurora_cli.configurators.slash.roocode import RooCodeSlashCommandConfigurator
+
         config = RooCodeSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -698,6 +800,7 @@ class TestRooCodeSpecialFrontmatter:
     def test_frontmatter_contains_command_name(self) -> None:
         """Test RooCode frontmatter contains the command name."""
         from aurora_cli.configurators.slash.roocode import RooCodeSlashCommandConfigurator
+
         config = RooCodeSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -712,6 +815,7 @@ class TestKiloCodeSpecialFrontmatter:
     def test_frontmatter_is_none(self) -> None:
         """Test Kilo Code returns None for frontmatter."""
         from aurora_cli.configurators.slash.kilocode import KiloCodeSlashCommandConfigurator
+
         config = KiloCodeSlashCommandConfigurator()
 
         for cmd_id in ALL_COMMANDS:
@@ -727,6 +831,7 @@ class TestGitHubCopilotSpecialFrontmatter:
         from aurora_cli.configurators.slash.github_copilot import (
             GitHubCopilotSlashCommandConfigurator,
         )
+
         config = GitHubCopilotSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -738,6 +843,7 @@ class TestGitHubCopilotSpecialFrontmatter:
         from aurora_cli.configurators.slash.github_copilot import (
             GitHubCopilotSlashCommandConfigurator,
         )
+
         config = GitHubCopilotSlashCommandConfigurator()
 
         for cmd_id in ALL_COMMANDS:
@@ -751,6 +857,7 @@ class TestOpenCodeSpecialFrontmatter:
     def test_frontmatter_contains_arguments_placeholder(self) -> None:
         """Test OpenCode frontmatter contains $ARGUMENTS placeholder."""
         from aurora_cli.configurators.slash.opencode import OpenCodeSlashCommandConfigurator
+
         config = OpenCodeSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -760,6 +867,7 @@ class TestOpenCodeSpecialFrontmatter:
     def test_frontmatter_contains_user_request_tags(self) -> None:
         """Test OpenCode frontmatter contains <UserRequest> tags."""
         from aurora_cli.configurators.slash.opencode import OpenCodeSlashCommandConfigurator
+
         config = OpenCodeSlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -773,6 +881,7 @@ class TestFactorySpecialFrontmatter:
     def test_frontmatter_has_argument_hint(self) -> None:
         """Test Factory frontmatter has argument-hint field."""
         from aurora_cli.configurators.slash.factory import FactorySlashCommandConfigurator
+
         config = FactorySlashCommandConfigurator()
 
         frontmatter = config.get_frontmatter("plan")
@@ -782,6 +891,7 @@ class TestFactorySpecialFrontmatter:
     def test_body_contains_arguments_placeholder(self) -> None:
         """Test Factory body contains $ARGUMENTS placeholder."""
         from aurora_cli.configurators.slash.factory import FactorySlashCommandConfigurator
+
         config = FactorySlashCommandConfigurator()
 
         body = config.get_body("plan")
@@ -791,10 +901,16 @@ class TestFactorySpecialFrontmatter:
 class TestSpecialFrontmatterToolGenerateAll:
     """Tests for generate_all method on special frontmatter tools."""
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS
+    )
     def test_generate_all_creates_all_command_files(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, special_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        special_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test generate_all creates files for all commands."""
         config = get_special_configurator(tool_id)
@@ -806,10 +922,16 @@ class TestSpecialFrontmatterToolGenerateAll:
             file_path = tmp_path / config.get_relative_path(cmd_id)
             assert file_path.exists(), f"File for {tool_id}/{cmd_id} should exist"
 
-    @pytest.mark.parametrize("tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS)
+    @pytest.mark.parametrize(
+        "tool_id,dir_pattern,file_pattern,special_fields", SPECIAL_FRONTMATTER_TOOLS
+    )
     def test_generate_all_files_have_aurora_markers(
-        self, tool_id: str, dir_pattern: str, file_pattern: str, special_fields: dict[str, Any],
-        tmp_path: Path
+        self,
+        tool_id: str,
+        dir_pattern: str,
+        file_pattern: str,
+        special_fields: dict[str, Any],
+        tmp_path: Path,
     ) -> None:
         """Test generated files contain Aurora markers."""
         config = get_special_configurator(tool_id)
@@ -819,9 +941,9 @@ class TestSpecialFrontmatterToolGenerateAll:
             file_path = tmp_path / config.get_relative_path(cmd_id)
             content = file_path.read_text()
 
-            assert AURORA_MARKERS["start"] in content, (
-                f"File for {tool_id}/{cmd_id} should have start marker"
-            )
-            assert AURORA_MARKERS["end"] in content, (
-                f"File for {tool_id}/{cmd_id} should have end marker"
-            )
+            assert (
+                AURORA_MARKERS["start"] in content
+            ), f"File for {tool_id}/{cmd_id} should have start marker"
+            assert (
+                AURORA_MARKERS["end"] in content
+            ), f"File for {tool_id}/{cmd_id} should have end marker"

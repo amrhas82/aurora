@@ -7,7 +7,6 @@ from pathlib import Path
 import click
 from rich.console import Console
 
-
 console = Console()
 
 
@@ -84,7 +83,9 @@ def headless_command(
             )
             branch = result.stdout.strip()
             if branch in ["main", "master"]:
-                console.print("[red]Error: Cannot run on main/master (use --allow-main to override)[/]")
+                console.print(
+                    "[red]Error: Cannot run on main/master (use --allow-main to override)[/]"
+                )
                 raise click.Abort()
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             pass  # Not a git repo, continue

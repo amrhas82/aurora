@@ -6,14 +6,14 @@ the retry loop and that feedback is properly generated and incorporated.
 """
 
 import pytest
+
 from aurora_core.budget import CostTracker
 from aurora_core.chunks import CodeChunk
 from aurora_core.config.loader import Config
 from aurora_core.store.memory import MemoryStore
 from aurora_reasoning.llm_client import LLMClient, LLMResponse
-from aurora_soar.orchestrator import SOAROrchestrator
-
 from aurora_soar import AgentInfo, AgentRegistry
+from aurora_soar.orchestrator import SOAROrchestrator
 
 
 class MockCostTracker(CostTracker):
@@ -101,13 +101,10 @@ class MockLLMClientWithRetry(LLMClient):
         combined = (prompt + " " + system).upper()
         # Verification: RED TEAM or contains verification keywords, but NOT feedback generation
         is_verification = (
-            (
-                "RED TEAM" in combined
-                or ("VERIF" in combined and "DECOMPOSITION" in combined)
-                or ("CONSISTENCY" in combined and "GROUNDEDNESS" in combined)
-            )
-            and "VERIFICATION RESULT (ATTEMPT" not in combined  # Exclude feedback generation
-        )
+            "RED TEAM" in combined
+            or ("VERIF" in combined and "DECOMPOSITION" in combined)
+            or ("CONSISTENCY" in combined and "GROUNDEDNESS" in combined)
+        ) and "VERIFICATION RESULT (ATTEMPT" not in combined  # Exclude feedback generation
 
         # Retry decomposition: has both decompose keywords AND retry indicators
         is_retry_decompose = (
@@ -121,7 +118,8 @@ class MockLLMClientWithRetry(LLMClient):
 
             if self.retry_scenario == "fail_then_pass":
                 # Second attempt: complete decomposition (Phase 2 format)
-                return self._make_response("""
+                return self._make_response(
+                    """
 {
   "goal": "Review authentication module for security",
   "subgoals": [
@@ -147,10 +145,12 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}, {"phase": 2, "parallelizable": [1], "sequential": []}, {"phase": 3, "parallelizable": [2], "sequential": []}],
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
-""")
+"""
+                )
             if self.retry_scenario == "fail_twice":
                 # Still incomplete even after retry
-                return self._make_response("""
+                return self._make_response(
+                    """
 {
   "goal": "Review authentication module",
   "subgoals": [
@@ -164,7 +164,8 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
   "expected_tools": ["file_reader"]
 }
-""")
+"""
+                )
             # pass_first - shouldn't reach here
             return self._make_response("mock response")
 
@@ -174,7 +175,8 @@ class MockLLMClientWithRetry(LLMClient):
             if self.retry_scenario == "fail_then_pass":
                 if self.verification_count == 1:
                     # First decomposition gets low score
-                    return self._make_response("""
+                    return self._make_response(
+                        """
 {
   "completeness": 0.4,
   "consistency": 0.7,
@@ -188,9 +190,11 @@ class MockLLMClientWithRetry(LLMClient):
     "Report generation not specified"
   ]
 }
-""")
+"""
+                    )
                 # Second decomposition passes
-                return self._make_response("""
+                return self._make_response(
+                    """
 {
   "completeness": 0.9,
   "consistency": 0.9,
@@ -200,10 +204,12 @@ class MockLLMClientWithRetry(LLMClient):
   "verdict": "PASS",
   "issues": []
 }
-""")
+"""
+                )
             if self.retry_scenario == "fail_twice":
                 # Both verifications fail
-                return self._make_response("""
+                return self._make_response(
+                    """
 {
   "completeness": 0.4,
   "consistency": 0.7,
@@ -216,10 +222,12 @@ class MockLLMClientWithRetry(LLMClient):
     "No vulnerability identification subgoal"
   ]
 }
-""")
+"""
+                )
             # pass_first
             # First verification passes
-            return self._make_response("""
+            return self._make_response(
+                """
 {
   "completeness": 0.9,
   "consistency": 0.9,
@@ -229,14 +237,16 @@ class MockLLMClientWithRetry(LLMClient):
   "verdict": "PASS",
   "issues": []
 }
-""")
+"""
+            )
 
         # Decomposition request
         if "decompose" in prompt.lower() or "subgoals" in prompt.lower():
             if self.retry_scenario == "fail_then_pass":
                 if self.call_count == 1:
                     # First attempt: incomplete decomposition (Phase 2 format)
-                    return self._make_response("""
+                    return self._make_response(
+                        """
 {
   "goal": "Review authentication module",
   "subgoals": [
@@ -250,9 +260,11 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
   "expected_tools": ["file_reader"]
 }
-""")
+"""
+                    )
                 # Second attempt: complete decomposition (Phase 2 format)
-                return self._make_response("""
+                return self._make_response(
+                    """
 {
   "goal": "Review authentication module for security",
   "subgoals": [
@@ -278,10 +290,12 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}, {"phase": 2, "parallelizable": [1], "sequential": []}, {"phase": 3, "parallelizable": [2], "sequential": []}],
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
-""")
+"""
+                )
             if self.retry_scenario == "fail_twice":
                 # Both attempts: incomplete decomposition (Phase 2 format)
-                return self._make_response("""
+                return self._make_response(
+                    """
 {
   "goal": "Review authentication module",
   "subgoals": [
@@ -295,10 +309,12 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
   "expected_tools": ["file_reader"]
 }
-""")
+"""
+                )
             # pass_first
             # First attempt: complete decomposition (Phase 2 format)
-            return self._make_response("""
+            return self._make_response(
+                """
 {
   "goal": "Review authentication module for security",
   "subgoals": [
@@ -324,7 +340,8 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}, {"phase": 2, "parallelizable": [1], "sequential": []}, {"phase": 3, "parallelizable": [2], "sequential": []}],
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
-""")
+"""
+            )
 
         # Feedback generation request (check for verification result in prompt)
         if "verification result" in prompt.lower() or (
@@ -458,9 +475,9 @@ class TestVerificationRetry:
         )
 
         # Verify retry occurred
-        assert llm_client.call_count >= 4, (
-            "Should have multiple LLM calls (decompose + verify, then retry)"
-        )
+        assert (
+            llm_client.call_count >= 4
+        ), "Should have multiple LLM calls (decompose + verify, then retry)"
 
         # Verify feedback was generated and used
         assert len(llm_client.feedback_received) > 0, "Should have received retry feedback"
@@ -571,6 +588,6 @@ class TestVerificationRetry:
 
         # Verify feedback contains actionable content
         feedback_text = llm_client.feedback_generated[0]
-        assert "improve" in feedback_text.lower() or "add" in feedback_text.lower(), (
-            "Feedback should contain improvement suggestions"
-        )
+        assert (
+            "improve" in feedback_text.lower() or "add" in feedback_text.lower()
+        ), "Feedback should contain improvement suggestions"

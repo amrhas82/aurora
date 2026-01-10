@@ -86,5 +86,9 @@ TOOL_OPTIONS = [
     {"value": "opencode", "name": "OpenCode", "available": True},
     {"value": "ampcode", "name": "AmpCode", "available": True},
     {"value": "droid", "name": "Droid", "available": True},
-    {"value": "universal-agents.md", "name": "Universal AGENTS.md (for other tools)", "available": True},
+    {
+        "value": "universal-agents.md",
+        "name": "Universal AGENTS.md (for other tools)",
+        "available": True,
+    },
 ]

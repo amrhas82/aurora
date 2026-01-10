@@ -21,7 +21,6 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
-
 # ==============================================================================
 # Test Fixtures
 # ==============================================================================
@@ -418,12 +417,12 @@ class TestErrorScenarios:
             response = json.loads(result)
 
             if "error" in response:
-                assert "suggestion" in response["error"], (
-                    f"Missing suggestion for scenario: {scenario}"
-                )
-                assert len(response["error"]["suggestion"]) > 0, (
-                    f"Empty suggestion for scenario: {scenario}"
-                )
+                assert (
+                    "suggestion" in response["error"]
+                ), f"Missing suggestion for scenario: {scenario}"
+                assert (
+                    len(response["error"]["suggestion"]) > 0
+                ), f"Empty suggestion for scenario: {scenario}"
 
 
 # ==============================================================================

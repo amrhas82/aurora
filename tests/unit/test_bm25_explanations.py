@@ -33,7 +33,7 @@ def test_explain_bm25_exact_match_multiple_terms():
 
     assert "exact keyword match" in explanation.lower()
     # Should mention both terms (but order may vary)
-    assert ("get" in explanation.lower() or "user" in explanation.lower())
+    assert "get" in explanation.lower() or "user" in explanation.lower()
 
 
 def test_explain_bm25_strong_overlap():
@@ -93,5 +93,6 @@ def test_explain_bm25_camelcase_tokenization():
 
     # Should recognize camelCase splitting and find matches
     # Could be exact match on full term OR strong overlap on split terms
-    assert ("exact keyword match" in explanation.lower() or
-            "strong term overlap" in explanation.lower())
+    assert (
+        "exact keyword match" in explanation.lower() or "strong term overlap" in explanation.lower()
+    )

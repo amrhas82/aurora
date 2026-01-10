@@ -3,7 +3,6 @@
 Central registry that manages all available tool configurators.
 """
 
-
 from aurora_planning.configurators.base import ToolConfigurator
 
 

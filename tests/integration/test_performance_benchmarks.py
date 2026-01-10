@@ -15,11 +15,10 @@ from pathlib import Path
 
 import psutil
 import pytest
-from aurora_cli.memory_manager import MemoryManager
 
+from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
-
 
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 
@@ -44,10 +43,7 @@ class TestQueryLatency:
     def memory_manager(self, memory_store):
         """Create MemoryManager with real components."""
         embedding_provider = EmbeddingProvider()
-        return MemoryManager(
-            memory_store=memory_store,
-            embedding_provider=embedding_provider
-        )
+        return MemoryManager(memory_store=memory_store, embedding_provider=embedding_provider)
 
     @pytest.fixture
     def aurora_subset(self) -> Path:
@@ -192,10 +188,7 @@ class TestMemoryUsage:
     def memory_manager(self, memory_store):
         """Create MemoryManager."""
         embedding_provider = EmbeddingProvider()
-        return MemoryManager(
-            memory_store=memory_store,
-            embedding_provider=embedding_provider
-        )
+        return MemoryManager(memory_store=memory_store, embedding_provider=embedding_provider)
 
     @pytest.fixture
     def large_codebase(self, tmp_path):
@@ -211,13 +204,13 @@ class TestMemoryUsage:
             content = f'"""Module {file_idx}."""\n\n'
 
             for class_idx in range(10):
-                content += f'\nclass Class{class_idx}_{file_idx}:\n'
+                content += f"\nclass Class{class_idx}_{file_idx}:\n"
                 content += f'    """Class {class_idx} in module {file_idx}."""\n\n'
 
                 for method_idx in range(5):
-                    content += f'    def method_{method_idx}(self, x, y):\n'
+                    content += f"    def method_{method_idx}(self, x, y):\n"
                     content += f'        """Method {method_idx}."""\n'
-                    content += f'        return x + y + {method_idx}\n\n'
+                    content += f"        return x + y + {method_idx}\n\n"
 
             module_file.write_text(content)
 
@@ -236,8 +229,7 @@ class TestMemoryUsage:
 
         # Verify we have ~10K chunks
         assert stats.chunks_created >= 8000, (
-            f"Expected ~10K chunks, got {stats.chunks_created}. "
-            f"Test setup may be incorrect."
+            f"Expected ~10K chunks, got {stats.chunks_created}. " f"Test setup may be incorrect."
         )
 
         # Run several searches to exercise retrieval
@@ -329,10 +321,7 @@ class TestIndexingPerformance:
     def memory_manager(self, memory_store):
         """Create MemoryManager."""
         embedding_provider = EmbeddingProvider()
-        return MemoryManager(
-            memory_store=memory_store,
-            embedding_provider=embedding_provider
-        )
+        return MemoryManager(memory_store=memory_store, embedding_provider=embedding_provider)
 
     @pytest.mark.benchmark
     def test_indexing_throughput(self, memory_manager, tmp_path):
@@ -407,5 +396,7 @@ class Class{i}:
         print(f"Files indexed: {stats.files_indexed}")
         print(f"Chunks created: {stats.chunks_created}")
         print(f"Duration: {elapsed:.2f}s")
-        print(f"Throughput: {stats.files_indexed/elapsed:.2f} files/sec, "
-              f"{stats.chunks_created/elapsed:.2f} chunks/sec")
+        print(
+            f"Throughput: {stats.files_indexed/elapsed:.2f} files/sec, "
+            f"{stats.chunks_created/elapsed:.2f} chunks/sec"
+        )

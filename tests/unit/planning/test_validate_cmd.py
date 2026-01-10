@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.cli.validate_cmd import ValidateCommand
 
 
@@ -35,7 +36,8 @@ class TestValidateCommandPlan:
         plan_file.write_text("# Plan: Test\n\n## Why\nReason text.\n\n## What Changes\n- Change")
 
         cap_file = cap_dir / "spec.md"
-        cap_file.write_text("""# Capability: Test
+        cap_file.write_text(
+            """# Capability: Test
 
 ## ADDED Requirements
 
@@ -47,9 +49,11 @@ The system SHALL do something.
 GIVEN state
 WHEN action
 THEN result
-""")
+"""
+        )
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -69,7 +73,8 @@ THEN result
         plan_file.write_text("# Plan: Test\n\n## Why\nReason.\n\n## What Changes\n- Change")
 
         cap_file = cap_dir / "spec.md"
-        cap_file.write_text("""# Capability: Test
+        cap_file.write_text(
+            """# Capability: Test
 
 ## ADDED Requirements
 
@@ -81,14 +86,17 @@ Text here.
 GIVEN state
 WHEN action
 THEN result
-""")
+"""
+        )
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
             result = validate_command.validate_plan("test-plan", strict=False, json_output=True)
             import json
+
             data = json.loads(result)
             assert "valid" in data
             assert "issues" in data
@@ -102,7 +110,8 @@ class TestValidateCommandCapability:
     def test_validate_valid_capability(self, tmp_path: Path, validate_command: ValidateCommand):
         """Test validating a valid capability file."""
         cap_file = tmp_path / "test-capability.md"
-        cap_file.write_text("""# Capability: Test Capability
+        cap_file.write_text(
+            """# Capability: Test Capability
 
 ## Requirements
 
@@ -114,9 +123,12 @@ The system SHALL support test functionality.
 GIVEN initial state
 WHEN action occurs
 THEN result happens
-""")
+"""
+        )
 
-        result = validate_command.validate_capability(str(cap_file), strict=False, json_output=False)
+        result = validate_command.validate_capability(
+            str(cap_file), strict=False, json_output=False
+        )
         assert "valid" in result.lower()
 
     def test_validate_capability_not_found(self, validate_command: ValidateCommand):
@@ -125,10 +137,13 @@ THEN result happens
             validate_command.validate_capability("nonexistent.md", strict=False, json_output=False)
         assert "not found" in str(exc_info.value).lower()
 
-    def test_validate_capability_json_output(self, tmp_path: Path, validate_command: ValidateCommand):
+    def test_validate_capability_json_output(
+        self, tmp_path: Path, validate_command: ValidateCommand
+    ):
         """Test JSON output for capability validation."""
         cap_file = tmp_path / "test-capability.md"
-        cap_file.write_text("""# Capability: Test
+        cap_file.write_text(
+            """# Capability: Test
 
 ## Requirements
 
@@ -140,10 +155,12 @@ The system SHALL do something.
 GIVEN state
 WHEN action
 THEN result
-""")
+"""
+        )
 
         result = validate_command.validate_capability(str(cap_file), strict=False, json_output=True)
         import json
+
         data = json.loads(result)
         assert "valid" in data
         assert "issues" in data

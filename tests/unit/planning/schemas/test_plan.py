@@ -8,8 +8,9 @@ Task: 1.5 - Write tests/unit/schemas/test_plan.py
 """
 
 import pytest
-from aurora_planning.schemas.plan import Modification, ModificationOperation, Plan
 from pydantic import ValidationError
+
+from aurora_planning.schemas.plan import Modification, ModificationOperation, Plan
 
 
 class TestModificationOperation:
@@ -152,7 +153,9 @@ class TestPlanSchema:
             )
 
         errors = exc_info.value.errors()
-        assert any("Consider splitting plans with more than 10 modifications" in str(e) for e in errors)
+        assert any(
+            "Consider splitting plans with more than 10 modifications" in str(e) for e in errors
+        )
 
     def test_rejects_plan_with_empty_what_changes(self):
         """Should reject plan with empty what_changes."""

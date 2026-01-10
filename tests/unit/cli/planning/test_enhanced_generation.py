@@ -182,7 +182,9 @@ class TestEnhancedTasksGeneration:
         # For now, just verify it doesn't crash
         assert "sg-1" in content.lower() or "SG-1" in content
 
-    def test_tasks_md_groups_by_subgoal(self, sample_plan_with_files, sample_file_resolutions, tmp_path):
+    def test_tasks_md_groups_by_subgoal(
+        self, sample_plan_with_files, sample_file_resolutions, tmp_path
+    ):
         """Test tasks.md groups tasks by subgoal."""
         renderer = TemplateRenderer()
         context = renderer.build_context(sample_plan_with_files)
@@ -204,9 +206,7 @@ class TestEnhancedTasksGeneration:
 class TestEnhancedAgentsJsonGeneration:
     """Test enhanced agents.json generation with gaps and file resolutions."""
 
-    def test_agents_json_includes_decomposition_source(
-        self, sample_plan_with_files, tmp_path
-    ):
+    def test_agents_json_includes_decomposition_source(self, sample_plan_with_files, tmp_path):
         """Test agents.json includes decomposition_source field."""
         renderer = TemplateRenderer()
         context = renderer.build_context(sample_plan_with_files)
@@ -220,9 +220,7 @@ class TestEnhancedAgentsJsonGeneration:
         assert '"decomposition_source"' in content
         assert '"soar"' in content
 
-    def test_agents_json_includes_context_summary(
-        self, sample_plan_with_files, tmp_path
-    ):
+    def test_agents_json_includes_context_summary(self, sample_plan_with_files, tmp_path):
         """Test agents.json includes context_summary field."""
         renderer = TemplateRenderer()
         context = renderer.build_context(sample_plan_with_files)
@@ -289,9 +287,7 @@ class TestEnhancedAgentsJsonGeneration:
 class TestEnhancedPlanMdGeneration:
     """Test enhanced plan.md generation with dependency graph."""
 
-    def test_plan_md_includes_dependency_graph_section(
-        self, sample_plan_with_files, tmp_path
-    ):
+    def test_plan_md_includes_dependency_graph_section(self, sample_plan_with_files, tmp_path):
         """Test plan.md includes ASCII dependency graph section."""
         renderer = TemplateRenderer()
         context = renderer.build_context(sample_plan_with_files)
@@ -304,9 +300,7 @@ class TestEnhancedPlanMdGeneration:
         # Verify dependency graph section exists
         assert "dependency" in content.lower() or "graph" in content.lower()
 
-    def test_plan_md_shows_linear_dependencies(
-        self, sample_plan_with_files, tmp_path
-    ):
+    def test_plan_md_shows_linear_dependencies(self, sample_plan_with_files, tmp_path):
         """Test plan.md shows linear dependency chain."""
         renderer = TemplateRenderer()
         context = renderer.build_context(sample_plan_with_files)
@@ -320,9 +314,7 @@ class TestEnhancedPlanMdGeneration:
         assert "sg-2" in content
         assert "sg-3" in content
 
-    def test_plan_md_shows_parallel_dependencies(
-        self, sample_plan_with_files, tmp_path
-    ):
+    def test_plan_md_shows_parallel_dependencies(self, sample_plan_with_files, tmp_path):
         """Test plan.md shows parallel dependencies."""
         # Modify plan to have parallel dependencies
         sample_plan_with_files.subgoals[1].dependencies = ["sg-1"]

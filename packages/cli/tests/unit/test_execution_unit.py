@@ -11,6 +11,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+
 from aurora_cli.errors import APIError
 from aurora_cli.execution import QueryExecutor
 

@@ -17,7 +17,6 @@ import os
 import sys
 from unittest.mock import Mock, patch
 
-
 try:
     from aurora_reasoning.llm_client import AnthropicClient, LLMResponse
 except ImportError as e:

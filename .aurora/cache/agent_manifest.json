@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-01-06T01:33:04.318862+01:00",
+  "generated_at": "2026-01-10T02:06:22.219857+01:00",
   "sources": [
     "/home/hamr/.claude/agents",
     "/home/hamr/.config/opencode/agent"
@@ -31,7 +31,7 @@
     {
       "id": "3-process-task-list",
       "role": "3 Process Task List",
-      "goal": "Manages implementation progress using markdown task lists with strict sequential execution, test-first workflow, and commit management. Use when user wants to implement a PRD systematically, has completed subtasks needing tracking, wants to continue work on an existing task list, or needs task list updates with proper test/commit workflow.",
+      "goal": "Manages implementation progress using markdown task lists with strict sequential execution and commit management. Use when user wants to implement a PRD systematically, has completed subtasks needing tracking, wants to continue work on an existing task list, or needs task list updates.",
       "category": "general",
       "skills": [],
       "examples": [],

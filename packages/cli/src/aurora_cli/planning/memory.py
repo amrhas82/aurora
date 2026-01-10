@@ -1,6 +1,7 @@
 """Memory-based file path resolution for planning.
 
 Wraps MemoryRetriever to resolve actual file paths from indexed memory.
+Provides memory search functionality for goal decomposition context.
 """
 
 import logging
@@ -12,6 +13,85 @@ from aurora_cli.planning.models import FileResolution, Subgoal
 from aurora_core.store.sqlite import SQLiteStore
 
 logger = logging.getLogger(__name__)
+
+
+def search_memory_for_goal(
+    goal: str,
+    config: Optional[Config] = None,
+    limit: int = 10,
+    threshold: float = 0.3,
+) -> list[tuple[str, float]]:
+    """Search indexed memory for files relevant to a goal.
+
+    Searches the memory index for code chunks relevant to the goal keywords,
+    returning file paths with relevance scores. Results are deduplicated by
+    file path (keeping highest score) and filtered by threshold.
+
+    Args:
+        goal: High-level goal description to search for
+        config: Configuration object (uses default if None)
+        limit: Maximum number of results to return (default: 10)
+        threshold: Minimum relevance score threshold (default: 0.3)
+
+    Returns:
+        List of (file_path, relevance_score) tuples, sorted by score descending.
+        Returns empty list if memory not indexed or on retrieval error.
+
+    Example:
+        >>> results = search_memory_for_goal("Add OAuth2 authentication", limit=5)
+        >>> for path, score in results:
+        ...     print(f"{path}: {score:.2f}")
+        src/auth/oauth.py: 0.85
+        src/auth/jwt.py: 0.72
+    """
+    # Create retriever
+    retriever = MemoryRetriever(config=config)
+
+    # Check if memory is indexed
+    if not retriever.has_indexed_memory():
+        logger.warning(
+            "Memory not indexed. Run 'aur mem index .' to enable context-aware planning."
+        )
+        return []
+
+    # Retrieve relevant code chunks
+    try:
+        chunks = retriever.retrieve(goal, limit=limit * 2)  # Get extra for deduplication
+    except Exception as e:
+        logger.warning(f"Failed to retrieve from memory: {e}")
+        return []
+
+    # Deduplicate by file path (keep highest score)
+    # Note: chunks can be either CodeChunk objects or dicts depending on retriever version
+    seen_paths: dict[str, float] = {}
+    for chunk in chunks:
+        # Handle both CodeChunk objects and dicts
+        if isinstance(chunk, dict):
+            file_path = chunk.get("file_path", "")
+            # Score might be in different fields
+            score = chunk.get("score", chunk.get("final_score", chunk.get("semantic_score", 0.0)))
+        else:
+            # CodeChunk object
+            file_path = getattr(chunk, "file_path", "")
+            score = getattr(chunk, "score", getattr(chunk, "final_score", 0.0))
+
+        if not file_path:
+            continue
+
+        if file_path not in seen_paths:
+            seen_paths[file_path] = score
+        else:
+            # Keep highest score
+            seen_paths[file_path] = max(seen_paths[file_path], score)
+
+    # Filter by threshold and convert to list of tuples
+    results = [(path, score) for path, score in seen_paths.items() if score >= threshold]
+
+    # Sort by score descending
+    results.sort(key=lambda x: x[1], reverse=True)
+
+    # Limit results
+    return results[:limit]
 
 
 class FilePathResolver:
@@ -35,9 +115,7 @@ class FilePathResolver:
         self.store = store
         self.retriever = MemoryRetriever(store=store, config=config)
 
-    def resolve_for_subgoal(
-        self, subgoal: Subgoal, limit: int = 5
-    ) -> list[FileResolution]:
+    def resolve_for_subgoal(self, subgoal: Subgoal, limit: int = 5) -> list[FileResolution]:
         """Resolve file paths for a subgoal from indexed memory.
 
         Args:
@@ -99,9 +177,7 @@ class FilePathResolver:
         """
         # Build base path string
         if resolution.line_start is not None and resolution.line_end is not None:
-            path_str = (
-                f"{resolution.path} lines {resolution.line_start}-{resolution.line_end}"
-            )
+            path_str = f"{resolution.path} lines {resolution.line_start}-{resolution.line_end}"
         else:
             path_str = resolution.path
 

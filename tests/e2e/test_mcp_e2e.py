@@ -24,7 +24,6 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
-
 # Mark entire module as requiring ML dependencies
 pytestmark = pytest.mark.ml
 
@@ -46,7 +45,8 @@ def e2e_tools(tmp_path):
 
     # Create multiple Python files with related code
     utils_file = code_dir / "utils.py"
-    utils_file.write_text("""
+    utils_file.write_text(
+        """
 '''Utility functions for the test project.'''
 
 def format_name(first: str, last: str) -> str:
@@ -64,10 +64,12 @@ class StringHelper:
     def capitalize_words(text: str) -> str:
         '''Capitalize each word in a string.'''
         return ' '.join(word.capitalize() for word in text.split())
-""")
+"""
+    )
 
     models_file = code_dir / "models.py"
-    models_file.write_text("""
+    models_file.write_text(
+        """
 '''Data models for the test project.'''
 
 from utils import format_name
@@ -86,10 +88,12 @@ class User:
 
     def __repr__(self) -> str:
         return f"User({self.first_name}, {self.last_name})"
-""")
+"""
+    )
 
     services_file = code_dir / "services.py"
-    services_file.write_text("""
+    services_file.write_text(
+        """
 '''Business logic services.'''
 
 from models import User
@@ -113,7 +117,8 @@ class UserService:
     def get_user_count(self) -> int:
         '''Get total number of users.'''
         return len(self.users)
-""")
+"""
+    )
 
     # Index the codebase
     index_result = tools.aurora_index(str(code_dir))
@@ -475,11 +480,13 @@ class TestE2EEdgeCases:
 
         # Add new file
         new_file = code_dir / "new_module.py"
-        new_file.write_text("""
+        new_file.write_text(
+            """
 def new_function():
     '''A brand new function.'''
     return "new"
-""")
+"""
+        )
 
         # Re-index
         index_result = tools.aurora_index(str(code_dir))

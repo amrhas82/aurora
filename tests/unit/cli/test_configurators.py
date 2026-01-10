@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from aurora_cli.configurators import (
     AgentsStandardConfigurator,
     AmpCodeConfigurator,
@@ -320,14 +321,16 @@ class TestClaudeCommandsConfigurator:
         commands_dir.mkdir(parents=True, exist_ok=True)
 
         plan_file = commands_dir / "plan.md"
-        plan_file.write_text("""---
+        plan_file.write_text(
+            """---
 name: Custom Plan
 description: My custom description
 ---
 <!-- AURORA:START -->
 Old content
 <!-- AURORA:END -->
-""")
+"""
+        )
 
         config = ClaudeCommandsConfigurator()
         await config.configure(tmp_path, ".aurora")

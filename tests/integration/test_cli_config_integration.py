@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+
 from aurora_cli.config import Config, ConfigurationError, load_config
 from aurora_cli.errors import ErrorHandler
 

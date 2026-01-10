@@ -1,6 +1,7 @@
 """Tests for ToolRegistry."""
 
 import pytest
+
 from aurora_planning.configurators.registry import ToolRegistry
 
 

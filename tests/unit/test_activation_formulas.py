@@ -16,8 +16,8 @@ import pytest
 
 from aurora_core.activation.base_level import (
     AccessHistoryEntry,
-    BLAConfig,
     BaseLevelActivation,
+    BLAConfig,
     calculate_bla,
 )
 from aurora_core.activation.decay import DecayCalculator, DecayConfig
@@ -28,7 +28,6 @@ from aurora_core.activation.spreading import (
     SpreadingConfig,
     calculate_spreading,
 )
-
 
 # ==============================================================================
 # Base-Level Activation Tests

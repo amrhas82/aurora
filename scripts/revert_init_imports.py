@@ -13,7 +13,6 @@ This is necessary to avoid circular dependencies during namespace package initia
 import re
 from pathlib import Path
 
-
 # Mapping of new namespace paths back to old package names
 REVERSE_MAPPINGS = {
     "aurora.core": "aurora_core",

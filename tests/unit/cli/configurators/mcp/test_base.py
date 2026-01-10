@@ -1,15 +1,12 @@
 """Unit tests for MCP configurator base class."""
 
 import json
-import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-from aurora_cli.configurators.mcp.base import (
-    MCPConfigurator,
-    ConfigResult,
-    merge_mcp_config,
-)
+import pytest
+
+from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator, merge_mcp_config
 
 
 class TestMerge_mcp_config:
@@ -58,11 +55,7 @@ class TestMerge_mcp_config:
     def test_merge_handles_wrapped_format(self):
         """Merge handles aurora config wrapped in mcpServers."""
         existing = {}
-        aurora = {
-            "mcpServers": {
-                "aurora": {"command": "python3", "args": ["-m", "test"]}
-            }
-        }
+        aurora = {"mcpServers": {"aurora": {"command": "python3", "args": ["-m", "test"]}}}
 
         result = merge_mcp_config(existing, aurora)
 
@@ -179,9 +172,9 @@ class TestMCPConfiguratorBase:
         configurator = ConcreteMCPConfigurator()
         config_path = tmp_path / ".test-tool" / "mcp.json"
         config_path.parent.mkdir(parents=True)
-        config_path.write_text(json.dumps({
-            "mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}
-        }))
+        config_path.write_text(
+            json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}})
+        )
 
         assert configurator.is_configured(tmp_path) is True
 
@@ -205,10 +198,14 @@ class TestMCPConfiguratorBase:
         configurator = ConcreteMCPConfigurator()
         config_path = tmp_path / ".test-tool" / "mcp.json"
         config_path.parent.mkdir(parents=True)
-        config_path.write_text(json.dumps({
-            "mcpServers": {"other": {"command": "node"}},
-            "setting": "value",
-        }))
+        config_path.write_text(
+            json.dumps(
+                {
+                    "mcpServers": {"other": {"command": "node"}},
+                    "setting": "value",
+                }
+            )
+        )
 
         result = configurator.configure(tmp_path)
 

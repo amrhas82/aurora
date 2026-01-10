@@ -21,7 +21,6 @@ from typing import Any
 
 from aurora_cli.config import Config, load_config
 
-
 # Health check result type: (status, message, details)
 # status: "pass", "warning", "fail"
 # message: human-readable description
@@ -607,7 +606,9 @@ class ToolIntegrationChecks:
             configured_tools = detect_configured_slash_tools(project_path)
 
             # Check if any are configured
-            configured_count = sum(1 for is_configured in configured_tools.values() if is_configured)
+            configured_count = sum(
+                1 for is_configured in configured_tools.values() if is_configured
+            )
 
             if configured_count == 0:
                 return (
@@ -633,7 +634,9 @@ class ToolIntegrationChecks:
             configured_tools = detect_configured_mcp_tools(project_path)
 
             # Check if any are configured
-            configured_count = sum(1 for is_configured in configured_tools.values() if is_configured)
+            configured_count = sum(
+                1 for is_configured in configured_tools.values() if is_configured
+            )
 
             if configured_count == 0:
                 return (
@@ -764,11 +767,14 @@ class MCPFunctionalChecks:
                 return (
                     "warning",
                     "MCP config not found",
-                    {"path": str(config_path), "suggestion": "Run 'aur init --config' to create it"}
+                    {
+                        "path": str(config_path),
+                        "suggestion": "Run 'aur init --config' to create it",
+                    },
                 )
 
             # Try to parse JSON
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 json.load(f)
 
             return ("pass", "MCP config syntax valid", {"path": str(config_path)})
@@ -777,7 +783,7 @@ class MCPFunctionalChecks:
             return (
                 "fail",
                 f"Invalid MCP config JSON syntax",
-                {"path": str(config_path), "error": str(e), "line": e.lineno}
+                {"path": str(config_path), "error": str(e), "line": e.lineno},
             )
         except Exception as e:
             return ("fail", f"MCP config check failed: {e}", {})
@@ -804,20 +810,20 @@ class MCPFunctionalChecks:
                 return (
                     "pass",
                     f"All 3 Aurora MCP tools importable",
-                    {"found": found_methods, "count": 3}
+                    {"found": found_methods, "count": 3},
                 )
             else:
                 return (
                     "fail",
                     f"Missing {len(missing_methods)} Aurora MCP tool(s)",
-                    {"found": found_methods, "missing": missing_methods}
+                    {"found": found_methods, "missing": missing_methods},
                 )
 
         except ImportError as e:
             return (
                 "fail",
                 "Cannot import aurora_mcp.tools",
-                {"error": str(e), "suggestion": "Check aurora-mcp package installation"}
+                {"error": str(e), "suggestion": "Check aurora-mcp package installation"},
             )
         except Exception as e:
             return ("fail", f"Aurora MCP tools check failed: {e}", {})
@@ -826,8 +832,15 @@ class MCPFunctionalChecks:
         """Check if all 9 SOAR phase modules can be imported."""
         try:
             phase_names = [
-                "assess", "retrieve", "decompose", "verify", "route",
-                "collect", "synthesize", "record", "respond"
+                "assess",
+                "retrieve",
+                "decompose",
+                "verify",
+                "route",
+                "collect",
+                "synthesize",
+                "record",
+                "respond",
             ]
 
             importable_phases = []
@@ -844,19 +857,19 @@ class MCPFunctionalChecks:
                 return (
                     "pass",
                     "All 9 SOAR phases importable",
-                    {"phases": importable_phases, "count": 9}
+                    {"phases": importable_phases, "count": 9},
                 )
             elif len(importable_phases) > 0:
                 return (
                     "fail",
                     f"{len(failed_phases)} SOAR phase(s) missing",
-                    {"importable": importable_phases, "failed": failed_phases}
+                    {"importable": importable_phases, "failed": failed_phases},
                 )
             else:
                 return (
                     "fail",
                     "No SOAR phases importable",
-                    {"suggestion": "Check aurora-soar package installation"}
+                    {"suggestion": "Check aurora-soar package installation"},
                 )
 
         except Exception as e:
@@ -871,7 +884,7 @@ class MCPFunctionalChecks:
                 return (
                     "warning",
                     "Memory database not found",
-                    {"path": str(db_path), "suggestion": "Run 'aur mem index' to initialize"}
+                    {"path": str(db_path), "suggestion": "Run 'aur mem index' to initialize"},
                 )
 
             # Try to open connection using SQLiteStore
@@ -880,23 +893,15 @@ class MCPFunctionalChecks:
             store = SQLiteStore(str(db_path))
             store.close()
 
-            return (
-                "pass",
-                "Memory database accessible",
-                {"path": str(db_path)}
-            )
+            return ("pass", "Memory database accessible", {"path": str(db_path)})
 
         except ImportError as e:
-            return (
-                "fail",
-                "Cannot import SQLiteStore",
-                {"error": str(e)}
-            )
+            return ("fail", "Cannot import SQLiteStore", {"error": str(e)})
         except Exception as e:
             return (
                 "fail",
                 f"Memory database connection failed: {e}",
-                {"path": str(db_path) if 'db_path' in locals() else "unknown"}
+                {"path": str(db_path) if "db_path" in locals() else "unknown"},
             )
 
     def _check_slash_command_mcp_consistency(self) -> HealthCheckResult:
@@ -906,26 +911,18 @@ class MCPFunctionalChecks:
             skills_dir = self.project_path / ".aurora" / "skills"
 
             if not skills_dir.exists():
-                return (
-                    "pass",
-                    "No slash commands configured",
-                    {"configured": False}
-                )
+                return ("pass", "No slash commands configured", {"configured": False})
 
             # Count configured skills
             skill_files = list(skills_dir.glob("*.md"))
 
             if len(skill_files) == 0:
-                return (
-                    "pass",
-                    "No slash commands configured",
-                    {"configured": False}
-                )
+                return ("pass", "No slash commands configured", {"configured": False})
 
             return (
                 "pass",
                 f"Slash commands configured ({len(skill_files)} skills)",
-                {"configured": True, "count": len(skill_files)}
+                {"configured": True, "count": len(skill_files)},
             )
 
         except Exception as e:
@@ -943,7 +940,8 @@ class MCPFunctionalChecks:
 
             # Get all public methods (not starting with _)
             all_methods = [
-                name for name in dir(tools_class)
+                name
+                for name in dir(tools_class)
                 if not name.startswith("_") and callable(getattr(tools_class, name))
             ]
 
@@ -958,29 +956,25 @@ class MCPFunctionalChecks:
                 return (
                     "pass",
                     "MCP server has exactly 3 tools",
-                    {"tools": found_required, "count": 3}
+                    {"tools": found_required, "count": 3},
                 )
             elif len(missing_required) > 0:
                 return (
                     "fail",
                     f"Missing {len(missing_required)} required tool(s)",
-                    {"found": found_required, "missing": missing_required}
+                    {"found": found_required, "missing": missing_required},
                 )
             elif len(extra_methods) > 0:
                 return (
                     "warning",
                     f"Extra {len(extra_methods)} tool(s) registered",
-                    {"required": found_required, "extra": extra_methods}
+                    {"required": found_required, "extra": extra_methods},
                 )
             else:
                 return ("pass", "MCP server tools complete", {"tools": found_required})
 
         except ImportError as e:
-            return (
-                "fail",
-                "Cannot import aurora_mcp.tools",
-                {"error": str(e)}
-            )
+            return ("fail", "Cannot import aurora_mcp.tools", {"error": str(e)})
         except Exception as e:
             return ("fail", f"MCP server tools check failed: {e}", {})
 
@@ -995,29 +989,36 @@ class MCPFunctionalChecks:
         # Check if .aurora directory is missing
         aurora_dir = self.project_path / ".aurora"
         if not aurora_dir.exists():
+
             def create_aurora_dir():
                 aurora_dir.mkdir(parents=True, exist_ok=True)
 
-            issues.append({
-                "name": "Missing .aurora directory",
-                "problem": f"Project missing .aurora directory at {aurora_dir}",
-                "fix": "Create .aurora directory",
-                "fix_func": create_aurora_dir
-            })
+            issues.append(
+                {
+                    "name": "Missing .aurora directory",
+                    "problem": f"Project missing .aurora directory at {aurora_dir}",
+                    "fix": "Create .aurora directory",
+                    "fix_func": create_aurora_dir,
+                }
+            )
 
         # Check if memory database is missing
         db_path = self.project_path / ".aurora" / "memory.db"
         if aurora_dir.exists() and not db_path.exists():
+
             def create_database():
                 from aurora.core.store.sqlite import SQLiteStore
+
                 SQLiteStore(str(db_path))
 
-            issues.append({
-                "name": "Missing memory database",
-                "problem": f"Memory database not found at {db_path}",
-                "fix": "Initialize memory database",
-                "fix_func": create_database
-            })
+            issues.append(
+                {
+                    "name": "Missing memory database",
+                    "problem": f"Memory database not found at {db_path}",
+                    "fix": "Initialize memory database",
+                    "fix_func": create_database,
+                }
+            )
 
         return issues
 
@@ -1035,30 +1036,38 @@ class MCPFunctionalChecks:
         for status, message, details in results:
             if status == "fail":
                 if "JSON syntax" in message:
-                    issues.append({
-                        "name": "Invalid MCP config syntax",
-                        "problem": f"MCP config has invalid JSON syntax: {details.get('error', 'unknown error')}",
-                        "solution": "Fix JSON syntax in ~/.claude/claude_desktop_config.json or run 'aur init --config'"
-                    })
+                    issues.append(
+                        {
+                            "name": "Invalid MCP config syntax",
+                            "problem": f"MCP config has invalid JSON syntax: {details.get('error', 'unknown error')}",
+                            "solution": "Fix JSON syntax in ~/.claude/claude_desktop_config.json or run 'aur init --config'",
+                        }
+                    )
                 elif "aurora_mcp.tools" in message or "Aurora MCP tools" in message:
-                    issues.append({
-                        "name": "Aurora MCP tools not available",
-                        "problem": "Cannot import aurora_mcp.tools module",
-                        "solution": "Ensure aurora-mcp package is installed: pip install -e packages/mcp"
-                    })
+                    issues.append(
+                        {
+                            "name": "Aurora MCP tools not available",
+                            "problem": "Cannot import aurora_mcp.tools module",
+                            "solution": "Ensure aurora-mcp package is installed: pip install -e packages/mcp",
+                        }
+                    )
                 elif "SOAR phases" in message:
                     missing = details.get("failed", [])
-                    issues.append({
-                        "name": "SOAR phases missing",
-                        "problem": f"Missing SOAR phase modules: {', '.join(missing)}",
-                        "solution": "Ensure aurora-soar package is installed: pip install -e packages/soar"
-                    })
+                    issues.append(
+                        {
+                            "name": "SOAR phases missing",
+                            "problem": f"Missing SOAR phase modules: {', '.join(missing)}",
+                            "solution": "Ensure aurora-soar package is installed: pip install -e packages/soar",
+                        }
+                    )
                 elif "Missing" in message and "tool" in message:
                     missing = details.get("missing", [])
-                    issues.append({
-                        "name": "MCP tools incomplete",
-                        "problem": f"Missing required MCP tools: {', '.join(missing)}",
-                        "solution": "Check aurora_mcp.tools.AuroraMCPTools class has all 3 methods: aurora_query, aurora_search, aurora_get"
-                    })
+                    issues.append(
+                        {
+                            "name": "MCP tools incomplete",
+                            "problem": f"Missing required MCP tools: {', '.join(missing)}",
+                            "solution": "Check aurora_mcp.tools.AuroraMCPTools class has all 3 methods: aurora_query, aurora_search, aurora_get",
+                        }
+                    )
 
         return issues

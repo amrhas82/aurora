@@ -93,9 +93,7 @@ class PlanParser(MarkdownParser):
         modification_specs = self._parse_modification_specs(specs_dir)
 
         # Prefer modification specs if available, otherwise use simple
-        modifications = (
-            modification_specs if modification_specs else simple_modifications
-        )
+        modifications = modification_specs if modification_specs else simple_modifications
 
         return ParsedPlan(
             name=name,
@@ -108,9 +106,7 @@ class PlanParser(MarkdownParser):
             ),
         )
 
-    def _parse_modification_specs(
-        self, specs_dir: Path
-    ) -> list[ParsedModification]:
+    def _parse_modification_specs(self, specs_dir: Path) -> list[ParsedModification]:
         """Parse modification spec files from capability-specs directory.
 
         Loads all spec.md files from capability subdirectories and parses their
@@ -140,9 +136,7 @@ class PlanParser(MarkdownParser):
 
                 try:
                     content = spec_file.read_text(encoding="utf-8")
-                    spec_modifications = self._parse_spec_modifications(
-                        capability_name, content
-                    )
+                    spec_modifications = self._parse_spec_modifications(capability_name, content)
                     modifications.extend(spec_modifications)
                 except OSError:
                     # Spec file couldn't be read, skip it
@@ -234,9 +228,7 @@ class PlanParser(MarkdownParser):
 
         return modifications
 
-    def _parse_modification_requirements(
-        self, section: Section
-    ) -> list[ParsedRequirement]:
+    def _parse_modification_requirements(self, section: Section) -> list[ParsedRequirement]:
         """Parse requirements from a modification section.
 
         Modification sections may have metadata fields (ID, Priority) before the
@@ -335,12 +327,8 @@ class PlanParser(MarkdownParser):
         current_rename: dict[str, str] = {}
 
         for line in lines:
-            from_match = re.match(
-                r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line
-            )
-            to_match = re.match(
-                r"^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line
-            )
+            from_match = re.match(r"^\s*-?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
+            to_match = re.match(r"^\s*-?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$", line)
 
             if from_match:
                 current_rename["from"] = from_match.group(1).strip()
@@ -381,9 +369,7 @@ class PlanParser(MarkdownParser):
             if header_match:
                 level = len(header_match.group(1))
                 title = header_match.group(2).strip()
-                content_lines = self._get_content_until_next_header_from_lines(
-                    lines, i + 1, level
-                )
+                content_lines = self._get_content_until_next_header_from_lines(lines, i + 1, level)
 
                 section = Section(
                     level=level,

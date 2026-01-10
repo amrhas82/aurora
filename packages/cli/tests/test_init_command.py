@@ -5,8 +5,9 @@ import os
 from pathlib import Path
 
 import pytest
-from aurora_cli.commands.init import init_command
 from click.testing import CliRunner
+
+from aurora_cli.commands.init import init_command
 
 
 class TestInitCommand:

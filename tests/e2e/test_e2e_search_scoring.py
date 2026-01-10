@@ -32,7 +32,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -78,7 +77,8 @@ def diverse_python_project() -> Generator[Path, None, None]:
         project_path = Path(tmp_project)
 
         # Create database module
-        (project_path / "database.py").write_text('''"""Database management with SQLite."""
+        (project_path / "database.py").write_text(
+            '''"""Database management with SQLite."""
 import sqlite3
 from typing import List, Dict, Any
 
@@ -117,10 +117,12 @@ class DatabaseManager:
         """Close database connection."""
         if self.connection:
             self.connection.close()
-''')
+'''
+        )
 
         # Create HTTP/API module
-        (project_path / "api_client.py").write_text('''"""HTTP API client for external services."""
+        (project_path / "api_client.py").write_text(
+            '''"""HTTP API client for external services."""
 import requests
 from typing import Dict, Any, Optional
 
@@ -176,10 +178,12 @@ class APIClient:
         response = self.session.post(url, json=data, headers=headers)
         response.raise_for_status()
         return response.json()
-''')
+'''
+        )
 
         # Create file I/O module
-        (project_path / "file_handler.py").write_text('''"""File handling and I/O operations."""
+        (project_path / "file_handler.py").write_text(
+            '''"""File handling and I/O operations."""
 import os
 import json
 from pathlib import Path
@@ -245,12 +249,12 @@ class FileHandler:
             List of matching file paths
         """
         return list(self.base_dir.glob(pattern))
-''')
+'''
+        )
 
         # Create math/algorithm module
-        (
-            project_path / "algorithms.py"
-        ).write_text('''"""Mathematical algorithms and computations."""
+        (project_path / "algorithms.py").write_text(
+            '''"""Mathematical algorithms and computations."""
 from typing import List
 
 
@@ -310,7 +314,8 @@ def factorial(n: int) -> int:
     for i in range(2, n + 1):
         result *= i
     return result
-''')
+'''
+        )
 
         yield project_path
 
@@ -671,9 +676,9 @@ class TestSearchScoring:
 
         # With non-Git directory, default BLA is 0.5
         # The key test is that activation records exist and were initialized
-        assert len(base_levels) > 0, (
-            "No activation records found!\nExpected activation table to have base_level values"
-        )
+        assert (
+            len(base_levels) > 0
+        ), "No activation records found!\nExpected activation table to have base_level values"
 
         # Verify at least some non-zero base levels or default 0.5
         non_zero_count = sum(1 for bl in base_levels if bl != 0.0)

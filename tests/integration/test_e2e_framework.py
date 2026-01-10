@@ -566,9 +566,9 @@ class E2ETestFramework:
         """
         assert "metadata" in response, "Response missing metadata"
         duration = response["metadata"].get("total_duration_ms", 0)
-        assert duration <= max_duration_ms, (
-            f"Query took {duration}ms, expected <{max_duration_ms}ms"
-        )
+        assert (
+            duration <= max_duration_ms
+        ), f"Query took {duration}ms, expected <{max_duration_ms}ms"
 
     def assert_cost_within_limit(self, response: dict[str, Any], max_cost_usd: float) -> None:
         """Assert that query cost is within limit.

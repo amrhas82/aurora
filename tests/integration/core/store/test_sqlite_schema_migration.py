@@ -42,7 +42,8 @@ class TestSchemaVersionDetection:
 
         # Create a legacy database with 7-column chunks table
         conn = sqlite3.connect(str(db_path))
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE chunks (
                 id TEXT PRIMARY KEY,
                 type TEXT NOT NULL,
@@ -52,15 +53,18 @@ class TestSchemaVersionDetection:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
-        conn.execute("""
+        """
+        )
+        conn.execute(
+            """
             CREATE TABLE activations (
                 chunk_id TEXT PRIMARY KEY,
                 base_level REAL NOT NULL,
                 last_access TIMESTAMP NOT NULL,
                 access_count INTEGER DEFAULT 1
             )
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 
@@ -120,14 +124,17 @@ class TestSchemaVersionDetection:
 
         # Create database with schema_version table
         conn = sqlite3.connect(str(db_path))
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE schema_version (
                 version INTEGER PRIMARY KEY,
                 applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
         conn.execute("INSERT INTO schema_version (version) VALUES (2)")
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE chunks (
                 id TEXT PRIMARY KEY,
                 type TEXT NOT NULL,
@@ -139,7 +146,8 @@ class TestSchemaVersionDetection:
                 first_access TIMESTAMP,
                 last_access TIMESTAMP
             )
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 
@@ -182,7 +190,8 @@ class TestSchemaCompatibilityCheck:
 
         # Create legacy database
         conn = sqlite3.connect(str(db_path))
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE chunks (
                 id TEXT PRIMARY KEY,
                 type TEXT NOT NULL,
@@ -192,7 +201,8 @@ class TestSchemaCompatibilityCheck:
                 created_at TIMESTAMP,
                 updated_at TIMESTAMP
             )
-        """)
+        """
+        )
         conn.commit()
         conn.close()
 

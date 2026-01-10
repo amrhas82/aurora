@@ -3,11 +3,11 @@
 Defines the interface that all tool-specific MCP configurators must implement.
 """
 
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-import json
 
 
 @dataclass

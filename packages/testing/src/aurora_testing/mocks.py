@@ -15,7 +15,6 @@ from typing import Any
 
 from aurora_core.chunks.base import Chunk
 
-
 # ============================================================================
 # Mock LLM
 # ============================================================================
@@ -229,9 +228,9 @@ class MockLLM:
         Raises:
             AssertionError: If call count doesn't match.
         """
-        assert self.call_count == expected_count, (
-            f"Expected {expected_count} calls, got {self.call_count}"
-        )
+        assert (
+            self.call_count == expected_count
+        ), f"Expected {expected_count} calls, got {self.call_count}"
 
 
 # ============================================================================

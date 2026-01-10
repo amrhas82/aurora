@@ -11,6 +11,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+from aurora_spawner import SpawnResult, SpawnTask, spawn, spawn_parallel
 
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
@@ -213,7 +214,7 @@ async def _execute_parallel_subgoals(
     timeout: float,
     metadata: dict[str, Any],
 ) -> list[AgentOutput]:
-    """Execute subgoals in parallel using asyncio.
+    """Execute subgoals in parallel using spawn_parallel().
 
     Args:
         subgoals: List of subgoal dictionaries with subgoal_index
@@ -223,41 +224,85 @@ async def _execute_parallel_subgoals(
         metadata: Execution metadata to update
 
     Returns:
-        List of AgentOutput objects
+        List of AgentOutput objects in input order
     """
-    logger.debug(f"Executing {len(subgoals)} subgoals in parallel")
+    logger.debug(f"Executing {len(subgoals)} subgoals in parallel with spawn_parallel()")
 
-    # Create tasks for all subgoals
-    tasks = []
+    start_time = time.time()
+
+    # Build SpawnTask list for all subgoals
+    spawn_tasks = []
     for subgoal in subgoals:
         idx = subgoal["subgoal_index"]
         agent = agent_map[idx]
-        task = _execute_single_subgoal(idx, subgoal, agent, context, timeout, metadata)
-        tasks.append(task)
 
-    # Execute all tasks concurrently
-    outputs = await asyncio.gather(*tasks, return_exceptions=True)
+        # Build agent prompt
+        prompt = _build_agent_prompt(subgoal, context)
 
-    # Handle any exceptions
-    results = []
-    for i, output in enumerate(outputs):
-        if isinstance(output, BaseException):
-            subgoal = subgoals[i]
-            idx = subgoal["subgoal_index"]
-            logger.error(f"Subgoal {idx} raised exception: {output}")
-            results.append(
-                AgentOutput(
-                    subgoal_index=idx,
-                    agent_id=agent_map[idx].id,
-                    success=False,
-                    error=str(output),
-                )
+        # Create SpawnTask
+        spawn_task = SpawnTask(
+            prompt=prompt,
+            agent=agent.id,
+            timeout=int(timeout),
+        )
+        spawn_tasks.append(spawn_task)
+
+    # Call spawn_parallel() with max_concurrent=5
+    logger.info(f"Spawning {len(spawn_tasks)} agents in parallel (max_concurrent=5)")
+    spawn_results = await spawn_parallel(spawn_tasks, max_concurrent=5)
+
+    # Convert all SpawnResults to AgentOutputs
+    agent_outputs = []
+    for i, spawn_result in enumerate(spawn_results):
+        subgoal = subgoals[i]
+        idx = subgoal["subgoal_index"]
+        agent = agent_map[idx]
+
+        duration_ms = int((time.time() - start_time) * 1000)
+
+        if spawn_result.success:
+            output = AgentOutput(
+                subgoal_index=idx,
+                agent_id=agent.id,
+                success=True,
+                summary=spawn_result.output,
+                confidence=0.85,  # Default confidence for successful spawner execution
+                execution_metadata={
+                    "duration_ms": duration_ms,
+                    "exit_code": spawn_result.exit_code,
+                    "spawner": True,
+                    "parallel": True,
+                },
+            )
+        else:
+            # Handle partial failures gracefully
+            output = AgentOutput(
+                subgoal_index=idx,
+                agent_id=agent.id,
+                success=False,
+                summary="",
+                confidence=0.0,
+                error=spawn_result.error or "Spawner execution failed",
+                execution_metadata={
+                    "duration_ms": duration_ms,
+                    "exit_code": spawn_result.exit_code,
+                    "spawner": True,
+                    "parallel": True,
+                },
             )
             metadata["failed_subgoals"] += 1
-        else:
-            results.append(output)
+            logger.warning(f"Subgoal {idx} failed: {spawn_result.error}")
 
-    return results
+        agent_outputs.append(output)
+
+    # Update execution metadata with parallel timing
+    total_duration = int((time.time() - start_time) * 1000)
+    logger.info(
+        f"Parallel execution complete: {len(agent_outputs)} subgoals "
+        f"in {total_duration}ms ({metadata['failed_subgoals']} failed)"
+    )
+
+    return agent_outputs
 
 
 async def _execute_sequential_subgoals(
@@ -341,22 +386,21 @@ async def _execute_single_subgoal(
     start_time = time.time()
 
     try:
-        # Execute agent with timeout
+        # Execute agent with timeout using spawner
         output = await asyncio.wait_for(
-            _mock_agent_execution(idx, subgoal, agent, context),
+            _execute_agent(agent, subgoal, context, timeout),
             timeout=timeout,
         )
 
         # Validate output format
         _validate_agent_output(output)
 
-        # Add execution metadata
-        duration_ms = int((time.time() - start_time) * 1000)
-        output.execution_metadata["duration_ms"] = duration_ms
+        # Add retry count to metadata (duration_ms already set by _execute_agent)
         output.execution_metadata["retry_count"] = retry_count
 
         logger.info(
-            f"Subgoal {idx} completed in {duration_ms}ms (confidence: {output.confidence:.2f})"
+            f"Subgoal {idx} completed in {output.execution_metadata.get('duration_ms', 0)}ms "
+            f"(confidence: {output.confidence:.2f})"
         )
 
         return output
@@ -455,6 +499,142 @@ async def _mock_agent_execution(
             "model_used": "mock-model",
         },
     )
+
+
+async def _execute_agent(
+    agent: AgentInfo,
+    subgoal: dict[str, Any],
+    context: dict[str, Any],
+    timeout: float = DEFAULT_AGENT_TIMEOUT,
+) -> AgentOutput:
+    """Execute a single agent using the spawner.
+
+    This function replaces _mock_agent_execution() with real spawner integration.
+
+    Args:
+        agent: AgentInfo for the agent to execute
+        subgoal: Subgoal dictionary with description and metadata
+        context: Context from Phase 2 (retrieved memories, conversation history)
+        timeout: Timeout in seconds (default: DEFAULT_AGENT_TIMEOUT)
+
+    Returns:
+        AgentOutput with execution results
+
+    Raises:
+        Never - errors are captured in AgentOutput.error
+    """
+    start_time = time.time()
+    subgoal_index = subgoal.get("subgoal_index", 0)
+
+    try:
+        # Build agent prompt from subgoal and context
+        prompt = _build_agent_prompt(subgoal, context)
+
+        # Create SpawnTask
+        spawn_task = SpawnTask(
+            prompt=prompt,
+            agent=agent.id,
+            timeout=int(timeout),
+        )
+
+        # Call spawn() function
+        logger.debug(f"Spawning agent '{agent.id}' for subgoal {subgoal_index}")
+        spawn_result: SpawnResult = await spawn(spawn_task)
+
+        # Convert SpawnResult to AgentOutput
+        duration_ms = int((time.time() - start_time) * 1000)
+
+        if spawn_result.success:
+            output = AgentOutput(
+                subgoal_index=subgoal_index,
+                agent_id=agent.id,
+                success=True,
+                summary=spawn_result.output,
+                confidence=0.85,  # Default confidence for successful spawner execution
+                execution_metadata={
+                    "duration_ms": duration_ms,
+                    "exit_code": spawn_result.exit_code,
+                    "spawner": True,
+                },
+            )
+        else:
+            # Graceful degradation on failure
+            output = AgentOutput(
+                subgoal_index=subgoal_index,
+                agent_id=agent.id,
+                success=False,
+                summary="",
+                confidence=0.0,
+                error=spawn_result.error or "Spawner execution failed",
+                execution_metadata={
+                    "duration_ms": duration_ms,
+                    "exit_code": spawn_result.exit_code,
+                    "spawner": True,
+                },
+            )
+
+        logger.info(
+            f"Agent '{agent.id}' completed subgoal {subgoal_index} "
+            f"(success={output.success}, duration={duration_ms}ms)"
+        )
+
+        return output
+
+    except Exception as e:
+        # Handle unexpected errors gracefully
+        duration_ms = int((time.time() - start_time) * 1000)
+        logger.error(f"Unexpected error executing agent '{agent.id}': {e}")
+
+        return AgentOutput(
+            subgoal_index=subgoal_index,
+            agent_id=agent.id,
+            success=False,
+            summary="",
+            confidence=0.0,
+            error=f"Unexpected error: {str(e)}",
+            execution_metadata={
+                "duration_ms": duration_ms,
+                "spawner": True,
+            },
+        )
+
+
+def _build_agent_prompt(subgoal: dict[str, Any], context: dict[str, Any]) -> str:
+    """Build agent prompt from subgoal description and context.
+
+    Args:
+        subgoal: Subgoal dictionary with description
+        context: Context from Phase 2
+
+    Returns:
+        Formatted prompt string for the agent
+    """
+    description = subgoal.get("description", "")
+
+    # Build context section
+    context_parts = []
+
+    # Add query if available
+    if "query" in context:
+        context_parts.append(f"Original Query: {context['query']}")
+
+    # Add retrieved memories if available
+    if context.get("retrieved_memories"):
+        context_parts.append("\nRelevant Context:")
+        for i, memory in enumerate(context["retrieved_memories"][:3], 1):
+            # Extract content from memory chunk
+            content = memory.get("content", str(memory))
+            context_parts.append(f"{i}. {content}")
+
+    context_str = "\n".join(context_parts) if context_parts else ""
+
+    # Build final prompt
+    if context_str:
+        prompt = f"{context_str}\n\nTask: {description}"
+    else:
+        prompt = f"Task: {description}"
+
+    return prompt
 
 
 def _validate_agent_output(output: AgentOutput) -> None:

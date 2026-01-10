@@ -13,6 +13,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+from click.testing import CliRunner
+
 from aurora_cli.main import (
     _display_phase_trace,
     _execute_dry_run,
@@ -23,7 +25,6 @@ from aurora_cli.main import (
     query_command,
     verify_command,
 )
-from click.testing import CliRunner
 
 
 class TestCliGroup:

@@ -2,7 +2,7 @@
 
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
 import pytest
 from click.testing import CliRunner
@@ -22,8 +22,6 @@ def temp_prompt(tmp_path):
     prompt = tmp_path / "prompt.md"
     prompt.write_text("# Goal\nTest task\n\n# Success Criteria\n- [ ] Works")
     return prompt
-
-
 
 
 class TestHeadlessValidation:
@@ -63,7 +61,9 @@ class TestHeadlessValidation:
     @patch("shutil.which", return_value="/usr/bin/claude")
     @patch("subprocess.run")
     @patch("pathlib.Path.cwd")
-    def test_allows_main_with_flag(self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path):
+    def test_allows_main_with_flag(
+        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+    ):
         """Test that --allow-main overrides branch check."""
         mock_cwd.return_value = tmp_path
 
@@ -85,7 +85,9 @@ class TestHeadlessValidation:
 
         mock_run.side_effect = mock_subprocess
 
-        result = runner.invoke(headless_command, [str(temp_prompt), "--allow-main", "--max-iter", "1"])
+        result = runner.invoke(
+            headless_command, [str(temp_prompt), "--allow-main", "--max-iter", "1"]
+        )
 
         # Should not abort due to branch check
         assert "Cannot run on main/master" not in result.output
@@ -97,7 +99,9 @@ class TestHeadlessExecution:
     @patch("shutil.which", return_value="/usr/bin/claude")
     @patch("subprocess.run")
     @patch("pathlib.Path.cwd")
-    def test_single_iteration_success(self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path):
+    def test_single_iteration_success(
+        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+    ):
         """Test successful single iteration."""
         mock_cwd.return_value = tmp_path
 
@@ -134,7 +138,9 @@ class TestHeadlessExecution:
     @patch("shutil.which", return_value="/usr/bin/claude")
     @patch("subprocess.run")
     @patch("pathlib.Path.cwd")
-    def test_multiple_iterations(self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path):
+    def test_multiple_iterations(
+        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+    ):
         """Test multiple iterations loop correctly."""
         mock_cwd.return_value = tmp_path
 
@@ -169,7 +175,9 @@ class TestHeadlessExecution:
     @patch("shutil.which", return_value="/usr/bin/claude")
     @patch("subprocess.run")
     @patch("pathlib.Path.cwd")
-    def test_tool_failure_aborts(self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path):
+    def test_tool_failure_aborts(
+        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+    ):
         """Test that tool failure aborts execution."""
         mock_cwd.return_value = tmp_path
 
@@ -266,7 +274,9 @@ class TestHeadlessDefaults:
     @patch("shutil.which", return_value="/usr/bin/claude")
     @patch("subprocess.run")
     @patch("pathlib.Path.cwd")
-    def test_default_max_iter_is_10(self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path):
+    def test_default_max_iter_is_10(
+        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+    ):
         """Test that default max iterations is 10."""
         mock_cwd.return_value = tmp_path
 

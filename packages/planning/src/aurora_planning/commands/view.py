@@ -14,6 +14,7 @@ from aurora_planning.parsers.markdown import MarkdownParser
 @dataclass
 class ChangeInfo:
     """Information about a change with task progress."""
+
     name: str
     progress: dict[str, int]  # {'total': int, 'completed': int}
 
@@ -21,6 +22,7 @@ class ChangeInfo:
 @dataclass
 class SpecInfo:
     """Information about a specification."""
+
     name: str
     requirement_count: int
 
@@ -65,8 +67,7 @@ class ViewCommand:
             print("-" * 60)
             for change in changes_data["active"]:
                 progress_bar = self._create_progress_bar(
-                    change["progress"]["completed"],
-                    change["progress"]["total"]
+                    change["progress"]["completed"], change["progress"]["total"]
                 )
                 percentage = (
                     round((change["progress"]["completed"] / change["progress"]["total"]) * 100)
@@ -90,9 +91,7 @@ class ViewCommand:
 
             # Sort specs by requirement count (descending)
             specs_data_sorted = sorted(
-                specs_data,
-                key=lambda s: s["requirement_count"],
-                reverse=True
+                specs_data, key=lambda s: s["requirement_count"], reverse=True
             )
 
             for spec in specs_data_sorted:
@@ -139,11 +138,7 @@ class ViewCommand:
         # Sort active changes by completion percentage (ascending) and then by name
         def sort_key(change: dict[str, Any]) -> tuple[float, str]:
             progress = change["progress"]
-            percentage = (
-                progress["completed"] / progress["total"]
-                if progress["total"] > 0
-                else 0
-            )
+            percentage = progress["completed"] / progress["total"] if progress["total"] > 0 else 0
             return (percentage, change["name"])
 
         active.sort(key=sort_key)
@@ -175,16 +170,10 @@ class ViewCommand:
                         parser = MarkdownParser(content)
                         spec = parser.parse_capability(entry.name)
                         requirement_count = len(spec.requirements)
-                        specs.append({
-                            "name": entry.name,
-                            "requirement_count": requirement_count
-                        })
+                        specs.append({"name": entry.name, "requirement_count": requirement_count})
                     except Exception:
                         # If spec cannot be parsed, include with 0 count
-                        specs.append({
-                            "name": entry.name,
-                            "requirement_count": 0
-                        })
+                        specs.append({"name": entry.name, "requirement_count": 0})
 
         return specs
 
@@ -200,29 +189,27 @@ class ViewCommand:
         except OSError:
             return {"total": 0, "completed": 0}
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         total = 0
         completed = 0
 
         for line in lines:
             line = line.strip()
-            if line.startswith('- ['):
+            if line.startswith("- ["):
                 total += 1
-                if line.startswith('- [x]') or line.startswith('- [X]'):
+                if line.startswith("- [x]") or line.startswith("- [X]"):
                     completed += 1
 
         return {"total": total, "completed": completed}
 
     def _display_summary(
-        self,
-        changes_data: dict[str, list[dict[str, Any]]],
-        specs_data: list[dict[str, Any]]
+        self, changes_data: dict[str, list[dict[str, Any]]], specs_data: list[dict[str, Any]]
     ) -> None:
         """Display summary metrics."""
         _ = (
-            len(changes_data["draft"]) +
-            len(changes_data["active"]) +
-            len(changes_data["completed"])
+            len(changes_data["draft"])
+            + len(changes_data["active"])
+            + len(changes_data["completed"])
         )
         total_specs = len(specs_data)
         total_requirements = sum(spec["requirement_count"] for spec in specs_data)
@@ -246,7 +233,9 @@ class ViewCommand:
 
         if total_tasks > 0:
             overall_progress = round((completed_tasks / total_tasks) * 100)
-            print(f"  ● Task Progress: {completed_tasks}/{total_tasks} ({overall_progress}% complete)")
+            print(
+                f"  ● Task Progress: {completed_tasks}/{total_tasks} ({overall_progress}% complete)"
+            )
 
     def _create_progress_bar(self, completed: int, total: int, width: int = 20) -> str:
         """Create a text-based progress bar."""

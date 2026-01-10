@@ -14,6 +14,7 @@ This validates end-to-end functionality of:
 """
 
 import pytest
+
 from aurora_context_code.languages.python import PythonParser
 from aurora_core.store.memory import MemoryStore
 from aurora_core.store.sqlite import SQLiteStore
@@ -44,7 +45,8 @@ class TestParseAndStoreFlow:
     def sample_python_file(self, tmp_path):
         """Create sample Python file for parsing."""
         test_file = tmp_path / "sample.py"
-        test_file.write_text('''
+        test_file.write_text(
+            '''
 """Sample module for testing."""
 
 def simple_function(x, y):
@@ -80,7 +82,8 @@ def complex_function(items, threshold=10):
             filtered.append(abs(item))
 
     return filtered
-''')
+'''
+        )
         return test_file
 
     def test_parse_store_retrieve_memory(self, parser, memory_store, sample_python_file):
@@ -156,23 +159,29 @@ def complex_function(items, threshold=10):
         """Test parsing and storing multiple files."""
         # Create multiple files
         file1 = tmp_path / "module1.py"
-        file1.write_text("""
+        file1.write_text(
+            """
 def func_a():
     return 1
-""")
+"""
+        )
 
         file2 = tmp_path / "module2.py"
-        file2.write_text("""
+        file2.write_text(
+            """
 def func_b():
     return 2
-""")
+"""
+        )
 
         file3 = tmp_path / "module3.py"
-        file3.write_text("""
+        file3.write_text(
+            """
 class ClassC:
     def method_c(self):
         return 3
-""")
+"""
+        )
 
         # Parse all files and store chunks
         all_chunks = []
@@ -193,10 +202,12 @@ class ClassC:
         """Test updating stored chunks."""
         # Create file and parse
         test_file = tmp_path / "test.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def original_function():
     return "original"
-""")
+"""
+        )
 
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -205,11 +216,13 @@ def original_function():
         memory_store.save_chunk(original_chunk)
 
         # Simulate file modification
-        test_file.write_text('''
+        test_file.write_text(
+            '''
 def original_function():
     """Now with docstring."""
     return "modified"
-''')
+'''
+        )
 
         # Re-parse
         updated_chunks = parser.parse(test_file)
@@ -256,7 +269,8 @@ class TestComplexParseStoreScenarios:
         large_file = tmp_path / "large.py"
         lines = []
         for i in range(50):
-            lines.append(f'''
+            lines.append(
+                f'''
 def function_{i}(x, y):
     """Function {i}."""
     if x > y:
@@ -265,7 +279,8 @@ def function_{i}(x, y):
         return y
     else:
         return 0
-''')
+'''
+            )
         large_file.write_text("\n".join(lines))
 
         # Parse
@@ -287,7 +302,8 @@ def function_{i}(x, y):
     def test_file_with_imports_parse_and_store(self, parser, memory_store, tmp_path):
         """Test parsing file with imports (dependencies)."""
         file_with_imports = tmp_path / "with_imports.py"
-        file_with_imports.write_text('''
+        file_with_imports.write_text(
+            '''
 import os
 import sys
 from pathlib import Path
@@ -301,7 +317,8 @@ def process_path(path: Path) -> str:
 def process_list(items: List[str]) -> Dict[str, int]:
     """Process a list."""
     return {item: len(item) for item in items}
-''')
+'''
+        )
 
         chunks = parser.parse(file_with_imports)
 
@@ -334,11 +351,13 @@ class TestErrorHandling:
     def test_parse_broken_file(self, parser, memory_store, tmp_path):
         """Test handling of broken Python files."""
         broken_file = tmp_path / "broken.py"
-        broken_file.write_text("""
+        broken_file.write_text(
+            """
 def broken_function(x, y)
     # Missing colon
     return x + y
-""")
+"""
+        )
 
         # Parser should handle gracefully (return empty or partial results)
         chunks = parser.parse(broken_file)
@@ -355,10 +374,12 @@ def broken_function(x, y)
         parser = PythonParser()
 
         test_file = tmp_path / "test.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def test_func():
     return 42
-""")
+"""
+        )
 
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -384,10 +405,12 @@ class TestPersistence:
 
         # Create test file
         test_file = tmp_path / "test.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def persistent_function():
     return "persisted"
-""")
+"""
+        )
 
         chunks = parser.parse(test_file)
         assert len(chunks) == 1

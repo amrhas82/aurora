@@ -11,8 +11,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from aurora_cli.commands.init import init_command
 from click.testing import CliRunner
+
+from aurora_cli.commands.init import init_command
 
 
 class TestInitCommandBasic:

@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 
 from .prompts.verify_synthesis import VerifySynthesisPromptTemplate
 
-
 if TYPE_CHECKING:
     from .llm_client import LLMClient
 
@@ -80,7 +79,7 @@ def synthesize_results(
     3. Calls LLM for natural language synthesis (NOT JSON)
     4. Validates traceability (every claim links to agent summary)
     5. Verifies synthesis quality
-    6. Retries with feedback if quality score < 0.7 (max 2 retries)
+    6. Retries with feedback if quality score < 0.6 (max 2 retries)
 
     Args:
         llm_client: LLM client to use for synthesis
@@ -169,7 +168,7 @@ def synthesize_results(
         )
 
         # Check if synthesis passes quality threshold
-        if verification_result["overall_score"] >= 0.7:
+        if verification_result["overall_score"] >= 0.6:
             # Success - return synthesis result
             full_prompt = f"SYSTEM:\n{system_prompt}\n\nUSER:\n{user_prompt}"
             return SynthesisResult(
@@ -207,7 +206,7 @@ def synthesize_results(
         # Prepare feedback for retry
         issues = verification_result.get("issues", [])
         feedback = (
-            f"Previous synthesis had quality score {verification_result['overall_score']:.2f} (threshold: 0.7). "
+            f"Previous synthesis had quality score {verification_result['overall_score']:.2f} (threshold: 0.6). "
             f"Issues identified: {', '.join(issues)}. "
             f"Please improve the synthesis to address these issues."
         )

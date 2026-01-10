@@ -196,9 +196,7 @@ class AgentInfo(BaseModel):
         try:
             return AgentCategory(v_lower)
         except ValueError:
-            raise ValueError(
-                f"Invalid category '{v}'. Must be one of: eng, qa, product, general"
-            )
+            raise ValueError(f"Invalid category '{v}'. Must be one of: eng, qa, product, general")
 
     @field_validator("skills", "examples", "dependencies", mode="before")
     @classmethod

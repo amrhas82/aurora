@@ -22,8 +22,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from aurora_cli.commands.doctor import doctor_command
 from click.testing import CliRunner
+
+from aurora_cli.commands.doctor import doctor_command
 
 
 @pytest.fixture
@@ -78,7 +79,10 @@ def test_doctor_healthy_environment(healthy_environment):
 
     # Should complete successfully (0 = perfect, 1 = warnings only)
     # MCP deprecation warnings are acceptable in healthy environment
-    assert result.exit_code in [0, 1], f"Expected exit code 0 or 1, got {result.exit_code}: {result.output}"
+    assert result.exit_code in [
+        0,
+        1,
+    ], f"Expected exit code 0 or 1, got {result.exit_code}: {result.output}"
 
     # If warnings exist, they should only be about MCP (deprecated)
     if result.exit_code == 1:
@@ -234,7 +238,10 @@ def test_doctor_exit_codes(temp_aurora_home):
     os.environ["ANTHROPIC_API_KEY"] = "sk-ant-test123"
 
     result = runner.invoke(doctor_command, [])
-    assert result.exit_code in [0, 1], f"Healthy environment should return 0 or 1, got {result.exit_code}"
+    assert result.exit_code in [
+        0,
+        1,
+    ], f"Healthy environment should return 0 or 1, got {result.exit_code}"
 
     # Warning state: exit 1 (optional components missing)
     # This is tested implicitly - tree-sitter missing, Git not initialized, etc.
@@ -246,6 +253,7 @@ def test_doctor_exit_codes(temp_aurora_home):
         del os.environ["ANTHROPIC_API_KEY"]
 
     result = runner.invoke(doctor_command, [])
-    assert result.exit_code in [1, 2], (
-        f"Broken environment should return 1 or 2, got {result.exit_code}"
-    )
+    assert result.exit_code in [
+        1,
+        2,
+    ], f"Broken environment should return 1 or 2, got {result.exit_code}"

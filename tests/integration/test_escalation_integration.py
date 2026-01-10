@@ -20,6 +20,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig, EscalationResult
 
 

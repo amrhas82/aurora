@@ -38,7 +38,6 @@ from pathlib import Path
 
 import pytest
 
-
 # GitSignalExtractor will be created in task 4.1
 # For now, this will fail with ImportError
 try:
@@ -74,7 +73,8 @@ class TestGitSignalExtraction:
 
         # Create Python file with 3 functions
         test_file = repo_dir / "functions.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def frequently_edited_function(x):
     \"\"\"This function will be edited 8 times.\"\"\"
     return x * 1
@@ -86,7 +86,8 @@ def moderately_edited_function(x):
 def rarely_edited_function(x):
     \"\"\"This function will be edited once (initial commit only).\"\"\"
     return x - 1
-""")
+"""
+        )
 
         # Initial commit
         subprocess.run(["git", "add", "functions.py"], cwd=repo_dir, check=True)
@@ -248,15 +249,15 @@ def rarely_edited_function(x):
         # ASSERTION 2: All BLA values should be > 0
         # Note: BLA can be negative in ACT-R (it's log-odds of retrieval)
         # Just verify they're valid floats, not NaN or infinity
-        assert isinstance(freq_bla, (int, float)) and not (freq_bla != freq_bla), (
-            f"Frequent BLA should be valid number, got {freq_bla}"
-        )
-        assert isinstance(mod_bla, (int, float)) and not (mod_bla != mod_bla), (
-            f"Moderate BLA should be valid number, got {mod_bla}"
-        )
-        assert isinstance(rare_bla, (int, float)) and not (rare_bla != rare_bla), (
-            f"Rare BLA should be valid number, got {rare_bla}"
-        )
+        assert isinstance(freq_bla, (int, float)) and not (
+            freq_bla != freq_bla
+        ), f"Frequent BLA should be valid number, got {freq_bla}"
+        assert isinstance(mod_bla, (int, float)) and not (
+            mod_bla != mod_bla
+        ), f"Moderate BLA should be valid number, got {mod_bla}"
+        assert isinstance(rare_bla, (int, float)) and not (
+            rare_bla != rare_bla
+        ), f"Rare BLA should be valid number, got {rare_bla}"
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_non_git_directory_graceful_fallback(self, tmp_path):

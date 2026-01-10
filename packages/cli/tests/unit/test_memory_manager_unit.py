@@ -14,14 +14,9 @@ from unittest.mock import Mock, call, patch
 
 import numpy as np
 import pytest
-from aurora_cli.errors import MemoryStoreError
-from aurora_cli.memory_manager import (
-    IndexStats,
-    MemoryManager,
-    MemoryStats,
-    SearchResult,
-)
 
+from aurora_cli.errors import MemoryStoreError
+from aurora_cli.memory_manager import IndexStats, MemoryManager, MemoryStats, SearchResult
 from aurora_core.chunks import CodeChunk
 
 

@@ -125,7 +125,8 @@ class MigrationManager:
 
         # Initialize access_history from existing last_access data
         # For each chunk with activation data, create an initial history entry
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE activations
             SET access_history = json_array(
                 json_object(
@@ -134,10 +135,12 @@ class MigrationManager:
                 )
             )
             WHERE access_history IS NULL
-        """)
+        """
+        )
 
         # Copy last_access from activations to chunks table for consistency
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE chunks
             SET last_access = (
                 SELECT last_access FROM activations WHERE activations.chunk_id = chunks.id
@@ -146,7 +149,8 @@ class MigrationManager:
                 SELECT last_access FROM activations WHERE activations.chunk_id = chunks.id
             )
             WHERE id IN (SELECT chunk_id FROM activations)
-        """)
+        """
+        )
 
         conn.commit()
 

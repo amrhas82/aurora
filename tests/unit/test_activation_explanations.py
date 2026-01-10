@@ -16,11 +16,7 @@ def test_explain_activation_full_metadata():
     # Create timestamp for "2 days ago"
     two_days_ago = (datetime.now() - timedelta(days=2)).timestamp()
 
-    metadata = {
-        "access_count": 5,
-        "commit_count": 23,
-        "last_modified": two_days_ago
-    }
+    metadata = {"access_count": 5, "commit_count": 23, "last_modified": two_days_ago}
     activation_score = 0.85
 
     explanation = _explain_activation_score(metadata, activation_score)
@@ -36,11 +32,7 @@ def test_explain_activation_no_git():
 
     one_week_ago = (datetime.now() - timedelta(weeks=1)).timestamp()
 
-    metadata = {
-        "access_count": 3,
-        "commit_count": None,
-        "last_modified": one_week_ago
-    }
+    metadata = {"access_count": 3, "commit_count": None, "last_modified": one_week_ago}
     activation_score = 0.65
 
     explanation = _explain_activation_score(metadata, activation_score)
@@ -54,11 +46,7 @@ def test_explain_activation_no_recency():
     """No recency: only access count and commit count."""
     from aurora_cli.commands.memory import _explain_activation_score
 
-    metadata = {
-        "access_count": 2,
-        "commit_count": 10,
-        "last_modified": None
-    }
+    metadata = {"access_count": 2, "commit_count": 10, "last_modified": None}
     activation_score = 0.55
 
     explanation = _explain_activation_score(metadata, activation_score)
@@ -72,11 +60,7 @@ def test_explain_activation_minimal():
     """Minimal metadata: only access count."""
     from aurora_cli.commands.memory import _explain_activation_score
 
-    metadata = {
-        "access_count": 1,
-        "commit_count": None,
-        "last_modified": None
-    }
+    metadata = {"access_count": 1, "commit_count": None, "last_modified": None}
     activation_score = 0.45
 
     explanation = _explain_activation_score(metadata, activation_score)
@@ -91,22 +75,14 @@ def test_explain_activation_plural_handling():
     from aurora_cli.commands.memory import _explain_activation_score
 
     # Single commit - should be "1 commit"
-    metadata_single = {
-        "access_count": 1,
-        "commit_count": 1,
-        "last_modified": None
-    }
+    metadata_single = {"access_count": 1, "commit_count": 1, "last_modified": None}
 
     explanation_single = _explain_activation_score(metadata_single, 0.5)
     assert "1 commit" in explanation_single.lower()
     assert "1 commits" not in explanation_single.lower()  # Not plural
 
     # Multiple commits - should be "2 commits"
-    metadata_multiple = {
-        "access_count": 2,
-        "commit_count": 2,
-        "last_modified": None
-    }
+    metadata_multiple = {"access_count": 2, "commit_count": 2, "last_modified": None}
 
     explanation_multiple = _explain_activation_score(metadata_multiple, 0.5)
     assert "2 commits" in explanation_multiple.lower()

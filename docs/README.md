@@ -20,11 +20,11 @@ Welcome to the Aurora documentation. This directory contains comprehensive docum
 
 Technical architecture, API contracts, and system design documentation.
 
-**Location:** `/docs/architecture/`
+**Location:** `/docs/reference/`
 
-- [SOAR Architecture](./architecture/SOAR_ARCHITECTURE.md) - Core SOAR-based cognitive architecture
-- [API Contracts v1.0](./architecture/API_CONTRACTS_v1.0.md) - Public API specifications and contracts
-- [Agent Integration](./architecture/AGENT_INTEGRATION.md) - Multi-agent integration patterns
+- [SOAR Architecture](./reference/SOAR_ARCHITECTURE.md) - Core SOAR-based cognitive architecture
+- [API Contracts v1.0](./reference/API_CONTRACTS_v1.0.md) - Public API specifications and contracts
+- [Agent Integration](./reference/AGENT_INTEGRATION.md) - Multi-agent integration patterns
 
 ---
 

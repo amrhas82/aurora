@@ -26,24 +26,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aurora_core.activation.base_level import (
-    AccessHistoryEntry,
-    BaseLevelActivation,
-    BLAConfig,
-)
-from aurora_core.activation.context_boost import (
-    ContextBoost,
-    ContextBoostConfig,
-)
-from aurora_core.activation.decay import (
-    DecayCalculator,
-    DecayConfig,
-)
-from aurora_core.activation.spreading import (
-    RelationshipGraph,
-    SpreadingActivation,
-    SpreadingConfig,
-)
+from aurora_core.activation.base_level import AccessHistoryEntry, BaseLevelActivation, BLAConfig
+from aurora_core.activation.context_boost import ContextBoost, ContextBoostConfig
+from aurora_core.activation.decay import DecayCalculator, DecayConfig
+from aurora_core.activation.spreading import RelationshipGraph, SpreadingActivation, SpreadingConfig
 
 
 class ActivationConfig(BaseModel):

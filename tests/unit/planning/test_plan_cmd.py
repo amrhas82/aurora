@@ -6,6 +6,7 @@ This tests the CLI interface wrapper around core plan functionality.
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.cli.plan_cmd import PlanCommand
 
 
@@ -33,10 +34,13 @@ class TestPlanCommandShow:
         plan_dir = temp_project / "aurora" / "plans" / "test-plan"
         plan_dir.mkdir(parents=True)
         plan_file = plan_dir / "plan.md"
-        plan_file.write_text("# Plan: Test Plan\n\n## Why\nTest reason.\n\n## What Changes\n- Test change")
+        plan_file.write_text(
+            "# Plan: Test Plan\n\n## Why\nTest reason.\n\n## What Changes\n- Test change"
+        )
 
         # Show the plan
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -54,11 +58,14 @@ class TestPlanCommandShow:
         specs_dir.mkdir(parents=True)
 
         plan_file = plan_dir / "plan.md"
-        plan_file.write_text("# Plan: Test Plan\n\n## Why\nTest reason.\n\n## What Changes\n- **test-capability:** Add feature")
+        plan_file.write_text(
+            "# Plan: Test Plan\n\n## Why\nTest reason.\n\n## What Changes\n- **test-capability:** Add feature"
+        )
 
         # Create capability file with modifications
         cap_file = specs_dir / "test-capability.md"
-        cap_file.write_text("""# Capability: Test Capability
+        cap_file.write_text(
+            """# Capability: Test Capability
 
 ## ADDED Requirements
 
@@ -68,9 +75,11 @@ class TestPlanCommandShow:
 GIVEN initial state
 WHEN action occurs
 THEN result happens
-""")
+"""
+        )
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -80,9 +89,12 @@ THEN result happens
         finally:
             os.chdir(original_cwd)
 
-    def test_show_nonexistent_plan_raises_error(self, temp_project: Path, plan_command: PlanCommand):
+    def test_show_nonexistent_plan_raises_error(
+        self, temp_project: Path, plan_command: PlanCommand
+    ):
         """Test that showing a non-existent plan raises an error."""
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -104,9 +116,12 @@ class TestPlanCommandList:
             plan_dir = plans_dir / name
             plan_dir.mkdir(parents=True)
             plan_file = plan_dir / "plan.md"
-            plan_file.write_text(f"# Plan: {name.title()}\n\n## Why\nReason.\n\n## What Changes\n- Change")
+            plan_file.write_text(
+                f"# Plan: {name.title()}\n\n## Why\nReason.\n\n## What Changes\n- Change"
+            )
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -128,6 +143,7 @@ class TestPlanCommandList:
         plan_file.write_text("# Plan: Test Plan\n\n## Why\nReason.\n\n## What Changes\n- Change")
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -135,6 +151,7 @@ class TestPlanCommandList:
             assert result is not None
             # Should be JSON with plan details
             import json
+
             try:
                 data = json.loads(result)
                 assert isinstance(data, list)
@@ -147,6 +164,7 @@ class TestPlanCommandList:
     def test_list_empty_plans_directory(self, temp_project: Path, plan_command: PlanCommand):
         """Test listing when no plans exist."""
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -169,11 +187,14 @@ class TestPlanCommandValidate:
         cap_dir.mkdir(parents=True)
 
         plan_file = plan_dir / "plan.md"
-        plan_file.write_text("# Plan: Test Plan\n\n## Why\nValid reason that is long enough.\n\n## What Changes\n- **test-capability:** Add feature")
+        plan_file.write_text(
+            "# Plan: Test Plan\n\n## Why\nValid reason that is long enough.\n\n## What Changes\n- **test-capability:** Add feature"
+        )
 
         # Create capability with valid modification
         cap_file = cap_dir / "spec.md"  # Changed from test-capability.md to spec.md
-        cap_file.write_text("""# Capability: Test
+        cap_file.write_text(
+            """# Capability: Test
 
 ## ADDED Requirements
 
@@ -185,9 +206,11 @@ The system SHALL support test functionality.
 GIVEN initial state
 WHEN action occurs
 THEN result happens
-""")
+"""
+        )
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -205,26 +228,35 @@ THEN result happens
         specs_dir.mkdir(parents=True)
 
         plan_file = plan_dir / "plan.md"
-        plan_file.write_text("# Plan: Test Plan\n\n## Why\nReason.\n\n## What Changes\n- **test-capability:** Add feature")
+        plan_file.write_text(
+            "# Plan: Test Plan\n\n## Why\nReason.\n\n## What Changes\n- **test-capability:** Add feature"
+        )
 
         # Create capability without scenarios
         cap_file = specs_dir / "test-capability.md"
-        cap_file.write_text("""# Capability: Test
+        cap_file.write_text(
+            """# Capability: Test
 
 ## ADDED Requirements
 
 ### REQ-001: Test requirement
 
 No scenarios here!
-""")
+"""
+        )
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
             result = plan_command.validate("test-plan", strict=False, json_output=False)
             assert result is not None
-            assert "issue" in result.lower() or "error" in result.lower() or "warning" in result.lower()
+            assert (
+                "issue" in result.lower()
+                or "error" in result.lower()
+                or "warning" in result.lower()
+            )
         finally:
             os.chdir(original_cwd)
 
@@ -236,10 +268,13 @@ No scenarios here!
         specs_dir.mkdir(parents=True)
 
         plan_file = plan_dir / "plan.md"
-        plan_file.write_text("# Plan: Test Plan\n\n## Why\nReason that is long enough.\n\n## What Changes\n- **test-capability:** Add feature")
+        plan_file.write_text(
+            "# Plan: Test Plan\n\n## Why\nReason that is long enough.\n\n## What Changes\n- **test-capability:** Add feature"
+        )
 
         cap_file = specs_dir / "test-capability.md"
-        cap_file.write_text("""# Capability: Test
+        cap_file.write_text(
+            """# Capability: Test
 
 ## ADDED Requirements
 
@@ -249,9 +284,11 @@ No scenarios here!
 GIVEN state
 WHEN action
 THEN result
-""")
+"""
+        )
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_project)
@@ -259,6 +296,7 @@ THEN result
             assert result is not None
             # Should be valid JSON
             import json
+
             try:
                 data = json.loads(result)
                 assert "valid" in data or "issues" in data

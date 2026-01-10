@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
+
 from aurora_cli.agent_discovery.scanner import (
     AGENT_FILE_EXTENSIONS,
     DEFAULT_DISCOVERY_PATHS,
@@ -203,9 +204,7 @@ class TestAgentScannerScanAllSources:
         names = {f.name for f in files}
         assert names == {"agent1.md", "agent2.md"}
 
-    def test_no_sources_logs_info(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_no_sources_logs_info(self, tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
         """Logs info when no sources found."""
         scanner = AgentScanner([str(tmp_path / "nonexistent")])
 

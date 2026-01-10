@@ -8,8 +8,9 @@ Task: 1.3 - Write tests/unit/schemas/test_base.py
 """
 
 import pytest
-from aurora_planning.schemas.base import Requirement, Scenario
 from pydantic import ValidationError
+
+from aurora_planning.schemas.base import Requirement, Scenario
 
 
 class TestScenarioSchema:
@@ -60,9 +61,7 @@ class TestRequirementSchema:
         with pytest.raises(ValidationError) as exc_info:
             Requirement(
                 text="The system provides user authentication",
-                scenarios=[
-                    Scenario(raw_text="Given a user\nWhen they login\nThen authenticated")
-                ],
+                scenarios=[Scenario(raw_text="Given a user\nWhen they login\nThen authenticated")],
             )
 
         errors = exc_info.value.errors()

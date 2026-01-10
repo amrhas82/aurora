@@ -23,6 +23,7 @@ from typing import Any
 
 import numpy as np
 import pytest
+
 from aurora_context_code.semantic.embedding_provider import (
     HAS_SENTENCE_TRANSFORMERS,
     EmbeddingProvider,
@@ -30,7 +31,6 @@ from aurora_context_code.semantic.embedding_provider import (
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.activation.engine import ActivationConfig
-
 
 # Mark all tests as requiring ML dependencies
 pytestmark = [
@@ -357,9 +357,9 @@ class TestSemanticRetrievalIntegration:
 
         # Hybrid should be at least as good as the better of the two
         best_single_method = max(precision_activation, precision_semantic)
-        assert precision_hybrid >= best_single_method - 0.01, (
-            "Hybrid should not be worse than single methods"
-        )
+        assert (
+            precision_hybrid >= best_single_method - 0.01
+        ), "Hybrid should not be worse than single methods"
 
         # Hybrid should achieve target precision
         assert precision_hybrid >= 0.6, f"Hybrid precision {precision_hybrid:.2%} < 60% target"

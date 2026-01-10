@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from aurora_planning.converters.json import JsonConverter
 
 
@@ -20,7 +21,8 @@ class TestJsonConverterCapability:
         cap_dir = tmp_path / "capabilities" / "test-cap"
         cap_dir.mkdir(parents=True)
         cap_file = cap_dir / "spec.md"
-        cap_file.write_text("""# Capability: Test Capability
+        cap_file.write_text(
+            """# Capability: Test Capability
 
 ## Purpose
 
@@ -36,11 +38,13 @@ The system SHALL provide test functionality.
 GIVEN a test state
 WHEN an action occurs
 THEN the result is expected
-""")
+"""
+        )
 
         result = converter.convert_capability_to_json(str(cap_file))
 
         import json
+
         data = json.loads(result)
 
         # Name is extracted from directory path, not content
@@ -53,7 +57,8 @@ THEN the result is expected
         cap_dir = tmp_path / "capabilities" / "meta-test"
         cap_dir.mkdir(parents=True)
         cap_file = cap_dir / "spec.md"
-        cap_file.write_text("""# Capability: Meta Test
+        cap_file.write_text(
+            """# Capability: Meta Test
 
 ## Purpose
 
@@ -69,11 +74,13 @@ The system SHALL work.
 GIVEN state
 WHEN action
 THEN result
-""")
+"""
+        )
 
         result = converter.convert_capability_to_json(str(cap_file))
 
         import json
+
         data = json.loads(result)
 
         assert "metadata" in data
@@ -95,7 +102,8 @@ class TestJsonConverterPlan:
         plan_dir = tmp_path / "plans" / "test-plan"
         plan_dir.mkdir(parents=True)
         plan_file = plan_dir / "plan.md"
-        plan_file.write_text("""# Plan: Test Plan
+        plan_file.write_text(
+            """# Plan: Test Plan
 
 ## Why
 
@@ -105,11 +113,13 @@ This plan adds a new feature for testing purposes.
 
 - **test-cap:** Add test functionality
 - **other-cap:** Modify existing behavior
-""")
+"""
+        )
 
         result = converter.convert_plan_to_json(str(plan_file))
 
         import json
+
         data = json.loads(result)
 
         # Name is extracted from directory path, not content
@@ -122,7 +132,8 @@ This plan adds a new feature for testing purposes.
         plan_dir = tmp_path / "plans" / "meta-plan"
         plan_dir.mkdir(parents=True)
         plan_file = plan_dir / "plan.md"
-        plan_file.write_text("""# Plan: Meta Plan
+        plan_file.write_text(
+            """# Plan: Meta Plan
 
 ## Why
 
@@ -131,11 +142,13 @@ Reason for the plan that is long enough.
 ## What Changes
 
 - **cap:** Change something
-""")
+"""
+        )
 
         result = converter.convert_plan_to_json(str(plan_file))
 
         import json
+
         data = json.loads(result)
 
         assert "metadata" in data

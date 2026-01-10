@@ -3,14 +3,15 @@
 Tests memory-based file path resolution for subgoals.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
 from pathlib import Path
+from unittest.mock import MagicMock, Mock
 
-from aurora_cli.planning.memory import FilePathResolver
-from aurora_cli.planning.models import Subgoal, FileResolution
-from aurora_core.store.sqlite import SQLiteStore
+import pytest
+
 from aurora_cli.config import Config
+from aurora_cli.planning.memory import FilePathResolver
+from aurora_cli.planning.models import FileResolution, Subgoal
+from aurora_core.store.sqlite import SQLiteStore
 
 
 class TestFilePathResolver:
@@ -94,9 +95,7 @@ class TestFilePathResolver:
         assert resolutions[1].path == "src/auth/tokens.py"
         assert resolutions[1].confidence == 0.78
 
-    def test_line_range_extraction(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_line_range_extraction(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test line numbers are extracted correctly from chunks."""
         # Arrange
         db_path = tmp_path / "test.db"
@@ -170,15 +169,11 @@ class TestFilePathResolver:
         # Arrange
         resolver = FilePathResolver()
 
-        high_conf = FileResolution(
-            path="src/auth.py", line_start=10, line_end=50, confidence=0.95
-        )
+        high_conf = FileResolution(path="src/auth.py", line_start=10, line_end=50, confidence=0.95)
         medium_conf = FileResolution(
             path="src/auth.py", line_start=10, line_end=50, confidence=0.75
         )
-        low_conf = FileResolution(
-            path="src/auth.py", line_start=10, line_end=50, confidence=0.45
-        )
+        low_conf = FileResolution(path="src/auth.py", line_start=10, line_end=50, confidence=0.45)
 
         # Act
         high_str = resolver.format_path_with_confidence(high_conf)
@@ -228,9 +223,7 @@ class TestFilePathResolver:
         # Should log warning
         assert "Memory not indexed" in caplog.text or "not indexed" in caplog.text.lower()
 
-    def test_has_indexed_memory(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_has_indexed_memory(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test has_indexed_memory delegates to retriever."""
         # Arrange
         db_path = tmp_path / "test.db"

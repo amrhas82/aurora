@@ -13,6 +13,7 @@ Tests all extraction features:
 from pathlib import Path
 
 import pytest
+
 from aurora_context_code.languages.python import PythonParser
 
 
@@ -71,14 +72,16 @@ class TestFunctionExtraction:
     def simple_file(self, tmp_path):
         """Create a simple test file with functions."""
         test_file = tmp_path / "test_simple.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def greet(name):
     \"\"\"Say hello.\"\"\"
     return f"Hello, {name}"
 
 def add(a, b):
     return a + b
-""")
+"""
+        )
         return test_file
 
     def test_extract_simple_functions(self, parser, simple_file):
@@ -104,10 +107,12 @@ def add(a, b):
     def test_function_without_docstring(self, parser, tmp_path):
         """Test extraction of function without docstring."""
         test_file = tmp_path / "no_docstring.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def simple():
     return 42
-""")
+"""
+        )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
         assert chunks[0].docstring is None
@@ -125,7 +130,8 @@ class TestClassExtraction:
     def class_file(self, tmp_path):
         """Create a test file with a class."""
         test_file = tmp_path / "test_class.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 class Calculator:
     \"\"\"A simple calculator.\"\"\"
 
@@ -136,7 +142,8 @@ class Calculator:
     def subtract(self, x, y):
         \"\"\"Subtract two numbers.\"\"\"
         return x - y
-""")
+"""
+        )
         return test_file
 
     def test_extract_class(self, parser, class_file):
@@ -171,14 +178,16 @@ class Calculator:
     def test_class_with_inheritance(self, parser, tmp_path):
         """Test extraction of class with inheritance."""
         test_file = tmp_path / "inheritance.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 class Parent:
     pass
 
 class Child(Parent):
     \"\"\"A child class.\"\"\"
     pass
-""")
+"""
+        )
         chunks = parser.parse(test_file)
 
         # Should have 2 classes
@@ -201,11 +210,13 @@ class TestDocstringExtraction:
     def test_single_quote_docstring(self, parser, tmp_path):
         """Test extraction of single-quoted docstring."""
         test_file = tmp_path / "single_quote.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def func():
     'Single quote docstring'
     pass
-""")
+"""
+        )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
         assert chunks[0].docstring == "Single quote docstring"
@@ -213,11 +224,13 @@ def func():
     def test_triple_quote_docstring(self, parser, tmp_path):
         """Test extraction of triple-quoted docstring."""
         test_file = tmp_path / "triple_quote.py"
-        test_file.write_text('''
+        test_file.write_text(
+            '''
 def func():
     """Triple quote docstring"""
     pass
-''')
+'''
+        )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
         assert chunks[0].docstring == "Triple quote docstring"
@@ -225,14 +238,16 @@ def func():
     def test_multiline_docstring(self, parser, tmp_path):
         """Test extraction of multiline docstring."""
         test_file = tmp_path / "multiline.py"
-        test_file.write_text('''
+        test_file.write_text(
+            '''
 def func():
     """
     This is a
     multiline docstring.
     """
     pass
-''')
+'''
+        )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
         # Docstring should be cleaned (whitespace normalized)
@@ -251,12 +266,14 @@ class TestComplexityCalculation:
     def test_simple_function_zero_complexity(self, parser, tmp_path):
         """Test that simple function has zero complexity."""
         test_file = tmp_path / "simple.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def simple():
     x = 1
     y = 2
     return x + y
-""")
+"""
+        )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
         assert chunks[0].complexity_score == 0.0
@@ -264,12 +281,14 @@ def simple():
     def test_function_with_if_statement(self, parser, tmp_path):
         """Test that if statement increases complexity."""
         test_file = tmp_path / "with_if.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def with_if(x):
     if x > 0:
         return x
     return 0
-""")
+"""
+        )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
         assert chunks[0].complexity_score > 0.0
@@ -277,7 +296,8 @@ def with_if(x):
     def test_function_with_multiple_branches(self, parser, tmp_path):
         """Test that multiple branches increase complexity."""
         test_file = tmp_path / "branches.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def complex_func(x, y):
     if x > 0:
         for i in range(10):
@@ -289,7 +309,8 @@ def complex_func(x, y):
                     except ZeroDivisionError:
                         pass
     return x + y
-""")
+"""
+        )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
         # Should have high complexity due to many branches
@@ -318,10 +339,12 @@ class TestErrorHandling:
     def test_parse_broken_syntax(self, parser, tmp_path):
         """Test that parser handles syntax errors gracefully."""
         test_file = tmp_path / "broken.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 def broken_function(:  # Syntax error
     return "broken"
-""")
+"""
+        )
         # Should not raise exception, return partial results or empty
         chunks = parser.parse(test_file)
         assert isinstance(chunks, list)
@@ -337,10 +360,12 @@ def broken_function(:  # Syntax error
     def test_parse_file_with_only_comments(self, parser, tmp_path):
         """Test that parser handles files with only comments."""
         test_file = tmp_path / "comments.py"
-        test_file.write_text("""
+        test_file.write_text(
+            """
 # This is a comment
 # Another comment
-""")
+"""
+        )
         chunks = parser.parse(test_file)
         assert chunks == []
 

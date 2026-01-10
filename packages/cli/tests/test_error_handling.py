@@ -13,6 +13,7 @@ import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
 from aurora_cli.errors import APIError, ConfigurationError, ErrorHandler, MemoryStoreError
 
 
@@ -451,8 +452,9 @@ class TestDryRunMode:
     @patch("aurora_core.store.SQLiteStore")
     def test_dry_run_shows_config(self, mock_store, mock_handler, capsys):
         """Test dry-run mode displays configuration."""
-        from aurora_cli.main import cli
         from click.testing import CliRunner
+
+        from aurora_cli.main import cli
 
         # Mock escalation result
         mock_result = Mock()
@@ -488,8 +490,9 @@ class TestDryRunMode:
 
     def test_dry_run_without_api_key(self):
         """Test dry-run mode works without API key."""
-        from aurora_cli.main import cli
         from click.testing import CliRunner
+
+        from aurora_cli.main import cli
 
         runner = CliRunner()
         # Dry-run should work without API key

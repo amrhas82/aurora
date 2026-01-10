@@ -28,7 +28,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-
 # Color codes for output
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -130,7 +129,8 @@ def create_test_code_files(test_dir: Path) -> list[Path]:
 
     # Create a simple Python file
     file1 = test_dir / "test_module.py"
-    file1.write_text("""
+    file1.write_text(
+        """
 def test_function():
     '''Test function for smoke testing.'''
     return "Hello from test function"
@@ -144,12 +144,14 @@ class TestClass:
     def get_value(self):
         '''Get the value attribute.'''
         return self.value
-""")
+"""
+    )
     files.append(file1)
 
     # Create another Python file
     file2 = test_dir / "utils.py"
-    file2.write_text("""
+    file2.write_text(
+        """
 def utility_function(x: int, y: int) -> int:
     '''Add two numbers together.'''
     return x + y
@@ -157,7 +159,8 @@ def utility_function(x: int, y: int) -> int:
 def helper_function(name: str) -> str:
     '''Return a greeting message.'''
     return f"Hello, {name}!"
-""")
+"""
+    )
     files.append(file2)
 
     return files
@@ -166,7 +169,8 @@ def helper_function(name: str) -> str:
 def create_test_prompt(test_dir: Path) -> Path:
     """Create a test prompt file for headless mode."""
     prompt_file = test_dir / "test_prompt.md"
-    prompt_file.write_text("""## Goal
+    prompt_file.write_text(
+        """## Goal
 Test the headless mode configuration and validation.
 
 ## Success Criteria
@@ -181,7 +185,8 @@ Test the headless mode configuration and validation.
 
 ## Context
 This is a smoke test to validate headless mode setup.
-""")
+"""
+    )
     return prompt_file
 
 

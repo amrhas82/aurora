@@ -27,7 +27,6 @@ from aurora_core.chunks import Chunk
 from aurora_core.store import SQLiteStore
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
 
@@ -249,7 +248,10 @@ class MemoryManager:
                     class WarningDetector(logging.Handler):
                         def emit(self, record: logging.LogRecord) -> None:
                             nonlocal warning_detected
-                            if record.levelno == logging.WARNING and "Parse errors" in record.getMessage():
+                            if (
+                                record.levelno == logging.WARNING
+                                and "Parse errors" in record.getMessage()
+                            ):
                                 warning_detected = True
 
                     warning_handler = WarningDetector()

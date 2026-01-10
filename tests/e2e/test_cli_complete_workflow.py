@@ -29,15 +29,14 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
 from aurora_cli.config import load_config
 from aurora_cli.errors import AuroraError, ConfigurationError, MemoryStoreError
 from aurora_cli.memory_manager import MemoryManager
-
 from aurora_core.chunks import CodeChunk
 from aurora_core.store import SQLiteStore
 
 from .conftest import run_cli_command
-
 
 pytestmark = pytest.mark.ml
 
@@ -242,9 +241,9 @@ class TestCompleteCLIWorkflow:
 
         # Verify search found relevant code
         output = search_result.stdout.lower()
-        assert "auth" in output or "authenticate" in output, (
-            "Should find authentication-related code"
-        )
+        assert (
+            "auth" in output or "authenticate" in output
+        ), "Should find authentication-related code"
 
         # Step 3: Verify database contains indexed code
         import sqlite3
@@ -321,9 +320,9 @@ class TestCompleteCLIWorkflow:
         # Verify stats output contains expected information
         output = stats_result.stdout.lower()
         # Stats should mention chunks or database information
-        assert "chunk" in output or "database" in output or "total" in output, (
-            "Stats should display database information"
-        )
+        assert (
+            "chunk" in output or "database" in output or "total" in output
+        ), "Stats should display database information"
 
 
 # ==============================================================================
@@ -421,15 +420,15 @@ class TestNewUserSetupWorkflow:
                 result = manager.index_path(str(temp_cli_project))
                 stats_after = manager.get_stats()
 
-                assert result.files_indexed > 0, (
-                    f"Should index some files, got {result.files_indexed}"
-                )
-                assert result.chunks_created > 0, (
-                    f"Should create chunks, got {result.chunks_created}"
-                )
-                assert stats_after.total_chunks > stats_before.total_chunks, (
-                    f"Total chunks should increase: before={stats_before.total_chunks}, after={stats_after.total_chunks}"
-                )
+                assert (
+                    result.files_indexed > 0
+                ), f"Should index some files, got {result.files_indexed}"
+                assert (
+                    result.chunks_created > 0
+                ), f"Should create chunks, got {result.chunks_created}"
+                assert (
+                    stats_after.total_chunks > stats_before.total_chunks
+                ), f"Total chunks should increase: before={stats_before.total_chunks}, after={stats_after.total_chunks}"
 
                 # Step 3: Search using direct API
                 search_results = manager.search("AuthManager authenticate", limit=5)
@@ -460,29 +459,35 @@ class TestMultiDirectoryIndexing:
             # Project 1: Authentication service
             proj1 = base_path / "auth_service"
             proj1.mkdir()
-            (proj1 / "auth.py").write_text('''
+            (proj1 / "auth.py").write_text(
+                '''
 def authenticate_user(username: str, password: str) -> bool:
     """Authenticate user credentials."""
     return True
-''')
+'''
+            )
 
             # Project 2: Database service
             proj2 = base_path / "db_service"
             proj2.mkdir()
-            (proj2 / "database.py").write_text('''
+            (proj2 / "database.py").write_text(
+                '''
 def connect_to_database(host: str, port: int) -> object:
     """Connect to database."""
     return object()
-''')
+'''
+            )
 
             # Project 3: API service
             proj3 = base_path / "api_service"
             proj3.mkdir()
-            (proj3 / "api.py").write_text('''
+            (proj3 / "api.py").write_text(
+                '''
 def handle_request(request: dict) -> dict:
     """Handle API request."""
     return {"status": "ok"}
-''')
+'''
+            )
 
             aurora_home = base_path / ".aurora"
             aurora_home.mkdir()
@@ -728,7 +733,8 @@ class TestLargeProjectIndexing:
                 module_dir.mkdir(exist_ok=True)
 
                 file_path = module_dir / f"file_{i}.py"
-                file_path.write_text(f'''
+                file_path.write_text(
+                    f'''
 def function_{i}(param1, param2):
     """Function number {i}."""
     result = param1 + param2
@@ -740,7 +746,8 @@ class Class_{i}:
     def method_{i}(self):
         """Method in class {i}."""
         return {i}
-''')
+'''
+                )
 
             yield project_path
 

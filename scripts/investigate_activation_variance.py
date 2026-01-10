@@ -132,7 +132,9 @@ def print_analysis(results: dict[str, Any]) -> None:
     print(f"  Max:    {acc_stats['max']}")
     print(f"  Mean:   {acc_stats['mean']:.2f}")
     print(f"  Median: {acc_stats['median']:.0f}")
-    print(f"  Chunks with zero access: {results['zero_access_count']} ({(results['zero_access_count']/results['total_chunks']*100):.1f}%)")
+    print(
+        f"  Chunks with zero access: {results['zero_access_count']} ({(results['zero_access_count']/results['total_chunks']*100):.1f}%)"
+    )
     print()
 
     # Analysis conclusions

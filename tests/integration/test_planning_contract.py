@@ -12,14 +12,14 @@ Contract tests ensure:
 import pytest
 from pydantic import ValidationError
 
+from aurora_planning.schemas.base import Requirement, Scenario
 from aurora_planning.schemas.plan import (
-    Plan,
     Modification,
     ModificationOperation,
+    Plan,
     PlanMetadata,
     RenameInfo,
 )
-from aurora_planning.schemas.base import Requirement, Scenario
 
 
 class TestPlanSchemaContract:
@@ -49,9 +49,9 @@ class TestPlanSchemaContract:
                     Modification(
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
-                        description="New test feature"
+                        description="New test feature",
                     )
-                ]
+                ],
             )
 
         assert any("name" in str(error).lower() for error in exc_info.value.errors())
@@ -67,9 +67,9 @@ class TestPlanSchemaContract:
                     Modification(
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
-                        description="New test feature"
+                        description="New test feature",
                     )
-                ]
+                ],
             )
 
         assert any("name" in str(error).lower() for error in exc_info.value.errors())
@@ -85,9 +85,9 @@ class TestPlanSchemaContract:
                     Modification(
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
-                        description="New test feature"
+                        description="New test feature",
                     )
-                ]
+                ],
             )
 
         assert any("why" in str(error).lower() for error in exc_info.value.errors())
@@ -103,9 +103,9 @@ class TestPlanSchemaContract:
                     Modification(
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
-                        description="New test feature"
+                        description="New test feature",
                     )
-                ]
+                ],
             )
 
         assert any("why" in str(error).lower() for error in exc_info.value.errors())
@@ -117,7 +117,7 @@ class TestPlanSchemaContract:
                 name="Test Plan",
                 why="Because we need to test this feature properly and ensure quality.",
                 what_changes="Add new feature",
-                modifications=[]  # Empty list
+                modifications=[],  # Empty list
             )
 
         assert any("modification" in str(error).lower() for error in exc_info.value.errors())
@@ -129,7 +129,7 @@ class TestPlanSchemaContract:
             Modification(
                 capability=f"feature-{i}",
                 operation=ModificationOperation.ADDED,
-                description=f"Feature {i}"
+                description=f"Feature {i}",
             )
             for i in range(101)
         ]
@@ -139,7 +139,7 @@ class TestPlanSchemaContract:
                 name="Test Plan",
                 why="Because we need to test this feature properly and ensure quality.",
                 what_changes="Add many features",
-                modifications=too_many_mods
+                modifications=too_many_mods,
             )
 
         assert any("modification" in str(error).lower() for error in exc_info.value.errors())
@@ -154,14 +154,12 @@ class TestPlanSchemaContract:
                 Modification(
                     capability="test-feature",
                     operation=ModificationOperation.ADDED,
-                    description="New test feature with validation"
+                    description="New test feature with validation",
                 )
             ],
             metadata=PlanMetadata(
-                version="1.0.0",
-                format="aurora-plan",
-                source_path="/path/to/plan.json"
-            )
+                version="1.0.0", format="aurora-plan", source_path="/path/to/plan.json"
+            ),
         )
 
         assert plan.name == "Test Plan"
@@ -190,7 +188,7 @@ class TestModificationSchemaContract:
             Modification(
                 capability="",
                 operation=ModificationOperation.ADDED,
-                description="Test modification"
+                description="Test modification",
             )
 
         assert any("capability" in str(error).lower() for error in exc_info.value.errors())
@@ -199,9 +197,7 @@ class TestModificationSchemaContract:
         """Contract: Modification description must not be empty."""
         with pytest.raises(ValidationError) as exc_info:
             Modification(
-                capability="test-feature",
-                operation=ModificationOperation.ADDED,
-                description=""
+                capability="test-feature", operation=ModificationOperation.ADDED, description=""
             )
 
         assert any("description" in str(error).lower() for error in exc_info.value.errors())
@@ -212,7 +208,7 @@ class TestModificationSchemaContract:
             Modification(
                 capability="test-feature",
                 operation="INVALID_OPERATION",  # Not a valid enum value
-                description="Test modification"
+                description="Test modification",
             )
 
         assert any("operation" in str(error).lower() for error in exc_info.value.errors())
@@ -228,9 +224,7 @@ class TestModificationSchemaContract:
 
         for op in operations:
             mod = Modification(
-                capability="test-feature",
-                operation=op,
-                description="Test modification"
+                capability="test-feature", operation=op, description="Test modification"
             )
             assert mod.operation == op
             assert mod.capability == "test-feature"
@@ -243,7 +237,7 @@ class TestModificationSchemaContract:
             capability="test-feature",
             operation=ModificationOperation.ADDED,
             description="Test modification",
-            requirement=req
+            requirement=req,
         )
 
         assert mod.requirement is not None
@@ -259,7 +253,7 @@ class TestModificationSchemaContract:
             capability="test-feature",
             operation=ModificationOperation.ADDED,
             description="Test modification",
-            requirements=reqs
+            requirements=reqs,
         )
 
         assert mod.requirements is not None
@@ -274,7 +268,7 @@ class TestModificationSchemaContract:
             capability="test-feature",
             operation=ModificationOperation.RENAMED,
             description="Rename feature",
-            rename=rename_info
+            rename=rename_info,
         )
 
         assert mod.rename is not None
@@ -322,9 +316,7 @@ class TestPlanMetadataSchemaContract:
     def test_plan_metadata_accepts_custom_values(self):
         """Contract: PlanMetadata accepts custom values."""
         metadata = PlanMetadata(
-            version="2.0.0",
-            format="custom-format",
-            source_path="/path/to/source.json"
+            version="2.0.0", format="custom-format", source_path="/path/to/source.json"
         )
 
         assert metadata.version == "2.0.0"
@@ -345,9 +337,9 @@ class TestSchemaSerializationContract:
                 Modification(
                     capability="test-feature",
                     operation=ModificationOperation.ADDED,
-                    description="New test feature"
+                    description="New test feature",
                 )
-            ]
+            ],
         )
 
         plan_dict = plan.model_dump()
@@ -367,9 +359,9 @@ class TestSchemaSerializationContract:
                 {
                     "capability": "test-feature",
                     "operation": "ADDED",
-                    "description": "New test feature"
+                    "description": "New test feature",
                 }
-            ]
+            ],
         }
 
         plan = Plan.model_validate(plan_dict)
@@ -391,15 +383,15 @@ class TestSchemaSerializationContract:
                     description="Enhance testing capabilities",
                     requirement=Requirement(
                         text="The system SHALL have better tests",
-                        scenarios=[Scenario(raw_text="Given a test suite, when tests run, then all pass")]
-                    )
+                        scenarios=[
+                            Scenario(raw_text="Given a test suite, when tests run, then all pass")
+                        ],
+                    ),
                 )
             ],
             metadata=PlanMetadata(
-                version="1.0.0",
-                format="aurora-plan",
-                source_path="/path/to/plan.json"
-            )
+                version="1.0.0", format="aurora-plan", source_path="/path/to/plan.json"
+            ),
         )
 
         # Serialize to dict
@@ -414,7 +406,9 @@ class TestSchemaSerializationContract:
         assert restored.what_changes == original.what_changes
         assert len(restored.modifications) == len(original.modifications)
         assert restored.modifications[0].capability == original.modifications[0].capability
-        assert restored.modifications[0].requirement.text == original.modifications[0].requirement.text
+        assert (
+            restored.modifications[0].requirement.text == original.modifications[0].requirement.text
+        )
         assert restored.metadata.version == original.metadata.version
 
 
@@ -431,10 +425,10 @@ class TestSchemaBackwardCompatibility:
                 {
                     "capability": "test-feature",
                     "operation": "ADDED",
-                    "description": "New test feature"
+                    "description": "New test feature",
                 }
             ],
-            "extra_field": "This should be ignored"  # Extra field
+            "extra_field": "This should be ignored",  # Extra field
         }
 
         # Pydantic v2 by default ignores extra fields
@@ -449,7 +443,7 @@ class TestSchemaBackwardCompatibility:
         mod = Modification(
             capability="test-feature",
             operation=ModificationOperation.ADDED,
-            description="Test modification"
+            description="Test modification",
         )
 
         assert mod.requirement is None

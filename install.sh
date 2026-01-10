@@ -26,7 +26,23 @@ fi
 # Clean stale metadata (prevents permission/timestamp errors)
 rm -rf src/*.egg-info build/ 2>/dev/null || true
 
-echo "Installing aurora-actr..."
+echo "Installing all Aurora packages..."
+echo ""
+
+# Install all sub-packages first (in dependency order)
+echo "Installing sub-packages..."
+pip install -e packages/core
+pip install -e packages/context-code
+pip install -e packages/soar
+pip install -e packages/reasoning
+pip install -e packages/planning
+pip install -e packages/spawner
+pip install -e packages/implement
+pip install -e packages/cli
+pip install -e packages/testing
+
+echo ""
+echo "Installing main package (aurora-actr)..."
 
 # Try editable install first, fallback to wheel if pip is old
 if pip install -e . 2>/dev/null; then
@@ -41,8 +57,11 @@ fi
 
 # Verify installation
 echo ""
-echo "Installed:"
-pip show aurora-actr | grep -E "^(Version|Location):"
+echo "Installed packages:"
+echo "=================="
+pip list | grep "^aurora" | awk '{printf "  %-25s %s\n", $1, $2}'
 echo ""
-echo "CLI:"
+echo "CLI version:"
 aur --version
+echo ""
+echo "✓ Installation complete!"

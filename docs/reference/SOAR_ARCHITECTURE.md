@@ -351,7 +351,11 @@ Choice (1-3):
 - Retrieval quality metadata included in response for client-side handling
 - Suitable for automation, CI/CD, programmatic usage
 
-### Phase 5: Route (Agent Routing)
+### Phase 5: Route (Agent Routing) - DEPRECATED
+
+> **⚠️ DEPRECATED (v0.6.3+):** This phase has been removed. Its functionality is now integrated into **Phase 4: Verify Lite** (combined verification + agent assignment). See Phase 4 section above for current implementation.
+>
+> This section is preserved for historical reference only.
 
 **Purpose**: Match subgoals to capable agents.
 

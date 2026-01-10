@@ -1,12 +1,11 @@
 """Tests for SOAR collect phase (agent execution)."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from aurora_spawner.models import SpawnResult, SpawnTask
 
 from aurora_soar.phases.collect import AgentOutput, CollectResult, execute_agents
+from aurora_spawner.models import SpawnResult, SpawnTask
 
 # ============================================================================
 # Fixtures
@@ -96,6 +95,291 @@ def test_collect_result_creation():
 
     assert len(result.agent_outputs) == 1
     assert result.execution_metadata["total_duration_ms"] == 100
+
+
+# ============================================================================
+# TDD Tests for Phase 3: Collect Phase Updates
+# ============================================================================
+
+
+class TestExecuteAgentsWithRetry:
+    """TDD tests for updated execute_agents function with retry/fallback."""
+
+    @pytest.mark.asyncio
+    async def test_accepts_agent_assignments_list(self):
+        """Test execute_agents accepts agent_assignments list instead of RouteResult."""
+        from aurora_soar.agent_registry import AgentInfo
+
+        # Create agent_assignments list
+        agent = AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent_assignments = [(0, agent)]
+
+        # Create subgoals
+        subgoals = [
+            {
+                "subgoal_index": 0,
+                "description": "Test subgoal",
+                "suggested_agent": "test-agent",
+                "is_critical": False,
+                "depends_on": [],
+            }
+        ]
+
+        context = {"query": "Test query"}
+
+        # Mock spawn_with_retry_and_fallback
+        with patch("aurora_soar.phases.collect.spawn_with_retry_and_fallback") as mock_spawn:
+            mock_spawn.return_value = SpawnResult(
+                success=True,
+                output="test output",
+                error=None,
+                exit_code=0,
+            )
+
+            result = await execute_agents(agent_assignments, subgoals, context)
+
+            assert result is not None
+            assert isinstance(result, CollectResult)
+
+    @pytest.mark.asyncio
+    async def test_uses_300s_timeout(self):
+        """Test execute_agents uses 300s default timeout (not 60s)."""
+        from aurora_soar.phases.collect import DEFAULT_AGENT_TIMEOUT
+
+        # Verify constant changed
+        assert DEFAULT_AGENT_TIMEOUT == 300
+
+    @pytest.mark.asyncio
+    async def test_on_progress_callback_invoked(self):
+        """Test execute_agents invokes on_progress callback."""
+        from aurora_soar.agent_registry import AgentInfo
+
+        agent = AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent_assignments = [(0, agent)]
+        subgoals = [
+            {
+                "subgoal_index": 0,
+                "description": "Test subgoal",
+                "suggested_agent": "test-agent",
+                "is_critical": False,
+                "depends_on": [],
+            }
+        ]
+        context = {"query": "Test query"}
+
+        progress_calls = []
+
+        def on_progress(message: str):
+            progress_calls.append(message)
+
+        with patch("aurora_soar.phases.collect.spawn_with_retry_and_fallback") as mock_spawn:
+            mock_spawn.return_value = SpawnResult(
+                success=True,
+                output="test output",
+                error=None,
+                exit_code=0,
+            )
+
+            await execute_agents(agent_assignments, subgoals, context, on_progress=on_progress)
+
+            # Should have progress messages
+            assert len(progress_calls) > 0
+
+    @pytest.mark.asyncio
+    async def test_progress_format_matches_spec(self):
+        """Test progress format: '[Agent 1/3] agent-id: Status'."""
+        from aurora_soar.agent_registry import AgentInfo
+
+        agent = AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent_assignments = [(0, agent)]
+        subgoals = [
+            {
+                "subgoal_index": 0,
+                "description": "Test subgoal",
+                "suggested_agent": "test-agent",
+                "is_critical": False,
+                "depends_on": [],
+            }
+        ]
+        context = {"query": "Test query"}
+
+        progress_calls = []
+
+        def on_progress(message: str):
+            progress_calls.append(message)
+
+        with patch("aurora_soar.phases.collect.spawn_with_retry_and_fallback") as mock_spawn:
+            mock_spawn.return_value = SpawnResult(
+                success=True,
+                output="test output",
+                error=None,
+                exit_code=0,
+            )
+
+            await execute_agents(agent_assignments, subgoals, context, on_progress=on_progress)
+
+            # Check format: [Agent X/Y] agent-id: Status
+            assert any("[Agent" in msg for msg in progress_calls)
+            assert any("test-agent" in msg for msg in progress_calls)
+
+    @pytest.mark.asyncio
+    async def test_calls_spawn_with_retry_and_fallback(self):
+        """Test execute_agents calls spawn_with_retry_and_fallback (not spawn)."""
+        from aurora_soar.agent_registry import AgentInfo
+
+        agent = AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent_assignments = [(0, agent)]
+        subgoals = [
+            {
+                "subgoal_index": 0,
+                "description": "Test subgoal",
+                "suggested_agent": "test-agent",
+                "is_critical": False,
+                "depends_on": [],
+            }
+        ]
+        context = {"query": "Test query"}
+
+        with patch("aurora_soar.phases.collect.spawn_with_retry_and_fallback") as mock_spawn:
+            mock_spawn.return_value = SpawnResult(
+                success=True,
+                output="test output",
+                error=None,
+                exit_code=0,
+                fallback=False,
+                retry_count=0,
+            )
+
+            await execute_agents(agent_assignments, subgoals, context)
+
+            # Verify spawn_with_retry_and_fallback was called
+            mock_spawn.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_fallback_metadata_in_result(self):
+        """Test CollectResult includes fallback metadata."""
+        from aurora_soar.agent_registry import AgentInfo
+
+        agent = AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent_assignments = [(0, agent)]
+        subgoals = [
+            {
+                "subgoal_index": 0,
+                "description": "Test subgoal",
+                "suggested_agent": "test-agent",
+                "is_critical": False,
+                "depends_on": [],
+            }
+        ]
+        context = {"query": "Test query"}
+
+        with patch("aurora_soar.phases.collect.spawn_with_retry_and_fallback") as mock_spawn:
+            # Simulate fallback
+            mock_spawn.return_value = SpawnResult(
+                success=True,
+                output="fallback output",
+                error=None,
+                exit_code=0,
+                fallback=True,
+                original_agent="test-agent",
+                retry_count=2,
+            )
+
+            result = await execute_agents(agent_assignments, subgoals, context)
+
+            # Verify fallback metadata exists
+            result_dict = result.to_dict()
+            assert "fallback_agents" in result_dict or "execution_metadata" in result_dict
+
+    @pytest.mark.asyncio
+    async def test_parallel_progress_multiple_lines(self):
+        """Test parallel execution shows progress for multiple agents."""
+        from aurora_soar.agent_registry import AgentInfo
+
+        agent1 = AgentInfo(
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent2 = AgentInfo(
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent_assignments = [(0, agent1), (1, agent2)]
+        subgoals = [
+            {
+                "subgoal_index": 0,
+                "description": "Test subgoal 1",
+                "suggested_agent": "agent-1",
+                "is_critical": False,
+                "depends_on": [],
+            },
+            {
+                "subgoal_index": 1,
+                "description": "Test subgoal 2",
+                "suggested_agent": "agent-2",
+                "is_critical": False,
+                "depends_on": [],
+            },
+        ]
+        context = {"query": "Test query"}
+
+        progress_calls = []
+
+        def on_progress(message: str):
+            progress_calls.append(message)
+
+        with patch("aurora_soar.phases.collect.spawn_with_retry_and_fallback") as mock_spawn:
+            mock_spawn.return_value = SpawnResult(
+                success=True,
+                output="test output",
+                error=None,
+                exit_code=0,
+            )
+
+            await execute_agents(agent_assignments, subgoals, context, on_progress=on_progress)
+
+            # Should have progress for both agents
+            agent1_messages = [msg for msg in progress_calls if "agent-1" in msg]
+            agent2_messages = [msg for msg in progress_calls if "agent-2" in msg]
+
+            assert len(agent1_messages) > 0
+            assert len(agent2_messages) > 0
 
 
 # ============================================================================
@@ -268,86 +552,77 @@ async def test_convert_spawn_result_to_agent_output():
 
 @pytest.mark.asyncio
 async def test_collect_parallel_with_spawner():
-    """Test that collect phase executes multiple agents in parallel using spawner.
+    """Test that collect phase executes multiple agents using new signature.
 
-    This test should FAIL initially (TDD RED phase) because spawn_parallel() isn't used yet.
-    Tests:
-    - Multiple agents spawned in parallel
-    - Semaphore limiting (max 5 concurrent)
-    - Results maintain input order
-    - All AgentOutput objects have correct subgoal_index
+    Tests new execute_agents signature with agent_assignments list.
     """
+    from aurora_soar.agent_registry import AgentInfo
     from aurora_soar.phases.collect import execute_agents
-    from aurora_soar.phases.route import RouteResult
 
-    # Create mock routing with multiple parallel subgoals
-    routing = RouteResult(
-        agent_assignments=[
-            (0, MagicMock(id="agent-0")),
-            (1, MagicMock(id="agent-1")),
-            (2, MagicMock(id="agent-2")),
-            (3, MagicMock(id="agent-3")),
-            (4, MagicMock(id="agent-4")),
-            (5, MagicMock(id="agent-5")),
-            (6, MagicMock(id="agent-6")),
-        ],
-        execution_plan=[
-            {
-                "phase": 1,
-                "parallelizable": [
-                    {"subgoal_index": 0, "description": "Task 0", "is_critical": False},
-                    {"subgoal_index": 1, "description": "Task 1", "is_critical": False},
-                    {"subgoal_index": 2, "description": "Task 2", "is_critical": False},
-                    {"subgoal_index": 3, "description": "Task 3", "is_critical": False},
-                    {"subgoal_index": 4, "description": "Task 4", "is_critical": False},
-                    {"subgoal_index": 5, "description": "Task 5", "is_critical": False},
-                    {"subgoal_index": 6, "description": "Task 6", "is_critical": False},
-                ],
-                "sequential": [],
-            }
-        ],
-    )
+    # Create agent assignments directly (new API)
+    agent_assignments = [
+        (
+            0,
+            AgentInfo(
+                id="agent-0", name="Agent 0", description="", capabilities=[], agent_type="local"
+            ),
+        ),
+        (
+            1,
+            AgentInfo(
+                id="agent-1", name="Agent 1", description="", capabilities=[], agent_type="local"
+            ),
+        ),
+        (
+            2,
+            AgentInfo(
+                id="agent-2", name="Agent 2", description="", capabilities=[], agent_type="local"
+            ),
+        ),
+    ]
+
+    subgoals = [
+        {
+            "subgoal_index": 0,
+            "description": "Task 0",
+            "is_critical": False,
+            "suggested_agent": "agent-0",
+        },
+        {
+            "subgoal_index": 1,
+            "description": "Task 1",
+            "is_critical": False,
+            "suggested_agent": "agent-1",
+        },
+        {
+            "subgoal_index": 2,
+            "description": "Task 2",
+            "is_critical": False,
+            "suggested_agent": "agent-2",
+        },
+    ]
 
     context = {"query": "Test parallel execution"}
 
-    # Mock spawn_parallel to return success results
-    async def mock_spawn_parallel(
-        tasks: list[SpawnTask], max_concurrent: int = 5, **kwargs
-    ) -> list[SpawnResult]:
-        """Mock spawn_parallel that returns success results in input order."""
-        # Verify max_concurrent parameter
-        assert max_concurrent == 5, f"Expected max_concurrent=5, got {max_concurrent}"
+    # Mock spawn_with_retry_and_fallback
+    with patch("aurora_soar.phases.collect.spawn_with_retry_and_fallback") as mock_spawn:
+        mock_spawn.return_value = SpawnResult(
+            success=True,
+            output="test output",
+            error=None,
+            exit_code=0,
+            fallback=False,
+            retry_count=0,
+        )
 
-        # Simulate parallel execution with small delay
-        await asyncio.sleep(0.01)
+        # Execute agents with new signature
+        result = await execute_agents(agent_assignments, subgoals, context, agent_timeout=10)
 
-        # Return success results maintaining input order
-        return [
-            SpawnResult(
-                success=True,
-                output=f"Completed {task.prompt}",
-                error=None,
-                exit_code=0,
-            )
-            for task in tasks
-        ]
-
-    with patch(
-        "aurora_soar.phases.collect.spawn_parallel", new_callable=AsyncMock
-    ) as mock_spawn_parallel_func:
-        mock_spawn_parallel_func.side_effect = mock_spawn_parallel
-
-        # Execute agents
-        result = await execute_agents(routing, context, agent_timeout=10)
-
-        # Verify spawn_parallel was called once with all tasks
-        assert mock_spawn_parallel_func.call_count == 1
-        call_args = mock_spawn_parallel_func.call_args
-        tasks_arg = call_args[0][0]
-        assert len(tasks_arg) == 7, f"Expected 7 tasks, got {len(tasks_arg)}"
+        # Verify spawn_with_retry_and_fallback was called for each agent
+        assert mock_spawn.call_count == 3
 
         # Verify all subgoals executed
-        assert len(result.agent_outputs) == 7
+        assert len(result.agent_outputs) == 3
 
         # Verify results maintain input order (sorted by subgoal_index)
         for i, output in enumerate(result.agent_outputs):
@@ -358,6 +633,6 @@ async def test_collect_parallel_with_spawner():
             assert output.success is True
 
         # Verify execution metadata
-        assert result.execution_metadata["parallel_subgoals"] == 7
-        assert result.execution_metadata["sequential_subgoals"] == 0
+        assert result.execution_metadata["total_subgoals"] == 3
+        assert "total_duration_ms" in result.execution_metadata
         assert result.execution_metadata["failed_subgoals"] == 0

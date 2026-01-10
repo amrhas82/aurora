@@ -11,11 +11,16 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
-from aurora_spawner import SpawnResult, SpawnTask, spawn, spawn_parallel
+from aurora_spawner import (
+    SpawnResult,
+    SpawnTask,
+    spawn,
+    spawn_parallel,
+    spawn_with_retry_and_fallback,
+)
 
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
-    from aurora_soar.phases.route import RouteResult
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +28,8 @@ __all__ = ["execute_agents", "CollectResult", "AgentOutput"]
 
 
 # Default timeouts (in seconds)
-DEFAULT_AGENT_TIMEOUT = 60
-DEFAULT_QUERY_TIMEOUT = 300  # 5 minutes
+DEFAULT_AGENT_TIMEOUT = 300  # 5 minutes per agent
+DEFAULT_QUERY_TIMEOUT = 300  # 5 minutes overall
 
 
 class AgentOutput:
@@ -82,6 +87,7 @@ class CollectResult:
         agent_outputs: List of AgentOutput objects for each executed subgoal
         execution_metadata: Overall execution metadata (total time, parallel speedup, etc.)
         user_interactions: List of user interactions during execution
+        fallback_agents: List of agent IDs that used fallback to LLM
     """
 
     def __init__(
@@ -89,10 +95,12 @@ class CollectResult:
         agent_outputs: list[AgentOutput],
         execution_metadata: dict[str, Any],
         user_interactions: list[dict[str, Any]] | None = None,
+        fallback_agents: list[str] | None = None,
     ):
         self.agent_outputs = agent_outputs
         self.execution_metadata = execution_metadata
         self.user_interactions = user_interactions or []
+        self.fallback_agents = fallback_agents or []
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
@@ -100,110 +108,158 @@ class CollectResult:
             "agent_outputs": [output.to_dict() for output in self.agent_outputs],
             "execution_metadata": self.execution_metadata,
             "user_interactions": self.user_interactions,
+            "fallback_agents": self.fallback_agents,
         }
 
 
 async def execute_agents(
-    routing: RouteResult,
+    agent_assignments: list[tuple[int, "AgentInfo"]],
+    subgoals: list[dict[str, Any]],
     context: dict[str, Any],
+    on_progress: Any = None,
     agent_timeout: float = DEFAULT_AGENT_TIMEOUT,
-    query_timeout: float = DEFAULT_QUERY_TIMEOUT,
 ) -> CollectResult:
-    """Execute agents based on routing plan with parallel and sequential execution.
+    """Execute agents with automatic retry and fallback to LLM.
 
-    This function:
-    1. Executes agents according to execution plan phases
-    2. Runs parallelizable subgoals concurrently using asyncio
-    3. Executes sequential subgoals in order
-    4. Validates agent outputs and retries on failure (max 2 retries)
-    5. Handles timeouts at agent and query level
-    6. Implements graceful degradation for non-critical failures
-    7. Aborts on critical subgoal failure
+    Simplified agent execution that:
+    1. Takes agent assignments directly (no RouteResult)
+    2. Uses spawn_with_retry_and_fallback for reliability
+    3. Provides streaming progress updates via callback
+    4. Tracks fallback metadata for monitoring
+    5. Executes all subgoals in parallel (no complex phasing)
 
     Args:
-        routing: RouteResult from Phase 5 with agent assignments and execution plan
-        context: Retrieved context from Phase 2
-        agent_timeout: Timeout per agent execution in seconds (default 60)
-        query_timeout: Overall query timeout in seconds (default 300)
+        agent_assignments: List of (subgoal_index, AgentInfo) tuples
+        subgoals: List of subgoal dictionaries from decomposition
+        context: Retrieved context from earlier phases
+        on_progress: Optional callback for progress updates: "[Agent X/Y] agent-id: Status"
+        agent_timeout: Timeout per agent execution in seconds (default 300)
 
     Returns:
-        CollectResult with all agent outputs and execution metadata
+        CollectResult with all agent outputs and fallback metadata
 
     Raises:
-        TimeoutError: If overall query timeout exceeded
-        RuntimeError: If critical subgoal fails after retries
+        RuntimeError: If critical subgoal fails after all retries
     """
     start_time = time.time()
     agent_outputs: list[AgentOutput] = []
+    fallback_agents: list[str] = []
     execution_metadata: dict[str, Any] = {
         "total_duration_ms": 0,
-        "phases_executed": 0,
-        "parallel_subgoals": 0,
-        "sequential_subgoals": 0,
+        "total_subgoals": len(agent_assignments),
         "failed_subgoals": 0,
-        "retries": 0,
+        "fallback_count": 0,
     }
-    user_interactions: list[dict[str, Any]] = []
 
-    # Convert agent assignments to dict for easy lookup
-    agent_map = dict(routing.agent_assignments)
+    # Build subgoal map for lookup
+    subgoal_map = {sg["subgoal_index"]: sg for sg in subgoals}
 
-    try:
-        # Execute each phase in the execution plan
-        for phase in routing.execution_plan:
-            phase_num = phase["phase"]
-            logger.info(f"Executing phase {phase_num}")
+    # Build spawn tasks with progress wrapper
+    total_agents = len(agent_assignments)
+    agent_idx = 0
 
-            # Execute parallelizable subgoals concurrently
-            parallelizable = phase.get("parallelizable", [])
-            if parallelizable:
-                execution_metadata["parallel_subgoals"] += len(parallelizable)
-                outputs = await _execute_parallel_subgoals(
-                    parallelizable,
-                    agent_map,
-                    context,
-                    agent_timeout,
-                    execution_metadata,
+    for subgoal_idx, agent in agent_assignments:
+        agent_idx += 1
+        subgoal = subgoal_map.get(subgoal_idx, {})
+
+        # Build agent prompt
+        prompt = _build_agent_prompt(subgoal, context)
+
+        # Create spawn task
+        spawn_task = SpawnTask(
+            prompt=prompt,
+            agent=agent.id,
+            timeout=int(agent_timeout),
+        )
+
+        # Progress callback wrapper
+        def make_progress_callback(idx, total, agent_id):
+            def progress_callback(attempt, max_attempts, status):
+                if on_progress:
+                    on_progress(f"[Agent {idx}/{total}] {agent_id}: {status}")
+
+            return progress_callback
+
+        progress_cb = make_progress_callback(agent_idx, total_agents, agent.id)
+
+        # Call spawn_with_retry_and_fallback
+        if on_progress:
+            on_progress(f"[Agent {agent_idx}/{total_agents}] {agent.id}: Starting...")
+
+        spawn_result = await spawn_with_retry_and_fallback(
+            spawn_task,
+            on_progress=progress_cb,
+        )
+
+        # Track fallback usage
+        if spawn_result.fallback:
+            fallback_agents.append(agent.id)
+            execution_metadata["fallback_count"] += 1
+
+        # Convert to AgentOutput
+        duration_ms = int((time.time() - start_time) * 1000)
+
+        if spawn_result.success:
+            output = AgentOutput(
+                subgoal_index=subgoal_idx,
+                agent_id=agent.id,
+                success=True,
+                summary=spawn_result.output,
+                confidence=0.85,
+                execution_metadata={
+                    "duration_ms": duration_ms,
+                    "exit_code": spawn_result.exit_code,
+                    "fallback": spawn_result.fallback,
+                    "retry_count": spawn_result.retry_count,
+                    "original_agent": spawn_result.original_agent,
+                },
+            )
+            if on_progress:
+                elapsed = duration_ms / 1000
+                on_progress(
+                    f"[Agent {agent_idx}/{total_agents}] {agent.id}: Completed ({elapsed:.1f}s)"
                 )
-                agent_outputs.extend(outputs)
+        else:
+            # Handle failure
+            output = AgentOutput(
+                subgoal_index=subgoal_idx,
+                agent_id=agent.id,
+                success=False,
+                summary="",
+                confidence=0.0,
+                error=spawn_result.error or "Agent execution failed",
+                execution_metadata={
+                    "duration_ms": duration_ms,
+                    "exit_code": spawn_result.exit_code,
+                    "fallback": spawn_result.fallback,
+                    "retry_count": spawn_result.retry_count,
+                },
+            )
+            execution_metadata["failed_subgoals"] += 1
 
-            # Execute sequential subgoals in order
-            sequential = phase.get("sequential", [])
-            if sequential:
-                execution_metadata["sequential_subgoals"] += len(sequential)
-                outputs = await _execute_sequential_subgoals(
-                    sequential,
-                    agent_map,
-                    context,
-                    agent_timeout,
-                    execution_metadata,
-                )
-                agent_outputs.extend(outputs)
+            if on_progress:
+                on_progress(f"[Agent {agent_idx}/{total_agents}] {agent.id}: Failed")
 
-            execution_metadata["phases_executed"] += 1
+            # Check if critical subgoal
+            if subgoal.get("is_critical", False):
+                raise RuntimeError(f"Critical subgoal {subgoal_idx} failed: {spawn_result.error}")
 
-            # Check overall query timeout
-            elapsed = time.time() - start_time
-            if elapsed > query_timeout:
-                raise TimeoutError(f"Query timeout exceeded: {elapsed:.1f}s > {query_timeout}s")
+        agent_outputs.append(output)
 
-    except Exception as e:
-        logger.error(f"Agent execution failed: {e}")
-        raise
-
-    finally:
-        # Calculate final metadata
-        execution_metadata["total_duration_ms"] = int((time.time() - start_time) * 1000)
+    # Calculate final metadata
+    execution_metadata["total_duration_ms"] = int((time.time() - start_time) * 1000)
 
     logger.info(
         f"Agent execution complete: {len(agent_outputs)} subgoals, "
-        f"{execution_metadata['failed_subgoals']} failed"
+        f"{execution_metadata['failed_subgoals']} failed, "
+        f"{execution_metadata['fallback_count']} used fallback"
     )
 
     return CollectResult(
         agent_outputs=agent_outputs,
         execution_metadata=execution_metadata,
-        user_interactions=user_interactions,
+        user_interactions=[],
+        fallback_agents=fallback_agents,
     )
 
 
@@ -383,7 +439,6 @@ async def _execute_single_subgoal(
         RuntimeError: If critical subgoal fails after all retries
     """
     logger.info(f"Executing subgoal {idx} with agent '{agent.id}' (attempt {retry_count + 1})")
-    start_time = time.time()
 
     try:
         # Execute agent with timeout using spawner

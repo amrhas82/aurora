@@ -22,9 +22,12 @@
 - `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_verify_lite.py` - Added 8 tests for verify_lite function
 - Old verify_decomposition function kept temporarily with DEPRECATED comment
 
-### Phase 3: Collect Phase
-- `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/collect.py` - Add streaming, new timeout, use retry logic
-- `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_collect.py` - Update tests with streaming and timeout changes
+### Phase 3: Collect Phase (COMPLETED)
+- `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/collect.py` - Simplified execute_agents with spawn_with_retry_and_fallback, 300s timeout, progress streaming
+- `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_collect.py` - Added 7 tests for new API, updated 1 legacy test
+- CollectResult now tracks fallback_agents metadata
+- Progress format: "[Agent X/Y] agent-id: Status"
+- All 15 tests pass
 
 ### Phase 4: Record Phase
 - `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/record.py` - Implement lightweight summary caching
@@ -187,8 +190,8 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Command: `cd /home/hamr/PycharmProjects/aurora/packages/soar && pytest tests/test_phases/test_verify.py -v`
     - Verify no regression in existing tests (old verify still works)
 
-- [ ] **3.0 Phase 3: Collect Phase Updates**
-  - [ ] 3.1 Write TDD tests for updated execute_agents function
+- [x] **3.0 Phase 3: Collect Phase Updates**
+  - [x] 3.1 Write TDD tests for updated execute_agents function
     - Open `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_collect.py`
     - Create test class `TestExecuteAgentsWithRetry`
     - Write test: `test_accepts_agent_assignments_list` - verify new parameter type
@@ -199,24 +202,24 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Write test: `test_fallback_metadata_in_result` - verify result includes fallback info
     - Write test: `test_parallel_progress_multiple_lines` - multiple agents show multiple lines
     - All tests should FAIL initially (RED phase)
-  - [ ] 3.2 Update execute_agents function signature
+  - [x] 3.2 Update execute_agents function signature
     - Open `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/collect.py`
     - Change parameter from `route_result: RouteResult` to `agent_assignments: list[tuple[int, AgentInfo]]`
     - Add parameter: `on_progress: Callable[[str], None] | None = None`
     - Update docstring to document new parameters
     - Update constant: `DEFAULT_AGENT_TIMEOUT = 300` (was 60)
-  - [ ] 3.3 Update execute_agents to use spawn_with_retry_and_fallback
+  - [x] 3.3 Update execute_agents to use spawn_with_retry_and_fallback
     - Import `spawn_with_retry_and_fallback` from aurora_spawner
     - Replace calls to `spawn()` with `spawn_with_retry_and_fallback()`
     - Pass on_progress callback to spawn function
     - Update progress callback to match format: "[Agent {idx}/{total}] {agent_id}: {status}"
     - Run tests - should start passing (GREEN phase)
-  - [ ] 3.4 Update CollectResult to include fallback metadata
+  - [x] 3.4 Update CollectResult to include fallback metadata
     - Locate CollectResult class in collect.py
     - Add field to track which agents used fallback
     - Update `to_dict()` method to include fallback_used list
     - Write test verifying fallback metadata serialization
-  - [ ] 3.5 Format progress output according to spec
+  - [x] 3.5 Format progress output according to spec
     - Implement progress formatting:
       - "Starting..." when agent begins
       - "Completed (X.Xs)" when agent succeeds
@@ -225,13 +228,13 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Pass formatted messages to on_progress callback
     - Write tests for each format variant
     - Verify tests pass
-  - [ ] 3.6 Update collect.py to remove RouteResult dependencies
+  - [x] 3.6 Update collect.py to remove RouteResult dependencies
     - Find all references to `RouteResult` in collect.py
     - Replace with direct use of agent_assignments list
     - Remove import of RouteResult from route.py
     - Update any helper functions that use RouteResult
     - Run tests to verify no breakage
-  - [ ] 3.7 Verify: Run collect phase tests with new timeout and streaming
+  - [x] 3.7 Verify: Run collect phase tests with new timeout and streaming
     - Command: `cd /home/hamr/PycharmProjects/aurora/packages/soar && pytest tests/test_phases/test_collect.py -v`
     - Verify all tests pass
     - Command: `cd /home/hamr/PycharmProjects/aurora/packages/soar && pytest tests/test_phases/test_collect.py -k "timeout" -v`

@@ -21,9 +21,19 @@ class DecomposePromptTemplate(PromptTemplate):
         available_agents = kwargs.get("available_agents", [])
 
         if available_agents:
-            agents_text = f"Available agents: {', '.join(available_agents)}"
+            agents_text = f"""Available agents: {', '.join(available_agents)}
+
+IMPORTANT: You MUST use ONLY agents from the above list.
+- For research/web queries: use 'business-analyst'
+- For general tasks: use 'master'
+- For code tasks: use 'full-stack-dev'
+- For architecture/design: use 'holistic-architect'
+- For product tasks: use 'product-manager' or 'product-owner'
+- For orchestration: use 'orchestrator'
+
+DO NOT use 'llm' or any agent not in the available agents list."""
         else:
-            agents_text = "No specific agents available - use 'llm' as fallback for all subgoals"
+            agents_text = "CRITICAL: No agents available - you must use 'master' as the fallback agent for all subgoals"
 
         return f"""You are a query decomposition expert for a code reasoning system.
 
@@ -32,7 +42,7 @@ executed by specialized agents.
 
 For each subgoal, specify:
 1. A clear, specific goal statement
-2. The suggested agent to execute it (from available agents, or 'llm' as fallback)
+2. The suggested agent to execute it (MUST be from available agents list)
 3. Whether the subgoal is critical to the overall query
 4. Dependencies on other subgoals (by index)
 

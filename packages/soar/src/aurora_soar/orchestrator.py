@@ -521,7 +521,9 @@ class SOAROrchestrator:
             else:
                 result = route.route_subgoals(decomposition, self.agent_registry)
             agents = (
-                [a.agent_id for a in result.agent_assignments] if result.agent_assignments else []
+                [agent.id for idx, agent in result.agent_assignments]
+                if result.agent_assignments
+                else []
             )
             self._invoke_callback("route", "after", {"agents": agents})
             return result

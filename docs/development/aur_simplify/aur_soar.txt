@@ -1,0 +1,294 @@
+
+  The changes affect:
+  1. aurora_spawner package - add retry + LLM fallback logic
+  2. aurora_soar package:
+    - phases/collect.py - add streaming output, use new retry logic
+    - phases/verify.py - simplify to Verify Lite
+    - phases/record.py - change to summary + link approach
+    - phases/route.py - potentially remove/merge into verify
+    - orchestrator.py - update flow to skip Route, simplified phases
+
+  Let me create a clear visualization of the changes.
+
+
+  Yes, these are package-level changes, not just the CLI wrapper. Let me show exactly what gets modified:
+
+  Packages Affected
+
+  packages/
+  ├── spawner/                          # MODIFY
+  │   └── src/aurora_spawner/
+  │       └── spawner.py               # Add retry + LLM fallback
+  │
+  ├── soar/                             # MODIFY
+  │   └── src/aurora_soar/
+  │       ├── orchestrator.py          # Update flow (skip Route)
+  │       └── phases/
+  │           ├── verify.py            # Simplify to Verify Lite (~100 lines)
+  │           ├── collect.py           # Add streaming callback
+  │           ├── record.py            # Summary + link (not full chunks)
+  │           └── route.py             # DEPRECATED (merge into Verify)
+  │
+  └── cli/                              # MINOR CHANGE
+      └── src/aurora_cli/
+          └── commands/soar.py         # Just uses updated packages
+
+  ---
+  New Flow (Before vs After)
+
+  BEFORE (9 phases, ~4800 lines)
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  1. Assess        → Determine complexity                    │
+  │  2. Retrieve      → Memory search                           │
+  │  3. Decompose     → Break into subgoals + suggest agents    │
+  │  4. Verify        → 396 lines of validation + LLM scoring   │
+  │  5. Route         → 369 lines to lookup agents by ID        │
+  │  6. Collect       → spawn_parallel (no streaming, no retry) │
+  │  7. Synthesize    → Combine results                         │
+  │  8. Record        → Store FULL chunks + embeddings          │
+  │  9. Respond       → Format output                           │
+  └─────────────────────────────────────────────────────────────┘
+
+  Problems:
+  - Route is redundant (Decompose already assigns agents)
+  - Verify is over-engineered (396 lines)
+  - Collect has no streaming, no retry
+  - Record stores huge chunks (2048+ chars, truncation issues)
+  - 60s timeout too short, agents fail silently
+
+  AFTER (7 phases for MEDIUM/COMPLEX, 4 for SIMPLE)
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                                                             │
+  │  SIMPLE queries:                                            │
+  │  ───────────────                                            │
+  │  1. Assess → SIMPLE detected                                │
+  │  2. Retrieve → Get context                                  │
+  │  3. Direct LLM → Answer immediately (skip decompose)        │
+  │  4. Respond → Format output                                 │
+  │                                                             │
+  │  MEDIUM/COMPLEX queries:                                    │
+  │  ───────────────────────                                    │
+  │  1. Assess       → Determine complexity                     │
+  │  2. Retrieve     → Memory search                            │
+  │  3. Decompose    → Break into subgoals + assign agents      │
+  │  4. Verify Lite  → <100 lines:                              │
+  │                    ✓ Check agents exist                     │
+  │                    ✓ Check no circular deps                 │
+  │                    ✓ Auto-retry ONCE with feedback          │
+  │                    ✓ Create agent assignments (was Route)   │
+  │  5. Collect      → spawn_parallel with:                     │
+  │                    ✓ Streaming output (user sees progress)  │
+  │                    ✓ Retry once per agent                   │
+  │                    ✓ Fallback to LLM if agent fails         │
+  │                    ✓ 300s timeout (was 60s)                 │
+  │  6. Synthesize   → Combine results                          │
+  │  7. Record       → Lightweight summary + link to log file   │
+  │                    (skip if confidence < 0.5)               │
+  │  8. Respond      → Format output                            │
+  │                                                             │
+  └─────────────────────────────────────────────────────────────┘
+
+  Route phase: REMOVED (merged into Verify Lite)
+
+  ---
+  Key Changes by Package
+
+  1. aurora_spawner/spawner.py
+
+  # NEW: spawn_with_retry_and_fallback()
+
+  async def spawn_with_retry_and_fallback(task: SpawnTask, **kwargs) -> SpawnResult:
+      """Spawn with single retry, fallback to direct LLM on failure."""
+
+      # Attempt 1: with agent
+      result = await spawn(task, **kwargs)
+      if result.success:
+          return result
+
+      # Attempt 2: retry same agent once
+      logger.info(f"Retrying agent '{task.agent}'...")
+      result = await spawn(task, **kwargs)
+      if result.success:
+          return result
+
+      # Fallback: direct LLM (no agent)
+      logger.warning(f"Agent '{task.agent}' failed, falling back to LLM")
+      fallback_task = SpawnTask(
+          prompt=task.prompt,
+          agent=None,  # No agent = direct LLM
+          timeout=task.timeout,
+      )
+      fallback_result = await spawn(fallback_task, **kwargs)
+      fallback_result.metadata = {"fallback": True, "original_agent": task.agent}
+      return fallback_result
+
+  2. aurora_soar/phases/collect.py
+
+  # CHANGES:
+  # - Use spawn_with_retry_and_fallback instead of spawn_parallel directly
+  # - Add streaming callback
+  # - Increase default timeout to 300s
+
+  DEFAULT_AGENT_TIMEOUT = 300  # Was 60
+
+  async def _execute_parallel_subgoals(...):
+      # Add streaming callback
+      def on_output(line: str):
+          # Show progress to user
+          print(f"  {line.strip()}")
+
+      # Use retry + fallback for each task
+      spawn_tasks = [...]
+      spawn_results = await spawn_parallel_with_retry(
+          spawn_tasks,
+          max_concurrent=5,
+          on_output=on_output,
+      )
+
+  3. aurora_soar/phases/verify.py → Verify Lite
+
+  # SIMPLIFY from 396 lines to <100 lines
+
+  def verify_lite(
+      decomposition: dict,
+      available_agents: list[str],
+  ) -> tuple[bool, list[tuple[int, AgentInfo]], list[str]]:
+      """Fast verification + agent assignment (replaces Route).
+
+      Returns:
+          (passed, agent_assignments, issues)
+      """
+      issues = []
+      assignments = []
+
+      # 1. Check all agents exist
+      for i, subgoal in enumerate(decomposition["subgoals"]):
+          agent_id = subgoal["suggested_agent"]
+          if agent_id not in available_agents:
+              issues.append(f"Agent '{agent_id}' not found")
+          else:
+              agent = get_agent(agent_id)
+              assignments.append((i, agent))
+
+      # 2. Check circular dependencies
+      if _has_circular_deps(decomposition["subgoals"]):
+          issues.append("Circular dependencies detected")
+
+      # 3. Check minimum subgoals
+      if len(decomposition["subgoals"]) == 0:
+          issues.append("No subgoals generated")
+
+      passed = len(issues) == 0
+      return passed, assignments, issues
+
+  4. aurora_soar/phases/record.py → Summary + Link
+
+  # CHANGE: Store lightweight summary, not full chunks
+
+  def record_pattern_lightweight(
+      store: Store,
+      query: str,
+      synthesis_result: SynthesisResult,
+      log_path: Path,
+  ) -> RecordResult:
+      """Record minimal summary with link to full log."""
+
+      # Skip low confidence
+      if synthesis_result.confidence < 0.5:
+          logger.info("Skipping record (confidence < 0.5)")
+          return RecordResult(cached=False, ...)
+
+      # Lightweight summary record
+      summary_record = SummaryRecord(
+          id=f"soar-{int(time.time() * 1000)}",
+          query=query[:200],
+          summary=synthesis_result.answer[:500],
+          confidence=synthesis_result.confidence,
+          log_file=str(log_path),
+          keywords=_extract_keywords(query),
+          timestamp=time.time(),
+      )
+
+      store.save_summary(summary_record)
+
+      # Activation boost for high confidence
+      activation = 0.2 if synthesis_result.confidence >= 0.8 else 0.05
+
+      return RecordResult(
+          cached=True,
+          reasoning_chunk_id=summary_record.id,
+          pattern_marked=(synthesis_result.confidence >= 0.8),
+          activation_update=activation,
+          ...
+      )
+
+  5. aurora_soar/orchestrator.py → Updated Flow
+
+  # CHANGES:
+  # - Skip Route phase (use Verify Lite output)
+  # - Pass streaming callback to Collect
+  # - Use lightweight Record
+
+  def execute(self, query: str, ...):
+      # Phase 1: Assess
+      phase1 = self._phase1_assess(query)
+
+      # SIMPLE: Direct to LLM
+      if phase1["complexity"] == "SIMPLE":
+          return self._execute_simple_path(query, ...)
+
+      # Phase 2: Retrieve
+      phase2 = self._phase2_retrieve(query, phase1["complexity"])
+
+      # Phase 3: Decompose
+      phase3 = self._phase3_decompose(query, phase2, phase1["complexity"])
+
+      # Phase 4: Verify Lite (includes agent assignment - no separate Route!)
+      passed, agent_assignments, issues = verify_lite(
+          phase3["decomposition"],
+          available_agents=self._list_agent_ids(),
+      )
+
+      if not passed:
+          # Auto-retry decomposition once with feedback
+          phase3 = self._phase3_decompose(query, phase2, phase1["complexity"],
+                                           retry_feedback="\n".join(issues))
+          passed, agent_assignments, issues = verify_lite(...)
+          if not passed:
+              return self._handle_verification_failure(...)
+
+      # Phase 5: Collect (with streaming + retry + fallback)
+      phase5 = self._phase5_collect(agent_assignments, phase2)
+
+      # Phase 6: Synthesize
+      phase6 = self._phase6_synthesize(phase5, query, phase3)
+
+      # Phase 7: Record (lightweight summary + link)
+      phase7 = self._phase7_record_lightweight(query, phase6, log_path)
+
+      # Phase 8: Respond
+      return self._phase8_respond(phase6, phase7, verbosity)
+
+  ---
+  Final Confirmation
+  ┌──────────────────────┬─────────────────────────────┬──────────────────────────────────────┐
+  │        Change        │           Package           │                 What                 │
+  ├──────────────────────┼─────────────────────────────┼──────────────────────────────────────┤
+  │ Retry + LLM fallback │ aurora_spawner              │ New spawn_with_retry_and_fallback()  │
+  ├──────────────────────┼─────────────────────────────┼──────────────────────────────────────┤
+  │ Streaming output     │ aurora_soar/collect.py      │ Pass on_output callback to spawner   │
+  ├──────────────────────┼─────────────────────────────┼──────────────────────────────────────┤
+  │ 300s timeout         │ aurora_soar/collect.py      │ Increase DEFAULT_AGENT_TIMEOUT       │
+  ├──────────────────────┼─────────────────────────────┼──────────────────────────────────────┤
+  │ Verify Lite          │ aurora_soar/verify.py       │ Reduce from 396 → ~100 lines         │
+  ├──────────────────────┼─────────────────────────────┼──────────────────────────────────────┤
+  │ Skip Route           │ aurora_soar/orchestrator.py │ Merge agent assignment into Verify   │
+  ├──────────────────────┼─────────────────────────────┼──────────────────────────────────────┤
+  │ Summary + Link       │ aurora_soar/record.py       │ Lightweight records, not full chunks │
+  └──────────────────────┴─────────────────────────────┴──────────────────────────────────────┘
+  Total estimated reduction: ~4800 lines → ~2500 lines (closer to PRD-0026 target of ~700)
+
+  ---
+  Is this the correct understanding of what we agreed?

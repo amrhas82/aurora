@@ -209,7 +209,7 @@ class TestOrchestratorSimplified:
                 elif phase_name == "retrieve":
                     return {"code_chunks": [], "reasoning_chunks": []}
                 elif phase_name == "decompose":
-                    return {"decomposition": {"subgoals": []}}
+                    return {"decomposition": {"subgoals": [{"goal": "test"}]}}
                 elif phase_name == "verify":
                     # Return verify_lite format: (passed, agent_assignments, issues)
                     return {"final_verdict": "PASS", "agent_assignments": []}
@@ -233,7 +233,17 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(orchestrator, "_phase1_assess", track_phase("assess"))
         monkeypatch.setattr(orchestrator, "_phase2_retrieve", track_phase("retrieve"))
         monkeypatch.setattr(orchestrator, "_phase3_decompose", track_phase("decompose"))
-        monkeypatch.setattr(orchestrator, "_phase4_verify", track_phase("verify"))
+        monkeypatch.setattr(orchestrator, "_get_available_agents", lambda: [])
+
+        # Mock verify_lite to track verify phase
+        from aurora_soar.phases import verify
+
+        def mock_verify_lite(*args, **kwargs):
+            phase_calls.append("verify")
+            return (True, [], [])  # passed, agent_assignments, issues
+
+        monkeypatch.setattr(verify, "verify_lite", mock_verify_lite)
+
         monkeypatch.setattr(orchestrator, "_phase5_collect", track_phase("collect"))
         monkeypatch.setattr(orchestrator, "_phase6_synthesize", track_phase("synthesize"))
         monkeypatch.setattr(orchestrator, "_phase7_record", track_phase("record"))
@@ -443,19 +453,22 @@ class TestOrchestratorSimplified:
 
         monkeypatch.setattr(record, "record_pattern_lightweight", mock_record_lightweight)
 
-        # Mock phases
+        # Mock phases (support retry_feedback parameter in decompose)
         monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
         monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
         monkeypatch.setattr(
             orchestrator,
             "_phase3_decompose",
-            lambda q, ctx, c: {"decomposition": {"subgoals": []}},
+            lambda q, ctx, c, retry_feedback=None: {
+                "decomposition": {"subgoals": [{"goal": "test"}]}
+            },
         )
-        monkeypatch.setattr(
-            orchestrator,
-            "_phase4_verify",
-            lambda *args: {"final_verdict": "PASS", "agent_assignments": []},
-        )
+        monkeypatch.setattr(orchestrator, "_get_available_agents", lambda: [])
+
+        # Mock verify_lite directly
+        from aurora_soar.phases import verify
+
+        monkeypatch.setattr(verify, "verify_lite", lambda *args, **kwargs: (True, [], []))
         monkeypatch.setattr(
             orchestrator,
             "_phase5_collect",
@@ -470,18 +483,18 @@ class TestOrchestratorSimplified:
         )
 
         # Mock _phase7_record to call our lightweight version
-        def mock_phase8(*args):
+        def mock_phase7_record(query, synthesis_result, log_path):
+            """Mock that calls the actual record_pattern_lightweight."""
             import tempfile
 
-            synthesis_result = args[4]  # 5th argument
             with tempfile.NamedTemporaryFile(suffix=".log", delete=False) as tmp:
-                log_path = tmp.name
+                temp_log_path = tmp.name
             result = record.record_pattern_lightweight(
-                orchestrator.store, args[0], synthesis_result, log_path
+                orchestrator.store, query, synthesis_result, temp_log_path
             )
             return result
 
-        monkeypatch.setattr(orchestrator, "_phase7_record", mock_phase8)
+        monkeypatch.setattr(orchestrator, "_phase7_record", mock_phase7_record)
         monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
 
         # Execute query

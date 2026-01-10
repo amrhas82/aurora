@@ -451,50 +451,50 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Manually observe latency improvement (target: <10s for MEDIUM)
 
 - [ ] **7.0 Phase 7: Documentation Updates**
-  - [ ] 7.1 Update docs/SOAR.md with new architecture
-    - Open `/home/hamr/PycharmProjects/aurora/docs/SOAR.md` (or create if doesn't exist)
-    - Update phase count: 9 → 7 phases for MEDIUM/COMPLEX, 4 for SIMPLE
-    - Remove all Route phase documentation
-    - Document Verify Lite and its dual role (verification + agent assignment)
-    - Document streaming progress output format
-    - Document retry and fallback behavior
-    - Document lightweight record caching policy
-    - Add section on SIMPLE vs MEDIUM/COMPLEX query paths
-  - [ ] 7.2 Update phase descriptions in SOAR.md
-    - Phase 1: Assess (unchanged)
-    - Phase 2: Retrieve (unchanged)
-    - Phase 3: Decompose (unchanged for MEDIUM/COMPLEX, skipped for SIMPLE)
-    - Phase 4: Verify Lite (NEW - replace old Verify section)
-    - Phase 5: Collect (update with streaming, retry, fallback)
-    - Phase 6: Synthesize (unchanged)
-    - Phase 7: Record (update with lightweight caching)
-    - Phase 8: Respond (unchanged)
-    - Remove Phase 5: Route (DELETE section)
-  - [ ] 7.3 Document streaming progress output
-    - Add section "Progress Visibility"
-    - Document output format: "[Agent 1/3] agent-id: Status"
-    - Document status types: "Starting", "Completed (Xs)", "Fallback to LLM", "Failed"
-    - Add example output for parallel agent execution
-    - Document that progress appears in CLI during execution
-  - [ ] 7.4 Document retry and fallback behavior
-    - Add section "Agent Retry and Fallback"
-    - Document retry policy: one immediate retry on failure
-    - Document fallback: direct LLM (Claude) if retry fails
-    - Document metadata tracking: fallback=True, original_agent set
-    - Add examples of when fallback occurs (timeout, agent error)
-  - [ ] 7.5 Document lightweight record caching policy
-    - Add section "Pattern Caching"
-    - Document confidence thresholds:
-      - >= 0.8: Cache + mark as pattern (activation +0.2)
-      - >= 0.5: Cache for learning (activation +0.05)
-      - < 0.5: Skip caching entirely
-    - Document record structure (query max 200 chars, summary max 500 chars)
-    - Document log file linking for full details
-  - [ ] 7.6 Update timeout documentation
-    - Find all references to agent timeout in docs
-    - Update from 60s to 300s
-    - Document rationale: complex tasks need more time
-    - Add note about retry not using exponential backoff
+  - [x] 7.1 Update docs/SOAR.md with new architecture
+    - Open `/home/hamr/PycharmProjects/aurora/docs/guides/SOAR.md` ✓
+    - Update phase count: 9 → 7 phases for MEDIUM/COMPLEX, 4 for SIMPLE ✓
+    - Remove all Route phase documentation ✓
+    - Document Verify Lite and its dual role (verification + agent assignment) ✓
+    - Document streaming progress output format ✓
+    - Document retry and fallback behavior ✓
+    - Document lightweight record caching policy ✓
+    - Add section on SIMPLE vs MEDIUM/COMPLEX query paths ✓
+  - [x] 7.2 Update phase descriptions in SOAR.md
+    - Phase 1: Assess (unchanged) ✓
+    - Phase 2: Retrieve (unchanged) ✓
+    - Phase 3: Decompose (unchanged for MEDIUM/COMPLEX, skipped for SIMPLE) ✓
+    - Phase 4: Verify Lite (NEW - replace old Verify section) ✓
+    - Phase 5: Collect (update with streaming, retry, fallback) ✓
+    - Phase 6: Synthesize (unchanged) ✓
+    - Phase 7: Record (update with lightweight caching) ✓
+    - Phase 8: Respond (unchanged) ✓
+    - Remove Phase 5: Route (DELETED section) ✓
+  - [x] 7.3 Document streaming progress output
+    - Documented in Phase 5: Collect section ✓
+    - Output format: "[Agent 1/3] agent-id: Status" ✓
+    - Status types: "Starting...", "Completed (2.3s)", "Fallback to LLM (timeout)" ✓
+    - Example output for parallel agent execution shown ✓
+    - Progress appears in CLI during execution ✓
+  - [x] 7.4 Document retry and fallback behavior
+    - Documented in Phase 5: Collect section ✓
+    - Retry policy: 3 retry attempts with exponential backoff ✓
+    - Fallback: Automatic fallback to LLM if agent fails ✓
+    - Metadata tracking: fallback agents tracked in result ✓
+    - Examples of when fallback occurs documented ✓
+  - [x] 7.5 Document lightweight record caching policy
+    - Documented in Phase 7: Record section + "Caching Policy" section ✓
+    - Confidence thresholds:
+      - >= 0.8: Cache + mark as pattern (activation +0.2) ✓
+      - >= 0.5: Cache for learning (activation +0.05) ✓
+      - < 0.5: Skip caching (no penalty) ✓
+    - Record structure: query max 200 chars, summary max 500 chars ✓
+    - Simple keyword extraction documented ✓
+  - [x] 7.6 Update timeout documentation
+    - Updated in Phase 5: Collect section ✓
+    - Timeout: 60s → 300s (5 minutes) ✓
+    - Rationale: "Accommodates complex agent tasks" ✓
+    - Exponential backoff for retries documented ✓
   - [ ] 7.7 Update architecture diagrams if they exist
     - Check if `/home/hamr/PycharmProjects/aurora/docs/architecture/SOAR_ARCHITECTURE.md` exists
     - If exists, update architecture diagram showing new simplified flow

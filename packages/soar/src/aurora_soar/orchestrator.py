@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Any, Callable
 from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
 from aurora_core.logging import ConversationLogger
+from aurora_core.metrics.query_metrics import QueryMetrics
 from aurora_reasoning.decompose import DecompositionResult
 from aurora_soar import discovery_adapter
 from aurora_soar.phases import (
@@ -125,6 +126,9 @@ class SOAROrchestrator:
             logging_enabled = config.get("logging", {}).get("conversation_logging_enabled", True)
             conversation_logger = ConversationLogger(enabled=logging_enabled)
         self.conversation_logger = conversation_logger
+
+        # Initialize query metrics tracker (Task 4.5.3)
+        self.query_metrics = QueryMetrics()
 
         # Initialize phase-level metadata tracking
         self._phase_metadata: dict[str, Any] = {}
@@ -315,6 +319,12 @@ class SOAROrchestrator:
             phase6_dict["agents_executed"] = len(phase6_result_obj.agent_outputs)
             self._phase_metadata["phase6_collect"] = phase6_dict
 
+            # Track spawned agents count for metrics (Task 4.5.1)
+            spawned_agents_count = len(phase5_result_obj.agent_assignments)
+
+            # Track fallback to LLM count for metrics (Task 4.5.2)
+            fallback_to_llm_count = len(phase6_result_obj.fallback_agents)
+
             # Phase 7: Synthesize results (needs CollectResult object)
             decomposition_dict = phase3_result.get("decomposition", phase3_result)
             phase7_result_obj = self._phase7_synthesize(
@@ -338,6 +348,22 @@ class SOAROrchestrator:
             phase8_dict["_timing_ms"] = 0
             phase8_dict["_error"] = None
             self._phase_metadata["phase8_record"] = phase8_dict
+
+            # Record query metrics (Task 4.5.3)
+            execution_duration_ms = (time.time() - self._start_time) * 1000
+            self.query_metrics.record_query(
+                query_id=self._query_id,
+                query_type="soar",
+                duration_ms=execution_duration_ms,
+                query_text=query,
+                complexity=phase1_result["complexity"],
+                success=True,
+                phase_count=9,
+                metadata={
+                    "spawned_agents_count": spawned_agents_count,
+                    "fallback_to_llm_count": fallback_to_llm_count,
+                },
+            )
 
             # Phase 9: Format response (needs object versions)
             return self._phase9_respond(phase7_result_obj, phase8_result, verbosity)
@@ -781,6 +807,22 @@ class SOAROrchestrator:
         # Add simple path metadata to phase tracking
         self._phase_metadata["phase7_synthesize"] = synthesis.to_dict()
         self._phase_metadata["phase8_record"] = record.to_dict()
+
+        # Record query metrics for simple path (Task 4.5.3)
+        execution_duration_ms = (time.time() - self._start_time) * 1000
+        self.query_metrics.record_query(
+            query_id=self._query_id,
+            query_type="simple",
+            duration_ms=execution_duration_ms,
+            query_text=query,
+            complexity="SIMPLE",
+            success=True,
+            phase_count=2,  # Only assess + retrieve for simple queries
+            metadata={
+                "spawned_agents_count": 0,  # No agents spawned for simple queries
+                "fallback_to_llm_count": 0,  # No fallback needed
+            },
+        )
 
         # Use phase 9 to format response properly
         return self._phase9_respond(synthesis, record, verbosity)

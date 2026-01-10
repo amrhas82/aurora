@@ -2,7 +2,7 @@
 
 **Memory-First Planning & Multi-Agent Orchestration Framework**
 
-**Version 0.6.2** | [PyPI](https://pypi.org/project/aurora-actr/) | [Commands](docs/guides/COMMANDS.md) | [Docs](docs/)
+**Version 0.6.3** | [PyPI](https://pypi.org/project/aurora-actr/) | [Commands](docs/guides/COMMANDS.md) | [Docs](docs/)
 
 Aurora is a local-first development automation framework that uses ACT-R memory, SOAR decomposition, and multi-agent orchestration to systematically break down goals and coordinate specialized agents—all without requiring API access.
 

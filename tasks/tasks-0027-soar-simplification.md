@@ -344,45 +344,39 @@ Each phase includes verification commands at the end. Run these to confirm succe
     - Write test: `test_agent_assignments_passed_to_collect` - verify format (PASS - mocked)
     - Write test: `test_simple_query_bypasses_decompose` - SIMPLE flow (PASS - current behavior)
     - 7 tests created: 6 PASS, 1 FAIL (expected - retry not yet implemented)
-  - [ ] 5.2 Remove Route phase call from orchestrator
-    - Open `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/orchestrator.py`
-    - Locate `_phase5_route()` method call
-    - Comment out or remove the method call
-    - Remove import of `route_subgoals` and `RouteResult` from route.py
-    - Update phase numbering in comments (phase 5 becomes collect, not route)
-  - [ ] 5.3 Integrate verify_lite into orchestrator
-    - Import `verify_lite` from phases.verify
-    - After decompose phase, call verify_lite instead of verify_decomposition
-    - Pass decomposition_dict and available_agents list
-    - Unpack result: `passed, agent_assignments, issues = verify_lite(...)`
-    - If not passed, generate retry feedback from issues
-    - Call decompose again with retry_feedback
-    - Call verify_lite again on retry result
-    - If still not passed, handle verification failure
-  - [ ] 5.4 Update collect phase call to use agent_assignments
-    - Update `_phase6_collect()` call (or rename to `_phase5_collect`)
-    - Pass `agent_assignments` directly instead of RouteResult
-    - Pass `on_progress` callback to collect
-    - Update method signature if needed
-    - Remove any RouteResult handling code
-  - [ ] 5.5 Create and wire streaming progress callback
-    - Add method `_get_progress_callback()` to orchestrator
-    - Return callback function that prints progress messages
-    - Format: simple print() statement for CLI output
-    - Wire callback to collect phase call
-    - Test that progress appears during execution
-  - [ ] 5.6 Integrate lightweight record into orchestrator
-    - Locate record phase call (phase 7 or 8)
-    - Replace `record_pattern()` with `record_pattern_lightweight()`
-    - Pass query, synthesis_result, and log_path
-    - Update any result handling code
-    - Verify RecordResult still works
-  - [ ] 5.7 Update orchestrator phase metadata structure
-    - Update metadata dictionary to reflect 7 phases (not 9)
-    - Remove Route phase from metadata
-    - Rename phase numbers: verify is 4, collect is 5, synthesize is 6, record is 7, respond is 8
-    - Update any logging or debug output with phase names
-    - Run tests - should start passing (GREEN phase)
+  - [x] 5.2 Remove Route phase call from orchestrator
+    - Removed `_phase5_route()` method completely
+    - Removed `route` import from phases
+    - Added note: routing now integrated into verify_lite
+  - [x] 5.3 Integrate verify_lite into orchestrator
+    - Integrated verify_lite in phase 4
+    - Added _get_available_agents() helper method
+    - Implemented auto-retry logic with retry_feedback
+    - Retry decompose with feedback if verification fails
+    - Retry verify_lite on new decomposition
+    - Handle verification failure after retry
+  - [x] 5.4 Update collect phase call to use agent_assignments
+    - Renamed `_phase6_collect` to `_phase5_collect`
+    - Updated signature to accept agent_assignments, subgoals, context, on_progress
+    - Pass agent_assignments directly from verify_lite result
+    - Updated all collect phase calls to use new signature
+  - [x] 5.5 Create and wire streaming progress callback
+    - Added `_get_progress_callback()` method
+    - Returns callback that prints to stdout with flush=True
+    - Wired progress callback to collect phase execution
+    - Progress messages flow through to console
+  - [x] 5.6 Integrate lightweight record into orchestrator
+    - Renamed `_phase8_record` to `_phase7_record`
+    - Updated to call `record_pattern_lightweight()`
+    - Pass query, synthesis_result, log_path
+    - Get log_path from conversation_logger
+    - RecordResult interface unchanged
+  - [x] 5.7 Update orchestrator phase metadata structure
+    - Updated module docstring: 7 phases instead of 9
+    - Renamed phases: collect=5, synthesize=6, record=7, respond=8
+    - Updated phase metadata keys throughout
+    - Updated query metrics to report phase_count=7
+    - Fixed all error handler methods to use _phase8_respond
   - [ ] 5.8 Verify: Run orchestrator integration tests and E2E tests
     - Command: `cd /home/hamr/PycharmProjects/aurora/packages/soar && pytest tests/test_orchestrator.py -v`
     - Verify all orchestrator tests pass

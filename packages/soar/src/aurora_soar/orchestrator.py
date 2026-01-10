@@ -1,19 +1,24 @@
 """SOAR Orchestrator - Main Pipeline Coordination.
 
-This module implements the 9-phase SOAR (Sense-Orient-Adapt-Respond) orchestrator
-that coordinates the entire reasoning pipeline from query assessment to response
-formatting.
+This module implements the simplified 7-phase SOAR (Sense-Orient-Adapt-Respond)
+orchestrator that coordinates the entire reasoning pipeline from query assessment
+to response formatting.
 
-The 9 phases are:
+The 7 phases are (Task 5.7 - simplified from 9 phases):
 1. Assess - Determine query complexity
 2. Retrieve - Get relevant context from memory
 3. Decompose - Break query into subgoals
-4. Verify - Validate decomposition quality
-5. Route - Assign agents to subgoals
-6. Collect - Execute agents and gather results
-7. Synthesize - Combine results into answer
-8. Record - Cache reasoning patterns
-9. Respond - Format final response
+4. Verify - Validate decomposition + assign agents (combined with routing)
+5. Collect - Execute agents and gather results
+6. Synthesize - Combine results into answer
+7. Record - Cache reasoning patterns (lightweight)
+8. Respond - Format final response
+
+Key simplifications:
+- Phase 4 (Verify) now uses verify_lite which combines validation + agent assignment
+- Removed separate Route phase (agent assignment now part of verify_lite)
+- Phase 7 (Record) uses record_pattern_lightweight for minimal overhead
+- Total phases reduced from 9 to 7 for improved performance
 
 The orchestrator manages:
 - Phase execution and coordination
@@ -43,7 +48,6 @@ from aurora_soar.phases import (
     record,
     respond,
     retrieve,
-    route,
     synthesize,
     verify,
 )
@@ -289,65 +293,105 @@ class SOAROrchestrator:
                 # Return partial results with error indication
                 return self._handle_decomposition_failure(query, phase3_result, verbosity)
 
-            # Phase 4: Verify decomposition
-            phase4_result = self._phase4_verify(
-                phase3_result, query, phase1_result["complexity"], phase2_result
+            # Phase 4: Verify decomposition with verify_lite (Task 5.3)
+            # Extract decomposition dict and get available agents
+            decomposition_dict = phase3_result.get("decomposition", phase3_result)
+            available_agents = self._get_available_agents()
+
+            # Call verify_lite which combines validation + agent assignment
+            passed, agent_assignments, issues = verify.verify_lite(
+                decomposition_dict, available_agents
             )
+
+            phase4_result = {
+                "final_verdict": "PASS" if passed else "FAIL",
+                "agent_assignments": agent_assignments,
+                "issues": issues,
+                "_timing_ms": 0,
+                "_error": None,
+            }
             self._phase_metadata["phase4_verify"] = phase4_result
 
-            # Check verification verdict
-            if phase4_result["final_verdict"] == "FAIL":
-                logger.error("Decomposition verification failed")
-                return self._handle_verification_failure(query, phase4_result, verbosity)
+            # Check verification verdict with auto-retry (Task 5.3)
+            if not passed:
+                logger.warning(f"Verification failed: {issues}. Retrying decomposition...")
+                # Generate retry feedback from issues
+                retry_feedback = "Please fix the following issues:\n" + "\n".join(
+                    f"- {issue}" for issue in issues
+                )
 
-            # Phase 5: Route to agents
-            # Extract the decomposition dict from the phase wrapper
-            decomposition_dict = phase3_result.get("decomposition", phase3_result)
-            phase5_result_obj = self._phase5_route(decomposition_dict)
-            # Store dict version in metadata, keep object for phase 6
+                # Retry decomposition with feedback
+                phase3_result = self._phase3_decompose(
+                    query, phase2_result, phase1_result["complexity"], retry_feedback=retry_feedback
+                )
+                self._phase_metadata["phase3_decompose_retry"] = phase3_result
+
+                # Retry verification
+                decomposition_dict = phase3_result.get("decomposition", phase3_result)
+                passed, agent_assignments, issues = verify.verify_lite(
+                    decomposition_dict, available_agents
+                )
+
+                phase4_result = {
+                    "final_verdict": "PASS" if passed else "FAIL",
+                    "agent_assignments": agent_assignments,
+                    "issues": issues,
+                    "_timing_ms": 0,
+                    "_error": None,
+                }
+                self._phase_metadata["phase4_verify_retry"] = phase4_result
+
+                if not passed:
+                    logger.error("Decomposition verification failed after retry")
+                    return self._handle_verification_failure(query, phase4_result, verbosity)
+
+            # Phase 5: Execute agents (Task 5.4 - removed route phase, pass agent_assignments directly)
+            subgoals = decomposition_dict.get("subgoals", [])
+            progress_callback = self._get_progress_callback()  # Task 5.5
+
+            phase5_result_obj = self._phase5_collect(
+                agent_assignments, subgoals, phase2_result, progress_callback
+            )
+            # Store dict version in metadata
             phase5_dict = phase5_result_obj.to_dict()
             phase5_dict["_timing_ms"] = 0  # Timing handled internally
             phase5_dict["_error"] = None
-            self._phase_metadata["phase5_route"] = phase5_dict
-
-            # Phase 6: Execute agents (needs RouteResult object)
-            phase6_result_obj = self._phase6_collect(phase5_result_obj, phase2_result)
-            # Store dict version in metadata, keep object for phase 7
-            phase6_dict = phase6_result_obj.to_dict()
-            phase6_dict["_timing_ms"] = 0  # Timing handled internally
-            phase6_dict["_error"] = None
-            phase6_dict["agents_executed"] = len(phase6_result_obj.agent_outputs)
-            self._phase_metadata["phase6_collect"] = phase6_dict
+            phase5_dict["agents_executed"] = len(phase5_result_obj.agent_outputs)
+            self._phase_metadata["phase5_collect"] = phase5_dict
 
             # Track spawned agents count for metrics (Task 4.5.1)
-            spawned_agents_count = len(phase5_result_obj.agent_assignments)
+            spawned_agents_count = len(agent_assignments)
 
             # Track fallback to LLM count for metrics (Task 4.5.2)
-            fallback_to_llm_count = len(phase6_result_obj.fallback_agents)
+            fallback_to_llm_count = len(phase5_result_obj.fallback_agents)
 
-            # Phase 7: Synthesize results (needs CollectResult object)
-            decomposition_dict = phase3_result.get("decomposition", phase3_result)
-            phase7_result_obj = self._phase7_synthesize(
-                phase6_result_obj, query, decomposition_dict
+            # Phase 6: Synthesize results
+            phase6_result_obj = self._phase6_synthesize(
+                phase5_result_obj, query, decomposition_dict
             )
             # Store dict version in metadata
-            phase7_dict = phase7_result_obj.to_dict()
+            phase6_dict = phase6_result_obj.to_dict()
+            phase6_dict["_timing_ms"] = 0
+            phase6_dict["_error"] = None
+            self._phase_metadata["phase6_synthesize"] = phase6_dict
+
+            # Phase 7: Record pattern with lightweight record (Task 5.6)
+            import tempfile
+
+            log_path = (
+                self.conversation_logger.get_current_log_path()
+                if hasattr(self.conversation_logger, "get_current_log_path")
+                else tempfile.gettempdir() + "/soar.log"
+            )
+            phase7_result = self._phase7_record(
+                query,
+                phase6_result_obj,
+                log_path,
+            )
+            phase7_dict = phase7_result.to_dict()
             phase7_dict["_timing_ms"] = 0
             phase7_dict["_error"] = None
-            self._phase_metadata["phase7_synthesize"] = phase7_dict
-
-            # Phase 8: Record pattern (needs object versions)
-            phase8_result = self._phase8_record(
-                query,
-                phase1_result["complexity"],
-                decomposition_dict,
-                phase6_result_obj,
-                phase7_result_obj,
-            )
-            phase8_dict = phase8_result.to_dict()
-            phase8_dict["_timing_ms"] = 0
-            phase8_dict["_error"] = None
-            self._phase_metadata["phase8_record"] = phase8_dict
+            self._phase_metadata["phase7_record"] = phase7_dict
 
             # Record query metrics (Task 4.5.3)
             execution_duration_ms = (time.time() - self._start_time) * 1000
@@ -358,15 +402,15 @@ class SOAROrchestrator:
                 query_text=query,
                 complexity=phase1_result["complexity"],
                 success=True,
-                phase_count=9,
+                phase_count=7,  # Updated from 9 to 7 phases (Task 5.7)
                 metadata={
                     "spawned_agents_count": spawned_agents_count,
                     "fallback_to_llm_count": fallback_to_llm_count,
                 },
             )
 
-            # Phase 9: Format response (needs object versions)
-            return self._phase9_respond(phase7_result_obj, phase8_result, verbosity)
+            # Phase 8: Format response
+            return self._phase8_respond(phase6_result_obj, phase7_result, verbosity)
 
         except BudgetExceededError:
             # Re-raise budget errors without handling - caller should handle budget limits
@@ -374,6 +418,33 @@ class SOAROrchestrator:
         except Exception as e:
             logger.exception(f"SOAR execution failed: {e}")
             return self._handle_execution_error(e, verbosity)
+
+    def _get_available_agents(self) -> list[Any]:
+        """Get list of available agents from registry or discovery system.
+
+        Returns:
+            List of available AgentInfo objects
+        """
+        if self._use_discovery:
+            # Use discovery adapter to get agents from manifest
+            manifest = self._manifest_manager.get_or_refresh()
+            return manifest.agents if manifest else []
+        else:
+            # Use agent registry
+            return self.agent_registry.list_agents() if self.agent_registry else []
+
+    def _get_progress_callback(self) -> callable:
+        """Create progress callback for streaming agent execution updates (Task 5.5).
+
+        Returns:
+            Callback function that prints progress messages
+        """
+
+        def progress_callback(message: str) -> None:
+            """Print progress message to stdout."""
+            print(message, flush=True)
+
+        return progress_callback
 
     def _phase1_assess(self, query: str) -> dict[str, Any]:
         """Execute Phase 1: Complexity Assessment."""
@@ -530,57 +601,43 @@ class SOAROrchestrator:
             self._invoke_callback("verify", "after", {"verdict": "FAIL", "error": str(e)})
             return result
 
-    def _phase5_route(self, decomposition: dict[str, Any]) -> route.RouteResult:
-        """Execute Phase 5: Agent Routing.
+    # NOTE: _phase5_route removed (Task 5.2) - routing now integrated into verify_lite
 
-        Returns RouteResult object (not dict) for use by phase 6.
-        """
-        logger.info("Phase 5: Routing to agents")
-        self._invoke_callback("route", "before", {})
-        time.time()
-        try:
-            # Pass agent_registry if available, otherwise route will use discovery
-            if self._use_discovery:
-                # For now, route.py still needs agent_registry, so create a wrapper
-                # This will be fully updated in Task 2.4
-                result = route.route_subgoals(decomposition, None)
-            else:
-                result = route.route_subgoals(decomposition, self.agent_registry)
-            agents = (
-                [agent.id for idx, agent in result.agent_assignments]
-                if result.agent_assignments
-                else []
-            )
-            self._invoke_callback("route", "after", {"agents": agents})
-            return result
-        except Exception as e:
-            logger.error(f"Phase 5 failed: {e}")
-            # Return empty RouteResult on failure
-            from aurora_soar.phases.route import RouteResult
-
-            self._invoke_callback("route", "after", {"agents": [], "error": str(e)})
-            return RouteResult(
-                agent_assignments=[], execution_plan=[], routing_metadata={"error": str(e)}
-            )
-
-    def _phase6_collect(
-        self, routing: route.RouteResult, context: dict[str, Any]
+    def _phase5_collect(
+        self,
+        agent_assignments: list[tuple[int, Any]],
+        subgoals: list[dict[str, Any]],
+        context: dict[str, Any],
+        on_progress: callable = None,
     ) -> collect.CollectResult:
-        """Execute Phase 6: Agent Execution.
+        """Execute Phase 5: Agent Execution (Task 5.4 - updated signature).
 
-        Returns CollectResult object (not dict) for use by phase 7.
+        Args:
+            agent_assignments: List of (subgoal_index, AgentInfo) tuples
+            subgoals: List of subgoal dictionaries
+            context: Retrieved context from phase 2
+            on_progress: Optional progress callback for streaming updates
+
+        Returns:
+            CollectResult object for use by phase 6
         """
-        logger.info("Phase 6: Executing agents")
+        logger.info("Phase 5: Executing agents")
         self._invoke_callback("collect", "before", {})
-        time.time()
         try:
-            # Execute agents asynchronously
-            result = asyncio.run(collect.execute_agents(routing, context))
+            # Execute agents asynchronously with new signature
+            result = asyncio.run(
+                collect.execute_agents(
+                    agent_assignments=agent_assignments,
+                    subgoals=subgoals,
+                    context=context,
+                    on_progress=on_progress,
+                )
+            )
             findings_count = len(result.agent_outputs) if result.agent_outputs else 0
             self._invoke_callback("collect", "after", {"findings_count": findings_count})
             return result
         except Exception as e:
-            logger.error(f"Phase 6 failed: {e}")
+            logger.error(f"Phase 5 collect failed: {e}")
             # Return empty CollectResult on failure
             from aurora_soar.phases.collect import CollectResult
 
@@ -589,11 +646,11 @@ class SOAROrchestrator:
                 agent_outputs=[], execution_metadata={"error": str(e)}, user_interactions=[]
             )
 
-    def _phase7_synthesize(
+    def _phase6_synthesize(
         self, collect_result: collect.CollectResult, query: str, decomposition: dict[str, Any]
     ) -> synthesize.SynthesisResult:
-        """Execute Phase 7: Result Synthesis."""
-        logger.info("Phase 7: Synthesizing results")
+        """Execute Phase 6: Result Synthesis (Task 5.7 - renumbered from phase 7)."""
+        logger.info("Phase 6: Synthesizing results")
         self._invoke_callback("synthesize", "before", {})
         start_time = time.time()
         try:
@@ -624,31 +681,36 @@ class SOAROrchestrator:
                 timing={"synthesis_ms": (time.time() - start_time) * 1000},
             )
 
-    def _phase8_record(
+    def _phase7_record(
         self,
         query: str,
-        complexity: str,
-        decomposition: dict[str, Any],
-        collect_result: collect.CollectResult,
         synthesis_result: synthesize.SynthesisResult,
+        log_path: str,
     ) -> record.RecordResult:
-        """Execute Phase 8: Pattern Recording."""
-        logger.info("Phase 8: Recording pattern")
+        """Execute Phase 7: Pattern Recording with lightweight record (Task 5.6).
+
+        Args:
+            query: Original user query
+            synthesis_result: Synthesis result from phase 6
+            log_path: Path to conversation log file
+
+        Returns:
+            RecordResult with caching status
+        """
+        logger.info("Phase 7: Recording pattern (lightweight)")
         self._invoke_callback("record", "before", {})
         start_time = time.time()
         try:
-            result = record.record_pattern(
+            result = record.record_pattern_lightweight(
                 store=self.store,
                 query=query,
-                complexity=complexity,
-                decomposition=decomposition,
-                collect_result=collect_result,
                 synthesis_result=synthesis_result,
+                log_path=log_path,
             )
             self._invoke_callback("record", "after", {"cached": result.cached})
             return result
         except Exception as e:
-            logger.error(f"Phase 8 failed: {e}")
+            logger.error(f"Phase 7 record failed: {e}")
             self._invoke_callback("record", "after", {"cached": False, "error": str(e)})
             return record.RecordResult(
                 cached=False,
@@ -658,18 +720,18 @@ class SOAROrchestrator:
                 timing={"record_ms": (time.time() - start_time) * 1000, "error": str(e)},
             )
 
-    def _phase9_respond(
+    def _phase8_respond(
         self,
         synthesis_result: synthesize.SynthesisResult,
         record_result: record.RecordResult,
         verbosity: str,
     ) -> dict[str, Any]:
-        """Execute Phase 9: Response Formatting."""
-        logger.info("Phase 9: Formatting response")
+        """Execute Phase 8: Response Formatting (Task 5.7 - renumbered from phase 9)."""
+        logger.info("Phase 8: Formatting response")
         self._invoke_callback("respond", "before", {})
 
-        # Add phase 9 metadata
-        self._phase_metadata["phase9_respond"] = {
+        # Add phase 8 metadata (Task 5.7 - updated phase number)
+        self._phase_metadata["phase8_respond"] = {
             "verbosity": verbosity,
             "formatted": True,
         }
@@ -825,7 +887,7 @@ class SOAROrchestrator:
         )
 
         # Use phase 9 to format response properly
-        return self._phase9_respond(synthesis, record, verbosity)
+        return self._phase8_respond(synthesis, record, verbosity)
 
     def _handle_verification_failure(
         self, query: str, verification: dict[str, Any], verbosity: str
@@ -866,7 +928,7 @@ class SOAROrchestrator:
         # Add verification failure to phase metadata before response formatting
         self._phase_metadata["verification_failure"] = verification
 
-        return self._phase9_respond(synthesis, record, verbosity)
+        return self._phase8_respond(synthesis, record, verbosity)
 
     def _handle_decomposition_failure(
         self, query: str, decomposition_result: dict[str, Any], verbosity: str
@@ -908,7 +970,7 @@ class SOAROrchestrator:
         # Add decomposition failure to phase metadata before response formatting
         self._phase_metadata["decomposition_failure"] = decomposition_result
 
-        return self._phase9_respond(synthesis, record, verbosity)
+        return self._phase8_respond(synthesis, record, verbosity)
 
     def _handle_execution_error(self, error: Exception, verbosity: str) -> dict[str, Any]:
         """Handle execution errors with graceful degradation.
@@ -943,7 +1005,7 @@ class SOAROrchestrator:
         # Add error details to phase metadata
         self._phase_metadata["error_details"] = str(error)
 
-        return self._phase9_respond(synthesis, record, verbosity)
+        return self._phase8_respond(synthesis, record, verbosity)
 
     def _track_llm_cost(
         self,

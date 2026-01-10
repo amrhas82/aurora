@@ -229,17 +229,17 @@ class TestOrchestratorSimplified:
 
             return wrapper
 
-        # Patch phase methods
+        # Patch phase methods (updated phase numbers for simplified orchestrator)
         monkeypatch.setattr(orchestrator, "_phase1_assess", track_phase("assess"))
         monkeypatch.setattr(orchestrator, "_phase2_retrieve", track_phase("retrieve"))
         monkeypatch.setattr(orchestrator, "_phase3_decompose", track_phase("decompose"))
         monkeypatch.setattr(orchestrator, "_phase4_verify", track_phase("verify"))
-        monkeypatch.setattr(orchestrator, "_phase6_collect", track_phase("collect"))
-        monkeypatch.setattr(orchestrator, "_phase7_synthesize", track_phase("synthesize"))
-        monkeypatch.setattr(orchestrator, "_phase8_record", track_phase("record"))
+        monkeypatch.setattr(orchestrator, "_phase5_collect", track_phase("collect"))
+        monkeypatch.setattr(orchestrator, "_phase6_synthesize", track_phase("synthesize"))
+        monkeypatch.setattr(orchestrator, "_phase7_record", track_phase("record"))
         monkeypatch.setattr(
             orchestrator,
-            "_phase9_respond",
+            "_phase8_respond",
             lambda *args, **kwargs: {"answer": "test", "metadata": {}},
         )
 
@@ -289,20 +289,20 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(orchestrator, "_phase4_verify", mock_verify)
         monkeypatch.setattr(
             orchestrator,
-            "_phase6_collect",
+            "_phase5_collect",
             lambda *args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase7_synthesize",
+            "_phase6_synthesize",
             lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase8_record",
+            "_phase7_record",
             lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase9_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")
@@ -338,20 +338,20 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(orchestrator, "_phase4_verify", mock_verify)
         monkeypatch.setattr(
             orchestrator,
-            "_phase6_collect",
+            "_phase5_collect",
             lambda *args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase7_synthesize",
+            "_phase6_synthesize",
             lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase8_record",
+            "_phase7_record",
             lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase9_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")
@@ -405,15 +405,15 @@ class TestOrchestratorSimplified:
 
         monkeypatch.setattr(
             orchestrator,
-            "_phase7_synthesize",
+            "_phase6_synthesize",
             lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase8_record",
+            "_phase7_record",
             lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase9_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
 
         # TODO: Once orchestrator has _get_progress_callback(), wire it here
         # For now, test will fail (RED phase) until implementation
@@ -458,18 +458,18 @@ class TestOrchestratorSimplified:
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase6_collect",
+            "_phase5_collect",
             lambda *args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase7_synthesize",
+            "_phase6_synthesize",
             lambda *args: MagicMock(
                 answer="test", confidence=0.9, summary="test", to_dict=lambda: {}
             ),
         )
 
-        # Mock _phase8_record to call our lightweight version
+        # Mock _phase7_record to call our lightweight version
         def mock_phase8(*args):
             import tempfile
 
@@ -481,8 +481,8 @@ class TestOrchestratorSimplified:
             )
             return result
 
-        monkeypatch.setattr(orchestrator, "_phase8_record", mock_phase8)
-        monkeypatch.setattr(orchestrator, "_phase9_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase7_record", mock_phase8)
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")
@@ -532,15 +532,15 @@ class TestOrchestratorSimplified:
 
         monkeypatch.setattr(
             orchestrator,
-            "_phase7_synthesize",
+            "_phase6_synthesize",
             lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
-            "_phase8_record",
+            "_phase7_record",
             lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase9_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")

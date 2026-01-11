@@ -74,6 +74,7 @@ Aurora is a cognitive architecture system that combines memory, reasoning, and a
 | `aur goals` | Planning | Goal decomposition | CLIPipeLLMClient |
 | `aur soar` | Reasoning | SOAR research pipeline | CLIPipeLLMClient |
 | `aur spawn` | Execution | Parallel task execution | Spawner + CLI tools |
+| `aur headless` | Autonomous | Claude loop until goal done | Subprocess + scratchpad |
 | `aur mem` | Memory | Code indexing/search | ACT-R + SQLite |
 | `aur agents` | Discovery | Agent management | ManifestManager |
 | `aur plan` | Legacy | OpenSpec planning | Legacy system |
@@ -102,6 +103,10 @@ Task: "I need to find code"
 Task: "I want to understand agent capabilities"
   +-> Use: aur agents list
       Why: Shows all available agents and their skills
+
+Task: "I have a goal, let Claude work on it autonomously"
+  +-> Use: aur headless --max=10
+      Why: Autonomous loop with scratchpad state management
 ```
 
 ---

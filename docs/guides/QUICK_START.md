@@ -195,24 +195,30 @@ aur mem search "database" --limit 10 --show-content
 
 ### Explore Headless Mode
 
+Autonomous Claude execution - let Claude work on a goal until done.
+
 ```bash
-# Create experiment prompt
-cat > experiment.md <<EOF
-## Goal
-Add docstrings to all functions in auth.py
+# Setup: Create prompt from template
+cp .aurora/headless/prompt.md.template .aurora/headless/prompt.md
+# Edit prompt.md with your goal
 
-## Success Criteria
-- All functions have docstrings
-- Docstrings follow Google style
+# Run headless (3 forms):
 
-## Constraints
-- Budget: $2.00
-- Max iterations: 5
-EOF
+# Form 1: Default prompt, default tool
+aur headless --max=10
 
-# Run headless experiment
-aur headless experiment.md --dry-run
+# Form 2: Custom prompt file
+aur headless -p my-task.md --max=10
+
+# Form 3: With test backpressure
+aur headless --test-cmd "pytest tests/" --max=15
 ```
+
+**How it works:**
+1. Claude reads your prompt (goal + instructions)
+2. Claude works autonomously, rewriting `.aurora/headless/scratchpad.md`
+3. Loop checks for `STATUS: DONE` in scratchpad
+4. Exits early when done, or after max iterations
 
 ---
 
@@ -281,8 +287,10 @@ aur mem index                         # Index current directory
 aur mem search "term"                 # Search memory
 aur mem stats                         # View statistics
 
-# Headless
-aur headless experiment.md            # Run autonomous experiment
+# Headless (autonomous Claude loop)
+aur headless --max=10                 # Default prompt, max 10 iterations
+aur headless -p task.md --max=10      # Custom prompt file
+aur headless --test-cmd "pytest"      # With test backpressure
 ```
 
 ### Configuration Files

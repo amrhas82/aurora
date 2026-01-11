@@ -360,14 +360,31 @@ aur --verify                       # Alternative syntax
 ```
 
 #### `aur headless`
-Run autonomous iterations with external CLI tools.
+Autonomous Claude execution loop - let Claude work on a goal until done.
 
 ```bash
-aur headless prompt.md             # Execute with prompt file
-aur headless --tool cursor         # Use different CLI tool
-aur headless --max-iter 20         # Set iteration limit
-aur headless --allow-main          # Allow on main branch
+# Form 1: Default prompt (.aurora/headless/prompt.md)
+aur headless --max=10
+
+# Form 2: Custom prompt file
+aur headless -p my-task.md --max=10
+
+# Form 3: With test backpressure
+aur headless --test-cmd "pytest tests/" --max=15
 ```
+
+**How it works:**
+1. Claude reads your prompt (goal + instructions)
+2. Claude works autonomously, rewriting `.aurora/headless/scratchpad.md`
+3. Loop checks for `STATUS: DONE` in scratchpad
+4. Exits early when done, or after max iterations
+
+**Options:**
+- `-t, --tool` - CLI tool to execute (default: claude)
+- `--max` - Maximum iterations (default: 10)
+- `-p, --prompt` - Custom prompt file
+- `--test-cmd` - Test command for backpressure
+- `--allow-main` - Allow running on main branch (dangerous)
 
 #### `aur budget`
 Manage API usage budget and spending.
@@ -1163,7 +1180,7 @@ cd .aurora/plans/0001-add-feature/
 | `aur spawn` | Execute tasks | `aur spawn tasks.md` |
 | `aur plan create` | Create plan (legacy) | `aur plan create "Feature"` |
 | `aur agents list` | List agents | `aur agents list` |
-| `aur headless` | Autonomous iterations | `aur headless prompt.md` |
+| `aur headless` | Autonomous Claude loop | `aur headless --max=10` |
 | `aur budget` | Manage budget | `aur budget status` |
 | `aur doctor` | Health check | `aur doctor` |
 | `aur version` | Show version | `aur version` |

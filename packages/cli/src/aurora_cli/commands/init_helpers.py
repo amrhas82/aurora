@@ -7,7 +7,7 @@ extracted and adapted from init_planning.py for reuse in the new unified flow.
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List  # noqa: F401
 
 import click
 import questionary
@@ -15,6 +15,7 @@ from rich.console import Console
 
 from aurora_cli.configurators import TOOL_OPTIONS, ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
+from aurora_cli.templates.headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
 
 console = Console()
 
@@ -388,7 +389,8 @@ def create_headless_templates(project_path: Path) -> None:
     """Create headless mode template files in .aurora/headless/.
 
     Creates:
-    - prompt.md.template - Example prompt structure
+    - prompt.md.template - Example prompt structure (from centralized template)
+    - scratchpad.md - Initial scratchpad state (from centralized template)
     - README.md - Usage instructions for headless mode
 
     Does NOT overwrite if files already exist.
@@ -398,13 +400,15 @@ def create_headless_templates(project_path: Path) -> None:
     """
     aurora_dir = project_path / AURORA_DIR_NAME
     headless_dir = aurora_dir / "headless"
+    headless_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create prompt template
-    prompt_template = headless_dir / "prompt.md.template"
-    if not prompt_template.exists():
-        prompt_content = """# Goal
-[Describe what you want to achieve]
-
+    # Create prompt template from centralized template
+    prompt_template_path = headless_dir / "prompt.md.template"
+    if not prompt_template_path.exists():
+        # Use centralized template but replace {goal} placeholder for user template
+        prompt_content = PROMPT_TEMPLATE.replace("{goal}", "[Describe what you want to achieve]")
+        # Add optional sections for user template
+        prompt_content += """
 # Success Criteria
 - [ ] Criterion 1
 - [ ] Criterion 2
@@ -417,14 +421,19 @@ def create_headless_templates(project_path: Path) -> None:
 # Context (Optional)
 Additional context about the task, relevant files, or background information...
 """
-        prompt_template.write_text(prompt_content, encoding="utf-8")
+        prompt_template_path.write_text(prompt_content, encoding="utf-8")
+
+    # Create scratchpad from centralized template
+    scratchpad_path = headless_dir / "scratchpad.md"
+    if not scratchpad_path.exists():
+        scratchpad_path.write_text(SCRATCHPAD_TEMPLATE, encoding="utf-8")
 
     # Create README
     readme = headless_dir / "README.md"
     if not readme.exists():
         readme_content = """# Headless Mode
 
-Run single-iteration autonomous reasoning experiments.
+Autonomous Claude execution loop - let Claude work on a goal until done.
 
 ## Quick Start
 
@@ -433,61 +442,83 @@ Run single-iteration autonomous reasoning experiments.
    cp prompt.md.template prompt.md
    ```
 
-2. Edit `prompt.md` with your goal and criteria
+2. Edit `prompt.md` with your goal
 
 3. Run headless mode:
    ```bash
-   aur headless prompt.md
+   aur headless -t claude --max=10
    ```
 
 ## How It Works
 
-1. Aurora reads your prompt (goal, success criteria, constraints)
-2. Runs SOAR pipeline for one iteration
-3. Evaluates if goal is achieved
-4. Saves progress to scratchpad.md
+1. Claude reads your prompt (goal + instructions)
+2. Claude works autonomously, rewriting scratchpad.md with current state
+3. Loop checks for `STATUS: DONE` in scratchpad
+4. Exits early when done, or after max iterations
 
 ## Commands
 
 ```bash
-# Default: 30,000 token budget, max 5 iterations
-aur headless prompt.md
+# Form 1: Default prompt (.aurora/headless/prompt.md)
+aur headless --max=10
 
-# Custom budget (tokens)
-aur headless prompt.md --budget 50000
+# Form 2: Custom prompt file
+aur headless -p my-task.md --max=10
 
-# More iterations
-aur headless prompt.md --max-iter 10
+# Form 3: With test backpressure
+aur headless --test-cmd "pytest tests/" --max=15
 
-# Show scratchpad after execution
-aur headless prompt.md --show-scratchpad
-
-# Dry run (validate without executing)
-aur headless prompt.md --dry-run
+# Allow running on main branch (dangerous)
+aur headless --allow-main
 ```
 
 ## Files
 
-- `prompt.md.template` - Example prompt structure (this template)
+- `prompt.md.template` - Example prompt structure
 - `prompt.md` - Your task definition (copy from template)
-- `scratchpad.md` - Auto-generated execution log
+- `scratchpad.md` - Claude's state (rewritten each iteration)
+
+## Key Concepts
+
+### Scratchpad Rewrite (Not Append)
+Claude rewrites scratchpad.md each iteration with current state only.
+This keeps context bounded and prevents history accumulation.
+
+### STATUS: DONE
+When Claude completes the goal, it sets `STATUS: DONE` in scratchpad.
+The loop detects this and exits early.
+
+### Backpressure (Optional)
+Use `--test-cmd` to run tests after each iteration.
+If tests fail, Claude sees the failure next iteration.
 
 ## Safety Features
 
 - **Git branch check**: Prevents running on main/master by default
-- **Token budget**: Stops when budget exceeded
 - **Max iterations**: Prevents runaway execution
-- **Scratchpad log**: Full audit trail
+- **Scratchpad state**: Visible progress tracking
 
-## Prompt Format
+## Scratchpad Format
 
-Required sections:
-- **Goal**: What you want to achieve
-- **Success Criteria**: Checklist of completion criteria
+```markdown
+# Scratchpad
 
-Optional sections:
-- **Constraints**: Limitations or requirements
-- **Context**: Additional background information
+## STATUS: IN_PROGRESS  (or DONE when complete)
+
+## Completed
+- Task 1
+- Task 2
+
+## Current Task
+Working on X...
+
+## Blockers
+(none)
+
+## Next Steps
+- Step 1
+- Step 2
+```
 """
         readme.write_text(readme_content, encoding="utf-8")
 

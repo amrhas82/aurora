@@ -1,6 +1,6 @@
 # Headless Mode
 
-Run single-iteration autonomous reasoning experiments.
+Autonomous Claude execution loop - let Claude work on a goal until done.
 
 ## Quick Start
 
@@ -9,58 +9,83 @@ Run single-iteration autonomous reasoning experiments.
    cp prompt.md.template prompt.md
    ```
 
-2. Edit `prompt.md` with your goal and criteria
+2. Edit `prompt.md` with your goal
 
 3. Run headless mode:
    ```bash
-   aur headless prompt.md
+   aur headless -t claude --max=10
    ```
 
 ## How It Works
 
-1. Aurora reads your prompt (goal, success criteria, constraints)
-2. Runs SOAR pipeline for one iteration
-3. Evaluates if goal is achieved
-4. Saves progress to scratchpad.md
+1. Claude reads your prompt (goal + instructions)
+2. Claude works autonomously, rewriting scratchpad.md with current state
+3. Loop checks for `STATUS: DONE` in scratchpad
+4. Exits early when done, or after max iterations
 
 ## Commands
 
 ```bash
-# Default: 30,000 token budget, max 5 iterations
-aur headless prompt.md
+# Default: claude tool, max 10 iterations
+aur headless
 
-# Custom budget (tokens)
-aur headless prompt.md --budget 50000
+# Custom tool and iterations
+aur headless -t claude --max=20
 
-# More iterations
-aur headless prompt.md --max-iter 10
+# Custom prompt file
+aur headless -p my-task.md --max=10
 
-# Show scratchpad after execution
-aur headless prompt.md --show-scratchpad
+# With test backpressure (run tests after each iteration)
+aur headless --test-cmd "pytest tests/" --max=15
 
-# Dry run (validate without executing)
-aur headless prompt.md --dry-run
+# Allow running on main branch (dangerous)
+aur headless --allow-main
 ```
 
 ## Files
 
-- `prompt.md.template` - Example prompt structure (this template)
+- `prompt.md.template` - Example prompt structure
 - `prompt.md` - Your task definition (copy from template)
-- `scratchpad.md` - Auto-generated execution log
+- `scratchpad.md` - Claude's state (rewritten each iteration)
+
+## Key Concepts
+
+### Scratchpad Rewrite (Not Append)
+Claude rewrites scratchpad.md each iteration with current state only.
+This keeps context bounded and prevents history accumulation.
+
+### STATUS: DONE
+When Claude completes the goal, it sets `STATUS: DONE` in scratchpad.
+The loop detects this and exits early.
+
+### Backpressure (Optional)
+Use `--test-cmd` to run tests after each iteration.
+If tests fail, Claude sees the failure next iteration.
 
 ## Safety Features
 
 - **Git branch check**: Prevents running on main/master by default
-- **Token budget**: Stops when budget exceeded
 - **Max iterations**: Prevents runaway execution
-- **Scratchpad log**: Full audit trail
+- **Scratchpad state**: Visible progress tracking
 
-## Prompt Format
+## Scratchpad Format
 
-Required sections:
-- **Goal**: What you want to achieve
-- **Success Criteria**: Checklist of completion criteria
+```markdown
+# Scratchpad
 
-Optional sections:
-- **Constraints**: Limitations or requirements
-- **Context**: Additional background information
+## STATUS: IN_PROGRESS  (or DONE when complete)
+
+## Completed
+- Task 1
+- Task 2
+
+## Current Task
+Working on X...
+
+## Blockers
+(none)
+
+## Next Steps
+- Step 1
+- Step 2
+```

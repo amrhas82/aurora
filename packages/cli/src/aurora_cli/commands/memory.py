@@ -21,7 +21,14 @@ from typing import Any
 import click
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import BarColumn, Progress, SpinnerColumn, TaskID, TextColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskID,
+    TextColumn,
+    TimeRemainingColumn,
+)
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
@@ -39,7 +46,7 @@ console = Console()
 
 @click.group(name="mem")
 def memory_group() -> None:
-    """Memory management commands for indexing and searching code.
+    r"""Memory management commands for indexing and searching code.
 
     \b
     Commands:
@@ -56,6 +63,27 @@ def memory_group() -> None:
     pass
 
 
+class _WarningFilter(logging.Filter):
+    """Filter that suppresses warnings during indexing while counting them.
+
+    Warnings are collected and displayed in the final summary instead of
+    interrupting the progress bar during indexing.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.warning_count = 0
+        self.warning_messages: list[str] = []
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Return False to suppress WARNING level logs, True otherwise."""
+        if record.levelno == logging.WARNING:
+            self.warning_count += 1
+            self.warning_messages.append(record.getMessage())
+            return False  # Suppress the warning
+        return True  # Allow other log levels through
+
+
 @memory_group.command(name="index")
 @click.argument("path", type=click.Path(exists=True, path_type=Path), default=".")
 @click.option(
@@ -67,7 +95,7 @@ def memory_group() -> None:
 @click.pass_context
 @handle_errors
 def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
-    """Index code files into memory store.
+    r"""Index code files into memory store.
 
     PATH is the directory or file to index. Defaults to current directory.
     Recursively scans for Python files and extracts functions, classes, and docstrings.
@@ -104,42 +132,74 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
     console.print(f"[dim]Using database: {db_path_str}[/]")
     manager = MemoryManager(config=config)
 
-    # Create progress display
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-        console=console,
-    ) as progress:
-        task_id: TaskID | None = None
+    # Suppress parse warnings during indexing for cleaner progress output
+    # Warnings are counted via filter and displayed in the final summary
+    parser_logger = logging.getLogger("aurora_context_code.languages.python")
+    warning_filter = _WarningFilter()
+    parser_logger.addFilter(warning_filter)
 
-        def progress_callback(current: int, total: int) -> None:
-            nonlocal task_id
-            if task_id is None:
-                task_id = progress.add_task(
-                    f"Indexing {path}",
-                    total=total,
-                )
-            progress.update(task_id, completed=current)
+    try:
+        # Create progress display with file count and time remaining
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            TextColumn("•"),
+            TextColumn("{task.completed}/{task.total} files"),
+            TimeRemainingColumn(),
+            console=console,
+        ) as progress:
+            task_id: TaskID | None = None
 
-        # Perform indexing
-        stats = manager.index_path(path, progress_callback=progress_callback)
+            def progress_callback(current: int, total: int) -> None:
+                nonlocal task_id
+                if task_id is None:
+                    task_id = progress.add_task(
+                        f"Indexing {path}",
+                        total=total,
+                    )
+                progress.update(task_id, completed=current)
+
+            # Perform indexing
+            stats = manager.index_path(path, progress_callback=progress_callback)
+    finally:
+        # Always remove the filter when done
+        parser_logger.removeFilter(warning_filter)
 
     # Display summary
     console.print()
-    console.print(
-        Panel.fit(
-            f"[bold green]✓ Indexing complete[/]\n\n"
-            f"Files indexed: [cyan]{stats.files_indexed}[/]\n"
-            f"Chunks created: [cyan]{stats.chunks_created}[/]\n"
-            f"Duration: [cyan]{stats.duration_seconds:.2f}s[/]\n"
-            f"Errors: [red]{stats.errors}[/]\n"
-            f"Warnings: [yellow]{stats.warnings}[/]",
-            title="Index Summary",
-            border_style="green",
-        )
-    )
+    console.print("[bold green]✓ Indexing Complete[/]")
+    console.print(f"  [green]✓[/] Files indexed:  {stats.files_indexed}")
+    console.print(f"  [green]✓[/] Chunks created: {stats.chunks_created}")
+    console.print(f"  [dim]⏱[/] Duration:       {stats.duration_seconds:.2f}s")
+
+    # Display error/warning summary table if there are issues
+    total_warnings = stats.warnings + warning_filter.warning_count
+    if stats.errors > 0 or total_warnings > 0:
+        console.print()
+        console.print("[bold]Indexing Issues Summary:[/]")
+        console.print("┌─────────────┬───────┬────────────────────────────────────────┐")
+        console.print("│ Issue Type  │ Count │ What To Do                             │")
+        console.print("├─────────────┼───────┼────────────────────────────────────────┤")
+
+        if stats.errors > 0:
+            console.print(
+                f"│ [red]Errors[/]      │ {stats.errors:5} │ Files that failed to parse             │"
+            )
+            console.print("│             │       │ → May be corrupted or binary files     │")
+            console.print("│             │       │ → Action: Check with aur mem stats     │")
+
+        if total_warnings > 0:
+            if stats.errors > 0:
+                console.print("├─────────────┼───────┼────────────────────────────────────────┤")
+            console.print(
+                f"│ [yellow]Warnings[/]    │ {total_warnings:5} │ Files with syntax/parse issues         │"
+            )
+            console.print("│             │       │ → Partial indexing succeeded           │")
+            console.print("│             │       │ → Action: Check logs with --verbose    │")
+
+        console.print("└─────────────┴───────┴────────────────────────────────────────┘")
 
 
 @memory_group.command(name="search")
@@ -207,7 +267,7 @@ def search_command(
     show_scores: bool,
     db_path: Path | None,
 ) -> None:
-    """Search AURORA memory for relevant chunks.
+    r"""Search AURORA memory for relevant chunks.
 
     QUERY is the text to search for in memory. Uses hybrid retrieval
     (activation + semantic similarity) to find relevant chunks.
@@ -295,7 +355,7 @@ def search_command(
 @click.pass_context
 @handle_errors
 def get_command(ctx: click.Context, index: int, output_format: str) -> None:
-    """Retrieve full content of a search result by index.
+    r"""Retrieve full content of a search result by index.
 
     INDEX is the 1-based result number from the last search.
 
@@ -342,13 +402,12 @@ def get_command(ctx: click.Context, index: int, output_format: str) -> None:
 @click.pass_context
 @handle_errors
 def stats_command(ctx: click.Context, db_path: Path | None) -> None:
-    """Display memory store statistics.
+    r"""Display memory store statistics.
 
     Shows information about indexed chunks, files, languages, and database size.
 
+    \b
     Examples:
-
-        \b
         # Show stats for database
         aur mem stats
 
@@ -445,62 +504,48 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
 
         console.print("[dim]💡 Run 'aur mem index .' to re-index[/]\n")
 
-    # Display query metrics (QueryMetrics auto-detects project-local .aurora)
+    # Display query metrics (simplified summary)
     try:
         query_metrics = QueryMetrics()
         metrics_summary = query_metrics.get_summary()
 
         if metrics_summary.total_queries > 0:
-            metrics_table = Table(title="Query Metrics", show_header=False)
-            metrics_table.add_column("Metric", style="cyan", width=30)
+            metrics_table = Table(title="Usage Summary", show_header=False)
+            metrics_table.add_column("Metric", style="cyan", width=24)
             metrics_table.add_column("Value", style="white")
 
-            metrics_table.add_row("Total Queries", f"[bold]{metrics_summary.total_queries:,}[/]")
-            metrics_table.add_row("  SOAR Queries", f"{metrics_summary.total_soar_queries:,}")
-            metrics_table.add_row("  Simple Queries", f"{metrics_summary.total_simple_queries:,}")
+            # Query counts in one line
+            metrics_table.add_row(
+                "Queries",
+                f"[bold]{metrics_summary.total_queries}[/] total "
+                f"({metrics_summary.total_soar_queries} SOAR, "
+                f"{metrics_summary.total_simple_queries} simple)",
+            )
 
-            if metrics_summary.queries_this_month > 0:
-                metrics_table.add_row("", "")
-                metrics_table.add_row("[bold]This Month", "")
-                metrics_table.add_row("  Queries", f"{metrics_summary.queries_this_month:,}")
-                metrics_table.add_row(
-                    "  SOAR Queries", f"{metrics_summary.soar_queries_this_month:,}"
-                )
-
+            # Average duration
             if metrics_summary.avg_duration_ms > 0:
-                metrics_table.add_row("", "")
-                metrics_table.add_row("[bold]Performance", "")
-                metrics_table.add_row(
-                    "  Avg Duration", f"{metrics_summary.avg_duration_ms/1000:.1f}s"
-                )
-                if metrics_summary.avg_soar_duration_ms > 0:
-                    metrics_table.add_row(
-                        "  Avg SOAR Duration", f"{metrics_summary.avg_soar_duration_ms/1000:.1f}s"
-                    )
-                metrics_table.add_row(
-                    "  Min Duration", f"{metrics_summary.min_duration_ms/1000:.1f}s"
-                )
-                metrics_table.add_row(
-                    "  Max Duration", f"{metrics_summary.max_duration_ms/1000:.1f}s"
-                )
+                avg_sec = metrics_summary.avg_duration_ms / 1000
+                metrics_table.add_row("Avg Time", f"{avg_sec:.1f}s")
 
-            if metrics_summary.success_rate < 1.0:
-                success_pct = metrics_summary.success_rate * 100
-                metrics_table.add_row("Success Rate", f"[yellow]{success_pct:.1f}%[/]")
-
+            # Complexity breakdown in one line
             if metrics_summary.complexity_breakdown:
-                metrics_table.add_row("", "")
-                metrics_table.add_row("[bold]By Complexity (This Month)", "")
-                for complexity, count in sorted(metrics_summary.complexity_breakdown.items()):
-                    metrics_table.add_row(f"  {complexity}", f"{count:,}")
+                breakdown = metrics_summary.complexity_breakdown
+                parts = []
+                for level in ["SIMPLE", "MEDIUM", "COMPLEX"]:
+                    if level in breakdown:
+                        parts.append(f"{breakdown[level]} {level.lower()}")
+                if parts:
+                    metrics_table.add_row("By Complexity", ", ".join(parts))
 
-            if metrics_summary.model_breakdown:
-                metrics_table.add_row("", "")
-                metrics_table.add_row("[bold]By Model (This Month)", "")
-                for model, count in sorted(
-                    metrics_summary.model_breakdown.items(), key=lambda x: x[1], reverse=True
-                ):
-                    metrics_table.add_row(f"  {model}", f"{count:,}")
+            # Goals created (count plans in active directory)
+            try:
+                plans_dir = Path.cwd() / ".aurora" / "plans" / "active"
+                if plans_dir.exists():
+                    goals_count = len([d for d in plans_dir.iterdir() if d.is_dir()])
+                    if goals_count > 0:
+                        metrics_table.add_row("Goals Created", f"{goals_count}")
+            except Exception:
+                pass
 
             console.print(metrics_table)
             console.print()
@@ -1192,7 +1237,7 @@ def _load_search_cache() -> list[SearchResult] | None:
 
     try:
         with open(cache_file, "rb") as f:
-            return pickle.load(f)
+            return pickle.load(f)  # nosec B301 - local trusted cache file
     except Exception as e:
         logger.warning(f"Failed to load search cache: {e}")
         return None

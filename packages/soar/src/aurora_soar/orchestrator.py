@@ -430,7 +430,9 @@ class SOAROrchestrator:
             return manifest.agents if manifest else []
         else:
             # Use agent registry
-            return self.agent_registry.list_agents() if self.agent_registry else []
+            if not self.agent_registry:
+                return []
+            return self.agent_registry.list_all()
 
     def _get_progress_callback(self) -> callable:
         """Create progress callback for streaming agent execution updates (Task 5.5).

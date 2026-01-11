@@ -1,5 +1,5 @@
 {
-  "content": "{\"goal\": \"Test goal\", \"subgoals\": [\"Subgoal 1\", \"Subgoal 2\"]}",
+  "content": "```json\n{\n  \"coherence\": 0.95,\n  \"completeness\": 0.90,\n  \"factuality\": 0.98,\n  \"overall_score\": 0.94,\n  \"issues\": [\n    \"Missing explicit mention of the test coverage target (80% per Success Criteria Checklist)\",\n    \"No comparison between current 36% coverage and the 80% target\",\n    \"Could clarify what 'agent outputs' were used as source material\"\n  ],\n  \"suggestions\": [\n    \"Add opening statement comparing current 36% vs target 80% coverage to provide context on how far below target the project is\",\n    \"Include a summary statement at the beginning highlighting that the project is significantly below its 80% coverage target\",\n    \"Consider adding a timeline or effort estimate for reaching the 80% target based on the prioritized recommendations\",\n    \"The recommendations could be strengthened by indicating which priorities would bring coverage closest to the 80% target\"\n  ]\n}\n```\n",
   "phase": "unknown",
   "tool": "claude"
 }

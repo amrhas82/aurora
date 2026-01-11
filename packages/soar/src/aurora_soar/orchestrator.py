@@ -293,6 +293,10 @@ class SOAROrchestrator:
                 return self._handle_decomposition_failure(query, phase3_result, verbosity)
 
             # Phase 4: Verify decomposition with verify_lite (Task 5.3)
+            if verbosity in ["VERBOSE", "verbose"]:
+                print("\n[ORCHESTRATOR] Phase 4: Verify")
+                print("  Validating decomposition and assigning agents...")
+
             # Extract decomposition dict and get available agents
             decomposition_dict = phase3_result.get("decomposition", phase3_result)
             available_agents = self._get_available_agents()
@@ -301,6 +305,12 @@ class SOAROrchestrator:
             passed, agent_assignments, issues = verify.verify_lite(
                 decomposition_dict, available_agents
             )
+
+            if verbosity in ["VERBOSE", "verbose"]:
+                if passed:
+                    print(f"  ✓ Verification passed ({len(agent_assignments)} agents assigned)")
+                else:
+                    print(f"  ✗ Verification failed ({len(issues)} issues found)")
 
             phase4_result = {
                 "final_verdict": "PASS" if passed else "FAIL",

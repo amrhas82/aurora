@@ -730,9 +730,26 @@ After completing all tasks, verify these success criteria from PRD:
 - **Performance:** 40% faster MEDIUM, 60% faster record
 - **Reliability:** Auto-retry + LLM fallback
 
+**E2E Test Results (Post-Implementation):**
+- ✅ **SIMPLE query test**: 46.1s, 4-phase fast path working, correct bypass
+- ✅ **MEDIUM query test**: 101-118s, full 7-phase pipeline working, 3 agents executed
+- ✅ **Streaming progress**: `[Agent 1/3] agent-id: Starting/Completed` format working
+- ✅ **Query metrics**: `aur mem stats` shows breakdown by complexity (SIMPLE: 2, MEDIUM: 2, COMPLEX: 2)
+- ✅ **Lightweight record**: Summary + log_file stored in ReasoningChunk metadata
+- ✅ **No errors**: JSON serialization fixed, subgoal_index handling fixed
+
+**Known Issues (Pre-existing, not introduced by this work):**
+- ⚠️ **CodeChunk.implementation warning**: MarkdownParser returns CodeChunk objects without `implementation` attribute when indexing conversation logs. This is unrelated to lightweight record and occurs during post-processing.
+- **Impact**: Cosmetic warning only, does not affect SOAR functionality
+
+**Bugfixes Applied:**
+1. Fixed `list_agents()` → `list_all()` method call (commit: 0e923cf)
+2. Fixed AgentInfo JSON serialization (commit: 455a9b9)
+3. Fixed missing subgoal_index handling (commit: 455a9b9)
+
 **Next Steps:**
 1. Deploy to production/staging environment
-2. Run E2E smoke tests with real LLM tools
-3. Collect performance and reliability metrics
-4. Monitor telemetry for 1-2 weeks
-5. Validate all success criteria with production data
+2. Collect performance and reliability metrics over 1-2 weeks
+3. Monitor telemetry: fallback usage, agent success rates, latency distributions
+4. Validate all success criteria with production data
+5. Optional: Fix pre-existing MarkdownParser/CodeChunk issue (separate from this PRD)

@@ -304,7 +304,9 @@ class SOAROrchestrator:
 
             phase4_result = {
                 "final_verdict": "PASS" if passed else "FAIL",
-                "agent_assignments": agent_assignments,
+                "agent_assignments": [
+                    {"index": idx, "agent_id": agent.id} for idx, agent in agent_assignments
+                ],
                 "issues": issues,
                 "_timing_ms": 0,
                 "_error": None,
@@ -333,7 +335,9 @@ class SOAROrchestrator:
 
                 phase4_result = {
                     "final_verdict": "PASS" if passed else "FAIL",
-                    "agent_assignments": agent_assignments,
+                    "agent_assignments": [
+                        {"index": idx, "agent_id": agent.id} for idx, agent in agent_assignments
+                    ],
                     "issues": issues,
                     "_timing_ms": 0,
                     "_error": None,

@@ -152,7 +152,11 @@ async def execute_agents(
     }
 
     # Build subgoal map for lookup
-    subgoal_map = {sg["subgoal_index"]: sg for sg in subgoals}
+    # If subgoals don't have subgoal_index, use array index
+    subgoal_map = {}
+    for i, sg in enumerate(subgoals):
+        idx = sg.get("subgoal_index", i)
+        subgoal_map[idx] = sg
 
     # Build spawn tasks with progress wrapper
     total_agents = len(agent_assignments)

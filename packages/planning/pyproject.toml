@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aurora-planning"
-version = "0.6.0"
+version = "0.6.7"
 description = "Aurora Planning System - Structured plan creation and management"
 authors = [
     {name = "Aurora Contributors", email = "noreply@example.com"}

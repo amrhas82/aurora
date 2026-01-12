@@ -89,8 +89,35 @@ aur mem index --force              # Rebuild index from scratch
 Search indexed memory with hybrid retrieval.
 
 ```bash
-aur mem search "authentication"    # Semantic + keyword search
-aur mem search "payment" --limit 10 # Limit results
+# Basic search
+aur mem search "authentication"
+
+# Filter by type
+aur mem search "auth" --type function    # Functions only
+aur mem search "auth" --type class       # Classes only
+aur mem search "auth" --type method      # Methods only
+aur mem search "auth" --type kb          # Markdown/knowledge base only
+aur mem search "auth" --type code        # All code chunks
+
+# Control results
+aur mem search "payment" --limit 10      # More results (default: 5)
+aur mem search "config" --min-score 0.5  # Higher relevance threshold
+
+# Display options
+aur mem search "api" --show-content      # Show code snippets
+aur mem search "api" --show-scores       # Detailed score breakdown
+aur mem search "api" --format json       # JSON output for scripting
+```
+
+**Options:**
+```
+-n, --limit INT         Max results (default: 5)
+-t, --type TYPE         Filter: function, class, method, kb, code, knowledge, document
+-f, --format FORMAT     Output: rich (default) or json
+-c, --show-content      Show content preview
+--show-scores           Detailed score explanations
+--min-score FLOAT       Minimum semantic score (0.0-1.0, default: 0.35)
+--db-path PATH          Custom database path
 ```
 
 [Full Documentation →](../commands/aur-mem.md)
@@ -316,11 +343,28 @@ aur plan show plan-id              # Show plan details
 [Full Documentation →](../commands/aur-plan.md)
 
 #### `aur agents list`
-Discover and list available agents.
+Discover and list available agents from configured tools.
 
 ```bash
-aur agents list                    # List all agents
+aur agents list                    # List agents for project-configured tools
+aur agents list --all              # List agents from all tools
+aur agents list --category eng     # Filter by category (eng, qa, product, general)
+aur agents search "keyword"        # Search agents by keyword
 aur agents show agent-id           # Show agent details
+aur agents refresh                 # Force regenerate agent manifest
+```
+
+**Features:**
+- **Project-scoped by default**: Only shows agents from tools configured in current project
+- **Category filtering**: Filter by eng, qa, product, or general
+- **Keyword search**: Search across agent id, role, goal, skills, and examples
+- **Auto-refresh**: Manifest automatically refreshes when stale
+
+**Options:**
+```
+-c, --category TYPE    Filter by category (eng, qa, product, general)
+-a, --all              Show agents from all tools, not just project-configured
+-f, --format FORMAT    Output format: rich (default) or simple
 ```
 
 [Full Documentation →](../commands/aur-agents.md)
@@ -328,12 +372,31 @@ aur agents show agent-id           # Show agent details
 ### Configuration & Management
 
 #### `aur init`
-Initialize Aurora in your project.
+Initialize Aurora in your project with a 3-step flow.
 
 ```bash
-aur init                           # Interactive setup
-aur init --config                  # Configure settings
+aur init                           # Full initialization (all 3 steps)
+aur init --config                  # Configure tools only (Step 3)
+aur init --tools=claude,cursor     # Configure specific tools (non-interactive)
+aur init --tools=all               # Configure all tools
+aur init --tools=none              # Skip tool configuration
 ```
+
+**3-Step Initialization Flow:**
+1. **Planning Setup** - Git initialization and directory structure (.aurora/plans, logs, cache)
+2. **Memory Indexing** - Semantic search database for codebase
+3. **Tool Configuration** - AI tool integrations with agent discovery
+
+**Re-run Options (when already initialized):**
+- `[1] Re-run all steps` - Full re-initialization
+- `[2] Selective steps` - Choose which steps to run
+- `[3] Configure tools only` - Same as `--config`
+- `[4] Refresh agents` - Rescan agent directories for configured tools
+
+**Agent Discovery:**
+- Automatically discovers agents from tool-specific directories (e.g., `~/.claude/agents/`)
+- Only discovers agents for tools you configure
+- Use option `[4]` or `aur agents refresh` to update after adding new agents
 
 #### `aur doctor`
 Run health checks and diagnostics.
@@ -661,8 +724,10 @@ aur mem index .
 ### Multi-Agent Workflow
 
 ```bash
-# 1. List available agents
-aur agents list
+# 1. List available agents for your configured tools
+aur agents list                    # Project-scoped
+aur agents list --all              # All tools
+aur agents search "developer"      # Find by keyword
 
 # 2. Create task file with agent assignments
 cat > tasks.md << 'EOF'
@@ -1180,6 +1245,9 @@ cd .aurora/plans/0001-add-feature/
 | `aur spawn` | Execute tasks | `aur spawn tasks.md` |
 | `aur plan create` | Create plan (legacy) | `aur plan create "Feature"` |
 | `aur agents list` | List agents | `aur agents list` |
+| `aur agents list --all` | List all agents | `aur agents list --all` |
+| `aur agents search` | Search agents | `aur agents search "test"` |
+| `aur agents refresh` | Refresh agent manifest | `aur agents refresh` |
 | `aur headless` | Autonomous Claude loop | `aur headless --max=10` |
 | `aur budget` | Manage budget | `aur budget status` |
 | `aur doctor` | Health check | `aur doctor` |
@@ -1223,8 +1291,10 @@ aur goals "Your feature description" --help
 
 **"What agents are available?"**
 ```bash
-aur agents list
-aur agents show @full-stack-dev
+aur agents list                    # Agents for configured tools
+aur agents list --all              # All available agents
+aur agents search "test"           # Search by keyword
+aur agents show full-stack-dev     # Show specific agent details
 ```
 
 **"How do I configure my CLI tool?"**

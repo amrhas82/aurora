@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.7] - 2026-01-12
+
+### Improved
+
+**CLI Output Enhancements:**
+- Added "For more details: aur mem stats" hint after indexing issues summary
+- Added log file path display: "Skipped files logged to: .aurora/logs/index.log"
+- Improved user guidance when indexing encounters warnings or errors
+
+**Documentation Updates:**
+- Updated `aur agents list` documentation with all subcommands (`--all`, `--category`, `search`, `refresh`)
+- Updated `aur init` documentation with 3-step flow, `--tools` flag, and agent refresh option
+- Added agent discovery explanation and re-run options to init docs
+- Updated Quick Reference table with new agent commands
+
+## [0.6.6] - 2026-01-12
+
+### Fixed
+
+- Synchronized all package versions to 0.6.6
+- Pre-commit lint fixes (MD5→SHA256, docstrings, f-strings)
+
 ## [0.6.5] - 2026-01-12
 
 ### Added

@@ -31,7 +31,7 @@ from aurora_cli.errors import ErrorHandler, handle_errors
 from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
 
-__all__ = ["memory_group"]
+__all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -77,52 +77,42 @@ class _WarningFilter(logging.Filter):
         return True  # Allow other log levels through
 
 
-@memory_group.command(name="index")
-@click.argument("path", type=click.Path(exists=True, path_type=Path), default=".")
-@click.option(
-    "--db-path",
-    type=click.Path(path_type=Path),
-    default=None,
-    help="Database path (overrides config, useful for testing)",
-)
-@click.pass_context
-@handle_errors
-def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
-    r"""Index code files into memory store.
+def run_indexing(
+    path: Path,
+    config: Config | None = None,
+    show_db_path: bool = True,
+    output_console: Console | None = None,
+) -> tuple[Any, int]:
+    """Run memory indexing with progress display.
 
-    PATH is the directory or file to index. Defaults to current directory.
-    Recursively scans for Python files and extracts functions, classes, and docstrings.
+    This is the shared implementation used by both `aur mem index` and `aur init`.
 
-    \b
-    Examples:
-        # Index current directory (default)
-        aur mem index
+    Args:
+        path: Directory or file to index
+        config: Config object with db_path. If None, loads default config.
+        show_db_path: Whether to print the database path being used
+        output_console: Console instance for output. Uses module console if None.
 
-        \b
-        # Index specific directory or file
-        aur mem index /path/to/project
-        aur mem index src/main.py
+    Returns:
+        Tuple of (IndexStats, total_warnings) from the indexing operation
 
-        \b
-        # Force reindex (run index command again on same path)
-        aur mem index .
-        # Note: Will update existing chunks and add new ones
-
-        \b
-        # Use custom database path
-        aur mem index . --db-path /tmp/test.db
+    Raises:
+        Any exceptions from MemoryManager.index_path()
     """
-    # Load configuration
-    config = load_config()
+    from aurora_cli.memory_manager import IndexProgress, MemoryManager
 
-    # Override db_path if provided
-    if db_path:
-        config.db_path = str(db_path)
+    out = output_console or console
+
+    # Load configuration if not provided
+    if config is None:
+        config = load_config()
 
     db_path_str = config.get_db_path()
 
     # Initialize memory manager with config
-    console.print(f"[dim]Using database: {db_path_str}[/]")
+    if show_db_path:
+        out.print(f"[dim]Using database: {db_path_str}[/]")
+
     manager = MemoryManager(config=config)
 
     # Suppress parse warnings during indexing for cleaner progress output
@@ -186,46 +176,125 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
 
             live.update(make_progress_display())
 
-        with Live(make_progress_display(), console=console, refresh_per_second=10) as live:
+        with Live(make_progress_display(), console=out, refresh_per_second=10) as live:
             # Perform indexing
             stats = manager.index_path(path, progress_callback=progress_callback)
     finally:
         # Always remove the filter when done
         parser_logger.removeFilter(warning_filter)
 
-    # Display summary
-    console.print()
-    console.print("[bold green]Indexing Complete[/]")
-    console.print(f"  Files indexed:  {stats.files_indexed}")
-    console.print(f"  Chunks created: {stats.chunks_created}")
-    console.print(f"  Duration:       {stats.duration_seconds:.2f}s")
+    # Calculate total warnings
+    total_warnings = stats.warnings + warning_filter.warning_count
+
+    return stats, total_warnings
+
+
+def display_indexing_summary(
+    stats: Any,
+    total_warnings: int,
+    output_console: Console | None = None,
+    log_path: Path | None = None,
+) -> None:
+    """Display indexing summary with stats and any issues.
+
+    Args:
+        stats: IndexStats from run_indexing
+        total_warnings: Total warning count from run_indexing
+        output_console: Console instance for output. Uses module console if None.
+        log_path: Optional path to the index log file for skipped files info.
+    """
+    out = output_console or console
+
+    out.print()
+    out.print("[bold green]Indexing Complete[/]")
+    out.print(f"  Files indexed:  {stats.files_indexed}")
+    out.print(f"  Chunks created: {stats.chunks_created}")
+    out.print(f"  Duration:       {stats.duration_seconds:.2f}s")
 
     # Display error/warning summary table if there are issues
-    total_warnings = stats.warnings + warning_filter.warning_count
     if stats.errors > 0 or total_warnings > 0:
-        console.print()
-        console.print("[bold]Indexing Issues Summary:[/]")
-        console.print("┌─────────────┬───────┬────────────────────────────────────────┐")
-        console.print("│ Issue Type  │ Count │ What To Do                             │")
-        console.print("├─────────────┼───────┼────────────────────────────────────────┤")
+        out.print()
+        out.print("[bold]Indexing Issues Summary:[/]")
+        out.print("┌─────────────┬───────┬────────────────────────────────────────┐")
+        out.print("│ Issue Type  │ Count │ What To Do                             │")
+        out.print("├─────────────┼───────┼────────────────────────────────────────┤")
 
         if stats.errors > 0:
-            console.print(
+            out.print(
                 f"│ [red]Errors[/]      │ {stats.errors:5} │ Files that failed to parse             │"
             )
-            console.print("│             │       │ → May be corrupted or binary files     │")
-            console.print("│             │       │ → Action: Check with aur mem stats     │")
+            out.print("│             │       │ → May be corrupted or binary files     │")
+            out.print("│             │       │ → Action: Check with aur mem stats     │")
 
         if total_warnings > 0:
             if stats.errors > 0:
-                console.print("├─────────────┼───────┼────────────────────────────────────────┤")
-            console.print(
+                out.print("├─────────────┼───────┼────────────────────────────────────────┤")
+            out.print(
                 f"│ [yellow]Warnings[/]    │ {total_warnings:5} │ Files with syntax/parse issues         │"
             )
-            console.print("│             │       │ → Partial indexing succeeded           │")
-            console.print("│             │       │ → Details: aur mem stats               │")
+            out.print("│             │       │ → Partial indexing succeeded           │")
+            out.print("│             │       │ → Details: aur mem stats               │")
 
-        console.print("└─────────────┴───────┴────────────────────────────────────────┘")
+        out.print("└─────────────┴───────┴────────────────────────────────────────┘")
+
+        # Show helpful follow-up hints
+        out.print()
+        out.print("[dim]For more details: aur mem stats[/]")
+        if log_path and log_path.exists():
+            out.print(f"[dim]Skipped files logged to: {log_path}[/]")
+
+
+@memory_group.command(name="index")
+@click.argument("path", type=click.Path(exists=True, path_type=Path), default=".")
+@click.option(
+    "--db-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Database path (overrides config, useful for testing)",
+)
+@click.pass_context
+@handle_errors
+def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
+    r"""Index code files into memory store.
+
+    PATH is the directory or file to index. Defaults to current directory.
+    Recursively scans for Python files and extracts functions, classes, and docstrings.
+
+    \b
+    Examples:
+        # Index current directory (default)
+        aur mem index
+
+        \b
+        # Index specific directory or file
+        aur mem index /path/to/project
+        aur mem index src/main.py
+
+        \b
+        # Force reindex (run index command again on same path)
+        aur mem index .
+        # Note: Will update existing chunks and add new ones
+
+        \b
+        # Use custom database path
+        aur mem index . --db-path /tmp/test.db
+    """
+    # Load configuration
+    config = load_config()
+
+    # Override db_path if provided
+    if db_path:
+        config.db_path = str(db_path)
+
+    # Use shared indexing function
+    stats, total_warnings = run_indexing(path, config=config)
+
+    # Determine log path for display
+    db_path_resolved = Path(config.get_db_path())
+    log_path = db_path_resolved.parent / "logs" / "index.log"
+
+    # Display summary
+    display_indexing_summary(stats, total_warnings, log_path=log_path)
 
 
 @memory_group.command(name="search")
@@ -262,9 +331,9 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
     "--type",
     "-t",
     "chunk_type",
-    type=click.Choice(["function", "class", "method", "knowledge", "document"]),
+    type=click.Choice(["function", "class", "method", "knowledge", "document", "kb", "code"]),
     default=None,
-    help="Filter results by chunk type (function, class, method, knowledge, document)",
+    help="Filter results by chunk type (function, class, method, kb, code)",
 )
 @click.option(
     "--show-scores",
@@ -501,6 +570,10 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
         success_pct = stats.success_rate * 100
         table.add_row("Success Rate", f"[yellow]{success_pct:.1f}%[/]")
 
+    # Show log location hint (after table, but calculate path now)
+    log_path = db_path_resolved.parent / "logs" / "index.log"
+    show_log_hint = stats.success_rate < 1.0 and log_path.exists()
+
     # Show files breakdown by language (from indexed files, not chunks)
     if stats.files_by_language:
         for lang, count in sorted(
@@ -514,6 +587,11 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
 
     console.print()
     console.print(table)
+
+    # Show log hint if there were skipped files
+    if show_log_hint:
+        console.print(f"[dim]Skipped files logged to: {log_path}[/]")
+
     console.print()
 
     # Display errors and warnings if present
@@ -730,7 +808,16 @@ def _display_rich_results(
     console.print("\n[dim]Average scores:[/]")
     console.print(f"  Activation: {avg_activation:.3f}")
     console.print(f"  Semantic:   {avg_semantic:.3f}")
-    console.print(f"  Hybrid:     {avg_hybrid:.3f}\n")
+    console.print(f"  Hybrid:     {avg_hybrid:.3f}")
+
+    # Show helpful tips for follow-up commands
+    console.print("\n[dim]Refine your search:[/]")
+    console.print("  --show-scores    Detailed score breakdown (BM25, semantic, activation)")
+    console.print("  --show-content   Preview code snippets")
+    console.print("  --limit N        More results (e.g., --limit 20)")
+    console.print("  --type TYPE      Filter: function, class, method, kb, code")
+    console.print("  --min-score 0.5  Higher relevance threshold")
+    console.print()
 
     # Show detailed score breakdown if requested
     if show_scores:
@@ -834,6 +921,8 @@ def _get_type_abbreviation(element_type: str) -> str:
         "reasoning": "reas",
         "knowledge": "know",
         "document": "doc",
+        "kb": "kb",  # Knowledge base (markdown files)
+        "section": "sect",  # Markdown sections
     }
 
     # Case-insensitive lookup with default to "unk" for unknown types

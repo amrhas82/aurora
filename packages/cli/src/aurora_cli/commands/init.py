@@ -18,6 +18,7 @@ from aurora_cli.commands.init_helpers import (
     create_project_md,
     detect_configured_tools,
     detect_git_repository,
+    get_configured_tool_ids,
     prompt_git_init,
     prompt_tool_selection,
 )
@@ -101,13 +102,12 @@ def validate_tool_ids(tool_ids: list[str]) -> None:
 def run_step_2_memory_indexing(project_path: Path) -> bool:
     """Run Step 2: Memory Indexing.
 
-    This step:
-    1. Determines project-specific db_path (.aurora/memory.db)
-    2. Prompts to re-index if memory.db already exists
-    3. Creates backup before re-indexing
-    4. Initializes MemoryManager with project-specific config
-    5. Indexes project files with progress bar
-    6. Displays success statistics
+    This step uses the shared `run_indexing` function from memory.py to:
+    1. Determine project-specific db_path (.aurora/memory.db)
+    2. Prompt to re-index if memory.db already exists
+    3. Create backup before re-indexing
+    4. Index project files with progress display
+    5. Display success statistics
 
     Args:
         project_path: Path to project root directory
@@ -117,14 +117,10 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
 
     Note:
         This function is idempotent - safe to run multiple times.
-        Creates backup before re-indexing to preserve existing data.
+        Uses the same indexing implementation as `aur mem index`.
     """
-    import logging
-
-    from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
-
+    from aurora_cli.commands.memory import display_indexing_summary, run_indexing
     from aurora_cli.config import Config
-    from aurora_cli.memory_manager import MemoryManager
 
     console.print("\n[bold]Step 2/3: Memory Indexing[/]")
     console.print("[dim]Indexing codebase for semantic search...[/]\n")
@@ -153,105 +149,21 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
     try:
         config = Config(db_path=str(db_path))
 
-        # Create MemoryManager with custom config
-        manager = MemoryManager(config=config)
+        # Use shared indexing function from memory.py
+        stats, total_warnings = run_indexing(
+            path=project_path,
+            config=config,
+            show_db_path=True,
+            output_console=console,
+        )
 
-        # Suppress parse warnings during indexing for cleaner output
-        # Warnings are still counted in stats via WarningDetector, just not displayed to console
-        parser_logger = logging.getLogger("aurora_context_code.languages.python")
-        root_logger = logging.getLogger()
+        # Determine log path for display
+        log_path = db_path.parent / "logs" / "index.log"
 
-        # Remove all console/stream handlers temporarily from both parser and root loggers
-        parser_original_handlers = parser_logger.handlers[:]
-        root_original_handlers = root_logger.handlers[:]
-
-        for handler in parser_original_handlers:
-            if isinstance(handler, logging.StreamHandler):
-                parser_logger.removeHandler(handler)
-
-        for handler in root_original_handlers:
-            if isinstance(handler, logging.StreamHandler):
-                root_logger.removeHandler(handler)
-
-        try:
-            # Create progress bar with time remaining estimate
-            from rich.progress import TimeRemainingColumn
-
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-                TextColumn("•"),
-                TextColumn("{task.completed}/{task.total} files"),
-                TimeRemainingColumn(),
-                console=console,
-            ) as progress:
-                task_id = None
-
-                def progress_callback(current: int, total: int) -> None:
-                    nonlocal task_id
-                    if task_id is None:
-                        task_id = progress.add_task("Indexing files", total=total)
-                    progress.update(task_id, completed=current)
-
-                # Perform indexing
-                stats = manager.index_path(project_path, progress_callback=progress_callback)
-        finally:
-            # Restore original handlers for both loggers
-            for handler in parser_original_handlers:
-                if handler not in parser_logger.handlers:
-                    parser_logger.addHandler(handler)
-
-            for handler in root_original_handlers:
-                if handler not in root_logger.handlers:
-                    root_logger.addHandler(handler)
-
-        # Show success summary
-        console.print()
-        console.print("[bold green]Memory Indexing Complete[/]")
+        # Display summary using shared function
+        display_indexing_summary(stats, total_warnings, output_console=console, log_path=log_path)
 
         if stats.files_indexed > 0:
-            console.print(f"  [green]✓[/] Files indexed:  {stats.files_indexed}")
-            console.print(f"  [green]✓[/] Chunks created: {stats.chunks_created}")
-            console.print(f"  [dim]⏱[/] Duration:       {stats.duration_seconds:.2f}s")
-
-            # Display error/warning summary table
-            if stats.errors > 0 or stats.warnings > 0:
-                console.print()
-                console.print("[bold]Indexing Issues Summary:[/]")
-                console.print("┌─────────────┬───────┬────────────────────────────────────────┐")
-                console.print("│ Issue Type  │ Count │ What To Do                             │")
-                console.print("├─────────────┼───────┼────────────────────────────────────────┤")
-
-                if stats.errors > 0:
-                    console.print(
-                        f"│ [yellow]Errors[/]      │ {stats.errors:5} │ Files that failed to parse             │"
-                    )
-                    console.print(
-                        "│             │       │ → May be corrupted or binary files     │"
-                    )
-                    console.print(
-                        "│             │       │ → Action: Check with aur mem stats     │"
-                    )
-
-                if stats.warnings > 0:
-                    if stats.errors > 0:
-                        console.print(
-                            "├─────────────┼───────┼────────────────────────────────────────┤"
-                        )
-                    console.print(
-                        f"│ [yellow]Warnings[/]    │ {stats.warnings:5} │ Files with syntax/parse errors         │"
-                    )
-                    console.print(
-                        "│             │       │ → Partial indexing succeeded           │"
-                    )
-                    console.print(
-                        "│             │       │ → Action: Check logs with --verbose    │"
-                    )
-
-                console.print("└─────────────┴───────┴────────────────────────────────────────┘")
-
             return True
         else:
             console.print("  [yellow]⚠[/] No files found to index")
@@ -382,7 +294,11 @@ def run_step_3_tool_configuration(
         tool_ids: Optional list of tool IDs to configure (bypasses interactive prompt)
 
     Returns:
-        Tuple of (created_tools, updated_tools) - lists of tool names
+        Tuple of (created_tools, updated_tools, agent_count, tool_names):
+          - created_tools: list of created tool names
+          - updated_tools: list of updated tool names
+          - agent_count: number of discovered agents
+          - tool_names: list of configured tool display names (e.g. ['Claude Code', 'Cursor'])
 
     Note:
         This function is idempotent - safe to run multiple times.
@@ -459,6 +375,46 @@ def run_step_3_tool_configuration(
             else:
                 console.print(f"  [cyan]▌[/] {display_name}")
 
+    # Agent discovery for selected tools
+    agent_count = 0
+    agent_sources = 0
+    try:
+        from aurora_cli.commands.agents import get_manifest
+        from aurora_cli.configurators.slash.paths import get_tool_paths
+
+        # Get agent paths for selected tools only
+        selected_agent_paths = []
+        for tool_id in selected_tool_ids:
+            tool_paths = get_tool_paths(tool_id)
+            if tool_paths and tool_paths.agents:
+                selected_agent_paths.append(tool_paths.agents)
+
+        if selected_agent_paths:
+            # Create scanner with only selected tool paths
+            from aurora_cli.agent_discovery import AgentScanner, ManifestManager
+            from aurora_cli.commands.agents import get_manifest_path
+
+            scanner = AgentScanner(selected_agent_paths)
+            manager = ManifestManager(scanner=scanner)
+            manifest = manager.generate()
+
+            # Count unique agents (by ID)
+            unique_agent_ids = set(a.id for a in manifest.agents)
+            agent_count = len(unique_agent_ids)
+            agent_sources = len(manifest.sources)
+
+            # Save manifest
+            manifest_path = get_manifest_path()
+            manager.save(manifest, manifest_path)
+
+            if agent_count > 0:
+                console.print(
+                    f"[green]✓[/] Discovered {agent_count} unique agent(s) "
+                    f"from {agent_sources} source(s)"
+                )
+    except Exception as e:
+        console.print(f"[yellow]⚠[/] Agent discovery: {e}")
+
     # Summary count
     total_tools = len(unique_tools)
     if total_tools > 0:
@@ -468,10 +424,17 @@ def run_step_3_tool_configuration(
 
     console.print()
 
-    # Return combined results for compatibility
+    # Build list of configured tool display names
+    configured_tool_names = []
+    for tool_id in sorted(unique_tools):
+        slash_config = SlashCommandRegistry.get(tool_id)
+        display_name = slash_config.name if slash_config else tool_id.title()
+        configured_tool_names.append(display_name)
+
+    # Return combined results for compatibility (include agent count and tool names)
     created = list(set(slash_created + config_created))
     updated = list(set(slash_updated + config_updated))
-    return (created, updated)
+    return (created, updated, agent_count, configured_tool_names)
 
 
 def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler) -> bool:
@@ -764,8 +727,15 @@ def init_command(config: bool, tools: str | None) -> None:
         # Run Step 3 only
         console.print("[bold]AURORA Tool Configuration[/]")
         console.print()
-        run_step_3_tool_configuration(project_path, tool_ids=parsed_tool_ids)
-        console.print("[bold green]✓[/] Tool configuration complete\n")
+        _, _, agent_count, tool_names = run_step_3_tool_configuration(
+            project_path, tool_ids=parsed_tool_ids
+        )
+        console.print("[bold green]✓[/] Tool configuration complete")
+        if tool_names:
+            console.print(f"[dim]Configured: {', '.join(tool_names)}[/]")
+        if agent_count > 0:
+            console.print(f"[dim]Found {agent_count} agent(s)[/]")
+        console.print()
         return
 
     # Check for existing setup
@@ -791,8 +761,80 @@ def init_command(config: bool, tools: str | None) -> None:
             console.print()
             console.print("[bold]AURORA Tool Configuration[/]")
             console.print()
-            run_step_3_tool_configuration(project_path, tool_ids=parsed_tool_ids)
-            console.print("[bold green]✓[/] Tool configuration complete\n")
+            _, _, agent_count, tool_names = run_step_3_tool_configuration(
+                project_path, tool_ids=parsed_tool_ids
+            )
+            console.print("[bold green]✓[/] Tool configuration complete")
+            if tool_names:
+                console.print(f"[dim]Configured: {', '.join(tool_names)}[/]")
+            if agent_count > 0:
+                console.print(f"[dim]Found {agent_count} agent(s)[/]")
+            console.print()
+            return
+
+        if rerun_choice == "agents":
+            # Refresh agent discovery for configured tools
+            console.print()
+            console.print("[bold]AURORA Agent Discovery[/]")
+            console.print()
+
+            # Get configured tools from project
+            configured_tool_ids = get_configured_tool_ids(project_path)
+
+            if not configured_tool_ids:
+                console.print("[yellow]⚠[/] No tools configured in this project.")
+                console.print(
+                    "[dim]Run 'aur init' with tool selection to configure tools first.[/]"
+                )
+                console.print()
+                return
+
+            # Discover agents for configured tools
+            try:
+                from aurora_cli.agent_discovery import AgentScanner, ManifestManager
+                from aurora_cli.commands.agents import get_manifest_path
+                from aurora_cli.configurators.slash.paths import get_tool_paths
+
+                # Get agent paths for configured tools
+                selected_agent_paths = []
+                for tool_id in configured_tool_ids:
+                    tool_paths = get_tool_paths(tool_id)
+                    if tool_paths and tool_paths.agents:
+                        selected_agent_paths.append(tool_paths.agents)
+
+                if not selected_agent_paths:
+                    console.print("[yellow]⚠[/] No agent directories found for configured tools.")
+                    console.print()
+                    return
+
+                console.print(f"[dim]Scanning {len(selected_agent_paths)} agent source(s)...[/]")
+
+                scanner = AgentScanner(selected_agent_paths)
+                manager = ManifestManager(scanner=scanner)
+                manifest = manager.generate()
+
+                # Count unique agents
+                unique_agent_ids = set(a.id for a in manifest.agents)
+                agent_count = len(unique_agent_ids)
+
+                # Save manifest
+                manifest_path = get_manifest_path()
+                manager.save(manifest, manifest_path)
+
+                console.print()
+                console.print("[bold green]✓[/] Agent discovery complete")
+                console.print(
+                    f"[dim]Found {agent_count} unique agent(s) from {len(manifest.sources)} source(s)[/]"
+                )
+
+                if agent_count > 0:
+                    console.print()
+                    console.print("[dim]Run 'aur agents list' to view discovered agents.[/]")
+
+            except Exception as e:
+                console.print(f"[red]✗[/] Agent discovery failed: {e}")
+
+            console.print()
             return
 
         # Determine which steps to run
@@ -835,8 +877,10 @@ def init_command(config: bool, tools: str | None) -> None:
         else:
             console.print("[dim]⊘ Skipping Step 2: Memory Indexing[/]")
 
+        agent_count = 0
+        tool_names: list[str] = []
         if 3 in steps_to_run:
-            created_tools, updated_tools = run_step_3_tool_configuration(
+            created_tools, updated_tools, agent_count, tool_names = run_step_3_tool_configuration(
                 project_path, tool_ids=parsed_tool_ids
             )
         else:
@@ -860,10 +904,10 @@ def init_command(config: bool, tools: str | None) -> None:
             else:
                 console.print("  [yellow]⚠[/] Memory indexing skipped")
         if 3 in steps_to_run:
-            total_tools = len(created_tools) + len(updated_tools)
+            total_tools = len(tool_names)
             if total_tools > 0:
                 console.print(
-                    f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured"
+                    f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured: {', '.join(tool_names)}"
                 )
 
         console.print()
@@ -886,8 +930,8 @@ def init_command(config: bool, tools: str | None) -> None:
     # Step 2: Memory Indexing
     indexing_succeeded = run_step_2_memory_indexing(project_path)
 
-    # Step 3: Tool Configuration
-    created_tools, updated_tools = run_step_3_tool_configuration(
+    # Step 3: Tool Configuration (includes agent discovery for selected tools)
+    created_tools, updated_tools, agent_count, tool_names = run_step_3_tool_configuration(
         project_path, tool_ids=parsed_tool_ids
     )
 
@@ -907,17 +951,25 @@ def init_command(config: bool, tools: str | None) -> None:
     else:
         console.print("  [yellow]⚠[/] Memory indexing skipped")
 
-    total_tools = len(created_tools) + len(updated_tools)
+    total_tools = len(tool_names)
     if total_tools > 0:
         console.print(
-            f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured"
+            f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured: {', '.join(tool_names)}"
         )
+
+    if agent_count > 0:
+        console.print(f"  [green]✓[/] {agent_count} agent(s) discovered")
+    else:
+        console.print("  [dim]⊘[/] No agents discovered")
 
     console.print()
     console.print("[bold]Next Steps:[/]")
     console.print('  1. [cyan]aur plan create "Your feature"[/] - Create a plan')
     console.print('  2. [cyan]aur mem search "keyword"[/] - Search your codebase')
-    console.print("  3. [cyan]aur agents list[/] - Discover available agents")
+    if agent_count > 0:
+        console.print("  3. [cyan]aur agents list[/] - View discovered agents")
+    else:
+        console.print("  3. [dim]Add agents to ~/.claude/agents/ to enable agent discovery[/]")
     console.print()
     console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")
     console.print()

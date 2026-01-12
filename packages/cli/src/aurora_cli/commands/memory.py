@@ -139,71 +139,56 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
     parser_logger.addFilter(warning_filter)
 
     try:
-        # Create progress display with phase-aware rendering
+        # Create progress display - overall file progress with phase context
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
             TextColumn("•"),
-            TextColumn("{task.fields[detail]}"),
+            TextColumn("{task.fields[files]}"),
             TimeRemainingColumn(),
             console=console,
         ) as progress:
             task_id: TaskID | None = None
-            current_phase: str = ""
+            total_files: int = 0
 
-            # Phase display names and colors
-            phase_info = {
-                "discovering": ("🔍 Discovering", "cyan"),
-                "parsing": ("📄 Parsing", "blue"),
-                "git_blame": ("📜 Git history", "yellow"),
-                "embedding": ("🧠 Embedding", "magenta"),
-                "storing": ("💾 Storing", "green"),
-                "complete": ("✓ Complete", "green"),
+            # Phase display names (no icons)
+            phase_names = {
+                "discovering": "Discovering",
+                "parsing": "Parsing",
+                "git_blame": "Git history",
+                "embedding": "Embedding",
+                "storing": "Storing",
+                "complete": "Complete",
             }
 
             def progress_callback(prog: IndexProgress) -> None:
-                nonlocal task_id, current_phase
+                nonlocal task_id, total_files
 
-                phase_name, _ = phase_info.get(prog.phase, (prog.phase, "white"))
-                detail = prog.detail or ""
+                phase_name = phase_names.get(prog.phase, prog.phase)
 
-                # Format detail string for display
-                if prog.phase == "parsing":
-                    detail = f"{prog.current}/{prog.total} files"
-                elif prog.phase == "git_blame":
-                    detail = f"{prog.current}/{prog.total} files (cached)"
-                elif prog.phase == "embedding":
-                    detail = prog.detail or "generating vectors"
-                elif prog.phase == "storing":
-                    detail = prog.detail or "writing to database"
-                elif prog.phase == "complete":
-                    detail = "done"
+                # Track total files from parsing phase
+                if prog.phase == "parsing" and prog.total > 0:
+                    total_files = prog.total
+
+                # Use file count for overall progress
+                files_str = f"{prog.current}/{total_files} files" if total_files > 0 else ""
 
                 if task_id is None:
                     task_id = progress.add_task(
-                        f"{phase_name}",
-                        total=max(prog.total, 1),
-                        detail=detail,
+                        phase_name,
+                        total=max(total_files, prog.total, 1),
+                        files=files_str,
                     )
                 else:
-                    # Update phase description if it changed
-                    if prog.phase != current_phase:
-                        current_phase = prog.phase
-                        progress.update(
-                            task_id,
-                            description=phase_name,
-                            total=max(prog.total, 1),
-                            completed=prog.current,
-                            detail=detail,
-                        )
-                    else:
-                        progress.update(
-                            task_id,
-                            completed=prog.current,
-                            detail=detail,
-                        )
+                    progress.update(
+                        task_id,
+                        description=phase_name,
+                        completed=prog.current,
+                        total=max(total_files, 1),
+                        files=files_str,
+                    )
 
             # Perform indexing
             stats = manager.index_path(path, progress_callback=progress_callback)
@@ -213,10 +198,10 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
 
     # Display summary
     console.print()
-    console.print("[bold green]✓ Indexing Complete[/]")
-    console.print(f"  [green]✓[/] Files indexed:  {stats.files_indexed}")
-    console.print(f"  [green]✓[/] Chunks created: {stats.chunks_created}")
-    console.print(f"  [dim]⏱[/] Duration:       {stats.duration_seconds:.2f}s")
+    console.print("[bold green]Indexing Complete[/]")
+    console.print(f"  Files indexed:  {stats.files_indexed}")
+    console.print(f"  Chunks created: {stats.chunks_created}")
+    console.print(f"  Duration:       {stats.duration_seconds:.2f}s")
 
     # Display error/warning summary table if there are issues
     total_warnings = stats.warnings + warning_filter.warning_count
@@ -529,7 +514,7 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
         console.print("[bold yellow]Indexing Issues[/]\n")
 
         if stats.failed_files:
-            console.print(f"[yellow]⚠ {len(stats.failed_files)} files failed to index[/]\n")
+            console.print(f"[yellow]{len(stats.failed_files)} files failed to index[/]\n")
             console.print("[bold]Failed Files:[/]")
             for file_path, error in stats.failed_files[:10]:  # Show first 10
                 console.print(f"  • [red]{Path(file_path).name}[/]: {error}")
@@ -538,7 +523,7 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
             console.print()
 
         if stats.warnings:
-            console.print(f"[yellow]⚠ {len(stats.warnings)} warnings[/]\n")
+            console.print(f"[yellow]{len(stats.warnings)} warnings[/]\n")
             console.print("[bold]Warnings:[/]")
             for warning in stats.warnings[:10]:  # Show first 10
                 console.print(f"  • {warning}")
@@ -631,7 +616,7 @@ def _display_rich_results(
     avg_semantic = sum(r.semantic_score for r in results) / len(results)
     if avg_semantic < 0.4:
         console.print(
-            "[yellow]⚠️  Warning: All results have weak semantic relevance[/]\n"
+            "[yellow]Warning: All results have weak semantic relevance[/]\n"
             "Results shown are based primarily on recent access history, not semantic match.\n"
             "[dim]Consider:[/]\n"
             "  • [cyan]Broadening your search query[/]\n"

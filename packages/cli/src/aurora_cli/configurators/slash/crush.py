@@ -26,6 +26,12 @@ description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
 ---""",
+    "proposal": """---
+name: Aurora: Proposal
+description: Generate structured proposals with agent delegation
+category: Aurora
+tags: [aurora, proposalning]
+---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context for continuity
@@ -51,6 +57,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".crush/commands/aurora/search.md",
     "get": ".crush/commands/aurora/get.md",
     "plan": ".crush/commands/aurora/plan.md",
+    "proposal": ".crush/commands/aurora/proposal.md",
     "checkpoint": ".crush/commands/aurora/checkpoint.md",
     "implement": ".crush/commands/aurora/implement.md",
     "archive": ".crush/commands/aurora/archive.md",

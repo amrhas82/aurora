@@ -26,6 +26,12 @@ description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
 ---""",
+    "proposal": """---
+name: Aurora: Proposal
+description: Generate structured proposals with agent delegation
+category: Aurora
+tags: [aurora, proposalning]
+---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context for continuity
@@ -51,6 +57,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".qoder/commands/aurora/search.md",
     "get": ".qoder/commands/aurora/get.md",
     "plan": ".qoder/commands/aurora/plan.md",
+    "proposal": ".qoder/commands/aurora/proposal.md",
     "checkpoint": ".qoder/commands/aurora/checkpoint.md",
     "implement": ".qoder/commands/aurora/implement.md",
     "archive": ".qoder/commands/aurora/archive.md",

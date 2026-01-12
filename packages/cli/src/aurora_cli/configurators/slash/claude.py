@@ -11,6 +11,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".claude/commands/aur/search.md",
     "get": ".claude/commands/aur/get.md",
     "plan": ".claude/commands/aur/plan.md",
+    "proposal": ".claude/commands/aur/proposal.md",
     "checkpoint": ".claude/commands/aur/checkpoint.md",
     "implement": ".claude/commands/aur/implement.md",
     "archive": ".claude/commands/aur/archive.md",
@@ -35,6 +36,12 @@ name: Aurora: Plan
 description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
+---""",
+    "proposal": """---
+name: Aurora: Proposal
+description: Generate spec-delta proposals with requirements and scenarios
+category: Aurora
+tags: [aurora, planning, specs]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint

@@ -12,6 +12,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".cursor/commands/aurora-search.md",
     "get": ".cursor/commands/aurora-get.md",
     "plan": ".cursor/commands/aurora-plan.md",
+    "proposal": ".cursor/commands/aurora-proposal.md",
     "checkpoint": ".cursor/commands/aurora-checkpoint.md",
     "implement": ".cursor/commands/aurora-implement.md",
     "archive": ".cursor/commands/aurora-archive.md",
@@ -39,6 +40,13 @@ id: /aurora-plan
 description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
+---""",
+    "proposal": """---
+name: Aurora: Proposal
+id: /aurora-proposal
+description: Generate structured proposals with agent delegation
+category: Aurora
+tags: [aurora, proposalning]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint

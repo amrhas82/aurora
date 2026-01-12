@@ -33,6 +33,14 @@ The user has requested the following plan. Use the aurora instructions to create
   $ARGUMENTS
 </UserRequest>
 """,
+    "proposal": """---
+description: Generate spec-delta proposals with requirements and scenarios
+---
+The user has requested a proposal. Use the aurora instructions to create their proposal.
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>
+""",
     "checkpoint": """---
 description: Save session context for continuity
 ---
@@ -64,6 +72,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".opencode/command/aurora-search.md",
     "get": ".opencode/command/aurora-get.md",
     "plan": ".opencode/command/aurora-plan.md",
+    "proposal": ".opencode/command/aurora-proposal.md",
     "checkpoint": ".opencode/command/aurora-checkpoint.md",
     "implement": ".opencode/command/aurora-implement.md",
     "archive": ".opencode/command/aurora-archive.md",

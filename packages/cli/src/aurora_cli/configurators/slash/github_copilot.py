@@ -24,6 +24,11 @@ description: Generate structured plans with agent delegation
 ---
 
 $ARGUMENTS""",
+    "proposal": """---
+description: Generate spec-delta proposals with requirements and scenarios
+---
+
+$ARGUMENTS""",
     "checkpoint": """---
 description: Save session context for continuity
 ---
@@ -46,6 +51,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".github/prompts/aurora-search.prompt.md",
     "get": ".github/prompts/aurora-get.prompt.md",
     "plan": ".github/prompts/aurora-plan.prompt.md",
+    "proposal": ".github/prompts/aurora-proposal.prompt.md",
     "checkpoint": ".github/prompts/aurora-checkpoint.prompt.md",
     "implement": ".github/prompts/aurora-implement.prompt.md",
     "archive": ".github/prompts/aurora-archive.prompt.md",

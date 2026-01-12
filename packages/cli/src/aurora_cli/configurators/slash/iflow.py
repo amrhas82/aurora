@@ -29,6 +29,13 @@ description: Generate structured plans with agent delegation
 category: Aurora
 tags: [aurora, planning]
 ---""",
+    "proposal": """---
+name: Aurora: Proposal
+id: /aurora-proposal
+description: Generate structured proposals with agent delegation
+category: Aurora
+tags: [aurora, proposalning]
+---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 id: /aurora-checkpoint
@@ -57,6 +64,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".iflow/commands/aurora-search.md",
     "get": ".iflow/commands/aurora-get.md",
     "plan": ".iflow/commands/aurora-plan.md",
+    "proposal": ".iflow/commands/aurora-proposal.md",
     "checkpoint": ".iflow/commands/aurora-checkpoint.md",
     "implement": ".iflow/commands/aurora-implement.md",
     "archive": ".iflow/commands/aurora-archive.md",

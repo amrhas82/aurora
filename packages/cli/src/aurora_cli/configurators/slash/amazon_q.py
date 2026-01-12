@@ -36,6 +36,15 @@ The user has requested the following plan. Use the aurora instructions to create
 <UserRequest>
   $ARGUMENTS
 </UserRequest>""",
+    "proposal": """---
+description: Generate spec-delta proposals with requirements and scenarios
+---
+
+The user has requested a proposal. Use the aurora instructions to create their proposal.
+
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>""",
     "checkpoint": """---
 description: Save session context for continuity
 ---
@@ -70,6 +79,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".amazonq/prompts/aurora-search.md",
     "get": ".amazonq/prompts/aurora-get.md",
     "plan": ".amazonq/prompts/aurora-plan.md",
+    "proposal": ".amazonq/prompts/aurora-proposal.md",
     "checkpoint": ".amazonq/prompts/aurora-checkpoint.md",
     "implement": ".amazonq/prompts/aurora-implement.md",
     "archive": ".amazonq/prompts/aurora-archive.md",

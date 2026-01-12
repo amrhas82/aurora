@@ -29,6 +29,13 @@ argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
 ---""",
+    "proposal": """---
+name: Aurora: Proposal
+description: Generate structured proposals with agent delegation
+argument-hint: request or feature description
+category: Aurora
+tags: [aurora, proposalning]
+---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context for continuity
@@ -57,6 +64,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".augment/commands/aurora-search.md",
     "get": ".augment/commands/aurora-get.md",
     "plan": ".augment/commands/aurora-plan.md",
+    "proposal": ".augment/commands/aurora-proposal.md",
     "checkpoint": ".augment/commands/aurora-checkpoint.md",
     "implement": ".augment/commands/aurora-implement.md",
     "archive": ".augment/commands/aurora-archive.md",

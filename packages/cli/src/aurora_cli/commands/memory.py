@@ -180,6 +180,10 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
             if prog.phase in ("parsing", "git_blame"):
                 files_processed = prog.current
 
+            # When complete, ensure bar shows 100%
+            if prog.phase == "complete" and total_files > 0:
+                files_processed = total_files
+
             live.update(make_progress_display())
 
         with Live(make_progress_display(), console=console, refresh_per_second=10) as live:
@@ -219,7 +223,7 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
                 f"│ [yellow]Warnings[/]    │ {total_warnings:5} │ Files with syntax/parse issues         │"
             )
             console.print("│             │       │ → Partial indexing succeeded           │")
-            console.print("│             │       │ → Action: Check logs with --verbose    │")
+            console.print("│             │       │ → Details: aur mem stats               │")
 
         console.print("└─────────────┴───────┴────────────────────────────────────────┘")
 

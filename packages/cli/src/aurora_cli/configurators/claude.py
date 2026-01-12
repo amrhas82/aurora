@@ -42,8 +42,10 @@ class ClaudeConfigurator(BaseConfigurator):
     ) -> None:
         """Configure Claude Code with Aurora integration.
 
-        Creates CLAUDE.md and also creates .claude/commands/aur/*.md
-        slash commands for Aurora CLI integration.
+        Creates CLAUDE.md stub that references .aurora/AGENTS.md.
+
+        Note: Slash commands are handled separately by SlashCommandRegistry's
+        ClaudeSlashCommandConfigurator to avoid duplication.
 
         Args:
             project_path: Root path of the project
@@ -51,9 +53,3 @@ class ClaudeConfigurator(BaseConfigurator):
         """
         # Configure CLAUDE.md using base class method
         await super().configure(project_path, aurora_dir)
-
-        # Also configure slash commands
-        from .claude_commands import ClaudeCommandsConfigurator
-
-        commands_configurator = ClaudeCommandsConfigurator()
-        await commands_configurator.configure(project_path, aurora_dir)

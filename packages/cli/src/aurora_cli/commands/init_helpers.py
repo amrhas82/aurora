@@ -624,11 +624,16 @@ async def configure_tools(
 
         await configurator.configure(project_path, AURORA_DIR_NAME)
 
+        # Use SlashCommandRegistry name if available, for consistent display
+        # This prevents duplicate entries like "Claude" and "Claude Code"
+        slash_configurator = SlashCommandRegistry.get(tool_id)
+        display_name = slash_configurator.name if slash_configurator else configurator.name
+
         # Track as updated only if it existed AND had markers
         if has_markers:
-            updated.append(configurator.name)
+            updated.append(display_name)
         else:
-            created.append(configurator.name)
+            created.append(display_name)
 
     return created, updated
 
@@ -745,7 +750,9 @@ def show_status_summary(project_path: Path) -> None:
             console.print("[yellow]●[/] Step 2: Memory indexing [dim](not complete)[/]")
 
     # Step 3: Tool Configuration - always check, even without .aurora
-    tool_count = count_configured_tools(project_path)
+    # Use slash command detection (new system) instead of old TOOL_OPTIONS
+    slash_configured = detect_configured_slash_tools(project_path)
+    tool_count = sum(1 for is_configured in slash_configured.values() if is_configured)
     if tool_count > 0:
         console.print(f"[green]✓[/] Step 3: Tools configured [dim]({tool_count} tools)[/]")
     else:
@@ -911,15 +918,20 @@ async def configure_mcp_servers(
         # Configure MCP server
         result = configurator.configure(project_path)
 
+        # Use SlashCommandRegistry name for consistent display
+        # This prevents "Claude Code" vs "Claude" mismatch
+        slash_configurator = SlashCommandRegistry.get(tool_id)
+        display_name = slash_configurator.name if slash_configurator else configurator.name
+
         if result.success:
             if was_configured:
-                updated.append(configurator.name)
+                updated.append(display_name)
             else:
-                created.append(configurator.name)
+                created.append(display_name)
 
             # Log any warnings from configuration
             for warning in result.warnings:
-                console.print(f"  [yellow]⚠[/] {configurator.name}: {warning}")
+                console.print(f"  [yellow]⚠[/] {display_name}: {warning}")
 
             # Validate the configuration after creation/update
             config_path = configurator.get_config_path(project_path)
@@ -927,9 +939,9 @@ async def configure_mcp_servers(
 
             # Add tool-prefixed validation warnings
             for warning in warnings:
-                validation_warnings.append(f"{configurator.name}: {warning}")
+                validation_warnings.append(f"{display_name}: {warning}")
         else:
-            console.print(f"  [red]✗[/] {configurator.name}: {result.message}")
+            console.print(f"  [red]✗[/] {display_name}: {result.message}")
 
     return created, updated, skipped, validation_warnings
 

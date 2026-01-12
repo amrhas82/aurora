@@ -44,14 +44,27 @@ def search_memory_for_goal(
         src/auth/oauth.py: 0.85
         src/auth/jwt.py: 0.72
     """
-    # Create retriever
-    retriever = MemoryRetriever(config=config)
+    # Load config if not provided
+    if config is None:
+        config = Config()
 
-    # Check if memory is indexed
+    # Get database path and check if it exists
+    from pathlib import Path
+
+    db_path = Path(config.get_db_path())
+    if not db_path.exists():
+        return []
+
+    # Create store and retriever
+    try:
+        store = SQLiteStore(str(db_path))
+        retriever = MemoryRetriever(store=store, config=config)
+    except Exception as e:
+        logger.warning(f"Failed to open memory store: {e}")
+        return []
+
+    # Check if memory is indexed (silently return empty - caller handles messaging)
     if not retriever.has_indexed_memory():
-        logger.warning(
-            "Memory not indexed. Run 'aur mem index .' to enable context-aware planning."
-        )
         return []
 
     # Retrieve relevant code chunks
@@ -67,13 +80,15 @@ def search_memory_for_goal(
     for chunk in chunks:
         # Handle both CodeChunk objects and dicts
         if isinstance(chunk, dict):
-            file_path = chunk.get("file_path", "")
+            # file_path may be in metadata for dict results
+            metadata = chunk.get("metadata", {})
+            file_path = chunk.get("file_path") or metadata.get("file_path", "")
             # Score might be in different fields
-            score = chunk.get("score", chunk.get("final_score", chunk.get("semantic_score", 0.0)))
+            score = chunk.get("hybrid_score", chunk.get("score", chunk.get("semantic_score", 0.0)))
         else:
             # CodeChunk object
             file_path = getattr(chunk, "file_path", "")
-            score = getattr(chunk, "score", getattr(chunk, "final_score", 0.0))
+            score = getattr(chunk, "score", getattr(chunk, "hybrid_score", 0.0))
 
         if not file_path:
             continue
@@ -102,6 +117,9 @@ class FilePathResolver:
     is not indexed.
     """
 
+    # Class-level flag to warn only once per session
+    _warned_not_indexed = False
+
     def __init__(
         self, store: Optional[SQLiteStore] = None, config: Optional[Config] = None
     ) -> None:
@@ -125,12 +143,8 @@ class FilePathResolver:
         Returns:
             List of FileResolution objects with paths, line ranges, and confidence
         """
-        # Check if memory is indexed
+        # Check if memory is indexed (silently degrade - caller shows user message)
         if not self.has_indexed_memory():
-            logger.warning(
-                "Memory not indexed. Run 'aur mem index .' for code-aware tasks. "
-                "Generating generic paths with low confidence."
-            )
             return self._generate_generic_paths(subgoal)
 
         # Retrieve relevant code chunks from memory

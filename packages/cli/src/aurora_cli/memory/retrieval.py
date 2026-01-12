@@ -155,8 +155,7 @@ class MemoryRetriever:
             results = retriever.retrieve(
                 query,
                 top_k=limit,
-                semantic_threshold=threshold,
-                mode=mode,
+                min_semantic_score=threshold,
             )
 
             elapsed = time.time() - start_time

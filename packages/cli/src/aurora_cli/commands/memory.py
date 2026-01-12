@@ -20,15 +20,8 @@ from typing import Any
 
 import click
 from rich.console import Console
+from rich.live import Live
 from rich.panel import Panel
-from rich.progress import (
-    BarColumn,
-    Progress,
-    SpinnerColumn,
-    TaskID,
-    TextColumn,
-    TimeRemainingColumn,
-)
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
@@ -139,57 +132,57 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
     parser_logger.addFilter(warning_filter)
 
     try:
-        # Create progress display - overall file progress with phase context
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            TextColumn("•"),
-            TextColumn("{task.fields[files]}"),
-            TimeRemainingColumn(),
-            console=console,
-        ) as progress:
-            task_id: TaskID | None = None
-            total_files: int = 0
+        # Use Live display for more control over layout
+        total_files: int = 0
+        files_processed: int = 0
+        current_phase: str = "discovering"
 
-            # Phase display names (no icons)
-            phase_names = {
-                "discovering": "Discovering",
-                "parsing": "Parsing",
-                "git_blame": "Git history",
-                "embedding": "Embedding",
-                "storing": "Storing",
-                "complete": "Complete",
-            }
+        # Phase descriptions
+        phase_details = {
+            "discovering": "Scanning directory...",
+            "parsing": "Parsing source files...",
+            "git_blame": "Extracting git history...",
+            "embedding": "Generating embeddings...",
+            "storing": "Writing to database...",
+            "complete": "Done",
+        }
 
-            def progress_callback(prog: IndexProgress) -> None:
-                nonlocal task_id, total_files
+        def make_progress_display() -> Table:
+            """Create the progress display table."""
+            # Calculate percentage
+            pct = (files_processed / total_files * 100) if total_files > 0 else 0
+            filled = int(pct / 100 * 40)
+            bar = "[green]" + "━" * filled + "[/]" + "[dim]" + "━" * (40 - filled) + "[/]"
 
-                phase_name = phase_names.get(prog.phase, prog.phase)
+            table = Table.grid(padding=0)
+            table.add_column()
 
-                # Track total files from parsing phase
-                if prog.phase == "parsing" and prog.total > 0:
-                    total_files = prog.total
+            # Main progress line
+            files_str = f"{files_processed}/{total_files} files" if total_files > 0 else ""
+            table.add_row(f"Indexing files {bar} {pct:3.0f}% {files_str}")
 
-                # Use file count for overall progress
-                files_str = f"{prog.current}/{total_files} files" if total_files > 0 else ""
+            # Phase detail line
+            phase_detail = phase_details.get(current_phase, "")
+            table.add_row(f"  [dim]{phase_detail}[/]")
 
-                if task_id is None:
-                    task_id = progress.add_task(
-                        phase_name,
-                        total=max(total_files, prog.total, 1),
-                        files=files_str,
-                    )
-                else:
-                    progress.update(
-                        task_id,
-                        description=phase_name,
-                        completed=prog.current,
-                        total=max(total_files, 1),
-                        files=files_str,
-                    )
+            return table
 
+        def progress_callback(prog: IndexProgress) -> None:
+            nonlocal total_files, files_processed, current_phase
+
+            current_phase = prog.phase
+
+            # Track total files from parsing phase
+            if prog.phase == "parsing" and prog.total > 0:
+                total_files = prog.total
+
+            # Track files processed (only advances during parsing/git_blame)
+            if prog.phase in ("parsing", "git_blame"):
+                files_processed = prog.current
+
+            live.update(make_progress_display())
+
+        with Live(make_progress_display(), console=console, refresh_per_second=10) as live:
             # Perform indexing
             stats = manager.index_path(path, progress_callback=progress_callback)
     finally:

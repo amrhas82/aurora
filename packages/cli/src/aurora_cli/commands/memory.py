@@ -35,7 +35,7 @@ from rich.text import Text
 
 from aurora_cli.config import Config, load_config
 from aurora_cli.errors import ErrorHandler, handle_errors
-from aurora_cli.memory_manager import MemoryManager, SearchResult
+from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
 
 __all__ = ["memory_group"]
@@ -139,27 +139,71 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
     parser_logger.addFilter(warning_filter)
 
     try:
-        # Create progress display with file count and time remaining
+        # Create progress display with phase-aware rendering
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
             TextColumn("•"),
-            TextColumn("{task.completed}/{task.total} files"),
+            TextColumn("{task.fields[detail]}"),
             TimeRemainingColumn(),
             console=console,
         ) as progress:
             task_id: TaskID | None = None
+            current_phase: str = ""
 
-            def progress_callback(current: int, total: int) -> None:
-                nonlocal task_id
+            # Phase display names and colors
+            phase_info = {
+                "discovering": ("🔍 Discovering", "cyan"),
+                "parsing": ("📄 Parsing", "blue"),
+                "git_blame": ("📜 Git history", "yellow"),
+                "embedding": ("🧠 Embedding", "magenta"),
+                "storing": ("💾 Storing", "green"),
+                "complete": ("✓ Complete", "green"),
+            }
+
+            def progress_callback(prog: IndexProgress) -> None:
+                nonlocal task_id, current_phase
+
+                phase_name, _ = phase_info.get(prog.phase, (prog.phase, "white"))
+                detail = prog.detail or ""
+
+                # Format detail string for display
+                if prog.phase == "parsing":
+                    detail = f"{prog.current}/{prog.total} files"
+                elif prog.phase == "git_blame":
+                    detail = f"{prog.current}/{prog.total} files (cached)"
+                elif prog.phase == "embedding":
+                    detail = prog.detail or "generating vectors"
+                elif prog.phase == "storing":
+                    detail = prog.detail or "writing to database"
+                elif prog.phase == "complete":
+                    detail = "done"
+
                 if task_id is None:
                     task_id = progress.add_task(
-                        f"Indexing {path}",
-                        total=total,
+                        f"{phase_name}",
+                        total=max(prog.total, 1),
+                        detail=detail,
                     )
-                progress.update(task_id, completed=current)
+                else:
+                    # Update phase description if it changed
+                    if prog.phase != current_phase:
+                        current_phase = prog.phase
+                        progress.update(
+                            task_id,
+                            description=phase_name,
+                            total=max(prog.total, 1),
+                            completed=prog.current,
+                            detail=detail,
+                        )
+                    else:
+                        progress.update(
+                            task_id,
+                            completed=prog.current,
+                            detail=detail,
+                        )
 
             # Perform indexing
             stats = manager.index_path(path, progress_callback=progress_callback)

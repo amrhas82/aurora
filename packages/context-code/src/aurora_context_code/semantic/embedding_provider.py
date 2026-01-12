@@ -235,14 +235,21 @@ class EmbeddingProvider:
 
         return embedding
 
-    def embed_batch(self, texts: list[str]) -> npt.NDArray[np.float32]:
-        """Generate embeddings for multiple texts efficiently.
+    def embed_batch(self, texts: list[str], batch_size: int = 32) -> npt.NDArray[np.float32]:
+        """Generate embeddings for multiple texts efficiently using native batching.
+
+        Uses sentence-transformers native batch encoding which is significantly
+        faster than encoding one at a time, especially on GPU.
 
         Args:
             texts: List of text chunks to embed
+            batch_size: Number of texts to encode at once (default 32)
 
         Returns:
             Array of embeddings, shape (len(texts), embedding_dim)
+
+        Raises:
+            ValueError: If any text is empty or too long
 
         Example:
             >>> provider = EmbeddingProvider()
@@ -251,5 +258,38 @@ class EmbeddingProvider:
             >>> embeddings.shape
             (2, 384)
         """
-        # TODO: Optional optimization - implement batch processing
-        return np.array([self.embed_chunk(text) for text in texts])
+        if not texts:
+            return np.array([], dtype=np.float32).reshape(0, self.embedding_dim)
+
+        # Validate and preprocess all texts
+        max_chars = 512 * 4  # ~2048 characters
+        processed_texts = []
+
+        for i, text in enumerate(texts):
+            if not isinstance(text, str):
+                raise TypeError(f"Expected str at index {i}, got {type(text).__name__}")
+
+            text = text.strip()
+            if not text:
+                raise ValueError(f"Cannot embed empty text at index {i}")
+
+            # Truncate if too long (instead of raising error in batch mode)
+            if len(text) > max_chars:
+                text = text[:max_chars]
+
+            processed_texts.append(text)
+
+        # Use native batch encoding - this is the key optimization
+        # sentence-transformers handles batching internally and efficiently
+        embeddings_result = self._model.encode(
+            processed_texts,
+            batch_size=batch_size,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+
+        # Cast to numpy array and ensure correct dtype
+        embeddings: npt.NDArray[np.float32] = np.asarray(embeddings_result, dtype=np.float32)
+
+        return embeddings

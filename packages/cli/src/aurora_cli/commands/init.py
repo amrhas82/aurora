@@ -1,8 +1,6 @@
 """Init command for AURORA CLI setup."""
 
 import asyncio
-import json
-import os
 import shutil
 import sqlite3
 import subprocess
@@ -12,7 +10,6 @@ import click
 from rich.console import Console
 
 from aurora_cli.commands.init_helpers import (
-    configure_mcp_servers,
     configure_slash_commands,
     configure_tools,
     create_agents_md,
@@ -21,11 +18,9 @@ from aurora_cli.commands.init_helpers import (
     create_project_md,
     detect_configured_tools,
     detect_git_repository,
-    get_mcp_capable_from_selection,
     prompt_git_init,
     prompt_tool_selection,
 )
-from aurora_cli.config import CONFIG_SCHEMA
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.errors import ErrorHandler, handle_errors
 
@@ -423,80 +418,59 @@ def run_step_3_tool_configuration(
 
     # Configure selected tools using slash command configurators
     console.print("[dim]Configuring slash commands...[/]")
-    created, updated = asyncio.run(configure_slash_commands(project_path, selected_tool_ids))
+    slash_created, slash_updated = asyncio.run(
+        configure_slash_commands(project_path, selected_tool_ids)
+    )
 
-    # Merge config file results with slash command results
-    created = list(set(created + config_created))
-    updated = list(set(updated + config_updated))
+    # MCP configuration is currently dormant - skip MCP setup
+    # TODO: Re-enable when MCP integration is ready
 
-    # Configure MCP servers for tools that support MCP
-    mcp_capable = get_mcp_capable_from_selection(selected_tool_ids)
-    mcp_created: list[str] = []
-    mcp_updated: list[str] = []
-    validation_warnings: list[str] = []
-
-    if mcp_capable:
-        console.print("[dim]Configuring MCP servers...[/]")
-        mcp_created, mcp_updated, _skipped, validation_warnings = asyncio.run(
-            configure_mcp_servers(project_path, mcp_capable)
-        )
-
-    # Show success message
+    # Show success message with clear breakdown of what was configured
     console.print()
 
-    # Display slash command results
-    if created:
-        console.print("[green]✓[/] Created slash commands:")
-        for tool_name in created:
-            # Check if this tool also got MCP config
-            mcp_note = ""
-            if tool_name in mcp_created:
-                mcp_note = " [dim](+ MCP server)[/]"
-            elif tool_name in mcp_updated:
-                mcp_note = " [dim](+ MCP updated)[/]"
-            console.print(f"  [cyan]▌[/] {tool_name}{mcp_note}")
+    # Display results per tool (group by tool for clarity)
+    unique_tools = set(selected_tool_ids)
+    if unique_tools:
+        console.print("[green]✓[/] Configured tools:")
+        for tool_id in sorted(unique_tools):
+            # Get display name from SlashCommandRegistry
+            slash_config = SlashCommandRegistry.get(tool_id)
+            display_name = slash_config.name if slash_config else tool_id.title()
 
-    if updated:
-        console.print("[green]✓[/] Updated slash commands:")
-        for tool_name in updated:
-            mcp_note = ""
-            if tool_name in mcp_created:
-                mcp_note = " [dim](+ MCP server)[/]"
-            elif tool_name in mcp_updated:
-                mcp_note = " [dim](+ MCP updated)[/]"
-            console.print(f"  [dim cyan]▌ {tool_name}{mcp_note}[/]")
+            # Gather what was configured for this tool
+            parts = []
 
-    # Display MCP-only results (tools that got MCP but weren't in slash command results)
-    mcp_only_created = [t for t in mcp_created if t not in created and t not in updated]
-    mcp_only_updated = [t for t in mcp_updated if t not in created and t not in updated]
+            # Check slash commands
+            if display_name in slash_created:
+                parts.append("slash commands")
+            elif display_name in slash_updated:
+                parts.append("slash commands [dim](updated)[/]")
 
-    if mcp_only_created or mcp_only_updated:
-        console.print("[green]✓[/] Configured MCP servers:")
-        for tool_name in mcp_only_created:
-            console.print(f"  [cyan]▌[/] {tool_name} [dim](MCP server created)[/]")
-        for tool_name in mcp_only_updated:
-            console.print(f"  [dim cyan]▌ {tool_name} (MCP server updated)[/]")
+            # Check instruction files (CLAUDE.md, etc.)
+            if display_name in config_created:
+                parts.append("instruction file")
+            elif display_name in config_updated:
+                parts.append("instruction file [dim](updated)[/]")
 
-    total = len(created) + len(updated)
-    mcp_total = len(mcp_created) + len(mcp_updated)
-    if total > 0:
-        mcp_note = f" ({mcp_total} with MCP)" if mcp_total > 0 else ""
+            # Format output
+            if parts:
+                details = ", ".join(parts)
+                console.print(f"  [cyan]▌[/] {display_name}: {details}")
+            else:
+                console.print(f"  [cyan]▌[/] {display_name}")
+
+    # Summary count
+    total_tools = len(unique_tools)
+    if total_tools > 0:
         console.print(
-            f"\n[bold green]✓[/] Configured {total} tool{'s' if total != 1 else ''}{mcp_note}"
-        )
-
-    # Display MCP validation warnings if any
-    if validation_warnings:
-        console.print()
-        console.print("[yellow]⚠ MCP configuration warnings:[/]")
-        for warning in validation_warnings:
-            console.print(f"  [yellow]•[/] {warning}")
-        console.print()
-        console.print(
-            "[dim]Run 'aur doctor' for detailed MCP health checks and auto-fix options.[/]"
+            f"\n[bold green]✓[/] Configured {total_tools} tool{'s' if total_tools != 1 else ''}"
         )
 
     console.print()
+
+    # Return combined results for compatibility
+    created = list(set(slash_created + config_created))
+    updated = list(set(slash_updated + config_updated))
     return (created, updated)
 
 
@@ -732,7 +706,7 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
 )
 @handle_errors
 def init_command(config: bool, tools: str | None) -> None:
-    """Initialize AURORA in current project (unified 3-step flow).
+    r"""Initialize AURORA in current project (unified 3-step flow).
 
     This command sets up Aurora for your project with:
       1. Planning Setup - Git initialization and directory structure

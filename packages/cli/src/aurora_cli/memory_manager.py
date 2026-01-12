@@ -20,7 +20,6 @@ from aurora_cli.config import Config
 from aurora_cli.errors import ErrorHandler, MemoryStoreError
 from aurora_cli.ignore_patterns import load_ignore_patterns, should_ignore
 from aurora_context_code.git import GitSignalExtractor
-from aurora_context_code.languages.python import PythonParser
 from aurora_context_code.registry import ParserRegistry, get_global_registry
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.chunks import Chunk
@@ -55,6 +54,25 @@ SKIP_DIRS = {
     ".vscode",
     ".DS_Store",
 }
+
+
+@dataclass
+class IndexProgress:
+    """Progress information for indexing operation.
+
+    Attributes:
+        phase: Current phase name ("discovering", "parsing", "git_blame", "embedding", "storing")
+        current: Current item number within phase
+        total: Total items in phase
+        file_path: Current file being processed (if applicable)
+        detail: Additional detail string (e.g., function name)
+    """
+
+    phase: str
+    current: int
+    total: int
+    file_path: str | None = None
+    detail: str | None = None
 
 
 @dataclass
@@ -180,16 +198,27 @@ class MemoryManager:
     def index_path(
         self,
         path: str | Path,
-        progress_callback: Callable[[int, int], None] | None = None,
+        progress_callback: (
+            Callable[[int, int], None] | Callable[[IndexProgress], None] | None
+        ) = None,
+        batch_size: int = 32,
     ) -> IndexStats:
         """Index all code files in the given path.
 
         Recursively discovers code files, parses them, generates embeddings,
         and stores chunks in the memory store. Reports progress via callback.
 
+        Uses optimized pipeline:
+        1. File-level git blame caching (one git call per file, not per function)
+        2. Batch embedding generation (32 chunks at a time by default)
+        3. Batched database writes per file
+
         Args:
             path: Directory or file path to index
-            progress_callback: Optional callback(files_processed, total_files)
+            progress_callback: Optional callback. Can be either:
+                - Simple: callback(files_processed, total_files) - legacy
+                - Rich: callback(IndexProgress) - shows phases
+            batch_size: Number of chunks to embed at once (default 32)
 
         Returns:
             IndexStats with indexing results
@@ -208,8 +237,22 @@ class MemoryManager:
         failed_files: list[tuple[str, str]] = []  # (file_path, error_message)
         warning_messages: list[str] = []
 
+        # Detect callback type (rich vs simple)
+        def report_progress(progress: IndexProgress) -> None:
+            """Report progress, adapting to callback type."""
+            if progress_callback is None:
+                return
+            try:
+                # Try rich callback first (IndexProgress)
+                progress_callback(progress)  # type: ignore
+            except TypeError:
+                # Fall back to simple callback (current, total)
+                progress_callback(progress.current, progress.total)  # type: ignore
+
         try:
-            # Discover all code files
+            # Phase 1: Discover files
+            report_progress(IndexProgress("discovering", 0, 0, detail="Scanning directory..."))
+
             if path_obj.is_file():
                 files = [path_obj]
             else:
@@ -219,6 +262,7 @@ class MemoryManager:
             logger.info(f"Discovered {total_files} code files in {path}")
 
             # Initialize Git signal extractor for this directory
+            # The extractor now uses file-level blame caching for efficiency
             try:
                 git_extractor = GitSignalExtractor()
                 logger.debug(f"Initialized GitSignalExtractor for {path}")
@@ -228,12 +272,86 @@ class MemoryManager:
                 )
                 git_extractor = None
 
-            # Process each file
+            # Batch accumulator for embedding generation
+            pending_chunks: list[tuple[Any, str, float, int, str]] = (
+                []
+            )  # (chunk, content, bla, commit_count, file_path)
+            total_chunks_processed = 0
+
+            def flush_batch() -> None:
+                """Process accumulated chunks with batch embedding."""
+                nonlocal pending_chunks, total_chunks_processed
+                if not pending_chunks:
+                    return
+
+                batch_len = len(pending_chunks)
+
+                # Phase: Embedding
+                report_progress(
+                    IndexProgress(
+                        "embedding",
+                        total_chunks_processed,
+                        total_chunks_processed + batch_len,
+                        detail=f"Batch of {batch_len} chunks",
+                    )
+                )
+
+                # Extract texts for batch embedding
+                texts = [content for _, content, _, _, _ in pending_chunks]
+
+                # Batch embed all chunks at once
+                embeddings = self.embedding_provider.embed_batch(texts, batch_size=batch_size)
+
+                # Phase: Storing
+                report_progress(
+                    IndexProgress(
+                        "storing",
+                        total_chunks_processed,
+                        total_chunks_processed + batch_len,
+                        detail=f"Writing {batch_len} chunks to database",
+                    )
+                )
+
+                # Store each chunk with its embedding
+                for i, (chunk, _, initial_bla, commit_count, _) in enumerate(pending_chunks):
+                    chunk.embeddings = embeddings[i].tobytes()
+                    self._save_chunk_with_retry(chunk)
+                    chunk_id = chunk.id
+
+                    # Update activation with Git-derived values
+                    if initial_bla != 0.0 or commit_count > 0:
+                        try:
+                            if hasattr(self.memory_store, "_transaction"):
+                                with self.memory_store._transaction() as conn:
+                                    conn.execute(
+                                        """
+                                        UPDATE activations
+                                        SET base_level = ?, access_count = ?
+                                        WHERE chunk_id = ?
+                                        """,
+                                        (initial_bla, commit_count, chunk_id),
+                                    )
+                        except Exception as e:
+                            logger.debug(f"Could not update activation for {chunk.name}: {e}")
+
+                    stats["chunks"] += 1
+                    total_chunks_processed += 1
+
+                pending_chunks = []
+
+            # Phase 2: Process each file (parsing + git blame)
             for i, file_path in enumerate(files):
                 try:
-                    # Call progress callback
-                    if progress_callback:
-                        progress_callback(i, total_files)
+                    # Report parsing progress
+                    report_progress(
+                        IndexProgress(
+                            "parsing",
+                            i,
+                            total_files,
+                            file_path=str(file_path.name),
+                            detail=f"Parsing {file_path.name}",
+                        )
+                    )
 
                     # Parse file
                     parser = self.parser_registry.get_parser_for_file(file_path)
@@ -242,7 +360,6 @@ class MemoryManager:
                         continue
 
                     # Track if we see parse warnings for this file
-                    # Create a custom handler to capture warnings
                     warning_detected = False
 
                     class WarningDetector(logging.Handler):
@@ -263,7 +380,6 @@ class MemoryManager:
                     finally:
                         parser_logger.removeHandler(warning_handler)
 
-                    # Count warnings if detected (before checking chunks)
                     if warning_detected:
                         stats["warnings"] += 1
                         warning_messages.append(f"Parse warnings in {file_path.name}")
@@ -272,10 +388,23 @@ class MemoryManager:
                         logger.debug(f"No chunks extracted from {file_path}")
                         continue
 
-                    # Generate embeddings and store chunks
+                    # Report git blame phase (first chunk triggers file-level blame)
+                    if git_extractor and chunks:
+                        report_progress(
+                            IndexProgress(
+                                "git_blame",
+                                i,
+                                total_files,
+                                file_path=str(file_path.name),
+                                detail=f"Extracting git history for {file_path.name}",
+                            )
+                        )
+
+                    # Process all chunks for this file
+                    # Git blame is now cached at file level - first chunk triggers blame,
+                    # subsequent chunks use cached data (O(1) lookup)
                     for chunk in chunks:
-                        # Extract Git signals for function-level BLA initialization
-                        initial_bla = 0.5  # Default BLA for non-Git or on error
+                        initial_bla = 0.5
                         commit_count = 0
 
                         if (
@@ -284,7 +413,7 @@ class MemoryManager:
                             and hasattr(chunk, "line_end")
                         ):
                             try:
-                                # Get commit times for this specific function (FUNCTION-level tracking)
+                                # This uses file-level blame cache internally
                                 commit_times = git_extractor.get_function_commit_times(
                                     file_path=str(file_path),
                                     line_start=chunk.line_start,
@@ -292,22 +421,16 @@ class MemoryManager:
                                 )
 
                                 if commit_times:
-                                    # Calculate BLA from commit history
                                     initial_bla = git_extractor.calculate_bla(
                                         commit_times, decay=0.5
                                     )
                                     commit_count = len(commit_times)
 
-                                    # Store Git metadata in chunk
                                     if not hasattr(chunk, "metadata") or chunk.metadata is None:
                                         chunk.metadata = {}
 
-                                    chunk.metadata["git_hash"] = (
-                                        commit_times[0] if commit_times else None
-                                    )
-                                    chunk.metadata["last_modified"] = (
-                                        commit_times[0] if commit_times else None
-                                    )
+                                    chunk.metadata["git_hash"] = commit_times[0]
+                                    chunk.metadata["last_modified"] = commit_times[0]
                                     chunk.metadata["commit_count"] = commit_count
 
                                     logger.debug(
@@ -316,65 +439,34 @@ class MemoryManager:
                                     )
                             except Exception as e:
                                 logger.debug(f"Could not extract Git signals for {chunk.name}: {e}")
-                                # Continue with default BLA
 
-                        # Generate embedding for chunk content
-                        # Use chunk's full content (signature + docstring + code)
+                        # Build content and add to batch
                         content_to_embed = self._build_chunk_content(chunk)
-                        embedding = self.embedding_provider.embed_chunk(content_to_embed)
+                        pending_chunks.append(
+                            (chunk, content_to_embed, initial_bla, commit_count, str(file_path))
+                        )
 
-                        # Set embedding on the chunk object (numpy array -> bytes)
-                        chunk.embeddings = embedding.tobytes()
-
-                        # Store chunk with embedding (with retry for database locks)
-                        self._save_chunk_with_retry(chunk)
-                        chunk_id = chunk.id  # Get chunk ID from the chunk object
-
-                        # Update activation with function-specific BLA and commit count
-                        # Note: save_chunk creates activation record with base_level=0.0, access_count=0
-                        # We need to update it with Git-derived values
-                        if initial_bla != 0.0 or commit_count > 0:
-                            try:
-                                # Use store's transaction manager to update activation
-                                if hasattr(self.memory_store, "_transaction"):
-                                    with self.memory_store._transaction() as conn:
-                                        conn.execute(
-                                            """
-                                            UPDATE activations
-                                            SET base_level = ?, access_count = ?
-                                            WHERE chunk_id = ?
-                                            """,
-                                            (initial_bla, commit_count, chunk_id),
-                                        )
-                                    logger.debug(
-                                        f"Initialized activation for {chunk.name}: BLA={initial_bla:.4f}, count={commit_count}"
-                                    )
-                            except Exception as e:
-                                logger.warning(
-                                    f"Could not initialize activation for {chunk.name}: {e}"
-                                )
-
-                        stats["chunks"] += 1
+                        # Flush batch when it reaches batch_size
+                        if len(pending_chunks) >= batch_size:
+                            flush_batch()
 
                     stats["files"] += 1
                     logger.debug(f"Indexed {file_path}: {len(chunks)} chunks")
 
                 except MemoryStoreError:
-                    # Re-raise memory store errors (already formatted)
                     raise
                 except Exception as e:
-                    # Log parse errors at debug level (suppress verbose warnings)
-                    # Full errors will be shown in summary
                     logger.debug(f"Failed to index {file_path}: {e}")
                     stats["errors"] += 1
-                    # Track failed file with error message
-                    error_msg = str(e).split("\n")[0][:100]  # First line, max 100 chars
+                    error_msg = str(e).split("\n")[0][:100]
                     failed_files.append((str(file_path), error_msg))
                     continue
 
-            # Final progress callback
-            if progress_callback:
-                progress_callback(total_files, total_files)
+            # Flush any remaining chunks
+            flush_batch()
+
+            # Final progress
+            report_progress(IndexProgress("complete", total_files, total_files, detail="Done"))
 
             duration = time.time() - start_time
             logger.info(
@@ -860,4 +952,4 @@ class MemoryManager:
             logger.warning(f"Failed to save indexing metadata: {e}")
 
 
-__all__ = ["MemoryManager", "IndexStats", "SearchResult", "MemoryStats"]
+__all__ = ["MemoryManager", "IndexStats", "IndexProgress", "SearchResult", "MemoryStats"]

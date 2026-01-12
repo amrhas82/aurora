@@ -167,5 +167,21 @@ def _register_builtin_parsers(registry: ParserRegistry) -> None:
     except Exception as e:
         logger.warning(f"Failed to auto-register MarkdownParser: {e}")
 
+    try:
+        from aurora_context_code.languages.typescript import TypeScriptParser
+
+        registry.register(TypeScriptParser())
+        logger.debug("Auto-registered TypeScriptParser")
+    except Exception as e:
+        logger.warning(f"Failed to auto-register TypeScriptParser: {e}")
+
+    try:
+        from aurora_context_code.languages.javascript import JavaScriptParser
+
+        registry.register(JavaScriptParser())
+        logger.debug("Auto-registered JavaScriptParser")
+    except Exception as e:
+        logger.warning(f"Failed to auto-register JavaScriptParser: {e}")
+
 
 __all__ = ["ParserRegistry", "get_global_registry"]

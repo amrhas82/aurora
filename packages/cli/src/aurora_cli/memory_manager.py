@@ -133,7 +133,9 @@ class MemoryStats:
         last_indexed: Last indexing timestamp (ISO format) or None
         failed_files: List of (file_path, error_message) tuples
         warnings: List of warning messages
-        success_rate: Percentage of files successfully indexed (0.0-1.0)
+        success_rate: Percentage of parseable files successfully indexed (0.0-1.0)
+        files_by_language: Dictionary mapping language to indexed file count
+        total_parseable: Total parseable files discovered
     """
 
     total_chunks: int
@@ -144,6 +146,8 @@ class MemoryStats:
     failed_files: list[tuple[str, str]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     success_rate: float = 1.0
+    files_by_language: dict[str, int] = field(default_factory=dict)
+    total_parseable: int = 0
 
 
 class MemoryManager:
@@ -234,8 +238,10 @@ class MemoryManager:
 
         start_time = time.time()
         stats = {"files": 0, "chunks": 0, "errors": 0, "warnings": 0}
+        files_by_language: dict[str, int] = {}  # Track indexed files by language
         failed_files: list[tuple[str, str]] = []  # (file_path, error_message)
         warning_messages: list[str] = []
+        skipped_files: list[tuple[str, str]] = []  # (file_path, reason)
 
         # Detect callback type (rich vs simple)
         def report_progress(progress: IndexProgress) -> None:
@@ -258,6 +264,8 @@ class MemoryManager:
             else:
                 files = self._discover_files(path_obj)
 
+            # Note: _discover_files only returns files with parsers, so total_files
+            # equals parseable files. Success rate = indexed / parseable.
             total_files = len(files)
             logger.info(f"Discovered {total_files} code files in {path}")
 
@@ -386,6 +394,7 @@ class MemoryManager:
 
                     if not chunks:
                         logger.debug(f"No chunks extracted from {file_path}")
+                        skipped_files.append((str(file_path), "No extractable elements"))
                         continue
 
                     # Report git blame phase (first chunk triggers file-level blame)
@@ -451,6 +460,9 @@ class MemoryManager:
                             flush_batch()
 
                     stats["files"] += 1
+                    # Track files by language for stats display
+                    lang = parser.language if parser else "unknown"
+                    files_by_language[lang] = files_by_language.get(lang, 0) + 1
                     logger.debug(f"Indexed {file_path}: {len(chunks)} chunks")
 
                 except MemoryStoreError:
@@ -476,11 +488,26 @@ class MemoryManager:
                 f"{duration:.2f}s"
             )
 
-            # Calculate success rate
+            # Calculate success rate (indexed / parseable files)
+            # total_files already only includes files with parsers
             success_rate = stats["files"] / total_files if total_files > 0 else 1.0
 
             # Save indexing metadata for stats command
-            self._save_indexing_metadata(failed_files, warning_messages, success_rate)
+            self._save_indexing_metadata(
+                failed_files, warning_messages, success_rate, files_by_language, total_files
+            )
+
+            # Write detailed log file
+            self._write_index_log(
+                path_obj,
+                stats,
+                failed_files,
+                warning_messages,
+                skipped_files,
+                files_by_language,
+                total_files,
+                duration,
+            )
 
             return IndexStats(
                 files_indexed=stats["files"],
@@ -626,6 +653,8 @@ class MemoryManager:
                 failed_files=metadata.get("failed_files", []),
                 warnings=metadata.get("warnings", []),
                 success_rate=metadata.get("success_rate", 1.0),
+                files_by_language=metadata.get("files_by_language", {}),
+                total_parseable=metadata.get("total_parseable", 0),
             )
 
         except Exception as e:
@@ -928,13 +957,17 @@ class MemoryManager:
         failed_files: list[tuple[str, str]],
         warnings: list[str],
         success_rate: float,
+        files_by_language: dict[str, int] | None = None,
+        total_parseable: int = 0,
     ) -> None:
         """Save indexing metadata to JSON file.
 
         Args:
             failed_files: List of (file_path, error_message) tuples
             warnings: List of warning messages
-            success_rate: Success rate (0.0-1.0)
+            success_rate: Success rate (0.0-1.0) - indexed / parseable files
+            files_by_language: Dict mapping language to indexed file count
+            total_parseable: Total parseable files discovered
         """
         import json
 
@@ -943,6 +976,8 @@ class MemoryManager:
             "failed_files": failed_files,
             "warnings": warnings,
             "success_rate": success_rate,
+            "files_by_language": files_by_language or {},
+            "total_parseable": total_parseable,
         }
 
         metadata_path = self._get_metadata_path()
@@ -950,6 +985,90 @@ class MemoryManager:
             metadata_path.write_text(json.dumps(metadata, indent=2))
         except Exception as e:
             logger.warning(f"Failed to save indexing metadata: {e}")
+
+    def _write_index_log(
+        self,
+        indexed_path: Path,
+        stats: dict,
+        failed_files: list[tuple[str, str]],
+        warnings: list[str],
+        skipped_files: list[tuple[str, str]],
+        files_by_language: dict[str, int],
+        total_parseable: int,
+        duration: float,
+    ) -> None:
+        """Write detailed indexing log to .aurora/logs/index.log.
+
+        Args:
+            indexed_path: Path that was indexed
+            stats: Statistics dictionary
+            failed_files: List of (file_path, error_message) tuples
+            warnings: List of warning messages
+            skipped_files: List of (file_path, reason) tuples
+            files_by_language: Dict mapping language to file count
+            total_parseable: Total parseable files discovered
+            duration: Indexing duration in seconds
+        """
+        # Determine log directory (next to db or in indexed path)
+        if self.config:
+            db_path = Path(self.config.get_db_path())
+            log_dir = db_path.parent / "logs"
+        else:
+            log_dir = indexed_path / ".aurora" / "logs"
+
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_path = log_dir / "index.log"
+
+            timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            success_rate = stats["files"] / total_parseable * 100 if total_parseable > 0 else 100
+
+            lines = [
+                f"# Index Log - {timestamp}",
+                f"# Path: {indexed_path}",
+                "",
+                "## Summary",
+                f"Files indexed:    {stats['files']}",
+                f"Total parseable:  {total_parseable}",
+                f"Success rate:     {success_rate:.1f}%",
+                f"Chunks created:   {stats['chunks']}",
+                f"Duration:         {duration:.1f}s",
+                "",
+                "## Files by Language",
+            ]
+
+            for lang, count in sorted(files_by_language.items(), key=lambda x: -x[1]):
+                lines.append(f"  {lang}: {count}")
+
+            if failed_files:
+                lines.append("")
+                lines.append(f"## Failed Files ({len(failed_files)})")
+                for file_path, error in failed_files:
+                    lines.append(f"  {file_path}")
+                    lines.append(f"    Error: {error}")
+
+            if warnings:
+                lines.append("")
+                lines.append(f"## Warnings ({len(warnings)})")
+                for warning in warnings:
+                    lines.append(f"  {warning}")
+
+            if skipped_files:
+                lines.append("")
+                lines.append(f"## Skipped Files ({len(skipped_files)})")
+                lines.append(
+                    "# Files with parsers but no extractable elements (empty or only comments)"
+                )
+                for file_path, reason in skipped_files:
+                    lines.append(f"  {file_path}")
+
+            lines.append("")
+
+            log_path.write_text("\n".join(lines))
+            logger.debug(f"Wrote index log to {log_path}")
+
+        except Exception as e:
+            logger.warning(f"Failed to write index log: {e}")
 
 
 __all__ = ["MemoryManager", "IndexStats", "IndexProgress", "SearchResult", "MemoryStats"]

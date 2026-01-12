@@ -471,7 +471,11 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
     table.add_column("Value", style="white")
 
     table.add_row("Total Chunks", f"[bold]{stats.total_chunks:,}[/]")
-    table.add_row("Total Files", f"[bold]{stats.total_files:,}[/]")
+    # Use files_by_language sum if available (more accurate), else fall back to DB count
+    total_indexed_files = (
+        sum(stats.files_by_language.values()) if stats.files_by_language else stats.total_files
+    )
+    table.add_row("Total Files", f"[bold]{total_indexed_files:,}[/]")
     table.add_row("Database Size", f"[bold]{stats.database_size_mb:.2f} MB[/]")
 
     # Add indexing metadata if available
@@ -492,13 +496,19 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
         except Exception:
             table.add_row("Last Indexed", "Unknown")
 
+    # Show success rate if there were issues
     if stats.success_rate < 1.0:
         success_pct = stats.success_rate * 100
         table.add_row("Success Rate", f"[yellow]{success_pct:.1f}%[/]")
 
-    if stats.languages:
-        table.add_row("", "")  # Separator
-        table.add_row("[bold]Languages", "")
+    # Show files breakdown by language (from indexed files, not chunks)
+    if stats.files_by_language:
+        for lang, count in sorted(
+            stats.files_by_language.items(), key=lambda x: x[1], reverse=True
+        ):
+            table.add_row(f"  {lang}", f"{count:,} files")
+    elif stats.languages:
+        # Fallback to chunk-based language display if no file breakdown
         for lang, count in sorted(stats.languages.items(), key=lambda x: x[1], reverse=True):
             table.add_row(f"  {lang}", f"{count:,} chunks")
 

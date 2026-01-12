@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5] - 2026-01-12
+
+### Added
+
+**TypeScript/JavaScript Parser Support:**
+- Added `TypeScriptParser` for `.ts` and `.tsx` files
+  - Extracts classes, functions, arrow functions, methods, interfaces, and type aliases
+  - JSDoc comment extraction
+  - Handles React/JSX syntax
+- Added `JavaScriptParser` for `.js`, `.jsx`, `.mjs`, `.cjs` files
+  - Extracts classes, functions, arrow functions, function expressions, and methods
+  - JSDoc comment extraction
+- New dependencies: `tree-sitter-typescript>=0.20.0`, `tree-sitter-javascript>=0.20.0`
+- Auto-registered in parser registry
+
+**Memory Index Improvements:**
+- File-level git blame caching for 336x speedup on subsequent function lookups
+- Batch embedding using native sentence-transformers batching
+- Two-line progress display with overall progress and phase detail
+- Files-by-language breakdown in `aur mem stats` output
+- Success rate now calculated from parseable files only (not all discovered)
+- Detailed index log written to `.aurora/logs/index.log` with:
+  - Summary statistics
+  - Files by language breakdown
+  - Failed files with error messages
+  - Skipped files (parseable but no extractable elements)
+
+### Fixed
+
+- `aur init` tool detection and duplicate display issues
+- Progress bar showing grey at 100% completion
+- Total Files count in stats now matches language breakdown sum
+- Warning help text now points to `aur mem stats`
+
 ## [0.6.2] - 2026-01-10
 
 ### Fixed

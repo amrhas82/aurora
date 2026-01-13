@@ -27,7 +27,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from rich.text import Text
 
 from aurora_cli.agent_discovery import (
     AgentCategory,
@@ -114,7 +113,7 @@ def get_manifest(force_refresh: bool = False, config: Config | None = None) -> A
 
 @click.group(name="agents")
 def agents_group() -> None:
-    """Agent discovery and management commands.
+    r"""Agent discovery and management commands.
 
     Discovers agents from tools configured in the current project.
     Agent sources are determined by tool configuration during 'aur init'.
@@ -167,7 +166,7 @@ def agents_group() -> None:
 )
 @handle_errors
 def list_command(category: str | None, output_format: str, show_all: bool) -> None:
-    """List discovered agents for configured tools.
+    r"""List discovered agents for configured tools.
 
     By default, shows agents only from tools configured in the current project.
     Use --all to show agents from all discovery paths.
@@ -296,7 +295,7 @@ def list_command(category: str | None, output_format: str, show_all: bool) -> No
 )
 @handle_errors
 def search_command(keyword: str, limit: int) -> None:
-    """Search agents by keyword.
+    r"""Search agents by keyword.
 
     Searches across agent id, role, goal, skills, examples, and when_to_use
     fields. Results are ranked by match quality:
@@ -353,7 +352,7 @@ def search_command(keyword: str, limit: int) -> None:
 @click.argument("agent_id")
 @handle_errors
 def show_command(agent_id: str) -> None:
-    """Display full details for a specific agent.
+    r"""Display full details for a specific agent.
 
     Shows comprehensive agent information including:
     - Role and goal
@@ -395,7 +394,7 @@ def show_command(agent_id: str) -> None:
 @agents_group.command(name="refresh")
 @handle_errors
 def refresh_command() -> None:
-    """Force regenerate the agent manifest.
+    r"""Force regenerate the agent manifest.
 
     Scans all agent source directories and rebuilds the manifest cache.
     Use this after adding, modifying, or removing agent files.

@@ -21,7 +21,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from aurora_cli.planning.errors import VALIDATION_MESSAGES
-from aurora_cli.planning.models import Complexity, Plan, PlanManifest, PlanStatus, Subgoal
+from aurora_cli.planning.models import (
+    AgentGap,
+    Complexity,
+    Goals,
+    Plan,
+    PlanManifest,
+    PlanStatus,
+    Subgoal,
+)
 from aurora_cli.planning.results import (
     ArchiveResult,
     InitResult,
@@ -802,7 +810,7 @@ def _check_agent_availability(agent: str) -> bool:
         # Silent config load
         import sys
 
-        from aurora_cli.agent_discovery import AgentManifest, AgentScanner, ManifestManager
+        from aurora_cli.agent_discovery import AgentScanner, ManifestManager
         from aurora_cli.config import load_config
 
         old_stdout = sys.stdout
@@ -851,8 +859,6 @@ def _write_goals_only(
     Raises:
         OSError: If directory creation or file write fails
     """
-    from aurora_cli.planning.models import AgentGap
-
     # Create directory
     plan_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1252,7 +1258,6 @@ def create_plan(
     # Generate subgoals using PlanDecomposer
     if auto_decompose:
         from aurora_cli.planning.decompose import PlanDecomposer
-        from aurora_cli.planning.models import AgentGap
 
         decomposer = PlanDecomposer(config=config)
 
@@ -1297,10 +1302,6 @@ def create_plan(
             sg.dependencies = [dep for dep in sg.dependencies if dep != sg.id]
 
     # Collect agent gaps using ideal vs assigned comparison
-    from aurora_cli.planning.agents import AgentMatcher, AgentRecommender
-    from aurora_cli.planning.models import AgentGap
-
-    recommender = AgentRecommender(config=config)
     agent_gaps: list[AgentGap] = []
     agents_assigned = 0
 

@@ -32,7 +32,6 @@ Examples:
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import shutil
@@ -42,19 +41,11 @@ from typing import TYPE_CHECKING
 
 import click
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
 
 from aurora_cli.config import load_config
 from aurora_cli.errors import handle_errors
 from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
-from aurora_cli.planning.core import (
-    archive_plan,
-    create_plan,
-    init_planning_directory,
-    list_plans,
-    show_plan,
-)
+from aurora_cli.planning.core import create_plan
 
 if TYPE_CHECKING:
     pass
@@ -195,15 +186,15 @@ def goals_command(
     # Validate tool exists in PATH
     if not shutil.which(tool):
         console.print(f"[red]Error: CLI tool '{tool}' not found in PATH[/]")
-        console.print(f"[dim]Install the tool or set a different one with --tool flag[/]")
+        console.print("[dim]Install the tool or set a different one with --tool flag[/]")
         raise click.Abort()
 
     if verbose:
         console.print(f"[dim]Using tool: {tool} (model: {model})[/]")
 
-    # Create CLI-agnostic LLM client
+    # Validate LLM client can be created
     try:
-        llm_client = CLIPipeLLMClient(tool=tool, model=model)
+        _ = CLIPipeLLMClient(tool=tool, model=model)
     except ValueError as e:
         console.print(f"[red]Error creating LLM client: {e}[/]")
         raise click.Abort()

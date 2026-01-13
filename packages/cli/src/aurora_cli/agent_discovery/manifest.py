@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest, ManifestStats
+from aurora_cli.agent_discovery.models import AgentCategory, AgentManifest, ManifestStats
 from aurora_cli.agent_discovery.parser import AgentParser
 from aurora_cli.agent_discovery.scanner import AgentScanner
 
@@ -109,6 +109,7 @@ class ManifestManager:
         malformed_count = 0
         category_counts: dict[str, int] = {cat.value: 0 for cat in AgentCategory}
         seen_ids: dict[str, str] = {}  # id -> source_file for conflict detection
+        duplicates: list[str] = []  # collect duplicate IDs for single warning
 
         # Scan and parse all agent files
         for file_path in scanner.scan_all_sources():
@@ -120,20 +121,24 @@ class ManifestManager:
 
             total_parsed += 1
 
-            # Check for duplicate IDs
+            # Check for duplicate IDs (collect for single warning)
             if agent.id in seen_ids:
-                logger.warning(
-                    "Duplicate agent ID '%s' - found in %s (keeping first from %s)",
-                    agent.id,
-                    file_path,
-                    seen_ids[agent.id],
-                )
+                duplicates.append(agent.id)
                 continue
 
             # Add to manifest
             manifest.add_agent(agent)
             seen_ids[agent.id] = str(file_path)
             category_counts[agent.category.value] += 1
+
+        # Show single warning for duplicates (if any)
+        if duplicates:
+            unique_dups = sorted(set(duplicates))
+            logger.warning(
+                "Found %d duplicate agent IDs (keeping first occurrence): %s",
+                len(duplicates),
+                ", ".join(unique_dups[:5]) + ("..." if len(unique_dups) > 5 else ""),
+            )
 
         # Update statistics
         manifest.stats = ManifestStats(
@@ -143,10 +148,10 @@ class ManifestManager:
         )
 
         logger.info(
-            "Generated manifest: %d agents from %d sources (%d malformed files skipped)",
+            "Generated manifest: %d agents from %d sources (%d duplicates skipped)",
             manifest.stats.total,
             len(manifest.sources),
-            manifest.stats.malformed_files,
+            len(duplicates),
         )
 
         return manifest

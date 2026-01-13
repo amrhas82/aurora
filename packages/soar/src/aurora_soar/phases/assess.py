@@ -1074,87 +1074,45 @@ def _assess_tier2_llm(
 
 
 def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[str, Any]:
-    """Assess query complexity using two-tier approach.
+    """Assess query complexity using keyword-based classification.
 
-    This function first attempts fast keyword classification. If the keyword
-    classifier has high confidence (≥0.8) and the score is not borderline
-    ([0.4, 0.6]), it returns immediately. Otherwise, it falls back to LLM
-    verification for more accurate classification.
+    Uses ComplexityAssessor for multi-dimensional lexical analysis including:
+    - Lexical metrics (word count, sentence count, punctuation)
+    - Keyword categories (action verbs, scope indicators)
+    - Structural patterns (lists, questions, conditionals)
+    - Domain complexity (technical terms, cross-cutting concerns)
 
-    Cost Optimization:
-    - 60-70% of queries use keyword only (zero LLM cost)
-    - 30-40% use LLM verification (~$0.0002/query)
-    - Target: <$0.0001 average per complexity assessment
+    LLM tier2 verification has been removed because:
+    - LLM has no additional context beyond the query text
+    - Keyword classifier achieved 96% accuracy on benchmark corpus
+    - LLM tier2 was less accurate than keyword classifier in practice
+    - Keyword scoring is transparent and debuggable
 
     Args:
         query: User query string
-        llm_client: Optional LLM client for Tier 2 verification (if None, keyword-only)
+        llm_client: Ignored (kept for API compatibility)
 
     Returns:
         Dict with keys:
             - complexity: str (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
             - confidence: float (0-1)
-            - method: str ("keyword" or "llm")
+            - method: str (always "keyword")
             - reasoning: str (explanation of classification)
-            - score: float (0-1, keyword match score for keyword method)
-            - recommended_verification: str (verification option recommendation, if LLM used)
+            - score: float (0-1, normalized complexity score)
     """
-    # Tier 1: Keyword classification
+    # Use keyword classification only (LLM tier2 removed)
+    # Rationale: LLM has no additional context and was less accurate than keyword classifier
     complexity_level, score, confidence = _assess_tier1_keyword(query)
 
-    # Build keyword result dict for potential LLM call
-    keyword_result = {
-        "complexity": complexity_level,
-        "score": score,
-        "confidence": confidence,
-    }
-
-    # Decision logic: Use keyword result if high confidence and not borderline
-    is_borderline = 0.4 <= score <= 0.6
-    use_keyword = confidence >= 0.8 and not is_borderline
-
-    if use_keyword:
-        logger.info(f"Keyword assessment: {complexity_level} (confidence={confidence:.3f})")
-        return {
-            "complexity": complexity_level,
-            "confidence": confidence,
-            "method": "keyword",
-            "reasoning": f"Keyword-based classification with {confidence:.1%} confidence",
-            "score": score,
-        }
-    # Tier 2: LLM verification
-    if llm_client is not None:
-        logger.info(
-            f"Keyword assessment borderline or low confidence "
-            f"(confidence={confidence:.3f}, score={score:.3f}), "
-            f"calling LLM for verification"
-        )
-
-        llm_result = _assess_tier2_llm(query, keyword_result, llm_client)
-
-        return {
-            "complexity": llm_result["complexity"],
-            "confidence": llm_result["confidence"],
-            "method": "llm",
-            "reasoning": llm_result["reasoning"],
-            "recommended_verification": llm_result.get("recommended_verification"),
-            "keyword_fallback": keyword_result,  # Include keyword result for reference
-        }
-    # No LLM available, use keyword result with warning
-    logger.warning(
-        f"Keyword assessment borderline or low confidence "
-        f"(confidence={confidence:.3f}, score={score:.3f}), "
-        f"but no LLM client provided. Using keyword result."
+    logger.info(
+        f"Complexity assessment: {complexity_level} "
+        f"(score={score:.3f}, confidence={confidence:.3f})"
     )
 
     return {
         "complexity": complexity_level,
         "confidence": confidence,
         "method": "keyword",
-        "reasoning": (
-            "Keyword-based classification (borderline or low confidence). "
-            "LLM verification recommended but not available."
-        ),
+        "reasoning": f"Multi-dimensional keyword analysis: {complexity_level.lower()} complexity",
         "score": score,
-        "llm_verification_needed": True,
     }

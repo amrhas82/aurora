@@ -2,8 +2,8 @@
 
 Complete reference for Aurora's configuration system, including all settings, file locations, and environment variables.
 
-**Version:** 1.1.0
-**Last Updated:** 2026-01-07
+**Version:** 1.2.0
+**Last Updated:** 2026-01-12
 
 ---
 
@@ -25,9 +25,10 @@ Complete reference for Aurora's configuration system, including all settings, fi
    - [Budget Settings](#budget-settings)
    - [Logging Settings](#logging-settings)
    - [MCP Settings](#mcp-settings-dormant)
-6. [Environment Variables](#environment-variables)
-7. [Project vs Global Mode](#project-vs-global-mode)
-8. [Troubleshooting](#troubleshooting)
+6. [Tool Paths Reference](#tool-paths-reference)
+7. [Environment Variables](#environment-variables)
+8. [Project vs Global Mode](#project-vs-global-mode)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -155,8 +156,8 @@ Here's a fully documented `config.json` with all available settings:
     "refresh_interval_hours": 24,
     "discovery_paths": [
       "~/.claude/agents",
-      "~/.config/ampcode/agents",
-      "~/.config/droid/agent",
+      "~/.cursor/agents",
+      "~/.factory/droids",
       "~/.config/opencode/agent"
     ],
     "manifest_path": "./.aurora/cache/agent_manifest.json"
@@ -383,7 +384,7 @@ export AURORA_PLANNING_ARCHIVE_ON_COMPLETE=true
 
 ### Agents Settings
 
-Controls agent discovery and caching.
+Controls agent discovery and caching. Aurora now supports **20 AI coding tools** with automatic discovery from their conventional agent locations.
 
 ```json
 "agents": {
@@ -391,8 +392,8 @@ Controls agent discovery and caching.
   "refresh_interval_hours": 24,
   "discovery_paths": [
     "~/.claude/agents",
-    "~/.config/ampcode/agents",
-    "~/.config/droid/agent",
+    "~/.cursor/agents",
+    "~/.factory/droids",
     "~/.config/opencode/agent"
   ],
   "manifest_path": "./.aurora/cache/agent_manifest.json"
@@ -403,10 +404,22 @@ Controls agent discovery and caching.
 |-----|------|---------|-------------|
 | `auto_refresh` | bool | `true` | Automatically refresh agent manifest when stale. |
 | `refresh_interval_hours` | int | `24` | Hours between manifest refreshes. Must be >= 1. |
-| `discovery_paths` | string[] | *(see above)* | Directories to scan for agent definitions. |
+| `discovery_paths` | string[] | *(all 20 tools)* | Directories to scan for agent definitions. See [Tool Paths Reference](#tool-paths-reference) for complete list. |
 | `manifest_path` | string | `"./.aurora/cache/agent_manifest.json"` | Cached agent manifest location. |
 
-**What agents are:** Agents are specialized AI personas defined in markdown files. Aurora discovers them from standard locations used by Claude Code, Cursor, and other tools.
+**What agents are:** Agents are specialized AI personas defined in markdown files. Aurora discovers them from standard locations used by Claude Code, Cursor, Factory Droid, OpenCode, and 16 other supported tools.
+
+**Agent discovery during init:** When you run `aur init --tools=<tool>`, Aurora automatically discovers agents from that tool's conventional location and reports the count.
+
+**Custom discovery paths:** Add your own agent directories:
+```json
+"agents": {
+  "discovery_paths": [
+    "~/.claude/agents",
+    "~/my-custom-agents"
+  ]
+}
+```
 
 ---
 
@@ -477,6 +490,105 @@ MCP (Model Context Protocol) support is **dormant** as of v0.5.0. These settings
 | `max_results` | int | `10` | Maximum results returned by MCP queries. Must be >= 1. |
 
 See [MCP Deprecation](MCP_DEPRECATION.md) for details on why MCP was deprecated.
+
+---
+
+## Tool Paths Reference
+
+Aurora maintains a centralized registry of conventional paths for all **20 supported AI coding tools**. Each tool has four path types:
+
+| Path Type | Description | Example |
+|-----------|-------------|---------|
+| `agents` | Global directory for agent persona files | `~/.claude/agents` |
+| `commands` | Global directory for user commands | `~/.claude/commands` |
+| `slash_commands` | Project-local Aurora slash commands | `.claude/commands/aur` |
+| `mcp` | MCP server configuration file | `~/.claude/mcp_servers.json` |
+
+### Complete Tool Paths Table
+
+| Tool ID | Agents Path | Slash Commands Path | MCP Config |
+|---------|-------------|---------------------|------------|
+| `amazon-q` | `~/.aws/amazonq/cli-agents` | `.amazonq/prompts` | `~/.aws/amazonq/mcp.json` |
+| `antigravity` | `~/.config/antigravity/agents` | `.agent/workflows` | — |
+| `auggie` | `~/.config/auggie/agents` | `.augment/commands` | — |
+| `claude` | `~/.claude/agents` | `.claude/commands/aur` | `~/.claude/mcp_servers.json` |
+| `cline` | `~/.cline/agents` | `.clinerules/workflows` | `~/.cline/mcp_settings.json` |
+| `codebuddy` | `~/.config/codebuddy/agents` | `.codebuddy/commands/aurora` | — |
+| `codex` | `~/.codex/agents` | `.codex/prompts` | — |
+| `costrict` | `~/.config/costrict/agents` | `.cospec/aurora/commands` | — |
+| `crush` | `~/.config/crush/agents` | `.crush/commands/aurora` | — |
+| `cursor` | `~/.cursor/agents` | `.cursor/commands` | — |
+| `factory` | `~/.factory/droids` | `.factory/commands` | — |
+| `gemini` | `~/.config/gemini-cli/agents` | `.gemini/commands/aurora` | — |
+| `github-copilot` | `~/.config/github-copilot/agents` | `.github/prompts` | — |
+| `iflow` | `~/.config/iflow/agents` | `.iflow/commands` | — |
+| `kilocode` | `~/.config/kilocode/agents` | `.kilocode/workflows` | — |
+| `opencode` | `~/.config/opencode/agent` | `.opencode/command` | — |
+| `qoder` | `~/.config/qoder/agents` | `.qoder/commands/aurora` | — |
+| `qwen` | `~/.config/qwen-coder/agents` | `.qwen/commands` | — |
+| `roocode` | `~/.config/roocode/agents` | `.roo/commands` | — |
+| `windsurf` | `~/.windsurf/agents` | `.windsurf/workflows` | — |
+
+### Path Type Details
+
+#### Agents Path (Global)
+Where agent persona markdown files are stored globally for each tool:
+- Used by Aurora's agent discovery system
+- Scanned during `aur init` and `aur agents list`
+- Contains `.md` files with agent definitions
+
+#### Commands Path (Global)
+Where user-defined slash commands are stored globally:
+- Tool-specific location for custom commands
+- Not used by Aurora directly (for reference)
+
+#### Slash Commands Path (Project-Local)
+Where Aurora writes its project-local slash commands:
+- Created during `aur init --tools=<tool>`
+- Contains Aurora commands like `search`, `plan`, `get`, etc.
+- Relative to project root (no `~` prefix)
+
+#### MCP Config (Global)
+Where MCP server configuration is stored:
+- Only configured for tools with known MCP support
+- MCP is currently dormant in Aurora
+
+### Programmatic Access
+
+Access tool paths programmatically:
+
+```python
+from aurora_cli.configurators.slash.paths import (
+    get_tool_paths,
+    get_all_agent_paths,
+    get_all_tools,
+    TOOL_PATHS,
+)
+
+# Get paths for a specific tool
+claude_paths = get_tool_paths("claude")
+print(claude_paths.agents)         # ~/.claude/agents
+print(claude_paths.slash_commands) # .claude/commands/aur
+print(claude_paths.mcp)            # ~/.claude/mcp_servers.json
+
+# Get all agent discovery paths (all 20 tools)
+all_agent_paths = get_all_agent_paths()
+# Returns: ['~/.aws/amazonq/cli-agents', '~/.config/antigravity/agents', ...]
+
+# List all tool IDs
+tools = get_all_tools()
+# Returns: ['amazon-q', 'antigravity', 'auggie', 'claude', ...]
+```
+
+### Sources
+
+Path information was researched from official documentation:
+- **OpenCode**: https://opencode.ai/docs/config/
+- **Factory Droid**: https://docs.factory.ai/cli/configuration/custom-droids
+- **Cline**: https://docs.cline.bot/cline-cli/cli-reference
+- **Cursor**: https://cursor.com/docs/cli/reference/configuration
+- **Codex**: https://developers.openai.com/codex/config-advanced/
+- **Amazon Q**: https://docs.aws.amazon.com/amazonq/
 
 ---
 

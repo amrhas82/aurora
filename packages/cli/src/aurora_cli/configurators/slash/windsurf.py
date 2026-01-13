@@ -20,13 +20,13 @@ FILE_PATHS: dict[str, str] = {
 
 # Descriptions for each command (used in frontmatter)
 DESCRIPTIONS: dict[str, str] = {
-    "search": "Search indexed code and documentation",
-    "get": "Get full chunk content by index",
-    "plan": "Generate structured plans with agent delegation",
-    "proposal": "Generate spec-delta proposals with requirements and scenarios",
-    "checkpoint": "Save session context for continuity",
-    "implement": "Plan-based implementation (placeholder)",
-    "archive": "Archive completed plans with spec processing",
+    "search": 'Search indexed code ["query" --limit N --type function]',
+    "get": "Retrieve search result [N] from last search",
+    "plan": "Create implementation plan with agent delegation [goal]",
+    "proposal": "Draft spec-delta proposal with requirements [feature]",
+    "checkpoint": 'Save session context ["optional-name"]',
+    "implement": "Execute plan tasks [plan-id]",
+    "archive": "Archive completed plan with spec processing [plan-id]",
 }
 
 

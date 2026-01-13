@@ -380,15 +380,19 @@ class SQLiteStore(Store):
             # Deserialize based on chunk type
             chunk_type = row_data["type"]
             chunk: Chunk
-            if chunk_type == "code":
+            if chunk_type in ("code", "kb"):
+                # Both code and kb (knowledge base/markdown) use CodeChunk structure
                 chunk = CodeChunk.from_json(full_data)
             elif chunk_type == "reasoning":
                 chunk = ReasoningChunk.from_json(full_data)
             else:
-                raise StorageError(
-                    f"Unknown chunk type: {chunk_type}",
-                    details=f"Cannot deserialize chunk {row_data['id']}",
+                # Skip truly unknown chunk types gracefully
+                import logging
+
+                logging.getLogger(__name__).debug(
+                    f"Skipping unknown chunk type '{chunk_type}': {row_data['id']}"
                 )
+                return None
 
             # Restore embeddings if present (BLOB field for semantic retrieval)
             if "embeddings" in row_data and row_data["embeddings"] is not None:

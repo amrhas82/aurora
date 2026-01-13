@@ -1,0 +1,110 @@
+{
+  "id": "0007-improve-current-memory-indexing",
+  "title": "improve current memory indexing",
+  "created_at": "2026-01-13T07:34:43.545014",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py",
+      "relevance": 0.8984782271227189
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.860187130179622
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/memory_manager.py",
+      "relevance": 0.6629125653909897
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/memory.py",
+      "relevance": 0.6342676887601678
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/e2e/test_memory_lifecycle_e2e.py",
+      "relevance": 0.5419785684147257
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/soar.py",
+      "relevance": 0.48383190190150993
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/core.py",
+      "relevance": 0.4732090835628646
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py",
+      "relevance": 0.4619612290473993
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/core/src/aurora_core/store/sqlite.py",
+      "relevance": 0.44740363388528037
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Analyze current memory indexing implementation to identify...",
+      "description": "Analyze current memory indexing implementation to identify bottlenecks and limitations",
+      "agent": null,
+      "suggested_specialty": "memory optimization specialist",
+      "confidence": 0.3,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Research best practices for memory indexing, retrieval...",
+      "description": "Research best practices for memory indexing, retrieval systems, and search optimization",
+      "agent": null,
+      "suggested_specialty": "memory optimization and search infrastructure specialist",
+      "confidence": 0.4222222222222222,
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Create PRD defining scope, requirements, and success...",
+      "description": "Create PRD defining scope, requirements, and success criteria for memory indexing improvements",
+      "agent": "@1-create-prd",
+      "suggested_specialty": null,
+      "confidence": 0.6000000000000001,
+      "dependencies": [
+        "sg-1",
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Generate detailed implementation tasks breaking down the...",
+      "description": "Generate detailed implementation tasks breaking down the improvement work",
+      "agent": "@2-generate-tasks",
+      "suggested_specialty": null,
+      "confidence": 0.8,
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Implement memory indexing improvements following the task...",
+      "description": "Implement memory indexing improvements following the task list",
+      "agent": "@full-stack-dev",
+      "suggested_specialty": null,
+      "confidence": 0.5857142857142856,
+      "dependencies": [
+        "sg-4"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Validate implementation quality, performance, and test...",
+      "description": "Validate implementation quality, performance, and test coverage",
+      "agent": "@qa-test-architect",
+      "suggested_specialty": null,
+      "confidence": 0.7333333333333334,
+      "dependencies": [
+        "sg-5"
+      ]
+    }
+  ],
+  "gaps": []
+}

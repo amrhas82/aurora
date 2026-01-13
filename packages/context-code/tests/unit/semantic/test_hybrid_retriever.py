@@ -71,33 +71,41 @@ class TestHybridConfig:
     """Test HybridConfig validation."""
 
     def test_default_config(self):
-        """Test default configuration values."""
+        """Test default configuration values (tri-hybrid mode)."""
         config = HybridConfig()
 
-        assert config.activation_weight == 0.6
+        # Tri-hybrid defaults: 30% BM25, 30% activation, 40% semantic
+        assert config.bm25_weight == 0.3
+        assert config.activation_weight == 0.3
         assert config.semantic_weight == 0.4
-        assert config.activation_top_k == 100
+        assert config.activation_top_k == 500  # Increased from 100 for better recall
         assert config.fallback_to_activation is True
+        # Cache defaults
+        assert config.enable_query_cache is True
+        assert config.query_cache_size == 100
+        assert config.query_cache_ttl_seconds == 1800
 
     def test_custom_weights(self):
-        """Test custom weight configuration."""
+        """Test custom weight configuration (dual-hybrid mode)."""
         config = HybridConfig(
+            bm25_weight=0.0,
             activation_weight=0.7,
             semantic_weight=0.3,
         )
 
+        assert config.bm25_weight == 0.0
         assert config.activation_weight == 0.7
         assert config.semantic_weight == 0.3
 
     def test_weights_must_sum_to_one(self):
         """Test that weights must sum to 1.0."""
         with pytest.raises(ValueError, match="Weights must sum to 1.0"):
-            HybridConfig(activation_weight=0.5, semantic_weight=0.6)
+            HybridConfig(bm25_weight=0.3, activation_weight=0.5, semantic_weight=0.6)
 
     def test_weights_must_be_in_range(self):
         """Test that weights must be in [0, 1]."""
         with pytest.raises(ValueError, match="activation_weight must be in"):
-            HybridConfig(activation_weight=1.5, semantic_weight=-0.5)
+            HybridConfig(bm25_weight=0.0, activation_weight=1.5, semantic_weight=-0.5)
 
     def test_top_k_must_be_positive(self):
         """Test that top_k must be >= 1."""
@@ -108,6 +116,7 @@ class TestHybridConfig:
         """Test that weights can have small floating point errors."""
         # Should not raise (1e-9 tolerance)
         config = HybridConfig(
+            bm25_weight=0.0,
             activation_weight=0.6000000001,
             semantic_weight=0.3999999999,
         )
@@ -118,23 +127,28 @@ class TestHybridRetrieverInit:
     """Test HybridRetriever initialization and configuration loading."""
 
     def test_default_initialization(self):
-        """Test initialization with default configuration."""
+        """Test initialization with default configuration (tri-hybrid mode)."""
         store = MockStore()
         engine = MockActivationEngine()
         provider = EmbeddingProvider()
 
         retriever = HybridRetriever(store, engine, provider)
 
-        assert retriever.config.activation_weight == 0.6
+        # Tri-hybrid defaults
+        assert retriever.config.bm25_weight == 0.3
+        assert retriever.config.activation_weight == 0.3
         assert retriever.config.semantic_weight == 0.4
-        assert retriever.config.activation_top_k == 100
+        assert retriever.config.activation_top_k == 500
+        # Cache should be enabled by default
+        assert retriever._query_cache is not None
 
     def test_explicit_config_initialization(self):
-        """Test initialization with explicit HybridConfig."""
+        """Test initialization with explicit HybridConfig (dual-hybrid mode)."""
         store = MockStore()
         engine = MockActivationEngine()
         provider = EmbeddingProvider()
         config = HybridConfig(
+            bm25_weight=0.0,
             activation_weight=0.7,
             semantic_weight=0.3,
             activation_top_k=50,
@@ -142,12 +156,13 @@ class TestHybridRetrieverInit:
 
         retriever = HybridRetriever(store, engine, provider, config=config)
 
+        assert retriever.config.bm25_weight == 0.0
         assert retriever.config.activation_weight == 0.7
         assert retriever.config.semantic_weight == 0.3
         assert retriever.config.activation_top_k == 50
 
     def test_aurora_config_initialization(self):
-        """Test initialization with AURORA Config object."""
+        """Test initialization with AURORA Config object (dual-hybrid via config)."""
         store = MockStore()
         engine = MockActivationEngine()
         provider = EmbeddingProvider()
@@ -157,6 +172,7 @@ class TestHybridRetrieverInit:
                 "context": {
                     "code": {
                         "hybrid_weights": {
+                            "bm25": 0.0,
                             "activation": 0.8,
                             "semantic": 0.2,
                             "top_k": 75,
@@ -169,6 +185,7 @@ class TestHybridRetrieverInit:
 
         retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
 
+        assert retriever.config.bm25_weight == 0.0
         assert retriever.config.activation_weight == 0.8
         assert retriever.config.semantic_weight == 0.2
         assert retriever.config.activation_top_k == 75
@@ -181,6 +198,7 @@ class TestHybridRetrieverInit:
         provider = EmbeddingProvider()
 
         explicit_config = HybridConfig(
+            bm25_weight=0.0,
             activation_weight=0.7,
             semantic_weight=0.3,
         )
@@ -190,6 +208,7 @@ class TestHybridRetrieverInit:
                 "context": {
                     "code": {
                         "hybrid_weights": {
+                            "bm25": 0.0,
                             "activation": 0.9,
                             "semantic": 0.1,
                         }
@@ -221,6 +240,7 @@ class TestHybridRetrieverInit:
                 "context": {
                     "code": {
                         "hybrid_weights": {
+                            "bm25": 0.0,
                             "activation": 0.75,
                             "semantic": 0.25,
                             # top_k and fallback_to_activation not specified
@@ -232,9 +252,10 @@ class TestHybridRetrieverInit:
 
         retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
 
+        assert retriever.config.bm25_weight == 0.0
         assert retriever.config.activation_weight == 0.75
         assert retriever.config.semantic_weight == 0.25
-        assert retriever.config.activation_top_k == 100  # default
+        assert retriever.config.activation_top_k == 500  # default
         assert retriever.config.fallback_to_activation is True  # default
 
     def test_aurora_config_missing_section(self):
@@ -247,10 +268,11 @@ class TestHybridRetrieverInit:
 
         retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
 
-        # Should use all defaults
-        assert retriever.config.activation_weight == 0.6
+        # Should use all tri-hybrid defaults
+        assert retriever.config.bm25_weight == 0.3
+        assert retriever.config.activation_weight == 0.3
         assert retriever.config.semantic_weight == 0.4
-        assert retriever.config.activation_top_k == 100
+        assert retriever.config.activation_top_k == 500
 
     def test_aurora_config_invalid_weights_raises_error(self):
         """Test that invalid weights from aurora_config raise ValueError."""
@@ -263,6 +285,7 @@ class TestHybridRetrieverInit:
                 "context": {
                     "code": {
                         "hybrid_weights": {
+                            "bm25": 0.3,
                             "activation": 0.5,
                             "semantic": 0.6,  # Sum > 1.0
                         }
@@ -334,8 +357,9 @@ class TestHybridRetrieverRetrieve:
         store = MockStore(chunks=chunks)
         engine = MockActivationEngine()
 
-        # Test with 100% activation weight
+        # Test with 100% activation weight (dual-hybrid mode)
         config_activation_only = HybridConfig(
+            bm25_weight=0.0,
             activation_weight=1.0,
             semantic_weight=0.0,
         )
@@ -347,8 +371,9 @@ class TestHybridRetrieverRetrieve:
         assert len(results) == 2
         assert results[0]["chunk_id"] == "1"  # Higher activation
 
-        # Test with 100% semantic weight
+        # Test with 100% semantic weight (dual-hybrid mode)
         config_semantic_only = HybridConfig(
+            bm25_weight=0.0,
             activation_weight=0.0,
             semantic_weight=1.0,
         )

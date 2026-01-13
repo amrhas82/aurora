@@ -1,0 +1,142 @@
+{
+  "id": "0016-am-writer-help-editing",
+  "title": "i am a writer and i want help with editing and critics to get ideas about plots",
+  "created_at": "2026-01-13T11:16:29.918116",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/models.py",
+      "relevance": 0.6642811971477907
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/goals.py",
+      "relevance": 0.6463864235592671
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/reasoning/src/aurora_reasoning/synthesize.py",
+      "relevance": 0.631565434517058
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/core.py",
+      "relevance": 0.6304655712978148
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py",
+      "relevance": 0.6243652616044639
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/paths.py",
+      "relevance": 0.6066542628562502
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.49949003583918333
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/agents.py",
+      "relevance": 0.4811983460190888
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py",
+      "relevance": 0.4695426418982589
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/agent_discovery/manifest.py",
+      "relevance": 0.4668165370762202
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Understand the writer's current work, genre, target...",
+      "description": "Understand the writer's current work, genre, target audience, and specific areas where they need editing help",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialist in creative writing, storytelling, narrative structure, and editorial feedback with deep understanding of various genres and writing styles",
+      "agent": "@business-analyst",
+      "suggested_specialty": null,
+      "confidence": 0.2,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Provide structural and content editing feedback on writing...",
+      "description": "Provide structural and content editing feedback on writing samples, focusing on plot coherence, pacing, character development, and narrative flow",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in story structure, plot development, character arcs, and narrative techniques across multiple genres",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.3,
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Generate creative plot ideas, twists, and narrative...",
+      "description": "Generate creative plot ideas, twists, and narrative possibilities based on the writer's genre and existing story elements",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Creative specialist with extensive knowledge of storytelling tropes, plot structures, and genre conventions who can brainstorm innovative narrative directions",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.2,
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Provide line-level editing critique including prose style,...",
+      "description": "Provide line-level editing critique including prose style, dialogue authenticity, description effectiveness, and technical writing issues",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Editorial expert skilled in prose refinement, voice consistency, dialogue polish, and technical writing mechanics",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.3,
+      "dependencies": [
+        "sg-2"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialist in creative writing, storytelling, narrative structure, and editorial feedback with deep understanding of various genres and writing styles",
+      "assigned_agent": "@business-analyst",
+      "recommended_agent": "@business-analyst",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    },
+    {
+      "subgoal_id": "sg-2",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in story structure, plot development, character arcs, and narrative techniques across multiple genres",
+      "assigned_agent": "@master",
+      "recommended_agent": "@master",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    },
+    {
+      "subgoal_id": "sg-3",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Creative specialist with extensive knowledge of storytelling tropes, plot structures, and genre conventions who can brainstorm innovative narrative directions",
+      "assigned_agent": "@master",
+      "recommended_agent": "@master",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    },
+    {
+      "subgoal_id": "sg-4",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Editorial expert skilled in prose refinement, voice consistency, dialogue polish, and technical writing mechanics",
+      "assigned_agent": "@master",
+      "recommended_agent": "@master",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    }
+  ]
+}

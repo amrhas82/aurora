@@ -264,10 +264,9 @@ class TestExecuteParallel:
     @pytest.mark.asyncio
     async def test_execute_multiple_tasks_in_parallel(self):
         """Test executing multiple tasks in parallel using spawn_parallel()."""
+        from aurora_cli.commands.spawn import _execute_parallel
         from aurora_spawner.models import SpawnResult
         from implement.models import ParsedTask
-
-        from aurora_cli.commands.spawn import _execute_parallel
 
         tasks = [
             ParsedTask(id="1", description="Task 1", agent="test-agent"),
@@ -295,10 +294,9 @@ class TestExecuteParallel:
     @pytest.mark.asyncio
     async def test_respect_max_concurrent_limit(self):
         """Test that max_concurrent limit is respected."""
+        from aurora_cli.commands.spawn import _execute_parallel
         from aurora_spawner.models import SpawnResult
         from implement.models import ParsedTask
-
-        from aurora_cli.commands.spawn import _execute_parallel
 
         tasks = [
             ParsedTask(id=str(i), description=f"Task {i}", agent="test-agent") for i in range(10)
@@ -320,10 +318,9 @@ class TestExecuteParallel:
     @pytest.mark.asyncio
     async def test_collect_and_report_results(self):
         """Test collecting and reporting execution results."""
+        from aurora_cli.commands.spawn import _execute_parallel
         from aurora_spawner.models import SpawnResult
         from implement.models import ParsedTask
-
-        from aurora_cli.commands.spawn import _execute_parallel
 
         tasks = [
             ParsedTask(id="1", description="Task 1", agent="test-agent"),
@@ -348,10 +345,9 @@ class TestExecuteParallel:
     @pytest.mark.asyncio
     async def test_handle_task_failures_gracefully(self):
         """Test graceful handling of task failures."""
+        from aurora_cli.commands.spawn import _execute_parallel
         from aurora_spawner.models import SpawnResult
         from implement.models import ParsedTask
-
-        from aurora_cli.commands.spawn import _execute_parallel
 
         tasks = [
             ParsedTask(id="1", description="Task 1", agent="test-agent"),
@@ -376,10 +372,9 @@ class TestExecuteParallel:
     @pytest.mark.asyncio
     async def test_update_task_file_with_completion(self):
         """Test updating task file with [x] after completion."""
+        from aurora_cli.commands.spawn import _execute_parallel
         from aurora_spawner.models import SpawnResult
         from implement.models import ParsedTask
-
-        from aurora_cli.commands.spawn import _execute_parallel
 
         tasks = [
             ParsedTask(id="1", description="Task 1", agent="test-agent"),

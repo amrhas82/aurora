@@ -463,6 +463,7 @@ class TestDataClasses:
             content="test content",
             activation_score=0.8,
             semantic_score=0.9,
+            bm25_score=0.7,
             hybrid_score=0.85,
             metadata={"type": "function"},
         )
@@ -473,6 +474,7 @@ class TestDataClasses:
         assert result.content == "test content"
         assert result.activation_score == 0.8
         assert result.semantic_score == 0.9
+        assert result.bm25_score == 0.7
         assert result.hybrid_score == 0.85
         assert result.metadata == {"type": "function"}
 

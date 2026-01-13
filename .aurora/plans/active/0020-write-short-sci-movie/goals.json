@@ -1,0 +1,135 @@
+{
+  "id": "0020-write-short-sci-movie",
+  "title": "i want to write a short sci movie and i don't know who can help me with this?",
+  "created_at": "2026-01-13T13:27:36.828861",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/models.py",
+      "relevance": 0.8377459430774086
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/goals.py",
+      "relevance": 0.7293625031968364
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/core.py",
+      "relevance": 0.7122102930850238
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/collect.py",
+      "relevance": 0.6072705418445674
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py",
+      "relevance": 0.6013029417030911
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/reasoning/src/aurora_reasoning/synthesize.py",
+      "relevance": 0.5741585032195611
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.5297265859012446
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/soar.py",
+      "relevance": 0.52908297911053
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py",
+      "relevance": 0.5268480548814001
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/llm/cli_pipe_client.py",
+      "relevance": 0.48118336885090884
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Clarify user's vision for the sci-fi movie (genre, themes,...",
+      "description": "Clarify user's vision for the sci-fi movie (genre, themes, target length, tone, key story elements)",
+      "ideal_agent": "@creative-writing-consultant",
+      "ideal_agent_desc": "Specialized in story development, script structure, creative writing guidance, and brainstorming narrative concepts",
+      "agent": "@business-analyst",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Develop story structure and outline (three-act structure,...",
+      "description": "Develop story structure and outline (three-act structure, character arcs, sci-fi world-building elements)",
+      "ideal_agent": "@screenplay-writer",
+      "ideal_agent_desc": "Expert in screenplay format, story structure, character development, and cinematic storytelling techniques",
+      "agent": "@master",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Create detailed character profiles and relationships",
+      "description": "Create detailed character profiles and relationships",
+      "ideal_agent": "@character-development-specialist",
+      "ideal_agent_desc": "Focuses on creating compelling characters with depth, motivations, and authentic dialogue",
+      "agent": "@master",
+      "dependencies": [
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Draft screenplay scenes with proper formatting and dialogue",
+      "description": "Draft screenplay scenes with proper formatting and dialogue",
+      "ideal_agent": "@screenplay-writer",
+      "ideal_agent_desc": "Expert in screenplay format, dialogue writing, scene construction, and pacing",
+      "agent": "@master",
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Review and refine script for pacing, consistency, and...",
+      "description": "Review and refine script for pacing, consistency, and sci-fi authenticity",
+      "ideal_agent": "@script-editor",
+      "ideal_agent_desc": "Specialized in script analysis, story consistency, pacing improvements, and genre conventions",
+      "agent": "@qa-test-architect",
+      "dependencies": [
+        "sg-4"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@creative-writing-consultant",
+      "ideal_agent_desc": "Specialized in story development, script structure, creative writing guidance, and brainstorming narrative concepts",
+      "assigned_agent": "@business-analyst"
+    },
+    {
+      "subgoal_id": "sg-2",
+      "ideal_agent": "@screenplay-writer",
+      "ideal_agent_desc": "Expert in screenplay format, story structure, character development, and cinematic storytelling techniques",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-3",
+      "ideal_agent": "@character-development-specialist",
+      "ideal_agent_desc": "Focuses on creating compelling characters with depth, motivations, and authentic dialogue",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-4",
+      "ideal_agent": "@screenplay-writer",
+      "ideal_agent_desc": "Expert in screenplay format, dialogue writing, scene construction, and pacing",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-5",
+      "ideal_agent": "@script-editor",
+      "ideal_agent_desc": "Specialized in script analysis, story consistency, pacing improvements, and genre conventions",
+      "assigned_agent": "@qa-test-architect"
+    }
+  ]
+}

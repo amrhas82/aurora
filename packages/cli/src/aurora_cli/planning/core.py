@@ -679,12 +679,67 @@ def _generate_plan_id(goal: str, plans_dir: Path) -> str:
 
     next_num = max_num + 1
 
-    # Generate slug from goal
-    slug = goal.lower()
-    slug = re.sub(r"[^a-z0-9\s-]", "", slug)  # Remove special chars
-    slug = re.sub(r"\s+", "-", slug)  # Spaces to hyphens
-    slug = re.sub(r"-+", "-", slug)  # Collapse multiple hyphens
-    slug = slug.strip("-")[:30]  # Truncate
+    # Generate slug from goal - extract 3-4 meaningful words
+    words = goal.lower()
+    words = re.sub(r"[^a-z0-9\s]", "", words)  # Remove special chars
+    words = words.split()
+
+    # Filter out common stop words to get meaningful words
+    stop_words = {
+        "i",
+        "want",
+        "to",
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "for",
+        "of",
+        "in",
+        "on",
+        "is",
+        "are",
+        "how",
+        "do",
+        "does",
+        "can",
+        "could",
+        "would",
+        "should",
+        "will",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "this",
+        "that",
+        "these",
+        "those",
+        "my",
+        "your",
+        "our",
+        "their",
+        "what",
+        "which",
+        "who",
+        "whom",
+        "when",
+        "where",
+        "why",
+        "with",
+    }
+    meaningful = [w for w in words if w not in stop_words and len(w) > 1]
+
+    # Take first 3-4 meaningful words
+    slug_words = meaningful[:4] if meaningful else ["plan"]
+    slug = "-".join(slug_words)
+
+    # Ensure reasonable length
+    if len(slug) > 40:
+        slug = "-".join(slug_words[:3])
 
     if not slug:
         slug = "plan"
@@ -774,6 +829,62 @@ def _check_agent_availability(agent: str) -> bool:
     except Exception as e:
         logger.warning("Could not check agent availability: %s", e)
         return True  # Assume available if can't check
+
+
+def _write_goals_only(
+    plan: Plan,
+    plan_dir: Path,
+    memory_context: list[tuple[str, float]],
+    agent_gaps: list["AgentGap"] | None = None,
+) -> None:
+    """Write only goals.json to disk (for aur goals command).
+
+    Per PRD-0026, aur goals creates ONLY goals.json. The /plan skill
+    will later read this and generate prd.md, tasks.md, and specs/.
+
+    Args:
+        plan: Plan object with subgoals and agent assignments
+        plan_dir: Directory to create and write goals.json to
+        memory_context: List of (file_path, relevance) tuples from memory search
+        agent_gaps: List of AgentGap objects (new format with ideal_agent, assigned_agent)
+
+    Raises:
+        OSError: If directory creation or file write fails
+    """
+    from aurora_cli.planning.models import AgentGap
+
+    # Create directory
+    plan_dir.mkdir(parents=True, exist_ok=True)
+
+    # Use provided agent_gaps or fallback to legacy format from plan.agent_gaps
+    gaps_to_write = agent_gaps or []
+    if not gaps_to_write and plan.agent_gaps:
+        # Legacy fallback: convert string list to AgentGap objects
+        gaps_to_write = [
+            AgentGap(
+                subgoal_id="",
+                recommended_agent=gap,
+                agent_exists=False,
+                fallback="@full-stack-dev",
+                suggested_capabilities=[],
+            )
+            for gap in plan.agent_gaps
+        ]
+
+    # Generate goals.json content
+    goals_data = generate_goals_json(
+        plan_id=plan.plan_id,
+        goal=plan.goal,
+        subgoals=plan.subgoals,
+        memory_context=memory_context,
+        gaps=gaps_to_write,
+    )
+
+    # Write goals.json
+    goals_file = plan_dir / "goals.json"
+    goals_file.write_text(goals_data.model_dump_json(indent=2))
+
+    logger.info("Created goals.json at %s (aur goals mode)", plan_dir)
 
 
 def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
@@ -1021,17 +1132,27 @@ def generate_goals_json(
     ]
 
     # Convert Subgoal objects to SubgoalData for goals.json format
-    subgoal_objects = [
-        SubgoalData(
-            id=sg.id,
-            title=sg.title,
-            description=sg.description,
-            agent=sg.recommended_agent,
-            confidence=getattr(sg, "confidence", 0.0),  # Default if not set
-            dependencies=sg.dependencies,
+    # Include ideal_agent and ideal_agent_desc for gap detection
+    subgoal_objects = []
+    for sg in subgoals:
+        # Sanitize dependencies - remove self-references and invalid IDs
+        clean_deps = [dep for dep in sg.dependencies if dep != sg.id]  # Remove self-dependency
+
+        # Get ideal_agent (may be empty for legacy decompositions)
+        ideal_agent = getattr(sg, "ideal_agent", None) or None
+        ideal_agent_desc = getattr(sg, "ideal_agent_desc", None) or None
+
+        subgoal_objects.append(
+            SubgoalData(
+                id=sg.id,
+                title=sg.title,
+                description=sg.description,
+                ideal_agent=ideal_agent,
+                ideal_agent_desc=ideal_agent_desc,
+                agent=sg.assigned_agent,
+                dependencies=clean_deps,
+            )
         )
-        for sg in subgoals
-    ]
 
     # Create Goals object
     goals = Goals(
@@ -1054,10 +1175,13 @@ def create_plan(
     config: Config | None = None,
     yes: bool = False,
     non_interactive: bool = False,
+    goals_only: bool = False,
 ) -> PlanResult:
     """Create a new plan with SOAR-based goal decomposition.
 
-    This is the main entry point for /aur:plan slash command.
+    This is the main entry point for plan creation. When goals_only=True,
+    creates only goals.json (for aur goals command). When goals_only=False,
+    creates full plan with PRD, tasks, and specs (for /plan skill).
 
     Args:
         goal: The high-level goal to decompose
@@ -1066,12 +1190,13 @@ def create_plan(
         config: Optional CLI configuration
         yes: Skip confirmation prompt and proceed automatically
         non_interactive: Alias for yes flag (skip confirmation prompt)
+        goals_only: If True, only create goals.json (aur goals behavior per PRD-0026)
 
     Returns:
         PlanResult with plan details or error message
 
     Example:
-        >>> result = create_plan("Implement OAuth2 authentication")
+        >>> result = create_plan("Implement OAuth2 authentication", goals_only=True)
         >>> if result.success:
         ...     print(f"Created plan: {result.plan.plan_id}")
     """
@@ -1121,7 +1246,7 @@ def create_plan(
 
         console = Console()
         console.print(
-            "[dim]No relevant context found in memory. Run 'aur mem index .' to index codebase.[/]\n"
+            "[dim]No memory index found. For code-aware planning, run: aur mem index .[/]\n"
         )
 
     # Generate subgoals using PlanDecomposer
@@ -1163,25 +1288,41 @@ def create_plan(
         file_resolutions = {}
         decomposition_source = "heuristic"
 
-    # Collect agent gaps
+    # Reassess complexity now that we have actual subgoals
+    complexity = _assess_complexity(goal, subgoals)
+
+    # Sanitize dependencies - remove self-references that break validation
+    for sg in subgoals:
+        if sg.dependencies:
+            sg.dependencies = [dep for dep in sg.dependencies if dep != sg.id]
+
+    # Collect agent gaps using ideal vs assigned comparison
+    from aurora_cli.planning.agents import AgentMatcher, AgentRecommender
     from aurora_cli.planning.models import AgentGap
 
+    recommender = AgentRecommender(config=config)
     agent_gaps: list[AgentGap] = []
     agents_assigned = 0
+
     for sg in subgoals:
-        if not _check_agent_availability(sg.recommended_agent):
+        # Gap detection: ideal_agent != assigned_agent
+        # If ideal_agent is empty, assume it equals assigned_agent (no gap)
+        ideal = sg.ideal_agent or sg.assigned_agent
+        assigned = sg.assigned_agent
+
+        is_gap = ideal != assigned
+
+        if is_gap:
+            # Gap detected - create AgentGap
             agent_gaps.append(
                 AgentGap(
                     subgoal_id=sg.id,
-                    recommended_agent=sg.recommended_agent,
-                    agent_exists=False,
-                    fallback="@full-stack-dev",
-                    suggested_capabilities=[],
+                    ideal_agent=ideal,
+                    ideal_agent_desc=sg.ideal_agent_desc or "",
+                    assigned_agent=assigned,
                 )
             )
-            sg.agent_exists = False
         else:
-            sg.agent_exists = True
             agents_assigned += 1
 
     # Calculate file resolution statistics
@@ -1246,6 +1387,14 @@ def create_plan(
             for res in resolutions
         ]
 
+    # Convert memory_context tuples to MemoryContext objects
+    from aurora_cli.planning.models import MemoryContext
+
+    memory_context_objects = [
+        MemoryContext(file=file_path, relevance=score)
+        for file_path, score in (memory_context or [])
+    ]
+
     # Create plan
     plan = Plan(
         plan_id=plan_id,
@@ -1253,16 +1402,23 @@ def create_plan(
         subgoals=subgoals,
         status=PlanStatus.ACTIVE,
         complexity=complexity,
-        agent_gaps=[gap.recommended_agent for gap in agent_gaps],  # Keep legacy format
+        agent_gaps=[gap.ideal_agent for gap in agent_gaps],  # Ideal agents that are missing
         context_sources=context_sources,
         decomposition_source=decomposition_source,
         file_resolutions=file_resolutions_dict,
+        memory_context=memory_context_objects,
     )
 
     # Write files
     plan_path = plans_dir / "active" / plan_id
     try:
-        _write_plan_files(plan, plan_path)
+        if goals_only:
+            # aur goals: Only create directory and goals.json (per PRD-0026)
+            # /plan skill will later add prd.md, tasks.md, specs/
+            _write_goals_only(plan, plan_path, memory_context or [], agent_gaps=agent_gaps)
+        else:
+            # Full plan creation (for /plan skill or legacy mode)
+            _write_plan_files(plan, plan_path)
     except Exception as e:
         return PlanResult(
             success=False,
@@ -1275,7 +1431,9 @@ def create_plan(
     # Build warnings
     warnings = []
     if agent_gaps:
-        warnings.append(f"Agent gaps detected: {', '.join(agent_gaps)}")
+        # Extract agent IDs from AgentGap objects for warning message
+        gap_agents = [gap.ideal_agent for gap in agent_gaps]
+        warnings.append(f"Agent gaps detected: {', '.join(gap_agents)}")
     if not context_sources:
         warnings.append("No context available. Consider running 'aur mem index .'")
 

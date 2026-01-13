@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 def prompt_for_confirmation() -> bool:
     """Prompt user to confirm plan generation.
 
-    Displays the prompt: "Proceed with plan generation? (Y/n)"
+    Displays the prompt: "Proceed with plan generation? [Y/n]"
 
     Valid inputs:
     - 'Y', 'y', or Enter (empty): Return True (proceed)
@@ -33,7 +33,7 @@ def prompt_for_confirmation() -> bool:
     """
     try:
         while True:
-            response = input("\nProceed with plan generation? (Y/n): ").strip()
+            response = input("\nProceed with plan generation? [Y/n]: ").strip()
 
             # Empty input or 'Y'/'y' means proceed
             if response == "" or response.lower() == "y":

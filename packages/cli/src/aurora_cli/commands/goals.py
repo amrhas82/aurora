@@ -51,7 +51,6 @@ from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
 from aurora_cli.planning.core import (
     archive_plan,
     create_plan,
-    generate_goals_json,
     init_planning_directory,
     list_plans,
     show_plan,
@@ -143,7 +142,7 @@ def goals_command(
     yes: bool,
     non_interactive: bool,
 ) -> None:
-    """Create goals with decomposition and agent matching.
+    r"""Create goals with decomposition and agent matching.
 
     Analyzes the GOAL and decomposes it into subgoals with
     recommended agents. Creates goals.json in .aurora/plans/NNNN-slug/
@@ -235,18 +234,20 @@ def goals_command(
         auto_decompose=not no_decompose,
         config=config,
         yes=yes or non_interactive,
+        goals_only=True,  # aur goals creates ONLY goals.json per PRD-0026
     )
 
     # Show agent matching results (Task 3.4)
     if verbose and result.success and result.plan:
         console.print("\n[bold]🤖 Agent matching results:[/]")
         for i, sg in enumerate(result.plan.subgoals, 1):
-            # Determine status based on agent_exists
-            status = "✓" if sg.agent_exists else "⚠️"
-            confidence_color = "green" if sg.agent_exists else "yellow"
+            # Gap detection: ideal != assigned
+            is_gap = sg.ideal_agent != sg.assigned_agent
+            status = "⚠️" if is_gap else "✓"
+            color = "yellow" if is_gap else "green"
             console.print(
-                f"   {status} sg-{i}: {sg.recommended_agent} "
-                f"([{confidence_color}]{'exists' if sg.agent_exists else 'NOT FOUND'}[/{confidence_color}])"
+                f"   {status} sg-{i}: {sg.assigned_agent} "
+                f"([{color}]{'GAP' if is_gap else 'MATCHED'}[/{color}])"
             )
 
     if not result.success:
@@ -263,57 +264,28 @@ def goals_command(
         print(plan.model_dump_json(indent=2))
         return
 
-    # === USER REVIEW FLOW (Task 4.2) ===
-    # Generate goals.json from plan data
-    # Convert MemoryContext objects to tuples for generate_goals_json
-    memory_tuples = (
-        [(mc.file, mc.relevance) for mc in plan.memory_context] if plan.memory_context else []
-    )
-
-    goals_data = generate_goals_json(
-        plan_id=plan.plan_id,
-        goal=plan.goal,
-        subgoals=plan.subgoals,
-        memory_context=memory_tuples,
-        gaps=plan.gaps if hasattr(plan, "gaps") else [],
-    )
-
-    # Write to temp file for review
+    # goals.json already written by create_plan() with goals_only=True
     plan_dir_path = Path(result.plan_dir)
-    temp_file = plan_dir_path / "goals.json.tmp"
-    temp_file.write_text(goals_data.model_dump_json(indent=2))
+    goals_file = plan_dir_path / "goals.json"
 
     # Show plan summary
-    console.print(f"\n[bold]📁 Plan directory:[/]")
+    console.print("\n[bold]Plan directory:[/]")
     console.print(f"   {plan_dir_path}/")
 
     # Ask user to review (unless --yes flag)
     if not (yes or non_interactive):
-        console.print("\n[bold]Review goals before saving?[/] [Y/n]: ", end="")
-        review_response = click.prompt("", default="y", show_default=False, type=str)
+        review_response = click.prompt(
+            "\nReview goals in editor? [y/N]", default="n", show_default=False, type=str
+        )
 
-        if review_response.lower() in ("y", "yes", ""):
+        if review_response.lower() in ("y", "yes"):
             # Open in editor
             editor = os.environ.get("EDITOR", "nano")
             try:
-                subprocess.run([editor, str(temp_file)], check=False)
+                subprocess.run([editor, str(goals_file)], check=False)
             except Exception as e:
                 console.print(f"[yellow]Warning: Could not open editor: {e}[/]")
                 console.print("[dim]Continuing without edit...[/]")
-
-        console.print("\n[bold]Proceed with saving goals?[/] [Y/n]: ", end="")
-        proceed_response = click.prompt("", default="y", show_default=False, type=str)
-
-        if proceed_response.lower() not in ("y", "yes", ""):
-            console.print("[yellow]Cancelled.[/]")
-            temp_file.unlink(missing_ok=True)
-            raise click.Abort()
-
-    # Move temp to final location
-    final_file = plan_dir_path / "goals.json"
-    temp_file.rename(final_file)
-
-    # === END USER REVIEW FLOW ===
 
     # Rich output
     console.print(f"\n[bold green]Plan created: {plan.plan_id}[/]")
@@ -324,9 +296,24 @@ def goals_command(
     console.print(f"Location:    {result.plan_dir}/")
 
     console.print("\n[bold]Subgoals:[/]")
+    # Display with gap detection: ideal_agent vs assigned_agent comparison
     for i, sg in enumerate(plan.subgoals, 1):
-        agent_status = "[green][/]" if sg.agent_exists else "[yellow]NOT FOUND[/]"
-        console.print(f"  {i}. {sg.title} ({sg.recommended_agent} {agent_status})")
+        console.print(f"  {i}. {sg.title}")
+
+        # Gap detection: ideal != assigned
+        is_gap = sg.ideal_agent != sg.assigned_agent
+
+        if is_gap:
+            # Gap detected - show both ideal and assigned
+            console.print(f"     [yellow]Ideal:[/] {sg.ideal_agent}")
+            if sg.ideal_agent_desc:
+                console.print(f"       [dim]{sg.ideal_agent_desc}[/]")
+            console.print(f"     [cyan]Available:[/] {sg.assigned_agent}")
+            console.print(f"     [red]Status: GAP - create {sg.ideal_agent}[/]")
+        else:
+            # Matched - ideal == assigned
+            console.print(f"     [cyan]{sg.assigned_agent}[/] [green]MATCHED[/]")
+
         if sg.dependencies:
             console.print(f"     [dim]Depends on: {', '.join(sg.dependencies)}[/]")
 
@@ -335,19 +322,13 @@ def goals_command(
         for warning in result.warnings:
             console.print(f"  - {warning}")
 
-    console.print("\n[bold]Files created (9 total):[/]")
-    # Base files (now including goals.json)
-    for fname in ["goals.json", "plan.md", "prd.md", "tasks.md", "agents.json"]:
-        console.print(f"  [green][/] {fname}")
-    # Capability specs
-    console.print(f"  [green][/] specs/{plan.plan_id}-planning.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-commands.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-validation.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-schemas.md")
+    console.print("\n[bold]Files created:[/]")
+    console.print("  [green]✓[/] goals.json")
 
     console.print("\n[bold green]✅ Goals saved.[/]")
     console.print("\n[bold]Next steps:[/]")
     console.print(f"1. Review goals:   cat {result.plan_dir}/goals.json")
-    console.print(f"2. Generate PRD:   cd {result.plan_dir} && [bold]/plan[/] (in Claude Code)")
+    console.print(
+        "2. Generate PRD:   Run [bold]/plan[/] in Claude Code to create prd.md, tasks.md, specs/"
+    )
     console.print("3. Start work:     aur implement or aur spawn tasks.md")
-    console.print(f"4. Archive:        aur plan archive {plan.plan_id}")

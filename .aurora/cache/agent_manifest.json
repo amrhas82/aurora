@@ -1,9 +1,8 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-01-10T02:06:22.219857+01:00",
+  "generated_at": "2026-01-12T23:00:22.064803+01:00",
   "sources": [
-    "/home/hamr/.claude/agents",
-    "/home/hamr/.config/opencode/agent"
+    "/home/hamr/.claude/agents"
   ],
   "agents": [
     {
@@ -60,6 +59,17 @@
       "when_to_use": null,
       "dependencies": [],
       "source_file": "/home/hamr/.claude/agents/context-initializer.md"
+    },
+    {
+      "id": "docs-init",
+      "role": "Docs Init",
+      "goal": "Creates comprehensive project documentation following structured /docs hierarchy with 00-context, 01-product, 02-features, 03-logs, 04-process",
+      "category": "general",
+      "skills": [],
+      "examples": [],
+      "when_to_use": null,
+      "dependencies": [],
+      "source_file": "/home/hamr/.claude/agents/docs-init.md"
     },
     {
       "id": "full-stack-dev",
@@ -173,12 +183,12 @@
     }
   ],
   "stats": {
-    "total": 15,
+    "total": 16,
     "by_category": {
       "eng": 0,
       "qa": 0,
       "product": 0,
-      "general": 15
+      "general": 16
     },
     "malformed_files": 0
   }

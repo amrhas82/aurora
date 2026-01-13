@@ -1,0 +1,142 @@
+{
+  "id": "0017-am-writer-help-editing",
+  "title": "i am a writer and i want help with editing my story",
+  "created_at": "2026-01-13T11:18:25.793098",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/goals.py",
+      "relevance": 0.704048356312132
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/models.py",
+      "relevance": 0.6610573270287319
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/core.py",
+      "relevance": 0.6019117308425147
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.5849462053820614
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/reasoning/src/aurora_reasoning/synthesize.py",
+      "relevance": 0.5833703612264658
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py",
+      "relevance": 0.5115443228382675
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/collect.py",
+      "relevance": 0.5000535465765823
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/soar.py",
+      "relevance": 0.4768263419670451
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/paths.py",
+      "relevance": 0.43953629649372916
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/agents.py",
+      "relevance": 0.4193427015074732
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Read and analyze the story content to understand narrative...",
+      "description": "Read and analyze the story content to understand narrative structure, characters, pacing, and themes",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in creative writing, narrative structure, character development, and literary analysis with experience in story editing and developmental feedback",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.3,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Provide editorial feedback on story structure, plot...",
+      "description": "Provide editorial feedback on story structure, plot coherence, character development, and pacing",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in creative writing with skills in developmental editing, story structure analysis, and narrative improvement",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.3,
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Suggest specific improvements for dialogue, prose style,...",
+      "description": "Suggest specific improvements for dialogue, prose style, and descriptive passages",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in literary style, dialogue writing, and prose refinement with editorial experience",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.2,
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Identify inconsistencies, plot holes, or unclear narrative...",
+      "description": "Identify inconsistencies, plot holes, or unclear narrative elements that need clarification",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in narrative logic, continuity, and story consistency with strong analytical and editorial skills",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.3,
+      "dependencies": [
+        "sg-1"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in creative writing, narrative structure, character development, and literary analysis with experience in story editing and developmental feedback",
+      "assigned_agent": "@master",
+      "recommended_agent": "@master",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    },
+    {
+      "subgoal_id": "sg-2",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in creative writing with skills in developmental editing, story structure analysis, and narrative improvement",
+      "assigned_agent": "@master",
+      "recommended_agent": "@master",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    },
+    {
+      "subgoal_id": "sg-3",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in literary style, dialogue writing, and prose refinement with editorial experience",
+      "assigned_agent": "@master",
+      "recommended_agent": "@master",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    },
+    {
+      "subgoal_id": "sg-4",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Expert in narrative logic, continuity, and story consistency with strong analytical and editorial skills",
+      "assigned_agent": "@master",
+      "recommended_agent": "@master",
+      "agent_exists": true,
+      "fallback": "@full-stack-dev",
+      "suggested_capabilities": []
+    }
+  ]
+}

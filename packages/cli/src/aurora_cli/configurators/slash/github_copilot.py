@@ -10,37 +10,37 @@ from aurora_cli.templates.slash_commands import get_command_body
 # Frontmatter for each command - includes $ARGUMENTS placeholder
 FRONTMATTER: dict[str, str] = {
     "search": """---
-description: Search indexed code and documentation
+description: Search indexed code ["query" --limit N --type function]
 ---
 
 $ARGUMENTS""",
     "get": """---
-description: Get full chunk content by index
+description: Retrieve search result [N] from last search
 ---
 
 $ARGUMENTS""",
     "plan": """---
-description: Generate structured plans with agent delegation
+description: Create implementation plan with agent delegation [goal]
 ---
 
 $ARGUMENTS""",
     "proposal": """---
-description: Generate spec-delta proposals with requirements and scenarios
+description: Draft spec-delta proposal with requirements [feature]
 ---
 
 $ARGUMENTS""",
     "checkpoint": """---
-description: Save session context for continuity
+description: Save session context ["optional-name"]
 ---
 
 $ARGUMENTS""",
     "implement": """---
-description: Plan-based implementation (placeholder)
+description: Execute plan tasks [plan-id]
 ---
 
 $ARGUMENTS""",
     "archive": """---
-description: Archive completed plans with spec processing
+description: Archive completed plan with spec processing [plan-id]
 ---
 
 $ARGUMENTS""",

@@ -110,6 +110,23 @@ def count_configured_tools(project_path: Path) -> int:
     return sum(1 for is_configured in configured.values() if is_configured)
 
 
+def get_configured_tool_ids(project_path: Path) -> list[str]:
+    """Get list of tool IDs that are configured in the project.
+
+    Used by agent discovery to scan only paths for configured tools.
+    Checks slash command configuration for all 20 supported tools.
+
+    Args:
+        project_path: Path to project root
+
+    Returns:
+        List of configured tool IDs (e.g., ['claude', 'cursor'])
+    """
+    # Use slash tool detection which covers all 20 tools
+    configured = detect_configured_slash_tools(project_path)
+    return [tool_id for tool_id, is_configured in configured.items() if is_configured]
+
+
 def detect_configured_slash_tools(project_path: Path) -> dict[str, bool]:
     """Detect which slash command tools are already configured.
 
@@ -767,14 +784,15 @@ def show_status_summary(project_path: Path) -> None:
 def prompt_rerun_options() -> str:
     """Prompt user for re-run option when initialization already exists.
 
-    Displays menu with 4 options:
+    Displays menu with 5 options:
     1. Re-run all steps
     2. Select specific steps
     3. Configure tools only
-    4. Exit without changes
+    4. Refresh agent discovery
+    5. Exit without changes
 
     Returns:
-        One of: "all", "selective", "config", "exit"
+        One of: "all", "selective", "config", "agents", "exit"
     """
     console.print()
     console.print("[bold cyan]Aurora is already initialized in this project.[/]")
@@ -783,11 +801,12 @@ def prompt_rerun_options() -> str:
     console.print("  [bold]1.[/] Re-run all steps")
     console.print("  [bold]2.[/] Select specific steps to re-run")
     console.print("  [bold]3.[/] Configure tools only")
-    console.print("  [bold]4.[/] Exit without changes")
+    console.print("  [bold]4.[/] Refresh agent discovery")
+    console.print("  [bold]5.[/] Exit without changes")
     console.print()
 
     while True:
-        choice = click.prompt("Choose an option", type=str, default="4")
+        choice = click.prompt("Choose an option", type=str, default="5")
 
         if choice == "1":
             return "all"
@@ -796,9 +815,11 @@ def prompt_rerun_options() -> str:
         elif choice == "3":
             return "config"
         elif choice == "4":
+            return "agents"
+        elif choice == "5":
             return "exit"
         else:
-            console.print(f"[yellow]Invalid choice: {choice}. Please enter 1, 2, 3, or 4.[/]")
+            console.print(f"[yellow]Invalid choice: {choice}. Please enter 1, 2, 3, 4, or 5.[/]")
             console.print()
 
 

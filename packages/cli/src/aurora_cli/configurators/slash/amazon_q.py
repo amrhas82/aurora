@@ -10,7 +10,7 @@ from aurora_cli.templates.slash_commands import get_command_body
 # Frontmatter for each command - includes $ARGUMENTS and <UserRequest> tags
 FRONTMATTER: dict[str, str] = {
     "search": """---
-description: Search indexed code and documentation
+description: Search indexed code ["query" --limit N --type function]
 ---
 
 The user wants to search indexed memory. Use the aurora instructions to search.
@@ -19,7 +19,7 @@ The user wants to search indexed memory. Use the aurora instructions to search.
   $ARGUMENTS
 </UserRequest>""",
     "get": """---
-description: Get full chunk content by index
+description: Retrieve search result [N] from last search
 ---
 
 The user wants to retrieve a specific chunk. Use the aurora instructions to get the chunk.
@@ -28,7 +28,7 @@ The user wants to retrieve a specific chunk. Use the aurora instructions to get 
   $ARGUMENTS
 </UserRequest>""",
     "plan": """---
-description: Generate structured plans with agent delegation
+description: Create implementation plan with agent delegation [goal]
 ---
 
 The user has requested the following plan. Use the aurora instructions to create their plan.
@@ -37,7 +37,7 @@ The user has requested the following plan. Use the aurora instructions to create
   $ARGUMENTS
 </UserRequest>""",
     "proposal": """---
-description: Generate spec-delta proposals with requirements and scenarios
+description: Draft spec-delta proposal with requirements [feature]
 ---
 
 The user has requested a proposal. Use the aurora instructions to create their proposal.
@@ -46,7 +46,7 @@ The user has requested a proposal. Use the aurora instructions to create their p
   $ARGUMENTS
 </UserRequest>""",
     "checkpoint": """---
-description: Save session context for continuity
+description: Save session context ["optional-name"]
 ---
 
 The user wants to save session context. Use the aurora instructions to create a checkpoint.
@@ -55,7 +55,7 @@ The user wants to save session context. Use the aurora instructions to create a 
   $ARGUMENTS
 </UserRequest>""",
     "implement": """---
-description: Plan-based implementation (placeholder)
+description: Execute plan tasks [plan-id]
 ---
 
 The user wants to implement a plan. Use the aurora instructions for implementation.
@@ -64,7 +64,7 @@ The user wants to implement a plan. Use the aurora instructions for implementati
   $ARGUMENTS
 </UserRequest>""",
     "archive": """---
-description: Archive completed plans with spec processing
+description: Archive completed plan with spec processing [plan-id]
 ---
 
 The user wants to archive a completed plan. Use the aurora instructions to archive the plan.

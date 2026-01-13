@@ -171,6 +171,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
             "code_chunks": code_chunks,
             "reasoning_chunks": reasoning_chunks,
             "total_retrieved": total_retrieved,
+            "chunks_retrieved": total_retrieved,  # For CLI display
             "high_quality_count": high_quality_count,
             "retrieval_time_ms": elapsed_ms,
             "budget": budget,

@@ -11,49 +11,49 @@ FRONTMATTER: dict[str, str] = {
     "search": """---
 name: Aurora: Search
 id: /aurora-search
-description: Search indexed code and documentation
+description: Search indexed code ["query" --limit N --type function]
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "get": """---
 name: Aurora: Get
 id: /aurora-get
-description: Get full chunk content by index
+description: Retrieve search result [N] from last search
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "plan": """---
 name: Aurora: Plan
 id: /aurora-plan
-description: Generate structured plans with agent delegation
+description: Create implementation plan with agent delegation [goal]
 category: Aurora
 tags: [aurora, planning]
 ---""",
     "proposal": """---
 name: Aurora: Proposal
 id: /aurora-proposal
-description: Generate structured proposals with agent delegation
+description: Draft spec-delta proposal with requirements [feature]
 category: Aurora
 tags: [aurora, proposalning]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 id: /aurora-checkpoint
-description: Save session context for continuity
+description: Save session context ["optional-name"]
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
     "implement": """---
 name: Aurora: Implement
 id: /aurora-implement
-description: Plan-based implementation (placeholder)
+description: Execute plan tasks [plan-id]
 category: Aurora
 tags: [aurora, planning, implementation]
 ---""",
     "archive": """---
 name: Aurora: Archive
 id: /aurora-archive
-description: Archive completed plans with spec processing
+description: Archive completed plan with spec processing [plan-id]
 category: Aurora
 tags: [aurora, planning, archive]
 ---""",

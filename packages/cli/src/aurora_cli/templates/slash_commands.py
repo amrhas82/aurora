@@ -149,6 +149,8 @@ PLAN_GUARDRAILS = f"""{BASE_GUARDRAILS}
 
 PLAN_STEPS = """**Steps**
 1. Review `.aurora/project.md`, run `aur plan list` and `aur plan list --specs`, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the plan in current behaviour; note any gaps that require clarification.
+   - **If `goals.json` exists** (from `aur goals`): Read it and include subgoals with confidence >= 0.5 under `## Goals Context`. Skip low-confidence agents (these are gaps, not assignments).
+   - **If no goals.json**: Run `aur agents list --format plan` and add the output under `## Available Agents` at the top of plan.md. Assign agents to each task/subgoal as you plan.
 2. Choose a unique verb-led `plan-id` and scaffold `plan.md`, `tasks.md`, and `design.md` (when needed) under `.aurora/plans/active/<id>/`.
 3. Map the change into concrete capabilities or requirements, breaking multi-scope efforts into distinct spec deltas with clear relationships and sequencing.
 4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
@@ -159,7 +161,25 @@ PLAN_STEPS = """**Steps**
 PLAN_REFERENCES = """**Reference**
 - Use `aur plan show <id> --json --deltas-only` or `aur plan show <spec> --type spec` to inspect details when validation fails.
 - Search existing requirements with `rg -n "Requirement:|Scenario:" .aurora/specs` before writing new ones.
-- Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so plans align with current implementation realities."""
+- Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so plans align with current implementation realities.
+
+**plan.md Format**:
+
+*With goals.json* (only include agents with confidence >= 0.5):
+```markdown
+## Goals Context
+> Source: `goals.json`
+
+| Subgoal | Agent | Dependencies |
+|---------|-------|--------------|
+| [title] | @agent-id | - |
+```
+
+*Without goals.json* (run command, paste output):
+```bash
+aur agents list --format plan
+```
+Then add output under `## Available Agents` and assign agents to tasks."""
 
 PLAN_TEMPLATE = f"""{PLAN_GUARDRAILS}
 

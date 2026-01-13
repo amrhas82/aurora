@@ -190,16 +190,14 @@ class PlanDecomposer:
                 agent_id, score = recommender.recommend_for_subgoal(subgoal)
                 agent_recommendations[subgoal.id] = (agent_id, score)
 
-                # Update subgoal with recommended agent
-                subgoal.recommended_agent = agent_id
-                subgoal.agent_exists = recommender.verify_agent_exists(agent_id)
+                # Update subgoal with assigned agent
+                subgoal.assigned_agent = agent_id
             except Exception as e:
                 logger.warning(f"Failed to recommend agent for subgoal {subgoal.id}: {e}")
                 # Use fallback
                 fallback = recommender.get_fallback_agent()
                 agent_recommendations[subgoal.id] = (fallback, 0.0)
-                subgoal.recommended_agent = fallback
-                subgoal.agent_exists = True  # Fallback is assumed to exist
+                subgoal.assigned_agent = fallback
 
         # Detect gaps for low-scoring recommendations
         agent_gaps = recommender.detect_gaps(subgoals, agent_recommendations)
@@ -217,7 +215,7 @@ class PlanDecomposer:
             Hash-based cache key
         """
         content = f"{goal}::{complexity.value}"
-        return hashlib.md5(content.encode()).hexdigest()
+        return hashlib.sha256(content.encode()).hexdigest()[:32]
 
     def _build_context(self, context_files: list[str] | None = None) -> dict[str, Any]:
         """Build context dictionary for SOAR decomposition.
@@ -350,15 +348,66 @@ class PlanDecomposer:
             )
 
             # Convert SOAR result to Subgoal objects
+            # Note: LLM returns: description, suggested_agent, is_critical, depends_on
             subgoals = []
             for idx, sg_dict in enumerate(result.decomposition.subgoals, 1):
+                # Extract description and create a short title from it
+                description = sg_dict.get("description", "No description")
+                # Create title from first ~50 chars of description or use explicit title if present
+                title = sg_dict.get("title")
+                if not title:
+                    # Generate title: Take first sentence or first 50 chars
+                    title = description.split(".")[0][:60]
+                    if len(description.split(".")[0]) > 60:
+                        title = title.rsplit(" ", 1)[0] + "..."
+
+                # Get agent - support both new schema (ideal_agent, assigned_agent) and legacy (suggested_agent)
+                # New schema: ideal_agent = what SHOULD handle, assigned_agent = best available
+                # Legacy: suggested_agent = both ideal and assigned
+                ideal_agent = sg_dict.get("ideal_agent", "")
+                ideal_agent_desc = sg_dict.get("ideal_agent_desc", "")
+                assigned_agent = sg_dict.get("assigned_agent", "")
+
+                # Fallback to legacy suggested_agent if new schema not present
+                if not assigned_agent:
+                    assigned_agent = sg_dict.get(
+                        "suggested_agent", sg_dict.get("agent", "full-stack-dev")
+                    )
+                if not ideal_agent:
+                    ideal_agent = assigned_agent  # Assume ideal == assigned for legacy
+
+                # Ensure @ prefix
+                agent = assigned_agent
+                if not agent.startswith("@"):
+                    agent = f"@{agent}"
+                if ideal_agent and not ideal_agent.startswith("@"):
+                    ideal_agent = f"@{ideal_agent}"
+
+                # Get dependencies and normalize to sg-N format
+                raw_deps = sg_dict.get("depends_on", sg_dict.get("dependencies", []))
+                dependencies = []
+                for dep in raw_deps:
+                    dep_str = str(dep)
+                    # Normalize: "1" -> "sg-1", "sg-1" stays "sg-1"
+                    if not dep_str.startswith("sg-"):
+                        # LLM often returns 0-indexed, convert to 1-indexed
+                        try:
+                            dep_num = int(dep_str)
+                            # If it's 0-indexed (0, 1, 2...), convert to 1-indexed
+                            if dep_num >= 0:
+                                dep_str = f"sg-{dep_num + 1}"
+                        except ValueError:
+                            dep_str = f"sg-{dep_str}"
+                    dependencies.append(dep_str)
+
                 subgoal = Subgoal(
                     id=sg_dict.get("id", f"sg-{idx}"),
-                    title=sg_dict.get("title", f"Subgoal {idx}"),
-                    description=sg_dict.get("description", "No description"),
-                    recommended_agent=sg_dict.get("agent", "@full-stack-dev"),
-                    agent_exists=True,  # Will validate in task 2.4
-                    dependencies=sg_dict.get("dependencies", []),
+                    title=title,
+                    description=description,
+                    ideal_agent=ideal_agent,
+                    ideal_agent_desc=ideal_agent_desc,
+                    assigned_agent=agent,
+                    dependencies=dependencies,
                 )
                 subgoals.append(subgoal)
 
@@ -384,10 +433,11 @@ class PlanDecomposer:
         if self.config and hasattr(self.config, "llm_client"):
             return self.config.llm_client
 
-        # Create default client
-        # This will use environment variables for API keys
+        # Create default client using CLIPipeLLMClient
         try:
-            return LLMClient()
+            from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+
+            return CLIPipeLLMClient(tool="claude", model="sonnet")
         except Exception as e:
             raise RuntimeError(f"Failed to create LLM client: {e}")
 
@@ -414,8 +464,9 @@ class PlanDecomposer:
                 id="sg-1",
                 title="Plan and design approach",
                 description=f"Analyze requirements and design approach for: {goal}",
-                recommended_agent="@holistic-architect",
-                agent_exists=False,
+                ideal_agent="@holistic-architect",
+                ideal_agent_desc="System design and architecture specialist",
+                assigned_agent="@holistic-architect",
             )
         )
 
@@ -425,8 +476,9 @@ class PlanDecomposer:
                 id="sg-2",
                 title="Implement solution",
                 description=f"Implement the planned solution for: {goal}",
-                recommended_agent="@full-stack-dev",
-                agent_exists=False,
+                ideal_agent="@full-stack-dev",
+                ideal_agent_desc="Full-stack development and implementation",
+                assigned_agent="@full-stack-dev",
             )
         )
 
@@ -436,8 +488,9 @@ class PlanDecomposer:
                 id="sg-3",
                 title="Test and verify",
                 description=f"Write tests and verify solution for: {goal}",
-                recommended_agent="@qa-test-architect",
-                agent_exists=False,
+                ideal_agent="@qa-test-architect",
+                ideal_agent_desc="Quality assurance and testing specialist",
+                assigned_agent="@qa-test-architect",
             )
         )
 
@@ -448,8 +501,9 @@ class PlanDecomposer:
                     id="sg-4",
                     title="Document changes",
                     description=f"Document implementation and update relevant docs for: {goal}",
-                    recommended_agent="@full-stack-dev",
-                    agent_exists=False,
+                    ideal_agent="@full-stack-dev",
+                    ideal_agent_desc="Full-stack development and documentation",
+                    assigned_agent="@full-stack-dev",
                 )
             )
 

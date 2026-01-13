@@ -2,12 +2,9 @@
 
 This module provides multi-source agent discovery, parsing, and manifest
 management for AI coding assistant agents from various configuration
-directories:
+directories (all 20 supported tools).
 
-- ~/.claude/agents/ (Claude Code)
-- ~/.config/ampcode/agents/ (AMP Code)
-- ~/.config/droid/agent/ (Droid)
-- ~/.config/opencode/agent/ (OpenCode)
+Uses the centralized tool paths registry for discovery paths.
 
 Main Components:
     AgentScanner: Multi-source agent file discovery
@@ -40,12 +37,12 @@ Example:
 from aurora_cli.agent_discovery.manifest import ManifestManager, should_refresh_manifest
 from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest, ManifestStats
 from aurora_cli.agent_discovery.parser import AgentParser
-from aurora_cli.agent_discovery.scanner import DEFAULT_DISCOVERY_PATHS, AgentScanner
+from aurora_cli.agent_discovery.scanner import AgentScanner, get_default_discovery_paths
 
 __all__ = [
     # Scanner
     "AgentScanner",
-    "DEFAULT_DISCOVERY_PATHS",
+    "get_default_discovery_paths",
     # Parser
     "AgentParser",
     # Manifest

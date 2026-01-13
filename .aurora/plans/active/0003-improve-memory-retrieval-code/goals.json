@@ -1,0 +1,86 @@
+{
+  "id": "0003-improve-memory-retrieval-code",
+  "title": "how to improve my memory retrieval for code?",
+  "created_at": "2026-01-12T21:23:17.380983",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/memory.py",
+      "relevance": 0.7004573762965023
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/paths.py",
+      "relevance": 0.47889041167861385
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py",
+      "relevance": 0.40678079427385205
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/htmlcov/coverage_html_cb_6fb7b396.js",
+      "relevance": 0.39154940965675317
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/soar/htmlcov/coverage_html_cb_6fb7b396.js",
+      "relevance": 0.39154940965675317
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/spawner/htmlcov/coverage_html_cb_6fb7b396.js",
+      "relevance": 0.39154940965675317
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.37213797723038367
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Analyze current memory retrieval implementation and...",
+      "description": "Analyze current memory retrieval implementation and identify bottlenecks",
+      "agent": "@full-stack-dev",
+      "confidence": 0.5,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Research best practices for code search and retrieval...",
+      "description": "Research best practices for code search and retrieval optimization",
+      "agent": "@business-analyst",
+      "confidence": 0.5,
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Design architecture improvements for memory retrieval system",
+      "description": "Design architecture improvements for memory retrieval system",
+      "agent": "@holistic-architect",
+      "confidence": 0.5,
+      "dependencies": [
+        "sg-1",
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Create PRD for memory retrieval optimization feature",
+      "description": "Create PRD for memory retrieval optimization feature",
+      "agent": "@1-create-prd",
+      "confidence": 0.5,
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Generate implementation tasks from architecture design",
+      "description": "Generate implementation tasks from architecture design",
+      "agent": "@2-generate-tasks",
+      "confidence": 0.5,
+      "dependencies": [
+        "sg-4"
+      ]
+    }
+  ],
+  "gaps": []
+}

@@ -29,11 +29,12 @@ from pathlib import Path
 from typing import Any
 
 import click
+from rich.console import Console
+
 from aurora_spawner import spawn_parallel
 from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
 from implement.parser import TaskParser
-from rich.console import Console
 
 console = Console()
 logger = logging.getLogger(__name__)

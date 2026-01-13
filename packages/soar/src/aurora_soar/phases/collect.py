@@ -2,14 +2,19 @@
 
 This module implements the Collect phase of the SOAR pipeline, which executes
 agents in parallel or sequentially based on dependencies.
+
+Supports ad-hoc agent spawning when no suitable agent exists in the registry.
+When an agent has config["is_spawn"]=True, the collect phase generates a spawn prompt
+using AgentMatcher and executes it via LLM instead of invoking a registered agent.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from aurora_spawner import (
     SpawnResult,
@@ -24,12 +29,67 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+def _get_agent_matcher():
+    """Lazy import of AgentMatcher to avoid circular imports."""
+    try:
+        from aurora_cli.planning.agents import AgentMatcher
+
+        return AgentMatcher()
+    except ImportError:
+        logger.warning("AgentMatcher not available, ad-hoc spawning disabled")
+        return None
+
+
 __all__ = ["execute_agents", "CollectResult", "AgentOutput"]
 
 
 # Default timeouts (in seconds)
 DEFAULT_AGENT_TIMEOUT = 300  # 5 minutes per agent
 DEFAULT_QUERY_TIMEOUT = 300  # 5 minutes overall
+
+# Spinner characters
+SPINNER_CHARS = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+
+async def _spawn_with_spinner(
+    task: SpawnTask,
+    progress_cb: Callable,
+    agent_idx: int,
+    total_agents: int,
+    agent_id: str,
+    on_progress: Callable | None,
+) -> SpawnResult:
+    """Run spawn_with_retry_and_fallback with a spinner on TTY."""
+    show_spinner = sys.stdout.isatty()
+    start_time = time.time()
+
+    # Create the spawn task
+    spawn_coro = spawn_with_retry_and_fallback(task, on_progress=progress_cb)
+
+    if not show_spinner:
+        # No spinner, just await
+        return await spawn_coro
+
+    # Run spawn in background, show spinner in foreground
+    spawn_task = asyncio.create_task(spawn_coro)
+    spinner_idx = 0
+
+    while not spawn_task.done():
+        elapsed = time.time() - start_time
+        spinner = SPINNER_CHARS[spinner_idx % len(SPINNER_CHARS)]
+        sys.stdout.write(
+            f"\r[Agent {agent_idx}/{total_agents}] {agent_id}: {spinner} Working... ({elapsed:.0f}s)"
+        )
+        sys.stdout.flush()
+        spinner_idx += 1
+        await asyncio.sleep(0.1)
+
+    # Clear spinner line
+    sys.stdout.write("\r" + " " * 60 + "\r")
+    sys.stdout.flush()
+
+    return await spawn_task
 
 
 class AgentOutput:
@@ -162,17 +222,53 @@ async def execute_agents(
     total_agents = len(agent_assignments)
     agent_idx = 0
 
+    # Get AgentMatcher for ad-hoc spawning (lazy load)
+    agent_matcher = None
+
     for subgoal_idx, agent in agent_assignments:
         agent_idx += 1
         subgoal = subgoal_map.get(subgoal_idx, {})
 
-        # Build agent prompt
-        prompt = _build_agent_prompt(subgoal, context)
+        # Check if this is an ad-hoc spawn (marked in config)
+        is_spawn = agent.config.get("is_spawn", False)
+
+        if is_spawn:
+            # Ad-hoc spawn: use spawn prompt from AgentMatcher
+            if agent_matcher is None:
+                agent_matcher = _get_agent_matcher()
+
+            if agent_matcher:
+                prompt = agent_matcher._create_spawn_prompt(
+                    agent_name=agent.id,
+                    agent_desc=getattr(agent, "description", ""),
+                    task_description=subgoal.get("description", ""),
+                )
+            else:
+                # Fallback: build a simple spawn prompt without AgentMatcher
+                prompt = f"""For this specific request, act as a {agent.id} specialist - {getattr(agent, "description", "specialist agent")}.
+
+Task: {subgoal.get("description", "")}
+
+Please complete this task directly without additional questions or preamble. Provide the complete deliverable.
+
+---
+
+After your deliverable, suggest a formal agent specification for this capability."""
+
+            logger.info(f"Ad-hoc spawning agent '{agent.id}' for subgoal {subgoal_idx}")
+            logger.debug(f"Spawn prompt for {agent.id}:\n{prompt[:500]}...")
+        else:
+            # Regular agent: use standard prompt
+            prompt = _build_agent_prompt(subgoal, context)
 
         # Create spawn task
+        # For ad-hoc spawns, use None as agent (direct LLM call without agent persona)
+        # For registered agents, use their agent.id
+        spawn_agent = None if is_spawn else agent.id
+
         spawn_task = SpawnTask(
             prompt=prompt,
-            agent=agent.id,
+            agent=spawn_agent,
             timeout=int(agent_timeout),
         )
 
@@ -186,19 +282,31 @@ async def execute_agents(
 
         progress_cb = make_progress_callback(agent_idx, total_agents, agent.id)
 
-        # Call spawn_with_retry_and_fallback
+        # Call spawn_with_retry_and_fallback with spinner
         if on_progress:
             on_progress(f"[Agent {agent_idx}/{total_agents}] {agent.id}: Starting...")
 
-        spawn_result = await spawn_with_retry_and_fallback(
+        # Run spawn with concurrent spinner
+        spawn_result = await _spawn_with_spinner(
             spawn_task,
-            on_progress=progress_cb,
+            progress_cb,
+            agent_idx,
+            total_agents,
+            agent.id,
+            on_progress,
         )
 
-        # Track fallback usage
+        # Track fallback and spawn usage
         if spawn_result.fallback:
             fallback_agents.append(agent.id)
             execution_metadata["fallback_count"] += 1
+
+        # Track ad-hoc spawned agents
+        if is_spawn:
+            if "spawned_agents" not in execution_metadata:
+                execution_metadata["spawned_agents"] = []
+            execution_metadata["spawned_agents"].append(agent.id)
+            execution_metadata["spawn_count"] = execution_metadata.get("spawn_count", 0) + 1
 
         # Convert to AgentOutput
         duration_ms = int((time.time() - start_time) * 1000)
@@ -216,6 +324,7 @@ async def execute_agents(
                     "fallback": spawn_result.fallback,
                     "retry_count": spawn_result.retry_count,
                     "original_agent": spawn_result.original_agent,
+                    "spawned": is_spawn,  # Track if this was an ad-hoc spawn
                 },
             )
             if on_progress:
@@ -237,6 +346,7 @@ async def execute_agents(
                     "exit_code": spawn_result.exit_code,
                     "fallback": spawn_result.fallback,
                     "retry_count": spawn_result.retry_count,
+                    "spawned": is_spawn,  # Track if this was an ad-hoc spawn
                 },
             )
             execution_metadata["failed_subgoals"] += 1
@@ -670,30 +780,34 @@ def _build_agent_prompt(subgoal: dict[str, Any], context: dict[str, Any]) -> str
     """
     description = subgoal.get("description", "")
 
-    # Build context section
-    context_parts = []
+    # Build directive prompt that forces execution (not conversation)
+    prompt_parts = [
+        "EXECUTE THIS TASK IMMEDIATELY. Do NOT introduce yourself or ask clarifying questions.",
+        "Return ONLY your findings and analysis.",
+        "",
+    ]
 
-    # Add query if available
-    if "query" in context:
-        context_parts.append(f"Original Query: {context['query']}")
+    # Add original query for context if available
+    original_query = context.get("query", context.get("original_query", ""))
+    if original_query:
+        prompt_parts.append(f"ORIGINAL QUESTION: {original_query}")
+        prompt_parts.append("")
 
-    # Add retrieved memories if available
+    # Add the actual task
+    prompt_parts.append(f"YOUR TASK: {description}")
+
+    # Add retrieved context if available (keep brief)
     if context.get("retrieved_memories"):
-        context_parts.append("\nRelevant Context:")
-        for i, memory in enumerate(context["retrieved_memories"][:3], 1):
-            # Extract content from memory chunk
-            content = memory.get("content", str(memory))
-            context_parts.append(f"{i}. {content}")
+        prompt_parts.append("")
+        prompt_parts.append("RELEVANT CONTEXT:")
+        for i, memory in enumerate(context["retrieved_memories"][:2], 1):
+            content = memory.get("content", str(memory))[:200]
+            prompt_parts.append(f"{i}. {content}")
 
-    context_str = "\n".join(context_parts) if context_parts else ""
+    prompt_parts.append("")
+    prompt_parts.append("BEGIN EXECUTION NOW:")
 
-    # Build final prompt
-    if context_str:
-        prompt = f"{context_str}\n\nTask: {description}"
-    else:
-        prompt = f"Task: {description}"
-
-    return prompt
+    return "\n".join(prompt_parts)
 
 
 def _validate_agent_output(output: AgentOutput) -> None:

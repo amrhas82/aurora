@@ -7,15 +7,28 @@ This module implements tri-hybrid retrieval with staged architecture:
   * Semantic similarity (40% weight by default)
   * Activation-based ranking (30% weight by default)
 
+Performance optimizations:
+- Query embedding cache (LRU, configurable size)
+- Persistent BM25 index (load once, rebuild on reindex)
+- Activation score caching via CacheManager
+
 Classes:
     HybridConfig: Configuration for hybrid retrieval weights
     HybridRetriever: Main hybrid retrieval implementation with BM25
 """
 
-from dataclasses import dataclass
+import hashlib
+import logging
+import time
+from collections import OrderedDict
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -47,10 +60,15 @@ class HybridConfig:
     bm25_weight: float = 0.3
     activation_weight: float = 0.3
     semantic_weight: float = 0.4
-    activation_top_k: int = 100
+    activation_top_k: int = 500  # Increased from 100 to improve recall on large repos
     stage1_top_k: int = 100
     fallback_to_activation: bool = True
     use_staged_retrieval: bool = True
+    # Caching configuration
+    enable_query_cache: bool = True
+    query_cache_size: int = 100
+    query_cache_ttl_seconds: int = 1800  # 30 minutes
+    bm25_index_path: str | None = None
 
     def __post_init__(self) -> None:
         """Validate configuration."""
@@ -72,6 +90,131 @@ class HybridConfig:
             raise ValueError(f"activation_top_k must be >= 1, got {self.activation_top_k}")
         if self.stage1_top_k < 1:
             raise ValueError(f"stage1_top_k must be >= 1, got {self.stage1_top_k}")
+        if self.query_cache_size < 1:
+            raise ValueError(f"query_cache_size must be >= 1, got {self.query_cache_size}")
+        if self.query_cache_ttl_seconds < 0:
+            raise ValueError(
+                f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}"
+            )
+
+
+@dataclass
+class CacheStats:
+    """Statistics for query embedding cache."""
+
+    hits: int = 0
+    misses: int = 0
+    evictions: int = 0
+
+    @property
+    def hit_rate(self) -> float:
+        """Calculate cache hit rate."""
+        total = self.hits + self.misses
+        return self.hits / total if total > 0 else 0.0
+
+
+class QueryEmbeddingCache:
+    """LRU cache for query embeddings with TTL support.
+
+    Caches query embeddings to avoid repeated embedding generation for
+    identical or similar queries. Uses normalized query as key.
+
+    Attributes:
+        capacity: Maximum number of cached embeddings
+        ttl_seconds: Time-to-live for cached entries
+        stats: Cache statistics (hits, misses, evictions)
+    """
+
+    def __init__(self, capacity: int = 100, ttl_seconds: int = 1800):
+        """Initialize query embedding cache.
+
+        Args:
+            capacity: Maximum cached embeddings (default 100)
+            ttl_seconds: TTL in seconds (default 1800 = 30 min)
+        """
+        self.capacity = capacity
+        self.ttl_seconds = ttl_seconds
+        self._cache: OrderedDict[str, tuple[npt.NDArray[np.float32], float]] = OrderedDict()
+        self.stats = CacheStats()
+
+    def _normalize_query(self, query: str) -> str:
+        """Normalize query for cache key.
+
+        Args:
+            query: Raw query string
+
+        Returns:
+            Normalized query (lowercase, stripped, single spaces)
+        """
+        return " ".join(query.lower().split())
+
+    def _make_key(self, query: str) -> str:
+        """Create cache key from query.
+
+        Args:
+            query: Query string
+
+        Returns:
+            Hash-based cache key
+        """
+        normalized = self._normalize_query(query)
+        return hashlib.md5(normalized.encode()).hexdigest()
+
+    def get(self, query: str) -> npt.NDArray[np.float32] | None:
+        """Get cached embedding for query.
+
+        Args:
+            query: Query string
+
+        Returns:
+            Cached embedding if found and not expired, None otherwise
+        """
+        key = self._make_key(query)
+
+        if key not in self._cache:
+            self.stats.misses += 1
+            return None
+
+        embedding, timestamp = self._cache[key]
+
+        # Check TTL
+        if time.time() - timestamp > self.ttl_seconds:
+            del self._cache[key]
+            self.stats.misses += 1
+            return None
+
+        # Move to end (most recently used)
+        self._cache.move_to_end(key)
+        self.stats.hits += 1
+        return embedding
+
+    def set(self, query: str, embedding: npt.NDArray[np.float32]) -> None:
+        """Cache embedding for query.
+
+        Args:
+            query: Query string
+            embedding: Query embedding to cache
+        """
+        key = self._make_key(query)
+
+        # Remove if exists (will re-add at end)
+        if key in self._cache:
+            del self._cache[key]
+        # Evict LRU if at capacity
+        elif len(self._cache) >= self.capacity:
+            self._cache.popitem(last=False)
+            self.stats.evictions += 1
+
+        self._cache[key] = (embedding, time.time())
+
+    def clear(self) -> None:
+        """Clear all cached embeddings."""
+        self._cache.clear()
+        self.stats = CacheStats()
+
+    def size(self) -> int:
+        """Get current cache size."""
+        return len(self._cache)
 
 
 class HybridRetriever:
@@ -146,6 +289,19 @@ class HybridRetriever:
         # BM25 scorer (lazy-initialized in retrieve())
         self.bm25_scorer: Any = None  # BM25Scorer from aurora_context_code.semantic.bm25_scorer
 
+        # Query embedding cache
+        if self.config.enable_query_cache:
+            self._query_cache = QueryEmbeddingCache(
+                capacity=self.config.query_cache_size,
+                ttl_seconds=self.config.query_cache_ttl_seconds,
+            )
+            logger.debug(
+                f"Query cache enabled: size={self.config.query_cache_size}, "
+                f"ttl={self.config.query_cache_ttl_seconds}s"
+            )
+        else:
+            self._query_cache = None
+
     def retrieve(
         self,
         query: str,
@@ -198,14 +354,30 @@ class HybridRetriever:
         if not activation_candidates:
             return []
 
-        # Step 2: Generate query embedding for semantic similarity
-        try:
-            query_embedding = self.embedding_provider.embed_query(query)
-        except Exception as e:
-            # If embedding fails and fallback is enabled, use activation-only
-            if self.config.fallback_to_activation:
-                return self._fallback_to_activation_only(activation_candidates, top_k)
-            raise ValueError(f"Failed to generate query embedding: {e}") from e
+        # Step 2: Generate query embedding for semantic similarity (with caching)
+        query_embedding = None
+        cache_hit = False
+
+        # Try cache first
+        if self._query_cache is not None:
+            query_embedding = self._query_cache.get(query)
+            if query_embedding is not None:
+                cache_hit = True
+                logger.debug(f"Query cache hit for: {query[:50]}...")
+
+        # Generate embedding if not cached
+        if query_embedding is None:
+            try:
+                query_embedding = self.embedding_provider.embed_query(query)
+                # Cache the embedding
+                if self._query_cache is not None:
+                    self._query_cache.set(query, query_embedding)
+                    logger.debug(f"Cached embedding for: {query[:50]}...")
+            except Exception as e:
+                # If embedding fails and fallback is enabled, use activation-only
+                if self.config.fallback_to_activation:
+                    return self._fallback_to_activation_only(activation_candidates, top_k)
+                raise ValueError(f"Failed to generate query embedding: {e}") from e
 
         # ========== STAGE 1: BM25 FILTERING ==========
         if self.config.use_staged_retrieval and self.config.bm25_weight > 0:
@@ -517,7 +689,7 @@ class HybridRetriever:
         bm25_weight = weights.get("bm25", 0.3)
         activation_weight = weights.get("activation", 0.3)
         semantic_weight = weights.get("semantic", 0.4)
-        activation_top_k = weights.get("top_k", 100)
+        activation_top_k = weights.get("top_k", 500)  # Match HybridConfig default
         stage1_top_k = weights.get("stage1_top_k", 100)
         fallback_to_activation = weights.get("fallback_to_activation", True)
         use_staged_retrieval = weights.get("use_staged_retrieval", True)
@@ -532,3 +704,35 @@ class HybridRetriever:
             fallback_to_activation=fallback_to_activation,
             use_staged_retrieval=use_staged_retrieval,
         )
+
+    def get_cache_stats(self) -> dict[str, Any]:
+        """Get query embedding cache statistics.
+
+        Returns:
+            Dictionary with cache stats:
+            - enabled: Whether cache is enabled
+            - size: Current number of cached embeddings
+            - capacity: Maximum cache capacity
+            - hits: Number of cache hits
+            - misses: Number of cache misses
+            - hit_rate: Cache hit rate (0.0-1.0)
+            - evictions: Number of LRU evictions
+        """
+        if self._query_cache is None:
+            return {"enabled": False}
+
+        return {
+            "enabled": True,
+            "size": self._query_cache.size(),
+            "capacity": self._query_cache.capacity,
+            "hits": self._query_cache.stats.hits,
+            "misses": self._query_cache.stats.misses,
+            "hit_rate": self._query_cache.stats.hit_rate,
+            "evictions": self._query_cache.stats.evictions,
+        }
+
+    def clear_cache(self) -> None:
+        """Clear the query embedding cache."""
+        if self._query_cache is not None:
+            self._query_cache.clear()
+            logger.debug("Query embedding cache cleared")

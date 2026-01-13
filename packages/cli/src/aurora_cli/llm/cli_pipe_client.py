@@ -9,10 +9,19 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
+from rich.console import Console
+from rich.live import Live
+from rich.spinner import Spinner
+
 from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
+
+# Console for spinner output
+_console = Console()
 
 
 class CLIPipeLLMClient(LLMClient):
@@ -135,20 +144,59 @@ class CLIPipeLLMClient(LLMClient):
         # Update state
         self._write_state(phase_name, "running")
 
-        # Pipe to tool
+        # Pipe to tool with spinner
+        cmd = [self._tool, "-p", "--model", self._model]
+        result = None
+        error = None
+
+        def run_subprocess():
+            nonlocal result, error
+            try:
+                result = subprocess.run(
+                    cmd,
+                    input=full_prompt,
+                    capture_output=True,
+                    text=True,
+                    timeout=300,  # Increased to 5 minutes
+                )
+            except subprocess.TimeoutExpired as e:
+                error = RuntimeError(f"Tool {self._tool} timed out after 300 seconds")
+            except Exception as e:
+                error = e
+
+        # Run subprocess in background thread with spinner
+        thread = threading.Thread(target=run_subprocess, daemon=True)
+        start_time = time.time()
+        thread.start()
+
+        # Show spinner while waiting (only on TTY)
+        import sys
+
+        show_spinner = sys.stdout.isatty()
+        spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+        spinner_idx = 0
         try:
-            # Build command with model flag
-            cmd = [self._tool, "-p", "--model", self._model]
-            result = subprocess.run(
-                cmd,
-                input=full_prompt,
-                capture_output=True,
-                text=True,
-                timeout=180,
-            )
-        except subprocess.TimeoutExpired as e:
-            self._write_state(phase_name, "timeout")
-            raise RuntimeError(f"Tool {self._tool} timed out after 180 seconds") from e
+            while thread.is_alive():
+                if show_spinner:
+                    elapsed = time.time() - start_time
+                    spinner = spinner_chars[spinner_idx % len(spinner_chars)]
+                    # Use \r to update same line, flush to ensure display
+                    sys.stdout.write(f"\r  {spinner} Thinking... ({elapsed:.0f}s)")
+                    sys.stdout.flush()
+                    spinner_idx += 1
+                thread.join(timeout=0.1)
+            if show_spinner:
+                # Clear spinner line
+                sys.stdout.write("\r" + " " * 40 + "\r")
+                sys.stdout.flush()
+        except KeyboardInterrupt:
+            _console.print("\n[yellow]Interrupted - waiting for subprocess...[/]")
+            thread.join(timeout=5)
+            raise
+
+        if error:
+            self._write_state(phase_name, "timeout" if "timed out" in str(error) else "failed")
+            raise error
 
         # Check for errors
         if result.returncode != 0:

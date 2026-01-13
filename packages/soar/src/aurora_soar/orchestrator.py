@@ -293,9 +293,8 @@ class SOAROrchestrator:
                 return self._handle_decomposition_failure(query, phase3_result, verbosity)
 
             # Phase 4: Verify decomposition with verify_lite (Task 5.3)
-            if verbosity in ["VERBOSE", "verbose"]:
-                print("\n[ORCHESTRATOR] Phase 4: Verify")
-                print("  Validating decomposition and assigning agents...")
+            logger.info("Phase 4: Verifying decomposition")
+            self._invoke_callback("verify", "before", {})
 
             # Extract decomposition dict and get available agents
             decomposition_dict = phase3_result.get("decomposition", phase3_result)
@@ -306,11 +305,17 @@ class SOAROrchestrator:
                 decomposition_dict, available_agents
             )
 
-            if verbosity in ["VERBOSE", "verbose"]:
-                if passed:
-                    print(f"  ✓ Verification passed ({len(agent_assignments)} agents assigned)")
-                else:
-                    print(f"  ✗ Verification failed ({len(issues)} issues found)")
+            # Invoke callback with result
+            self._invoke_callback(
+                "verify",
+                "after",
+                {
+                    "verdict": "PASS" if passed else "FAIL",
+                    "overall_score": 1.0 if passed else 0.5,
+                    "issues": issues,
+                    "agents_assigned": len(agent_assignments),
+                },
+            )
 
             phase4_result = {
                 "final_verdict": "PASS" if passed else "FAIL",
@@ -362,8 +367,12 @@ class SOAROrchestrator:
             subgoals = decomposition_dict.get("subgoals", [])
             progress_callback = self._get_progress_callback()  # Task 5.5
 
+            # Build context with original query for agent prompts
+            collect_context = dict(phase2_result)
+            collect_context["query"] = query  # Add original query for agent context
+
             phase5_result_obj = self._phase5_collect(
-                agent_assignments, subgoals, phase2_result, progress_callback
+                agent_assignments, subgoals, collect_context, progress_callback
             )
             # Store dict version in metadata
             phase5_dict = phase5_result_obj.to_dict()
@@ -1049,27 +1058,29 @@ class SOAROrchestrator:
 
         # Create chunks from sections
         split_chunks = []
+        truncation_suffix = "\n\n[... content truncated ...]"
         for i, (header, content) in enumerate(sections, 1):
             if len(content) > max_chars:
-                # Section still too large, truncate with warning
-                logger.warning(
-                    f"Section '{header}' still exceeds {max_chars} chars after splitting, truncating"
+                # Section still too large, truncate (debug level - this is expected behavior)
+                original_len = len(content)
+                content = content[: max_chars - len(truncation_suffix)] + truncation_suffix
+                logger.debug(
+                    f"Section '{header}' truncated from {original_len} to {len(content)} chars"
                 )
-                content = content[:max_chars] + "\n\n[... content truncated ...]"
 
             # Create new chunk with section suffix
             section_chunk = CodeChunk(
                 chunk_id=f"{chunk.id}_section_{i}",
                 file_path=chunk.file_path,
+                element_type=chunk.element_type,
                 name=f"{chunk.name} - {header or 'Section ' + str(i)}",
+                line_start=chunk.line_start,
+                line_end=chunk.line_end,
                 signature=chunk.signature,
                 docstring=content,
-                implementation=chunk.implementation,
                 language=chunk.language,
-                start_line=chunk.start_line,
-                end_line=chunk.end_line,
                 metadata={
-                    **chunk.metadata,
+                    **(chunk.metadata if chunk.metadata else {}),
                     "section_index": i,
                     "section_header": header,
                     "is_split_section": True,
@@ -1117,7 +1128,17 @@ class SOAROrchestrator:
                         # Index each section
                         for section_chunk in section_chunks:
                             try:
-                                embedding = embedding_provider.embed_chunk(section_chunk.docstring)
+                                # Final safety check: ensure docstring is under limit
+                                docstring = section_chunk.docstring or ""
+                                if len(docstring) > 2048:
+                                    logger.warning(
+                                        f"Section {section_chunk.id} still too large after splitting "
+                                        f"({len(docstring)} chars), truncating to 2048"
+                                    )
+                                    docstring = docstring[:2019] + "\n\n[... truncated ...]"
+                                    section_chunk.docstring = docstring
+
+                                embedding = embedding_provider.embed_chunk(docstring)
                                 section_chunk.embeddings = embedding
                                 self.store.save_chunk(section_chunk)
                                 indexed_count += 1
@@ -1127,7 +1148,16 @@ class SOAROrchestrator:
                                 continue
                     else:
                         # Chunk is small enough, index directly
-                        embedding = embedding_provider.embed_chunk(chunk.docstring)
+                        docstring = chunk.docstring or ""
+                        # Safety check (should never trigger since we check > 2048 above)
+                        if len(docstring) > 2048:
+                            logger.warning(
+                                f"Chunk {chunk.id} unexpectedly too large ({len(docstring)} chars), truncating"
+                            )
+                            docstring = docstring[:2019] + "\n\n[... truncated ...]"
+                            chunk.docstring = docstring
+
+                        embedding = embedding_provider.embed_chunk(docstring)
                         chunk.embeddings = embedding
                         self.store.save_chunk(chunk)
                         indexed_count += 1

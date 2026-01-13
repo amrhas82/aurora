@@ -1,0 +1,134 @@
+{
+  "id": "0011-create-reasoning-stateful-multiturn",
+  "title": "want to create reasoning stateful multi-turn module",
+  "created_at": "2026-01-13T08:05:39.569222",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/orchestrator.py",
+      "relevance": 0.689010981444636
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/core.py",
+      "relevance": 0.6866121026026561
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/goals.py",
+      "relevance": 0.6612216050824875
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/decompose.py",
+      "relevance": 0.5073659746994532
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py",
+      "relevance": 0.4864920954462139
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/plan.py",
+      "relevance": 0.4822043891046003
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/agent_discovery/scanner.py",
+      "relevance": 0.4521175473873278
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.45055249661726476
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/paths.py",
+      "relevance": 0.40905847138609636
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Research existing multi-turn conversation patterns and...",
+      "description": "Research existing multi-turn conversation patterns and stateful reasoning approaches in similar systems",
+      "agent": "@business-analyst",
+      "suggested_specialty": null,
+      "confidence": 0.4727272727272727,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Define architectural design for stateful multi-turn...",
+      "description": "Define architectural design for stateful multi-turn reasoning module including state management, conversation flow, and integration points",
+      "agent": "@holistic-architect",
+      "suggested_specialty": null,
+      "confidence": 0.43333333333333335,
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Create Product Requirements Document (PRD) for the...",
+      "description": "Create Product Requirements Document (PRD) for the reasoning stateful multi-turn module",
+      "agent": "@1-create-prd",
+      "suggested_specialty": null,
+      "confidence": 0.8,
+      "dependencies": [
+        "sg-1",
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Generate detailed implementation tasks from the PRD",
+      "description": "Generate detailed implementation tasks from the PRD",
+      "agent": "@2-generate-tasks",
+      "suggested_specialty": null,
+      "confidence": 1.0,
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Implement core state management components for multi-turn...",
+      "description": "Implement core state management components for multi-turn conversations",
+      "agent": null,
+      "suggested_specialty": "@ux-expert",
+      "confidence": 0.225,
+      "dependencies": [
+        "sg-4"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Implement reasoning logic and decision-making components",
+      "description": "Implement reasoning logic and decision-making components",
+      "agent": null,
+      "suggested_specialty": "@ux-expert",
+      "confidence": 0.26666666666666666,
+      "dependencies": [
+        "sg-5"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Integrate module with existing Aurora packages (SOAR,...",
+      "description": "Integrate module with existing Aurora packages (SOAR, planning, memory)",
+      "agent": "@full-stack-dev",
+      "suggested_specialty": null,
+      "confidence": 0.3,
+      "dependencies": [
+        "sg-6"
+      ]
+    },
+    {
+      "id": "sg-8",
+      "title": "Design and implement comprehensive test suite for stateful...",
+      "description": "Design and implement comprehensive test suite for stateful multi-turn interactions",
+      "agent": "@qa-test-architect",
+      "suggested_specialty": null,
+      "confidence": 0.6333333333333333,
+      "dependencies": [
+        "sg-7"
+      ]
+    }
+  ],
+  "gaps": []
+}

@@ -58,12 +58,20 @@ class Subgoal(BaseModel):
     Represents a decomposed piece of work that can be assigned
     to a specific agent for implementation.
 
+    Binary gap detection model:
+    - ideal_agent: The agent that SHOULD handle this task (unconstrained)
+    - ideal_agent_desc: Description of the ideal agent's capabilities
+    - assigned_agent: Best AVAILABLE agent from manifest
+
+    Gap detection: ideal_agent != assigned_agent → gap exists
+
     Attributes:
         id: Unique subgoal ID in format 'sg-N' (e.g., 'sg-1')
         title: Short descriptive title (5-100 chars)
         description: Detailed description (10-500 chars)
-        recommended_agent: Agent ID in format '@agent-id'
-        agent_exists: Whether the agent exists in manifest
+        ideal_agent: Agent that SHOULD handle this (unconstrained)
+        ideal_agent_desc: Description of ideal agent's capabilities
+        assigned_agent: Best AVAILABLE agent ID in '@agent-id' format
         dependencies: List of subgoal IDs this depends on
     """
 
@@ -89,14 +97,20 @@ class Subgoal(BaseModel):
         max_length=500,
         description="Detailed description of what this subgoal accomplishes",
     )
-    recommended_agent: str = Field(
-        ...,
-        description="Agent ID in '@agent-id' format",
-        examples=["@full-stack-dev", "@qa-test-architect"],
+    ideal_agent: str = Field(
+        default="",
+        description="Agent that SHOULD handle this task (unconstrained)",
+        examples=["@creative-writer", "@data-analyst"],
     )
-    agent_exists: bool = Field(
-        default=True,
-        description="Whether the recommended agent exists in manifest",
+    ideal_agent_desc: str = Field(
+        default="",
+        description="Description of ideal agent's capabilities",
+        examples=["Specialist in story editing, narrative development"],
+    )
+    assigned_agent: str = Field(
+        ...,
+        description="Best AVAILABLE agent ID in '@agent-id' format",
+        examples=["@full-stack-dev", "@qa-test-architect"],
     )
     dependencies: list[str] = Field(
         default_factory=list,
@@ -122,7 +136,7 @@ class Subgoal(BaseModel):
             raise ValueError(f"Subgoal ID must be 'sg-N' format (e.g., 'sg-1'). Got: {v}")
         return v
 
-    @field_validator("recommended_agent")
+    @field_validator("assigned_agent", "ideal_agent")
     @classmethod
     def validate_agent_format(cls, v: str) -> str:
         """Validate agent ID starts with '@'.
@@ -134,8 +148,12 @@ class Subgoal(BaseModel):
             The validated agent ID
 
         Raises:
-            ValueError: If agent format is invalid
+            ValueError: If agent format is invalid (only when non-empty)
         """
+        # Allow empty strings for optional ideal_agent field
+        if not v:
+            return v
+
         pattern = r"^@[a-z0-9][a-z0-9-]*$"
         if not re.match(pattern, v):
             raise ValueError(f"Agent must start with '@' (e.g., '@full-stack-dev'). Got: {v}")
@@ -247,6 +265,10 @@ class Plan(BaseModel):
     file_resolutions: dict[str, list[dict[str, Any]]] = Field(
         default_factory=dict,
         description="Map of subgoal ID to file resolutions",
+    )
+    memory_context: list["MemoryContext"] = Field(
+        default_factory=list,
+        description="Relevant files from memory search",
     )
 
     @field_validator("plan_id")
@@ -489,15 +511,16 @@ class FileResolution(BaseModel):
 class AgentGap(BaseModel):
     """Agent gap information for unmatched subgoals.
 
-    Represents a subgoal that couldn't be matched to an existing agent
-    with sufficient confidence, requiring manual assignment or agent creation.
+    Represents a subgoal where the ideal agent differs from the assigned agent,
+    indicating a gap in the agent registry. Used for gap detection and reporting.
+
+    Binary gap detection: ideal_agent != assigned_agent → gap exists
 
     Attributes:
-        subgoal_id: ID of the subgoal with the gap
-        recommended_agent: Best-match agent ID (even if low score)
-        agent_exists: Whether the recommended agent exists in manifest
-        fallback: Fallback agent ID to use
-        suggested_capabilities: Keywords for future agent creation
+        subgoal_id: ID of the subgoal with the gap (e.g., "sg-1")
+        ideal_agent: Agent that SHOULD handle this task (unconstrained)
+        ideal_agent_desc: Description of the ideal agent's capabilities
+        assigned_agent: Best AVAILABLE agent from manifest
     """
 
     model_config = ConfigDict(
@@ -510,22 +533,20 @@ class AgentGap(BaseModel):
         description="ID of subgoal with agent gap",
         examples=["sg-1", "sg-4"],
     )
-    recommended_agent: str = Field(
-        ...,
-        description="Best-match agent ID",
-        examples=["@qa-test-architect", "@security-expert"],
+    ideal_agent: str = Field(
+        default="",
+        description="Agent that SHOULD handle this task (unconstrained)",
+        examples=["@creative-writer", "@data-analyst"],
     )
-    agent_exists: bool = Field(
-        default=False,
-        description="Whether recommended agent exists in manifest",
+    ideal_agent_desc: str = Field(
+        default="",
+        description="Description of ideal agent's capabilities",
+        examples=["Specialist in story editing, narrative development"],
     )
-    fallback: str = Field(
-        default="@full-stack-dev",
-        description="Fallback agent to use",
-    )
-    suggested_capabilities: list[str] = Field(
-        default_factory=list,
-        description="Keywords for future agent creation",
+    assigned_agent: str = Field(
+        default="",
+        description="Best AVAILABLE agent from manifest",
+        examples=["@business-analyst", "@master"],
     )
 
     @field_validator("subgoal_id")
@@ -547,7 +568,7 @@ class AgentGap(BaseModel):
             raise ValueError(f"Subgoal ID must be 'sg-N' format. Got: {v}")
         return v
 
-    @field_validator("recommended_agent", "fallback")
+    @field_validator("ideal_agent", "assigned_agent")
     @classmethod
     def validate_agent_format(cls, v: str) -> str:
         """Validate agent ID format.
@@ -559,8 +580,12 @@ class AgentGap(BaseModel):
             The validated agent ID
 
         Raises:
-            ValueError: If format is invalid
+            ValueError: If format is invalid (only when non-empty)
         """
+        # Allow empty strings for optional fields
+        if not v:
+            return v
+
         pattern = r"^@[a-z0-9][a-z0-9-]*$"
         if not re.match(pattern, v):
             raise ValueError(f"Agent must start with '@'. Got: {v}")
@@ -600,8 +625,8 @@ class DecompositionSummary(BaseModel):
     subgoals: list[Subgoal] = Field(
         ...,
         min_length=1,
-        max_length=10,
-        description="List of decomposed subgoals",
+        max_length=12,
+        description="List of decomposed subgoals (prefer 8-10, max 12)",
     )
     agents_assigned: int = Field(
         ...,
@@ -677,12 +702,17 @@ class DecompositionSummary(BaseModel):
             # Subgoals count
             content.append(f"[bold cyan]Subgoals:[/bold cyan] {len(self.subgoals)}\n")
 
-            # List each subgoal
+            # List each subgoal with gap detection:
+            #   Matched: ideal == assigned (green)
+            #   Gap: ideal != assigned (yellow)
             for sg in self.subgoals:
-                agent_style = "yellow" if not sg.agent_exists else "green"
-                content.append(
-                    f"  [{sg.id}] {sg.title} ([{agent_style}]{sg.recommended_agent}[/{agent_style}])"
-                )
+                is_gap = sg.ideal_agent != sg.assigned_agent
+                if is_gap:
+                    content.append(
+                        f"   {sg.title} ([yellow]{sg.assigned_agent} → {sg.ideal_agent} ⚠[/yellow])"
+                    )
+                else:
+                    content.append(f"   {sg.title} ([green]{sg.assigned_agent}[/green])")
 
             content.append("")
 
@@ -739,7 +769,11 @@ class DecompositionSummary(BaseModel):
             print(f"Goal: {self.goal}")
             print(f"Subgoals: {len(self.subgoals)}")
             for sg in self.subgoals:
-                print(f"  [{sg.id}] {sg.title} ({sg.recommended_agent})")
+                is_gap = sg.ideal_agent != sg.assigned_agent
+                if is_gap:
+                    print(f"  {sg.title} ({sg.assigned_agent} → {sg.ideal_agent} - GAP)")
+                else:
+                    print(f"  {sg.title} ({sg.assigned_agent})")
             print(f"Agents: {self.agents_assigned} assigned, {len(self.agent_gaps)} gaps")
             print(
                 f"Files: {self.files_resolved} resolved (avg confidence: {self.avg_confidence:.2f})"
@@ -788,12 +822,15 @@ class SubgoalData(BaseModel):
     Represents a subgoal with agent assignment and dependencies.
     This is the format used in goals.json for the /plan skill.
 
+    Binary gap detection: ideal_agent != agent → gap exists
+
     Attributes:
         id: Subgoal ID (sg-1, sg-2, etc.)
         title: Short title
         description: Detailed description
-        agent: Recommended agent ID with @ prefix
-        confidence: Confidence score of agent match (0.0-1.0)
+        ideal_agent: Agent that SHOULD handle this (unconstrained)
+        ideal_agent_desc: Description of ideal agent's capabilities
+        agent: Best AVAILABLE agent ID with @ prefix (assigned_agent)
         dependencies: List of dependent subgoal IDs
     """
 
@@ -820,17 +857,21 @@ class SubgoalData(BaseModel):
         min_length=10,
         max_length=500,
     )
-    agent: str = Field(
-        ...,
-        description="Recommended agent ID with @ prefix",
+    ideal_agent: str | None = Field(
+        default=None,
+        description="Agent that SHOULD handle this task (unconstrained)",
+        examples=["@creative-writer", "@data-analyst"],
+    )
+    ideal_agent_desc: str | None = Field(
+        default=None,
+        description="Description of ideal agent's capabilities",
+        examples=["Specialist in story editing, narrative development"],
+    )
+    agent: str | None = Field(
+        default=None,
+        description="Best AVAILABLE agent ID with @ prefix (assigned_agent)",
         pattern=r"^@[a-z0-9-]+$",
         examples=["@full-stack-dev", "@qa-test-architect"],
-    )
-    confidence: float = Field(
-        ...,
-        description="Confidence score of agent match",
-        ge=0.0,
-        le=1.0,
     )
     dependencies: list[str] = Field(
         default_factory=list,

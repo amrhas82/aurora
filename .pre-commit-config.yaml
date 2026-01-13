@@ -49,6 +49,7 @@ repos:
         name: Format Python code with Black
         language_version: python3.10
         args: ['--line-length=100']
+        exclude: '^(tests/fixtures/.*|generate_saas_model\.py|saas_financial_model\.py)'
 
   # Python import sorting
   - repo: https://github.com/pycqa/isort
@@ -57,6 +58,7 @@ repos:
       - id: isort
         name: Sort Python imports with isort
         args: ['--profile=black', '--line-length=100']
+        exclude: '^(tests/fixtures/.*|generate_saas_model\.py|saas_financial_model\.py)'
 
   # Python linting
   - repo: https://github.com/pycqa/flake8
@@ -67,8 +69,9 @@ repos:
         args: [
           '--max-line-length=100',
           '--extend-ignore=E203,W503,E501',  # Black compatibility
-          '--exclude=.git,__pycache__,build,dist,*.egg-info'
+          '--exclude=.git,__pycache__,build,dist,*.egg-info,docs/development'
         ]
+        exclude: '^(docs/development/|generate_saas_model\.py|saas_financial_model\.py)'
 
   # Python type checking (optional, can be slow)
   # - repo: https://github.com/pre-commit/mirrors-mypy

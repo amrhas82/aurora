@@ -9,13 +9,13 @@ from aurora_cli.templates.slash_commands import get_command_body
 
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
-    "search": "Search indexed code and documentation",
-    "get": "Get full chunk content by index",
-    "plan": "Generate structured plans with agent delegation",
+    "search": 'Search indexed code ["query" --limit N --type function]',
+    "get": "Retrieve search result [N] from last search",
+    "plan": "Create implementation plan with agent delegation [goal]",
     "proposal": "Generate spec-delta proposals with requirements",
-    "checkpoint": "Save session context for continuity",
-    "implement": "Plan-based implementation (placeholder)",
-    "archive": "Archive completed plans with spec processing",
+    "checkpoint": 'Save session context ["optional-name"]',
+    "implement": "Execute plan tasks [plan-id]",
+    "archive": "Archive completed plan with spec processing [plan-id]",
 }
 
 # File paths for each command (TOML format)

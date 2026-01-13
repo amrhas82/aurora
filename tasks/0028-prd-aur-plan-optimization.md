@@ -183,37 +183,37 @@ aur goals "description"     → .aurora/plans/active/NNNN-slug/goals.json
 
 ## Implementation Tasks
 
-### Task 0: Fix `aur goals` Memory Retrieval (OPTIMIZATION)
-- [ ] 0.1 Locate memory search call in `packages/cli/src/aurora_cli/commands/goals.py`
-- [ ] 0.2 Add filter to retrieve code chunks only (exclude docs, markdown, config files)
-- [ ] 0.3 Or add `--code-only` flag to the command
-- [ ] 0.4 Test: `aur goals "improve memory indexing"` should return `.py` files, not `.md` files
+### Task 0: Fix `aur goals` Memory Retrieval (OPTIMIZATION) [DONE]
+- [x] 0.1 Locate memory search call in `packages/cli/src/aurora_cli/commands/goals.py`
+- [x] 0.2 Add filter to retrieve code chunks only (exclude docs, markdown, config files)
+- [x] 0.3 Or add `--code-only` flag to the command (used extension-based filter instead)
+- [x] 0.4 Test: `aur goals "improve memory indexing"` should return `.py` files, not `.md` files
 
 ### Task 1: Replace PLAN_TEMPLATE with exact OpenSpec port
-- [ ] 1.1 Replace current loose PLAN_TEMPLATE with exact OpenSpec proposal template (rebranded)
-- [ ] 1.2 Add PLAN_GUARDRAILS, PLAN_STEPS, PLAN_REFERENCES constants
-- [ ] 1.3 Update COMMAND_TEMPLATES dict with new PLAN_TEMPLATE
-- [ ] 1.4 Add goals.json integration to Step 1 (conditional: "If goals.json exists...")
-- [ ] 1.5 **Fallback**: If Task 0 fails, add `aur agents list` step to self-capture agents
+- [x] 1.1 Replace current loose PLAN_TEMPLATE with exact OpenSpec proposal template (rebranded)
+- [x] 1.2 Add PLAN_GUARDRAILS, PLAN_STEPS, PLAN_REFERENCES constants
+- [x] 1.3 Update COMMAND_TEMPLATES dict with new PLAN_TEMPLATE
+- [x] 1.4 Add goals.json integration to Step 1 (conditional: "If goals.json exists...")
+- [x] 1.5 **Fallback**: If Task 0 fails, add `aur agents list` step to self-capture agents
 
-### Task 2: Port PROPOSAL_TEMPLATE from OpenSpec (Issue #2) [READY]
-- [ ] 2.1 Add PROPOSAL_GUARDRAILS (exact port, rebranded)
-- [ ] 2.2 Add PROPOSAL_STEPS (exact port, paths changed to `.aurora/`)
-- [ ] 2.3 Add PROPOSAL_REFERENCES (exact port, commands rebranded)
-- [ ] 2.4 Add combined PROPOSAL_TEMPLATE
-- [ ] 2.5 Add `"proposal": PROPOSAL_TEMPLATE` to COMMAND_TEMPLATES dict
+### Task 2: Port PROPOSAL_TEMPLATE from OpenSpec (Issue #2) [DONE]
+- [x] 2.1 Add PROPOSAL_GUARDRAILS (exact port, rebranded)
+- [x] 2.2 Add PROPOSAL_STEPS (exact port, paths changed to `.aurora/`)
+- [x] 2.3 Add PROPOSAL_REFERENCES (exact port, commands rebranded)
+- [x] 2.4 Add combined PROPOSAL_TEMPLATE
+- [x] 2.5 Add `"proposal": PROPOSAL_TEMPLATE` to COMMAND_TEMPLATES dict
 
-### Task 3: Register proposal command for `aur init --config`
-- [ ] 3.1 Add `"proposal"` to COMMAND_IDS in `base.py`
-- [ ] 3.2 Add FILE_PATHS entry: `"proposal": ".claude/commands/aur/proposal.md"`
-- [ ] 3.3 Add FRONTMATTER entry with name/description/category/tags
-- [ ] 3.4 Add DESCRIPTIONS entry for proposal command
+### Task 3: Register proposal command for `aur init --config` [DONE]
+- [x] 3.1 Add `"proposal"` to COMMAND_IDS in `base.py`
+- [x] 3.2 Add FILE_PATHS entry for all 20 tools
+- [x] 3.3 Add FRONTMATTER entry with name/description/category/tags
+- [x] 3.4 Add DESCRIPTIONS entry for proposal command
 
-### Task 4: Test and validate
-- [ ] 4.1 Run `aur init --config` to regenerate slash commands
-- [ ] 4.2 Verify `.claude/commands/aur/proposal.md` is created
-- [ ] 4.3 Test `/aur:plan` with goals.json path - verify Goals Context section
-- [ ] 4.4 Test `/aur:proposal` generates proposal.md, tasks.md, specs/ in same directory
+### Task 4: Test and validate [DONE]
+- [x] 4.1 Run `aur init --config` to regenerate slash commands
+- [x] 4.2 Verify `.claude/commands/aur/proposal.md` is created
+- [x] 4.3 Test `/aur:plan` with goals.json path - verify Goals Context section
+- [x] 4.4 Test `/aur:proposal` generates proposal.md, tasks.md, specs/ in same directory
 
 ## Verification
 

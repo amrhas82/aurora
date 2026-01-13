@@ -116,26 +116,27 @@ def get_manifest(force_refresh: bool = False, config: Config | None = None) -> A
 def agents_group() -> None:
     """Agent discovery and management commands.
 
-    Discover and search AI coding assistant agents from multiple sources:
-    - ~/.claude/agents/ (Claude Code)
-    - ~/.config/ampcode/agents/ (AMP Code)
-    - ~/.config/droid/agent/ (Droid)
-    - ~/.config/opencode/agent/ (OpenCode)
+    Discovers agents from tools configured in the current project.
+    Agent sources are determined by tool configuration during 'aur init'.
 
     \b
     Commands:
-        list     - List all discovered agents by category
+        list     - List agents for project-configured tools
         search   - Search agents by keyword
         show     - Display full details for an agent
         refresh  - Force regenerate the agent manifest
 
     \b
     Examples:
-        aur agents list                    # List all agents
+        aur agents list                    # List agents for configured tools
+        aur agents list --all              # List agents from all tools
         aur agents list --category qa      # List only QA agents
         aur agents search "test"           # Search for test-related agents
         aur agents show qa-test-architect  # Show agent details
         aur agents refresh                 # Force manifest refresh
+
+    \b
+    Tip: Run 'aur init' and select option [4] to refresh agent discovery.
     """
     pass
 
@@ -152,21 +153,33 @@ def agents_group() -> None:
     "--format",
     "-f",
     "output_format",
-    type=click.Choice(["rich", "simple"]),
+    type=click.Choice(["rich", "simple", "plan"]),
     default="rich",
-    help="Output format (default: rich)",
+    help="Output format: rich (default), simple (plain text), plan (for plan.md)",
+)
+@click.option(
+    "--all",
+    "-a",
+    "show_all",
+    is_flag=True,
+    default=False,
+    help="Show agents from all tools (not just project-configured tools)",
 )
 @handle_errors
-def list_command(category: str | None, output_format: str) -> None:
-    """List all discovered agents grouped by category.
+def list_command(category: str | None, output_format: str, show_all: bool) -> None:
+    """List discovered agents for configured tools.
 
-    Displays agents organized by their category (eng, qa, product, general)
-    with counts for each category.
+    By default, shows agents only from tools configured in the current project.
+    Use --all to show agents from all discovery paths.
 
     \b
     Examples:
-        # List all agents
+        # List agents for project-configured tools
         aur agents list
+
+        \b
+        # List all agents from all tools
+        aur agents list --all
 
         \b
         # List only engineering agents
@@ -176,19 +189,62 @@ def list_command(category: str | None, output_format: str) -> None:
         # Simple output (no Rich formatting)
         aur agents list --format simple
     """
-    start_time = time.time()
+    from pathlib import Path
 
-    manifest = get_manifest()
+    from aurora_cli.commands.init_helpers import get_configured_tool_ids
+    from aurora_cli.configurators.slash.paths import get_tool_paths
+
+    start_time = time.time()
+    project_path = Path.cwd()
+
+    # Determine which agent paths to use
+    if show_all:
+        # Use all configured discovery paths
+        manifest = get_manifest()
+        tool_context = "all tools"
+    else:
+        # Project-scoped: only configured tools
+        configured_tool_ids = get_configured_tool_ids(project_path)
+
+        if not configured_tool_ids:
+            console.print(
+                "\n[yellow]No tools configured in this project.[/]\n"
+                "Run [cyan]aur init[/] to configure tools and discover agents.\n"
+                "\n[dim]Tip: Use [cyan]aur agents list --all[/] to see all agents.[/]"
+            )
+            return
+
+        # Get agent paths for configured tools
+        selected_agent_paths = []
+        for tool_id in configured_tool_ids:
+            tool_paths = get_tool_paths(tool_id)
+            if tool_paths and tool_paths.agents:
+                selected_agent_paths.append(tool_paths.agents)
+
+        if not selected_agent_paths:
+            console.print(
+                "\n[yellow]No agent directories found for configured tools.[/]\n"
+                "Run [cyan]aur init[/] and select option [4] to refresh agent discovery."
+            )
+            return
+
+        # Create scanner with project-specific paths
+        scanner = AgentScanner(selected_agent_paths)
+        manager = ManifestManager(scanner=scanner)
+        manifest = manager.generate()
+        tool_context = ", ".join(configured_tool_ids)
 
     if manifest.stats.total == 0:
-        console.print(
-            "\n[yellow]No agents found.[/]\n"
-            "Agent files should be in one of these directories:\n"
-            "  - ~/.claude/agents/\n"
-            "  - ~/.config/ampcode/agents/\n"
-            "  - ~/.config/droid/agent/\n"
-            "  - ~/.config/opencode/agent/\n"
-        )
+        if show_all:
+            console.print(
+                "\n[yellow]No agents found.[/]\n"
+                "Add agent files to tool-specific directories like ~/.claude/agents/"
+            )
+        else:
+            console.print(
+                f"\n[yellow]No agents found for configured tools ({tool_context}).[/]\n"
+                "Add agent files to the appropriate directories or use [cyan]--all[/] to search everywhere."
+            )
         return
 
     # Filter by category if specified
@@ -218,6 +274,15 @@ def list_command(category: str | None, output_format: str) -> None:
     elapsed = time.time() - start_time
     if elapsed > 0.5:
         console.print(f"\n[dim]Completed in {elapsed:.2f}s[/]")
+
+    # Show available options hint
+    console.print()
+    console.print("[dim]Options:[/]")
+    console.print("[dim]  aur agents search <keyword>    Search agents by keyword[/]")
+    console.print("[dim]  aur agents show <agent-id>     Show agent details[/]")
+    if not show_all:
+        console.print("[dim]  aur agents list --all          Show agents from all tools[/]")
+    console.print("[dim]  aur init → option [4]          Refresh agent discovery[/]")
 
 
 @agents_group.command(name="search")
@@ -390,9 +455,19 @@ def _display_agents_list(
 
     Args:
         agents_by_category: Dictionary mapping category to agent list
-        output_format: 'rich' or 'simple'
+        output_format: 'rich', 'simple', or 'plan'
         total: Total agent count for header
     """
+    # Plan format: clean output for plan.md (no headers, just @agent - goal)
+    if output_format == "plan":
+        all_agents = []
+        for agents in agents_by_category.values():
+            all_agents.extend(agents)
+        for agent in sorted(all_agents, key=lambda a: a.id):
+            # Full description, no truncation
+            print(f"@{agent.id} - {agent.goal}")
+        return
+
     console.print(f"\n[bold]Discovered {total} agent(s)[/]\n")
 
     # Category display order and colors
@@ -415,14 +490,14 @@ def _display_agents_list(
         if output_format == "rich":
             console.print(f"[bold {cat_color}]{cat_name}[/] ({len(agents)})")
             for agent in sorted(agents, key=lambda a: a.id):
-                role_preview = _truncate(agent.role, 50)
-                console.print(f"  [cyan]{agent.id}[/] - {role_preview}")
+                # Full description, no truncation
+                console.print(f"  [cyan]@{agent.id}[/] - {agent.goal}")
             console.print()
         else:
-            # Simple format
+            # Simple format - full description
             print(f"\n{cat_name} ({len(agents)})")
             for agent in sorted(agents, key=lambda a: a.id):
-                print(f"  - {agent.id}: {agent.role}")
+                print(f"  @{agent.id} - {agent.goal}")
 
 
 def _display_agent_details(agent: AgentInfo) -> None:

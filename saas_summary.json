@@ -1,0 +1,30 @@
+{
+  "final_month": 36,
+  "total_customers": 602,
+  "monthly_recurring_revenue": 27177.6,
+  "annual_run_rate": 326131.19999999995,
+  "cumulative_profit": -611173.9100000001,
+  "months_to_profitability": null,
+  "revenue_growth": {
+    "first_month_mrr": 4678.75,
+    "last_month_mrr": 27177.6,
+    "total_growth_pct": 480.87309644670046
+  },
+  "unit_economics": {
+    "starter": {
+      "ltv": 362.5,
+      "cac_payback_months": 5.172413793103448,
+      "ltv_cac_ratio": 2.4166666666666665
+    },
+    "professional": {
+      "ltv": 1980.0,
+      "cac_payback_months": 5.05050505050505,
+      "ltv_cac_ratio": 3.96
+    },
+    "enterprise": {
+      "ltv": 9966.666666666668,
+      "cac_payback_months": 6.688963210702341,
+      "ltv_cac_ratio": 4.983333333333334
+    }
+  }
+}

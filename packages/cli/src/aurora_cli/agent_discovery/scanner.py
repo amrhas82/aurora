@@ -1,11 +1,10 @@
 """Multi-source agent file discovery for AURORA CLI.
 
 This module provides the AgentScanner class for discovering agent markdown files
-from multiple standard directories used by various AI coding assistants:
-- ~/.claude/agents/ (Claude Code)
-- ~/.config/ampcode/agents/ (AMP Code)
-- ~/.config/droid/agent/ (Droid)
-- ~/.config/opencode/agent/ (OpenCode)
+from multiple standard directories used by various AI coding assistants.
+
+The scanner uses the centralized tool paths registry (paths.py) for default
+discovery paths, covering all 20 supported AI coding tools.
 
 The scanner handles missing directories gracefully with logging, and yields
 file paths for processing by the AgentParser.
@@ -19,13 +18,17 @@ from typing import Iterator
 
 logger = logging.getLogger(__name__)
 
-# Default agent discovery paths (relative to home directory)
-DEFAULT_DISCOVERY_PATHS: list[str] = [
-    "~/.claude/agents",
-    "~/.config/ampcode/agents",
-    "~/.config/droid/agent",
-    "~/.config/opencode/agent",
-]
+
+def get_default_discovery_paths() -> list[str]:
+    """Get default agent discovery paths from the tool registry.
+
+    Returns:
+        List of agent directory paths for all 20 supported tools
+    """
+    from aurora_cli.configurators.slash.paths import get_all_agent_paths
+
+    return get_all_agent_paths()
+
 
 # Supported agent file extensions
 AGENT_FILE_EXTENSIONS: frozenset[str] = frozenset({".md", ".markdown"})
@@ -59,11 +62,11 @@ class AgentScanner:
 
         Args:
             discovery_paths: Optional list of paths to scan. If not provided,
-                           uses DEFAULT_DISCOVERY_PATHS. Paths may contain
-                           tilde (~) for home directory expansion.
+                           uses paths from the tool registry (all 20 tools).
+                           Paths may contain tilde (~) for home directory expansion.
         """
         if discovery_paths is None:
-            discovery_paths = DEFAULT_DISCOVERY_PATHS.copy()
+            discovery_paths = get_default_discovery_paths()
 
         self._raw_paths = discovery_paths
 

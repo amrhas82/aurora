@@ -10,49 +10,49 @@ from aurora_cli.templates.slash_commands import get_command_body
 FRONTMATTER: dict[str, str] = {
     "search": """---
 name: Aurora: Search
-description: Search indexed code and documentation
+description: Search indexed code ["query" --limit N --type function]
 argument-hint: search query
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "get": """---
 name: Aurora: Get
-description: Get full chunk content by index
+description: Retrieve search result [N] from last search
 argument-hint: chunk index number
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "plan": """---
 name: Aurora: Plan
-description: Generate structured plans with agent delegation
+description: Create implementation plan with agent delegation [goal]
 argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
 ---""",
     "proposal": """---
 name: Aurora: Proposal
-description: Generate structured proposals with agent delegation
+description: Draft spec-delta proposal with requirements [feature]
 argument-hint: request or feature description
 category: Aurora
 tags: [aurora, proposalning]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
-description: Save session context for continuity
+description: Save session context ["optional-name"]
 argument-hint: optional checkpoint name
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
     "implement": """---
 name: Aurora: Implement
-description: Plan-based implementation (placeholder)
+description: Execute plan tasks [plan-id]
 argument-hint: plan ID to implement
 category: Aurora
 tags: [aurora, planning, implementation]
 ---""",
     "archive": """---
 name: Aurora: Archive
-description: Archive completed plans with spec processing
+description: Archive completed plan with spec processing [plan-id]
 argument-hint: plan ID to archive
 category: Aurora
 tags: [aurora, planning, archive]

@@ -61,27 +61,51 @@ def verify_lite(
     agent_map = {agent.id: agent for agent in available_agents}
 
     # Check 3 & 4: Validate subgoal structure and agent existence
-    for subgoal in subgoals:
-        subgoal_index = subgoal.get("subgoal_index")
+    for i, subgoal in enumerate(subgoals):
+        # Use subgoal_index if provided, otherwise fall back to loop index
+        subgoal_index = subgoal.get("subgoal_index", i)
 
         # Validate required fields
         if "description" not in subgoal:
             issues.append(f"Subgoal {subgoal_index} missing 'description' field")
             continue
 
-        if "suggested_agent" not in subgoal:
-            issues.append(f"Subgoal {subgoal_index} missing 'suggested_agent' field")
+        # Support both new schema (assigned_agent) and legacy (suggested_agent)
+        # New schema: ideal_agent = what SHOULD handle, assigned_agent = best available
+        # Legacy: suggested_agent = both ideal and assigned
+        assigned_agent = subgoal.get("assigned_agent") or subgoal.get("suggested_agent")
+
+        if not assigned_agent:
+            issues.append(
+                f"Subgoal {subgoal_index} missing agent field (assigned_agent or suggested_agent)"
+            )
             continue
 
-        suggested_agent = subgoal["suggested_agent"]
+        # Check for gap first: ideal_agent != assigned_agent
+        ideal_agent = subgoal.get("ideal_agent")
+        if ideal_agent and ideal_agent != assigned_agent:
+            # Gap detected - create a placeholder AgentInfo for spawning
+            # The collect phase will use spawn_prompt instead of invoking
+            from aurora_soar.agent_registry import AgentInfo
 
-        # Check if agent exists
-        if suggested_agent not in agent_map:
-            issues.append(f"Agent '{suggested_agent}' not found in registry")
+            placeholder_agent = AgentInfo(
+                id=ideal_agent,
+                name=ideal_agent,
+                description=subgoal.get("ideal_agent_desc", "Ad-hoc spawned agent"),
+                capabilities=[],
+                agent_type="local",  # Use "local" type for validation
+                config={"is_spawn": True},  # Mark as spawn in config
+            )
+            agent_assignments.append((subgoal_index, placeholder_agent))
+            continue
+
+        # Check if assigned agent exists
+        if assigned_agent not in agent_map:
+            issues.append(f"Agent '{assigned_agent}' not found in registry")
             continue
 
         # Valid subgoal - create assignment
-        agent_info = agent_map[suggested_agent]
+        agent_info = agent_map[assigned_agent]
         agent_assignments.append((subgoal_index, agent_info))
 
     # Check 5: Detect circular dependencies

@@ -21,43 +21,43 @@ FILE_PATHS: dict[str, str] = {
 FRONTMATTER: dict[str, str] = {
     "search": """---
 name: Aurora: Search
-description: Search indexed code and documentation
+description: Search indexed code ["query" --limit N --type function]
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "get": """---
 name: Aurora: Get
-description: Get full chunk content by index
+description: Retrieve search result [N] from last search
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "plan": """---
 name: Aurora: Plan
-description: Generate structured plans with agent delegation
+description: Create implementation plan with agent delegation [goal]
 category: Aurora
 tags: [aurora, planning]
 ---""",
     "proposal": """---
 name: Aurora: Proposal
-description: Generate spec-delta proposals with requirements and scenarios
+description: Draft spec-delta proposal with requirements [feature]
 category: Aurora
 tags: [aurora, planning, specs]
 ---""",
     "checkpoint": """---
 name: Aurora: Checkpoint
-description: Save session context for continuity
+description: Save session context ["optional-name"]
 category: Aurora
 tags: [aurora, session, checkpoint]
 ---""",
     "implement": """---
 name: Aurora: Implement
-description: Plan-based implementation (placeholder)
+description: Execute plan tasks [plan-id]
 category: Aurora
 tags: [aurora, planning, implementation]
 ---""",
     "archive": """---
 name: Aurora: Archive
-description: Archive completed plans with spec processing
+description: Archive completed plan with spec processing [plan-id]
 category: Aurora
 tags: [aurora, planning, archive]
 ---""",

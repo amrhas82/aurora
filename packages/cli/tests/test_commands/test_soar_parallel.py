@@ -37,10 +37,9 @@ class TestSoarParallelResearch:
     @pytest.mark.asyncio
     async def test_parallel_subgoals_calls_spawn_parallel(self):
         """Test that _execute_parallel_subgoals calls spawn_parallel()."""
-        from aurora_spawner.models import SpawnResult
-
         from aurora_soar.agent_registry import AgentInfo
         from aurora_soar.phases.collect import _execute_parallel_subgoals
+        from aurora_spawner.models import SpawnResult
 
         # Setup test data
         subgoals = [
@@ -110,10 +109,9 @@ class TestSoarParallelResearch:
     @pytest.mark.asyncio
     async def test_parallel_execution_handles_failures_gracefully(self):
         """Test that parallel results properly handle failures."""
-        from aurora_spawner.models import SpawnResult
-
         from aurora_soar.agent_registry import AgentInfo
         from aurora_soar.phases.collect import _execute_parallel_subgoals
+        from aurora_spawner.models import SpawnResult
 
         # Setup test data with one failing subgoal
         subgoals = [
@@ -186,10 +184,9 @@ class TestSoarParallelResearch:
     @pytest.mark.asyncio
     async def test_parallel_results_maintain_order(self):
         """Test that parallel execution returns results in input order."""
-        from aurora_spawner.models import SpawnResult
-
         from aurora_soar.agent_registry import AgentInfo
         from aurora_soar.phases.collect import _execute_parallel_subgoals
+        from aurora_spawner.models import SpawnResult
 
         # Setup test data
         subgoals = [

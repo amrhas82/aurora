@@ -28,29 +28,28 @@ console = Console()
 
 
 # Phase ownership mapping - which phases are pure Python vs need LLM
+# Note: Simplified 7-phase pipeline (route merged into verify)
 PHASE_OWNERS = {
     "assess": "ORCHESTRATOR",
     "retrieve": "ORCHESTRATOR",
     "decompose": "LLM",
-    "verify": "LLM",
-    "route": "ORCHESTRATOR",
+    "verify": "LLM",  # Now includes agent assignment (was separate route phase)
     "collect": "LLM",
     "synthesize": "LLM",
     "record": "ORCHESTRATOR",
     "respond": "LLM",
 }
 
-# Phase numbers
+# Phase numbers (7-phase simplified pipeline)
 PHASE_NUMBERS = {
     "assess": 1,
     "retrieve": 2,
     "decompose": 3,
-    "verify": 4,
-    "route": 5,
-    "collect": 6,
-    "synthesize": 7,
-    "record": 8,
-    "respond": 9,
+    "verify": 4,  # Includes agent assignment
+    "collect": 5,  # Was 6
+    "synthesize": 6,  # Was 7
+    "record": 7,  # Was 8
+    "respond": 8,  # Was 9
 }
 
 # Phase descriptions shown during execution
@@ -58,8 +57,7 @@ PHASE_DESCRIPTIONS = {
     "assess": "Analyzing query complexity...",
     "retrieve": "Looking up memory index...",
     "decompose": "Breaking query into subgoals...",
-    "verify": "Validating decomposition...",
-    "route": "Assigning agents to subgoals...",
+    "verify": "Validating decomposition and assigning agents...",
     "collect": "Researching subgoals...",
     "synthesize": "Combining findings...",
     "record": "Caching reasoning pattern...",
@@ -81,6 +79,21 @@ def _format_markdown_answer(text: str) -> str:
     Returns:
         Formatted text with visual separators and proper spacing
     """
+    # First, ensure paragraph breaks are preserved
+    # If text has no blank lines but has multiple sentences, add paragraph spacing
+    if "\n\n" not in text and len(text) > 500:
+        # Split on sentence boundaries that look like paragraph breaks
+        # (period followed by space and capital letter, with certain keywords)
+        import re
+
+        # Add blank lines before common paragraph starters
+        paragraph_starters = [
+            r"\. (The next|On the|In the|After|When|But|However|Meanwhile|Finally|Later|Then|Now|As |It was|She |He |They |We |This |That )",
+            r"\. \n",  # Already has newline
+        ]
+        for pattern in paragraph_starters:
+            text = re.sub(pattern, lambda m: ". \n\n" + m.group(0)[2:], text)
+
     lines = text.split("\n")
     formatted_lines = []
     in_code_block = False
@@ -201,7 +214,7 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
     """Print phase result summary.
 
     Args:
-        phase_num: Phase number (1-9)
+        phase_num: Phase number (1-8, simplified pipeline)
         result: Phase result dictionary
     """
     if phase_num == 1:
@@ -217,38 +230,37 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
         count = result.get("subgoal_count", 0)
         console.print(f"  [cyan]✓ {count} subgoals identified[/]")
     elif phase_num == 4:
-        # Verify phase
+        # Verify phase (now includes agent assignment)
         verdict = result.get("verdict", "UNKNOWN")
         score = result.get("overall_score", 0.0)
+        agents_assigned = result.get("agents_assigned", 0)
 
         # Check if this is a devil's advocate pass (0.6 <= score < 0.7)
         if verdict == "PASS" and 0.6 <= score < 0.7:
             console.print(f"  [yellow]⚠️  PASS (marginal - score: {score:.2f})[/]")
             issues_count = len(result.get("issues", []))
-            suggestions_count = len(result.get("suggestions", []))
             console.print(
-                f"  [yellow]└─ {issues_count} concerns identified, {suggestions_count} suggestions provided[/]"
+                f"  [yellow]└─ {issues_count} concerns, {agents_assigned} subgoals routed[/]"
             )
         else:
-            console.print(f"  [cyan]✓ {verdict}[/]")
+            if agents_assigned > 0:
+                console.print(f"  [cyan]✓ {verdict} ({agents_assigned} subgoals routed)[/]")
+            else:
+                console.print(f"  [cyan]✓ {verdict}[/]")
     elif phase_num == 5:
-        # Route phase
-        agents = result.get("agents", [])
-        console.print(f"  [cyan]Assigned: {', '.join(agents) if agents else 'no agents'}[/]")
-    elif phase_num == 6:
-        # Collect phase
+        # Collect phase (was 6)
         count = result.get("findings_count", 0)
         console.print(f"  [cyan]✓ Research complete ({count} findings)[/]")
-    elif phase_num == 7:
-        # Synthesize phase
+    elif phase_num == 6:
+        # Synthesize phase (was 7)
         confidence = result.get("confidence", 0.0)
         console.print(f"  [cyan]✓ Answer ready (confidence: {confidence:.0%})[/]")
-    elif phase_num == 8:
-        # Record phase
+    elif phase_num == 7:
+        # Record phase (was 8)
         cached = result.get("cached", False)
         console.print(f"  [cyan]✓ Pattern {'cached' if cached else 'recorded'}[/]")
-    elif phase_num == 9:
-        # Respond phase
+    elif phase_num == 8:
+        # Respond phase (was 9)
         console.print("  [cyan]✓ Response formatted[/]")
 
 
@@ -305,20 +317,19 @@ def _create_phase_callback(tool: str):
     help="Show verbose output",
 )
 def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> None:
-    r"""Execute 9-phase SOAR query with terminal orchestration.
+    r"""Execute SOAR query with terminal orchestration (7+1 phase pipeline).
 
     Runs the SOAR pipeline via SOAROrchestrator, piping to external LLM tools:
 
     \b
-    [ORCHESTRATOR] Phase 1: ASSESS    - Complexity assessment (Python)
-    [ORCHESTRATOR] Phase 2: RETRIEVE  - Memory lookup (Python)
-    [LLM]          Phase 3: DECOMPOSE - Break into subgoals
-    [LLM]          Phase 4: VERIFY    - Validate decomposition
-    [ORCHESTRATOR] Phase 5: ROUTE     - Agent assignment (Python)
-    [LLM]          Phase 6: COLLECT   - Research/execute
-    [LLM]          Phase 7: SYNTHESIZE - Combine results
-    [ORCHESTRATOR] Phase 8: RECORD    - Cache pattern (Python)
-    [LLM]          Phase 9: RESPOND   - Format answer
+    [ORCHESTRATOR] Phase 1: ASSESS     - Complexity assessment (Python)
+    [ORCHESTRATOR] Phase 2: RETRIEVE   - Memory lookup (Python)
+    [LLM]          Phase 3: DECOMPOSE  - Break into subgoals
+    [LLM]          Phase 4: VERIFY     - Validate & assign agents
+    [LLM]          Phase 5: COLLECT    - Research/execute
+    [LLM]          Phase 6: SYNTHESIZE - Combine results
+    [ORCHESTRATOR] Phase 7: RECORD     - Cache pattern (Python)
+    [LLM]          Phase 8: RESPOND    - Format answer
 
     \b
     Examples:
@@ -373,7 +384,7 @@ def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> Non
     # Import here to avoid circular imports and allow lazy loading
     from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
     from aurora_core.config.loader import Config
-    from aurora_core.store.memory import MemoryStore
+    from aurora_core.store.sqlite import SQLiteStore
     from aurora_soar.agent_registry import AgentRegistry
     from aurora_soar.orchestrator import SOAROrchestrator
 
@@ -389,7 +400,7 @@ def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> Non
 
     # Load dependencies
     config = Config.load()
-    store = MemoryStore()  # Use in-memory store for CLI
+    store = SQLiteStore()  # Use SQLite store for persistence (~/.aurora/memory.db)
 
     # Discover available agents using the same system as 'aur agents list'
     from aurora_cli.commands.agents import get_manifest

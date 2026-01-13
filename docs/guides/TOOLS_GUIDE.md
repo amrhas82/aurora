@@ -661,14 +661,32 @@ aur mem index . --exclude "node_modules" --exclude ".git"
 # Basic search
 aur mem search "authentication"
 
-# Limit results
-aur mem search "payment" --limit 10
+# Filter by type
+aur mem search "auth" --type function    # Functions only
+aur mem search "auth" --type class       # Classes only
+aur mem search "auth" --type method      # Methods only
+aur mem search "auth" --type kb          # Markdown/knowledge base only
+aur mem search "auth" --type code        # All code chunks
 
-# Relevance threshold
-aur mem search "config" --threshold 0.7
+# Control results
+aur mem search "payment" --limit 10      # More results (default: 5)
+aur mem search "config" --min-score 0.5  # Higher relevance threshold
 
-# JSON output
-aur mem search "api" --json
+# Display options
+aur mem search "api" --show-content      # Show code snippets
+aur mem search "api" --show-scores       # Detailed score breakdown
+aur mem search "api" --format json       # JSON output for scripting
+```
+
+**Search Options**:
+```
+-n, --limit INT         Max results (default: 5)
+-t, --type TYPE         Filter: function, class, method, kb, code, knowledge, document
+-f, --format FORMAT     Output: rich (default) or json
+-c, --show-content      Show content preview
+--show-scores           Detailed score explanations (BM25, Semantic, Activation)
+--min-score FLOAT       Minimum semantic score (0.0-1.0, default: 0.35)
+--db-path PATH          Custom database path
 ```
 
 ### aur agents - Agent Management

@@ -26,16 +26,13 @@ Autonomous Claude execution loop - let Claude work on a goal until done.
 ## Commands
 
 ```bash
-# Default: claude tool, max 10 iterations
-aur headless
+# Form 1: Default prompt (.aurora/headless/prompt.md)
+aur headless --max=10
 
-# Custom tool and iterations
-aur headless -t claude --max=20
-
-# Custom prompt file
+# Form 2: Custom prompt file
 aur headless -p my-task.md --max=10
 
-# With test backpressure (run tests after each iteration)
+# Form 3: With test backpressure
 aur headless --test-cmd "pytest tests/" --max=15
 
 # Allow running on main branch (dangerous)

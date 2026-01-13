@@ -23,17 +23,28 @@ class DecomposePromptTemplate(PromptTemplate):
         if available_agents:
             agents_text = f"""Available agents: {', '.join(available_agents)}
 
-IMPORTANT: You MUST use ONLY agents from the above list.
-- For research/web queries: use 'business-analyst'
-- For general tasks: use 'master'
-- For code tasks: use 'full-stack-dev'
-- For architecture/design: use 'holistic-architect'
-- For product tasks: use 'product-manager' or 'product-owner'
-- For orchestration: use 'orchestrator'
+For each subgoal, you must specify TWO agents:
+1. ideal_agent: The IDEAL agent for this task (any name, even if not available)
+2. assigned_agent: The BEST AVAILABLE agent from the list above
 
-DO NOT use 'llm' or any agent not in the available agents list."""
+Common ideal agents (create if needed):
+- creative-writer: story editing, narrative, creative writing
+- data-analyst: data analysis, visualization, statistics
+- ux-designer: UI/UX design, wireframes, prototypes
+- devops-engineer: CI/CD, infrastructure, deployment
+- security-expert: security audits, vulnerability analysis
+
+Common available agents:
+- business-analyst: research, market analysis, competitive intelligence
+- master: general tasks, multi-domain work
+- full-stack-dev: code implementation, debugging, refactoring
+- holistic-architect: architecture, system design, API design
+- product-manager/product-owner: product tasks, requirements"""
         else:
-            agents_text = "CRITICAL: No agents available - you must use 'master' as the fallback agent for all subgoals"
+            agents_text = """No agents available.
+
+For ideal_agent: specify the ideal agent name for the task (any domain)
+For assigned_agent: use 'master' as fallback for all subgoals"""
 
         return f"""You are a query decomposition expert for a code reasoning system.
 
@@ -42,11 +53,11 @@ executed by specialized agents.
 
 For each subgoal, specify:
 1. A clear, specific goal statement
-2. The suggested agent to execute it (MUST be from available agents list)
-3. Whether the subgoal is critical to the overall query
-4. Dependencies on other subgoals (by index)
-
-Organize subgoals into an execution order, marking which can run in parallel.
+2. The IDEAL agent (unconstrained - what SHOULD handle this task)
+3. A brief description of the ideal agent's capabilities
+4. The ASSIGNED agent (from available list - best match we have)
+5. Whether the subgoal is critical to the overall query
+6. Dependencies on other subgoals (by index)
 
 {agents_text}
 
@@ -56,7 +67,9 @@ You MUST respond with valid JSON only. Use this exact schema:
   "subgoals": [
     {{
       "description": "Specific subgoal description",
-      "suggested_agent": "agent-name",
+      "ideal_agent": "agent-that-should-handle-this",
+      "ideal_agent_desc": "Brief description of ideal agent capabilities",
+      "assigned_agent": "best-available-agent",
       "is_critical": true/false,
       "depends_on": [0, 1]  // indices of prerequisite subgoals
     }}

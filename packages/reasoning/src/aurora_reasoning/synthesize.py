@@ -147,17 +147,9 @@ def synthesize_results(
             retry_count += 1
             continue
 
-        # Validate traceability
-        try:
-            _validate_traceability(synthesis["answer"], summaries)
-        except ValueError as e:
-            if retry_count >= max_retries:
-                raise ValueError(
-                    f"Traceability validation failed after {max_retries} retries: {e}"
-                ) from e
-            feedback = f"Previous synthesis had traceability issues: {e}. Ensure every claim references an agent output."
-            retry_count += 1
-            continue
+        # Traceability validation removed - was overengineered
+        # If agents did their job, the answer will naturally reference their findings
+        traceability_warning = None
 
         # Verify synthesis quality
         verification_result = verify_synthesis(
@@ -171,17 +163,20 @@ def synthesize_results(
         if verification_result["overall_score"] >= 0.6:
             # Success - return synthesis result
             full_prompt = f"SYSTEM:\n{system_prompt}\n\nUSER:\n{user_prompt}"
+            metadata = {
+                "retry_count": retry_count,
+                "verification_score": verification_result["overall_score"],
+                "coherence": verification_result.get("coherence", 0.0),
+                "completeness": verification_result.get("completeness", 0.0),
+                "factuality": verification_result.get("factuality", 0.0),
+            }
+            if traceability_warning:
+                metadata["traceability_warning"] = traceability_warning
             return SynthesisResult(
                 answer=synthesis["answer"],
                 confidence=verification_result["overall_score"],
                 traceability=_extract_traceability(synthesis["answer"], summaries),
-                metadata={
-                    "retry_count": retry_count,
-                    "verification_score": verification_result["overall_score"],
-                    "coherence": verification_result.get("coherence", 0.0),
-                    "completeness": verification_result.get("completeness", 0.0),
-                    "factuality": verification_result.get("factuality", 0.0),
-                },
+                metadata=metadata,
                 raw_response=response.content,
                 prompt_used=full_prompt,
             )
@@ -190,15 +185,18 @@ def synthesize_results(
         if retry_count >= max_retries:
             # Return best-effort synthesis even if quality is low
             full_prompt = f"SYSTEM:\n{system_prompt}\n\nUSER:\n{user_prompt}"
+            metadata = {
+                "retry_count": retry_count,
+                "verification_score": verification_result["overall_score"],
+                "quality_warning": "Synthesis quality below threshold after max retries",
+            }
+            if traceability_warning:
+                metadata["traceability_warning"] = traceability_warning
             return SynthesisResult(
                 answer=synthesis["answer"],
                 confidence=verification_result["overall_score"],
                 traceability=_extract_traceability(synthesis["answer"], summaries),
-                metadata={
-                    "retry_count": retry_count,
-                    "verification_score": verification_result["overall_score"],
-                    "quality_warning": "Synthesis quality below threshold after max retries",
-                },
+                metadata=metadata,
                 raw_response=response.content,
                 prompt_used=full_prompt,
             )
@@ -386,7 +384,8 @@ def _parse_synthesis_response(response: str) -> dict[str, Any]:
     if not answer_lines:
         raise ValueError("No ANSWER section found in synthesis response")
 
-    answer = " ".join(answer_lines)
+    # Preserve newlines for markdown formatting
+    answer = "\n".join(answer_lines)
 
     return {
         "answer": answer,

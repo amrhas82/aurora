@@ -1,10 +1,12 @@
 """Agent capability matching for planning.
 
 Wraps AgentManifest to recommend agents for subgoals based on capability matching.
+Provides AgentMatcher for ideal vs assigned agent comparison and gap detection.
 """
 
 import logging
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -66,6 +68,288 @@ STOP_WORDS = {
     "these",
     "those",
 }
+
+
+# =============================================================================
+# New AgentMatcher for ideal vs assigned comparison (used by aur soar/goals)
+# =============================================================================
+
+
+@dataclass
+class GapInfo:
+    """Information about a detected agent gap.
+
+    Represents a subgoal where the ideal agent differs from the assigned agent,
+    indicating a gap in the agent registry.
+
+    Attributes:
+        subgoal_id: ID of the subgoal with the gap (e.g., "sg-1")
+        ideal_agent: Agent that SHOULD handle this task (unconstrained)
+        ideal_agent_desc: Description of the ideal agent's capabilities
+        assigned_agent: Best AVAILABLE agent from manifest
+    """
+
+    subgoal_id: str
+    ideal_agent: str
+    ideal_agent_desc: str
+    assigned_agent: str
+
+
+@dataclass
+class MatchResult:
+    """Result of matching a subgoal to an agent.
+
+    Contains the matched agent, gap detection result, and optional spawn prompt.
+
+    Attributes:
+        subgoal_id: ID of the subgoal
+        agent: Agent to use (ideal if spawning, assigned otherwise)
+        is_gap: True if ideal != assigned
+        gap_info: Gap details if is_gap is True
+        spawn_prompt: Prompt for ad-hoc spawning (aur soar only)
+    """
+
+    subgoal_id: str
+    agent: str
+    is_gap: bool
+    gap_info: Optional[GapInfo] = None
+    spawn_prompt: Optional[str] = None
+
+
+class AgentMatcher:
+    """Matches subgoals to agents with gap detection and ad-hoc spawning.
+
+    Compares ideal_agent (what SHOULD handle the task) with assigned_agent
+    (best available from manifest) to detect gaps. Used by both aur soar
+    and aur goals:
+
+    - aur soar: Spawns ad-hoc agents when gaps detected
+    - aur goals: Reports gaps with suggestions for agent creation
+
+    Attributes:
+        manifest: AgentManifest for checking agent existence
+        available_agents_list: Formatted list of available agents for spawn prompts
+    """
+
+    def __init__(self, manifest: Optional["AgentManifest"] = None) -> None:
+        """Initialize agent matcher.
+
+        Args:
+            manifest: Optional AgentManifest (loads from cache if None)
+        """
+        self.manifest = manifest
+        self._available_agents_list: Optional[str] = None
+
+    def match_subgoal(
+        self,
+        subgoal: dict,
+        for_spawn: bool = False,
+    ) -> MatchResult:
+        """Match a subgoal to an agent, detecting gaps.
+
+        Compares ideal_agent vs assigned_agent from the subgoal dict.
+        If they differ, a gap is detected.
+
+        Args:
+            subgoal: Dict with keys: id, ideal_agent, ideal_agent_desc, assigned_agent
+            for_spawn: If True, generate spawn_prompt for gaps (aur soar mode)
+
+        Returns:
+            MatchResult with gap detection and optional spawn prompt
+        """
+        subgoal_id = subgoal.get("id", "unknown")
+        ideal = subgoal.get("ideal_agent", "")
+        ideal_desc = subgoal.get("ideal_agent_desc", "")
+        assigned = subgoal.get("assigned_agent", "")
+        description = subgoal.get("description", "")
+
+        # Normalize agent IDs (ensure @ prefix)
+        ideal = self._normalize_agent_id(ideal)
+        assigned = self._normalize_agent_id(assigned)
+
+        # Gap detection: ideal != assigned
+        is_gap = ideal != assigned
+
+        # Build gap info if gap detected
+        gap_info = None
+        if is_gap:
+            gap_info = GapInfo(
+                subgoal_id=subgoal_id,
+                ideal_agent=ideal,
+                ideal_agent_desc=ideal_desc,
+                assigned_agent=assigned,
+            )
+
+        # Build spawn prompt if requested and gap detected
+        spawn_prompt = None
+        if is_gap and for_spawn:
+            spawn_prompt = self._create_spawn_prompt(
+                agent_name=ideal,
+                agent_desc=ideal_desc,
+                task_description=description,
+            )
+
+        # For spawning, use ideal agent; otherwise use assigned
+        agent_to_use = ideal if for_spawn else assigned
+
+        return MatchResult(
+            subgoal_id=subgoal_id,
+            agent=agent_to_use,
+            is_gap=is_gap,
+            gap_info=gap_info,
+            spawn_prompt=spawn_prompt,
+        )
+
+    def detect_gaps(self, subgoals: list[dict]) -> list[GapInfo]:
+        """Detect all gaps in a list of subgoals.
+
+        Used by aur goals to report gaps with suggestions.
+
+        Args:
+            subgoals: List of subgoal dicts with ideal_agent, assigned_agent
+
+        Returns:
+            List of GapInfo for subgoals where ideal != assigned
+        """
+        gaps = []
+        for subgoal in subgoals:
+            result = self.match_subgoal(subgoal, for_spawn=False)
+            if result.is_gap and result.gap_info:
+                gaps.append(result.gap_info)
+        return gaps
+
+    def agent_exists(self, agent_id: str) -> bool:
+        """Check if an agent exists in the manifest.
+
+        Args:
+            agent_id: Agent ID with or without @ prefix
+
+        Returns:
+            True if agent exists in manifest
+        """
+        if self.manifest is None:
+            self._load_manifest()
+
+        if self.manifest is None:
+            return False
+
+        agent_id_clean = agent_id.lstrip("@")
+        try:
+            agent = self.manifest.get_agent(agent_id_clean)
+            return agent is not None
+        except Exception:
+            return False
+
+    def _create_spawn_prompt(
+        self,
+        agent_name: str,
+        agent_desc: str,
+        task_description: str,
+    ) -> str:
+        """Create a prompt for ad-hoc agent spawning.
+
+        Used by aur soar when no suitable agent exists. The prompt
+        instructs the LLM to act as the ideal agent and complete the task.
+
+        Args:
+            agent_name: Name of the ideal agent (e.g., "@creative-writer")
+            agent_desc: Description of the agent's capabilities
+            task_description: The task to complete
+
+        Returns:
+            Formatted spawn prompt for LLM
+        """
+        # Get available agents list for context
+        available_list = self._get_available_agents_list()
+
+        return f"""For this specific request, act as a {agent_name} specialist ({agent_desc}).
+
+Task: {task_description}
+
+Please complete this task directly without additional questions or preamble. Provide the complete deliverable.
+
+---
+
+After your deliverable, suggest a formal agent specification for this capability:
+- Agent ID (kebab-case)
+- Role/title
+- Goal description
+- Key capabilities (3-5 items)
+
+Available agents for reference:
+{available_list}
+"""
+
+    def _get_available_agents_list(self) -> str:
+        """Get formatted list of available agents.
+
+        Cached for efficiency across multiple spawn prompts.
+
+        Returns:
+            Formatted string with agent IDs and descriptions
+        """
+        if self._available_agents_list is not None:
+            return self._available_agents_list
+
+        if self.manifest is None:
+            self._load_manifest()
+
+        if self.manifest is None or not self.manifest.agents:
+            self._available_agents_list = "- (no agents registered)"
+            return self._available_agents_list
+
+        lines = []
+        for agent in self.manifest.agents:
+            desc = ""
+            if hasattr(agent, "goal") and agent.goal:
+                desc = agent.goal[:60] + "..." if len(agent.goal) > 60 else agent.goal
+            elif hasattr(agent, "when_to_use") and agent.when_to_use:
+                desc = (
+                    agent.when_to_use[:60] + "..."
+                    if len(agent.when_to_use) > 60
+                    else agent.when_to_use
+                )
+
+            lines.append(f"- @{agent.id}: {desc}")
+
+        self._available_agents_list = "\n".join(lines)
+        return self._available_agents_list
+
+    def _normalize_agent_id(self, agent_id: str) -> str:
+        """Normalize agent ID to include @ prefix.
+
+        Args:
+            agent_id: Agent ID with or without @ prefix
+
+        Returns:
+            Agent ID with @ prefix
+        """
+        if not agent_id:
+            return "@unknown"
+        return agent_id if agent_id.startswith("@") else f"@{agent_id}"
+
+    def _load_manifest(self) -> None:
+        """Load agent manifest from cache."""
+        if not MANIFEST_AVAILABLE or not ManifestManager:
+            logger.warning("ManifestManager not available")
+            return
+
+        try:
+            manifest_path = Path.cwd() / ".aurora" / "cache" / "agent_manifest.json"
+            manager = ManifestManager()
+            self.manifest = manager.get_or_refresh(
+                path=manifest_path,
+                auto_refresh=True,
+                refresh_interval_hours=24,
+            )
+            logger.debug(f"Loaded agent manifest with {len(self.manifest.agents)} agents")
+        except Exception as e:
+            logger.warning(f"Failed to load agent manifest: {e}")
+
+
+# =============================================================================
+# Legacy AgentRecommender (kept for backward compatibility)
+# =============================================================================
 
 
 class AgentRecommender:
@@ -329,6 +613,62 @@ Important:
 
         return gaps
 
+    def score_agent_for_subgoal(self, agent_id: str, subgoal: Subgoal) -> float:
+        """Score how well a specific agent matches a subgoal.
+
+        Unlike recommend_for_subgoal which finds the best agent, this method
+        scores a specific agent that's already been assigned (e.g., by SOAR).
+
+        Args:
+            agent_id: Agent ID with @ prefix (e.g., "@full-stack-dev")
+            subgoal: Subgoal to score against
+
+        Returns:
+            Match score from 0.0 to 1.0
+        """
+        # Load manifest if not provided
+        if self.manifest is None:
+            try:
+                self.manifest = self._load_manifest()
+            except Exception as e:
+                logger.warning(f"Failed to load agent manifest: {e}")
+                return 0.4  # Moderate confidence if can't verify
+
+        # Strip @ prefix if present
+        agent_id_clean = agent_id.lstrip("@")
+
+        # Find the agent in manifest
+        try:
+            agent = self.manifest.get_agent(agent_id_clean)
+            if agent is None:
+                return 0.3  # Low score for unknown agents
+        except Exception:
+            return 0.3
+
+        # Extract keywords from subgoal
+        keywords = self._extract_keywords(subgoal)
+
+        if not keywords:
+            return 0.4  # Moderate confidence if no keywords to match
+
+        # Score this specific agent
+        score = self._score_agent(agent, keywords)
+
+        # Boost score slightly since SOAR (LLM) assigned it - has semantic understanding
+        # Keyword matching can underestimate due to paraphrasing
+        # But don't give high confidence if there's no keyword overlap at all
+        if score > 0.2:
+            # Good keyword match - boost for semantic understanding
+            boosted_score = min(score + 0.2, 1.0)
+        elif score > 0:
+            # Some match - modest boost
+            boosted_score = min(score + 0.1, 0.6)
+        else:
+            # No keyword match - low confidence (can't verify LLM assignment)
+            boosted_score = 0.3
+
+        return boosted_score
+
     def verify_agent_exists(self, agent_id: str) -> bool:
         """Verify that an agent exists in the manifest.
 
@@ -392,10 +732,11 @@ Important:
         return keywords
 
     def _score_agent(self, agent: any, keywords: set[str]) -> float:
-        """Score an agent based on keyword overlap.
+        """Score an agent based on keyword overlap and action word matching.
 
-        Compares keywords against agent's capabilities and when_to_use text.
-        Uses weighted scoring with when_to_use getting higher weight.
+        Compares keywords against agent's goal, when_to_use, capabilities,
+        and AGENT_ACTION_WORDS for semantic matching. Action words like
+        "analyze", "implement", "debug" boost scores for matching agents.
 
         Args:
             agent: Agent object from manifest
@@ -407,13 +748,24 @@ Important:
         if not keywords:
             return 0.0
 
-        # Extract when_to_use keywords (higher weight)
+        # Extract goal keywords (high weight) - primary description of agent
+        goal_text = ""
+        if hasattr(agent, "goal") and agent.goal:
+            goal_text = agent.goal.lower()
+
+        goal_tokens = re.split(r"[^a-z0-9]+", goal_text)
+        goal_keywords = {token for token in goal_tokens if token and len(token) > 2}
+
+        # Extract when_to_use keywords (high weight) - may be null
         when_to_use_text = ""
         if hasattr(agent, "when_to_use") and agent.when_to_use:
             when_to_use_text = agent.when_to_use.lower()
 
         when_to_use_tokens = re.split(r"[^a-z0-9]+", when_to_use_text)
         when_to_use_keywords = {token for token in when_to_use_tokens if token and len(token) > 2}
+
+        # Combine goal and when_to_use for primary matching
+        primary_keywords = goal_keywords | when_to_use_keywords
 
         # Extract capabilities keywords (lower weight)
         capabilities_text = ""
@@ -424,19 +776,47 @@ Important:
         capabilities_keywords = {token for token in capabilities_tokens if token and len(token) > 2}
 
         # Calculate weighted overlap
-        # when_to_use matches count as 2x, capabilities as 1x
-        when_to_use_overlap = len(keywords & when_to_use_keywords)
+        # primary (goal/when_to_use) matches count as 2x, capabilities as 1x
+        primary_overlap = len(keywords & primary_keywords)
         capabilities_overlap = len(keywords & capabilities_keywords)
 
-        weighted_overlap = (when_to_use_overlap * 2.0) + capabilities_overlap
-        max_possible = len(keywords) * 2.0  # Maximum if all matched in when_to_use
+        weighted_overlap = (primary_overlap * 2.0) + capabilities_overlap
+        max_possible = len(keywords) * 2.0  # Maximum if all matched in primary
 
         if max_possible == 0:
             return 0.0
 
-        score = weighted_overlap / max_possible
+        base_score = weighted_overlap / max_possible
 
-        return min(score, 1.0)  # Cap at 1.0
+        # Partial/stem matching - boost score if subgoal keywords partially match
+        # agent's goal keywords (e.g., "implementation" matches "implement")
+        # This works automatically for any agent without hardcoded word lists
+        all_agent_keywords = primary_keywords | capabilities_keywords
+        if all_agent_keywords:
+            partial_matches = 0
+            matched_keywords = set()  # Track to avoid double counting
+
+            for keyword in keywords:
+                if keyword in matched_keywords:
+                    continue  # Already counted via exact match
+                for agent_kw in all_agent_keywords:
+                    # Skip if already exact match
+                    if keyword == agent_kw:
+                        matched_keywords.add(keyword)
+                        break
+                    # Partial match if one is prefix of other (handles verb forms)
+                    # e.g., "implement" matches "implementation", "analyze" matches "analyzing"
+                    if len(keyword) >= 4 and len(agent_kw) >= 4:
+                        if keyword.startswith(agent_kw[:4]) or agent_kw.startswith(keyword[:4]):
+                            partial_matches += 1
+                            matched_keywords.add(keyword)
+                            break
+
+            # Boost score for partial matches (+0.1 per match, cap at 0.3)
+            partial_boost = min(partial_matches * 0.1, 0.3)
+            base_score += partial_boost
+
+        return min(base_score, 1.0)  # Cap at 1.0
 
     def _load_manifest(self) -> "AgentManifest":
         """Load agent manifest from cache.

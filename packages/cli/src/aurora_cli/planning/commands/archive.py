@@ -1,5 +1,4 @@
-"""
-Archive command for Aurora planning system.
+"""Archive command for Aurora planning system.
 
 Ported from OpenSpec src/core/archive.ts
 """
@@ -61,8 +60,7 @@ class ArchiveCommand:
         no_validate: bool = False,
         validate: bool | None = None,
     ) -> None:
-        """
-        Execute the archive command.
+        """Execute the archive command.
 
         Args:
             plan_name: Name of the plan to archive (prompts if None)
@@ -208,7 +206,7 @@ class ArchiveCommand:
 
                 should_update_specs = True
                 if not yes:
-                    response = input("Proceed with spec updates? (Y/n) ")
+                    response = input("Proceed with spec updates? [Y/n]: ")
                     should_update_specs = response.lower() != "n"
                     if not should_update_specs:
                         print("Skipping spec updates. Proceeding with archive.")

@@ -5,7 +5,89 @@ Provides memory search functionality for goal decomposition context.
 """
 
 import logging
+from pathlib import Path as PathLib
 from typing import Optional
+
+# Code file extensions to include in memory search results
+CODE_EXTENSIONS = {
+    # Python
+    ".py",
+    ".pyi",
+    # JavaScript/TypeScript
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".mjs",
+    ".cjs",
+    # Java/JVM
+    ".java",
+    ".kt",
+    ".kts",
+    ".scala",
+    ".groovy",
+    # C/C++
+    ".c",
+    ".h",
+    ".cpp",
+    ".hpp",
+    ".cc",
+    ".cxx",
+    # Go
+    ".go",
+    # Rust
+    ".rs",
+    # Ruby
+    ".rb",
+    # PHP
+    ".php",
+    # C#
+    ".cs",
+    # Swift
+    ".swift",
+    # Shell
+    ".sh",
+    ".bash",
+    ".zsh",
+    # SQL
+    ".sql",
+}
+
+
+# Directories to exclude from memory search results
+EXCLUDED_DIRS = {
+    "htmlcov",
+    "coverage",
+    "__pycache__",
+    ".git",
+    "node_modules",
+    ".venv",
+    "venv",
+    "dist",
+    "build",
+    ".eggs",
+}
+
+
+def is_code_file(file_path: str) -> bool:
+    """Check if a file path is a code file based on extension.
+
+    Args:
+        file_path: Path to check
+
+    Returns:
+        True if file has a code extension, False otherwise
+    """
+    path = PathLib(file_path)
+
+    # Exclude files in noise directories
+    for part in path.parts:
+        if part in EXCLUDED_DIRS:
+            return False
+
+    suffix = path.suffix.lower()
+    return suffix in CODE_EXTENSIONS
+
 
 from aurora_cli.config import Config
 from aurora_cli.memory.retrieval import MemoryRetriever
@@ -68,8 +150,9 @@ def search_memory_for_goal(
         return []
 
     # Retrieve relevant code chunks
+    # Get 4x limit to account for deduplication + code-only filtering
     try:
-        chunks = retriever.retrieve(goal, limit=limit * 2)  # Get extra for deduplication
+        chunks = retriever.retrieve(goal, limit=limit * 4)
     except Exception as e:
         logger.warning(f"Failed to retrieve from memory: {e}")
         return []
@@ -91,6 +174,10 @@ def search_memory_for_goal(
             score = getattr(chunk, "score", getattr(chunk, "hybrid_score", 0.0))
 
         if not file_path:
+            continue
+
+        # Filter to code files only (exclude docs, markdown, config)
+        if not is_code_file(file_path):
             continue
 
         if file_path not in seen_paths:

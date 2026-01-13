@@ -24,43 +24,43 @@ FILE_PATHS: dict[str, str] = {
 # Frontmatter with $ARGUMENTS placeholder and argument-hint
 FRONTMATTER: dict[str, str] = {
     "search": """---
-description: Search indexed code and documentation
+description: Search indexed code ["query" --limit N --type function]
 argument-hint: search query
 ---
 
 $ARGUMENTS""",
     "get": """---
-description: Get full chunk content by index
+description: Retrieve search result [N] from last search
 argument-hint: chunk index number
 ---
 
 $ARGUMENTS""",
     "plan": """---
-description: Generate structured plans with agent delegation
+description: Create implementation plan with agent delegation [goal]
 argument-hint: request or feature description
 ---
 
 $ARGUMENTS""",
     "proposal": """---
-description: Generate spec-delta proposals with requirements and scenarios
+description: Draft spec-delta proposal with requirements [feature]
 argument-hint: request or feature description
 ---
 
 $ARGUMENTS""",
     "checkpoint": """---
-description: Save session context for continuity
+description: Save session context ["optional-name"]
 argument-hint: optional checkpoint name
 ---
 
 $ARGUMENTS""",
     "implement": """---
-description: Plan-based implementation (placeholder)
+description: Execute plan tasks [plan-id]
 argument-hint: plan ID to implement
 ---
 
 $ARGUMENTS""",
     "archive": """---
-description: Archive completed plans with spec processing
+description: Archive completed plan with spec processing [plan-id]
 argument-hint: plan ID to archive
 ---
 

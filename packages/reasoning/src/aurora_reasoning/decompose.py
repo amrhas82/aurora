@@ -146,12 +146,30 @@ def decompose_query(
         raise ValueError(f"'subgoals' must be a list, got {type(decomposition['subgoals'])}")
 
     for i, subgoal in enumerate(decomposition["subgoals"]):
-        required_subgoal_fields = ["description", "suggested_agent", "is_critical", "depends_on"]
+        # New schema: ideal_agent, ideal_agent_desc, assigned_agent
+        # Backward compatibility: also accept suggested_agent
+        required_subgoal_fields = ["description", "is_critical", "depends_on"]
         missing_sg = [f for f in required_subgoal_fields if f not in subgoal]
         if missing_sg:
             raise ValueError(
                 f"Subgoal {i} missing required fields: {missing_sg}\nSubgoal: {subgoal}"
             )
+
+        # Check for new schema fields OR legacy field
+        has_new_schema = "ideal_agent" in subgoal and "assigned_agent" in subgoal
+        has_legacy_schema = "suggested_agent" in subgoal
+
+        if not has_new_schema and not has_legacy_schema:
+            raise ValueError(
+                f"Subgoal {i} missing agent fields. Expected 'ideal_agent' + 'assigned_agent' "
+                f"(or legacy 'suggested_agent').\nSubgoal: {subgoal}"
+            )
+
+        # If legacy schema, convert to new schema for downstream compatibility
+        if has_legacy_schema and not has_new_schema:
+            subgoal["ideal_agent"] = subgoal["suggested_agent"]
+            subgoal["ideal_agent_desc"] = ""
+            subgoal["assigned_agent"] = subgoal["suggested_agent"]
 
     # Validate execution_order structure
     if not isinstance(decomposition["execution_order"], list):

@@ -1,0 +1,125 @@
+{
+  "id": "0008-improve-aur-soar-handle",
+  "title": "i want to improve aur soar to handle multi-turn agents",
+  "created_at": "2026-01-13T07:44:47.006640",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/agents.py",
+      "relevance": 0.6541164786911351
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/soar.py",
+      "relevance": 0.5988853696368381
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/goals.py",
+      "relevance": 0.5919957580040263
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/core.py",
+      "relevance": 0.5697222785601979
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/agent_discovery/scanner.py",
+      "relevance": 0.565477599836565
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/paths.py",
+      "relevance": 0.5639349112778724
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/decompose.py",
+      "relevance": 0.5613789213284648
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/agents.py",
+      "relevance": 0.5558411836278578
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init.py",
+      "relevance": 0.48498011997904417
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/llm/cli_pipe_client.py",
+      "relevance": 0.46720484125003925
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Analyze current aur soar implementation and identify how it...",
+      "description": "Analyze current aur soar implementation and identify how it currently handles agents and turns",
+      "agent": "@full-stack-dev",
+      "suggested_specialty": null,
+      "confidence": 0.5818181818181818,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Research multi-turn agent patterns and best practices in...",
+      "description": "Research multi-turn agent patterns and best practices in reasoning systems",
+      "agent": "@business-analyst",
+      "suggested_specialty": null,
+      "confidence": 0.5333333333333333,
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Design architecture for multi-turn agent support including...",
+      "description": "Design architecture for multi-turn agent support including state management and conversation continuity",
+      "agent": "@holistic-architect",
+      "suggested_specialty": null,
+      "confidence": 0.5727272727272728,
+      "dependencies": [
+        "sg-1",
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Create PRD for multi-turn agent feature with requirements...",
+      "description": "Create PRD for multi-turn agent feature with requirements and success criteria",
+      "agent": "@product-manager",
+      "suggested_specialty": null,
+      "confidence": 0.6333333333333333,
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Generate implementation tasks from architecture design",
+      "description": "Generate implementation tasks from architecture design",
+      "agent": "@2-generate-tasks",
+      "suggested_specialty": null,
+      "confidence": 0.8,
+      "dependencies": [
+        "sg-4"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Implement multi-turn agent support in aur soar orchestrator...",
+      "description": "Implement multi-turn agent support in aur soar orchestrator and related components",
+      "agent": null,
+      "suggested_specialty": "front-end developer",
+      "confidence": 0.30000000000000004,
+      "dependencies": [
+        "sg-5"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Test multi-turn agent functionality and verify correctness",
+      "description": "Test multi-turn agent functionality and verify correctness",
+      "agent": null,
+      "suggested_specialty": "QA engineer",
+      "confidence": 0.4857142857142857,
+      "dependencies": [
+        "sg-6"
+      ]
+    }
+  ],
+  "gaps": []
+}

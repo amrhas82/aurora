@@ -1,0 +1,94 @@
+{
+  "id": "0014-am-writer-help-editing",
+  "title": "i am a writer and i want help with editing my story, inspire me to find an ending, how do i go about that?",
+  "created_at": "2026-01-13T09:56:59.424684",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/goals.py",
+      "relevance": 0.6776268319873385
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/core.py",
+      "relevance": 0.6487868782295656
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/models.py",
+      "relevance": 0.6391350550972357
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/init_helpers.py",
+      "relevance": 0.632690199781202
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/reasoning/src/aurora_reasoning/synthesize.py",
+      "relevance": 0.6126973405773992
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.565454548387777
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/paths.py",
+      "relevance": 0.5532471279896605
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/agents.py",
+      "relevance": 0.5298972268030877
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/agent_discovery/manifest.py",
+      "relevance": 0.4981846106822977
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/soar.py",
+      "relevance": 0.49297231310316636
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Analyze current story structure, themes, and character arcs...",
+      "description": "Analyze current story structure, themes, and character arcs to understand narrative context",
+      "agent": "@business-analyst",
+      "suggested_specialty": null,
+      "confidence": 0.30000000000000004,
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Brainstorm multiple potential ending approaches based on...",
+      "description": "Brainstorm multiple potential ending approaches based on story analysis (resolution types, emotional tones, thematic conclusions)",
+      "agent": "@business-analyst",
+      "suggested_specialty": null,
+      "confidence": 0.27142857142857146,
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Provide editorial feedback on story structure, pacing, and...",
+      "description": "Provide editorial feedback on story structure, pacing, and character development leading to the ending",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.3,
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Create a structured writing process for developing and...",
+      "description": "Create a structured writing process for developing and refining the chosen ending",
+      "agent": "@master",
+      "suggested_specialty": null,
+      "confidence": 0.2,
+      "dependencies": [
+        "sg-2",
+        "sg-3"
+      ]
+    }
+  ],
+  "gaps": []
+}

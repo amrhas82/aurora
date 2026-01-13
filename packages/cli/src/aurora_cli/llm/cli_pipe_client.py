@@ -15,8 +15,6 @@ from pathlib import Path
 from typing import Any
 
 from rich.console import Console
-from rich.live import Live
-from rich.spinner import Spinner
 
 from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
 
@@ -159,7 +157,7 @@ class CLIPipeLLMClient(LLMClient):
                     text=True,
                     timeout=300,  # Increased to 5 minutes
                 )
-            except subprocess.TimeoutExpired as e:
+            except subprocess.TimeoutExpired:
                 error = RuntimeError(f"Tool {self._tool} timed out after 300 seconds")
             except Exception as e:
                 error = e

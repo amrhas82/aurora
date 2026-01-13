@@ -414,7 +414,7 @@ def load_config(path: str | None = None) -> Config:
         ConfigurationError: If config file has invalid syntax or values
     """
     config_data: dict[str, Any] = {}
-    config_source = "defaults"
+    _ = "defaults"  # config_source tracked but unused
 
     # Check if we're in a project (has ./.aurora directory)
     in_project = Path("./.aurora").exists()
@@ -446,7 +446,7 @@ def load_config(path: str | None = None) -> Config:
             try:
                 with open(config_path) as f:
                     config_data = json.load(f)
-                config_source = str(config_path)
+                _ = str(config_path)  # config_source tracked but unused
             except json.JSONDecodeError as e:
                 error_msg = error_handler.handle_config_error(e, config_path=str(config_path))
                 raise ConfigurationError(error_msg) from e

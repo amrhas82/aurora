@@ -16,7 +16,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Literal, Optional
+from typing import Literal
 
 
 class ComplexityLevel(IntEnum):
@@ -566,7 +566,6 @@ class ComplexityAssessor:
         signals = []
 
         words = set(re.findall(r"\b\w+\b", prompt_lower))
-        word_list = prompt_lower.split()
 
         # Detect verbose simple patterns (long prompts that are just lookups)
         # e.g., "i would like you to tell me what version of python is being used"

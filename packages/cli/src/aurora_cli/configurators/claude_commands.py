@@ -4,7 +4,6 @@ Creates .claude/commands/aur/*.md files for Claude Code slash command integratio
 """
 
 from pathlib import Path
-from typing import List
 
 from aurora_cli.templates.commands import get_all_command_templates
 

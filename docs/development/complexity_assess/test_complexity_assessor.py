@@ -15,9 +15,8 @@ import pytest
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from complexity_assessor import AssessmentResult, ComplexityAssessor, assess_prompt
-from evaluate import evaluate_corpus
-from test_corpus import TEST_CORPUS
+from complexity_assessor import AssessmentResult, ComplexityAssessor, assess_prompt  # noqa: E402
+from evaluate import evaluate_corpus  # noqa: E402
 
 
 class TestComplexityAssessor:

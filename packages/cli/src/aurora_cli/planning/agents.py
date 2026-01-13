@@ -6,7 +6,7 @@ Provides AgentMatcher for ideal vs assigned agent comparison and gap detection.
 
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 

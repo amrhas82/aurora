@@ -1,7 +1,5 @@
 """Tool registry for configurators."""
 
-from typing import Dict, List, Optional
-
 from .agents import AgentsStandardConfigurator
 from .ampcode import AmpCodeConfigurator
 from .base import ToolConfigurator

@@ -99,7 +99,7 @@ def run_indexing(
     Raises:
         Any exceptions from MemoryManager.index_path()
     """
-    from aurora_cli.memory_manager import IndexProgress, MemoryManager
+    from aurora_cli.memory_manager import MemoryManager
 
     out = output_console or console
 

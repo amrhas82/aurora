@@ -89,10 +89,10 @@ def is_code_file(file_path: str) -> bool:
     return suffix in CODE_EXTENSIONS
 
 
-from aurora_cli.config import Config
-from aurora_cli.memory.retrieval import MemoryRetriever
-from aurora_cli.planning.models import FileResolution, Subgoal
-from aurora_core.store.sqlite import SQLiteStore
+from aurora_cli.config import Config  # noqa: E402
+from aurora_cli.memory.retrieval import MemoryRetriever  # noqa: E402
+from aurora_cli.planning.models import FileResolution, Subgoal  # noqa: E402
+from aurora_core.store.sqlite import SQLiteStore  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

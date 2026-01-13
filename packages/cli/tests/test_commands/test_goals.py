@@ -7,10 +7,7 @@ The goals command creates a goals.json file with subgoals and agent assignments.
 from __future__ import annotations
 
 import json
-import os
-import subprocess
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -165,11 +162,11 @@ class TestToolResolution:
                 complexity=Mock(value="simple"),
                 subgoals=[],
             ),
-            plan_dir="/tmp/plan",
+            plan_dir="/tmp/plan",  # nosec B108
             warnings=[],
         )
 
-        result = cli_runner.invoke(
+        _ = cli_runner.invoke(
             goals_command,
             ["Test goal", "--tool", "claude", "--yes"],
         )
@@ -202,11 +199,11 @@ class TestToolResolution:
                 complexity=Mock(value="simple"),
                 subgoals=[],
             ),
-            plan_dir="/tmp/plan",
+            plan_dir="/tmp/plan",  # nosec B108
             warnings=[],
         )
 
-        result = cli_runner.invoke(
+        _ = cli_runner.invoke(
             goals_command,
             ["Test goal", "--yes"],
         )
@@ -243,11 +240,11 @@ class TestModelResolution:
                 complexity=Mock(value="simple"),
                 subgoals=[],
             ),
-            plan_dir="/tmp/plan",
+            plan_dir="/tmp/plan",  # nosec B108
             warnings=[],
         )
 
-        result = cli_runner.invoke(
+        _ = cli_runner.invoke(
             goals_command,
             ["Test goal", "--model", "sonnet", "--yes"],
         )
@@ -280,11 +277,11 @@ class TestModelResolution:
                 complexity=Mock(value="simple"),
                 subgoals=[],
             ),
-            plan_dir="/tmp/plan",
+            plan_dir="/tmp/plan",  # nosec B108
             warnings=[],
         )
 
-        result = cli_runner.invoke(
+        _ = cli_runner.invoke(
             goals_command,
             ["Test goal", "--yes"],
         )

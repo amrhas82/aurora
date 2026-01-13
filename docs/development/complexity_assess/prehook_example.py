@@ -25,7 +25,7 @@ from pathlib import Path
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from complexity_assessor import assess_prompt
+from complexity_assessor import assess_prompt  # noqa: E402
 
 # Model routing configuration
 MODEL_ROUTING = {

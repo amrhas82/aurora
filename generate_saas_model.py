@@ -65,7 +65,7 @@ for month in range(60):
 first, last = projections[0], projections[-1]
 print("SaaS Financial Model - 5 Year Projection")
 print("=" * 60)
-print(f"\nINITIAL STATE (Month 0):")
+print("\nINITIAL STATE (Month 0):")
 print(
     f"  Customers: {first['Total_Customers']} (S:{first['Customers_Starter']}, P:{first['Customers_Professional']}, E:{first['Customers_Enterprise']})"
 )
@@ -74,7 +74,7 @@ print(f"  ARR: ${first['ARR']:,.0f}")
 print(f"  Net Profit: ${first['Net_Profit']:,.0f}")
 print(f"  Margin: {first['Net_Margin_Pct']:.1f}%")
 
-print(f"\nFINAL STATE (Year 5, Month 59):")
+print("\nFINAL STATE (Year 5, Month 59):")
 print(
     f"  Customers: {last['Total_Customers']} (S:{last['Customers_Starter']}, P:{last['Customers_Professional']}, E:{last['Customers_Enterprise']})"
 )
@@ -83,7 +83,7 @@ print(f"  ARR: ${last['ARR']:,.0f}")
 print(f"  Net Profit: ${last['Net_Profit']:,.0f}")
 print(f"  Margin: {last['Net_Margin_Pct']:.1f}%")
 
-print(f"\nGROWTH METRICS:")
+print("\nGROWTH METRICS:")
 print(
     f"  Customer Growth: {((last['Total_Customers']-first['Total_Customers'])/first['Total_Customers']*100):.0f}%"
 )
@@ -95,7 +95,7 @@ prof_month = next((p["Month"] for p in projections if p["Net_Profit"] > 0), None
 if prof_month:
     print(f"  Months to Profitability: {prof_month}")
 else:
-    print(f"  Months to Profitability: Not achieved in projection")
+    print("  Months to Profitability: Not achieved in projection")
 
 # Save CSV
 with open("saas_financial_model.csv", "w", newline="") as f:

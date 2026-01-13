@@ -9,8 +9,6 @@ import logging
 
 import click
 from rich.console import Console
-from rich.table import Table
-from rich.text import Text
 
 from aurora_cli.config import load_config
 from aurora_cli.health_checks import (
@@ -31,7 +29,7 @@ console = Console()
 @click.command(name="doctor")
 @click.option("--fix", is_flag=True, help="Automatically fix issues where possible")
 def doctor_command(fix: bool) -> None:
-    """Run health checks and diagnostics.
+    r"""Run health checks and diagnostics.
 
     Checks the health of your AURORA installation across six categories:
     - Core System: CLI version, database, API keys, permissions

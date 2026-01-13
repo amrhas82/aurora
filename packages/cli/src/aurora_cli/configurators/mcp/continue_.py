@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator, merge_mcp_config
+from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator
 
 
 class ContinueMCPConfigurator(MCPConfigurator):

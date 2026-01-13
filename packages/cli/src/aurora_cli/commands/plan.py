@@ -23,7 +23,6 @@ from typing import TYPE_CHECKING
 
 import click
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
 
 from aurora_cli.config import load_config
@@ -47,7 +46,7 @@ console = Console()
 
 @click.group(name="plan")
 def plan_group() -> None:
-    """Plan management commands.
+    r"""Plan management commands.
 
     Create, list, view, and archive development plans.
 
@@ -70,7 +69,7 @@ def plan_group() -> None:
         aur plan list                    # List active plans
         aur plan view 0001-oauth-auth    # View plan details
         aur plan archive 0001-oauth      # Archive completed plan
-    """
+    r"""
     pass
 
 
@@ -127,7 +126,7 @@ def create_command(
     yes: bool,
     non_interactive: bool,
 ) -> None:
-    """Create a new plan with SOAR-based goal decomposition.
+    r"""Create a new plan with SOAR-based goal decomposition.
 
     Analyzes the GOAL and decomposes it into subgoals with
     recommended agents. Creates the four-file plan structure:
@@ -155,7 +154,7 @@ def create_command(
         \b
         # JSON output
         aur plan create "Add user dashboard" --format json
-    """
+    r"""
     # Load config to ensure project-local paths are used
     config = load_config()
 
@@ -248,7 +247,7 @@ def create_command(
 )
 @handle_errors
 def init_command(path: str | None, force: bool) -> None:
-    """Initialize planning directory structure.
+    r"""Initialize planning directory structure.
 
     Creates the planning directory with:
     - active/ - Directory for active plans
@@ -268,7 +267,7 @@ def init_command(path: str | None, force: bool) -> None:
         \b
         # Force reinitialize
         aur plan init --force
-    """
+    r"""
     result = init_planning_directory(
         path=Path(path) if path else None,
         force=force,
@@ -310,7 +309,7 @@ def init_command(path: str | None, force: bool) -> None:
 )
 @handle_errors
 def list_command(archived: bool, all_plans: bool, output_format: str) -> None:
-    """List plans with filtering options.
+    r"""List plans with filtering options.
 
     By default, shows only active plans. Use --archived to see
     archived plans, or --all to see both.
@@ -331,7 +330,7 @@ def list_command(archived: bool, all_plans: bool, output_format: str) -> None:
         \b
         # JSON output for scripting
         aur plan list --format json
-    """
+    r"""
     config = load_config()
     result = list_plans(archived=archived, all_plans=all_plans, config=config)
 
@@ -411,7 +410,7 @@ def list_command(archived: bool, all_plans: bool, output_format: str) -> None:
 )
 @handle_errors
 def view_command(plan_id: str, archived: bool, output_format: str) -> None:
-    """Display detailed plan information.
+    r"""Display detailed plan information.
 
     Shows comprehensive plan details including:
     - Goal and complexity
@@ -437,7 +436,7 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
         \b
         # JSON output
         aur plan view 0001-oauth --format json
-    """
+    r"""
     config = load_config()
     result = show_plan(plan_id, archived=archived, config=config)
 
@@ -502,7 +501,7 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
 )
 @handle_errors
 def archive_command(plan_id: str, yes: bool) -> None:
-    """Archive a completed plan.
+    r"""Archive a completed plan.
 
     Moves the plan from active/ to archive/ with timestamp prefix.
     Updates plan status and records duration from creation.
@@ -517,7 +516,7 @@ def archive_command(plan_id: str, yes: bool) -> None:
         \b
         # Archive without confirmation
         aur plan archive 0001-oauth -y
-    """
+    r"""
     # Confirmation unless --yes
     config = load_config()
 

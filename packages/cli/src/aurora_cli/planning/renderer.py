@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 
 # Import from the correct location - Plan model is in aurora_cli.planning.models
 try:
@@ -51,6 +51,7 @@ class TemplateRenderer:
         self.template_dir = template_dir or get_template_dir()
         self.env = Environment(
             loader=FileSystemLoader(str(self.template_dir)),
+            autoescape=True,  # Security: Enable autoescape for XSS protection
             trim_blocks=True,
             lstrip_blocks=True,
             keep_trailing_newline=True,

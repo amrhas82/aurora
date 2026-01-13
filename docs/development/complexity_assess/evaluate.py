@@ -9,13 +9,12 @@ import sys
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from complexity_assessor import AssessmentResult, ComplexityAssessor
-from test_corpus import TEST_CORPUS, get_by_category, get_by_level
+from complexity_assessor import ComplexityAssessor  # noqa: E402
+from test_corpus import TEST_CORPUS  # noqa: E402
 
 
 @dataclass

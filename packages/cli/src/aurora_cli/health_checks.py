@@ -123,7 +123,7 @@ class CoreSystemChecks:
         if not db_path.exists():
 
             def create_database():
-                from aurora.core.store.sqlite import SQLiteStore
+                from aurora_core.store.sqlite import SQLiteStore
 
                 SQLiteStore(str(db_path))  # Database is created on init
 
@@ -196,7 +196,7 @@ class CodeAnalysisChecks:
     def _check_tree_sitter(self) -> HealthCheckResult:
         """Check if tree-sitter is available and list configured languages."""
         try:
-            import tree_sitter
+            import tree_sitter  # noqa: F401
 
             # Check for available language parsers
             available_languages = []
@@ -290,7 +290,7 @@ class CodeAnalysisChecks:
 
         # Check if tree-sitter is missing
         try:
-            import tree_sitter
+            import tree_sitter  # noqa: F401
         except ImportError:
             issues.append(
                 {
@@ -782,7 +782,7 @@ class MCPFunctionalChecks:
         except json.JSONDecodeError as e:
             return (
                 "fail",
-                f"Invalid MCP config JSON syntax",
+                "Invalid MCP config JSON syntax",
                 {"path": str(config_path), "error": str(e), "line": e.lineno},
             )
         except Exception as e:
@@ -809,7 +809,7 @@ class MCPFunctionalChecks:
             if len(found_methods) == 3:
                 return (
                     "pass",
-                    f"All 3 Aurora MCP tools importable",
+                    "All 3 Aurora MCP tools importable",
                     {"found": found_methods, "count": 3},
                 )
             else:
@@ -888,7 +888,7 @@ class MCPFunctionalChecks:
                 )
 
             # Try to open connection using SQLiteStore
-            from aurora.core.store.sqlite import SQLiteStore
+            from aurora_core.store.sqlite import SQLiteStore
 
             store = SQLiteStore(str(db_path))
             store.close()
@@ -1007,7 +1007,7 @@ class MCPFunctionalChecks:
         if aurora_dir.exists() and not db_path.exists():
 
             def create_database():
-                from aurora.core.store.sqlite import SQLiteStore
+                from aurora_core.store.sqlite import SQLiteStore
 
                 SQLiteStore(str(db_path))
 

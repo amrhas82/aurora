@@ -379,7 +379,6 @@ def run_step_3_tool_configuration(
     agent_count = 0
     agent_sources = 0
     try:
-        from aurora_cli.commands.agents import get_manifest
         from aurora_cli.configurators.slash.paths import get_tool_paths
 
         # Get agent paths for selected tools only

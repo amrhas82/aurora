@@ -430,7 +430,6 @@ class QueryExecutor:
         """
         try:
             # Use MemoryManager to perform hybrid search with activation scoring
-            from aurora_cli.config import Config
             from aurora_cli.memory_manager import MemoryManager
 
             # Create a temporary MemoryManager with the memory store

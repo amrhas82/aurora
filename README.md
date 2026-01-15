@@ -57,6 +57,7 @@ No cloud APIs required for core functionality.
 |---------|--------------|
 | `/aur:plan goals.json` | Generate PRD + tasks from goals |
 | `/aur:implement` | Execute tasks with checkpoints |
+| `/aur:archive plan-id` | Archive completed plan |
 | `/aur:checkpoint` | Save session context for recovery |
 | `/aur:search "query"` | Search memory, use `/aur:get` to read chunks |
 

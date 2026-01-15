@@ -1,8 +1,9 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-01-14T20:43:34.572240+01:00",
+  "generated_at": "2026-01-15T10:11:48.778311+01:00",
   "sources": [
-    "/home/hamr/.claude/agents"
+    "/home/hamr/.claude/agents",
+    "/home/hamr/.factory/droids"
   ],
   "agents": [
     {

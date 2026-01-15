@@ -171,6 +171,17 @@ def decompose_query(
             subgoal["ideal_agent_desc"] = ""
             subgoal["assigned_agent"] = subgoal["suggested_agent"]
 
+        # Validate match_quality field (new in v1.1)
+        match_quality = subgoal.get("match_quality", "acceptable")  # Default for backward compat
+        valid_qualities = ["excellent", "acceptable", "insufficient"]
+        if match_quality not in valid_qualities:
+            raise ValueError(
+                f"Subgoal {i} has invalid match_quality '{match_quality}'. "
+                f"Must be one of: {valid_qualities}\nSubgoal: {subgoal}"
+            )
+        # Ensure field exists for downstream consumers
+        subgoal["match_quality"] = match_quality
+
     # Validate execution_order structure
     if not isinstance(decomposition["execution_order"], list):
         raise ValueError(

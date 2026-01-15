@@ -133,6 +133,9 @@ class SOAROrchestrator:
         # Initialize query metrics tracker (Task 4.5.3)
         self.query_metrics = QueryMetrics()
 
+        # Configure proactive health checking
+        self._configure_proactive_health_checks()
+
         # Initialize phase-level metadata tracking
         self._phase_metadata: dict[str, Any] = {}
         self._total_cost: float = 0.0
@@ -142,6 +145,71 @@ class SOAROrchestrator:
         self._query: str = ""
 
         logger.info("SOAR orchestrator initialized")
+
+    def _configure_proactive_health_checks(self) -> None:
+        """Configure proactive health checking from config."""
+        from aurora_spawner.observability import ProactiveHealthConfig, get_health_monitor
+
+        # Get config from system config or use defaults
+        health_config_dict = self.config.get("proactive_health_checks", {})
+        enabled = health_config_dict.get("enabled", True)
+
+        if not enabled:
+            logger.info("Proactive health checking disabled")
+            return
+
+        proactive_config = ProactiveHealthConfig(
+            enabled=True,
+            check_interval=health_config_dict.get("check_interval", 5.0),
+            no_output_threshold=health_config_dict.get("no_output_threshold", 15.0),
+            failure_threshold=health_config_dict.get("failure_threshold", 3),
+        )
+
+        # Reinitialize health monitor with proactive config
+        health_monitor = get_health_monitor()
+        health_monitor._proactive_config = proactive_config
+        logger.info(
+            f"Proactive health checking enabled: "
+            f"interval={proactive_config.check_interval}s, "
+            f"threshold={proactive_config.no_output_threshold}s, "
+            f"max_failures={proactive_config.failure_threshold}"
+        )
+
+        # Configure early detection monitor
+        self._configure_early_detection()
+
+    def _configure_early_detection(self) -> None:
+        """Configure early detection system from config."""
+        from aurora_spawner.early_detection import (
+            EarlyDetectionConfig,
+            reset_early_detection_monitor,
+        )
+
+        # Get config from system config or use defaults
+        early_config_dict = self.config.get("early_detection", {})
+        enabled = early_config_dict.get("enabled", True)
+
+        if not enabled:
+            logger.info("Early detection disabled")
+            return
+
+        early_config = EarlyDetectionConfig(
+            enabled=True,
+            check_interval=early_config_dict.get("check_interval", 2.0),
+            stall_threshold=early_config_dict.get("stall_threshold", 15.0),
+            min_output_bytes=early_config_dict.get("min_output_bytes", 100),
+            stderr_pattern_check=early_config_dict.get("stderr_pattern_check", True),
+            memory_limit_mb=early_config_dict.get("memory_limit_mb"),
+        )
+
+        # Initialize early detection monitor with config
+        reset_early_detection_monitor(early_config)
+        logger.info(
+            f"Early detection enabled: "
+            f"check_interval={early_config.check_interval}s, "
+            f"stall_threshold={early_config.stall_threshold}s, "
+            f"min_output={early_config.min_output_bytes}b"
+        )
 
     def _list_agents(self):
         """List all available agents using registry or discovery adapter.
@@ -317,7 +385,11 @@ class SOAROrchestrator:
             for idx, agent in agent_assignments:
                 sg = subgoals[idx] if idx < len(subgoals) else {}
                 # Check if agent is a spawn (gap) - marked by verify_lite
-                is_spawn = getattr(agent, "config", {}).get("is_spawn", False)
+                agent_config = getattr(agent, "config", {}) or {}
+                is_spawn = agent_config.get("is_spawn", False)
+                match_quality = agent_config.get("match_quality", "acceptable")
+                ideal_agent = agent_config.get("ideal_agent", "")
+                ideal_agent_desc = agent_config.get("ideal_agent_desc", "")
                 subgoal_details.append(
                     {
                         "index": idx + 1,
@@ -326,6 +398,9 @@ class SOAROrchestrator:
                         "is_critical": sg.get("is_critical", False),
                         "depends_on": sg.get("depends_on", []),
                         "is_spawn": is_spawn,
+                        "match_quality": match_quality,
+                        "ideal_agent": ideal_agent,
+                        "ideal_agent_desc": ideal_agent_desc,
                     }
                 )
 
@@ -378,7 +453,11 @@ class SOAROrchestrator:
                 subgoal_details = []
                 for idx, agent in agent_assignments:
                     sg = subgoals[idx] if idx < len(subgoals) else {}
-                    is_spawn = getattr(agent, "config", {}).get("is_spawn", False)
+                    agent_config = getattr(agent, "config", {}) or {}
+                    is_spawn = agent_config.get("is_spawn", False)
+                    match_quality = agent_config.get("match_quality", "acceptable")
+                    ideal_agent = agent_config.get("ideal_agent", "")
+                    ideal_agent_desc = agent_config.get("ideal_agent_desc", "")
                     subgoal_details.append(
                         {
                             "index": idx + 1,
@@ -387,6 +466,9 @@ class SOAROrchestrator:
                             "is_critical": sg.get("is_critical", False),
                             "depends_on": sg.get("depends_on", []),
                             "is_spawn": is_spawn,
+                            "match_quality": match_quality,
+                            "ideal_agent": ideal_agent,
+                            "ideal_agent_desc": ideal_agent_desc,
                         }
                     )
 
@@ -424,12 +506,25 @@ class SOAROrchestrator:
                 phase5_dict["_error"] = None
                 phase5_dict["agents_executed"] = len(phase5_result_obj.agent_outputs)
 
+                # Extract early termination data
+                early_terminations = phase5_dict.get("execution_metadata", {}).get(
+                    "early_terminations", []
+                )
+
+                # Extract circuit breaker data
+                circuit_blocked = phase5_dict.get("execution_metadata", {}).get(
+                    "circuit_blocked", []
+                )
+                circuit_blocked_agents = [cb["agent_id"] for cb in circuit_blocked]
+
                 # Add recovery metrics with detailed categorization
                 phase5_dict["recovery_metrics"] = {
                     "total_failures": 0,
-                    "early_terminations": 0,
-                    "circuit_breaker_blocks": 0,
-                    "circuit_blocked_agents": [],
+                    "early_terminations": len(early_terminations),
+                    "early_termination_details": early_terminations,
+                    "circuit_breaker_blocks": len(circuit_blocked),
+                    "circuit_blocked_agents": circuit_blocked_agents,
+                    "circuit_blocked_details": circuit_blocked,
                     "timeout_count": 0,
                     "timeout_agents": [],
                     "rate_limit_count": 0,
@@ -621,9 +716,20 @@ class SOAROrchestrator:
             return result
 
     def _phase3_decompose(
-        self, query: str, context: dict[str, Any], complexity: str
+        self,
+        query: str,
+        context: dict[str, Any],
+        complexity: str,
+        retry_feedback: str | None = None,
     ) -> dict[str, Any]:
-        """Execute Phase 3: Query Decomposition."""
+        """Execute Phase 3: Query Decomposition.
+
+        Args:
+            query: The user query to decompose
+            context: Context from phase 2 (memory retrieval)
+            complexity: Complexity level (simple/medium/complex)
+            retry_feedback: Optional feedback from failed verification to guide retry
+        """
         logger.info("Phase 3: Decomposing query")
         self._invoke_callback("decompose", "before", {})
         start_time = time.time()
@@ -680,6 +786,14 @@ class SOAROrchestrator:
             CollectResult object for use by phase 6
         """
         logger.info("Phase 5: Executing agents")
+
+        # Reset health monitors to ensure fresh state with correct config
+        from aurora_spawner.early_detection import reset_early_detection_monitor
+        from aurora_spawner.observability import reset_health_monitor
+
+        reset_health_monitor()
+        reset_early_detection_monitor()
+
         self._invoke_callback("collect", "before", {})
         try:
             # Load recovery config from policies
@@ -717,8 +831,12 @@ class SOAROrchestrator:
             circuit_failures = recovery_metrics["circuit_failures"]
             timeout_failures = recovery_metrics["timeout_failures"]
 
-            # Log recovery summary
+            # Log recovery summary with early termination breakdown
             if failed_count > 0:
+                early_term_details = [
+                    f"{d['agent_id']} ({d['reason']}, {d['detection_time']}ms)"
+                    for d in recovery_metrics.get("early_term_details", [])
+                ]
                 logger.info(
                     f"Agent execution completed with {failed_count} failures. "
                     f"Fallback used: {len(result.fallback_agents)}, "
@@ -726,6 +844,8 @@ class SOAROrchestrator:
                     f"Circuit breaker: {len(circuit_failures)}, "
                     f"Timeouts: {len(timeout_failures)}"
                 )
+                if early_term_details:
+                    logger.info(f"Early termination details: {', '.join(early_term_details)}")
 
                 # Trigger recovery procedures if needed
                 if circuit_failures:
@@ -733,7 +853,7 @@ class SOAROrchestrator:
 
                 if early_term_count > 0:
                     logger.info(
-                        f"Early termination system detected {early_term_count} problematic agents. "
+                        f"Early termination system detected {early_term_count} problematic agents in real-time. "
                         "Circuit breaker and retry policies active for future attempts."
                     )
 
@@ -1363,6 +1483,7 @@ class SOAROrchestrator:
             Dict with failure analysis:
                 - failed_count: Total failed agents
                 - early_term_count: Agents with early termination
+                - early_term_details: List of early termination details
                 - circuit_failures: List of agent IDs blocked by circuit breaker
                 - timeout_failures: List of agent IDs that timed out
                 - rate_limit_failures: List of agent IDs that hit rate limits
@@ -1370,6 +1491,7 @@ class SOAROrchestrator:
         """
         failed_count = 0
         early_term_count = 0
+        early_term_details = []
         circuit_failures = []
         timeout_failures = []
         rate_limit_failures = []
@@ -1381,12 +1503,20 @@ class SOAROrchestrator:
                 error_msg = (output.error or "").lower()
                 metadata = output.execution_metadata
 
-                # Track early termination patterns
-                if metadata.get("termination_reason"):
+                # Track early termination patterns with details
+                term_reason = metadata.get("termination_reason")
+                if term_reason:
                     early_term_count += 1
+                    early_term_details.append(
+                        {
+                            "agent_id": output.agent_id,
+                            "reason": term_reason,
+                            "detection_time": metadata.get("duration_ms", 0),
+                        }
+                    )
                     logger.debug(
-                        f"Agent {output.agent_id} early termination: "
-                        f"{metadata.get('termination_reason')}"
+                        f"Agent {output.agent_id} early termination: {term_reason} "
+                        f"(detected in {metadata.get('duration_ms', 0)}ms)"
                     )
 
                 # Track circuit breaker failures
@@ -1415,6 +1545,7 @@ class SOAROrchestrator:
         return {
             "failed_count": failed_count,
             "early_term_count": early_term_count,
+            "early_term_details": early_term_details,
             "circuit_failures": circuit_failures,
             "timeout_failures": timeout_failures,
             "rate_limit_failures": rate_limit_failures,

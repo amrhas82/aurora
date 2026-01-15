@@ -81,21 +81,15 @@ def verify_lite(
             )
             continue
 
-        # Check for gap using AgentRecommender with keyword matching
-        # Only spawn ad-hoc if no agent has adequate capability match
+        # Use LLM's match_quality judgment instead of keyword scoring
+        # LLM already evaluated fit in Phase 3 decomposition
+        match_quality = subgoal.get("match_quality", "acceptable")  # Default for backward compat
         ideal_agent = subgoal.get("ideal_agent")
         ideal_agent_desc = subgoal.get("ideal_agent_desc", "")
 
-        if ideal_agent and ideal_agent_desc:
-            # Use AgentRecommender to find best match based on description
-            from aurora_cli.planning.agents import AgentRecommender
-
-            recommender = AgentRecommender(manifest=None)  # Will load from cache
-            best_agent, match_score = recommender.recommend_for_description(ideal_agent_desc)
-
-            # Gap only if score < 0.15 (no capable agent found)
-            if match_score < 0.15:
-                # True gap - create placeholder for ad-hoc spawning
+        if match_quality == "insufficient":
+            # LLM determined no capable agent available - spawn ideal agent
+            if ideal_agent and ideal_agent_desc:
                 from aurora_soar.agent_registry import AgentInfo
 
                 placeholder_agent = AgentInfo(
@@ -104,12 +98,18 @@ def verify_lite(
                     description=ideal_agent_desc,
                     capabilities=[],
                     agent_type="local",
-                    config={"is_spawn": True},
+                    config={"is_spawn": True, "match_quality": "insufficient"},
                 )
                 agent_assignments.append((subgoal_index, placeholder_agent))
                 continue
-            # else: LLM found a capable agent - trust its assignment
-            # Don't overwrite assigned_agent here
+            else:
+                issues.append(
+                    f"Subgoal {subgoal_index} marked insufficient but missing ideal agent info"
+                )
+                continue
+
+        # For excellent/acceptable matches, use LLM's assigned_agent
+        # Store match quality in agent config for display
 
         # Check if assigned agent exists (strip @ prefix if present)
         agent_id = assigned_agent.lstrip("@") if assigned_agent else ""
@@ -117,8 +117,15 @@ def verify_lite(
             issues.append(f"Agent '{assigned_agent}' not found in registry")
             continue
 
-        # Valid subgoal - create assignment
+        # Valid subgoal - create assignment with match quality metadata
         agent_info = agent_map[agent_id]
+        # Store match quality and ideal agent info for display
+        if not hasattr(agent_info, "config") or agent_info.config is None:
+            agent_info.config = {}
+        agent_info.config["match_quality"] = match_quality
+        if match_quality == "acceptable" and ideal_agent:
+            agent_info.config["ideal_agent"] = ideal_agent
+            agent_info.config["ideal_agent_desc"] = ideal_agent_desc or ""
         agent_assignments.append((subgoal_index, agent_info))
 
     # Check 5: Detect circular dependencies

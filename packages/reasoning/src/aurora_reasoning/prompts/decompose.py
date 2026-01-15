@@ -56,8 +56,12 @@ For each subgoal, specify:
 2. The IDEAL agent (unconstrained - what SHOULD handle this task)
 3. A brief description of the ideal agent's capabilities
 4. The ASSIGNED agent (from available list - best match we have)
-5. Whether the subgoal is critical to the overall query
-6. Dependencies on other subgoals (by index)
+5. MATCH QUALITY - how well the assigned agent fits this task:
+   - "excellent": Agent's core specialty matches task (e.g., @qa-test-architect for testing)
+   - "acceptable": Agent is capable but not specialized (e.g., @full-stack-dev for design)
+   - "insufficient": No capable agent available (e.g., @master for creative writing)
+6. Whether the subgoal is critical to the overall query
+7. Dependencies on other subgoals (by index)
 
 {agents_text}
 
@@ -70,6 +74,7 @@ You MUST respond with valid JSON only. Use this exact schema:
       "ideal_agent": "agent-that-should-handle-this",
       "ideal_agent_desc": "Brief description of ideal agent capabilities",
       "assigned_agent": "best-available-agent",
+      "match_quality": "excellent | acceptable | insufficient",
       "is_critical": true/false,
       "depends_on": [0, 1]  // indices of prerequisite subgoals
     }}

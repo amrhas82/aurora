@@ -256,19 +256,48 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
 
             table = Table(title="Plan Decomposition", show_header=True, header_style="bold")
             table.add_column("#", style="dim", width=4)
-            table.add_column("Subgoal", width=55)
-            table.add_column("Agent", style="cyan", width=20)
+            table.add_column("Subgoal", width=45)
+            table.add_column("Agent", width=20)
+            table.add_column("Match", width=12)
 
             for sg in subgoals:
                 agent_name = sg.get("agent", "unknown")
                 is_spawn = sg.get("is_spawn", False)
-                # Mark spawned agents with asterisk
-                agent_display = f"@{agent_name}*" if is_spawn else f"@{agent_name}"
+                match_quality = sg.get("match_quality", "acceptable")
+                ideal_agent = sg.get("ideal_agent", "")
+
+                # Agent display with color based on match quality
+                if is_spawn:
+                    agent_display = f"[yellow]@{agent_name}*[/]"
+                    match_display = "[yellow]✗ Spawned[/]"
+                elif match_quality == "excellent":
+                    agent_display = f"[green]@{agent_name}[/]"
+                    match_display = "[green]✓ Excellent[/]"
+                elif match_quality == "acceptable":
+                    agent_display = f"[cyan]@{agent_name}[/]"
+                    match_display = f"[yellow]⚠ Acceptable[/]"
+                else:  # insufficient (shouldn't reach here if spawn logic works)
+                    agent_display = f"[red]@{agent_name}[/]"
+                    match_display = "[red]✗ Weak[/]"
+
+                # Truncate description if needed
+                desc_text = sg.get("description", "")[:45]
+
                 table.add_row(
                     str(sg.get("index", "?")),
-                    sg.get("description", "")[:55],
+                    desc_text,
                     agent_display,
+                    match_display,
                 )
+
+                # Show ideal agent suggestion for acceptable matches
+                if match_quality == "acceptable" and ideal_agent:
+                    table.add_row(
+                        "",
+                        f"[dim]→ Suggest: {ideal_agent}[/]",
+                        "",
+                        "",
+                    )
 
             console.print()
             console.print(table)
@@ -371,12 +400,40 @@ def _create_phase_callback(tool: str):
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="Context files for informed decomposition. Can be used multiple times.",
 )
+@click.option(
+    "--early-detection-interval",
+    type=float,
+    default=None,
+    help="Early detection check interval in seconds (default: 2.0)",
+)
+@click.option(
+    "--early-detection-stall-threshold",
+    type=float,
+    default=None,
+    help="Stall threshold for early detection in seconds (default: 15.0)",
+)
+@click.option(
+    "--early-detection-min-output",
+    type=int,
+    default=None,
+    help="Minimum output bytes before stall check (default: 100)",
+)
+@click.option(
+    "--disable-early-detection",
+    is_flag=True,
+    default=False,
+    help="Disable early failure detection",
+)
 def soar_command(
     query: str,
     model: str,
     tool: str | None,
     verbose: bool,
     context_files: tuple[Path, ...],
+    early_detection_interval: float | None,
+    early_detection_stall_threshold: float | None,
+    early_detection_min_output: int | None,
+    disable_early_detection: bool,
 ) -> None:
     r"""Execute SOAR query with terminal orchestration (7+1 phase pipeline).
 
@@ -462,6 +519,31 @@ def soar_command(
 
     # Load dependencies
     config = Config.load()
+
+    # Apply CLI overrides for early detection settings
+    if (
+        disable_early_detection
+        or early_detection_interval is not None
+        or early_detection_stall_threshold is not None
+        or early_detection_min_output is not None
+    ):
+        # Build early_detection config override
+        early_detection_config = (
+            config.get("early_detection", {}).copy() if config.get("early_detection") else {}
+        )
+
+        if disable_early_detection:
+            early_detection_config["enabled"] = False
+        if early_detection_interval is not None:
+            early_detection_config["check_interval"] = early_detection_interval
+        if early_detection_stall_threshold is not None:
+            early_detection_config["stall_threshold"] = early_detection_stall_threshold
+        if early_detection_min_output is not None:
+            early_detection_config["min_output_bytes"] = early_detection_min_output
+
+        # Update config with overrides
+        config._data["early_detection"] = early_detection_config
+
     store = SQLiteStore()  # Use SQLite store for persistence (~/.aurora/memory.db)
 
     # Discover available agents using the same system as 'aur agents list'

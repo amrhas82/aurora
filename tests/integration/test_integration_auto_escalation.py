@@ -1,5 +1,4 @@
-"""
-Integration Test: Auto-Escalation
+"""Integration Test: Auto-Escalation
 
 Tests Issue #9: Auto-Escalation Not Implemented
 - Verifies low confidence triggers escalation to SOAR
@@ -31,13 +30,12 @@ Phase: 1 (Core Restoration)
 Priority: P1 (High)
 """
 
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
-from aurora_soar.phases.assess import assess_complexity
 
 
 class TestAutoEscalation:
@@ -79,8 +77,7 @@ class TestAutoEscalation:
     def test_low_confidence_triggers_escalation_non_interactive(
         self, executor_non_interactive, mock_memory_store
     ):
-        """
-        Test that low confidence automatically escalates to SOAR in non-interactive mode.
+        """Test that low confidence automatically escalates to SOAR in non-interactive mode.
 
         This test will FAIL because auto-escalation not implemented.
         """
@@ -140,8 +137,7 @@ class TestAutoEscalation:
                     )
 
     def test_high_confidence_no_escalation(self, executor_non_interactive):
-        """
-        Test that high confidence doesn't trigger escalation.
+        """Test that high confidence doesn't trigger escalation.
 
         This test verifies we only escalate when needed.
         """
@@ -189,8 +185,7 @@ class TestAutoEscalation:
                     )
 
     def test_interactive_mode_prompts_user(self, executor_interactive):
-        """
-        Test that interactive mode prompts user when confidence is low.
+        """Test that interactive mode prompts user when confidence is low.
 
         This test will FAIL because prompt logic not implemented.
         """
@@ -237,8 +232,7 @@ class TestAutoEscalation:
                     )
 
     def test_interactive_mode_user_declines_escalation(self, executor_interactive):
-        """
-        Test that user can decline escalation and use direct LLM.
+        """Test that user can decline escalation and use direct LLM.
 
         This test verifies user choice is respected.
         """
@@ -290,8 +284,7 @@ class TestAutoEscalation:
                         )
 
     def test_confidence_threshold_boundary(self, executor_non_interactive):
-        """
-        Test behavior at confidence threshold (0.6).
+        """Test behavior at confidence threshold (0.6).
 
         This test documents boundary behavior.
         """
@@ -338,8 +331,7 @@ class TestEscalationLogging:
     """Test that escalation decisions are logged for transparency."""
 
     def test_escalation_logged_when_triggered(self, tmp_path, caplog):
-        """
-        Test that escalation is logged with reason.
+        """Test that escalation is logged with reason.
 
         This test verifies transparency in decision-making.
         """
@@ -374,8 +366,7 @@ class TestEscalationLogging:
                 assert True, "Escalation logging will be verified in implementation"
 
     def test_confidence_score_logged(self):
-        """
-        Test that confidence score is logged for debugging.
+        """Test that confidence score is logged for debugging.
 
         This test documents expected logging behavior.
         """
@@ -423,8 +414,7 @@ def process_data(data):
         return executor, memory_store
 
     def test_escalation_passes_memory_store_to_soar(self, executor_with_memory):
-        """
-        Test that SOAR pipeline receives memory store when escalating.
+        """Test that SOAR pipeline receives memory store when escalating.
 
         This test verifies context is preserved during escalation.
         """

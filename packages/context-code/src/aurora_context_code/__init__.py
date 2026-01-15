@@ -1,5 +1,4 @@
-"""
-AURORA Context-Code Package
+"""AURORA Context-Code Package
 
 Provides code parsing, analysis, and semantic understanding capabilities:
 - Abstract CodeParser interface
@@ -18,7 +17,6 @@ from aurora_context_code.semantic import (
     HybridRetriever,
     cosine_similarity,
 )
-
 
 __all__ = [
     "EmbeddingProvider",

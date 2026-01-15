@@ -8,9 +8,7 @@ Tests boundary conditions, error handling, and unusual scenarios:
 - Special edge cases
 """
 
-from unittest.mock import MagicMock, Mock
-
-import pytest
+from unittest.mock import Mock
 
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_reasoning.verify import VerificationOption, VerificationResult, VerificationVerdict

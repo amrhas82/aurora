@@ -7,10 +7,6 @@ Pattern: Direct function calls with mocked exceptions (no subprocess, no @patch 
 """
 
 import json
-from pathlib import Path
-from unittest.mock import Mock
-
-import pytest
 
 from aurora_cli.errors import (
     APIError,

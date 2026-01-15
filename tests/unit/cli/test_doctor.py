@@ -5,7 +5,6 @@ Tests the `aur doctor` command that performs health checks and auto-repair.
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest

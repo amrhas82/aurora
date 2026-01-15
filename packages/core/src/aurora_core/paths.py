@@ -1,5 +1,4 @@
-"""
-Path resolution utilities for AURORA.
+"""Path resolution utilities for AURORA.
 
 Provides consistent path resolution across all modules:
 - Project-local paths (./.aurora/) when in a project context
@@ -9,12 +8,10 @@ RULE: Everything is project-local EXCEPT budget_tracker.json
 """
 
 from pathlib import Path
-from typing import Literal
 
 
 def get_aurora_dir() -> Path:
-    """
-    Get the correct .aurora directory (project-local or global).
+    """Get the correct .aurora directory (project-local or global).
 
     Resolution order:
     1. If ./.aurora exists → use project-local
@@ -42,8 +39,7 @@ def get_aurora_dir() -> Path:
 
 
 def get_db_path() -> Path:
-    """
-    Get the path to memory.db (always project-local if project exists).
+    """Get the path to memory.db (always project-local if project exists).
 
     Returns:
         Path to memory.db
@@ -52,8 +48,7 @@ def get_db_path() -> Path:
 
 
 def get_logs_dir() -> Path:
-    """
-    Get the path to logs directory (always project-local if project exists).
+    """Get the path to logs directory (always project-local if project exists).
 
     Returns:
         Path to logs directory
@@ -62,8 +57,7 @@ def get_logs_dir() -> Path:
 
 
 def get_conversations_dir() -> Path:
-    """
-    Get the path to conversation logs directory.
+    """Get the path to conversation logs directory.
 
     Returns:
         Path to conversations directory
@@ -72,8 +66,7 @@ def get_conversations_dir() -> Path:
 
 
 def get_budget_tracker_path() -> Path:
-    """
-    Get the path to budget_tracker.json (ALWAYS global - never project-local).
+    """Get the path to budget_tracker.json (ALWAYS global - never project-local).
 
     Budget tracking is intentionally global because:
     - Users have one budget across all projects
@@ -86,8 +79,7 @@ def get_budget_tracker_path() -> Path:
 
 
 def ensure_aurora_dir() -> Path:
-    """
-    Ensure .aurora directory exists and return its path.
+    """Ensure .aurora directory exists and return its path.
 
     Creates the directory if it doesn't exist.
 
@@ -100,8 +92,7 @@ def ensure_aurora_dir() -> Path:
 
 
 def is_project_mode() -> bool:
-    """
-    Check if running in project mode (has ./.aurora directory).
+    """Check if running in project mode (has ./.aurora directory).
 
     Returns:
         True if project-local .aurora exists

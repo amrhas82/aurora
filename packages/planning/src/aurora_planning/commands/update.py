@@ -1,5 +1,4 @@
-"""
-Update command for Aurora planning system.
+"""Update command for Aurora planning system.
 
 Simplified version ported from OpenSpec src/core/update.ts
 Focuses on updating AGENTS.md file with latest instructions.
@@ -16,8 +15,7 @@ class UpdateCommand:
     """Command to update OpenSpec instruction files."""
 
     def execute(self, project_path: str = ".", verbose: bool = False) -> None:
-        """
-        Execute the update command.
+        """Execute the update command.
 
         Updates the .aurora/plans/AGENTS.md file with the latest template content.
         In the full implementation, this would also update AI tool configuration

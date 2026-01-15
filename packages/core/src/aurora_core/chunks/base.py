@@ -1,5 +1,4 @@
-"""
-Base chunk interface for AURORA knowledge representation.
+"""Base chunk interface for AURORA knowledge representation.
 
 This module defines the abstract Chunk base class that all concrete chunk
 types must implement.
@@ -11,8 +10,7 @@ from typing import Any
 
 
 class Chunk(ABC):
-    """
-    Base class for all AURORA chunks.
+    """Base class for all AURORA chunks.
 
     A chunk represents a unit of knowledge in the AURORA system, such as:
     - Code elements (functions, classes, methods) - type: "code"
@@ -23,8 +21,7 @@ class Chunk(ABC):
     """
 
     def __init__(self, chunk_id: str, chunk_type: str):
-        """
-        Initialize a chunk.
+        """Initialize a chunk.
 
         Args:
             chunk_id: Unique identifier for this chunk
@@ -37,8 +34,7 @@ class Chunk(ABC):
 
     @abstractmethod
     def to_json(self) -> dict[str, Any]:
-        """
-        Serialize chunk to JSON-compatible dict.
+        """Serialize chunk to JSON-compatible dict.
 
         Returns:
             Dictionary containing all chunk data in JSON-serializable format
@@ -48,8 +44,7 @@ class Chunk(ABC):
     @classmethod
     @abstractmethod
     def from_json(cls, data: dict[str, Any]) -> "Chunk":
-        """
-        Deserialize chunk from JSON dict.
+        """Deserialize chunk from JSON dict.
 
         Args:
             data: Dictionary containing chunk data
@@ -61,8 +56,7 @@ class Chunk(ABC):
 
     @abstractmethod
     def validate(self) -> bool:
-        """
-        Validate chunk structure and data.
+        """Validate chunk structure and data.
 
         Returns:
             True if valid

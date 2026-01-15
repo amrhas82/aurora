@@ -1,5 +1,4 @@
-"""
-Unit tests for ContextProvider interface and implementations.
+"""Unit tests for ContextProvider interface and implementations.
 
 Tests the abstract ContextProvider interface and ensures concrete
 implementations follow the contract.

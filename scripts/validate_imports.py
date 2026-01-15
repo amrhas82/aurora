@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Import validation script for pre-commit hook.
+"""Import validation script for pre-commit hook.
 
 Detects old aurora.* import patterns and enforces new aurora_* package naming.
 
@@ -23,7 +22,6 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # Old patterns that should be migrated to new package names
 OLD_IMPORT_PATTERNS = [
@@ -56,9 +54,8 @@ OLD_IMPORT_PATTERNS = [
 ]
 
 
-def validate_file(filepath: Path) -> List[Tuple[int, str, str]]:
-    """
-    Validate imports in a single file.
+def validate_file(filepath: Path) -> list[tuple[int, str, str]]:
+    """Validate imports in a single file.
 
     Args:
         filepath: Path to the file to validate
@@ -69,9 +66,9 @@ def validate_file(filepath: Path) -> List[Tuple[int, str, str]]:
     violations = []
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             lines = f.readlines()
-    except (UnicodeDecodeError, IOError):
+    except (OSError, UnicodeDecodeError):
         # Skip binary files or files that can't be read
         return violations
 
@@ -91,9 +88,8 @@ def validate_file(filepath: Path) -> List[Tuple[int, str, str]]:
     return violations
 
 
-def get_staged_python_files() -> List[Path]:
-    """
-    Get list of Python files staged for commit.
+def get_staged_python_files() -> list[Path]:
+    """Get list of Python files staged for commit.
 
     Returns:
         List of Path objects for staged .py files
@@ -121,9 +117,8 @@ def get_staged_python_files() -> List[Path]:
         return []
 
 
-def find_python_files(path: Path) -> List[Path]:
-    """
-    Recursively find all Python files in a directory.
+def find_python_files(path: Path) -> list[Path]:
+    """Recursively find all Python files in a directory.
 
     Args:
         path: Directory path to search

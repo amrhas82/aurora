@@ -1,5 +1,4 @@
-"""
-AURORA MCP Server - Model Context Protocol Integration.
+"""AURORA MCP Server - Model Context Protocol Integration.
 
 This module provides FastMCP server implementation for integrating AURORA
 with Claude Desktop and other MCP clients.

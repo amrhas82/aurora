@@ -4,8 +4,6 @@ Tests the logic for generating human-readable explanations of semantic similarit
 scores based on threshold-based relevance levels.
 """
 
-import pytest
-
 
 def test_explain_semantic_very_high():
     """Very high relevance: semantic score ≥0.9."""

@@ -1,5 +1,4 @@
-"""
-Tests for MarkdownParser.
+"""Tests for MarkdownParser.
 
 Ported from: test/core/parsers/markdown-parser.test.ts
 TDD approach: Tests written first based on TypeScript test behavior.

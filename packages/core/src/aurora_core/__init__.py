@@ -1,5 +1,4 @@
-"""
-AURORA Core Package
+"""AURORA Core Package
 
 Provides foundational components for the AURORA framework including:
 - Storage layer (SQLite and in-memory implementations)

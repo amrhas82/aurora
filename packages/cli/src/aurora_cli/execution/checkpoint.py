@@ -11,7 +11,6 @@ from typing import Any
 
 from aurora_core.paths import get_aurora_dir
 
-
 logger = logging.getLogger(__name__)
 
 

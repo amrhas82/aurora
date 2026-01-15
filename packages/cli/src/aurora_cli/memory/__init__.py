@@ -26,5 +26,4 @@ Example:
 
 from aurora_cli.memory.retrieval import MemoryRetriever
 
-
 __all__ = ["MemoryRetriever"]

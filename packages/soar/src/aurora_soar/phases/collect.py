@@ -24,7 +24,6 @@ from aurora_spawner import (
     spawn_with_retry_and_fallback,
 )
 
-
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
 

@@ -1,5 +1,4 @@
-"""
-ACT-R Literature Validation Tests
+"""ACT-R Literature Validation Tests
 
 This module validates AURORA's ACT-R activation implementation against
 published examples and formulas from ACT-R cognitive architecture literature.

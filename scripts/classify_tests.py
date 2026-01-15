@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Detect misclassified tests and suggest correct classification.
+"""Detect misclassified tests and suggest correct classification.
 
 This script analyzes test files using heuristics to determine if they're
 correctly classified as unit/integration/e2e tests based on their location
@@ -18,7 +17,6 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Set
 
 
 @dataclass
@@ -29,30 +27,28 @@ class TestClassification:
     current_location: str  # unit, integration, or e2e
     suggested_location: str  # unit, integration, or e2e
     confidence: str  # high, medium, low
-    reasons: List[str]
-    heuristics_matched: List[str]
+    reasons: list[str]
+    heuristics_matched: list[str]
 
 
 class TestClassifier:
     """Classifies tests based on their characteristics."""
 
     def __init__(self, test_root: Path):
-        """
-        Initialize classifier.
+        """Initialize classifier.
 
         Args:
             test_root: Root directory containing test files
         """
         self.test_root = test_root
 
-    def find_test_files(self, path: Path = None) -> List[Path]:
+    def find_test_files(self, path: Path = None) -> list[Path]:
         """Find all test files in the given path."""
         search_path = path or self.test_root
         return list(search_path.rglob("test_*.py"))
 
     def get_current_location(self, file_path: Path) -> str:
-        """
-        Determine current test location based on directory.
+        """Determine current test location based on directory.
 
         Args:
             file_path: Path to test file
@@ -72,9 +68,8 @@ class TestClassifier:
         else:
             return "unknown"
 
-    def analyze_file_content(self, file_path: Path) -> Dict[str, any]:
-        """
-        Analyze file content for classification heuristics.
+    def analyze_file_content(self, file_path: Path) -> dict[str, any]:
+        """Analyze file content for classification heuristics.
 
         Args:
             file_path: Path to test file
@@ -182,8 +177,7 @@ class TestClassifier:
         return analysis
 
     def classify_test(self, file_path: Path) -> TestClassification:
-        """
-        Classify a test file.
+        """Classify a test file.
 
         Args:
             file_path: Path to test file
@@ -303,9 +297,8 @@ class TestClassifier:
             heuristics_matched=heuristics,
         )
 
-    def classify_all(self, path: Path = None) -> List[TestClassification]:
-        """
-        Classify all test files.
+    def classify_all(self, path: Path = None) -> list[TestClassification]:
+        """Classify all test files.
 
         Args:
             path: Optional path to analyze (default: all tests)
@@ -385,7 +378,7 @@ def main():
             report_lines.append(f"  Current:   tests/{result.current_location}/")
             report_lines.append(f"  Suggested: tests/{result.suggested_location}/")
             report_lines.append(f"  Confidence: {result.confidence.upper()}")
-            report_lines.append(f"  Reasons:")
+            report_lines.append("  Reasons:")
             for reason in result.reasons:
                 report_lines.append(f"    - {reason}")
             report_lines.append("")

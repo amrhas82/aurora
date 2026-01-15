@@ -1,5 +1,4 @@
-"""
-Unit tests for the CodeParser abstract interface.
+"""Unit tests for the CodeParser abstract interface.
 
 Tests the contract that all parser implementations must follow.
 """

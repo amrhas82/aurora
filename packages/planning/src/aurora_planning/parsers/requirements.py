@@ -1,5 +1,4 @@
-"""
-Requirements block parsing utilities.
+"""Requirements block parsing utilities.
 
 Ported from: src/core/parsers/requirement-blocks.ts
 Terminology: delta→modification, spec→capability

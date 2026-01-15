@@ -1,5 +1,4 @@
-"""
-Plan schema (was Change schema in OpenSpec).
+"""Plan schema (was Change schema in OpenSpec).
 
 Ported from: src/core/schemas/change.schema.ts
 Zod → Pydantic translation.

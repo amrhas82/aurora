@@ -1,5 +1,4 @@
-"""
-Parser registry for managing language-specific code parsers.
+"""Parser registry for managing language-specific code parsers.
 
 This module provides the ParserRegistry class for registering and discovering
 code parsers for different programming languages.
@@ -10,13 +9,11 @@ from pathlib import Path
 
 from aurora_context_code.parser import CodeParser
 
-
 logger = logging.getLogger(__name__)
 
 
 class ParserRegistry:
-    """
-    Registry for managing code parsers.
+    """Registry for managing code parsers.
 
     Provides centralized registration and discovery of language-specific
     parsers. Parsers can be registered manually or auto-registered on
@@ -35,8 +32,7 @@ class ParserRegistry:
         logger.debug("ParserRegistry initialized")
 
     def register(self, parser: CodeParser) -> None:
-        """
-        Register a code parser.
+        """Register a code parser.
 
         Args:
             parser: Parser instance to register
@@ -54,8 +50,7 @@ class ParserRegistry:
         logger.debug(f"Registered parser: {parser}")
 
     def get_parser(self, language: str) -> CodeParser | None:
-        """
-        Get parser for a specific language.
+        """Get parser for a specific language.
 
         Args:
             language: Programming language identifier (e.g., "python")
@@ -66,8 +61,7 @@ class ParserRegistry:
         return self._parsers.get(language)
 
     def get_parser_for_file(self, file_path: Path) -> CodeParser | None:
-        """
-        Get appropriate parser for a given file.
+        """Get appropriate parser for a given file.
 
         Checks all registered parsers to find one that can handle the file.
 
@@ -86,8 +80,7 @@ class ParserRegistry:
         return None
 
     def list_languages(self) -> list[str]:
-        """
-        List all registered languages.
+        """List all registered languages.
 
         Returns:
             List of language identifiers
@@ -95,8 +88,7 @@ class ParserRegistry:
         return list(self._parsers.keys())
 
     def unregister(self, language: str) -> bool:
-        """
-        Unregister a parser.
+        """Unregister a parser.
 
         Args:
             language: Language identifier
@@ -126,8 +118,7 @@ _global_registry: ParserRegistry | None = None
 
 
 def get_global_registry() -> ParserRegistry:
-    """
-    Get the global parser registry instance.
+    """Get the global parser registry instance.
 
     Creates the registry on first access (lazy initialization).
 
@@ -146,8 +137,7 @@ def get_global_registry() -> ParserRegistry:
 
 
 def _register_builtin_parsers(registry: ParserRegistry) -> None:
-    """
-    Auto-register built-in parsers.
+    """Auto-register built-in parsers.
 
     Args:
         registry: Registry to register parsers in

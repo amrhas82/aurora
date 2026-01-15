@@ -4,7 +4,7 @@ Tests memory-based file path resolution for subgoals.
 """
 
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 

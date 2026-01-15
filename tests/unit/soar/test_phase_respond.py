@@ -1,5 +1,4 @@
-"""
-Unit tests for SOAR Phase 9: Response Formatting (Respond).
+"""Unit tests for SOAR Phase 9: Response Formatting (Respond).
 
 Tests the format_response function that formats final responses with
 different verbosity levels (QUIET, NORMAL, VERBOSE, JSON).

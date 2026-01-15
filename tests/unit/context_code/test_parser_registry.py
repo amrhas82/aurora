@@ -1,5 +1,4 @@
-"""
-Unit tests for ParserRegistry.
+"""Unit tests for ParserRegistry.
 
 Tests registration, discovery, and multi-language support.
 """

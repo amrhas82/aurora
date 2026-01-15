@@ -1,5 +1,4 @@
-"""
-List command for Aurora planning system.
+"""List command for Aurora planning system.
 
 Ported from OpenSpec src/core/list.ts
 """
@@ -38,8 +37,7 @@ class ListCommand:
         mode: Literal["changes", "specs"] = "changes",
         options: dict[str, Any] | None = None,
     ) -> None:
-        """
-        Execute the list command.
+        """Execute the list command.
 
         Args:
             target_path: Target directory path (default: current directory)
@@ -217,8 +215,7 @@ class ListCommand:
         return f"{completed}/{total} ({percent}%)"
 
     def _get_last_modified(self, dir_path: Path) -> datetime:
-        """
-        Get the most recent modification time of any file in a directory (recursive).
+        """Get the most recent modification time of any file in a directory (recursive).
         Falls back to the directory's own mtime if no files are found.
         """
         latest: datetime | None = None

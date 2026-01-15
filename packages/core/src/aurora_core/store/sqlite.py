@@ -1,5 +1,4 @@
-"""
-SQLite-based storage implementation for AURORA chunks.
+"""SQLite-based storage implementation for AURORA chunks.
 
 This module provides a production-ready storage backend using SQLite with:
 - Thread-safe connection pooling
@@ -30,14 +29,12 @@ from aurora_core.store.base import Store
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
 
 class SQLiteStore(Store):
-    """
-    SQLite-based storage implementation with connection pooling.
+    """SQLite-based storage implementation with connection pooling.
 
     This implementation provides thread-safe storage with:
     - Connection per thread (thread-local storage)
@@ -72,8 +69,7 @@ class SQLiteStore(Store):
         self._init_schema()
 
     def _get_connection(self) -> sqlite3.Connection:
-        """
-        Get or create a connection for the current thread.
+        """Get or create a connection for the current thread.
 
         Returns:
             Thread-local SQLite connection
@@ -125,8 +121,7 @@ class SQLiteStore(Store):
             raise StorageError("Failed to initialize database schema", details=str(e))
 
     def _detect_schema_version(self) -> tuple[int, int]:
-        """
-        Detect the schema version of an existing database.
+        """Detect the schema version of an existing database.
 
         This method determines the schema version by:
         1. Checking the schema_version table if it exists
@@ -190,8 +185,7 @@ class SQLiteStore(Store):
             raise StorageError("Failed to detect schema version", details=str(e))
 
     def _check_schema_compatibility(self) -> None:
-        """
-        Check if the database schema is compatible with current version.
+        """Check if the database schema is compatible with current version.
 
         This method should be called before attempting to use an existing database.
         It raises SchemaMismatchError if the database has an incompatible schema,
@@ -222,8 +216,7 @@ class SQLiteStore(Store):
 
     @contextmanager
     def _transaction(self) -> Iterator[sqlite3.Connection]:
-        """
-        Context manager for database transactions with automatic rollback.
+        """Context manager for database transactions with automatic rollback.
 
         Usage:
             with store._transaction():
@@ -250,8 +243,7 @@ class SQLiteStore(Store):
             raise StorageError("Transaction failed and was rolled back", details=str(e))
 
     def save_chunk(self, chunk: "Chunk") -> bool:
-        """
-        Save a chunk to storage with validation.
+        """Save a chunk to storage with validation.
 
         Args:
             chunk: The chunk to save
@@ -315,8 +307,7 @@ class SQLiteStore(Store):
                 raise StorageError(f"Failed to save chunk: {chunk.id}", details=str(e))
 
     def get_chunk(self, chunk_id: ChunkID) -> Optional["Chunk"]:
-        """
-        Retrieve a chunk by ID.
+        """Retrieve a chunk by ID.
 
         Args:
             chunk_id: The chunk ID to retrieve
@@ -351,8 +342,7 @@ class SQLiteStore(Store):
             raise StorageError(f"Failed to retrieve chunk: {chunk_id}", details=str(e))
 
     def _deserialize_chunk(self, row_data: dict[str, Any]) -> Optional["Chunk"]:
-        """
-        Deserialize a chunk from database row.
+        """Deserialize a chunk from database row.
 
         Args:
             row_data: Dictionary containing chunk data from database
@@ -408,8 +398,7 @@ class SQLiteStore(Store):
             )
 
     def update_activation(self, chunk_id: ChunkID, delta: float) -> None:
-        """
-        Update activation score for a chunk.
+        """Update activation score for a chunk.
 
         Args:
             chunk_id: The chunk to update
@@ -442,8 +431,7 @@ class SQLiteStore(Store):
                 )
 
     def get_activation(self, chunk_id: ChunkID) -> float:
-        """
-        Get the current activation score for a chunk.
+        """Get the current activation score for a chunk.
 
         Args:
             chunk_id: The chunk ID to query
@@ -473,8 +461,7 @@ class SQLiteStore(Store):
             raise StorageError(f"Failed to get activation for chunk: {chunk_id}", details=str(e))
 
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
-        """
-        Retrieve chunks by activation threshold.
+        """Retrieve chunks by activation threshold.
 
         Args:
             min_activation: Minimum activation score (can be negative in ACT-R)
@@ -525,8 +512,7 @@ class SQLiteStore(Store):
     def add_relationship(
         self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
     ) -> bool:
-        """
-        Add a relationship between chunks.
+        """Add a relationship between chunks.
 
         Args:
             from_id: Source chunk ID
@@ -568,8 +554,7 @@ class SQLiteStore(Store):
                 )
 
     def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
-        """
-        Get related chunks via relationship graph traversal.
+        """Get related chunks via relationship graph traversal.
 
         Args:
             chunk_id: Starting chunk ID
@@ -629,8 +614,7 @@ class SQLiteStore(Store):
     def record_access(
         self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
     ) -> None:
-        """
-        Record an access to a chunk for ACT-R activation tracking.
+        """Record an access to a chunk for ACT-R activation tracking.
 
         This method updates the chunk's access history in the activations table,
         which is used to calculate Base-Level Activation (BLA) based on frequency
@@ -726,8 +710,7 @@ class SQLiteStore(Store):
     def get_access_history(
         self, chunk_id: ChunkID, limit: int | None = None
     ) -> list[dict[str, Any]]:
-        """
-        Retrieve access history for a chunk.
+        """Retrieve access history for a chunk.
 
         Returns a list of access records, most recent first.
 
@@ -776,8 +759,7 @@ class SQLiteStore(Store):
             )
 
     def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
-        """
-        Get access statistics for a chunk.
+        """Get access statistics for a chunk.
 
         Provides quick access to summary statistics without retrieving
         the full access history.
@@ -829,8 +811,7 @@ class SQLiteStore(Store):
             )
 
     def close(self) -> None:
-        """
-        Close database connection and cleanup.
+        """Close database connection and cleanup.
 
         Raises:
             StorageError: If cleanup fails
@@ -843,8 +824,7 @@ class SQLiteStore(Store):
                 raise StorageError("Failed to close database connection", details=str(e))
 
     def reset_database(self) -> bool:
-        """
-        Reset the database by deleting and recreating it with current schema.
+        """Reset the database by deleting and recreating it with current schema.
 
         This method:
         1. Closes existing connections
@@ -892,8 +872,7 @@ class SQLiteStore(Store):
 
 
 def backup_database(db_path: str) -> str:
-    """
-    Create a backup of the database file.
+    """Create a backup of the database file.
 
     Creates a copy of the database file with a timestamp suffix.
     Format: {db_path}.bak.{timestamp}

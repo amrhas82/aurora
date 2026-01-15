@@ -1,5 +1,4 @@
-"""
-Unit tests for RetryHandler class.
+"""Unit tests for RetryHandler class.
 
 Tests exponential backoff retry logic for transient errors.
 """

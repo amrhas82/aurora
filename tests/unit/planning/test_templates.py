@@ -10,11 +10,8 @@ Tests cover:
 
 import json
 from datetime import datetime
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
-
 
 # Import renderer from CLI planning (which imports from aurora_planning)
 try:

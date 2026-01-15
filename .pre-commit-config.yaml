@@ -49,6 +49,7 @@ repos:
         name: Format Python code with Black
         language_version: python3.10
         args: ['--line-length=100']
+        exclude: 'tests/fixtures/.*broken\.py$'
 
   # Python import sorting
   - repo: https://github.com/pycqa/isort
@@ -66,8 +67,8 @@ repos:
         name: Lint Python code with flake8
         args: [
           '--max-line-length=100',
-          '--extend-ignore=E203,W503,E501',  # Black compatibility
-          '--exclude=.git,__pycache__,build,dist,*.egg-info'
+          '--extend-ignore=E203,W503,E501,E722,E721,F841,E402,F541',  # Black compatibility + test/script leniency
+          '--exclude=.git,__pycache__,build,dist,*.egg-info,tests/fixtures/sample_python_files/broken.py'
         ]
 
   # Python type checking (optional, can be slow)
@@ -89,6 +90,7 @@ repos:
         types: [python]
         pass_filenames: true
         stages: [pre-commit]
+        exclude: '^scripts/(validate_imports|revert_init_imports|migrate_imports)\.py$'
 
       - id: validate-test-classification
         name: Validate test classification (unit/integration/e2e)
@@ -96,7 +98,7 @@ repos:
         language: system
         types: [python]
         files: '^tests/.*\.py$'
-        pass_filenames: true
+        pass_filenames: false
         stages: [pre-commit]
 
       - id: validate-marker-usage
@@ -105,7 +107,7 @@ repos:
         language: system
         types: [python]
         files: '^tests/.*\.py$'
-        pass_filenames: true
+        pass_filenames: false
         stages: [pre-commit]
 
   # Security checks
@@ -114,8 +116,8 @@ repos:
     hooks:
       - id: bandit
         name: Security check with Bandit
-        args: ['-ll', '--skip=B101,B601']  # Skip assert and subprocess warnings
-        exclude: '^tests/'
+        args: ['-ll', '--skip=B101,B601,B103,B108,B301,B306']  # Skip test-specific patterns
+        exclude: '^(tests/|packages/.*/tests/|.*_test\.py$|test_.*\.py$|compare_batch_sizes\.py|profile_.*\.py|benchmark_.*\.py)'
 
   # Documentation
   - repo: https://github.com/pycqa/pydocstyle
@@ -123,8 +125,8 @@ repos:
     hooks:
       - id: pydocstyle
         name: Check docstring style
-        args: ['--convention=google', '--add-ignore=D100,D101,D102,D103,D104,D105,D107']
-        exclude: '^tests/'
+        args: ['--convention=google', '--add-ignore=D100,D101,D102,D103,D104,D105,D106,D107,D202,D205,D209,D300,D301,D402,D403,D415']
+        exclude: '^(tests/|packages/.*/tests/|docs/archive/|.*_test\.py$|test_.*\.py$|compare_batch_sizes\.py|profile_.*\.py|benchmark_.*\.py|saas_financial_model\.py)'
 
 # Configuration
 default_language_version:

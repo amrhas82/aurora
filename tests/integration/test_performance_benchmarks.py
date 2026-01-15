@@ -9,7 +9,6 @@ This validates that the BM25 implementation meets performance targets
 specified in the PRD.
 """
 
-import sqlite3
 import time
 from pathlib import Path
 
@@ -19,7 +18,6 @@ import pytest
 from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
-
 
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 

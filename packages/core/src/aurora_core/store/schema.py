@@ -1,5 +1,4 @@
-"""
-Database schema definitions for AURORA storage.
+"""Database schema definitions for AURORA storage.
 
 This module contains SQL DDL statements for creating and managing the
 database schema used by SQLiteStore and potentially other SQL-based
@@ -95,8 +94,7 @@ INIT_SCHEMA = [
 
 
 def get_schema_version_insert(version: int = SCHEMA_VERSION) -> str:
-    """
-    Generate SQL to record schema version.
+    """Generate SQL to record schema version.
 
     Args:
         version: Schema version number to record
@@ -108,8 +106,7 @@ def get_schema_version_insert(version: int = SCHEMA_VERSION) -> str:
 
 
 def get_init_statements() -> list[str]:
-    """
-    Get all initialization SQL statements including version tracking.
+    """Get all initialization SQL statements including version tracking.
 
     Returns:
         List of SQL statements to initialize the database schema

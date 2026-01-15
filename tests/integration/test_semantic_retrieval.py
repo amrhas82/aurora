@@ -1,5 +1,4 @@
-"""
-Integration tests for semantic retrieval with hybrid scoring.
+"""Integration tests for semantic retrieval with hybrid scoring.
 
 This test verifies that hybrid retrieval (activation + semantic) works end-to-end
 and improves retrieval precision compared to activation-only retrieval.
@@ -31,7 +30,6 @@ from aurora_context_code.semantic.embedding_provider import (
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.activation.engine import ActivationConfig
-
 
 # Mark all tests as requiring ML dependencies
 pytestmark = [
@@ -115,8 +113,7 @@ class MockActivationEngine:
 
 
 def create_test_dataset(embedding_provider: EmbeddingProvider, now: datetime):
-    """
-    Create realistic test dataset with embeddings and access patterns.
+    """Create realistic test dataset with embeddings and access patterns.
 
     Returns:
         - store: MockStore with chunks

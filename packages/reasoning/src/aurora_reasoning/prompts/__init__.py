@@ -1,7 +1,7 @@
 """Prompt templates for AURORA reasoning system."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 
 class PromptTemplate(ABC):

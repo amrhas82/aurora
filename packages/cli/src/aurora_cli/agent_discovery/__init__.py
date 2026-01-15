@@ -39,7 +39,6 @@ from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentMan
 from aurora_cli.agent_discovery.parser import AgentParser
 from aurora_cli.agent_discovery.scanner import AgentScanner, get_default_discovery_paths
 
-
 __all__ = [
     # Scanner
     "AgentScanner",

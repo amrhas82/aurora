@@ -7,7 +7,6 @@ This configurator returns None for frontmatter (no frontmatter needed).
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "search": ".kilocode/workflows/aurora-search.md",

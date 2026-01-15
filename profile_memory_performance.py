@@ -16,7 +16,6 @@ import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
 
 from aurora_cli.config import load_config
 from aurora_cli.memory_manager import MemoryManager
@@ -127,7 +126,7 @@ def profile_indexing(test_dir: Path, db_path: Path) -> IndexingMetrics:
     git_time = sum(phase_times.get("git_blame", [0]))
     embed_time = sum(phase_times.get("embedding", [0]))
     store_time = sum(phase_times.get("storing", [0]))
-    parse_time = sum(phase_times.get("parsing", [0]))
+    sum(phase_times.get("parsing", [0]))
 
     avg_chunk_embed_ms = (
         (embed_time / stats.chunks_created * 1000) if stats.chunks_created > 0 else 0
@@ -306,7 +305,7 @@ def profile_database(db_path: Path) -> DatabaseMetrics:
     print(f"  Indexes:              {metrics.index_count:>8}")
     print(f"  Tables:               {metrics.table_count:>8}")
     print(f"  Avg chunk size:       {metrics.avg_chunk_size_bytes:>8,} bytes")
-    print(f"\n  Chunk distribution:")
+    print("\n  Chunk distribution:")
     for chunk_type, count in sorted(
         metrics.chunk_distribution.items(), key=lambda x: x[1], reverse=True
     ):
@@ -388,16 +387,16 @@ def main() -> None:
         print("\n" + "=" * 60)
         print("PERFORMANCE PROFILE SUMMARY")
         print("=" * 60)
-        print(f"\nIndexing Performance:")
+        print("\nIndexing Performance:")
         print(f"  Throughput:        {indexing_metrics.files_per_second:.1f} files/sec")
         print(f"  Chunk rate:        {indexing_metrics.chunks_per_second:.1f} chunks/sec")
-        print(f"\nQuery Performance:")
+        print("\nQuery Performance:")
         avg_query = statistics.mean([q.total_ms for q in query_metrics])
         print(f"  Avg latency:       {avg_query:.2f}ms")
         print(
             f"  P50 latency:       {statistics.median([q.total_ms for q in query_metrics]):.2f}ms"
         )
-        print(f"\nDatabase Efficiency:")
+        print("\nDatabase Efficiency:")
         print(f"  Size:              {db_metrics.db_size_mb:.2f} MB")
         print(
             f"  Density:           {db_metrics.total_chunks / db_metrics.db_size_mb:.0f} chunks/MB"

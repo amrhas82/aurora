@@ -1,5 +1,4 @@
-"""
-Unit tests for configuration loading and validation.
+"""Unit tests for configuration loading and validation.
 
 Tests cover:
 - Config class typed access methods

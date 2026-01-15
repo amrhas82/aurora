@@ -1,5 +1,4 @@
-"""
-RetryHandler for exponential backoff retry logic.
+"""RetryHandler for exponential backoff retry logic.
 
 Implements retry logic with exponential backoff for transient errors,
 following the resilience patterns from PRD Section 5.1.
@@ -10,14 +9,12 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar
 
-
 P = ParamSpec("P")
 T = TypeVar("T")
 
 
 class RetryHandler:
-    """
-    Handles retry logic with exponential backoff for transient errors.
+    """Handles retry logic with exponential backoff for transient errors.
 
     This class implements the retry pattern with exponential backoff delays,
     distinguishing between recoverable (transient) and non-recoverable errors.
@@ -61,8 +58,7 @@ class RetryHandler:
         backoff_factor: float = 2.0,
         recoverable_errors: tuple[type[Exception], ...] | None = None,
     ):
-        """
-        Initialize the RetryHandler.
+        """Initialize the RetryHandler.
 
         Args:
             max_retries: Maximum number of retry attempts (must be > 0)
@@ -103,8 +99,7 @@ class RetryHandler:
         self.last_total_delay = 0.0
 
     def is_recoverable(self, error: Exception) -> bool:
-        """
-        Determine if an error is recoverable (transient).
+        """Determine if an error is recoverable (transient).
 
         Args:
             error: The exception to check
@@ -116,8 +111,7 @@ class RetryHandler:
         return isinstance(error, self._recoverable_errors)
 
     def calculate_delay(self, attempt: int) -> float:
-        """
-        Calculate exponential backoff delay for a retry attempt.
+        """Calculate exponential backoff delay for a retry attempt.
 
         Formula: min(base_delay * (backoff_factor ^ attempt), max_delay)
 
@@ -137,8 +131,7 @@ class RetryHandler:
         recoverable_errors: tuple[type[Exception], ...] | None = None,
         **kwargs: Any,
     ) -> T:
-        """
-        Execute a function with retry logic.
+        """Execute a function with retry logic.
 
         Attempts to execute the function, retrying on transient errors with
         exponential backoff. Non-recoverable errors fail immediately.
@@ -196,8 +189,7 @@ class RetryHandler:
                 self._recoverable_errors = original_recoverable
 
     def __call__(self, func: Callable[P, T]) -> Callable[P, T]:
-        """
-        Use RetryHandler as a decorator.
+        """Use RetryHandler as a decorator.
 
         Example:
             >>> handler = RetryHandler(max_retries=3)

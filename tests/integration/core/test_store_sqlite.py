@@ -1,5 +1,4 @@
-"""
-Unit tests for SQLiteStore implementation.
+"""Unit tests for SQLiteStore implementation.
 
 These tests verify SQLite-specific functionality including:
 - Database file creation and initialization

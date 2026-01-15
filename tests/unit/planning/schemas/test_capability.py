@@ -1,5 +1,4 @@
-"""
-Tests for Capability schema (was Spec schema in OpenSpec).
+"""Tests for Capability schema (was Spec schema in OpenSpec).
 
 Ported from: test/core/validation.test.ts - describe('SpecSchema')
 TDD approach: Tests written first based on TypeScript test behavior.

@@ -18,10 +18,7 @@ Migration Path:
 """
 
 import warnings
-from pathlib import Path
 from unittest.mock import Mock, patch
-
-import pytest
 
 from aurora_cli.agent_discovery.models import AgentCategory, AgentInfo, AgentManifest, ManifestStats
 from aurora_soar.agent_registry import AgentInfo as RegistryAgentInfo
@@ -41,7 +38,7 @@ class TestAgentRegistryDeprecation:
             warnings.simplefilter("always")
 
             # Create AgentRegistry (should trigger warning)
-            registry = AgentRegistry()
+            AgentRegistry()
 
             # Verify warning was raised
             assert len(w) == 1
@@ -87,8 +84,8 @@ class TestAgentRegistryDeprecation:
                 MockManager.return_value = mock_instance
 
                 # Use discovery adapter (should NOT trigger warning)
-                agents = list_agents()
-                agent = get_agent("test-agent")
+                list_agents()
+                get_agent("test-agent")
 
                 # Verify no warnings were raised
                 deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]

@@ -9,9 +9,6 @@ Usage:
 """
 
 import time
-from pathlib import Path
-
-import numpy as np
 
 
 def benchmark_model(model_name: str, texts: list[str], batch_size: int = 32) -> dict:
@@ -94,7 +91,7 @@ def main():
     print("EMBEDDING MODEL BENCHMARK")
     print("=" * 80)
     print(f"\nTest dataset: {len(texts)} code snippets")
-    print(f"Batch size: 32")
+    print("Batch size: 32")
 
     results = []
     for model_name in models:

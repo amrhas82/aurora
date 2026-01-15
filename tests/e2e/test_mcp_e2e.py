@@ -14,16 +14,12 @@ Total: 10+ end-to-end tests
 """
 
 import json
-import os
-import tempfile
 import time
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
-
 
 # Mark entire module as requiring ML dependencies
 pytestmark = pytest.mark.ml

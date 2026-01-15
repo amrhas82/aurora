@@ -14,7 +14,6 @@ from aurora_cli.config import load_config
 from aurora_cli.errors import handle_errors
 from aurora_core.budget.tracker import CostTracker
 
-
 console = Console()
 
 

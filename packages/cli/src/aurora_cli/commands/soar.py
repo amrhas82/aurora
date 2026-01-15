@@ -24,7 +24,6 @@ from rich.panel import Panel
 
 from aurora_core.paths import get_aurora_dir
 
-
 console = Console()
 
 

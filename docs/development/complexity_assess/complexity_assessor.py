@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Keyword-Based Prompt Complexity Assessor
+"""Keyword-Based Prompt Complexity Assessor
 
 A lightweight, LLM-free prompt complexity classifier that uses lexical analysis,
 keyword matching, and structural pattern recognition to categorize prompts as
@@ -51,8 +50,7 @@ class AssessmentResult:
 
 
 class ComplexityAssessor:
-    """
-    Assesses prompt complexity using multi-dimensional lexical analysis.
+    """Assesses prompt complexity using multi-dimensional lexical analysis.
 
     Dimensions analyzed:
     1. Lexical metrics (word count, sentence count, punctuation)
@@ -325,8 +323,7 @@ class ComplexityAssessor:
         self.debug = debug
 
     def assess(self, prompt: str) -> AssessmentResult:
-        """
-        Main assessment entry point.
+        """Main assessment entry point.
 
         Args:
             prompt: The user prompt to assess

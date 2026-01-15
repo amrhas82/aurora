@@ -1,5 +1,4 @@
-"""
-Keyword-based prompt complexity assessment module.
+"""Keyword-based prompt complexity assessment module.
 
 A lightweight, LLM-free complexity classifier for routing prompts to
 appropriate models based on lexical analysis and pattern matching.

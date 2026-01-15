@@ -1,5 +1,4 @@
-"""
-Custom exception hierarchy for the AURORA framework.
+"""Custom exception hierarchy for the AURORA framework.
 
 This module defines all custom exceptions used throughout AURORA, organized
 in a clear hierarchy for proper error handling and user-friendly messaging.
@@ -7,16 +6,14 @@ in a clear hierarchy for proper error handling and user-friendly messaging.
 
 
 class AuroraError(Exception):
-    """
-    Base exception for all AURORA-specific errors.
+    """Base exception for all AURORA-specific errors.
 
     All custom exceptions in the AURORA framework inherit from this base class,
     allowing for catch-all error handling when needed.
     """
 
     def __init__(self, message: str, details: str | None = None):
-        """
-        Initialize an AURORA error.
+        """Initialize an AURORA error.
 
         Args:
             message: User-friendly error message
@@ -33,8 +30,7 @@ class AuroraError(Exception):
 
 
 class StorageError(AuroraError):
-    """
-    Raised when storage operations fail.
+    """Raised when storage operations fail.
 
     Examples:
         - Database connection failures
@@ -47,8 +43,7 @@ class StorageError(AuroraError):
 
 
 class ParseError(AuroraError):
-    """
-    Raised when code parsing fails.
+    """Raised when code parsing fails.
 
     Examples:
         - Invalid syntax in source file
@@ -61,8 +56,7 @@ class ParseError(AuroraError):
 
 
 class ConfigurationError(AuroraError):
-    """
-    Raised when configuration is invalid or missing.
+    """Raised when configuration is invalid or missing.
 
     Examples:
         - Missing required configuration keys
@@ -75,8 +69,7 @@ class ConfigurationError(AuroraError):
 
 
 class ValidationError(AuroraError):
-    """
-    Raised when data validation fails.
+    """Raised when data validation fails.
 
     Examples:
         - Invalid chunk structure
@@ -89,16 +82,14 @@ class ValidationError(AuroraError):
 
 
 class ChunkNotFoundError(StorageError):
-    """
-    Raised when a requested chunk cannot be found in storage.
+    """Raised when a requested chunk cannot be found in storage.
 
     This is a specialized storage error for missing chunks, allowing
     callers to distinguish between "not found" and other storage failures.
     """
 
     def __init__(self, chunk_id: str):
-        """
-        Initialize a chunk not found error.
+        """Initialize a chunk not found error.
 
         Args:
             chunk_id: The ID of the chunk that was not found
@@ -109,8 +100,7 @@ class ChunkNotFoundError(StorageError):
 
 
 class SchemaMismatchError(StorageError):
-    """
-    Raised when the database schema version does not match the expected version.
+    """Raised when the database schema version does not match the expected version.
 
     This error indicates that the database was created with an older version
     of AURORA and needs to be migrated or reset before use.
@@ -127,8 +117,7 @@ class SchemaMismatchError(StorageError):
         expected_version: int,
         db_path: str | None = None,
     ):
-        """
-        Initialize a schema mismatch error.
+        """Initialize a schema mismatch error.
 
         Args:
             found_version: The schema version found in the database
@@ -151,8 +140,7 @@ class SchemaMismatchError(StorageError):
 
 
 class FatalError(AuroraError):
-    """
-    Raised when a fatal error occurs that requires immediate termination.
+    """Raised when a fatal error occurs that requires immediate termination.
 
     Examples:
         - Storage corruption
@@ -163,8 +151,7 @@ class FatalError(AuroraError):
     """
 
     def __init__(self, message: str, recovery_hint: str | None = None):
-        """
-        Initialize a fatal error.
+        """Initialize a fatal error.
 
         Args:
             message: User-friendly error message
@@ -176,8 +163,7 @@ class FatalError(AuroraError):
 
 
 class BudgetExceededError(AuroraError):
-    """
-    Raised when a query would exceed budget limits.
+    """Raised when a query would exceed budget limits.
 
     Examples:
         - Monthly budget limit reached
@@ -194,8 +180,7 @@ class BudgetExceededError(AuroraError):
         limit_usd: float,
         estimated_cost: float,
     ):
-        """
-        Initialize a budget exceeded error.
+        """Initialize a budget exceeded error.
 
         Args:
             message: User-friendly error message

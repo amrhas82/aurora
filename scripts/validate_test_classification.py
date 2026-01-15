@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Test classification validation script for pre-commit hook.
+"""Test classification validation script for pre-commit hook.
 
 Detects misclassified tests (integration/e2e tests in unit/ directory, etc.)
 based on objective heuristics.
@@ -21,11 +20,9 @@ Exit codes:
 """
 
 import argparse
-import ast
 import re
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
 
 # Heuristics for detecting integration tests
 INTEGRATION_INDICATORS = [
@@ -64,9 +61,8 @@ class TestClassificationChecker:
         self.integration_patterns = [(re.compile(p), m) for p, m in INTEGRATION_INDICATORS]
         self.e2e_patterns = [(re.compile(p), m) for p, m in E2E_INDICATORS]
 
-    def check_file(self, filepath: Path) -> List[Tuple[str, List[str]]]:
-        """
-        Check if a test file is properly classified.
+    def check_file(self, filepath: Path) -> list[tuple[str, list[str]]]:
+        """Check if a test file is properly classified.
 
         Args:
             filepath: Path to the test file
@@ -77,9 +73,9 @@ class TestClassificationChecker:
         """
         # Determine expected location from content
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 content = f.read()
-        except (UnicodeDecodeError, IOError):
+        except (OSError, UnicodeDecodeError):
             return []  # Skip files that can't be read
 
         # Check if file is in tests/ directory
@@ -130,8 +126,7 @@ class TestClassificationChecker:
         return violations
 
     def check_for_mock_usage(self, filepath: Path) -> bool:
-        """
-        Check if file uses mocking (which suggests it should be a unit test).
+        """Check if file uses mocking (which suggests it should be a unit test).
 
         Args:
             filepath: Path to the test file
@@ -140,7 +135,7 @@ class TestClassificationChecker:
             True if file uses mocks, False otherwise
         """
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 content = f.read()
 
             # Check for mock imports and decorators
@@ -158,13 +153,12 @@ class TestClassificationChecker:
                     return True
 
             return False
-        except (UnicodeDecodeError, IOError):
+        except (OSError, UnicodeDecodeError):
             return False
 
 
-def get_staged_test_files() -> List[Path]:
-    """
-    Get list of test files staged for commit.
+def get_staged_test_files() -> list[Path]:
+    """Get list of test files staged for commit.
 
     Returns:
         List of Path objects for staged test files
@@ -191,9 +185,8 @@ def get_staged_test_files() -> List[Path]:
         return []
 
 
-def find_test_files(path: Path) -> List[Path]:
-    """
-    Recursively find all test files in a directory.
+def find_test_files(path: Path) -> list[Path]:
+    """Recursively find all test files in a directory.
 
     Args:
         path: Directory path to search
@@ -283,14 +276,14 @@ Indicators:
                 print(
                     f"  Should be in tests/{suggested_location}/ (currently in tests/{filepath.parts[filepath.parts.index('tests') + 1]}/)"
                 )
-                print(f"  Reasons:")
+                print("  Reasons:")
                 for reason in reasons:
                     print(f"    - {reason}")
 
                 # Check if it uses mocks (suggests it's a unit test after all)
                 if suggested_location == "integration" and checker.check_for_mock_usage(filepath):
                     print(
-                        f"  ℹ️  Note: File uses mocks - may be acceptable as unit test with edge case"
+                        "  ℹ️  Note: File uses mocks - may be acceptable as unit test with edge case"
                     )
 
     # Summary

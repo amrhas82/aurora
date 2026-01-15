@@ -1,5 +1,4 @@
-"""
-AGENTS.md template for Aurora planning system.
+"""AGENTS.md template for Aurora planning system.
 
 Rebranded from OpenSpec to Aurora.
 This template contains the instructions for AI coding assistants using

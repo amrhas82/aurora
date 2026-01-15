@@ -1,5 +1,4 @@
-"""
-Unit Tests for BM25 Tokenizer
+"""Unit Tests for BM25 Tokenizer
 
 Tests the code-aware tokenization functionality for BM25 scoring.
 All tests follow TDD approach - written BEFORE implementation.
@@ -16,8 +15,7 @@ import pytest
 
 
 def test_tokenize_camelcase():
-    """
-    UT-BM25-01: CamelCase splitting
+    """UT-BM25-01: CamelCase splitting
 
     Test that camelCase identifiers are split into component words.
     Example: "getUserData" → ["get", "user", "data", "getuserdata"]
@@ -42,8 +40,7 @@ def test_tokenize_camelcase():
 
 
 def test_tokenize_snake_case():
-    """
-    UT-BM25-02: snake_case splitting
+    """UT-BM25-02: snake_case splitting
 
     Test that snake_case identifiers are split on underscores.
     Example: "user_manager" → ["user", "manager", "user_manager"]
@@ -67,8 +64,7 @@ def test_tokenize_snake_case():
 
 
 def test_tokenize_dot_notation():
-    """
-    UT-BM25-03: Dot notation splitting
+    """UT-BM25-03: Dot notation splitting
 
     Test that dot notation (module paths, namespaces) are split.
     Example: "auth.oauth.client" → ["auth", "oauth", "client"]
@@ -90,8 +86,7 @@ def test_tokenize_dot_notation():
 
 
 def test_tokenize_acronyms():
-    """
-    UT-BM25-04: Acronym preservation
+    """UT-BM25-04: Acronym preservation
 
     Test that acronyms (consecutive uppercase letters) are handled correctly.
     Example: "HTTPRequest" → ["http", "request", "httprequest"]
@@ -117,8 +112,7 @@ def test_tokenize_acronyms():
 
 
 def test_tokenize_mixed_case():
-    """
-    UT-BM25-05: Mixed case handling
+    """UT-BM25-05: Mixed case handling
 
     Test that mixed notation (camelCase + snake_case + dots) works correctly.
     Example: "getUserData.auth_token" → ["get", "user", "data", "auth", "token"]
@@ -144,8 +138,7 @@ def test_tokenize_mixed_case():
 
 
 def test_tokenize_empty_string():
-    """
-    UT-BM25-06: Empty string handling
+    """UT-BM25-06: Empty string handling
 
     Test that empty strings are handled gracefully.
     Example: "" → []
@@ -163,8 +156,7 @@ def test_tokenize_empty_string():
 
 
 def test_tokenize_special_characters():
-    """
-    UT-BM25-07: Special character handling
+    """UT-BM25-07: Special character handling
 
     Test that special characters are handled appropriately.
     Example: "user@email.com" → ["user", "email", "com"]
@@ -190,8 +182,7 @@ def test_tokenize_special_characters():
 
 
 def test_tokenize_whitespace_handling():
-    """
-    UT-BM25-08: Whitespace handling
+    """UT-BM25-08: Whitespace handling
 
     Test that multiple words separated by whitespace are tokenized.
     Example: "authenticate user session" → ["authenticate", "user", "session"]
@@ -213,8 +204,7 @@ def test_tokenize_whitespace_handling():
 
 
 def test_tokenize_preserves_case_variations():
-    """
-    UT-BM25-09: Case preservation for matching
+    """UT-BM25-09: Case preservation for matching
 
     Test that tokenizer handles case variations appropriately for BM25.
 
@@ -253,8 +243,7 @@ def test_tokenize_preserves_case_variations():
 
 
 def test_bm25_idf_calculation():
-    """
-    UT-BM25-10: IDF calculation test
+    """UT-BM25-10: IDF calculation test
 
     Test that IDF (Inverse Document Frequency) is calculated correctly.
     Formula: IDF = log((N - n(t) + 0.5) / (n(t) + 0.5) + 1)
@@ -299,8 +288,7 @@ def test_bm25_idf_calculation():
 
 
 def test_bm25_term_frequency():
-    """
-    UT-BM25-11: Term frequency scoring test
+    """UT-BM25-11: Term frequency scoring test
 
     Test that term frequency affects BM25 score correctly.
     Higher frequency should increase score, but with saturation (k1 parameter).
@@ -335,8 +323,7 @@ def test_bm25_term_frequency():
 
 
 def test_bm25_document_length_normalization():
-    """
-    UT-BM25-12: Document length normalization test
+    """UT-BM25-12: Document length normalization test
 
     Test that BM25 length normalization (b parameter) works correctly.
     Shorter documents with term should score higher than longer documents.
@@ -363,8 +350,7 @@ def test_bm25_document_length_normalization():
 
 
 def test_bm25_multiple_term_scoring():
-    """
-    UT-BM25-13: Multiple term scoring test
+    """UT-BM25-13: Multiple term scoring test
 
     Test that BM25 correctly scores documents with multiple query terms.
     Documents matching more terms should score higher.
@@ -394,8 +380,7 @@ def test_bm25_multiple_term_scoring():
 
 
 def test_bm25_score_exact_match():
-    """
-    UT-BM25-14: Exact match scoring test
+    """UT-BM25-14: Exact match scoring test
 
     Test that exact matches produce positive scores.
     """
@@ -412,8 +397,7 @@ def test_bm25_score_exact_match():
 
 
 def test_bm25_score_no_match():
-    """
-    UT-BM25-15: No match scoring test
+    """UT-BM25-15: No match scoring test
 
     Test that documents with no matching terms score 0.
     """

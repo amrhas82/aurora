@@ -1,5 +1,4 @@
-"""
-Abstract storage interface for AURORA chunks.
+"""Abstract storage interface for AURORA chunks.
 
 This module defines the base Store interface that all storage implementations
 must implement, ensuring consistent behavior across SQLite, in-memory, and
@@ -12,7 +11,6 @@ from datetime import datetime
 # Forward reference to avoid circular imports - Chunk will be defined in chunks module
 from typing import TYPE_CHECKING, Any, Optional
 
-
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -20,8 +18,7 @@ from aurora_core.types import ChunkID
 
 
 class Store(ABC):
-    """
-    Abstract storage interface for AURORA chunks.
+    """Abstract storage interface for AURORA chunks.
 
     This interface defines the contract that all storage implementations must
     follow. It provides methods for:
@@ -35,8 +32,7 @@ class Store(ABC):
 
     @abstractmethod
     def save_chunk(self, chunk: "Chunk") -> bool:
-        """
-        Save a chunk to storage.
+        """Save a chunk to storage.
 
         Args:
             chunk: The chunk to save. Must have a valid ID and pass validation.
@@ -52,8 +48,7 @@ class Store(ABC):
 
     @abstractmethod
     def get_chunk(self, chunk_id: ChunkID) -> Optional["Chunk"]:
-        """
-        Retrieve a chunk by its ID.
+        """Retrieve a chunk by its ID.
 
         Args:
             chunk_id: The unique identifier of the chunk to retrieve
@@ -68,8 +63,7 @@ class Store(ABC):
 
     @abstractmethod
     def update_activation(self, chunk_id: ChunkID, delta: float) -> None:
-        """
-        Update the activation score for a chunk.
+        """Update the activation score for a chunk.
 
         This method is used by the spreading activation algorithm to adjust
         chunk relevance scores based on usage patterns.
@@ -87,8 +81,7 @@ class Store(ABC):
 
     @abstractmethod
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
-        """
-        Retrieve top N chunks above an activation threshold.
+        """Retrieve top N chunks above an activation threshold.
 
         Results are ordered by activation score (highest first).
 
@@ -108,8 +101,7 @@ class Store(ABC):
     def add_relationship(
         self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
     ) -> bool:
-        """
-        Add a relationship between two chunks.
+        """Add a relationship between two chunks.
 
         Relationships represent dependencies, function calls, imports, or other
         semantic connections between code elements.
@@ -131,8 +123,7 @@ class Store(ABC):
 
     @abstractmethod
     def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
-        """
-        Get related chunks via relationships (for spreading activation).
+        """Get related chunks via relationships (for spreading activation).
 
         Traverses the relationship graph up to max_depth levels from the
         starting chunk, returning all connected chunks.
@@ -154,8 +145,7 @@ class Store(ABC):
     def record_access(
         self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
     ) -> None:
-        """
-        Record an access to a chunk for ACT-R activation tracking.
+        """Record an access to a chunk for ACT-R activation tracking.
 
         This method updates the chunk's access history, which is used to calculate
         Base-Level Activation (BLA) based on frequency and recency of access.
@@ -175,8 +165,7 @@ class Store(ABC):
     def get_access_history(
         self, chunk_id: ChunkID, limit: int | None = None
     ) -> list[dict[str, Any]]:
-        """
-        Retrieve access history for a chunk.
+        """Retrieve access history for a chunk.
 
         Returns a list of access records, most recent first.
 
@@ -195,8 +184,7 @@ class Store(ABC):
 
     @abstractmethod
     def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
-        """
-        Get access statistics for a chunk.
+        """Get access statistics for a chunk.
 
         Provides quick access to summary statistics without retrieving
         the full access history.
@@ -219,8 +207,7 @@ class Store(ABC):
 
     @abstractmethod
     def close(self) -> None:
-        """
-        Close storage connection and cleanup resources.
+        """Close storage connection and cleanup resources.
 
         This method should:
         - Close any open database connections

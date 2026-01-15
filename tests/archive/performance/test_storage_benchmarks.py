@@ -1,5 +1,4 @@
-"""
-Performance benchmarks for storage layer.
+"""Performance benchmarks for storage layer.
 
 These benchmarks verify that storage operations meet the required
 performance targets specified in the PRD:
@@ -16,7 +15,6 @@ from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.store.memory import MemoryStore
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
-
 
 # Performance targets from PRD
 WRITE_TARGET_MS = 50

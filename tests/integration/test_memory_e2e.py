@@ -1,5 +1,4 @@
-"""
-End-to-end memory integration tests.
+"""End-to-end memory integration tests.
 
 Tests complete workflows:
 1. Index → Search → Retrieve: Full indexing and retrieval flow
@@ -16,7 +15,6 @@ This validates end-to-end functionality of:
 
 import json
 import sqlite3
-from pathlib import Path
 
 import pytest
 
@@ -24,7 +22,6 @@ from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
-
 
 pytestmark = pytest.mark.ml  # All tests in this file require ML dependencies
 

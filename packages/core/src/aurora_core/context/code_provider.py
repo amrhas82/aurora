@@ -1,5 +1,4 @@
-"""
-CodeContextProvider implementation for code-based context retrieval.
+"""CodeContextProvider implementation for code-based context retrieval.
 
 This module provides a concrete implementation of ContextProvider that
 retrieves relevant code chunks based on keyword queries.
@@ -16,7 +15,6 @@ from aurora_core.context.provider import ContextProvider
 from aurora_core.store.base import Store
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_context_code.registry import ParserRegistry
 
@@ -25,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class CodeContextProvider(ContextProvider):
-    """
-    Context provider for code-based retrieval.
+    """Context provider for code-based retrieval.
 
     Retrieves code chunks from a Store based on keyword matching against:
     - Function/class names
@@ -83,8 +80,7 @@ class CodeContextProvider(ContextProvider):
 
     @staticmethod
     def _parse_query(query: str) -> list[str]:
-        """
-        Parse query into keywords.
+        """Parse query into keywords.
 
         Extracts keywords by:
         1. Converting to lowercase
@@ -119,8 +115,7 @@ class CodeContextProvider(ContextProvider):
 
     @staticmethod
     def _score_chunk(chunk: Chunk, keywords: list[str]) -> float:
-        """
-        Score a chunk based on keyword matches.
+        """Score a chunk based on keyword matches.
 
         Calculates relevance score as:
             score = (number of matching keywords) / (total keywords)
@@ -163,8 +158,7 @@ class CodeContextProvider(ContextProvider):
         return matches / len(keywords)
 
     def __init__(self, store: Store, parser_registry: "ParserRegistry"):
-        """
-        Initialize CodeContextProvider.
+        """Initialize CodeContextProvider.
 
         Args:
             store: Storage backend for chunks
@@ -176,8 +170,7 @@ class CodeContextProvider(ContextProvider):
         logger.debug("CodeContextProvider initialized")
 
     def retrieve(self, query: str, limit: int = 10) -> list[Chunk]:
-        """
-        Retrieve relevant code chunks based on query.
+        """Retrieve relevant code chunks based on query.
 
         Args:
             query: Natural language query or keywords
@@ -232,8 +225,7 @@ class CodeContextProvider(ContextProvider):
         return results
 
     def update(self, chunk_id: ChunkID, activation_delta: float) -> None:
-        """
-        Update activation score for a chunk.
+        """Update activation score for a chunk.
 
         Currently stub - full implementation in subtask 5.7.
 
@@ -251,8 +243,7 @@ class CodeContextProvider(ContextProvider):
         self._store.update_activation(chunk_id, activation_delta)
 
     def refresh(self) -> None:
-        """
-        Refresh cached data and re-index changed files.
+        """Refresh cached data and re-index changed files.
 
         Currently stub - full implementation in subtask 5.6.
 

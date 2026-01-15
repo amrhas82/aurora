@@ -4,7 +4,7 @@ These tests verify that the soar command uses spawn_parallel() for complex
 queries that require research across multiple subgoals.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 

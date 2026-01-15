@@ -15,13 +15,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from aurora_cli.planning.models import (
-    AgentGap,
-    Complexity,
-    DecompositionSummary,
-    FileResolution,
-    Subgoal,
-)
+from aurora_cli.planning.models import AgentGap, Complexity, DecompositionSummary, Subgoal
 
 
 class TestDecompositionSummaryModel:

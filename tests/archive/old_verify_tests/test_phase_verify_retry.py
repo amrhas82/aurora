@@ -1,5 +1,4 @@
-"""
-Unit tests for Phase 4 verification retry logic.
+"""Unit tests for Phase 4 verification retry logic.
 
 Tests the retry loop when decompositions fail verification.
 """

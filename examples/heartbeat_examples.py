@@ -5,14 +5,12 @@ This module demonstrates various heartbeat patterns for agent execution monitori
 
 import asyncio
 import logging
-from typing import Any
 
 from aurora_spawner import (
     HeartbeatEventType,
     create_heartbeat_emitter,
     create_heartbeat_monitor,
     spawn,
-    spawn_parallel,
     spawn_with_retry_and_fallback,
 )
 from aurora_spawner.models import SpawnTask
@@ -118,8 +116,8 @@ async def example_timeout_monitoring():
         return
 
     # Wait for result
-    result = await exec_task
-    print(f"✅ Execution completed successfully")
+    await exec_task
+    print("✅ Execution completed successfully")
 
 
 async def example_health_checks():
@@ -153,9 +151,7 @@ async def example_health_checks():
 
         print(f"Health check #{check_count}: ", end="")
         if healthy:
-            print(
-                f"✓ Healthy | Runtime: {elapsed:.1f}s | Idle: {idle:.1f}s"
-            )
+            print(f"✓ Healthy | Runtime: {elapsed:.1f}s | Idle: {idle:.1f}s")
         else:
             print(f"✗ Unhealthy - {reason}")
             exec_task.cancel()
@@ -293,8 +289,7 @@ async def example_parallel_with_heartbeats():
 
     # Create tasks
     tasks = [
-        SpawnTask(prompt=f"Analyze module {i}", agent="analyzer", timeout=60)
-        for i in range(3)
+        SpawnTask(prompt=f"Analyze module {i}", agent="analyzer", timeout=60) for i in range(3)
     ]
 
     # Create emitters for each task
@@ -343,7 +338,7 @@ async def example_retry_with_monitoring():
     """Example 9: Retry logic with heartbeat monitoring."""
     print("\n=== Example 9: Retry with Heartbeat Monitoring ===\n")
 
-    emitter = create_heartbeat_emitter("retry-task-009")
+    create_heartbeat_emitter("retry-task-009")
 
     task = SpawnTask(
         prompt="Deploy the application to staging environment",
@@ -370,7 +365,7 @@ async def example_retry_with_monitoring():
     elif result.retry_count > 0:
         print(f"\n✅ Succeeded on attempt {result.retry_count + 1}")
     else:
-        print(f"\n✅ Succeeded on first attempt")
+        print("\n✅ Succeeded on first attempt")
 
     print(f"{'✅' if result.success else '❌'} Execution finished")
 

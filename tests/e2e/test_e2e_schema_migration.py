@@ -19,7 +19,6 @@ Expected Behavior:
 Reference: PRD-0013 Section 4 (FR-1: Schema Migration), Task 1.0
 """
 
-import json
 import os
 import sqlite3
 import tempfile
@@ -29,7 +28,6 @@ from pathlib import Path
 import pytest
 
 from .conftest import run_cli_command
-
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]

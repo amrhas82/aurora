@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Evaluation framework for complexity assessor.
+"""Evaluation framework for complexity assessor.
 
 Runs the assessor against the test corpus and produces detailed metrics,
 identifying misclassifications for algorithm refinement.
@@ -33,8 +32,7 @@ class EvaluationResult:
 def evaluate_corpus(
     assessor: ComplexityAssessor | None = None, verbose: bool = False
 ) -> EvaluationResult:
-    """
-    Evaluate assessor against the full test corpus.
+    """Evaluate assessor against the full test corpus.
 
     Returns detailed metrics including:
     - Overall accuracy

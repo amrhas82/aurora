@@ -2,9 +2,6 @@
 
 import json
 from pathlib import Path
-from unittest.mock import patch
-
-import pytest
 
 from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator, merge_mcp_config
 

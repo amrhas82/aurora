@@ -1,5 +1,4 @@
-"""
-Reusable pytest fixtures for AURORA testing.
+"""Reusable pytest fixtures for AURORA testing.
 
 Provides common fixtures for:
 - Storage backends (SQLite, Memory)
@@ -23,7 +22,6 @@ from aurora_core.store.memory import MemoryStore
 
 # Import core components
 from aurora_core.store.sqlite import SQLiteStore
-
 
 # ============================================================================
 # Storage Fixtures

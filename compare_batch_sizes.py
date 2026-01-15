@@ -106,7 +106,7 @@ def main():
     print(f"  Total time: {optimal['total_time']:.1f}s")
 
     # Estimate memory usage
-    print(f"\nEstimated memory per batch:")
+    print("\nEstimated memory per batch:")
     for batch_size in [32, 64, 128, 256]:
         # Rough estimate: ~1MB per embedding (384 dims * 4 bytes * batch_size)
         mem_mb = (batch_size * 384 * 4) / (1024 * 1024)

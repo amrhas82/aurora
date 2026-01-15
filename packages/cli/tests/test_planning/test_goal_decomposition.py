@@ -10,7 +10,6 @@ import pytest
 
 from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
 from aurora_cli.planning.core import decompose_goal
-from aurora_cli.planning.models import Subgoal
 from aurora_reasoning.llm_client import LLMResponse
 
 

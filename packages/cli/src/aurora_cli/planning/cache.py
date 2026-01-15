@@ -28,12 +28,11 @@ import logging
 import sqlite3
 import time
 from collections import OrderedDict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from aurora_cli.planning.models import Complexity, Subgoal
-
 
 # Configure logger for cache operations
 logger = logging.getLogger(__name__)

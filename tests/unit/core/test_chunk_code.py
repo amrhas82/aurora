@@ -1,5 +1,4 @@
-"""
-Unit tests for CodeChunk implementation.
+"""Unit tests for CodeChunk implementation.
 
 Tests serialization, validation, and edge cases for code chunks.
 """

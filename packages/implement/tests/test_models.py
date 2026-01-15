@@ -3,8 +3,6 @@
 TDD RED Phase: These tests should fail initially until ParsedTask is implemented.
 """
 
-import pytest
-
 from implement.models import ParsedTask
 
 

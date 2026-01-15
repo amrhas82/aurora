@@ -1,5 +1,4 @@
-"""
-Unit tests for MemoryStore implementation.
+"""Unit tests for MemoryStore implementation.
 
 These tests verify in-memory storage functionality including:
 - Fast in-memory operations

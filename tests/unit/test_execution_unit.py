@@ -7,7 +7,7 @@ Tests the execute_with_auto_escalation() method with various scenarios:
 - Complex/Critical queries (always escalate)
 """
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

@@ -1,5 +1,4 @@
-"""
-Parallel Agent Execution with Dynamic Optimization
+"""Parallel Agent Execution with Dynamic Optimization
 
 This module provides improved parallel agent execution with:
 

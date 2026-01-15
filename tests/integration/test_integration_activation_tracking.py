@@ -1,5 +1,4 @@
-"""
-Integration Test: Activation Tracking
+"""Integration Test: Activation Tracking
 
 Tests Issue #4: Identical Search Results (All Activation Scores 0.0)
 - Verifies store.record_access() is called during search
@@ -33,14 +32,12 @@ Priority: P0 (Critical)
 import sqlite3
 import time
 from datetime import datetime, timezone
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
-from aurora_core.chunks.base import Chunk
 
 
 class TestActivationTracking:
@@ -93,8 +90,7 @@ def calculate_median(numbers):
         return manager, test_db_path
 
     def test_record_access_called_during_search(self, manager_with_data):
-        """
-        Test that store.record_access() is called for each retrieved chunk.
+        """Test that store.record_access() is called for each retrieved chunk.
 
         This test will FAIL because search() doesn't call record_access().
         """
@@ -145,8 +141,7 @@ def calculate_median(numbers):
                 )
 
     def test_access_count_increments_after_search(self, manager_with_data):
-        """
-        Test that access_count in activations table increments after search.
+        """Test that access_count in activations table increments after search.
 
         This test will FAIL because record_access() is not called.
         """
@@ -193,8 +188,7 @@ def calculate_median(numbers):
             )
 
     def test_base_level_updates_after_access(self, manager_with_data):
-        """
-        Test that base_level activation updates according to ACT-R formula.
+        """Test that base_level activation updates according to ACT-R formula.
 
         This test will FAIL because activation is never updated.
         """
@@ -255,8 +249,7 @@ def calculate_median(numbers):
                 )
 
     def test_last_access_time_updates(self, manager_with_data):
-        """
-        Test that last_access_time is updated in activations table.
+        """Test that last_access_time is updated in activations table.
 
         This test will FAIL because record_access() is not called.
         """
@@ -318,8 +311,7 @@ def calculate_median(numbers):
                 )
 
     def test_second_search_changes_activation_scores(self, manager_with_data):
-        """
-        Test that performing a second search changes activation scores (due to recency).
+        """Test that performing a second search changes activation scores (due to recency).
 
         This test will FAIL because activation scores never update.
         """
@@ -359,8 +351,7 @@ def calculate_median(numbers):
             )
 
     def test_activation_context_stored(self, manager_with_data):
-        """
-        Test that search context is stored with activation records.
+        """Test that search context is stored with activation records.
 
         This test will FAIL if context parameter is not passed to record_access().
         """
@@ -458,8 +449,7 @@ def moderately_used():
         return manager, db_path
 
     def test_activation_varies_by_access_frequency(self, manager_with_varied_access):
-        """
-        Test that chunks with more accesses have higher activation scores.
+        """Test that chunks with more accesses have higher activation scores.
 
         This test will FAIL if activation doesn't vary by frequency.
         """

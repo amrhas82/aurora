@@ -1,5 +1,4 @@
-"""
-Aurora commands module.
+"""Aurora commands module.
 
 Ported from OpenSpec src/core/
 """

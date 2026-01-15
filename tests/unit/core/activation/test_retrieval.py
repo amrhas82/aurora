@@ -1,5 +1,4 @@
-"""
-Unit tests for Activation-Based Retrieval.
+"""Unit tests for Activation-Based Retrieval.
 
 Tests the ActivationRetriever and BatchRetriever classes including:
 - RetrievalConfig and RetrievalResult models

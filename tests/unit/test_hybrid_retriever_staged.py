@@ -10,7 +10,7 @@ Test Coverage:
     - UT-HYBRID-04: Empty query handling
 """
 
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import numpy as np
 import pytest

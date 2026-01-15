@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Smoke test for SOAR Orchestrator Python API.
+"""Smoke test for SOAR Orchestrator Python API.
 
 Validates that the SOAR orchestrator can:
 - Create orchestrator instance with mocked dependencies
@@ -13,8 +12,7 @@ Exit codes:
 """
 
 import sys
-from unittest.mock import MagicMock, Mock
-
+from unittest.mock import Mock
 
 try:
     from aurora_core.store.memory import MemoryStore
@@ -26,8 +24,7 @@ except ImportError as e:
 
 
 def run_smoke_test() -> bool:
-    """
-    Run smoke tests for SOAR orchestrator.
+    """Run smoke tests for SOAR orchestrator.
 
     Returns:
         True if all tests pass, False otherwise

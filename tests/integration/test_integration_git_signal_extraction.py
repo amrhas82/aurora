@@ -1,5 +1,4 @@
-"""
-Integration Test: Git Signal Extraction (Function-Level)
+"""Integration Test: Git Signal Extraction (Function-Level)
 
 Tests Issue #16: Git-Based BLA Initialization Not Implemented
 - Verifies GitSignalExtractor extracts commit history per function
@@ -33,11 +32,8 @@ Priority: P0 (Critical)
 
 import subprocess
 import time
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 import pytest
-
 
 # GitSignalExtractor will be created in task 4.1
 # For now, this will fail with ImportError
@@ -54,8 +50,7 @@ class TestGitSignalExtraction:
 
     @pytest.fixture
     def git_repo_with_function_history(self, tmp_path):
-        """
-        Create git repo with file containing 3 functions with different edit histories.
+        """Create git repo with file containing 3 functions with different edit histories.
 
         Function edit counts:
         - frequently_edited_function: 8 commits
@@ -139,8 +134,7 @@ def rarely_edited_function(x):
         not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented (task 4.1)"
     )
     def test_get_function_commit_times_extracts_per_function(self, git_repo_with_function_history):
-        """
-        Test that get_function_commit_times() returns function-specific commit times.
+        """Test that get_function_commit_times() returns function-specific commit times.
 
         This test will FAIL because GitSignalExtractor doesn't exist yet.
         """
@@ -202,8 +196,7 @@ def rarely_edited_function(x):
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_calculate_bla_from_commits(self, git_repo_with_function_history):
-        """
-        Test that calculate_bla() produces higher values for frequently-edited functions.
+        """Test that calculate_bla() produces higher values for frequently-edited functions.
 
         This test will FAIL because calculate_bla() doesn't exist yet.
         """
@@ -262,8 +255,7 @@ def rarely_edited_function(x):
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_non_git_directory_graceful_fallback(self, tmp_path):
-        """
-        Test that non-Git directories don't crash (graceful fallback).
+        """Test that non-Git directories don't crash (graceful fallback).
 
         This test verifies robustness.
         """
@@ -304,8 +296,7 @@ def rarely_edited_function(x):
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_git_blame_line_porcelain_parsing(self, git_repo_with_function_history):
-        """
-        Test that git blame --line-porcelain output is correctly parsed.
+        """Test that git blame --line-porcelain output is correctly parsed.
 
         This test verifies commit SHA extraction.
         """
@@ -381,8 +372,7 @@ class TestGitMetadataStorage:
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_chunk_metadata_includes_git_hash(self, git_repo_with_tracked_file):
-        """
-        Test that chunk metadata includes git_hash from most recent commit.
+        """Test that chunk metadata includes git_hash from most recent commit.
 
         This test verifies metadata storage (task 4.3).
         """
@@ -410,8 +400,7 @@ class TestGitMetadataStorage:
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_chunk_metadata_includes_commit_count(self):
-        """
-        Test that chunk metadata includes commit_count.
+        """Test that chunk metadata includes commit_count.
 
         This test documents expected behavior for task 4.3.
         """
@@ -430,8 +419,7 @@ class TestBLACalculationFormula:
 
     @pytest.mark.skipif(not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented")
     def test_bla_formula_with_known_values(self):
-        """
-        Test BLA calculation with known timestamp values.
+        """Test BLA calculation with known timestamp values.
 
         ACT-R Formula: B = ln(Σ t_j^(-d))
         where:

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-MINIMAL VIABLE ACT-R SYSTEM
+"""MINIMAL VIABLE ACT-R SYSTEM
 Ready to run, ~100 lines, immediate start
 
 This is the absolute minimum to get ACT-R + LLM working.

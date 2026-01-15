@@ -4,8 +4,6 @@ Tests the logic for generating human-readable explanations of BM25 scores
 based on query term matching patterns.
 """
 
-import pytest
-
 
 def test_explain_bm25_exact_match():
     """Single exact match: query term found verbatim in chunk content."""

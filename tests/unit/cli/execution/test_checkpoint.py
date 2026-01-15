@@ -1,12 +1,10 @@
 """Unit tests for CheckpointManager."""
 
-import tempfile
 import time
-from pathlib import Path
 
 import pytest
 
-from aurora_cli.execution import CheckpointManager, CheckpointState, TaskState
+from aurora_cli.execution import CheckpointManager, TaskState
 
 
 @pytest.fixture

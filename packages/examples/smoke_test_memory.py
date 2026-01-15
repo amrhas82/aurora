@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Smoke test for MemoryStore Python API.
+"""Smoke test for MemoryStore Python API.
 
 Validates that the memory store can:
 - Create store instance with in-memory storage
@@ -16,8 +15,6 @@ Exit codes:
 """
 
 import sys
-from datetime import datetime, timezone
-
 
 try:
     from aurora_core.chunks.code_chunk import CodeChunk
@@ -28,8 +25,7 @@ except ImportError as e:
 
 
 def run_smoke_test() -> bool:
-    """
-    Run smoke tests for memory store.
+    """Run smoke tests for memory store.
 
     Returns:
         True if all tests pass, False otherwise

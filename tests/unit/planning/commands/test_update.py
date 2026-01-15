@@ -1,5 +1,4 @@
-"""
-Tests for aurora.commands.update module.
+"""Tests for aurora.commands.update module.
 
 Simplified tests focusing on AGENTS.md update.
 Full configurator tests will be added in Phase 7.

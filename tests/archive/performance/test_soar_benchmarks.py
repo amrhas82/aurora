@@ -1,5 +1,4 @@
-"""
-Performance benchmarks for SOAR pipeline.
+"""Performance benchmarks for SOAR pipeline.
 
 These benchmarks verify that SOAR operations meet the required
 performance targets specified in the PRD:
@@ -19,7 +18,6 @@ from aurora_core.store.memory import MemoryStore
 from aurora_reasoning.llm_client import LLMClient
 from aurora_soar import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
-
 
 # Performance targets from PRD
 SIMPLE_QUERY_TARGET_S = 2.0

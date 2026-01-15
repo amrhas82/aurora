@@ -1,12 +1,10 @@
-"""
-Tests for aurora.commands.list module.
+"""Tests for aurora.commands.list module.
 
 Ported from Aurora test/core/list.test.ts
 """
 
 import shutil
 import tempfile
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest

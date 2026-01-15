@@ -1,5 +1,4 @@
-"""
-Pytest configuration for AURORA project.
+"""Pytest configuration for AURORA project.
 
 This file sets up the Python path to enable imports from both:
 1. Namespace packages in src/aurora/ (aurora.core, aurora.cli, etc.)

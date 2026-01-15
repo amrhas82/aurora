@@ -1,13 +1,10 @@
-"""
-Tests for validation types: ValidationIssue, ValidationReport.
+"""Tests for validation types: ValidationIssue, ValidationReport.
 
 Ported from: src/core/validation/types.ts
 TDD approach: Tests written first based on TypeScript interface behavior.
 
 Task: 2.3 - Write tests/unit/validation/test_types.py
 """
-
-import pytest
 
 from aurora_planning.validators.types import ValidationIssue, ValidationLevel, ValidationReport
 

@@ -397,7 +397,6 @@ class TestRetryLoopExhaustion:
     ):
         """Test that max retries are enforced and result in FAIL."""
         from aurora_reasoning.llm_client import LLMResponse
-        from aurora_soar.phases.decompose import DecomposePhaseResult
 
         # Always return RETRY verdict (never passes)
         persistent_retry_verification = VerificationResult(

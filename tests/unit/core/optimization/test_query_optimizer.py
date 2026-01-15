@@ -1,5 +1,4 @@
-"""
-Unit tests for QueryOptimizer.
+"""Unit tests for QueryOptimizer.
 
 Tests cover:
 - Chunk type inference from queries

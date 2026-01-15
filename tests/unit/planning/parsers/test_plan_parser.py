@@ -1,5 +1,4 @@
-"""
-Tests for PlanParser (was ChangeParser).
+"""Tests for PlanParser (was ChangeParser).
 
 Ported from: src/core/parsers/change-parser.ts behavior
 TDD approach: Tests written first based on TypeScript behavior.
@@ -7,11 +6,8 @@ TDD approach: Tests written first based on TypeScript behavior.
 Task: 3.2 - Write tests/unit/parsers/test_plan_parser.py
 """
 
-import os
 import tempfile
 from pathlib import Path
-
-import pytest
 
 from aurora_planning.parsers.plan_parser import PlanParser
 from aurora_planning.schemas.plan import ModificationOperation

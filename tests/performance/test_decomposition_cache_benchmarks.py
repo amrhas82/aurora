@@ -1,5 +1,4 @@
-"""
-Performance benchmarks for plan decomposition cache.
+"""Performance benchmarks for plan decomposition cache.
 
 This test suite benchmarks cached vs non-cached decomposition operations:
 1. Cache GET latency (memory vs persistent hits)
@@ -460,8 +459,7 @@ class TestEndToEndCacheSpeedup:
     """Benchmark end-to-end speedup from caching."""
 
     def test_decomposition_speedup_ratio(self, memory_cache, sample_subgoals):
-        """
-        Measure speedup ratio: cached vs non-cached decomposition.
+        """Measure speedup ratio: cached vs non-cached decomposition.
 
         This simulates real-world usage where decomposition is expensive.
         """
@@ -661,8 +659,7 @@ class TestCacheComparisonSummary:
     """Generate comparison summary of cache vs non-cached performance."""
 
     def test_comprehensive_comparison(self, memory_cache, sample_subgoals):
-        """
-        Comprehensive comparison of cached vs non-cached operations.
+        """Comprehensive comparison of cached vs non-cached operations.
 
         Generates a performance summary showing:
         - Memory cache hit vs miss

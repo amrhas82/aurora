@@ -1,5 +1,4 @@
-"""
-Unit tests for MetricsCollector class.
+"""Unit tests for MetricsCollector class.
 
 Tests performance and reliability metrics tracking.
 """

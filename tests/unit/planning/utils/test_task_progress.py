@@ -1,9 +1,5 @@
 """Tests for task progress utilities."""
 
-from pathlib import Path
-
-import pytest
-
 from aurora_planning.utils.task_progress import (
     TaskProgress,
     count_tasks_from_content,

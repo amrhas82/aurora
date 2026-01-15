@@ -4,12 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from aurora_soar.phases.retrieve import (
-    ACTIVATION_THRESHOLD,
-    RETRIEVAL_BUDGETS,
-    filter_by_activation,
-    retrieve_context,
-)
+from aurora_soar.phases.retrieve import RETRIEVAL_BUDGETS, filter_by_activation, retrieve_context
 
 
 class TestRetrievalBudgets:

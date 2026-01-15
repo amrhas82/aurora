@@ -1,5 +1,4 @@
-"""
-Capability schema (was Spec schema in OpenSpec).
+"""Capability schema (was Spec schema in OpenSpec).
 
 Ported from: src/core/schemas/spec.schema.ts
 Zod → Pydantic translation.

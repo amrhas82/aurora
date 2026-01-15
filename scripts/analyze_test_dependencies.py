@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Analyze test file dependencies to determine safe migration order.
+"""Analyze test file dependencies to determine safe migration order.
 
 This script parses test files to identify import dependencies and generates
 a migration plan with batches that respect dependency ordering.
@@ -17,31 +16,28 @@ import json
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 
 class TestDependencyAnalyzer:
     """Analyzes dependencies between test files."""
 
     def __init__(self, test_root: Path):
-        """
-        Initialize analyzer.
+        """Initialize analyzer.
 
         Args:
             test_root: Root directory containing test files
         """
         self.test_root = test_root
-        self.dependencies: Dict[str, Set[str]] = defaultdict(set)
-        self.reverse_deps: Dict[str, Set[str]] = defaultdict(set)
-        self.test_files: Set[str] = set()
+        self.dependencies: dict[str, set[str]] = defaultdict(set)
+        self.reverse_deps: dict[str, set[str]] = defaultdict(set)
+        self.test_files: set[str] = set()
 
-    def find_test_files(self) -> List[Path]:
+    def find_test_files(self) -> list[Path]:
         """Find all test files in the test root."""
         return list(self.test_root.rglob("test_*.py"))
 
-    def extract_imports(self, file_path: Path) -> Set[str]:
-        """
-        Extract import statements from a Python file.
+    def extract_imports(self, file_path: Path) -> set[str]:
+        """Extract import statements from a Python file.
 
         Args:
             file_path: Path to Python file
@@ -69,8 +65,7 @@ class TestDependencyAnalyzer:
         return imports
 
     def is_test_module_import(self, import_name: str) -> bool:
-        """
-        Check if an import is from the test directory.
+        """Check if an import is from the test directory.
 
         Args:
             import_name: Name of imported module
@@ -85,9 +80,8 @@ class TestDependencyAnalyzer:
             return True
         return False
 
-    def build_dependency_graph(self, files: List[Path]) -> None:
-        """
-        Build dependency graph for given test files.
+    def build_dependency_graph(self, files: list[Path]) -> None:
+        """Build dependency graph for given test files.
 
         Args:
             files: List of test file paths
@@ -109,9 +103,8 @@ class TestDependencyAnalyzer:
                     self.dependencies[rel_path].add(imp)
                     self.reverse_deps[imp].add(rel_path)
 
-    def detect_circular_dependencies(self) -> List[Tuple[str, str]]:
-        """
-        Detect circular dependencies in the dependency graph.
+    def detect_circular_dependencies(self) -> list[tuple[str, str]]:
+        """Detect circular dependencies in the dependency graph.
 
         Returns:
             List of (file1, file2) tuples representing circular deps
@@ -119,7 +112,7 @@ class TestDependencyAnalyzer:
         circular = []
         visited = set()
 
-        def dfs(node: str, path: Set[str]) -> None:
+        def dfs(node: str, path: set[str]) -> None:
             if node in path:
                 # Found cycle
                 circular.append((node, node))
@@ -142,9 +135,8 @@ class TestDependencyAnalyzer:
 
         return circular
 
-    def generate_migration_batches(self, files_to_move: List[str]) -> List[List[str]]:
-        """
-        Generate migration batches that respect dependencies.
+    def generate_migration_batches(self, files_to_move: list[str]) -> list[list[str]]:
+        """Generate migration batches that respect dependencies.
 
         Files with no dependencies are moved first, followed by files
         that only depend on already-moved files.
@@ -187,9 +179,8 @@ class TestDependencyAnalyzer:
 
         return batches
 
-    def analyze(self, files_to_analyze: List[str] = None) -> Dict:
-        """
-        Perform complete dependency analysis.
+    def analyze(self, files_to_analyze: list[str] = None) -> dict:
+        """Perform complete dependency analysis.
 
         Args:
             files_to_analyze: Specific files to analyze (default: all test files)

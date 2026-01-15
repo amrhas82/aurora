@@ -12,7 +12,6 @@ This validates that the memory system correctly handles:
 """
 
 import sqlite3
-import tempfile
 import time
 from pathlib import Path
 
@@ -21,7 +20,6 @@ import pytest
 from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
-
 
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 

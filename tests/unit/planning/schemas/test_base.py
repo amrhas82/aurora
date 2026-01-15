@@ -1,5 +1,4 @@
-"""
-Tests for base schemas: Scenario and Requirement.
+"""Tests for base schemas: Scenario and Requirement.
 
 Ported from: test/core/validation.test.ts - describe('Validation Schemas')
 TDD approach: Tests written first based on TypeScript test behavior.

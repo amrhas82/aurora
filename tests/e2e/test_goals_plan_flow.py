@@ -11,7 +11,6 @@ integration behavior and validate the goals.json format for /plan consumption.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest

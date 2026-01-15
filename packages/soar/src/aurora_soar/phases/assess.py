@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Literal
 
-
 if TYPE_CHECKING:
     from aurora_reasoning.llm_client import LLMClient
 
@@ -71,8 +70,7 @@ class AssessmentResult:
 
 
 class ComplexityAssessor:
-    """
-    Assesses prompt complexity using multi-dimensional lexical analysis.
+    """Assesses prompt complexity using multi-dimensional lexical analysis.
 
     Dimensions analyzed:
     1. Lexical metrics (word count, sentence count, punctuation)
@@ -341,8 +339,7 @@ class ComplexityAssessor:
         self.debug = debug
 
     def assess(self, prompt: str) -> AssessmentResult:
-        """
-        Main assessment entry point.
+        """Main assessment entry point.
 
         Args:
             prompt: The user prompt to assess
@@ -436,8 +433,7 @@ class ComplexityAssessor:
         )
 
     def _detect_critical(self, prompt_lower: str) -> bool:
-        """
-        Check if prompt contains critical keywords requiring high-priority handling.
+        """Check if prompt contains critical keywords requiring high-priority handling.
 
         Uses a tiered approach to avoid false positives:
         1. Tier 1 (always critical): emergency, outage, breach, vulnerability, exploit, corruption

@@ -1,5 +1,4 @@
-"""
-Resilience module for AURORA.
+"""Resilience module for AURORA.
 
 This module provides production hardening features including:
 - RetryHandler: Exponential backoff retry logic for transient errors
@@ -12,7 +11,6 @@ from aurora_core.resilience.alerting import Alert, Alerting, AlertRule, AlertSev
 from aurora_core.resilience.metrics_collector import MetricsCollector
 from aurora_core.resilience.rate_limiter import RateLimiter
 from aurora_core.resilience.retry_handler import RetryHandler
-
 
 __all__ = [
     "RetryHandler",

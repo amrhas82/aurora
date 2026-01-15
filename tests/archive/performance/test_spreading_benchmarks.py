@@ -1,5 +1,4 @@
-"""
-Performance benchmarks for spreading activation calculations.
+"""Performance benchmarks for spreading activation calculations.
 
 This test suite benchmarks:
 1. Spreading activation calculation for varying graph sizes
@@ -23,8 +22,7 @@ from aurora_core.activation.spreading import RelationshipGraph, SpreadingActivat
 
 
 def create_linear_graph(size: int) -> RelationshipGraph:
-    """
-    Create a linear graph where each chunk links to the next.
+    """Create a linear graph where each chunk links to the next.
 
     chunk_0 -> chunk_1 -> chunk_2 -> ... -> chunk_N
 
@@ -43,8 +41,7 @@ def create_linear_graph(size: int) -> RelationshipGraph:
 
 
 def create_tree_graph(depth: int, branching_factor: int) -> RelationshipGraph:
-    """
-    Create a tree graph with specified depth and branching factor.
+    """Create a tree graph with specified depth and branching factor.
 
     Each node has `branching_factor` children.
     Total nodes = 1 + b + b^2 + ... + b^depth
@@ -79,8 +76,7 @@ def create_tree_graph(depth: int, branching_factor: int) -> RelationshipGraph:
 
 
 def create_dense_graph(size: int, edges_per_node: int) -> RelationshipGraph:
-    """
-    Create a dense graph where each chunk has multiple connections.
+    """Create a dense graph where each chunk has multiple connections.
 
     Args:
         size: Number of chunks
@@ -108,8 +104,7 @@ def create_dense_graph(size: int, edges_per_node: int) -> RelationshipGraph:
 def create_clustered_graph(
     num_clusters: int, cluster_size: int, inter_cluster_edges: int
 ) -> RelationshipGraph:
-    """
-    Create a clustered graph with dense clusters and sparse inter-cluster connections.
+    """Create a clustered graph with dense clusters and sparse inter-cluster connections.
 
     Args:
         num_clusters: Number of clusters
@@ -250,8 +245,7 @@ class TestSpreadingPerformanceTree:
 
 
 class TestSpreadingPerformanceDense:
-    """
-    Benchmark spreading activation on dense graphs.
+    """Benchmark spreading activation on dense graphs.
 
     This is the main performance target from PRD Section 7.9:
     "3 hops, 1000 edges, <200ms"
@@ -282,8 +276,7 @@ class TestSpreadingPerformanceDense:
         print(f"\nDense graph (100 chunks, 500 edges): {mean_time_ms:.1f}ms")
 
     def test_spreading_dense_200_chunks_5edges(self, benchmark, spreading_calculator_3hops):
-        """
-        Benchmark spreading on dense graph: 200 chunks, 5 edges per chunk.
+        """Benchmark spreading on dense graph: 200 chunks, 5 edges per chunk.
 
         PRD TARGET: 3 hops, 1000 edges, <200ms
         """

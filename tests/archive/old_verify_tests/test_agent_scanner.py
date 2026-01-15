@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
-from unittest.mock import patch
 
 import pytest
 

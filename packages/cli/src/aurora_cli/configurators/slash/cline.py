@@ -7,7 +7,6 @@ Uses markdown heading format for frontmatter instead of YAML.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
     "search": 'Search indexed code ["query" --limit N --type function]',

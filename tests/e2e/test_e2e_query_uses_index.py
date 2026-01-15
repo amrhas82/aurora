@@ -25,12 +25,10 @@ import subprocess
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from .conftest import run_cli_command
-
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]

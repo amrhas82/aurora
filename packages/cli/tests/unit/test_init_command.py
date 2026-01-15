@@ -7,10 +7,8 @@ Pattern: Direct click.testing.CliRunner with mocked dependencies.
 """
 
 import json
-from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.init import init_command

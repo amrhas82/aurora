@@ -1,5 +1,4 @@
-"""
-Base schemas: Scenario and Requirement.
+"""Base schemas: Scenario and Requirement.
 
 Ported from: src/core/schemas/base.schema.ts
 Zod → Pydantic translation.

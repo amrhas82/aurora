@@ -8,7 +8,6 @@ from implement.executor import ExecutionResult, TaskExecutor
 from implement.models import ParsedTask
 from implement.parser import TaskParser
 
-
 __all__ = [
     "ParsedTask",
     "TaskParser",

@@ -17,7 +17,6 @@ import pstats
 import sqlite3
 import time
 from pathlib import Path
-from pstats import SortKey
 from typing import Any
 
 from aurora_cli.config import load_config
@@ -74,7 +73,6 @@ def profile_indexing(path: Path, batch_size: int = 32) -> ProfilingResults:
         }
 
         # Monkey-patch to track timing
-        original_parse = None
         original_embed_batch = None
         original_save_chunk = None
 
@@ -306,11 +304,11 @@ def print_results(results: ProfilingResults, db_metrics: dict[str, Any] | None =
     print("DETAILED METRICS")
     print("-" * 80)
 
-    print(f"\nParsing:")
+    print("\nParsing:")
     print(f"  Total calls:       {results.parse_calls}")
     print(f"  Avg per file:      {results.avg_parse_per_file * 1000:.1f}ms")
 
-    print(f"\nEmbedding:")
+    print("\nEmbedding:")
     print(f"  Total batches:     {results.embed_calls}")
     print(f"  Total chunks:      {results.chunks_created}")
     print(f"  Avg per chunk:     {results.avg_embed_per_chunk * 1000:.1f}ms")
@@ -318,7 +316,7 @@ def print_results(results: ProfilingResults, db_metrics: dict[str, Any] | None =
         avg_batch = results.chunks_created / results.embed_calls
         print(f"  Avg batch size:    {avg_batch:.1f} chunks")
 
-    print(f"\nDatabase Writes:")
+    print("\nDatabase Writes:")
     print(f"  Total writes:      {results.db_write_calls}")
     print(f"  Avg per chunk:     {results.avg_db_per_chunk * 1000:.2f}ms")
 

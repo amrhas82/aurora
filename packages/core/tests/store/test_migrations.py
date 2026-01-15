@@ -1,5 +1,4 @@
-"""
-Comprehensive test suite for database migration logic.
+"""Comprehensive test suite for database migration logic.
 
 Tests cover:
 - TD-P1-001: Migration v1→v2 with data preservation

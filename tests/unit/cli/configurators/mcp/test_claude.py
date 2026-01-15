@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from aurora_cli.configurators.mcp.claude import AURORA_MCP_PERMISSIONS, ClaudeMCPConfigurator
 
 

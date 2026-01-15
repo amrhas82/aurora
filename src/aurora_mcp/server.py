@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-AURORA MCP Server - FastMCP implementation.
+"""AURORA MCP Server - FastMCP implementation.
 
 Provides Model Context Protocol server for AURORA codebase indexing and search.
 """
@@ -24,8 +23,7 @@ class AuroraMCPServer:
     def __init__(
         self, db_path: str | None = None, config_path: str | None = None, test_mode: bool = False
     ):
-        """
-        Initialize AURORA MCP Server.
+        """Initialize AURORA MCP Server.
 
         Args:
             db_path: Path to SQLite database (default: ~/.aurora/memory.db)

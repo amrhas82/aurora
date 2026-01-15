@@ -1,5 +1,4 @@
-"""
-Unit tests for ReasoningChunk implementation.
+"""Unit tests for ReasoningChunk implementation.
 
 Tests the full ReasoningChunk implementation including validation,
 serialization, and integration with the chunk system.

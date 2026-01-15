@@ -10,7 +10,6 @@ from .commands import COMMAND_TEMPLATES, get_all_command_templates, get_command_
 from .headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
 from .project import PROJECT_TEMPLATE, get_project_template
 
-
 __all__ = [
     "AGENTS_TEMPLATE",
     "CLAUDE_TEMPLATE",

@@ -11,7 +11,7 @@ Test-Driven Development (TDD):
 
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -758,7 +758,6 @@ class TestInitCommandMain:
 
     def test_init_command_with_config_flag_fast_path(self, tmp_path):
         """init_command() with --config flag should run Step 3 only."""
-        from unittest.mock import AsyncMock
 
         from click.testing import CliRunner
 
@@ -805,7 +804,6 @@ class TestInitCommandMain:
 
     def test_init_command_full_init_flow_calls_all_3_steps(self, tmp_path):
         """init_command() should call all 3 steps in order for full initialization."""
-        from unittest.mock import AsyncMock
 
         from click.testing import CliRunner
 
@@ -838,7 +836,6 @@ class TestInitCommandMain:
 
     def test_init_command_displays_success_summary(self, tmp_path):
         """init_command() should display success summary after completion."""
-        from unittest.mock import AsyncMock
 
         from click.testing import CliRunner
 
@@ -868,7 +865,6 @@ class TestInitCommandMain:
 
     def test_init_command_shows_step_numbering(self, tmp_path):
         """init_command() should display step numbers (1/3, 2/3, 3/3)."""
-        from unittest.mock import AsyncMock
 
         from click.testing import CliRunner
 
@@ -1321,7 +1317,6 @@ class TestRerunSafety:
 
     def test_marker_content_preservation_in_tools(self, tmp_path):
         """Tool configurators should preserve content outside Aurora markers."""
-        from aurora_cli.commands.init_helpers import configure_tools
 
         # Create tool config with custom content outside markers
         config_file = tmp_path / "CLAUDE.md"

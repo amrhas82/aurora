@@ -1,5 +1,4 @@
-"""
-Contract tests for aurora_core.store package.
+"""Contract tests for aurora_core.store package.
 
 These tests verify that the Store interface contracts are honored by all implementations.
 Contract tests ensure:
@@ -16,7 +15,6 @@ import pytest
 from aurora_core.chunks import CodeChunk
 from aurora_core.exceptions import ChunkNotFoundError, StorageError, ValidationError
 from aurora_core.store import MemoryStore, SQLiteStore
-from aurora_core.types import ChunkID
 
 
 class TestStoreContractSaveAndRetrieve:

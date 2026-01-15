@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-
 if TYPE_CHECKING:
     pass
 

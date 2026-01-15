@@ -4,8 +4,6 @@ Tests the _get_type_abbreviation() helper function in memory.py
 that maps full type names to abbreviated forms for display.
 """
 
-import pytest
-
 
 def _get_type_abbreviation(element_type: str) -> str:
     """Get abbreviated type name for display.

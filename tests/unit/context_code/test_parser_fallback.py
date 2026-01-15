@@ -6,9 +6,6 @@ Tests that parser gracefully falls back to text chunking when tree-sitter is una
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 
 class TestTreeSitterFallback:

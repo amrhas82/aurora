@@ -1,5 +1,4 @@
-"""
-Python code parser using tree-sitter.
+"""Python code parser using tree-sitter.
 
 This module provides the PythonParser class for extracting code elements
 (functions, classes, methods) from Python source files.
@@ -12,7 +11,6 @@ from pathlib import Path
 
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
-
 
 # Try to import tree-sitter, fall back to text chunking if unavailable
 TREE_SITTER_AVAILABLE = True
@@ -31,8 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class PythonParser(CodeParser):
-    """
-    Python code parser using tree-sitter.
+    """Python code parser using tree-sitter.
 
     Extracts functions, classes, and methods from Python source files,
     including:
@@ -68,8 +65,7 @@ class PythonParser(CodeParser):
             )
 
     def can_parse(self, file_path: Path) -> bool:
-        """
-        Check if this parser can handle the given file.
+        """Check if this parser can handle the given file.
 
         Args:
             file_path: Path to check
@@ -80,8 +76,7 @@ class PythonParser(CodeParser):
         return file_path.suffix in self.EXTENSIONS
 
     def parse(self, file_path: Path) -> list[CodeChunk]:
-        """
-        Parse a Python source file and extract code elements.
+        """Parse a Python source file and extract code elements.
 
         Args:
             file_path: Absolute path to Python source file
@@ -152,8 +147,7 @@ class PythonParser(CodeParser):
     def _extract_functions(
         self, root_node: tree_sitter.Node, file_path: Path, source_code: str
     ) -> list[CodeChunk]:
-        """
-        Extract function definitions from the AST.
+        """Extract function definitions from the AST.
 
         Args:
             root_node: Root node of the syntax tree
@@ -226,8 +220,7 @@ class PythonParser(CodeParser):
     def _extract_classes_and_methods(
         self, root_node: tree_sitter.Node, file_path: Path, source_code: str
     ) -> list[CodeChunk]:
-        """
-        Extract class definitions and their methods from the AST.
+        """Extract class definitions and their methods from the AST.
 
         Args:
             root_node: Root node of the syntax tree
@@ -309,8 +302,7 @@ class PythonParser(CodeParser):
         file_path: Path,
         source_code: str,
     ) -> list[CodeChunk]:
-        """
-        Extract methods from a class body.
+        """Extract methods from a class body.
 
         Args:
             class_body_node: Class body node
@@ -380,8 +372,7 @@ class PythonParser(CodeParser):
         return chunks
 
     def _find_nodes_by_type(self, node: tree_sitter.Node, node_type: str) -> list[tree_sitter.Node]:
-        """
-        Find all nodes of a given type in the tree.
+        """Find all nodes of a given type in the tree.
 
         Args:
             node: Root node to search from
@@ -402,8 +393,7 @@ class PythonParser(CodeParser):
         return results
 
     def _is_inside_class(self, node: tree_sitter.Node) -> bool:
-        """
-        Check if a node is inside a class definition.
+        """Check if a node is inside a class definition.
 
         Args:
             node: Node to check
@@ -419,8 +409,7 @@ class PythonParser(CodeParser):
         return False
 
     def _extract_docstring(self, node: tree_sitter.Node, source_code: str) -> str | None:
-        """
-        Extract docstring from a function or class definition.
+        """Extract docstring from a function or class definition.
 
         A docstring is the first expression statement in the body that contains
         a string literal.
@@ -461,8 +450,7 @@ class PythonParser(CodeParser):
             return None
 
     def _clean_docstring(self, raw_string: str) -> str | None:
-        """
-        Clean a raw docstring by removing quotes and normalizing whitespace.
+        """Clean a raw docstring by removing quotes and normalizing whitespace.
 
         Args:
             raw_string: Raw string literal from source code
@@ -491,8 +479,7 @@ class PythonParser(CodeParser):
         return cleaned if cleaned else None
 
     def _calculate_complexity(self, node: tree_sitter.Node) -> float:
-        """
-        Calculate cyclomatic complexity for a code element.
+        """Calculate cyclomatic complexity for a code element.
 
         Counts branch points (if, for, while, try, with, match, boolean operators)
         and normalizes to [0.0, 1.0] range using a sigmoid-like function.
@@ -543,8 +530,7 @@ class PythonParser(CodeParser):
         return min(complexity_score, 1.0)  # Ensure it doesn't exceed 1.0
 
     def _extract_imports(self, root_node: tree_sitter.Node, source_code: str) -> set[str]:
-        """
-        Extract all imported names from the module.
+        """Extract all imported names from the module.
 
         Args:
             root_node: Root node of the syntax tree
@@ -585,8 +571,7 @@ class PythonParser(CodeParser):
     def _identify_dependencies(
         self, chunk: CodeChunk, imports: set[str], all_chunks: list[CodeChunk]
     ) -> list[str]:
-        """
-        Identify dependencies for a code chunk.
+        """Identify dependencies for a code chunk.
 
         This is a simplified implementation that:
         1. Identifies calls to other functions/methods in the same file
@@ -615,8 +600,7 @@ class PythonParser(CodeParser):
         return []
 
     def _generate_chunk_id(self, file_path: Path, element_name: str, line_start: int) -> str:
-        """
-        Generate a unique chunk ID based on file path, element name, and location.
+        """Generate a unique chunk ID based on file path, element name, and location.
 
         Args:
             file_path: Source file path
@@ -632,8 +616,7 @@ class PythonParser(CodeParser):
         return f"code:{self.language}:{hash_digest[:16]}"
 
     def _get_fallback_chunks(self, file_path: Path, content: str) -> list[CodeChunk]:
-        """
-        Fallback chunking when tree-sitter is unavailable.
+        """Fallback chunking when tree-sitter is unavailable.
 
         Creates simple text-based chunks by splitting on double newlines
         and grouping into 50-line chunks.

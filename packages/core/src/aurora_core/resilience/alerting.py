@@ -1,5 +1,4 @@
-"""
-Alerting system for monitoring and notifications.
+"""Alerting system for monitoring and notifications.
 
 Implements alert rules and notifications following PRD Section 5.4.
 """
@@ -9,7 +8,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +22,7 @@ class AlertSeverity(Enum):
 
 @dataclass
 class AlertRule:
-    """
-    Defines an alert rule with threshold and severity.
+    """Defines an alert rule with threshold and severity.
 
     Attributes:
         name: Human-readable name for the alert
@@ -44,8 +41,7 @@ class AlertRule:
     description: str
 
     def evaluate(self, metric_value: float) -> bool:
-        """
-        Evaluate if the metric value triggers this alert.
+        """Evaluate if the metric value triggers this alert.
 
         Args:
             metric_value: Current value of the metric
@@ -68,8 +64,7 @@ class AlertRule:
 
 @dataclass
 class Alert:
-    """
-    Represents a fired alert.
+    """Represents a fired alert.
 
     Attributes:
         rule_name: Name of the rule that triggered
@@ -89,8 +84,7 @@ class Alert:
 
 
 class Alerting:
-    """
-    Manages alert rules and notifications.
+    """Manages alert rules and notifications.
 
     This class provides a centralized alerting system that:
     - Defines alert rules based on metrics thresholds
@@ -132,8 +126,7 @@ class Alerting:
         self.fired_alerts: list[Alert] = []
 
     def add_rule(self, rule: AlertRule) -> None:
-        """
-        Add an alert rule.
+        """Add an alert rule.
 
         Args:
             rule: The alert rule to add
@@ -146,8 +139,7 @@ class Alerting:
         self.rules[rule.name] = rule
 
     def remove_rule(self, rule_name: str) -> None:
-        """
-        Remove an alert rule by name.
+        """Remove an alert rule by name.
 
         Args:
             rule_name: Name of the rule to remove
@@ -160,8 +152,7 @@ class Alerting:
         del self.rules[rule_name]
 
     def add_default_rules(self) -> None:
-        """
-        Add default alert rules as specified in PRD Section 5.4.
+        """Add default alert rules as specified in PRD Section 5.4.
 
         Default rules:
         - Error Rate > 5%: WARNING
@@ -201,8 +192,7 @@ class Alerting:
                 self.rules[rule.name] = rule
 
     def add_notification_handler(self, handler: Callable[[Alert], None]) -> None:
-        """
-        Add a notification handler for alerts.
+        """Add a notification handler for alerts.
 
         The handler will be called for each fired alert. Handlers can be used
         to send alerts to external systems (webhooks, email, SMS, etc.).
@@ -213,8 +203,7 @@ class Alerting:
         self.notification_handlers.append(handler)
 
     def evaluate(self, metrics: dict[str, float]) -> list[Alert]:
-        """
-        Evaluate all rules against provided metrics.
+        """Evaluate all rules against provided metrics.
 
         Args:
             metrics: Dictionary of metric_name -> value
@@ -260,8 +249,7 @@ class Alerting:
         return alerts
 
     def _notify(self, alert: Alert) -> None:
-        """
-        Send notifications for an alert.
+        """Send notifications for an alert.
 
         Logs the alert and calls all registered notification handlers.
 
@@ -282,8 +270,7 @@ class Alerting:
                 logger.error(f"Error in notification handler: {e}", exc_info=True)
 
     def get_fired_alerts(self, severity: AlertSeverity | None = None) -> list[Alert]:
-        """
-        Get list of all fired alerts, optionally filtered by severity.
+        """Get list of all fired alerts, optionally filtered by severity.
 
         Args:
             severity: Optional severity filter
@@ -300,8 +287,7 @@ class Alerting:
         self.fired_alerts.clear()
 
     def get_stats(self) -> dict[str, Any]:
-        """
-        Get alerting statistics.
+        """Get alerting statistics.
 
         Returns:
             Dictionary with statistics:

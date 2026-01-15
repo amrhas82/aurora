@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Smoke test for LLM Client Python API.
+"""Smoke test for LLM Client Python API.
 
 Validates that the LLM client can:
 - Initialize with API key from environment
@@ -15,8 +14,6 @@ Exit codes:
 
 import os
 import sys
-from unittest.mock import Mock, patch
-
 
 try:
     from aurora_reasoning.llm_client import AnthropicClient, LLMResponse
@@ -26,8 +23,7 @@ except ImportError as e:
 
 
 def run_smoke_test() -> bool:
-    """
-    Run smoke tests for LLM client.
+    """Run smoke tests for LLM client.
 
     Returns:
         True if all tests pass, False otherwise

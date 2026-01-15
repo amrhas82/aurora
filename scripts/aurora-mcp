@@ -10,7 +10,6 @@ This script provides commands to control the AURORA MCP server:
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 

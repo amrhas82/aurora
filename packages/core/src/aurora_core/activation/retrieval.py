@@ -1,5 +1,4 @@
-"""
-Activation-Based Retrieval
+"""Activation-Based Retrieval
 
 This module implements retrieval of chunks based on ACT-R activation scores.
 Chunks are ranked by total activation and filtered by threshold, ensuring

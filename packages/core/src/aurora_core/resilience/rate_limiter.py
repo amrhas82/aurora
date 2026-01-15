@@ -1,5 +1,4 @@
-"""
-RateLimiter using token bucket algorithm.
+"""RateLimiter using token bucket algorithm.
 
 Implements rate limiting following PRD Section 5.3.
 """
@@ -8,8 +7,7 @@ import time
 
 
 class RateLimiter:
-    """
-    Implements token bucket rate limiting.
+    """Implements token bucket rate limiting.
 
     This class uses the token bucket algorithm to enforce rate limits:
     - Tokens are added to a bucket at a constant rate (refill_rate)
@@ -45,8 +43,7 @@ class RateLimiter:
         requests_per_minute: int = 60,
         max_wait_time: float = 60.0,
     ):
-        """
-        Initialize the RateLimiter.
+        """Initialize the RateLimiter.
 
         Args:
             requests_per_minute: Maximum requests allowed per minute (must be > 0)
@@ -69,8 +66,7 @@ class RateLimiter:
         self._last_refill_time = time.time()
 
     def _refill_tokens(self) -> None:
-        """
-        Refill tokens based on time elapsed since last refill.
+        """Refill tokens based on time elapsed since last refill.
 
         Tokens are added at refill_rate per second, capped at max_tokens.
         """
@@ -86,8 +82,7 @@ class RateLimiter:
         self._last_refill_time = now
 
     def try_acquire(self, tokens: int = 1) -> bool:
-        """
-        Try to acquire tokens without blocking.
+        """Try to acquire tokens without blocking.
 
         Args:
             tokens: Number of tokens to acquire (default 1, must be > 0)
@@ -112,8 +107,7 @@ class RateLimiter:
         return False
 
     def wait_if_needed(self, tokens: int = 1) -> None:
-        """
-        Wait until tokens are available, then acquire them.
+        """Wait until tokens are available, then acquire them.
 
         Blocks until sufficient tokens are available or timeout is exceeded.
 
@@ -160,8 +154,7 @@ class RateLimiter:
         self._last_refill_time = time.time()
 
     def __enter__(self) -> "RateLimiter":
-        """
-        Context manager entry: wait for and acquire one token.
+        """Context manager entry: wait for and acquire one token.
 
         Example:
             >>> with limiter:

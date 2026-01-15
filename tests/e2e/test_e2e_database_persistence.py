@@ -19,9 +19,7 @@ Reference: PRD-0010 Section 3 (User Stories), FR-1 (Database Path Management)
 
 import json
 import os
-import shutil
 import sqlite3
-import subprocess
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
@@ -29,7 +27,6 @@ from pathlib import Path
 import pytest
 
 from .conftest import run_cli_command
-
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]

@@ -1,12 +1,9 @@
-"""
-Unit tests for GitSignalExtractor.
+"""Unit tests for GitSignalExtractor.
 
 Tests the Git signal extraction functionality for function-level BLA initialization.
 These tests create real Git repositories to verify actual Git operations.
 """
 
-import math
-import os
 import shutil
 import subprocess
 import tempfile
@@ -23,8 +20,7 @@ class TestGitSignalExtractor:
 
     @pytest.fixture
     def temp_git_repo(self):
-        """
-        Create a temporary Git repository for testing.
+        """Create a temporary Git repository for testing.
 
         Creates a repo with proper Git config (user.name and user.email)
         to allow commits during tests.
@@ -69,8 +65,7 @@ class TestGitSignalExtractor:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_get_function_commit_times_with_history(self, temp_git_repo):
-        """
-        Test extracting commit times for functions with different edit histories.
+        """Test extracting commit times for functions with different edit histories.
 
         Creates a file with 3 functions:
         - func_a: 8 commits (frequently edited)
@@ -189,8 +184,7 @@ def func_c():
         assert func_c_times == sorted(func_c_times, reverse=True)
 
     def test_calculate_bla_from_commits(self, temp_git_repo):
-        """
-        Test that BLA calculation reflects frequency: more commits = higher BLA.
+        """Test that BLA calculation reflects frequency: more commits = higher BLA.
 
         This validates the ACT-R formula: BLA = ln(Σ t_j^(-d))
         """
@@ -261,8 +255,7 @@ def rarely_edited():
         assert difference > 0.5, f"Expected substantial BLA difference, got {difference:.4f}"
 
     def test_non_git_directory_graceful_fallback(self, temp_non_git_dir):
-        """
-        Test that non-Git directories return empty list and fallback BLA.
+        """Test that non-Git directories return empty list and fallback BLA.
 
         This ensures Aurora doesn't crash on codebases without Git history.
         """
@@ -417,8 +410,7 @@ abc123def456789012345678901234567890abcd 3 3
         assert isinstance(result, list)
 
     def test_functions_in_same_file_have_different_bla(self, temp_git_repo):
-        """
-        CRITICAL TEST: Verify functions in same file can have DIFFERENT BLA values.
+        """CRITICAL TEST: Verify functions in same file can have DIFFERENT BLA values.
 
         This is the core requirement for function-level Git tracking.
         """

@@ -1,5 +1,4 @@
-"""
-Integration tests for error recovery.
+"""Integration tests for error recovery.
 
 Tests the full resilience system with retry logic, rate limiting,
 metrics collection, and alerting working together.

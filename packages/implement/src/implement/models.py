@@ -4,7 +4,7 @@ ParsedTask extends the basic task tracking pattern from TaskProgress
 with agent and model metadata for task execution.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 

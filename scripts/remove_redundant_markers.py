@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Remove redundant pytest markers from test files.
+"""Remove redundant pytest markers from test files.
 
 This script removes markers that are redundant because they duplicate
 information already conveyed by the test file's location.
@@ -14,17 +13,15 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List
 
 
-def find_python_test_files(root_path: Path) -> List[Path]:
+def find_python_test_files(root_path: Path) -> list[Path]:
     """Find all Python test files in the given directory tree."""
     return list(root_path.rglob("test_*.py"))
 
 
 def remove_redundant_markers_from_file(file_path: Path, dry_run: bool = False) -> tuple[int, int]:
-    """
-    Remove redundant markers from a single test file.
+    """Remove redundant markers from a single test file.
 
     Args:
         file_path: Path to the test file

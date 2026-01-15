@@ -16,7 +16,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Mock implementations for profiling
-from unittest.mock import Mock
 
 
 class MockLLMClient:

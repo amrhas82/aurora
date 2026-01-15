@@ -47,7 +47,6 @@ from aurora_cli.errors import handle_errors
 from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
 from aurora_cli.planning.core import create_plan
 
-
 if TYPE_CHECKING:
     pass
 

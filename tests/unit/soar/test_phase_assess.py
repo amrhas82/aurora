@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Pytest tests for the keyword-based complexity assessor.
+"""Pytest tests for the keyword-based complexity assessor.
 
 Tests validate:
 1. Core functionality and edge cases
@@ -9,9 +8,8 @@ Tests validate:
 """
 import pytest
 
-from aurora_soar.phases.assess import AssessmentResult, ComplexityAssessor, assess_complexity
+from aurora_soar.phases.assess import ComplexityAssessor, assess_complexity
 from tests.unit.soar.evaluate_assess import evaluate_corpus
-from tests.unit.soar.test_corpus_assess import TEST_CORPUS
 
 
 class TestComplexityAssessor:

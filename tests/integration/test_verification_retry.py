@@ -1,5 +1,4 @@
-"""
-Integration tests for verification retry loop.
+"""Integration tests for verification retry loop.
 
 Tests that CRITICAL queries with low verification scores trigger
 the retry loop and that feedback is properly generated and incorporated.

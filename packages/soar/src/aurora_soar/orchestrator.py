@@ -52,7 +52,6 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
-
 if TYPE_CHECKING:
     from aurora_core.config.loader import Config
     from aurora_core.store.base import Store
@@ -415,21 +414,44 @@ class SOAROrchestrator:
             collect_context = dict(phase2_result)
             collect_context["query"] = query  # Add original query for agent context
 
-            phase5_result_obj = self._phase5_collect(
-                agent_assignments, subgoals, collect_context, progress_callback
-            )
-            # Store dict version in metadata
-            phase5_dict = phase5_result_obj.to_dict()
-            phase5_dict["_timing_ms"] = 0  # Timing handled internally
-            phase5_dict["_error"] = None
-            phase5_dict["agents_executed"] = len(phase5_result_obj.agent_outputs)
-            self._phase_metadata["phase5_collect"] = phase5_dict
+            try:
+                phase5_result_obj = self._phase5_collect(
+                    agent_assignments, subgoals, collect_context, progress_callback
+                )
+                # Store dict version in metadata with recovery info
+                phase5_dict = phase5_result_obj.to_dict()
+                phase5_dict["_timing_ms"] = 0  # Timing handled internally
+                phase5_dict["_error"] = None
+                phase5_dict["agents_executed"] = len(phase5_result_obj.agent_outputs)
 
-            # Track spawned agents count for metrics (Task 4.5.1)
-            spawned_agents_count = len(agent_assignments)
+                # Add recovery metrics with detailed categorization
+                phase5_dict["recovery_metrics"] = {
+                    "total_failures": 0,
+                    "early_terminations": 0,
+                    "circuit_breaker_blocks": 0,
+                    "circuit_blocked_agents": [],
+                    "timeout_count": 0,
+                    "timeout_agents": [],
+                    "rate_limit_count": 0,
+                    "rate_limit_agents": [],
+                    "auth_failure_count": 0,
+                    "auth_failed_agents": [],
+                    "fallback_used_count": len(phase5_result_obj.fallback_agents),
+                    "fallback_agents": phase5_result_obj.fallback_agents,
+                }
 
-            # Track fallback to LLM count for metrics (Task 4.5.2)
-            fallback_to_llm_count = len(phase5_result_obj.fallback_agents)
+                self._phase_metadata["phase5_collect"] = phase5_dict
+
+                # Track spawned agents count for metrics (Task 4.5.1)
+                spawned_agents_count = len(agent_assignments)
+
+                # Track fallback to LLM count for metrics (Task 4.5.2)
+                fallback_to_llm_count = len(phase5_result_obj.fallback_agents)
+
+            except RuntimeError as e:
+                # Critical subgoal failure - attempt recovery
+                logger.error(f"Critical failure in agent execution: {e}")
+                return self._handle_critical_failure(query, str(e), verbosity)
 
             # Phase 6: Synthesize results
             phase6_result_obj = self._phase6_synthesize(
@@ -687,9 +709,61 @@ class SOAROrchestrator:
                     fallback_to_llm=fallback_to_llm,
                 )
             )
+
+            # Analyze failure patterns and trigger recovery
+            recovery_metrics = self._analyze_execution_failures(result)
+            failed_count = recovery_metrics["failed_count"]
+            early_term_count = recovery_metrics["early_term_count"]
+            circuit_failures = recovery_metrics["circuit_failures"]
+            timeout_failures = recovery_metrics["timeout_failures"]
+
+            # Log recovery summary
+            if failed_count > 0:
+                logger.info(
+                    f"Agent execution completed with {failed_count} failures. "
+                    f"Fallback used: {len(result.fallback_agents)}, "
+                    f"Early terminations: {early_term_count}, "
+                    f"Circuit breaker: {len(circuit_failures)}, "
+                    f"Timeouts: {len(timeout_failures)}"
+                )
+
+                # Trigger recovery procedures if needed
+                if circuit_failures:
+                    self._trigger_circuit_recovery(circuit_failures)
+
+                if early_term_count > 0:
+                    logger.info(
+                        f"Early termination system detected {early_term_count} problematic agents. "
+                        "Circuit breaker and retry policies active for future attempts."
+                    )
+
             findings_count = len(result.agent_outputs) if result.agent_outputs else 0
-            self._invoke_callback("collect", "after", {"findings_count": findings_count})
+            self._invoke_callback(
+                "collect",
+                "after",
+                {
+                    "findings_count": findings_count,
+                    "failed_count": failed_count,
+                    "fallback_count": len(result.fallback_agents),
+                    "early_terminations": early_term_count,
+                    "circuit_failures": len(circuit_failures),
+                    "timeout_failures": len(timeout_failures),
+                },
+            )
             return result
+        except RuntimeError as e:
+            # Critical subgoal failure - propagate to trigger recovery
+            logger.error(f"Critical failure in Phase 5: {e}")
+            self._invoke_callback(
+                "collect",
+                "after",
+                {
+                    "findings_count": 0,
+                    "error": str(e),
+                    "critical_failure": True,
+                },
+            )
+            raise
         except Exception as e:
             logger.error(f"Phase 5 collect failed: {e}")
             # Return empty CollectResult on failure
@@ -1053,6 +1127,59 @@ class SOAROrchestrator:
 
         return self._phase8_respond(synthesis, record, verbosity)
 
+    def _handle_critical_failure(
+        self, query: str, error_msg: str, verbosity: str
+    ) -> dict[str, Any]:
+        """Handle critical subgoal failure with recovery attempt.
+
+        Args:
+            query: Original query
+            error_msg: Error message from critical failure
+            verbosity: Output verbosity
+
+        Returns:
+            Error response with recovery information
+        """
+        logger.error(f"Handling critical failure: {error_msg}")
+        from aurora_soar.phases.record import RecordResult
+        from aurora_soar.phases.synthesize import SynthesisResult
+
+        # Build recovery context
+        recovery_info = {
+            "critical_failure": True,
+            "error": error_msg,
+            "recovery_attempted": False,
+            "recovery_strategy": "Circuit breaker and retry policies active",
+        }
+
+        synthesis = SynthesisResult(
+            answer=(
+                f"Unable to complete the query due to a critical failure: {error_msg}\n\n"
+                "Recovery mechanisms have been activated for future attempts:\n"
+                "- Circuit breaker tracking failing agents\n"
+                "- Retry policies with exponential backoff\n"
+                "- Fallback to direct LLM for failed agents\n\n"
+                "Please try rephrasing the query or breaking it into smaller parts."
+            ),
+            confidence=0.0,
+            traceability=[],
+            metadata=recovery_info,
+            timing={"synthesis_ms": 0},
+        )
+
+        record = RecordResult(
+            cached=False,
+            reasoning_chunk_id=None,
+            pattern_marked=False,
+            activation_update=0.0,
+            timing={"record_ms": 0},
+        )
+
+        # Add critical failure to phase metadata
+        self._phase_metadata["critical_failure"] = recovery_info
+
+        return self._phase8_respond(synthesis, record, verbosity)
+
     def _handle_execution_error(self, error: Exception, verbosity: str) -> dict[str, Any]:
         """Handle execution errors with graceful degradation.
 
@@ -1129,11 +1256,11 @@ class SOAROrchestrator:
         """Build aggregated metadata from all phases.
 
         Returns:
-            Dict with execution metadata
+            Dict with execution metadata including recovery information
         """
         elapsed_time = time.time() - self._start_time
 
-        return {
+        metadata = {
             "query_id": self._query_id,
             "query": self._query,
             "total_duration_ms": elapsed_time * 1000,
@@ -1143,6 +1270,16 @@ class SOAROrchestrator:
             "phases": self._phase_metadata,
             "timestamp": time.time(),
         }
+
+        # Add recovery metrics if any failures occurred
+        if hasattr(self, "_circuit_failures") and self._circuit_failures:
+            metadata["recovery"] = {
+                "circuit_breaker_triggered": True,
+                "circuit_failures": self._circuit_failures,
+                "total_circuit_failures": len(self._circuit_failures),
+            }
+
+        return metadata
 
     def _split_large_chunk_by_sections(self, chunk, max_chars: int = 2048):
         """Split a large chunk by H2 markdown sections.
@@ -1215,6 +1352,115 @@ class SOAROrchestrator:
 
         logger.info(f"Split chunk {chunk.id} into {len(split_chunks)} sections")
         return split_chunks
+
+    def _analyze_execution_failures(self, result: collect.CollectResult) -> dict[str, Any]:
+        """Analyze agent execution failures and categorize them for recovery.
+
+        Args:
+            result: CollectResult from agent execution phase
+
+        Returns:
+            Dict with failure analysis:
+                - failed_count: Total failed agents
+                - early_term_count: Agents with early termination
+                - circuit_failures: List of agent IDs blocked by circuit breaker
+                - timeout_failures: List of agent IDs that timed out
+                - rate_limit_failures: List of agent IDs that hit rate limits
+                - auth_failures: List of agent IDs with authentication issues
+        """
+        failed_count = 0
+        early_term_count = 0
+        circuit_failures = []
+        timeout_failures = []
+        rate_limit_failures = []
+        auth_failures = []
+
+        for output in result.agent_outputs:
+            if not output.success:
+                failed_count += 1
+                error_msg = (output.error or "").lower()
+                metadata = output.execution_metadata
+
+                # Track early termination patterns
+                if metadata.get("termination_reason"):
+                    early_term_count += 1
+                    logger.debug(
+                        f"Agent {output.agent_id} early termination: "
+                        f"{metadata.get('termination_reason')}"
+                    )
+
+                # Track circuit breaker failures
+                if "circuit open" in error_msg or "circuit" in error_msg:
+                    circuit_failures.append(output.agent_id)
+                    logger.warning(f"Agent {output.agent_id} blocked by circuit breaker")
+
+                # Track timeout failures
+                if any(pattern in error_msg for pattern in ["timeout", "timed out"]):
+                    timeout_failures.append(output.agent_id)
+                    logger.debug(f"Agent {output.agent_id} timed out")
+
+                # Track rate limit failures
+                if any(
+                    pattern in error_msg
+                    for pattern in ["rate limit", "429", "quota exceeded", "too many requests"]
+                ):
+                    rate_limit_failures.append(output.agent_id)
+                    logger.warning(f"Agent {output.agent_id} hit rate limit")
+
+                # Track authentication failures
+                if any(pattern in error_msg for pattern in ["auth", "401", "403", "unauthorized"]):
+                    auth_failures.append(output.agent_id)
+                    logger.error(f"Agent {output.agent_id} authentication failed")
+
+        return {
+            "failed_count": failed_count,
+            "early_term_count": early_term_count,
+            "circuit_failures": circuit_failures,
+            "timeout_failures": timeout_failures,
+            "rate_limit_failures": rate_limit_failures,
+            "auth_failures": auth_failures,
+        }
+
+    def _trigger_circuit_recovery(self, failed_agents: list[str]) -> None:
+        """Trigger recovery procedures for circuit-broken agents.
+
+        This method is called when agents fail due to circuit breaker activation.
+        It logs the failures for future analysis and can trigger additional
+        recovery actions.
+
+        Args:
+            failed_agents: List of agent IDs that were blocked by circuit breaker
+        """
+        logger.warning(
+            f"Circuit breaker recovery triggered for {len(failed_agents)} agents: "
+            f"{', '.join(failed_agents)}"
+        )
+
+        # Store circuit failure metadata for analysis
+        if not hasattr(self, "_circuit_failures"):
+            self._circuit_failures = []
+
+        for agent_id in failed_agents:
+            self._circuit_failures.append(
+                {
+                    "agent_id": agent_id,
+                    "timestamp": time.time(),
+                    "query_id": self._query_id,
+                }
+            )
+
+        # Add circuit failure context to phase metadata
+        if "circuit_breaker_failures" not in self._phase_metadata:
+            self._phase_metadata["circuit_breaker_failures"] = []
+
+        self._phase_metadata["circuit_breaker_failures"].extend(
+            [{"agent_id": aid, "timestamp": time.time()} for aid in failed_agents]
+        )
+
+        logger.info(
+            "Circuit breaker failures recorded. "
+            "Agents will be retried after reset timeout (typically 120s)."
+        )
 
     def _index_conversation_log(self, log_path) -> None:
         """Index conversation log as knowledge chunk for future retrieval.

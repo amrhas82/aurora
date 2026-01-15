@@ -5,10 +5,8 @@ Tests agent capability matching for planning subgoals.
 
 from unittest.mock import Mock, patch
 
-import pytest
-
 from aurora_cli.planning.agents import AgentRecommender
-from aurora_cli.planning.models import AgentGap, Subgoal
+from aurora_cli.planning.models import Subgoal
 
 
 class TestAgentRecommender:

@@ -1,5 +1,4 @@
-"""
-Configuration loading and validation for AURORA.
+"""Configuration loading and validation for AURORA.
 
 Implements:
 - Config class with typed access methods
@@ -21,7 +20,6 @@ import jsonschema
 from aurora_core.config.schema import get_schema
 from aurora_core.exceptions import ConfigurationError
 
-
 # Environment variable to config key mapping
 ENV_VAR_MAPPING = {
     "AURORA_STORAGE_PATH": "storage.path",
@@ -35,8 +33,7 @@ ENV_VAR_MAPPING = {
 
 
 class Config:
-    """
-    Typed configuration access with validation.
+    """Typed configuration access with validation.
 
     Provides:
     - Dot-notation access to nested config values
@@ -46,8 +43,7 @@ class Config:
     """
 
     def __init__(self, data: dict[str, Any]) -> None:
-        """
-        Initialize configuration with validated data.
+        """Initialize configuration with validated data.
 
         Args:
             data: Configuration dictionary (already validated)
@@ -58,8 +54,7 @@ class Config:
     def load(
         project_path: Path | None = None, cli_overrides: dict[str, Any] | None = None
     ) -> "Config":
-        """
-        Load configuration with override hierarchy.
+        """Load configuration with override hierarchy.
 
         Override precedence (highest to lowest):
         1. CLI flags (cli_overrides parameter)
@@ -118,8 +113,7 @@ class Config:
         return Config(config)
 
     def get(self, key: str, default: Any = None) -> Any:
-        """
-        Get configuration value by dot-notation key.
+        """Get configuration value by dot-notation key.
 
         Args:
             key: Dot-notation key (e.g., 'storage.path')
@@ -140,8 +134,7 @@ class Config:
         return value
 
     def storage_path(self) -> Path:
-        """
-        Get storage path (expanded to absolute).
+        """Get storage path (expanded to absolute).
 
         Returns:
             Absolute path to storage file
@@ -152,8 +145,7 @@ class Config:
         return Path(path)
 
     def llm_config(self) -> dict[str, Any]:
-        """
-        Get complete LLM configuration.
+        """Get complete LLM configuration.
 
         Returns:
             Dictionary with LLM settings
@@ -164,8 +156,7 @@ class Config:
         return cast(dict[str, Any], llm_config)
 
     def validate(self) -> bool:
-        """
-        Validate configuration against schema.
+        """Validate configuration against schema.
 
         Returns:
             True if valid
@@ -184,8 +175,7 @@ class Config:
 
     @staticmethod
     def _load_json_file(path: Path) -> dict[str, Any]:
-        """
-        Load and parse JSON configuration file.
+        """Load and parse JSON configuration file.
 
         Args:
             path: Path to JSON file
@@ -206,8 +196,7 @@ class Config:
 
     @staticmethod
     def _load_env_vars() -> dict[str, Any]:
-        """
-        Load configuration overrides from environment variables.
+        """Load configuration overrides from environment variables.
 
         Returns:
             Dictionary with dot-notation keys from AURORA_* env vars
@@ -221,8 +210,7 @@ class Config:
 
     @staticmethod
     def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
-        """
-        Deep merge two configuration dictionaries.
+        """Deep merge two configuration dictionaries.
 
         Args:
             base: Base configuration
@@ -243,8 +231,7 @@ class Config:
 
     @staticmethod
     def _merge_overrides(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
-        """
-        Merge dot-notation overrides into configuration.
+        """Merge dot-notation overrides into configuration.
 
         Args:
             base: Base configuration
@@ -272,8 +259,7 @@ class Config:
 
     @staticmethod
     def _validate_schema(config: dict[str, Any]) -> None:
-        """
-        Validate configuration against JSON schema.
+        """Validate configuration against JSON schema.
 
         Args:
             config: Configuration to validate
@@ -294,8 +280,7 @@ class Config:
 
     @staticmethod
     def _check_secrets(config: dict[str, Any]) -> None:
-        """
-        Check that no secrets are directly in configuration.
+        """Check that no secrets are directly in configuration.
 
         Args:
             config: Configuration to check
@@ -313,8 +298,7 @@ class Config:
 
     @staticmethod
     def _expand_paths(config: dict[str, Any], project_path: Path | None = None) -> dict[str, Any]:
-        """
-        Expand paths in configuration (~ and relative paths).
+        """Expand paths in configuration (~ and relative paths).
 
         Args:
             config: Configuration with paths to expand
@@ -348,8 +332,7 @@ class Config:
 
     @staticmethod
     def _expand_path(path: str, project_path: Path | None = None) -> Path:
-        """
-        Expand a single path (tilde and relative).
+        """Expand a single path (tilde and relative).
 
         Args:
             path: Path string to expand

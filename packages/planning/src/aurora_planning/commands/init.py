@@ -1,5 +1,4 @@
-"""
-Init command for Aurora planning system.
+"""Init command for Aurora planning system.
 
 Ported from OpenSpec src/core/init.ts - SIMPLIFIED VERSION
 Full AI tool configurator support deferred to Phase 7 (CLI Commands).
@@ -42,8 +41,7 @@ class InitCommand:
     """Command to initialize OpenSpec in a project."""
 
     def execute(self, target_path: str = ".") -> None:
-        """
-        Execute the init command.
+        """Execute the init command.
 
         Args:
             target_path: Target directory path (default: current directory)

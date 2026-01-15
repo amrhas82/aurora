@@ -1,5 +1,4 @@
-"""
-Integration tests for ACT-R activation-based retrieval precision.
+"""Integration tests for ACT-R activation-based retrieval precision.
 
 This test verifies that activation ranking improves retrieval precision
 compared to baseline methods (e.g., keyword matching only).
@@ -59,8 +58,7 @@ class MockChunk:
 
 
 def create_test_dataset(now: datetime):
-    """
-    Create realistic test dataset with known ground truth relevance.
+    """Create realistic test dataset with known ground truth relevance.
 
     Returns dict with:
         - chunks: List of MockChunk objects
@@ -146,8 +144,7 @@ class TestActivationRetrievalPrecision:
         return relevant_count / k
 
     def test_baseline_keyword_only(self):
-        """
-        Baseline: keyword matching only (no access history, no spreading).
+        """Baseline: keyword matching only (no access history, no spreading).
 
         This represents traditional keyword-based search without activation.
         """
@@ -195,8 +192,7 @@ class TestActivationRetrievalPrecision:
         return p3, p5
 
     def test_activation_based_retrieval(self):
-        """
-        Activation-based: Uses BLA, spreading, context boost, and decay.
+        """Activation-based: Uses BLA, spreading, context boost, and decay.
 
         This represents ACT-R activation formula with access history.
         """
@@ -249,8 +245,7 @@ class TestActivationRetrievalPrecision:
         return p3, p5
 
     def test_activation_improves_over_baseline(self):
-        """
-        Main integration test: Verify activation ranking improves precision.
+        """Main integration test: Verify activation ranking improves precision.
 
         This is the primary test for Task 1.20.
         """

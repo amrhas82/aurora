@@ -21,13 +21,11 @@ import hashlib
 import logging
 import time
 from collections import OrderedDict
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
-
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +157,7 @@ class QueryEmbeddingCache:
             Hash-based cache key
         """
         normalized = self._normalize_query(query)
-        return hashlib.md5(normalized.encode()).hexdigest()
+        return hashlib.md5(normalized.encode(), usedforsecurity=False).hexdigest()
 
     def get(self, query: str) -> npt.NDArray[np.float32] | None:
         """Get cached embedding for query.
@@ -357,13 +355,11 @@ class HybridRetriever:
 
         # Step 2: Generate query embedding for semantic similarity (with caching)
         query_embedding = None
-        cache_hit = False
 
         # Try cache first
         if self._query_cache is not None:
             query_embedding = self._query_cache.get(query)
             if query_embedding is not None:
-                cache_hit = True
                 logger.debug(f"Query cache hit for: {query[:50]}...")
 
         # Generate embedding if not cached

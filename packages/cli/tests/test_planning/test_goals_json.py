@@ -6,9 +6,6 @@ FR-6.2 format from PRD-0026.
 
 import json
 from datetime import datetime
-from pathlib import Path
-
-import pytest
 
 from aurora_cli.planning.models import AgentGap, Subgoal
 
@@ -159,7 +156,7 @@ class TestGoalsJsonFormat:
 
     def test_goals_with_multiple_subgoals(self):
         """Test Goals with multiple subgoals and dependencies."""
-        from aurora_cli.planning.models import Goals, MemoryContext, SubgoalData
+        from aurora_cli.planning.models import Goals, SubgoalData
 
         # Arrange
         subgoals = [

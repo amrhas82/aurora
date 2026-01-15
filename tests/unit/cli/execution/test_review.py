@@ -1,8 +1,6 @@
 """Unit tests for DecompositionReview and ExecutionPreview."""
 
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from aurora_cli.execution.review import (
     AgentGap,

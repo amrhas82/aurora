@@ -2,9 +2,7 @@
 
 import json
 import os
-from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.init import init_command

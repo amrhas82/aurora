@@ -1,5 +1,4 @@
-"""
-Conversation logging for Aurora SOAR pipeline.
+"""Conversation logging for Aurora SOAR pipeline.
 
 Logs SOAR interactions to markdown files with structured phase data.
 """
@@ -44,8 +43,7 @@ class VerbosityLevel(str, Enum):
 
 
 class ConversationLogger:
-    """
-    Logs SOAR conversations to markdown files.
+    """Logs SOAR conversations to markdown files.
 
     Creates timestamped markdown logs in ./.aurora/logs/conversations/YYYY/MM/
     with structured phase data and execution summary.
@@ -56,8 +54,7 @@ class ConversationLogger:
     """
 
     def __init__(self, base_path: Path | None = None, enabled: bool = True):
-        """
-        Initialize conversation logger.
+        """Initialize conversation logger.
 
         Args:
             base_path: Base directory for logs (default: project-local .aurora/logs/conversations)
@@ -77,8 +74,7 @@ class ConversationLogger:
         execution_summary: dict[str, Any],
         metadata: dict[str, Any] | None = None,
     ) -> Path | None:
-        """
-        Log a SOAR interaction to a markdown file.
+        """Log a SOAR interaction to a markdown file.
 
         Args:
             query: User query
@@ -131,8 +127,7 @@ class ConversationLogger:
         return self.base_path / year / month
 
     def _extract_keywords(self, query: str, max_keywords: int = 2) -> list[str]:
-        """
-        Extract keywords from query for filename.
+        """Extract keywords from query for filename.
 
         Args:
             query: User query
@@ -192,8 +187,7 @@ class ConversationLogger:
         return keywords[:max_keywords]
 
     def _generate_filename(self, query: str) -> str:
-        """
-        Generate filename from query keywords.
+        """Generate filename from query keywords.
 
         Format: keyword1-keyword2-YYYY-MM-DD.md
 
@@ -218,8 +212,7 @@ class ConversationLogger:
         return f"{keyword_part}-{date_part}.md"
 
     def _get_unique_path(self, path: Path) -> Path:
-        """
-        Get unique path by appending -2, -3, etc. if file exists.
+        """Get unique path by appending -2, -3, etc. if file exists.
 
         Args:
             path: Desired file path
@@ -251,8 +244,7 @@ class ConversationLogger:
         execution_summary: dict[str, Any],
         metadata: dict[str, Any] | None = None,
     ) -> str:
-        """
-        Format conversation log as markdown.
+        """Format conversation log as markdown.
 
         Args:
             query: User query
@@ -377,8 +369,7 @@ class ConversationLogger:
         return "\n".join(lines)
 
     def rotate_logs(self, max_files_per_month: int = 100) -> None:
-        """
-        Rotate logs by archiving old files.
+        """Rotate logs by archiving old files.
 
         Args:
             max_files_per_month: Maximum log files to keep per month

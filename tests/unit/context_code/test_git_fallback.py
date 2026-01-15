@@ -10,8 +10,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 
 class TestGitFallback:
     """Test Git unavailability and fallback."""

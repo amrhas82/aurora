@@ -1,5 +1,4 @@
-"""
-AURORA Core - Performance Optimization Module
+"""AURORA Core - Performance Optimization Module
 
 This module provides performance optimization components for large codebase support:
 
@@ -65,7 +64,6 @@ This module provides performance optimization components for large codebase supp
 from aurora_core.optimization.cache_manager import CacheManager
 from aurora_core.optimization.parallel_executor import ParallelAgentExecutor
 from aurora_core.optimization.query_optimizer import QueryOptimizer
-
 
 __all__ = [
     "CacheManager",

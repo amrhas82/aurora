@@ -5,14 +5,11 @@ Tests integration with real components, not just unit-level config parsing.
 """
 
 import json
-import os
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_cli.config import Config, ConfigurationError, load_config
-from aurora_cli.errors import ErrorHandler
+from aurora_cli.config import ConfigurationError, load_config
 
 
 class TestConfigIntegrationWorkflows:

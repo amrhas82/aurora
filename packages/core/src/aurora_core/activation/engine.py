@@ -1,5 +1,4 @@
-"""
-ACT-R Activation Engine
+"""ACT-R Activation Engine
 
 This module integrates all ACT-R activation components into a unified
 ActivationEngine that calculates total activation for memory chunks.

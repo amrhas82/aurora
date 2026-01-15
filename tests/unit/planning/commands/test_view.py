@@ -1,5 +1,4 @@
-"""
-Tests for aurora.commands.view module.
+"""Tests for aurora.commands.view module.
 
 Ported from Aurora test/core/view.test.ts
 """

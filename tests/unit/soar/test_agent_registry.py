@@ -1,5 +1,4 @@
-"""
-Unit tests for AgentRegistry and AgentInfo.
+"""Unit tests for AgentRegistry and AgentInfo.
 
 Tests agent discovery, registration, validation, and capability-based queries.
 """

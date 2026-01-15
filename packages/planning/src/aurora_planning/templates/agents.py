@@ -1,5 +1,4 @@
-"""
-AGENTS.md template for Aurora planning system.
+"""AGENTS.md template for Aurora planning system.
 
 Ported from Aurora src/core/templates/agents-template.ts
 

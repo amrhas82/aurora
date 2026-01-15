@@ -6,8 +6,6 @@ including access count, commit count, and recency information.
 
 from datetime import datetime, timedelta
 
-import pytest
-
 
 def test_explain_activation_full_metadata():
     """Full metadata: access count, commit count, and recency all present."""

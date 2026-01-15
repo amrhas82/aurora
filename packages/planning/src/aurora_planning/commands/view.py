@@ -1,5 +1,4 @@
-"""
-View command for Aurora planning system.
+"""View command for Aurora planning system.
 
 Ported from OpenSpec src/core/view.ts
 """
@@ -31,8 +30,7 @@ class ViewCommand:
     """Command to display OpenSpec dashboard."""
 
     def execute(self, target_path: str = ".") -> None:
-        """
-        Execute the view command.
+        """Execute the view command.
 
         Args:
             target_path: Target directory path (default: current directory)

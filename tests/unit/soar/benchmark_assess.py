@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Performance benchmarks for complexity assessor.
+"""Performance benchmarks for complexity assessor.
 
 Tests single prompt latency, long prompt latency, and throughput.
 Requirements:

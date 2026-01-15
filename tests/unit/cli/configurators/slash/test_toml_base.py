@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Python 3.11+ has tomllib built-in, but Python 3.10 needs tomli
 try:
     import tomllib
@@ -75,7 +74,6 @@ class TestTomlSlashCommandConfiguratorAbstract:
         assert hasattr(TomlSlashCommandConfigurator, "get_description")
 
         # Verify it's declared abstract (will have __isabstractmethod__ = True)
-        import inspect
 
         # Get the method from the class
         method = getattr(TomlSlashCommandConfigurator, "get_description", None)

@@ -21,7 +21,6 @@ Each phase is implemented as a separate module for testability and maintainabili
 
 from __future__ import annotations
 
-
 __all__ = [
     "assess",
     "retrieve",

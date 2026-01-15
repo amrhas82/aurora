@@ -1,5 +1,4 @@
-"""
-Project context template for Aurora planning system.
+"""Project context template for Aurora planning system.
 
 Rebranded from OpenSpec to Aurora.
 """

@@ -1,5 +1,4 @@
-"""
-Unit tests for SOAR Phase 8: ACT-R Pattern Caching (Record).
+"""Unit tests for SOAR Phase 8: ACT-R Pattern Caching (Record).
 
 Tests the record_pattern function that caches successful reasoning patterns
 to ACT-R memory.

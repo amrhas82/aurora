@@ -1,5 +1,4 @@
-"""
-Query Optimization for Large Codebases
+"""Query Optimization for Large Codebases
 
 This module provides query optimization strategies to improve retrieval performance
 for large codebases (10K+ chunks). Key optimizations include:

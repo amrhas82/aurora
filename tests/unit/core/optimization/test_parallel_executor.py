@@ -1,5 +1,4 @@
-"""
-Unit tests for ParallelAgentExecutor.
+"""Unit tests for ParallelAgentExecutor.
 
 Tests cover:
 - Basic parallel execution

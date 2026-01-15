@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Evaluation framework for complexity assessor.
+"""Evaluation framework for complexity assessor.
 
 Runs the assessor against the test corpus and produces detailed metrics,
 identifying misclassifications for algorithm refinement.
@@ -8,10 +7,9 @@ identifying misclassifications for algorithm refinement.
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional
 
-from aurora_soar.phases.assess import AssessmentResult, ComplexityAssessor
-from tests.unit.soar.test_corpus_assess import TEST_CORPUS, get_by_category, get_by_level
+from aurora_soar.phases.assess import ComplexityAssessor
+from tests.unit.soar.test_corpus_assess import TEST_CORPUS
 
 
 @dataclass
@@ -30,8 +28,7 @@ class EvaluationResult:
 def evaluate_corpus(
     assessor: ComplexityAssessor | None = None, verbose: bool = False
 ) -> EvaluationResult:
-    """
-    Evaluate assessor against the full test corpus.
+    """Evaluate assessor against the full test corpus.
 
     Returns detailed metrics including:
     - Overall accuracy

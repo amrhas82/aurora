@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Example prehook script for Claude Code model routing.
+"""Example prehook script for Claude Code model routing.
 
 This script can be used as a pre-prompt hook to route prompts
 to appropriate models based on complexity assessment.
@@ -48,8 +47,7 @@ MODEL_ROUTING = {
 
 
 def route_prompt(prompt: str) -> dict:
-    """
-    Assess prompt complexity and return routing recommendation.
+    """Assess prompt complexity and return routing recommendation.
 
     Args:
         prompt: The user prompt to assess

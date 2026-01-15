@@ -1,5 +1,4 @@
-"""
-Decay Penalty Calculation
+"""Decay Penalty Calculation
 
 This module implements decay penalty for ACT-R activation, which reduces
 activation for chunks that haven't been accessed recently. The decay

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Validate pytest marker usage in test files.
+"""Validate pytest marker usage in test files.
 
 This script detects redundant markers where the marker duplicates information
 already conveyed by the test file's location:
@@ -18,12 +17,10 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
-def find_redundant_markers(file_path: Path) -> List[Tuple[int, str, str]]:
-    """
-    Find redundant markers in a test file.
+def find_redundant_markers(file_path: Path) -> list[tuple[int, str, str]]:
+    """Find redundant markers in a test file.
 
     Args:
         file_path: Path to the test file
@@ -62,7 +59,7 @@ def find_redundant_markers(file_path: Path) -> List[Tuple[int, str, str]]:
     return redundant
 
 
-def find_python_test_files(root_path: Path) -> List[Path]:
+def find_python_test_files(root_path: Path) -> list[Path]:
     """Find all Python test files in the given directory tree."""
     return list(root_path.rglob("test_*.py"))
 
@@ -92,7 +89,7 @@ def main():
         sys.exit(1)
 
     print(f"{'=' * 70}")
-    print(f"Pytest Marker Redundancy Check")
+    print("Pytest Marker Redundancy Check")
     print(f"{'=' * 70}")
     print(f"Searching in: {args.path.absolute()}")
     print(f"Mode: {'FIX (will remove)' if args.fix else 'REPORT ONLY'}")

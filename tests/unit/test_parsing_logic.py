@@ -1,5 +1,4 @@
-"""
-Pure unit tests for parsing logic.
+"""Pure unit tests for parsing logic.
 
 Tests text parsing, keyword extraction, docstring cleaning, and chunk scoring
 with edge cases including empty inputs, Unicode, malformed text, and special
@@ -9,11 +8,8 @@ These are pure unit tests: no I/O, no external dependencies, deterministic,
 and focus on text processing correctness.
 """
 
-import pytest
-
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.context.code_provider import CodeContextProvider
-
 
 # ==============================================================================
 # Query Parsing Tests

@@ -17,20 +17,13 @@ Note: Memory store re-indexing REPLACES old chunks (not append-only).
 This ensures chunks stay current and don't accumulate duplicates.
 """
 
-import json
-import os
-import sqlite3
 import time
 from pathlib import Path
-from typing import Any
 
 import pytest
 
-from aurora_cli.memory_manager import IndexStats, MemoryManager, SearchResult
-from aurora_context_code.languages.python import PythonParser
-from aurora_core.chunks import CodeChunk
+from aurora_cli.memory_manager import MemoryManager
 from aurora_core.store.sqlite import SQLiteStore
-
 
 pytestmark = pytest.mark.ml
 

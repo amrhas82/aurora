@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from rich.console import Console
 from rich.table import Table
 
 from aurora_cli.execution import CheckpointManager, TaskState
 from implement.models import ParsedTask
-
 
 console = Console()
 

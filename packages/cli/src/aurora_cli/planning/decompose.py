@@ -11,7 +11,6 @@ decompose_query functionality into the planning workflow. It handles:
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from pathlib import Path
 from typing import Any
@@ -20,7 +19,6 @@ from aurora_cli.planning.agents import AgentRecommender
 from aurora_cli.planning.cache import PlanDecompositionCache
 from aurora_cli.planning.memory import FilePathResolver
 from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
-
 
 # Try to import MemoryRetriever for context loading
 try:

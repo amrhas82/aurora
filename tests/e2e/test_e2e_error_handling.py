@@ -6,10 +6,7 @@ displayed without Python tracebacks, and that appropriate exit codes are used.
 
 import os
 import subprocess
-import tempfile
 from pathlib import Path
-
-import pytest
 
 
 def run_cli_command(args: list[str], env: dict | None = None) -> tuple[int, str, str]:

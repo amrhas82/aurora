@@ -1,5 +1,4 @@
-"""
-ACT-R Activation Engine Module
+"""ACT-R Activation Engine Module
 
 This module implements the ACT-R (Adaptive Control of Thought-Rational) activation
 framework for memory retrieval in AURORA. The activation system determines which

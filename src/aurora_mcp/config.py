@@ -1,5 +1,4 @@
-"""
-AURORA MCP Configuration and Logging.
+"""AURORA MCP Configuration and Logging.
 
 This module provides logging configuration for MCP tools with performance metrics.
 """
@@ -7,15 +6,13 @@ This module provides logging configuration for MCP tools with performance metric
 import logging
 import time
 from collections.abc import Callable
-from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Any
 
 
 def setup_mcp_logging(log_file: str = "~/.aurora/mcp.log") -> logging.Logger:
-    """
-    Setup MCP logging with performance metrics.
+    """Setup MCP logging with performance metrics.
 
     Args:
         log_file: Path to log file (default: ~/.aurora/mcp.log)
@@ -52,8 +49,7 @@ def setup_mcp_logging(log_file: str = "~/.aurora/mcp.log") -> logging.Logger:
 
 
 def log_performance(tool_name: str) -> Callable:
-    """
-    Decorator to log performance metrics for MCP tools.
+    """Decorator to log performance metrics for MCP tools.
 
     Args:
         tool_name: Name of the MCP tool being logged

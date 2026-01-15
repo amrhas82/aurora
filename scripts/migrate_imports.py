@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Import Path Migration Script for AURORA
+"""Import Path Migration Script for AURORA
 
 This script migrates import statements bidirectionally:
 
@@ -45,8 +44,7 @@ def find_python_files(root_path: Path) -> list[Path]:
 
 
 def migrate_import_line(line: str, reverse: bool = False) -> tuple[str, bool]:
-    """
-    Migrate a single line of code, replacing import patterns.
+    """Migrate a single line of code, replacing import patterns.
 
     Args:
         line: The line to migrate
@@ -98,8 +96,7 @@ def migrate_import_line(line: str, reverse: bool = False) -> tuple[str, bool]:
 
 
 def migrate_file(file_path: Path, dry_run: bool = False, reverse: bool = False) -> dict[str, int]:
-    """
-    Migrate imports in a single file.
+    """Migrate imports in a single file.
 
     Args:
         file_path: Path to the Python file to migrate

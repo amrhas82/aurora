@@ -1,5 +1,4 @@
-"""
-In-memory storage implementation for testing AURORA chunks.
+"""In-memory storage implementation for testing AURORA chunks.
 
 This module provides a lightweight, fast storage backend using Python
 dictionaries for testing purposes. No file I/O is performed, making it
@@ -15,14 +14,12 @@ from aurora_core.exceptions import ChunkNotFoundError, StorageError, ValidationE
 from aurora_core.store.base import Store
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
 
 class MemoryStore(Store):
-    """
-    In-memory storage implementation for testing.
+    """In-memory storage implementation for testing.
 
     This implementation provides the same interface as SQLiteStore but stores
     all data in memory using Python dictionaries. It's fast, thread-safe for
@@ -54,8 +51,7 @@ class MemoryStore(Store):
             raise StorageError("Cannot perform operation on closed store")
 
     def reset(self) -> None:
-        """
-        Clear all data from memory.
+        """Clear all data from memory.
 
         This is useful for resetting state between tests.
         """
@@ -64,8 +60,7 @@ class MemoryStore(Store):
         self._relationships.clear()
 
     def save_chunk(self, chunk: "Chunk") -> bool:
-        """
-        Save a chunk to memory.
+        """Save a chunk to memory.
 
         Args:
             chunk: The chunk to save
@@ -99,8 +94,7 @@ class MemoryStore(Store):
         return True
 
     def get_chunk(self, chunk_id: ChunkID) -> Optional["Chunk"]:
-        """
-        Retrieve a chunk by ID.
+        """Retrieve a chunk by ID.
 
         Args:
             chunk_id: The chunk ID to retrieve
@@ -115,8 +109,7 @@ class MemoryStore(Store):
         return self._chunks.get(str(chunk_id))
 
     def update_activation(self, chunk_id: ChunkID, delta: float) -> None:
-        """
-        Update activation score for a chunk.
+        """Update activation score for a chunk.
 
         Args:
             chunk_id: The chunk to update
@@ -145,8 +138,7 @@ class MemoryStore(Store):
         self._activations[chunk_id_str]["access_count"] += 1
 
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
-        """
-        Retrieve chunks by activation threshold.
+        """Retrieve chunks by activation threshold.
 
         Args:
             min_activation: Minimum activation score
@@ -175,8 +167,7 @@ class MemoryStore(Store):
     def add_relationship(
         self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
     ) -> bool:
-        """
-        Add a relationship between chunks.
+        """Add a relationship between chunks.
 
         Args:
             from_id: Source chunk ID
@@ -215,8 +206,7 @@ class MemoryStore(Store):
         return True
 
     def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
-        """
-        Get related chunks via relationship graph traversal.
+        """Get related chunks via relationship graph traversal.
 
         Args:
             chunk_id: Starting chunk ID
@@ -260,8 +250,7 @@ class MemoryStore(Store):
     def record_access(
         self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
     ) -> None:
-        """
-        Record an access to a chunk for ACT-R activation tracking.
+        """Record an access to a chunk for ACT-R activation tracking.
 
         Args:
             chunk_id: The chunk that was accessed
@@ -300,8 +289,7 @@ class MemoryStore(Store):
     def get_access_history(
         self, chunk_id: ChunkID, limit: int | None = None
     ) -> list[dict[str, Any]]:
-        """
-        Retrieve access history for a chunk.
+        """Retrieve access history for a chunk.
 
         Returns a list of access records, most recent first.
 
@@ -337,8 +325,7 @@ class MemoryStore(Store):
         return sorted_history
 
     def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
-        """
-        Get access statistics for a chunk.
+        """Get access statistics for a chunk.
 
         Args:
             chunk_id: The chunk to get statistics for
@@ -380,8 +367,7 @@ class MemoryStore(Store):
         }
 
     def close(self) -> None:
-        """
-        Close the store and mark it as closed.
+        """Close the store and mark it as closed.
 
         Clears all data structures to release memory. This ensures proper
         cleanup, especially important in Python 3.12+ with improved GC.

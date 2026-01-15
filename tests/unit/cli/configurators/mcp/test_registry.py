@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from aurora_cli.configurators.mcp.base import MCPConfigurator
 from aurora_cli.configurators.mcp.registry import MCPConfigRegistry
 

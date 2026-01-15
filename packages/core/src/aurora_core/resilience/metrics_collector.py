@@ -1,5 +1,4 @@
-"""
-MetricsCollector for tracking performance and reliability metrics.
+"""MetricsCollector for tracking performance and reliability metrics.
 
 Implements metrics collection following PRD Section 5.2.
 """
@@ -9,8 +8,7 @@ from typing import Any
 
 
 class MetricsCollector:
-    """
-    Collects and tracks performance and reliability metrics.
+    """Collects and tracks performance and reliability metrics.
 
     This class provides centralized metrics collection for:
     - Query performance (total, success, failed, latency, p95)
@@ -68,8 +66,7 @@ class MetricsCollector:
         self._errors_by_type: dict[str, int] = defaultdict(int)
 
     def record_query(self, success: bool, latency: float) -> None:
-        """
-        Record a query execution.
+        """Record a query execution.
 
         Args:
             success: True if query succeeded, False if failed
@@ -98,8 +95,7 @@ class MetricsCollector:
         self._cache_misses += 1
 
     def record_error(self, error_type: str) -> None:
-        """
-        Record an error occurrence.
+        """Record an error occurrence.
 
         Args:
             error_type: The type of error (e.g., "TimeoutError", "ConnectionError")
@@ -108,8 +104,7 @@ class MetricsCollector:
         self._errors_by_type[error_type] += 1
 
     def get_metrics(self) -> dict[str, Any]:
-        """
-        Get a snapshot of current metrics.
+        """Get a snapshot of current metrics.
 
         Returns:
             Dictionary containing all metrics with structure:
@@ -160,8 +155,7 @@ class MetricsCollector:
         return sum(self._latencies) / len(self._latencies)
 
     def _calculate_p95_latency(self) -> float:
-        """
-        Calculate 95th percentile latency.
+        """Calculate 95th percentile latency.
 
         Returns:
             The 95th percentile latency, or 0.0 if no latencies recorded

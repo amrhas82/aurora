@@ -5,8 +5,7 @@ configurations with soft failures (warnings instead of errors).
 """
 
 import json
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

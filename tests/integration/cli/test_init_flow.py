@@ -17,19 +17,15 @@ Test Coverage:
 - Task 8.1: Error recovery
 """
 
-import json
-import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from click.testing import CliRunner
 
 from aurora_cli.main import cli
-
 
 pytestmark = pytest.mark.integration
 

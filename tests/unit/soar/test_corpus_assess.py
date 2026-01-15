@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Test corpus for complexity assessment validation.
+"""Test corpus for complexity assessment validation.
 
 Each entry contains:
 - prompt: The actual prompt text

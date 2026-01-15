@@ -1,18 +1,15 @@
-"""
-Unit tests for MCPFunctionalChecks class.
+"""Unit tests for MCPFunctionalChecks class.
 
 Tests cover all 6 check methods with pass/warning/fail scenarios following TDD RED phase.
 """
 
-import json
 from pathlib import Path
-from typing import Optional
-from unittest.mock import MagicMock, Mock, mock_open, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from aurora_cli.config import Config
-from aurora_cli.health_checks import HealthCheckResult, MCPFunctionalChecks
+from aurora_cli.health_checks import MCPFunctionalChecks
 
 
 @pytest.fixture

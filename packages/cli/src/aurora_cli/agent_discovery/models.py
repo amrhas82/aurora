@@ -1,5 +1,4 @@
-"""
-Pydantic models for Agent Discovery system.
+"""Pydantic models for Agent Discovery system.
 
 This module defines the data models for agent information and manifest schema
 used by the AURORA CLI agent discovery system.

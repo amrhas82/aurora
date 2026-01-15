@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Memory Indexing and Query Performance Baseline Profiler
+"""Memory Indexing and Query Performance Baseline Profiler
 
 Measures baseline performance metrics for:
 1. File discovery and parsing
@@ -14,7 +13,6 @@ Output: JSON report with detailed metrics for performance analysis.
 
 import json
 import logging
-import os
 import sqlite3
 import sys
 import time
@@ -29,8 +27,6 @@ sys.path.insert(0, str(Path(__file__).parent / "packages/context-code/src"))
 
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
-from aurora_context_code.semantic import EmbeddingProvider
-from aurora_core.store import SQLiteStore
 
 # Suppress non-critical logging
 logging.basicConfig(level=logging.WARNING)
@@ -134,7 +130,6 @@ def profile_indexing(test_path: Path, config: Config) -> IndexingMetrics:
 
     # Track phase timings
     phase_start_times = {}
-    phase_durations = {"discovery": 0.0, "parsing": 0.0, "embedding": 0.0, "storage": 0.0}
 
     memory_samples = []
 
@@ -154,7 +149,7 @@ def profile_indexing(test_path: Path, config: Config) -> IndexingMetrics:
 
     # Time overall indexing
     start_time = time.time()
-    start_mem = get_memory_usage()
+    get_memory_usage()
 
     stats = manager.index_path(test_path, progress_callback=progress_callback)
 

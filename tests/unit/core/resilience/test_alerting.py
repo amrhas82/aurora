@@ -1,5 +1,4 @@
-"""
-Unit tests for Alerting class.
+"""Unit tests for Alerting class.
 
 Tests alert rules and notification system.
 """

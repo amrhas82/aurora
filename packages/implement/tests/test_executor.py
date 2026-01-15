@@ -5,7 +5,7 @@ TDD RED Phase: These tests should fail initially until TaskExecutor is implement
 
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -169,7 +169,7 @@ async def test_execute_handles_failure():
             exit_code=1,
         )
 
-        with patch("implement.executor.spawn", return_value=mock_result) as mock_spawn:
+        with patch("implement.executor.spawn", return_value=mock_result):
             executor = TaskExecutor()
             results = await executor.execute(tasks, tasks_file)
 

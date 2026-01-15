@@ -1,5 +1,4 @@
-"""
-Integration tests for end-to-end context retrieval flow.
+"""Integration tests for end-to-end context retrieval flow.
 
 Tests the complete flow: Parse → Store → Retrieve
 """

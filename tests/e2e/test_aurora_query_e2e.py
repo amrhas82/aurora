@@ -13,13 +13,11 @@ Only run when explicitly needed for validation.
 import json
 import os
 import time
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
-
 
 # Skip all tests if no API key is available
 pytestmark = pytest.mark.skipif(

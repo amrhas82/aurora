@@ -6,10 +6,8 @@ subgoals with low-confidence agent matches and suggests required capabilities.
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from aurora_cli.planning.agents import AgentRecommender
-from aurora_cli.planning.models import AgentGap, Subgoal
+from aurora_cli.planning.models import Subgoal
 
 
 class TestGapDetection:

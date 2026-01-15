@@ -1,5 +1,4 @@
-"""
-Markdown parser for knowledge documents and conversation logs.
+"""Markdown parser for knowledge documents and conversation logs.
 
 This module provides the MarkdownParser class for extracting knowledge chunks
 from markdown files (conversation logs, documentation, notes).
@@ -13,13 +12,11 @@ from aurora_context_code.knowledge_parser import KnowledgeParser
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
 
-
 logger = logging.getLogger(__name__)
 
 
 class MarkdownParser(CodeParser):
-    """
-    Markdown parser for knowledge documents.
+    """Markdown parser for knowledge documents.
 
     Extracts knowledge chunks from markdown files by:
     - Splitting content by ## headers (sections)
@@ -40,8 +37,7 @@ class MarkdownParser(CodeParser):
         logger.debug("MarkdownParser initialized")
 
     def can_parse(self, file_path: Path) -> bool:
-        """
-        Check if this parser can handle the given file.
+        """Check if this parser can handle the given file.
 
         Args:
             file_path: Path to check
@@ -52,8 +48,7 @@ class MarkdownParser(CodeParser):
         return file_path.suffix.lower() in self.EXTENSIONS
 
     def parse(self, file_path: Path) -> list[CodeChunk]:
-        """
-        Parse a markdown file and extract knowledge chunks.
+        """Parse a markdown file and extract knowledge chunks.
 
         This method:
         1. Uses KnowledgeParser to split markdown by sections

@@ -8,7 +8,6 @@ import pytest
 
 from aurora_reasoning.verify import verify_decomposition
 
-
 # Test data: Known good decompositions
 GOOD_DECOMPOSITION_1 = {
     "query": "Refactor the user authentication module to use OAuth2",

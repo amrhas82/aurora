@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-01-14T22:00:00.000000",
+  "updated_at": "2026-01-15T07:18:37.578076",
   "active_plans": [
     "0001-improve-aur-spawn-capabilities",
     "0002-write-scifi-book-about",
@@ -11,7 +11,8 @@
     "0007-improve-aur-goals-decompose",
     "0008-unify-goals-soar-pipeline",
     "0009-enhance-aur-mem-search",
-    "0010-spawn-early-failure-detection"
+    "0010-spawn-early-failure-detection",
+    "0011-improve-aur-soar-agent"
   ],
   "archived_plans": [],
   "stats": {}

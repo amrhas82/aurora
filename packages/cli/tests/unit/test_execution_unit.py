@@ -7,7 +7,6 @@ IMPORTANT: These are UNIT tests - they use mocks, NOT subprocess.run().
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest

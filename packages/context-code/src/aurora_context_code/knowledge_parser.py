@@ -1,5 +1,4 @@
-"""
-Knowledge Chunk Parser for AURORA.
+"""Knowledge Chunk Parser for AURORA.
 
 Parses conversation logs and documentation into searchable knowledge chunks.
 Extracts metadata from filenames and splits by markdown sections.
@@ -9,8 +8,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List
-
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +36,7 @@ class KnowledgeParser:
         self.logger = logging.getLogger(__name__)
 
     def parse_conversation_log(self, file_path: Path) -> list[KnowledgeChunk]:
-        """
-        Parse a conversation log file into knowledge chunks.
+        """Parse a conversation log file into knowledge chunks.
 
         Args:
             file_path: Path to the markdown file
@@ -78,8 +75,7 @@ class KnowledgeParser:
         return chunks
 
     def _extract_metadata_from_filename(self, file_path: Path) -> dict[str, Any]:
-        """
-        Extract metadata from filename.
+        """Extract metadata from filename.
 
         Filename patterns:
             - 2024-01-15_semantic_search.md → date + keywords
@@ -117,8 +113,7 @@ class KnowledgeParser:
     def _split_by_sections(
         self, content: str, base_metadata: dict[str, Any], file_path: Path
     ) -> list[KnowledgeChunk]:
-        """
-        Split content by markdown ## headers.
+        """Split content by markdown ## headers.
 
         Args:
             content: Full file content
@@ -168,8 +163,7 @@ class KnowledgeParser:
 
 
 def parse_knowledge_file(file_path: Path) -> list[KnowledgeChunk]:
-    """
-    Convenience function to parse a knowledge file.
+    """Convenience function to parse a knowledge file.
 
     Args:
         file_path: Path to the markdown file

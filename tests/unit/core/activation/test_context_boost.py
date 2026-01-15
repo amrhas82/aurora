@@ -1,5 +1,4 @@
-"""
-Unit tests for Context Boost calculation.
+"""Unit tests for Context Boost calculation.
 
 Tests the ACT-R context boost component including:
 - Keyword extraction from text

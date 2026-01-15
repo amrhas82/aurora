@@ -1,5 +1,4 @@
-"""
-Unit tests for CacheManager.
+"""Unit tests for CacheManager.
 
 Tests cover:
 - LRU cache operations (get, set, eviction)

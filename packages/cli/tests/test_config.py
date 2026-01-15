@@ -2,7 +2,6 @@
 
 import json
 import os
-from pathlib import Path
 
 import pytest
 
@@ -347,7 +346,7 @@ class TestLoadConfig:
 
     def test_load_config_generic_file_error(self, tmp_path, monkeypatch):
         """Test loading config with generic file error (e.g., IO error)."""
-        from unittest.mock import mock_open, patch
+        from unittest.mock import patch
 
         # Mock Path.exists to return True but open() to raise OSError
         config_path = tmp_path / "aurora.config.json"

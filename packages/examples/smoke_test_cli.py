@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Smoke test for AURORA CLI commands.
+"""Smoke test for AURORA CLI commands.
 
 Validates that the CLI can:
 - Initialize configuration with mock prompts
@@ -21,13 +20,10 @@ Exit codes:
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any
-
 
 # Color codes for output
 GREEN = "\033[92m"
@@ -59,8 +55,7 @@ def print_warning(msg: str) -> None:
 def run_cli_command(
     args: list[str], env: dict[str, str] | None = None, input_text: str | None = None
 ) -> tuple[int, str, str]:
-    """
-    Run CLI command and return exit code, stdout, stderr.
+    """Run CLI command and return exit code, stdout, stderr.
 
     Args:
         args: Command arguments (e.g., ["aur", "--help"])
@@ -552,8 +547,7 @@ def test_init_help() -> bool:
 
 
 def run_smoke_tests() -> bool:
-    """
-    Run all smoke tests for CLI.
+    """Run all smoke tests for CLI.
 
     Returns:
         True if all tests pass, False otherwise

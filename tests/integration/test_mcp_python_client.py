@@ -1,5 +1,4 @@
-"""
-Comprehensive Python-based MCP testing without requiring Claude Desktop.
+"""Comprehensive Python-based MCP testing without requiring Claude Desktop.
 
 This test suite directly imports and tests AuroraMCPTools, providing complete
 coverage of all 5 MCP tools through Python scripts and CLI commands.
@@ -33,7 +32,6 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
-
 # Check if fastmcp is available (required for MCP server tests)
 HAS_FASTMCP = False
 try:
@@ -57,8 +55,7 @@ pytestmark = pytest.mark.skipif(
 
 
 class MCPTestClient:
-    """
-    Python-based MCP test client for comprehensive testing.
+    """Python-based MCP test client for comprehensive testing.
 
     Provides helper methods for:
     - Setting up temporary test environments
@@ -81,8 +78,7 @@ class MCPTestClient:
         return file_path
 
     def create_test_codebase(self) -> dict[str, Path]:
-        """
-        Create a realistic test codebase with multiple files.
+        """Create a realistic test codebase with multiple files.
 
         Returns dict mapping file purpose to file path.
         """
@@ -246,8 +242,7 @@ def process_payment(amount: float, card_number: str) -> dict:
         return files
 
     def index_test_codebase(self) -> dict[str, Any]:
-        """
-        Index the test codebase and return statistics.
+        """Index the test codebase and return statistics.
 
         Returns:
             Dict with indexing stats (files_indexed, chunks_created, etc.)
@@ -256,8 +251,7 @@ def process_payment(amount: float, card_number: str) -> dict:
         return json.loads(result_json)
 
     def verify_database_state(self) -> dict[str, int]:
-        """
-        Verify database state by querying directly.
+        """Verify database state by querying directly.
 
         Returns:
             Dict with database counts (chunks, files)
@@ -292,8 +286,7 @@ def process_payment(amount: float, card_number: str) -> dict:
 
 @pytest.fixture
 def test_client(tmp_path):
-    """
-    Pytest fixture providing a configured test client.
+    """Pytest fixture providing a configured test client.
 
     Creates temporary directory and database for isolated testing.
     Cleans up after test completes.
@@ -317,8 +310,7 @@ def test_client(tmp_path):
 
 @pytest.fixture
 def indexed_client(test_client):
-    """
-    Pytest fixture providing a test client with indexed codebase.
+    """Pytest fixture providing a test client with indexed codebase.
 
     Creates sample files and indexes them before test runs.
     """

@@ -1,5 +1,4 @@
-"""
-Project context template for Aurora planning system.
+"""Project context template for Aurora planning system.
 
 Ported from OpenSpec src/core/templates/project-template.ts
 """

@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_core.chunks import CodeChunk
 
-
 if TYPE_CHECKING:
     from aurora_cli.config import Config
     from aurora_core.store.sqlite import SQLiteStore

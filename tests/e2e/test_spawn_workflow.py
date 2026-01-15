@@ -1,15 +1,8 @@
 """End-to-end tests for spawn workflow with interruption and resume."""
 
-import tempfile
-from pathlib import Path
-
 import pytest
 
-from aurora_cli.commands.spawn_helpers import (
-    create_task_states_from_tasks,
-    list_checkpoints,
-    resume_from_checkpoint,
-)
+from aurora_cli.commands.spawn_helpers import create_task_states_from_tasks
 from aurora_cli.execution import CheckpointManager, TaskState
 from implement.models import ParsedTask
 

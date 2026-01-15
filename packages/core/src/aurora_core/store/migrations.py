@@ -1,5 +1,4 @@
-"""
-Schema migration utilities for AURORA storage.
+"""Schema migration utilities for AURORA storage.
 
 This module provides utilities for managing database schema upgrades,
 ensuring smooth transitions between versions without data loss.
@@ -14,8 +13,7 @@ from aurora_core.store.schema import SCHEMA_VERSION
 
 
 class Migration:
-    """
-    Represents a single schema migration.
+    """Represents a single schema migration.
 
     Args:
         from_version: Source schema version
@@ -37,8 +35,7 @@ class Migration:
         self.description = description
 
     def apply(self, conn: sqlite3.Connection) -> None:
-        """
-        Apply this migration to a database connection.
+        """Apply this migration to a database connection.
 
         Args:
             conn: SQLite database connection
@@ -57,8 +54,7 @@ class Migration:
 
 
 class MigrationManager:
-    """
-    Manages schema migrations for AURORA storage.
+    """Manages schema migrations for AURORA storage.
 
     This class tracks available migrations and applies them in order to
     upgrade a database from an older schema version to the current version.
@@ -70,8 +66,7 @@ class MigrationManager:
         self._register_migrations()
 
     def _register_migrations(self) -> None:
-        """
-        Register all available migrations.
+        """Register all available migrations.
 
         Add new migrations here as the schema evolves.
         """
@@ -96,8 +91,7 @@ class MigrationManager:
         )
 
     def _migrate_v1_to_v2(self, conn: sqlite3.Connection) -> None:
-        """
-        Migrate from schema v1 to v2: Add access history tracking.
+        """Migrate from schema v1 to v2: Add access history tracking.
 
         Changes:
         - Add access_history JSON column to activations table
@@ -155,8 +149,7 @@ class MigrationManager:
         conn.commit()
 
     def _migrate_v2_to_v3(self, conn: sqlite3.Connection) -> None:
-        """
-        Migrate from schema v2 to v3: Add embeddings support.
+        """Migrate from schema v2 to v3: Add embeddings support.
 
         Changes:
         - Add embeddings BLOB column to chunks table for storing embedding vectors
@@ -172,8 +165,7 @@ class MigrationManager:
         conn.commit()
 
     def add_migration(self, migration: Migration) -> None:
-        """
-        Register a migration.
+        """Register a migration.
 
         Args:
             migration: Migration to register
@@ -181,8 +173,7 @@ class MigrationManager:
         self._migrations.append(migration)
 
     def get_current_version(self, conn: sqlite3.Connection) -> int:
-        """
-        Get the current schema version from database.
+        """Get the current schema version from database.
 
         Args:
             conn: SQLite database connection
@@ -201,8 +192,7 @@ class MigrationManager:
             return 0
 
     def needs_migration(self, conn: sqlite3.Connection) -> bool:
-        """
-        Check if database needs migration.
+        """Check if database needs migration.
 
         Args:
             conn: SQLite database connection
@@ -214,8 +204,7 @@ class MigrationManager:
         return current_version < SCHEMA_VERSION
 
     def migrate(self, conn: sqlite3.Connection) -> None:
-        """
-        Migrate database to current schema version.
+        """Migrate database to current schema version.
 
         This method applies all necessary migrations in order to bring
         the database up to the current schema version.
@@ -260,8 +249,7 @@ class MigrationManager:
             conn.commit()
 
     def backup_database(self, db_path: str) -> str:
-        """
-        Create a backup of the database before migration.
+        """Create a backup of the database before migration.
 
         Args:
             db_path: Path to database file
@@ -292,8 +280,7 @@ class MigrationManager:
     def migrate_with_backup(
         self, conn: sqlite3.Connection, db_path: str | None = None
     ) -> str | None:
-        """
-        Migrate database with automatic backup.
+        """Migrate database with automatic backup.
 
         Args:
             conn: SQLite database connection
@@ -325,8 +312,7 @@ _migration_manager = MigrationManager()
 
 
 def get_migration_manager() -> MigrationManager:
-    """
-    Get the global migration manager instance.
+    """Get the global migration manager instance.
 
     Returns:
         Global MigrationManager instance

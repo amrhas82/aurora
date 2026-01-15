@@ -1,5 +1,4 @@
-"""
-Shared type definitions for the AURORA Core package.
+"""Shared type definitions for the AURORA Core package.
 
 This module provides type aliases and base types used throughout the AURORA
 framework for consistency and type safety.
@@ -7,7 +6,6 @@ framework for consistency and type safety.
 
 from datetime import datetime
 from typing import Any, NewType
-
 
 # Type aliases for improved readability and type safety
 ChunkID = NewType("ChunkID", str)

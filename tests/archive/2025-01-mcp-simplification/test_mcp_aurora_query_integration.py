@@ -12,15 +12,11 @@ Total: 15 integration tests
 """
 
 import json
-import os
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
-
 
 # ==============================================================================
 # Test Fixtures

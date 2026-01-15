@@ -1,5 +1,4 @@
-"""
-Validation threshold constants and messages.
+"""Validation threshold constants and messages.
 
 Ported from: src/core/validation/constants.ts
 Terminology: openspec→aurora, change→plan, spec→capability, delta→modification

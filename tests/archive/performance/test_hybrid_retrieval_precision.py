@@ -1,5 +1,4 @@
-"""
-Performance benchmark for hybrid retrieval precision.
+"""Performance benchmark for hybrid retrieval precision.
 
 This benchmark verifies Task 2.18: Hybrid retrieval improves precision over
 keyword-only (≥85% target).
@@ -32,7 +31,6 @@ from aurora_context_code.semantic.embedding_provider import (
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.activation.engine import ActivationConfig
-
 
 # Mark all tests as requiring ML dependencies
 pytestmark = [
@@ -109,8 +107,7 @@ class MockActivationEngine:
 
 
 def create_comprehensive_dataset(embedding_provider: EmbeddingProvider, now: datetime):
-    """
-    Create comprehensive dataset optimized for high precision.
+    """Create comprehensive dataset optimized for high precision.
 
     Strategy:
     1. Clear semantic categories (database, network, file I/O, auth, UI)
@@ -373,8 +370,7 @@ class TestHybridRetrievalPrecisionBenchmark:
     """Precision benchmarks for hybrid retrieval (Task 2.18)."""
 
     def test_keyword_only_baseline(self, embedding_provider, comprehensive_dataset):
-        """
-        Baseline: Keyword matching only (context boost, no semantic).
+        """Baseline: Keyword matching only (context boost, no semantic).
 
         This represents traditional keyword search without embeddings.
         """
@@ -417,8 +413,7 @@ class TestHybridRetrievalPrecisionBenchmark:
         return avg_precision, results_per_query
 
     def test_hybrid_retrieval_precision(self, embedding_provider, comprehensive_dataset):
-        """
-        Hybrid retrieval: 60% activation + 40% semantic.
+        """Hybrid retrieval: 60% activation + 40% semantic.
 
         This is the main test for Task 2.18.
         """
@@ -462,8 +457,7 @@ class TestHybridRetrievalPrecisionBenchmark:
         return avg_precision, results_per_query
 
     def test_hybrid_improves_over_keyword_only(self, embedding_provider, comprehensive_dataset):
-        """
-        Main benchmark: Verify hybrid retrieval improves over keyword-only.
+        """Main benchmark: Verify hybrid retrieval improves over keyword-only.
 
         This is the primary test for Task 2.18.
         """
@@ -498,8 +492,7 @@ class TestHybridRetrievalPrecisionBenchmark:
         print(f"\n✓ SUCCESS: Hybrid retrieval improves precision by {improvement:+.2%}")
 
     def test_hybrid_achieves_target_precision(self, embedding_provider, comprehensive_dataset):
-        """
-        Test that hybrid retrieval achieves ≥85% precision target (Task 2.18).
+        """Test that hybrid retrieval achieves ≥85% precision target (Task 2.18).
 
         Note: The 85% target is aspirational and depends on:
         - Dataset quality and semantic clarity

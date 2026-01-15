@@ -1,5 +1,4 @@
-"""
-CodeChunk implementation for representing parsed code elements.
+"""CodeChunk implementation for representing parsed code elements.
 
 This module provides the CodeChunk class for representing functions, classes,
 and methods parsed from source code files.
@@ -15,8 +14,7 @@ from aurora_core.chunks.base import Chunk
 
 @dataclass
 class CodeChunk(Chunk):
-    """
-    Represents a parsed code element (function, class, method).
+    """Represents a parsed code element (function, class, method).
 
     This chunk type stores information about code elements extracted from
     source files, including location, dependencies, and complexity metrics.
@@ -63,8 +61,7 @@ class CodeChunk(Chunk):
         embeddings: bytes | None = None,
         metadata: dict[str, Any] | None = None,
     ):
-        """
-        Initialize a CodeChunk.
+        """Initialize a CodeChunk.
 
         Args:
             chunk_id: Unique identifier for this chunk
@@ -103,8 +100,7 @@ class CodeChunk(Chunk):
         self.validate()
 
     def to_json(self) -> dict[str, Any]:
-        """
-        Serialize chunk to JSON-compatible dict.
+        """Serialize chunk to JSON-compatible dict.
 
         Follows the schema defined in PRD Section 4.2.2.
 
@@ -149,8 +145,7 @@ class CodeChunk(Chunk):
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "CodeChunk":
-        """
-        Deserialize chunk from JSON dict.
+        """Deserialize chunk from JSON dict.
 
         Args:
             data: Dictionary containing chunk data in storage format
@@ -216,8 +211,7 @@ class CodeChunk(Chunk):
             raise ValueError(f"Failed to deserialize CodeChunk: {e}")
 
     def validate(self) -> bool:
-        """
-        Validate chunk structure and data.
+        """Validate chunk structure and data.
 
         Validation rules:
         - line_start must be > 0

@@ -1,5 +1,4 @@
-"""
-Integration test for ReasoningChunk storage and retrieval.
+"""Integration test for ReasoningChunk storage and retrieval.
 
 Tests the complete workflow:
 1. Create ReasoningChunk instances

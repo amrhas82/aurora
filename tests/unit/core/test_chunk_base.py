@@ -1,5 +1,4 @@
-"""
-Unit tests for the abstract Chunk base class.
+"""Unit tests for the abstract Chunk base class.
 
 Tests the Chunk interface contract that all concrete chunk types must implement.
 """

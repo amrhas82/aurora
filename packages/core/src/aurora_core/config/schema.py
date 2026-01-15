@@ -1,12 +1,10 @@
-"""
-JSON schema for AURORA configuration validation.
+"""JSON schema for AURORA configuration validation.
 
 Defines the JSON Schema Draft 7 specification for validating
 configuration files according to PRD Section 4.6.
 """
 
 from typing import Any
-
 
 # JSON Schema Draft 7 for AURORA Configuration
 CONFIG_SCHEMA: dict[str, Any] = {
@@ -378,8 +376,7 @@ CONFIG_SCHEMA: dict[str, Any] = {
 
 
 def get_schema() -> dict[str, Any]:
-    """
-    Get the JSON schema for configuration validation.
+    """Get the JSON schema for configuration validation.
 
     Returns:
         JSON Schema Draft 7 specification for AURORA configuration

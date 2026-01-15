@@ -1,5 +1,4 @@
-"""
-E2E Test Configuration and Utilities.
+"""E2E Test Configuration and Utilities.
 
 Provides helpers for subprocess CLI invocations that preserve Python environment.
 """
@@ -9,14 +8,13 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Generator
 
 import pytest
 
 
 def get_cli_env() -> dict[str, str]:
-    """
-    Get environment dict for subprocess CLI calls that preserves PYTHONPATH.
+    """Get environment dict for subprocess CLI calls that preserves PYTHONPATH.
 
     When E2E tests modify HOME/AURORA_HOME, subprocess calls lose access to
     installed packages. This helper preserves PYTHONPATH to fix that.
@@ -41,8 +39,7 @@ def run_cli_command(
     check: bool = False,
     **kwargs: Any,
 ) -> subprocess.CompletedProcess:
-    """
-    Run CLI command with preserved Python environment.
+    """Run CLI command with preserved Python environment.
 
     Args:
         args: Command arguments (e.g., ["aur", "mem", "index", ...])

@@ -1,5 +1,4 @@
-"""
-Tests for Plan schema (was Change schema in OpenSpec).
+"""Tests for Plan schema (was Change schema in OpenSpec).
 
 Ported from: test/core/validation.test.ts - describe('ChangeSchema')
 TDD approach: Tests written first based on TypeScript test behavior.

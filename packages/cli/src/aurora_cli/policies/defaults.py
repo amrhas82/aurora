@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 DEFAULT_POLICIES_YAML = """# Aurora Policies Configuration
 # This file defines policies for execution control and safety
 

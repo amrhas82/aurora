@@ -1,5 +1,4 @@
-"""
-ReasoningChunk implementation for Phase 2 (SOAR Pipeline).
+"""ReasoningChunk implementation for Phase 2 (SOAR Pipeline).
 
 This module provides the full ReasoningChunk implementation for storing
 reasoning patterns, decompositions, and execution traces in ACT-R memory.
@@ -13,8 +12,7 @@ from aurora_core.chunks.base import Chunk
 
 @dataclass
 class ReasoningChunk(Chunk):
-    """
-    Represents a reasoning pattern or decision trace.
+    """Represents a reasoning pattern or decision trace.
 
     Attributes:
         pattern: Query pattern that triggered this reasoning (e.g., "implement feature X")
@@ -48,8 +46,7 @@ class ReasoningChunk(Chunk):
         success_score: float = 0.0,
         metadata: dict[str, Any] | None = None,
     ):
-        """
-        Initialize a ReasoningChunk.
+        """Initialize a ReasoningChunk.
 
         Args:
             chunk_id: Unique identifier for this chunk
@@ -77,8 +74,7 @@ class ReasoningChunk(Chunk):
         self.validate()
 
     def to_json(self) -> dict[str, Any]:
-        """
-        Serialize chunk to JSON-compatible dict.
+        """Serialize chunk to JSON-compatible dict.
 
         Returns:
             Dictionary in the format expected by the storage layer
@@ -104,8 +100,7 @@ class ReasoningChunk(Chunk):
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "ReasoningChunk":
-        """
-        Deserialize chunk from JSON dict.
+        """Deserialize chunk from JSON dict.
 
         Args:
             data: Dictionary containing chunk data
@@ -143,8 +138,7 @@ class ReasoningChunk(Chunk):
             raise ValueError(f"Failed to deserialize ReasoningChunk: {e}")
 
     def validate(self) -> bool:
-        """
-        Validate chunk structure.
+        """Validate chunk structure.
 
         Returns:
             True if valid

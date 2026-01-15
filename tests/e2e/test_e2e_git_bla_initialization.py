@@ -32,12 +32,10 @@ import tempfile
 import time
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Dict, List
 
 import pytest
 
 from .conftest import run_cli_command
-
 
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]

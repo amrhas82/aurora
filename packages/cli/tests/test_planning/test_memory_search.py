@@ -4,10 +4,7 @@ Tests memory search functionality for finding relevant context files
 based on goal keywords, with relevance scoring and filtering.
 """
 
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import Mock, patch
 
 from aurora_cli.planning.memory import search_memory_for_goal
 
@@ -232,7 +229,7 @@ class TestMemorySearchForGoal:
         with patch(
             "aurora_cli.planning.memory.MemoryRetriever", return_value=mock_retriever
         ) as MockRetriever:
-            results = search_memory_for_goal(goal, config=mock_config, limit=10)
+            search_memory_for_goal(goal, config=mock_config, limit=10)
 
         # Assert
         MockRetriever.assert_called_once()

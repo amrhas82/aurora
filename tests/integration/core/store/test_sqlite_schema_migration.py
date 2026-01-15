@@ -1,5 +1,4 @@
-"""
-Unit tests for SQLite schema migration functionality.
+"""Unit tests for SQLite schema migration functionality.
 
 These tests verify:
 - Schema version detection from existing databases
@@ -10,7 +9,6 @@ These tests verify:
 """
 
 import sqlite3
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest

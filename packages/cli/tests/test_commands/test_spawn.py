@@ -7,7 +7,7 @@ Following TDD approach:
 """
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
@@ -51,7 +51,7 @@ class TestArgumentParsing:
                 # Create empty tasks.md
                 Path("tasks.md").write_text("# Tasks\n")
 
-                result = runner.invoke(spawn_command, [])
+                runner.invoke(spawn_command, [])
 
                 # Should attempt to load tasks.md from current directory
                 mock_load.assert_called_once()
@@ -69,7 +69,7 @@ class TestArgumentParsing:
                 custom_file = Path("custom-tasks.md")
                 custom_file.write_text("# Tasks\n")
 
-                result = runner.invoke(spawn_command, [str(custom_file)])
+                runner.invoke(spawn_command, [str(custom_file)])
 
                 mock_load.assert_called_once()
                 called_path = mock_load.call_args[0][0]
@@ -87,7 +87,7 @@ class TestArgumentParsing:
                 with runner.isolated_filesystem():
                     Path("tasks.md").write_text("# Tasks\n")
 
-                    result = runner.invoke(spawn_command, [])
+                    runner.invoke(spawn_command, [])
 
                     # Should call parallel execution by default
                     # (will be tested in execution tests)
@@ -221,7 +221,6 @@ class TestLoadTasks:
 
     def test_validate_all_tasks_have_required_fields(self):
         """Test that validation catches tasks with missing required fields."""
-        from aurora_cli.commands.spawn import load_tasks
 
         # Task with only whitespace description should be caught
         content = """# Tasks
@@ -231,7 +230,7 @@ class TestLoadTasks:
 """
         with patch("pathlib.Path.exists", return_value=True):
             with patch("pathlib.Path.read_text", return_value=content):
-                path = Path("tasks.md")
+                Path("tasks.md")
 
                 # This should raise ValueError due to whitespace-only descriptions
                 # Note: The parser captures text after the ID, so "1." gives desc="."
@@ -308,7 +307,7 @@ class TestExecuteParallel:
                 for i in range(10)
             ]
 
-            result = await _execute_parallel(tasks, verbose=False)
+            await _execute_parallel(tasks, verbose=False)
 
             # Verify spawn_parallel was called with max_concurrent=5
             assert mock_spawn.called

@@ -1,5 +1,4 @@
-"""
-Pure unit tests for ACT-R activation formulas.
+"""Pure unit tests for ACT-R activation formulas.
 
 Tests core activation formula calculations including:
 - Base-Level Activation (BLA) with power law decay
@@ -28,7 +27,6 @@ from aurora_core.activation.spreading import (
     SpreadingConfig,
     calculate_spreading,
 )
-
 
 # ==============================================================================
 # Base-Level Activation Tests

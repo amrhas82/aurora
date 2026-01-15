@@ -1,5 +1,4 @@
-"""
-Unit tests for KnowledgeParser (knowledge chunk parsing and indexing).
+"""Unit tests for KnowledgeParser (knowledge chunk parsing and indexing).
 
 Tests:
 - UT-KNOW-01: Parse markdown sections test
@@ -9,7 +8,6 @@ Tests:
 """
 
 import tempfile
-from datetime import datetime
 from pathlib import Path
 
 import pytest

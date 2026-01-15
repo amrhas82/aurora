@@ -7,7 +7,6 @@ import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.spawn import spawn_command
-from aurora_cli.execution import CheckpointManager
 
 
 @pytest.fixture

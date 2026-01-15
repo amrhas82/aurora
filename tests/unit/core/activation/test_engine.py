@@ -1,5 +1,4 @@
-"""
-Integration tests for ActivationEngine (Full Activation Formula).
+"""Integration tests for ActivationEngine (Full Activation Formula).
 
 Tests the complete ACT-R activation engine including:
 - Total activation formula: BLA + Spreading + Context - Decay

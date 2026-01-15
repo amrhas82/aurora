@@ -5,10 +5,8 @@ to support agent and model metadata extraction from HTML comments.
 """
 
 import re
-from typing import List
 
 from implement.models import ParsedTask
-
 
 # Regex patterns for task checkboxes (ported from task_progress.py)
 TASK_PATTERN = re.compile(r"^[-*]\s+\[[\sx]\]", re.IGNORECASE)

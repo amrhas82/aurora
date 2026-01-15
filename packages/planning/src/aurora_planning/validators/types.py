@@ -1,5 +1,4 @@
-"""
-Validation types: ValidationIssue, ValidationReport.
+"""Validation types: ValidationIssue, ValidationReport.
 
 Ported from: src/core/validation/types.ts
 TypeScript interfaces → Pydantic models.

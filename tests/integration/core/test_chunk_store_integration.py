@@ -1,5 +1,4 @@
-"""
-Integration tests for Chunk types with Store implementations.
+"""Integration tests for Chunk types with Store implementations.
 
 Tests that chunks can be properly saved and retrieved from storage.
 """

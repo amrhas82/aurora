@@ -1,5 +1,4 @@
-"""
-Unit tests for Base-Level Activation (BLA) formula.
+"""Unit tests for Base-Level Activation (BLA) formula.
 
 Tests the ACT-R BLA calculation including:
 - Power law decay formula: BLA = ln(Σ t_j^(-d))

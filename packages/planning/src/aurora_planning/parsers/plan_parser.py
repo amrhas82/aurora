@@ -1,5 +1,4 @@
-"""
-PlanParser for parsing plan files with delta specifications.
+"""PlanParser for parsing plan files with delta specifications.
 
 Ported from: src/core/parsers/change-parser.ts
 Terminology: change→plan, spec→capability, delta→modification

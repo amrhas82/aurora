@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Test corpus for complexity assessment validation.
+"""Test corpus for complexity assessment validation.
 
 Each entry contains:
 - prompt: The actual prompt text
@@ -279,12 +278,12 @@ TEST_CORPUS = [
 ]
 
 # Group prompts by expected level for analysis
-SIMPLE_PROMPTS = [(p, c, n) for p, l, c, n in TEST_CORPUS if l == "simple"]
-MEDIUM_PROMPTS = [(p, c, n) for p, l, c, n in TEST_CORPUS if l == "medium"]
-COMPLEX_PROMPTS = [(p, c, n) for p, l, c, n in TEST_CORPUS if l == "complex"]
+SIMPLE_PROMPTS = [(p, c, n) for p, lvl, c, n in TEST_CORPUS if lvl == "simple"]
+MEDIUM_PROMPTS = [(p, c, n) for p, lvl, c, n in TEST_CORPUS if lvl == "medium"]
+COMPLEX_PROMPTS = [(p, c, n) for p, lvl, c, n in TEST_CORPUS if lvl == "complex"]
 
 # Prompts specifically for edge case testing
-EDGE_CASES = [(p, l, c, n) for p, l, c, n in TEST_CORPUS if c == "edge"]
+EDGE_CASES = [(p, lvl, c, n) for p, lvl, c, n in TEST_CORPUS if c == "edge"]
 
 
 def get_corpus() -> list[tuple[str, str, str, str]]:
@@ -294,12 +293,12 @@ def get_corpus() -> list[tuple[str, str, str, str]]:
 
 def get_by_category(category: str) -> list[tuple[str, str, str, str]]:
     """Get prompts by category."""
-    return [(p, l, c, n) for p, l, c, n in TEST_CORPUS if c == category]
+    return [(p, lvl, c, n) for p, lvl, c, n in TEST_CORPUS if c == category]
 
 
 def get_by_level(level: str) -> list[tuple[str, str, str, str]]:
     """Get prompts by expected level."""
-    return [(p, l, c, n) for p, l, c, n in TEST_CORPUS if l == level]
+    return [(p, lvl, c, n) for p, lvl, c, n in TEST_CORPUS if lvl == level]
 
 
 if __name__ == "__main__":

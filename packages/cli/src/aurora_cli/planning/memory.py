@@ -6,8 +6,6 @@ Provides memory search functionality for goal decomposition context.
 
 import logging
 from pathlib import Path as PathLib
-from typing import Optional
-
 
 # Code file extensions to include in memory search results
 CODE_EXTENSIONS = {
@@ -94,7 +92,6 @@ from aurora_cli.config import Config  # noqa: E402
 from aurora_cli.memory.retrieval import MemoryRetriever  # noqa: E402
 from aurora_cli.planning.models import FileResolution, Subgoal  # noqa: E402
 from aurora_core.store.sqlite import SQLiteStore  # noqa: E402
-
 
 logger = logging.getLogger(__name__)
 
@@ -209,9 +206,7 @@ class FilePathResolver:
     # Class-level flag to warn only once per session
     _warned_not_indexed = False
 
-    def __init__(
-        self, store: SQLiteStore | None = None, config: Config | None = None
-    ) -> None:
+    def __init__(self, store: SQLiteStore | None = None, config: Config | None = None) -> None:
         """Initialize file path resolver.
 
         Args:

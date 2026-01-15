@@ -35,7 +35,6 @@ from aurora_cli.planning.core import (
     show_plan,
 )
 
-
 if TYPE_CHECKING:
     pass
 

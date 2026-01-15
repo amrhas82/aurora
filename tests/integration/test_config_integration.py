@@ -1,5 +1,4 @@
-"""
-Integration tests for configuration system.
+"""Integration tests for configuration system.
 
 Tests end-to-end configuration loading scenarios including:
 - Integration with other components (Store, Context, Agent Registry)

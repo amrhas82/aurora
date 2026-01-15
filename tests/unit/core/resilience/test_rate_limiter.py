@@ -1,5 +1,4 @@
-"""
-Unit tests for RateLimiter class.
+"""Unit tests for RateLimiter class.
 
 Tests token bucket rate limiting algorithm.
 """

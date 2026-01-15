@@ -6,7 +6,6 @@ proper formatting and display of various error types.
 
 import json
 import os
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -17,7 +16,6 @@ from aurora_cli.errors import (
     EXIT_USER_ERROR,
     APIError,
     BudgetExceededError,
-    ConfigurationError,
     ErrorHandler,
     MemoryStoreError,
     handle_errors,

@@ -20,24 +20,19 @@ Test Coverage:
 
 import json
 import os
-import shutil
 import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from aurora_cli.config import load_config
-from aurora_cli.errors import AuroraError, ConfigurationError, MemoryStoreError
+from aurora_cli.errors import ConfigurationError
 from aurora_cli.memory_manager import MemoryManager
-from aurora_core.chunks import CodeChunk
 from aurora_core.store import SQLiteStore
 
 from .conftest import run_cli_command
-
 
 pytestmark = pytest.mark.ml
 

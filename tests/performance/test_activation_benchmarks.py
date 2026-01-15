@@ -1,5 +1,4 @@
-"""
-Performance benchmarks for ACT-R activation calculations.
+"""Performance benchmarks for ACT-R activation calculations.
 
 This test suite benchmarks:
 1. BLA calculation for varying candidate sizes (100, 1000)
@@ -62,8 +61,7 @@ class MockChunk:
 
 
 def create_benchmark_chunks(count: int, now: datetime) -> list[MockChunk]:
-    """
-    Create realistic chunk dataset for benchmarking.
+    """Create realistic chunk dataset for benchmarking.
 
     Access patterns:
     - 20% frequent (10 accesses, last 1 day ago)
@@ -98,8 +96,7 @@ def create_benchmark_chunks(count: int, now: datetime) -> list[MockChunk]:
 
 
 def create_relationship_graph(chunk_count: int) -> RelationshipGraph:
-    """
-    Create relationship graph for benchmarking.
+    """Create relationship graph for benchmarking.
 
     Creates a realistic graph with:
     - Average 3 outgoing edges per chunk
@@ -305,15 +302,13 @@ class TestDecayPerformance:
 
 
 class TestFullActivationPerformance:
-    """
-    Benchmark full activation calculation (all components).
+    """Benchmark full activation calculation (all components).
 
     This is the main performance target from PRD Section 7.
     """
 
     def test_full_activation_100_candidates(self, benchmark, activation_engine):
-        """
-        Benchmark full activation for 100 candidates.
+        """Benchmark full activation for 100 candidates.
 
         Target: <100ms (PRD Section 7.6)
         """
@@ -356,8 +351,7 @@ class TestFullActivationPerformance:
         print(f"\n100 candidates: {mean_time_ms:.1f}ms (target: <100ms)")
 
     def test_full_activation_1000_candidates(self, benchmark, activation_engine):
-        """
-        Benchmark full activation for 1000 candidates.
+        """Benchmark full activation for 1000 candidates.
 
         Target: <200ms (PRD Section 7.7)
         """
@@ -404,8 +398,7 @@ class TestBatchActivationPerformance:
     """Benchmark batch activation calculation efficiency."""
 
     def test_batch_vs_sequential(self, benchmark, activation_engine):
-        """
-        Compare batch vs sequential activation calculation.
+        """Compare batch vs sequential activation calculation.
 
         Batch processing should show minimal overhead compared to sequential.
         """
@@ -446,8 +439,7 @@ class TestMemoryEfficiency:
     """Verify memory-efficient activation calculation."""
 
     def test_no_memory_leak(self, activation_engine):
-        """
-        Verify activation calculation doesn't leak memory.
+        """Verify activation calculation doesn't leak memory.
 
         Run multiple iterations and check that memory usage is stable.
         """

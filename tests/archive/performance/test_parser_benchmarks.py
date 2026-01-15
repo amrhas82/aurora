@@ -1,5 +1,4 @@
-"""
-Performance benchmarks for code parsers.
+"""Performance benchmarks for code parsers.
 
 Tests parser performance against target metrics:
 - < 200ms for 1000-line file

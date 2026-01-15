@@ -1,5 +1,4 @@
-"""
-Tests for Validator class.
+"""Tests for Validator class.
 
 Ported from: test/core/validation.test.ts (Validator describe block)
 TDD approach: Tests written first based on TypeScript test behavior.
@@ -7,11 +6,8 @@ TDD approach: Tests written first based on TypeScript test behavior.
 Task: 2.5 - Write tests/unit/validation/test_validator.py
 """
 
-import os
 import tempfile
 from pathlib import Path
-
-import pytest
 
 from aurora_cli.planning.validation.validator import Validator
 

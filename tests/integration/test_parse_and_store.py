@@ -1,5 +1,4 @@
-"""
-Integration test for parse → store → retrieve flow.
+"""Integration test for parse → store → retrieve flow.
 
 Tests the complete workflow:
 1. Parse Python files to extract code chunks

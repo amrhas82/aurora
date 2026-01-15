@@ -1,5 +1,4 @@
-"""
-Aurora Parsers.
+"""Aurora Parsers.
 
 Provides markdown parsing for capabilities and plans.
 Ported from: src/core/parsers/

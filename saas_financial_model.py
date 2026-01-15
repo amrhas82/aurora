@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-"""
-SaaS Financial Model with Tiered Pricing
+"""SaaS Financial Model with Tiered Pricing
 Comprehensive revenue, cost, and growth projections
 """
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 
 
@@ -19,7 +16,7 @@ class PricingTier:
     name: str
     monthly_price: float
     annual_price: float
-    features: List[str]
+    features: list[str]
     target_segment: str
 
 
@@ -42,7 +39,7 @@ class SaaSFinancialModel:
         self.pricing_tiers = self._define_pricing_tiers()
         self.customer_metrics = self._define_customer_metrics()
 
-    def _define_pricing_tiers(self) -> Dict[str, PricingTier]:
+    def _define_pricing_tiers(self) -> dict[str, PricingTier]:
         """Define tiered pricing structure"""
         return {
             "starter": PricingTier(
@@ -74,7 +71,7 @@ class SaaSFinancialModel:
             ),
         }
 
-    def _define_customer_metrics(self) -> Dict[str, CustomerMetrics]:
+    def _define_customer_metrics(self) -> dict[str, CustomerMetrics]:
         """Define customer acquisition and retention by tier"""
         return {
             "starter": CustomerMetrics(
@@ -183,7 +180,6 @@ class SaaSFinancialModel:
         # Operating Expenses
         # Scale with revenue but have fixed component
         base_opex = 20000  # Base monthly operating expenses
-        variable_opex_rate = 0.25  # 25% of revenue
 
         cost_data["sales_marketing"] = cost_data["total_cac"]
         cost_data["engineering"] = base_opex * 0.4 + cost_data["total_mrr"] * 0.10
@@ -230,7 +226,7 @@ class SaaSFinancialModel:
 
         return metrics
 
-    def generate_summary_metrics(self, financial_df: pd.DataFrame) -> Dict:
+    def generate_summary_metrics(self, financial_df: pd.DataFrame) -> dict:
         """Generate key summary metrics"""
         latest = financial_df.iloc[-1]
         first = financial_df.iloc[0]
@@ -265,7 +261,7 @@ class SaaSFinancialModel:
             },
         }
 
-    def run_model(self) -> tuple[pd.DataFrame, Dict]:
+    def run_model(self) -> tuple[pd.DataFrame, dict]:
         """Run complete financial model"""
         # Calculate customer progression
         customers_df = self.calculate_customers()
@@ -289,13 +285,13 @@ class SaaSFinancialModel:
         financial_df.to_csv(filename, index=False)
         print(f"Financial model exported to {filename}")
 
-    def export_summary(self, summary: Dict, filename: str = "saas_summary.json"):
+    def export_summary(self, summary: dict, filename: str = "saas_summary.json"):
         """Export summary metrics to JSON"""
         with open(filename, "w") as f:
             json.dump(summary, f, indent=2)
         print(f"Summary metrics exported to {filename}")
 
-    def print_summary(self, summary: Dict):
+    def print_summary(self, summary: dict):
         """Print formatted summary"""
         print("\n" + "=" * 60)
         print("SaaS FINANCIAL MODEL SUMMARY")
@@ -312,12 +308,12 @@ class SaaSFinancialModel:
         else:
             print("Months to Profitability: Not yet profitable")
 
-        print(f"\nRevenue Growth:")
+        print("\nRevenue Growth:")
         print(f"  First Month MRR: ${summary['revenue_growth']['first_month_mrr']:,.2f}")
         print(f"  Last Month MRR: ${summary['revenue_growth']['last_month_mrr']:,.2f}")
         print(f"  Total Growth: {summary['revenue_growth']['total_growth_pct']:.1f}%")
 
-        print(f"\nUnit Economics by Tier:")
+        print("\nUnit Economics by Tier:")
         for tier, metrics in summary["unit_economics"].items():
             print(f"  {tier.upper()}:")
             print(f"    LTV: ${metrics['ltv']:,.2f}")

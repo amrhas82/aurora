@@ -1,5 +1,4 @@
-"""
-Integration tests for Aurora Planning workflows.
+"""Integration tests for Aurora Planning workflows.
 
 Tests end-to-end functionality of planning commands including:
 - Plan creation with full 8-file structure
@@ -19,9 +18,7 @@ import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.plan import archive_plan, create_command, list_plans, show_plan
-from aurora_planning.id_generator import generate_plan_id
 from aurora_planning.planning_config import get_plans_dir
-from aurora_planning.renderer import render_plan_files
 
 
 @pytest.fixture

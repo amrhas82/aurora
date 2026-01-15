@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Revert __init__.py imports back to old paths to avoid circular dependencies.
+"""Revert __init__.py imports back to old paths to avoid circular dependencies.
 
 This script reverts imports in package __init__.py files from:
     from aurora.core.store import SQLiteStore

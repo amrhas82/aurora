@@ -1,5 +1,4 @@
-"""
-Adapter layer for agent discovery integration with SOAR.
+"""Adapter layer for agent discovery integration with SOAR.
 
 This module bridges the new ManifestManager (from aurora_cli.agent_discovery)
 with SOAR's AgentRegistry interface, enabling SOAR to use the agent discovery system
@@ -15,12 +14,10 @@ Functions:
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 from aurora_cli.agent_discovery.manifest import ManifestManager
 from aurora_cli.agent_discovery.models import AgentInfo as DiscoveryAgentInfo
 from aurora_soar.agent_registry import AgentInfo as RegistryAgentInfo
-
 
 logger = logging.getLogger(__name__)
 

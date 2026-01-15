@@ -1,5 +1,4 @@
-"""
-Integration Test: Budget Enforcement
+"""Integration Test: Budget Enforcement
 
 Tests Issue #10: Budget Commands Missing
 - Verifies budget checking before expensive LLM calls
@@ -31,7 +30,6 @@ Priority: P1 (High)
 """
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -72,8 +70,7 @@ class TestBudgetEnforcement:
         return tracker, budget_path
 
     def test_budget_checked_before_llm_call(self, low_budget_config):
-        """
-        Test that budget is checked BEFORE calling expensive LLM.
+        """Test that budget is checked BEFORE calling expensive LLM.
 
         This test will FAIL because execute_direct_llm() doesn't check budget.
         """
@@ -125,8 +122,7 @@ class TestBudgetEnforcement:
             )
 
     def test_actual_cost_recorded_after_successful_query(self, tmp_path):
-        """
-        Test that actual LLM cost is recorded after successful query.
+        """Test that actual LLM cost is recorded after successful query.
 
         This test will FAIL if cost recording not implemented.
         """
@@ -179,8 +175,7 @@ class TestBudgetEnforcement:
                     )
 
     def test_budget_history_shows_blocked_queries(self, cost_tracker_with_low_budget):
-        """
-        Test that blocked queries appear in budget history.
+        """Test that blocked queries appear in budget history.
 
         This test will FAIL if history tracking not implemented.
         """
@@ -216,8 +211,7 @@ class TestBudgetEnforcement:
         )
 
     def test_increase_budget_allows_query(self, low_budget_config):
-        """
-        Test that increasing budget allows previously blocked query.
+        """Test that increasing budget allows previously blocked query.
 
         This test verifies budget modification works.
         """
@@ -269,8 +263,7 @@ class TestBudgetCommands:
         return tracker, budget_path
 
     def test_budget_show_command_displays_spending(self, budget_tracker_with_history):
-        """
-        Test that 'aur budget' shows current spending and remaining budget.
+        """Test that 'aur budget' shows current spending and remaining budget.
 
         This test will FAIL because budget command doesn't exist yet.
         """
@@ -296,8 +289,7 @@ class TestBudgetCommands:
         )
 
     def test_budget_set_command_updates_limit(self, tmp_path):
-        """
-        Test that 'aur budget set <amount>' updates budget limit.
+        """Test that 'aur budget set <amount>' updates budget limit.
 
         This test documents expected behavior for task 7.1.
         """
@@ -323,8 +315,7 @@ class TestBudgetCommands:
         )
 
     def test_budget_reset_command_clears_spending(self, budget_tracker_with_history):
-        """
-        Test that 'aur budget reset' clears spending history.
+        """Test that 'aur budget reset' clears spending history.
 
         This test documents expected behavior for task 7.1.
         """
@@ -343,8 +334,7 @@ class TestBudgetCommands:
         ), f"Spending not reset\nExpected: $0.00\nActual: ${tracker.get_total_spent()}"
 
     def test_budget_history_command_shows_queries(self, budget_tracker_with_history):
-        """
-        Test that 'aur budget history' displays query history with costs.
+        """Test that 'aur budget history' displays query history with costs.
 
         This test documents expected behavior for task 7.1.
         """
@@ -384,8 +374,7 @@ class TestBudgetEstimation:
     """Test cost estimation before LLM calls."""
 
     def test_estimate_cost_from_prompt_length(self):
-        """
-        Test that cost can be estimated from prompt length.
+        """Test that cost can be estimated from prompt length.
 
         This test documents expected estimation logic.
         """
@@ -413,8 +402,7 @@ class TestBudgetEstimation:
         # This logic will be used in execute_direct_llm() for budget checks
 
     def test_budget_includes_response_tokens(self):
-        """
-        Test that budget estimation accounts for response tokens.
+        """Test that budget estimation accounts for response tokens.
 
         This test documents that both input and output tokens should be estimated.
         """

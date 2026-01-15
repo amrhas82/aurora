@@ -1,5 +1,4 @@
-"""
-Mock implementations for AURORA testing.
+"""Mock implementations for AURORA testing.
 
 Provides predictable mock implementations:
 - MockLLM: Predictable LLM responses for testing
@@ -14,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 from aurora_core.chunks.base import Chunk
-
 
 # ============================================================================
 # Mock LLM

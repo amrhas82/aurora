@@ -1,5 +1,4 @@
-"""
-Query metrics tracking for SOAR pipeline.
+"""Query metrics tracking for SOAR pipeline.
 
 Tracks query execution metrics including duration, complexity, success rate,
 and monthly aggregations for `aur mem stats` display.
@@ -16,7 +15,6 @@ from pathlib import Path
 from typing import Any
 
 from aurora_core.paths import get_db_path
-
 
 logger = logging.getLogger(__name__)
 
@@ -55,16 +53,14 @@ class QueryMetricsSummary:
 
 
 class QueryMetrics:
-    """
-    Track and aggregate query metrics in SQLite.
+    """Track and aggregate query metrics in SQLite.
 
     Stores per-query metrics and provides aggregation for monthly reports.
     Uses same database as memory store for simplicity.
     """
 
     def __init__(self, db_path: str | Path | None = None):
-        """
-        Initialize query metrics tracker.
+        """Initialize query metrics tracker.
 
         Args:
             db_path: Path to SQLite database (default: project-local .aurora/memory.db)
@@ -130,8 +126,7 @@ class QueryMetrics:
         claude_calls: int | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> None:
-        """
-        Record a query execution metric.
+        """Record a query execution metric.
 
         Args:
             query_id: Unique query identifier
@@ -185,8 +180,7 @@ class QueryMetrics:
             logger.warning(f"Failed to record query metric: {e}")
 
     def get_summary(self, year_month: str | None = None) -> QueryMetricsSummary:
-        """
-        Get aggregated query metrics summary.
+        """Get aggregated query metrics summary.
 
         Args:
             year_month: Specific month to query (default: current month)
@@ -302,8 +296,7 @@ class QueryMetrics:
         return summary
 
     def get_monthly_trend(self, months: int = 6) -> list[dict[str, Any]]:
-        """
-        Get query counts by month for trend analysis.
+        """Get query counts by month for trend analysis.
 
         Args:
             months: Number of months to retrieve

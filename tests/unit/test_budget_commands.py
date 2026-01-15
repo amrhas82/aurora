@@ -6,9 +6,8 @@ Ensures proper display, validation, and error handling.
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import click
 import pytest
 from click.testing import CliRunner
 

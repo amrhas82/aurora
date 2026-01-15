@@ -1,5 +1,4 @@
-"""
-Unit tests for Spreading Activation.
+"""Unit tests for Spreading Activation.
 
 Tests the ACT-R spreading activation calculation including:
 - Relationship graph construction and traversal

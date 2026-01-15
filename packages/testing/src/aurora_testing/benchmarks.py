@@ -1,5 +1,4 @@
-"""
-Performance benchmarking utilities for AURORA testing.
+"""Performance benchmarking utilities for AURORA testing.
 
 Provides tools for:
 - Timing operations and enforcing performance targets
@@ -17,7 +16,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, TypeVar
-
 
 T = TypeVar("T")
 

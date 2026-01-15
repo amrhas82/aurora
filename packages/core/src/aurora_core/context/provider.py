@@ -1,5 +1,4 @@
-"""
-Abstract ContextProvider interface for AURORA context retrieval.
+"""Abstract ContextProvider interface for AURORA context retrieval.
 
 This module defines the interface that all context providers must implement
 to supply relevant chunks based on queries.
@@ -12,8 +11,7 @@ from aurora_core.types import ChunkID
 
 
 class ContextProvider(ABC):
-    """
-    Abstract interface for context providers.
+    """Abstract interface for context providers.
 
     Context providers are responsible for:
     - Retrieving relevant chunks based on text queries
@@ -29,8 +27,7 @@ class ContextProvider(ABC):
 
     @abstractmethod
     def retrieve(self, query: str, limit: int = 10) -> list[Chunk]:
-        """
-        Retrieve relevant chunks matching the query.
+        """Retrieve relevant chunks matching the query.
 
         Args:
             query: Natural language query or keywords
@@ -48,8 +45,7 @@ class ContextProvider(ABC):
 
     @abstractmethod
     def update(self, chunk_id: ChunkID, activation_delta: float) -> None:
-        """
-        Update activation score for a chunk based on usage.
+        """Update activation score for a chunk based on usage.
 
         This method is called when a chunk is accessed or used, allowing
         the provider to track relevance over time. Positive deltas indicate
@@ -68,8 +64,7 @@ class ContextProvider(ABC):
 
     @abstractmethod
     def refresh(self) -> None:
-        """
-        Refresh cached data and re-index changed sources.
+        """Refresh cached data and re-index changed sources.
 
         This method should:
         - Check modification times of source files

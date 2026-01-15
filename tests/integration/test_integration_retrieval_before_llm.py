@@ -1,5 +1,4 @@
-"""
-Integration Test: Retrieval Before LLM Call
+"""Integration Test: Retrieval Before LLM Call
 
 Tests Issue #15: Query Doesn't Use Indexed Data
 - Verifies that execute_direct_llm() retrieves context from memory store
@@ -30,7 +29,7 @@ Priority: P0 (Critical)
 """
 
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -38,7 +37,6 @@ from aurora_cli.config import Config
 from aurora_cli.execution import QueryExecutor
 from aurora_cli.memory_manager import MemoryManager
 from aurora_core.chunks.base import Chunk
-from aurora_reasoning.llm_client import LLMClient
 
 
 class TestRetrievalBeforeLLM:
@@ -112,8 +110,7 @@ class DatabaseConnection:
         return executor, memory_manager
 
     def test_direct_llm_retrieves_from_memory_store(self, executor_with_memory):
-        """
-        Test that execute_direct_llm() queries memory store before calling LLM.
+        """Test that execute_direct_llm() queries memory store before calling LLM.
 
         This test will FAIL because execute_direct_llm() doesn't retrieve context.
         """
@@ -166,8 +163,7 @@ class DatabaseConnection:
                 )
 
     def test_llm_prompt_includes_file_paths(self, executor_with_memory):
-        """
-        Test that context includes file paths and line ranges from chunks.
+        """Test that context includes file paths and line ranges from chunks.
 
         This test will FAIL if context formatting doesn't include metadata.
         """
@@ -202,8 +198,7 @@ class DatabaseConnection:
             )
 
     def test_llm_prompt_includes_code_content(self, executor_with_memory):
-        """
-        Test that context includes actual code content from chunks.
+        """Test that context includes actual code content from chunks.
 
         This test will FAIL if chunks aren't retrieved or formatted.
         """
@@ -243,8 +238,7 @@ class DatabaseConnection:
             )
 
     def test_retrieval_with_empty_memory_store(self, tmp_path):
-        """
-        Test behavior when memory store is empty (no indexed data).
+        """Test behavior when memory store is empty (no indexed data).
 
         This test verifies graceful handling (no errors).
         """
@@ -272,8 +266,7 @@ class DatabaseConnection:
             assert mock_generate.called, "LLM not called with empty memory store"
 
     def test_retrieval_with_populated_store(self, executor_with_memory):
-        """
-        Test behavior when memory store has relevant indexed data.
+        """Test behavior when memory store has relevant indexed data.
 
         This test verifies context IS included when data exists.
         """
@@ -314,8 +307,7 @@ class DatabaseConnection:
             )
 
     def test_context_limit_respected(self, executor_with_memory):
-        """
-        Test that retrieval respects context limits (top-k chunks).
+        """Test that retrieval respects context limits (top-k chunks).
 
         This test verifies we don't overwhelm LLM with too much context.
         """
@@ -385,8 +377,7 @@ class TestContextFormatting:
         return chunks
 
     def test_context_includes_chunk_metadata(self, sample_chunks):
-        """
-        Test that formatted context includes chunk names, file paths, and line ranges.
+        """Test that formatted context includes chunk names, file paths, and line ranges.
 
         This test verifies proper context structure.
         """
@@ -411,8 +402,7 @@ class TestContextFormatting:
         assert True, "Context formatting will be verified in implementation"
 
     def test_multiple_files_in_context(self):
-        """
-        Test that context can include chunks from multiple files.
+        """Test that context can include chunks from multiple files.
 
         This test documents expected behavior for cross-file context.
         """

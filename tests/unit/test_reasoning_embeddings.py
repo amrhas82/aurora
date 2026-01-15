@@ -1,5 +1,4 @@
-"""
-Unit tests for Reasoning Chunk embeddings and search.
+"""Unit tests for Reasoning Chunk embeddings and search.
 
 Tests:
 - UT-REAS-01: Generate embeddings test

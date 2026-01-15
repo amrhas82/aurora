@@ -1,5 +1,4 @@
-"""
-Agent Registry and Discovery System.
+"""Agent Registry and Discovery System.
 
 Provides agent registration, discovery, validation, and capability-based queries.
 
@@ -25,14 +24,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class AgentInfo:
-    """
-    Information about a registered agent.
+    """Information about a registered agent.
 
     Attributes:
         id: Unique identifier for the agent
@@ -65,8 +62,7 @@ class AgentInfo:
 
 
 class AgentRegistry:
-    """
-    Registry for agent discovery and management.
+    """Registry for agent discovery and management.
 
     Manages agent registration, discovery from config files,
     validation, and capability-based queries.
@@ -79,8 +75,7 @@ class AgentRegistry:
     VALID_AGENT_TYPES = {"local", "remote", "mcp"}
 
     def __init__(self, discovery_paths: list[Path] | None = None):
-        """
-        Initialize the agent registry.
+        """Initialize the agent registry.
 
         Args:
             discovery_paths: Optional list of directories to scan for agent configs
@@ -98,8 +93,7 @@ class AgentRegistry:
         self._file_mtimes: dict[Path, float] = {}
 
     def register(self, agent: AgentInfo) -> None:
-        """
-        Register an agent in the registry.
+        """Register an agent in the registry.
 
         Args:
             agent: AgentInfo instance to register
@@ -111,8 +105,7 @@ class AgentRegistry:
         logger.info(f"Registered agent: {agent.id} ({agent.name})")
 
     def get(self, agent_id: str) -> AgentInfo | None:
-        """
-        Retrieve an agent by ID.
+        """Retrieve an agent by ID.
 
         Args:
             agent_id: Unique identifier of the agent
@@ -123,8 +116,7 @@ class AgentRegistry:
         return self.agents.get(agent_id)
 
     def list_all(self) -> list[AgentInfo]:
-        """
-        List all registered agents.
+        """List all registered agents.
 
         Returns:
             List of all registered AgentInfo instances
@@ -132,8 +124,7 @@ class AgentRegistry:
         return list(self.agents.values())
 
     def find_by_capability(self, capability: str) -> list[AgentInfo]:
-        """
-        Find agents that have a specific capability.
+        """Find agents that have a specific capability.
 
         Args:
             capability: Capability identifier to search for
@@ -144,8 +135,7 @@ class AgentRegistry:
         return [agent for agent in self.agents.values() if capability in agent.capabilities]
 
     def find_by_capabilities(self, capabilities: list[str]) -> list[AgentInfo]:
-        """
-        Find agents that have ALL specified capabilities.
+        """Find agents that have ALL specified capabilities.
 
         Args:
             capabilities: List of capability identifiers
@@ -160,8 +150,7 @@ class AgentRegistry:
         ]
 
     def filter_by_type(self, agent_type: str) -> list[AgentInfo]:
-        """
-        Filter agents by type.
+        """Filter agents by type.
 
         Args:
             agent_type: Agent type to filter by ('local', 'remote', 'mcp')
@@ -172,8 +161,7 @@ class AgentRegistry:
         return [agent for agent in self.agents.values() if agent.agent_type == agent_type]
 
     def validate_agent_data(self, agent_data: dict[str, Any]) -> tuple[bool, str | None]:
-        """
-        Validate agent configuration data.
+        """Validate agent configuration data.
 
         Args:
             agent_data: Dictionary containing agent configuration
@@ -208,8 +196,7 @@ class AgentRegistry:
         return True, None
 
     def discover(self) -> None:
-        """
-        Discover and load agents from all configured discovery paths.
+        """Discover and load agents from all configured discovery paths.
 
         Scans all discovery paths for agent configuration files
         and registers valid agents.
@@ -222,8 +209,7 @@ class AgentRegistry:
             self._discover_from_path(path)
 
     def _discover_from_path(self, path: Path) -> None:
-        """
-        Discover agents from a specific path.
+        """Discover agents from a specific path.
 
         Args:
             path: Path to search for agent configuration files
@@ -238,8 +224,7 @@ class AgentRegistry:
             self._load_config_file(config_file)
 
     def _load_config_file(self, config_file: Path) -> None:
-        """
-        Load agents from a configuration file.
+        """Load agents from a configuration file.
 
         Args:
             config_file: Path to agent configuration JSON file
@@ -279,8 +264,7 @@ class AgentRegistry:
             logger.error(f"Failed to load config file {config_file}: {e}")
 
     def refresh(self) -> None:
-        """
-        Refresh agent registry by re-scanning configuration files.
+        """Refresh agent registry by re-scanning configuration files.
 
         Only reloads files that have been modified since last load.
         """
@@ -296,8 +280,7 @@ class AgentRegistry:
                 self._load_config_file(config_file)
 
     def create_fallback_agent(self) -> AgentInfo:
-        """
-        Create a default fallback agent for when no suitable agent is found.
+        """Create a default fallback agent for when no suitable agent is found.
 
         Returns:
             AgentInfo for the fallback LLM executor agent
@@ -312,8 +295,7 @@ class AgentRegistry:
         )
 
     def get_or_fallback(self, agent_id: str) -> AgentInfo:
-        """
-        Get an agent by ID, or return the fallback agent if not found.
+        """Get an agent by ID, or return the fallback agent if not found.
 
         Args:
             agent_id: ID of the agent to retrieve

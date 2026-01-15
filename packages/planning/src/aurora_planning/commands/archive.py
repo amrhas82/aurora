@@ -1,5 +1,4 @@
-"""
-Archive command for Aurora planning system.
+"""Archive command for Aurora planning system.
 
 Ported from OpenSpec src/core/archive.ts
 """
@@ -49,8 +48,7 @@ class ArchiveCommand:
         no_validate: bool = False,
         validate: bool | None = None,
     ) -> None:
-        """
-        Execute the archive command.
+        """Execute the archive command.
 
         Args:
             plan_name: Name of the plan to archive (prompts if None)

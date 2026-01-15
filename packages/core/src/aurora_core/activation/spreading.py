@@ -1,5 +1,4 @@
-"""
-Spreading Activation Implementation
+"""Spreading Activation Implementation
 
 This module implements spreading activation, a core component of ACT-R memory.
 Spreading activation propagates activation along relationship edges in the

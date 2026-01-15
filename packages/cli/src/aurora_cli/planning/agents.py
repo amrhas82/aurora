@@ -8,10 +8,9 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from aurora_cli.planning.models import AgentGap, Subgoal
-
 
 # Try to import ManifestManager - graceful fallback if not available
 try:
@@ -369,10 +368,10 @@ class AgentRecommender:
     def __init__(
         self,
         manifest: Optional["AgentManifest"] = None,
-        config: any | None = None,
+        config: Any | None = None,
         score_threshold: float = 0.5,
         default_fallback: str = "@full-stack-dev",
-        llm_client: any | None = None,  # CLIPipeLLMClient
+        llm_client: Any | None = None,  # CLIPipeLLMClient
     ) -> None:
         """Initialize agent recommender.
 

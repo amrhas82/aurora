@@ -1,5 +1,4 @@
-"""
-Context Boost Implementation
+"""Context Boost Implementation
 
 This module implements context boost, a component of ACT-R activation that
 increases activation for chunks matching the current query context. Context

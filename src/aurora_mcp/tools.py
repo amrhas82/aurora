@@ -1,5 +1,4 @@
-"""
-AURORA MCP Tools - Implementation of MCP tools for code indexing and search.
+"""AURORA MCP Tools - Implementation of MCP tools for code indexing and search.
 
 This module provides the actual implementation of the MCP tools:
 - aurora_search: Search indexed codebase
@@ -30,8 +29,7 @@ class AuroraMCPTools:
     """Implementation of AURORA MCP tools."""
 
     def __init__(self, db_path: str, config_path: str | None = None):
-        """
-        Initialize AURORA MCP Tools.
+        """Initialize AURORA MCP Tools.
 
         Args:
             db_path: Path to SQLite database
@@ -145,8 +143,7 @@ class AuroraMCPTools:
         suggestion: str,
         details: dict[str, Any] | None = None,
     ) -> str:
-        """
-        Format error message as JSON.
+        """Format error message as JSON.
 
         Args:
             error_type: Error type identifier

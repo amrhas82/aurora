@@ -1,5 +1,4 @@
-"""
-Validator for capabilities and plans.
+"""Validator for capabilities and plans.
 
 Ported from: src/core/validation/validator.ts
 Terminology: spec→capability, change→plan, delta→modification

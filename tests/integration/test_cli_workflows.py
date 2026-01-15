@@ -14,16 +14,13 @@ Test Coverage:
 - Task 3.13: aur query (real safety checks with git integration)
 """
 
-import json
 import os
-import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
 
 import pytest
-
 
 pytestmark = pytest.mark.ml
 

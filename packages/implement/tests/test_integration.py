@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from implement import ParsedTask, TaskExecutor, TaskParser
+from implement import TaskExecutor, TaskParser
 
 
 def test_parser_executor_integration():

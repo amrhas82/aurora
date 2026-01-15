@@ -1,5 +1,4 @@
-"""
-Unit tests for the abstract Store interface contract.
+"""Unit tests for the abstract Store interface contract.
 
 These tests verify that any Store implementation follows the expected
 interface contract and behavior patterns.
@@ -54,8 +53,7 @@ class TestStoreInterface:
 
 
 class StoreContractTests(ABC):
-    """
-    Abstract test suite that verifies Store implementation contract.
+    """Abstract test suite that verifies Store implementation contract.
 
     Concrete test classes for specific Store implementations should inherit
     from this class and implement the create_store() fixture.
@@ -63,8 +61,7 @@ class StoreContractTests(ABC):
 
     @pytest.fixture
     def store(self):
-        """
-        Create a Store instance for testing.
+        """Create a Store instance for testing.
 
         This should be overridden by concrete test classes.
         """

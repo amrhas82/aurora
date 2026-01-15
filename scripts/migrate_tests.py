@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Batch test migration script - Move test files between directories.
+"""Batch test migration script - Move test files between directories.
 
 This script performs careful, verified migration of test files:
 1. Reads a migration plan (JSON or manual list)
@@ -24,10 +23,9 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
-def run_command(cmd: List[str], check: bool = True) -> Tuple[int, str, str]:
+def run_command(cmd: list[str], check: bool = True) -> tuple[int, str, str]:
     """Run a shell command and return results."""
     result = subprocess.run(cmd, capture_output=True, text=True)
     if check and result.returncode != 0:
@@ -46,10 +44,10 @@ def verify_tests_pass(test_path: Path) -> bool:
     )
 
     if returncode == 0:
-        print(f"  ✅ Tests passed")
+        print("  ✅ Tests passed")
         return True
     else:
-        print(f"  ❌ Tests failed")
+        print("  ❌ Tests failed")
         print(f"     {stderr}")
         return False
 
@@ -75,19 +73,19 @@ def move_test_file(source: Path, dest_dir: Path, dry_run: bool = False) -> bool:
     )
 
     if returncode != 0:
-        print(f"❌ Failed to move file")
+        print("❌ Failed to move file")
         return False
 
-    print(f"✅ Moved successfully")
+    print("✅ Moved successfully")
     return True
 
 
 def migrate_from_manual_list(
-    migrations: List[Tuple[Path, Path]], verify: bool = True, dry_run: bool = False
+    migrations: list[tuple[Path, Path]], verify: bool = True, dry_run: bool = False
 ) -> bool:
     """Migrate tests from a manual list of (source, dest_dir) tuples."""
     print(f"\n{'='*70}")
-    print(f"Test Migration - Manual Mode")
+    print("Test Migration - Manual Mode")
     print(f"{'='*70}")
     print(f"Files to migrate: {len(migrations)}")
     print(f"Verification: {'enabled' if verify else 'disabled'}")
@@ -111,7 +109,7 @@ def migrate_from_manual_list(
                 if verify_tests_pass(dest_path):
                     success_count += 1
                 else:
-                    print(f"⚠️  Tests failed after move - consider reverting")
+                    print("⚠️  Tests failed after move - consider reverting")
                     failure_count += 1
             else:
                 success_count += 1
@@ -119,7 +117,7 @@ def migrate_from_manual_list(
             failure_count += 1
 
     print(f"\n{'='*70}")
-    print(f"Migration Summary")
+    print("Migration Summary")
     print(f"{'='*70}")
     print(f"✅ Successful: {success_count}")
     print(f"❌ Failed: {failure_count}")

@@ -1,5 +1,4 @@
-"""
-Abstract interface for code parsers.
+"""Abstract interface for code parsers.
 
 This module defines the CodeParser protocol that all language-specific parsers
 must implement to provide consistent code analysis capabilities across different
@@ -13,8 +12,7 @@ from aurora_core.chunks.code_chunk import CodeChunk
 
 
 class CodeParser(ABC):
-    """
-    Abstract base class for language-specific code parsers.
+    """Abstract base class for language-specific code parsers.
 
     All parser implementations must subclass this and implement the parse() method
     to extract code elements (functions, classes, methods) from source files.
@@ -31,8 +29,7 @@ class CodeParser(ABC):
     """
 
     def __init__(self, language: str):
-        """
-        Initialize the parser.
+        """Initialize the parser.
 
         Args:
             language: Programming language this parser handles
@@ -41,8 +38,7 @@ class CodeParser(ABC):
 
     @abstractmethod
     def parse(self, file_path: Path) -> list[CodeChunk]:
-        """
-        Parse a source file and extract code elements.
+        """Parse a source file and extract code elements.
 
         This method should:
         1. Read and parse the source file
@@ -67,8 +63,7 @@ class CodeParser(ABC):
 
     @abstractmethod
     def can_parse(self, file_path: Path) -> bool:
-        """
-        Check if this parser can handle the given file.
+        """Check if this parser can handle the given file.
 
         Typically checks file extension against supported extensions
         for this parser's language.

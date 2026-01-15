@@ -1,5 +1,4 @@
-"""
-Tests for requirements block parsing utilities.
+"""Tests for requirements block parsing utilities.
 
 Ported from: src/core/parsers/requirement-blocks.ts
 TDD approach: Tests written first based on TypeScript behavior.
@@ -7,12 +6,7 @@ TDD approach: Tests written first based on TypeScript behavior.
 Task: 3.3 - Write tests/unit/parsers/test_requirements.py
 """
 
-import pytest
-
 from aurora_cli.planning.parsers.requirements import (
-    ModificationPlan,
-    RequirementBlock,
-    RequirementsSectionParts,
     extract_requirements_section,
     normalize_requirement_name,
     parse_modification_spec,

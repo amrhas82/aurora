@@ -7,7 +7,7 @@ and marking tasks complete in tasks.md file upon successful execution.
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from aurora_spawner import SpawnResult, SpawnTask, spawn
 from implement.models import ParsedTask

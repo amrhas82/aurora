@@ -4,8 +4,6 @@ Tests that validation thresholds and messages are defined correctly
 and accessible for use in validation logic.
 """
 
-import pytest
-
 from aurora_cli.planning.validation.constants import (
     MAX_MODIFICATIONS_PER_PLAN,
     MAX_REQUIREMENT_TEXT_LENGTH,

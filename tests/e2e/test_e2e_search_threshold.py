@@ -5,15 +5,13 @@ and that config values are respected.
 """
 
 import json
-from pathlib import Path
 
 import pytest
-
 
 # These tests require real API access (LLM calls for query/reasoning)
 pytestmark = pytest.mark.real_api
 
-from tests.e2e.conftest import run_cli_command
+from tests.e2e.conftest import run_cli_command  # noqa: E402
 
 
 @pytest.fixture

@@ -1,5 +1,4 @@
-"""
-Integration tests for complexity assessment with SOAR orchestrator.
+"""Integration tests for complexity assessment with SOAR orchestrator.
 
 Tests verify that the new ComplexityAssessor correctly classifies queries
 and that the orchestrator properly routes them based on complexity level.
@@ -7,7 +6,6 @@ and that the orchestrator properly routes them based on complexity level.
 
 import pytest
 
-from aurora_soar.orchestrator import SOAROrchestrator
 from aurora_soar.phases.assess import assess_complexity
 
 

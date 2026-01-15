@@ -4,12 +4,10 @@ Tests the integration of SOAR decomposition into the planning workflow,
 including context building, agent loading, and graceful fallback.
 """
 
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import Mock, patch
 
 from aurora_cli.planning.decompose import PlanDecomposer
-from aurora_cli.planning.models import Complexity, Subgoal
+from aurora_cli.planning.models import Complexity
 
 
 class TestPlanDecomposer:
@@ -458,7 +456,6 @@ class TestAgentRecommendationIntegration:
         mock_decompose_query.return_value = mock_result
 
         # Mock agent recommender
-        from aurora_cli.planning.models import AgentGap
 
         mock_recommender = Mock()
         mock_recommender.recommend_for_subgoal.side_effect = [

@@ -1,5 +1,4 @@
-"""
-Tests for aurora.commands.init module.
+"""Tests for aurora.commands.init module.
 
 Ported from Aurora test/core/init.test.ts - SIMPLIFIED VERSION
 Full configurator support deferred to Phase 7 (CLI Commands).

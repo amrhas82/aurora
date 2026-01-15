@@ -1,5 +1,4 @@
-"""
-Multi-Tier Caching for Performance Optimization
+"""Multi-Tier Caching for Performance Optimization
 
 This module implements a multi-tier caching system to improve retrieval performance:
 

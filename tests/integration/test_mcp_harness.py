@@ -1,5 +1,4 @@
-"""
-MCP Test Harness - FastMCP Testing Integration
+"""MCP Test Harness - FastMCP Testing Integration
 
 This module provides a test harness for Aurora's MCP server using FastMCP
 testing utilities. It validates that all 5 MCP tools work correctly with
@@ -22,7 +21,6 @@ import pytest
 
 # Import MCP tools directly for testing
 from aurora_mcp.tools import AuroraMCPTools
-
 
 # Skip all tests in this module unless MCP is explicitly enabled (PRD-0024)
 pytestmark = pytest.mark.skipif(

@@ -1,5 +1,4 @@
-"""
-Comprehensive test suite for LLM client error handling and initialization.
+"""Comprehensive test suite for LLM client error handling and initialization.
 
 Tests cover:
 - TD-P2-001: LLM client initialization error paths

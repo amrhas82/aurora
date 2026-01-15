@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Pytest tests for the keyword-based complexity assessor.
+"""Pytest tests for the keyword-based complexity assessor.
 
 Tests validate:
 1. Core functionality and edge cases

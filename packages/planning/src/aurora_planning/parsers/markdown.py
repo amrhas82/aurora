@@ -1,5 +1,4 @@
-"""
-MarkdownParser for parsing capability and plan markdown files.
+"""MarkdownParser for parsing capability and plan markdown files.
 
 Ported from: src/core/parsers/markdown-parser.ts
 Terminology: spec→capability, change→plan, delta→modification

@@ -51,6 +51,7 @@ class TemplateRenderer:
         self.template_dir = template_dir or get_template_dir()
         self.env = Environment(
             loader=FileSystemLoader(str(self.template_dir)),
+            autoescape=True,
             trim_blocks=True,
             lstrip_blocks=True,
             keep_trailing_newline=True,

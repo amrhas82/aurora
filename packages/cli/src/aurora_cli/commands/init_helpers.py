@@ -13,10 +13,9 @@ import click
 import questionary
 from rich.console import Console
 
-from aurora_cli.configurators import TOOL_OPTIONS, ToolRegistry
+from aurora_cli.configurators import ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.templates.headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
-
 
 console = Console()
 

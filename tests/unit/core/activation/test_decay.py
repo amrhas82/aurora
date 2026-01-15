@@ -1,5 +1,4 @@
-"""
-Unit tests for Decay Penalty calculation.
+"""Unit tests for Decay Penalty calculation.
 
 Tests the ACT-R decay component including:
 - DecayConfig validation and defaults

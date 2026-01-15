@@ -1,5 +1,4 @@
-"""
-Unit tests for PythonParser.
+"""Unit tests for PythonParser.
 
 Tests all extraction features:
 - Function extraction

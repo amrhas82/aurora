@@ -11,14 +11,11 @@ This module tests the full plan creation workflow including:
 from __future__ import annotations
 
 import json
-from datetime import datetime
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from aurora_cli.planning.core import create_plan
-from aurora_cli.planning.models import Complexity, PlanStatus
 
 
 @pytest.fixture

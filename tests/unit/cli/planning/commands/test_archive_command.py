@@ -323,7 +323,7 @@ class TestArchiveCommandManifestIntegration:
 
     def test_manifest_updated_after_archive(self):
         """Verify manifest is updated when plan is archived."""
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir)

@@ -1,8 +1,6 @@
 """Tests for simplified headless command (pipe-to-CLI approach)."""
 
-import subprocess
-from pathlib import Path
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from click.testing import CliRunner

@@ -1,5 +1,4 @@
-"""
-Integration Test: Database Path Consistency
+"""Integration Test: Database Path Consistency
 
 Tests Issue #2: Database Path Confusion
 - Verifies all commands use config-specified database path
@@ -30,7 +29,6 @@ Priority: P0 (Critical)
 """
 
 import sqlite3
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -83,8 +81,7 @@ class Calculator:
     def test_memory_manager_respects_config_db_path(
         self, config_with_custom_path, custom_db_path, temp_workspace
     ):
-        """
-        Test that MemoryManager creates database at config-specified path.
+        """Test that MemoryManager creates database at config-specified path.
 
         This test will FAIL because MemoryManager doesn't use config.get_db_path().
         Currently, it creates DB at hardcoded path (e.g., ~/.aurora/memory.db).
@@ -120,8 +117,7 @@ class Calculator:
     def test_all_operations_use_same_database(
         self, config_with_custom_path, custom_db_path, temp_workspace
     ):
-        """
-        Test that stats, search, and retrieval all use the same database.
+        """Test that stats, search, and retrieval all use the same database.
 
         This test will FAIL if different operations use different databases.
         """
@@ -152,8 +148,7 @@ class Calculator:
     def test_search_uses_config_database(
         self, config_with_custom_path, custom_db_path, temp_workspace
     ):
-        """
-        Test that search operation uses config-specified database.
+        """Test that search operation uses config-specified database.
 
         This test will FAIL if search reads from different database.
         """
@@ -182,8 +177,7 @@ class Calculator:
         )
 
     def test_multiple_configs_with_different_paths(self, tmp_path, temp_workspace):
-        """
-        Test that different configs can use different database paths without interference.
+        """Test that different configs can use different database paths without interference.
 
         This test will FAIL if there's a global singleton DB or hardcoded path.
         """
@@ -231,8 +225,7 @@ class Calculator:
         )
 
     def test_config_get_db_path_expands_tilde(self, tmp_path):
-        """
-        Test that Config.get_db_path() properly expands ~ in paths.
+        """Test that Config.get_db_path() properly expands ~ in paths.
 
         This test will FAIL if get_db_path() method doesn't exist or doesn't expand ~.
         """
@@ -264,8 +257,7 @@ class Calculator:
         )
 
     def test_config_validation_for_db_path(self):
-        """
-        Test that Config validates db_path during initialization.
+        """Test that Config validates db_path during initialization.
 
         This test will FAIL if validation doesn't exist or is insufficient.
         """
@@ -332,8 +324,7 @@ class TestDatabaseMigration:
 
     @pytest.mark.skip(reason="Migration logic not yet implemented (task 3.5)")
     def test_detect_old_database(self, old_db_path):
-        """
-        Test that init command detects old aurora.db files.
+        """Test that init command detects old aurora.db files.
 
         This test is SKIPPED until migration logic is implemented in task 3.5.
         """
@@ -342,8 +333,7 @@ class TestDatabaseMigration:
 
     @pytest.mark.skip(reason="Migration logic not yet implemented (task 3.5)")
     def test_migrate_data_to_new_location(self, old_db_path, new_db_path):
-        """
-        Test that data is properly migrated from old to new database.
+        """Test that data is properly migrated from old to new database.
 
         This test is SKIPPED until migration logic is implemented in task 3.5.
         """

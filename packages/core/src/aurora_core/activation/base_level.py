@@ -1,5 +1,4 @@
-"""
-Base-Level Activation (BLA) Formula Implementation
+"""Base-Level Activation (BLA) Formula Implementation
 
 This module implements the ACT-R Base-Level Activation formula, which calculates
 activation based on the frequency and recency of chunk access patterns.
@@ -207,8 +206,6 @@ class BaseLevelActivation:
                 # Exponential spacing: more accesses near last_access
                 fraction = math.pow(i / (access_count - 1), 2.0)
                 offset_seconds = time_span * fraction
-
-                from datetime import timedelta
 
                 timestamp = creation_time + timedelta(seconds=offset_seconds)
                 history.append(AccessHistoryEntry(timestamp=timestamp))

@@ -1,11 +1,9 @@
-"""
-Performance tests for unified init command.
+"""Performance tests for unified init command.
 
 Tests init performance with various file counts to ensure
 initialization completes within acceptable time limits.
 """
 
-import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -49,8 +47,7 @@ def mock_config():
 
 
 def create_test_files(project_path: Path, count: int) -> list[Path]:
-    """
-    Create test Python files for indexing.
+    """Create test Python files for indexing.
 
     Args:
         project_path: Project directory path

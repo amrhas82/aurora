@@ -1,5 +1,4 @@
-"""
-Contract tests for aurora_planning package.
+"""Contract tests for aurora_planning package.
 
 These tests verify that the Plan and Modification schema contracts are honored.
 Contract tests ensure:

@@ -17,14 +17,9 @@ Original file: tests/unit/mcp/test_aurora_query_tool.py
 """
 
 import json
-import os
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 from aurora_mcp.tools import AuroraMCPTools
-
 
 # ==============================================================================
 # Task 1.4: API Key and Budget Tests (TDD)

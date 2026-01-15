@@ -1,5 +1,4 @@
-"""
-POC: Multi-turn MCP tool that controls the conversation loop.
+"""POC: Multi-turn MCP tool that controls the conversation loop.
 
 This tool makes SEPARATE API calls for each phase, controlling the flow
 from Python - not relying on Claude to "follow instructions".
@@ -12,8 +11,7 @@ import anthropic
 
 
 def run_multiturn_soar(query: str, api_key: str | None = None) -> dict:
-    """
-    Run a multi-turn SOAR query with separate LLM calls per phase.
+    """Run a multi-turn SOAR query with separate LLM calls per phase.
 
     The KEY insight: Python controls the loop, makes separate API calls.
     Claude doesn't need to "remember" to follow phases - we FORCE it.

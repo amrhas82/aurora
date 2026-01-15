@@ -4,11 +4,11 @@ Tests end-to-end workflows with mocked subprocess calls.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from aurora_spawner import SpawnResult, SpawnTask, spawn, spawn_parallel, spawn_sequential
+from aurora_spawner import SpawnResult, SpawnTask, spawn_parallel, spawn_sequential
 
 
 @pytest.mark.asyncio

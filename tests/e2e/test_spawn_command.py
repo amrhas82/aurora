@@ -8,10 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import pytest
 
-
-@pytest.mark.e2e
 class TestSpawnCommandE2E:
     """End-to-end tests for spawn command."""
 

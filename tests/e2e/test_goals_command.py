@@ -56,7 +56,6 @@ def valid_subgoal():
     )
 
 
-@pytest.mark.e2e
 class TestGoalsCommandE2E:
     """End-to-end tests for aur goals command."""
 

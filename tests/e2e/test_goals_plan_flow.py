@@ -55,7 +55,6 @@ def valid_subgoal():
     )
 
 
-@pytest.mark.e2e
 class TestGoalsPlanIntegration:
     """E2E tests for aur goals → /plan integration."""
 

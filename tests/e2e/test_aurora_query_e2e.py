@@ -73,7 +73,7 @@ class TestAuroraQueryE2E:
     """End-to-end tests for aurora_query with real Anthropic API.
 
     NOTE: These tests make real API calls and will incur costs.
-    They are marked with @pytest.mark.e2e for selective running.
+    They run as part of the e2e test suite.
     """
 
     def test_simple_query_with_real_api(self, tools, temp_aurora_config):

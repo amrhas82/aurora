@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-01-15
+
+### Added
+
+**Spawner: Early Failure Detection & Circuit Breaker:**
+- Circuit breaker pattern with CLOSED/OPEN/HALF_OPEN states (2 failures → skip agent for 120s)
+- Early error detection with 11 regex patterns (rate limit, 429, connection errors, auth failures)
+- Per-attempt failure tracking for faster circuit opening within same query
+- Soft error handling: timeouts/rate-limits don't stop execution of other agents
+- Heartbeat emitter support for real-time progress tracking
+- All spawner logs changed to DEBUG level for clean CLI output
+- New file: `packages/spawner/src/aurora_spawner/circuit_breaker.py` (~100 lines)
+
+**SOAR UI Enhancements:**
+- Plan Decomposition table display after Phase 4 verification
+  - Shows subgoal number, description, and assigned agent
+  - Spawned agents marked with asterisk (*) indicator
+- Summary panel with intelligent gap detection
+  - Format: "X subgoals • Y assigned • Z spawned"
+  - Lists missing agents that will fallback to LLM
+  - Proper singular/plural grammar (1 subgoal vs 2 subgoals)
+- `is_spawn` flag propagation from verify_lite through orchestrator to UI
+
+### Changed
+
+**SOAR Phase Improvements:**
+- Collect phase now distinguishes soft vs hard errors
+  - Soft errors (timeout, rate limit, quota) continue execution
+  - Hard errors (auth failures, code errors) stop immediately
+- Timeouts don't block other agents from running in parallel
+- Better error messages and user feedback throughout pipeline
+
+**Memory:**
+- `aur mem search` now records access and updates activation scores
+- ACT-R decay formula applied after each search (frequency + recency)
+- Chunks retrieved more often get higher activation in future searches
+
+### Fixed
+
+- Summary panel grammar: "1 subgoals" → "1 subgoal"
+- Gap detection using `is_spawn` flag instead of unreliable string matching
+- Non-friendly WARNING logs changed to DEBUG level
+- Clean CLI output with no verbose error messages during normal operation
+
+### Performance
+
+- Circuit breaker prevents wasting time on broken agents (skip after 2 failures)
+- Error patterns kill processes within 5s instead of waiting for 300s timeout
+- Parallel agent execution continues even when some agents fail
+
+---
+
 ## [0.6.7] - 2026-01-12
 
 ### Improved

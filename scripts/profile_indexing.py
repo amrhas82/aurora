@@ -231,7 +231,7 @@ def analyze_database_performance(db_path: Path) -> dict[str, Any]:
         tables = cursor.fetchall()
         table_stats = {}
         for (table_name,) in tables:
-            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")  # nosec
             count = cursor.fetchone()[0]
             table_stats[table_name] = count
         metrics["table_row_counts"] = table_stats

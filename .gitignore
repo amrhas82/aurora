@@ -79,6 +79,16 @@ htmlcov/
 cli_full_test.txt
 openspec-source/
 
+# Temporary reports and profiling results
+*_report.json
+*_report.txt
+profiling_results.json
+bandit-report.json
+coverage.json
+baseline_failures.txt
+misclassified-files.txt
+saas_summary.json
+
 # Test artifacts that should use tmp directories
 MagicMock/
 test_plans/

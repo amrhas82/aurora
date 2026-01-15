@@ -1,0 +1,53 @@
+{
+  "plan_id": "0008-unify-goals-soar-pipeline",
+  "created_at": "2026-01-14T21:30:00Z",
+  "goal": "Unify aur goals with SOAR pipeline so LLM sees actual code during decomposition",
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Add plan_only() to SOAR",
+      "description": "Create PlanResult dataclass and plan_only() method that runs phases 1-4",
+      "ideal_agent": "@full-stack-dev",
+      "assigned_agent": "@full-stack-dev",
+      "confidence": 0.9,
+      "depends_on": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Wire goals to SOAR",
+      "description": "Refactor aur goals command to use orchestrator.plan_only()",
+      "ideal_agent": "@full-stack-dev",
+      "assigned_agent": "@full-stack-dev",
+      "confidence": 0.85,
+      "depends_on": ["sg-1"]
+    },
+    {
+      "id": "sg-3",
+      "title": "Delete redundant code",
+      "description": "Remove PlanDecomposer, AgentRecommender, simplify core.py",
+      "ideal_agent": "@full-stack-dev",
+      "assigned_agent": "@full-stack-dev",
+      "confidence": 0.9,
+      "depends_on": ["sg-2"]
+    },
+    {
+      "id": "sg-4",
+      "title": "Test and validate",
+      "description": "Ensure goals output unchanged, file resolutions improved",
+      "ideal_agent": "@qa-test-architect",
+      "assigned_agent": "@qa-test-architect",
+      "confidence": 0.85,
+      "depends_on": ["sg-3"]
+    }
+  ],
+  "gaps": [],
+  "metadata": {
+    "source": "aur:plan",
+    "estimated_deletion": "~1200 lines",
+    "benefits": [
+      "LLM sees actual code during decomposition",
+      "Single source of truth for decomposition logic",
+      "Higher quality file resolutions"
+    ]
+  }
+}

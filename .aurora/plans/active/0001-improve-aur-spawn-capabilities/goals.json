@@ -1,0 +1,42 @@
+{
+  "id": "0001-improve-aur-spawn-capabilities",
+  "title": "i want to improve aur spawn capabilities in spawning adhoc agents after agent discovery find gaps in specialised agents",
+  "created_at": "2026-01-14T11:51:57.769380",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution/review.py",
+      "relevance": 0.6191545072368582
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Plan and design approach",
+      "description": "Analyze requirements and design approach for: i want to improve aur spawn capabilities in spawning adhoc agents after agent discovery find gaps in specialised agents",
+      "ideal_agent": "@holistic-architect",
+      "ideal_agent_desc": "System design and architecture specialist",
+      "agent": "@holistic-architect",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Implement solution",
+      "description": "Implement the planned solution for: i want to improve aur spawn capabilities in spawning adhoc agents after agent discovery find gaps in specialised agents",
+      "ideal_agent": "@full-stack-dev",
+      "ideal_agent_desc": "Full-stack development and implementation",
+      "agent": "@full-stack-dev",
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Test and verify",
+      "description": "Write tests and verify solution for: i want to improve aur spawn capabilities in spawning adhoc agents after agent discovery find gaps in specialised agents",
+      "ideal_agent": "@qa-test-architect",
+      "ideal_agent_desc": "Quality assurance and testing specialist",
+      "agent": "@qa-test-architect",
+      "dependencies": []
+    }
+  ],
+  "gaps": []
+}

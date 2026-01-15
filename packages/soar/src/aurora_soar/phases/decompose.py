@@ -154,17 +154,52 @@ def decompose_query(
     )
 
 
+def _read_file_lines(file_path: str, line_start: int, line_end: int, max_lines: int = 50) -> str:
+    """Read specific lines from a file.
+
+    Args:
+        file_path: Path to the file
+        line_start: Starting line (1-indexed)
+        line_end: Ending line (inclusive)
+        max_lines: Maximum lines to read (truncate if longer)
+
+    Returns:
+        File content or empty string if read fails
+    """
+    try:
+        from pathlib import Path
+
+        path = Path(file_path)
+        if not path.exists():
+            return ""
+
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+
+        # Convert to 0-indexed
+        start_idx = max(0, line_start - 1)
+        end_idx = min(len(lines), line_end)
+
+        # Limit lines to prevent huge context
+        if end_idx - start_idx > max_lines:
+            end_idx = start_idx + max_lines
+
+        return "".join(lines[start_idx:end_idx])
+    except Exception:
+        return ""
+
+
 def _build_context_summary(context: dict[str, Any]) -> str:
-    """Build a concise summary of retrieved context for decomposition.
+    """Build actionable context summary with actual code content.
+
+    For top chunks, reads actual file content so the LLM can see real code.
+    For remaining chunks, includes docstrings/signatures as fallback.
 
     Args:
         context: Context dict with code_chunks and reasoning_chunks
 
     Returns:
-        Summary string describing available context. When no chunks are
-        available (empty retrieval), returns a note indicating that LLM
-        general knowledge will be used, signaling to downstream phases
-        that retrieval failed.
+        Summary string with actual code the LLM can use for decomposition.
     """
     code_chunks = context.get("code_chunks", [])
     reasoning_chunks = context.get("reasoning_chunks", [])
@@ -172,23 +207,69 @@ def _build_context_summary(context: dict[str, Any]) -> str:
     summary_parts = []
 
     if code_chunks:
-        summary_parts.append(
-            f"Available code context: {len(code_chunks)} code chunks covering "
-            f"relevant functions, classes, and modules"
-        )
+        # Read actual code for top 7 chunks, docstrings for rest
+        TOP_N_WITH_CODE = 7
+        MAX_CHUNKS = 12
+
+        summary_parts.append(f"## Relevant Code ({len(code_chunks)} elements found)\n")
+
+        for i, chunk in enumerate(code_chunks[:MAX_CHUNKS]):
+            # Extract chunk info (handle both objects and dicts)
+            if hasattr(chunk, "file_path"):
+                # CodeChunk object
+                file_path = chunk.file_path
+                name = getattr(chunk, "name", "unknown")
+                element_type = getattr(chunk, "element_type", "")
+                line_start = getattr(chunk, "line_start", 0)
+                line_end = getattr(chunk, "line_end", 0)
+                docstring = getattr(chunk, "docstring", "") or ""
+            elif isinstance(chunk, dict):
+                metadata = chunk.get("metadata", {})
+                if metadata:
+                    file_path = metadata.get("file_path", "unknown")
+                    name = metadata.get("name", "unknown")
+                    element_type = metadata.get("type", "")
+                    line_start = metadata.get("line_start", 0)
+                    line_end = metadata.get("line_end", 0)
+                else:
+                    file_path = chunk.get("file_path", "unknown")
+                    name = chunk.get("name", "unknown")
+                    element_type = chunk.get("element_type", "")
+                    line_start = chunk.get("line_start", 0)
+                    line_end = chunk.get("line_end", 0)
+                docstring = chunk.get("content", "")
+            else:
+                continue
+
+            short_path = "/".join(file_path.split("/")[-2:]) if "/" in file_path else file_path
+            entry_parts = [f"### {element_type}: {name}", f"File: {short_path}"]
+
+            # For top N chunks, read actual code
+            if i < TOP_N_WITH_CODE and line_start and line_end:
+                code_content = _read_file_lines(file_path, line_start, line_end)
+                if code_content:
+                    entry_parts.append(f"```python\n{code_content.rstrip()}\n```")
+                elif docstring:
+                    entry_parts.append(f"Description: {docstring[:300]}...")
+            elif docstring:
+                # Fallback to docstring for remaining chunks
+                doc_preview = docstring[:200] + "..." if len(docstring) > 200 else docstring
+                entry_parts.append(f"Description: {doc_preview}")
+
+            summary_parts.append("\n".join(entry_parts))
+
+        if len(code_chunks) > MAX_CHUNKS:
+            summary_parts.append(f"\n... and {len(code_chunks) - MAX_CHUNKS} more elements")
 
     if reasoning_chunks:
         summary_parts.append(
-            f"Reasoning patterns: {len(reasoning_chunks)} previous successful "
-            f"decompositions and solutions"
+            f"\n## Previous Solutions: {len(reasoning_chunks)} relevant patterns available"
         )
 
-    # When no context is available (0 code chunks AND 0 reasoning chunks),
-    # return special message to signal retrieval failure to downstream phases
     if not summary_parts:
         return "No indexed context available. Using LLM general knowledge."
 
-    return ". ".join(summary_parts) + "."
+    return "\n\n".join(summary_parts)
 
 
 def clear_cache() -> None:

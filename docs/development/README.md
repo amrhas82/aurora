@@ -12,7 +12,9 @@ Developer guides, testing, and contribution guidelines.
 
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Testing guide and best practices
 - **[TEST_REFERENCE.md](TEST_REFERENCE.md)** - Test reference documentation
+- **[TEST_COVERAGE_REPORT.md](TEST_COVERAGE_REPORT.md)** - Test coverage summary for PRD-0029
 - **[CLI_TESTING_GUIDE.md](CLI_TESTING_GUIDE.md)** - CLI testing guide
+- **[SPAWN_TESTING_GUIDE.md](SPAWN_TESTING_GUIDE.md)** - Manual testing guide for `aur spawn`
 - **[PRE_PUSH_VALIDATION.md](PRE_PUSH_VALIDATION.md)** - Pre-push validation checklist
 
 ## Code Quality
@@ -21,6 +23,12 @@ Developer guides, testing, and contribution guidelines.
 - **[PROMPT_ENGINEERING_GUIDE.md](PROMPT_ENGINEERING_GUIDE.md)** - Prompt engineering guide
 - **[PROMPT_TEMPLATE_REVIEW.md](PROMPT_TEMPLATE_REVIEW.md)** - Prompt template review
 - **[ERROR_CATALOG.md](ERROR_CATALOG.md)** - Error catalog and handling
+
+## Implementation Status
+
+- **[PRD_0029_QUICK_START.md](PRD_0029_QUICK_START.md)** - 🚀 Quick start for new approval gates & policies features
+- **[PRD_0029_IMPLEMENTATION_STATUS.md](PRD_0029_IMPLEMENTATION_STATUS.md)** - Complete implementation details (Approval Gates, Policies & Recovery)
+- **[FEATURES_BACKLOG.md](FEATURES_BACKLOG.md)** - Planned features and enhancements
 
 ## Migration Guides
 

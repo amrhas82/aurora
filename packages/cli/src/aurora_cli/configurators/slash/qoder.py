@@ -26,12 +26,6 @@ description: Create implementation plan with agent delegation [goal]
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "proposal": """---
-name: Aurora: Proposal
-description: Draft spec-delta proposal with requirements [feature]
-category: Aurora
-tags: [aurora, proposalning]
----""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context ["optional-name"]
@@ -57,7 +51,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".qoder/commands/aurora/search.md",
     "get": ".qoder/commands/aurora/get.md",
     "plan": ".qoder/commands/aurora/plan.md",
-    "proposal": ".qoder/commands/aurora/proposal.md",
     "checkpoint": ".qoder/commands/aurora/checkpoint.md",
     "implement": ".qoder/commands/aurora/implement.md",
     "archive": ".qoder/commands/aurora/archive.md",

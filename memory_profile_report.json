@@ -1,0 +1,187 @@
+{
+  "total_duration_ms": 82686.78754000575,
+  "files_indexed": 95,
+  "chunks_created": 840,
+  "phases": [
+    {
+      "name": "Embedding generation",
+      "duration_ms": 70092.11089593009,
+      "operations": 840,
+      "throughput": 11.984230311556713,
+      "details": {
+        "measurements": 27,
+        "avg_ms": 2596.00410725667
+      }
+    },
+    {
+      "name": "Git blame extraction",
+      "duration_ms": 6781.2702329829335,
+      "operations": 95,
+      "throughput": 14.009174791167636,
+      "details": {
+        "measurements": 95,
+        "avg_ms": 71.38179192613615
+      }
+    },
+    {
+      "name": "Parsing files",
+      "duration_ms": 3718.3466691640206,
+      "operations": 95,
+      "throughput": 25.548989497893814,
+      "details": {
+        "measurements": 95,
+        "avg_ms": 39.14049125435811
+      }
+    },
+    {
+      "name": "Database writes",
+      "duration_ms": 1944.7636010008864,
+      "operations": 840,
+      "throughput": 431.929104168593,
+      "details": {
+        "measurements": 27,
+        "avg_ms": 72.02828151855135
+      }
+    },
+    {
+      "name": "File discovery",
+      "duration_ms": 139.19109699781984,
+      "operations": 1,
+      "throughput": 7.1843675462638465,
+      "details": {
+        "measurements": 1,
+        "avg_ms": 139.19109699781984
+      }
+    }
+  ],
+  "hotspots": [
+    {
+      "function": "<method 'keys' of 'collections.OrderedDict' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.24529800000000002,
+      "total_time_ms": 0.24529800000000002,
+      "calls": 351,
+      "time_per_call_ms": 0.0006988547008547009
+    },
+    {
+      "function": "<method 'values' of 'collections.OrderedDict' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.000466,
+      "total_time_ms": 0.000466,
+      "calls": 1,
+      "time_per_call_ms": 0.000466
+    },
+    {
+      "function": "<method 'items' of 'collections.OrderedDict' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.057929,
+      "total_time_ms": 0.057929,
+      "calls": 81,
+      "time_per_call_ms": 0.0007151728395061728
+    },
+    {
+      "function": "<method 'setter' of 'property' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.025241,
+      "total_time_ms": 0.025241,
+      "calls": 16,
+      "time_per_call_ms": 0.0015775625
+    },
+    {
+      "function": "<method 'extend' of 'bytearray' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.004564,
+      "total_time_ms": 0.004564,
+      "calls": 4,
+      "time_per_call_ms": 0.001141
+    },
+    {
+      "function": "<method 'find' of 'bytearray' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.6407320000000001,
+      "total_time_ms": 0.6407320000000001,
+      "calls": 627,
+      "time_per_call_ms": 0.0010219011164274326
+    },
+    {
+      "function": "<method 'translate' of 'bytearray' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.07688700000000001,
+      "total_time_ms": 0.07688700000000001,
+      "calls": 25,
+      "time_per_call_ms": 0.0030754800000000002
+    },
+    {
+      "function": "<method 'encode' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 2.699392,
+      "total_time_ms": 2.699392,
+      "calls": 3682,
+      "time_per_call_ms": 0.0007331319934818034
+    },
+    {
+      "function": "<method 'replace' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 26.979666,
+      "total_time_ms": 26.979666,
+      "calls": 2275,
+      "time_per_call_ms": 0.011859193846153849
+    },
+    {
+      "function": "<method 'split' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 119.08487400000001,
+      "total_time_ms": 119.08487400000001,
+      "calls": 44692,
+      "time_per_call_ms": 0.0026645680211223486
+    },
+    {
+      "function": "<method 'rsplit' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 3.801651,
+      "total_time_ms": 3.801651,
+      "calls": 2671,
+      "time_per_call_ms": 0.0014233062523399476
+    },
+    {
+      "function": "<method 'join' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 62.446805,
+      "total_time_ms": 30.601349000000003,
+      "calls": 26090,
+      "time_per_call_ms": 0.002393514948256037
+    },
+    {
+      "function": "<method 'find' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.061029,
+      "total_time_ms": 0.061029,
+      "calls": 82,
+      "time_per_call_ms": 0.0007442560975609756
+    },
+    {
+      "function": "<method 'partition' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 23.272947000000002,
+      "total_time_ms": 23.272947000000002,
+      "calls": 34051,
+      "time_per_call_ms": 0.0006834732313294764
+    },
+    {
+      "function": "<method 'index' of 'str' objects>",
+      "file": "~",
+      "cumulative_time_ms": 0.016452,
+      "total_time_ms": 0.016452,
+      "calls": 9,
+      "time_per_call_ms": 0.0018280000000000002
+    }
+  ],
+  "bottlenecks": [
+    "Embedding generation dominates at 84.8% of total time (70092ms for 840 operations)",
+    "File discovery has low throughput: 7.2 ops/sec"
+  ],
+  "recommendations": [
+    "Parsing is slow. Consider: (1) Parallel file parsing, (2) Tree-sitter query optimization, (3) Caching parse results",
+    "Embedding generation is slow (12.0 chunks/sec). Consider: (1) Larger batch sizes (current: 32), (2) GPU acceleration with sentence-transformers, (3) Faster embedding models (e.g., all-MiniLM-L6-v2)"
+  ]
+}

@@ -35,6 +35,12 @@ from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
 from implement.parser import TaskParser
 
+from aurora_cli.commands.spawn_helpers import (
+    clean_checkpoints as _clean_checkpoints_impl,
+    list_checkpoints as _list_checkpoints_impl,
+    resume_from_checkpoint as _resume_from_checkpoint_impl,
+)
+
 console = Console()
 logger = logging.getLogger(__name__)
 
@@ -67,14 +73,48 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     help="Parse and validate tasks without executing them",
 )
+@click.option(
+    "--yes",
+    "-y",
+    is_flag=True,
+    help="Skip execution preview prompt",
+)
+@click.option(
+    "--resume",
+    type=str,
+    default=None,
+    help="Resume from checkpoint by execution ID",
+)
+@click.option(
+    "--list-checkpoints",
+    is_flag=True,
+    help="List resumable checkpoints and exit",
+)
+@click.option(
+    "--clean-checkpoints",
+    type=int,
+    default=None,
+    metavar="DAYS",
+    help="Clean checkpoints older than DAYS and exit",
+)
+@click.option(
+    "--no-checkpoint",
+    is_flag=True,
+    help="Disable checkpoint creation",
+)
 def spawn_command(
     task_file: Path,
     parallel: bool,
     sequential: bool,
     verbose: bool,
     dry_run: bool,
+    yes: bool,
+    resume: str | None,
+    list_checkpoints: bool,
+    clean_checkpoints: int | None,
+    no_checkpoint: bool,
 ) -> None:
-    """Execute tasks from a markdown task file.
+    """Execute tasks from a markdown task file with checkpoint support.
 
     Loads tasks from TASK_FILE (default: tasks.md) and executes them using
     the aurora-spawner package. Tasks can specify agents via HTML comments:
@@ -85,16 +125,43 @@ def spawn_command(
     By default, tasks are executed in parallel with max_concurrent=5.
     Use --sequential to force one-at-a-time execution.
 
+    Supports checkpoints for resume after interruption:
+        aur spawn --resume <execution-id>
+        aur spawn --list-checkpoints
+        aur spawn --clean-checkpoints 7
+
     Args:
         task_file: Path to task file (default: tasks.md)
         parallel: Execute in parallel (default: True)
         sequential: Force sequential execution
         verbose: Show detailed output
         dry_run: Validate without executing
+        yes: Skip execution preview prompt
+        resume: Resume from checkpoint ID
+        list_checkpoints: List resumable checkpoints
+        clean_checkpoints: Clean old checkpoints (days)
+        no_checkpoint: Disable checkpoint creation
     """
     try:
-        # Load tasks from file
-        tasks = load_tasks(task_file)
+        from aurora_cli.execution import CheckpointManager
+
+        # Handle utility flags first
+        if list_checkpoints:
+            _list_checkpoints()
+            return
+
+        if clean_checkpoints is not None:
+            _clean_checkpoints(clean_checkpoints)
+            return
+
+        # Load or resume tasks
+        if resume:
+            tasks, execution_id = _resume_from_checkpoint(resume)
+            console.print(f"[cyan]Resuming execution: {execution_id}[/]")
+        else:
+            # Load tasks from file
+            tasks = load_tasks(task_file)
+            execution_id = f"spawn-{int(__import__('time').time() * 1000)}"
 
         if not tasks:
             console.print("[yellow]No tasks found in file.[/]")
@@ -109,15 +176,78 @@ def spawn_command(
                 console.print(f"  {status} {task.id}. {task.description} (agent: {task.agent})")
             return
 
+        # Check policies for potentially destructive operations
+        from aurora_cli.policies import Operation, OperationType, PoliciesEngine, PolicyAction
+
+        try:
+            policies = PoliciesEngine()
+
+            # Scan tasks for keywords that might indicate destructive operations
+            for task in tasks:
+                desc_lower = task.description.lower()
+
+                # Check for file deletion keywords
+                if any(kw in desc_lower for kw in ["delete", "remove", "rm ", "del "]):
+                    op = Operation(type=OperationType.FILE_DELETE, target=task.description, count=1)
+                    result = policies.check_operation(op)
+
+                    if result.action == PolicyAction.DENY:
+                        console.print(f"[red]Policy violation:[/] {result.reason}")
+                        console.print(f"[red]Task blocked:[/] {task.description}")
+                        return
+                    elif result.action == PolicyAction.PROMPT and not yes:
+                        console.print(f"[yellow]Warning:[/] {result.reason}")
+                        console.print(f"[yellow]Task:[/] {task.description}")
+                        if not click.confirm("Proceed with this task?"):
+                            console.print("[yellow]Execution cancelled by user.[/]")
+                            return
+
+        except Exception as e:
+            logger.warning(f"Policy check failed: {e}, proceeding without policy enforcement")
+
+        # Show execution preview (unless --yes or resuming)
+        if not yes and not resume:
+            from aurora_cli.execution import ExecutionPreview, ReviewDecision
+
+            # Convert tasks to preview format
+            preview_tasks = [
+                {"description": t.description, "agent_id": t.agent or "llm", "task": t.description}
+                for t in tasks
+            ]
+
+            preview = ExecutionPreview(preview_tasks)
+            preview.display()
+            decision = preview.prompt()
+
+            if decision == ReviewDecision.ABORT:
+                console.print("[yellow]Execution cancelled by user.[/]")
+                return
+
+        # Initialize checkpoint manager (unless disabled)
+        checkpoint_mgr = None
+        if not no_checkpoint:
+            checkpoint_mgr = CheckpointManager(execution_id, plan_id=None)
+            console.print(f"[dim]Checkpoint: {execution_id}[/]")
+
         # Determine execution mode
         use_parallel = parallel and not sequential
 
-        if use_parallel:
-            console.print("[cyan]Executing tasks in parallel...[/]")
-            result = asyncio.run(_execute_parallel(tasks, verbose))
-        else:
-            console.print("[cyan]Executing tasks sequentially...[/]")
-            result = asyncio.run(_execute_sequential(tasks, verbose))
+        try:
+            if use_parallel:
+                console.print("[cyan]Executing tasks in parallel...[/]")
+                result = asyncio.run(
+                    _execute_parallel(tasks, verbose, checkpoint_mgr=checkpoint_mgr)
+                )
+            else:
+                console.print("[cyan]Executing tasks sequentially...[/]")
+                result = asyncio.run(
+                    _execute_sequential(tasks, verbose, checkpoint_mgr=checkpoint_mgr)
+                )
+        except KeyboardInterrupt:
+            if checkpoint_mgr:
+                checkpoint_mgr.mark_interrupted()
+                console.print(f"\n[yellow]Interrupted. Resume with:[/] aur spawn --resume {execution_id}")
+            raise click.Abort()
 
         # Display summary
         console.print(f"\n[bold green]Completed:[/] {result['completed']}/{result['total']}")
@@ -165,12 +295,15 @@ def load_tasks(file_path: Path) -> list[ParsedTask]:
     return tasks
 
 
-async def _execute_parallel(tasks: list[ParsedTask], verbose: bool) -> dict[str, int]:
-    """Execute tasks in parallel.
+async def _execute_parallel(
+    tasks: list[ParsedTask], verbose: bool, checkpoint_mgr=None
+) -> dict[str, int]:
+    """Execute tasks in parallel with checkpoint support.
 
     Args:
         tasks: List of tasks to execute
         verbose: Show detailed output
+        checkpoint_mgr: Optional CheckpointManager for progress tracking
 
     Returns:
         Execution summary with total, completed, failed counts
@@ -212,12 +345,15 @@ async def _execute_parallel(tasks: list[ParsedTask], verbose: bool) -> dict[str,
     return {"total": total, "completed": completed, "failed": failed}
 
 
-async def _execute_sequential(tasks: list[ParsedTask], verbose: bool) -> dict[str, int]:
-    """Execute tasks sequentially.
+async def _execute_sequential(
+    tasks: list[ParsedTask], verbose: bool, checkpoint_mgr=None
+) -> dict[str, int]:
+    """Execute tasks sequentially with checkpoint support.
 
     Args:
         tasks: List of tasks to execute
         verbose: Show detailed output
+        checkpoint_mgr: Optional CheckpointManager for progress tracking
 
     Returns:
         Execution summary with total, completed, failed counts
@@ -266,3 +402,18 @@ def execute_tasks_parallel(tasks: list[ParsedTask]) -> dict[str, int]:
         Execution summary with total, completed, failed counts
     """
     return asyncio.run(_execute_parallel(tasks, verbose=False))
+
+
+def _list_checkpoints() -> None:
+    """List all resumable checkpoints."""
+    _list_checkpoints_impl()
+
+
+def _clean_checkpoints(days: int) -> None:
+    """Clean checkpoints older than specified days."""
+    _clean_checkpoints_impl(days)
+
+
+def _resume_from_checkpoint(execution_id: str) -> tuple[list[ParsedTask], str]:
+    """Resume execution from checkpoint."""
+    return _resume_from_checkpoint_impl(execution_id)

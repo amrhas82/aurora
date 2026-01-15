@@ -30,13 +30,6 @@ argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "proposal": """---
-name: Aurora: Proposal
-description: Draft spec-delta proposal with requirements [feature]
-argument-hint: request or feature description
-category: Aurora
-tags: [aurora, proposalning]
----""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context ["optional-name"]
@@ -65,7 +58,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".factory/commands/aurora-search.md",
     "get": ".factory/commands/aurora-get.md",
     "plan": ".factory/commands/aurora-plan.md",
-    "proposal": ".factory/commands/aurora-proposal.md",
     "checkpoint": ".factory/commands/aurora-checkpoint.md",
     "implement": ".factory/commands/aurora-implement.md",
     "archive": ".factory/commands/aurora-archive.md",

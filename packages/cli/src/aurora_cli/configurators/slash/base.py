@@ -31,7 +31,7 @@ class SlashCommandTarget:
 
 
 # All Aurora slash commands
-ALL_COMMANDS = ["search", "get", "plan", "proposal", "checkpoint", "implement", "archive"]
+ALL_COMMANDS = ["search", "get", "plan", "checkpoint", "implement", "archive"]
 
 
 class SlashCommandConfigurator(ABC):
@@ -103,6 +103,11 @@ class SlashCommandConfigurator(ABC):
                 if frontmatter:
                     sections.append(frontmatter.strip())
 
+                # Add description line before markers (Claude Code may use first line after frontmatter)
+                description = self.get_description(target.command_id)
+                if description:
+                    sections.append(f"\n{description}\n")
+
                 sections.append(f"{AURORA_MARKERS['start']}\n{body}\n{AURORA_MARKERS['end']}")
 
                 content = "\n".join(sections) + "\n"
@@ -171,6 +176,20 @@ class SlashCommandConfigurator(ABC):
             Command body content
         """
         ...
+
+    def get_description(self, command_id: str) -> str | None:
+        """Get a brief description for a slash command.
+
+        This is shown as the first line after frontmatter, before Aurora markers.
+        Claude Code may use this as the skill description in listings.
+
+        Args:
+            command_id: Command identifier
+
+        Returns:
+            Brief description string or None
+        """
+        return None
 
     def resolve_absolute_path(self, project_path: str, command_id: str) -> str:
         """Resolve absolute path for a slash command file.

@@ -204,6 +204,7 @@ class SOAROrchestrator:
         query: str,
         verbosity: str = "NORMAL",
         max_cost_usd: float | None = None,
+        context_files: list[str] | None = None,
     ) -> dict[str, Any]:
         """Execute the full 9-phase SOAR pipeline.
 
@@ -272,6 +273,11 @@ class SOAROrchestrator:
 
             # Phase 2: Retrieve context
             phase2_result = self._phase2_retrieve(query, phase1_result["complexity"])
+
+            # Inject context files if provided (--context flag)
+            if context_files:
+                phase2_result = self._inject_context_files(phase2_result, context_files)
+
             self._phase_metadata["phase2_retrieve"] = phase2_result
 
             # Check for SIMPLE query early exit
@@ -305,7 +311,23 @@ class SOAROrchestrator:
                 decomposition_dict, available_agents
             )
 
-            # Invoke callback with result
+            # Build subgoal summary for display and output formatting
+            subgoals = decomposition_dict.get("subgoals", [])
+            subgoal_details = []
+            for idx, agent in agent_assignments:
+                sg = subgoals[idx] if idx < len(subgoals) else {}
+                # Check if agent is a spawn (gap) - marked by verify_lite
+                is_spawn = getattr(agent, "config", {}).get("is_spawn", False)
+                subgoal_details.append({
+                    "index": idx + 1,
+                    "description": sg.get("description", ""),
+                    "agent": agent.id,
+                    "is_critical": sg.get("is_critical", False),
+                    "depends_on": sg.get("depends_on", []),
+                    "is_spawn": is_spawn,
+                })
+
+            # Invoke callback with result (including subgoal details for table display)
             self._invoke_callback(
                 "verify",
                 "after",
@@ -314,6 +336,7 @@ class SOAROrchestrator:
                     "overall_score": 1.0 if passed else 0.5,
                     "issues": issues,
                     "agents_assigned": len(agent_assignments),
+                    "subgoals": subgoal_details,  # For table display
                 },
             )
 
@@ -323,6 +346,7 @@ class SOAROrchestrator:
                     {"index": idx, "agent_id": agent.id} for idx, agent in agent_assignments
                 ],
                 "issues": issues,
+                "subgoals_detailed": subgoal_details,  # Add detailed subgoal data
                 "_timing_ms": 0,
                 "_error": None,
             }
@@ -348,12 +372,27 @@ class SOAROrchestrator:
                     decomposition_dict, available_agents
                 )
 
+                # Rebuild subgoal details for retry
+                subgoal_details = []
+                for idx, agent in agent_assignments:
+                    sg = subgoals[idx] if idx < len(subgoals) else {}
+                    is_spawn = getattr(agent, "config", {}).get("is_spawn", False)
+                    subgoal_details.append({
+                        "index": idx + 1,
+                        "description": sg.get("description", ""),
+                        "agent": agent.id,
+                        "is_critical": sg.get("is_critical", False),
+                        "depends_on": sg.get("depends_on", []),
+                        "is_spawn": is_spawn,
+                    })
+
                 phase4_result = {
                     "final_verdict": "PASS" if passed else "FAIL",
                     "agent_assignments": [
                         {"index": idx, "agent_id": agent.id} for idx, agent in agent_assignments
                     ],
                     "issues": issues,
+                    "subgoals_detailed": subgoal_details,  # Add detailed subgoal data
                     "_timing_ms": 0,
                     "_error": None,
                 }
@@ -494,6 +533,43 @@ class SOAROrchestrator:
             self._invoke_callback("assess", "after", {"complexity": "MEDIUM", "error": str(e)})
             return result
 
+    def _inject_context_files(
+        self, phase2_result: dict[str, Any], context_files: list[str]
+    ) -> dict[str, Any]:
+        """Inject explicit context files into phase 2 results.
+
+        Loads context files directly and merges them with retrieved context.
+        Used for --context flag support.
+
+        Args:
+            phase2_result: Result from phase 2 (retrieve)
+            context_files: List of file paths to load
+
+        Returns:
+            Modified phase2_result with injected context
+        """
+        from pathlib import Path
+
+        try:
+            from aurora_cli.memory.retrieval import MemoryRetriever
+
+            retriever = MemoryRetriever()
+            paths = [Path(f) for f in context_files]
+            loaded_chunks = retriever.load_context_files(paths)
+
+            if loaded_chunks:
+                # Prepend to code_chunks (explicit context has priority)
+                existing_chunks = phase2_result.get("code_chunks", [])
+                phase2_result["code_chunks"] = loaded_chunks + existing_chunks
+                logger.info(
+                    f"Injected {len(loaded_chunks)} context files into retrieval results"
+                )
+
+        except Exception as e:
+            logger.warning(f"Failed to inject context files: {e}")
+
+        return phase2_result
+
     def _phase2_retrieve(self, query: str, complexity: str) -> dict[str, Any]:
         """Execute Phase 2: Context Retrieval."""
         logger.info("Phase 2: Retrieving context")
@@ -581,13 +657,31 @@ class SOAROrchestrator:
         logger.info("Phase 5: Executing agents")
         self._invoke_callback("collect", "before", {})
         try:
-            # Execute agents asynchronously with new signature
+            # Load recovery config from policies
+            from aurora_cli.policies import PoliciesEngine
+
+            try:
+                policies = PoliciesEngine()
+                recovery_config = policies.get_recovery_config()
+                max_retries = recovery_config.max_retries
+                fallback_to_llm = recovery_config.fallback_to_llm
+                agent_timeout = recovery_config.timeout_seconds
+            except Exception as e:
+                logger.warning(f"Failed to load policies, using defaults: {e}")
+                max_retries = 2
+                fallback_to_llm = True
+                agent_timeout = 300  # 5 minutes - matches collect.DEFAULT_AGENT_TIMEOUT
+
+            # Execute agents asynchronously with recovery config
             result = asyncio.run(
                 collect.execute_agents(
                     agent_assignments=agent_assignments,
                     subgoals=subgoals,
                     context=context,
                     on_progress=on_progress,
+                    agent_timeout=agent_timeout,
+                    max_retries=max_retries,
+                    fallback_to_llm=fallback_to_llm,
                 )
             )
             findings_count = len(result.agent_outputs) if result.agent_outputs else 0
@@ -753,17 +847,44 @@ class SOAROrchestrator:
             if code_chunks:
                 prompt_parts.append("\nRelevant Code:")
                 for chunk in code_chunks[:5]:  # Limit to top 5
-                    content = (
-                        chunk.content if hasattr(chunk, "content") else chunk.get("content", "")
-                    )
-                    prompt_parts.append(f"- {content[:200]}...")  # Truncate long chunks
+                    # Handle both CodeChunk objects and dict representations
+                    if hasattr(chunk, "file_path"):
+                        # CodeChunk object - build display from attributes
+                        file_path = chunk.file_path
+                        name = getattr(chunk, "name", "")
+                        docstring = getattr(chunk, "docstring", "") or ""
+                        signature = getattr(chunk, "signature", "") or ""
+                        display = f"{file_path}: {name}"
+                        if signature:
+                            display += f" - {signature[:100]}"
+                        if docstring:
+                            display += f"\n  {docstring[:150]}"
+                        prompt_parts.append(f"- {display}")
+                    elif isinstance(chunk, dict):
+                        # Dict representation
+                        content = chunk.get("content", "")
+                        if isinstance(content, dict):
+                            # Nested content dict (from to_json format)
+                            file_path = content.get("file", "")
+                            name = content.get("function", "")
+                            display = f"{file_path}: {name}"
+                        else:
+                            display = str(content)[:200]
+                        prompt_parts.append(f"- {display}")
+                    else:
+                        # Fallback
+                        prompt_parts.append(f"- {str(chunk)[:200]}")
 
             if reasoning_chunks:
                 prompt_parts.append("\nRelevant Context:")
                 for chunk in reasoning_chunks[:3]:  # Limit to top 3
-                    pattern = (
-                        chunk.pattern if hasattr(chunk, "pattern") else chunk.get("pattern", "")
-                    )
+                    # Handle both objects and dict representations
+                    if hasattr(chunk, "pattern"):
+                        pattern = chunk.pattern
+                    elif isinstance(chunk, dict):
+                        pattern = chunk.get("pattern", str(chunk)[:200])
+                    else:
+                        pattern = str(chunk)[:200]
                     prompt_parts.append(f"- {pattern}")
 
             prompt_parts.append("\nPlease provide a clear, concise answer:")

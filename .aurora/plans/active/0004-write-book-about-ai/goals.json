@@ -1,0 +1,128 @@
+{
+  "id": "0004-write-book-about-ai",
+  "title": "i want to write a book about ai frameworks and how they help scaffold llms",
+  "created_at": "2026-01-14T12:23:43.786558",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/cache.py",
+      "relevance": 0.5278059534202795
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution/recovery.py",
+      "relevance": 0.4841463963899902
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution/review.py",
+      "relevance": 0.4769929215148269
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/benchmark_embedding_models.py",
+      "relevance": 0.467409020170806
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Research and analyze current AI frameworks landscape, their...",
+      "description": "Research and analyze current AI frameworks landscape, their architectures, and LLM scaffolding approaches",
+      "ideal_agent": "@technical-researcher",
+      "ideal_agent_desc": "Specialist in technical research, framework analysis, and synthesizing complex technical information",
+      "agent": "@business-analyst",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Define book structure, target audience, chapter outline,...",
+      "description": "Define book structure, target audience, chapter outline, and key themes to cover",
+      "ideal_agent": "@technical-writer",
+      "ideal_agent_desc": "Expert in technical documentation, book structuring, and educational content organization",
+      "agent": "@product-manager",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Create detailed chapter-by-chapter content plan with...",
+      "description": "Create detailed chapter-by-chapter content plan with specific frameworks to cover (LangChain, AutoGPT, LlamaIndex, etc.)",
+      "ideal_agent": "@content-strategist",
+      "ideal_agent_desc": "Specialist in content planning, narrative flow, and educational progression",
+      "agent": "@product-owner",
+      "dependencies": [
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Develop technical examples and code samples demonstrating...",
+      "description": "Develop technical examples and code samples demonstrating framework usage and LLM scaffolding patterns",
+      "ideal_agent": "@ai-engineer",
+      "ideal_agent_desc": "Expert in LLM implementation, framework usage, and creating technical examples",
+      "agent": "@full-stack-dev",
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Write manuscript content with clear explanations, examples,...",
+      "description": "Write manuscript content with clear explanations, examples, and practical guidance",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialist in writing engaging technical content, narrative development, and educational writing",
+      "agent": "@master",
+      "dependencies": [
+        "sg-4"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Review technical accuracy, clarity, completeness, and...",
+      "description": "Review technical accuracy, clarity, completeness, and educational effectiveness",
+      "ideal_agent": "@technical-editor",
+      "ideal_agent_desc": "Expert in technical editing, accuracy validation, and content quality assessment",
+      "agent": "@qa-test-architect",
+      "dependencies": [
+        "sg-5"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@technical-researcher",
+      "ideal_agent_desc": "Specialist in technical research, framework analysis, and synthesizing complex technical information",
+      "assigned_agent": "@business-analyst"
+    },
+    {
+      "subgoal_id": "sg-2",
+      "ideal_agent": "@technical-writer",
+      "ideal_agent_desc": "Expert in technical documentation, book structuring, and educational content organization",
+      "assigned_agent": "@product-manager"
+    },
+    {
+      "subgoal_id": "sg-3",
+      "ideal_agent": "@content-strategist",
+      "ideal_agent_desc": "Specialist in content planning, narrative flow, and educational progression",
+      "assigned_agent": "@product-owner"
+    },
+    {
+      "subgoal_id": "sg-4",
+      "ideal_agent": "@ai-engineer",
+      "ideal_agent_desc": "Expert in LLM implementation, framework usage, and creating technical examples",
+      "assigned_agent": "@full-stack-dev"
+    },
+    {
+      "subgoal_id": "sg-5",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialist in writing engaging technical content, narrative development, and educational writing",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-6",
+      "ideal_agent": "@technical-editor",
+      "ideal_agent_desc": "Expert in technical editing, accuracy validation, and content quality assessment",
+      "assigned_agent": "@qa-test-architect"
+    }
+  ]
+}

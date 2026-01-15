@@ -24,11 +24,6 @@ description: Create implementation plan with agent delegation [goal]
 ---
 
 $ARGUMENTS""",
-    "proposal": """---
-description: Draft spec-delta proposal with requirements [feature]
----
-
-$ARGUMENTS""",
     "checkpoint": """---
 description: Save session context ["optional-name"]
 ---
@@ -51,7 +46,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".github/prompts/aurora-search.prompt.md",
     "get": ".github/prompts/aurora-get.prompt.md",
     "plan": ".github/prompts/aurora-plan.prompt.md",
-    "proposal": ".github/prompts/aurora-proposal.prompt.md",
     "checkpoint": ".github/prompts/aurora-checkpoint.prompt.md",
     "implement": ".github/prompts/aurora-implement.prompt.md",
     "archive": ".github/prompts/aurora-archive.prompt.md",

@@ -131,11 +131,11 @@ class ManifestManager:
             seen_ids[agent.id] = str(file_path)
             category_counts[agent.category.value] += 1
 
-        # Show single warning for duplicates (if any)
+        # Show info message for duplicates (expected when scanning multiple tools)
         if duplicates:
             unique_dups = sorted(set(duplicates))
-            logger.warning(
-                "Found %d duplicate agent IDs (keeping first occurrence): %s",
+            logger.info(
+                "Found %d agents shared across tools (deduplicated): %s",
                 len(duplicates),
                 ", ".join(unique_dups[:5]) + ("..." if len(unique_dups) > 5 else ""),
             )

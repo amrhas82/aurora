@@ -59,13 +59,17 @@ async def _spawn_with_spinner(
     total_agents: int,
     agent_id: str,
     on_progress: Callable | None,
+    max_retries: int = 2,
+    fallback_to_llm: bool = True,
 ) -> SpawnResult:
     """Run spawn_with_retry_and_fallback with a spinner on TTY."""
     show_spinner = sys.stdout.isatty()
     start_time = time.time()
 
-    # Create the spawn task
-    spawn_coro = spawn_with_retry_and_fallback(task, on_progress=progress_cb)
+    # Create the spawn task with configurable recovery
+    spawn_coro = spawn_with_retry_and_fallback(
+        task, on_progress=progress_cb, max_retries=max_retries, fallback_to_llm=fallback_to_llm
+    )
 
     if not show_spinner:
         # No spinner, just await
@@ -178,6 +182,8 @@ async def execute_agents(
     context: dict[str, Any],
     on_progress: Any = None,
     agent_timeout: float = DEFAULT_AGENT_TIMEOUT,
+    max_retries: int = 2,
+    fallback_to_llm: bool = True,
 ) -> CollectResult:
     """Execute agents with automatic retry and fallback to LLM.
 
@@ -194,6 +200,8 @@ async def execute_agents(
         context: Retrieved context from earlier phases
         on_progress: Optional callback for progress updates: "[Agent X/Y] agent-id: Status"
         agent_timeout: Timeout per agent execution in seconds (default 300)
+        max_retries: Maximum retries per agent (default 2)
+        fallback_to_llm: Whether to fallback to LLM after retries (default True)
 
     Returns:
         CollectResult with all agent outputs and fallback metadata
@@ -286,7 +294,7 @@ After your deliverable, suggest a formal agent specification for this capability
         if on_progress:
             on_progress(f"[Agent {agent_idx}/{total_agents}] {agent.id}: Starting...")
 
-        # Run spawn with concurrent spinner
+        # Run spawn with concurrent spinner and recovery config
         spawn_result = await _spawn_with_spinner(
             spawn_task,
             progress_cb,
@@ -294,6 +302,8 @@ After your deliverable, suggest a formal agent specification for this capability
             total_agents,
             agent.id,
             on_progress,
+            max_retries=max_retries,
+            fallback_to_llm=fallback_to_llm,
         )
 
         # Track fallback and spawn usage
@@ -354,9 +364,23 @@ After your deliverable, suggest a formal agent specification for this capability
             if on_progress:
                 on_progress(f"[Agent {agent_idx}/{total_agents}] {agent.id}: Failed")
 
-            # Check if critical subgoal
-            if subgoal.get("is_critical", False):
+            # Check if critical subgoal with HARD failure
+            # Soft errors (timeout, no activity) should NOT stop execution
+            is_critical = subgoal.get("is_critical", False)
+            error_msg = spawn_result.error or ""
+            is_soft_error = any(pattern in error_msg.lower() for pattern in [
+                "timeout", "no activity", "timed out", "circuit open",
+                "rate limit", "429", "quota"
+            ])
+
+            if is_critical and not is_soft_error:
+                # Only raise for hard failures on critical subgoals
                 raise RuntimeError(f"Critical subgoal {subgoal_idx} failed: {spawn_result.error}")
+            elif is_critical and is_soft_error:
+                # Soft error on critical - log at debug level, continue silently
+                logger.debug(
+                    f"Critical subgoal {subgoal_idx} had soft failure ({error_msg}), continuing"
+                )
 
         agent_outputs.append(output)
 

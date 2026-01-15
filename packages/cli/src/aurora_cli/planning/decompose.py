@@ -17,8 +17,18 @@ from pathlib import Path
 from typing import Any
 
 from aurora_cli.planning.agents import AgentRecommender
+from aurora_cli.planning.cache import PlanDecompositionCache
 from aurora_cli.planning.memory import FilePathResolver
 from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
+
+# Try to import MemoryRetriever for context loading
+try:
+    from aurora_cli.memory.retrieval import MemoryRetriever
+
+    MEMORY_RETRIEVER_AVAILABLE = True
+except ImportError:
+    MEMORY_RETRIEVER_AVAILABLE = False
+    MemoryRetriever = None  # type: ignore
 
 # Try to import SOAR - graceful fallback if not available
 try:
@@ -52,17 +62,41 @@ class PlanDecomposer:
 
     Attributes:
         config: Optional configuration object for LLM settings
-        _cache: Cache for decomposition results (goal+complexity -> result)
+        cache: Specialized cache for decomposition results with LRU+TTL
     """
 
-    def __init__(self, config: Any | None = None):
+    def __init__(
+        self,
+        config: Any | None = None,
+        store: Any | None = None,
+        cache_capacity: int = 100,
+        cache_ttl_hours: int = 24,
+        enable_persistent_cache: bool = True,
+    ):
         """Initialize PlanDecomposer.
 
         Args:
             config: Optional configuration object with LLM settings
+            store: Optional SQLiteStore for memory retrieval
+            cache_capacity: Maximum number of decompositions to cache (default: 100)
+            cache_ttl_hours: Cache entry TTL in hours (default: 24)
+            enable_persistent_cache: Enable persistent cache storage (default: True)
         """
         self.config = config
-        self._cache: dict[str, tuple[list[Subgoal], str]] = {}
+        self.store = store
+
+        # Initialize specialized decomposition cache
+        persistent_path = None
+        if enable_persistent_cache:
+            # Use .aurora/cache for persistent storage
+            cache_dir = Path.cwd() / ".aurora" / "cache"
+            persistent_path = cache_dir / "decomposition_cache.db"
+
+        self.cache = PlanDecompositionCache(
+            capacity=cache_capacity,
+            ttl_hours=cache_ttl_hours,
+            persistent_path=persistent_path,
+        )
 
     def decompose(
         self,
@@ -85,19 +119,20 @@ class PlanDecomposer:
         if complexity is None:
             complexity = Complexity.MODERATE
 
-        # Check cache first
-        cache_key = self._get_cache_key(goal, complexity)
-        if cache_key in self._cache:
+        # Check cache first (handles both in-memory and persistent)
+        cached_result = self.cache.get(goal, complexity, context_files)
+        if cached_result:
             logger.debug(f"Cache hit for goal: {goal[:50]}...")
-            return self._cache[cache_key]
+            return cached_result
 
         # Try SOAR first
         if SOAR_AVAILABLE and decompose_query:
             try:
-                context = self._build_context(context_files)
+                context = self._build_context(context_files, goal=goal)
                 subgoals = self._call_soar(goal, context, complexity)
                 result = (subgoals, "soar")
-                self._cache[cache_key] = result
+                # Cache the result
+                self.cache.set(goal, complexity, subgoals, "soar", context_files)
                 return result
             except (ImportError, RuntimeError, TimeoutError) as e:
                 logger.warning(f"SOAR decomposition failed: {e}, falling back to heuristics")
@@ -105,7 +140,8 @@ class PlanDecomposer:
         # Fallback to heuristics
         subgoals = self._fallback_to_heuristics(goal, complexity)
         result = (subgoals, "heuristic")
-        self._cache[cache_key] = result
+        # Cache the heuristic result
+        self.cache.set(goal, complexity, subgoals, "heuristic", context_files)
         return result
 
     def decompose_with_files(
@@ -204,48 +240,101 @@ class PlanDecomposer:
 
         return subgoals, agent_recommendations, agent_gaps, source
 
-    def _get_cache_key(self, goal: str, complexity: Complexity) -> str:
-        """Generate cache key from goal and complexity.
-
-        Args:
-            goal: The goal string
-            complexity: Complexity level
+    def get_cache_stats(self) -> dict[str, Any]:
+        """Get cache statistics.
 
         Returns:
-            Hash-based cache key
+            Dictionary with cache statistics including size, hits, misses, hit_rate
         """
-        content = f"{goal}::{complexity.value}"
-        return hashlib.sha256(content.encode()).hexdigest()[:32]
+        return self.cache.get_stats()
 
-    def _build_context(self, context_files: list[str] | None = None) -> dict[str, Any]:
+    def clear_cache(self) -> None:
+        """Clear all cache entries (both in-memory and persistent)."""
+        self.cache.clear()
+
+    def _build_context(
+        self,
+        context_files: list[str] | None = None,
+        goal: str | None = None,
+    ) -> dict[str, Any]:
         """Build context dictionary for SOAR decomposition.
+
+        Loads context from:
+        1. Explicit context files (--context flag) - highest priority
+        2. Memory retrieval based on goal query - if no explicit files
 
         Args:
             context_files: Optional list of relevant file paths
+            goal: Optional goal string for memory retrieval
 
         Returns:
             Context dictionary with code_chunks and reasoning_chunks
         """
-        # For now, return empty context
-        # In future, integrate with memory retrieval system
-        return {
-            "code_chunks": [],
-            "reasoning_chunks": [],
-        }
+        code_chunks: list[Any] = []
+        reasoning_chunks: list[Any] = []
+
+        if not MEMORY_RETRIEVER_AVAILABLE or not MemoryRetriever:
+            logger.debug("MemoryRetriever not available, returning empty context")
+            return {"code_chunks": code_chunks, "reasoning_chunks": reasoning_chunks}
+
+        try:
+            retriever = MemoryRetriever(store=self.store, config=self.config)
+
+            # Priority 1: Load explicit context files (highest priority)
+            if context_files:
+                paths = [Path(f) for f in context_files]
+                loaded_chunks = retriever.load_context_files(paths)
+                if loaded_chunks:
+                    code_chunks.extend(loaded_chunks)
+                    logger.info(
+                        "Loaded %d explicit context files for decomposition",
+                        len(loaded_chunks),
+                    )
+
+            # Priority 2: Always query memory to augment context (not just fallback)
+            if goal and self.store:
+                retrieved = retriever.retrieve(goal, limit=10)
+                if retrieved:
+                    code_chunks.extend(retrieved)
+                    logger.info(
+                        "Retrieved %d chunks from memory for decomposition",
+                        len(retrieved),
+                    )
+
+        except Exception as e:
+            logger.warning("Failed to build context: %s", e)
+
+        return {"code_chunks": code_chunks, "reasoning_chunks": reasoning_chunks}
+
+    def _read_file_lines(
+        self, file_path: str, line_start: int, line_end: int, max_lines: int = 50
+    ) -> str:
+        """Read specific lines from a file."""
+        try:
+            path = Path(file_path)
+            if not path.exists():
+                return ""
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                lines = f.readlines()
+            start_idx = max(0, line_start - 1)
+            end_idx = min(len(lines), line_end)
+            if end_idx - start_idx > max_lines:
+                end_idx = start_idx + max_lines
+            return "".join(lines[start_idx:end_idx])
+        except Exception:
+            return ""
 
     def _build_context_summary(self, context: dict[str, Any]) -> str:
-        """Build a concise summary of retrieved context for decomposition.
+        """Build actionable context summary with actual code content.
 
-        This method mirrors the logic from aurora_soar.phases.decompose._build_context_summary
-        to provide consistent context summary formatting.
+        For top chunks, reads actual file content so the LLM can see real code.
+        For remaining chunks, includes docstrings as fallback.
 
         Args:
             context: Context dict with code_chunks and reasoning_chunks
 
         Returns:
-            Summary string describing available context. When no chunks are
-            available (empty retrieval), returns a note indicating that LLM
-            general knowledge will be used. Limited to 500 characters.
+            Summary string with actual code the LLM can use for decomposition.
         """
         code_chunks = context.get("code_chunks", [])
         reasoning_chunks = context.get("reasoning_chunks", [])
@@ -253,25 +342,66 @@ class PlanDecomposer:
         summary_parts = []
 
         if code_chunks:
-            summary_parts.append(
-                f"Available code context: {len(code_chunks)} code chunks covering "
-                f"relevant functions, classes, and modules"
-            )
+            TOP_N_WITH_CODE = 7
+            MAX_CHUNKS = 12
+
+            summary_parts.append(f"## Relevant Code ({len(code_chunks)} elements)\n")
+
+            for i, chunk in enumerate(code_chunks[:MAX_CHUNKS]):
+                # Extract chunk info (handle both objects and dicts)
+                if hasattr(chunk, "file_path"):
+                    file_path = chunk.file_path
+                    name = getattr(chunk, "name", "unknown")
+                    element_type = getattr(chunk, "element_type", "")
+                    line_start = getattr(chunk, "line_start", 0)
+                    line_end = getattr(chunk, "line_end", 0)
+                    docstring = getattr(chunk, "docstring", "") or ""
+                elif isinstance(chunk, dict):
+                    metadata = chunk.get("metadata", {})
+                    if metadata:
+                        file_path = metadata.get("file_path", "unknown")
+                        name = metadata.get("name", "unknown")
+                        element_type = metadata.get("type", "")
+                        line_start = metadata.get("line_start", 0)
+                        line_end = metadata.get("line_end", 0)
+                    else:
+                        file_path = chunk.get("file_path", "unknown")
+                        name = chunk.get("name", "unknown")
+                        element_type = chunk.get("element_type", "")
+                        line_start = chunk.get("line_start", 0)
+                        line_end = chunk.get("line_end", 0)
+                    docstring = chunk.get("content", "")
+                else:
+                    continue
+
+                short_path = "/".join(file_path.split("/")[-2:]) if "/" in file_path else file_path
+                entry_parts = [f"### {element_type}: {name}", f"File: {short_path}"]
+
+                # For top N chunks, read actual code
+                if i < TOP_N_WITH_CODE and line_start and line_end:
+                    code_content = self._read_file_lines(file_path, line_start, line_end)
+                    if code_content:
+                        entry_parts.append(f"```python\n{code_content.rstrip()}\n```")
+                    elif docstring:
+                        entry_parts.append(f"Description: {docstring[:300]}...")
+                elif docstring:
+                    doc_preview = docstring[:200] + "..." if len(docstring) > 200 else docstring
+                    entry_parts.append(f"Description: {doc_preview}")
+
+                summary_parts.append("\n".join(entry_parts))
+
+            if len(code_chunks) > MAX_CHUNKS:
+                summary_parts.append(f"\n... and {len(code_chunks) - MAX_CHUNKS} more elements")
 
         if reasoning_chunks:
             summary_parts.append(
-                f"Reasoning patterns: {len(reasoning_chunks)} previous successful "
-                f"decompositions and solutions"
+                f"\n## Previous Solutions: {len(reasoning_chunks)} relevant patterns"
             )
 
-        # When no context is available (0 code chunks AND 0 reasoning chunks),
-        # return special message to signal retrieval failure to downstream phases
         if not summary_parts:
             return "No indexed context available. Using LLM general knowledge."
 
-        # Join parts and limit to 500 characters
-        summary = ". ".join(summary_parts) + "."
-        return summary[:500] if len(summary) > 500 else summary
+        return "\n\n".join(summary_parts)
 
     def _load_available_agents(self) -> list[str] | None:
         """Load available agents from manifest.

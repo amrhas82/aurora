@@ -15,6 +15,25 @@ from typing import Any
 from aurora_core.paths import get_conversations_dir
 
 
+class ChunkAwareEncoder(json.JSONEncoder):
+    """JSON encoder that handles CodeChunk and other dataclass-like objects."""
+
+    def default(self, obj: Any) -> Any:
+        # Handle objects with to_json method (like CodeChunk)
+        if hasattr(obj, "to_json"):
+            return obj.to_json()
+        # Handle objects with __dict__ (most Python objects)
+        if hasattr(obj, "__dict__"):
+            return {k: v for k, v in obj.__dict__.items() if not k.startswith("_")}
+        # Handle datetime objects
+        if hasattr(obj, "isoformat"):
+            return obj.isoformat()
+        # Handle bytes
+        if isinstance(obj, bytes):
+            return "<binary data>"
+        return super().default(obj)
+
+
 class VerbosityLevel(str, Enum):
     """Verbosity levels for SOAR output."""
 
@@ -257,6 +276,44 @@ class ConversationLogger:
         lines.append("---")
         lines.append("")
 
+        # Subgoal breakdown section (from decompose phase)
+        if "decompose" in phase_data:
+            decompose_data = phase_data["decompose"]
+            decomposition = decompose_data.get("decomposition", {})
+
+            if isinstance(decomposition, dict):
+                goal = decomposition.get("goal", "")
+                subgoals = decomposition.get("subgoals", [])
+
+                if goal or subgoals:
+                    lines.append("## Subgoal Breakdown")
+                    lines.append("")
+
+                    if goal:
+                        lines.append(f"**Goal**: {goal}")
+                        lines.append("")
+
+                    if subgoals:
+                        lines.append("**Subgoals**:")
+                        lines.append("")
+                        for i, subgoal in enumerate(subgoals, 1):
+                            if isinstance(subgoal, dict):
+                                desc = subgoal.get("description", "")
+                                agent = subgoal.get("agent", "N/A")
+                                criticality = subgoal.get("criticality", "N/A")
+                                dependencies = subgoal.get("dependencies", [])
+
+                                lines.append(f"{i}. **{desc}**")
+                                lines.append(f"   - Agent: `{agent}`")
+                                lines.append(f"   - Criticality: {criticality}")
+                                if dependencies:
+                                    deps_str = ", ".join(str(d) for d in dependencies)
+                                    lines.append(f"   - Dependencies: [{deps_str}]")
+                                lines.append("")
+
+                    lines.append("---")
+                    lines.append("")
+
         # Phase sections with numbers
         phase_order = [
             ("assess", 1),
@@ -276,7 +333,7 @@ class ConversationLogger:
                 lines.append("")
 
                 # Format phase data as JSON block
-                phase_json = json.dumps(phase_data[phase_name], indent=2)
+                phase_json = json.dumps(phase_data[phase_name], indent=2, cls=ChunkAwareEncoder)
                 lines.append("```json")
                 lines.append(phase_json)
                 lines.append("```")
@@ -313,7 +370,7 @@ class ConversationLogger:
             lines.append("## Metadata")
             lines.append("")
             lines.append("```json")
-            lines.append(json.dumps(metadata, indent=2))
+            lines.append(json.dumps(metadata, indent=2, cls=ChunkAwareEncoder))
             lines.append("```")
             lines.append("")
 

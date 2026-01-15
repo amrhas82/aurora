@@ -1,3 +1,22 @@
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
+
+These instructions are for AI assistants working in this project.
+
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
+
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
+
+Keep this managed block so 'openspec update' can refresh the instructions.
+
+<!-- OPENSPEC:END -->
+
 <!-- AURORA:START -->
 # Aurora Instructions
 
@@ -35,13 +54,18 @@ Python 3.10+, Click CLI, Pydantic, SQLite, tree-sitter, BM25, sentence-transform
 Build: `make install` | Test: `make test` | Lint: `make lint` | Quality: `make quality-check`
 
 ## CLI Entry Points
-- `aur init` - Initialize project
-- `aur mem index .` - Index codebase
-- `aur mem search "query"` - Search memory
+**Setup** (run in project directory):
+- `aur init` - Initialize project (creates `.aurora/` directory and database)
+- `aur mem index .` - Index codebase into project database
+
+**Usage** (requires `aur init` first):
+- `aur mem search "query"` - Search project memory (uses `.aurora/memory.db`)
 - `aur goals "Add feature"` - Decompose goal into tasks
 - `aur soar "How does X work?"` - Answer complex questions
 - `aur spawn tasks.md` - Execute tasks in parallel
 - `aur doctor` - Health check
+
+**Note**: Database is project-local at `./.aurora/memory.db`, not global. Must `cd` to project directory before running commands.
 
 ## Key Patterns
 - Monorepo: 9 packages in `packages/` (cli, core, context-code, soar, reasoning, planning, spawner, implement, testing)
@@ -59,7 +83,9 @@ Build: `make install` | Test: `make test` | Lint: `make lint` | Quality: `make q
 ```bash
 ./install.sh              # Install all packages editable
 make test-unit            # Fast tests (~30s)
-aur mem index . --force   # Rebuild memory index
+cd /path/to/project       # Navigate to project directory
+aur init                  # Initialize project (creates .aurora/)
+aur mem index . --force   # Rebuild project memory index
 ```
 
 ## Documentation

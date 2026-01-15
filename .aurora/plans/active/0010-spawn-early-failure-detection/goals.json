@@ -1,0 +1,60 @@
+{
+  "plan_id": "0010-spawn-early-failure-detection",
+  "created_at": "2026-01-14T22:00:00Z",
+  "goal": "Implement early failure detection for agent spawning with error patterns, progressive timeout, and circuit breaker",
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Create CircuitBreaker module",
+      "description": "Implement circuit breaker pattern to skip known-failing agents",
+      "ideal_agent": "@full-stack-dev",
+      "confidence": 0.95,
+      "depends_on": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Add error pattern detection to spawn()",
+      "description": "Async stderr reading with immediate kill on error patterns",
+      "ideal_agent": "@full-stack-dev",
+      "confidence": 0.9,
+      "depends_on": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Implement progressive timeout",
+      "description": "Start with 60s, extend to 300s only if stdout activity detected",
+      "ideal_agent": "@full-stack-dev",
+      "confidence": 0.85,
+      "depends_on": ["sg-2"]
+    },
+    {
+      "id": "sg-4",
+      "title": "Integrate circuit breaker into retry/fallback",
+      "description": "Check circuit state before spawn, track failures, skip to fallback when open",
+      "ideal_agent": "@full-stack-dev",
+      "confidence": 0.9,
+      "depends_on": ["sg-1", "sg-2"]
+    },
+    {
+      "id": "sg-5",
+      "title": "Add tests and validation",
+      "description": "Unit tests for circuit breaker, integration test for early failure",
+      "ideal_agent": "@qa-test-architect",
+      "confidence": 0.85,
+      "depends_on": ["sg-4"]
+    }
+  ],
+  "metadata": {
+    "source": "conversation",
+    "estimated_lines": "~80-100 new",
+    "files_affected": [
+      "packages/spawner/src/aurora_spawner/spawner.py",
+      "packages/spawner/src/aurora_spawner/circuit_breaker.py"
+    ],
+    "benefits": [
+      "Fast fail on API errors (seconds vs minutes)",
+      "Skip known-broken agents automatically",
+      "Reduce worst-case wait from 105min to ~10min"
+    ]
+  }
+}

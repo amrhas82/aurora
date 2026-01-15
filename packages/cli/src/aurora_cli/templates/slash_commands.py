@@ -112,50 +112,71 @@ Every response MUST follow this exact structure:
 
 NO additional explanations, suggestions, or questions."""
 
-# /aur:implement - Plan implementation (placeholder)
+# /aur:implement - Plan implementation
 IMPLEMENT_TEMPLATE = f"""{BASE_GUARDRAILS}
 
-**Status:** Placeholder in v0.5.0
+**Usage**
+Execute plan tasks sequentially with checkpoint support.
 
-**Future Vision**
-Plan-based implementation that executes changes from Aurora plans.
+**What it does**
+1. Reads plan.md, tasks.md, and specs/ from plan directory
+2. Executes tasks in order, marking each `- [x]` when complete
+3. Saves checkpoint after each task for resume capability
+4. Validates completed work against spec scenarios when available
 
-**Current Workaround**
-1. View plan: `aur plan show plan-001`
-2. Read tasks: Open `.aurora/plans/active/plan-001/tasks.md`
-3. Implement manually following task list
-4. Archive when done: `/aur:archive plan-001`
+**Commands**
+```bash
+# Implement specific plan
+/aur:implement 0001-add-auth
 
-**Planned Features**
-- Execute plan-based changes automatically
-- Validate against acceptance criteria
-- Track task completion
-- Generate implementation reports
+# Resume interrupted implementation
+/aur:implement 0001-add-auth --resume
 
-**Aurora Workflow (Manual for now)**
-1. `aur plan create "Feature"` - Create plan
-2. Review and refine plan
-3. Implement tasks manually
-4. `aur plan archive plan-001` - Archive completed
+# Interactive selection (lists active plans)
+/aur:implement
+```
+
+**Workflow**
+1. Read `.aurora/plans/active/<plan-id>/plan.md` for context
+2. Read `.aurora/plans/active/<plan-id>/tasks.md` for work items
+3. Check `specs/` for formal requirements and scenarios (if exists)
+4. For each task:
+   - Execute the implementation
+   - Run validation (tests, checks) from task description
+   - Mark task complete: `- [ ]` → `- [x]`
+   - Save checkpoint to `.aurora/checkpoints/`
+5. On completion: suggest `/aur:archive <plan-id>`
+
+**Resume Mode**
+When `--resume` is passed:
+1. Read latest checkpoint from `.aurora/checkpoints/`
+2. Skip already-completed tasks (marked `- [x]`)
+3. Continue from first incomplete task
+
+**Validation**
+- If `specs/<capability>/spec.md` exists, use scenarios as acceptance criteria
+- Mark validation pass/fail in task completion notes
+- Warn if spec scenarios not fully covered
 
 **Reference**
-- `aur plan list` - See available plans
-- `aur plan show <id>` - View plan details"""
+- `aur plan list` - See active plans
+- `aur plan show <id>` - View plan details
+- Checkpoints stored in `.aurora/checkpoints/<plan-id>/`"""
 
-# /aur:plan - Plan generation command (exact port from OpenSpec proposal template)
+# /aur:plan - Plan generation command (matches OpenSpec proposal template exactly)
 PLAN_GUARDRAILS = f"""{BASE_GUARDRAILS}
 - Identify any vague or ambiguous details and ask the necessary follow-up questions before editing files.
 - Do not write any code during the planning stage. Only create design documents (plan.md, tasks.md, design.md, and spec deltas). Implementation happens in the implement stage after approval."""
 
 PLAN_STEPS = """**Steps**
 1. Review `.aurora/project.md`, run `aur plan list` and `aur plan list --specs`, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the plan in current behaviour; note any gaps that require clarification.
-   - **If `goals.json` exists** (from `aur goals`): Read it and include subgoals with confidence >= 0.5 under `## Goals Context`. Skip low-confidence agents (these are gaps, not assignments).
-   - **If no goals.json**: Run `aur agents list --format plan` and add the output under `## Available Agents` at the top of plan.md. Assign agents to each task/subgoal as you plan.
+   - **If input is a `goals.json` file**: Read it and populate the Goals Context table with subgoals, agents, files, and dependencies.
+   - **If input is a prompt**: Run `aur agents list` to see available agents. Assign agents to tasks as you plan.
 2. Choose a unique verb-led `plan-id` and scaffold `plan.md`, `tasks.md`, and `design.md` (when needed) under `.aurora/plans/active/<id>/`.
 3. Map the change into concrete capabilities or requirements, breaking multi-scope efforts into distinct spec deltas with clear relationships and sequencing.
 4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
 5. Draft spec deltas in `.aurora/plans/active/<id>/specs/<capability>/spec.md` (one folder per capability) using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement and cross-reference related capabilities when relevant.
-6. Draft `tasks.md` as an ordered list of small, verifiable work items that deliver user-visible progress, include validation (tests, tooling), and highlight dependencies or parallelizable work.
+6. Draft `tasks.md` with `<!-- @agent: @name -->` comment after each parent task. Agent assignment priority: goals.json > agent registry match > LLM inference.
 7. Validate with `aur plan validate <id> --strict` and resolve every issue before sharing the plan."""
 
 PLAN_REFERENCES = """**Reference**
@@ -163,54 +184,70 @@ PLAN_REFERENCES = """**Reference**
 - Search existing requirements with `rg -n "Requirement:|Scenario:" .aurora/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so plans align with current implementation realities.
 
-**plan.md Format**:
-
-*With goals.json* (only include agents with confidence >= 0.5):
+**plan.md Template** (matches OpenSpec proposal.md sections):
 ```markdown
+# Plan: [Brief description]
+
+## Plan ID
+`{plan-id}`
+
+## Summary
+[1-2 sentences]
+
 ## Goals Context
-> Source: `goals.json`
+> Source: `goals.json` (if provided, otherwise omit this section)
 
-| Subgoal | Agent | Dependencies |
-|---------|-------|--------------|
-| [title] | @agent-id | - |
+| Subgoal | Agent | Files | Dependencies |
+|---------|-------|-------|--------------|
+| [title] | @agent-id | [memory_context files] | [dependencies] |
+
+## Problem Statement
+[Current state, pain points]
+
+## Proposed Solution
+[What changes]
+
+## Benefits
+[Why this helps]
+
+## Scope
+### In Scope
+- [What's included]
+
+### Out of Scope
+- [What's excluded]
+
+## Dependencies
+[Systems, files, or other plans this depends on]
+
+## Implementation Strategy
+[Phased approach with task counts]
+
+## Risks and Mitigations
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+
+## Success Criteria
+- [ ] [Measurable outcome]
+
+## Open Questions
+1. [Question] - **Recommendation**: [answer]
 ```
 
-*Without goals.json* (run command, paste output):
-```bash
-aur agents list --format plan
-```
-Then add output under `## Available Agents` and assign agents to tasks."""
+**tasks.md Template** (with @agent per task):
+```markdown
+## Phase N: [Name]
+- [ ] N.1 Task description
+  <!-- @agent: @full-stack-dev -->
+  - Details
+  - **Validation**: How to verify
+```"""
 
 PLAN_TEMPLATE = f"""{PLAN_GUARDRAILS}
 
 {PLAN_STEPS}
 
 {PLAN_REFERENCES}"""
-
-# /aur:proposal - Proposal generation command (exact port from OpenSpec proposal template)
-PROPOSAL_GUARDRAILS = f"""{BASE_GUARDRAILS}
-- Identify any vague or ambiguous details and ask the necessary follow-up questions before editing files.
-- Do not write any code during the proposal stage. Only create design documents (proposal.md, tasks.md, design.md, and spec deltas). Implementation happens in the apply stage after approval."""
-
-PROPOSAL_STEPS = """**Steps**
-1. Review `.aurora/project.md`, run `aur plan list` and `aur plan list --specs`, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the proposal in current behaviour; note any gaps that require clarification.
-2. Choose a unique verb-led `plan-id` and scaffold `proposal.md`, `tasks.md`, and `design.md` (when needed) under `.aurora/plans/active/<id>/`.
-3. Map the change into concrete capabilities or requirements, breaking multi-scope efforts into distinct spec deltas with clear relationships and sequencing.
-4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
-5. Draft spec deltas in `.aurora/plans/active/<id>/specs/<capability>/spec.md` (one folder per capability) using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement and cross-reference related capabilities when relevant.
-6. Draft `tasks.md` as an ordered list of small, verifiable work items that deliver user-visible progress, include validation (tests, tooling), and highlight dependencies or parallelizable work.
-7. Validate with `aur plan validate <id> --strict` and resolve every issue before sharing the proposal."""
-
-PROPOSAL_REFERENCES = """**Reference**
-- Use `aur plan show <id> --json --deltas-only` or `aur plan show <spec> --type spec` to inspect details when validation fails.
-- Search existing requirements with `rg -n "Requirement:|Scenario:" .aurora/specs` before writing new ones.
-- Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so proposals align with current implementation realities."""
-
-PROPOSAL_TEMPLATE = f"""{PROPOSAL_GUARDRAILS}
-
-{PROPOSAL_STEPS}
-
-{PROPOSAL_REFERENCES}"""
 
 # /aur:checkpoint - Save session context
 CHECKPOINT_TEMPLATE = f"""{BASE_GUARDRAILS}
@@ -294,7 +331,6 @@ COMMAND_TEMPLATES: dict[str, str] = {
     "search": SEARCH_TEMPLATE,
     "get": GET_TEMPLATE,
     "plan": PLAN_TEMPLATE,
-    "proposal": PROPOSAL_TEMPLATE,
     "checkpoint": CHECKPOINT_TEMPLATE,
     "implement": IMPLEMENT_TEMPLATE,
     "archive": ARCHIVE_TEMPLATE,

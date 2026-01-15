@@ -53,8 +53,16 @@ From MCP tools, version upgrades, config changes.
 ---
 
 **File Locations**
-- Global config: `~/.aurora/config.json`
+
+Project-local (created by `aur init` in project directory):
 - Project config: `.aurora/config.json`
-- Memory DB: `.aurora/memory.db`
+- Memory DB: `.aurora/memory.db` (project-specific, not global)
 - Plans: `.aurora/plans/`
-- Agents: `~/.aurora/agents/` or `.aurora/agents/`
+- Agents: `.aurora/agents/` (optional, project-specific)
+
+Global (user-level):
+- Global config: `~/.aurora/config.json`
+- Budget tracker: `~/.aurora/budget_tracker.json`
+- Agents: `~/.aurora/agents/` (optional, global)
+
+**Note**: Database is ALWAYS project-local. Must run `aur init` in project directory first, then `aur mem index .` to populate.

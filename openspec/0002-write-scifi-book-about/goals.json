@@ -1,0 +1,149 @@
+{
+  "id": "0002-write-scifi-book-about",
+  "title": "i want to write a sci-fi book about an alient with agi arriving to earth in 1950",
+  "created_at": "2026-01-14T12:17:51.185530",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/cache.py",
+      "relevance": 0.8198859721571637
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution/recovery.py",
+      "relevance": 0.6234255629015688
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/performance/test_decomposition_cache_benchmarks.py",
+      "relevance": 0.605308260883374
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/policies/models.py",
+      "relevance": 0.581386164040716
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/profile_indexing.py",
+      "relevance": 0.5657235221914546
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Develop the core narrative concept, themes, and story arc...",
+      "description": "Develop the core narrative concept, themes, and story arc for the alien AGI arrival in 1950",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialized in narrative structure, story development, theme exploration, and creative fiction writing",
+      "agent": "@master",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Research historical context of 1950s Earth: Cold War...",
+      "description": "Research historical context of 1950s Earth: Cold War tensions, technology level, social dynamics, and scientific understanding",
+      "ideal_agent": "@research-historian",
+      "ideal_agent_desc": "Expert in historical research, period-accurate details, and cultural context analysis",
+      "agent": "@business-analyst",
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Design the alien species characteristics, AGI capabilities,...",
+      "description": "Design the alien species characteristics, AGI capabilities, motivations, and technology specifications",
+      "ideal_agent": "@sci-fi-worldbuilder",
+      "ideal_agent_desc": "Specialist in creating internally consistent sci-fi worlds, alien species design, and speculative technology",
+      "agent": "@holistic-architect",
+      "dependencies": [
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Develop main characters: humans in 1950s who encounter the...",
+      "description": "Develop main characters: humans in 1950s who encounter the alien, their backgrounds, motivations, and character arcs",
+      "ideal_agent": "@character-developer",
+      "ideal_agent_desc": "Expert in character psychology, motivation, dialogue, and character arc development",
+      "agent": "@master",
+      "dependencies": [
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Create detailed chapter-by-chapter outline with plot...",
+      "description": "Create detailed chapter-by-chapter outline with plot points, conflicts, and resolution",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialized in plot structure, pacing, narrative tension, and story planning",
+      "agent": "@master",
+      "dependencies": [
+        "sg-1",
+        "sg-3",
+        "sg-4"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Draft manuscript chapters with period-accurate dialogue,...",
+      "description": "Draft manuscript chapters with period-accurate dialogue, descriptions, and narrative voice",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Professional fiction writer with expertise in sci-fi genre, dialogue, and prose style",
+      "agent": "@master",
+      "dependencies": [
+        "sg-5"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Review and edit manuscript for consistency, pacing,...",
+      "description": "Review and edit manuscript for consistency, pacing, scientific plausibility, and narrative quality",
+      "ideal_agent": "@editor",
+      "ideal_agent_desc": "Experienced editor with skills in developmental editing, consistency checking, and story refinement",
+      "agent": "@qa-test-architect",
+      "dependencies": [
+        "sg-6"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialized in narrative structure, story development, theme exploration, and creative fiction writing",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-2",
+      "ideal_agent": "@research-historian",
+      "ideal_agent_desc": "Expert in historical research, period-accurate details, and cultural context analysis",
+      "assigned_agent": "@business-analyst"
+    },
+    {
+      "subgoal_id": "sg-3",
+      "ideal_agent": "@sci-fi-worldbuilder",
+      "ideal_agent_desc": "Specialist in creating internally consistent sci-fi worlds, alien species design, and speculative technology",
+      "assigned_agent": "@holistic-architect"
+    },
+    {
+      "subgoal_id": "sg-4",
+      "ideal_agent": "@character-developer",
+      "ideal_agent_desc": "Expert in character psychology, motivation, dialogue, and character arc development",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-5",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Specialized in plot structure, pacing, narrative tension, and story planning",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-6",
+      "ideal_agent": "@creative-writer",
+      "ideal_agent_desc": "Professional fiction writer with expertise in sci-fi genre, dialogue, and prose style",
+      "assigned_agent": "@master"
+    },
+    {
+      "subgoal_id": "sg-7",
+      "ideal_agent": "@editor",
+      "ideal_agent_desc": "Experienced editor with skills in developmental editing, consistency checking, and story refinement",
+      "assigned_agent": "@qa-test-architect"
+    }
+  ]
+}

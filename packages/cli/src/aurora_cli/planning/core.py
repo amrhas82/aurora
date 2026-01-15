@@ -1259,9 +1259,7 @@ def create_plan(
     if auto_decompose:
         from aurora_cli.planning.decompose import PlanDecomposer
 
-        decomposer = PlanDecomposer(config=config)
-
-        # Get store for file resolution
+        # Get store for file resolution and context retrieval
         store = None
         try:
             from aurora_cli.memory import get_default_db_path
@@ -1272,6 +1270,9 @@ def create_plan(
                 store = SQLiteStore(str(db_path))
         except Exception:
             pass
+
+        # Create decomposer with store for memory-informed decomposition
+        decomposer = PlanDecomposer(config=config, store=store)
 
         # Decompose with file resolution
         subgoals, file_resolutions, decomposition_source = decomposer.decompose_with_files(
@@ -1355,18 +1356,56 @@ def create_plan(
         warnings=warnings,
     )
 
-    # Display summary
+    # Display summary (keep existing for compatibility)
     summary.display()
 
-    # Prompt for confirmation (unless yes flag is set)
+    # Show decomposition review with approval prompt (unless yes flag is set)
     if not (yes or non_interactive):
-        from aurora_cli.planning.checkpoint import prompt_for_confirmation
+        from aurora_cli.execution.review import AgentGap as ReviewAgentGap
+        from aurora_cli.execution.review import DecompositionReview, ReviewDecision
 
-        if not prompt_for_confirmation():
+        # Convert subgoals to format expected by DecompositionReview
+        review_subgoals = []
+        review_agent_gaps = []
+
+        for i, sg in enumerate(subgoals):
+            review_subgoals.append(
+                {
+                    "description": f"{sg.title}: {sg.description}",
+                    "agent_id": sg.assigned_agent,
+                    "goal": sg.title,
+                }
+            )
+
+            # Add to gaps if mismatch between ideal and assigned
+            if sg.ideal_agent and sg.ideal_agent != sg.assigned_agent:
+                review_agent_gaps.append(
+                    ReviewAgentGap(
+                        subgoal_index=i, description=sg.title, required_agent=sg.ideal_agent
+                    )
+                )
+
+        # Show review UI
+        review = DecompositionReview(
+            subgoals=review_subgoals,
+            agent_gaps=review_agent_gaps,
+            goal=goal,
+            complexity=complexity,
+            source=decomposition_source,
+            files_count=files_resolved,
+            files_confidence=avg_confidence,
+        )
+        review.display()
+        decision = review.prompt()
+
+        if decision == ReviewDecision.ABORT:
             return PlanResult(
                 success=False,
                 error="Plan creation cancelled by user.",
             )
+
+        # Note: PROCEED and FALLBACK both continue to plan generation
+        # The difference would be used in spawn/execute phase (future enhancement)
 
     # Determine context sources
     context_sources = []

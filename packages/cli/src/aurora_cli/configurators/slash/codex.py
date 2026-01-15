@@ -15,7 +15,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".codex/prompts/aurora-search.md",
     "get": ".codex/prompts/aurora-get.md",
     "plan": ".codex/prompts/aurora-plan.md",
-    "proposal": ".codex/prompts/aurora-proposal.md",
     "checkpoint": ".codex/prompts/aurora-checkpoint.md",
     "implement": ".codex/prompts/aurora-implement.md",
     "archive": ".codex/prompts/aurora-archive.md",
@@ -37,12 +36,6 @@ argument-hint: chunk index number
 $ARGUMENTS""",
     "plan": """---
 description: Create implementation plan with agent delegation [goal]
-argument-hint: request or feature description
----
-
-$ARGUMENTS""",
-    "proposal": """---
-description: Draft spec-delta proposal with requirements [feature]
 argument-hint: request or feature description
 ---
 

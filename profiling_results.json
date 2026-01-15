@@ -1,0 +1,31 @@
+{
+  "total_time": 100.73748336799326,
+  "files_processed": 95,
+  "chunks_created": 840,
+  "throughput_files_per_sec": 0.9430451985083419,
+  "throughput_chunks_per_sec": 8.33850491312639,
+  "phases": {
+    "parsing": {
+      "total_time": 3.5820594278920908,
+      "calls": 111,
+      "avg_per_call_ms": 37.70588871465359,
+      "percentage": 3.5558357307843944
+    },
+    "git_blame": {
+      "total_time": 0,
+      "percentage": 0.0
+    },
+    "embedding": {
+      "total_time": 89.04988788589253,
+      "calls": 27,
+      "avg_per_chunk_ms": 106.01177129272921,
+      "percentage": 88.39796757736539
+    },
+    "db_write": {
+      "total_time": 1.2162842749094125,
+      "calls": 840,
+      "avg_per_write_ms": 1.447957470130253,
+      "percentage": 1.2073800478679175
+    }
+  }
+}

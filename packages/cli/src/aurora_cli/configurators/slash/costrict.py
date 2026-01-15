@@ -29,13 +29,6 @@ argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "proposal": """---
-name: Aurora: Proposal
-description: Draft spec-delta proposal with requirements [feature]
-argument-hint: request or feature description
-category: Aurora
-tags: [aurora, proposalning]
----""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context ["optional-name"]
@@ -64,7 +57,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".cospec/aurora/commands/aurora-search.md",
     "get": ".cospec/aurora/commands/aurora-get.md",
     "plan": ".cospec/aurora/commands/aurora-plan.md",
-    "proposal": ".cospec/aurora/commands/aurora-proposal.md",
     "checkpoint": ".cospec/aurora/commands/aurora-checkpoint.md",
     "implement": ".cospec/aurora/commands/aurora-implement.md",
     "archive": ".cospec/aurora/commands/aurora-archive.md",

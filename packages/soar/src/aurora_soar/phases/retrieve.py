@@ -1,7 +1,7 @@
 """Phase 2: Context Retrieval.
 
 This module implements the Retrieve phase of the SOAR pipeline, which retrieves
-relevant context from ACT-R memory based on query keywords and complexity.
+relevant context from memory using hybrid retrieval (BM25 + semantic + activation).
 
 Budget allocation by complexity:
 - SIMPLE: 5 chunks
@@ -9,10 +9,8 @@ Budget allocation by complexity:
 - COMPLEX: 15 chunks
 - CRITICAL: 20 chunks
 
-For Phase 2, we use basic activation-based retrieval. Phase 3 will add:
-- Spreading activation from query keywords
-- Base-level learning decay
-- Semantic similarity scoring
+Uses MemoryRetriever with HybridRetriever for query-based retrieval,
+combining keyword matching, semantic similarity, and activation scoring.
 """
 
 from __future__ import annotations
@@ -93,19 +91,13 @@ def filter_by_activation(chunks: list[Any], store: Store | None = None) -> tuple
 
 
 def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any]:
-    """Retrieve relevant context from ACT-R memory.
+    """Retrieve relevant context from memory using hybrid retrieval.
 
-    This function retrieves the most relevant chunks from memory based on
-    activation scores. The number of chunks retrieved depends on query complexity.
-
-    Phase 2 Implementation (Basic):
-    - Use Store.retrieve_by_activation() for basic retrieval
-    - No spreading activation yet (Phase 3)
-    - No semantic similarity yet (Phase 3)
-    - Just get top-N most activated chunks
+    Uses MemoryRetriever with HybridRetriever to find chunks relevant to the query.
+    Combines BM25 keyword matching, semantic similarity, and activation scoring.
 
     Args:
-        query: User query string (currently unused, will be used in Phase 3 for spreading activation)
+        query: User query string for retrieval matching
         complexity: Complexity level (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
         store: Store instance for retrieval
 
@@ -114,7 +106,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
             - code_chunks: list of CodeChunk objects
             - reasoning_chunks: list of ReasoningChunk objects
             - total_retrieved: int (total number of chunks)
-            - high_quality_count: int (chunks with activation >= ACTIVATION_THRESHOLD)
+            - high_quality_count: int (chunks with high relevance scores)
             - retrieval_time_ms: float (retrieval duration)
             - budget: int (max chunks allocated)
             - budget_used: int (actual chunks retrieved)
@@ -127,12 +119,33 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
     logger.info(f"Retrieving context for {complexity} query (budget={budget} chunks)")
 
     try:
-        # Phase 2: Basic activation-based retrieval
-        # For now, retrieve chunks with any activation > 0
-        # Phase 3 will add spreading activation from query keywords
-        retrieved_chunks = store.retrieve_by_activation(
-            min_activation=0.0,  # Get any activated chunks
+        # Use MemoryRetriever with HybridRetriever for query-based retrieval
+        from aurora_cli.memory.retrieval import MemoryRetriever
+
+        retriever = MemoryRetriever(store=store)
+
+        # Check if memory is indexed
+        if not retriever.has_indexed_memory():
+            logger.warning("No indexed memory found, returning empty context")
+            elapsed_ms = (time.time() - start_time) * 1000
+            return {
+                "code_chunks": [],
+                "reasoning_chunks": [],
+                "total_retrieved": 0,
+                "chunks_retrieved": 0,
+                "high_quality_count": 0,
+                "retrieval_time_ms": elapsed_ms,
+                "budget": budget,
+                "budget_used": 0,
+            }
+
+        # Retrieve chunks using hybrid retrieval (BM25 + semantic + activation)
+        # Use lower threshold to get more candidates for complex queries
+        min_score = 0.3 if complexity in ("COMPLEX", "CRITICAL") else 0.5
+        retrieved_chunks = retriever.retrieve(
+            query,
             limit=budget,
+            min_semantic_score=min_score,
         )
 
         # Separate chunks by type
@@ -154,8 +167,11 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
                 # Unknown type, put in code_chunks by default
                 code_chunks.append(chunk)
 
-        # Apply activation filtering to count high-quality chunks
-        _, high_quality_count = filter_by_activation(retrieved_chunks, store=store)
+        # Count high-quality chunks (those with good scores)
+        high_quality_count = sum(
+            1 for chunk in retrieved_chunks
+            if getattr(chunk, "score", getattr(chunk, "hybrid_score", 0.0)) >= 0.6
+        )
 
         elapsed_ms = (time.time() - start_time) * 1000
         total_retrieved = len(retrieved_chunks)

@@ -247,6 +247,53 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
                 console.print(f"  [cyan]✓ {verdict} ({agents_assigned} subgoals routed)[/]")
             else:
                 console.print(f"  [cyan]✓ {verdict}[/]")
+
+        # Display subgoal table if available
+        subgoals = result.get("subgoals", [])
+        if subgoals:
+            from rich.panel import Panel
+            from rich.table import Table
+
+            table = Table(title="Plan Decomposition", show_header=True, header_style="bold")
+            table.add_column("#", style="dim", width=4)
+            table.add_column("Subgoal", width=55)
+            table.add_column("Agent", style="cyan", width=20)
+
+            for sg in subgoals:
+                agent_name = sg.get("agent", "unknown")
+                is_spawn = sg.get("is_spawn", False)
+                # Mark spawned agents with asterisk
+                agent_display = f"@{agent_name}*" if is_spawn else f"@{agent_name}"
+                table.add_row(
+                    str(sg.get("index", "?")),
+                    sg.get("description", "")[:55],
+                    agent_display,
+                )
+
+            console.print()
+            console.print(table)
+
+            # Display summary panel
+            total = len(subgoals)
+            # Count gaps using is_spawn flag (set by verify_lite for missing agents)
+            gap_subgoals = [sg for sg in subgoals if sg.get("is_spawn", False)]
+            gaps = len(gap_subgoals)
+            assigned = total - gaps
+
+            # Build summary text with proper grammar
+            subgoal_word = "subgoal" if total == 1 else "subgoals"
+            summary_parts = [f"[bold]{total} {subgoal_word}[/]", f"[cyan]{assigned} assigned[/]"]
+            if gaps > 0:
+                summary_parts.append(f"[yellow]{gaps} spawned[/]")
+            summary_text = " • ".join(summary_parts)
+
+            # Show spawned agents (will use fallback LLM)
+            if gap_subgoals:
+                gap_agents = sorted(set(sg.get("agent", "unknown") for sg in gap_subgoals))
+                gap_list = ", ".join(f"@{a}" for a in gap_agents)
+                summary_text += f"\n\n[yellow]Spawned (no matching agent):[/] {gap_list}"
+
+            console.print(Panel(summary_text, title="Summary", border_style="dim"))
     elif phase_num == 5:
         # Collect phase (was 6)
         count = result.get("findings_count", 0)
@@ -316,7 +363,21 @@ def _create_phase_callback(tool: str):
     default=False,
     help="Show verbose output",
 )
-def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> None:
+@click.option(
+    "--context",
+    "-c",
+    "context_files",
+    multiple=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Context files for informed decomposition. Can be used multiple times.",
+)
+def soar_command(
+    query: str,
+    model: str,
+    tool: str | None,
+    verbose: bool,
+    context_files: tuple[Path, ...],
+) -> None:
     r"""Execute SOAR query with terminal orchestration (7+1 phase pipeline).
 
     Runs the SOAR pipeline via SOAROrchestrator, piping to external LLM tools:
@@ -336,6 +397,7 @@ def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> Non
         aur soar "What is SOAR orchestrator?"
         aur soar "Explain ACT-R memory" --tool cursor
         aur soar "State of AI?" --model opus --verbose
+        aur soar "Refactor auth" --context src/auth.py --context docs/auth.md
     """
     # Load config for defaults
     from aurora_cli.config import load_config
@@ -438,7 +500,9 @@ def soar_command(query: str, model: str, tool: str | None, verbose: bool) -> Non
     # Execute SOAR pipeline
     try:
         verbosity = "verbose" if verbose else "normal"
-        result = orchestrator.execute(query, verbosity=verbosity)
+        # Pass context files if provided
+        ctx_files = [str(f) for f in context_files] if context_files else None
+        result = orchestrator.execute(query, verbosity=verbosity, context_files=ctx_files)
     except Exception as e:
         console.print(f"\n[red]Error during SOAR execution: {e}[/]")
         if verbose:

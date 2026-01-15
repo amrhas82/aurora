@@ -69,29 +69,37 @@ def detect_existing_setup(project_path: Path) -> bool:
 
 
 def detect_configured_tools(project_path: Path) -> dict[str, bool]:
-    """Detect which tools are already configured.
+    """Detect which tools are already configured by checking for slash command files.
 
     Args:
         project_path: Path to project root
 
     Returns:
-        Dictionary mapping tool IDs to configured status
+        Dictionary mapping SlashCommandRegistry tool IDs to configured status
     """
     configured = {}
-    for tool_option in TOOL_OPTIONS:
-        tool_id = tool_option["value"]
-        configurator = ToolRegistry.get(tool_id)
-        if configurator:
-            config_file = project_path / configurator.config_file_name
-            # Check if file exists and contains Aurora markers
+
+    # Check each slash command configurator
+    for configurator in SlashCommandRegistry.get_all():
+        tool_id = configurator.tool_id
+
+        # Check if any slash command file exists for this tool
+        # We check the first command (search) as a representative
+        try:
+            search_path = configurator.get_relative_path("search")
+            slash_file = project_path / search_path
+
             is_configured = False
-            if config_file.exists():
-                content = config_file.read_text(encoding="utf-8")
+            if slash_file.exists():
+                content = slash_file.read_text(encoding="utf-8")
+                # Check for Aurora markers
                 is_configured = (
                     "<!-- AURORA:START -->" in content and "<!-- AURORA:END -->" in content
                 )
+
             configured[tool_id] = is_configured
-        else:
+        except (KeyError, Exception):
+            # If tool doesn't support slash commands, mark as not configured
             configured[tool_id] = False
 
     return configured
@@ -541,9 +549,10 @@ Working on X...
 
 
 async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
-    """Prompt user to select tools for configuration.
+    """Prompt user to select tools for configuration with grouped UI.
 
     Uses SlashCommandRegistry to get all 20 available AI coding tools.
+    Shows a two-step process: selection and review.
 
     Args:
         configured_tools: Dictionary mapping tool IDs to configured status
@@ -551,47 +560,89 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
     Returns:
         List of selected tool IDs
     """
-    choices = []
+    while True:
+        # Build checkbox choices with grouped sections
+        choices = []
 
-    # Build checkbox choices from SlashCommandRegistry (all 20 tools)
-    for configurator in SlashCommandRegistry.get_all():
-        tool_id = configurator.tool_id
-        tool_name = configurator.name
-        is_configured = configured_tools.get(tool_id, False)
+        # Header for all native providers
+        choices.append(questionary.Separator("\nNatively supported providers (✔ Aurora custom slash commands available)"))
 
-        if is_configured:
-            label = f"{tool_name} (already configured)"
-        else:
-            label = tool_name
+        # Add all tools sorted alphabetically
+        for configurator in sorted(
+            SlashCommandRegistry.get_all(),
+            key=lambda c: c.name,
+        ):
+            tool_id = configurator.tool_id
+            tool_name = configurator.name
+            is_configured = configured_tools.get(tool_id, False)
 
-        choices.append(
-            questionary.Choice(
-                title=label,
-                value=tool_id,
-                checked=is_configured,  # Pre-check if already configured
+            if is_configured:
+                label = f"  {tool_name} (already configured)"
+            else:
+                label = f"  {tool_name}"
+
+            choices.append(
+                questionary.Choice(
+                    title=label,
+                    value=tool_id,
+                    checked=is_configured,
+                )
             )
-        )
 
-    # Show selection prompt
-    console.print()
-    console.print("[dim]Select which AI coding tools you want to configure:[/]")
-    console.print()
+        # Show selection prompt
+        console.print()
+        console.print("[bold cyan]Welcome to Aurora![/]")
+        console.print("[bold]Select AI coding tools[/]")
+        console.print()
 
-    selected = await questionary.checkbox(
-        "Select tools:",
-        choices=choices,
-        instruction="(space=toggle, a=all, enter=confirm)",
-        style=questionary.Style(
-            [
-                ("selected", "fg:cyan bold"),
-                ("pointer", "fg:cyan bold"),
-                ("highlighted", "fg:cyan"),
-                ("checkbox", "fg:white"),
-            ]
-        ),
-    ).ask_async()
+        selected = await questionary.checkbox(
+            "Select tools to configure:",
+            choices=choices,
+            instruction="(↑↓ navigate, space=toggle, a=all, enter=confirm)",
+            style=questionary.Style(
+                [
+                    ("selected", "fg:cyan bold"),
+                    ("pointer", "fg:cyan bold"),
+                    ("highlighted", "fg:cyan"),
+                    ("checkbox", "fg:white"),
+                    ("separator", "fg:white dim"),
+                ]
+            ),
+        ).ask_async()
 
-    return selected if selected else []
+        if not selected:
+            return []
+
+        # Show review step
+        console.print()
+        console.print("[bold cyan]Welcome to Aurora![/]")
+        console.print("[bold]Review selections[/]")
+        console.print()
+
+        # Display selected tools
+        tool_names = []
+        for tool_id in sorted(selected):
+            configurator = SlashCommandRegistry.get(tool_id)
+            if configurator:
+                tool_names.append(configurator.name)
+                console.print(f"  ▌ {configurator.name}")
+
+        console.print()
+
+        # Confirm or adjust
+        confirm = await questionary.confirm(
+            "Press Enter to confirm or n to adjust",
+            default=True,
+            auto_enter=False,
+        ).ask_async()
+
+        if confirm:
+            return selected
+
+        # User wants to adjust - loop back to selection
+        console.print()
+        console.print("[dim]Adjusting selections...[/]")
+        console.print()
 
 
 async def configure_tools(
@@ -769,9 +820,19 @@ def show_status_summary(project_path: Path) -> None:
     # Step 3: Tool Configuration - always check, even without .aurora
     # Use slash command detection (new system) instead of old TOOL_OPTIONS
     slash_configured = detect_configured_slash_tools(project_path)
-    tool_count = sum(1 for is_configured in slash_configured.values() if is_configured)
+    configured_tool_ids = [tool_id for tool_id, is_configured in slash_configured.items() if is_configured]
+    tool_count = len(configured_tool_ids)
+
     if tool_count > 0:
-        console.print(f"[green]✓[/] Step 3: Tools configured [dim]({tool_count} tools)[/]")
+        # Get tool display names
+        tool_names = []
+        for tool_id in sorted(configured_tool_ids):
+            configurator = SlashCommandRegistry.get(tool_id)
+            if configurator:
+                tool_names.append(configurator.name)
+
+        tools_str = ", ".join(tool_names)
+        console.print(f"[green]✓[/] Step 3: Tools configured [dim]({tools_str})[/]")
     else:
         if aurora_exists:
             console.print("[yellow]●[/] Step 3: Tool configuration [dim](not complete)[/]")

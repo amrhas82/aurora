@@ -26,12 +26,6 @@ description: Create implementation plan with agent delegation [goal]
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "proposal": """---
-name: Aurora: Proposal
-description: Draft spec-delta proposal with requirements [feature]
-category: Aurora
-tags: [aurora, proposalning]
----""",
     "checkpoint": """---
 name: Aurora: Checkpoint
 description: Save session context ["optional-name"]
@@ -57,7 +51,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".codebuddy/commands/aurora/search.md",
     "get": ".codebuddy/commands/aurora/get.md",
     "plan": ".codebuddy/commands/aurora/plan.md",
-    "proposal": ".codebuddy/commands/aurora/proposal.md",
     "checkpoint": ".codebuddy/commands/aurora/checkpoint.md",
     "implement": ".codebuddy/commands/aurora/implement.md",
     "archive": ".codebuddy/commands/aurora/archive.md",

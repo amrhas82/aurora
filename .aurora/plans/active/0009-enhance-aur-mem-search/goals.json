@@ -1,0 +1,157 @@
+{
+  "id": "0009-enhance-aur-mem-search",
+  "title": "how can i enhance aur mem search performance in retrieving results?",
+  "created_at": "2026-01-14T20:42:32.199384",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/memory.py",
+      "relevance": 0.6206158177863578
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/profile_indexing.py",
+      "relevance": 0.5951684352550723
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/cache.py",
+      "relevance": 0.5613041655322104
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/unit/cli/planning/test_cache.py",
+      "relevance": 0.5387069565401966
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/compare_batch_sizes.py",
+      "relevance": 0.5322435784237676
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/profile_memory_indexing.py",
+      "relevance": 0.5163808759297435
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Profile current aur mem search implementation to identify...",
+      "description": "Profile current aur mem search implementation to identify performance bottlenecks",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Specialist in profiling, benchmarking, and identifying performance bottlenecks in code execution",
+      "agent": "@full-stack-dev",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Analyze memory indexing and retrieval algorithms for...",
+      "description": "Analyze memory indexing and retrieval algorithms for optimization opportunities",
+      "ideal_agent": "@search-optimization-specialist",
+      "ideal_agent_desc": "Expert in search algorithms, indexing strategies, and information retrieval optimization",
+      "agent": "@holistic-architect",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-3",
+      "title": "Review database query patterns and schema design for memory...",
+      "description": "Review database query patterns and schema design for memory store",
+      "ideal_agent": "@database-engineer",
+      "ideal_agent_desc": "Specialist in database optimization, query tuning, and schema design for performance",
+      "agent": "@full-stack-dev",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Evaluate and optimize embedding/BM25 search performance if...",
+      "description": "Evaluate and optimize embedding/BM25 search performance if applicable",
+      "ideal_agent": "@ml-engineer",
+      "ideal_agent_desc": "Expert in machine learning model optimization, vector search, and embedding performance",
+      "agent": "@holistic-architect",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Design and implement caching strategy for frequently...",
+      "description": "Design and implement caching strategy for frequently accessed search results",
+      "ideal_agent": "@systems-architect",
+      "ideal_agent_desc": "Specialist in caching strategies, distributed systems, and performance architecture",
+      "agent": "@holistic-architect",
+      "dependencies": [
+        "sg-2",
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Implement performance improvements and optimizations",
+      "description": "Implement performance improvements and optimizations",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Developer focused on implementing and validating performance optimizations",
+      "agent": "@full-stack-dev",
+      "dependencies": [
+        "sg-2",
+        "sg-3",
+        "sg-4",
+        "sg-5"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Create performance benchmarks and regression tests",
+      "description": "Create performance benchmarks and regression tests",
+      "ideal_agent": "@qa-performance-engineer",
+      "ideal_agent_desc": "Specialist in performance testing, benchmarking, and regression detection",
+      "agent": "@qa-test-architect",
+      "dependencies": [
+        "sg-6"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Specialist in profiling, benchmarking, and identifying performance bottlenecks in code execution",
+      "assigned_agent": "@full-stack-dev"
+    },
+    {
+      "subgoal_id": "sg-2",
+      "ideal_agent": "@search-optimization-specialist",
+      "ideal_agent_desc": "Expert in search algorithms, indexing strategies, and information retrieval optimization",
+      "assigned_agent": "@holistic-architect"
+    },
+    {
+      "subgoal_id": "sg-3",
+      "ideal_agent": "@database-engineer",
+      "ideal_agent_desc": "Specialist in database optimization, query tuning, and schema design for performance",
+      "assigned_agent": "@full-stack-dev"
+    },
+    {
+      "subgoal_id": "sg-4",
+      "ideal_agent": "@ml-engineer",
+      "ideal_agent_desc": "Expert in machine learning model optimization, vector search, and embedding performance",
+      "assigned_agent": "@holistic-architect"
+    },
+    {
+      "subgoal_id": "sg-5",
+      "ideal_agent": "@systems-architect",
+      "ideal_agent_desc": "Specialist in caching strategies, distributed systems, and performance architecture",
+      "assigned_agent": "@holistic-architect"
+    },
+    {
+      "subgoal_id": "sg-6",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Developer focused on implementing and validating performance optimizations",
+      "assigned_agent": "@full-stack-dev"
+    },
+    {
+      "subgoal_id": "sg-7",
+      "ideal_agent": "@qa-performance-engineer",
+      "ideal_agent_desc": "Specialist in performance testing, benchmarking, and regression detection",
+      "assigned_agent": "@qa-test-architect"
+    }
+  ]
+}

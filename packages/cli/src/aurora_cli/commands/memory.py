@@ -402,14 +402,24 @@ def search_command(
     db_path_resolved = Path(config.get_db_path())
 
     if not db_path_resolved.exists():
-        error_handler = ErrorHandler()
-        error = FileNotFoundError(f"Database not found at {db_path_resolved}")
-        error_msg = error_handler.handle_path_error(
-            error, str(db_path_resolved), "opening database"
+        # Custom error message for missing database
+        error_msg = (
+            f"[bold red][Path][/] Path not found.\n\n"
+            f"[yellow]Path:[/] {db_path_resolved}\n"
+            f"[yellow]Operation:[/] opening database\n\n"
+            "[green]Solutions:[/]\n"
+            "  1. Navigate to your project directory:\n"
+            "     [cyan]cd /path/to/your/project[/]\n"
+            "  2. Initialize the project (creates [cyan].aurora/memory.db[/]):\n"
+            "     [cyan]aur init[/]\n"
+            "  3. Check current directory:\n"
+            "     [cyan]pwd[/]\n\n"
+            "[green]Note:[/] Database is project-local, not global. "
+            "Each project has its own [cyan].aurora/memory.db[/]"
         )
+
         console.print(
-            f"\n{error_msg}\n\n"
-            "[green]Hint:[/] Run [cyan]aur mem index .[/] to create and populate the database.",
+            f"\n{error_msg}",
             style="red",
         )
         raise click.Abort()

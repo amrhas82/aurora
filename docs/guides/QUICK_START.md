@@ -92,19 +92,23 @@ Response:
 # Navigate to your project
 cd /path/to/your/project
 
-# Index Python files
-aur mem index
+# Initialize project (creates .aurora/ directory and database)
+aur init
+
+# Index Python files into project database
+aur mem index .
 ```
 
 **What Happens**:
+- `aur init` creates `.aurora/` directory with project-local database
 - Recursively scans directory
 - Parses Python files
 - Extracts functions, classes, methods
-- Stores in `aurora.db`
+- Stores in `.aurora/memory.db` (project-specific)
 
 **Expected Output**:
 ```
-Using database: ./aurora.db
+Using database: ./.aurora/memory.db
 Indexing . ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%
 
 ┌────────────────────────────────────────────────┐
@@ -227,9 +231,10 @@ aur headless --test-cmd "pytest tests/" --max=15
 ### Workflow 1: Understand Existing Code
 
 ```bash
-# 1. Index codebase
+# 1. Initialize and index codebase
 cd /path/to/project
-aur mem index
+aur init                              # Create project database
+aur mem index .                       # Index codebase
 
 # 2. Ask about architecture
 aur query "Explain the overall architecture"
@@ -257,8 +262,10 @@ aur query "Add input validation to the registration endpoint"
 ### Workflow 3: Debug Issues
 
 ```bash
-# 1. Index recent changes
-aur mem index src/
+# 1. Initialize project (if not done) and index recent changes
+cd /path/to/project
+aur init                              # Skip if already initialized
+aur mem index src/                    # Re-index recent changes
 
 # 2. Query about the bug
 aur query "Why is the login endpoint returning 401?"
@@ -296,9 +303,10 @@ aur headless --test-cmd "pytest"      # With test backpressure
 ### Configuration Files
 
 ```bash
-~/.aurora/config.json                 # User config
-./aurora.config.json                  # Project config
-./aurora.db                           # Memory database
+~/.aurora/config.json                 # Global user config
+~/.aurora/budget_tracker.json         # Global budget tracker
+.aurora/config.json                   # Project config (created by aur init)
+.aurora/memory.db                     # Project memory database (created by aur init)
 ```
 
 ### Environment Variables
@@ -335,11 +343,15 @@ rm aurora.db-wal aurora.db-shm
 aur query "question" --force-direct
 ```
 
-### "No results found"
+### "No results found" or "Database not found"
 
 ```bash
+# Initialize project (if not done)
+cd /path/to/project
+aur init
+
 # Re-index
-aur mem index
+aur mem index .
 
 # Verify
 aur mem stats

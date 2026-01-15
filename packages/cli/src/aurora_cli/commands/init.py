@@ -278,7 +278,7 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
 def run_step_3_tool_configuration(
     project_path: Path,
     tool_ids: list[str] | None = None,
-) -> tuple[list[str], list[str]]:
+) -> tuple[list[str], list[str], int, list[str]]:
     """Run Step 3: Tool Configuration.
 
     This step:
@@ -346,8 +346,15 @@ def run_step_3_tool_configuration(
 
     # Display results per tool (group by tool for clarity)
     unique_tools = set(selected_tool_ids)
+    total_agent_count = 0
+
     if unique_tools:
         console.print("[green]✓[/] Configured tools:")
+
+        # Discover agents per tool
+        from aurora_cli.configurators.slash.paths import get_tool_paths
+        from aurora_cli.agent_discovery import AgentScanner, ManifestManager
+
         for tool_id in sorted(unique_tools):
             # Get display name from SlashCommandRegistry
             slash_config = SlashCommandRegistry.get(tool_id)
@@ -368,6 +375,26 @@ def run_step_3_tool_configuration(
             elif display_name in config_updated:
                 parts.append("instruction file [dim](updated)[/]")
 
+            # Discover agents for this tool
+            tool_agent_count = 0
+            try:
+                tool_paths = get_tool_paths(tool_id)
+                if tool_paths and tool_paths.agents:
+                    scanner = AgentScanner([tool_paths.agents])
+                    manager = ManifestManager(scanner=scanner)
+                    tool_manifest = manager.generate()
+
+                    # Count unique agents for this tool
+                    unique_agent_ids = set(a.id for a in tool_manifest.agents)
+                    tool_agent_count = len(unique_agent_ids)
+                    total_agent_count += tool_agent_count
+            except Exception:
+                pass  # Silently skip agent discovery errors per tool
+
+            # Add agent count to parts
+            if tool_agent_count > 0:
+                parts.append(f"{tool_agent_count} agent{'s' if tool_agent_count != 1 else ''}")
+
             # Format output
             if parts:
                 details = ", ".join(parts)
@@ -375,13 +402,13 @@ def run_step_3_tool_configuration(
             else:
                 console.print(f"  [cyan]▌[/] {display_name}")
 
-    # Agent discovery for selected tools
-    agent_count = 0
-    agent_sources = 0
+    # Save combined manifest for all selected tools
     try:
         from aurora_cli.configurators.slash.paths import get_tool_paths
+        from aurora_cli.agent_discovery import AgentScanner, ManifestManager
+        from aurora_cli.commands.agents import get_manifest_path
 
-        # Get agent paths for selected tools only
+        # Get agent paths for all selected tools
         selected_agent_paths = []
         for tool_id in selected_tool_ids:
             tool_paths = get_tool_paths(tool_id)
@@ -389,28 +416,13 @@ def run_step_3_tool_configuration(
                 selected_agent_paths.append(tool_paths.agents)
 
         if selected_agent_paths:
-            # Create scanner with only selected tool paths
-            from aurora_cli.agent_discovery import AgentScanner, ManifestManager
-            from aurora_cli.commands.agents import get_manifest_path
-
             scanner = AgentScanner(selected_agent_paths)
             manager = ManifestManager(scanner=scanner)
             manifest = manager.generate()
 
-            # Count unique agents (by ID)
-            unique_agent_ids = set(a.id for a in manifest.agents)
-            agent_count = len(unique_agent_ids)
-            agent_sources = len(manifest.sources)
-
             # Save manifest
             manifest_path = get_manifest_path()
             manager.save(manifest, manifest_path)
-
-            if agent_count > 0:
-                console.print(
-                    f"[green]✓[/] Discovered {agent_count} unique agent(s) "
-                    f"from {agent_sources} source(s)"
-                )
     except Exception as e:
         console.print(f"[yellow]⚠[/] Agent discovery: {e}")
 
@@ -433,7 +445,7 @@ def run_step_3_tool_configuration(
     # Return combined results for compatibility (include agent count and tool names)
     created = list(set(slash_created + config_created))
     updated = list(set(slash_updated + config_updated))
-    return (created, updated, agent_count, configured_tool_names)
+    return (created, updated, total_agent_count, configured_tool_names)
 
 
 def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler) -> bool:

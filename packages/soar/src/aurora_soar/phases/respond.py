@@ -171,6 +171,17 @@ def _format_normal(
     )
     lines.append(f"  Files Modified: {synthesis_result.metadata.get('total_files_modified', 0)}")
 
+    # Subgoal Breakdown (if available)
+    subgoal_breakdown = _extract_subgoal_breakdown(phase_metadata)
+    if subgoal_breakdown:
+        lines.append("\n" + "-" * 80)
+        lines.append("SUBGOAL BREAKDOWN:")
+        for sg in subgoal_breakdown:
+            critical_marker = " [CRITICAL]" if sg.get("is_critical") else ""
+            deps = f" (depends on: {', '.join(str(d+1) for d in sg.get('depends_on', []))})" if sg.get('depends_on') else ""
+            lines.append(f"  {sg['index']}. {sg['description'][:70]}{critical_marker}")
+            lines.append(f"     Agent: {sg['agent']}{deps}")
+
     # Phase Summary
     if "phases" in phase_metadata:
         lines.append("\nPHASE SUMMARY:")
@@ -236,6 +247,20 @@ def _format_verbose(
         lines.append(f"  Completeness: {synthesis_result.metadata['completeness']:.2f}")
     if "factuality" in synthesis_result.metadata:
         lines.append(f"  Factuality: {synthesis_result.metadata['factuality']:.2f}")
+
+    # Subgoal Breakdown
+    subgoal_breakdown = _extract_subgoal_breakdown(phase_metadata)
+    if subgoal_breakdown:
+        lines.append("\n" + "=" * 80)
+        lines.append("SUBGOAL DECOMPOSITION")
+        lines.append("=" * 80)
+        for sg in subgoal_breakdown:
+            critical_marker = " [CRITICAL]" if sg.get("is_critical") else ""
+            lines.append(f"\n{sg['index']}. {sg['description']}{critical_marker}")
+            lines.append(f"   Assigned Agent: {sg['agent']}")
+            if sg.get('depends_on'):
+                deps_str = ", ".join(str(d+1) for d in sg['depends_on'])
+                lines.append(f"   Dependencies: Subgoals {deps_str}")
 
     # Traceability
     lines.append("\n" + "=" * 80)
@@ -308,3 +333,27 @@ def _format_verbose(
     lines.append("\n" + "=" * 80)
 
     return "\n".join(lines)
+
+
+def _extract_subgoal_breakdown(phase_metadata: dict[str, Any]) -> list[dict[str, Any]]:
+    """Extract subgoal breakdown from phase metadata.
+
+    Args:
+        phase_metadata: Aggregated phase metadata
+
+    Returns:
+        List of subgoal detail dicts, or empty list if not available
+    """
+    phases = phase_metadata.get("phases", {})
+
+    # Try to get from phase4_verify (primary)
+    phase4 = phases.get("phase4_verify", {})
+    if isinstance(phase4, dict) and "subgoals_detailed" in phase4:
+        return phase4["subgoals_detailed"]
+
+    # Try to get from phase4_verify_retry (fallback)
+    phase4_retry = phases.get("phase4_verify_retry", {})
+    if isinstance(phase4_retry, dict) and "subgoals_detailed" in phase4_retry:
+        return phase4_retry["subgoals_detailed"]
+
+    return []

@@ -81,31 +81,44 @@ def verify_lite(
             )
             continue
 
-        # Check for gap first: ideal_agent != assigned_agent
+        # Check for gap using AgentRecommender with keyword matching
+        # Only spawn ad-hoc if no agent has adequate capability match
         ideal_agent = subgoal.get("ideal_agent")
-        if ideal_agent and ideal_agent != assigned_agent:
-            # Gap detected - create a placeholder AgentInfo for spawning
-            # The collect phase will use spawn_prompt instead of invoking
-            from aurora_soar.agent_registry import AgentInfo
+        ideal_agent_desc = subgoal.get("ideal_agent_desc", "")
 
-            placeholder_agent = AgentInfo(
-                id=ideal_agent,
-                name=ideal_agent,
-                description=subgoal.get("ideal_agent_desc", "Ad-hoc spawned agent"),
-                capabilities=[],
-                agent_type="local",  # Use "local" type for validation
-                config={"is_spawn": True},  # Mark as spawn in config
-            )
-            agent_assignments.append((subgoal_index, placeholder_agent))
-            continue
+        if ideal_agent and ideal_agent_desc:
+            # Use AgentRecommender to find best match based on description
+            from aurora_cli.planning.agents import AgentRecommender
 
-        # Check if assigned agent exists
-        if assigned_agent not in agent_map:
+            recommender = AgentRecommender(manifest=None)  # Will load from cache
+            best_agent, match_score = recommender.recommend_for_description(ideal_agent_desc)
+
+            # Gap only if score < 0.15 (no capable agent found)
+            if match_score < 0.15:
+                # True gap - create placeholder for ad-hoc spawning
+                from aurora_soar.agent_registry import AgentInfo
+
+                placeholder_agent = AgentInfo(
+                    id=ideal_agent,
+                    name=ideal_agent,
+                    description=ideal_agent_desc,
+                    capabilities=[],
+                    agent_type="local",
+                    config={"is_spawn": True},
+                )
+                agent_assignments.append((subgoal_index, placeholder_agent))
+                continue
+            # else: LLM found a capable agent - trust its assignment
+            # Don't overwrite assigned_agent here
+
+        # Check if assigned agent exists (strip @ prefix if present)
+        agent_id = assigned_agent.lstrip("@") if assigned_agent else ""
+        if agent_id not in agent_map:
             issues.append(f"Agent '{assigned_agent}' not found in registry")
             continue
 
         # Valid subgoal - create assignment
-        agent_info = agent_map[assigned_agent]
+        agent_info = agent_map[agent_id]
         agent_assignments.append((subgoal_index, agent_info))
 
     # Check 5: Detect circular dependencies

@@ -977,10 +977,12 @@ def init_command(config: bool, tools: str | None) -> None:
     console.print("[bold]Next Steps:[/]")
     console.print('  1. [cyan]aur plan create "Your feature"[/] - Create a plan')
     console.print('  2. [cyan]aur mem search "keyword"[/] - Search your codebase')
+    console.print('  3. [cyan]aur goals "Add feature"[/] - Decompose goal into tasks')
+    console.print('  4. [cyan]aur headless "prompt"[/] - Run in headless mode')
     if agent_count > 0:
-        console.print("  3. [cyan]aur agents list[/] - View discovered agents")
+        console.print("  5. [cyan]aur agents list[/] - View discovered agents")
     else:
-        console.print("  3. [dim]Add agents to ~/.claude/agents/ to enable agent discovery[/]")
+        console.print("  5. [dim]Add agents to ~/.claude/agents/ to enable agent discovery[/]")
     console.print()
     console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")
     console.print()

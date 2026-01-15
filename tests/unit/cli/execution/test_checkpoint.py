@@ -134,22 +134,28 @@ class TestCheckpointManager:
         """Test listing resumable checkpoints."""
         # Create two checkpoints with incomplete tasks
         mgr1 = CheckpointManager("exec-1")
-        mgr1.save([
-            TaskState(id="task-1", status="completed"),
-            TaskState(id="task-2", status="pending"),
-        ])
+        mgr1.save(
+            [
+                TaskState(id="task-1", status="completed"),
+                TaskState(id="task-2", status="pending"),
+            ]
+        )
 
         mgr2 = CheckpointManager("exec-2")
-        mgr2.save([
-            TaskState(id="task-1", status="in_progress"),
-        ])
+        mgr2.save(
+            [
+                TaskState(id="task-1", status="in_progress"),
+            ]
+        )
 
         # Create one fully completed checkpoint (should not be listed)
         mgr3 = CheckpointManager("exec-3")
-        mgr3.save([
-            TaskState(id="task-1", status="completed"),
-            TaskState(id="task-2", status="completed"),
-        ])
+        mgr3.save(
+            [
+                TaskState(id="task-1", status="completed"),
+                TaskState(id="task-2", status="completed"),
+            ]
+        )
 
         resumable = CheckpointManager.list_resumable()
 
@@ -171,6 +177,7 @@ class TestCheckpointManager:
         old_time = time.time() - (8 * 24 * 60 * 60)
         old_checkpoint.touch()
         import os
+
         os.utime(old_checkpoint, (old_time, old_time))
 
         # Create recent checkpoint

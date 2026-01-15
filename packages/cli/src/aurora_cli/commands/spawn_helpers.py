@@ -10,6 +10,7 @@ from rich.table import Table
 from aurora_cli.execution import CheckpointManager, TaskState
 from implement.models import ParsedTask
 
+
 console = Console()
 
 
@@ -46,7 +47,7 @@ def list_checkpoints() -> None:
         )
 
     console.print(table)
-    console.print(f"\n[dim]Resume with:[/] aur spawn --resume <execution-id>")
+    console.print("\n[dim]Resume with:[/] aur spawn --resume <execution-id>")
 
 
 def clean_checkpoints(days: int) -> None:
@@ -102,9 +103,7 @@ def resume_from_checkpoint(execution_id: str) -> tuple[list[ParsedTask], str]:
     # Show resume info
     resume_point = mgr.get_resume_point(checkpoint.tasks)
     console.print(f"[cyan]Found checkpoint from {checkpoint.started_at}[/]")
-    console.print(
-        f"[cyan]Progress: {resume_point}/{len(tasks)} tasks remaining[/]"
-    )
+    console.print(f"[cyan]Progress: {resume_point}/{len(tasks)} tasks remaining[/]")
 
     return tasks, execution_id
 

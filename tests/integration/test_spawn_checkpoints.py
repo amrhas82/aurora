@@ -14,7 +14,8 @@ from aurora_cli.execution import CheckpointManager
 def temp_task_file():
     """Create a temporary task file."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-        f.write("""# Test Tasks
+        f.write(
+            """# Test Tasks
 
 - [ ] 1. Task one
 <!-- agent: test-agent -->
@@ -24,7 +25,8 @@ def temp_task_file():
 
 - [ ] 3. Task three
 <!-- agent: qa-expert -->
-""")
+"""
+        )
         path = Path(f.name)
     yield path
     path.unlink()

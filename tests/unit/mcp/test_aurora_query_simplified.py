@@ -25,6 +25,7 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
+
 # Skip all tests in this file - MCP functionality is dormant (PRD-0024)
 # aurora_query tool was never implemented, only aurora_search and aurora_get exist
 pytestmark = pytest.mark.skip(

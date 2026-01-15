@@ -109,15 +109,13 @@ def get_memory_usage() -> MemoryMetrics:
     # Convert from KB to MB
     rss_mb = usage.ru_maxrss / 1024
 
-    return MemoryMetrics(
-        peak_rss_mb=rss_mb,
-        current_rss_mb=rss_mb
-    )
+    return MemoryMetrics(peak_rss_mb=rss_mb, current_rss_mb=rss_mb)
 
 
 def get_system_info() -> dict[str, Any]:
     """Collect system information."""
     import platform
+
     import psutil
 
     return {
@@ -125,8 +123,8 @@ def get_system_info() -> dict[str, Any]:
         "python_version": platform.python_version(),
         "cpu_count": psutil.cpu_count(logical=True),
         "cpu_physical": psutil.cpu_count(logical=False),
-        "total_memory_mb": psutil.virtual_memory().total / (1024 ** 2),
-        "available_memory_mb": psutil.virtual_memory().available / (1024 ** 2)
+        "total_memory_mb": psutil.virtual_memory().total / (1024**2),
+        "available_memory_mb": psutil.virtual_memory().available / (1024**2),
     }
 
 
@@ -136,12 +134,7 @@ def profile_indexing(test_path: Path, config: Config) -> IndexingMetrics:
 
     # Track phase timings
     phase_start_times = {}
-    phase_durations = {
-        "discovery": 0.0,
-        "parsing": 0.0,
-        "embedding": 0.0,
-        "storage": 0.0
-    }
+    phase_durations = {"discovery": 0.0, "parsing": 0.0, "embedding": 0.0, "storage": 0.0}
 
     memory_samples = []
 
@@ -186,7 +179,7 @@ def profile_indexing(test_path: Path, config: Config) -> IndexingMetrics:
 
     # Get database size
     db_path = Path(config.get_db_path())
-    db_size_mb = db_path.stat().st_size / (1024 ** 2) if db_path.exists() else 0.0
+    db_size_mb = db_path.stat().st_size / (1024**2) if db_path.exists() else 0.0
 
     # Query database for actual chunk count
     conn = sqlite3.connect(str(db_path))
@@ -201,7 +194,9 @@ def profile_indexing(test_path: Path, config: Config) -> IndexingMetrics:
 
     # Memory stats
     peak_mem_mb = max(memory_samples) if memory_samples else end_mem.peak_rss_mb
-    avg_mem_mb = sum(memory_samples) / len(memory_samples) if memory_samples else end_mem.current_rss_mb
+    avg_mem_mb = (
+        sum(memory_samples) / len(memory_samples) if memory_samples else end_mem.current_rss_mb
+    )
 
     return IndexingMetrics(
         total_duration_seconds=total_duration,
@@ -217,7 +212,7 @@ def profile_indexing(test_path: Path, config: Config) -> IndexingMetrics:
         peak_memory_mb=peak_mem_mb,
         avg_memory_mb=avg_mem_mb,
         db_size_mb=db_size_mb,
-        db_chunks_count=db_chunks
+        db_chunks_count=db_chunks,
     )
 
 
@@ -245,23 +240,22 @@ def profile_queries(config: Config, test_queries: list[str]) -> list[QueryMetric
 
         # Approximate component timings (actual breakdown requires instrumentation)
         # For baseline, we measure total time
-        query_results.append(QueryMetrics(
-            query_text=query_text,
-            total_duration_ms=total_duration_ms,
-            bm25_duration_ms=total_duration_ms * 0.4,  # Approximate
-            semantic_duration_ms=total_duration_ms * 0.5,  # Approximate
-            hybrid_duration_ms=total_duration_ms * 0.1,  # Approximate
-            results_returned=len(results),
-            memory_used_mb=memory_used_mb
-        ))
+        query_results.append(
+            QueryMetrics(
+                query_text=query_text,
+                total_duration_ms=total_duration_ms,
+                bm25_duration_ms=total_duration_ms * 0.4,  # Approximate
+                semantic_duration_ms=total_duration_ms * 0.5,  # Approximate
+                hybrid_duration_ms=total_duration_ms * 0.1,  # Approximate
+                results_returned=len(results),
+                memory_used_mb=memory_used_mb,
+            )
+        )
 
     return query_results
 
 
-def generate_recommendations(
-    indexing: IndexingMetrics,
-    queries: list[QueryMetrics]
-) -> list[str]:
+def generate_recommendations(indexing: IndexingMetrics, queries: list[QueryMetrics]) -> list[str]:
     """Generate performance recommendations based on metrics."""
     recommendations = []
 
@@ -326,11 +320,15 @@ def main():
     print("\n1. Profiling indexing...")
     indexing_metrics = profile_indexing(test_path, config)
 
-    print(f"   Indexed: {indexing_metrics.files_indexed} files, "
-          f"{indexing_metrics.chunks_created} chunks")
+    print(
+        f"   Indexed: {indexing_metrics.files_indexed} files, "
+        f"{indexing_metrics.chunks_created} chunks"
+    )
     print(f"   Duration: {indexing_metrics.total_duration_seconds:.2f}s")
-    print(f"   Throughput: {indexing_metrics.files_per_second:.1f} files/s, "
-          f"{indexing_metrics.chunks_per_second:.1f} chunks/s")
+    print(
+        f"   Throughput: {indexing_metrics.files_per_second:.1f} files/s, "
+        f"{indexing_metrics.chunks_per_second:.1f} chunks/s"
+    )
     print(f"   Memory: {indexing_metrics.peak_memory_mb:.1f} MB peak")
 
     # Profile queries
@@ -340,7 +338,7 @@ def main():
         "search query",
         "configuration management",
         "error handling",
-        "database operations"
+        "database operations",
     ]
 
     query_metrics = profile_queries(config, test_queries)
@@ -360,11 +358,11 @@ def main():
         test_dataset={
             "path": str(test_path),
             "files_indexed": indexing_metrics.files_indexed,
-            "chunks_created": indexing_metrics.chunks_created
+            "chunks_created": indexing_metrics.chunks_created,
         },
         indexing_metrics=indexing_metrics,
         query_metrics=query_metrics,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
     # Save report

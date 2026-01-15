@@ -30,16 +30,14 @@ from pathlib import Path
 import click
 from rich.console import Console
 
+from aurora_cli.commands.spawn_helpers import clean_checkpoints as _clean_checkpoints_impl
+from aurora_cli.commands.spawn_helpers import list_checkpoints as _list_checkpoints_impl
+from aurora_cli.commands.spawn_helpers import resume_from_checkpoint as _resume_from_checkpoint_impl
 from aurora_spawner import spawn_parallel
 from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
 from implement.parser import TaskParser
 
-from aurora_cli.commands.spawn_helpers import (
-    clean_checkpoints as _clean_checkpoints_impl,
-    list_checkpoints as _list_checkpoints_impl,
-    resume_from_checkpoint as _resume_from_checkpoint_impl,
-)
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -246,7 +244,9 @@ def spawn_command(
         except KeyboardInterrupt:
             if checkpoint_mgr:
                 checkpoint_mgr.mark_interrupted()
-                console.print(f"\n[yellow]Interrupted. Resume with:[/] aur spawn --resume {execution_id}")
+                console.print(
+                    f"\n[yellow]Interrupted. Resume with:[/] aur spawn --resume {execution_id}"
+                )
             raise click.Abort()
 
         # Display summary

@@ -21,6 +21,7 @@ from aurora_cli.planning.cache import PlanDecompositionCache
 from aurora_cli.planning.memory import FilePathResolver
 from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
 
+
 # Try to import MemoryRetriever for context loading
 try:
     from aurora_cli.memory.retrieval import MemoryRetriever
@@ -314,7 +315,7 @@ class PlanDecomposer:
             path = Path(file_path)
             if not path.exists():
                 return ""
-            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(path, encoding="utf-8", errors="ignore") as f:
                 lines = f.readlines()
             start_idx = max(0, line_start - 1)
             end_idx = min(len(lines), line_end)

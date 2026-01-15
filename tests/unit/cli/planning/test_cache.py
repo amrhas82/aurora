@@ -299,9 +299,7 @@ class TestPlanDecompositionCache:
         assert len(subgoals) == 2
         assert source == "soar"
 
-    def test_persistent_cache_expiration(
-        self, sample_subgoals: list[Subgoal]
-    ) -> None:
+    def test_persistent_cache_expiration(self, sample_subgoals: list[Subgoal]) -> None:
         """Test persistent cache TTL expiration."""
         with TemporaryDirectory() as tmpdir:
             cache_path = Path(tmpdir) / "test_cache.db"
@@ -381,9 +379,7 @@ class TestPersistentCachePromotion:
 class TestCacheKeyGeneration:
     """Tests for cache key generation logic."""
 
-    def test_identical_keys_for_same_inputs(
-        self, memory_cache: PlanDecompositionCache
-    ) -> None:
+    def test_identical_keys_for_same_inputs(self, memory_cache: PlanDecompositionCache) -> None:
         """Test that identical inputs generate same cache key."""
         goal = "Add authentication"
         complexity = Complexity.MODERATE
@@ -397,9 +393,7 @@ class TestCacheKeyGeneration:
 
         assert key1 == key2
 
-    def test_different_keys_for_different_goals(
-        self, memory_cache: PlanDecompositionCache
-    ) -> None:
+    def test_different_keys_for_different_goals(self, memory_cache: PlanDecompositionCache) -> None:
         """Test that different goals generate different keys."""
         complexity = Complexity.MODERATE
 
@@ -419,9 +413,7 @@ class TestCacheKeyGeneration:
 
         assert key1 != key2
 
-    def test_context_file_order_normalized(
-        self, memory_cache: PlanDecompositionCache
-    ) -> None:
+    def test_context_file_order_normalized(self, memory_cache: PlanDecompositionCache) -> None:
         """Test that context file order is normalized in cache key."""
         goal = "Add authentication"
         complexity = Complexity.MODERATE
@@ -968,6 +960,7 @@ class TestCachePersistentEdgeCases:
 
             # Manually insert corrupted data
             import sqlite3
+
             conn = sqlite3.connect(cache_path)
             conn.execute(
                 """

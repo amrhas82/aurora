@@ -9,8 +9,10 @@ from __future__ import annotations
 import hashlib
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from aurora.reasoning import LLMClient
+
     from aurora_reasoning.decompose import DecompositionResult
 
 __all__ = ["decompose_query", "DecomposePhaseResult"]
@@ -173,7 +175,7 @@ def _read_file_lines(file_path: str, line_start: int, line_end: int, max_lines: 
         if not path.exists():
             return ""
 
-        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        with open(path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
 
         # Convert to 0-indexed

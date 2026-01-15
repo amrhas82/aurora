@@ -10,6 +10,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar
 
+
 P = ParamSpec("P")
 T = TypeVar("T")
 

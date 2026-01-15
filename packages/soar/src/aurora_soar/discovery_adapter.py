@@ -21,11 +21,12 @@ from aurora_cli.agent_discovery.manifest import ManifestManager
 from aurora_cli.agent_discovery.models import AgentInfo as DiscoveryAgentInfo
 from aurora_soar.agent_registry import AgentInfo as RegistryAgentInfo
 
+
 logger = logging.getLogger(__name__)
 
 
 # Module-level cache for ManifestManager instance
-_manifest_manager_cache: Optional[ManifestManager] = None
+_manifest_manager_cache: ManifestManager | None = None
 
 
 def _clear_cache() -> None:
@@ -100,8 +101,8 @@ def convert_agent_info(discovery_agent: DiscoveryAgentInfo) -> RegistryAgentInfo
 
 def get_agent(
     agent_id: str,
-    manifest_path: Optional[Path] = None,
-) -> Optional[RegistryAgentInfo]:
+    manifest_path: Path | None = None,
+) -> RegistryAgentInfo | None:
     """Get an agent by ID using ManifestManager.
 
     Looks up an agent in the discovery system's manifest and converts it
@@ -135,7 +136,7 @@ def get_agent(
 
 
 def list_agents(
-    manifest_path: Optional[Path] = None,
+    manifest_path: Path | None = None,
 ) -> list[RegistryAgentInfo]:
     """List all agents using ManifestManager.
 

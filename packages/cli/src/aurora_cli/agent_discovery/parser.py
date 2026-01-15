@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from aurora_cli.agent_discovery.models import AgentInfo
 
+
 logger = logging.getLogger(__name__)
 
 

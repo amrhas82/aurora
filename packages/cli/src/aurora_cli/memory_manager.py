@@ -26,6 +26,7 @@ from aurora_core.chunks import Chunk
 from aurora_core.store import SQLiteStore
 from aurora_core.types import ChunkID
 
+
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
 

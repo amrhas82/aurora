@@ -6,4 +6,5 @@ instead of making API calls.
 
 from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
 
+
 __all__ = ["CLIPipeLLMClient"]

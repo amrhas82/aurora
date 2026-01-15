@@ -28,7 +28,7 @@ class ExecutionResult:
     task_id: str
     success: bool
     output: str
-    error: Optional[str] = None
+    error: str | None = None
     skipped: bool = False
 
 
@@ -41,7 +41,7 @@ class TaskExecutor:
     - Mark tasks complete in tasks.md after successful execution
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize TaskExecutor.
 
         Args:
@@ -49,7 +49,7 @@ class TaskExecutor:
         """
         self.config = config or {}
 
-    async def execute(self, tasks: List[ParsedTask], tasks_file: Path) -> List[ExecutionResult]:
+    async def execute(self, tasks: list[ParsedTask], tasks_file: Path) -> list[ExecutionResult]:
         """Execute tasks sequentially.
 
         Args:
@@ -59,7 +59,7 @@ class TaskExecutor:
         Returns:
             List of ExecutionResult for each task
         """
-        results: List[ExecutionResult] = []
+        results: list[ExecutionResult] = []
 
         for task in tasks:
             # Skip already completed tasks

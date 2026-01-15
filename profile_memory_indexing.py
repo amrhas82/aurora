@@ -265,11 +265,7 @@ class IndexingProfiler:
         # Check git blame performance
         if "Git blame extraction" in phase_map:
             git = phase_map["Git blame extraction"]
-            percentage = (
-                git.duration_ms / sum(p.duration_ms for p in phases) * 100
-                if phases
-                else 0
-            )
+            percentage = git.duration_ms / sum(p.duration_ms for p in phases) * 100 if phases else 0
             if percentage > 20:
                 recommendations.append(
                     f"Git blame takes {percentage:.1f}% of time. Consider: "
@@ -320,9 +316,7 @@ def format_report(report: ProfilingReport) -> str:
     lines.append("TOP FUNCTION HOTSPOTS")
     lines.append("-" * 40)
     for i, hotspot in enumerate(report.hotspots[:10], 1):
-        lines.append(
-            f"{i:2}. {hotspot['function']:40} {hotspot['cumulative_time_ms']:8,.0f} ms"
-        )
+        lines.append(f"{i:2}. {hotspot['function']:40} {hotspot['cumulative_time_ms']:8,.0f} ms")
         lines.append(f"    {hotspot['file']} ({hotspot['calls']:,} calls)")
         lines.append(f"    {hotspot['time_per_call_ms']:.2f} ms/call")
     lines.append("")
@@ -349,9 +343,7 @@ def format_report(report: ProfilingReport) -> str:
 
 def main():
     """Main profiling entry point."""
-    parser = argparse.ArgumentParser(
-        description="Profile Aurora memory indexing performance"
-    )
+    parser = argparse.ArgumentParser(description="Profile Aurora memory indexing performance")
     parser.add_argument(
         "--path",
         type=Path,

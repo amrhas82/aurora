@@ -10,6 +10,7 @@ from pathlib import Path
 from aurora_cli.configurators.slash.base import AURORA_MARKERS, SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
+
 # Relative paths (used for get_relative_path, but actual files go to global dir)
 FILE_PATHS: dict[str, str] = {
     "search": ".codex/prompts/aurora-search.md",

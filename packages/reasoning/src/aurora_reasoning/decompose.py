@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 from .prompts.decompose import DecomposePromptTemplate
 from .prompts.examples import Complexity, get_loader
 
+
 if TYPE_CHECKING:
     from .llm_client import LLMClient
 

@@ -17,6 +17,7 @@ from aurora_cli.planning.parsers.requirements import (
 )
 from aurora_cli.planning.validation.validator import Validator
 
+
 # Import manifest functions for tracking
 try:
     from aurora_cli.planning.core import _update_manifest

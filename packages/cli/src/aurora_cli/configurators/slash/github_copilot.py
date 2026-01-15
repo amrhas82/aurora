@@ -7,6 +7,7 @@ Files use .prompt.md extension and include $ARGUMENTS placeholder.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
+
 # Frontmatter for each command - includes $ARGUMENTS placeholder
 FRONTMATTER: dict[str, str] = {
     "search": """---

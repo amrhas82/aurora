@@ -8,6 +8,7 @@ import logging
 from pathlib import Path as PathLib
 from typing import Optional
 
+
 # Code file extensions to include in memory search results
 CODE_EXTENSIONS = {
     # Python
@@ -94,12 +95,13 @@ from aurora_cli.memory.retrieval import MemoryRetriever  # noqa: E402
 from aurora_cli.planning.models import FileResolution, Subgoal  # noqa: E402
 from aurora_core.store.sqlite import SQLiteStore  # noqa: E402
 
+
 logger = logging.getLogger(__name__)
 
 
 def search_memory_for_goal(
     goal: str,
-    config: Optional[Config] = None,
+    config: Config | None = None,
     limit: int = 10,
     threshold: float = 0.3,
 ) -> list[tuple[str, float]]:
@@ -208,7 +210,7 @@ class FilePathResolver:
     _warned_not_indexed = False
 
     def __init__(
-        self, store: Optional[SQLiteStore] = None, config: Optional[Config] = None
+        self, store: SQLiteStore | None = None, config: Config | None = None
     ) -> None:
         """Initialize file path resolver.
 

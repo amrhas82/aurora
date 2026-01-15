@@ -11,6 +11,7 @@ from dataclasses import asdict, is_dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from aurora_soar.phases.record import RecordResult
     from aurora_soar.phases.synthesize import SynthesisResult
@@ -178,7 +179,11 @@ def _format_normal(
         lines.append("SUBGOAL BREAKDOWN:")
         for sg in subgoal_breakdown:
             critical_marker = " [CRITICAL]" if sg.get("is_critical") else ""
-            deps = f" (depends on: {', '.join(str(d+1) for d in sg.get('depends_on', []))})" if sg.get('depends_on') else ""
+            deps = (
+                f" (depends on: {', '.join(str(d+1) for d in sg.get('depends_on', []))})"
+                if sg.get("depends_on")
+                else ""
+            )
             lines.append(f"  {sg['index']}. {sg['description'][:70]}{critical_marker}")
             lines.append(f"     Agent: {sg['agent']}{deps}")
 
@@ -258,8 +263,8 @@ def _format_verbose(
             critical_marker = " [CRITICAL]" if sg.get("is_critical") else ""
             lines.append(f"\n{sg['index']}. {sg['description']}{critical_marker}")
             lines.append(f"   Assigned Agent: {sg['agent']}")
-            if sg.get('depends_on'):
-                deps_str = ", ".join(str(d+1) for d in sg['depends_on'])
+            if sg.get("depends_on"):
+                deps_str = ", ".join(str(d + 1) for d in sg["depends_on"])
                 lines.append(f"   Dependencies: Subgoals {deps_str}")
 
     # Traceability

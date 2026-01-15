@@ -19,6 +19,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
 
@@ -169,7 +170,8 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
 
         # Count high-quality chunks (those with good scores)
         high_quality_count = sum(
-            1 for chunk in retrieved_chunks
+            1
+            for chunk in retrieved_chunks
             if getattr(chunk, "score", getattr(chunk, "hybrid_score", 0.0)) >= 0.6
         )
 

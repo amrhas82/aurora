@@ -23,6 +23,7 @@ from aurora_core.activation.engine import ActivationEngine
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_soar.phases.assess import assess_complexity
 
+
 console = Console()
 logger = logging.getLogger(__name__)
 

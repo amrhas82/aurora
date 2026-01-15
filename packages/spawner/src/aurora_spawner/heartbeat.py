@@ -248,9 +248,7 @@ class HeartbeatMonitor:
 
         return True, None
 
-    async def monitor_until_complete(
-        self, check_interval: float = 2.0
-    ) -> tuple[bool, str | None]:
+    async def monitor_until_complete(self, check_interval: float = 2.0) -> tuple[bool, str | None]:
         """Monitor execution until completion or timeout.
 
         Args:
@@ -289,9 +287,7 @@ def create_heartbeat_emitter(task_id: str) -> HeartbeatEmitter:
     return HeartbeatEmitter(task_id=task_id)
 
 
-def create_heartbeat_monitor(
-    emitter: HeartbeatEmitter, timeout: int = 300
-) -> HeartbeatMonitor:
+def create_heartbeat_monitor(emitter: HeartbeatEmitter, timeout: int = 300) -> HeartbeatMonitor:
     """Factory function for creating heartbeat monitors.
 
     Args:

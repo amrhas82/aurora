@@ -16,6 +16,7 @@ from typing import Any, Callable
 
 from aurora_spawner.models import SpawnResult, SpawnTask
 
+
 logger = logging.getLogger(__name__)
 
 # Error patterns to detect early failures (case-insensitive)
@@ -460,7 +461,7 @@ async def spawn_with_retry_and_fallback(
             if fallback_to_llm:
                 # Go directly to fallback
                 if on_progress:
-                    on_progress(1, 1, f"Circuit open, fallback to LLM")
+                    on_progress(1, 1, "Circuit open, fallback to LLM")
                 fallback_task = SpawnTask(
                     prompt=task.prompt,
                     agent=None,
@@ -498,7 +499,7 @@ async def spawn_with_retry_and_fallback(
         if task.agent and attempt > 0:
             should_skip, skip_reason = cb.should_skip(agent_id)
             if should_skip:
-                logger.debug(f"Circuit opened mid-retry, skipping to fallback")
+                logger.debug("Circuit opened mid-retry, skipping to fallback")
                 break  # Exit retry loop, go to fallback
 
         if on_progress and attempt > 0:
@@ -525,7 +526,9 @@ async def spawn_with_retry_and_fallback(
         if on_progress:
             on_progress(max_agent_attempts + 1, max_total_attempts, "Fallback to LLM")
 
-        logger.debug(f"Agent '{agent_id}' failed after {max_agent_attempts} attempts, falling back to LLM")
+        logger.debug(
+            f"Agent '{agent_id}' failed after {max_agent_attempts} attempts, falling back to LLM"
+        )
         fallback_task = SpawnTask(
             prompt=task.prompt,
             agent=None,

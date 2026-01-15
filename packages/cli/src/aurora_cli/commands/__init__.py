@@ -10,6 +10,7 @@ from .memory import memory_group
 from .plan import plan_group
 from .spawn import spawn_command
 
+
 __all__ = [
     "goals_command",
     "headless_command",

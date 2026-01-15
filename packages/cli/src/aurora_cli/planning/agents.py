@@ -12,6 +12,7 @@ from typing import Optional
 
 from aurora_cli.planning.models import AgentGap, Subgoal
 
+
 # Try to import ManifestManager - graceful fallback if not available
 try:
     from aurora_cli.agent_discovery.manifest import AgentManifest, ManifestManager
@@ -112,8 +113,8 @@ class MatchResult:
     subgoal_id: str
     agent: str
     is_gap: bool
-    gap_info: Optional[GapInfo] = None
-    spawn_prompt: Optional[str] = None
+    gap_info: GapInfo | None = None
+    spawn_prompt: str | None = None
 
 
 class AgentMatcher:
@@ -138,7 +139,7 @@ class AgentMatcher:
             manifest: Optional AgentManifest (loads from cache if None)
         """
         self.manifest = manifest
-        self._available_agents_list: Optional[str] = None
+        self._available_agents_list: str | None = None
 
     def match_subgoal(
         self,
@@ -368,10 +369,10 @@ class AgentRecommender:
     def __init__(
         self,
         manifest: Optional["AgentManifest"] = None,
-        config: Optional[any] = None,
+        config: any | None = None,
         score_threshold: float = 0.5,
         default_fallback: str = "@full-stack-dev",
-        llm_client: Optional[any] = None,  # CLIPipeLLMClient
+        llm_client: any | None = None,  # CLIPipeLLMClient
     ) -> None:
         """Initialize agent recommender.
 

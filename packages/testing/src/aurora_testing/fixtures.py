@@ -24,6 +24,7 @@ from aurora_core.store.memory import MemoryStore
 # Import core components
 from aurora_core.store.sqlite import SQLiteStore
 
+
 # ============================================================================
 # Storage Fixtures
 # ============================================================================

@@ -13,6 +13,7 @@ Functions:
 import numpy as np
 import numpy.typing as npt
 
+
 # Optional dependency - only needed for semantic features
 # Note: mypy config disables warn_unused_ignores for this module
 try:

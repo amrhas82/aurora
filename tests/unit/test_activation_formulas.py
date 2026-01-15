@@ -29,6 +29,7 @@ from aurora_core.activation.spreading import (
     calculate_spreading,
 )
 
+
 # ==============================================================================
 # Base-Level Activation Tests
 # ==============================================================================

@@ -23,6 +23,7 @@ from aurora_cli.policies.models import (
 )
 from aurora_core.paths import get_aurora_dir
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +63,9 @@ class PoliciesEngine:
                 yaml_content = f.read()
             return self._parse_yaml(yaml_content)
         except Exception as e:
-            logger.warning(f"Failed to load policies from {self.policies_path}: {e}, using defaults")
+            logger.warning(
+                f"Failed to load policies from {self.policies_path}: {e}, using defaults"
+            )
             return self._parse_yaml(get_default_policies_yaml())
 
     def _parse_yaml(self, yaml_content: str) -> PoliciesConfig:
@@ -82,9 +85,11 @@ class PoliciesEngine:
             budget = BudgetConfig(
                 monthly_limit_usd=budget_data.get("monthly_limit_usd", 100.0),
                 warn_at_percent=budget_data.get("warn_at_percent", 80),
-                hard_limit_action=PolicyAction.DENY
-                if budget_data.get("hard_limit_action") == "reject"
-                else PolicyAction.PROMPT,
+                hard_limit_action=(
+                    PolicyAction.DENY
+                    if budget_data.get("hard_limit_action") == "reject"
+                    else PolicyAction.PROMPT
+                ),
             )
 
             # Parse recovery config
@@ -98,7 +103,9 @@ class PoliciesEngine:
             # Parse destructive config
             destructive_data = data.get("destructive", {})
             destructive = DestructiveConfig(
-                file_delete=destructive_data.get("file_delete", {"action": "prompt", "max_files": 5}),
+                file_delete=destructive_data.get(
+                    "file_delete", {"action": "prompt", "max_files": 5}
+                ),
                 git_force_push=destructive_data.get("git_force_push", {"action": "deny"}),
                 git_push_main=destructive_data.get("git_push_main", {"action": "prompt"}),
                 drop_table=destructive_data.get("drop_table", {"action": "deny"}),

@@ -24,6 +24,7 @@ from aurora_spawner import (
     spawn_with_retry_and_fallback,
 )
 
+
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
 
@@ -177,7 +178,7 @@ class CollectResult:
 
 
 async def execute_agents(
-    agent_assignments: list[tuple[int, "AgentInfo"]],
+    agent_assignments: list[tuple[int, AgentInfo]],
     subgoals: list[dict[str, Any]],
     context: dict[str, Any],
     on_progress: Any = None,
@@ -368,10 +369,18 @@ After your deliverable, suggest a formal agent specification for this capability
             # Soft errors (timeout, no activity) should NOT stop execution
             is_critical = subgoal.get("is_critical", False)
             error_msg = spawn_result.error or ""
-            is_soft_error = any(pattern in error_msg.lower() for pattern in [
-                "timeout", "no activity", "timed out", "circuit open",
-                "rate limit", "429", "quota"
-            ])
+            is_soft_error = any(
+                pattern in error_msg.lower()
+                for pattern in [
+                    "timeout",
+                    "no activity",
+                    "timed out",
+                    "circuit open",
+                    "rate limit",
+                    "429",
+                    "quota",
+                ]
+            )
 
             if is_critical and not is_soft_error:
                 # Only raise for hard failures on critical subgoals

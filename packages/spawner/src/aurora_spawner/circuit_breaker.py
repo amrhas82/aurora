@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Tuple
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -61,7 +62,7 @@ class CircuitBreaker:
         """
         self.failure_threshold = failure_threshold
         self.reset_timeout = reset_timeout
-        self._circuits: Dict[str, AgentCircuit] = {}
+        self._circuits: dict[str, AgentCircuit] = {}
 
     def _get_circuit(self, agent_id: str) -> AgentCircuit:
         """Get or create circuit for agent."""
@@ -82,8 +83,7 @@ class CircuitBreaker:
         if circuit.failure_count >= self.failure_threshold:
             if circuit.state != CircuitState.OPEN:
                 logger.warning(
-                    f"Circuit OPEN for agent '{agent_id}': "
-                    f"{circuit.failure_count} failures"
+                    f"Circuit OPEN for agent '{agent_id}': " f"{circuit.failure_count} failures"
                 )
             circuit.state = CircuitState.OPEN
 
@@ -111,7 +111,7 @@ class CircuitBreaker:
         skip, _ = self.should_skip(agent_id)
         return skip
 
-    def should_skip(self, agent_id: str) -> Tuple[bool, str]:
+    def should_skip(self, agent_id: str) -> tuple[bool, str]:
         """Check if agent should be skipped due to open circuit.
 
         Also handles state transitions:
@@ -135,15 +135,17 @@ class CircuitBreaker:
             elapsed = now - circuit.last_failure_time
             if elapsed >= self.reset_timeout:
                 logger.info(
-                    f"Circuit HALF_OPEN for agent '{agent_id}': "
-                    f"testing after {elapsed:.0f}s"
+                    f"Circuit HALF_OPEN for agent '{agent_id}': " f"testing after {elapsed:.0f}s"
                 )
                 circuit.state = CircuitState.HALF_OPEN
                 circuit.last_attempt_time = now
                 return False, ""  # Allow test request
             else:
                 remaining = self.reset_timeout - elapsed
-                return True, f"Circuit open: {circuit.failure_count} failures, retry in {remaining:.0f}s"
+                return (
+                    True,
+                    f"Circuit open: {circuit.failure_count} failures, retry in {remaining:.0f}s",
+                )
 
         if circuit.state == CircuitState.HALF_OPEN:
             # Only allow one test request
@@ -170,7 +172,7 @@ class CircuitBreaker:
         logger.info("All circuits RESET")
         self._circuits.clear()
 
-    def get_status(self) -> Dict[str, dict]:
+    def get_status(self) -> dict[str, dict]:
         """Get status of all circuits.
 
         Returns:

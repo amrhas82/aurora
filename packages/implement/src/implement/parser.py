@@ -9,6 +9,7 @@ from typing import List
 
 from implement.models import ParsedTask
 
+
 # Regex patterns for task checkboxes (ported from task_progress.py)
 TASK_PATTERN = re.compile(r"^[-*]\s+\[[\sx]\]", re.IGNORECASE)
 COMPLETED_TASK_PATTERN = re.compile(r"^[-*]\s+\[x\]", re.IGNORECASE)
@@ -37,7 +38,7 @@ class TaskParser:
     Metadata comments apply to the task immediately preceding them.
     """
 
-    def parse(self, content: str) -> List[ParsedTask]:
+    def parse(self, content: str) -> list[ParsedTask]:
         """Parse tasks from markdown content.
 
         Args:
@@ -50,7 +51,7 @@ class TaskParser:
             return []
 
         lines = content.split("\n")
-        tasks: List[ParsedTask] = []
+        tasks: list[ParsedTask] = []
         current_task_idx = -1
 
         for line in lines:

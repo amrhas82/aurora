@@ -341,7 +341,9 @@ def print_results(results: ProfilingResults, db_metrics: dict[str, Any] | None =
     top_bottleneck = phases_sorted[0]
 
     print(f"\nTop bottleneck: {top_bottleneck[0]}")
-    print(f"  Time: {top_bottleneck[1]:.2f}s ({(top_bottleneck[1] / results.total_time) * 100:.1f}%)")
+    print(
+        f"  Time: {top_bottleneck[1]:.2f}s ({(top_bottleneck[1] / results.total_time) * 100:.1f}%)"
+    )
 
     # Recommendations
     print("\nOptimization Recommendations:")
@@ -386,42 +388,50 @@ def save_results_json(results: ProfilingResults, output_path: Path):
         "total_time": results.total_time,
         "files_processed": results.files_processed,
         "chunks_created": results.chunks_created,
-        "throughput_files_per_sec": results.files_processed / results.total_time
-        if results.total_time > 0
-        else 0,
-        "throughput_chunks_per_sec": results.chunks_created / results.total_time
-        if results.total_time > 0
-        else 0,
+        "throughput_files_per_sec": (
+            results.files_processed / results.total_time if results.total_time > 0 else 0
+        ),
+        "throughput_chunks_per_sec": (
+            results.chunks_created / results.total_time if results.total_time > 0 else 0
+        ),
         "phases": {
             "parsing": {
                 "total_time": results.parsing_time,
                 "calls": results.parse_calls,
                 "avg_per_call_ms": results.avg_parse_per_file * 1000,
-                "percentage": (results.parsing_time / results.total_time) * 100
-                if results.total_time > 0
-                else 0,
+                "percentage": (
+                    (results.parsing_time / results.total_time) * 100
+                    if results.total_time > 0
+                    else 0
+                ),
             },
             "git_blame": {
                 "total_time": results.git_blame_time,
-                "percentage": (results.git_blame_time / results.total_time) * 100
-                if results.total_time > 0
-                else 0,
+                "percentage": (
+                    (results.git_blame_time / results.total_time) * 100
+                    if results.total_time > 0
+                    else 0
+                ),
             },
             "embedding": {
                 "total_time": results.embedding_time,
                 "calls": results.embed_calls,
                 "avg_per_chunk_ms": results.avg_embed_per_chunk * 1000,
-                "percentage": (results.embedding_time / results.total_time) * 100
-                if results.total_time > 0
-                else 0,
+                "percentage": (
+                    (results.embedding_time / results.total_time) * 100
+                    if results.total_time > 0
+                    else 0
+                ),
             },
             "db_write": {
                 "total_time": results.db_write_time,
                 "calls": results.db_write_calls,
                 "avg_per_write_ms": results.avg_db_per_chunk * 1000,
-                "percentage": (results.db_write_time / results.total_time) * 100
-                if results.total_time > 0
-                else 0,
+                "percentage": (
+                    (results.db_write_time / results.total_time) * 100
+                    if results.total_time > 0
+                    else 0
+                ),
             },
         },
     }

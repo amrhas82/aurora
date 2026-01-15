@@ -266,7 +266,7 @@ class Plan(BaseModel):
         default_factory=dict,
         description="Map of subgoal ID to file resolutions",
     )
-    memory_context: list["MemoryContext"] = Field(
+    memory_context: list[MemoryContext] = Field(
         default_factory=list,
         description="Relevant files from memory search",
     )
@@ -488,7 +488,7 @@ class FileResolution(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_line_range(self) -> "FileResolution":
+    def validate_line_range(self) -> FileResolution:
         """Validate line_end >= line_start if both provided.
 
         Returns:

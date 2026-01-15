@@ -23,6 +23,7 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
+
 # Skip all tests in this file - MCP functionality is dormant (PRD-0024)
 pytestmark = pytest.mark.skip(reason="MCP functionality dormant - tests deprecated (PRD-0024)")
 

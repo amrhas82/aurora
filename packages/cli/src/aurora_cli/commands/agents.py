@@ -38,6 +38,7 @@ from aurora_cli.agent_discovery import (
 from aurora_cli.config import Config, load_config
 from aurora_cli.errors import handle_errors
 
+
 if TYPE_CHECKING:
     pass
 

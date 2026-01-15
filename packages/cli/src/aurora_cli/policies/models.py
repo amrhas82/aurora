@@ -68,7 +68,9 @@ class BudgetConfig:
 class DestructiveConfig:
     """Configuration for destructive operation policies."""
 
-    file_delete: dict[str, Any] = field(default_factory=lambda: {"action": "prompt", "max_files": 5})
+    file_delete: dict[str, Any] = field(
+        default_factory=lambda: {"action": "prompt", "max_files": 5}
+    )
     git_force_push: dict[str, Any] = field(default_factory=lambda: {"action": "deny"})
     git_push_main: dict[str, Any] = field(default_factory=lambda: {"action": "prompt"})
     drop_table: dict[str, Any] = field(default_factory=lambda: {"action": "deny"})

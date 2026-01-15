@@ -15,6 +15,7 @@ from aurora_core.exceptions import ChunkNotFoundError, StorageError, ValidationE
 from aurora_core.store.base import Store
 from aurora_core.types import ChunkID
 
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 

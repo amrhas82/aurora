@@ -5,13 +5,12 @@ Tests are written first (TDD) before full implementation.
 """
 
 from pathlib import Path
-from typing import Optional
 
 
 class PlanCommand:
     """CLI command for creating and managing plans."""
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize PlanCommand.
 
         Args:
@@ -22,8 +21,8 @@ class PlanCommand:
     def create(
         self,
         name: str,
-        description: Optional[str] = None,
-        template: Optional[str] = None,
+        description: str | None = None,
+        template: str | None = None,
     ) -> Path:
         """Create a new plan.
 

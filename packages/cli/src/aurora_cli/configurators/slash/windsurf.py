@@ -7,6 +7,7 @@ with aurora-{command}.md naming and special auto_execution_mode: 3 frontmatter.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
+
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "search": ".windsurf/workflows/aurora-search.md",

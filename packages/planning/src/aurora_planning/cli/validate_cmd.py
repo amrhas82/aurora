@@ -5,7 +5,6 @@ Tests are written first (TDD) before full implementation.
 """
 
 from pathlib import Path
-from typing import Optional
 
 
 class ValidationResult:
@@ -27,7 +26,7 @@ class ValidationResult:
 class ValidateCommand:
     """CLI command for validating plans."""
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Path | None = None):
         """Initialize ValidateCommand.
 
         Args:

@@ -394,7 +394,9 @@ def main() -> None:
         print(f"\nQuery Performance:")
         avg_query = statistics.mean([q.total_ms for q in query_metrics])
         print(f"  Avg latency:       {avg_query:.2f}ms")
-        print(f"  P50 latency:       {statistics.median([q.total_ms for q in query_metrics]):.2f}ms")
+        print(
+            f"  P50 latency:       {statistics.median([q.total_ms for q in query_metrics]):.2f}ms"
+        )
         print(f"\nDatabase Efficiency:")
         print(f"  Size:              {db_metrics.db_size_mb:.2f} MB")
         print(

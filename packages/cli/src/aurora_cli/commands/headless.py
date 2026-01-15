@@ -9,6 +9,7 @@ from rich.console import Console
 
 from aurora_cli.templates.headless import SCRATCHPAD_TEMPLATE
 
+
 console = Console()
 
 

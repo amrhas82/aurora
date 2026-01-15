@@ -7,6 +7,7 @@ Uses $ARGUMENTS placeholder and <UserRequest> tags for argument handling.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
+
 # Frontmatter for each command - includes $ARGUMENTS and <UserRequest> tags
 FRONTMATTER: dict[str, str] = {
     "search": """---

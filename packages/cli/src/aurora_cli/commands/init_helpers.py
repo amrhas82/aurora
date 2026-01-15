@@ -17,6 +17,7 @@ from aurora_cli.configurators import TOOL_OPTIONS, ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.templates.headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
 
+
 console = Console()
 
 AURORA_DIR_NAME = ".aurora"
@@ -565,7 +566,11 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
         choices = []
 
         # Header for all native providers
-        choices.append(questionary.Separator("\nNatively supported providers (✔ Aurora custom slash commands available)"))
+        choices.append(
+            questionary.Separator(
+                "\nNatively supported providers (✔ Aurora custom slash commands available)"
+            )
+        )
 
         # Add all tools sorted alphabetically
         for configurator in sorted(
@@ -820,7 +825,9 @@ def show_status_summary(project_path: Path) -> None:
     # Step 3: Tool Configuration - always check, even without .aurora
     # Use slash command detection (new system) instead of old TOOL_OPTIONS
     slash_configured = detect_configured_slash_tools(project_path)
-    configured_tool_ids = [tool_id for tool_id, is_configured in slash_configured.items() if is_configured]
+    configured_tool_ids = [
+        tool_id for tool_id, is_configured in slash_configured.items() if is_configured
+    ]
     tool_count = len(configured_tool_ids)
 
     if tool_count > 0:

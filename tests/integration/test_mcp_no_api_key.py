@@ -24,6 +24,7 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
+
 # Skip all tests in this module unless MCP is explicitly enabled (PRD-0024)
 # Also mark as requiring ML dependencies
 pytestmark = [

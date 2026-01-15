@@ -39,6 +39,7 @@ from aurora_cli.planning.results import (
     ShowResult,
 )
 
+
 logger = logging.getLogger(__name__)
 
 # Import renderer for template-based file generation
@@ -843,7 +844,7 @@ def _write_goals_only(
     plan: Plan,
     plan_dir: Path,
     memory_context: list[tuple[str, float]],
-    agent_gaps: list["AgentGap"] | None = None,
+    agent_gaps: list[AgentGap] | None = None,
 ) -> None:
     """Write only goals.json to disk (for aur goals command).
 
@@ -1108,8 +1109,8 @@ def generate_goals_json(
     goal: str,
     subgoals: list[Subgoal],
     memory_context: list[tuple[str, float]],
-    gaps: list["AgentGap"],
-) -> "Goals":
+    gaps: list[AgentGap],
+) -> Goals:
     """Generate Goals object for goals.json output.
 
     Converts plan data into the Goals format matching FR-6.2 from PRD-0026.

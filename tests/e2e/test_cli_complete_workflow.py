@@ -38,6 +38,7 @@ from aurora_core.store import SQLiteStore
 
 from .conftest import run_cli_command
 
+
 pytestmark = pytest.mark.ml
 
 

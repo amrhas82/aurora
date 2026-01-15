@@ -5,19 +5,15 @@ from pathlib import Path
 
 import pytest
 
-from aurora_cli.policies import (
-    Operation,
-    OperationType,
-    PoliciesEngine,
-    PolicyAction,
-)
+from aurora_cli.policies import Operation, OperationType, PoliciesEngine, PolicyAction
 
 
 @pytest.fixture
 def temp_policies_file():
     """Create a temporary policies file."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        f.write("""
+        f.write(
+            """
 budget:
   monthly_limit_usd: 50.0
   warn_at_percent: 70
@@ -54,7 +50,8 @@ anomalies:
   scope_multiplier: 2
   unexpected_file_types:
     - "*.sql"
-""")
+"""
+        )
         path = Path(f.name)
     yield path
     path.unlink()

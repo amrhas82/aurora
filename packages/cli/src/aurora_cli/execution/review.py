@@ -11,6 +11,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
+
 console = Console()
 
 
@@ -102,7 +103,11 @@ class DecompositionReview:
         # Stats line
         stats_parts = [
             f"{total_count} subgoals",
-            f"{assigned_count} assigned, {gap_count} gaps" if gap_count > 0 else f"{assigned_count} assigned",
+            (
+                f"{assigned_count} assigned, {gap_count} gaps"
+                if gap_count > 0
+                else f"{assigned_count} assigned"
+            ),
         ]
 
         if self.files_count > 0:
@@ -119,25 +124,23 @@ class DecompositionReview:
         # Warnings section
         if gap_count > 0:
             # Collect unique ideal agents
-            unique_agents = sorted(set(
-                gap.required_agent
-                for gap in self.agent_gaps
-                if gap.required_agent
-            ))
+            unique_agents = sorted(
+                set(gap.required_agent for gap in self.agent_gaps if gap.required_agent)
+            )
 
             if unique_agents:
                 agents_display = ", ".join(unique_agents)
-                summary_lines.extend([
-                    "",
-                    "Warnings:",
-                    f"  ⚠ Agent gaps detected: {agents_display}"
-                ])
+                summary_lines.extend(
+                    ["", "Warnings:", f"  ⚠ Agent gaps detected: {agents_display}"]
+                )
             else:
-                summary_lines.extend([
-                    "",
-                    "Warnings:",
-                    f"  ⚠ {gap_count} agent gaps - will use ad-hoc agents or fallback to LLM"
-                ])
+                summary_lines.extend(
+                    [
+                        "",
+                        "Warnings:",
+                        f"  ⚠ {gap_count} agent gaps - will use ad-hoc agents or fallback to LLM",
+                    ]
+                )
 
         summary_text = "\n".join(summary_lines)
         console.print()
@@ -215,17 +218,17 @@ class ExecutionPreview:
 
         if gap_count > 0:
             # Collect unique ideal agents
-            unique_agents = sorted(set(
-                gap.required_agent
-                for gap in self.agent_gaps
-                if gap.required_agent
-            ))
+            unique_agents = sorted(
+                set(gap.required_agent for gap in self.agent_gaps if gap.required_agent)
+            )
 
             if unique_agents:
                 agents_display = ", ".join(unique_agents)
                 summary_lines.append(f"[yellow]⚠[/yellow] Agent gaps: {agents_display}")
             else:
-                summary_lines.append(f"[yellow]⚠[/yellow] {gap_count} gap(s) (will spawn ad-hoc or fallback)")
+                summary_lines.append(
+                    f"[yellow]⚠[/yellow] {gap_count} gap(s) (will spawn ad-hoc or fallback)"
+                )
 
         summary_text = "\n".join(summary_lines)
         console.print()

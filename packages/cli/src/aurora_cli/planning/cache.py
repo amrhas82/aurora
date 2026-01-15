@@ -34,6 +34,7 @@ from typing import Any
 
 from aurora_cli.planning.models import Complexity, Subgoal
 
+
 # Configure logger for cache operations
 logger = logging.getLogger(__name__)
 
@@ -118,9 +119,7 @@ class CacheMetrics:
     def avg_set_latency_ms(self) -> float:
         """Calculate average SET operation latency."""
         return (
-            self.total_set_latency_ms / self.write_operations
-            if self.write_operations > 0
-            else 0.0
+            self.total_set_latency_ms / self.write_operations if self.write_operations > 0 else 0.0
         )
 
 
@@ -631,7 +630,7 @@ class PlanDecompositionCache:
             )
             conn.commit()
             conn.close()
-        except sqlite3.Error as e:
+        except sqlite3.Error:
             # Silently fail if persistent storage can't be initialized
             # Cache will still work in-memory
             pass

@@ -7,6 +7,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
 
+
 if TYPE_CHECKING:
     from aurora_cli.policies.models import RecoveryConfig
 
@@ -85,16 +86,22 @@ class AgentRecovery:
                         metadata=result.get("metadata", {}),
                     )
 
-                logger.debug(f"Agent {agent_id} failed on attempt {attempt_num}: {result.get('error')}")
+                logger.debug(
+                    f"Agent {agent_id} failed on attempt {attempt_num}: {result.get('error')}"
+                )
 
             except asyncio.TimeoutError:
-                logger.debug(f"Agent {agent_id} timed out on attempt {attempt_num} ({self.timeout}s)")
+                logger.debug(
+                    f"Agent {agent_id} timed out on attempt {attempt_num} ({self.timeout}s)"
+                )
             except Exception as e:
                 logger.warning(f"Agent {agent_id} exception on attempt {attempt_num}: {e}")
 
         # All attempts failed, try fallback if enabled
         if self.fallback_enabled:
-            logger.info(f"Agent {agent_id} failed after {max_attempts} attempts, using LLM fallback")
+            logger.info(
+                f"Agent {agent_id} failed after {max_attempts} attempts, using LLM fallback"
+            )
 
             if on_progress:
                 on_progress(max_attempts + 1, max_attempts + 1, "Fallback to LLM")
@@ -131,9 +138,7 @@ class AgentRecovery:
             original_agent=original_agent,
         )
 
-    async def execute_fallback(
-        self, task: str, execute_fn: Callable
-    ) -> dict[str, Any]:
+    async def execute_fallback(self, task: str, execute_fn: Callable) -> dict[str, Any]:
         """Execute task with direct LLM call as last resort.
 
         Args:

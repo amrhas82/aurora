@@ -20,6 +20,7 @@ from aurora_cli.configurators.slash.base import (
 )
 from aurora_cli.templates.slash_commands import get_command_body
 
+
 # Tool configuration data for parametrized tests
 # Each tool defines: tool_id, directory pattern, file naming, extension
 SIMPLE_MARKDOWN_TOOLS = [

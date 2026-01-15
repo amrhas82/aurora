@@ -12,6 +12,7 @@ from datetime import datetime
 # Forward reference to avoid circular imports - Chunk will be defined in chunks module
 from typing import TYPE_CHECKING, Any, Optional
 
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 

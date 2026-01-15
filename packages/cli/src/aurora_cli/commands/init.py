@@ -25,6 +25,7 @@ from aurora_cli.commands.init_helpers import (
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.errors import ErrorHandler, handle_errors
 
+
 console = Console()
 
 
@@ -352,8 +353,8 @@ def run_step_3_tool_configuration(
         console.print("[green]✓[/] Configured tools:")
 
         # Discover agents per tool
-        from aurora_cli.configurators.slash.paths import get_tool_paths
         from aurora_cli.agent_discovery import AgentScanner, ManifestManager
+        from aurora_cli.configurators.slash.paths import get_tool_paths
 
         for tool_id in sorted(unique_tools):
             # Get display name from SlashCommandRegistry
@@ -404,9 +405,9 @@ def run_step_3_tool_configuration(
 
     # Save combined manifest for all selected tools
     try:
-        from aurora_cli.configurators.slash.paths import get_tool_paths
         from aurora_cli.agent_discovery import AgentScanner, ManifestManager
         from aurora_cli.commands.agents import get_manifest_path
+        from aurora_cli.configurators.slash.paths import get_tool_paths
 
         # Get agent paths for all selected tools
         selected_agent_paths = []

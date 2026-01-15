@@ -21,6 +21,7 @@ from typing import Any
 
 from aurora_cli.config import Config, load_config
 
+
 # Health check result type: (status, message, details)
 # status: "pass", "warning", "fail"
 # message: human-readable description
@@ -774,7 +775,7 @@ class MCPFunctionalChecks:
                 )
 
             # Try to parse JSON
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 json.load(f)
 
             return ("pass", "MCP config syntax valid", {"path": str(config_path)})

@@ -15,6 +15,7 @@ from typing import Any
 
 from aurora_cli.errors import ConfigurationError, ErrorHandler
 
+
 # List of all 20 AI coding tools supported by Aurora slash command configurators.
 # Each tool has:
 #   - name: Human-readable display name

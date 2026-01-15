@@ -20,6 +20,7 @@ from aurora_cli.health_checks import (
     ToolIntegrationChecks,
 )
 
+
 __all__ = ["doctor_command"]
 
 logger = logging.getLogger(__name__)

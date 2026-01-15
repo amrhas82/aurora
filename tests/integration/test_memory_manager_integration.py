@@ -25,6 +25,7 @@ from aurora_context_code.registry import ParserRegistry
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
 
+
 pytestmark = pytest.mark.ml
 
 if TYPE_CHECKING:

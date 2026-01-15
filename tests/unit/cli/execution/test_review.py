@@ -34,9 +34,7 @@ class TestDecompositionReview:
             {"description": "Deploy", "agent_id": "@devops-expert", "goal": "Deploy"},
         ]
 
-        gaps = [
-            AgentGap(subgoal_index=1, description="Deploy", required_agent="@devops-expert")
-        ]
+        gaps = [AgentGap(subgoal_index=1, description="Deploy", required_agent="@devops-expert")]
 
         review = DecompositionReview(subgoals, gaps)
 
@@ -60,9 +58,7 @@ class TestDecompositionReview:
     @patch("aurora_cli.execution.review.console")
     def test_display_with_gaps(self, mock_console):
         """Test display with gaps."""
-        subgoals = [
-            {"description": "Deploy", "agent_id": "@devops-expert", "goal": "Deploy"}
-        ]
+        subgoals = [{"description": "Deploy", "agent_id": "@devops-expert", "goal": "Deploy"}]
 
         gaps = [AgentGap(subgoal_index=0, description="Deploy", required_agent="@devops-expert")]
 

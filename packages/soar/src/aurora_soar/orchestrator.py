@@ -52,6 +52,7 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
+
 if TYPE_CHECKING:
     from aurora_core.config.loader import Config
     from aurora_core.store.base import Store
@@ -318,14 +319,16 @@ class SOAROrchestrator:
                 sg = subgoals[idx] if idx < len(subgoals) else {}
                 # Check if agent is a spawn (gap) - marked by verify_lite
                 is_spawn = getattr(agent, "config", {}).get("is_spawn", False)
-                subgoal_details.append({
-                    "index": idx + 1,
-                    "description": sg.get("description", ""),
-                    "agent": agent.id,
-                    "is_critical": sg.get("is_critical", False),
-                    "depends_on": sg.get("depends_on", []),
-                    "is_spawn": is_spawn,
-                })
+                subgoal_details.append(
+                    {
+                        "index": idx + 1,
+                        "description": sg.get("description", ""),
+                        "agent": agent.id,
+                        "is_critical": sg.get("is_critical", False),
+                        "depends_on": sg.get("depends_on", []),
+                        "is_spawn": is_spawn,
+                    }
+                )
 
             # Invoke callback with result (including subgoal details for table display)
             self._invoke_callback(
@@ -377,14 +380,16 @@ class SOAROrchestrator:
                 for idx, agent in agent_assignments:
                     sg = subgoals[idx] if idx < len(subgoals) else {}
                     is_spawn = getattr(agent, "config", {}).get("is_spawn", False)
-                    subgoal_details.append({
-                        "index": idx + 1,
-                        "description": sg.get("description", ""),
-                        "agent": agent.id,
-                        "is_critical": sg.get("is_critical", False),
-                        "depends_on": sg.get("depends_on", []),
-                        "is_spawn": is_spawn,
-                    })
+                    subgoal_details.append(
+                        {
+                            "index": idx + 1,
+                            "description": sg.get("description", ""),
+                            "agent": agent.id,
+                            "is_critical": sg.get("is_critical", False),
+                            "depends_on": sg.get("depends_on", []),
+                            "is_spawn": is_spawn,
+                        }
+                    )
 
                 phase4_result = {
                     "final_verdict": "PASS" if passed else "FAIL",
@@ -561,9 +566,7 @@ class SOAROrchestrator:
                 # Prepend to code_chunks (explicit context has priority)
                 existing_chunks = phase2_result.get("code_chunks", [])
                 phase2_result["code_chunks"] = loaded_chunks + existing_chunks
-                logger.info(
-                    f"Injected {len(loaded_chunks)} context files into retrieval results"
-                )
+                logger.info(f"Injected {len(loaded_chunks)} context files into retrieval results")
 
         except Exception as e:
             logger.warning(f"Failed to inject context files: {e}")

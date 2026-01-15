@@ -28,6 +28,7 @@ from aurora_cli.execution import QueryExecutor
 from aurora_cli.memory_manager import MemoryManager
 from aurora_core.store.sqlite import SQLiteStore
 
+
 pytestmark = pytest.mark.ml
 
 

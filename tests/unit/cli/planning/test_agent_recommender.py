@@ -43,7 +43,7 @@ class TestAgentRecommender:
             id="sg-1",
             title="Implement OAuth2 authentication",
             description="Add OAuth2 authentication flow with token management",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
         )
 
         # Act
@@ -64,11 +64,13 @@ class TestAgentRecommender:
         # Arrange
         mock_agent1 = Mock()
         mock_agent1.id = "full-stack-dev"
+        mock_agent1.goal = "Full-stack development specialist"
         mock_agent1.when_to_use = "implementing features, coding, development"
         mock_agent1.capabilities = ["python", "javascript", "testing"]
 
         mock_agent2 = Mock()
         mock_agent2.id = "qa-test-architect"
+        mock_agent2.goal = "Quality assurance and testing specialist"
         mock_agent2.when_to_use = "testing, quality assurance, test architecture"
         mock_agent2.capabilities = ["testing", "quality", "pytest"]
 
@@ -84,7 +86,7 @@ class TestAgentRecommender:
             id="sg-1",
             title="Test architecture review",
             description="Review testing architecture and quality assurance processes",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
         )
 
         # Act
@@ -100,6 +102,7 @@ class TestAgentRecommender:
         # Arrange
         mock_agent = Mock()
         mock_agent.id = "specialized-agent"
+        mock_agent.goal = "Specialized Agent specialist"
         mock_agent.when_to_use = "very specific niche task"
         mock_agent.capabilities = ["niche", "specific"]
 
@@ -115,7 +118,7 @@ class TestAgentRecommender:
             id="sg-1",
             title="Implement OAuth2 authentication",
             description="Add OAuth2 authentication flow",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
         )
 
         # Act
@@ -131,6 +134,7 @@ class TestAgentRecommender:
         # Arrange
         mock_agent = Mock()
         mock_agent.id = "full-stack-dev"
+        mock_agent.goal = "Full Stack Dev specialist"
         mock_agent.when_to_use = "general development"
         mock_agent.capabilities = ["python", "javascript"]
 
@@ -149,13 +153,13 @@ class TestAgentRecommender:
                 id="sg-1",
                 title="Security audit",
                 description="Perform comprehensive security audit",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             ),
             Subgoal(
                 id="sg-2",
                 title="Implement feature",
                 description="Implement new feature",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             ),
         ]
 
@@ -171,10 +175,9 @@ class TestAgentRecommender:
         # Assert
         assert len(gaps) == 1
         assert gaps[0].subgoal_id == "sg-1"
-        assert gaps[0].recommended_agent == "@security-expert"
-        assert gaps[0].agent_exists is False
-        assert gaps[0].fallback == "@full-stack-dev"
-        assert len(gaps[0].suggested_capabilities) > 0
+        assert gaps[0].ideal_agent == "@security-expert"
+        assert gaps[0].assigned_agent == "@full-stack-dev"  # Fallback
+        assert gaps[0].ideal_agent_desc  # Has description
 
     @patch("aurora_cli.planning.agents.ManifestManager")
     def test_agent_existence_check(self, mock_manager_class) -> None:
@@ -212,7 +215,7 @@ class TestAgentRecommender:
             id="sg-1",
             title="The implementation of the OAuth2 for the authentication",
             description="Add the OAuth2 authentication to the system",
-            recommended_agent="@dev",
+            assigned_agent="@dev",
         )
 
         # Act
@@ -247,7 +250,7 @@ class TestAgentRecommender:
             id="sg-1",
             title="Test task",
             description="Test description for the task",
-            recommended_agent="@dev",
+            assigned_agent="@dev",
         )
 
         # Act

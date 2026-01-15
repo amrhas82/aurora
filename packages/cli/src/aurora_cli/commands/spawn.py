@@ -33,7 +33,7 @@ from rich.console import Console
 from aurora_cli.commands.spawn_helpers import clean_checkpoints as _clean_checkpoints_impl
 from aurora_cli.commands.spawn_helpers import list_checkpoints as _list_checkpoints_impl
 from aurora_cli.commands.spawn_helpers import resume_from_checkpoint as _resume_from_checkpoint_impl
-from aurora_spawner import spawn_parallel
+from aurora_spawner import spawn_parallel, spawn_parallel_tracked
 from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
 from implement.parser import TaskParser
@@ -99,6 +99,29 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     help="Disable checkpoint creation",
 )
+@click.option(
+    "--max-concurrent",
+    type=int,
+    default=4,
+    help="Maximum concurrent tasks (default: 4)",
+)
+@click.option(
+    "--stagger-delay",
+    type=float,
+    default=5.0,
+    help="Delay between task starts in seconds (default: 5.0)",
+)
+@click.option(
+    "--policy",
+    type=click.Choice(["default", "patient", "fast_fail", "production", "development"]),
+    default="patient",
+    help="Spawn timeout policy (default: patient)",
+)
+@click.option(
+    "--no-fallback",
+    is_flag=True,
+    help="Disable LLM fallback on agent failure",
+)
 def spawn_command(
     task_file: Path,
     parallel: bool,
@@ -110,6 +133,10 @@ def spawn_command(
     list_checkpoints: bool,
     clean_checkpoints: int | None,
     no_checkpoint: bool,
+    max_concurrent: int,
+    stagger_delay: float,
+    policy: str,
+    no_fallback: bool,
 ) -> None:
     """Execute tasks from a markdown task file with checkpoint support.
 
@@ -138,6 +165,10 @@ def spawn_command(
         list_checkpoints: List resumable checkpoints
         clean_checkpoints: Clean old checkpoints (days)
         no_checkpoint: Disable checkpoint creation
+        max_concurrent: Maximum concurrent tasks (default: 4)
+        stagger_delay: Delay between task starts in seconds (default: 5.0)
+        policy: Spawn timeout policy preset (default: patient)
+        no_fallback: Disable LLM fallback on agent failure
     """
     try:
         from aurora_cli.execution import CheckpointManager
@@ -231,14 +262,31 @@ def spawn_command(
 
         try:
             if use_parallel:
-                console.print("[cyan]Executing tasks in parallel...[/]")
+                console.print(
+                    f"[cyan]Executing {len(tasks)} tasks in parallel "
+                    f"(max_concurrent={max_concurrent}, policy={policy}, stagger={stagger_delay}s)...[/]"
+                )
                 result = asyncio.run(
-                    _execute_parallel(tasks, verbose, checkpoint_mgr=checkpoint_mgr)
+                    _execute_parallel(
+                        tasks,
+                        verbose,
+                        checkpoint_mgr=checkpoint_mgr,
+                        max_concurrent=max_concurrent,
+                        stagger_delay=stagger_delay,
+                        policy_name=policy,
+                        fallback_to_llm=not no_fallback,
+                    )
                 )
             else:
                 console.print("[cyan]Executing tasks sequentially...[/]")
                 result = asyncio.run(
-                    _execute_sequential(tasks, verbose, checkpoint_mgr=checkpoint_mgr)
+                    _execute_sequential(
+                        tasks,
+                        verbose,
+                        checkpoint_mgr=checkpoint_mgr,
+                        policy_name=policy,
+                        fallback_to_llm=not no_fallback,
+                    )
                 )
         except KeyboardInterrupt:
             if checkpoint_mgr:
@@ -295,14 +343,31 @@ def load_tasks(file_path: Path) -> list[ParsedTask]:
 
 
 async def _execute_parallel(
-    tasks: list[ParsedTask], verbose: bool, checkpoint_mgr=None
+    tasks: list[ParsedTask],
+    verbose: bool,
+    checkpoint_mgr=None,
+    max_concurrent: int = 4,
+    stagger_delay: float = 5.0,
+    policy_name: str = "patient",
+    fallback_to_llm: bool = True,
 ) -> dict[str, int]:
-    """Execute tasks in parallel with checkpoint support.
+    """Execute tasks in parallel using spawn_parallel_tracked().
+
+    Uses the same mature spawning infrastructure as aur soar:
+    - Stagger delays between task starts
+    - Per-task heartbeat monitoring
+    - Global timeout calculation
+    - Circuit breaker pre-checks
+    - Retry with fallback to LLM
 
     Args:
         tasks: List of tasks to execute
         verbose: Show detailed output
         checkpoint_mgr: Optional CheckpointManager for progress tracking
+        max_concurrent: Maximum concurrent tasks (default: 4)
+        stagger_delay: Delay between task starts in seconds (default: 5.0)
+        policy_name: Spawn policy preset (default: "patient")
+        fallback_to_llm: Fall back to LLM on agent failure (default: True)
 
     Returns:
         Execution summary with total, completed, failed counts
@@ -316,43 +381,67 @@ async def _execute_parallel(
         spawn_task = SpawnTask(
             prompt=task.description,
             agent=task.agent if task.agent != "self" else None,
-            timeout=300,  # 5 minutes default
+            policy_name=policy_name,
         )
         spawn_tasks.append(spawn_task)
 
-    # Execute in parallel with max_concurrent=5
+    # Progress callback
+    def on_progress(msg: str):
+        if verbose:
+            console.print(f"[dim]{msg}[/]")
+
+    # Execute with spawn_parallel_tracked (shared with aur soar)
+    results, metadata = await spawn_parallel_tracked(
+        tasks=spawn_tasks,
+        max_concurrent=max_concurrent,
+        stagger_delay=stagger_delay,
+        policy_name=policy_name,
+        on_progress=on_progress if verbose else None,
+        fallback_to_llm=fallback_to_llm,
+    )
+
+    # Display verbose results
     if verbose:
-        console.print(
-            f"[cyan]Spawning {len(spawn_tasks)} tasks in parallel (max_concurrent=5)...[/]"
-        )
-
-    results = await spawn_parallel(spawn_tasks, max_concurrent=5)
-
-    # Count results
-    total = len(results)
-    completed = sum(1 for r in results if r.success)
-    failed = total - completed
-
-    if verbose:
+        console.print("")
         for i, result in enumerate(results):
             task_id = tasks[i].id
             if result.success:
-                console.print(f"[green]✓[/] Task {task_id}: Success")
+                fallback_note = " (fallback)" if getattr(result, "fallback", False) else ""
+                console.print(f"[green]✓[/] Task {task_id}: Success{fallback_note}")
             else:
                 console.print(f"[red]✗[/] Task {task_id}: Failed - {result.error}")
 
-    return {"total": total, "completed": completed, "failed": failed}
+        # Show metadata summary
+        if metadata.get("fallback_count", 0) > 0:
+            console.print(f"[yellow]Fallbacks used: {metadata['fallback_count']}[/]")
+        if metadata.get("circuit_blocked"):
+            console.print(f"[yellow]Circuit blocked: {len(metadata['circuit_blocked'])} tasks[/]")
+
+    return {
+        "total": metadata["total_tasks"],
+        "completed": metadata["total_tasks"] - metadata["failed_tasks"],
+        "failed": metadata["failed_tasks"],
+    }
 
 
 async def _execute_sequential(
-    tasks: list[ParsedTask], verbose: bool, checkpoint_mgr=None
+    tasks: list[ParsedTask],
+    verbose: bool,
+    checkpoint_mgr=None,
+    policy_name: str = "patient",
+    fallback_to_llm: bool = True,
 ) -> dict[str, int]:
-    """Execute tasks sequentially with checkpoint support.
+    """Execute tasks sequentially using spawn_parallel_tracked().
+
+    Uses the same infrastructure as parallel execution but with max_concurrent=1
+    and no stagger delay.
 
     Args:
         tasks: List of tasks to execute
         verbose: Show detailed output
         checkpoint_mgr: Optional CheckpointManager for progress tracking
+        policy_name: Spawn policy preset (default: "patient")
+        fallback_to_llm: Fall back to LLM on agent failure (default: True)
 
     Returns:
         Execution summary with total, completed, failed counts
@@ -360,35 +449,47 @@ async def _execute_sequential(
     if not tasks:
         return {"total": 0, "completed": 0, "failed": 0}
 
-    # For sequential execution, use spawn_parallel with max_concurrent=1
+    # Convert ParsedTask to SpawnTask
     spawn_tasks = []
     for task in tasks:
         spawn_task = SpawnTask(
             prompt=task.description,
             agent=task.agent if task.agent != "self" else None,
-            timeout=300,
+            policy_name=policy_name,
         )
         spawn_tasks.append(spawn_task)
 
+    # Progress callback
+    def on_progress(msg: str):
+        if verbose:
+            console.print(f"[dim]{msg}[/]")
+
+    # Execute sequentially (max_concurrent=1, no stagger)
+    results, metadata = await spawn_parallel_tracked(
+        tasks=spawn_tasks,
+        max_concurrent=1,
+        stagger_delay=0.0,  # No stagger for sequential
+        policy_name=policy_name,
+        on_progress=on_progress if verbose else None,
+        fallback_to_llm=fallback_to_llm,
+    )
+
+    # Display verbose results
     if verbose:
-        console.print(f"[cyan]Spawning {len(spawn_tasks)} tasks sequentially...[/]")
-
-    results = await spawn_parallel(spawn_tasks, max_concurrent=1)
-
-    # Count results
-    total = len(results)
-    completed = sum(1 for r in results if r.success)
-    failed = total - completed
-
-    if verbose:
+        console.print("")
         for i, result in enumerate(results):
             task_id = tasks[i].id
             if result.success:
-                console.print(f"[green]✓[/] Task {task_id}: Success")
+                fallback_note = " (fallback)" if getattr(result, "fallback", False) else ""
+                console.print(f"[green]✓[/] Task {task_id}: Success{fallback_note}")
             else:
                 console.print(f"[red]✗[/] Task {task_id}: Failed - {result.error}")
 
-    return {"total": total, "completed": completed, "failed": failed}
+    return {
+        "total": metadata["total_tasks"],
+        "completed": metadata["total_tasks"] - metadata["failed_tasks"],
+        "failed": metadata["failed_tasks"],
+    }
 
 
 def execute_tasks_parallel(tasks: list[ParsedTask]) -> dict[str, int]:

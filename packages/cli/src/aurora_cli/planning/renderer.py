@@ -102,6 +102,41 @@ class TemplateRenderer:
             plan.created_at.isoformat() if plan.created_at else datetime.utcnow().isoformat()
         )
 
+        # Build subgoals with enhanced agent capability context
+        subgoals_context = []
+        for sg in plan.subgoals:
+            # Detect gap: ideal_agent differs from assigned_agent
+            ideal = getattr(sg, "ideal_agent", None) or sg.assigned_agent
+            is_gap = ideal != sg.assigned_agent
+
+            # Determine match quality based on gap detection
+            # match_quality may be set by SOAR decomposition, default to "excellent"/"acceptable"
+            match_quality = getattr(sg, "match_quality", None)
+            if match_quality is None:
+                match_quality = "acceptable" if is_gap else "excellent"
+
+            subgoals_context.append(
+                {
+                    "id": sg.id,
+                    "title": sg.title,
+                    "description": sg.description,
+                    "ideal_agent": ideal,
+                    "ideal_agent_desc": getattr(sg, "ideal_agent_desc", "") or "",
+                    "assigned_agent": sg.assigned_agent,
+                    "match_quality": match_quality,
+                    "is_gap": is_gap,
+                    "dependencies": sg.dependencies,
+                }
+            )
+
+        # Calculate agent statistics
+        excellent_count = sum(1 for sg in subgoals_context if sg["match_quality"] == "excellent")
+        acceptable_count = sum(1 for sg in subgoals_context if sg["match_quality"] == "acceptable")
+        insufficient_count = sum(
+            1 for sg in subgoals_context if sg["match_quality"] == "insufficient"
+        )
+        gap_count = sum(1 for sg in subgoals_context if sg["is_gap"])
+
         context = {
             # Basic plan info
             "plan_id": plan.plan_id,
@@ -112,21 +147,20 @@ class TemplateRenderer:
             "created_at": plan.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "updated_at": created_iso,  # For agents.json template
             "tags": [],  # Empty tags list for now
-            # Subgoals
-            "subgoals": [
-                {
-                    "id": sg.id,
-                    "title": sg.title,
-                    "description": sg.description,
-                    "recommended_agent": sg.recommended_agent,
-                    "agent_exists": sg.agent_exists,
-                    "dependencies": sg.dependencies,
-                }
-                for sg in plan.subgoals
-            ],
+            # Subgoals with enhanced context
+            "subgoals": subgoals_context,
+            # Agent capability statistics
+            "agent_stats": {
+                "excellent_count": excellent_count,
+                "acceptable_count": acceptable_count,
+                "insufficient_count": insufficient_count,
+                "gap_count": gap_count,
+                "total_subgoals": len(subgoals_context),
+            },
             # Metadata
             "agent_gaps": plan.agent_gaps,
             "context_sources": plan.context_sources,
+            "file_resolutions": plan.file_resolutions,
             # Optional fields
             "archived_at": (
                 plan.archived_at.strftime("%Y-%m-%d %H:%M:%S") if plan.archived_at else None
@@ -138,6 +172,8 @@ class TemplateRenderer:
             # Computed fields for templates
             "subgoal_count": len(plan.subgoals),
             "has_dependencies": any(sg.dependencies for sg in plan.subgoals),
+            "has_agent_gaps": gap_count > 0,
+            "has_insufficient_agents": insufficient_count > 0,
             "cross_team_dependencies": 0,  # Placeholder for future enhancement
         }
 

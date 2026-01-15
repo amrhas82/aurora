@@ -865,7 +865,7 @@ def init_command(config: bool, tools: str | None) -> None:
         console.print()
         console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
         console.print(
-            "[bold cyan]║[/]        [bold]AURORA Re-initialization[/]        [bold cyan]║[/]"
+            "[bold cyan]║[/]          [bold]AURORA Re-initialization[/]         [bold cyan]║[/]"
         )
         console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
         console.print()

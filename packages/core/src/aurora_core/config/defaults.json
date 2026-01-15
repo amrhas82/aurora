@@ -43,5 +43,51 @@
     "path": "~/.aurora/logs/",
     "max_size_mb": 100,
     "max_files": 10
+  },
+  "proactive_health_checks": {
+    "enabled": true,
+    "check_interval": 5.0,
+    "no_output_threshold": 15.0,
+    "failure_threshold": 3
+  },
+  "early_detection": {
+    "enabled": true,
+    "check_interval": 2.0,
+    "stall_threshold": 15.0,
+    "min_output_bytes": 100,
+    "stderr_pattern_check": true,
+    "memory_limit_mb": null
+  },
+  "headless": {
+    "tools": ["claude"],
+    "strategy": "first_success",
+    "parallel": true,
+    "max_iterations": 10,
+    "timeout": 600,
+    "tool_configs": {
+      "claude": {
+        "priority": 1,
+        "timeout": 600,
+        "flags": ["--print", "--dangerously-skip-permissions"],
+        "input_method": "argument",
+        "env": {},
+        "working_dir": null,
+        "enabled": true,
+        "max_retries": 2,
+        "retry_delay": 1.0
+      },
+      "opencode": {
+        "priority": 2,
+        "timeout": 600,
+        "flags": [],
+        "input_method": "stdin",
+        "env": {},
+        "working_dir": null,
+        "enabled": true,
+        "max_retries": 2,
+        "retry_delay": 1.0
+      }
+    },
+    "routing_rules": []
   }
 }

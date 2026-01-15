@@ -498,7 +498,15 @@ def soar_command(
     )
 
     start_time = time.time()
-    soar_dir = _ensure_soar_dir()
+
+    # Ensure project is initialized
+    try:
+        soar_dir = _ensure_soar_dir()
+    except RuntimeError as e:
+        console.print(f"\n[red]Error:[/] {e}")
+        console.print("\n[dim]Run this command to initialize your project:[/]")
+        console.print("  [cyan]aur init[/]")
+        raise SystemExit(1)
 
     # Import here to avoid circular imports and allow lazy loading
     from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
@@ -544,7 +552,10 @@ def soar_command(
         # Update config with overrides
         config._data["early_detection"] = early_detection_config
 
-    store = SQLiteStore()  # Use SQLite store for persistence (~/.aurora/memory.db)
+    # Use project-local memory store (consistent with aur init and aur mem index)
+    # cli_config.get_db_path() returns ./.aurora/memory.db by default
+    db_path = cli_config.get_db_path() if cli_config else "./.aurora/memory.db"
+    store = SQLiteStore(db_path)
 
     # Discover available agents using the same system as 'aur agents list'
     from aurora_cli.commands.agents import get_manifest

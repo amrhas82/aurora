@@ -266,6 +266,8 @@ class AgentMatcher:
 
 Task: {task_description}
 
+IMPORTANT: Emit brief progress updates (e.g., "Analyzing...", "Found X...") as you work.
+
 Please complete this task directly without additional questions or preamble. Provide the complete deliverable.
 
 ---
@@ -596,18 +598,12 @@ Important:
 
             # Gap if score below threshold
             if score < self.score_threshold:
-                # Extract keywords for suggested capabilities
-                keywords = self._extract_keywords(subgoal)
-
-                # Check if recommended agent exists
-                agent_exists = self.verify_agent_exists(agent_id)
-
+                # Create gap with new schema
                 gap = AgentGap(
                     subgoal_id=subgoal.id,
-                    recommended_agent=agent_id,
-                    agent_exists=agent_exists,
-                    fallback=self.default_fallback,
-                    suggested_capabilities=list(keywords)[:10],  # Limit to 10
+                    ideal_agent=agent_id,
+                    ideal_agent_desc=f"Agent for: {subgoal.description[:50]}",
+                    assigned_agent=self.default_fallback,
                 )
                 gaps.append(gap)
 
@@ -844,3 +840,53 @@ Important:
 
         logger.debug(f"Loaded agent manifest with {len(manifest.agents)} agents")
         return manifest
+
+    def recommend_for_description(self, description: str) -> tuple[str, float]:
+        """Find best agent for a task description string.
+
+        Used by verify.py to match ideal_agent_desc to available agents
+        without needing a full Subgoal object. Reuses existing keyword
+        extraction and scoring logic.
+
+        Args:
+            description: Task description (e.g., ideal_agent_desc from SOAR)
+
+        Returns:
+            Tuple of (agent_id, score)
+            - agent_id: Best matching agent ID with @ prefix
+            - score: Match score from 0.0 to 1.0
+        """
+        # Load manifest if not provided
+        if self.manifest is None:
+            try:
+                self.manifest = self._load_manifest()
+            except Exception as e:
+                logger.warning(f"Failed to load agent manifest: {e}")
+                return (self.default_fallback, 0.0)
+
+        # Extract keywords from description text
+        text = description.lower()
+        tokens = re.split(r"[^a-z0-9]+", text)
+        keywords = {t for t in tokens if t and len(t) > 2 and t not in STOP_WORDS}
+
+        if not keywords:
+            logger.debug("No keywords extracted from description")
+            return (self.default_fallback, 0.0)
+
+        # Score each agent using existing _score_agent method
+        best_agent = None
+        best_score = 0.0
+
+        for agent in self.manifest.agents:
+            score = self._score_agent(agent, keywords)
+            if score > best_score:
+                best_score = score
+                best_agent = agent
+
+        # Use lower threshold (0.15) for description matching
+        # since we don't have structured Subgoal with title+description
+        if best_agent and best_score >= 0.15:
+            return (f"@{best_agent.id}", best_score)
+
+        # Return fallback if no good match
+        return (self.default_fallback, best_score)

@@ -3,14 +3,27 @@
 This module provides the MemoryManager class for indexing code files into the
 memory store and searching the indexed content. It handles progress reporting,
 file discovery, parsing, and embedding generation.
+
+Performance Optimizations:
+- Parallel file parsing with ThreadPoolExecutor
+- Batch embedding generation (32+ chunks at a time)
+- File-level git blame caching (one git call per file)
+- Incremental indexing with content hashing (skip unchanged files)
+- Git-based fast path for change detection in repositories
+- Automatic cleanup of deleted files from index
+- Connection pooling with WAL mode for concurrent writes
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
+import os
 import sqlite3
 import time
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,6 +44,83 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+def compute_file_hash(file_path: Path) -> str:
+    """Compute SHA-256 hash of file content.
+
+    Args:
+        file_path: Path to file to hash
+
+    Returns:
+        Hex-encoded SHA-256 hash string
+    """
+    hasher = hashlib.sha256()
+    try:
+        with open(file_path, "rb") as f:
+            # Read in 64KB chunks to handle large files efficiently
+            for chunk in iter(lambda: f.read(65536), b""):
+                hasher.update(chunk)
+        return hasher.hexdigest()
+    except OSError:
+        # Return empty hash if file can't be read
+        return ""
+
+
+def get_git_changed_files(root: Path) -> set[str] | None:
+    """Get files changed in git working directory.
+
+    Uses git status to identify modified, added, and untracked files.
+    This provides a fast path for incremental indexing in git repos.
+
+    Args:
+        root: Root directory of git repository
+
+    Returns:
+        Set of relative file paths that have changes, or None if not a git repo
+    """
+    import subprocess
+
+    try:
+        # Check if this is a git repo
+        result = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            return None
+
+        # Get modified and untracked files
+        result = subprocess.run(
+            ["git", "status", "--porcelain", "-uall"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            return None
+
+        changed = set()
+        for line in result.stdout.splitlines():
+            if len(line) < 4:
+                continue
+            # Status is first two chars, path starts at char 3
+            status = line[:2].strip()
+            path = line[3:]
+            # Include modified (M), added (A), untracked (??), and renamed (R)
+            if status in ("M", "A", "??", "AM", "MM", "R", "RM"):
+                # Handle renamed files (format: "R  old -> new")
+                if " -> " in path:
+                    path = path.split(" -> ")[1]
+                changed.add(path)
+
+        return changed
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return None
 
 
 # Directory names to skip during indexing
@@ -85,6 +175,9 @@ class IndexStats:
         duration_seconds: Total indexing duration
         errors: Number of files that failed to parse
         warnings: Number of files with parse warnings (partial results)
+        files_skipped: Number of files skipped (unchanged in incremental mode)
+        files_deleted: Number of deleted files cleaned up from index
+        parallel_workers: Number of parallel workers used
     """
 
     files_indexed: int
@@ -92,6 +185,9 @@ class IndexStats:
     duration_seconds: float
     errors: int = 0
     warnings: int = 0
+    files_skipped: int = 0
+    files_deleted: int = 0
+    parallel_workers: int = 1
 
 
 @dataclass
@@ -206,6 +302,8 @@ class MemoryManager:
             Callable[[int, int], None] | Callable[[IndexProgress], None] | None
         ) = None,
         batch_size: int = 32,
+        max_workers: int | None = None,
+        incremental: bool = True,
     ) -> IndexStats:
         """Index all code files in the given path.
 
@@ -213,9 +311,11 @@ class MemoryManager:
         and stores chunks in the memory store. Reports progress via callback.
 
         Uses optimized pipeline:
-        1. File-level git blame caching (one git call per file, not per function)
-        2. Batch embedding generation (32 chunks at a time by default)
-        3. Batched database writes per file
+        1. Parallel file parsing with ThreadPoolExecutor
+        2. File-level git blame caching (one git call per file, not per function)
+        3. Batch embedding generation (32 chunks at a time by default)
+        4. Incremental indexing (skip unchanged files based on mtime)
+        5. Batched database writes
 
         Args:
             path: Directory or file path to index
@@ -223,6 +323,8 @@ class MemoryManager:
                 - Simple: callback(files_processed, total_files) - legacy
                 - Rich: callback(IndexProgress) - shows phases
             batch_size: Number of chunks to embed at once (default 32)
+            max_workers: Maximum parallel workers for parsing (None = auto: min(8, cpu_count))
+            incremental: Skip unchanged files based on mtime (default True)
 
         Returns:
             IndexStats with indexing results
@@ -237,11 +339,18 @@ class MemoryManager:
             raise ValueError(f"Path does not exist: {path}")
 
         start_time = time.time()
-        stats = {"files": 0, "chunks": 0, "errors": 0, "warnings": 0}
+        stats = {"files": 0, "chunks": 0, "errors": 0, "warnings": 0, "skipped": 0}
         files_by_language: dict[str, int] = {}  # Track indexed files by language
         failed_files: list[tuple[str, str]] = []  # (file_path, error_message)
         warning_messages: list[str] = []
         skipped_files: list[tuple[str, str]] = []  # (file_path, reason)
+
+        # Determine worker count: default to min(8, cpu_count) for I/O-bound work
+        if max_workers is None:
+            cpu_count = os.cpu_count() or 4
+            actual_workers = min(8, cpu_count)
+        else:
+            actual_workers = max_workers
 
         # Detect callback type (rich vs simple)
         def report_progress(progress: IndexProgress) -> None:
@@ -268,6 +377,80 @@ class MemoryManager:
             # equals parseable files. Success rate = indexed / parseable.
             total_files = len(files)
             logger.info(f"Discovered {total_files} code files in {path}")
+
+            # Incremental indexing with content hashing and git integration
+            files_to_process: list[Path] = []
+            deleted_count = 0
+
+            if incremental:
+                report_progress(
+                    IndexProgress("checking", 0, total_files, detail="Checking for changes...")
+                )
+
+                # Load file index from database (content hashes and mtimes)
+                file_index = self._load_file_index()
+
+                # Try git-based fast path first (much faster for git repos)
+                git_changed = get_git_changed_files(path_obj) if path_obj.is_dir() else None
+
+                # Build set of current file paths for cleanup detection
+                current_file_set = {str(f) for f in files}
+
+                for file_path in files:
+                    file_key = str(file_path)
+                    rel_key = (
+                        str(file_path.relative_to(path_obj)) if path_obj.is_dir() else file_key
+                    )
+
+                    try:
+                        current_mtime = file_path.stat().st_mtime
+                        cached_info = file_index.get(file_key)
+
+                        # Fast path 1: Git says file unchanged and we have it indexed
+                        if git_changed is not None and cached_info is not None:
+                            if rel_key not in git_changed:
+                                # Git says unchanged, trust it
+                                stats["skipped"] += 1
+                                skipped_files.append((file_key, "Unchanged (git)"))
+                                continue
+
+                        # Fast path 2: mtime unchanged
+                        if cached_info is not None and current_mtime <= cached_info["mtime"]:
+                            stats["skipped"] += 1
+                            skipped_files.append((file_key, "Unchanged (mtime)"))
+                            continue
+
+                        # Medium path: mtime changed, check content hash
+                        if cached_info is not None:
+                            current_hash = compute_file_hash(file_path)
+                            if current_hash and current_hash == cached_info.get("hash"):
+                                # Content unchanged (file touched but not modified)
+                                stats["skipped"] += 1
+                                skipped_files.append((file_key, "Unchanged (hash)"))
+                                # Update mtime in cache so next check is faster
+                                self._update_file_index_mtime(file_key, current_mtime)
+                                continue
+
+                    except OSError:
+                        pass  # Process file if we can't stat it
+
+                    files_to_process.append(file_path)
+
+                # Cleanup: find and remove chunks from deleted files
+                deleted_count = self._cleanup_deleted_files(file_index, current_file_set)
+                if deleted_count > 0:
+                    logger.info(f"Cleaned up {deleted_count} deleted files from index")
+
+                logger.info(
+                    f"Incremental: {len(files_to_process)} changed, {stats['skipped']} unchanged, {deleted_count} deleted"
+                )
+            else:
+                files_to_process = files
+
+            stats["deleted"] = deleted_count
+
+            # Track file info for successfully indexed files (hash + mtime)
+            new_file_info: dict[str, dict[str, Any]] = {}
 
             # Initialize Git signal extractor for this directory
             # The extractor now uses file-level blame caching for efficiency
@@ -347,135 +530,296 @@ class MemoryManager:
 
                 pending_chunks = []
 
-            # Phase 2: Process each file (parsing + git blame)
-            for i, file_path in enumerate(files):
-                try:
-                    # Report parsing progress
-                    report_progress(
-                        IndexProgress(
-                            "parsing",
-                            i,
-                            total_files,
-                            file_path=str(file_path.name),
-                            detail=f"Parsing {file_path.name}",
-                        )
+            # Phase 2: Parallel file parsing
+            # Parse files in parallel using ThreadPoolExecutor
+            # This is safe because parsing is stateless and read-only
+            processed_count = 0
+            total_to_process = len(files_to_process)
+
+            if actual_workers > 1 and total_to_process > 1:
+                logger.info(f"Using {actual_workers} parallel workers for parsing")
+                report_progress(
+                    IndexProgress(
+                        "parsing",
+                        0,
+                        total_to_process,
+                        detail=f"Parallel parsing ({actual_workers} workers)",
                     )
+                )
 
-                    # Parse file
-                    parser = self.parser_registry.get_parser_for_file(file_path)
-                    if not parser:
-                        logger.debug(f"No parser for {file_path}, skipping")
-                        continue
-
-                    # Track if we see parse warnings for this file
-                    warning_detected = False
-
-                    class WarningDetector(logging.Handler):
-                        def emit(self, record: logging.LogRecord) -> None:
-                            nonlocal warning_detected
-                            if (
-                                record.levelno == logging.WARNING
-                                and "Parse errors" in record.getMessage()
-                            ):
-                                warning_detected = True
-
-                    warning_handler = WarningDetector()
-                    parser_logger = logging.getLogger("aurora_context_code.languages.python")
-                    parser_logger.addHandler(warning_handler)
+                # Define the parsing function for parallel execution
+                def parse_single_file(file_path: Path) -> dict[str, Any]:
+                    """Parse a single file and return results (thread-safe)."""
+                    result: dict[str, Any] = {
+                        "file_path": file_path,
+                        "chunks": [],
+                        "language": None,
+                        "error": None,
+                        "warning": False,
+                    }
 
                     try:
+                        parser = self.parser_registry.get_parser_for_file(file_path)
+                        if not parser:
+                            result["error"] = "No parser available"
+                            return result
+
+                        result["language"] = parser.language
+
+                        # Parse the file (tree-sitter is thread-safe)
                         chunks = parser.parse(file_path)
-                    finally:
-                        parser_logger.removeHandler(warning_handler)
 
-                    if warning_detected:
-                        stats["warnings"] += 1
-                        warning_messages.append(f"Parse warnings in {file_path.name}")
+                        if not chunks:
+                            result["error"] = "No extractable elements"
+                            return result
 
-                    if not chunks:
-                        logger.debug(f"No chunks extracted from {file_path}")
-                        skipped_files.append((str(file_path), "No extractable elements"))
-                        continue
+                        result["chunks"] = chunks
+                        return result
 
-                    # Report git blame phase (first chunk triggers file-level blame)
-                    if git_extractor and chunks:
+                    except Exception as e:
+                        result["error"] = str(e).split("\n")[0][:100]
+                        return result
+
+                # Execute parsing in parallel
+                with ThreadPoolExecutor(max_workers=actual_workers) as executor:
+                    # Submit all parsing tasks
+                    future_to_file = {
+                        executor.submit(parse_single_file, fp): fp for fp in files_to_process
+                    }
+
+                    # Process results as they complete
+                    for future in as_completed(future_to_file):
+                        file_path = future_to_file[future]
+                        processed_count += 1
+
+                        # Update progress
                         report_progress(
                             IndexProgress(
-                                "git_blame",
-                                i,
-                                total_files,
+                                "parsing",
+                                processed_count,
+                                total_to_process,
                                 file_path=str(file_path.name),
-                                detail=f"Extracting git history for {file_path.name}",
+                                detail=f"Parsed {processed_count}/{total_to_process}",
                             )
                         )
 
-                    # Process all chunks for this file
-                    # Git blame is now cached at file level - first chunk triggers blame,
-                    # subsequent chunks use cached data (O(1) lookup)
-                    for chunk in chunks:
-                        initial_bla = 0.5
-                        commit_count = 0
+                        try:
+                            result = future.result()
 
-                        if (
-                            git_extractor
-                            and hasattr(chunk, "line_start")
-                            and hasattr(chunk, "line_end")
-                        ):
-                            try:
-                                # This uses file-level blame cache internally
-                                commit_times = git_extractor.get_function_commit_times(
-                                    file_path=str(file_path),
-                                    line_start=chunk.line_start,
-                                    line_end=chunk.line_end,
+                            if result["error"]:
+                                if result["error"] == "No extractable elements":
+                                    skipped_files.append((str(file_path), result["error"]))
+                                else:
+                                    stats["errors"] += 1
+                                    failed_files.append((str(file_path), result["error"]))
+                                continue
+
+                            chunks = result["chunks"]
+                            lang = result["language"]
+
+                            # Git blame phase (sequential, uses cache)
+                            if git_extractor and chunks:
+                                report_progress(
+                                    IndexProgress(
+                                        "git_blame",
+                                        processed_count,
+                                        total_to_process,
+                                        file_path=str(file_path.name),
+                                        detail=f"Git history for {file_path.name}",
+                                    )
                                 )
 
-                                if commit_times:
-                                    initial_bla = git_extractor.calculate_bla(
-                                        commit_times, decay=0.5
+                            # Process all chunks for this file
+                            for chunk in chunks:
+                                initial_bla = 0.5
+                                commit_count = 0
+
+                                if (
+                                    git_extractor
+                                    and hasattr(chunk, "line_start")
+                                    and hasattr(chunk, "line_end")
+                                ):
+                                    try:
+                                        commit_times = git_extractor.get_function_commit_times(
+                                            file_path=str(file_path),
+                                            line_start=chunk.line_start,
+                                            line_end=chunk.line_end,
+                                        )
+
+                                        if commit_times:
+                                            initial_bla = git_extractor.calculate_bla(
+                                                commit_times, decay=0.5
+                                            )
+                                            commit_count = len(commit_times)
+
+                                            if (
+                                                not hasattr(chunk, "metadata")
+                                                or chunk.metadata is None
+                                            ):
+                                                chunk.metadata = {}
+
+                                            chunk.metadata["git_hash"] = commit_times[0]
+                                            chunk.metadata["last_modified"] = commit_times[0]
+                                            chunk.metadata["commit_count"] = commit_count
+                                    except Exception as e:
+                                        logger.debug(
+                                            f"Could not extract Git signals for {chunk.name}: {e}"
+                                        )
+
+                                # Build content and add to batch
+                                content_to_embed = self._build_chunk_content(chunk)
+                                pending_chunks.append(
+                                    (
+                                        chunk,
+                                        content_to_embed,
+                                        initial_bla,
+                                        commit_count,
+                                        str(file_path),
                                     )
-                                    commit_count = len(commit_times)
+                                )
 
-                                    if not hasattr(chunk, "metadata") or chunk.metadata is None:
-                                        chunk.metadata = {}
+                                # Flush batch when it reaches batch_size
+                                if len(pending_chunks) >= batch_size:
+                                    flush_batch()
 
-                                    chunk.metadata["git_hash"] = commit_times[0]
-                                    chunk.metadata["last_modified"] = commit_times[0]
-                                    chunk.metadata["commit_count"] = commit_count
+                            stats["files"] += 1
+                            files_by_language[lang] = files_by_language.get(lang, 0) + 1
 
-                                    logger.debug(
-                                        f"Function {chunk.name} ({file_path.name}:{chunk.line_start}-{chunk.line_end}): "
-                                        f"BLA={initial_bla:.4f} from {commit_count} commits"
-                                    )
-                            except Exception as e:
-                                logger.debug(f"Could not extract Git signals for {chunk.name}: {e}")
+                            # Record file info for incremental indexing (hash + mtime + chunk count)
+                            try:
+                                file_key = str(file_path)
+                                new_file_info[file_key] = {
+                                    "hash": compute_file_hash(file_path),
+                                    "mtime": file_path.stat().st_mtime,
+                                    "chunk_count": len(chunks),
+                                }
+                            except OSError:
+                                pass
 
-                        # Build content and add to batch
-                        content_to_embed = self._build_chunk_content(chunk)
-                        pending_chunks.append(
-                            (chunk, content_to_embed, initial_bla, commit_count, str(file_path))
+                            logger.debug(f"Indexed {file_path}: {len(chunks)} chunks")
+
+                        except Exception as e:
+                            logger.debug(f"Failed to index {file_path}: {e}")
+                            stats["errors"] += 1
+                            error_msg = str(e).split("\n")[0][:100]
+                            failed_files.append((str(file_path), error_msg))
+
+            else:
+                # Sequential processing (single worker or single file)
+                for i, file_path in enumerate(files_to_process):
+                    try:
+                        # Report parsing progress
+                        report_progress(
+                            IndexProgress(
+                                "parsing",
+                                i,
+                                total_to_process,
+                                file_path=str(file_path.name),
+                                detail=f"Parsing {file_path.name}",
+                            )
                         )
 
-                        # Flush batch when it reaches batch_size
-                        if len(pending_chunks) >= batch_size:
-                            flush_batch()
+                        # Parse file
+                        parser = self.parser_registry.get_parser_for_file(file_path)
+                        if not parser:
+                            logger.debug(f"No parser for {file_path}, skipping")
+                            continue
 
-                    stats["files"] += 1
-                    # Track files by language for stats display
-                    lang = parser.language if parser else "unknown"
-                    files_by_language[lang] = files_by_language.get(lang, 0) + 1
-                    logger.debug(f"Indexed {file_path}: {len(chunks)} chunks")
+                        chunks = parser.parse(file_path)
 
-                except MemoryStoreError:
-                    raise
-                except Exception as e:
-                    logger.debug(f"Failed to index {file_path}: {e}")
-                    stats["errors"] += 1
-                    error_msg = str(e).split("\n")[0][:100]
-                    failed_files.append((str(file_path), error_msg))
-                    continue
+                        if not chunks:
+                            logger.debug(f"No chunks extracted from {file_path}")
+                            skipped_files.append((str(file_path), "No extractable elements"))
+                            continue
+
+                        # Report git blame phase
+                        if git_extractor and chunks:
+                            report_progress(
+                                IndexProgress(
+                                    "git_blame",
+                                    i,
+                                    total_to_process,
+                                    file_path=str(file_path.name),
+                                    detail=f"Git history for {file_path.name}",
+                                )
+                            )
+
+                        # Process all chunks for this file
+                        for chunk in chunks:
+                            initial_bla = 0.5
+                            commit_count = 0
+
+                            if (
+                                git_extractor
+                                and hasattr(chunk, "line_start")
+                                and hasattr(chunk, "line_end")
+                            ):
+                                try:
+                                    commit_times = git_extractor.get_function_commit_times(
+                                        file_path=str(file_path),
+                                        line_start=chunk.line_start,
+                                        line_end=chunk.line_end,
+                                    )
+
+                                    if commit_times:
+                                        initial_bla = git_extractor.calculate_bla(
+                                            commit_times, decay=0.5
+                                        )
+                                        commit_count = len(commit_times)
+
+                                        if not hasattr(chunk, "metadata") or chunk.metadata is None:
+                                            chunk.metadata = {}
+
+                                        chunk.metadata["git_hash"] = commit_times[0]
+                                        chunk.metadata["last_modified"] = commit_times[0]
+                                        chunk.metadata["commit_count"] = commit_count
+                                except Exception as e:
+                                    logger.debug(
+                                        f"Could not extract Git signals for {chunk.name}: {e}"
+                                    )
+
+                            # Build content and add to batch
+                            content_to_embed = self._build_chunk_content(chunk)
+                            pending_chunks.append(
+                                (chunk, content_to_embed, initial_bla, commit_count, str(file_path))
+                            )
+
+                            # Flush batch when it reaches batch_size
+                            if len(pending_chunks) >= batch_size:
+                                flush_batch()
+
+                        stats["files"] += 1
+                        lang = parser.language if parser else "unknown"
+                        files_by_language[lang] = files_by_language.get(lang, 0) + 1
+
+                        # Record file info for incremental indexing (hash + mtime + chunk count)
+                        try:
+                            file_key = str(file_path)
+                            new_file_info[file_key] = {
+                                "hash": compute_file_hash(file_path),
+                                "mtime": file_path.stat().st_mtime,
+                                "chunk_count": len(chunks),
+                            }
+                        except OSError:
+                            pass
+
+                        logger.debug(f"Indexed {file_path}: {len(chunks)} chunks")
+
+                    except MemoryStoreError:
+                        raise
+                    except Exception as e:
+                        logger.debug(f"Failed to index {file_path}: {e}")
+                        stats["errors"] += 1
+                        error_msg = str(e).split("\n")[0][:100]
+                        failed_files.append((str(file_path), error_msg))
+                        continue
 
             # Flush any remaining chunks
             flush_batch()
+
+            # Save file index for incremental indexing (content hashes + mtimes)
+            if incremental and new_file_info:
+                self._save_file_index(new_file_info)
 
             # Final progress
             report_progress(IndexProgress("complete", total_files, total_files, detail="Done"))
@@ -484,8 +828,8 @@ class MemoryManager:
             logger.info(
                 f"Indexing complete: {stats['files']} files, "
                 f"{stats['chunks']} chunks, {stats['errors']} errors, "
-                f"{stats['warnings']} warnings, "
-                f"{duration:.2f}s"
+                f"{stats['warnings']} warnings, {stats['skipped']} skipped, "
+                f"{duration:.2f}s ({actual_workers} workers)"
             )
 
             # Calculate success rate (indexed / parseable files)
@@ -515,6 +859,9 @@ class MemoryManager:
                 duration_seconds=duration,
                 errors=stats["errors"],
                 warnings=stats["warnings"],
+                files_skipped=stats["skipped"],
+                files_deleted=stats.get("deleted", 0),
+                parallel_workers=actual_workers,
             )
 
         except MemoryStoreError:
@@ -933,6 +1280,188 @@ class MemoryManager:
         """
         db_path = Path(self.config.get_db_path())
         return db_path.parent / ".indexing_metadata.json"
+
+    def _get_mtime_cache_path(self) -> Path:
+        """Get path to mtime cache file for incremental indexing.
+
+        Returns:
+            Path to .aurora/.mtime_cache.json
+        """
+        db_path = Path(self.config.get_db_path())
+        return db_path.parent / ".mtime_cache.json"
+
+    def _load_mtime_cache(self) -> dict[str, float]:
+        """Load file modification time cache for incremental indexing.
+
+        Returns:
+            Dictionary mapping file paths to last indexed mtime
+        """
+        cache_path = self._get_mtime_cache_path()
+        if not cache_path.exists():
+            return {}
+
+        try:
+            data = json.loads(cache_path.read_text())
+            # Validate cache structure
+            if isinstance(data, dict):
+                return {k: float(v) for k, v in data.items() if isinstance(v, (int, float))}
+            return {}
+        except Exception as e:
+            logger.warning(f"Failed to load mtime cache: {e}")
+            return {}
+
+    def _save_mtime_cache(self, cache: dict[str, float]) -> None:
+        """Save file modification time cache for incremental indexing.
+
+        Args:
+            cache: Dictionary mapping file paths to mtime
+        """
+        cache_path = self._get_mtime_cache_path()
+        try:
+            cache_path.write_text(json.dumps(cache))
+        except Exception as e:
+            logger.warning(f"Failed to save mtime cache: {e}")
+
+    def _load_file_index(self) -> dict[str, dict[str, Any]]:
+        """Load file index from database for incremental indexing.
+
+        Returns:
+            Dictionary mapping file paths to {"hash": str, "mtime": float, "chunk_count": int}
+        """
+        file_index: dict[str, dict[str, Any]] = {}
+
+        try:
+            if hasattr(self.memory_store, "_transaction"):
+                with self.memory_store._transaction() as conn:
+                    # Check if file_index table exists
+                    cursor = conn.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name='file_index'"
+                    )
+                    if cursor.fetchone() is None:
+                        # Table doesn't exist yet, return empty (will be created on save)
+                        return {}
+
+                    cursor = conn.execute(
+                        "SELECT file_path, content_hash, mtime, chunk_count FROM file_index"
+                    )
+                    for row in cursor:
+                        file_index[row[0]] = {
+                            "hash": row[1],
+                            "mtime": row[2],
+                            "chunk_count": row[3] or 0,
+                        }
+        except Exception as e:
+            logger.warning(f"Failed to load file index from database: {e}")
+            # Fall back to mtime cache for backward compatibility
+            mtime_cache = self._load_mtime_cache()
+            for path, mtime in mtime_cache.items():
+                file_index[path] = {"hash": "", "mtime": mtime, "chunk_count": 0}
+
+        return file_index
+
+    def _save_file_index(self, file_info: dict[str, dict[str, Any]]) -> None:
+        """Save file index to database for incremental indexing.
+
+        Args:
+            file_info: Dictionary mapping file paths to {"hash": str, "mtime": float, "chunk_count": int}
+        """
+        try:
+            if hasattr(self.memory_store, "_transaction"):
+                with self.memory_store._transaction() as conn:
+                    # Ensure table exists
+                    conn.execute(
+                        """
+                        CREATE TABLE IF NOT EXISTS file_index (
+                            file_path TEXT PRIMARY KEY,
+                            content_hash TEXT NOT NULL,
+                            mtime REAL NOT NULL,
+                            indexed_at TIMESTAMP NOT NULL,
+                            chunk_count INTEGER DEFAULT 0
+                        )
+                    """
+                    )
+
+                    now = datetime.now(timezone.utc).isoformat()
+                    for file_path, info in file_info.items():
+                        conn.execute(
+                            """INSERT OR REPLACE INTO file_index
+                               (file_path, content_hash, mtime, indexed_at, chunk_count)
+                               VALUES (?, ?, ?, ?, ?)""",
+                            (
+                                file_path,
+                                info["hash"],
+                                info["mtime"],
+                                now,
+                                info.get("chunk_count", 0),
+                            ),
+                        )
+        except Exception as e:
+            logger.warning(f"Failed to save file index to database: {e}")
+
+    def _update_file_index_mtime(self, file_path: str, mtime: float) -> None:
+        """Update just the mtime for a file in the index (for touched-but-unchanged files).
+
+        Args:
+            file_path: Path to the file
+            mtime: New modification time
+        """
+        try:
+            if hasattr(self.memory_store, "_transaction"):
+                with self.memory_store._transaction() as conn:
+                    conn.execute(
+                        "UPDATE file_index SET mtime = ? WHERE file_path = ?",
+                        (mtime, file_path),
+                    )
+        except Exception as e:
+            logger.debug(f"Failed to update mtime in file index: {e}")
+
+    def _cleanup_deleted_files(
+        self, file_index: dict[str, dict[str, Any]], current_files: set[str]
+    ) -> int:
+        """Remove chunks from files that no longer exist.
+
+        Args:
+            file_index: Current file index from database
+            current_files: Set of file paths that currently exist
+
+        Returns:
+            Number of files cleaned up
+        """
+        deleted_count = 0
+
+        # Find files in index that are no longer present
+        indexed_paths = set(file_index.keys())
+        deleted_paths = indexed_paths - current_files
+
+        if not deleted_paths:
+            return 0
+
+        try:
+            if hasattr(self.memory_store, "_transaction"):
+                with self.memory_store._transaction() as conn:
+                    for deleted_path in deleted_paths:
+                        # Delete chunks associated with this file
+                        # Chunks have file path stored in content JSON as content->>'$.file'
+                        conn.execute(
+                            """DELETE FROM chunks
+                               WHERE type = 'code'
+                               AND json_extract(content, '$.file') = ?""",
+                            (deleted_path,),
+                        )
+
+                        # Delete from file_index
+                        conn.execute(
+                            "DELETE FROM file_index WHERE file_path = ?",
+                            (deleted_path,),
+                        )
+
+                        deleted_count += 1
+                        logger.debug(f"Cleaned up deleted file: {deleted_path}")
+
+        except Exception as e:
+            logger.warning(f"Failed to cleanup deleted files: {e}")
+
+        return deleted_count
 
     def _load_indexing_metadata(self) -> dict:
         """Load indexing metadata from JSON file.

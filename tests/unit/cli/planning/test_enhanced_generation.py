@@ -37,24 +37,21 @@ def sample_plan_with_files() -> Plan:
                 id="sg-1",
                 title="Setup authentication module",
                 description="Create authentication module with login/logout",
-                recommended_agent="@full-stack-dev",
-                agent_exists=True,
+                assigned_agent="@full-stack-dev",
                 dependencies=[],
             ),
             Subgoal(
                 id="sg-2",
                 title="Implement JWT token handling",
                 description="Add JWT token generation and validation",
-                recommended_agent="@security-expert",
-                agent_exists=False,
+                assigned_agent="@security-expert",
                 dependencies=["sg-1"],
             ),
             Subgoal(
                 id="sg-3",
                 title="Write integration tests",
                 description="Create integration tests for auth flow",
-                recommended_agent="@qa-test-architect",
-                agent_exists=True,
+                assigned_agent="@qa-test-architect",
                 dependencies=["sg-1", "sg-2"],
             ),
         ],
@@ -107,10 +104,9 @@ def sample_agent_gaps() -> list[AgentGap]:
     return [
         AgentGap(
             subgoal_id="sg-2",
-            recommended_agent="@security-expert",
-            agent_exists=False,
-            fallback="@full-stack-dev",
-            suggested_capabilities=["jwt", "token", "security", "authentication"],
+            ideal_agent="@security-expert",
+            ideal_agent_desc="Specialist in security, jwt, token, authentication",
+            assigned_agent="@full-stack-dev",
         )
     ]
 
@@ -239,13 +235,12 @@ class TestEnhancedAgentsJsonGeneration:
         context = renderer.build_context(sample_plan_with_files)
 
         # Add agent_gaps to context (convert to dict format)
-        context["agent_gaps_detailed"] = [
+        context["agent_gaps"] = [
             {
                 "subgoal_id": gap.subgoal_id,
-                "recommended_agent": gap.recommended_agent,
-                "agent_exists": gap.agent_exists,
-                "fallback": gap.fallback,
-                "suggested_capabilities": gap.suggested_capabilities,
+                "ideal_agent": gap.ideal_agent,
+                "ideal_agent_desc": gap.ideal_agent_desc,
+                "assigned_agent": gap.assigned_agent,
             }
             for gap in sample_agent_gaps
         ]

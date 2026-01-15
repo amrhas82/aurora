@@ -143,7 +143,9 @@ class CLIPipeLLMClient(LLMClient):
         self._write_state(phase_name, "running")
 
         # Pipe to tool with spinner
-        cmd = [self._tool, "-p", "--model", self._model]
+        # Note: Don't pass --model to claude CLI - it generates invalid Bedrock model IDs
+        # for aliases like "sonnet". Let the CLI use its default config instead.
+        cmd = [self._tool, "-p"]
         result = None
         error = None
 

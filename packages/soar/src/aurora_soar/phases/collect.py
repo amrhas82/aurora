@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import sys
 import time
 from typing import TYPE_CHECKING, Any, Callable
@@ -21,8 +22,10 @@ from aurora_spawner import (
     SpawnTask,
     spawn,
     spawn_parallel,
+    spawn_parallel_tracked,
     spawn_with_retry_and_fallback,
 )
+from aurora_spawner.timeout_policy import SpawnPolicy
 
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
@@ -185,59 +188,47 @@ async def execute_agents(
     max_retries: int = 2,
     fallback_to_llm: bool = True,
 ) -> CollectResult:
-    """Execute agents with automatic retry and fallback to LLM.
+    """Execute agents using spawn_parallel_tracked().
 
-    Simplified agent execution that:
-    1. Takes agent assignments directly (no RouteResult)
-    2. Uses spawn_with_retry_and_fallback for reliability
-    3. Provides streaming progress updates via callback
-    4. Tracks fallback metadata for monitoring
-    5. Executes all subgoals in parallel (no complex phasing)
+    Uses the shared spawning infrastructure from aurora_spawner for:
+    - Stagger delays between agent starts
+    - Per-task heartbeat monitoring
+    - Global timeout calculation
+    - Circuit breaker pre-checks
+    - Retry with fallback to LLM
+
+    SOAR-specific handling:
+    - Converts agent_assignments to SpawnTask list
+    - Handles is_spawn ad-hoc agent prompts
+    - Converts SpawnResult list to AgentOutput list
 
     Args:
         agent_assignments: List of (subgoal_index, AgentInfo) tuples
         subgoals: List of subgoal dictionaries from decomposition
         context: Retrieved context from earlier phases
-        on_progress: Optional callback for progress updates: "[Agent X/Y] agent-id: Status"
+        on_progress: Optional callback for progress updates
         agent_timeout: Timeout per agent execution in seconds (default 300)
         max_retries: Maximum retries per agent (default 2)
         fallback_to_llm: Whether to fallback to LLM after retries (default True)
 
     Returns:
         CollectResult with all agent outputs and fallback metadata
-
-    Raises:
-        RuntimeError: If critical subgoal fails after all retries
     """
     start_time = time.time()
-    agent_outputs: list[AgentOutput] = []
-    fallback_agents: list[str] = []
-    execution_metadata: dict[str, Any] = {
-        "total_duration_ms": 0,
-        "total_subgoals": len(agent_assignments),
-        "failed_subgoals": 0,
-        "fallback_count": 0,
-    }
 
     # Build subgoal map for lookup
-    # If subgoals don't have subgoal_index, use array index
     subgoal_map = {}
     for i, sg in enumerate(subgoals):
         idx = sg.get("subgoal_index", i)
         subgoal_map[idx] = sg
 
-    # Build spawn tasks with progress wrapper
-    total_agents = len(agent_assignments)
-    agent_idx = 0
-
-    # Get AgentMatcher for ad-hoc spawning (lazy load)
+    # Build SpawnTask list and track SOAR-specific metadata per task
+    spawn_tasks: list[SpawnTask] = []
+    task_metadata: list[dict[str, Any]] = []  # Track subgoal_idx, agent, is_spawn per task
     agent_matcher = None
 
     for subgoal_idx, agent in agent_assignments:
-        agent_idx += 1
         subgoal = subgoal_map.get(subgoal_idx, {})
-
-        # Check if this is an ad-hoc spawn (marked in config)
         is_spawn = agent.config.get("is_spawn", False)
 
         if is_spawn:
@@ -257,143 +248,106 @@ async def execute_agents(
 
 Task: {subgoal.get("description", "")}
 
-Please complete this task directly without additional questions or preamble. Provide the complete deliverable.
+IMPORTANT: Emit brief progress updates (e.g., "Analyzing...", "Found X...") as you work.
 
----
-
-After your deliverable, suggest a formal agent specification for this capability."""
+Please complete this task directly without additional questions or preamble. Provide the complete deliverable."""
 
             logger.info(f"Ad-hoc spawning agent '{agent.id}' for subgoal {subgoal_idx}")
-            logger.debug(f"Spawn prompt for {agent.id}:\n{prompt[:500]}...")
+            spawn_agent = None  # Direct LLM call for ad-hoc
         else:
             # Regular agent: use standard prompt
             prompt = _build_agent_prompt(subgoal, context)
+            spawn_agent = agent.id
 
-        # Create spawn task
-        # For ad-hoc spawns, use None as agent (direct LLM call without agent persona)
-        # For registered agents, use their agent.id
-        spawn_agent = None if is_spawn else agent.id
-
-        spawn_task = SpawnTask(
-            prompt=prompt,
-            agent=spawn_agent,
-            timeout=int(agent_timeout),
-        )
-
-        # Progress callback wrapper
-        def make_progress_callback(idx, total, agent_id):
-            def progress_callback(attempt, max_attempts, status):
-                if on_progress:
-                    on_progress(f"[Agent {idx}/{total}] {agent_id}: {status}")
-
-            return progress_callback
-
-        progress_cb = make_progress_callback(agent_idx, total_agents, agent.id)
-
-        # Call spawn_with_retry_and_fallback with spinner
-        if on_progress:
-            on_progress(f"[Agent {agent_idx}/{total_agents}] {agent.id}: Starting...")
-
-        # Run spawn with concurrent spinner and recovery config
-        spawn_result = await _spawn_with_spinner(
-            spawn_task,
-            progress_cb,
-            agent_idx,
-            total_agents,
-            agent.id,
-            on_progress,
-            max_retries=max_retries,
-            fallback_to_llm=fallback_to_llm,
-        )
-
-        # Track fallback and spawn usage
-        if spawn_result.fallback:
-            fallback_agents.append(agent.id)
-            execution_metadata["fallback_count"] += 1
-
-        # Track ad-hoc spawned agents
-        if is_spawn:
-            if "spawned_agents" not in execution_metadata:
-                execution_metadata["spawned_agents"] = []
-            execution_metadata["spawned_agents"].append(agent.id)
-            execution_metadata["spawn_count"] = execution_metadata.get("spawn_count", 0) + 1
-
-        # Convert to AgentOutput
-        duration_ms = int((time.time() - start_time) * 1000)
-
-        if spawn_result.success:
-            output = AgentOutput(
-                subgoal_index=subgoal_idx,
-                agent_id=agent.id,
-                success=True,
-                summary=spawn_result.output,
-                confidence=0.85,
-                execution_metadata={
-                    "duration_ms": duration_ms,
-                    "exit_code": spawn_result.exit_code,
-                    "fallback": spawn_result.fallback,
-                    "retry_count": spawn_result.retry_count,
-                    "original_agent": spawn_result.original_agent,
-                    "spawned": is_spawn,  # Track if this was an ad-hoc spawn
-                },
+        spawn_tasks.append(
+            SpawnTask(
+                prompt=prompt,
+                agent=spawn_agent,
+                policy_name="patient",
             )
-            if on_progress:
-                elapsed = duration_ms / 1000
-                on_progress(
-                    f"[Agent {agent_idx}/{total_agents}] {agent.id}: Completed ({elapsed:.1f}s)"
+        )
+        task_metadata.append(
+            {
+                "subgoal_idx": subgoal_idx,
+                "agent": agent,
+                "is_spawn": is_spawn,
+            }
+        )
+
+    # Execute using shared spawn_parallel_tracked
+    # This handles: stagger, heartbeat, global timeout, circuit breaker, retry, fallback
+    results, exec_metadata = await spawn_parallel_tracked(
+        tasks=spawn_tasks,
+        max_concurrent=4,
+        stagger_delay=5.0,
+        policy_name="patient",
+        on_progress=on_progress,
+        fallback_to_llm=fallback_to_llm,
+        max_retries=max_retries,
+    )
+
+    # Convert SpawnResult list to AgentOutput list (SOAR-specific)
+    agent_outputs: list[AgentOutput] = []
+    fallback_agents: list[str] = []
+
+    for i, result in enumerate(results):
+        meta = task_metadata[i]
+        subgoal_idx = meta["subgoal_idx"]
+        agent = meta["agent"]
+        is_spawn = meta["is_spawn"]
+
+        if result.success:
+            agent_outputs.append(
+                AgentOutput(
+                    subgoal_index=subgoal_idx,
+                    agent_id=agent.id,
+                    success=True,
+                    summary=result.output,
+                    confidence=0.85,
+                    execution_metadata={
+                        "exit_code": result.exit_code,
+                        "spawned": is_spawn,
+                        "termination_reason": getattr(result, "termination_reason", None),
+                        "fallback": getattr(result, "fallback", False),
+                    },
                 )
+            )
         else:
-            # Handle failure
-            output = AgentOutput(
-                subgoal_index=subgoal_idx,
-                agent_id=agent.id,
-                success=False,
-                summary="",
-                confidence=0.0,
-                error=spawn_result.error or "Agent execution failed",
-                execution_metadata={
-                    "duration_ms": duration_ms,
-                    "exit_code": spawn_result.exit_code,
-                    "fallback": spawn_result.fallback,
-                    "retry_count": spawn_result.retry_count,
-                    "spawned": is_spawn,  # Track if this was an ad-hoc spawn
-                },
-            )
-            execution_metadata["failed_subgoals"] += 1
-
-            if on_progress:
-                on_progress(f"[Agent {agent_idx}/{total_agents}] {agent.id}: Failed")
-
-            # Check if critical subgoal with HARD failure
-            # Soft errors (timeout, no activity) should NOT stop execution
-            is_critical = subgoal.get("is_critical", False)
-            error_msg = spawn_result.error or ""
-            is_soft_error = any(
-                pattern in error_msg.lower()
-                for pattern in [
-                    "timeout",
-                    "no activity",
-                    "timed out",
-                    "circuit open",
-                    "rate limit",
-                    "429",
-                    "quota",
-                ]
-            )
-
-            if is_critical and not is_soft_error:
-                # Only raise for hard failures on critical subgoals
-                raise RuntimeError(f"Critical subgoal {subgoal_idx} failed: {spawn_result.error}")
-            elif is_critical and is_soft_error:
-                # Soft error on critical - log at debug level, continue silently
-                logger.debug(
-                    f"Critical subgoal {subgoal_idx} had soft failure ({error_msg}), continuing"
+            agent_outputs.append(
+                AgentOutput(
+                    subgoal_index=subgoal_idx,
+                    agent_id=agent.id,
+                    success=False,
+                    summary="",
+                    confidence=0.0,
+                    error=result.error or "Agent execution failed",
+                    execution_metadata={
+                        "exit_code": result.exit_code,
+                        "spawned": is_spawn,
+                        "termination_reason": getattr(result, "termination_reason", None),
+                    },
                 )
+            )
 
-        agent_outputs.append(output)
+        # Track fallback usage
+        if getattr(result, "fallback", False):
+            fallback_agents.append(agent.id)
 
-    # Calculate final metadata
-    execution_metadata["total_duration_ms"] = int((time.time() - start_time) * 1000)
+    # Build execution metadata from spawn_parallel_tracked results
+    execution_metadata = {
+        "total_duration_ms": exec_metadata.get(
+            "total_duration_ms", int((time.time() - start_time) * 1000)
+        ),
+        "total_subgoals": len(agent_assignments),
+        "failed_subgoals": exec_metadata.get("failed_tasks", 0),
+        "fallback_count": exec_metadata.get("fallback_count", 0),
+        "circuit_blocked": exec_metadata.get("circuit_blocked", []),
+        "circuit_blocked_count": len(exec_metadata.get("circuit_blocked", [])),
+        "early_terminations": exec_metadata.get("early_terminations", []),
+        "retried_agents": exec_metadata.get("retried_tasks", []),
+        "spawned_agents": [m["agent"].id for m in task_metadata if m["is_spawn"]],
+        "spawn_count": sum(1 for m in task_metadata if m["is_spawn"]),
+    }
 
     logger.info(
         f"Agent execution complete: {len(agent_outputs)} subgoals, "

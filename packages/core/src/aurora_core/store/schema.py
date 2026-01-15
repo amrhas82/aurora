@@ -6,7 +6,7 @@ storage implementations.
 """
 
 # Schema version for migration tracking
-SCHEMA_VERSION = 3  # Incremented for embeddings support
+SCHEMA_VERSION = 4  # Incremented for file_index table (incremental indexing)
 
 # SQL statements for creating tables and indexes
 CREATE_CHUNKS_TABLE = """
@@ -70,6 +70,21 @@ CREATE_RELATIONSHIPS_TO_INDEX = """
 CREATE INDEX IF NOT EXISTS idx_rel_to ON relationships(to_chunk);
 """
 
+# File index for incremental indexing (tracks indexed files with content hash)
+CREATE_FILE_INDEX_TABLE = """
+CREATE TABLE IF NOT EXISTS file_index (
+    file_path TEXT PRIMARY KEY,       -- Relative path from project root
+    content_hash TEXT NOT NULL,       -- SHA-256 of file content
+    mtime REAL NOT NULL,              -- File modification time (seconds since epoch)
+    indexed_at TIMESTAMP NOT NULL,    -- When this file was last indexed
+    chunk_count INTEGER DEFAULT 0     -- Number of chunks extracted from this file
+);
+"""
+
+CREATE_FILE_INDEX_HASH = """
+CREATE INDEX IF NOT EXISTS idx_file_index_hash ON file_index(content_hash);
+"""
+
 # Schema version tracking table
 CREATE_SCHEMA_VERSION_TABLE = """
 CREATE TABLE IF NOT EXISTS schema_version (
@@ -89,6 +104,8 @@ INIT_SCHEMA = [
     CREATE_RELATIONSHIPS_TABLE,
     CREATE_RELATIONSHIPS_FROM_INDEX,
     CREATE_RELATIONSHIPS_TO_INDEX,
+    CREATE_FILE_INDEX_TABLE,
+    CREATE_FILE_INDEX_HASH,
     CREATE_SCHEMA_VERSION_TABLE,
 ]
 
@@ -119,6 +136,7 @@ __all__ = [
     "CREATE_CHUNKS_TABLE",
     "CREATE_ACTIVATIONS_TABLE",
     "CREATE_RELATIONSHIPS_TABLE",
+    "CREATE_FILE_INDEX_TABLE",
     "INIT_SCHEMA",
     "get_schema_version_insert",
     "get_init_statements",

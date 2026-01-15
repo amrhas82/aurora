@@ -273,8 +273,9 @@ class SOAROrchestrator:
         verbosity: str = "NORMAL",
         max_cost_usd: float | None = None,
         context_files: list[str] | None = None,
+        stop_after_verify: bool = False,
     ) -> dict[str, Any]:
-        """Execute the full 9-phase SOAR pipeline.
+        """Execute the full 8-phase SOAR pipeline.
 
         This is the main entry point for query processing. It coordinates all
         phases and handles errors gracefully.
@@ -283,15 +284,27 @@ class SOAROrchestrator:
             query: User query string
             verbosity: Output verbosity level (QUIET, NORMAL, VERBOSE, JSON)
             max_cost_usd: Optional budget limit for this query (overrides config)
+            context_files: Optional list of context files to inject
+            stop_after_verify: If True, stop after phase 4 (verify) and return
+                decomposition + agent assignments. Used by `aur goals` to get
+                mature decomposition without executing agents.
 
         Returns:
-            Dict with keys:
+            Dict with keys (full execution):
                 - answer: str (synthesized answer)
                 - confidence: float (0-1)
                 - overall_score: float (0-1)
                 - reasoning_trace: dict (phase outputs)
                 - metadata: dict (execution metadata)
                 - cost_usd: float (actual cost)
+
+            Dict with keys (stop_after_verify=True):
+                - decomposition: dict (subgoals with agent assignments)
+                - agent_assignments: list[dict] (index, agent_id, match_quality)
+                - subgoals_detailed: list[dict] (full subgoal info)
+                - complexity: str (SIMPLE, MEDIUM, COMPLEX)
+                - context: dict (retrieved context)
+                - metadata: dict (execution metadata)
 
         Raises:
             BudgetExceededError: If query would exceed budget limits
@@ -350,6 +363,10 @@ class SOAROrchestrator:
 
             # Check for SIMPLE query early exit
             if phase1_result["complexity"] == "SIMPLE":
+                if stop_after_verify:
+                    # For goals-only mode, return single-subgoal decomposition
+                    logger.info("SIMPLE query with stop_after_verify, returning single subgoal")
+                    return self._build_simple_verify_result(query, phase2_result)
                 # Skip decomposition, go directly to solving
                 logger.info("SIMPLE query detected, bypassing decomposition")
                 return self._execute_simple_path(query, phase2_result, verbosity)
@@ -487,6 +504,18 @@ class SOAROrchestrator:
                 if not passed:
                     logger.error("Decomposition verification failed after retry")
                     return self._handle_verification_failure(query, phase4_result, verbosity)
+
+            # Early exit for goals-only mode (aur goals uses stop_after_verify=True)
+            if stop_after_verify:
+                return self._build_verify_only_result(
+                    query=query,
+                    complexity=phase1_result["complexity"],
+                    context=phase2_result,
+                    decomposition=decomposition_dict,
+                    agent_assignments=agent_assignments,
+                    subgoal_details=phase4_result.get("subgoals_detailed", subgoal_details),
+                    issues=issues,
+                )
 
             # Phase 5: Execute agents (Task 5.4 - removed route phase, pass agent_assignments directly)
             subgoals = decomposition_dict.get("subgoals", [])
@@ -1371,6 +1400,177 @@ class SOAROrchestrator:
         )
 
         return cost
+
+    def _build_simple_verify_result(
+        self,
+        query: str,
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Build result for SIMPLE query in goals-only mode.
+
+        For SIMPLE queries, we create a single-subgoal decomposition
+        pointing to a generic development agent.
+
+        Args:
+            query: Original user query
+            context: Retrieved context from phase 2
+
+        Returns:
+            Dict with single-subgoal decomposition
+        """
+        elapsed_time = time.time() - self._start_time
+
+        # Create single subgoal for simple query
+        single_subgoal = {
+            "id": "sg-1",
+            "description": query,
+            "depends_on": [],
+            "is_critical": True,
+        }
+
+        decomposition = {
+            "goal": query,
+            "subgoals": [single_subgoal],
+        }
+
+        # Assign to full-stack-dev as default
+        subgoal_details = [
+            {
+                "index": 1,
+                "description": query,
+                "agent": "@full-stack-dev",
+                "is_critical": True,
+                "depends_on": [],
+                "is_spawn": False,
+                "match_quality": "excellent",
+                "ideal_agent": "@full-stack-dev",
+                "ideal_agent_desc": "General development tasks",
+            }
+        ]
+
+        # Extract memory context
+        memory_context = []
+        code_chunks = context.get("code_chunks", [])
+        for chunk in code_chunks[:10]:
+            if hasattr(chunk, "file_path"):
+                file_path = chunk.file_path
+                score = getattr(chunk, "activation", 0.5)
+            elif isinstance(chunk, dict):
+                file_path = chunk.get("file_path", chunk.get("file", ""))
+                score = chunk.get("activation", chunk.get("relevance", 0.5))
+            else:
+                continue
+            if file_path:
+                memory_context.append((file_path, score))
+
+        return {
+            "decomposition": decomposition,
+            "agent_assignments": [
+                {
+                    "index": 0,
+                    "agent_id": "@full-stack-dev",
+                    "match_quality": "excellent",
+                    "is_spawn": False,
+                    "ideal_agent": "@full-stack-dev",
+                    "ideal_agent_desc": "General development tasks",
+                }
+            ],
+            "subgoals_detailed": subgoal_details,
+            "complexity": "SIMPLE",
+            "context": context,
+            "memory_context": memory_context,
+            "issues": [],
+            "metadata": {
+                "query_id": self._query_id,
+                "query": query,
+                "total_duration_ms": elapsed_time * 1000,
+                "total_cost_usd": self._total_cost,
+                "tokens_used": self._token_usage,
+                "phases": self._phase_metadata,
+                "stop_after_verify": True,
+                "simple_path": True,
+            },
+        }
+
+    def _build_verify_only_result(
+        self,
+        query: str,
+        complexity: str,
+        context: dict[str, Any],
+        decomposition: dict[str, Any],
+        agent_assignments: list[tuple[int, Any]],
+        subgoal_details: list[dict[str, Any]],
+        issues: list[str],
+    ) -> dict[str, Any]:
+        """Build result for goals-only mode (stop_after_verify=True).
+
+        This method builds a result structure suitable for `aur goals` when
+        SOAROrchestrator is used with stop_after_verify=True. It contains
+        all the decomposition and agent matching information without executing
+        the agents.
+
+        Args:
+            query: Original user query
+            complexity: Assessed complexity (SIMPLE, MEDIUM, COMPLEX)
+            context: Retrieved context from phase 2
+            decomposition: Decomposition dict from phase 3
+            agent_assignments: List of (subgoal_index, AgentInfo) tuples
+            subgoal_details: Detailed subgoal info including match_quality
+            issues: Any verification issues (should be empty if passed)
+
+        Returns:
+            Dict with decomposition results for goals.json generation
+        """
+        elapsed_time = time.time() - self._start_time
+
+        # Build agent assignments with full details
+        assignments_detailed = []
+        for idx, agent in agent_assignments:
+            agent_config = getattr(agent, "config", {}) or {}
+            assignments_detailed.append(
+                {
+                    "index": idx,
+                    "agent_id": agent.id,
+                    "match_quality": agent_config.get("match_quality", "acceptable"),
+                    "is_spawn": agent_config.get("is_spawn", False),
+                    "ideal_agent": agent_config.get("ideal_agent", ""),
+                    "ideal_agent_desc": agent_config.get("ideal_agent_desc", ""),
+                }
+            )
+
+        # Extract memory context for goals.json
+        memory_context = []
+        code_chunks = context.get("code_chunks", [])
+        for chunk in code_chunks[:10]:  # Top 10
+            if hasattr(chunk, "file_path"):
+                file_path = chunk.file_path
+                score = getattr(chunk, "activation", 0.5)
+            elif isinstance(chunk, dict):
+                file_path = chunk.get("file_path", chunk.get("file", ""))
+                score = chunk.get("activation", chunk.get("relevance", 0.5))
+            else:
+                continue
+            if file_path:
+                memory_context.append((file_path, score))
+
+        return {
+            "decomposition": decomposition,
+            "agent_assignments": assignments_detailed,
+            "subgoals_detailed": subgoal_details,
+            "complexity": complexity,
+            "context": context,
+            "memory_context": memory_context,
+            "issues": issues,
+            "metadata": {
+                "query_id": self._query_id,
+                "query": query,
+                "total_duration_ms": elapsed_time * 1000,
+                "total_cost_usd": self._total_cost,
+                "tokens_used": self._token_usage,
+                "phases": self._phase_metadata,
+                "stop_after_verify": True,
+            },
+        }
 
     def _build_metadata(self) -> dict[str, Any]:
         """Build aggregated metadata from all phases.

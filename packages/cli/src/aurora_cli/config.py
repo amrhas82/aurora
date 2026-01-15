@@ -98,6 +98,43 @@ class Config:
     # SOAR configuration
     soar_default_tool: str = "claude"  # Default CLI tool for aur soar
     soar_default_model: str = "sonnet"  # Default model (sonnet or opus)
+    # Headless configuration
+    headless_tools: list[str] = field(default_factory=lambda: ["claude"])  # Default tools
+    headless_strategy: str = "first_success"  # Aggregation strategy
+    headless_parallel: bool = True  # Run tools in parallel
+    headless_max_iterations: int = 10  # Default max iterations
+    headless_timeout: int = 600  # Per-tool timeout in seconds
+    headless_budget: float | None = None  # Budget limit in USD (None = unlimited)
+    headless_time_limit: int | None = None  # Time limit in seconds (None = unlimited)
+    headless_tool_configs: dict[str, dict[str, Any]] = field(
+        default_factory=lambda: {
+            "claude": {
+                "priority": 1,
+                "timeout": 600,
+                "flags": ["--print", "--dangerously-skip-permissions"],
+                "input_method": "argument",
+                "env": {},  # Tool-specific environment variables
+                "working_dir": None,  # Override working directory (None = use cwd)
+                "enabled": True,  # Enable/disable tool without removing config
+                "max_retries": 2,  # Tool-specific retry count
+                "retry_delay": 1.0,  # Base delay between retries
+            },
+            "opencode": {
+                "priority": 2,
+                "timeout": 600,
+                "flags": [],
+                "input_method": "stdin",
+                "env": {},
+                "working_dir": None,
+                "enabled": True,
+                "max_retries": 2,
+                "retry_delay": 1.0,
+            },
+        }
+    )  # Per-tool configuration
+    headless_routing_rules: list[dict[str, Any]] = field(
+        default_factory=lambda: []
+    )  # Custom routing rules
 
     def get_db_path(self) -> str:
         """Get expanded absolute database path.
@@ -302,6 +339,68 @@ class Config:
                     f"Cannot create planning_base_dir (parent not writable): {self.planning_base_dir}"
                 )
 
+        # Validate headless configuration
+        valid_strategies = ["first_success", "all_complete", "voting", "best_score", "merge"]
+        if self.headless_strategy not in valid_strategies:
+            raise ConfigurationError(
+                f"headless_strategy must be one of {valid_strategies}, got '{self.headless_strategy}'"
+            )
+
+        if self.headless_max_iterations < 1:
+            raise ConfigurationError(
+                f"headless_max_iterations must be >= 1, got {self.headless_max_iterations}"
+            )
+
+        if self.headless_timeout < 1:
+            raise ConfigurationError(f"headless_timeout must be >= 1, got {self.headless_timeout}")
+
+        if self.headless_budget is not None and self.headless_budget <= 0:
+            raise ConfigurationError(f"headless_budget must be > 0, got {self.headless_budget}")
+
+        if self.headless_time_limit is not None and self.headless_time_limit < 1:
+            raise ConfigurationError(
+                f"headless_time_limit must be >= 1, got {self.headless_time_limit}"
+            )
+
+        # Validate tool configs
+        valid_input_methods = ["argument", "stdin", "file", "pipe"]
+        for tool_name, tool_config in self.headless_tool_configs.items():
+            if "input_method" in tool_config:
+                if tool_config["input_method"] not in valid_input_methods:
+                    raise ConfigurationError(
+                        f"headless.tool_configs.{tool_name}.input_method must be one of {valid_input_methods}, "
+                        f"got '{tool_config['input_method']}'"
+                    )
+            if "timeout" in tool_config and tool_config["timeout"] < 1:
+                raise ConfigurationError(
+                    f"headless.tool_configs.{tool_name}.timeout must be >= 1, got {tool_config['timeout']}"
+                )
+            if "priority" in tool_config and tool_config["priority"] < 1:
+                raise ConfigurationError(
+                    f"headless.tool_configs.{tool_name}.priority must be >= 1, got {tool_config['priority']}"
+                )
+            if "max_retries" in tool_config and tool_config["max_retries"] < 0:
+                raise ConfigurationError(
+                    f"headless.tool_configs.{tool_name}.max_retries must be >= 0, got {tool_config['max_retries']}"
+                )
+            if "retry_delay" in tool_config and tool_config["retry_delay"] < 0:
+                raise ConfigurationError(
+                    f"headless.tool_configs.{tool_name}.retry_delay must be >= 0, got {tool_config['retry_delay']}"
+                )
+            if "env" in tool_config and not isinstance(tool_config["env"], dict):
+                raise ConfigurationError(
+                    f"headless.tool_configs.{tool_name}.env must be a dict, got {type(tool_config['env']).__name__}"
+                )
+
+        # Validate routing rules structure
+        for i, rule in enumerate(self.headless_routing_rules):
+            if "pattern" not in rule and "condition" not in rule:
+                raise ConfigurationError(
+                    f"headless.routing_rules[{i}] must have 'pattern' or 'condition'"
+                )
+            if "tools" not in rule:
+                raise ConfigurationError(f"headless.routing_rules[{i}] must have 'tools' list")
+
 
 # Default configuration schema
 CONFIG_SCHEMA: dict[str, Any] = {
@@ -363,6 +462,39 @@ CONFIG_SCHEMA: dict[str, Any] = {
     "soar": {
         "default_tool": "claude",  # CLI tool for aur soar (claude, cursor, etc.)
         "default_model": "sonnet",  # Model to use (sonnet or opus)
+    },
+    "headless": {
+        "tools": ["claude"],  # Default tools to use
+        "strategy": "first_success",  # Aggregation: first_success, all_complete, voting, best_score, merge
+        "parallel": True,  # Run multiple tools in parallel
+        "max_iterations": 10,  # Default max iterations
+        "timeout": 600,  # Global per-tool timeout in seconds (can be overridden per-tool)
+        "tool_configs": {
+            # Per-tool configuration - add any tool with custom settings
+            "claude": {
+                "priority": 1,  # Lower = higher priority in multi-tool mode
+                "timeout": 600,  # Tool-specific timeout (overrides global)
+                "flags": ["--print", "--dangerously-skip-permissions"],
+                "input_method": "argument",  # argument, stdin, file, pipe
+                "env": {},  # Tool-specific environment variables
+                "working_dir": None,  # Override working directory (null = use cwd)
+                "enabled": True,  # Enable/disable without removing config
+                "max_retries": 2,  # Tool-specific retry count
+                "retry_delay": 1.0,  # Base delay between retries (seconds)
+            },
+            "opencode": {
+                "priority": 2,
+                "timeout": 600,
+                "flags": [],
+                "input_method": "stdin",
+                "env": {},
+                "working_dir": None,
+                "enabled": True,
+                "max_retries": 2,
+                "retry_delay": 1.0,
+            },
+        },
+        "routing_rules": [],  # Custom routing rules for task-based tool selection
     },
 }
 
@@ -544,6 +676,34 @@ def load_config(path: str | None = None) -> Config:
         "soar_default_model": config_data.get("soar", {}).get(
             "default_model", defaults["soar"]["default_model"]
         ),
+        # Headless configuration
+        "headless_tools": config_data.get("headless", {}).get(
+            "tools", defaults["headless"]["tools"]
+        ),
+        "headless_strategy": config_data.get("headless", {}).get(
+            "strategy", defaults["headless"]["strategy"]
+        ),
+        "headless_parallel": config_data.get("headless", {}).get(
+            "parallel", defaults["headless"]["parallel"]
+        ),
+        "headless_max_iterations": config_data.get("headless", {}).get(
+            "max_iterations", defaults["headless"]["max_iterations"]
+        ),
+        "headless_timeout": config_data.get("headless", {}).get(
+            "timeout", defaults["headless"]["timeout"]
+        ),
+        "headless_budget": config_data.get("headless", {}).get(
+            "budget", defaults["headless"].get("budget")
+        ),
+        "headless_time_limit": config_data.get("headless", {}).get(
+            "time_limit", defaults["headless"].get("time_limit")
+        ),
+        "headless_tool_configs": config_data.get("headless", {}).get(
+            "tool_configs", defaults["headless"]["tool_configs"]
+        ),
+        "headless_routing_rules": config_data.get("headless", {}).get(
+            "routing_rules", defaults["headless"]["routing_rules"]
+        ),
     }
 
     # Apply environment variable overrides
@@ -601,6 +761,68 @@ def load_config(path: str | None = None) -> Config:
         else:
             raise ConfigurationError(
                 f"AURORA_SOAR_MODEL must be 'sonnet' or 'opus', got '{os.environ['AURORA_SOAR_MODEL']}'"
+            )
+
+    # Apply headless environment variable overrides
+    if "AURORA_HEADLESS_TOOLS" in os.environ:
+        # Comma-separated list of tools: "claude,opencode"
+        flat_config["headless_tools"] = [
+            t.strip() for t in os.environ["AURORA_HEADLESS_TOOLS"].split(",") if t.strip()
+        ]
+
+    if "AURORA_HEADLESS_STRATEGY" in os.environ:
+        val = os.environ["AURORA_HEADLESS_STRATEGY"].lower()
+        valid_strategies = ["first_success", "all_complete", "voting", "best_score", "merge"]
+        if val in valid_strategies:
+            flat_config["headless_strategy"] = val
+        else:
+            raise ConfigurationError(
+                f"AURORA_HEADLESS_STRATEGY must be one of {valid_strategies}, got '{os.environ['AURORA_HEADLESS_STRATEGY']}'"
+            )
+
+    if "AURORA_HEADLESS_PARALLEL" in os.environ:
+        val = os.environ["AURORA_HEADLESS_PARALLEL"].lower()
+        if val in ("true", "1", "yes"):
+            flat_config["headless_parallel"] = True
+        elif val in ("false", "0", "no"):
+            flat_config["headless_parallel"] = False
+        else:
+            raise ConfigurationError(
+                f"AURORA_HEADLESS_PARALLEL must be true/false, got '{os.environ['AURORA_HEADLESS_PARALLEL']}'"
+            )
+
+    if "AURORA_HEADLESS_MAX_ITERATIONS" in os.environ:
+        try:
+            flat_config["headless_max_iterations"] = int(
+                os.environ["AURORA_HEADLESS_MAX_ITERATIONS"]
+            )
+        except ValueError:
+            raise ConfigurationError(
+                f"AURORA_HEADLESS_MAX_ITERATIONS must be an integer, got '{os.environ['AURORA_HEADLESS_MAX_ITERATIONS']}'"
+            )
+
+    if "AURORA_HEADLESS_TIMEOUT" in os.environ:
+        try:
+            flat_config["headless_timeout"] = int(os.environ["AURORA_HEADLESS_TIMEOUT"])
+        except ValueError:
+            raise ConfigurationError(
+                f"AURORA_HEADLESS_TIMEOUT must be an integer, got '{os.environ['AURORA_HEADLESS_TIMEOUT']}'"
+            )
+
+    if "AURORA_HEADLESS_BUDGET" in os.environ:
+        try:
+            flat_config["headless_budget"] = float(os.environ["AURORA_HEADLESS_BUDGET"])
+        except ValueError:
+            raise ConfigurationError(
+                f"AURORA_HEADLESS_BUDGET must be a number, got '{os.environ['AURORA_HEADLESS_BUDGET']}'"
+            )
+
+    if "AURORA_HEADLESS_TIME_LIMIT" in os.environ:
+        try:
+            flat_config["headless_time_limit"] = int(os.environ["AURORA_HEADLESS_TIME_LIMIT"])
+        except ValueError:
+            raise ConfigurationError(
+                f"AURORA_HEADLESS_TIME_LIMIT must be an integer, got '{os.environ['AURORA_HEADLESS_TIME_LIMIT']}'"
             )
 
     # Create Config instance
@@ -684,6 +906,17 @@ def save_config(config: Config, path: str | None = None) -> None:
         "soar": {
             "default_tool": config.soar_default_tool,
             "default_model": config.soar_default_model,
+        },
+        "headless": {
+            "tools": config.headless_tools,
+            "strategy": config.headless_strategy,
+            "parallel": config.headless_parallel,
+            "max_iterations": config.headless_max_iterations,
+            "timeout": config.headless_timeout,
+            "budget": config.headless_budget,
+            "time_limit": config.headless_time_limit,
+            "tool_configs": config.headless_tool_configs,
+            "routing_rules": config.headless_routing_rules,
         },
     }
 

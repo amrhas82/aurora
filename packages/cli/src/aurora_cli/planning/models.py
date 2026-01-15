@@ -52,16 +52,31 @@ class Complexity(str, Enum):
     COMPLEX = "complex"
 
 
+class MatchQuality(str, Enum):
+    """Agent match quality levels for subgoal assignment.
+
+    Levels:
+    - EXCELLENT: Agent's core specialty matches task perfectly
+    - ACCEPTABLE: Agent can handle but isn't specialized for task
+    - INSUFFICIENT: No capable agent available, using fallback
+    """
+
+    EXCELLENT = "excellent"
+    ACCEPTABLE = "acceptable"
+    INSUFFICIENT = "insufficient"
+
+
 class Subgoal(BaseModel):
-    """Individual subgoal with agent assignment.
+    """Individual subgoal with agent assignment and match quality.
 
     Represents a decomposed piece of work that can be assigned
     to a specific agent for implementation.
 
-    Binary gap detection model:
+    3-tier match quality model:
     - ideal_agent: The agent that SHOULD handle this task (unconstrained)
     - ideal_agent_desc: Description of the ideal agent's capabilities
     - assigned_agent: Best AVAILABLE agent from manifest
+    - match_quality: How well the assigned agent fits the task
 
     Gap detection: ideal_agent != assigned_agent → gap exists
 
@@ -72,6 +87,7 @@ class Subgoal(BaseModel):
         ideal_agent: Agent that SHOULD handle this (unconstrained)
         ideal_agent_desc: Description of ideal agent's capabilities
         assigned_agent: Best AVAILABLE agent ID in '@agent-id' format
+        match_quality: How well assigned agent matches task requirements
         dependencies: List of subgoal IDs this depends on
     """
 
@@ -111,6 +127,10 @@ class Subgoal(BaseModel):
         ...,
         description="Best AVAILABLE agent ID in '@agent-id' format",
         examples=["@full-stack-dev", "@qa-test-architect"],
+    )
+    match_quality: MatchQuality = Field(
+        default=MatchQuality.EXCELLENT,
+        description="How well the assigned agent matches the task requirements",
     )
     dependencies: list[str] = Field(
         default_factory=list,
@@ -673,18 +693,23 @@ class DecompositionSummary(BaseModel):
             The validated source
 
         Raises:
-            ValueError: If source is not 'soar' or 'heuristic'
+            ValueError: If source is not a recognized value
         """
-        valid_sources = {"soar", "heuristic"}
+        valid_sources = {"soar", "soar_llm", "heuristic"}
         if v not in valid_sources:
             raise ValueError(f"decomposition_source must be one of {valid_sources}. Got: {v}")
         return v
 
     def display(self) -> None:
-        """Display the summary using Rich formatting.
+        """Display the summary using Rich formatting with match quality indicators.
 
         This method renders the decomposition summary in a user-friendly
         format with colors and formatting for easy review.
+
+        Match quality indicators:
+        - [++] excellent: Green - agent is specialized for this task
+        - [+] acceptable: Yellow - agent can handle but not specialized
+        - [-] insufficient: Red - no capable agent, needs ad-hoc spawn
         """
         try:
             from rich.console import Console
@@ -701,26 +726,65 @@ class DecompositionSummary(BaseModel):
             # Subgoals count
             content.append(f"[bold cyan]Subgoals:[/bold cyan] {len(self.subgoals)}\n")
 
-            # List each subgoal with gap detection:
-            #   Matched: ideal == assigned (green)
-            #   Gap: ideal != assigned (yellow)
+            # Count match qualities
+            excellent_count = 0
+            acceptable_count = 0
+            insufficient_count = 0
+
+            # List each subgoal with match quality indicators
             for sg in self.subgoals:
-                is_gap = sg.ideal_agent != sg.assigned_agent
-                if is_gap:
-                    content.append(
-                        f"   {sg.title} ([yellow]{sg.assigned_agent} → {sg.ideal_agent} ⚠[/yellow])"
+                # Get match_quality if available, otherwise infer from gap detection
+                match_quality = getattr(sg, "match_quality", None)
+                is_gap = sg.ideal_agent and sg.ideal_agent != sg.assigned_agent
+
+                if match_quality is None:
+                    match_quality = "acceptable" if is_gap else "excellent"
+
+                # Format based on match quality
+                if match_quality == "excellent":
+                    excellent_count += 1
+                    indicator = "[green][++][/green]"
+                    agent_display = f"[green]{sg.assigned_agent}[/green]"
+                elif match_quality == "acceptable":
+                    acceptable_count += 1
+                    indicator = "[yellow][+][/yellow]"
+                    if is_gap:
+                        agent_display = (
+                            f"[yellow]{sg.assigned_agent}[/yellow] "
+                            f"[dim](ideal: {sg.ideal_agent})[/dim]"
+                        )
+                    else:
+                        agent_display = f"[yellow]{sg.assigned_agent}[/yellow]"
+                else:  # insufficient
+                    insufficient_count += 1
+                    indicator = "[red][-][/red]"
+                    agent_display = (
+                        f"[red]{sg.assigned_agent}[/red] " f"[dim](need: {sg.ideal_agent})[/dim]"
                     )
-                else:
-                    content.append(f"   {sg.title} ([green]{sg.assigned_agent}[/green])")
+
+                content.append(f"  {indicator} {sg.title}: {agent_display}")
 
             content.append("")
 
-            # Agent summary
+            # Agent match quality summary
+            quality_summary = "[bold cyan]Agent Matching:[/bold cyan] "
+            quality_parts = []
+            if excellent_count > 0:
+                quality_parts.append(f"[green]{excellent_count} excellent[/green]")
+            if acceptable_count > 0:
+                quality_parts.append(f"[yellow]{acceptable_count} acceptable[/yellow]")
+            if insufficient_count > 0:
+                quality_parts.append(f"[red]{insufficient_count} insufficient[/red]")
+            quality_summary += ", ".join(quality_parts) if quality_parts else "none"
+            content.append(quality_summary)
+
+            # Gap summary (for backward compatibility)
             gap_count = len(self.agent_gaps)
-            agent_summary = f"[bold cyan]Agents:[/bold cyan] {self.agents_assigned} assigned"
             if gap_count > 0:
-                agent_summary += f", [yellow]{gap_count} gaps[/yellow]"
-            content.append(agent_summary)
+                content.append(
+                    f"[bold cyan]Gaps Detected:[/bold cyan] "
+                    f"[yellow]{gap_count} subgoals need attention[/yellow]"
+                )
 
             # File summary
             file_summary = f"[bold cyan]Files:[/bold cyan] {self.files_resolved} resolved"
@@ -736,13 +800,20 @@ class DecompositionSummary(BaseModel):
             }
             complexity_color = complexity_colors[self.complexity]
             content.append(
-                f"[bold cyan]Complexity:[/bold cyan] [{complexity_color}]{self.complexity.value.upper()}[/{complexity_color}]"
+                f"[bold cyan]Complexity:[/bold cyan] "
+                f"[{complexity_color}]{self.complexity.value.upper()}[/{complexity_color}]"
             )
 
-            # Decomposition source
-            source_color = "green" if self.decomposition_source == "soar" else "yellow"
+            # Decomposition source (normalize soar_llm to soar for display)
+            source_display = (
+                "soar"
+                if self.decomposition_source.startswith("soar")
+                else self.decomposition_source
+            )
+            source_color = "green" if source_display == "soar" else "yellow"
             content.append(
-                f"[bold cyan]Source:[/bold cyan] [{source_color}]{self.decomposition_source}[/{source_color}]"
+                f"[bold cyan]Source:[/bold cyan] "
+                f"[{source_color}]{source_display}[/{source_color}]"
             )
 
             # Warnings
@@ -750,7 +821,14 @@ class DecompositionSummary(BaseModel):
                 content.append("")
                 content.append("[bold yellow]Warnings:[/bold yellow]")
                 for warning in self.warnings:
-                    content.append(f"  ⚠ {warning}")
+                    content.append(f"  ! {warning}")
+
+            # Add legend if there are any gaps
+            if insufficient_count > 0 or acceptable_count > 0:
+                content.append("")
+                content.append(
+                    "[dim]Legend: [++] excellent | [+] acceptable | [-] insufficient[/dim]"
+                )
 
             # Create panel and display
             panel = Panel(
@@ -767,22 +845,51 @@ class DecompositionSummary(BaseModel):
             print("=" * 60)
             print(f"Goal: {self.goal}")
             print(f"Subgoals: {len(self.subgoals)}")
+
+            excellent_count = 0
+            acceptable_count = 0
+            insufficient_count = 0
+
             for sg in self.subgoals:
-                is_gap = sg.ideal_agent != sg.assigned_agent
-                if is_gap:
-                    print(f"  {sg.title} ({sg.assigned_agent} → {sg.ideal_agent} - GAP)")
+                match_quality = getattr(sg, "match_quality", None)
+                is_gap = sg.ideal_agent and sg.ideal_agent != sg.assigned_agent
+                if match_quality is None:
+                    match_quality = "acceptable" if is_gap else "excellent"
+
+                if match_quality == "excellent":
+                    excellent_count += 1
+                    indicator = "[++]"
+                elif match_quality == "acceptable":
+                    acceptable_count += 1
+                    indicator = "[+]"
                 else:
-                    print(f"  {sg.title} ({sg.assigned_agent})")
-            print(f"Agents: {self.agents_assigned} assigned, {len(self.agent_gaps)} gaps")
+                    insufficient_count += 1
+                    indicator = "[-]"
+
+                if is_gap:
+                    print(
+                        f"  {indicator} {sg.title}: {sg.assigned_agent} "
+                        f"(ideal: {sg.ideal_agent})"
+                    )
+                else:
+                    print(f"  {indicator} {sg.title}: {sg.assigned_agent}")
+
             print(
-                f"Files: {self.files_resolved} resolved (avg confidence: {self.avg_confidence:.2f})"
+                f"Agent Matching: {excellent_count} excellent, "
+                f"{acceptable_count} acceptable, {insufficient_count} insufficient"
+            )
+            print(f"Gaps: {len(self.agent_gaps)}")
+            print(
+                f"Files: {self.files_resolved} resolved "
+                f"(avg confidence: {self.avg_confidence:.2f})"
             )
             print(f"Complexity: {self.complexity.value.upper()}")
             print(f"Source: {self.decomposition_source}")
             if self.warnings:
                 print("Warnings:")
                 for warning in self.warnings:
-                    print(f"  ⚠ {warning}")
+                    print(f"  ! {warning}")
+            print("Legend: [++] excellent | [+] acceptable | [-] insufficient")
             print("=" * 60 + "\n")
 
 
@@ -818,10 +925,13 @@ class MemoryContext(BaseModel):
 class SubgoalData(BaseModel):
     """Subgoal data for goals.json format.
 
-    Represents a subgoal with agent assignment and dependencies.
+    Represents a subgoal with agent assignment, match quality, and dependencies.
     This is the format used in goals.json for the /plan skill.
 
-    Binary gap detection: ideal_agent != agent → gap exists
+    3-tier match quality model:
+    - ideal_agent: Agent that SHOULD handle this (unconstrained)
+    - agent: Best AVAILABLE agent from manifest
+    - match_quality: How well assigned agent fits the task
 
     Attributes:
         id: Subgoal ID (sg-1, sg-2, etc.)
@@ -830,6 +940,7 @@ class SubgoalData(BaseModel):
         ideal_agent: Agent that SHOULD handle this (unconstrained)
         ideal_agent_desc: Description of ideal agent's capabilities
         agent: Best AVAILABLE agent ID with @ prefix (assigned_agent)
+        match_quality: How well agent matches task (excellent/acceptable/insufficient)
         dependencies: List of dependent subgoal IDs
     """
 
@@ -871,6 +982,11 @@ class SubgoalData(BaseModel):
         description="Best AVAILABLE agent ID with @ prefix (assigned_agent)",
         pattern=r"^@[a-z0-9-]+$",
         examples=["@full-stack-dev", "@qa-test-architect"],
+    )
+    match_quality: str = Field(
+        default="excellent",
+        description="How well the assigned agent matches the task",
+        examples=["excellent", "acceptable", "insufficient"],
     )
     dependencies: list[str] = Field(
         default_factory=list,

@@ -160,7 +160,7 @@ class MemoryRetriever:
 
             elapsed = time.time() - start_time
             if elapsed > RETRIEVE_LATENCY_TARGET:
-                logger.warning(
+                logger.debug(
                     "Retrieval took %.2fs (target: %.2fs)",
                     elapsed,
                     RETRIEVE_LATENCY_TARGET,
@@ -250,7 +250,7 @@ class MemoryRetriever:
 
         elapsed = time.time() - start_time
         if elapsed > FILE_LOAD_LATENCY_TARGET:
-            logger.warning(
+            logger.debug(
                 "File loading took %.2fs (target: %.2fs for 10 files)",
                 elapsed,
                 FILE_LOAD_LATENCY_TARGET,

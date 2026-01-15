@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-01-15T19:46:14.874934",
+  "active_plans": [
+    "0001-enhance-agent-recovery-aur",
+    "0002-improve-aur-spawn-parallel",
+    "0003-improve-aur-spawn-parallel"
+  ],
+  "archived_plans": [],
+  "stats": {}
+}

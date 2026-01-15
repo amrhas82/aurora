@@ -82,6 +82,8 @@ def run_indexing(
     config: Config | None = None,
     show_db_path: bool = True,
     output_console: Console | None = None,
+    force: bool = False,
+    max_workers: int | None = None,
 ) -> tuple[Any, int]:
     """Run memory indexing with progress display.
 
@@ -92,6 +94,8 @@ def run_indexing(
         config: Config object with db_path. If None, loads default config.
         show_db_path: Whether to print the database path being used
         output_console: Console instance for output. Uses module console if None.
+        force: If True, reindex all files (disable incremental mode)
+        max_workers: Max parallel workers for parsing (None = auto)
 
     Returns:
         Tuple of (IndexStats, total_warnings) from the indexing operation
@@ -177,8 +181,13 @@ def run_indexing(
             live.update(make_progress_display())
 
         with Live(make_progress_display(), console=out, refresh_per_second=10) as live:
-            # Perform indexing
-            stats = manager.index_path(path, progress_callback=progress_callback)
+            # Perform indexing with parallel processing and incremental mode
+            stats = manager.index_path(
+                path,
+                progress_callback=progress_callback,
+                max_workers=max_workers,
+                incremental=not force,
+            )
     finally:
         # Always remove the filter when done
         parser_logger.removeFilter(warning_filter)
@@ -210,6 +219,18 @@ def display_indexing_summary(
     out.print(f"  Files indexed:  {stats.files_indexed}")
     out.print(f"  Chunks created: {stats.chunks_created}")
     out.print(f"  Duration:       {stats.duration_seconds:.2f}s")
+
+    # Show incremental stats if files were skipped
+    if hasattr(stats, "files_skipped") and stats.files_skipped > 0:
+        out.print(f"  Files skipped:  {stats.files_skipped} [dim](unchanged)[/]")
+
+    # Show deleted files cleanup count
+    if hasattr(stats, "files_deleted") and stats.files_deleted > 0:
+        out.print(f"  Files cleaned:  {stats.files_deleted} [dim](deleted)[/]")
+
+    # Show parallel worker count
+    if hasattr(stats, "parallel_workers") and stats.parallel_workers > 1:
+        out.print(f"  Workers used:   {stats.parallel_workers}")
 
     # Display error/warning summary table if there are issues
     if stats.errors > 0 or total_warnings > 0:
@@ -252,28 +273,53 @@ def display_indexing_summary(
     default=None,
     help="Database path (overrides config, useful for testing)",
 )
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Force reindex all files (disable incremental mode)",
+)
+@click.option(
+    "--workers",
+    "-w",
+    type=int,
+    default=None,
+    help="Max parallel workers for parsing (default: auto, min(8, cpu_count))",
+)
 @click.pass_context
 @handle_errors
-def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
+def index_command(
+    ctx: click.Context, path: Path, db_path: Path | None, force: bool, workers: int | None
+) -> None:
     r"""Index code files into memory store.
 
     PATH is the directory or file to index. Defaults to current directory.
     Recursively scans for Python files and extracts functions, classes, and docstrings.
 
     \b
+    Performance optimizations:
+        - Parallel file parsing (uses multiple CPU cores)
+        - Incremental indexing (only re-indexes changed files)
+        - Batch embedding generation (processes chunks in batches)
+
+    \b
     Examples:
-        # Index current directory (default)
+        # Index current directory (incremental by default)
         aur mem index
+
+        \b
+        # Force full reindex (ignore file modification times)
+        aur mem index --force
+
+        \b
+        # Limit parallel workers (default: auto)
+        aur mem index --workers 4
 
         \b
         # Index specific directory or file
         aur mem index /path/to/project
         aur mem index src/main.py
-
-        \b
-        # Force reindex (run index command again on same path)
-        aur mem index .
-        # Note: Will update existing chunks and add new ones
 
         \b
         # Use custom database path
@@ -287,7 +333,7 @@ def index_command(ctx: click.Context, path: Path, db_path: Path | None) -> None:
         config.db_path = str(db_path)
 
     # Use shared indexing function
-    stats, total_warnings = run_indexing(path, config=config)
+    stats, total_warnings = run_indexing(path, config=config, force=force, max_workers=workers)
 
     # Determine log path for display
     db_path_resolved = Path(config.get_db_path())

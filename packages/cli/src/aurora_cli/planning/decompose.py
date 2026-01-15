@@ -55,6 +55,14 @@ logger = logging.getLogger(__name__)
 class PlanDecomposer:
     """Orchestrates SOAR decomposition for planning workflow.
 
+    .. deprecated::
+        This class is deprecated. Use `SOAROrchestrator.execute(stop_after_verify=True)`
+        instead, which provides mature 3-tier agent matching (excellent/acceptable/spawned)
+        and unified decomposition with the `aur soar` pipeline.
+
+        The new approach is used by default in `create_plan(use_soar_decomposition=True)`.
+        This class is kept as a fallback for edge cases.
+
     This class integrates SOAR's sophisticated decomposition capabilities
     into the planning system, with graceful fallback to heuristics when
     SOAR is unavailable or fails.
@@ -74,6 +82,9 @@ class PlanDecomposer:
     ):
         """Initialize PlanDecomposer.
 
+        .. deprecated::
+            Use `SOAROrchestrator.execute(stop_after_verify=True)` instead.
+
         Args:
             config: Optional configuration object with LLM settings
             store: Optional SQLiteStore for memory retrieval
@@ -81,6 +92,14 @@ class PlanDecomposer:
             cache_ttl_hours: Cache entry TTL in hours (default: 24)
             enable_persistent_cache: Enable persistent cache storage (default: True)
         """
+        import warnings
+
+        warnings.warn(
+            "PlanDecomposer is deprecated. Use SOAROrchestrator.execute(stop_after_verify=True) "
+            "for mature 3-tier agent matching. This class is kept as a fallback.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.config = config
         self.store = store
 

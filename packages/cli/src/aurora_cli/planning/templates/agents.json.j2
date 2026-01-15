@@ -12,20 +12,30 @@
       "id": "{{ subgoal.id }}",
       "title": "{{ subgoal.title }}",
       "description": "{{ subgoal.description }}",
-      "recommended_agent": "{{ subgoal.recommended_agent }}",
-      "agent_exists": {{ subgoal.agent_exists | tojson }},
+      "ideal_agent": "{{ subgoal.ideal_agent | default(subgoal.assigned_agent) }}",
+      "ideal_agent_desc": "{{ subgoal.ideal_agent_desc | default('') }}",
+      "assigned_agent": "{{ subgoal.assigned_agent }}",
+      "match_quality": "{{ subgoal.match_quality | default('excellent') }}",
       "dependencies": {{ subgoal.dependencies | tojson }}
     }{% if not loop.last %},{% endif %}
 {% endfor -%}
   ],
+  "agent_stats": {
+    "excellent_count": {{ agent_stats.excellent_count | default(0) }},
+    "acceptable_count": {{ agent_stats.acceptable_count | default(0) }},
+    "insufficient_count": {{ agent_stats.insufficient_count | default(0) }},
+    "gap_count": {{ agent_stats.gap_count | default(0) }},
+    "total_subgoals": {{ agent_stats.total_subgoals | default(subgoals | length) }}
+  },
   "tags": {{ tags | default([]) | tojson }},
   {% if decomposition_source %}"decomposition_source": "{{ decomposition_source }}",{% endif %}
   {% if context_summary %}"context_summary": "{{ context_summary }}",{% endif %}
-  {% if agent_gaps_detailed %}"agent_gaps": {{ agent_gaps_detailed | tojson }},{% endif %}
-  {% if file_resolutions_detailed %}"file_resolutions": {{ file_resolutions_detailed | tojson }},{% endif %}
+  {% if agent_gaps %}"agent_gaps": {{ agent_gaps | tojson }},{% endif %}
+  {% if file_resolutions %}"file_resolutions": {{ file_resolutions | tojson }},{% endif %}
   "metadata": {
     "generator": "Aurora Planning System",
-    "version": "0.1.0",
-    "plan_format": "eight-file-workflow"
+    "version": "0.2.0",
+    "plan_format": "eight-file-workflow",
+    "agent_schema_version": "1.1"
   }
 }

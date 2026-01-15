@@ -28,21 +28,20 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Implement authentication",
                 description="Add OAuth2 authentication flow",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             ),
             Subgoal(
                 id="sg-2",
                 title="Add security tests",
                 description="Write security tests for auth flow",
-                recommended_agent="@qa-test-architect",
+                assigned_agent="@qa-test-architect",
             ),
         ]
 
         gaps = [
             AgentGap(
                 subgoal_id="sg-2",
-                recommended_agent="@security-expert",
-                agent_exists=False,
+                assigned_agent="@security-expert",
                 fallback="@full-stack-dev",
                 suggested_capabilities=["security", "testing"],
             )
@@ -94,7 +93,7 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Test task",
                 description="Test description",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             )
         ]
 
@@ -120,7 +119,7 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Test task",
                 description="Test description",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             )
         ]
 
@@ -146,7 +145,7 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Test task",
                 description="Test description for the task",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             )
         ]
 
@@ -174,7 +173,7 @@ class TestSummaryDisplay:
                 id="sg-1",
                 title="Test task",
                 description="Test description for the task",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             )
         ]
 

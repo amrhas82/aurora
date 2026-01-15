@@ -869,10 +869,9 @@ def _write_goals_only(
         gaps_to_write = [
             AgentGap(
                 subgoal_id="",
-                recommended_agent=gap,
-                agent_exists=False,
-                fallback="@full-stack-dev",
-                suggested_capabilities=[],
+                ideal_agent=gap,
+                ideal_agent_desc="",
+                assigned_agent="@full-stack-dev",
             )
             for gap in plan.agent_gaps
         ]
@@ -1014,7 +1013,7 @@ def _generate_plan_md(plan: Plan) -> str:
     for i, sg in enumerate(plan.subgoals, 1):
         lines.append(f"### {i}. {sg.title}")
         lines.append("")
-        lines.append(f"**Agent:** {sg.recommended_agent}")
+        lines.append(f"**Agent:** {sg.assigned_agent}")
         if sg.dependencies:
             lines.append(f"**Dependencies:** {', '.join(sg.dependencies)}")
         lines.append("")
@@ -1090,7 +1089,7 @@ def _generate_tasks_md(plan: Plan) -> str:
 
     for i, sg in enumerate(plan.subgoals, 1):
         lines.append(f"- [ ] {i}.0 {sg.title}")
-        lines.append(f"  - Agent: {sg.recommended_agent}")
+        lines.append(f"  - Agent: {sg.assigned_agent}")
         if sg.dependencies:
             lines.append(f"  - Dependencies: {', '.join(sg.dependencies)}")
         lines.append("")
@@ -1138,7 +1137,7 @@ def generate_goals_json(
     ]
 
     # Convert Subgoal objects to SubgoalData for goals.json format
-    # Include ideal_agent and ideal_agent_desc for gap detection
+    # Include ideal_agent, ideal_agent_desc, and match_quality for gap detection
     subgoal_objects = []
     for sg in subgoals:
         # Sanitize dependencies - remove self-references and invalid IDs
@@ -1148,6 +1147,16 @@ def generate_goals_json(
         ideal_agent = getattr(sg, "ideal_agent", None) or None
         ideal_agent_desc = getattr(sg, "ideal_agent_desc", None) or None
 
+        # Get match_quality, defaulting based on gap detection
+        match_quality = getattr(sg, "match_quality", None)
+        if match_quality is None:
+            # Infer from gap: if ideal != assigned, it's acceptable at best
+            is_gap = ideal_agent and ideal_agent != sg.assigned_agent
+            match_quality = "acceptable" if is_gap else "excellent"
+        elif hasattr(match_quality, "value"):
+            # Convert enum to string if needed
+            match_quality = match_quality.value
+
         subgoal_objects.append(
             SubgoalData(
                 id=sg.id,
@@ -1156,6 +1165,7 @@ def generate_goals_json(
                 ideal_agent=ideal_agent,
                 ideal_agent_desc=ideal_agent_desc,
                 agent=sg.assigned_agent,
+                match_quality=match_quality,
                 dependencies=clean_deps,
             )
         )
@@ -1174,6 +1184,141 @@ def generate_goals_json(
     return goals
 
 
+def _decompose_with_soar(
+    goal: str,
+    config: Config | None = None,
+    context_files: list[str] | None = None,
+) -> tuple[list[Subgoal], dict, str, list[tuple[str, float]]]:
+    """Decompose goal using SOAROrchestrator with mature 3-tier agent matching.
+
+    This uses the full SOAR pipeline (phases 1-4) for decomposition:
+    1. Assess - Determine query complexity
+    2. Retrieve - Get relevant context from memory
+    3. Decompose - Break goal into subgoals with LLM
+    4. Verify - Validate and assign agents with 3-tier matching
+
+    Args:
+        goal: High-level goal to decompose
+        config: Optional CLI configuration
+        context_files: Optional list of context file paths
+
+    Returns:
+        Tuple of:
+        - subgoals: List of Subgoal objects with agent assignments
+        - file_resolutions: Dict mapping subgoal_id to resolved files
+        - decomposition_source: String indicating source ("soar_llm")
+        - memory_context: List of (file_path, score) tuples
+    """
+    from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+    from aurora_core.store.sqlite import SQLiteStore
+    from aurora_soar.orchestrator import SOAROrchestrator
+
+    logger.info("Using SOAROrchestrator for decomposition with stop_after_verify=True")
+
+    # Get store - use project-local path (consistent with aur init and aur mem index)
+    # config.get_db_path() returns ./.aurora/memory.db by default
+    db_path = (
+        config.get_db_path() if config and hasattr(config, "get_db_path") else "./.aurora/memory.db"
+    )
+    store = SQLiteStore(db_path)
+
+    # Discover available agents (same as aur soar)
+    from aurora_cli.commands.agents import get_manifest
+    from aurora_soar.agent_registry import AgentInfo as SoarAgentInfo
+    from aurora_soar.agent_registry import AgentRegistry
+
+    manifest = get_manifest()
+    agent_registry = AgentRegistry()
+    for agent in manifest.agents:
+        agent_registry.register(
+            SoarAgentInfo(
+                id=agent.id,
+                name=agent.role or agent.id,
+                description=agent.goal or "",
+                capabilities=agent.skills or [],
+                agent_type="local",
+            )
+        )
+    logger.info(f"Discovered {len(manifest.agents)} agents for decomposition")
+
+    # Create LLM clients
+    tool = "claude"  # Default tool
+    model = "sonnet"  # Default model
+    if config:
+        tool = getattr(config, "goals_default_tool", "claude") or "claude"
+        model = getattr(config, "goals_default_model", "sonnet") or "sonnet"
+
+    reasoning_llm = CLIPipeLLMClient(tool=tool, model=model)
+    solving_llm = CLIPipeLLMClient(tool=tool, model=model)
+
+    # Convert Config object to dict for SOAROrchestrator
+    # SOAROrchestrator expects dict-like config with .get() method
+    config_dict: dict = {}
+    if config:
+        # Extract relevant config as dict
+        if hasattr(config, "to_dict"):
+            config_dict = config.to_dict()
+        elif hasattr(config, "__dict__"):
+            config_dict = {k: v for k, v in vars(config).items() if not k.startswith("_")}
+
+    # Create orchestrator (same pattern as aur soar)
+    orchestrator = SOAROrchestrator(
+        store=store,
+        agent_registry=agent_registry,
+        config=config_dict,
+        reasoning_llm=reasoning_llm,
+        solving_llm=solving_llm,
+    )
+
+    # Execute phases 1-4 only
+    result = orchestrator.execute(
+        query=goal,
+        context_files=context_files,
+        stop_after_verify=True,
+    )
+
+    # Map result to Subgoal objects
+    subgoals = []
+    decomposition = result.get("decomposition", {})
+    subgoals_data = decomposition.get("subgoals", [])
+    subgoals_detailed = result.get("subgoals_detailed", [])
+    agent_assignments = result.get("agent_assignments", [])
+
+    # Build mapping from index to agent info
+    agent_map = {a["index"]: a for a in agent_assignments}
+
+    for i, sg_data in enumerate(subgoals_data):
+        sg_detail = subgoals_detailed[i] if i < len(subgoals_detailed) else {}
+        agent_info = agent_map.get(i, {})
+
+        # Get match quality from detailed info
+        match_quality = sg_detail.get(
+            "match_quality", agent_info.get("match_quality", "acceptable")
+        )
+
+        subgoal = Subgoal(
+            id=sg_data.get("id", f"sg-{i+1}"),
+            title=sg_detail.get("description", sg_data.get("description", ""))[:100],
+            description=sg_data.get("description", ""),
+            assigned_agent=sg_detail.get("agent", agent_info.get("agent_id", "@full-stack-dev")),
+            dependencies=sg_data.get("depends_on", []),
+            ideal_agent=sg_detail.get("ideal_agent", agent_info.get("ideal_agent", "")),
+            ideal_agent_desc=sg_detail.get(
+                "ideal_agent_desc", agent_info.get("ideal_agent_desc", "")
+            ),
+            match_quality=match_quality,
+        )
+        subgoals.append(subgoal)
+
+    # Extract memory context
+    memory_context = result.get("memory_context", [])
+
+    # File resolutions (not yet populated by SOAR, could be added later)
+    file_resolutions: dict = {}
+
+    return subgoals, file_resolutions, "soar_llm", memory_context
+
+
 def create_plan(
     goal: str,
     context_files: list[Path] | None = None,
@@ -1182,6 +1327,7 @@ def create_plan(
     yes: bool = False,
     non_interactive: bool = False,
     goals_only: bool = False,
+    use_soar_decomposition: bool = True,
 ) -> PlanResult:
     """Create a new plan with SOAR-based goal decomposition.
 
@@ -1197,6 +1343,9 @@ def create_plan(
         yes: Skip confirmation prompt and proceed automatically
         non_interactive: Alias for yes flag (skip confirmation prompt)
         goals_only: If True, only create goals.json (aur goals behavior per PRD-0026)
+        use_soar_decomposition: If True (default), use SOAROrchestrator phases 1-4
+            for mature 3-tier agent matching (excellent/acceptable/spawned).
+            If False, use legacy PlanDecomposer.
 
     Returns:
         PlanResult with plan details or error message
@@ -1255,32 +1404,51 @@ def create_plan(
             "[dim]No memory index found. For code-aware planning, run: aur mem index .[/]\n"
         )
 
-    # Generate subgoals using PlanDecomposer
+    # Generate subgoals
     if auto_decompose:
-        from aurora_cli.planning.decompose import PlanDecomposer
+        if use_soar_decomposition:
+            # Use mature SOAROrchestrator with 3-tier agent matching
+            try:
+                subgoals, file_resolutions, decomposition_source, soar_memory_context = (
+                    _decompose_with_soar(
+                        goal=goal,
+                        config=config,
+                        context_files=[str(f) for f in context_files] if context_files else None,
+                    )
+                )
+                # Use SOAR's memory context if we didn't find any earlier
+                if not memory_context and soar_memory_context:
+                    memory_context = soar_memory_context
+            except Exception as e:
+                logger.warning(f"SOAR decomposition failed, falling back to PlanDecomposer: {e}")
+                use_soar_decomposition = False  # Fall through to PlanDecomposer
 
-        # Get store for file resolution and context retrieval
-        store = None
-        try:
-            from aurora_cli.memory import get_default_db_path
-            from aurora_core.store.sqlite import SQLiteStore
+        if not use_soar_decomposition:
+            # Legacy PlanDecomposer fallback
+            from aurora_cli.planning.decompose import PlanDecomposer
 
-            db_path = get_default_db_path(config)
-            if db_path.exists():
-                store = SQLiteStore(str(db_path))
-        except Exception:
-            pass
+            # Get store for file resolution and context retrieval
+            store = None
+            try:
+                from aurora_cli.memory import get_default_db_path
+                from aurora_core.store.sqlite import SQLiteStore
 
-        # Create decomposer with store for memory-informed decomposition
-        decomposer = PlanDecomposer(config=config, store=store)
+                db_path = get_default_db_path(config)
+                if db_path.exists():
+                    store = SQLiteStore(str(db_path))
+            except Exception:
+                pass
 
-        # Decompose with file resolution
-        subgoals, file_resolutions, decomposition_source = decomposer.decompose_with_files(
-            goal=goal,
-            complexity=complexity,
-            context_files=[str(f) for f in context_files] if context_files else None,
-            store=store,
-        )
+            # Create decomposer with store for memory-informed decomposition
+            decomposer = PlanDecomposer(config=config, store=store)
+
+            # Decompose with file resolution
+            subgoals, file_resolutions, decomposition_source = decomposer.decompose_with_files(
+                goal=goal,
+                complexity=complexity,
+                context_files=[str(f) for f in context_files] if context_files else None,
+                store=store,
+            )
     else:
         # Single subgoal fallback
         subgoals = [
@@ -1288,7 +1456,7 @@ def create_plan(
                 id="sg-1",
                 title="Implement goal",
                 description=goal,
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             )
         ]
         file_resolutions = {}
@@ -1302,19 +1470,31 @@ def create_plan(
         if sg.dependencies:
             sg.dependencies = [dep for dep in sg.dependencies if dep != sg.id]
 
-    # Collect agent gaps using ideal vs assigned comparison
+    # Collect agent gaps based on match_quality (not just ideal vs assigned)
+    # A gap exists only if match_quality is not "excellent"
     agent_gaps: list[AgentGap] = []
     agents_assigned = 0
 
     for sg in subgoals:
-        # Gap detection: ideal_agent != assigned_agent
-        # If ideal_agent is empty, assume it equals assigned_agent (no gap)
-        ideal = sg.ideal_agent or sg.assigned_agent
-        assigned = sg.assigned_agent
+        # Get match_quality - if excellent, no gap even if ideal differs from assigned
+        match_quality = getattr(sg, "match_quality", None)
+        if hasattr(match_quality, "value"):
+            match_quality = match_quality.value  # Convert enum to string
 
-        is_gap = ideal != assigned
+        # Gap detection based on match_quality
+        # - excellent: no gap (agent is well-suited)
+        # - acceptable/insufficient: gap exists (ideal != assigned)
+        is_gap = match_quality and match_quality != "excellent"
+
+        # Legacy fallback: if no match_quality, use ideal vs assigned comparison
+        if match_quality is None:
+            ideal = sg.ideal_agent or sg.assigned_agent
+            assigned = sg.assigned_agent
+            is_gap = ideal != assigned
 
         if is_gap:
+            ideal = sg.ideal_agent or sg.assigned_agent
+            assigned = sg.assigned_agent
             # Gap detected - create AgentGap
             agent_gaps.append(
                 AgentGap(
@@ -1530,27 +1710,27 @@ def _decompose_auth_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Design authentication architecture",
             description=f"Design the authentication system architecture for: {goal}",
-            recommended_agent="@holistic-architect",
+            assigned_agent="@holistic-architect",
         ),
         Subgoal(
             id="sg-2",
             title="Implement authentication logic",
             description="Implement the core authentication flow including login, logout, session management",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Add security measures",
             description="Add security measures: rate limiting, token validation, secure storage",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
             dependencies=["sg-2"],
         ),
         Subgoal(
             id="sg-4",
             title="Write authentication tests",
             description="Write comprehensive tests for authentication flows",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-2", "sg-3"],
         ),
     ]
@@ -1563,20 +1743,20 @@ def _decompose_api_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Design API contract",
             description=f"Design the API contract and endpoints for: {goal}",
-            recommended_agent="@holistic-architect",
+            assigned_agent="@holistic-architect",
         ),
         Subgoal(
             id="sg-2",
             title="Implement API endpoints",
             description="Implement the API endpoints with proper validation and error handling",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Write API tests",
             description="Write API integration tests and documentation",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-2"],
         ),
     ]
@@ -1589,20 +1769,20 @@ def _decompose_testing_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Analyze test requirements",
             description=f"Analyze and document test requirements for: {goal}",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
         ),
         Subgoal(
             id="sg-2",
             title="Implement test infrastructure",
             description="Set up test infrastructure, fixtures, and utilities",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Write test cases",
             description="Implement the test cases according to test plan",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-2"],
         ),
     ]
@@ -1615,34 +1795,34 @@ def _decompose_refactor_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Analyze current implementation",
             description=f"Analyze the current implementation and identify improvement areas for: {goal}",
-            recommended_agent="@holistic-architect",
+            assigned_agent="@holistic-architect",
         ),
         Subgoal(
             id="sg-2",
             title="Create refactoring plan",
             description="Create detailed refactoring plan with incremental steps",
-            recommended_agent="@holistic-architect",
+            assigned_agent="@holistic-architect",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Add tests for existing behavior",
             description="Add tests to capture existing behavior before refactoring",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-4",
             title="Execute refactoring",
             description="Execute refactoring in incremental steps, maintaining test coverage",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
             dependencies=["sg-2", "sg-3"],
         ),
         Subgoal(
             id="sg-5",
             title="Verify refactoring",
             description="Verify all tests pass and no regressions introduced",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-4"],
         ),
     ]
@@ -1655,20 +1835,20 @@ def _decompose_ui_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Design UI components",
             description=f"Design UI/UX for: {goal}",
-            recommended_agent="@ux-expert",
+            assigned_agent="@ux-expert",
         ),
         Subgoal(
             id="sg-2",
             title="Implement UI components",
             description="Implement the UI components following the design",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Write UI tests",
             description="Write UI tests including visual regression tests",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-2"],
         ),
     ]
@@ -1681,27 +1861,27 @@ def _decompose_generic_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Analyze requirements",
             description=f"Analyze and document requirements for: {goal}",
-            recommended_agent="@business-analyst",
+            assigned_agent="@business-analyst",
         ),
         Subgoal(
             id="sg-2",
             title="Design solution",
             description="Design the solution architecture",
-            recommended_agent="@holistic-architect",
+            assigned_agent="@holistic-architect",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Implement solution",
             description="Implement the solution according to design",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
             dependencies=["sg-2"],
         ),
         Subgoal(
             id="sg-4",
             title="Test implementation",
             description="Write tests and verify implementation",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-3"],
         ),
     ]
@@ -1769,14 +1949,14 @@ Return ONLY a JSON array with this exact structure:
     "id": "sg-1",
     "title": "Short title",
     "description": "Detailed description of what this subgoal accomplishes",
-    "recommended_agent": "@agent-id",
+    "assigned_agent": "@agent-id",
     "dependencies": []
   }},
   {{
     "id": "sg-2",
     "title": "Another title",
     "description": "Another description",
-    "recommended_agent": "@agent-id",
+    "assigned_agent": "@agent-id",
     "dependencies": ["sg-1"]
   }}
 ]
@@ -1821,15 +2001,15 @@ Important:
                 raise KeyError("Subgoal missing required field: title")
             if "description" not in sg_data:
                 raise KeyError("Subgoal missing required field: description")
-            if "recommended_agent" not in sg_data:
-                raise KeyError("Subgoal missing required field: recommended_agent")
+            if "assigned_agent" not in sg_data:
+                raise KeyError("Subgoal missing required field: assigned_agent")
 
             # Create Subgoal (Pydantic will validate)
             subgoal = Subgoal(
                 id=sg_data["id"],
                 title=sg_data["title"],
                 description=sg_data["description"],
-                recommended_agent=sg_data["recommended_agent"],
+                assigned_agent=sg_data["assigned_agent"],
                 dependencies=sg_data.get("dependencies", []),
             )
             subgoals.append(subgoal)

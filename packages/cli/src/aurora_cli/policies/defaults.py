@@ -13,7 +13,7 @@ budget:
 
 # Agent recovery policies
 agent_recovery:
-  timeout_seconds: 120
+  timeout_seconds: 300  # 5 minutes - LLMs need time to think
   max_retries: 2
   fallback_to_llm: true
 

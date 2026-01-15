@@ -89,8 +89,8 @@ Complexity is auto-detected. Use `aur soar "query"` to force SOAR mode.
 - Combining eliminates phase transition overhead
 - ~40% latency reduction for MEDIUM queries
 
-### Phase 5: Collect (Enhanced with Streaming + Retry)
-**Goal:** Execute agents and gather results with automatic retry and fallback
+### Phase 5: Collect (Enhanced with Streaming + Retry + Early Failure Detection)
+**Goal:** Execute agents and gather results with automatic retry, fallback, and early failure detection
 
 **New features:**
 1. **Streaming progress output:**
@@ -104,12 +104,21 @@ Complexity is auto-detected. Use `aur soar "query"` to force SOAR mode.
    - Automatic fallback to LLM if agent fails
    - Tracks which agents used fallback in metadata
 
-3. **Increased timeout:**
+3. **Early failure detection:**
+   - Detects agent failures in 5-15s vs 60-300s timeout
+   - Non-blocking health checks every 2s
+   - Error pattern matching: rate limits, auth failures, API errors
+   - Stall detection: 15s no-output threshold after 100 bytes
+   - Consecutive stall requirement: 2 checks before termination
+   - Immediate propagation to circuit breaker
+   - Tracked in `execution_metadata.early_terminations`
+
+4. **Increased timeout:**
    - Default timeout: 60s → 300s (5 minutes)
    - Accommodates complex agent tasks
    - Prevents premature timeouts on large codebases
 
-4. **Direct agent assignments:**
+5. **Direct agent assignments:**
    - Takes list of (subgoal_index, AgentInfo) tuples
    - No intermediate RouteResult structure
    - Simpler execution flow
@@ -479,10 +488,233 @@ SOAR behavior can be tuned via config (advanced):
     "max_subgoals": 10,
     "retrieval_top_k": 50,
     "min_groundedness_score": 0.6,
-    "cache_threshold": 0.5
+    "cache_threshold": 0.5,
+    "agent_timeout_seconds": 300,
+    "enable_early_failure_detection": true
   }
 }
 ```
+
+### Early Failure Detection
+
+SOAR detects failing agents in 5-15s (vs 60-300s timeout) using non-blocking health monitoring with configurable thresholds.
+
+#### Detection Mechanisms
+
+1. **Non-blocking health checks:**
+   - Runs independently every 2-5s (configurable via `check_interval`)
+   - No waiting for full timeout
+   - Async monitoring with minimal overhead
+   - Monitors both stdout and stderr for activity
+
+2. **Stall detection:**
+   - Monitors output growth (stdout/stderr combined)
+   - Default threshold: 120s without new output (configurable via `stall_threshold`)
+   - Minimum output requirement: 100 bytes before stall checking begins (configurable via `min_output_bytes`)
+   - Requires 2 consecutive stall checks before terminating (prevents false positives)
+   - Resets stall counter when output grows
+
+3. **Error pattern matching:**
+   - **Rate limits:** `429`, `quota exceeded`, `rate limit exceeded`, `too many requests`
+   - **Auth failures:** `invalid api key`, `unauthorized`, `authentication failed`, `401`, `403`
+   - **API errors:** `API error`, `model not available`, `connection refused`
+   - **Immediate termination:** No waiting for consecutive checks on pattern match
+   - Configurable via `stderr_pattern_check` flag
+
+4. **Memory limits (optional):**
+   - Set `memory_limit_mb` to terminate agents exceeding memory threshold
+   - Default: disabled (no memory monitoring)
+
+#### Configuration Options
+
+**System-level config** (`.aurora/config.json` or global config):
+
+```json
+{
+  "soar": {
+    "agent_timeout_seconds": 300,
+    "early_detection": {
+      "enabled": true,
+      "check_interval": 5.0,
+      "stall_threshold": 120.0,
+      "min_output_bytes": 100,
+      "stderr_pattern_check": true,
+      "memory_limit_mb": null
+    }
+  }
+}
+```
+
+**Configuration fields:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `true` | Enable/disable early detection system |
+| `check_interval` | float | `5.0` | Seconds between health checks (2.0-10.0 recommended) |
+| `stall_threshold` | float | `120.0` | Seconds without output before considering stalled (15.0-300.0) |
+| `min_output_bytes` | int | `100` | Minimum output before stall checking begins |
+| `stderr_pattern_check` | bool | `true` | Enable error pattern matching on stderr |
+| `memory_limit_mb` | int | `null` | Optional memory limit (MB) for agent processes |
+
+**Recommended presets:**
+
+```json
+// Aggressive (fast failure detection, may have false positives)
+{
+  "check_interval": 2.0,
+  "stall_threshold": 15.0,
+  "min_output_bytes": 50
+}
+
+// Default (balanced detection with low false positives)
+{
+  "check_interval": 5.0,
+  "stall_threshold": 120.0,
+  "min_output_bytes": 100
+}
+
+// Conservative (patient, minimal false positives)
+{
+  "check_interval": 10.0,
+  "stall_threshold": 300.0,
+  "min_output_bytes": 200
+}
+```
+
+#### Timeout Policies
+
+Spawner-level timeout policies work alongside early detection:
+
+- **`default`**: 60s initial, 300s max, 30s no-activity
+- **`patient`**: 120s initial, 600s max, 120s no-activity
+- **`fast_fail`**: 60s fixed, 15s no-activity
+
+Early detection typically terminates agents **before** timeout policies kick in.
+
+#### Failure Modes
+
+Early detection categorizes failures for recovery:
+
+1. **Stall failures:**
+   - No output growth for `stall_threshold` seconds
+   - 2 consecutive stall detections required
+   - Tracked in `execution_metadata.early_terminations`
+   - Example: `{"reason": "Stalled: no output for 125.3s (2 checks)", "detection_time": 130000}`
+
+2. **Pattern-based failures:**
+   - Error patterns matched in stderr
+   - Immediate termination (no consecutive check requirement)
+   - Categories: rate limit, auth, API errors
+   - Tracked in `execution_metadata.early_terminations`
+
+3. **Circuit breaker blocks:**
+   - Agent blocked by circuit breaker from previous failures
+   - No execution attempt made
+   - Tracked in `execution_metadata.circuit_blocked`
+   - Example: `{"agent_id": "flaky-agent", "failure_count": 3, "reset_time": "2026-01-15T10:30:00"}`
+
+4. **Timeout failures:**
+   - Agent exceeded timeout policy limits
+   - Fallback to regular timeout mechanism
+   - Tracked separately from early terminations
+
+#### Recovery Behavior
+
+When early detection triggers:
+
+1. **Immediate termination:**
+   - Agent process receives SIGTERM
+   - Execution metadata updated with termination reason
+   - Circuit breaker notified of failure
+
+2. **Automatic retry:**
+   - Spawner retry policy applies (default: 3 attempts)
+   - Exponential backoff between retries
+   - Circuit breaker may block retries if failure rate too high
+
+3. **Fallback to LLM:**
+   - If all retries fail, fallback to direct LLM execution
+   - Configurable via `fallback_to_llm` policy setting
+   - Tracked in `fallback_agents` list
+
+4. **Circuit breaker update:**
+   - Failure count incremented for agent
+   - Circuit opens after threshold (default: 3 failures)
+   - Reset timeout: 120s (agent blocked until reset)
+
+#### Monitoring
+
+**Real-time detection:**
+```bash
+# Watch for early terminations
+aur soar "query" --verbose 2>&1 | grep -i "early termination"
+
+# Monitor health checks
+aur soar "query" --verbose 2>&1 | grep "Health check"
+
+# View stall detection
+aur soar "query" --verbose 2>&1 | grep "Stalled"
+```
+
+**Post-execution analysis:**
+```bash
+# View early termination details in logs
+cat .aurora/logs/soar-*.log | jq '.phases.phase5_collect.recovery_metrics.early_termination_details'
+
+# Check circuit breaker blocks
+cat .aurora/logs/soar-*.log | jq '.phases.phase5_collect.recovery_metrics.circuit_blocked_details'
+
+# Analyze failure patterns
+cat .aurora/logs/soar-*.log | jq '.phases.phase5_collect.execution_metadata' | grep -A5 "early_termination"
+```
+
+**Execution metadata structure:**
+```json
+{
+  "phases": {
+    "phase5_collect": {
+      "recovery_metrics": {
+        "early_terminations": 2,
+        "early_termination_details": [
+          {
+            "agent_id": "slow-agent",
+            "reason": "Stalled: no output for 125.3s (2 checks)",
+            "detection_time": 130000
+          }
+        ],
+        "circuit_breaker_blocks": 1,
+        "circuit_blocked_agents": ["flaky-agent"],
+        "circuit_blocked_details": [
+          {
+            "agent_id": "flaky-agent",
+            "failure_count": 3,
+            "reset_time": "2026-01-15T10:30:00"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+#### How It Works
+
+1. **Registration:** Agent execution registers with `EarlyDetectionMonitor` singleton
+2. **Background monitoring:** Monitor runs async health checks at `check_interval` frequency
+3. **Activity tracking:** Checks track stdout/stderr size and time since last growth
+4. **Stall detection:** If output stalled for `stall_threshold` + 2 consecutive checks, trigger termination
+5. **Pattern detection:** Stderr scanned for error patterns, immediate termination on match
+6. **Termination signal:** Main execution loop polls `should_terminate()` and exits early
+7. **Circuit breaker notification:** Failure immediately propagated to circuit breaker
+
+#### Benefits
+
+- **Fast failure detection:** 15-120s vs 300s timeout (configurable)
+- **Immediate retry/fallback:** No waiting for full timeout
+- **Better UX:** Faster error feedback to user
+- **Reduced compute waste:** Stop failing tasks early
+- **Pattern-based recovery:** Different strategies for rate limits vs auth failures
+- **Low false positives:** 2 consecutive stall checks required
 
 ## See Also
 

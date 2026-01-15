@@ -2,14 +2,22 @@
 
 Provides structured logging, metrics collection, and performance tracking
 for agent execution, failure detection, and recovery.
+
+Features proactive health checking with:
+- Background monitoring thread for early failure detection
+- Configurable check intervals and failure thresholds
+- Process health verification (output activity, resource usage)
+- Early termination triggers before timeout
 """
 
+import asyncio
 import logging
+import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +66,36 @@ class HealthMetrics:
     circuit_open_count: int = 0
     last_success_time: float | None = None
     last_failure_time: float | None = None
+    proactive_checks: int = 0  # Number of proactive health checks performed
+    early_detections: int = 0  # Failures detected proactively before timeout
+
+
+@dataclass
+class ProactiveHealthConfig:
+    """Configuration for proactive health checking."""
+
+    enabled: bool = True  # Enable metrics collection
+    check_interval: float = 5.0  # Check every 5 seconds
+    no_output_threshold: float = 300.0  # Alert if no output for 5 minutes (matches agent timeout)
+    failure_threshold: int = 3  # Consecutive check failures before alert
+    check_stderr_patterns: bool = True  # Monitor stderr for error patterns
+    check_process_alive: bool = True  # Verify process is still running
+    terminate_on_failure: bool = False  # Let policy timeouts control termination
+
+
+@dataclass
+class ActiveExecution:
+    """Tracks an active agent execution for proactive monitoring."""
+
+    task_id: str
+    agent_id: str
+    start_time: float
+    last_output_time: float
+    consecutive_failures: int = 0
+    stdout_size: int = 0
+    stderr_size: int = 0
+    should_terminate: bool = False
+    termination_reason: str | None = None
 
 
 class AgentHealthMonitor:
@@ -69,10 +107,15 @@ class AgentHealthMonitor:
     - Recovery rates and times
     - Circuit breaker activations
     - Time-to-detection metrics
+    - Proactive health checks during execution
     """
 
-    def __init__(self):
-        """Initialize health monitor."""
+    def __init__(self, proactive_config: ProactiveHealthConfig | None = None):
+        """Initialize health monitor.
+
+        Args:
+            proactive_config: Optional configuration for proactive health checking
+        """
         self._agent_metrics: dict[str, HealthMetrics] = defaultdict(
             lambda: HealthMetrics(agent_id="")
         )
@@ -80,6 +123,260 @@ class AgentHealthMonitor:
         self._detection_latencies: list[float] = []
         self._recovery_times: list[float] = []
         self._start_times: dict[str, float] = {}  # task_id -> start_time
+
+        # Proactive health checking
+        self._proactive_config = proactive_config or ProactiveHealthConfig()
+        self._active_executions: dict[str, ActiveExecution] = {}
+        self._health_check_thread: threading.Thread | None = None
+        self._health_check_stop_event = threading.Event()
+        self._health_check_callbacks: dict[str, Callable[[str, str], None]] = {}
+        self._lock = threading.Lock()
+
+    def start_proactive_monitoring(self) -> None:
+        """Start background thread for proactive health checking."""
+        if not self._proactive_config.enabled:
+            return
+
+        if self._health_check_thread is not None and self._health_check_thread.is_alive():
+            return
+
+        self._health_check_stop_event.clear()
+        self._health_check_thread = threading.Thread(
+            target=self._health_check_loop, daemon=True, name="HealthCheckMonitor"
+        )
+        self._health_check_thread.start()
+        logger.info("Proactive health monitoring started")
+
+    def stop_proactive_monitoring(self) -> None:
+        """Stop background health checking thread."""
+        if self._health_check_thread is None:
+            return
+
+        self._health_check_stop_event.set()
+        self._health_check_thread.join(timeout=2.0)
+        self._health_check_thread = None
+        logger.info("Proactive health monitoring stopped")
+
+    def register_execution_for_monitoring(
+        self,
+        task_id: str,
+        agent_id: str,
+        termination_callback: Callable[[str, str], None] | None = None,
+    ) -> None:
+        """Register an active execution for proactive monitoring.
+
+        Args:
+            task_id: Unique task identifier
+            agent_id: Agent identifier
+            termination_callback: Optional callback to trigger early termination
+                Signature: callback(task_id, reason)
+        """
+        if not self._proactive_config.enabled:
+            return
+
+        now = time.time()
+        with self._lock:
+            self._active_executions[task_id] = ActiveExecution(
+                task_id=task_id,
+                agent_id=agent_id,
+                start_time=now,
+                last_output_time=now,
+            )
+
+            if termination_callback:
+                self._health_check_callbacks[task_id] = termination_callback
+
+        logger.debug(f"Registered task {task_id} for proactive monitoring")
+
+    def update_execution_activity(
+        self, task_id: str, stdout_size: int = 0, stderr_size: int = 0
+    ) -> None:
+        """Update execution activity metrics (called when output is received).
+
+        Args:
+            task_id: Unique task identifier
+            stdout_size: Current size of stdout in bytes
+            stderr_size: Current size of stderr in bytes
+        """
+        if not self._proactive_config.enabled:
+            return
+
+        with self._lock:
+            if task_id in self._active_executions:
+                execution = self._active_executions[task_id]
+                if stdout_size > execution.stdout_size or stderr_size > execution.stderr_size:
+                    execution.last_output_time = time.time()
+                    execution.stdout_size = stdout_size
+                    execution.stderr_size = stderr_size
+                    execution.consecutive_failures = 0  # Reset failure counter on activity
+
+    def unregister_execution(self, task_id: str) -> None:
+        """Remove execution from active monitoring.
+
+        Args:
+            task_id: Unique task identifier
+        """
+        with self._lock:
+            self._active_executions.pop(task_id, None)
+            self._health_check_callbacks.pop(task_id, None)
+
+    def _health_check_loop(self) -> None:
+        """Background thread that performs periodic health checks."""
+        while not self._health_check_stop_event.is_set():
+            try:
+                self._perform_health_checks()
+            except Exception as e:
+                logger.error(f"Health check loop error: {e}", exc_info=True)
+
+            self._health_check_stop_event.wait(self._proactive_config.check_interval)
+
+    def _perform_health_checks(self) -> None:
+        """Perform health checks on all active executions."""
+        now = time.time()
+        executions_to_check = []
+
+        with self._lock:
+            executions_to_check = list(self._active_executions.values())
+
+        for execution in executions_to_check:
+            try:
+                self._check_execution_health(execution, now)
+            except Exception as e:
+                logger.error(
+                    f"Health check failed for task {execution.task_id}: {e}", exc_info=True
+                )
+
+    def _check_execution_health(self, execution: ActiveExecution, now: float) -> None:
+        """Check health of a single execution.
+
+        Args:
+            execution: Active execution to check
+            now: Current timestamp
+        """
+        metrics = self._agent_metrics[execution.agent_id]
+        metrics.proactive_checks += 1
+
+        time_since_output = now - execution.last_output_time
+        elapsed = now - execution.start_time
+
+        # Check for no output threshold
+        if time_since_output > self._proactive_config.no_output_threshold:
+            execution.consecutive_failures += 1
+            # Only warn if termination is enabled, otherwise use debug level
+            # (warning is only useful if we're going to take action)
+            if self._proactive_config.terminate_on_failure:
+                log_fn = logger.warning if execution.consecutive_failures == 1 else logger.debug
+            else:
+                log_fn = logger.debug
+            log_fn(
+                f"No output for {time_since_output:.0f}s (check {execution.consecutive_failures})",
+                extra={
+                    "agent_id": execution.agent_id,
+                    "task_id": execution.task_id,
+                    "time_since_output": time_since_output,
+                    "threshold": self._proactive_config.no_output_threshold,
+                    "consecutive_failures": execution.consecutive_failures,
+                    "event": "health_check.no_output",
+                },
+            )
+
+            # Trigger early termination if threshold exceeded
+            if execution.consecutive_failures >= self._proactive_config.failure_threshold:
+                reason = (
+                    f"No output for {time_since_output:.0f}s "
+                    f"({execution.consecutive_failures} consecutive check failures)"
+                )
+                self._trigger_early_termination(execution, reason, metrics)
+
+        # Log periodic health check
+        logger.debug(
+            "Health check performed",
+            extra={
+                "agent_id": execution.agent_id,
+                "task_id": execution.task_id,
+                "elapsed": elapsed,
+                "time_since_output": time_since_output,
+                "consecutive_failures": execution.consecutive_failures,
+                "event": "health_check.performed",
+            },
+        )
+
+    def _trigger_early_termination(
+        self, execution: ActiveExecution, reason: str, metrics: HealthMetrics
+    ) -> None:
+        """Trigger early termination for an execution.
+
+        Args:
+            execution: Active execution to terminate
+            reason: Reason for termination
+            metrics: Agent metrics to update
+        """
+        # Skip if termination is disabled - just track metrics silently
+        if not self._proactive_config.terminate_on_failure:
+            metrics.early_detections += 1
+            logger.debug(
+                f"Health check issue detected (termination disabled): {reason}",
+                extra={
+                    "agent_id": execution.agent_id,
+                    "task_id": execution.task_id,
+                    "reason": reason,
+                    "event": "health_check.issue_detected",
+                },
+            )
+            return
+
+        with self._lock:
+            if execution.should_terminate:
+                return  # Already triggered
+
+            execution.should_terminate = True
+            execution.termination_reason = reason
+
+            # Update metrics
+            metrics.early_detections += 1
+
+            logger.error(
+                "Early termination triggered by proactive health check",
+                extra={
+                    "agent_id": execution.agent_id,
+                    "task_id": execution.task_id,
+                    "reason": reason,
+                    "elapsed": time.time() - execution.start_time,
+                    "event": "health_check.early_termination",
+                },
+            )
+
+            # Invoke termination callback if registered
+            callback = self._health_check_callbacks.get(execution.task_id)
+            if callback:
+                try:
+                    callback(execution.task_id, reason)
+                except Exception as e:
+                    logger.error(f"Termination callback failed: {e}", exc_info=True)
+
+    def should_terminate(self, task_id: str) -> tuple[bool, str | None]:
+        """Check if a task should be terminated by proactive health check.
+
+        Args:
+            task_id: Unique task identifier
+
+        Returns:
+            Tuple of (should_terminate, reason)
+
+        Note:
+            Termination is disabled - policy timeouts in spawner main loop
+            are the single source of truth for timeout decisions.
+        """
+        # Disabled: Let SpawnPolicy.timeout_policy control all timeouts
+        # The spawner's main loop (spawner.py:259-278) handles this properly
+        if not self._proactive_config.terminate_on_failure:
+            return False, None
+
+        with self._lock:
+            execution = self._active_executions.get(task_id)
+            if execution:
+                return execution.should_terminate, execution.termination_reason
+            return False, None
 
     def record_execution_start(
         self, task_id: str, agent_id: str, policy_name: str | None = None
@@ -104,6 +401,11 @@ class AgentHealthMonitor:
                 "event": "execution.started",
             },
         )
+
+        # Start proactive monitoring if enabled
+        if self._proactive_config.enabled:
+            self.start_proactive_monitoring()
+            self.register_execution_for_monitoring(task_id, agent_id)
 
     def record_execution_success(self, task_id: str, agent_id: str, output_size: int = 0) -> None:
         """Record successful agent execution.
@@ -139,8 +441,9 @@ class AgentHealthMonitor:
             },
         )
 
-        # Clean up start time
+        # Clean up
         self._start_times.pop(task_id, None)
+        self.unregister_execution(task_id)
 
     def record_execution_failure(
         self,
@@ -196,9 +499,16 @@ class AgentHealthMonitor:
         # Determine log level based on failure reason
         log_level = logging.ERROR if reason == FailureReason.CRASH else logging.WARNING
 
+        # Build log message with error details
+        log_msg = f"Agent {agent_id} failed"
+        if error_message:
+            # Extract first line of error, truncate if too long
+            error_line = error_message.split("\n")[0][:100]
+            log_msg += f": {error_line}"
+
         logger.log(
             log_level,
-            "Agent execution failed",
+            log_msg,
             extra={
                 "agent_id": agent_id,
                 "task_id": task_id,
@@ -214,10 +524,10 @@ class AgentHealthMonitor:
             },
         )
 
-        # Alert on high detection latency (>30s indicates slow failure detection)
+        # Log high detection latency (>30s) for metrics - not a problem with patient policy
         if detection_latency > 30.0:
-            logger.error(
-                "High failure detection latency detected",
+            logger.debug(
+                f"Detection latency: {detection_latency:.0f}s",
                 extra={
                     "agent_id": agent_id,
                     "task_id": task_id,
@@ -231,8 +541,9 @@ class AgentHealthMonitor:
                 },
             )
 
-        # Clean up start time
+        # Clean up
         self._start_times.pop(task_id, None)
+        self.unregister_execution(task_id)
 
     def record_recovery(self, task_id: str, agent_id: str, recovery_time: float) -> None:
         """Record successful recovery after failure.
@@ -446,6 +757,25 @@ def get_health_monitor() -> AgentHealthMonitor:
     global _global_health_monitor
     if _global_health_monitor is None:
         _global_health_monitor = AgentHealthMonitor()
+    return _global_health_monitor
+
+
+def reset_health_monitor(config: ProactiveHealthConfig | None = None) -> AgentHealthMonitor:
+    """Reset the global health monitor singleton with new configuration.
+
+    Use this at the start of execution to ensure fresh state and
+    apply updated configuration.
+
+    Args:
+        config: Optional new configuration for the health monitor
+
+    Returns:
+        Fresh AgentHealthMonitor instance
+    """
+    global _global_health_monitor
+    if _global_health_monitor is not None:
+        _global_health_monitor.stop_proactive_monitoring()
+    _global_health_monitor = AgentHealthMonitor(config)
     return _global_health_monitor
 
 

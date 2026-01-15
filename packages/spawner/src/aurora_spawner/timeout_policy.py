@@ -365,6 +365,32 @@ class SpawnPolicy:
         )
 
     @classmethod
+    def patient(cls) -> "SpawnPolicy":
+        """Patient policy: longer timeouts for agent execution that requires thinking."""
+        return cls(
+            name="patient",
+            timeout_policy=TimeoutPolicy(
+                mode=TimeoutMode.PROGRESSIVE,
+                initial_timeout=120.0,  # 2 minutes initial
+                max_timeout=600.0,  # 10 minutes max
+                extension_threshold=10.0,
+                no_activity_timeout=120.0,  # 2 minutes - agents can think without output
+            ),
+            retry_policy=RetryPolicy(
+                max_attempts=2,  # One retry
+                strategy=RetryStrategy.EXPONENTIAL_BACKOFF,
+                base_delay=2.0,
+                max_delay=30.0,
+                backoff_factor=2.0,
+            ),
+            termination_policy=TerminationPolicy(
+                enabled=True,
+                kill_on_error_patterns=True,  # Still fail fast on errors
+                kill_on_no_activity=False,  # Let LLMs think without killing
+            ),
+        )
+
+    @classmethod
     def development(cls) -> "SpawnPolicy":
         """Development policy: very patient, useful for debugging."""
         return cls(
@@ -413,7 +439,7 @@ class SpawnPolicy:
         """Create policy from preset name.
 
         Args:
-            name: One of: default, production, fast_fail, development, test
+            name: One of: default, production, fast_fail, patient, development, test
 
         Returns:
             SpawnPolicy instance
@@ -425,6 +451,7 @@ class SpawnPolicy:
             "default": cls.default,
             "production": cls.production,
             "fast_fail": cls.fast_fail,
+            "patient": cls.patient,
             "development": cls.development,
             "test": cls.test,
         }

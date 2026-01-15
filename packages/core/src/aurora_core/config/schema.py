@@ -448,6 +448,65 @@ CONFIG_SCHEMA: dict[str, Any] = {
             "additionalProperties": False,
             "description": "Early failure detection configuration for faster recovery",
         },
+        "headless": {
+            "type": "object",
+            "properties": {
+                "tools": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of tools to use in headless mode",
+                },
+                "strategy": {
+                    "type": "string",
+                    "enum": ["first_success", "best_result", "all"],
+                    "default": "first_success",
+                    "description": "Strategy for using multiple tools",
+                },
+                "parallel": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Run tools in parallel",
+                },
+                "max_iterations": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "default": 10,
+                    "description": "Maximum iterations per tool",
+                },
+                "timeout": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 600,
+                    "description": "Global timeout for headless execution",
+                },
+                "tool_configs": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "priority": {"type": "integer", "minimum": 1},
+                            "timeout": {"type": "integer", "minimum": 1},
+                            "flags": {"type": "array", "items": {"type": "string"}},
+                            "input_method": {"type": "string", "enum": ["argument", "stdin"]},
+                            "env": {"type": "object"},
+                            "working_dir": {"type": ["string", "null"]},
+                            "enabled": {"type": "boolean", "default": True},
+                            "max_retries": {"type": "integer", "minimum": 0},
+                            "retry_delay": {"type": "number", "minimum": 0},
+                        },
+                    },
+                    "description": "Per-tool configuration",
+                },
+                "routing_rules": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "Rules for routing requests to tools",
+                },
+            },
+            "additionalProperties": False,
+            "description": "Headless mode configuration for multi-tool execution",
+        },
     },
     "additionalProperties": False,
 }

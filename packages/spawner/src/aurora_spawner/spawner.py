@@ -6,6 +6,7 @@ Features:
 - Circuit breaker: Skip known-failing agents after threshold failures
 - Configurable timeout policies with adaptive extension
 - Retry policies with exponential backoff and jitter
+- Non-blocking early detection: Detect failures before timeout
 """
 
 import asyncio
@@ -15,6 +16,7 @@ import shutil
 import time
 from typing import Any, Callable
 
+from aurora_spawner.early_detection import get_early_detection_monitor
 from aurora_spawner.models import SpawnResult, SpawnTask
 from aurora_spawner.observability import FailureReason, get_health_monitor
 from aurora_spawner.timeout_policy import SpawnPolicy
@@ -84,8 +86,10 @@ async def spawn(
     if not tool_path:
         raise ValueError(f"Tool '{resolved_tool}' not found in PATH")
 
-    # Build command: [tool, "-p", "--model", model]
-    cmd = [resolved_tool, "-p", "--model", resolved_model]
+    # Build command: [tool, "-p"]
+    # Note: Don't pass --model to claude CLI - it generates invalid Bedrock model IDs
+    # for aliases like "sonnet". Let the CLI use its default config instead.
+    cmd = [resolved_tool, "-p"]
 
     # Add --agent flag if agent is specified
     if task.agent:
@@ -100,6 +104,11 @@ async def spawn(
     task_id = getattr(task, "task_id", None) or f"task_{id(task)}"
     agent_id = task.agent or "llm"
     health_monitor.record_execution_start(task_id, agent_id, policy.name)
+
+    # Start early detection monitoring
+    early_monitor = get_early_detection_monitor()
+    await early_monitor.start_monitoring()
+    await early_monitor.register_execution(task_id, agent_id)
 
     try:
         # Emit started event
@@ -122,11 +131,13 @@ async def spawn(
             stderr=asyncio.subprocess.PIPE,
         )
 
-        # Write prompt to stdin
+        # Write prompt to stdin and close
         if process.stdin:
             process.stdin.write(task.prompt.encode())
+            process.stdin.write(b"\n")  # Ensure newline at end
             await process.stdin.drain()
-            process.stdin.close()
+            process.stdin.close()  # Close stdin to signal EOF
+            await process.stdin.wait_closed()  # Wait for close to complete
 
         # Track errors from stderr
         stdout_chunks: list[bytes] = []
@@ -136,6 +147,10 @@ async def spawn(
         # Initialize timeout based on policy
         current_timeout = policy.timeout_policy.get_initial_timeout()
         last_activity_time = time.time()
+
+        logger.debug(
+            f"Spawn started: agent={agent_id}, timeout={current_timeout:.0f}s/{policy.timeout_policy.max_timeout:.0f}s"
+        )
 
         async def read_stdout():
             """Read stdout chunks and track activity."""
@@ -147,6 +162,14 @@ async def spawn(
                         break
                     stdout_chunks.append(chunk)
                     last_activity_time = time.time()
+
+                    stdout_size = sum(len(c) for c in stdout_chunks)
+
+                    # Update proactive health monitor with activity
+                    health_monitor.update_execution_activity(task_id, stdout_size=stdout_size)
+
+                    # Update early detection monitor with activity
+                    await early_monitor.update_activity(task_id, stdout_size=stdout_size)
 
                     # Emit stdout event
                     if heartbeat_emitter:
@@ -173,6 +196,14 @@ async def spawn(
                     stderr_chunks.append(chunk)
                     last_activity_time = time.time()
 
+                    stderr_size = sum(len(c) for c in stderr_chunks)
+
+                    # Update proactive health monitor with activity
+                    health_monitor.update_execution_activity(task_id, stderr_size=stderr_size)
+
+                    # Update early detection monitor with activity
+                    await early_monitor.update_activity(task_id, stderr_size=stderr_size)
+
                     # Emit stderr event
                     if heartbeat_emitter:
                         from aurora_spawner.heartbeat import HeartbeatEventType
@@ -196,11 +227,44 @@ async def spawn(
 
         try:
             # Wait for process with timeout and early termination checks
-            time.time()
             while process.returncode is None:
                 now = time.time()
                 elapsed = now - start_time
                 time_since_activity = now - last_activity_time
+
+                # Check early detection monitor for non-blocking termination
+                should_terminate_early, early_reason = await early_monitor.should_terminate(task_id)
+                if should_terminate_early:
+                    logger.debug(f"Early detection triggered termination: {early_reason}")
+                    termination_reason = f"Early detection: {early_reason}"
+                    if heartbeat_emitter:
+                        from aurora_spawner.heartbeat import HeartbeatEventType
+
+                        heartbeat_emitter.emit(
+                            HeartbeatEventType.KILLED,
+                            agent_id=task.agent or "llm",
+                            message=f"Early detection: {early_reason}",
+                        )
+                    process.kill()
+                    await process.wait()
+                    break
+
+                # Check proactive health monitor for early termination
+                should_terminate_health, health_reason = health_monitor.should_terminate(task_id)
+                if should_terminate_health:
+                    logger.debug(f"Proactive health check triggered termination: {health_reason}")
+                    termination_reason = f"Proactive health check: {health_reason}"
+                    if heartbeat_emitter:
+                        from aurora_spawner.heartbeat import HeartbeatEventType
+
+                        heartbeat_emitter.emit(
+                            HeartbeatEventType.KILLED,
+                            agent_id=task.agent or "llm",
+                            message=f"Health check terminated: {health_reason}",
+                        )
+                    process.kill()
+                    await process.wait()
+                    break
 
                 # Get current stdout/stderr for termination checks
                 stdout_so_far = b"".join(stdout_chunks).decode(errors="ignore")
@@ -262,7 +326,9 @@ async def spawn(
 
                 # Check absolute timeout
                 if elapsed > current_timeout:
-                    logger.debug(f"Process timeout after {current_timeout:.0f}s")
+                    logger.info(
+                        f"Spawn timeout triggered: elapsed={elapsed:.0f}s > current_timeout={current_timeout:.0f}s"
+                    )
                     termination_reason = f"Process timed out after {current_timeout:.0f} seconds"
                     if heartbeat_emitter:
                         from aurora_spawner.heartbeat import HeartbeatEventType
@@ -280,6 +346,14 @@ async def spawn(
                 await asyncio.sleep(policy.timeout_policy.activity_check_interval)
 
         finally:
+            # Kill process if still running (handles external cancellation from global timeout)
+            if process.returncode is None:
+                process.kill()
+                try:
+                    await process.wait()
+                except Exception:
+                    pass
+
             # Cancel reader tasks
             for t in [stdout_task, stderr_task]:
                 if not t.done():
@@ -467,6 +541,318 @@ async def spawn_parallel(
     return list(results)
 
 
+async def spawn_parallel_with_recovery(
+    tasks: list[SpawnTask],
+    max_concurrent: int = 5,
+    max_retries: int | None = None,
+    fallback_to_llm: bool | None = None,
+    recovery_policy: Any | None = None,
+    on_progress: Callable[[int, int, str, str], None] | None = None,
+    on_recovery: Callable[[int, str, int, bool], None] | None = None,
+    **kwargs: Any,
+) -> list[SpawnResult]:
+    """Spawn subprocesses in parallel with automatic recovery on failure.
+
+    Simple agent recovery that retries failed tasks with exponential backoff
+    and optionally falls back to direct LLM if agent fails.
+
+    Args:
+        tasks: List of tasks to execute in parallel
+        max_concurrent: Maximum number of concurrent tasks (default: 5)
+        max_retries: Maximum retry attempts per task (default: from recovery_policy or 2)
+        fallback_to_llm: Fall back to direct LLM if agent fails (default: from recovery_policy or True)
+        recovery_policy: RecoveryPolicy instance for fine-grained control (overrides max_retries/fallback_to_llm)
+        on_progress: Optional callback(idx, total, agent_id, status)
+        on_recovery: Optional callback(idx, agent_id, retry_count, used_fallback)
+        **kwargs: Additional arguments passed to spawn()
+
+    Returns:
+        List of SpawnResults in input order with recovery metadata
+
+    Example - Simple usage:
+        >>> results = await spawn_parallel_with_recovery(
+        ...     tasks=[SpawnTask(prompt="task1", agent="coder"), ...],
+        ...     max_retries=2,
+        ...     fallback_to_llm=True,
+        ... )
+
+    Example - Using RecoveryPolicy:
+        >>> from aurora_spawner.recovery import RecoveryPolicy
+        >>> policy = RecoveryPolicy.patient()
+        >>> results = await spawn_parallel_with_recovery(
+        ...     tasks=tasks,
+        ...     recovery_policy=policy,
+        ... )
+
+    Example - Per-agent overrides:
+        >>> policy = RecoveryPolicy.default().with_override("slow-agent", max_retries=5)
+        >>> results = await spawn_parallel_with_recovery(tasks=tasks, recovery_policy=policy)
+    """
+    if not tasks:
+        return []
+
+    # Resolve recovery configuration
+    from aurora_spawner.recovery import RecoveryPolicy as RP
+
+    if recovery_policy is None:
+        recovery_policy = RP.default()
+    elif isinstance(recovery_policy, str):
+        recovery_policy = RP.from_name(recovery_policy)
+
+    # Allow explicit overrides to take precedence
+    effective_max_retries = max_retries if max_retries is not None else recovery_policy.max_retries
+    effective_fallback = (
+        fallback_to_llm if fallback_to_llm is not None else recovery_policy.fallback_to_llm
+    )
+
+    semaphore = asyncio.Semaphore(max_concurrent)
+    total = len(tasks)
+
+    async def spawn_with_recovery(idx: int, task: SpawnTask) -> SpawnResult:
+        """Spawn single task with recovery using existing retry infrastructure."""
+        async with semaphore:
+            agent_id = task.agent or "llm"
+
+            # Get agent-specific policy
+            agent_policy = recovery_policy.get_for_agent(agent_id)
+            task_max_retries = max_retries if max_retries is not None else agent_policy.max_retries
+            task_fallback = (
+                fallback_to_llm if fallback_to_llm is not None else agent_policy.fallback_to_llm
+            )
+
+            if on_progress:
+                on_progress(idx + 1, total, agent_id, "Starting")
+
+            start_time = time.time()
+
+            # Use existing retry+fallback mechanism
+            result = await spawn_with_retry_and_fallback(
+                task,
+                max_retries=task_max_retries,
+                fallback_to_llm=task_fallback,
+                **kwargs,
+            )
+
+            elapsed = time.time() - start_time
+
+            # Invoke policy callbacks
+            if result.retry_count > 0 and agent_policy.on_retry:
+                agent_policy.on_retry(agent_id, result.retry_count, result.error or "")
+            if result.fallback and agent_policy.on_fallback:
+                agent_policy.on_fallback(agent_id, result.error or "")
+            if not result.success and agent_policy.on_recovery_failed:
+                agent_policy.on_recovery_failed(agent_id, result.error or "")
+
+            # Notify recovery if retries or fallback occurred
+            if on_recovery and (result.retry_count > 0 or result.fallback):
+                on_recovery(idx + 1, agent_id, result.retry_count, result.fallback)
+
+            # Progress callback with status
+            if on_progress:
+                status = f"Completed ({elapsed:.1f}s)"
+                if result.retry_count > 0:
+                    status = f"Recovered after {result.retry_count} retries ({elapsed:.1f}s)"
+                if result.fallback:
+                    status = f"Fallback to LLM ({elapsed:.1f}s)"
+                if not result.success:
+                    status = f"Failed ({elapsed:.1f}s)"
+                on_progress(idx + 1, total, agent_id, status)
+
+            return result
+
+    coros = [spawn_with_recovery(idx, task) for idx, task in enumerate(tasks)]
+    results = await asyncio.gather(*coros, return_exceptions=False)
+
+    return list(results)
+
+
+async def spawn_parallel_with_state_tracking(
+    tasks: list[SpawnTask],
+    max_concurrent: int = 5,
+    recovery_policy: Any | None = None,
+    on_state_change: Callable[[str, str, str, str], None] | None = None,
+    **kwargs: Any,
+) -> tuple[list[SpawnResult], dict[str, Any]]:
+    """Spawn subprocesses in parallel with full state machine tracking.
+
+    Enhanced version of spawn_parallel_with_recovery that provides detailed
+    state tracking for each task through a simple state machine. Useful for
+    debugging, observability, and understanding recovery behavior.
+
+    Args:
+        tasks: List of tasks to execute in parallel
+        max_concurrent: Maximum number of concurrent tasks (default: 5)
+        recovery_policy: RecoveryPolicy instance for fine-grained control
+        on_state_change: Optional callback(task_id, agent_id, from_state, to_state)
+        **kwargs: Additional arguments passed to spawn()
+
+    Returns:
+        Tuple of (results list, state machine summary dict)
+
+    State Machine Flow:
+        INITIAL -> EXECUTING -> SUCCEEDED (happy path)
+        INITIAL -> EXECUTING -> RETRY_PENDING -> RETRYING -> SUCCEEDED (with retry)
+        INITIAL -> EXECUTING -> FALLBACK_PENDING -> FALLBACK_EXECUTING -> SUCCEEDED (with fallback)
+        INITIAL -> CIRCUIT_OPEN -> FALLBACK_EXECUTING -> SUCCEEDED (circuit breaker bypass)
+
+    Example:
+        >>> from aurora_spawner import spawn_parallel_with_state_tracking, SpawnTask, RecoveryPolicy
+        >>> tasks = [SpawnTask(prompt="task1", agent="coder"), ...]
+        >>> results, summary = await spawn_parallel_with_state_tracking(
+        ...     tasks,
+        ...     recovery_policy=RecoveryPolicy.patient(),
+        ...     on_state_change=lambda tid, aid, f, t: print(f"{aid}: {f} -> {t}"),
+        ... )
+        >>> print(f"Recovered: {summary['recovered']}, Failed: {summary['failed']}")
+    """
+    if not tasks:
+        return [], {"total_tasks": 0}
+
+    from aurora_spawner.recovery import RecoveryPolicy as RP
+    from aurora_spawner.recovery import RecoveryState, RecoveryStateMachine
+
+    if recovery_policy is None:
+        recovery_policy = RP.default()
+    elif isinstance(recovery_policy, str):
+        recovery_policy = RP.from_name(recovery_policy)
+
+    # Create state machine
+    state_machine = RecoveryStateMachine(policy=recovery_policy)
+
+    semaphore = asyncio.Semaphore(max_concurrent)
+    total = len(tasks)
+
+    async def spawn_with_state_tracking(idx: int, task: SpawnTask) -> SpawnResult:
+        """Spawn single task with state machine tracking."""
+        async with semaphore:
+            task_id = f"task-{idx}"
+            agent_id = task.agent or "llm"
+
+            # Create task state
+            task_state = state_machine.create_task_state(task_id, agent_id)
+
+            def emit_state_change(from_state: str, to_state: str) -> None:
+                if on_state_change:
+                    on_state_change(task_id, agent_id, from_state, to_state)
+
+            # Check circuit breaker first
+            if task.agent:
+                should_skip, skip_reason = state_machine.check_circuit_breaker(task_id, agent_id)
+                if should_skip:
+                    old_state = task_state.state.value
+                    task_state.circuit_open()
+                    emit_state_change(old_state, task_state.state.value)
+
+                    if task_state.state == RecoveryState.CIRCUIT_OPEN:
+                        # Go to fallback
+                        old_state = task_state.state.value
+                        task_state.start_fallback()
+                        emit_state_change(old_state, task_state.state.value)
+
+                        fallback_task = SpawnTask(
+                            prompt=task.prompt,
+                            agent=None,
+                            timeout=task.timeout,
+                            policy_name=task.policy_name,
+                        )
+                        result = await spawn(fallback_task, **kwargs)
+                        result.fallback = True
+                        result.original_agent = task.agent
+                        result.retry_count = 0
+
+                        old_state = task_state.state.value
+                        if result.success:
+                            task_state.succeed()
+                        else:
+                            task_state.transition(RecoveryState.FAILED, reason="fallback_failed")
+                        emit_state_change(old_state, task_state.state.value)
+
+                        return result
+                    else:
+                        # No fallback, just failed
+                        return SpawnResult(
+                            success=False,
+                            output="",
+                            error=skip_reason,
+                            exit_code=-1,
+                            retry_count=0,
+                        )
+
+            # Start execution
+            old_state = task_state.state.value
+            task_state.start()
+            emit_state_change(old_state, task_state.state.value)
+
+            # Execute with state machine driven retry loop
+            while not task_state.is_terminal:
+                current_task = task
+
+                # Check if we're in fallback mode
+                if task_state.state == RecoveryState.FALLBACK_EXECUTING:
+                    current_task = SpawnTask(
+                        prompt=task.prompt,
+                        agent=None,
+                        timeout=task.timeout,
+                        policy_name=task.policy_name,
+                    )
+
+                result = await spawn(current_task, **kwargs)
+
+                if result.success:
+                    old_state = task_state.state.value
+                    task_state.succeed()
+                    emit_state_change(old_state, task_state.state.value)
+
+                    if task.agent:
+                        state_machine.record_success(agent_id)
+
+                    result.retry_count = task_state.attempt
+                    result.fallback = task_state.used_fallback
+                    if task_state.used_fallback:
+                        result.original_agent = task.agent
+                    return result
+
+                # Handle failure
+                old_state = task_state.state.value
+                task_state.fail(result.error)
+                emit_state_change(old_state, task_state.state.value)
+
+                if task.agent:
+                    state_machine.record_failure(agent_id)
+
+                # Transition based on new state
+                if task_state.state == RecoveryState.RETRY_PENDING:
+                    # Calculate delay
+                    delay = recovery_policy.get_delay(task_state.attempt - 1)
+                    if delay > 0:
+                        await asyncio.sleep(delay)
+
+                    old_state = task_state.state.value
+                    task_state.start_retry()
+                    emit_state_change(old_state, task_state.state.value)
+
+                elif task_state.state == RecoveryState.FALLBACK_PENDING:
+                    old_state = task_state.state.value
+                    task_state.start_fallback()
+                    emit_state_change(old_state, task_state.state.value)
+
+            # Terminal state - return final result
+            return SpawnResult(
+                success=task_state.state == RecoveryState.SUCCEEDED,
+                output=result.output if result else "",
+                error=task_state.last_error,
+                exit_code=result.exit_code if result else -1,
+                retry_count=task_state.attempt,
+                fallback=task_state.used_fallback,
+                original_agent=task.agent if task_state.used_fallback else None,
+            )
+
+    coros = [spawn_with_state_tracking(idx, task) for idx, task in enumerate(tasks)]
+    results = await asyncio.gather(*coros, return_exceptions=False)
+
+    return list(results), state_machine.get_summary()
+
+
 async def spawn_sequential(
     tasks: list[SpawnTask], pass_context: bool = True, stop_on_failure: bool = False, **kwargs: Any
 ) -> list[SpawnResult]:
@@ -512,6 +898,336 @@ async def spawn_sequential(
             break
 
     return results
+
+
+async def spawn_parallel_tracked(
+    tasks: list[SpawnTask],
+    max_concurrent: int = 4,
+    stagger_delay: float = 5.0,
+    policy_name: str = "patient",
+    on_progress: Callable[[str], None] | None = None,
+    enable_heartbeat: bool = True,
+    global_timeout_buffer: float = 120.0,
+    fallback_to_llm: bool = True,
+    max_retries: int = 2,
+    **kwargs: Any,
+) -> tuple[list[SpawnResult], dict[str, Any]]:
+    """Spawn subprocesses in parallel with full tracking, staggering, and heartbeat.
+
+    This is the mature spawning pattern used by both SOAR's collect phase and aur spawn.
+    Single source of truth for advanced parallel spawning.
+
+    Features:
+    - Stagger delays between agent starts to avoid API burst limits
+    - Per-task heartbeat monitoring for health tracking
+    - Global timeout calculation based on waves and policy
+    - Progress callbacks for visibility
+    - Circuit breaker pre-checks for fast-fail
+    - Retry with exponential backoff + LLM fallback
+    - Execution metadata collection
+
+    Args:
+        tasks: List of SpawnTask to execute in parallel
+        max_concurrent: Maximum concurrent agents (default: 4)
+        stagger_delay: Delay between agent starts in seconds (default: 5.0)
+        policy_name: Spawn policy preset name (default: "patient")
+        on_progress: Optional callback for progress messages
+        enable_heartbeat: Enable per-task heartbeat monitoring (default: True)
+        global_timeout_buffer: Additional buffer for global timeout (default: 120s)
+        fallback_to_llm: Fall back to LLM if agent fails (default: True)
+        max_retries: Maximum retries per task (default: 2)
+        **kwargs: Additional arguments passed to spawn()
+
+    Returns:
+        Tuple of (results list, execution metadata dict)
+
+    Metadata includes:
+        - total_duration_ms: Total execution time
+        - early_terminations: List of early termination events
+        - fallback_count: Number of LLM fallbacks used
+        - retried_tasks: Tasks that required retries
+        - circuit_blocked: Agents blocked by circuit breaker pre-spawn
+        - heartbeat_metrics: Per-task heartbeat summaries
+    """
+    import math
+
+    from aurora_spawner.circuit_breaker import get_circuit_breaker
+    from aurora_spawner.heartbeat import (
+        HeartbeatEventType,
+        HeartbeatMonitor,
+        create_heartbeat_emitter,
+    )
+
+    if not tasks:
+        return [], {"total_duration_ms": 0, "total_tasks": 0}
+
+    start_time = time.time()
+    total_tasks = len(tasks)
+    circuit_breaker = get_circuit_breaker()
+
+    # Execution metadata
+    metadata: dict[str, Any] = {
+        "total_tasks": total_tasks,
+        "failed_tasks": 0,
+        "fallback_count": 0,
+        "early_terminations": [],
+        "retried_tasks": [],
+        "circuit_blocked": [],
+        "heartbeat_metrics": [],
+    }
+
+    # Get policy for timeout calculation
+    policy = SpawnPolicy.from_name(policy_name)
+    policy_max_timeout = policy.timeout_policy.max_timeout
+
+    # Calculate global timeout
+    # Must accommodate: waves * max_timeout + stagger + buffer
+    stagger_delay_total = (total_tasks - 1) * stagger_delay
+    num_waves = math.ceil(total_tasks / max_concurrent) if total_tasks > 0 else 1
+    global_timeout = (num_waves * policy_max_timeout) + stagger_delay_total + global_timeout_buffer
+
+    logger.info(
+        f"spawn_parallel_tracked: tasks={total_tasks}, waves={num_waves}, "
+        f"max_concurrent={max_concurrent}, policy={policy_name}, "
+        f"global_timeout={global_timeout:.0f}s"
+    )
+
+    # Track progress
+    completed_count = 0
+    results: list[SpawnResult | None] = [None] * total_tasks  # Preserve order
+
+    async def tracked_spawn(idx: int, task: SpawnTask) -> SpawnResult:
+        """Spawn single task with stagger, heartbeat, and tracking."""
+        nonlocal completed_count
+
+        agent_id = task.agent or "llm"
+        task_id = f"tracked_{idx}_{agent_id}"
+
+        # Stagger delay to avoid API burst
+        task_stagger = idx * stagger_delay
+        if task_stagger > 0:
+            if on_progress:
+                on_progress(
+                    f"  Task {idx+1}/{total_tasks} ({agent_id}) starting in {task_stagger:.0f}s..."
+                )
+            await asyncio.sleep(task_stagger)
+
+        if on_progress:
+            on_progress(f"  Task {idx+1}/{total_tasks} ({agent_id}) starting now")
+
+        task_start = time.time()
+
+        # Circuit breaker pre-check (skip for direct LLM)
+        if task.agent:
+            should_skip, skip_reason = circuit_breaker.should_skip(agent_id)
+            if should_skip:
+                logger.warning(f"Circuit breaker: skipping '{agent_id}' - {skip_reason}")
+                metadata["circuit_blocked"].append(
+                    {
+                        "agent_id": agent_id,
+                        "task_index": idx,
+                        "reason": skip_reason,
+                    }
+                )
+
+                if fallback_to_llm:
+                    # Replace with LLM fallback
+                    task = SpawnTask(
+                        prompt=task.prompt,
+                        agent=None,
+                        timeout=task.timeout,
+                        policy_name=task.policy_name,
+                    )
+                    metadata["fallback_count"] += 1
+                else:
+                    # Return failure immediately
+                    return SpawnResult(
+                        success=False,
+                        output="",
+                        error=f"Circuit breaker open: {skip_reason}",
+                        exit_code=-1,
+                    )
+
+        # Setup heartbeat if enabled
+        heartbeat = None
+        if enable_heartbeat:
+            heartbeat = create_heartbeat_emitter(task_id)
+            monitor = HeartbeatMonitor(
+                emitter=heartbeat,
+                total_timeout=int(policy_max_timeout),
+                activity_timeout=int(policy_max_timeout * 0.4),
+                warning_threshold=0.8,
+            )
+            _ = monitor  # Available for external health checks
+
+            # Subscribe to timeout warnings
+            def on_warning(event):
+                if event.event_type == HeartbeatEventType.TIMEOUT_WARNING and on_progress:
+                    on_progress(
+                        f"  [{completed_count}/{total_tasks}] {agent_id}: approaching timeout"
+                    )
+
+            heartbeat.subscribe(on_warning)
+
+        try:
+            # Progress callback for retries
+            def retry_progress(attempt: int, max_attempts: int, status: str):
+                if on_progress and attempt > 1:
+                    on_progress(f"    [{agent_id}] Retry {attempt}/{max_attempts}: {status}")
+
+            # Spawn with retry and fallback
+            result = await spawn_with_retry_and_fallback(
+                task,
+                on_progress=retry_progress,
+                max_retries=max_retries,
+                fallback_to_llm=fallback_to_llm,
+                heartbeat_emitter=heartbeat,
+                policy=policy,
+                **kwargs,
+            )
+
+            # Track completion
+            completed_count += 1
+            duration_ms = int((time.time() - task_start) * 1000)
+
+            # Progress update
+            if on_progress:
+                used_fallback = getattr(result, "fallback", False)
+                if result.success:
+                    status = f"{agent_id} done" + (" (fallback)" if used_fallback else "")
+                else:
+                    status = f"{agent_id} failed"
+                on_progress(f"  [{completed_count}/{total_tasks} done] {status}")
+
+            # Track early termination
+            if hasattr(result, "termination_reason") and result.termination_reason:
+                metadata["early_terminations"].append(
+                    {
+                        "agent_id": agent_id,
+                        "task_index": idx,
+                        "reason": result.termination_reason,
+                        "detection_time_ms": duration_ms,
+                    }
+                )
+
+            # Track fallback usage
+            if getattr(result, "fallback", False):
+                metadata["fallback_count"] += 1
+
+            # Track retries
+            retry_count = getattr(result, "retry_count", 0)
+            if retry_count > 0:
+                metadata["retried_tasks"].append(
+                    {
+                        "agent_id": agent_id,
+                        "task_index": idx,
+                        "retries": retry_count,
+                    }
+                )
+
+            # Track failure
+            if not result.success:
+                metadata["failed_tasks"] += 1
+
+            # Collect heartbeat metrics
+            if heartbeat:
+                metadata["heartbeat_metrics"].append(
+                    {
+                        "task_index": idx,
+                        "agent_id": agent_id,
+                        "event_count": len(heartbeat.get_all_events()),
+                        "elapsed_s": heartbeat.seconds_since_start(),
+                        "idle_s": heartbeat.seconds_since_activity(),
+                    }
+                )
+
+            return result
+
+        except Exception as e:
+            completed_count += 1
+            metadata["failed_tasks"] += 1
+            logger.error(f"Task {idx} ({agent_id}) failed: {e}")
+
+            if on_progress:
+                on_progress(
+                    f"  [{completed_count}/{total_tasks} done] {agent_id} error: {str(e)[:50]}"
+                )
+
+            return SpawnResult(
+                success=False,
+                output="",
+                error=str(e),
+                exit_code=-1,
+            )
+
+    # Concurrency semaphore
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def rate_limited_spawn(idx: int, task: SpawnTask) -> SpawnResult:
+        """Spawn with concurrency limiting."""
+        async with semaphore:
+            result = await tracked_spawn(idx, task)
+            results[idx] = result  # Store in order
+            return result
+
+    # Create all tasks
+    spawn_tasks = [asyncio.create_task(rate_limited_spawn(i, task)) for i, task in enumerate(tasks)]
+
+    # Wait with global timeout
+    try:
+        done, pending = await asyncio.wait(
+            spawn_tasks,
+            timeout=global_timeout,
+            return_when=asyncio.ALL_COMPLETED,
+        )
+
+        # Handle timeout - cancel pending
+        if pending:
+            logger.warning(
+                f"Global timeout ({global_timeout:.0f}s) hit, {len(pending)} tasks pending"
+            )
+            if on_progress:
+                on_progress(f"  Timeout: {len(pending)} tasks cancelled, using partial results")
+
+            for task in pending:
+                task.cancel()
+            await asyncio.gather(*pending, return_exceptions=True)
+
+    except Exception as e:
+        logger.error(f"spawn_parallel_tracked error: {e}")
+        # Cancel all tasks
+        for task in spawn_tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*spawn_tasks, return_exceptions=True)
+
+    # Build final results list (None for cancelled tasks)
+    final_results = []
+    for i, result in enumerate(results):
+        if result is None:
+            final_results.append(
+                SpawnResult(
+                    success=False,
+                    output="",
+                    error="Task cancelled (global timeout)",
+                    exit_code=-1,
+                )
+            )
+            metadata["failed_tasks"] += 1
+        else:
+            final_results.append(result)
+
+    # Finalize metadata
+    metadata["total_duration_ms"] = int((time.time() - start_time) * 1000)
+
+    logger.info(
+        f"spawn_parallel_tracked complete: {total_tasks} tasks, "
+        f"{metadata['failed_tasks']} failed, {metadata['fallback_count']} fallbacks, "
+        f"{len(metadata['circuit_blocked'])} circuit blocked, "
+        f"duration={metadata['total_duration_ms']}ms"
+    )
+
+    return final_results, metadata
 
 
 async def spawn_with_retry_and_fallback(
@@ -654,26 +1370,40 @@ async def spawn_with_retry_and_fallback(
                     )
             return result
 
-        # Determine error type for retry decision
+        # Determine error type for retry decision and circuit breaker
         error_type = None
+        failure_type = None  # For circuit breaker
         if result.termination_reason:
-            if "timed out" in result.termination_reason.lower():
+            reason_lower = result.termination_reason.lower()
+            if "timed out" in reason_lower:
                 error_type = "timeout"
-            elif "error pattern" in result.termination_reason.lower():
+                failure_type = "timeout"
+            elif "error pattern" in reason_lower:
                 error_type = "error_pattern"
+                failure_type = "error_pattern"
+            elif "inference" in reason_lower or "api" in reason_lower:
+                error_type = "inference"
+                failure_type = "inference"
+            elif "crash" in reason_lower:
+                failure_type = "crash"
+        elif result.error:
+            # Check error message for inference failures
+            error_lower = result.error.lower()
+            if any(x in error_lower for x in ["api", "connection", "json", "parse", "model"]):
+                failure_type = "inference"
 
         # Check if should retry
         should_retry, retry_reason = policy.retry_policy.should_retry(attempt, error_type)
         if not should_retry:
             logger.debug(f"Not retrying: {retry_reason}")
-            # Record failure with circuit breaker
+            # Record failure with circuit breaker including failure type
             if task.agent and policy.retry_policy.circuit_breaker_enabled:
-                cb.record_failure(agent_id)
+                cb.record_failure(agent_id, failure_type=failure_type)
             break
 
         # Record failure PER ATTEMPT for faster circuit opening
         if task.agent and policy.retry_policy.circuit_breaker_enabled:
-            cb.record_failure(agent_id)
+            cb.record_failure(agent_id, failure_type=failure_type)
         logger.debug(f"Spawn attempt {attempt_num} failed: {result.error}")
 
     # Try fallback if enabled

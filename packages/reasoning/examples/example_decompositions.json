@@ -7,7 +7,10 @@
       "subgoals": [
         {
           "description": "Locate and read calculate_total function in utils.py",
-          "suggested_agent": "code-analyzer",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Code reading and function analysis specialist",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
         }
@@ -30,25 +33,37 @@
       "subgoals": [
         {
           "description": "Analyze existing user registration flow and identify integration points",
-          "suggested_agent": "code-analyzer",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Code analysis and flow understanding",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Create email validation function with regex pattern and domain checks",
-          "suggested_agent": "code-analyzer",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Implementation of validation logic",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0]
         },
         {
           "description": "Write unit tests for email validation function",
-          "suggested_agent": "test-runner",
+          "ideal_agent": "qa-test-architect",
+          "ideal_agent_desc": "Test design and implementation specialist",
+          "assigned_agent": "qa-test-architect",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [1]
         },
         {
           "description": "Integrate validation into registration form with user-friendly error messages",
-          "suggested_agent": "refactoring-engine",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Frontend/backend integration",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [1, 2]
         }
@@ -86,49 +101,73 @@
       "subgoals": [
         {
           "description": "Analyze current payment processing implementation and identify tight coupling issues",
-          "suggested_agent": "code-analyzer",
+          "ideal_agent": "holistic-architect",
+          "ideal_agent_desc": "System analysis and architecture assessment",
+          "assigned_agent": "holistic-architect",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Audit payment-related security concerns and compliance requirements",
-          "suggested_agent": "security-scanner",
+          "ideal_agent": "security-expert",
+          "ideal_agent_desc": "Security auditing and compliance specialist",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Design payment provider interface with abstract base class and provider implementations",
-          "suggested_agent": "llm-executor",
+          "ideal_agent": "holistic-architect",
+          "ideal_agent_desc": "Interface and abstraction design",
+          "assigned_agent": "holistic-architect",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0, 1]
         },
         {
           "description": "Implement retry logic with exponential backoff and circuit breaker pattern",
-          "suggested_agent": "code-analyzer",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Resilience pattern implementation",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [2]
         },
         {
           "description": "Create comprehensive error handling with specific exception types and recovery strategies",
-          "suggested_agent": "code-analyzer",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Error handling and exception design",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [2]
         },
         {
           "description": "Update existing code to use new provider abstraction layer",
-          "suggested_agent": "refactoring-engine",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Code refactoring and migration",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [3, 4]
         },
         {
           "description": "Write integration tests for each payment provider with mocked responses",
-          "suggested_agent": "test-runner",
+          "ideal_agent": "qa-test-architect",
+          "ideal_agent_desc": "Integration testing and test architecture",
+          "assigned_agent": "qa-test-architect",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [5]
         },
         {
           "description": "Update API documentation with new payment flow and error codes",
-          "suggested_agent": "documentation-generator",
+          "ideal_agent": "technical-writer",
+          "ideal_agent_desc": "API documentation specialist",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "acceptable",
           "is_critical": false,
           "depends_on": [5]
         }
@@ -171,61 +210,91 @@
       "subgoals": [
         {
           "description": "Perform comprehensive dependency analysis of current monolith to identify service boundaries",
-          "suggested_agent": "dependency-tracker",
+          "ideal_agent": "holistic-architect",
+          "ideal_agent_desc": "Dependency analysis and service boundary identification",
+          "assigned_agent": "holistic-architect",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Audit data flow and database dependencies to plan data migration strategy",
-          "suggested_agent": "code-analyzer",
+          "ideal_agent": "data-architect",
+          "ideal_agent_desc": "Database and data flow analysis specialist",
+          "assigned_agent": "holistic-architect",
+          "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Security assessment of API boundaries and authentication/authorization requirements",
-          "suggested_agent": "security-scanner",
+          "ideal_agent": "security-expert",
+          "ideal_agent_desc": "Security architecture and API security specialist",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Design microservices architecture with service contracts and communication patterns",
-          "suggested_agent": "llm-executor",
+          "ideal_agent": "holistic-architect",
+          "ideal_agent_desc": "Microservices architecture design",
+          "assigned_agent": "holistic-architect",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0, 1, 2]
         },
         {
           "description": "Create deployment pipeline and infrastructure-as-code for each microservice",
-          "suggested_agent": "llm-executor",
+          "ideal_agent": "devops-engineer",
+          "ideal_agent_desc": "CI/CD and infrastructure automation specialist",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [3]
         },
         {
           "description": "Implement strangler fig pattern to gradually replace monolith components",
-          "suggested_agent": "refactoring-engine",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Migration pattern implementation",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [4]
         },
         {
           "description": "Build comprehensive monitoring and observability with distributed tracing",
-          "suggested_agent": "llm-executor",
+          "ideal_agent": "devops-engineer",
+          "ideal_agent_desc": "Observability and monitoring specialist",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [5]
         },
         {
           "description": "Create rollback procedures and disaster recovery plan",
-          "suggested_agent": "documentation-generator",
+          "ideal_agent": "devops-engineer",
+          "ideal_agent_desc": "Disaster recovery and rollback planning",
+          "assigned_agent": "holistic-architect",
+          "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [5, 6]
         },
         {
           "description": "Execute phased migration with canary deployments and traffic shifting",
-          "suggested_agent": "llm-executor",
+          "ideal_agent": "devops-engineer",
+          "ideal_agent_desc": "Deployment orchestration specialist",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [6, 7]
         },
         {
           "description": "Validate system performance and conduct load testing for each phase",
-          "suggested_agent": "test-runner",
+          "ideal_agent": "qa-test-architect",
+          "ideal_agent_desc": "Performance testing and validation specialist",
+          "assigned_agent": "qa-test-architect",
+          "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [8]
         }
@@ -268,6 +337,179 @@
         }
       ],
       "expected_tools": ["dependency_analyzer", "code_reader", "security_audit", "infrastructure_provisioner", "deployment_manager", "test_runner", "monitoring_setup"]
+    }
+  },
+  {
+    "complexity": "MEDIUM",
+    "query": "Create a data visualization dashboard for user analytics",
+    "decomposition": {
+      "goal": "Build an interactive analytics dashboard with user metrics and visualizations",
+      "subgoals": [
+        {
+          "description": "Analyze available user data sources and define key metrics to display",
+          "ideal_agent": "business-analyst",
+          "ideal_agent_desc": "Data analysis and metrics definition",
+          "assigned_agent": "business-analyst",
+          "match_quality": "excellent",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Design dashboard UI/UX with wireframes and component layout",
+          "ideal_agent": "ux-expert",
+          "ideal_agent_desc": "UI/UX design and wireframing specialist",
+          "assigned_agent": "ux-expert",
+          "match_quality": "excellent",
+          "is_critical": true,
+          "depends_on": [0]
+        },
+        {
+          "description": "Implement data aggregation API endpoints for dashboard metrics",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Backend API development",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
+          "is_critical": true,
+          "depends_on": [0]
+        },
+        {
+          "description": "Build frontend dashboard components with chart library integration",
+          "ideal_agent": "full-stack-dev",
+          "ideal_agent_desc": "Frontend development and visualization",
+          "assigned_agent": "full-stack-dev",
+          "match_quality": "excellent",
+          "is_critical": true,
+          "depends_on": [1, 2]
+        },
+        {
+          "description": "Write tests for dashboard components and API endpoints",
+          "ideal_agent": "qa-test-architect",
+          "ideal_agent_desc": "Test design and implementation",
+          "assigned_agent": "qa-test-architect",
+          "match_quality": "excellent",
+          "is_critical": true,
+          "depends_on": [3]
+        }
+      ],
+      "execution_order": [
+        {
+          "phase": 1,
+          "parallelizable": [0],
+          "sequential": []
+        },
+        {
+          "phase": 2,
+          "parallelizable": [1, 2],
+          "sequential": []
+        },
+        {
+          "phase": 3,
+          "parallelizable": [3],
+          "sequential": []
+        },
+        {
+          "phase": 4,
+          "parallelizable": [4],
+          "sequential": []
+        }
+      ],
+      "expected_tools": ["code_reader", "code_writer", "test_runner", "ui_builder"]
+    }
+  },
+  {
+    "complexity": "COMPLEX",
+    "query": "Write a creative story about time travel with plot twists",
+    "decomposition": {
+      "goal": "Create an engaging time travel story with compelling plot twists and character development",
+      "subgoals": [
+        {
+          "description": "Develop the story outline including time travel mechanics and key plot points",
+          "ideal_agent": "creative-writer",
+          "ideal_agent_desc": "Story development and narrative structure specialist",
+          "assigned_agent": "master",
+          "match_quality": "insufficient",
+          "is_critical": true,
+          "depends_on": []
+        },
+        {
+          "description": "Create detailed character profiles with motivations and arcs",
+          "ideal_agent": "creative-writer",
+          "ideal_agent_desc": "Character development specialist",
+          "assigned_agent": "master",
+          "match_quality": "insufficient",
+          "is_critical": true,
+          "depends_on": [0]
+        },
+        {
+          "description": "Write the first act establishing the world and introducing characters",
+          "ideal_agent": "creative-writer",
+          "ideal_agent_desc": "Narrative prose and world-building",
+          "assigned_agent": "master",
+          "match_quality": "insufficient",
+          "is_critical": true,
+          "depends_on": [1]
+        },
+        {
+          "description": "Craft the middle section with escalating conflicts and plot twists",
+          "ideal_agent": "creative-writer",
+          "ideal_agent_desc": "Plot development and twist crafting",
+          "assigned_agent": "master",
+          "match_quality": "insufficient",
+          "is_critical": true,
+          "depends_on": [2]
+        },
+        {
+          "description": "Write the climax and resolution with satisfying conclusion",
+          "ideal_agent": "creative-writer",
+          "ideal_agent_desc": "Story conclusion and emotional payoff",
+          "assigned_agent": "master",
+          "match_quality": "insufficient",
+          "is_critical": true,
+          "depends_on": [3]
+        },
+        {
+          "description": "Review and edit for consistency, pacing, and prose quality",
+          "ideal_agent": "editor",
+          "ideal_agent_desc": "Story editing and quality review",
+          "assigned_agent": "master",
+          "match_quality": "insufficient",
+          "is_critical": false,
+          "depends_on": [4]
+        }
+      ],
+      "execution_order": [
+        {
+          "phase": 1,
+          "parallelizable": [0],
+          "sequential": []
+        },
+        {
+          "phase": 2,
+          "parallelizable": [1],
+          "sequential": []
+        },
+        {
+          "phase": 3,
+          "parallelizable": [2],
+          "sequential": []
+        },
+        {
+          "phase": 4,
+          "parallelizable": [3],
+          "sequential": []
+        },
+        {
+          "phase": 5,
+          "parallelizable": [4],
+          "sequential": []
+        },
+        {
+          "phase": 6,
+          "parallelizable": [5],
+          "sequential": []
+        }
+      ],
+      "expected_tools": ["text_generator", "document_editor"]
     }
   }
 ]

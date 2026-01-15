@@ -393,6 +393,41 @@ The actual LLM execution would work in a real environment with `claude` CLI inst
 
 ---
 
+## Timeout Architecture
+
+Three systems control agent timeouts. Understanding these prevents premature termination:
+
+### 1. SpawnPolicy.timeout_policy (Primary - spawner/execution.py)
+The **authoritative** timeout source. Policy presets:
+- `default`: 60s base, 180s global max
+- `patient`: 120s base, 600s global max (for LLM tasks)
+- `aggressive`: 30s base, 90s global max
+
+### 2. ProactiveHealthConfig (Monitoring - spawner/observability.py)
+Background health checks. Key settings:
+- `no_output_threshold`: 120s (warn if no output)
+- `terminate_on_failure`: **False** (disabled - lets policy timeouts control)
+
+### 3. EarlyDetectionConfig (Stall detection - spawner/early_detection.py)
+Detects truly stuck agents. Key settings:
+- `stall_threshold`: 120s (match patient policy)
+- `min_output_bytes`: 100 (must have output before stall check)
+- `terminate_on_stall`: **False** (disabled - lets policy timeouts control)
+
+### How They Work Together
+1. SpawnPolicy timeout is the **only** thing that kills agents
+2. ProactiveHealthConfig emits warnings but doesn't terminate
+3. EarlyDetectionConfig only terminates after 2+ consecutive stall detections AND 120s of no output
+
+### Reset at Phase Start
+Both singletons must be reset at collect phase start (orchestrator.py:637-639):
+```python
+reset_health_monitor()
+reset_early_detection_monitor()
+```
+
+---
+
 ## Troubleshooting
 
 **Issue**: `ModuleNotFoundError`
@@ -406,6 +441,9 @@ The actual LLM execution would work in a real environment with `claude` CLI inst
 
 **Issue**: `Tool 'claude' not found`
 **Fix**: This is expected if claude CLI not installed. Tests verify infrastructure, not actual execution.
+
+**Issue**: `Early termination triggered` or agents dying too quickly
+**Fix**: Check that all three timeout systems are aligned to 120s. Ensure `terminate_on_failure: False` in ProactiveHealthConfig and `stall_threshold: 120.0` in EarlyDetectionConfig.
 
 ---
 

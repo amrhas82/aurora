@@ -12,6 +12,10 @@ aur soar [OPTIONS] QUERY
 
 The `aur soar` command implements Aurora's 9-phase SOAR pipeline for complex query processing. It combines systematic reasoning, agent orchestration, and parallel research execution to provide well-researched, synthesized answers.
 
+**Shared Infrastructure**:
+- **Phases 1-5**: SOAROrchestrator shared with `aur goals` (with `stop_after_verify=True`)
+- **Phase 6**: Uses `spawn_parallel_tracked()` shared with `aur spawn`
+
 SOAR is designed for queries that require:
 - Breaking down complex problems into subgoals
 - Coordinating multiple research agents
@@ -76,20 +80,31 @@ Assigns agents to subgoals based on capabilities and creates execution plan.
 - **Sequential**: Dependent subgoals execute in order
 - **Mixed**: Phases combine parallel and sequential execution
 
-### Phase 6: COLLECT (LLM) - **Parallel Research**
-Executes agents to research subgoals, using parallel spawning for independent tasks.
+### Phase 6: COLLECT (LLM) - **Parallel Research + Early Failure Detection**
+Executes agents to research subgoals, using parallel spawning and early failure detection.
+
+**Shared Infrastructure**: Uses `spawn_parallel_tracked()` from `aurora_spawner` - the same mature spawning infrastructure as `aur spawn`. This ensures consistent behavior for stagger delays, heartbeat monitoring, circuit breaker protection, and timeout policies.
 
 **Parallel Execution:**
-- Max 5 concurrent agent spawns
+- Max 4 concurrent agent spawns (configurable)
+- 5s stagger delay between spawns (prevents API rate limits)
 - Independent subgoals run simultaneously
-- Reduces total research time by 3-5x
-- Graceful failure handling for individual agents
+- Reduces total research time by 2-4x
+- Graceful failure handling with LLM fallback
+
+**Early Failure Detection:**
+- Non-blocking health checks every 2s
+- Detects failures in 5-15s (vs 60-300s timeout)
+- Stall detection: 15s no-output after 100 bytes (2 checks)
+- Pattern matching: rate limits, auth, API errors
+- Immediate circuit breaker updates
+- Detailed termination logging with detection times
 
 **Example Parallel Flow:**
 ```
 Phase 6.1: Parallel Research (3 agents)
 ├─ Agent 1: Research React    ┐
-├─ Agent 2: Research Vue      ├─ Parallel
+├─ Agent 2: Research Vue      ├─ Parallel (with early detection)
 └─ Agent 3: Research Angular  ┘
 
 Phase 6.2: Sequential Analysis
@@ -159,6 +174,38 @@ aur soar "Query" --verbose
 - Timing information
 - Confidence scores
 
+### `--early-detection-interval`
+
+Check interval for early failure detection in seconds (default: 2.0)
+
+```bash
+aur soar "Query" --early-detection-interval 1.0
+```
+
+### `--early-detection-stall-threshold`
+
+Stall threshold for early detection in seconds (default: 15.0)
+
+```bash
+aur soar "Query" --early-detection-stall-threshold 10.0
+```
+
+### `--early-detection-min-output`
+
+Minimum output bytes before stall check (default: 100)
+
+```bash
+aur soar "Query" --early-detection-min-output 50
+```
+
+### `--disable-early-detection`
+
+Disable early failure detection (use full timeout)
+
+```bash
+aur soar "Query" --disable-early-detection
+```
+
 ## Parallel Research
 
 SOAR automatically uses parallel research for complex queries with independent subgoals.
@@ -207,23 +254,27 @@ Query: "Analyze microservices vs monolith vs serverless"
 ### Parallel Execution Details
 
 **Implementation:**
-- Uses `aurora_spawner.spawn_parallel()` from packages/spawner
-- Max concurrent spawns: 5 (configurable)
+- Max concurrent spawns: 4 (semaphore limited)
+- Stagger delay: 5s between agent starts
+- Per-agent timeout: 600s max (patient policy, progressive)
 - Graceful failure handling per agent
-- Result order preservation
-- Progress tracking and logging
 
-**Execution Flow:**
-```python
-# Pseudocode from collect phase
-parallel_subgoals = [sg1, sg2, sg3]
-spawn_tasks = [
-    SpawnTask(prompt=sg1.desc, agent="agent1", timeout=60),
-    SpawnTask(prompt=sg2.desc, agent="agent2", timeout=60),
-    SpawnTask(prompt=sg3.desc, agent="agent3", timeout=60),
-]
-results = await spawn_parallel(spawn_tasks, max_concurrent=5)
+**Global Timeout Calculation:**
+
+Global timeout accounts for concurrency waves since only 4 agents run simultaneously:
+
 ```
+num_waves = ceil(num_agents / 4)
+stagger = (num_agents - 1) × 5s
+global_timeout = (num_waves × 600) + stagger + 120s buffer
+```
+
+| Agents | Waves | Stagger | Global Timeout |
+|--------|-------|---------|----------------|
+| 4      | 1     | 15s     | 735s (~12 min) |
+| 6      | 2     | 25s     | 1345s (~22 min) |
+| 8      | 2     | 35s     | 1355s (~23 min) |
+| 12     | 3     | 55s     | 1975s (~33 min) |
 
 ## Examples
 
@@ -239,6 +290,18 @@ Phase 1: ASSESS    → SIMPLE (score: 8)
 Phase 2: RETRIEVE  → 0 chunks
 Phase 9: RESPOND   → Direct answer
 ```
+
+### Example 1b: Fast Failure Detection
+
+```bash
+# Aggressive early detection for development
+aur soar "Complex query" \
+  --early-detection-interval 1.0 \
+  --early-detection-stall-threshold 10.0 \
+  --early-detection-min-output 50
+```
+
+**Use case:** Development environment where you want to fail fast on stalled agents.
 
 ### Example 2: Complex Research Query
 
@@ -314,7 +377,9 @@ Located at `~/.aurora/config.json`:
     "default_tool": "claude",
     "default_model": "sonnet",
     "max_concurrent_agents": 5,
-    "agent_timeout_seconds": 60
+    "agent_timeout_seconds": 300,
+    "enable_early_failure_detection": true,
+    "timeout_policy": "default"
   }
 }
 ```
@@ -322,6 +387,112 @@ Located at `~/.aurora/config.json`:
 **Update config:**
 ```bash
 aur init --config
+```
+
+### Early Failure Detection Configuration
+
+Configure early detection behavior for faster failure recovery:
+
+**Full Configuration:**
+```json
+{
+  "soar": {
+    "agent_timeout_seconds": 300,
+    "enable_early_failure_detection": true,
+    "timeout_policy": "default",
+    "early_detection": {
+      "enabled": true,
+      "check_interval": 2.0,
+      "stall_threshold": 15.0,
+      "min_output_bytes": 100,
+      "stderr_pattern_check": true,
+      "memory_limit_mb": null
+    }
+  }
+}
+```
+
+**Early Detection Options:**
+- `enabled` - Enable/disable early detection (default: `true`)
+- `check_interval` - Health check interval in seconds (default: `2.0`)
+- `stall_threshold` - No-output threshold in seconds (default: `15.0`)
+- `min_output_bytes` - Min bytes before stall check (default: `100`)
+- `stderr_pattern_check` - Enable pattern matching (default: `true`)
+
+**Timeout Policies** (spawner-level):
+```json
+{
+  "timeout_policy": "default"    // 60s initial, 300s max, 30s no-activity
+  "timeout_policy": "patient"    // 120s initial, 600s max, 120s no-activity
+  "timeout_policy": "fast_fail"  // 60s fixed, 15s no-activity
+}
+```
+
+**Error Patterns Detected:**
+- Rate limits: `429`, `rate limit exceeded`, `quota exceeded`
+- Auth: `invalid api key`, `authentication failed`, `unauthorized`
+- API: `API error`, `model not available`, `connection refused`
+- Stalls: No output for 15s+ (2 consecutive checks)
+
+**Monitoring Early Failures:**
+
+```bash
+# Real-time early termination detection
+aur soar "query" --verbose 2>&1 | grep -i "early termination"
+
+# Watch health check activity
+aur soar "query" --verbose 2>&1 | grep "Health check"
+
+# View stall detections
+aur soar "query" --verbose 2>&1 | grep "Stall detected"
+
+# Analyze detection metrics from logs
+cat .aurora/logs/soar-*.log | jq '.early_termination_details[] | {
+  agent: .agent_id,
+  reason: .reason,
+  detection_time: .detection_time,
+  stdout_size: .stdout_size,
+  time_since_activity: .time_since_activity
+}'
+
+# Check recovery metrics
+cat .aurora/logs/soar-*.log | jq '.recovery_metrics'
+
+# Count early terminations by reason
+cat .aurora/logs/soar-*.log | jq -r '.early_termination_details[].reason' | sort | uniq -c
+```
+
+**Tuning for Your Use Case:**
+
+**Fast failure detection (development):**
+```json
+{
+  "early_detection": {
+    "check_interval": 1.0,
+    "stall_threshold": 10.0,
+    "min_output_bytes": 50
+  },
+  "timeout_policy": "fast_fail"
+}
+```
+
+**Patient detection (production):**
+```json
+{
+  "early_detection": {
+    "check_interval": 5.0,
+    "stall_threshold": 30.0,
+    "min_output_bytes": 200
+  },
+  "timeout_policy": "patient"
+}
+```
+
+**Disable early detection:**
+```json
+{
+  "enable_early_failure_detection": false
+}
 ```
 
 ### Agent Discovery

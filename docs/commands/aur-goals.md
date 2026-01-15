@@ -12,6 +12,8 @@ aur goals GOAL [OPTIONS]
 
 The `aur goals` command analyzes a high-level goal and decomposes it into concrete subgoals with recommended agent assignments. It creates a `goals.json` file in `.aurora/plans/NNNN-slug/` that serves as input for the `/plan` skill in Claude Code.
 
+**Shared Infrastructure**: Uses `SOAROrchestrator` (same as `aur soar`) with `stop_after_verify=True` to run phases 1-4 only (Memory, Search, Decompose, Verify). This ensures consistent decomposition quality across all Aurora planning commands.
+
 **Workflow Position**: This is step 1 of the planning flow:
 1. **aur goals** - Decompose goal (this command)
 2. **/plan** - Generate PRD and tasks (Claude Code skill)
@@ -312,14 +314,39 @@ Both tool and model follow this resolution order:
 
 ## How It Works
 
-### 1. Memory Search
+### Architecture
+
+Uses SOAROrchestrator with `stop_after_verify=True`:
+
+```
+┌─────────────┐     ┌─────────────┐
+│  aur goals  │     │  aur soar   │
+│  (CLI)      │     │  (CLI)      │
+└──────┬──────┘     └──────┬──────┘
+       │                   │
+       ▼                   ▼
+┌────────────────────────────────────┐
+│        SOAROrchestrator            │
+├────────────────────────────────────┤
+│ Phase 1: Memory (ACT-R search)     │
+│ Phase 2: Search (context)          │
+│ Phase 3: Decompose (LLM)           │
+│ Phase 4: Verify (validate plan)    │
+├────────────────────────────────────┤
+│ Phase 5: Assign (agents)     ←── aur goals stops here
+│ Phase 6: Collect (execute)   ←── aur soar continues
+│ Phase 7: Synthesize (answer) │
+└────────────────────────────────────┘
+```
+
+### 1. Memory Search (Phase 1-2)
 
 Searches indexed codebase for relevant context:
 - Extracts keywords from goal
 - Queries Aurora memory (ACT-R)
 - Returns top files with relevance scores
 
-### 2. Goal Decomposition
+### 2. Goal Decomposition (Phase 3)
 
 Uses LLM to break down the goal:
 - Analyzes goal and context
@@ -327,14 +354,29 @@ Uses LLM to break down the goal:
 - Identifies dependencies
 - Assigns subgoal IDs (sg-1, sg-2, etc.)
 
-### 3. Agent Matching
+### 3. Plan Verification (Phase 4)
 
-Assigns agents to subgoals:
-- **Keyword Matching**: Fast, pattern-based matching
-- **LLM Fallback**: Used when keyword confidence < 0.5
+Validates the decomposition:
+- Checks subgoal completeness
+- Verifies dependencies are valid
+- Ensures coverage of original goal
+
+### 4. Agent Matching (Phase 5)
+
+3-tier LLM-based agent matching:
+
+| Tier | Confidence | Behavior |
+|------|------------|----------|
+| **Excellent** | > 0.7 | Direct assignment, high fit |
+| **Acceptable** | 0.5-0.7 | Assignment with note |
+| **Insufficient** | < 0.5 | Gap reported, fallback used |
+
+Matching process:
+- **LLM Analysis**: Evaluates task requirements vs agent capabilities
+- **Confidence Scoring**: Returns match quality tier
 - **Gap Detection**: Reports missing agent capabilities
 
-### 4. User Review
+### 5. User Review
 
 Allows you to review and edit:
 - Opens goals.json in `$EDITOR` (default: nano)
@@ -451,10 +493,11 @@ Time includes:
 
 ## See Also
 
+- [aur soar Command](./aur-soar.md) - Full SOAR pipeline (shares phases 1-5 with aur goals)
+- [aur spawn Command](./aur-spawn.md) - Parallel task execution (shares spawner with aur soar)
 - [Planning Flow Workflow](../workflows/planning-flow.md)
 - [Example goals.json Files](../../examples/goals/)
 - [aur implement Command](./aur-implement.md)
-- [aur spawn Command](./aur-spawn.md)
 - [Agent System Documentation](../agents/README.md)
 
 ## Version

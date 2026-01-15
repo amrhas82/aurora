@@ -118,14 +118,20 @@ def verify_lite(
             continue
 
         # Valid subgoal - create assignment with match quality metadata
-        agent_info = agent_map[agent_id]
+        # Copy agent_info to avoid mutating shared registry object
+        from dataclasses import replace
+
+        base_agent = agent_map[agent_id]
+        agent_config = (base_agent.config or {}).copy()
+
         # Store match quality and ideal agent info for display
-        if not hasattr(agent_info, "config") or agent_info.config is None:
-            agent_info.config = {}
-        agent_info.config["match_quality"] = match_quality
+        agent_config["match_quality"] = match_quality
         if match_quality == "acceptable" and ideal_agent:
-            agent_info.config["ideal_agent"] = ideal_agent
-            agent_info.config["ideal_agent_desc"] = ideal_agent_desc or ""
+            agent_config["ideal_agent"] = ideal_agent
+            agent_config["ideal_agent_desc"] = ideal_agent_desc or ""
+
+        # Create new agent instance with updated config
+        agent_info = replace(base_agent, config=agent_config)
         agent_assignments.append((subgoal_index, agent_info))
 
     # Check 5: Detect circular dependencies

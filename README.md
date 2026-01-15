@@ -20,6 +20,10 @@ Aurora answers planning questions without implementing anything:
 
 **"Execute my plan"** - `aur spawn` runs tasks with gate checks for scope creep and safeguards (budget limits, dangerous command detection).
 
+**"Run unattended agent"** - `aur headless` executes agent tasks in the background with automatic recovery and logging.
+
+**"Search my code"** - `aur mem search` searches your indexed codebase using BM25, ACT-R activation, and git signals.
+
 ---
 
 ## Memory System
@@ -43,7 +47,9 @@ No cloud APIs required for core functionality.
 | `aur goals "Add auth"` | Decompose goal, assign agents, detect gaps |
 | `aur soar "How does X work?"` | Research with parallel ad-hoc agents |
 | `aur spawn tasks.md` | Execute tasks with safeguards |
+| `aur headless tasks.md` | Run agent tasks unattended with recovery |
 | `aur mem search "query"` | Search indexed memory |
+| `aur mem index .` | Index codebase for memory search |
 
 **Slash Commands (Claude Code):**
 

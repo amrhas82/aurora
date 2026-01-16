@@ -1,0 +1,91 @@
+{
+  "id": "0004-improve-aur-goals-decomposing",
+  "title": "how can i improve aur goals decomposing and memory indexing make it faster",
+  "created_at": "2026-01-15T22:17:38.616239",
+  "status": "ready_for_planning",
+  "memory_context": [],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Profile current goal decomposition performance to identify...",
+      "description": "Profile current goal decomposition performance to identify bottlenecks",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Specialist in profiling, benchmarking, and performance optimization",
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Profile memory indexing performance and identify slow...",
+      "description": "Profile memory indexing performance and identify slow operations",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Specialist in profiling, benchmarking, and performance optimization",
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Analyze goal decomposition algorithm and data structures...",
+      "description": "Analyze goal decomposition algorithm and data structures for optimization opportunities",
+      "ideal_agent": "@algorithms-expert",
+      "ideal_agent_desc": "Specialist in algorithm optimization, complexity analysis, and efficient data structures",
+      "agent": "@holistic-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-4",
+      "title": "Analyze memory indexing architecture (tree-sitter, BM25,...",
+      "description": "Analyze memory indexing architecture (tree-sitter, BM25, embeddings) for optimization opportunities",
+      "ideal_agent": "@search-engineer",
+      "ideal_agent_desc": "Specialist in search indexing, information retrieval, and vector databases",
+      "agent": "@holistic-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Implement optimizations for goal decomposition (caching,...",
+      "description": "Implement optimizations for goal decomposition (caching, parallelization, algorithm improvements)",
+      "ideal_agent": "@backend-engineer",
+      "ideal_agent_desc": "Specialist in backend optimization, caching strategies, and parallel processing",
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Implement optimizations for memory indexing (batch...",
+      "description": "Implement optimizations for memory indexing (batch processing, incremental indexing, query optimization)",
+      "ideal_agent": "@backend-engineer",
+      "ideal_agent_desc": "Specialist in backend optimization, database tuning, and batch processing",
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-4"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Design and implement performance benchmarks to validate...",
+      "description": "Design and implement performance benchmarks to validate improvements",
+      "ideal_agent": "@qa-engineer",
+      "ideal_agent_desc": "Specialist in performance testing, benchmarking, and regression detection",
+      "agent": "@qa-test-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-5",
+        "sg-6"
+      ]
+    }
+  ],
+  "gaps": []
+}

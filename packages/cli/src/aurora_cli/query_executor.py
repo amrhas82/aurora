@@ -382,7 +382,7 @@ class QueryExecutor:
         Returns:
             Configured SOAROrchestrator instance
         """
-        from aurora_core.config.loader import Config
+        from aurora_cli.config import Config
         from aurora_soar.agent_registry import AgentRegistry
         from aurora_soar.orchestrator import SOAROrchestrator
 
@@ -390,12 +390,11 @@ class QueryExecutor:
         reasoning_llm = self._initialize_llm_client(api_key)
         solving_llm = self._initialize_llm_client(api_key)
 
-        # Create minimal config
-        config_dict = {
-            "budget": {"monthly_limit_usd": 100.0},
-            "logging": {"conversation_logging_enabled": True},
-        }
-        config = Config(config_dict)
+        # Create config with overrides for execution context
+        config = Config()
+        # Add execution-specific settings
+        config._data.setdefault("budget", {})["monthly_limit_usd"] = 100.0
+        config._data.setdefault("logging", {})["conversation_logging_enabled"] = True
 
         # Initialize agent registry
         agent_registry = AgentRegistry()

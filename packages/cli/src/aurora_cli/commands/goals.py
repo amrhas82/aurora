@@ -42,13 +42,49 @@ from typing import TYPE_CHECKING
 import click
 from rich.console import Console
 
-from aurora_cli.config import load_config
+from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
 from aurora_cli.planning.core import create_plan
 
 if TYPE_CHECKING:
     pass
+
+
+def _start_background_model_loading(verbose: bool = False) -> None:
+    """Start loading the embedding model in the background.
+
+    This is non-blocking - the model loads in a background thread while
+    other initialization continues. When embeddings are actually needed,
+    the code will wait for loading to complete (with a spinner if still loading).
+
+    Uses lightweight cache checking to avoid importing torch/sentence-transformers
+    until actually needed in the background thread.
+
+    Args:
+        verbose: Whether to enable verbose logging
+    """
+    try:
+        # Use lightweight cache check that doesn't import torch
+        from aurora_context_code.model_cache import is_model_cached_fast, start_background_loading
+
+        # Only start background loading if model is cached
+        # If not cached, we'll handle download later when actually needed
+        if not is_model_cached_fast():
+            logger.debug("Model not cached, skipping background load")
+            return
+
+        # Start loading in background thread (imports torch there, not here)
+        start_background_loading()
+        logger.debug("Background model loading started")
+
+    except ImportError:
+        # aurora_context_code not installed
+        if verbose:
+            logger.debug("Context code package not available")
+    except Exception as e:
+        logger.debug("Background model loading failed to start: %s", e)
+
 
 __all__ = ["goals_command"]
 
@@ -160,28 +196,23 @@ def goals_command(
         aur goals "Add user dashboard" --format json
     """
     # Load config to ensure project-local paths are used
-    config = load_config()
+    config = Config()
+
+    # Start background model loading early (non-blocking)
+    # The model will load in parallel with other initialization
+    _start_background_model_loading(verbose)
 
     # Resolve tool: CLI flag → env → config → default
     if tool is None:
-        tool = os.environ.get(
-            "AURORA_GOALS_TOOL",
-            (
-                config.goals_default_tool
-                if config and hasattr(config, "goals_default_tool")
-                else "claude"
-            ),
-        )
+        tool = os.environ.get("AURORA_GOALS_TOOL", config.soar_default_tool)
 
     # Resolve model: CLI flag → env → config → default
     if model is None:
         env_model = os.environ.get("AURORA_GOALS_MODEL")
         if env_model and env_model.lower() in ("sonnet", "opus"):
             model = env_model.lower()
-        elif config and hasattr(config, "goals_default_model") and config.goals_default_model:
-            model = config.goals_default_model
         else:
-            model = "sonnet"  # Final default
+            model = config.soar_default_model
 
     # Validate tool exists in PATH
     if not shutil.which(tool):
@@ -278,35 +309,60 @@ def goals_command(
                 console.print(f"[yellow]Warning: Could not open editor: {e}[/]")
                 console.print("[dim]Continuing without edit...[/]")
 
-    # Rich output
+    # Goals-specific display: Agent Assignments table with match quality
+    # This is the divergence point from aur soar - goals shows this table + editor
+    from rich.table import Table
+
     console.print(f"\n[bold green]Plan created: {plan.plan_id}[/]")
-    console.print("=" * 60)
-    console.print(f"Goal:        {plan.goal}")
-    console.print(f"Complexity:  {plan.complexity.value}")
-    console.print(f"Subgoals:    {len(plan.subgoals)}")
-    console.print(f"Location:    {result.plan_dir}/")
+    console.print(f"[dim]Location: {result.plan_dir}/[/]\n")
 
-    console.print("\n[bold]Subgoals:[/]")
-    # Display with gap detection: ideal_agent vs assigned_agent comparison
+    # Count match qualities for summary
+    excellent_count = 0
+    acceptable_count = 0
+    insufficient_count = 0
+
+    # Build the Agent Assignments table
+    table = Table(title="Agent Assignments", show_header=True, header_style="bold")
+    table.add_column("#", style="dim", width=3)
+    table.add_column("Subgoal", min_width=30, max_width=50)
+    table.add_column("Agent", style="cyan", min_width=18)
+    table.add_column("Match", min_width=12)
+
     for i, sg in enumerate(plan.subgoals, 1):
-        console.print(f"  {i}. {sg.title}")
+        # Get match quality (from SOAR's 3-tier matching)
+        match_quality = getattr(sg, "match_quality", None)
+        if hasattr(match_quality, "value"):
+            match_quality = match_quality.value
+        if not match_quality:
+            # Fallback: infer from ideal vs assigned
+            match_quality = "excellent" if sg.ideal_agent == sg.assigned_agent else "acceptable"
 
-        # Gap detection: ideal != assigned
-        is_gap = sg.ideal_agent != sg.assigned_agent
+        # Count and format match indicator
+        if match_quality == "excellent":
+            excellent_count += 1
+            match_display = "[green]Excellent[/]"
+        elif match_quality == "acceptable":
+            acceptable_count += 1
+            match_display = "[yellow]Acceptable[/]"
+        else:  # insufficient - agent will be spawned
+            insufficient_count += 1
+            match_display = "[red]Spawned[/]"
 
-        if is_gap:
-            # Gap detected - show both ideal and assigned
-            console.print(f"     [yellow]Ideal:[/] {sg.ideal_agent}")
-            if sg.ideal_agent_desc:
-                console.print(f"       [dim]{sg.ideal_agent_desc}[/]")
-            console.print(f"     [cyan]Available:[/] {sg.assigned_agent}")
-            console.print(f"     [red]Status: GAP - create {sg.ideal_agent}[/]")
-        else:
-            # Matched - ideal == assigned
-            console.print(f"     [cyan]{sg.assigned_agent}[/] [green]MATCHED[/]")
+        # Truncate title if too long
+        title_display = sg.title[:47] + "..." if len(sg.title) > 50 else sg.title
 
-        if sg.dependencies:
-            console.print(f"     [dim]Depends on: {', '.join(sg.dependencies)}[/]")
+        table.add_row(str(i), title_display, sg.assigned_agent, match_display)
+
+    console.print(table)
+
+    # Summary line
+    total = len(plan.subgoals)
+    console.print(
+        f"\n[dim]Summary: {total} subgoals | "
+        f"[green]{excellent_count} excellent[/], "
+        f"[yellow]{acceptable_count} acceptable[/], "
+        f"[red]{insufficient_count} spawned[/][/]"
+    )
 
     if result.warnings:
         console.print("\n[yellow]Warnings:[/]")

@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-01-16
+
+### Added
+
+**Spawner: Unified Parallel Execution Infrastructure:**
+- New `spawn_parallel_tracked()` function as single source of truth for mature spawning
+  - Stagger delays (default 5s) between agent starts to avoid API burst limits
+  - Per-task heartbeat monitoring with HeartbeatEmitter + HeartbeatMonitor
+  - Global timeout calculation based on waves and policy (num_waves * policy_max + stagger + buffer)
+  - Circuit breaker pre-checks for fast-fail on known broken agents
+  - Retry with exponential backoff + LLM fallback
+  - Execution metadata collection (early_terminations, fallback_count, retried_tasks, etc.)
+  - Spinner display during execution showing active task count and elapsed time
+- Both `aur spawn` and SOAR collect phase now use the same infrastructure
+- New CLI options for `aur spawn`:
+  - `--stagger-delay` (default: 5.0s)
+  - `--policy` (default: patient)
+  - `--max-concurrent` (default: 4)
+  - `--no-fallback` to disable LLM fallback
+- New spawner configuration in `defaults.json`:
+  ```json
+  "spawner": {
+    "max_concurrent": 4,
+    "stagger_delay": 5.0,
+    "default_policy": "patient"
+  }
+  ```
+- `display_name` field in `SpawnTask` for progress display even when agent is None
+
+### Changed
+
+**Goals-SOAR Integration Refactor (Unified UX):**
+- Removed brittle adapter layer between SOAR and goals command
+- Pydantic validators now coerce instead of reject:
+  - Agent names: automatically add '@' prefix if missing
+  - Subgoal IDs: automatically add 'sg-' prefix if numeric
+  - Dependencies: automatically convert numeric IDs to 'sg-N' format
+- Removed normalization functions (`normalize_agent_name`, `normalize_dependency_id`)
+- `aur goals` and `aur soar` now have unified UX until divergence point
+- SOAR phases 1-5 display naturally in both commands
+- Goals command shows agent assignments table after SOAR phases complete
+
+**CLI Output Improvements:**
+- Ad-hoc spawned agents now display correct agent name instead of "llm"
+- Spinner shows during Phase 5 Collect: `⠧ Working... 3 active (125s)`
+- Suppressed verbose HuggingFace Hub warnings during embedding model loading
+  - No more `WARNING:huggingface_hub.utils._http` noise during `aur soar`
+  - Retries still work, just not logged to console
+- Observability failure logs changed from WARNING/ERROR to DEBUG level
+  - Progress callbacks handle user-facing feedback
+  - Clean console output during normal operation
+  - Use `--verbose` or `--debug` to see detailed logs
+
+**SOAR Collect Phase:**
+- Refactored to use `spawn_parallel_tracked()` instead of inline `tracked_spawn()`
+- Sets `display_name=agent.id` when creating SpawnTasks for proper progress display
+- Collect phase now inherits all spawner improvements (stagger, heartbeat, global timeout)
+
+### Fixed
+
+- Spinner regression in Phase 5 - spinner now properly displays and cleans up
+- Ad-hoc agent display name showing "llm" instead of actual agent name
+- Missing `finally` block in `spawn_parallel_tracked()` to stop spinner
+- HuggingFace warning spam during model loading
+
+### Performance
+
+- Stagger delays prevent API burst limits and improve success rates
+- Global timeout prevents hanging on stuck agents
+- Heartbeat monitoring detects and handles stalled agents
+
+### Testing
+
+- 40 unit tests passing for planning models (Goals-SOAR refactor)
+- All spawner functionality tested via existing test suite
+- Clean output verified with manual `aur soar` and `aur spawn` testing
+
+---
+
 ## [0.8.0] - 2026-01-15
 
 ### Added

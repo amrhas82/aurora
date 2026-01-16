@@ -25,7 +25,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from aurora_cli.config import load_config
+from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 from aurora_cli.planning.core import (
     archive_plan,
@@ -156,7 +156,7 @@ def create_command(
         aur plan create "Add user dashboard" --format json
     r"""
     # Load config to ensure project-local paths are used
-    config = load_config()
+    config = Config()
 
     # Auto-initialize if .aurora doesn't exist
     if not no_auto_init:
@@ -331,7 +331,7 @@ def list_command(archived: bool, all_plans: bool, output_format: str) -> None:
         # JSON output for scripting
         aur plan list --format json
     r"""
-    config = load_config()
+    config = Config()
     result = list_plans(archived=archived, all_plans=all_plans, config=config)
 
     if result.warning:
@@ -437,7 +437,7 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
         # JSON output
         aur plan view 0001-oauth --format json
     r"""
-    config = load_config()
+    config = Config()
     result = show_plan(plan_id, archived=archived, config=config)
 
     if not result.success:
@@ -518,7 +518,7 @@ def archive_command(plan_id: str, yes: bool) -> None:
         aur plan archive 0001-oauth -y
     r"""
     # Confirmation unless --yes
-    config = load_config()
+    config = Config()
 
     if not yes:
         if not click.confirm(f"Archive plan '{plan_id}'? This will move files to archive/"):

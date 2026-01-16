@@ -46,15 +46,12 @@ ModuleNotFoundError: No module named 'sentence_transformers'
 ```
 
 **Solution:**
-Install ML dependencies explicitly:
+Install ML dependencies manually if you need semantic search:
 ```bash
-pip install aurora[ml]
+pip install sentence-transformers torch
 ```
 
-Or install all optional dependencies:
-```bash
-pip install aurora[all]
-```
+Note: Aurora works without ML dependencies using BM25 + ACT-R only.
 
 ### Python Version Too Old
 
@@ -1058,7 +1055,7 @@ rm -rf /tmp/aurora-test
 | `Permission denied` | Wrong permissions | `chmod 644 ~/.aurora/*.db` |
 | `Database locked` | Concurrent access | Wait and retry |
 | `API key not found` | Not configured | `aur init` |
-| `Embeddings generation failed` | Missing ML deps | `pip install aurora[ml]` |
+| `Embeddings generation failed` | Missing ML deps | `pip install sentence-transformers torch` |
 
 ### Report Issues
 

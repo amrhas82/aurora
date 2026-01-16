@@ -811,12 +811,12 @@ def _check_agent_availability(agent: str) -> bool:
         import sys
 
         from aurora_cli.agent_discovery import AgentScanner, ManifestManager
-        from aurora_cli.config import load_config
+        from aurora_cli.config import Config
 
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
-            config = load_config()
+            config = Config()
         finally:
             sys.stdout = old_stdout
 
@@ -1188,6 +1188,7 @@ def _decompose_with_soar(
     goal: str,
     config: Config | None = None,
     context_files: list[str] | None = None,
+    show_phases: bool = True,
 ) -> tuple[list[Subgoal], dict, str, list[tuple[str, float]]]:
     """Decompose goal using SOAROrchestrator with mature 3-tier agent matching.
 
@@ -1201,6 +1202,7 @@ def _decompose_with_soar(
         goal: High-level goal to decompose
         config: Optional CLI configuration
         context_files: Optional list of context file paths
+        show_phases: If True (default), display phase progress to terminal
 
     Returns:
         Tuple of:
@@ -1209,11 +1211,65 @@ def _decompose_with_soar(
         - decomposition_source: String indicating source ("soar_llm")
         - memory_context: List of (file_path, score) tuples
     """
+    from typing import Any
+
+    from rich.console import Console
+
     from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
     from aurora_core.store.sqlite import SQLiteStore
     from aurora_soar.orchestrator import SOAROrchestrator
 
     logger.info("Using SOAROrchestrator for decomposition with stop_after_verify=True")
+
+    # Phase display configuration
+    console = Console()
+    phase_owners = {
+        "assess": "ORCHESTRATOR",
+        "retrieve": "ORCHESTRATOR",
+        "decompose": "LLM",
+        "verify": "LLM",
+    }
+    phase_numbers = {"assess": 1, "retrieve": 2, "decompose": 3, "verify": 4}
+    phase_descriptions = {
+        "assess": "Analyzing query complexity...",
+        "retrieve": "Looking up memory index...",
+        "decompose": "Breaking goal into subgoals...",
+        "verify": "Validating and assigning agents...",
+    }
+
+    def phase_callback(phase_name: str, status: str, result: dict[str, Any]) -> None:
+        """Display phase progress to terminal."""
+        if not show_phases:
+            return
+
+        owner = phase_owners.get(phase_name, "ORCHESTRATOR")
+        phase_num = phase_numbers.get(phase_name, 0)
+        description = phase_descriptions.get(phase_name, "Processing...")
+
+        if status == "before":
+            # Print phase header
+            if owner == "ORCHESTRATOR":
+                console.print(f"\n[blue][ORCHESTRATOR][/] Phase {phase_num}: {phase_name.title()}")
+            else:
+                tool = getattr(config, "soar_default_tool", "claude") if config else "claude"
+                console.print(
+                    f"\n[green][LLM -> {tool}][/] Phase {phase_num}: {phase_name.title()}"
+                )
+            console.print(f"  {description}")
+        else:  # status == "after"
+            # Print phase result
+            if phase_name == "assess":
+                complexity = result.get("complexity", "UNKNOWN")
+                console.print(f"  [cyan]Complexity: {complexity}[/]")
+            elif phase_name == "retrieve":
+                chunks = result.get("chunks_retrieved", 0)
+                console.print(f"  [cyan]Matched: {chunks} chunks from memory[/]")
+            elif phase_name == "decompose":
+                count = result.get("subgoal_count", 0)
+                console.print(f"  [cyan]Identified: {count} subgoals[/]")
+            elif phase_name == "verify":
+                agents = result.get("agents_assigned", 0)
+                console.print(f"  [cyan]Assigned: {agents} agents[/]")
 
     # Get store - use project-local path (consistent with aur init and aur mem index)
     # config.get_db_path() returns ./.aurora/memory.db by default
@@ -1245,8 +1301,8 @@ def _decompose_with_soar(
     tool = "claude"  # Default tool
     model = "sonnet"  # Default model
     if config:
-        tool = getattr(config, "goals_default_tool", "claude") or "claude"
-        model = getattr(config, "goals_default_model", "sonnet") or "sonnet"
+        tool = getattr(config, "soar_default_tool", "claude") or "claude"
+        model = getattr(config, "soar_default_model", "sonnet") or "sonnet"
 
     reasoning_llm = CLIPipeLLMClient(tool=tool, model=model)
     solving_llm = CLIPipeLLMClient(tool=tool, model=model)
@@ -1268,6 +1324,7 @@ def _decompose_with_soar(
         config=config_dict,
         reasoning_llm=reasoning_llm,
         solving_llm=solving_llm,
+        phase_callback=phase_callback if show_phases else None,
     )
 
     # Execute phases 1-4 only
@@ -1278,6 +1335,7 @@ def _decompose_with_soar(
     )
 
     # Map result to Subgoal objects
+    # Note: Pydantic validators handle coercion (adding '@' to agents, 'sg-' to IDs)
     subgoals = []
     decomposition = result.get("decomposition", {})
     subgoals_data = decomposition.get("subgoals", [])
@@ -1296,13 +1354,20 @@ def _decompose_with_soar(
             "match_quality", agent_info.get("match_quality", "acceptable")
         )
 
+        # Get agent names directly - Pydantic coerces to @-prefixed format
+        assigned_agent = sg_detail.get("agent", agent_info.get("agent_id", "full-stack-dev"))
+        ideal_agent = sg_detail.get("ideal_agent", agent_info.get("ideal_agent", ""))
+
+        # Get dependencies directly - Pydantic coerces to sg-N format
+        dependencies = sg_data.get("depends_on", [])
+
         subgoal = Subgoal(
             id=sg_data.get("id", f"sg-{i+1}"),
             title=sg_detail.get("description", sg_data.get("description", ""))[:100],
             description=sg_data.get("description", ""),
-            assigned_agent=sg_detail.get("agent", agent_info.get("agent_id", "@full-stack-dev")),
-            dependencies=sg_data.get("depends_on", []),
-            ideal_agent=sg_detail.get("ideal_agent", agent_info.get("ideal_agent", "")),
+            assigned_agent=assigned_agent,
+            dependencies=dependencies,
+            ideal_agent=ideal_agent,
             ideal_agent_desc=sg_detail.get(
                 "ideal_agent_desc", agent_info.get("ideal_agent_desc", "")
             ),
@@ -1375,56 +1440,26 @@ def create_plan(
     # Assess complexity
     complexity = _assess_complexity(goal, [])  # Initial assessment before decomposition
 
-    # Search memory for goal-level context (NEW - for Task 2.2)
-    from aurora_cli.planning.memory import search_memory_for_goal
-
-    memory_context = search_memory_for_goal(goal, config=config, limit=10, threshold=0.3)
-
-    # Display memory search results (NEW - for Task 2.2)
-    if memory_context:
-        from rich.console import Console
-
-        console = Console()
-        console.print(f"\n[bold]🔍 Found {len(memory_context)} relevant context files:[/]")
-        for file_path, score in memory_context:
-            # Color code by relevance
-            if score >= 0.8:
-                color = "green"
-            elif score >= 0.6:
-                color = "yellow"
-            else:
-                color = "dim"
-            console.print(f"   [{color}]{file_path} ({score:.2f})[/{color}]")
-        console.print("")
-    else:
-        from rich.console import Console
-
-        console = Console()
-        console.print(
-            "[dim]No memory index found. For code-aware planning, run: aur mem index .[/]\n"
-        )
-
     # Generate subgoals
+    # Note: Memory search happens inside SOAR phase 2 (retrieve) to avoid
+    # blocking model load during startup. For non-SOAR paths, we search after.
+    memory_context: list[tuple[str, float]] = []
+
     if auto_decompose:
         if use_soar_decomposition:
             # Use mature SOAROrchestrator with 3-tier agent matching
-            try:
-                subgoals, file_resolutions, decomposition_source, soar_memory_context = (
-                    _decompose_with_soar(
-                        goal=goal,
-                        config=config,
-                        context_files=[str(f) for f in context_files] if context_files else None,
-                    )
+            # SOAR phase 2 handles memory retrieval with proper background loading
+            subgoals, file_resolutions, decomposition_source, soar_memory_context = (
+                _decompose_with_soar(
+                    goal=goal,
+                    config=config,
+                    context_files=[str(f) for f in context_files] if context_files else None,
                 )
-                # Use SOAR's memory context if we didn't find any earlier
-                if not memory_context and soar_memory_context:
-                    memory_context = soar_memory_context
-            except Exception as e:
-                logger.warning(f"SOAR decomposition failed, falling back to PlanDecomposer: {e}")
-                use_soar_decomposition = False  # Fall through to PlanDecomposer
-
-        if not use_soar_decomposition:
-            # Legacy PlanDecomposer fallback
+            )
+            # Use SOAR's memory context (from phase 2 retrieve)
+            memory_context = soar_memory_context or []
+        else:
+            # Legacy PlanDecomposer (only used if explicitly disabled via config)
             from aurora_cli.planning.decompose import PlanDecomposer
 
             # Get store for file resolution and context retrieval
@@ -1449,6 +1484,11 @@ def create_plan(
                 context_files=[str(f) for f in context_files] if context_files else None,
                 store=store,
             )
+
+            # Search memory for legacy path (not using SOAR's phase 2)
+            from aurora_cli.planning.memory import search_memory_for_goal
+
+            memory_context = search_memory_for_goal(goal, config=config, limit=10, threshold=0.3)
     else:
         # Single subgoal fallback
         subgoals = [
@@ -1461,6 +1501,11 @@ def create_plan(
         ]
         file_resolutions = {}
         decomposition_source = "heuristic"
+
+        # Search memory for single-task path
+        from aurora_cli.planning.memory import search_memory_for_goal
+
+        memory_context = search_memory_for_goal(goal, config=config, limit=10, threshold=0.3)
 
     # Reassess complexity now that we have actual subgoals
     complexity = _assess_complexity(goal, subgoals)
@@ -1508,18 +1553,29 @@ def create_plan(
             agents_assigned += 1
 
     # Calculate file resolution statistics
-    files_resolved = sum(len(resolutions) for resolutions in file_resolutions.values())
-    all_confidences = [
-        res.confidence for resolutions in file_resolutions.values() for res in resolutions
-    ]
-    avg_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
+    # Use file_resolutions if available, otherwise fall back to memory_context count
+    if file_resolutions:
+        files_resolved = sum(len(resolutions) for resolutions in file_resolutions.values())
+        all_confidences = [
+            res.confidence for resolutions in file_resolutions.values() for res in resolutions
+        ]
+        avg_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
+    elif memory_context:
+        # SOAR path: count unique files from memory context
+        unique_files = set(file_path for file_path, _ in memory_context)
+        files_resolved = len(unique_files)
+        all_scores = [score for _, score in memory_context]
+        avg_confidence = sum(all_scores) / len(all_scores) if all_scores else 0.0
+    else:
+        files_resolved = 0
+        avg_confidence = 0.0
 
     # Build warnings
     warnings = []
     if agent_gaps:
         warnings.append(f"Agent gaps detected: {len(agent_gaps)} subgoals need attention")
-    if not file_resolutions:
-        warnings.append("No file paths resolved. Consider running 'aur mem index .'")
+    if files_resolved == 0:
+        warnings.append("No relevant files found. Consider running 'aur mem index .'")
 
     # Build decomposition summary for checkpoint
     from aurora_cli.planning.models import DecompositionSummary
@@ -1576,7 +1632,7 @@ def create_plan(
             files_confidence=avg_confidence,
         )
         review.display()
-        decision = review.prompt()
+        decision = review.prompt(planning_only=goals_only)
 
         if decision == ReviewDecision.ABORT:
             return PlanResult(

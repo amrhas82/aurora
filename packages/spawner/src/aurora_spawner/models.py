@@ -12,6 +12,7 @@ class SpawnTask:
     agent: str | None = None
     timeout: int = 300
     policy_name: str | None = None  # Optional policy preset name
+    display_name: str | None = None  # For progress display (e.g., ad-hoc agent names)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""
@@ -20,6 +21,7 @@ class SpawnTask:
             "agent": self.agent,
             "timeout": self.timeout,
             "policy_name": self.policy_name,
+            "display_name": self.display_name,
         }
 
 

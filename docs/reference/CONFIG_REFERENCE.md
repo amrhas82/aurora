@@ -1,164 +1,371 @@
 # Aurora Configuration Reference
 
-Complete reference for Aurora's configuration system, including all settings, file locations, and environment variables.
+Complete reference for Aurora's configuration system, including defaults, customization, file locations, and environment variables.
 
-**Version:** 1.3.0
-**Last Updated:** 2026-01-15
+**Version:** 1.4.0
+**Last Updated:** 2026-01-16
+**Config System:** Simplified dict-based (v0.7.0+)
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Configuration File Locations](#configuration-file-locations)
-3. [Precedence Rules](#precedence-rules)
-4. [Complete Configuration Example](#complete-configuration-example)
+2. [Configuration Architecture](#configuration-architecture)
+3. [File Locations](#file-locations)
+4. [Precedence Rules](#precedence-rules)
 5. [Configuration Sections](#configuration-sections)
-   - [LLM Settings](#llm-settings)
-   - [Escalation Settings](#escalation-settings)
-   - [Memory Settings](#memory-settings)
-   - [Database Settings](#database-settings)
-   - [Search Settings](#search-settings)
-   - [SOAR Settings](#soar-settings)
-   - [Spawner Settings](#spawner-settings)
-   - [Headless Settings](#headless-settings)
-   - [Planning Settings](#planning-settings)
-   - [Agents Settings](#agents-settings)
-   - [Budget Settings](#budget-settings)
-   - [Logging Settings](#logging-settings)
-   - [MCP Settings](#mcp-settings-dormant)
-6. [Tool Paths Reference](#tool-paths-reference)
-7. [Environment Variables](#environment-variables)
-8. [Project vs Global Mode](#project-vs-global-mode)
+6. [Environment Variables](#environment-variables)
+7. [Customization Guide](#customization-guide)
+8. [Migration Notes](#migration-notes)
 9. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Overview
 
-Aurora uses a JSON-based configuration system that controls:
+Aurora uses a **dict-based JSON configuration system** that merges:
+- **Built-in defaults** (`defaults.json` in the CLI package)
+- **User config** (`~/.aurora/config.json` or `./.aurora/config.json`)
+- **Environment variables** (highest priority)
 
-- **LLM behavior** - API keys, model selection, temperature
-- **Memory indexing** - Chunk sizes, paths, auto-indexing
-- **SOAR reasoning** - Default tools and models for `aur soar`
-- **Planning** - Plan storage, templates, auto-increment
-- **Agent discovery** - Where to find agents, refresh intervals
-- **Budget tracking** - API cost limits
-- **Logging** - Log levels and file locations
-
-**Key principle:** Aurora is project-local by default. When you run `aur init` in a project, it creates a `.aurora/` directory that isolates all project-specific data.
+**Key principles:**
+- **Project-local by default** - `aur init` creates `.aurora/` for project isolation
+- **Sensible defaults** - Works out-of-the-box with minimal configuration
+- **Hierarchical override** - CLI flags > env vars > config file > defaults
 
 ---
 
-## Configuration File Locations
+## Configuration Architecture
 
-Aurora looks for configuration in these locations (in order):
+### System Overview
 
-### Project Mode (when `.aurora/` exists)
+```
+┌─────────────────────────────────────────────┐
+│  CLI Command (aur soar, aur goals, etc.)   │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│         Config Loading (config.py)          │
+│                                             │
+│  1. Load defaults.json (built-in)          │
+│  2. Merge user config (if exists)          │
+│  3. Apply environment overrides            │
+│  4. Return dict or Config wrapper          │
+└─────────────────────────────────────────────┘
+```
 
-| Priority | Location | Purpose |
-|----------|----------|---------|
-| 1 | `.aurora/config.json` | Project-specific settings |
-| 2 | Built-in defaults | Fallback values |
+### Built-in Defaults
 
-### Global Mode (no `.aurora/` directory)
+Location: `packages/cli/src/aurora_cli/defaults.json`
+
+This file contains **all** default configuration values. You never need to edit this file - it's part of the Aurora package. Your customizations go in your user config file.
+
+**Why dict-based?**
+- Simple to read and modify
+- Supports nested structure naturally
+- Easy to merge user overrides
+- No schema validation overhead
+- Direct JSON mapping
+
+### Config Class Wrapper
+
+For backward compatibility, Aurora provides a `Config` class that wraps the dict:
+
+```python
+from aurora_cli.config import Config, load_config
+
+# Dict access (new way)
+config_dict = load_config()
+db_path = config_dict["storage"]["path"]
+
+# Wrapper access (backward compat)
+config = Config()
+db_path = config.db_path
+```
+
+---
+
+## File Locations
+
+### Project Mode (Recommended)
+
+After running `aur init` in a project directory:
+
+| File | Purpose | Scope |
+|------|---------|-------|
+| `./.aurora/config.json` | Project-specific settings | This project only |
+| `./.aurora/memory.db` | Project code index | This project only |
+| `./.aurora/plans/` | Project plans | This project only |
+| `~/.aurora/budget_tracker.json` | API usage tracking | **Global** (shared) |
+
+### Global Mode
+
+Without `aur init`, Aurora uses:
 
 | Priority | Location | Purpose |
 |----------|----------|---------|
 | 1 | `./aurora.config.json` | Current directory config |
 | 2 | `~/.aurora/config.json` | User-wide settings |
-| 3 | Built-in defaults | Fallback values |
+| 3 | Built-in defaults | Package defaults |
 
 ### Special Paths
 
-| Path | Purpose | Scope |
-|------|---------|-------|
-| `~/.aurora/config.json` | Global user configuration | User-wide |
-| `.aurora/config.json` | Project configuration | Project-only |
-| `~/.aurora/budget_tracker.json` | API usage tracking | **Always global** |
-
-**Note:** The `AURORA_HOME` environment variable can override `~/.aurora` to a custom location.
+- **`AURORA_HOME`** environment variable can override `~/.aurora` location
+- **Budget tracker** is always global to track total API usage across all projects
+- **Agent discovery** searches multiple global paths (see `agents.discovery_paths`)
 
 ---
 
 ## Precedence Rules
 
-Configuration values are resolved in this order (highest to lowest):
+Configuration values are resolved in this order (highest to lowest priority):
 
 ```
-1. CLI flags           (e.g., --tool cursor)
-2. Environment vars    (e.g., AURORA_SOAR_TOOL=cursor)
-3. Config file         (e.g., soar.default_tool in config.json)
-4. Built-in defaults   (e.g., "claude")
+1. CLI Flags           (e.g., aur soar "query" --tool opencode)
+2. Environment Vars    (e.g., AURORA_SOAR_TOOL=gemini)
+3. User Config File    (e.g., ~/.aurora/config.json)
+4. Built-in Defaults   (e.g., packages/cli/src/aurora_cli/defaults.json)
 ```
 
-**Example:**
+**Example Resolution:**
+
 ```bash
-# Config file has: soar.default_tool = "cursor"
+# defaults.json has: soar.default_tool = "claude"
+# ~/.aurora/config.json has: soar.default_tool = "cursor"
 # Environment has: AURORA_SOAR_TOOL=gemini
-# CLI has: --tool claude
+# CLI has: --tool opencode
 
-aur soar "query"           # Uses gemini (env var)
-aur soar "query" -t claude # Uses claude (CLI flag wins)
+aur soar "query"              # Uses cursor (from config file)
+AURORA_SOAR_TOOL=gemini aur soar "query"  # Uses gemini (env var)
+aur soar "query" --tool opencode          # Uses opencode (CLI flag wins)
 ```
 
 ---
 
-## Complete Configuration Example
+## Configuration Sections
 
-Here's a fully documented `config.json` with all available settings:
+### Storage
+
+Controls where Aurora stores its database and how it connects.
 
 ```json
 {
-  "version": "1.1.0",
+  "storage": {
+    "type": "sqlite",
+    "path": "./.aurora/memory.db",
+    "max_connections": 10,
+    "timeout_seconds": 5
+  }
+}
+```
 
+**Fields:**
+- `type` - Database type (currently only "sqlite" supported)
+- `path` - Database file location (project-local by default)
+- `max_connections` - SQLite connection pool size
+- `timeout_seconds` - Query timeout
+
+**Project-local pattern:**
+- `./.aurora/memory.db` - Keeps index with your project
+- `~/.aurora/memory.db` - Global index (not recommended)
+
+---
+
+### LLM Settings
+
+Configure language model behavior for reasoning and decomposition.
+
+```json
+{
   "llm": {
     "provider": "anthropic",
-    "anthropic_api_key": null,
     "model": "claude-3-5-sonnet-20241022",
+    "api_key_env": "ANTHROPIC_API_KEY",
+    "base_url": null,
+    "timeout_seconds": 30,
     "temperature": 0.7,
     "max_tokens": 4096
-  },
+  }
+}
+```
 
-  "escalation": {
-    "threshold": 0.7,
-    "enable_keyword_only": false,
-    "force_mode": null
-  },
+**Fields:**
+- `provider` - LLM provider (currently "anthropic")
+- `model` - Default Claude model
+- `api_key_env` - Environment variable name for API key
+- `base_url` - Override API endpoint (null = use default)
+- `timeout_seconds` - API request timeout
+- `temperature` - Sampling temperature (0.0-2.0)
+- `max_tokens` - Maximum response length
 
+**Environment:** Set `ANTHROPIC_API_KEY` for authentication.
+
+---
+
+### Search Settings
+
+Configure semantic search and retrieval thresholds.
+
+```json
+{
+  "search": {
+    "min_semantic_score": 0.70,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+  }
+}
+```
+
+**Fields:**
+- `min_semantic_score` - Minimum similarity score (0.0-1.0)
+- `embedding_model` - HuggingFace model for embeddings
+
+**Tuning:**
+- Lower score (0.5) - More results, less precise
+- Higher score (0.8) - Fewer results, more precise
+
+**Environment:** Set `HF_HUB_OFFLINE=1` to use cached models only.
+
+---
+
+### SOAR Settings
+
+Configure the SOAR (State, Operator, And Result) reasoning system.
+
+```json
+{
+  "soar": {
+    "default_tool": "claude",
+    "default_model": "sonnet"
+  }
+}
+```
+
+**Fields:**
+- `default_tool` - CLI tool for SOAR phases ("claude", "cursor", "opencode", etc.)
+- `default_model` - Model tier ("sonnet" or "opus")
+
+**Override:**
+```bash
+# Via environment
+AURORA_SOAR_TOOL=opencode aur soar "query"
+
+# Via CLI flag
+aur soar "query" --tool cursor --model opus
+```
+
+---
+
+### Memory Settings
+
+Configure automatic code indexing behavior.
+
+```json
+{
   "memory": {
     "auto_index": true,
     "index_paths": ["."],
     "chunk_size": 1000,
     "overlap": 200
-  },
+  }
+}
+```
 
-  "database": {
-    "path": "./.aurora/memory.db"
-  },
+**Fields:**
+- `auto_index` - Automatically index files on `aur mem index`
+- `index_paths` - Directories to index (relative to project root)
+- `chunk_size` - Characters per chunk (affects retrieval granularity)
+- `overlap` - Overlap between chunks (preserves context)
 
-  "search": {
-    "min_semantic_score": 0.70
-  },
+**Tuning:**
+- Larger chunks (1500) - Better context, slower search
+- Smaller chunks (500) - Faster search, less context
+- Overlap (200) - Prevents splitting concepts
 
-  "soar": {
-    "default_tool": "claude",
-    "default_model": "sonnet"
-  },
+---
 
-  "spawner": {
-    "tool": "claude",
-    "model": "sonnet",
-    "max_retries": 2,
-    "fallback_to_llm": true
-  },
+### Planning Settings
 
+Configure plan storage and templates.
+
+```json
+{
+  "planning": {
+    "base_dir": "./.aurora/plans",
+    "template_dir": null,
+    "auto_increment": true,
+    "archive_on_complete": false
+  }
+}
+```
+
+**Fields:**
+- `base_dir` - Where to store plans
+- `template_dir` - Custom plan templates (null = use built-in)
+- `auto_increment` - Auto-generate plan IDs (0001, 0002, etc.)
+- `archive_on_complete` - Move completed plans to archive/
+
+**Structure:**
+```
+.aurora/plans/
+├── active/
+│   └── 0001-feature-name/
+│       ├── plan.md
+│       ├── prd.md
+│       ├── tasks.md
+│       └── agents.json
+└── archive/
+    └── 0001-feature-name/
+```
+
+---
+
+### Agents Settings
+
+Configure agent discovery and caching.
+
+```json
+{
+  "agents": {
+    "discovery_paths": [
+      "~/.claude/agents",
+      "~/.config/ampcode/agents",
+      "~/.config/droid/agent",
+      "~/.config/opencode/agent"
+    ],
+    "manifest_path": "./.aurora/cache/agent_manifest.json",
+    "refresh_interval_days": 1,
+    "fallback_mode": "llm_only"
+  }
+}
+```
+
+**Fields:**
+- `discovery_paths` - Where to find agent definitions
+- `manifest_path` - Cached agent registry
+- `refresh_interval_days` - How often to rescan
+- `fallback_mode` - What to do if no agents found
+
+**Discovery:**
+Aurora searches for `agents.json` files in configured paths and caches the results.
+
+---
+
+### Headless Settings
+
+Configure multi-tool execution and routing.
+
+```json
+{
   "headless": {
     "tools": ["claude"],
     "strategy": "first_success",
     "parallel": true,
     "max_iterations": 10,
     "timeout": 600,
+    "budget": null,
+    "time_limit": null,
     "tool_configs": {
       "claude": {
         "priority": 1,
@@ -166,911 +373,429 @@ Here's a fully documented `config.json` with all available settings:
         "flags": ["--print", "--dangerously-skip-permissions"],
         "input_method": "argument",
         "env": {},
-        "enabled": true,
-        "max_retries": 2,
-        "retry_delay": 1.0
-      },
-      "opencode": {
-        "priority": 2,
-        "timeout": 600,
-        "flags": [],
-        "input_method": "stdin",
-        "env": {},
+        "working_dir": null,
         "enabled": true,
         "max_retries": 2,
         "retry_delay": 1.0
       }
     },
     "routing_rules": []
-  },
-
-  "planning": {
-    "base_dir": "./.aurora/plans",
-    "template_dir": null,
-    "auto_increment": true,
-    "archive_on_complete": false
-  },
-
-  "agents": {
-    "auto_refresh": true,
-    "refresh_interval_hours": 24,
-    "discovery_paths": [
-      "~/.claude/agents",
-      "~/.cursor/agents",
-      "~/.factory/droids",
-      "~/.config/opencode/agent"
-    ],
-    "manifest_path": "./.aurora/cache/agent_manifest.json"
-  },
-
-  "budget": {
-    "limit": 10.0,
-    "tracker_path": "~/.aurora/budget_tracker.json"
-  },
-
-  "logging": {
-    "level": "INFO",
-    "file": "./.aurora/logs/aurora.log"
-  },
-
-  "mcp": {
-    "always_on": false,
-    "log_file": "./.aurora/logs/mcp.log",
-    "max_results": 10
   }
 }
 ```
 
----
+**Fields:**
+- `tools` - CLI tools to use (in priority order)
+- `strategy` - Execution strategy ("first_success", "voting", "merge")
+- `parallel` - Run tools concurrently
+- `max_iterations` - Maximum task attempts
+- `timeout` - Global timeout (seconds)
+- `budget` - USD budget limit (null = unlimited)
+- `time_limit` - Time limit in seconds (null = unlimited)
+- `tool_configs` - Per-tool configuration
+- `routing_rules` - Advanced routing (see FLOWS.md)
 
-## Configuration Sections
+**Per-Tool Config:**
+- `priority` - Execution order (1 = first)
+- `timeout` - Tool-specific timeout
+- `flags` - CLI flags to pass
+- `input_method` - How to pass prompt ("argument" or "stdin")
+- `max_retries` - Retry failed operations
+- `retry_delay` - Seconds between retries
 
-### LLM Settings
-
-Controls the Language Model used for SOAR reasoning phases.
-
-```json
-"llm": {
-  "provider": "anthropic",
-  "anthropic_api_key": null,
-  "model": "claude-3-5-sonnet-20241022",
-  "temperature": 0.7,
-  "max_tokens": 4096
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `provider` | string | `"anthropic"` | LLM provider. Currently only `"anthropic"` is supported. |
-| `anthropic_api_key` | string\|null | `null` | API key for Anthropic. **Recommended:** Use `ANTHROPIC_API_KEY` env var instead for security. |
-| `model` | string | `"claude-3-5-sonnet-20241022"` | Model ID for API calls. Used by internal SOAR phases. |
-| `temperature` | float | `0.7` | Response randomness (0.0 = deterministic, 1.0 = creative). Range: 0.0-1.0. |
-| `max_tokens` | int | `4096` | Maximum tokens in LLM response. Must be positive. |
-
-**Security note:** Never commit API keys to version control. Use environment variables:
+**Environment Overrides:**
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-```
-
----
-
-### Escalation Settings
-
-Controls when Aurora escalates queries to full SOAR reasoning vs. direct LLM calls.
-
-```json
-"escalation": {
-  "threshold": 0.7,
-  "enable_keyword_only": false,
-  "force_mode": null
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `threshold` | float | `0.7` | Complexity score threshold for SOAR escalation. Queries scoring above this use full 9-phase pipeline. Range: 0.0-1.0. |
-| `enable_keyword_only` | bool | `false` | If `true`, only use keyword matching for escalation (faster but less accurate). |
-| `force_mode` | string\|null | `null` | Force all queries to specific mode. Values: `"direct"` (skip SOAR), `"aurora"` (always use SOAR), or `null` (auto-detect). |
-
-**When to adjust:**
-- Lower `threshold` (e.g., 0.5) → More queries use full SOAR (slower, more thorough)
-- Higher `threshold` (e.g., 0.9) → Fewer queries use SOAR (faster, simpler answers)
-- Set `force_mode: "direct"` → Bypass SOAR entirely for speed
-
----
-
-### Memory Settings
-
-Controls how Aurora indexes and chunks your codebase.
-
-```json
-"memory": {
-  "auto_index": true,
-  "index_paths": ["."],
-  "chunk_size": 1000,
-  "overlap": 200
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `auto_index` | bool | `true` | Automatically index on `aur init`. Set `false` for manual control. |
-| `index_paths` | string[] | `["."]` | Directories to index. Relative to project root. |
-| `chunk_size` | int | `1000` | Maximum characters per chunk. Must be >= 100. |
-| `overlap` | int | `200` | Characters of overlap between chunks for context continuity. Must be >= 0. |
-
-**How chunking works:**
-- Code files are parsed with tree-sitter into functions/classes
-- Documentation is split at section boundaries
-- `chunk_size` limits each chunk's length
-- `overlap` ensures context isn't lost at boundaries
-
-**Example: Index only src/ and docs/**
-```json
-"memory": {
-  "index_paths": ["src/", "docs/"]
-}
-```
-
----
-
-### Database Settings
-
-Controls where Aurora stores the memory database.
-
-```json
-"database": {
-  "path": "./.aurora/memory.db"
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `path` | string | `"./.aurora/memory.db"` | SQLite database path. Supports `~` expansion. |
-
-**Path patterns:**
-- `./.aurora/memory.db` → Project-local (recommended)
-- `~/.aurora/memory.db` → Global/shared across projects
-- `/absolute/path/memory.db` → Explicit location
-
-**Override per-command:**
-```bash
-aur mem search "query" --db-path /tmp/test.db
-```
-
----
-
-### Search Settings
-
-Controls search result filtering.
-
-```json
-"search": {
-  "min_semantic_score": 0.70
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `min_semantic_score` | float | `0.70` | Minimum score for search results. Range: 0.0-1.0. Higher = stricter filtering. |
-
-**Score interpretation:**
-- `0.70` = Moderate match (default, balanced precision/recall)
-- `0.85` = High confidence matches only
-- `0.50` = Include more potential matches
-
----
-
-### SOAR Settings
-
-Controls defaults for `aur soar` command and agent execution behavior.
-
-```json
-"soar": {
-  "default_tool": "claude",
-  "default_model": "sonnet",
-  "agent_timeout_seconds": 300,
-  "max_concurrent_agents": 5,
-  "enable_early_failure_detection": true,
-  "timeout_policy": "default"
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `default_tool` | string | `"claude"` | CLI tool to pipe SOAR queries to. Must be installed and in PATH. Examples: `"claude"`, `"cursor"`, `"gemini"`. |
-| `default_model` | string | `"sonnet"` | Model to use. Values: `"sonnet"` or `"opus"`. |
-| `agent_timeout_seconds` | int | `300` | Maximum execution time for spawned agents (5 minutes). Range: 60-600s. |
-| `max_concurrent_agents` | int | `5` | Maximum parallel agent spawns. Range: 1-10. |
-| `enable_early_failure_detection` | bool | `true` | Enable early failure detection for faster error handling. |
-| `timeout_policy` | string | `"default"` | Timeout policy: `"default"`, `"patient"`, or `"fast_fail"`. |
-
-**Timeout Policies:**
-- `"default"`: 60s initial, 300s max, 30s no-activity (balanced)
-- `"patient"`: 120s initial, 600s max, 120s no-activity (large tasks)
-- `"fast_fail"`: 60s fixed, 15s no-activity (fast feedback)
-
-**Early Failure Detection:**
-When enabled, SOAR detects agent failures in 5-15s vs 60-300s timeout by monitoring:
-- Error patterns: rate limits, auth failures, API errors
-- No-activity: detects stuck agents based on policy
-- Immediate circuit breaker updates
-
-**Override per-command:**
-```bash
-aur soar "query" --tool cursor --model opus
-```
-
-**Environment variables:**
-```bash
-export AURORA_SOAR_TOOL=cursor
-export AURORA_SOAR_MODEL=opus
-export AURORA_SOAR_TIMEOUT=300
-export AURORA_SOAR_TIMEOUT_POLICY=fast_fail
-```
-
-**Monitoring:**
-```bash
-# View early terminations
-aur soar "query" --verbose 2>&1 | grep "early termination"
-
-# Check logs for detection times
-cat .aurora/logs/soar-*.log | grep "detection_time"
-```
-
----
-
-### Spawner Settings
-
-Controls agent spawning behavior, recovery, and circuit breaker.
-
-```json
-"spawner": {
-  "tool": "claude",
-  "model": "sonnet",
-  "recovery": {
-    "strategy": "retry_then_fallback",
-    "max_retries": 2,
-    "fallback_to_llm": true,
-    "base_delay": 1.0,
-    "max_delay": 30.0,
-    "backoff_factor": 2.0,
-    "jitter": true,
-    "circuit_breaker_enabled": true,
-    "agent_overrides": {}
-  },
-  "circuit_breaker": {
-    "failure_threshold": 2,
-    "reset_timeout": 120,
-    "failure_window": 300
-  }
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `tool` | string | `"claude"` | CLI tool for spawning agents. Must be in PATH. |
-| `model` | string | `"sonnet"` | Model to pass to the tool. |
-
-**Recovery Settings (`spawner.recovery`):**
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `strategy` | string | `"retry_then_fallback"` | Recovery strategy: `retry_then_fallback`, `retry_same`, `fallback_only`, `no_recovery` |
-| `preset` | string | - | Use preset: `default`, `aggressive_retry`, `fast_fallback`, `patient`, `no_recovery` |
-| `max_retries` | int | `2` | Maximum retry attempts per task |
-| `fallback_to_llm` | bool | `true` | Fall back to direct LLM if agent fails |
-| `base_delay` | float | `1.0` | Initial delay between retries (seconds) |
-| `max_delay` | float | `30.0` | Maximum delay cap (seconds) |
-| `backoff_factor` | float | `2.0` | Exponential backoff multiplier |
-| `jitter` | bool | `true` | Add randomness to prevent thundering herd |
-| `circuit_breaker_enabled` | bool | `true` | Enable circuit breaker protection |
-| `agent_overrides` | object | `{}` | Per-agent policy overrides |
-
-**Recovery Strategies:**
-
-| Strategy | Retries | Fallback | Use Case |
-|----------|---------|----------|----------|
-| `retry_then_fallback` | 2 | Yes | Default - balanced reliability |
-| `retry_same` | 5 | No | Critical agents that must succeed |
-| `fallback_only` | 0 | Yes | Fast failure, let LLM handle it |
-| `no_recovery` | 0 | No | Fail-fast for debugging |
-
-**Recovery Presets:**
-
-| Preset | Retries | Fallback | Base Delay | Backoff |
-|--------|---------|----------|------------|---------|
-| `default` | 2 | Yes | 1.0s | 2x |
-| `aggressive_retry` | 5 | No | 0.5s | 2x |
-| `fast_fallback` | 0 | Yes | - | - |
-| `patient` | 3 | Yes | 2.0s | 3x |
-| `no_recovery` | 0 | No | - | - |
-
-**Per-Agent Overrides:**
-
-```json
-"spawner": {
-  "recovery": {
-    "agent_overrides": {
-      "slow-agent": {
-        "max_retries": 5,
-        "base_delay": 2.0
-      },
-      "critical-agent": {
-        "strategy": "retry_same",
-        "max_retries": 10
-      }
-    }
-  }
-}
-```
-
-**Circuit Breaker Settings (`spawner.circuit_breaker`):**
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `failure_threshold` | int | `2` | Failures to open circuit |
-| `reset_timeout` | int | `120` | Seconds before testing recovery |
-| `failure_window` | int | `300` | Time window for counting failures |
-
-**How recovery works:**
-
-1. Task fails → classify error (transient/permanent/timeout/resource)
-2. Permanent errors → fail immediately (no retry)
-3. Transient errors → retry with exponential backoff (1s, 2s, 4s)
-4. After `max_retries` exhausted → fall back to direct LLM (if enabled)
-5. After `failure_threshold` failures within `failure_window` → circuit opens, agent skipped
-
-**Error Categories:**
-
-| Category | Pattern Examples | Behavior |
-|----------|------------------|----------|
-| `transient` | Rate limit, 429, connection reset | Retry with backoff |
-| `timeout` | Timed out, deadline exceeded | Retry with longer timeout |
-| `resource` | Quota exceeded, out of memory | Retry after delay |
-| `permanent` | Auth failed, 401, invalid API key | Fail immediately |
-
-**Environment variables:**
-```bash
-export AURORA_SPAWN_TOOL=cursor
-export AURORA_SPAWN_MODEL=opus
-```
-
----
-
-### Headless Settings
-
-Controls the `aur headless` autonomous execution loop with multi-tool support.
-
-```json
-"headless": {
-  "tools": ["claude", "opencode"],
-  "strategy": "first_success",
-  "parallel": true,
-  "max_iterations": 10,
-  "timeout": 600,
-  "tool_configs": {
-    "claude": {
-      "priority": 1,
-      "timeout": 600,
-      "flags": ["--print", "--dangerously-skip-permissions"],
-      "input_method": "argument",
-      "env": {},
-      "working_dir": null,
-      "enabled": true,
-      "max_retries": 2,
-      "retry_delay": 1.0
-    },
-    "opencode": {
-      "priority": 2,
-      "timeout": 600,
-      "flags": [],
-      "input_method": "stdin",
-      "env": {},
-      "working_dir": null,
-      "enabled": true,
-      "max_retries": 2,
-      "retry_delay": 1.0
-    }
-  },
-  "routing_rules": []
-}
-```
-
-**General Settings:**
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `tools` | string[] | `["claude"]` | Default tools to use. Can specify multiple for multi-tool mode. |
-| `strategy` | string | `"first_success"` | Aggregation strategy: `first_success`, `all_complete`, `voting`, `best_score`, `merge`. |
-| `parallel` | bool | `true` | Run multiple tools in parallel (true) or sequentially (false). |
-| `max_iterations` | int | `10` | Maximum execution loop iterations. |
-| `timeout` | int | `600` | Global per-tool timeout in seconds (can be overridden per-tool). |
-| `tool_configs` | object | *(see below)* | Per-tool configuration settings. |
-| `routing_rules` | array | `[]` | Task-based routing rules for tool selection. |
-
-**Per-Tool Configuration (`tool_configs.<tool>`):**
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `priority` | int | `1-N` | Lower = higher priority in multi-tool mode. |
-| `timeout` | int | `600` | Tool-specific timeout (overrides global). |
-| `flags` | string[] | `[]` | Command-line flags passed to the tool. |
-| `input_method` | string | `"stdin"` | How to pass context: `argument`, `stdin`, `file`, `pipe`. |
-| `env` | object | `{}` | Tool-specific environment variables. |
-| `working_dir` | string\|null | `null` | Working directory override (`null` = use cwd). |
-| `enabled` | bool | `true` | Enable/disable tool without removing config. |
-| `max_retries` | int | `2` | Tool-specific retry count on failure. |
-| `retry_delay` | float | `1.0` | Base delay between retries (seconds). |
-
-**Aggregation Strategies:**
-
-| Strategy | Description | Use Case |
-|----------|-------------|----------|
-| `first_success` | Return first successful result, cancel others | Fast completion, redundancy |
-| `all_complete` | Wait for all tools, return best result | Thorough comparison |
-| `voting` | Consensus from 3+ tools (majority wins) | High confidence tasks |
-| `best_score` | Score by success, output length, speed | Quality optimization |
-| `merge` | Combine outputs from all tools | Comprehensive output |
-
-**Adding a New Tool:**
-
-```json
-"headless": {
-  "tools": ["claude", "opencode", "cursor"],
-  "tool_configs": {
-    "cursor": {
-      "priority": 3,
-      "timeout": 300,
-      "flags": ["--no-tty"],
-      "input_method": "stdin",
-      "env": {"CURSOR_API_KEY": "..."},
-      "enabled": true
-    }
-  }
-}
-```
-
-**Task-Based Routing Rules:**
-
-Route specific tasks to specific tools:
-
-```json
-"routing_rules": [
-  {
-    "pattern": ".*test.*",
-    "tools": ["claude"]
-  },
-  {
-    "condition": "file_type == 'python'",
-    "tools": ["opencode", "claude"]
-  }
-]
-```
-
-**Environment Variables:**
-
-```bash
-export AURORA_HEADLESS_TOOLS=claude,opencode
-export AURORA_HEADLESS_STRATEGY=all_complete
-export AURORA_HEADLESS_PARALLEL=true
-export AURORA_HEADLESS_MAX_ITERATIONS=15
-export AURORA_HEADLESS_TIMEOUT=300
-```
-
-**CLI Usage:**
-
-```bash
-# Single tool
-aur headless -t claude --max=10
-
-# Multiple tools in parallel
-aur headless -t claude -t opencode --max=10
-
-# Multiple tools with voting
-aur headless -t claude -t opencode -t cursor --strategy voting
-
-# Sequential multi-tool (round-robin)
-aur headless -t claude -t opencode --sequential
-
-# Show effective configuration
-aur headless --show-config
-
-# List available tools
-aur headless --list-tools
-```
-
----
-
-### Planning Settings
-
-Controls plan storage and behavior.
-
-```json
-"planning": {
-  "base_dir": "./.aurora/plans",
-  "template_dir": null,
-  "auto_increment": true,
-  "archive_on_complete": false
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `base_dir` | string | `"./.aurora/plans"` | Directory for plan files. |
-| `template_dir` | string\|null | `null` | Custom templates directory. `null` = use package defaults. |
-| `auto_increment` | bool | `true` | Auto-generate sequential plan IDs (plan-001, plan-002, etc.). |
-| `archive_on_complete` | bool | `false` | Automatically archive plans when completed. |
-
-**Environment variables:**
-```bash
-export AURORA_PLANS_DIR=/custom/plans
-export AURORA_TEMPLATE_DIR=/custom/templates
-export AURORA_PLANNING_AUTO_INCREMENT=false
-export AURORA_PLANNING_ARCHIVE_ON_COMPLETE=true
-```
-
----
-
-### Agents Settings
-
-Controls agent discovery and caching. Aurora now supports **20 AI coding tools** with automatic discovery from their conventional agent locations.
-
-```json
-"agents": {
-  "auto_refresh": true,
-  "refresh_interval_hours": 24,
-  "discovery_paths": [
-    "~/.claude/agents",
-    "~/.cursor/agents",
-    "~/.factory/droids",
-    "~/.config/opencode/agent"
-  ],
-  "manifest_path": "./.aurora/cache/agent_manifest.json"
-}
-```
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `auto_refresh` | bool | `true` | Automatically refresh agent manifest when stale. |
-| `refresh_interval_hours` | int | `24` | Hours between manifest refreshes. Must be >= 1. |
-| `discovery_paths` | string[] | *(all 20 tools)* | Directories to scan for agent definitions. See [Tool Paths Reference](#tool-paths-reference) for complete list. |
-| `manifest_path` | string | `"./.aurora/cache/agent_manifest.json"` | Cached agent manifest location. |
-
-**What agents are:** Agents are specialized AI personas defined in markdown files. Aurora discovers them from standard locations used by Claude Code, Cursor, Factory Droid, OpenCode, and 16 other supported tools.
-
-**Agent discovery during init:** When you run `aur init --tools=<tool>`, Aurora automatically discovers agents from that tool's conventional location and reports the count.
-
-**Custom discovery paths:** Add your own agent directories:
-```json
-"agents": {
-  "discovery_paths": [
-    "~/.claude/agents",
-    "~/my-custom-agents"
-  ]
-}
+AURORA_HEADLESS_BUDGET=25.0 aur headless prompt.md
+AURORA_HEADLESS_TIME_LIMIT=3600 aur headless prompt.md
 ```
 
 ---
 
 ### Budget Settings
 
-Controls API usage tracking and limits.
+Configure API cost tracking and limits.
 
 ```json
-"budget": {
-  "limit": 10.0,
-  "tracker_path": "~/.aurora/budget_tracker.json"
+{
+  "budget": {
+    "limit": 10.0,
+    "tracker_path": "~/.aurora/budget_tracker.json"
+  }
 }
 ```
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `limit` | float | `10.0` | Budget limit in USD. Aurora warns when approaching limit. Must be >= 0. |
-| `tracker_path` | string | `"~/.aurora/budget_tracker.json"` | **Always global** - tracks usage across all projects. |
-
-**Note:** The budget tracker is intentionally global so you have one view of total API spending across all projects.
+**Fields:**
+- `limit` - Monthly budget in USD
+- `tracker_path` - Where to store usage data (always global)
 
 **Check usage:**
 ```bash
-aur budget status
+aur budget show        # View current usage
+aur budget set 25.0    # Update monthly limit
+```
+
+**Budget tracker format:**
+```json
+{
+  "2026-01": {
+    "spent": 5.23,
+    "limit": 10.0
+  }
+}
 ```
 
 ---
 
 ### Logging Settings
 
-Controls log output.
+Configure log levels and file locations.
 
 ```json
-"logging": {
-  "level": "INFO",
-  "file": "./.aurora/logs/aurora.log"
+{
+  "logging": {
+    "level": "INFO",
+    "path": "./.aurora/logs/",
+    "max_size_mb": 100,
+    "max_files": 10
+  }
 }
 ```
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `level` | string | `"INFO"` | Log verbosity. Values: `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"`. |
-| `file` | string | `"./.aurora/logs/aurora.log"` | Log file path. |
+**Fields:**
+- `level` - Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- `path` - Log directory
+- `max_size_mb` - Max size per log file
+- `max_files` - Max number of rotated logs
 
-**Environment variable:**
-```bash
-export AURORA_LOGGING_LEVEL=DEBUG
-```
+**Environment:** `AURORA_LOGGING_LEVEL=DEBUG`
 
 ---
 
-### MCP Settings (Dormant)
+### Context Settings
 
-MCP (Model Context Protocol) support is **dormant** as of v0.5.0. These settings are preserved for potential future use.
+Configure code analysis and hybrid retrieval.
 
 ```json
-"mcp": {
-  "always_on": false,
-  "log_file": "./.aurora/logs/mcp.log",
-  "max_results": 10
+{
+  "context": {
+    "code": {
+      "enabled": true,
+      "languages": ["python"],
+      "max_file_size_kb": 500,
+      "cache_ttl_hours": 24,
+      "hybrid_weights": {
+        "activation": 0.6,
+        "semantic": 0.4,
+        "top_k": 100,
+        "fallback_to_activation": true
+      }
+    }
+  }
 }
 ```
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `always_on` | bool | `false` | Enable MCP server (dormant). |
-| `log_file` | string | `"./.aurora/logs/mcp.log"` | MCP-specific log file. |
-| `max_results` | int | `10` | Maximum results returned by MCP queries. Must be >= 1. |
-
-See [MCP Deprecation](MCP_DEPRECATION.md) for details on why MCP was deprecated.
+**Fields:**
+- `enabled` - Enable code context extraction
+- `languages` - Supported languages for parsing
+- `max_file_size_kb` - Skip files larger than this
+- `hybrid_weights` - ACT-R vs semantic search balance
 
 ---
 
-## Tool Paths Reference
+### Early Detection Settings
 
-Aurora maintains a centralized registry of conventional paths for all **20 supported AI coding tools**. Each tool has four path types:
+Configure proactive error detection during execution.
 
-| Path Type | Description | Example |
-|-----------|-------------|---------|
-| `agents` | Global directory for agent persona files | `~/.claude/agents` |
-| `commands` | Global directory for user commands | `~/.claude/commands` |
-| `slash_commands` | Project-local Aurora slash commands | `.claude/commands/aur` |
-| `mcp` | MCP server configuration file | `~/.claude/mcp_servers.json` |
-
-### Complete Tool Paths Table
-
-| Tool ID | Agents Path | Slash Commands Path | MCP Config |
-|---------|-------------|---------------------|------------|
-| `amazon-q` | `~/.aws/amazonq/cli-agents` | `.amazonq/prompts` | `~/.aws/amazonq/mcp.json` |
-| `antigravity` | `~/.config/antigravity/agents` | `.agent/workflows` | — |
-| `auggie` | `~/.config/auggie/agents` | `.augment/commands` | — |
-| `claude` | `~/.claude/agents` | `.claude/commands/aur` | `~/.claude/mcp_servers.json` |
-| `cline` | `~/.cline/agents` | `.clinerules/workflows` | `~/.cline/mcp_settings.json` |
-| `codebuddy` | `~/.config/codebuddy/agents` | `.codebuddy/commands/aurora` | — |
-| `codex` | `~/.codex/agents` | `.codex/prompts` | — |
-| `costrict` | `~/.config/costrict/agents` | `.cospec/aurora/commands` | — |
-| `crush` | `~/.config/crush/agents` | `.crush/commands/aurora` | — |
-| `cursor` | `~/.cursor/agents` | `.cursor/commands` | — |
-| `factory` | `~/.factory/droids` | `.factory/commands` | — |
-| `gemini` | `~/.config/gemini-cli/agents` | `.gemini/commands/aurora` | — |
-| `github-copilot` | `~/.config/github-copilot/agents` | `.github/prompts` | — |
-| `iflow` | `~/.config/iflow/agents` | `.iflow/commands` | — |
-| `kilocode` | `~/.config/kilocode/agents` | `.kilocode/workflows` | — |
-| `opencode` | `~/.config/opencode/agent` | `.opencode/command` | — |
-| `qoder` | `~/.config/qoder/agents` | `.qoder/commands/aurora` | — |
-| `qwen` | `~/.config/qwen-coder/agents` | `.qwen/commands` | — |
-| `roocode` | `~/.config/roocode/agents` | `.roo/commands` | — |
-| `windsurf` | `~/.windsurf/agents` | `.windsurf/workflows` | — |
-
-### Path Type Details
-
-#### Agents Path (Global)
-Where agent persona markdown files are stored globally for each tool:
-- Used by Aurora's agent discovery system
-- Scanned during `aur init` and `aur agents list`
-- Contains `.md` files with agent definitions
-
-#### Commands Path (Global)
-Where user-defined slash commands are stored globally:
-- Tool-specific location for custom commands
-- Not used by Aurora directly (for reference)
-
-#### Slash Commands Path (Project-Local)
-Where Aurora writes its project-local slash commands:
-- Created during `aur init --tools=<tool>`
-- Contains Aurora commands like `search`, `plan`, `get`, etc.
-- Relative to project root (no `~` prefix)
-
-#### MCP Config (Global)
-Where MCP server configuration is stored:
-- Only configured for tools with known MCP support
-- MCP is currently dormant in Aurora
-
-### Programmatic Access
-
-Access tool paths programmatically:
-
-```python
-from aurora_cli.configurators.slash.paths import (
-    get_tool_paths,
-    get_all_agent_paths,
-    get_all_tools,
-    TOOL_PATHS,
-)
-
-# Get paths for a specific tool
-claude_paths = get_tool_paths("claude")
-print(claude_paths.agents)         # ~/.claude/agents
-print(claude_paths.slash_commands) # .claude/commands/aur
-print(claude_paths.mcp)            # ~/.claude/mcp_servers.json
-
-# Get all agent discovery paths (all 20 tools)
-all_agent_paths = get_all_agent_paths()
-# Returns: ['~/.aws/amazonq/cli-agents', '~/.config/antigravity/agents', ...]
-
-# List all tool IDs
-tools = get_all_tools()
-# Returns: ['amazon-q', 'antigravity', 'auggie', 'claude', ...]
+```json
+{
+  "early_detection": {
+    "enabled": true,
+    "check_interval": 2.0,
+    "stall_threshold": 15.0,
+    "min_output_bytes": 100,
+    "stderr_pattern_check": true,
+    "memory_limit_mb": null
+  }
+}
 ```
 
-### Sources
-
-Path information was researched from official documentation:
-- **OpenCode**: https://opencode.ai/docs/config/
-- **Factory Droid**: https://docs.factory.ai/cli/configuration/custom-droids
-- **Cline**: https://docs.cline.bot/cline-cli/cli-reference
-- **Cursor**: https://cursor.com/docs/cli/reference/configuration
-- **Codex**: https://developers.openai.com/codex/config-advanced/
-- **Amazon Q**: https://docs.aws.amazon.com/amazonq/
+**Fields:**
+- `enabled` - Enable early detection
+- `check_interval` - How often to check (seconds)
+- `stall_threshold` - No output = stalled (seconds)
+- `min_output_bytes` - Minimum output to consider progress
+- `stderr_pattern_check` - Look for error patterns
+- `memory_limit_mb` - Kill if exceeds (null = no limit)
 
 ---
 
 ## Environment Variables
 
-All supported environment variables:
+Aurora supports environment variable overrides for common settings:
 
-| Variable | Config Equivalent | Description |
-|----------|-------------------|-------------|
-| `AURORA_HOME` | *(config location)* | Override `~/.aurora` directory |
-| `ANTHROPIC_API_KEY` | `llm.anthropic_api_key` | Anthropic API key (recommended) |
-| `AURORA_ESCALATION_THRESHOLD` | `escalation.threshold` | Float 0.0-1.0 |
-| `AURORA_LOGGING_LEVEL` | `logging.level` | DEBUG/INFO/WARNING/ERROR/CRITICAL |
-| `AURORA_PLANS_DIR` | `planning.base_dir` | Plans directory path |
-| `AURORA_TEMPLATE_DIR` | `planning.template_dir` | Templates directory path |
-| `AURORA_PLANNING_AUTO_INCREMENT` | `planning.auto_increment` | true/false |
-| `AURORA_PLANNING_ARCHIVE_ON_COMPLETE` | `planning.archive_on_complete` | true/false |
-| `AURORA_SOAR_TOOL` | `soar.default_tool` | CLI tool name |
-| `AURORA_SOAR_MODEL` | `soar.default_model` | sonnet/opus |
-| `AURORA_SPAWN_TOOL` | `spawner.tool` | CLI tool for spawning |
-| `AURORA_SPAWN_MODEL` | `spawner.model` | Model for spawning |
-| `AURORA_HEADLESS_TOOLS` | `headless.tools` | Comma-separated tool names |
-| `AURORA_HEADLESS_STRATEGY` | `headless.strategy` | Aggregation strategy |
-| `AURORA_HEADLESS_PARALLEL` | `headless.parallel` | true/false |
-| `AURORA_HEADLESS_MAX_ITERATIONS` | `headless.max_iterations` | Max loop iterations |
-| `AURORA_HEADLESS_TIMEOUT` | `headless.timeout` | Per-tool timeout (seconds) |
+### LLM Configuration
 
-**Example .bashrc/.zshrc:**
-```bash
-# Aurora configuration
-export ANTHROPIC_API_KEY=sk-ant-...
-export AURORA_SOAR_TOOL=cursor
-export AURORA_LOGGING_LEVEL=DEBUG
-```
+| Variable | Config Path | Example |
+|----------|-------------|---------|
+| `ANTHROPIC_API_KEY` | `llm.api_key` | `sk-ant-...` |
+| `AURORA_LLM_MODEL` | `llm.model` | `claude-3-5-sonnet-20241022` |
+
+### SOAR Configuration
+
+| Variable | Config Path | Example |
+|----------|-------------|---------|
+| `AURORA_SOAR_TOOL` | `soar.default_tool` | `cursor`, `opencode` |
+| `AURORA_SOAR_MODEL` | `soar.default_model` | `sonnet`, `opus` |
+
+### Headless Configuration
+
+| Variable | Config Path | Example |
+|----------|-------------|---------|
+| `AURORA_HEADLESS_BUDGET` | `headless.budget` | `25.0` |
+| `AURORA_HEADLESS_TIME_LIMIT` | `headless.time_limit` | `3600` |
+| `AURORA_HEADLESS_TOOLS` | `headless.tools` | `claude,cursor,opencode` |
+| `AURORA_HEADLESS_TIMEOUT` | `headless.timeout` | `600` |
+
+### Planning Configuration
+
+| Variable | Config Path | Example |
+|----------|-------------|---------|
+| `AURORA_PLANS_DIR` | `planning.base_dir` | `./my-plans` |
+| `AURORA_TEMPLATE_DIR` | `planning.template_dir` | `./templates` |
+
+### Logging Configuration
+
+| Variable | Config Path | Example |
+|----------|-------------|---------|
+| `AURORA_LOGGING_LEVEL` | `logging.level` | `DEBUG`, `INFO` |
+
+### Paths Configuration
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `AURORA_HOME` | Override global .aurora directory | `~/.aurora` |
+| `HF_HUB_OFFLINE` | Use cached models only | `0` (download) |
 
 ---
 
-## Project vs Global Mode
+## Customization Guide
 
-Aurora operates in two modes based on whether `.aurora/` exists:
+### Creating Your Config File
 
-### Project Mode (Recommended)
+1. **Check current config:**
+   ```bash
+   aur doctor  # Shows config file location
+   ```
 
-When `.aurora/` directory exists in current directory:
+2. **Create user config:**
+   ```bash
+   # Global config (affects all projects)
+   mkdir -p ~/.aurora
+   nano ~/.aurora/config.json
 
+   # Project config (this project only)
+   aur init  # Creates .aurora/
+   nano .aurora/config.json
+   ```
+
+3. **Start with minimal overrides:**
+   ```json
+   {
+     "soar": {
+       "default_tool": "cursor"
+     },
+     "budget": {
+       "limit": 25.0
+     }
+   }
+   ```
+
+### Common Customizations
+
+**Change default tool:**
+```json
+{
+  "soar": {
+    "default_tool": "opencode",
+    "default_model": "opus"
+  }
+}
 ```
-your-project/
-├── .aurora/
-│   ├── config.json      ← Project config (optional)
-│   ├── memory.db        ← Project memory
-│   ├── plans/           ← Project plans
-│   ├── cache/           ← Project cache
-│   └── logs/            ← Project logs
-├── src/
-└── ...
+
+**Increase budget:**
+```json
+{
+  "budget": {
+    "limit": 50.0
+  }
+}
 ```
 
-**Benefits:**
-- Complete project isolation
-- Config travels with project (can be committed)
-- No interference between projects
+**Debug logging:**
+```json
+{
+  "logging": {
+    "level": "DEBUG"
+  }
+}
+```
 
-**Create project mode:**
+**Custom agent paths:**
+```json
+{
+  "agents": {
+    "discovery_paths": [
+      "~/.claude/agents",
+      "~/my-agents"
+    ]
+  }
+}
+```
+
+**Headless multi-tool:**
+```json
+{
+  "headless": {
+    "tools": ["claude", "cursor", "opencode"],
+    "strategy": "voting",
+    "parallel": true
+  }
+}
+```
+
+### Validation
+
+Aurora validates config on load. Invalid values will show an error:
+
 ```bash
-cd your-project
-aur init
+$ aur doctor
+Config error: headless.budget must be positive, got -5.0
 ```
 
-### Global Mode
+**Common validation rules:**
+- `budget.limit` > 0
+- `headless.time_limit` > 0
+- `logging.level` in [DEBUG, INFO, WARNING, ERROR, CRITICAL]
+- `escalation.threshold` between 0.0-1.0
+- `search.min_semantic_score` between 0.0-1.0
 
-When no `.aurora/` exists, Aurora uses global configuration:
+---
 
-```
-~/.aurora/
-├── config.json          ← Global config
-├── memory.db            ← Shared memory (if configured)
-├── budget_tracker.json  ← Always global
-└── logs/
-```
+## Migration Notes
 
-**When to use global:**
-- Quick queries without project setup
-- Shared settings across projects
-- Testing Aurora features
+### From v0.6.x to v0.7.0+
+
+**Breaking changes:**
+- `database.path` → `storage.path`
+- Removed `aurora_core/config/` package
+- Config now returns dict instead of dataclass
+
+**What you need to do:**
+
+1. Update config files:
+   ```json
+   // Old (v0.6.x)
+   {
+     "database": {
+       "path": "./.aurora/memory.db"
+     }
+   }
+
+   // New (v0.7.0+)
+   {
+     "storage": {
+       "path": "./.aurora/memory.db"
+     }
+   }
+   ```
+
+2. Code using config:
+   ```python
+   # Old
+   from aurora_core.config import load_config
+   config = load_config()  # Returns dataclass
+
+   # New
+   from aurora_cli.config import Config
+   config = Config()  # Returns wrapper with same API
+   ```
+
+**Backward compatibility:**
+The `Config` class wrapper maintains the same property accessors, so most code continues to work without changes.
 
 ---
 
 ## Troubleshooting
 
-### Config file not loading
+### Config Not Loading
 
-**Check location:**
+**Symptom:** Aurora uses defaults instead of your config.
+
+**Check:**
 ```bash
-# See which config file Aurora finds
-cat .aurora/config.json 2>/dev/null || cat ~/.aurora/config.json
+aur doctor  # Shows which config file is loaded
+ls -la ~/.aurora/config.json
+ls -la ./.aurora/config.json
 ```
 
-**Validate JSON syntax:**
-```bash
-python -m json.tool .aurora/config.json
-```
+**Common causes:**
+- Config file doesn't exist
+- Invalid JSON syntax
+- Wrong file location (global vs project)
 
-### Environment variable not working
+### Environment Variables Not Working
 
-**Check it's exported:**
+**Check precedence:**
 ```bash
+# Set and test
+export AURORA_SOAR_TOOL=cursor
+aur soar "test query"  # Should show cursor in output
+
+# Verify it's set
 echo $AURORA_SOAR_TOOL
-# Should show value, not empty
 ```
 
-**Check spelling:**
+### Validation Errors
+
+**Symptom:** Config loads but values rejected.
+
 ```bash
-env | grep AURORA
+$ aur doctor
+Config error: headless.budget must be positive, got 0.0
 ```
 
-### API key issues
+**Fix:** Check value ranges in validation rules above.
 
-**Verify key is set:**
+### Budget Not Tracking
+
+**Check tracker file:**
 ```bash
-echo $ANTHROPIC_API_KEY | head -c 20
-# Should show: sk-ant-...
+cat ~/.aurora/budget_tracker.json
 ```
 
-**Never put API keys in config files that might be committed:**
+**Reset if corrupted:**
 ```bash
-# Good: environment variable
-export ANTHROPIC_API_KEY=sk-ant-...
-
-# Bad: in config.json (might be committed)
-"anthropic_api_key": "sk-ant-..."
+rm ~/.aurora/budget_tracker.json
+aur budget set 10.0
 ```
 
-### Reset to defaults
+### Tool Not Found
 
-**Remove project config:**
+**Symptom:** `Tool 'cursor' not found in PATH`
+
+**Check:**
 ```bash
-rm .aurora/config.json
+which cursor
+echo $PATH
 ```
 
-**Remove global config:**
-```bash
-rm ~/.aurora/config.json
-```
-
-Aurora will use built-in defaults.
+**Fix:** Install the tool or use a different one.
 
 ---
 
 ## See Also
 
-- [Commands Reference](../COMMANDS.md) - CLI command documentation
-- [SOAR Reasoning](SOAR.md) - 9-phase cognitive pipeline
-- [ML Models Guide](ML_MODELS.md) - Custom embedding models
-- [MCP Deprecation](MCP_DEPRECATION.md) - Why MCP was deprecated
-- [Error Catalog](cli/ERROR_CATALOG.md) - Error codes and solutions
+- [QUICK_START.md](../guides/QUICK_START.md) - Getting started with Aurora
+- [CLI_USAGE_GUIDE.md](../guides/CLI_USAGE_GUIDE.md) - Command reference
+- [SOAR.md](../guides/SOAR.md) - SOAR reasoning system
+- [TOOLS_CONFIG_GUIDE.md](../guides/TOOLS_CONFIG_GUIDE.md) - Multi-tool setup

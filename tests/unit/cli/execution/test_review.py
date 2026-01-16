@@ -40,31 +40,33 @@ class TestDecompositionReview:
         assert len(review.agent_gaps) == 1
         assert review.agent_gaps[0].required_agent == "@devops-expert"
 
-    @patch("aurora_cli.execution.review.console")
-    def test_display_without_gaps(self, mock_console):
-        """Test display without gaps."""
+    def test_display_without_gaps(self):
+        """Test display without gaps is a no-op.
+
+        Note: display() is intentionally a no-op since decomposition details
+        are shown by DecompositionSummary.display() to avoid duplicate output.
+        """
         subgoals = [
             {"description": "Implement auth", "agent_id": "@full-stack-dev", "goal": "Auth"}
         ]
 
         review = DecompositionReview(subgoals, [])
+        # Should not raise - just verify it runs without error
         review.display()
 
-        # Should print table and summary
-        assert mock_console.print.called
+    def test_display_with_gaps(self):
+        """Test display with gaps is a no-op.
 
-    @patch("aurora_cli.execution.review.console")
-    def test_display_with_gaps(self, mock_console):
-        """Test display with gaps."""
+        Note: display() is intentionally a no-op since decomposition details
+        are shown by DecompositionSummary.display() to avoid duplicate output.
+        """
         subgoals = [{"description": "Deploy", "agent_id": "@devops-expert", "goal": "Deploy"}]
 
         gaps = [AgentGap(subgoal_index=0, description="Deploy", required_agent="@devops-expert")]
 
         review = DecompositionReview(subgoals, gaps)
+        # Should not raise - just verify it runs without error
         review.display()
-
-        # Should print table with gap warnings
-        assert mock_console.print.called
 
     @patch("aurora_cli.execution.review.Prompt.ask")
     def test_prompt_proceed(self, mock_ask):

@@ -28,10 +28,12 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-### With ML Features
+**Optional ML features:** If you want to test semantic search locally:
 ```bash
-pip install -e ".[ml]"
+pip install sentence-transformers torch
 ```
+
+Note: Aurora works without ML dependencies (uses BM25 + ACT-R only).
 
 ## Development Workflow
 
@@ -223,10 +225,11 @@ aur mem index .
 pip install tree-sitter-python tree-sitter-javascript
 ```
 
-**Tests fail with ML**: Missing dependencies
+**Tests fail with ML**: Missing optional ML dependencies
 ```bash
-pip install -e ".[ml]"
-pytest -m "not ml"  # Skip ML tests
+pip install sentence-transformers torch
+# Or skip ML tests:
+pytest -m "not ml"
 ```
 
 ## Release Process

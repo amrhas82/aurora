@@ -78,7 +78,7 @@ class TestCLIPipeLLMClientGenerate:
             assert response.model == "claude"
 
     def test_generate_handles_timeout(self, tmp_path):
-        """generate() enforces 180-second timeout."""
+        """generate() enforces 300-second (5 min) timeout."""
         from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
 
         with patch("shutil.which", return_value="/usr/bin/claude"):
@@ -90,7 +90,7 @@ class TestCLIPipeLLMClientGenerate:
             client.generate(prompt="Test")
 
             call_args = mock_run.call_args
-            assert call_args[1]["timeout"] == 180
+            assert call_args[1]["timeout"] == 300
 
     def test_generate_raises_on_failure(self, tmp_path):
         """generate() raises RuntimeError on non-zero exit code."""

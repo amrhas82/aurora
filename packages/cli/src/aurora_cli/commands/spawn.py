@@ -33,7 +33,7 @@ from rich.console import Console
 from aurora_cli.commands.spawn_helpers import clean_checkpoints as _clean_checkpoints_impl
 from aurora_cli.commands.spawn_helpers import list_checkpoints as _list_checkpoints_impl
 from aurora_cli.commands.spawn_helpers import resume_from_checkpoint as _resume_from_checkpoint_impl
-from aurora_spawner import spawn_parallel, spawn_parallel_tracked
+from aurora_spawner import spawn_parallel_tracked
 from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
 from implement.parser import TaskParser

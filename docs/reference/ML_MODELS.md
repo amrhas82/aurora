@@ -12,7 +12,7 @@ AURORA uses `all-MiniLM-L6-v2` by default:
 
 ## When to Use ML
 
-**Use ML features (`pip install aurora-actr[ml]`):**
+**Use ML features (install manually: `pip install sentence-transformers torch`):**
 - Large codebases (10K+ files)
 - Need conceptual search ("authentication" finds login(), verify_token())
 - Searching documentation semantically

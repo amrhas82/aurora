@@ -38,10 +38,20 @@ See Also:
 
 from aurora_context_code.semantic.embedding_provider import EmbeddingProvider, cosine_similarity
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+from aurora_context_code.semantic.model_utils import (
+    DEFAULT_MODEL,
+    BackgroundModelLoader,
+    ensure_model_downloaded,
+    is_model_cached,
+)
 
 __all__ = [
     "EmbeddingProvider",
     "cosine_similarity",
     "HybridRetriever",
     "HybridConfig",
+    "DEFAULT_MODEL",
+    "BackgroundModelLoader",
+    "ensure_model_downloaded",
+    "is_model_cached",
 ]

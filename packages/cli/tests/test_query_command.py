@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_cli.execution import QueryExecutor
+from aurora_cli.query_executor import QueryExecutor
 from aurora_reasoning.llm_client import LLMResponse
 
 

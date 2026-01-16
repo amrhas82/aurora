@@ -15,7 +15,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from aurora_cli.config import load_config
+from aurora_cli.config import Config
 from aurora_cli.templates.headless import SCRATCHPAD_TEMPLATE
 
 console = Console()
@@ -289,8 +289,8 @@ def headless_command(
         _list_available_tools()
         return
 
-    # Load config and apply defaults (Config is a dataclass with headless_* attributes)
-    config = load_config()
+    # Load config and apply defaults (Config class wraps dict with attribute access)
+    config = Config()
 
     # Load tool configurations from config into the registry
     from aurora_cli.tool_providers import ToolProviderRegistry

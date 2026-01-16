@@ -1,10 +1,18 @@
 {
   "version": "1.0",
-  "updated_at": "2026-01-15T19:46:14.874934",
+  "updated_at": "2026-01-16T15:20:32.886692",
   "active_plans": [
     "0001-enhance-agent-recovery-aur",
     "0002-improve-aur-spawn-parallel",
-    "0003-improve-aur-spawn-parallel"
+    "0003-improve-aur-spawn-parallel",
+    "0004-improve-aur-goals-decomposing",
+    "0005-test-feature",
+    "0006-add-login-feature",
+    "0007-improve-aur-goals-decomposing",
+    "0008-improve-aur-goals-decomposing",
+    "0009-improve-aur-goals-decomposing",
+    "0010-add-login-feature",
+    "0010-improve-aur-goals-decomposing"
   ],
   "archived_plans": [],
   "stats": {}

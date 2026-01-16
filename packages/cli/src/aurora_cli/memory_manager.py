@@ -34,12 +34,12 @@ from aurora_cli.errors import ErrorHandler, MemoryStoreError
 from aurora_cli.ignore_patterns import load_ignore_patterns, should_ignore
 from aurora_context_code.git import GitSignalExtractor
 from aurora_context_code.registry import ParserRegistry, get_global_registry
-from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.chunks import Chunk
 from aurora_core.store import SQLiteStore
 from aurora_core.types import ChunkID
 
 if TYPE_CHECKING:
+    from aurora_context_code.semantic import EmbeddingProvider
     from aurora_core.store.base import Store
 
 
@@ -264,7 +264,7 @@ class MemoryManager:
         config: Config | None = None,
         memory_store: Store | None = None,
         parser_registry: ParserRegistry | None = None,
-        embedding_provider: EmbeddingProvider | None = None,
+        embedding_provider: "EmbeddingProvider | None" = None,
     ):
         """Initialize MemoryManager.
 
@@ -272,7 +272,7 @@ class MemoryManager:
             config: Configuration with db_path (preferred way to initialize)
             memory_store: Optional store instance (for backward compatibility)
             parser_registry: Optional parser registry (uses global if None)
-            embedding_provider: Optional embedding provider (creates new if None)
+            embedding_provider: Optional embedding provider (lazy-loaded if None)
 
         Note:
             Either config or memory_store must be provided.
@@ -291,9 +291,25 @@ class MemoryManager:
         self.store = memory_store  # Alias for compatibility
         self.config = config
         self.parser_registry = parser_registry or get_global_registry()
-        self.embedding_provider = embedding_provider or EmbeddingProvider()
+        self._embedding_provider = embedding_provider  # Lazy-loaded via property
         self.error_handler = ErrorHandler()
         logger.info("MemoryManager initialized")
+
+    @property
+    def embedding_provider(self) -> "EmbeddingProvider":
+        """Get embedding provider (lazy-loaded on first access).
+
+        Sets HF_HUB_OFFLINE=1 if model is cached to prevent network requests.
+        """
+        if self._embedding_provider is None:
+            from aurora_context_code.semantic.model_utils import is_model_cached
+
+            if is_model_cached():
+                os.environ["HF_HUB_OFFLINE"] = "1"
+            from aurora_context_code.semantic import EmbeddingProvider
+
+            self._embedding_provider = EmbeddingProvider()
+        return self._embedding_provider
 
     def index_path(
         self,

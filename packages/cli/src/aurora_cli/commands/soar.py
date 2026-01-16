@@ -70,6 +70,45 @@ PHASE_DESCRIPTIONS = {
 # ============================================================================
 
 
+def _start_background_model_loading(verbose: bool = False) -> None:
+    """Start loading the embedding model in the background.
+
+    This is non-blocking - the model loads in a background thread while
+    other initialization continues. When embeddings are actually needed,
+    the code will wait for loading to complete (with a spinner if still loading).
+
+    Uses lightweight cache checking to avoid importing torch/sentence-transformers
+    until actually needed in the background thread.
+
+    Args:
+        verbose: Whether to enable verbose logging
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Use lightweight cache check that doesn't import torch
+        from aurora_context_code.model_cache import is_model_cached_fast, start_background_loading
+
+        # Only start background loading if model is cached
+        # If not cached, we'll handle download later when actually needed
+        if not is_model_cached_fast():
+            logger.debug("Model not cached, skipping background load")
+            return
+
+        # Start loading in background thread (imports torch there, not here)
+        start_background_loading()
+        logger.debug("Background model loading started")
+
+    except ImportError:
+        # aurora_context_code not installed
+        if verbose:
+            logger.debug("Context code package not available")
+    except Exception as e:
+        logger.debug("Background model loading failed to start: %s", e)
+
+
 def _format_markdown_answer(text: str) -> str:
     """Format markdown answer with better visual hierarchy for terminal.
 
@@ -457,13 +496,17 @@ def soar_command(
         aur soar "Refactor auth" --context src/auth.py --context docs/auth.md
     """
     # Load config for defaults
-    from aurora_cli.config import load_config
+    from aurora_cli.config import Config
 
     try:
-        cli_config = load_config()
+        cli_config = Config()
     except Exception:
         # If config loading fails, use hardcoded defaults
         cli_config = None
+
+    # Start background model loading early (non-blocking)
+    # The model will load in parallel with other initialization
+    _start_background_model_loading(verbose)
 
     # Resolve tool from CLI flag -> env var -> config -> default
     if tool is None:
@@ -510,7 +553,6 @@ def soar_command(
 
     # Import here to avoid circular imports and allow lazy loading
     from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
-    from aurora_core.config.loader import Config
     from aurora_core.store.sqlite import SQLiteStore
     from aurora_soar.agent_registry import AgentRegistry
     from aurora_soar.orchestrator import SOAROrchestrator
@@ -525,8 +567,8 @@ def soar_command(
     # Create phase callback for terminal display
     phase_callback = _create_phase_callback(tool)
 
-    # Load dependencies
-    config = Config.load()
+    # Load config - cli_config was already loaded at top of function
+    config = cli_config
 
     # Apply CLI overrides for early detection settings
     if (

@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import math
 import sys
 import time
 from typing import TYPE_CHECKING, Any, Callable
@@ -25,7 +24,6 @@ from aurora_spawner import (
     spawn_parallel_tracked,
     spawn_with_retry_and_fallback,
 )
-from aurora_spawner.timeout_policy import SpawnPolicy
 
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
@@ -264,6 +262,7 @@ Please complete this task directly without additional questions or preamble. Pro
                 prompt=prompt,
                 agent=spawn_agent,
                 policy_name="patient",
+                display_name=agent.id,  # Show agent name in progress (even for ad-hoc)
             )
         )
         task_metadata.append(

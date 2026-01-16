@@ -212,7 +212,7 @@ class AgentManifest:
 - One CLI tool (claude, cursor, aider, etc.)
 
 ### Optional
-- `[ml]` extra: sentence-transformers, torch (~1.9GB)
+- ML features: manually install `sentence-transformers` and `torch` (~1.9GB) for semantic search
 - Anthropic API key (for LLM features)
 
 ## Extension Points

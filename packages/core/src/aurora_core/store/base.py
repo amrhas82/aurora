@@ -222,5 +222,25 @@ class Store(ABC):
         """
         pass
 
+    def get_chunk_count(self) -> int:
+        """Get the total number of chunks in storage.
+
+        This is a fast operation for checking if memory has been indexed,
+        avoiding the overhead of loading chunk data or embeddings.
+
+        Returns:
+            Number of chunks stored
+
+        Note:
+            Default implementation uses retrieve_by_activation which may be
+            slower. Subclasses should override with a more efficient COUNT query.
+
+        Raises:
+            StorageError: If storage operation fails
+        """
+        # Default implementation - subclasses should override for efficiency
+        chunks = self.retrieve_by_activation(min_activation=-float("inf"), limit=1)
+        return 1 if chunks else 0
+
 
 __all__ = ["Store"]

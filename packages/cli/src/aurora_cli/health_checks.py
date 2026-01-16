@@ -19,7 +19,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from aurora_cli.config import Config, load_config
+from aurora_cli.config import Config
 
 # Health check result type: (status, message, details)
 # status: "pass", "warning", "fail"
@@ -37,7 +37,7 @@ class CoreSystemChecks:
         Args:
             config: Optional Config object. If None, loads from default location.
         """
-        self.config = config or load_config()
+        self.config = config or Config()
 
     def run_checks(self) -> list[HealthCheckResult]:
         """Run all core system checks.
@@ -175,7 +175,7 @@ class CodeAnalysisChecks:
         Args:
             config: Optional Config object. If None, loads from default location.
         """
-        self.config = config or load_config()
+        self.config = config or Config()
 
     def run_checks(self) -> list[HealthCheckResult]:
         """Run all code analysis checks.
@@ -311,7 +311,7 @@ class SearchRetrievalChecks:
         Args:
             config: Optional Config object. If None, loads from default location.
         """
-        self.config = config or load_config()
+        self.config = config or Config()
 
     def run_checks(self) -> list[HealthCheckResult]:
         """Run all search & retrieval checks.
@@ -463,7 +463,7 @@ class ConfigurationChecks:
         Args:
             config: Optional Config object. If None, loads from default location.
         """
-        self.config = config or load_config()
+        self.config = config or Config()
 
     def run_checks(self) -> list[HealthCheckResult]:
         """Run all configuration checks.
@@ -543,7 +543,7 @@ class ToolIntegrationChecks:
         Args:
             config: Optional Config object. If None, loads from default location.
         """
-        self.config = config or load_config()
+        self.config = config or Config()
 
     def run_checks(self) -> list[HealthCheckResult]:
         """Run all tool integration checks.
@@ -722,7 +722,7 @@ class MCPFunctionalChecks:
         Args:
             config: Optional Config object. If None, loads from default location.
         """
-        self.config = config or load_config()
+        self.config = config or Config()
         # Config doesn't have project_dir, always use cwd
         self.project_path = Path.cwd()
 

@@ -53,10 +53,14 @@ from aurora_soar.phases import (
 from aurora_soar.phases.respond import Verbosity
 
 if TYPE_CHECKING:
-    from aurora_core.config.loader import Config
+    from typing import Any
+
     from aurora_core.store.base import Store
     from aurora_reasoning.llm_client import LLMClient
     from aurora_soar.agent_registry import AgentRegistry
+
+    # Config can be a dict or Config wrapper class - both support .get() method
+    Config = dict[str, Any]
 
 
 logger = logging.getLogger(__name__)

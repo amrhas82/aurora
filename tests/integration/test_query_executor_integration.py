@@ -19,7 +19,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from aurora_cli.errors import APIError
-from aurora_cli.execution import QueryExecutor
+from aurora_cli.query_executor import QueryExecutor
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_reasoning.llm_client import LLMResponse
@@ -104,7 +104,7 @@ def populated_store(temp_db: SQLiteStore) -> SQLiteStore:
 class TestQueryExecutorWithRealStore:
     """Test QueryExecutor with real Store integration."""
 
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_with_real_store(
         self,
         mock_call_llm: Mock,
@@ -142,7 +142,7 @@ class TestQueryExecutorWithRealStore:
         # Since SQLiteStore doesn't have search_keyword, prompt should be just the query
         assert prompt_arg == "fibonacci"
 
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_no_matching_context(
         self,
         mock_call_llm: Mock,
@@ -175,7 +175,7 @@ class TestQueryExecutorWithRealStore:
         # No context prefix since Store doesn't support search_keyword
         assert prompt_arg == "quantum entanglement"
 
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_memory_context_with_mock_search_method(
         self,
         mock_call_llm: Mock,
@@ -227,7 +227,7 @@ class TestQueryExecutorWithRealStore:
         temp_db: SQLiteStore,
     ) -> None:
         """Test direct LLM execution with empty store (no context)."""
-        with patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry") as mock_call:
+        with patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry") as mock_call:
             mock_response = Mock(spec=LLMResponse)
             mock_response.content = "Answer without context"
             mock_response.input_tokens = 15
@@ -252,7 +252,7 @@ class TestQueryExecutorWithRealStore:
 class TestQueryExecutorErrorPropagation:
     """Test error propagation through real components."""
 
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_api_error_propagates_from_llm(
         self,
         mock_call_llm: Mock,
@@ -277,11 +277,11 @@ class TestQueryExecutorErrorPropagation:
 
     def test_invalid_store_raises_error(self) -> None:
         """Test execution with invalid store raises appropriate error."""
-        with patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry"):
+        with patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry"):
             executor = QueryExecutor()
 
             # Pass None as memory_store to direct LLM (should still work)
-            with patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry") as mock_call:
+            with patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry") as mock_call:
                 mock_response = Mock(spec=LLMResponse)
                 mock_response.content = "Response"
                 mock_response.input_tokens = 10
@@ -302,7 +302,7 @@ class TestQueryExecutorErrorPropagation:
         temp_db: SQLiteStore,
     ) -> None:
         """Test graceful degradation when store search fails."""
-        with patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry") as mock_call:
+        with patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry") as mock_call:
             mock_response = Mock(spec=LLMResponse)
             mock_response.content = "Fallback response"
             mock_response.input_tokens = 10
@@ -520,7 +520,7 @@ class TestQueryExecutorRetryLogic:
 class TestQueryExecutorCostEstimation:
     """Test cost estimation with real token counts."""
 
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_cost_estimation_with_real_tokens(
         self,
         mock_call_llm: Mock,

@@ -17,10 +17,6 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from aurora_context_code.semantic import EmbeddingProvider
-from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
-from aurora_core.activation.engine import ActivationEngine
-from aurora_core.store.sqlite import SQLiteStore
 from aurora_soar.phases.assess import assess_complexity
 
 console = Console()
@@ -69,6 +65,11 @@ def query_command(
 
 def _run_interactive(query_text: str, verbose: bool) -> None:
     """Run blocking interactive SOAR - reads stdin at each reasoning phase."""
+    import os
+
+    from aurora_context_code.semantic.model_utils import BackgroundModelLoader, is_model_cached
+    from aurora_core.activation.engine import ActivationEngine
+    from aurora_core.store.sqlite import SQLiteStore
 
     # Initialize
     db_path = str(Path.home() / ".aurora" / "memory.db")
@@ -77,8 +78,33 @@ def _run_interactive(query_text: str, verbose: bool) -> None:
         raise click.Abort()
 
     store = SQLiteStore(db_path)
-    embedding_provider = EmbeddingProvider()
     activation_engine = ActivationEngine()
+
+    # Get embedding provider - prefer background loader if available
+    embedding_provider = None
+    try:
+        loader = BackgroundModelLoader.get_instance()
+
+        # Check if already loaded from background
+        embedding_provider = loader.get_provider_if_ready()
+
+        if embedding_provider is None and loader.is_loading():
+            # Wait for background loading to complete
+            console.print("[dim]Waiting for embedding model...[/]")
+            embedding_provider = loader.wait_for_model(timeout=60.0)
+        elif embedding_provider is None and is_model_cached():
+            # Not loading but cached - load now
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            from aurora_context_code.semantic import EmbeddingProvider
+
+            embedding_provider = EmbeddingProvider()
+    except ImportError:
+        logger.debug("sentence-transformers not installed")
+    except Exception as e:
+        logger.warning("Failed to get embedding provider: %s", e)
+
+    from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
+
     retriever = HybridRetriever(store, activation_engine, embedding_provider)
 
     session_id = f"query-{int(time.time() * 1000)}"
@@ -249,6 +275,11 @@ def _run_interactive(query_text: str, verbose: bool) -> None:
 
 def _run_single_shot(query_text: str, verbose: bool) -> None:
     """Run single-shot mode - outputs phases 1-2 + guidance."""
+    import os
+
+    from aurora_context_code.semantic.model_utils import BackgroundModelLoader, is_model_cached
+    from aurora_core.activation.engine import ActivationEngine
+    from aurora_core.store.sqlite import SQLiteStore
 
     db_path = str(Path.home() / ".aurora" / "memory.db")
     if not Path(db_path).exists():
@@ -256,8 +287,33 @@ def _run_single_shot(query_text: str, verbose: bool) -> None:
         raise click.Abort()
 
     store = SQLiteStore(db_path)
-    embedding_provider = EmbeddingProvider()
     activation_engine = ActivationEngine()
+
+    # Get embedding provider - prefer background loader if available
+    embedding_provider = None
+    try:
+        loader = BackgroundModelLoader.get_instance()
+
+        # Check if already loaded from background
+        embedding_provider = loader.get_provider_if_ready()
+
+        if embedding_provider is None and loader.is_loading():
+            # Wait for background loading to complete
+            console.print("[dim]Waiting for embedding model...[/]")
+            embedding_provider = loader.wait_for_model(timeout=60.0)
+        elif embedding_provider is None and is_model_cached():
+            # Not loading but cached - load now
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            from aurora_context_code.semantic import EmbeddingProvider
+
+            embedding_provider = EmbeddingProvider()
+    except ImportError:
+        logger.debug("sentence-transformers not installed")
+    except Exception as e:
+        logger.warning("Failed to get embedding provider: %s", e)
+
+    from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
+
     retriever = HybridRetriever(store, activation_engine, embedding_provider)
 
     # PHASE 1: ASSESS

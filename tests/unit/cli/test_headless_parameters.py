@@ -237,7 +237,7 @@ class TestEnvironmentVariableOverrides:
         monkeypatch.setenv("AURORA_HEADLESS_BUDGET", "15.50")
         monkeypatch.chdir(tmp_path)
 
-        config = load_config()
+        config = Config()
         assert config.headless_budget == 15.50
 
     def test_budget_env_var_with_integer(self, monkeypatch, tmp_path):
@@ -245,7 +245,7 @@ class TestEnvironmentVariableOverrides:
         monkeypatch.setenv("AURORA_HEADLESS_BUDGET", "25")
         monkeypatch.chdir(tmp_path)
 
-        config = load_config()
+        config = Config()
         assert config.headless_budget == 25.0
 
     def test_budget_env_var_invalid_raises_error(self, monkeypatch, tmp_path):
@@ -262,7 +262,7 @@ class TestEnvironmentVariableOverrides:
         monkeypatch.setenv("AURORA_HEADLESS_TIME_LIMIT", "1800")
         monkeypatch.chdir(tmp_path)
 
-        config = load_config()
+        config = Config()
         assert config.headless_time_limit == 1800
 
     def test_time_limit_env_var_invalid_raises_error(self, monkeypatch, tmp_path):
@@ -585,7 +585,7 @@ class TestCombinedBudgetAndMaxRetriesEnvVars:
         monkeypatch.setenv("AURORA_HEADLESS_BUDGET", "20.0")
         monkeypatch.chdir(tmp_path)
 
-        config = load_config()
+        config = Config()
         # Budget from env var
         assert config.headless_budget == 20.0
         # Retries from defaults in config schema
@@ -597,7 +597,7 @@ class TestCombinedBudgetAndMaxRetriesEnvVars:
         monkeypatch.setenv("AURORA_HEADLESS_TIME_LIMIT", "1800")
         monkeypatch.chdir(tmp_path)
 
-        config = load_config()
+        config = Config()
         assert config.headless_budget == 30.0
         assert config.headless_time_limit == 1800
 

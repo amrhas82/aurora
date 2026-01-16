@@ -413,7 +413,7 @@ class TestEscalationEdgeCases:
 class TestEscalationPipelineIntegration:
     """Test escalation integrated with execution pipeline."""
 
-    @patch("aurora_cli.execution.QueryExecutor.execute_direct_llm")
+    @patch("aurora_cli.query_executor.QueryExecutor.execute_direct_llm")
     def test_direct_llm_path(self, mock_execute):
         """Test direct LLM execution path when escalation chooses direct."""
         handler = AutoEscalationHandler()
@@ -425,7 +425,7 @@ class TestEscalationPipelineIntegration:
             assert result.score < 0.6
             assert result.complexity in ["SIMPLE", "MEDIUM"]
 
-    @patch("aurora_cli.execution.QueryExecutor.execute_aurora")
+    @patch("aurora_cli.query_executor.QueryExecutor.execute_aurora")
     def test_aurora_path(self, mock_execute):
         """Test AURORA execution path when escalation chooses AURORA."""
         handler = AutoEscalationHandler()

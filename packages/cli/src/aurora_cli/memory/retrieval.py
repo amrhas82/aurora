@@ -69,6 +69,8 @@ class MemoryRetriever:
         """Get or create the HybridRetriever instance.
 
         Lazy-loads the retriever to avoid import overhead until needed.
+        Uses BackgroundModelLoader if model loading was started earlier,
+        otherwise creates EmbeddingProvider directly.
 
         Returns:
             HybridRetriever instance
@@ -80,22 +82,120 @@ class MemoryRetriever:
             raise ValueError("Cannot retrieve: no memory store configured")
 
         if self._retriever is None:
-            from aurora_context_code.semantic import EmbeddingProvider
             from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
             from aurora_core.activation.engine import ActivationEngine
 
             activation_engine = ActivationEngine()
-            embedding_provider = EmbeddingProvider()
+
+            # Try to get embedding provider from background loader or create new one
+            embedding_provider = self._get_embedding_provider()
+
             self._retriever = HybridRetriever(
                 self._store,
                 activation_engine,
-                embedding_provider,
+                embedding_provider,  # None = BM25-only mode
             )
 
         return self._retriever
 
+    def _get_embedding_provider(self) -> Any:
+        """Get embedding provider, using background loader if available.
+
+        First checks if BackgroundModelLoader has a ready provider (from
+        background loading started earlier). If so, returns it immediately.
+        If loading is in progress, waits with a progress indicator.
+        Otherwise falls back to creating a new EmbeddingProvider.
+
+        Returns:
+            EmbeddingProvider if available, None for BM25-only mode
+        """
+        try:
+            from aurora_context_code.semantic.model_utils import (
+                BackgroundModelLoader,
+                is_model_cached,
+            )
+
+            loader = BackgroundModelLoader.get_instance()
+
+            # Check if provider is already ready (fastest path)
+            provider = loader.get_provider_if_ready()
+            if provider is not None:
+                logger.debug("Using pre-loaded embedding provider from background loader")
+                return provider
+
+            # Check if loading is in progress - wait with progress indicator
+            if loader.is_loading():
+                logger.debug("Waiting for background model loading to complete")
+                return self._wait_for_background_model(loader)
+
+            # Not loading and not loaded - try to create new provider
+            # This happens if background loading wasn't started (e.g., model not cached)
+            if not is_model_cached():
+                logger.info(
+                    "Embedding model not cached. Using BM25-only search. "
+                    "Run 'aur mem index .' to download the embedding model."
+                )
+                return None
+
+            # Model is cached but wasn't pre-loaded - load now
+            import os
+
+            os.environ["HF_HUB_OFFLINE"] = "1"
+
+            from aurora_context_code.semantic import EmbeddingProvider
+
+            return EmbeddingProvider()
+
+        except ImportError:
+            logger.debug("sentence-transformers not installed, using BM25-only search")
+            return None
+        except Exception as e:
+            logger.warning(
+                "Embedding provider unavailable, using BM25-only search. Error: %s",
+                str(e)[:80],
+            )
+            return None
+
+    def _wait_for_background_model(self, loader: Any) -> Any:
+        """Wait for background model loading with progress display.
+
+        Shows a spinner while waiting for background loading to complete.
+
+        Args:
+            loader: BackgroundModelLoader instance
+
+        Returns:
+            EmbeddingProvider if loaded successfully, None otherwise
+        """
+        try:
+            from rich.console import Console
+            from rich.progress import Progress, SpinnerColumn, TextColumn
+
+            console = Console()
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+                transient=True,
+            ) as progress:
+                task = progress.add_task("Loading embedding model...", total=None)
+                provider = loader.wait_for_model(timeout=60.0)
+                if provider:
+                    progress.update(task, description="[green]Model ready[/]")
+                else:
+                    progress.update(task, description="[yellow]Model unavailable[/]")
+                return provider
+
+        except ImportError:
+            # Rich not available - wait without progress
+            return loader.wait_for_model(timeout=60.0)
+
     def has_indexed_memory(self) -> bool:
         """Check if the memory store has indexed content.
+
+        This method checks the store directly without triggering embedding model
+        loading, avoiding a 30+ second delay on first use.
 
         Returns:
             True if store has at least one chunk, False otherwise
@@ -108,9 +208,18 @@ class MemoryRetriever:
             return False
 
         try:
-            # Try to retrieve one chunk to check if memory exists
-            results = self._get_retriever().retrieve("test", top_k=1)
-            return len(results) > 0
+            # Check store directly without loading embedding model
+            # This avoids the 30+ second model loading delay
+            chunk_count = self._store.get_chunk_count()
+            return chunk_count > 0
+        except AttributeError:
+            # Fallback: if store doesn't have get_chunk_count, use retrieve_by_activation
+            try:
+                results = self._store.retrieve_by_activation(min_activation=0.0, limit=1)
+                return len(results) > 0
+            except Exception as e:
+                logger.warning("Error checking indexed memory: %s", e)
+                return False
         except Exception as e:
             logger.warning("Error checking indexed memory: %s", e)
             return False

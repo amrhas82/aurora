@@ -460,6 +460,26 @@ class SQLiteStore(Store):
         except sqlite3.Error as e:
             raise StorageError(f"Failed to get activation for chunk: {chunk_id}", details=str(e))
 
+    def get_chunk_count(self) -> int:
+        """Get the total number of chunks in storage.
+
+        This is a fast operation that uses COUNT(*) on the chunks table,
+        avoiding the need to load chunk data or embeddings.
+
+        Returns:
+            Number of chunks stored
+
+        Raises:
+            StorageError: If storage operation fails
+        """
+        conn = self._get_connection()
+        try:
+            cursor = conn.execute("SELECT COUNT(*) FROM chunks")
+            row = cursor.fetchone()
+            return row[0] if row else 0
+        except sqlite3.Error as e:
+            raise StorageError("Failed to get chunk count", details=str(e))
+
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
         """Retrieve chunks by activation threshold.
 

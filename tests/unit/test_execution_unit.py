@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from aurora_cli.execution import QueryExecutor
+from aurora_cli.query_executor import QueryExecutor
 
 
 class TestAutoEscalation:
@@ -47,7 +47,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
         ):
@@ -72,7 +72,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch("click.confirm", return_value=True),
             patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
@@ -98,7 +98,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch("click.confirm", return_value=False),
             patch.object(
@@ -128,7 +128,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch.object(
                 executor, "execute_direct_llm", return_value="Direct LLM response"
@@ -157,7 +157,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
         ):
@@ -182,7 +182,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
         ):
@@ -207,7 +207,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch.object(executor, "execute_aurora", return_value="SOAR response") as mock_soar,
         ):
@@ -233,7 +233,7 @@ class TestAutoEscalation:
         }
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch.object(executor, "execute_direct_llm", return_value="Direct LLM response"),
         ):

@@ -13,17 +13,59 @@ Functions:
 import numpy as np
 import numpy.typing as npt
 
-# Optional dependency - only needed for semantic features
-# Note: mypy config disables warn_unused_ignores for this module
-try:
-    import torch
-    from sentence_transformers import SentenceTransformer
+# Lazy-loaded dependencies - only imported when actually needed
+# This avoids 20+ second startup delay from torch/sentence_transformers
+_torch = None
+_SentenceTransformer = None
+_HAS_SENTENCE_TRANSFORMERS: bool | None = None
 
-    HAS_SENTENCE_TRANSFORMERS = True
-except ImportError:
-    HAS_SENTENCE_TRANSFORMERS = False
-    SentenceTransformer = None  # type: ignore[misc,assignment]
-    torch = None  # type: ignore[assignment]
+
+def _can_import_ml_deps() -> bool:
+    """Check if ML dependencies can be imported without actually importing them.
+
+    This is a lightweight check that doesn't trigger heavy imports.
+    Uses importlib.util.find_spec() which only checks for importability.
+
+    Returns:
+        True if both torch and sentence_transformers are available, False otherwise.
+    """
+    import importlib.util
+
+    torch_spec = importlib.util.find_spec("torch")
+    st_spec = importlib.util.find_spec("sentence_transformers")
+
+    return torch_spec is not None and st_spec is not None
+
+
+def _lazy_import() -> bool:
+    """Lazily import torch and sentence_transformers on first use.
+
+    Returns:
+        True if imports succeeded, False otherwise.
+    """
+    global _torch, _SentenceTransformer, _HAS_SENTENCE_TRANSFORMERS
+
+    if _HAS_SENTENCE_TRANSFORMERS is not None:
+        # Already attempted import (success or failure)
+        return _HAS_SENTENCE_TRANSFORMERS
+
+    try:
+        import torch as torch_module
+        from sentence_transformers import SentenceTransformer as ST
+
+        _torch = torch_module
+        _SentenceTransformer = ST
+        _HAS_SENTENCE_TRANSFORMERS = True
+    except ImportError:
+        _HAS_SENTENCE_TRANSFORMERS = False
+
+    return _HAS_SENTENCE_TRANSFORMERS
+
+
+# Public API: Check if sentence-transformers is available
+# Uses lightweight importlib.util.find_spec() - doesn't actually import torch/sentence_transformers
+# This allows tests to conditionally skip without triggering the 20+ second import
+HAS_SENTENCE_TRANSFORMERS = _can_import_ml_deps()
 
 
 def cosine_similarity(
@@ -89,6 +131,8 @@ class EmbeddingProvider:
     - Fast inference (<50ms per chunk target)
     - Good semantic understanding for code
 
+    The model is loaded lazily on first use to avoid 30+ second startup delays.
+
     Attributes:
         model_name: Name of the sentence-transformers model
         embedding_dim: Dimension of output vectors (384 for default model)
@@ -101,12 +145,27 @@ class EmbeddingProvider:
         (384,)
     """
 
+    # Known embedding dimensions for common models (avoid loading model just to get dim)
+    _KNOWN_EMBEDDING_DIMS = {
+        "all-MiniLM-L6-v2": 384,
+        "sentence-transformers/all-MiniLM-L6-v2": 384,
+        "all-mpnet-base-v2": 768,
+        "sentence-transformers/all-mpnet-base-v2": 768,
+        "multi-qa-MiniLM-L6-cos-v1": 384,
+        "all-distilroberta-v1": 768,
+    }
+
     def __init__(
         self,
         model_name: str = "all-MiniLM-L6-v2",
         device: str | None = None,
     ):
-        """Initialize embedding provider.
+        """Initialize embedding provider with lazy model loading.
+
+        The model is NOT loaded during initialization - it will be loaded
+        on the first call to embed_chunk(), embed_query(), or embed_batch().
+        This eliminates the 30+ second startup delay for commands that may
+        not need embeddings.
 
         Args:
             model_name: Sentence-transformers model name
@@ -115,7 +174,7 @@ class EmbeddingProvider:
         Raises:
             ImportError: If sentence-transformers is not installed
         """
-        if not HAS_SENTENCE_TRANSFORMERS:
+        if not _can_import_ml_deps():
             raise ImportError(
                 "sentence-transformers is required for semantic embeddings. "
                 "Install with: pip install aurora-context-code[ml]"
@@ -123,17 +182,106 @@ class EmbeddingProvider:
 
         self.model_name = model_name
 
-        # Auto-detect device if not specified
-        if device is None:
-            self.device = "cuda" if torch is not None and torch.cuda.is_available() else "cpu"
-        else:
-            self.device = device
+        # Store device (will check CUDA availability later when actually loading model)
+        # Deferring this check avoids importing torch during initialization
+        self._device_hint = device
 
-        # Load the sentence-transformers model
-        self._model = SentenceTransformer(model_name, device=self.device)
+        # Lazy-loaded model (initialized to None, loaded on first use)
+        self._model: object | None = None
+        self._device: str | None = None
 
-        # Get embedding dimension from the model
-        self.embedding_dim = self._model.get_sentence_embedding_dimension()
+        # Set embedding dimension from known values (avoids loading model)
+        # Will be updated from model if unknown
+        self._embedding_dim: int | None = self._KNOWN_EMBEDDING_DIMS.get(model_name)
+
+    @property
+    def device(self) -> str:
+        """Get device (auto-detects CUDA only when needed)."""
+        if self._device is None:
+            if self._device_hint is not None:
+                self._device = self._device_hint
+            else:
+                # Lazy check for CUDA - only import torch when actually needed
+                _lazy_import()
+                if _torch is not None and _torch.cuda.is_available():
+                    self._device = "cuda"
+                else:
+                    self._device = "cpu"
+        return self._device
+
+    @property
+    def embedding_dim(self) -> int:
+        """Get embedding dimension, loading model if necessary for unknown models."""
+        if self._embedding_dim is not None:
+            return self._embedding_dim
+        # Unknown model - need to load to get dimension
+        self._ensure_model_loaded()
+        return self._embedding_dim  # type: ignore[return-value]
+
+    def _ensure_model_loaded(self) -> object:
+        """Load the model if not already loaded (lazy initialization).
+
+        Returns:
+            The loaded SentenceTransformer model
+
+        Note:
+            This method is idempotent - calling it multiple times is safe.
+        """
+        if self._model is None:
+            import logging
+
+            # Ensure dependencies are imported now
+            _lazy_import()
+
+            # Suppress verbose HuggingFace Hub warnings during model loading
+            # These warnings about network timeouts and retries are noisy
+            hf_loggers = [
+                "huggingface_hub.utils._http",
+                "huggingface_hub.file_download",
+                "sentence_transformers.SentenceTransformer",
+            ]
+            original_levels = {}
+            for logger_name in hf_loggers:
+                hf_logger = logging.getLogger(logger_name)
+                original_levels[logger_name] = hf_logger.level
+                hf_logger.setLevel(logging.ERROR)
+
+            try:
+                # Use the lazily-imported SentenceTransformer class
+                self._model = _SentenceTransformer(self.model_name, device=self.device)
+                # Update embedding dimension from the actual model
+                self._embedding_dim = self._model.get_sentence_embedding_dimension()
+            finally:
+                # Restore original logging levels
+                for logger_name, level in original_levels.items():
+                    logging.getLogger(logger_name).setLevel(level)
+
+        return self._model
+
+    def is_model_loaded(self) -> bool:
+        """Check if the model has been loaded.
+
+        Returns:
+            True if model is loaded, False if still lazy (not yet loaded)
+        """
+        return self._model is not None
+
+    def preload_model(self) -> None:
+        """Explicitly load the model (for pre-warming in background threads).
+
+        This method can be called from a background thread to load the model
+        before it's needed, avoiding the delay when first embedding is requested.
+
+        Example:
+            >>> import threading
+            >>> provider = EmbeddingProvider()
+            >>> # Load model in background
+            >>> thread = threading.Thread(target=provider.preload_model)
+            >>> thread.start()
+            >>> # ... do other initialization work ...
+            >>> thread.join()  # Wait for model to be ready
+        """
+        self._ensure_model_loaded()
 
     def embed_chunk(self, text: str) -> npt.NDArray[np.float32]:
         """Generate embedding for a code chunk.
@@ -173,9 +321,12 @@ class EmbeddingProvider:
                 f"(~512 tokens). Consider chunking the code into smaller pieces."
             )
 
+        # Ensure model is loaded (lazy initialization)
+        model = self._ensure_model_loaded()
+
         # Generate embedding using sentence-transformers
         # The model.encode() returns normalized embeddings by default
-        embedding_result = self._model.encode(
+        embedding_result = model.encode(
             text,
             convert_to_numpy=True,
             normalize_embeddings=True,  # L2 normalization for cosine similarity
@@ -221,9 +372,12 @@ class EmbeddingProvider:
                 f"(~512 tokens). Please shorten the query."
             )
 
+        # Ensure model is loaded (lazy initialization)
+        model = self._ensure_model_loaded()
+
         # Generate embedding using sentence-transformers
         # The model.encode() returns normalized embeddings by default
-        embedding_result = self._model.encode(
+        embedding_result = model.encode(
             query,
             convert_to_numpy=True,
             normalize_embeddings=True,  # L2 normalization for cosine similarity
@@ -279,9 +433,12 @@ class EmbeddingProvider:
 
             processed_texts.append(text)
 
+        # Ensure model is loaded (lazy initialization)
+        model = self._ensure_model_loaded()
+
         # Use native batch encoding - this is the key optimization
         # sentence-transformers handles batching internally and efficiently
-        embeddings_result = self._model.encode(
+        embeddings_result = model.encode(
             processed_texts,
             batch_size=batch_size,
             convert_to_numpy=True,

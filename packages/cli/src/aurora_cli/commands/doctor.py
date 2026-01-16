@@ -10,7 +10,7 @@ import logging
 import click
 from rich.console import Console
 
-from aurora_cli.config import load_config
+from aurora_cli.config import Config
 from aurora_cli.health_checks import (
     CodeAnalysisChecks,
     ConfigurationChecks,
@@ -55,8 +55,8 @@ def doctor_command(fix: bool) -> None:
         aur doctor --fix
     """
     try:
-        # Load configuration
-        config = load_config()
+        # Load configuration (using Config class for backward compat)
+        config = Config()
 
         # Create health check instances
         core_checks = CoreSystemChecks(config)

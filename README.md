@@ -273,12 +273,12 @@ export AURORA_GOALS_MODEL=sonnet
 
 **Standard:**
 ```bash
-pip install aurora-actr  # ~520KB
+pip install aurora-actr  # Lightweight, no heavy ML dependencies
 ```
 
-**With ML features:**
+**For Development:**
 ```bash
-pip install aurora-actr[ml]  # +1.9GB for semantic search
+pip install aurora-actr[dev]  # Includes testing tools
 ```
 
 ---

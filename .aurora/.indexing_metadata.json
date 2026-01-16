@@ -1,12 +1,11 @@
 {
-  "last_indexed": "2026-01-15T20:28:23.793530+00:00",
+  "last_indexed": "2026-01-16T12:04:52.699102+00:00",
   "failed_files": [],
   "warnings": [],
-  "success_rate": 0.9051155115511551,
+  "success_rate": 0.024390243902439025,
   "files_by_language": {
-    "markdown": 505,
-    "python": 589,
-    "javascript": 3
+    "markdown": 17,
+    "python": 13
   },
-  "total_parseable": 1212
+  "total_parseable": 1230
 }

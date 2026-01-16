@@ -13,8 +13,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from aurora_cli.config import Config
 from aurora_core.budget import CostTracker
-from aurora_core.config.loader import Config
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_reasoning.llm_client import LLMResponse
 from aurora_soar.agent_registry import AgentRegistry

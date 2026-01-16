@@ -181,7 +181,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.AnthropicClient")
     def test_api_call_with_retry_success_first_attempt(self, mock_client_class):
         """Test successful API call on first attempt."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora_cli.query_executor import QueryExecutor
 
         # Mock successful response
         mock_response = Mock()
@@ -205,7 +205,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.time.sleep")
     def test_api_call_with_retry_rate_limit_success(self, mock_sleep, mock_client_class):
         """Test API call succeeds after rate limit retry."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora_cli.query_executor import QueryExecutor
 
         # Mock rate limit on first call, success on second
         mock_response = Mock()
@@ -233,7 +233,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.time.sleep")
     def test_api_call_with_retry_exhausted(self, mock_sleep, mock_client_class):
         """Test API call fails after exhausting retries."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora_cli.query_executor import QueryExecutor
 
         # Mock rate limit on all attempts
         mock_client = Mock()
@@ -254,7 +254,7 @@ class TestLLMAPIErrorHandling:
     @patch("aurora_cli.execution.AnthropicClient")
     def test_api_call_non_retryable_error(self, mock_client_class):
         """Test non-retryable error (auth) fails immediately."""
-        from aurora_cli.execution import QueryExecutor
+        from aurora_cli.query_executor import QueryExecutor
 
         # Mock authentication error (non-retryable)
         mock_client = Mock()

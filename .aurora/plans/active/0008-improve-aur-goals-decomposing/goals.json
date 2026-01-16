@@ -1,0 +1,108 @@
+{
+  "id": "0008-improve-aur-goals-decomposing",
+  "title": "how can i improve aur goals decomposing and memory indexing make it faster",
+  "created_at": "2026-01-15T22:58:11.226908",
+  "status": "ready_for_planning",
+  "memory_context": [],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Profile current memory indexing implementation to identify bottlenecks (aur mem index command)",
+      "description": "Profile current memory indexing implementation to identify bottlenecks (aur mem index command)",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling and optimization specialist",
+      "agent": "@full-stack-dev",
+      "match_quality": "acceptable",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Analyze current goals decomposition logic in packages/cli/src/aurora_cli/commands/goals.py and plann",
+      "description": "Analyze current goals decomposition logic in packages/cli/src/aurora_cli/commands/goals.py and planning modules",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Review memory store implementation in packages/core/src/aurora_core/store/ for indexing inefficienci",
+      "description": "Review memory store implementation in packages/core/src/aurora_core/store/ for indexing inefficiencies",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": []
+    },
+    {
+      "id": "sg-4",
+      "title": "Design optimized indexing strategy with batch processing, parallel file parsing, and incremental upd",
+      "description": "Design optimized indexing strategy with batch processing, parallel file parsing, and incremental updates",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@holistic-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Design improved goals decomposition with better agent matching and cached one-shot examples",
+      "description": "Design improved goals decomposition with better agent matching and cached one-shot examples",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@holistic-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Implement memory indexing optimizations: parallel tree-sitter parsing, batch SQLite writes, skip unc",
+      "description": "Implement memory indexing optimizations: parallel tree-sitter parsing, batch SQLite writes, skip unchanged files",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Implement goals decomposition improvements: better agent capability matching, reduce LLM calls, cach",
+      "description": "Implement goals decomposition improvements: better agent capability matching, reduce LLM calls, cache common patterns",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-5"
+      ]
+    },
+    {
+      "id": "sg-8",
+      "title": "Add performance benchmarks and tests for indexing and decomposition speed",
+      "description": "Add performance benchmarks and tests for indexing and decomposition speed",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@qa-test-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-6",
+        "sg-7"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling and optimization specialist",
+      "assigned_agent": "@full-stack-dev"
+    }
+  ]
+}

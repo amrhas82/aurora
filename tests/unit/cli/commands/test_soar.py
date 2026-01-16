@@ -292,14 +292,16 @@ class TestTerminalUXFormat:
         assert "╰" in result.output  # Box character
 
     def test_phase_ownership_classification(self):
-        """Correct owner (ORCHESTRATOR/LLM) for each of 9 phases."""
-        # Phase ownership mapping from FR-4.2
+        """Correct owner (ORCHESTRATOR/LLM) for each phase.
+
+        Note: Simplified 7-phase pipeline (route merged into verify).
+        """
+        # Phase ownership mapping - simplified 7-phase pipeline
         expected_owners = {
             "assess": "ORCHESTRATOR",
             "retrieve": "ORCHESTRATOR",
             "decompose": "LLM",
-            "verify": "LLM",
-            "route": "ORCHESTRATOR",
+            "verify": "LLM",  # Now includes agent assignment (was separate route phase)
             "collect": "LLM",
             "synthesize": "LLM",
             "record": "ORCHESTRATOR",

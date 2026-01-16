@@ -3,18 +3,18 @@
   "mode": "standalone",
   "storage": {
     "type": "sqlite",
-    "path": "~/.aurora/memory.db",
+    "path": "./.aurora/memory.db",
     "max_connections": 10,
     "timeout_seconds": 5
   },
   "llm": {
-    "reasoning_provider": "anthropic",
-    "reasoning_model": "claude-3-5-sonnet-20241022",
-    "solving_provider": "anthropic",
-    "solving_model": "claude-opus-4-5-20251101",
+    "provider": "anthropic",
+    "model": "claude-3-5-sonnet-20241022",
     "api_key_env": "ANTHROPIC_API_KEY",
     "base_url": null,
-    "timeout_seconds": 30
+    "timeout_seconds": 30,
+    "temperature": 0.7,
+    "max_tokens": 4096
   },
   "context": {
     "code": {
@@ -30,19 +30,61 @@
       }
     }
   },
+  "search": {
+    "min_semantic_score": 0.70,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+  },
+  "escalation": {
+    "threshold": 0.7,
+    "enable_keyword_only": false,
+    "force_mode": null
+  },
+  "memory": {
+    "auto_index": true,
+    "index_paths": ["."],
+    "chunk_size": 1000,
+    "overlap": 200
+  },
+  "mcp": {
+    "always_on": false,
+    "log_file": "./.aurora/logs/mcp.log",
+    "max_results": 10
+  },
+  "budget": {
+    "limit": 10.0,
+    "tracker_path": "~/.aurora/budget_tracker.json"
+  },
   "agents": {
     "discovery_paths": [
-      ".aurora/agents.json",
-      "~/.aurora/agents.json"
+      "~/.claude/agents",
+      "~/.config/ampcode/agents",
+      "~/.config/droid/agent",
+      "~/.config/opencode/agent"
     ],
-    "refresh_interval_days": 15,
+    "manifest_path": "./.aurora/cache/agent_manifest.json",
+    "refresh_interval_days": 1,
     "fallback_mode": "llm_only"
   },
   "logging": {
     "level": "INFO",
-    "path": "~/.aurora/logs/",
+    "path": "./.aurora/logs/",
     "max_size_mb": 100,
     "max_files": 10
+  },
+  "planning": {
+    "base_dir": "./.aurora/plans",
+    "template_dir": null,
+    "auto_increment": true,
+    "archive_on_complete": false
+  },
+  "soar": {
+    "default_tool": "claude",
+    "default_model": "sonnet"
+  },
+  "spawner": {
+    "max_concurrent": 4,
+    "stagger_delay": 5.0,
+    "default_policy": "patient"
   },
   "proactive_health_checks": {
     "enabled": true,

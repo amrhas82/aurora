@@ -35,7 +35,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from aurora_cli.config import Config
-from aurora_cli.execution import QueryExecutor
+from aurora_cli.query_executor import QueryExecutor
 
 
 class TestAutoEscalation:
@@ -105,7 +105,7 @@ class TestAutoEscalation:
             return "SOAR response"
 
         with (
-            patch("aurora_cli.execution.QueryExecutor._initialize_llm_client"),
+            patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch(
                 "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
             ),

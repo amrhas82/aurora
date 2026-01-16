@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from aurora_cli.config import CONFIG_SCHEMA, _get_aurora_home
+from aurora_cli.config import DEFAULTS_FILE, _get_aurora_home
 from aurora_cli.errors import ErrorHandler
 
 __all__ = ["InteractiveWizard"]
@@ -229,22 +229,18 @@ class InteractiveWizard:
             console.print(f"  [red]✗[/] {error_msg}")
             raise click.Abort()
 
-        # Prepare config data from template
+        # Prepare config data from defaults
         import json
 
-        config_data = CONFIG_SCHEMA.copy()
+        with open(DEFAULTS_FILE) as f:
+            config_data = json.load(f)
 
         # Set database path
-        config_data["database"]["path"] = str(config_dir / "memory.db")
+        config_data["storage"]["path"] = str(config_dir / "memory.db")
 
-        # Set API key if provided
+        # Set API key if provided (stored as api_key in llm section)
         if self.api_key:
-            if self.config_data.get("provider") == "anthropic":
-                config_data["llm"]["anthropic_api_key"] = self.api_key
-            elif self.config_data.get("provider") == "openai":
-                config_data["llm"]["openai_api_key"] = self.api_key
-        else:
-            config_data["llm"]["anthropic_api_key"] = None
+            config_data["llm"]["api_key"] = self.api_key
 
         # Write config file
         try:

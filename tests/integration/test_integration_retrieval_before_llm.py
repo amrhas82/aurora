@@ -34,8 +34,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from aurora_cli.config import Config
-from aurora_cli.execution import QueryExecutor
 from aurora_cli.memory_manager import MemoryManager
+from aurora_cli.query_executor import QueryExecutor
 from aurora_core.chunks.base import Chunk
 
 

@@ -10,7 +10,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from aurora_cli.config import load_config
+from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 from aurora_core.budget.tracker import CostTracker
 
@@ -49,7 +49,7 @@ def show_command() -> None:
     """
     try:
         # Load configuration
-        config = load_config()
+        config = Config()
 
         # Get tracker path from config or use default
         budget_path = Path(config.budget_tracker_path).expanduser()
@@ -126,7 +126,10 @@ def set_command(amount: float) -> None:
 
     try:
         # Load configuration
-        config = load_config()
+        from aurora_cli.config import load_config, save_config
+
+        config_dict = load_config()
+        config = Config(config_dict)
 
         # Get tracker path
         budget_path = Path(config.budget_tracker_path).expanduser()
@@ -137,13 +140,11 @@ def set_command(amount: float) -> None:
         # Set new budget
         tracker.set_budget(amount)
 
-        # Update config attribute
-        config.budget_limit = amount
+        # Update config dict
+        config_dict.setdefault("budget", {})["limit"] = amount
 
         # Save config back to file
-        from aurora_cli.config import save_config
-
-        save_config(config)
+        save_config(config_dict)
 
         console.print(f"\n[bold green]✓[/] Budget limit set to [bold]${amount:.2f}[/] per month\n")
 
@@ -176,7 +177,7 @@ def reset_command(confirm: bool) -> None:
 
     try:
         # Load configuration
-        config = load_config()
+        config = Config()
 
         # Get tracker path
         budget_path = Path(config.budget_tracker_path).expanduser()
@@ -221,7 +222,7 @@ def history_command(limit: int, show_all: bool) -> None:
     """
     try:
         # Load configuration
-        config = load_config()
+        config = Config()
 
         # Get tracker path
         budget_path = Path(config.budget_tracker_path).expanduser()

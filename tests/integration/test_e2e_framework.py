@@ -17,8 +17,8 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+from aurora_cli.config import Config
 from aurora_core.budget import CostTracker
-from aurora_core.config.loader import Config
 from aurora_core.logging import ConversationLogger
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_reasoning.llm_client import LLMClient

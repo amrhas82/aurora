@@ -1,0 +1,157 @@
+{
+  "id": "0009-improve-aur-goals-decomposing",
+  "title": "how can i improve aur goals decomposing and memory indexing make it faster",
+  "created_at": "2026-01-16T12:06:43.724450",
+  "status": "ready_for_planning",
+  "memory_context": [
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/unit/spawner/test_spawn_parallel_edge_cases.py",
+      "relevance": 0.7285787241958703
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/unit/spawner/test_early_termination.py",
+      "relevance": 0.6238016185599886
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/unit/spawner/test_early_detection_comprehensive.py",
+      "relevance": 0.5141053895514782
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/unit/spawner/test_circuit_breaker_adhoc_agents.py",
+      "relevance": 0.4117281220658857
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/unit/spawner/test_recovery_scenarios.py",
+      "relevance": 0.39662451246618646
+    },
+    {
+      "file": "/home/hamr/PycharmProjects/aurora/tests/unit/spawner/test_recovery_flow.py",
+      "relevance": 0.37503289252074984
+    }
+  ],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Profile current goals decomposition pipeline to identify bottlenecks (LLM calls, context building, J",
+      "description": "Profile current goals decomposition pipeline to identify bottlenecks (LLM calls, context building, JSON parsing)",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling and optimization specialist",
+      "agent": "@full-stack-dev",
+      "match_quality": "acceptable",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Profile memory indexing pipeline to identify slow operations (tree-sitter parsing, BM25 indexing, em",
+      "description": "Profile memory indexing pipeline to identify slow operations (tree-sitter parsing, BM25 indexing, embedding generation)",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling and bottleneck analysis",
+      "agent": "@full-stack-dev",
+      "match_quality": "acceptable",
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Analyze current architecture for parallelization opportunities in goals decomposition",
+      "description": "Analyze current architecture for parallelization opportunities in goals decomposition",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@holistic-architect",
+      "match_quality": "excellent",
+      "dependencies": []
+    },
+    {
+      "id": "sg-4",
+      "title": "Design incremental indexing strategy to avoid full re-indexing on small changes",
+      "description": "Design incremental indexing strategy to avoid full re-indexing on small changes",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@holistic-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-1"
+      ]
+    },
+    {
+      "id": "sg-5",
+      "title": "Implement caching layer for repeated LLM decomposition queries with similar patterns",
+      "description": "Implement caching layer for repeated LLM decomposition queries with similar patterns",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-2"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Implement parallel file processing for memory indexing using asyncio/multiprocessing",
+      "description": "Implement parallel file processing for memory indexing using asyncio/multiprocessing",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Optimize BM25 index updates with batch operations and lazy rebuilding",
+      "description": "Optimize BM25 index updates with batch operations and lazy rebuilding",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-8",
+      "title": "Add optional embedding pre-computation for frequently accessed code patterns",
+      "description": "Add optional embedding pre-computation for frequently accessed code patterns",
+      "ideal_agent": "@ml-engineer",
+      "ideal_agent_desc": "ML model optimization and embedding caching",
+      "agent": "@full-stack-dev",
+      "match_quality": "acceptable",
+      "dependencies": [
+        "sg-6"
+      ]
+    },
+    {
+      "id": "sg-9",
+      "title": "Write performance benchmarks to validate improvements and prevent regressions",
+      "description": "Write performance benchmarks to validate improvements and prevent regressions",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@qa-test-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-5",
+        "sg-6"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling and optimization specialist",
+      "assigned_agent": "@full-stack-dev"
+    },
+    {
+      "subgoal_id": "sg-2",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling and bottleneck analysis",
+      "assigned_agent": "@full-stack-dev"
+    },
+    {
+      "subgoal_id": "sg-8",
+      "ideal_agent": "@ml-engineer",
+      "ideal_agent_desc": "ML model optimization and embedding caching",
+      "assigned_agent": "@full-stack-dev"
+    }
+  ]
+}

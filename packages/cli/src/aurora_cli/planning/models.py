@@ -139,63 +139,86 @@ class Subgoal(BaseModel):
 
     @field_validator("id")
     @classmethod
-    def validate_subgoal_id(cls, v: str) -> str:
-        """Validate subgoal ID is in 'sg-N' format.
+    def coerce_subgoal_id(cls, v: str) -> str:
+        """Coerce subgoal ID to 'sg-N' format.
+
+        Accepts SOAR's numeric format (e.g., "1") and normalizes to 'sg-N'.
+        Rejects invalid formats that are neither numeric nor 'sg-N'.
 
         Args:
-            v: The subgoal ID to validate
+            v: The subgoal ID to coerce
 
         Returns:
-            The validated ID
+            Normalized ID in 'sg-N' format
 
         Raises:
             ValueError: If ID format is invalid
         """
-        pattern = r"^sg-\d+$"
-        if not re.match(pattern, v):
-            raise ValueError(f"Subgoal ID must be 'sg-N' format (e.g., 'sg-1'). Got: {v}")
-        return v
+        if not v:
+            return v
+        # Already in correct format
+        if re.match(r"^sg-\d+$", v):
+            return v
+        # Numeric ID from SOAR - coerce to sg-N
+        if v.isdigit():
+            return f"sg-{v}"
+        # Invalid format - reject
+        raise ValueError(f"Subgoal ID must be 'sg-N' or numeric format. Got: {v}")
 
     @field_validator("assigned_agent", "ideal_agent")
     @classmethod
-    def validate_agent_format(cls, v: str) -> str:
-        """Validate agent ID starts with '@'.
+    def coerce_agent_format(cls, v: str) -> str:
+        """Coerce agent ID to '@agent-id' format.
+
+        Accepts SOAR's format (e.g., "full-stack-dev") and normalizes to '@full-stack-dev'.
 
         Args:
-            v: The agent ID to validate
+            v: The agent ID to coerce
 
         Returns:
-            The validated agent ID
-
-        Raises:
-            ValueError: If agent format is invalid (only when non-empty)
+            Normalized agent ID with '@' prefix
         """
         # Allow empty strings for optional ideal_agent field
         if not v:
             return v
-
-        pattern = r"^@[a-z0-9][a-z0-9-]*$"
-        if not re.match(pattern, v):
-            raise ValueError(f"Agent must start with '@' (e.g., '@full-stack-dev'). Got: {v}")
-        return v
+        # Already has @ prefix
+        if v.startswith("@"):
+            return v
+        # Add @ prefix (SOAR returns without @)
+        return f"@{v}"
 
     @field_validator("dependencies", mode="before")
     @classmethod
-    def ensure_list(cls, v: Any) -> list[str]:
-        """Ensure dependencies is a list.
+    def coerce_dependencies(cls, v: Any) -> list[str]:
+        """Coerce dependencies to list of 'sg-N' format IDs.
+
+        Accepts SOAR's numeric format (e.g., ["1", "2"]) and normalizes.
 
         Args:
             v: Value to normalize
 
         Returns:
-            List of dependency IDs
+            List of dependency IDs in 'sg-N' format
         """
         if v is None:
             return []
+
+        def coerce_dep_id(dep: str) -> str:
+            """Coerce a single dependency ID to 'sg-N' format."""
+            dep = str(dep).strip()
+            if not dep:
+                return ""
+            if re.match(r"^sg-\d+$", dep):
+                return dep
+            if dep.isdigit():
+                return f"sg-{dep}"
+            return f"sg-{dep}"
+
         if isinstance(v, str):
-            return [v.strip()] if v.strip() else []
+            v = v.strip()
+            return [coerce_dep_id(v)] if v else []
         if isinstance(v, list):
-            return [str(item).strip() for item in v if item]
+            return [coerce_dep_id(item) for item in v if item]
         return []
 
 
@@ -703,8 +726,9 @@ class DecompositionSummary(BaseModel):
     def display(self) -> None:
         """Display the summary using Rich formatting with match quality indicators.
 
-        This method renders the decomposition summary in a user-friendly
-        format with colors and formatting for easy review.
+        Renders two panels:
+        1. Plan Decomposition Summary - goal and subgoals list
+        2. Summary - metadata (agent matching, complexity, warnings)
 
         Match quality indicators:
         - [++] excellent: Green - agent is specialized for this task
@@ -717,13 +741,9 @@ class DecompositionSummary(BaseModel):
 
             console = Console()
 
-            # Build summary content
+            # === Panel 1: Plan Decomposition Summary (goal + subgoals only) ===
             content = []
-
-            # Goal
             content.append(f"[bold cyan]Goal:[/bold cyan] {self.goal}\n")
-
-            # Subgoals count
             content.append(f"[bold cyan]Subgoals:[/bold cyan] {len(self.subgoals)}\n")
 
             # Count match qualities
@@ -733,14 +753,12 @@ class DecompositionSummary(BaseModel):
 
             # List each subgoal with match quality indicators
             for sg in self.subgoals:
-                # Get match_quality if available, otherwise infer from gap detection
                 match_quality = getattr(sg, "match_quality", None)
                 is_gap = sg.ideal_agent and sg.ideal_agent != sg.assigned_agent
 
                 if match_quality is None:
                     match_quality = "acceptable" if is_gap else "excellent"
 
-                # Format based on match quality
                 if match_quality == "excellent":
                     excellent_count += 1
                     indicator = "[green][++][/green]"
@@ -764,10 +782,19 @@ class DecompositionSummary(BaseModel):
 
                 content.append(f"  {indicator} {sg.title}: {agent_display}")
 
-            content.append("")
+            # First panel: subgoals only
+            panel1 = Panel(
+                "\n".join(content),
+                title="[bold]Plan Decomposition Summary[/bold]",
+                border_style="cyan",
+            )
+            console.print(panel1)
+            console.print()
+
+            # === Panel 2: Summary (metadata only) ===
+            summary = []
 
             # Agent match quality summary
-            quality_summary = "[bold cyan]Agent Matching:[/bold cyan] "
             quality_parts = []
             if excellent_count > 0:
                 quality_parts.append(f"[green]{excellent_count} excellent[/green]")
@@ -775,22 +802,24 @@ class DecompositionSummary(BaseModel):
                 quality_parts.append(f"[yellow]{acceptable_count} acceptable[/yellow]")
             if insufficient_count > 0:
                 quality_parts.append(f"[red]{insufficient_count} insufficient[/red]")
-            quality_summary += ", ".join(quality_parts) if quality_parts else "none"
-            content.append(quality_summary)
+            quality_str = ", ".join(quality_parts) if quality_parts else "none"
+            summary.append(f"[bold cyan]Agent Matching:[/bold cyan] {quality_str}")
 
-            # Gap summary (for backward compatibility)
+            # Gap summary
             gap_count = len(self.agent_gaps)
             if gap_count > 0:
-                content.append(
+                summary.append(
                     f"[bold cyan]Gaps Detected:[/bold cyan] "
                     f"[yellow]{gap_count} subgoals need attention[/yellow]"
                 )
 
-            # File summary
-            file_summary = f"[bold cyan]Files:[/bold cyan] {self.files_resolved} resolved"
+            # Context files summary
             if self.files_resolved > 0:
-                file_summary += f" (avg confidence: {self.avg_confidence:.2f})"
-            content.append(file_summary)
+                file_summary = (
+                    f"[bold cyan]Context:[/bold cyan] {self.files_resolved} files "
+                    f"(avg relevance: {self.avg_confidence:.2f})"
+                )
+                summary.append(file_summary)
 
             # Complexity
             complexity_colors = {
@@ -799,52 +828,52 @@ class DecompositionSummary(BaseModel):
                 Complexity.COMPLEX: "red",
             }
             complexity_color = complexity_colors[self.complexity]
-            content.append(
+            summary.append(
                 f"[bold cyan]Complexity:[/bold cyan] "
                 f"[{complexity_color}]{self.complexity.value.upper()}[/{complexity_color}]"
             )
 
-            # Decomposition source (normalize soar_llm to soar for display)
+            # Decomposition source
             source_display = (
                 "soar"
                 if self.decomposition_source.startswith("soar")
                 else self.decomposition_source
             )
             source_color = "green" if source_display == "soar" else "yellow"
-            content.append(
+            summary.append(
                 f"[bold cyan]Source:[/bold cyan] "
                 f"[{source_color}]{source_display}[/{source_color}]"
             )
 
             # Warnings
             if self.warnings:
-                content.append("")
-                content.append("[bold yellow]Warnings:[/bold yellow]")
+                summary.append("")
+                summary.append("[bold yellow]Warnings:[/bold yellow]")
                 for warning in self.warnings:
-                    content.append(f"  ! {warning}")
+                    summary.append(f"  ! {warning}")
 
-            # Add legend if there are any gaps
+            # Legend
             if insufficient_count > 0 or acceptable_count > 0:
-                content.append("")
-                content.append(
+                summary.append("")
+                summary.append(
                     "[dim]Legend: [++] excellent | [+] acceptable | [-] insufficient[/dim]"
                 )
 
-            # Create panel and display
-            panel = Panel(
-                "\n".join(content),
-                title="[bold]Plan Decomposition Summary[/bold]",
+            panel2 = Panel(
+                "\n".join(summary),
+                title="[bold]Summary[/bold]",
                 border_style="cyan",
             )
-            console.print(panel)
+            console.print(panel2)
 
         except ImportError:
             # Fallback to plain text if Rich not available
+            # Panel 1: Plan Decomposition Summary
             print("\n" + "=" * 60)
             print("PLAN DECOMPOSITION SUMMARY")
             print("=" * 60)
             print(f"Goal: {self.goal}")
-            print(f"Subgoals: {len(self.subgoals)}")
+            print(f"Subgoals: {len(self.subgoals)}\n")
 
             excellent_count = 0
             acceptable_count = 0
@@ -874,22 +903,35 @@ class DecompositionSummary(BaseModel):
                 else:
                     print(f"  {indicator} {sg.title}: {sg.assigned_agent}")
 
+            print("=" * 60 + "\n")
+
+            # Panel 2: Summary (metadata)
+            print("=" * 60)
+            print("SUMMARY")
+            print("=" * 60)
             print(
                 f"Agent Matching: {excellent_count} excellent, "
                 f"{acceptable_count} acceptable, {insufficient_count} insufficient"
             )
-            print(f"Gaps: {len(self.agent_gaps)}")
-            print(
-                f"Files: {self.files_resolved} resolved "
-                f"(avg confidence: {self.avg_confidence:.2f})"
-            )
+            if len(self.agent_gaps) > 0:
+                print(f"Gaps Detected: {len(self.agent_gaps)} subgoals need attention")
+            if self.files_resolved > 0:
+                print(
+                    f"Context: {self.files_resolved} files (avg relevance: {self.avg_confidence:.2f})"
+                )
             print(f"Complexity: {self.complexity.value.upper()}")
-            print(f"Source: {self.decomposition_source}")
+            source_display = (
+                "soar"
+                if self.decomposition_source.startswith("soar")
+                else self.decomposition_source
+            )
+            print(f"Source: {source_display}")
             if self.warnings:
-                print("Warnings:")
+                print("\nWarnings:")
                 for warning in self.warnings:
                     print(f"  ! {warning}")
-            print("Legend: [++] excellent | [+] acceptable | [-] insufficient")
+            if insufficient_count > 0 or acceptable_count > 0:
+                print("\nLegend: [++] excellent | [+] acceptable | [-] insufficient")
             print("=" * 60 + "\n")
 
 

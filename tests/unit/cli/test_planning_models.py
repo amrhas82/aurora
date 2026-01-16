@@ -64,13 +64,12 @@ class TestSubgoalModel:
             id="sg-1",
             title="Implement authentication",
             description="Create OAuth2 authentication flow with JWT tokens",
-            recommended_agent="@full-stack-dev",
+            assigned_agent="@full-stack-dev",
         )
 
         assert subgoal.id == "sg-1"
         assert subgoal.title == "Implement authentication"
-        assert subgoal.recommended_agent == "@full-stack-dev"
-        assert subgoal.agent_exists is True
+        assert subgoal.assigned_agent == "@full-stack-dev"
         assert subgoal.dependencies == []
 
     def test_subgoal_with_dependencies(self) -> None:
@@ -79,7 +78,7 @@ class TestSubgoalModel:
             id="sg-2",
             title="Write authentication tests",
             description="Create unit and integration tests for auth",
-            recommended_agent="@qa-test-architect",
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-1"],
         )
 
@@ -92,7 +91,7 @@ class TestSubgoalModel:
                 id="subgoal-1",  # Should be sg-1
                 title="Some title here",
                 description="Some description that is long enough",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
             )
 
         error_msg = str(exc_info.value)
@@ -105,37 +104,35 @@ class TestSubgoalModel:
                 id="sg-",
                 title="Some title here",
                 description="Some description that is long enough",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
             )
 
         error_msg = str(exc_info.value)
         assert "sg-N" in error_msg or "sg-" in error_msg
 
-    def test_invalid_agent_format_no_at(self) -> None:
-        """Rejects agent without @ prefix."""
-        with pytest.raises(ValidationError) as exc_info:
-            Subgoal(
-                id="sg-1",
-                title="Some title here",
-                description="Some description that is long enough",
-                recommended_agent="full-stack-dev",  # Missing @
-            )
+    def test_agent_without_at_is_coerced(self) -> None:
+        """Agent without @ prefix is coerced to have @ prefix."""
+        subgoal = Subgoal(
+            id="sg-1",
+            title="Some title here",
+            description="Some description that is long enough",
+            assigned_agent="full-stack-dev",  # Missing @ - should be coerced
+        )
 
-        error_msg = str(exc_info.value)
-        assert "@" in error_msg or "full-stack-dev" in error_msg
+        assert subgoal.assigned_agent == "@full-stack-dev"
 
-    def test_invalid_agent_format_uppercase(self) -> None:
-        """Rejects agent with uppercase letters."""
-        with pytest.raises(ValidationError) as exc_info:
-            Subgoal(
-                id="sg-1",
-                title="Some title here",
-                description="Some description that is long enough",
-                recommended_agent="@FullStackDev",  # Should be lowercase
-            )
+    def test_agent_with_uppercase_is_preserved(self) -> None:
+        """Agent with uppercase is preserved (coercion only adds @ prefix)."""
+        # Note: SOAR outputs lowercase agents, but we don't reject uppercase
+        # since the coercion layer only handles @ prefix, not case normalization
+        subgoal = Subgoal(
+            id="sg-1",
+            title="Some title here",
+            description="Some description that is long enough",
+            assigned_agent="@FullStackDev",  # Preserved as-is
+        )
 
-        error_msg = str(exc_info.value)
-        assert "@" in error_msg
+        assert subgoal.assigned_agent == "@FullStackDev"
 
     def test_title_too_short(self) -> None:
         """Rejects title shorter than 5 chars."""
@@ -144,7 +141,7 @@ class TestSubgoalModel:
                 id="sg-1",
                 title="Test",  # 4 chars
                 description="Some description that is long enough",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
             )
 
         errors = exc_info.value.errors()
@@ -157,7 +154,7 @@ class TestSubgoalModel:
                 id="sg-1",
                 title="Valid title",
                 description="Short",  # Less than 10 chars
-                recommended_agent="@dev",
+                assigned_agent="@dev",
             )
 
         errors = exc_info.value.errors()
@@ -169,8 +166,7 @@ class TestSubgoalModel:
             id="sg-3",
             title="Test subgoal title",
             description="This is a test description for the subgoal",
-            recommended_agent="@qa-test-architect",
-            agent_exists=False,
+            assigned_agent="@qa-test-architect",
             dependencies=["sg-1", "sg-2"],
         )
 
@@ -179,8 +175,7 @@ class TestSubgoalModel:
 
         assert restored.id == original.id
         assert restored.title == original.title
-        assert restored.recommended_agent == original.recommended_agent
-        assert restored.agent_exists == original.agent_exists
+        assert restored.assigned_agent == original.assigned_agent
         assert restored.dependencies == original.dependencies
 
     def test_dependencies_normalized_from_string(self) -> None:
@@ -189,7 +184,7 @@ class TestSubgoalModel:
             id="sg-2",
             title="Valid title here",
             description="Valid description here that is long enough",
-            recommended_agent="@dev",
+            assigned_agent="@dev",
             dependencies="sg-1",  # type: ignore[arg-type] # String instead of list
         )
 
@@ -201,7 +196,7 @@ class TestSubgoalModel:
             id="sg-1",
             title="Valid title here",
             description="Valid description here that is long enough",
-            recommended_agent="@dev",
+            assigned_agent="@dev",
             dependencies=None,  # type: ignore[arg-type]
         )
 
@@ -219,13 +214,13 @@ class TestPlanModel:
                 id="sg-1",
                 title="Implement core feature",
                 description="Create the main functionality for the feature",
-                recommended_agent="@full-stack-dev",
+                assigned_agent="@full-stack-dev",
             ),
             Subgoal(
                 id="sg-2",
                 title="Write unit tests",
                 description="Create comprehensive unit tests for the feature",
-                recommended_agent="@qa-test-architect",
+                assigned_agent="@qa-test-architect",
                 dependencies=["sg-1"],
             ),
         ]
@@ -305,7 +300,7 @@ class TestPlanModel:
                 id=f"sg-{i}",
                 title=f"Subgoal number {i}",
                 description=f"Description for subgoal {i} that is long enough",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
             )
             for i in range(1, 12)  # 11 subgoals
         ]
@@ -326,13 +321,13 @@ class TestPlanModel:
                 id="sg-1",
                 title="First subgoal title",
                 description="Description for first subgoal here",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
             ),
             Subgoal(
                 id="sg-2",
                 title="Second subgoal title",
                 description="Description for second subgoal",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
                 dependencies=["sg-999"],  # Invalid reference
             ),
         ]
@@ -353,14 +348,14 @@ class TestPlanModel:
                 id="sg-1",
                 title="First subgoal title",
                 description="Description for first subgoal here",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
                 dependencies=["sg-2"],
             ),
             Subgoal(
                 id="sg-2",
                 title="Second subgoal title",
                 description="Description for second subgoal",
-                recommended_agent="@dev",
+                assigned_agent="@dev",
                 dependencies=["sg-1"],  # Circular!
             ),
         ]

@@ -34,7 +34,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from aurora_cli.execution import QueryExecutor
+from aurora_cli.query_executor import QueryExecutor
 from aurora_core.cost.tracker import BudgetExceededError, CostTracker
 
 

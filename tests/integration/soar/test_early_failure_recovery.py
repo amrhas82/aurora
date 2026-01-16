@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from aurora_core.config.loader import Config
+from aurora_cli.config import Config
 from aurora_soar.orchestrator import SOAROrchestrator
 from aurora_soar.phases.collect import execute_agents
 from aurora_spawner import SpawnResult, SpawnTask

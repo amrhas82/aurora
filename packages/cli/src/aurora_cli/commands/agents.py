@@ -35,7 +35,7 @@ from aurora_cli.agent_discovery import (
     AgentScanner,
     ManifestManager,
 )
-from aurora_cli.config import Config, load_config
+from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 
 if TYPE_CHECKING:
@@ -64,7 +64,7 @@ def get_manifest_path(config: Config | None = None) -> Path:
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
-            config = load_config()
+            config = Config()
         finally:
             sys.stdout = old_stdout
 
@@ -89,7 +89,7 @@ def get_manifest(force_refresh: bool = False, config: Config | None = None) -> A
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
         try:
-            config = load_config()
+            config = Config()
         finally:
             sys.stdout = old_stdout
 

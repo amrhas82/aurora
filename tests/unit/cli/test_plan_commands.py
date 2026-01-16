@@ -67,6 +67,10 @@ def _mock_config(plans_dir: Path) -> MagicMock:
     """Create mock config with plans directory."""
     config = MagicMock()
     config.get_plans_path.return_value = plans_dir
+    config.get_planning_base_dir.return_value = str(plans_dir)
+    config.planning_base_dir = str(plans_dir)
+    config.soar_default_tool = "claude"
+    config.soar_default_model = "sonnet"
     return config
 
 
@@ -680,7 +684,7 @@ class TestCreatePlan:
         assert result.plan is not None
         # In tests, SOAR fails and falls back to heuristics (3 subgoals)
         assert len(result.plan.subgoals) >= 3
-        assert any("architect" in sg.recommended_agent.lower() for sg in result.plan.subgoals)
+        assert any("architect" in sg.assigned_agent.lower() for sg in result.plan.subgoals)
 
     def test_create_plan_api_decomposition(self, tmp_path: Path) -> None:
         """create_plan uses API decomposition for API goals."""

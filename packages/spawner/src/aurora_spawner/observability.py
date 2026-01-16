@@ -10,7 +10,6 @@ Features proactive health checking with:
 - Early termination triggers before timeout
 """
 
-import asyncio
 import logging
 import threading
 import time
@@ -496,8 +495,9 @@ class AgentHealthMonitor:
                 self._detection_latencies
             )
 
-        # Determine log level based on failure reason
-        log_level = logging.ERROR if reason == FailureReason.CRASH else logging.WARNING
+        # Use DEBUG level for all failures - progress callbacks handle user-facing output
+        # Observability module is for metrics, not user feedback
+        log_level = logging.DEBUG
 
         # Build log message with error details
         log_msg = f"Agent {agent_id} failed"

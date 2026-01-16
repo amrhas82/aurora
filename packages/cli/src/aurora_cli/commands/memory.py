@@ -26,7 +26,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
-from aurora_cli.config import Config, load_config
+from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
@@ -109,7 +109,7 @@ def run_indexing(
 
     # Load configuration if not provided
     if config is None:
-        config = load_config()
+        config = Config()
 
     db_path_str = config.get_db_path()
 
@@ -118,6 +118,30 @@ def run_indexing(
         out.print(f"[dim]Using database: {db_path_str}[/]")
 
     manager = MemoryManager(config=config)
+
+    # Ensure embedding model is downloaded before indexing
+    # This prevents HuggingFace download interrupting the indexing progress
+    try:
+        from aurora_context_code.semantic.model_utils import (
+            ensure_model_downloaded,
+            is_model_cached,
+        )
+
+        model_name = config.embedding_model
+        if not is_model_cached(model_name):
+            out.print(f"[cyan]Embedding model not cached, downloading...[/]")
+            if not ensure_model_downloaded(model_name, show_progress=True, console=out):
+                out.print(
+                    "[yellow]Warning: Failed to download embedding model. "
+                    "Semantic search will be unavailable (BM25-only mode).[/]"
+                )
+        else:
+            out.print(f"[dim]Embedding model: {model_name} (cached)[/]")
+    except ImportError:
+        out.print(
+            "[yellow]Warning: sentence-transformers not installed. "
+            "Semantic search will be unavailable.[/]"
+        )
 
     # Suppress parse warnings during indexing for cleaner progress output
     # Warnings are counted via filter and displayed in the final summary
@@ -326,7 +350,7 @@ def index_command(
         aur mem index . --db-path /tmp/test.db
     """
     # Load configuration
-    config = load_config()
+    config = Config()
 
     # Override db_path if provided
     if db_path:
@@ -439,7 +463,7 @@ def search_command(
         aur mem search "authentication" --show-scores
     """
     # Load configuration
-    config = load_config()
+    config = Config()
 
     # Override db_path if provided
     if db_path:
@@ -567,7 +591,7 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
         aur mem stats --db-path /tmp/test.db
     """
     # Load configuration
-    config = load_config()
+    config = Config()
 
     # Override db_path if provided
     if db_path:

@@ -364,6 +364,11 @@ class HybridRetriever:
 
         # Generate embedding if not cached
         if query_embedding is None:
+            # If no embedding provider, fall back to activation+BM25 only
+            if self.embedding_provider is None:
+                logger.debug("No embedding provider - using activation+BM25 only")
+                return self._fallback_to_activation_only(activation_candidates, top_k)
+
             try:
                 query_embedding = self.embedding_provider.embed_query(query)
                 # Cache the embedding

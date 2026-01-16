@@ -64,110 +64,57 @@ class DecompositionReview:
         self.files_confidence = files_confidence
 
     def display(self) -> None:
-        """Display summary to terminal."""
-        # Create summary table
-        table = Table(title="Plan Decomposition", show_header=True, header_style="bold cyan")
-        table.add_column("#", style="dim", width=4)
-        table.add_column("Subgoal", style="cyan")
-        table.add_column("Agent", style="green")
+        """Display summary to terminal.
 
-        for i, subgoal in enumerate(self.subgoals, 1):
-            description = subgoal.get("description", subgoal.get("goal", ""))
-            agent_id = subgoal.get("agent_id", "unknown")
+        Note: The detailed decomposition summary is already shown by
+        DecompositionSummary.display() - this method is now a no-op
+        to avoid redundant output. The approval prompt still works.
+        """
+        # Decomposition details already shown by DecompositionSummary.display()
+        # This method intentionally does nothing to avoid duplicate output
+        pass
 
-            # Check if this is a gap and get ideal agent
-            gap = next((g for g in self.agent_gaps if g.subgoal_index == i - 1), None)
-            if gap and gap.required_agent:
-                # Show: @assigned → @ideal ⚠
-                agent_display = f"[yellow]{agent_id} → {gap.required_agent} ⚠[/yellow]"
-            else:
-                agent_display = agent_id
-
-            # Truncate description but keep readable
-            desc_display = description[:60] if len(description) > 60 else description
-            table.add_row(str(i), desc_display, agent_display)
-
-        console.print()
-        console.print(table)
-
-        # Build compact summary panel
-        assigned_count = len(self.subgoals) - len(self.agent_gaps)
-        gap_count = len(self.agent_gaps)
-        total_count = len(self.subgoals)
-
-        # Goal line (truncate if too long)
-        goal_display = self.goal[:70] + "..." if len(self.goal) > 70 else self.goal
-        summary_lines = [f"Goal: {goal_display}", ""]
-
-        # Stats line
-        stats_parts = [
-            f"{total_count} subgoals",
-            (
-                f"{assigned_count} assigned, {gap_count} gaps"
-                if gap_count > 0
-                else f"{assigned_count} assigned"
-            ),
-        ]
-
-        if self.files_count > 0:
-            stats_parts.append(f"{self.files_count} files (avg: {self.files_confidence:.2f})")
-
-        if self.complexity:
-            stats_parts.append(self.complexity)
-
-        if self.source:
-            stats_parts.append(self.source)
-
-        summary_lines.append(" • ".join(stats_parts))
-
-        # Warnings section
-        if gap_count > 0:
-            # Collect unique ideal agents
-            unique_agents = sorted(
-                set(gap.required_agent for gap in self.agent_gaps if gap.required_agent)
-            )
-
-            if unique_agents:
-                agents_display = ", ".join(unique_agents)
-                summary_lines.extend(
-                    ["", "Warnings:", f"  ⚠ Agent gaps detected: {agents_display}"]
-                )
-            else:
-                summary_lines.extend(
-                    [
-                        "",
-                        "Warnings:",
-                        f"  ⚠ {gap_count} agent gaps - will use ad-hoc agents or fallback to LLM",
-                    ]
-                )
-
-        summary_text = "\n".join(summary_lines)
-        console.print()
-        console.print(Panel(summary_text, title="Summary", border_style="blue"))
-
-    def prompt(self) -> ReviewDecision:
+    def prompt(self, planning_only: bool = False) -> ReviewDecision:
         """Prompt user for decision.
+
+        Args:
+            planning_only: If True, show simpler save/abort options (for aur goals).
+                          If False, show full execution options (for aur spawn).
 
         Returns:
             ReviewDecision enum value (PROCEED, FALLBACK, or ABORT)
         """
         console.print()
-        console.print("[bold]Options:[/bold]")
-        console.print("  [P]roceed   - Execute (try ad-hoc agents → fallback to LLM)")
-        console.print("  [F]allback  - Execute (LLM directly for gaps, faster)")
-        console.print("  [A]bort     - Cancel and restart")
-        console.print()
 
-        choice = Prompt.ask(
-            "Choice", choices=["P", "p", "F", "f", "A", "a"], default="P", show_choices=False
-        )
-
-        if choice.upper() == "P":
+        if planning_only:
+            # Simple prompt for aur goals (planning only, no execution)
+            choice = Prompt.ask(
+                "Save goals? [Y/n]",
+                choices=["Y", "y", "N", "n", ""],
+                default="",
+                show_choices=False,
+            )
+            if choice.upper() == "N":
+                return ReviewDecision.ABORT
             return ReviewDecision.PROCEED
-        elif choice.upper() == "F":
-            return ReviewDecision.FALLBACK
         else:
-            return ReviewDecision.ABORT
+            # Full prompt for execution contexts (aur spawn)
+            console.print("[bold]Options:[/bold]")
+            console.print("  [P]roceed   - Execute (try ad-hoc agents -> fallback to LLM)")
+            console.print("  [F]allback  - Execute (LLM directly for gaps, faster)")
+            console.print("  [A]bort     - Cancel and restart")
+            console.print()
+
+            choice = Prompt.ask(
+                "Choice", choices=["P", "p", "F", "f", "A", "a"], default="P", show_choices=False
+            )
+
+            if choice.upper() == "P":
+                return ReviewDecision.PROCEED
+            elif choice.upper() == "F":
+                return ReviewDecision.FALLBACK
+            else:
+                return ReviewDecision.ABORT
 
 
 class ExecutionPreview:

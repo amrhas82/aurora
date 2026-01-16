@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from aurora_cli.errors import APIError
-from aurora_cli.execution import QueryExecutor
+from aurora_cli.query_executor import QueryExecutor
 
 
 class TestQueryExecutorInit:
@@ -50,8 +50,8 @@ class TestQueryExecutorInit:
 class TestExecuteDirectLLM:
     """Test direct LLM execution method."""
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_llm_client")
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_with_valid_query(
         self, mock_call_llm: Mock, mock_init_llm: Mock
     ) -> None:
@@ -75,8 +75,8 @@ class TestExecuteDirectLLM:
         mock_init_llm.assert_called_once_with("sk-ant-test123")
         mock_call_llm.assert_called_once()
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_llm_client")
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_with_memory_context(
         self, mock_call_llm: Mock, mock_init_llm: Mock
     ) -> None:
@@ -146,8 +146,8 @@ class TestExecuteDirectLLM:
         with pytest.raises(ValueError, match="API key is required"):
             executor.execute_direct_llm(query="What is Python?", api_key="  \n  ")
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_llm_client")
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_with_verbose_logging(
         self, mock_call_llm: Mock, mock_init_llm: Mock
     ) -> None:
@@ -170,8 +170,8 @@ class TestExecuteDirectLLM:
             # Verify verbose logging calls
             assert mock_logger.info.call_count >= 1
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_llm_client")
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_uses_config_params(
         self, mock_call_llm: Mock, mock_init_llm: Mock
     ) -> None:
@@ -201,8 +201,8 @@ class TestExecuteDirectLLM:
         assert call_args["temperature"] == 0.9
         assert call_args["max_tokens"] == 2000
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_llm_client")
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_api_error_is_propagated(
         self, mock_call_llm: Mock, mock_init_llm: Mock
     ) -> None:
@@ -219,8 +219,8 @@ class TestExecuteDirectLLM:
         with pytest.raises(APIError, match="API rate limit exceeded"):
             executor.execute_direct_llm(query="Test", api_key="sk-ant-test123")
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_llm_client")
-    @patch("aurora_cli.execution.QueryExecutor._call_llm_with_retry")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
+    @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_generic_error_wrapped_as_api_error(
         self, mock_call_llm: Mock, mock_init_llm: Mock
     ) -> None:
@@ -241,7 +241,7 @@ class TestExecuteDirectLLM:
 class TestExecuteAurora:
     """Test AURORA SOAR pipeline execution method."""
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_orchestrator")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_orchestrator")
     def test_execute_aurora_with_valid_query(self, mock_init_orch: Mock) -> None:
         """Test execute_aurora() with valid query executes orchestrator."""
         # Setup mocks
@@ -267,7 +267,7 @@ class TestExecuteAurora:
         mock_init_orch.assert_called_once_with("sk-ant-test123", mock_store)
         mock_orchestrator.execute.assert_called_once()
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_orchestrator")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_orchestrator")
     def test_execute_aurora_with_verbose_returns_trace(self, mock_init_orch: Mock) -> None:
         """Test execute_aurora() with verbose=True returns response and trace."""
         # Setup mocks
@@ -326,7 +326,7 @@ class TestExecuteAurora:
                 memory_store=None,  # type: ignore[arg-type]
             )
 
-    @patch("aurora_cli.execution.QueryExecutor._initialize_orchestrator")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_orchestrator")
     def test_execute_aurora_orchestrator_error_wrapped(self, mock_init_orch: Mock) -> None:
         """Test execute_aurora() wraps orchestrator errors as APIError."""
         # Setup mock to raise error
@@ -384,7 +384,7 @@ class TestInitializeOrchestrator:
     @patch("aurora_core.config.loader.Config")
     @patch("aurora_soar.orchestrator.SOAROrchestrator")
     @patch("aurora_soar.agent_registry.AgentRegistry")
-    @patch("aurora_cli.execution.QueryExecutor._initialize_llm_client")
+    @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
     def test_initialize_orchestrator_creates_soar_instance(
         self,
         mock_init_llm: Mock,

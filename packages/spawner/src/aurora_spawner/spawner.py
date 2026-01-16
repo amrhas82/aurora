@@ -512,7 +512,7 @@ async def spawn_parallel(
         async with semaphore:
             try:
                 # Call progress callback on start
-                agent_id = task.agent or "llm"
+                agent_id = task.display_name or task.agent or "llm"
                 if on_progress:
                     on_progress(idx + 1, total, agent_id, "Starting")
 
@@ -611,7 +611,7 @@ async def spawn_parallel_with_recovery(
     async def spawn_with_recovery(idx: int, task: SpawnTask) -> SpawnResult:
         """Spawn single task with recovery using existing retry infrastructure."""
         async with semaphore:
-            agent_id = task.agent or "llm"
+            agent_id = task.display_name or task.agent or "llm"
 
             # Get agent-specific policy
             agent_policy = recovery_policy.get_for_agent(agent_id)
@@ -726,7 +726,7 @@ async def spawn_parallel_with_state_tracking(
         """Spawn single task with state machine tracking."""
         async with semaphore:
             task_id = f"task-{idx}"
-            agent_id = task.agent or "llm"
+            agent_id = task.display_name or task.agent or "llm"
 
             # Create task state
             task_state = state_machine.create_task_state(task_id, agent_id)
@@ -1000,7 +1000,7 @@ async def spawn_parallel_tracked(
         """Spawn single task with stagger, heartbeat, and tracking."""
         nonlocal completed_count
 
-        agent_id = task.agent or "llm"
+        agent_id = task.display_name or task.agent or "llm"
         task_id = f"tracked_{idx}_{agent_id}"
 
         # Stagger delay to avoid API burst
@@ -1173,6 +1173,32 @@ async def spawn_parallel_tracked(
     # Create all tasks
     spawn_tasks = [asyncio.create_task(rate_limited_spawn(i, task)) for i, task in enumerate(tasks)]
 
+    # Spinner for TTY - shows while tasks are running
+    import sys
+
+    show_spinner = sys.stdout.isatty()
+    spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    spinner_running = True
+
+    async def spinner_task():
+        """Show spinner while tasks are running."""
+        spinner_idx = 0
+        while spinner_running:
+            if show_spinner and completed_count < total_tasks:
+                active = total_tasks - completed_count
+                elapsed = int(time.time() - start_time)
+                spinner = spinner_chars[spinner_idx % len(spinner_chars)]
+                sys.stdout.write(f"\r  {spinner} Working... {active} active ({elapsed}s)")
+                sys.stdout.flush()
+                spinner_idx += 1
+            await asyncio.sleep(0.1)
+        # Clear spinner line
+        if show_spinner:
+            sys.stdout.write("\r" + " " * 50 + "\r")
+            sys.stdout.flush()
+
+    spinner = asyncio.create_task(spinner_task()) if show_spinner else None
+
     # Wait with global timeout
     try:
         done, pending = await asyncio.wait(
@@ -1200,6 +1226,12 @@ async def spawn_parallel_tracked(
             if not task.done():
                 task.cancel()
         await asyncio.gather(*spawn_tasks, return_exceptions=True)
+
+    finally:
+        # Stop spinner
+        spinner_running = False
+        if spinner:
+            await spinner
 
     # Build final results list (None for cancelled tasks)
     final_results = []

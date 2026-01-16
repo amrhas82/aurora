@@ -1,35 +1,53 @@
-# Aurora Tools Guide
+# Aurora Tools & Configuration Guide
 
-Comprehensive guide to Aurora's tooling ecosystem, architecture, and workflows.
+Complete reference for Aurora's tooling ecosystem, architecture, workflows, and configurator system.
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Tool Ecosystem](#tool-ecosystem)
-- [Core Systems](#core-systems)
-- [Command-Line Interface](#command-line-interface)
-- [Planning Flow](#planning-flow)
-- [Agent System](#agent-system)
-- [Memory System](#memory-system)
-- [CLI Tool Integration](#cli-tool-integration)
-- [Advanced Workflows](#advanced-workflows)
-- [Configuration Deep Dive](#configuration-deep-dive)
-- [Debugging & Troubleshooting](#debugging--troubleshooting)
-- [Best Practices](#best-practices)
+**Last Updated:** 2026-01-16
+**Version:** 0.9.1+
 
 ---
 
+## Table of Contents
+
+### Part I: User Guide
+1. [Overview](#overview)
+2. [Tool Ecosystem](#tool-ecosystem)
+3. [Core Systems](#core-systems)
+4. [Command Reference](#command-reference)
+5. [Planning Flow](#planning-flow)
+6. [Advanced Workflows](#advanced-workflows)
+7. [Configuration](#configuration)
+8. [Debugging & Troubleshooting](#debugging--troubleshooting)
+
+### Part II: Developer Guide
+9. [Configurator System](#configurator-system)
+10. [Adding New Tools](#adding-new-tools)
+11. [Modifying Templates](#modifying-templates)
+12. [Testing](#testing)
+13. [Release Process](#release-process)
+
+### Part III: Reference
+14. [Best Practices](#best-practices)
+15. [FAQ](#faq)
+
+---
+
+# Part I: User Guide
+
 ## Overview
 
-Aurora is a cognitive architecture system that combines memory, reasoning, and agent orchestration for AI-powered development workflows. It provides:
+Aurora is a cognitive architecture system combining memory, reasoning, and agent orchestration for AI-powered development workflows.
+
+### Key Features
 
 - **Memory System**: ACT-R-based code indexing and retrieval
 - **Reasoning Engine**: SOAR 9-phase reasoning pipeline
 - **Agent Orchestration**: Multi-agent task execution
 - **Planning Tools**: Goal decomposition and task generation
 - **CLI Integration**: Works with 20+ CLI tools (claude, cursor, etc.)
+- **Slash Commands**: Automatically generates commands for supported tools
 
-### Architecture Components
+### Architecture
 
 ```
 +-------------------------------------------------------------+
@@ -54,12 +72,10 @@ Aurora is a cognitive architecture system that combines memory, reasoning, and a
 |    +- ManifestManager: Agent discovery & registration       |
 |    +- TaskParser: Markdown task file parsing                |
 |    +- ConfigManager: Multi-tier configuration               |
+|    +- SlashConfigurator: Command generation (20+ tools)     |
 +-------------------------------------------------------------+
 |  External Tools (20+ supported)                              |
-|    +- claude (CLI)                                           |
-|    +- cursor                                                 |
-|    +- aider                                                  |
-|    +- ... (any tool supporting -p flag)                     |
+|    +- claude (CLI), cursor, windsurf, cline, etc.           |
 +-------------------------------------------------------------+
 ```
 
@@ -71,17 +87,15 @@ Aurora is a cognitive architecture system that combines memory, reasoning, and a
 
 | Tool | Type | Purpose | Integration |
 |------|------|---------|-------------|
+| `aur init` | Setup | Initialize project with slash commands | SlashConfigurator |
 | `aur goals` | Planning | Goal decomposition | CLIPipeLLMClient |
 | `aur soar` | Reasoning | SOAR research pipeline | CLIPipeLLMClient |
 | `aur spawn` | Execution | Parallel task execution | Spawner + CLI tools |
 | `aur headless` | Autonomous | Claude loop until goal done | Subprocess + scratchpad |
 | `aur mem` | Memory | Code indexing/search | ACT-R + SQLite |
 | `aur agents` | Discovery | Agent management | ManifestManager |
-| `aur plan` | Legacy | OpenSpec planning | Legacy system |
 
 ### Tool Selection Matrix
-
-Choose the right tool for your task:
 
 ```
 Task: "I have a complex question"
@@ -100,13 +114,9 @@ Task: "I need to find code"
   +-> Use: aur mem search
       Why: Semantic + keyword search of indexed code
 
-Task: "I want to understand agent capabilities"
-  +-> Use: aur agents list
-      Why: Shows all available agents and their skills
-
-Task: "I have a goal, let Claude work on it autonomously"
-  +-> Use: aur headless --max=10
-      Why: Autonomous loop with scratchpad state management
+Task: "I need slash commands in my IDE"
+  +-> Use: aur init
+      Why: Generates commands for 20+ tools
 ```
 
 ---
@@ -116,25 +126,6 @@ Task: "I have a goal, let Claude work on it autonomously"
 ### 1. Memory System (ACT-R)
 
 **Purpose**: Index and retrieve code with semantic understanding.
-
-**Architecture**:
-```
-+----------------------------------------------+
-|           Memory System (ACT-R)              |
-+----------------------------------------------+
-|  Indexing Pipeline:                          |
-|    1. File scanning (recursive)              |
-|    2. Chunking (semantic + structural)       |
-|    3. Embedding generation (local or API)    |
-|    4. SQLite storage (.aurora/memory.db)     |
-|                                              |
-|  Retrieval Pipeline:                         |
-|    1. Query embedding                        |
-|    2. Hybrid search (vector + keyword)       |
-|    3. Relevance scoring (0.0-1.0)            |
-|    4. Result ranking                         |
-+----------------------------------------------+
-```
 
 **Commands**:
 ```bash
@@ -150,30 +141,21 @@ aur mem index . --force
 # Search indexed code
 aur mem search "authentication flow"
 
-# Search with limit
-aur mem search "payment" --limit 10
-
-# Search with relevance threshold
-aur mem search "config" --threshold 0.7
+# Search with filters
+aur mem search "payment" --limit 10 --type function
 ```
 
-**Storage Location**:
+**Storage**:
 - Database: `.aurora/memory.db`
 - Cache: `~/.aurora/cache/`
 - Embeddings: Stored in SQLite
 
-**Configuration**:
-```json
-{
-  "memory": {
-    "embedding_model": "local",  // or "openai"
-    "chunk_size": 1000,
-    "chunk_overlap": 200,
-    "index_patterns": ["*.py", "*.js", "*.md"],
-    "exclude_patterns": ["node_modules", ".git"]
-  }
-}
-```
+**Search Types**:
+- `function` - Functions only
+- `class` - Classes only
+- `method` - Methods only
+- `kb` - Markdown/knowledge base
+- `code` - All code chunks
 
 ### 2. SOAR Reasoning Engine
 
@@ -201,53 +183,22 @@ MEDIUM (score 12-28):
   -> Multi-step with subgoals, some spawning
 
 COMPLEX (score ≥ 29):
-  -> Full decomposition, parallel research (spawn_parallel)
+  -> Full decomposition, parallel research
 
 CRITICAL (score ≥ 35):
   -> High-stakes with adversarial verification
 ```
 
-**Usage Examples**:
+**Usage**:
 ```bash
-# Simple query (no parallel spawning)
+# Simple query
 aur soar "What is ACT-R?"
 
-# Medium query (some spawning)
-aur soar "How does authentication work in this codebase?"
-
-# Complex query (full parallel research)
-aur soar "Compare React, Vue, and Angular for SPAs"
-
-# With tool selection
-aur soar "Explain microservices" --tool cursor
-
-# With model selection
-aur soar "Optimize database queries" --model opus
+# Complex query (triggers parallel agents)
+aur soar "Compare React, Vue, and Angular"
 
 # Verbose mode (show all phases)
-aur soar "Complex question" --verbose
-```
-
-**Parallel Execution in COLLECT Phase**:
-```python
-# When complexity = COMPLEX, SOAR uses:
-results = await spawn_parallel(tasks, max_concurrent=5)
-
-# This spawns up to 5 agents concurrently
-# Each agent researches a sub-question independently
-# Results are synthesized in phase 7
-```
-
-**Log Files**:
-```bash
-# SOAR logs stored in:
-~/.aurora/soar/
-
-# View latest log:
-ls -t ~/.aurora/soar/*.log | head -1 | xargs cat
-
-# Follow live execution:
-tail -f ~/.aurora/soar/soar-*.log
+aur soar "How does authentication work?" --verbose
 ```
 
 ### 3. Spawner System
@@ -265,16 +216,10 @@ result = await spawn(
     timeout=300
 )
 
-# Parallel spawning (up to max_concurrent)
+# Parallel spawning
 results = await spawn_parallel(
-    tasks=[SpawnTask(...), SpawnTask(...), ...],
-    max_concurrent=5
-)
-
-# Sequential spawning (with context accumulation)
-results = await spawn_sequential(
     tasks=[SpawnTask(...), ...],
-    pass_context=True
+    max_concurrent=5
 )
 ```
 
@@ -289,31 +234,6 @@ results = await spawn_sequential(
 4. Default: "claude"
 ```
 
-**Model Resolution Order**:
-```
-1. CLI flag: --model opus
-   ↓ (if not provided)
-2. Environment variable: AURORA_SPAWN_MODEL=opus
-   ↓ (if not set)
-3. Config file: spawn.default_model = "opus"
-   ↓ (if not set)
-4. Default: "sonnet"
-```
-
-**Supported CLI Tools**:
-```
-✓ claude (Anthropic CLI)
-✓ cursor
-✓ aider
-✓ open-interpreter
-✓ gpt-engineer
-✓ fabric
-✓ shell_gpt
-✓ chatgpt-cli
-✓ llm (Simon Willison's LLM)
-✓ ... any tool with -p flag for piping
-```
-
 **Task File Format**:
 ```markdown
 # My Tasks
@@ -325,9 +245,6 @@ results = await spawn_sequential(
 - [ ] 2. Write integration tests
 <!-- agent: qa-test-architect -->
 <!-- depends: 1 -->
-
-- [ ] 3. Update API documentation
-<!-- agent: self -->
 ```
 
 ### 4. Planning System
@@ -335,81 +252,128 @@ results = await spawn_sequential(
 **Purpose**: Structured goal decomposition and task generation.
 
 **Components**:
-```
-GoalDecomposer
-  +- Memory search (find relevant context)
-  +- LLM decomposition (via CLIPipeLLMClient)
-  +- AgentRecommender (keyword + LLM fallback)
-  +- GapDetector (missing agent capabilities)
-  +- goals.json generator
+- **GoalDecomposer**: Memory search + LLM decomposition
+- **AgentRecommender**: Keyword + LLM fallback matching
+- **GapDetector**: Missing agent capability detection
+- **TaskGenerator**: PRD and tasks.md creation
 
-TaskGenerator (/plan skill)
-  +- goals.json reader
-  +- PRD generator
-  +- tasks.md generator (with agent metadata)
-  +- specs/ generator
-```
+**Workflow**:
+```bash
+# 1. Decompose goal
+aur goals "Add user authentication"
 
-**AgentRecommender Algorithm**:
-```python
-def recommend_for_subgoal(subgoal):
-    # 1. Try keyword matching
-    agent, score = keyword_match(subgoal)
-    if score >= 0.5:
-        return agent, score
+# 2. Review goals.json
+cd .aurora/plans/0001-add-user-auth/
+$EDITOR goals.json
 
-    # 2. Try LLM classification (fallback)
-    if llm_client:
-        agent, score = llm_classify(subgoal)
-        if score >= 0.5:
-            return agent, score
+# 3. Generate PRD and tasks (in Claude Code)
+/plan
 
-    # 3. Return default fallback
-    return "full-stack-dev", score
-```
-
-**Gap Detection**:
-```python
-def detect_gaps(subgoals, recommendations):
-    gaps = []
-    for sg, (agent, confidence) in zip(subgoals, recommendations):
-        if confidence < 0.5:
-            capabilities = extract_capabilities(sg)
-            gaps.append(AgentGap(
-                subgoal_id=sg.id,
-                suggested_capabilities=capabilities,
-                fallback=default_agent
-            ))
-    return gaps
+# 4. Execute tasks
+aur spawn tasks.md
 ```
 
 ---
 
-## Command-Line Interface
+## Command Reference
+
+### aur init - Project Setup
+
+**Purpose**: Initialize Aurora in a project and generate slash commands for supported tools.
+
+**Syntax**:
+```bash
+aur init [OPTIONS]
+```
+
+**Options**:
+```
+--tools TEXT          Comma-separated tools (default: all)
+--config              Regenerate config files only
+--force               Overwrite existing files
+--help                Show help message
+```
+
+**Examples**:
+```bash
+# Initialize with all tools (20+)
+aur init
+
+# Initialize with specific tools
+aur init --tools=claude,cursor,windsurf
+
+# Regenerate commands only
+aur init --config --tools=claude
+
+# Force overwrite
+aur init --force
+```
+
+**What It Creates**:
+```
+.claude/commands/aur/
+  +- search.md
+  +- get.md
+  +- plan.md
+  +- checkpoint.md
+  +- implement.md
+  +- archive.md
+
+.cursor/commands/
+  +- aurora-search.md
+  +- aurora-get.md
+  ... (same 6 commands)
+
+.windsurf/commands/
+  +- aurora-search.md
+  ... (same 6 commands)
+
+... (for all selected tools)
+```
+
+**Supported Tools** (20):
+1. Claude Code (`.claude/commands/aur/`)
+2. Cursor (`.cursor/commands/`)
+3. Windsurf (`.windsurf/commands/`)
+4. Cline (`.cline/commands/`)
+5. GitHub Copilot (`.github/copilot/`)
+6. Codex (`.codex/commands/`)
+7. OpenCode (`.opencode/commands/`)
+8. Amazon Q (`.amazonq/commands/`)
+9. CodeBuddy (`.codebuddy/commands/`)
+10. Auggie (`.auggie/commands/`)
+11. Costrict (`.costrict/commands/`)
+12. Crush (`.crush/commands/`)
+13. Antigravity (`.antigravity/commands/`)
+14. Gemini CLI (`.gemini/commands/aurora/`) - TOML format
+15. Qwen (`.qwen/commands/`) - TOML format
+16. KiloCode (`.kilocode/commands/`) - TOML format
+17. RooCode (`.roocode/commands/`) - TOML format
+18. Qoder (`.qoder/commands/`) - TOML format
+19. iFlow (`.iflow/commands/`) - TOML format
+20. Factory (`.factory/commands/`)
 
 ### aur goals - Goal Decomposition
 
-**Full Syntax**:
+**Syntax**:
 ```bash
 aur goals [OPTIONS] GOAL
 ```
 
 **Options**:
 ```
---tool, -t TEXT         CLI tool to use (default: from env or config or 'claude')
+--tool, -t TEXT         CLI tool to use (default: claude)
 --model, -m [sonnet|opus] Model to use (default: sonnet)
---context PATH          Add context file (can be used multiple times)
---no-decompose          Skip decomposition (single task goal)
+--context PATH          Add context file (multiple allowed)
+--no-decompose          Skip decomposition (single task)
 --yes, -y               Skip confirmation prompts
 --verbose, -v           Show detailed progress
---help                  Show help message
 ```
 
 **Examples**:
-
 ```bash
 # Basic usage
-aur goals "Implement OAuth2 authentication with JWT tokens"
+aur goals "Implement OAuth2 authentication"
 
 # With context files
 aur goals "Add caching layer" \
@@ -419,184 +383,62 @@ aur goals "Add caching layer" \
 # Skip confirmation (CI/CD)
 aur goals "Fix login bug" --yes
 
-# Simple goal without decomposition
-aur goals "Update README" --no-decompose
-
-# Use specific tool and model
-aur goals "Optimize database queries" \
-  --tool cursor \
-  --model opus
-
-# Verbose mode (see all steps)
-aur goals "Build user dashboard" --verbose
-```
-
-**Output**:
-```
-🔍 Searching memory for relevant context...
-   Found 3 relevant files
-   - src/auth/login.py (0.85)
-   - src/auth/middleware.py (0.72)
-   - docs/auth-design.md (0.68)
-
-📋 Decomposing goal into subgoals...
-   Created 4 subgoals
-
-🤖 Matching agents to subgoals...
-   ✓ sg-1: @full-stack-dev (0.89)
-   ✓ sg-2: @qa-test-architect (0.92)
-   ✓ sg-3: @full-stack-dev (0.78)
-   ⚠️  sg-4: @full-stack-dev (0.45) - gap detected
-
-⚠️  1 agent gap detected:
-   sg-4 needs capabilities: ["security", "audit"]
-   Using fallback: @full-stack-dev
-
-📁 Plan directory: .aurora/plans/0001-implement-oauth2-authentication/
-
-Review goals? [Y/n]: y
-<opens goals.json in $EDITOR>
-
-Proceed? [Y/n]: y
-
-✅ Goals saved. Run /plan in Claude Code to generate PRD and tasks.
-```
-
-**Environment Variables**:
-```bash
-export AURORA_GOALS_TOOL=cursor    # Default tool
-export AURORA_GOALS_MODEL=opus     # Default model
-```
-
-**Config File** (`~/.aurora/config.json`):
-```json
-{
-  "goals": {
-    "default_tool": "claude",
-    "default_model": "sonnet",
-    "memory_threshold": 0.3,
-    "max_subgoals": 7
-  }
-}
+# Use specific tool
+aur goals "Optimize queries" --tool cursor --model opus
 ```
 
 ### aur soar - SOAR Reasoning
 
-**Full Syntax**:
+**Syntax**:
 ```bash
 aur soar [OPTIONS] QUERY
 ```
 
 **Options**:
 ```
---tool, -t TEXT         CLI tool to use (default: claude)
---model, -m [sonnet|opus] Model to use (default: sonnet)
+--tool, -t TEXT         CLI tool (default: claude)
+--model, -m [sonnet|opus] Model (default: sonnet)
 --verbose, -v           Show all 9 phases
---stream                Stream output in real-time
+--stream                Stream output
 --save PATH             Save result to file
---help                  Show help message
 ```
 
 **Examples**:
-
 ```bash
 # Simple query
-aur soar "How does the authentication system work?"
+aur soar "How does authentication work?"
 
-# Complex research (triggers parallel agents)
-aur soar "Compare React, Vue, and Angular for building SPAs"
+# Complex research
+aur soar "Compare React, Vue, Angular"
 
-# With tool selection
-aur soar "Explain microservices architecture" --tool cursor
+# Verbose mode
+aur soar "Explain microservices" --verbose
 
-# With model selection
-aur soar "Optimize database performance" --model opus
-
-# Verbose mode (see all 9 phases)
-aur soar "How does ACT-R memory work?" --verbose
-
-# Stream output (see results as they come)
-aur soar "Analyze this codebase" --stream
-
-# Save to file
+# Save output
 aur soar "Document the API" --save api-docs.md
 ```
 
-**Verbose Output** (shows all phases):
-```
-[PHASE 1: ASSESS] Analyzing query complexity...
-  Complexity: COMPLEX (score: 32)
-  Routing: Full decomposition with parallel research
+### aur spawn - Task Execution
 
-[PHASE 2: RETRIEVE] Searching memory...
-  Found 5 relevant chunks (avg relevance: 0.78)
-
-[PHASE 3: DECOMPOSE] Breaking into sub-questions...
-  Sub-question 1: What is React's component model?
-  Sub-question 2: How does Vue's reactivity system work?
-  Sub-question 3: What is Angular's dependency injection?
-
-[PHASE 4: VERIFY] Validating decomposition...
-  Quality score: 0.92 (good)
-
-[PHASE 5: ROUTE] Assigning agents...
-  Sub-Q1 -> @researcher (0.85)
-  Sub-Q2 -> @researcher (0.88)
-  Sub-Q3 -> @researcher (0.91)
-
-[PHASE 6: COLLECT] Executing agents in parallel...
-  Spawning 3 agents (max_concurrent=5)
-  ✓ Agent 1 completed (12.3s)
-  ✓ Agent 2 completed (14.1s)
-  ✓ Agent 3 completed (11.8s)
-
-[PHASE 7: SYNTHESIZE] Combining results...
-  Synthesized 3 agent outputs
-  Confidence: 0.87
-
-[PHASE 8: RECORD] Storing reasoning trace...
-  Saved to ~/.aurora/soar/soar-20260110-123456.log
-
-[PHASE 9: RESPOND] Formatting answer...
-
-<Final synthesized answer here>
-```
-
-**Environment Variables**:
-```bash
-export AURORA_SOAR_TOOL=cursor     # Default tool
-export AURORA_SOAR_MODEL=opus      # Default model
-```
-
-### aur spawn - Parallel Task Execution
-
-**Full Syntax**:
+**Syntax**:
 ```bash
 aur spawn [OPTIONS] [TASK_FILE]
 ```
 
 **Options**:
 ```
---parallel/--no-parallel  Enable/disable parallel execution (default: parallel)
+--parallel/--no-parallel  Enable/disable parallel (default: parallel)
 --sequential             Force sequential execution
 --dry-run                Validate without executing
 --verbose, -v            Show detailed progress
---max-concurrent INT     Maximum parallel tasks (default: 5)
---timeout INT            Task timeout in seconds (default: 300)
---help                   Show help message
+--max-concurrent INT     Max parallel tasks (default: 5)
+--timeout INT            Task timeout seconds (default: 300)
 ```
 
 **Examples**:
-
 ```bash
-# Execute tasks.md in parallel (default)
+# Execute tasks.md in parallel
 aur spawn
-
-# Execute specific file
-aur spawn my-tasks.md
-
-# Dry run (validate only)
-aur spawn tasks.md --dry-run
 
 # Sequential execution
 aur spawn tasks.md --sequential
@@ -606,34 +448,6 @@ aur spawn tasks.md --max-concurrent 3
 
 # Custom timeout
 aur spawn tasks.md --timeout 600
-
-# Verbose output
-aur spawn tasks.md --verbose
-```
-
-**Progress Output**:
-```
-Loaded 5 tasks from tasks.md
-
-Executing in parallel (max_concurrent=5)...
-
-[1/5] Task 1: Implement auth endpoint ... ✓ (12.3s)
-[2/5] Task 2: Write tests          ... ✓ (14.1s)
-[3/5] Task 3: Update docs          ... ✓ (8.2s)
-[4/5] Task 4: Deploy to staging    ... ✓ (18.7s)
-[5/5] Task 5: Send notification    ... ✓ (3.1s)
-
-Summary:
-  Total: 5
-  Completed: 5
-  Failed: 0
-  Duration: 18.7s
-```
-
-**Environment Variables**:
-```bash
-export AURORA_SPAWN_MAX_CONCURRENT=10  # Max parallel
-export AURORA_SPAWN_TIMEOUT=600        # Timeout (sec)
 ```
 
 ### aur mem - Memory Commands
@@ -643,17 +457,11 @@ export AURORA_SPAWN_TIMEOUT=600        # Timeout (sec)
 # Index current directory
 aur mem index .
 
-# Index specific directory
-aur mem index packages/
-
 # Force rebuild
 aur mem index . --force
 
-# Index with pattern
-aur mem index . --include "*.py" --include "*.md"
-
-# Exclude patterns
-aur mem index . --exclude "node_modules" --exclude ".git"
+# With patterns
+aur mem index . --include "*.py" --exclude "node_modules"
 ```
 
 **Search Command**:
@@ -662,36 +470,17 @@ aur mem index . --exclude "node_modules" --exclude ".git"
 aur mem search "authentication"
 
 # Filter by type
-aur mem search "auth" --type function    # Functions only
-aur mem search "auth" --type class       # Classes only
-aur mem search "auth" --type method      # Methods only
-aur mem search "auth" --type kb          # Markdown/knowledge base only
-aur mem search "auth" --type code        # All code chunks
+aur mem search "auth" --type function
 
 # Control results
-aur mem search "payment" --limit 10      # More results (default: 5)
-aur mem search "config" --min-score 0.5  # Higher relevance threshold
+aur mem search "payment" --limit 10 --min-score 0.5
 
-# Display options
-aur mem search "api" --show-content      # Show code snippets
-aur mem search "api" --show-scores       # Detailed score breakdown
-aur mem search "api" --format json       # JSON output for scripting
-```
-
-**Search Options**:
-```
--n, --limit INT         Max results (default: 5)
--t, --type TYPE         Filter: function, class, method, kb, code, knowledge, document
--f, --format FORMAT     Output: rich (default) or json
--c, --show-content      Show content preview
---show-scores           Detailed score explanations (BM25, Semantic, Activation)
---min-score FLOAT       Minimum semantic score (0.0-1.0, default: 0.35)
---db-path PATH          Custom database path
+# Show content
+aur mem search "api" --show-content
 ```
 
 ### aur agents - Agent Management
 
-**List Command**:
 ```bash
 # List all agents
 aur agents list
@@ -706,20 +495,6 @@ aur agents list --capability testing
 aur agents list --json
 ```
 
-**Agent Manifest Format**:
-```json
-{
-  "agents": [
-    {
-      "id": "full-stack-dev",
-      "name": "Full Stack Developer",
-      "capabilities": ["frontend", "backend", "api", "database"],
-      "description": "Implements full-stack features with tests"
-    }
-  ]
-}
-```
-
 ---
 
 ## Planning Flow
@@ -729,87 +504,50 @@ Complete workflow from goal to execution.
 ### Stage 1: Goal Decomposition (Terminal)
 
 ```bash
-# Start with a high-level goal
 aur goals "Implement user authentication system"
 ```
 
-**What happens**:
-1. Memory search finds relevant context (existing auth code, docs)
-2. Goal decomposed into 3-7 subgoals using LLM
-3. Agents matched to each subgoal (keyword + LLM fallback)
-4. Gaps detected (missing agent capabilities)
-5. User reviews goals.json in editor
+**What Happens**:
+1. Memory search finds relevant context
+2. Goal decomposed into 3-7 subgoals
+3. Agents matched to each subgoal
+4. Gaps detected (missing capabilities)
+5. User reviews `goals.json` in editor
 6. Directory created: `.aurora/plans/0001-implement-user-auth/`
-7. `goals.json` saved with subgoals and agent assignments
 
 **goals.json Output**:
 ```json
 {
   "id": "0001-implement-user-auth",
   "title": "Implement user authentication system",
-  "created_at": "2026-01-10T12:00:00Z",
   "status": "ready_for_planning",
   "memory_context": [
-    {"file": "src/auth/login.py", "relevance": 0.85},
-    {"file": "src/models/user.py", "relevance": 0.78}
+    {"file": "src/auth/login.py", "relevance": 0.85}
   ],
   "subgoals": [
     {
       "id": "sg-1",
       "title": "Implement JWT token generation",
-      "description": "Add function to generate and sign JWT tokens",
       "agent": "@full-stack-dev",
       "confidence": 0.89,
       "dependencies": []
-    },
-    {
-      "id": "sg-2",
-      "title": "Create login endpoint",
-      "description": "Add POST /api/login endpoint with validation",
-      "agent": "@full-stack-dev",
-      "confidence": 0.92,
-      "dependencies": ["sg-1"]
-    },
-    {
-      "id": "sg-3",
-      "title": "Write authentication tests",
-      "description": "Add unit and integration tests for auth flow",
-      "agent": "@qa-test-architect",
-      "confidence": 0.95,
-      "dependencies": ["sg-1", "sg-2"]
     }
-  ],
-  "gaps": []
+  ]
 }
 ```
 
 ### Stage 2: PRD and Task Generation (Claude Code)
 
 ```bash
-# Navigate to plan directory
-cd .aurora/plans/0001-implement-user-auth/
-
-# Run /plan skill in Claude Code
+# In Claude Code, run:
 /plan
 ```
 
-**What happens**:
-1. `/plan` skill reads `goals.json`
-2. Generates `prd.md` with full requirements
-3. Generates `tasks.md` with agent metadata from goals.json
-4. Generates `specs/` directory with detailed specifications
-
-**Generated Files**:
-```
-.aurora/plans/0001-implement-user-auth/
-+-- goals.json              # Created by: aur goals
-+-- prd.md                  # Created by: /plan
-+-- tasks.md                # Created by: /plan
-+-- specs/                  # Created by: /plan
-    +-- api-spec.md
-    +-- auth-flow.md
-    +-- test-plan.md
-```
+**What Happens**:
+1. Reads `goals.json`
+2. Generates `prd.md` with requirements
+3. Generates `tasks.md` with agent metadata
+4. Generates `specs/` directory
 
 **tasks.md Format**:
 ```markdown
@@ -823,573 +561,103 @@ cd .aurora/plans/0001-implement-user-auth/
 <!-- agent: full-stack-dev -->
 <!-- goal: sg-2 -->
 <!-- depends: 1 -->
-
-- [ ] 3. Write authentication tests
-<!-- agent: qa-test-architect -->
-<!-- goal: sg-3 -->
-<!-- depends: 1,2 -->
 ```
 
 ### Stage 3: Task Execution
 
-**Option A: Sequential Execution (Claude Code)**:
+**Option A: Sequential (Claude Code)**:
 ```bash
-# In Claude Code, run:
 aur implement
-
-# This executes tasks one at a time
-# Uses Task tool to spawn subagents
-# Marks tasks [x] as completed
 ```
 
-**Option B: Parallel Execution (Terminal)**:
+**Option B: Parallel (Terminal)**:
 ```bash
-# From terminal:
 aur spawn tasks.md --verbose
-
-# This executes tasks in parallel
-# Respects dependencies
-# Max 5 concurrent by default
-```
-
-**Complete Workflow Example**:
-```bash
-# 1. Decompose goal (Terminal)
-aur goals "Add user authentication" --verbose
-
-# 2. Review and edit goals
-cd .aurora/plans/0001-add-user-auth/
-$EDITOR goals.json
-
-# 3. Generate PRD and tasks (Claude Code)
-# In Claude Code, run: /plan
-
-# 4a. Execute sequentially (Claude Code)
-# In Claude Code, run: aur implement
-
-# OR
-
-# 4b. Execute in parallel (Terminal)
-aur spawn tasks.md --verbose
-
-# 5. Re-index updated code
-aur mem index .
-
-# 6. Verify implementation
-aur soar "Explain the authentication system"
-```
-
----
-
-## Agent System
-
-### Agent Discovery
-
-**Manifest Manager**:
-```python
-from aurora_cli.agent_discovery import ManifestManager
-
-manager = ManifestManager()
-manifest = manager.get_or_refresh()
-
-# List all agents
-for agent in manifest.agents:
-    print(f"{agent.id}: {agent.name}")
-    print(f"  Capabilities: {agent.capabilities}")
-
-# Get specific agent
-agent = manager.get_agent("full-stack-dev")
-```
-
-**Discovery Paths**:
-```
-1. Project agents: .aurora/agents/
-2. Global agents: ~/.aurora/agents/
-3. Package agents: aurora_cli/agents/
-```
-
-**Agent Manifest Format**:
-```markdown
----
-id: full-stack-dev
-name: Full Stack Developer
-capabilities:
-  - frontend
-  - backend
-  - api
-  - database
-  - testing
----
-
-# Full Stack Developer Agent
-
-Implements full-stack features with comprehensive testing.
-
-## Capabilities
-- Frontend: React, Vue, Angular
-- Backend: Python, Node.js, Go
-- Database: PostgreSQL, MongoDB
-- Testing: pytest, Jest, Cypress
-
-## Usage
-Assign to tasks requiring end-to-end implementation.
-```
-
-### Agent Matching
-
-**Keyword-Based Matching**:
-```python
-keywords = {
-    "full-stack-dev": ["implement", "build", "create", "api", "endpoint"],
-    "qa-test-architect": ["test", "verify", "validate", "qa", "quality"],
-    "researcher": ["research", "investigate", "analyze", "explain"]
-}
-
-def keyword_match(task_description):
-    scores = {}
-    for agent, keywords in keywords.items():
-        score = sum(1 for kw in keywords if kw in task_description.lower())
-        scores[agent] = score / len(keywords)
-    return max(scores.items(), key=lambda x: x[1])
-```
-
-**LLM Fallback**:
-```python
-def llm_classify(task_description, available_agents):
-    prompt = f"""
-    Task: {task_description}
-
-    Available agents:
-    {format_agents(available_agents)}
-
-    Which agent is best suited for this task?
-    Return JSON: {{"agent_id": "...", "confidence": 0.85}}
-    """
-
-    response = llm_client.generate(prompt)
-    return parse_agent_recommendation(response)
-```
-
-**Combined Approach**:
-```
-1. Try keyword matching
-   +- If score >= 0.5: Use that agent
-   +- If score < 0.5: Continue to step 2
-
-2. Try LLM classification
-   +- If score >= 0.5: Use that agent
-   +- If score < 0.5: Continue to step 3
-
-3. Use default fallback agent
-   +- Return: "full-stack-dev" with low confidence
-```
-
-### Gap Detection
-
-**What are gaps?**
-Gaps occur when no suitable agent exists for a subgoal (confidence < 0.5).
-
-**Gap Report**:
-```json
-{
-  "gaps": [
-    {
-      "subgoal_id": "sg-4",
-      "suggested_capabilities": ["security", "penetration-testing", "audit"],
-      "fallback": "@full-stack-dev"
-    }
-  ]
-}
-```
-
-**User Action**:
-1. Create new agent with suggested capabilities
-2. Use fallback agent (may not be optimal)
-3. Modify subgoal to match existing agents
-
----
-
-## Memory System
-
-### Indexing
-
-**What gets indexed**:
-- Python files (*.py)
-- JavaScript files (*.js, *.jsx, *.ts, *.tsx)
-- Markdown files (*.md)
-- Configuration files (*.json, *.yaml, *.toml)
-
-**Chunking Strategy**:
-```python
-# Semantic chunking (respects code structure)
-chunks = semantic_chunk(file_content, chunk_size=1000, overlap=200)
-
-# Structural chunking (functions, classes)
-chunks = structural_chunk(ast_tree)
-
-# Combined approach
-final_chunks = merge(semantic_chunks, structural_chunks)
-```
-
-**Embedding Models**:
-```python
-# Local model (default)
-embeddings = LocalEmbedder().embed(chunks)
-
-# OpenAI model
-embeddings = OpenAIEmbedder(api_key).embed(chunks)
-
-# Custom model
-embeddings = CustomEmbedder(model_path).embed(chunks)
-```
-
-### Retrieval
-
-**Hybrid Search**:
-```python
-# Vector search (semantic similarity)
-vector_results = cosine_similarity(query_embedding, chunk_embeddings)
-
-# Keyword search (BM25)
-keyword_results = bm25_search(query_tokens, chunk_tokens)
-
-# Combine with weights
-final_results = (
-    0.7 * vector_results +
-    0.3 * keyword_results
-)
-```
-
-**Relevance Scoring**:
-```
-Score range: 0.0 - 1.0
-
-0.9 - 1.0: Highly relevant (exact match)
-0.7 - 0.9: Very relevant (strong semantic match)
-0.5 - 0.7: Relevant (partial match)
-0.3 - 0.5: Somewhat relevant (weak match)
-0.0 - 0.3: Not relevant (filtered out)
-```
-
-**Memory Context in goals.json**:
-```json
-{
-  "memory_context": [
-    {"file": "src/auth/login.py", "relevance": 0.92},
-    {"file": "src/auth/middleware.py", "relevance": 0.85},
-    {"file": "src/models/user.py", "relevance": 0.78},
-    {"file": "docs/auth-design.md", "relevance": 0.71}
-  ]
-}
-```
-
----
-
-## CLI Tool Integration
-
-### CLIPipeLLMClient
-
-**Purpose**: CLI-agnostic LLM interface that works with 20+ tools.
-
-**Architecture**:
-```python
-class CLIPipeLLMClient:
-    def __init__(self, tool: str, model: str):
-        self.tool = tool      # "claude", "cursor", etc.
-        self.model = model    # "sonnet", "opus", etc.
-
-    async def generate(self, prompt: str, **kwargs):
-        # 1. Build command: [tool, "-p", "--model", model]
-        # 2. Spawn subprocess
-        # 3. Pipe prompt to stdin
-        # 4. Stream stdout back
-        # 5. Return response
-```
-
-**Tool Requirements**:
-```
-Any CLI tool that supports:
-  - `-p` or `--print` flag for non-interactive mode
-  - Prompt via stdin
-  - Output to stdout
-
-Example compatible tools:
-  ✓ claude -p --model sonnet
-  ✓ cursor --print
-  ✓ aider --yes --no-check-update
-  ✓ open-interpreter --local
-```
-
-**Tool Validation**:
-```python
-def validate_tool(tool: str) -> bool:
-    # Check if tool exists in PATH
-    if not shutil.which(tool):
-        raise ValueError(f"Tool '{tool}' not found in PATH")
-
-    # Verify tool supports required flags
-    result = subprocess.run([tool, "--help"], capture_output=True)
-    if "-p" not in result.stdout.decode():
-        warnings.warn(f"Tool '{tool}' may not support -p flag")
-
-    return True
-```
-
-**Resolution Flow**:
-```
-User runs: aur goals "Goal text"
-
-1. Check CLI flag: --tool cursor
-   +- If provided: use cursor
-
-2. Check environment variable: AURORA_GOALS_TOOL=cursor
-   +- If set: use cursor
-
-3. Check config file: goals.default_tool = "cursor"
-   +- If set: use cursor
-
-4. Use default: "claude"
-
-Same process for model selection.
-```
-
-### Supported Tools Matrix
-
-| Tool | Tested | Flags | Notes |
-|------|--------|-------|-------|
-| claude | ✅ | `-p --model` | Official Anthropic CLI |
-| cursor | ✅ | `--print` | Cursor IDE CLI |
-| aider | ✅ | `--yes --no-check-update` | AI pair programming |
-| open-interpreter | ⚠️ | `--local` | May need additional setup |
-| gpt-engineer | ⚠️ | Custom | Needs wrapper script |
-| fabric | ✅ | `-p` | LLM framework |
-| shell_gpt | ✅ | `--no-animation` | Terminal assistant |
-| chatgpt-cli | ⚠️ | Custom | Needs configuration |
-| llm | ✅ | `-p` | Simon Willison's tool |
-
-### Custom Tool Integration
-
-**Wrapper Script Example**:
-```bash
-#!/bin/bash
-# custom-tool-wrapper.sh
-
-# Read prompt from stdin
-prompt=$(cat)
-
-# Call your custom tool
-your-custom-tool --prompt "$prompt" --model "$1" --output -
-
-# Exit with tool's exit code
-exit $?
-```
-
-**Register Custom Tool**:
-```bash
-# Make wrapper executable
-chmod +x custom-tool-wrapper.sh
-
-# Add to PATH
-export PATH=$PATH:/path/to/wrappers
-
-# Use with Aurora
-aur goals "Goal" --tool custom-tool-wrapper
-```
-
-**Config for Custom Tool**:
-```json
-{
-  "goals": {
-    "default_tool": "custom-tool-wrapper"
-  }
-}
 ```
 
 ---
 
 ## Advanced Workflows
 
-### Workflow 1: Feature Implementation with Full Traceability
+### Workflow 1: Feature Implementation with Traceability
 
 ```bash
-# 1. Index current codebase
+# 1. Index codebase
 aur mem index .
 
-# 2. Research existing patterns
-aur soar "How is API routing currently implemented?" --verbose
+# 2. Research patterns
+aur soar "How is API routing implemented?" --verbose
 
-# 3. Create goals with context
-aur goals "Add new user profile API endpoint" \
-  --context src/api/routes.py \
-  --context src/models/user.py
+# 3. Create goals
+aur goals "Add user profile API" \
+  --context src/api/routes.py
 
-# 4. Review goals.json
-cd .aurora/plans/0001-add-user-profile-api/
-cat goals.json
+# 4. Generate PRD and tasks
+# In Claude Code: /plan
 
-# 5. Generate PRD and tasks (Claude Code)
-# Run: /plan
-
-# 6. Execute with progress tracking
+# 5. Execute
 aur spawn tasks.md --verbose
 
-# 7. Verify implementation
+# 6. Verify
 aur mem index .
-aur soar "Explain the user profile API endpoint"
-
-# 8. Document changes
-aur soar "Summarize changes made in this branch" --save CHANGELOG.md
+aur soar "Explain the user profile API"
 ```
 
-### Workflow 2: Bug Investigation and Fix
+### Workflow 2: Bug Investigation
 
 ```bash
-# 1. Search for bug context
+# 1. Search context
 aur mem search "login authentication error"
 
-# 2. Investigate with SOAR
-aur soar "Why might authentication fail intermittently?" --verbose
+# 2. Investigate
+aur soar "Why might authentication fail?" --verbose
 
-# 3. Create focused goal
-aur goals "Fix intermittent authentication failures" \
+# 3. Fix
+aur goals "Fix authentication failures" \
   --context src/auth/login.py \
-  --context src/auth/session.py \
   --no-decompose
 
-# 4. Quick fix with spawn
+# 4. Execute
 aur spawn tasks.md --sequential
-
-# 5. Verify fix
-aur mem index .
-aur soar "How does the authentication system handle session timeouts now?"
 ```
 
-### Workflow 3: Research-Driven Development
+### Workflow 3: Multi-Agent Collaboration
 
-```bash
-# 1. Research options
-aur soar "Compare WebSocket implementations: socket.io vs native WebSockets" \
-  --model opus \
-  --save research/websocket-comparison.md
+```markdown
+# tasks.md with explicit assignments
 
-# 2. Create goal based on research
-aur goals "Implement WebSocket support using socket.io" \
-  --context research/websocket-comparison.md
-
-# 3. Generate detailed plan
-cd .aurora/plans/0001-implement-websocket-support/
-# Run /plan in Claude Code
-
-# 4. Parallel execution
-aur spawn tasks.md --max-concurrent 3
-
-# 5. Document decision
-aur soar "Why did we choose socket.io over native WebSockets?" \
-  --save docs/decisions/websocket-choice.md
-```
-
-### Workflow 4: Multi-Agent Collaboration
-
-```bash
-# 1. List available agents
-aur agents list
-
-# 2. Create task file with explicit agent assignments
-cat > tasks.md << 'EOF'
-- [ ] 1. Research best practices for real-time updates
+- [ ] 1. Research real-time updates
 <!-- agent: researcher -->
 
 - [ ] 2. Design WebSocket API
 <!-- agent: architect -->
 
-- [ ] 3. Implement WebSocket server
+- [ ] 3. Implement server
 <!-- agent: full-stack-dev -->
 <!-- depends: 2 -->
 
-- [ ] 4. Add client-side WebSocket handler
-<!-- agent: full-stack-dev -->
-<!-- depends: 2 -->
-
-- [ ] 5. Write integration tests
+- [ ] 4. Write tests
 <!-- agent: qa-test-architect -->
-<!-- depends: 3,4 -->
-
-- [ ] 6. Create API documentation
-<!-- agent: technical-writer -->
-<!-- depends: 2,3,4 -->
-EOF
-
-# 3. Execute with parallel agents
-aur spawn tasks.md --verbose
-
-# 4. Review results
-cat tasks.md  # See [x] for completed tasks
+<!-- depends: 3 -->
 ```
 
-### Workflow 5: Continuous Integration
-
 ```bash
-#!/bin/bash
-# ci-workflow.sh
-
-# 1. Index codebase
-aur mem index . --force
-
-# 2. Run SOAR quality check
-aur soar "Analyze code quality and identify issues" \
-  --model opus \
-  --save reports/quality-check.md
-
-# 3. Check for missing tests
-aur soar "List all functions without tests" \
-  --save reports/missing-tests.md
-
-# 4. Generate test tasks
-aur goals "Add missing test coverage" \
-  --context reports/missing-tests.md \
-  --yes
-
-# 5. Execute test creation
-cd .aurora/plans/*/
-# Run /plan in Claude Code
-aur spawn tasks.md --sequential
-
-# 6. Re-index with new tests
-aur mem index .
-
-# 7. Verify coverage
-aur soar "Summarize test coverage improvements" \
-  --save reports/coverage-summary.md
+aur spawn tasks.md --verbose
 ```
 
 ---
 
-## Configuration Deep Dive
+## Configuration
 
 ### Multi-Tier Configuration
 
 **Resolution Order** (highest to lowest priority):
 ```
 1. CLI flags (--tool, --model)
-2. Environment variables (AURORA_*_TOOL, AURORA_*_MODEL)
+2. Environment variables (AURORA_*_TOOL)
 3. Project config (.aurora/config.json)
 4. Global config (~/.aurora/config.json)
 5. Built-in defaults
-```
-
-**Example Resolution**:
-```bash
-# Scenario: User runs
-aur goals "Goal" --tool cursor
-
-# Resolution:
-1. CLI flag: --tool cursor ✓ USED
-2. AURORA_GOALS_TOOL=claude ✗ IGNORED
-3. Project config: "tool": "aider" ✗ IGNORED
-4. Global config: "tool": "claude" ✗ IGNORED
-5. Default: "claude" ✗ IGNORED
-
-# Result: Uses cursor
 ```
 
 ### Global Configuration
@@ -1402,46 +670,21 @@ aur goals "Goal" --tool cursor
     "default_tool": "claude",
     "default_model": "sonnet",
     "memory_threshold": 0.3,
-    "max_subgoals": 7,
-    "enable_gaps": true
+    "max_subgoals": 7
   },
   "soar": {
     "default_tool": "claude",
-    "default_model": "sonnet",
     "enable_parallel": true,
-    "max_concurrent": 5,
-    "complexity_threshold": {
-      "simple": 11,
-      "medium": 28,
-      "complex": 29
-    }
+    "max_concurrent": 5
   },
   "spawn": {
     "max_concurrent": 5,
-    "default_timeout": 300,
-    "enable_progress": true,
-    "update_tasks_file": true
+    "default_timeout": 300
   },
   "memory": {
     "embedding_model": "local",
     "chunk_size": 1000,
-    "chunk_overlap": 200,
-    "relevance_threshold": 0.3,
-    "max_results": 10
-  },
-  "agents": {
-    "discovery_paths": [
-      "~/.aurora/agents",
-      ".aurora/agents"
-    ],
-    "fallback_agent": "full-stack-dev",
-    "confidence_threshold": 0.5
-  },
-  "logging": {
-    "level": "INFO",
-    "file": "~/.aurora/aurora.log",
-    "max_size_mb": 100,
-    "backup_count": 5
+    "relevance_threshold": 0.3
   }
 }
 ```
@@ -1456,53 +699,31 @@ aur goals "Goal" --tool cursor
     "default_tool": "cursor",
     "memory_threshold": 0.5
   },
-  "soar": {
-    "default_model": "opus"
-  },
   "memory": {
     "index_patterns": ["*.py", "*.js", "*.md"],
-    "exclude_patterns": [
-      "node_modules",
-      ".git",
-      "venv",
-      "__pycache__"
-    ]
+    "exclude_patterns": ["node_modules", ".git", "venv"]
   }
 }
 ```
 
-**Project config overrides global config** for matching keys.
-
 ### Environment Variables
 
-**Goals Command**:
+**Goals**:
 ```bash
 export AURORA_GOALS_TOOL=cursor
 export AURORA_GOALS_MODEL=opus
 ```
 
-**SOAR Command**:
+**SOAR**:
 ```bash
 export AURORA_SOAR_TOOL=claude
 export AURORA_SOAR_MODEL=sonnet
 ```
 
-**Spawn Command**:
+**Spawn**:
 ```bash
 export AURORA_SPAWN_MAX_CONCURRENT=10
 export AURORA_SPAWN_TIMEOUT=600
-```
-
-**API Keys**:
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-export OPENAI_API_KEY=sk-...
-```
-
-**Logging**:
-```bash
-export AURORA_LOGGING_LEVEL=DEBUG
-export AURORA_LOG_FILE=/var/log/aurora.log
 ```
 
 ---
@@ -1514,225 +735,558 @@ export AURORA_LOG_FILE=/var/log/aurora.log
 **SOAR Logs**:
 ```bash
 # Location
-~/.aurora/soar/soar-YYYYMMDD-HHMMSS.log
+~/.aurora/soar/soar-*.log
 
 # View latest
 ls -t ~/.aurora/soar/*.log | head -1 | xargs cat
 
 # Follow live
 tail -f ~/.aurora/soar/soar-*.log
-
-# Filter by phase
-grep "PHASE" ~/.aurora/soar/soar-*.log
-
-# Check for errors
-grep "ERROR" ~/.aurora/soar/soar-*.log
 ```
 
 **Aurora Main Log**:
 ```bash
-# Location
-~/.aurora/aurora.log
-
-# View with tail
+# View
 tail -f ~/.aurora/aurora.log
-
-# Filter by level
-grep "ERROR" ~/.aurora/aurora.log
-grep "WARNING" ~/.aurora/aurora.log
 
 # Debug mode
 export AURORA_LOGGING_LEVEL=DEBUG
 aur goals "Goal" --verbose
 ```
 
-**Spawn Execution Logs**:
-```bash
-# Verbose mode shows all subprocess output
-aur spawn tasks.md --verbose
-
-# Individual task logs (if tool supports it)
-ls -la .aurora/spawn-logs/
-```
-
 ### Common Issues
 
 #### Issue: "Tool not found"
 
-**Error**:
-```
-ValueError: Tool 'cursor' not found in PATH
-```
-
-**Solutions**:
 ```bash
-# Check if tool is installed
+# Check if installed
 which cursor
 
-# Add tool to PATH
+# Add to PATH
 export PATH=$PATH:/path/to/cursor
 
-# Use a different tool
+# Use different tool
 aur goals "Goal" --tool claude
-
-# Set default tool
-cat >> ~/.aurora/config.json << 'EOF'
-{
-  "goals": {"default_tool": "claude"}
-}
-EOF
 ```
 
-#### Issue: "No agent found for subgoal"
+#### Issue: "Database locked"
 
-**Error**:
-```
-WARNING: No good agent for 'sg-3'
-  Suggested: Create agent with capabilities: ["security", "audit"]
-  Using fallback: @full-stack-dev
-```
-
-**Solutions**:
 ```bash
-# 1. Create new agent with suggested capabilities
-cat > .aurora/agents/security-expert.md << 'EOF'
----
-id: security-expert
-name: Security Expert
-capabilities:
-  - security
-  - audit
-  - penetration-testing
----
-
-Security expert specializing in audits and testing.
-EOF
-
-# 2. Re-run goals command
-aur goals "Goal" --verbose
-
-# 3. Or accept fallback agent in goals.json
-```
-
-#### Issue: "Memory database locked"
-
-**Error**:
-```
-sqlite3.OperationalError: database is locked
-```
-
-**Solutions**:
-```bash
-# Check for other Aurora processes
-ps aux | grep aur
-
 # Kill stale processes
 pkill -f "aur mem"
 
-# Rebuild index if corrupted
+# Rebuild index
 rm .aurora/memory.db
 aur mem index . --force
 ```
 
 #### Issue: "Spawn timeout"
 
-**Error**:
-```
-Task 3 timed out after 300 seconds
-```
-
-**Solutions**:
 ```bash
 # Increase timeout
 aur spawn tasks.md --timeout 600
 
-# Or per-task timeout in tasks.md
-# - [ ] 1. Long running task
-# <!-- timeout: 600 -->
-
-# Or set default in config
+# Or set default
 cat >> ~/.aurora/config.json << 'EOF'
-{
-  "spawn": {"default_timeout": 600}
-}
+{"spawn": {"default_timeout": 600}}
 EOF
-```
-
-#### Issue: "goals.json validation error"
-
-**Error**:
-```
-ValidationError: goals.json missing required field 'subgoals'
-```
-
-**Solutions**:
-```bash
-# Check JSON validity
-python3 -m json.tool .aurora/plans/*/goals.json
-
-# Regenerate goals.json
-rm .aurora/plans/*/goals.json
-aur goals "Goal" --yes
-
-# Manually fix goals.json
-$EDITOR .aurora/plans/*/goals.json
-```
-
-### Debug Mode
-
-**Enable Debug Logging**:
-```bash
-# Environment variable
-export AURORA_LOGGING_LEVEL=DEBUG
-
-# Config file
-{
-  "logging": {"level": "DEBUG"}
-}
-
-# CLI flag
-aur goals "Goal" --debug --verbose
-```
-
-**Debug Output Shows**:
-```
-[DEBUG] CLIPipeLLMClient: Resolving tool...
-[DEBUG] Tool resolution: CLI flag -> None
-[DEBUG] Tool resolution: Env var -> cursor
-[DEBUG] Tool selected: cursor
-[DEBUG] Model resolution: CLI flag -> sonnet
-[DEBUG] Building command: ['cursor', '--print', '--model', 'sonnet']
-[DEBUG] Spawning subprocess...
-[DEBUG] Piping prompt (245 chars) to stdin...
-[DEBUG] Reading stdout...
-[DEBUG] Process completed with exit code 0
 ```
 
 ### Health Check
 
-**Run Diagnostics**:
 ```bash
 aur doctor
 
-# Output:
-✓ Aurora installation OK
-✓ Config file valid
-✓ Memory database accessible
-✓ CLI tools: claude (found), cursor (found)
-✓ Agents: 5 discovered
-✗ SOAR logs: 15 files (recommend cleanup)
-
-Recommendations:
-  - Clean old SOAR logs: rm ~/.aurora/soar/*.log
-  - Update Aurora: pip install --upgrade aurora-actr
-```
-
-**Auto-Fix Issues**:
-```bash
+# Auto-fix issues
 aur doctor --fix
 ```
 
 ---
+
+# Part II: Developer Guide
+
+## Configurator System
+
+Aurora's configurator system automatically generates slash commands for 20+ AI coding tools.
+
+### Architecture Overview
+
+```
+packages/cli/src/aurora_cli/
+├── commands/
+│   └── init.py                    # aur init command
+├── configurators/
+│   ├── slash/                     # Slash command configurators
+│   │   ├── base.py                # SlashCommandConfigurator base
+│   │   ├── toml_base.py           # TomlSlashCommandConfigurator
+│   │   ├── registry.py            # SlashCommandRegistry (20 tools)
+│   │   ├── claude.py              # Claude Code (.claude/commands/aur/)
+│   │   ├── cursor.py              # Cursor (.cursor/commands/)
+│   │   └── ... (18 more tools)
+│   └── mcp/                       # MCP configurators (dormant)
+└── templates/
+    └── slash_commands.py          # SINGLE SOURCE OF TRUTH
+```
+
+### Key Design Principles
+
+1. **DRY**: All tools use same template bodies from `templates/slash_commands.py`
+2. **Separation**: Tool-specific metadata vs shared logic
+3. **Managed Blocks**: User can add content outside `AURORA:START/END` markers
+
+### Template System
+
+**Single Source**: `templates/slash_commands.py`
+
+```python
+# Defines 6 Aurora commands:
+ALL_COMMANDS = ["search", "get", "plan", "checkpoint", "implement", "archive"]
+
+# Each command has a template:
+COMMAND_TEMPLATES = {
+    "search": SEARCH_TEMPLATE,
+    "get": GET_TEMPLATE,
+    "plan": PLAN_TEMPLATE,
+    "checkpoint": CHECKPOINT_TEMPLATE,
+    "implement": IMPLEMENT_TEMPLATE,
+    "archive": ARCHIVE_TEMPLATE,
+}
+```
+
+**All 20 tools use same templates via `get_command_body(command_id)`**.
+
+### Base Classes
+
+#### SlashCommandConfigurator (Markdown)
+
+```python
+class SlashCommandConfigurator(ABC):
+    @property
+    @abstractmethod
+    def tool_id(self) -> str:
+        """Tool identifier (e.g., "claude", "cursor")"""
+
+    @property
+    @abstractmethod
+    def is_available(self) -> bool:
+        """Whether tool is detected/available"""
+
+    @abstractmethod
+    def get_relative_path(self, command_id: str) -> str:
+        """File path (e.g., ".claude/commands/aur/search.md")"""
+
+    @abstractmethod
+    def get_frontmatter(self, command_id: str) -> str | None:
+        """YAML frontmatter (name, description, tags)"""
+
+    @abstractmethod
+    def get_body(self, command_id: str) -> str:
+        """Command body from templates"""
+```
+
+**Managed Block System**:
+```markdown
+---
+name: Aurora: Search
+---
+<!-- AURORA:START -->
+[Template body - managed by Aurora]
+<!-- AURORA:END -->
+
+User can add custom content here (not managed)
+```
+
+#### TomlSlashCommandConfigurator (TOML)
+
+```python
+class TomlSlashCommandConfigurator(SlashCommandConfigurator):
+    def get_frontmatter(self, command_id: str) -> str | None:
+        """Always None (TOML doesn't use frontmatter)"""
+
+    @abstractmethod
+    def get_description(self, command_id: str) -> str:
+        """Description for TOML field"""
+```
+
+**TOML Format**:
+```toml
+description = "Search indexed code"
+
+prompt = """
+<!-- AURORA:START -->
+[body]
+<!-- AURORA:END -->
+"""
+```
+
+**Tools using TOML**: Gemini CLI, Qwen, KiloCode, RooCode, Qoder, iFlow
+
+### Registry System
+
+**SlashCommandRegistry** (`configurators/slash/registry.py`):
+
+```python
+class SlashCommandRegistry:
+    @classmethod
+    def get_all() -> list[SlashCommandConfigurator]:
+        """Get all 20 registered configurators"""
+
+    @classmethod
+    def get(tool_id: str) -> SlashCommandConfigurator | None:
+        """Get specific tool configurator"""
+
+    @classmethod
+    def get_available() -> list[SlashCommandConfigurator]:
+        """Get only available tools (is_available=True)"""
+```
+
+---
+
+## Adding New Tools
+
+### Step 1: Create Configurator Class
+
+**Option A: Markdown Format** (most tools):
+
+Create `configurators/slash/newtool.py`:
+
+```python
+"""NewTool slash command configurator."""
+
+from aurora_cli.configurators.slash.base import SlashCommandConfigurator
+from aurora_cli.templates.slash_commands import get_command_body
+
+FILE_PATHS: dict[str, str] = {
+    "search": ".newtool/commands/aurora-search.md",
+    "get": ".newtool/commands/aurora-get.md",
+    "plan": ".newtool/commands/aurora-plan.md",
+    "checkpoint": ".newtool/commands/aurora-checkpoint.md",
+    "implement": ".newtool/commands/aurora-implement.md",
+    "archive": ".newtool/commands/aurora-archive.md",
+}
+
+FRONTMATTER: dict[str, str] = {
+    "search": """---
+name: Aurora: Search
+description: Search indexed code
+category: Aurora
+tags: [aurora, search]
+---""",
+    # ... (repeat for all 6 commands)
+}
+
+
+class NewToolSlashCommandConfigurator(SlashCommandConfigurator):
+    """Slash command configurator for NewTool."""
+
+    @property
+    def tool_id(self) -> str:
+        return "newtool"
+
+    @property
+    def is_available(self) -> bool:
+        return True
+
+    def get_relative_path(self, command_id: str) -> str:
+        return FILE_PATHS[command_id]
+
+    def get_frontmatter(self, command_id: str) -> str | None:
+        return FRONTMATTER[command_id]
+
+    def get_body(self, command_id: str) -> str:
+        return get_command_body(command_id)  # Uses shared templates
+```
+
+**Option B: TOML Format**:
+
+```python
+from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurator
+
+DESCRIPTIONS: dict[str, str] = {
+    "search": "Search indexed code",
+    # ... (6 commands)
+}
+
+class NewToolSlashCommandConfigurator(TomlSlashCommandConfigurator):
+    def get_description(self, command_id: str) -> str:
+        return DESCRIPTIONS[command_id]
+    # ... (rest similar to Markdown)
+```
+
+### Step 2: Register in Registry
+
+Edit `configurators/slash/registry.py`:
+
+```python
+from aurora_cli.configurators.slash.newtool import NewToolSlashCommandConfigurator
+
+configurators = [
+    # ... existing tools ...
+    NewToolSlashCommandConfigurator(),  # Add this
+]
+```
+
+Update count in docstring: `"""All 21 supported AI coding tools"""`
+
+### Step 3: Create Tests
+
+Create `tests/unit/cli/configurators/slash/test_newtool.py`:
+
+```python
+"""Unit tests for NewTool configurator."""
+
+import pytest
+from aurora_cli.configurators.slash.newtool import NewToolSlashCommandConfigurator
+
+
+def test_tool_id():
+    config = NewToolSlashCommandConfigurator()
+    assert config.tool_id == "newtool"
+
+
+def test_get_relative_path():
+    config = NewToolSlashCommandConfigurator()
+    assert config.get_relative_path("search") == ".newtool/commands/aurora-search.md"
+
+
+def test_get_body_returns_template():
+    config = NewToolSlashCommandConfigurator()
+    body = config.get_body("search")
+    assert "Guardrails" in body
+    assert "aur mem search" in body
+```
+
+### Step 4: Update Documentation
+
+1. Update this guide - Add tool to supported tools list
+2. Update `COMMANDS.md` - Add tool to slash command examples
+3. Update `README.md` - Add to supported tools list
+
+### Step 5: Test
+
+```bash
+# Run tests
+pytest tests/unit/cli/configurators/slash/test_newtool.py -v
+
+# Test in real project
+cd /tmp/test-project
+aur init --tools=newtool
+
+# Verify files created
+ls .newtool/commands/
+```
+
+---
+
+## Modifying Templates
+
+### Updating Default Templates
+
+**Location**: `packages/cli/src/aurora_cli/templates/slash_commands.py`
+
+**Impact**: All 20 tools use these templates.
+
+**Example: Update `/aur:search` format**:
+
+```python
+# Edit templates/slash_commands.py
+
+SEARCH_TEMPLATE = f"""{BASE_GUARDRAILS}
+
+**Usage**
+Run `aur mem search "<query>"` to search indexed code.
+
+**Output Format (MANDATORY - NEVER DEVIATE)**
+
+1. Execute `aur mem search` with parsed args
+2. Display the **FULL TABLE** - never collapse
+3. Create simplified table showing ALL results
+4. Add exactly 2 sentences of guidance
+5. Single line: `Next: /aur:get N`
+
+NO additional explanations."""
+```
+
+**After editing**:
+```bash
+# Reinstall
+./install.sh
+
+# Test in project
+cd /tmp/test-project
+aur init --config --tools=claude
+
+# Verify changes
+cat .claude/commands/aur/search.md
+```
+
+### Tool-Specific Overrides (Rare)
+
+```python
+class SpecialToolSlashCommandConfigurator(SlashCommandConfigurator):
+    def get_body(self, command_id: str) -> str:
+        """Custom body for special tool."""
+        if command_id == "search":
+            return "Custom search template..."
+        else:
+            return get_command_body(command_id)
+```
+
+**⚠️ Warning**: Avoid tool-specific overrides - breaks single source of truth.
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Test all configurators
+pytest tests/unit/cli/configurators/ -v
+
+# Test specific tool
+pytest tests/unit/cli/configurators/slash/test_claude.py -v
+```
+
+### Integration Tests
+
+```bash
+# Create test project
+mkdir -p /tmp/test-aurora
+cd /tmp/test-aurora
+git init
+
+# Test init
+aur init --tools=claude
+
+# Verify files
+ls -la .claude/commands/aur/
+
+# Check content
+cat .claude/commands/aur/search.md
+
+# Test update
+aur init --config --tools=claude
+
+# Verify Aurora markers preserved
+grep -A 5 "AURORA:START" .claude/commands/aur/search.md
+```
+
+### Testing Template Changes
+
+```bash
+# 1. Reinstall
+./install.sh
+
+# 2. Test in fresh project
+cd /tmp/test-aurora
+rm -rf .claude .cursor .windsurf
+
+# 3. Regenerate all tools
+aur init --config --tools=all
+
+# 4. Spot check multiple tools
+cat .claude/commands/aur/search.md
+cat .cursor/commands/aurora-search.md
+cat .gemini/commands/aurora/search.toml
+
+# 5. Verify consistency
+# All should have same body between markers
+```
+
+### Manual Testing Checklist
+
+- [ ] Markdown tools generate correct frontmatter
+- [ ] TOML tools generate valid syntax
+- [ ] Aurora markers present in all files
+- [ ] All 6 commands generated
+- [ ] File paths follow tool's naming convention
+- [ ] Update preserves user content outside markers
+- [ ] Body content matches template
+
+---
+
+## Release Process
+
+### Pre-Release Checklist
+
+#### Code Quality
+
+```bash
+# Run full local CI
+./scripts/run-local-ci.sh
+```
+
+**Must pass**:
+- ✅ All tests (including configurator tests)
+- ✅ No security issues (bandit)
+- ✅ Code formatted (black, isort)
+- ✅ Test coverage standards
+
+#### Configurator-Specific Checks
+
+**For ALL changes**:
+- [ ] Updated `templates/slash_commands.py`? Test 3+ tools (Markdown + TOML)
+- [ ] Added new tool? Updated count in registry docstring
+- [ ] Modified base class? Run all configurator tests
+- [ ] Changed file paths? Test `aur init --tools=<tool>`
+
+**For template changes**:
+- [ ] Test search command: `/aur:search test limit 5`
+- [ ] Test get command: `/aur:get 1`
+- [ ] Verify "MANDATORY" sections are clear
+- [ ] Check all 6 commands render correctly
+
+**For new tools**:
+- [ ] Tool added to `configurators/slash/registry.py`
+- [ ] Unit tests created
+- [ ] Tool listed in this guide
+- [ ] README.md updated (if major tool)
+
+#### Cross-Tool Consistency
+
+```bash
+# Generate for multiple tools
+cd /tmp/test-consistency
+aur init --tools=claude,cursor,windsurf,gemini
+
+# Extract bodies between markers
+sed -n '/AURORA:START/,/AURORA:END/p' .claude/commands/aur/search.md > /tmp/claude-body
+sed -n '/AURORA:START/,/AURORA:END/p' .cursor/commands/aurora-search.md > /tmp/cursor-body
+
+# Bodies should be identical
+diff /tmp/claude-body /tmp/cursor-body
+```
+
+### Release
+
+```bash
+# After all checks pass
+./scripts/release.sh <version>
+```
+
+### Post-Release
+
+- [ ] Test install from PyPI: `pip install --upgrade aurora-actr`
+- [ ] Verify `aur init` works in fresh project
+- [ ] Smoke test 2-3 tools (Claude, Cursor, Gemini)
+- [ ] Check GitHub release notes
+
+### Critical Files
+
+| File | When to Update |
+|------|----------------|
+| `templates/slash_commands.py` | Any command behavior/format change |
+| `configurators/slash/registry.py` | Adding/removing tools |
+| `configurators/slash/base.py` | Base interface changes |
+| `configurators/slash/toml_base.py` | TOML format changes |
+| `TOOLS_GUIDE.md` | Any configurator change |
+| `COMMANDS.md` | Template format changes |
+| `README.md` | Major tool additions |
+
+---
+
+# Part III: Reference
 
 ## Best Practices
 
@@ -1740,51 +1294,32 @@ aur doctor --fix
 
 **Index Regularly**:
 ```bash
-# After significant code changes
+# After code changes
 git commit && aur mem index .
 
 # Daily in CI/CD
 0 2 * * * cd /project && aur mem index . --force
-
-# After pulling changes
-git pull && aur mem index .
 ```
 
-**Optimize Index Size**:
+**Optimize Index**:
 ```json
 {
   "memory": {
     "index_patterns": ["*.py", "*.js", "*.md"],
     "exclude_patterns": [
-      "node_modules",
-      ".git",
-      "venv",
-      "__pycache__",
-      "*.min.js",
-      "build",
-      "dist"
+      "node_modules", ".git", "venv", "*.min.js", "build", "dist"
     ]
   }
 }
-```
-
-**Clean Old Data**:
-```bash
-# Rebuild from scratch
-rm .aurora/memory.db
-aur mem index . --force
-
-# Clear cache
-rm -rf ~/.aurora/cache/
 ```
 
 ### Goal Decomposition
 
 **Good Goals** (specific, actionable):
 ```bash
-✓ aur goals "Add OAuth2 authentication with JWT tokens"
-✓ aur goals "Implement real-time WebSocket notifications"
-✓ aur goals "Optimize database queries in user dashboard"
+✓ aur goals "Add OAuth2 authentication with JWT"
+✓ aur goals "Implement WebSocket notifications"
+✓ aur goals "Optimize database queries"
 ```
 
 **Bad Goals** (vague, too broad):
@@ -1794,59 +1329,31 @@ rm -rf ~/.aurora/cache/
 ✗ aur goals "Improve performance"
 ```
 
-**Use Context Files**:
-```bash
-# Provide relevant context for better decomposition
-aur goals "Refactor authentication" \
-  --context src/auth/login.py \
-  --context src/auth/middleware.py \
-  --context docs/auth-design.md
-```
-
 ### Task Organization
 
-**Task File Structure**:
+**Use Phases**:
 ```markdown
-# Feature: User Authentication
-
 ## Phase 1: Core Implementation
-- [ ] 1. Implement JWT generation
-<!-- agent: full-stack-dev -->
-
-- [ ] 2. Create login endpoint
-<!-- agent: full-stack-dev -->
-<!-- depends: 1 -->
+- [ ] 1. Task A
+- [ ] 2. Task B
 
 ## Phase 2: Testing
-- [ ] 3. Write unit tests
-<!-- agent: qa-test-architect -->
-<!-- depends: 1,2 -->
-
-- [ ] 4. Write integration tests
-<!-- agent: qa-test-architect -->
-<!-- depends: 1,2 -->
-
-## Phase 3: Documentation
-- [ ] 5. Update API docs
-<!-- agent: technical-writer -->
-<!-- depends: 2 -->
+- [ ] 3. Test A
+- [ ] 4. Test B
 ```
 
 **Dependencies**:
 ```markdown
-# Independent tasks (can run in parallel)
+# Independent (parallel)
 - [ ] 1. Task A
 - [ ] 2. Task B
-- [ ] 3. Task C
 
-# Sequential tasks (must run in order)
+# Sequential
 - [ ] 1. Task A
 - [ ] 2. Task B
 <!-- depends: 1 -->
-- [ ] 3. Task C
-<!-- depends: 2 -->
 
-# Diamond dependency (A -> B,C -> D)
+# Diamond (A -> B,C -> D)
 - [ ] 1. Task A
 - [ ] 2. Task B
 <!-- depends: 1 -->
@@ -1856,122 +1363,269 @@ aur goals "Refactor authentication" \
 <!-- depends: 2,3 -->
 ```
 
-### Agent Assignment
-
-**Let Aurora Decide** (default):
-```bash
-# Aurora matches agents automatically
-aur goals "Implement feature"
-```
-
-**Manual Override** (when needed):
-```markdown
-- [ ] 1. Implement feature
-<!-- agent: custom-agent-id -->
-```
-
-**Review Assignments**:
-```bash
-# Always review goals.json before proceeding
-cd .aurora/plans/*/
-cat goals.json
-$EDITOR goals.json  # Fix any wrong assignments
-```
-
-### Performance Optimization
+### Performance
 
 **Parallel Execution**:
 ```bash
-# Use parallel for independent tasks
+# Independent tasks
 aur spawn tasks.md --max-concurrent 10
 
-# Use sequential for dependent tasks
+# Dependent tasks
 aur spawn tasks.md --sequential
 ```
 
 **Resource Limits**:
 ```bash
-# Don't overwhelm your system
-export AURORA_SPAWN_MAX_CONCURRENT=5  # For laptops
-export AURORA_SPAWN_MAX_CONCURRENT=20 # For servers
+# Laptops
+export AURORA_SPAWN_MAX_CONCURRENT=5
 
-# Adjust timeouts for long-running tasks
-export AURORA_SPAWN_TIMEOUT=600  # 10 minutes
-```
-
-**Memory Index Optimization**:
-```bash
-# Index only what you need
-aur mem index packages/cli/ packages/core/
-
-# Skip large files
-aur mem index . --exclude "*.sqlite" --exclude "*.db"
+# Servers
+export AURORA_SPAWN_MAX_CONCURRENT=20
 ```
 
 ### Security
 
 **API Keys**:
 ```bash
-# Use environment variables (not config files)
+# Use env vars (not config files)
 export ANTHROPIC_API_KEY=sk-ant-...
 
 # Don't commit keys
 echo "ANTHROPIC_API_KEY=*" >> .gitignore
-
-# Use secrets management in production
-export ANTHROPIC_API_KEY=$(vault read -field=api_key secret/anthropic)
 ```
 
 **Config Files**:
 ```bash
-# Project config should be committed
+# Project config: OK to commit
 git add .aurora/config.json
 
-# Global config should NOT be committed
-# (already in ~/.aurora/, not in project)
-
-# Sensitive data should use env vars
-{
-  "goals": {
-    "default_tool": "claude"  # ✓ OK to commit
-  }
-}
+# Global config: NOT in repo
+# (already in ~/.aurora/)
 ```
 
-**Task Files**:
-```markdown
-# Don't include sensitive data in task descriptions
-- [ ] 1. Deploy to production
-<!-- agent: devops -->
-<!-- NOTE: Use env vars for credentials -->
+---
 
-# Use placeholders
-- [ ] 1. Update API key to ${NEW_API_KEY}
-<!-- agent: devops -->
+## FAQ
+
+### General
+
+**Q: Which tool should I use for my task?**
+A: See [Tool Selection Matrix](#tool-selection-matrix).
+
+**Q: How do I update existing slash commands?**
+A: Run `aur init --config --tools=<tool>` to regenerate.
+
+**Q: Can I customize generated commands?**
+A: Yes, add content outside `AURORA:START/END` markers.
+
+### Configuration
+
+**Q: What's the config resolution order?**
+A: CLI flags > env vars > project config > global config > defaults.
+
+**Q: Where are config files stored?**
+A: Global: `~/.aurora/config.json`, Project: `.aurora/config.json`.
+
+**Q: How do I use a different tool by default?**
+A: Set in config or env: `export AURORA_GOALS_TOOL=cursor`.
+
+### Memory
+
+**Q: When should I reindex?**
+A: After significant code changes or git pull.
+
+**Q: How do I fix "database locked"?**
+A: Kill stale processes: `pkill -f "aur mem"` then rebuild.
+
+**Q: What files are indexed?**
+A: By default: `*.py`, `*.js`, `*.md`. Configure with `index_patterns`.
+
+### Development
+
+**Q: How do I add a new tool?**
+A: See [Adding New Tools](#adding-new-tools).
+
+**Q: How do I modify command templates?**
+A: Edit `templates/slash_commands.py`, see [Modifying Templates](#modifying-templates).
+
+**Q: Where are tests located?**
+A: `tests/unit/cli/configurators/slash/test_*.py`.
+
+### Troubleshooting
+
+**Q: "Tool not found" error?**
+A: Check `which <tool>`, add to PATH, or use different tool.
+
+**Q: Spawn timeout?**
+A: Increase with `--timeout 600` or set in config.
+
+**Q: Commands not working after init?**
+A: Check file was created, has Aurora markers, regenerate if needed.
+
+---
+
+## Common Patterns
+
+### Pattern 1: Markdown with YAML Frontmatter
+
+**Example**: Claude, Cursor, Windsurf (14 tools)
+
+```markdown
+---
+name: Aurora: Search
+description: Search indexed code
+category: Aurora
+tags: [aurora, search]
+---
+<!-- AURORA:START -->
+**Guardrails**
+...
+<!-- AURORA:END -->
+```
+
+### Pattern 2: TOML Format
+
+**Example**: Gemini CLI, Qwen, KiloCode (6 tools)
+
+```toml
+description = "Search indexed code"
+
+prompt = """
+<!-- AURORA:START -->
+**Guardrails**
+...
+<!-- AURORA:END -->
+"""
+```
+
+### Pattern 3: Tool Detection
+
+```python
+@property
+def is_available(self) -> bool:
+    """Check if tool exists."""
+    return (Path.home() / ".tool-config").exists()
+```
+
+### Pattern 4: Naming Conventions
+
+- **Claude**: `.claude/commands/aur/{command}.md`
+- **Most tools**: `.tool/commands/aurora-{command}.md`
+- **Gemini**: `.gemini/commands/aurora/{command}.toml`
+
+---
+
+## Troubleshooting Guide
+
+### Issue: "Aurora markers missing"
+
+**Cause**: Manually edited file, removed markers.
+
+**Solution**:
+```bash
+rm .claude/commands/aur/search.md
+aur init --config --tools=claude
+```
+
+### Issue: Template changes not appearing
+
+**Cause**: Local install didn't update package.
+
+**Solution**:
+```bash
+./install.sh
+cd /tmp/test-project
+rm -rf .claude
+aur init --config --tools=claude
+```
+
+### Issue: Tool not registered
+
+**Cause**: Missing from registry's `_ensure_initialized()`.
+
+**Solution**:
+```python
+# In configurators/slash/registry.py
+from aurora_cli.configurators.slash.newtool import NewToolSlashCommandConfigurator
+
+configurators = [
+    # ... existing ...
+    NewToolSlashCommandConfigurator(),
+]
+```
+
+### Issue: TOML syntax error
+
+**Cause**: Invalid TOML generation.
+
+**Check**:
+```python
+# In toml_base.py _generate_toml()
+prompt = """
+{AURORA_MARKERS["start"]}
+{body}
+{AURORA_MARKERS["end"]}
+"""
+```
+
+### Issue: Inconsistent bodies
+
+**Cause**: One tool has custom `get_body()` override.
+
+**Solution**: Remove override, update shared template instead.
+
+---
+
+## Quick Reference
+
+### Add New Tool
+
+1. ✅ Create `configurators/slash/newtool.py`
+2. ✅ Choose format (Markdown or TOML)
+3. ✅ Define FILE_PATHS (6 commands)
+4. ✅ Define FRONTMATTER or DESCRIPTIONS
+5. ✅ Implement required methods
+6. ✅ Register in `registry.py`
+7. ✅ Create tests
+8. ✅ Run tests
+9. ✅ Update tool count
+10. ✅ Update docs
+11. ✅ Test: `aur init --tools=newtool`
+
+### Modify Template
+
+1. ✅ Edit `templates/slash_commands.py`
+2. ✅ Reinstall: `./install.sh`
+3. ✅ Test with 3+ tools (Markdown + TOML)
+4. ✅ Run tests
+5. ✅ Update `COMMANDS.md` if needed
+6. ✅ Run pre-commit
+7. ✅ Run local CI
+8. ✅ Release
+
+### Test Changes
+
+```bash
+# Unit tests
+pytest tests/unit/cli/configurators/slash/ -v
+
+# Integration
+cd /tmp/test-config
+aur init --tools=claude,cursor,gemini
+cat .claude/commands/aur/search.md
+cat .cursor/commands/aurora-search.md
 ```
 
 ---
 
 ## See Also
 
-- [COMMANDS.md](COMMANDS.md) - Quick command reference
-- [Configuration Reference](../reference/CONFIG_REFERENCE.md) - Detailed config guide
-- [SOAR Architecture](../reference/SOAR_ARCHITECTURE.md) - SOAR pipeline internals
-- [Planning Flow](../workflows/planning-flow.md) - Complete planning workflow
-- [aur goals Documentation](../commands/aur-goals.md) - Goals command details
-- [aur soar Documentation](../commands/aur-soar.md) - SOAR command details
-- [aur spawn Documentation](../commands/aur-spawn.md) - Spawn command details
+- **COMMANDS.md** - Quick command reference
+- **RELEASE.md** - Release workflow
+- **README.md** - Project overview
+- **CONTRIBUTING.md** - Development guide
 
 ---
 
-## Contributing
-
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for:
-- Development setup
-- Adding new commands
-- Creating custom agents
-- Testing guidelines
-
-## License
-
-MIT License - See [LICENSE](../../LICENSE) for details.
+**Maintained by**: Aurora Core Team
+**Questions?**: Open an issue at https://github.com/your-repo/aurora/issues

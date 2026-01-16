@@ -137,8 +137,8 @@ class SOAROrchestrator:
         # Initialize query metrics tracker (Task 4.5.3)
         self.query_metrics = QueryMetrics()
 
-        # Configure proactive health checking
-        self._configure_proactive_health_checks()
+        # Configure health monitoring (combined proactive + early detection)
+        self._configure_health_monitoring()
 
         # Initialize phase-level metadata tracking
         self._phase_metadata: dict[str, Any] = {}
@@ -150,70 +150,60 @@ class SOAROrchestrator:
 
         logger.info("SOAR orchestrator initialized")
 
-    def _configure_proactive_health_checks(self) -> None:
-        """Configure proactive health checking from config."""
-        from aurora_spawner.observability import ProactiveHealthConfig, get_health_monitor
+    def _configure_health_monitoring(self) -> None:
+        """Configure health monitoring (proactive + early detection) from config.
 
-        # Get config from system config or use defaults
-        health_config_dict = self.config.get("proactive_health_checks", {})
-        enabled = health_config_dict.get("enabled", True)
-
-        if not enabled:
-            logger.info("Proactive health checking disabled")
-            return
-
-        proactive_config = ProactiveHealthConfig(
-            enabled=True,
-            check_interval=health_config_dict.get("check_interval", 5.0),
-            no_output_threshold=health_config_dict.get("no_output_threshold", 15.0),
-            failure_threshold=health_config_dict.get("failure_threshold", 3),
-        )
-
-        # Reinitialize health monitor with proactive config
-        health_monitor = get_health_monitor()
-        health_monitor._proactive_config = proactive_config
-        logger.info(
-            f"Proactive health checking enabled: "
-            f"interval={proactive_config.check_interval}s, "
-            f"threshold={proactive_config.no_output_threshold}s, "
-            f"max_failures={proactive_config.failure_threshold}"
-        )
-
-        # Configure early detection monitor
-        self._configure_early_detection()
-
-    def _configure_early_detection(self) -> None:
-        """Configure early detection system from config."""
+        Combines configuration of both systems in a single pass for startup performance.
+        """
         from aurora_spawner.early_detection import (
             EarlyDetectionConfig,
             reset_early_detection_monitor,
         )
+        from aurora_spawner.observability import ProactiveHealthConfig, get_health_monitor
 
-        # Get config from system config or use defaults
+        # Get config dicts (single lookup each)
+        health_config_dict = self.config.get("proactive_health_checks", {})
         early_config_dict = self.config.get("early_detection", {})
-        enabled = early_config_dict.get("enabled", True)
 
-        if not enabled:
-            logger.info("Early detection disabled")
-            return
+        health_enabled = health_config_dict.get("enabled", True)
+        early_enabled = early_config_dict.get("enabled", True)
 
-        early_config = EarlyDetectionConfig(
-            enabled=True,
-            check_interval=early_config_dict.get("check_interval", 2.0),
-            stall_threshold=early_config_dict.get("stall_threshold", 15.0),
-            min_output_bytes=early_config_dict.get("min_output_bytes", 100),
-            stderr_pattern_check=early_config_dict.get("stderr_pattern_check", True),
-            memory_limit_mb=early_config_dict.get("memory_limit_mb"),
-        )
+        # Configure proactive health checking
+        if health_enabled:
+            proactive_config = ProactiveHealthConfig(
+                enabled=True,
+                check_interval=health_config_dict.get("check_interval", 5.0),
+                no_output_threshold=health_config_dict.get("no_output_threshold", 15.0),
+                failure_threshold=health_config_dict.get("failure_threshold", 3),
+            )
 
-        # Initialize early detection monitor with config
-        reset_early_detection_monitor(early_config)
-        logger.info(
-            f"Early detection enabled: "
-            f"check_interval={early_config.check_interval}s, "
-            f"stall_threshold={early_config.stall_threshold}s, "
-            f"min_output={early_config.min_output_bytes}b"
-        )
+            health_monitor = get_health_monitor()
+            health_monitor._proactive_config = proactive_config
+            logger.debug(
+                f"Proactive health: interval={proactive_config.check_interval}s, "
+                f"threshold={proactive_config.no_output_threshold}s"
+            )
+        else:
+            logger.debug("Proactive health checking disabled")
+
+        # Configure early detection
+        if early_enabled:
+            early_config = EarlyDetectionConfig(
+                enabled=True,
+                check_interval=early_config_dict.get("check_interval", 2.0),
+                stall_threshold=early_config_dict.get("stall_threshold", 15.0),
+                min_output_bytes=early_config_dict.get("min_output_bytes", 100),
+                stderr_pattern_check=early_config_dict.get("stderr_pattern_check", True),
+                memory_limit_mb=early_config_dict.get("memory_limit_mb"),
+            )
+
+            reset_early_detection_monitor(early_config)
+            logger.debug(
+                f"Early detection: interval={early_config.check_interval}s, "
+                f"stall={early_config.stall_threshold}s"
+            )
+        else:
+            logger.debug("Early detection disabled")
 
     def _list_agents(self):
         """List all available agents using registry or discovery adapter.

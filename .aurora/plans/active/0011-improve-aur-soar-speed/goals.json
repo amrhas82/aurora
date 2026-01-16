@@ -1,0 +1,101 @@
+{
+  "id": "0011-improve-aur-soar-speed",
+  "title": "how do i improve aur soar speed at startup?",
+  "created_at": "2026-01-16T16:46:34.311879",
+  "status": "ready_for_planning",
+  "memory_context": [],
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Profile and measure current aur soar startup time to identify bottlenecks",
+      "description": "Profile and measure current aur soar startup time to identify bottlenecks",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling, bottleneck analysis, and optimization specialist",
+      "agent": "@full-stack-dev",
+      "match_quality": "acceptable",
+      "dependencies": []
+    },
+    {
+      "id": "sg-2",
+      "title": "Analyze SOAR orchestrator initialization code to identify slow operations",
+      "description": "Analyze SOAR orchestrator initialization code to identify slow operations",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": []
+    },
+    {
+      "id": "sg-3",
+      "title": "Review early detection monitor and spawner initialization overhead",
+      "description": "Review early detection monitor and spawner initialization overhead",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": []
+    },
+    {
+      "id": "sg-4",
+      "title": "Evaluate database connection and memory store initialization performance",
+      "description": "Evaluate database connection and memory store initialization performance",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Database performance and initialization optimization",
+      "agent": "@full-stack-dev",
+      "match_quality": "acceptable",
+      "dependencies": []
+    },
+    {
+      "id": "sg-5",
+      "title": "Design and implement lazy loading strategy for non-critical components",
+      "description": "Design and implement lazy loading strategy for non-critical components",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@holistic-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-1",
+        "sg-2",
+        "sg-3"
+      ]
+    },
+    {
+      "id": "sg-6",
+      "title": "Implement startup optimizations and caching strategies",
+      "description": "Implement startup optimizations and caching strategies",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@full-stack-dev",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-4"
+      ]
+    },
+    {
+      "id": "sg-7",
+      "title": "Write performance regression tests to validate startup improvements",
+      "description": "Write performance regression tests to validate startup improvements",
+      "ideal_agent": null,
+      "ideal_agent_desc": null,
+      "agent": "@qa-test-architect",
+      "match_quality": "excellent",
+      "dependencies": [
+        "sg-5"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "subgoal_id": "sg-1",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Performance profiling, bottleneck analysis, and optimization specialist",
+      "assigned_agent": "@full-stack-dev"
+    },
+    {
+      "subgoal_id": "sg-4",
+      "ideal_agent": "@performance-engineer",
+      "ideal_agent_desc": "Database performance and initialization optimization",
+      "assigned_agent": "@full-stack-dev"
+    }
+  ]
+}

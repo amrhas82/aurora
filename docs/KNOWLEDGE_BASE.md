@@ -10,6 +10,12 @@ Quick index to detailed documentation for AI assistants and developers.
 Setup, testing (84%+ coverage), code style (ruff, mypy), CI/CD workflow.
 - `docs/development.md`
 
+## Performance Testing
+Startup benchmarks, regression guards, profiling guide. Target: <3s for `aur soar`.
+- `docs/PERFORMANCE_TESTING.md` (full guide)
+- `docs/PERFORMANCE_QUICK_REF.md` (quick reference)
+- `tests/performance/README.md` (test suite docs)
+
 ## CLI Commands
 All aur commands: init, mem, soar, goals, spawn, agents, doctor, headless, budget.
 - `docs/guides/COMMANDS.md`

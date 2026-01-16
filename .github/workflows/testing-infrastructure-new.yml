@@ -45,6 +45,11 @@ jobs:
           pytest -m "not ml and not real_api" --cov=packages --cov-report=xml --cov-report=term -v
         continue-on-error: false
 
+      - name: Run startup performance benchmarks
+        run: |
+          pytest tests/performance/test_soar_startup_performance.py::TestRegressionGuards -v
+        continue-on-error: false
+
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v3

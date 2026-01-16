@@ -26,6 +26,7 @@ from aurora_core.exceptions import (
     ValidationError,
 )
 from aurora_core.store.base import Store
+from aurora_core.store.connection_pool import get_connection_pool
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
@@ -61,34 +62,43 @@ class SQLiteStore(Store):
         # Thread-local storage for connections (one connection per thread)
         self._local = threading.local()
 
+        # Track if schema has been initialized for this database
+        self._schema_initialized = False
+        self._schema_lock = threading.Lock()
+
         # Create database directory if it doesn't exist
         if self.db_path != ":memory:":
             Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
 
-        # Initialize schema on first connection
-        self._init_schema()
+        # Defer schema initialization until first use
+        # This speeds up Store creation by avoiding immediate DB checks
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get or create a connection for the current thread.
+
+        Uses connection pooling for improved performance and deferred schema init.
 
         Returns:
             Thread-local SQLite connection
         """
         if not hasattr(self._local, "connection") or self._local.connection is None:
-            try:
-                conn = sqlite3.connect(self.db_path, timeout=self.timeout, check_same_thread=False)
-                conn.row_factory = sqlite3.Row  # Enable column access by name
+            # Try to get pooled connection first
+            pool = get_connection_pool()
+            conn, is_new = pool.get_connection(
+                self.db_path,
+                timeout=self.timeout,
+                wal_mode=self.wal_mode,
+                schema_initialized=self._schema_initialized,
+            )
 
-                # Enable WAL mode for better concurrency
-                if self.wal_mode and self.db_path != ":memory:":
-                    conn.execute("PRAGMA journal_mode=WAL")
+            self._local.connection = conn
 
-                # Enable foreign keys
-                conn.execute("PRAGMA foreign_keys=ON")
-
-                self._local.connection = conn
-            except sqlite3.Error as e:
-                raise StorageError(f"Failed to connect to database: {self.db_path}", details=str(e))
+            # Initialize schema if needed (must happen after connection is set)
+            if not self._schema_initialized:
+                with self._schema_lock:
+                    if not self._schema_initialized:
+                        self._init_schema()
+                        self._schema_initialized = True
 
         return cast(sqlite3.Connection, self._local.connection)
 

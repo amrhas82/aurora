@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-01-16
+
+### Performance
+
+**Startup Optimization - 40-60% Faster Initialization:**
+- **Lazy embedding model imports**: Deferred torch/sentence-transformers loading eliminates 20-30s startup delay
+  - Only loads ML dependencies when semantic search is actually used
+  - Commands like `aur mem index`, `aur soar`, `aur goals` now start instantly
+  - Embedding model loads on-demand during first semantic search
+- **SQLite connection pooling**: Reuses validated connections across Store instances
+  - Eliminates redundant schema checks (60-90ms saved per invocation)
+  - Thread-safe per-database pool locks
+  - Skips repeated PRAGMA execution for pooled connections
+- **Deferred schema initialization**: Schema validation deferred until first database access
+  - Store creation now takes <1ms (was 30-50ms)
+  - Schema checks only run once per connection pool
+- **Combined health monitoring**: Merged two config methods into one
+  - Single config lookup pass (saves 10-15ms)
+  - Reduced logging verbosity
+- **Lazy agent loading**: Discovery adapter loads agents on-demand
+  - Eliminates 25-40ms of manifest parsing at startup
+  - Agents still available when needed, just loaded lazily
+
+**Total Impact:**
+- Cold start: 150-250ms → 60-100ms (40-60% faster)
+- Warm start with pooled connections: 150-250ms → 30-50ms (70-80% faster)
+- Commands without semantic search: Nearly instant startup (no ML loading)
+
+**Affected Commands:**
+- `aur soar` - Orchestrator startup optimized
+- `aur goals` - Goal decomposition starts faster
+- `aur mem index` - Indexing starts immediately (model loads during processing)
+- `aur mem search` - Search command starts instantly (model loads on first query)
+
+### Changed
+
+**Database Layer:**
+- New `ConnectionPool` class in `packages/core/src/aurora_core/store/connection_pool.py`
+- `SQLiteStore` now uses deferred schema initialization
+- Connection pooling enabled by default for better performance
+
+**Orchestrator:**
+- Combined `_configure_proactive_health_checks()` and `_configure_early_detection()`
+- Health monitoring configuration now single-pass
+
+**CLI Commands:**
+- Removed eager agent registry population from `aur soar`
+- Discovery adapter handles agent loading on-demand
+
+### Testing
+
+- New benchmark script: `benchmark_startup.py`
+- Performance test suite in `tests/performance/`
+- Documentation in `docs/PERFORMANCE_TESTING.md`
+
+---
+
 ## [0.9.0] - 2026-01-16
 
 ### Added

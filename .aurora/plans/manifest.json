@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-01-16T15:20:32.886692",
+  "updated_at": "2026-01-16T16:46:34.312985",
   "active_plans": [
     "0001-enhance-agent-recovery-aur",
     "0002-improve-aur-spawn-parallel",
@@ -12,7 +12,8 @@
     "0008-improve-aur-goals-decomposing",
     "0009-improve-aur-goals-decomposing",
     "0010-add-login-feature",
-    "0010-improve-aur-goals-decomposing"
+    "0010-improve-aur-goals-decomposing",
+    "0011-improve-aur-soar-speed"
   ],
   "archived_plans": [],
   "stats": {}

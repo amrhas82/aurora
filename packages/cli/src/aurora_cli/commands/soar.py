@@ -599,28 +599,12 @@ def soar_command(
     db_path = cli_config.get_db_path() if cli_config else "./.aurora/memory.db"
     store = SQLiteStore(db_path)
 
-    # Discover available agents using the same system as 'aur agents list'
-    from aurora_cli.commands.agents import get_manifest
-    from aurora_soar.agent_registry import AgentInfo as SoarAgentInfo
+    # Use discovery adapter instead of explicit registry for lazy loading
+    # This defers agent loading until actually needed by orchestrator
+    agent_registry = None  # Let orchestrator use discovery_adapter
 
-    manifest = get_manifest()  # Uses its own config loading
-
-    # Populate agent registry with discovered agents
-    agent_registry = AgentRegistry()
-    for agent in manifest.agents:
-        agent_registry.register(
-            SoarAgentInfo(
-                id=agent.id,
-                name=agent.role or agent.id,
-                description=agent.goal or "",
-                capabilities=agent.skills or [],
-                agent_type="local",
-            )
-        )
-
-    # Show agent discovery count
-    agent_count = len(manifest.agents)
-    console.print(f"[dim]Discovered {agent_count} agent{'s' if agent_count != 1 else ''}[/]\n")
+    # Show startup message without blocking on agent discovery
+    console.print("[dim]Initializing...[/]\n")
 
     # Create orchestrator with CLI client and callback
     orchestrator = SOAROrchestrator(

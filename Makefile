@@ -1,4 +1,4 @@
-.PHONY: help install install-dev clean test test-unit test-integration test-performance lint format type-check quality-check benchmark coverage docs
+.PHONY: help install install-dev clean test test-unit test-integration test-performance lint format type-check quality-check benchmark benchmark-soar benchmark-startup coverage docs
 
 help:
 	@echo "AURORA Development Commands"
@@ -15,6 +15,8 @@ help:
 	@echo "type-check       - Run mypy type checker"
 	@echo "quality-check    - Run all quality checks (lint, type-check, test)"
 	@echo "benchmark        - Run performance benchmarks with detailed output"
+	@echo "benchmark-soar   - Run SOAR startup benchmarks only"
+	@echo "benchmark-startup - Run all startup performance benchmarks"
 	@echo "coverage         - Generate and open HTML coverage report"
 	@echo "docs             - Build documentation"
 
@@ -79,6 +81,12 @@ quality-check: lint type-check test
 
 benchmark:
 	pytest tests/performance/ -m performance --benchmark-only --benchmark-verbose
+
+benchmark-soar:
+	pytest tests/performance/test_soar_startup_performance.py -v --benchmark-only --benchmark-verbose
+
+benchmark-startup:
+	pytest tests/performance/test_soar_startup_performance.py tests/performance/test_goals_startup_performance.py tests/performance/test_init_performance.py -v --benchmark-only --benchmark-verbose
 
 coverage:
 	pytest tests/ --cov=packages --cov-report=html

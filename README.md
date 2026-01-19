@@ -58,7 +58,41 @@ cd aurora && ./install.sh
 ```bash
 # Terminal
 aur mem index .
-aur mem search "authentication"
+aur mem search "soar reasoning" --show-scores
+Found 5 results for 'soar reasoning'
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━┓
+┃ File                       ┃ Type   ┃ Name             ┃ Lines   ┃ Comm… ┃ Modifi… ┃  Score ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━┩
+│ orchestrator.py            │ code   │ SOAROrchestrator │ 69-1884 │    30 │ recent  │  0.922 │
+│ TOKEN-PREDICTION-VS-AGENT… │ kb     │ Connection to    │ 1-40    │     2 │ recent  │  0.892 │
+│                            │        │ You...           │         │       │         │        │
+│ decompose.py               │ code   │ PlanDecomposer   │ 55-658  │    12 │ recent  │  0.755 │
+│ decompose.py               │ code   │ PlanDecomposer.… │ 460-566 │     5 │ recent  │  0.731 │
+│ test_agent_matching_quali… │ code   │ TestDecompositi… │ 663-707 │     2 │ recent  │  0.703 │
+└────────────────────────────┴────────┴──────────────────┴─────────┴───────┴─────────┴────────┘
+
+Average scores:
+  Activation: 0.916
+  Semantic:   0.867
+  Hybrid:     0.801
+
+Refine your search:
+  --show-scores    Detailed score breakdown (BM25, semantic, activation)
+  --show-content   Preview code snippets
+  --limit N        More results (e.g., --limit 20)
+  --type TYPE      Filter: function, class, method, kb, code
+  --min-score 0.5  Higher relevance threshold
+
+Detailed Score Breakdown:
+
+┌─ orchestrator.py | code | SOAROrchestrator (Lines 69-1884) ────────────────────────────────┐
+│ Final Score: 0.922                                                                         │
+│  ├─ BM25:       1.000 * (exact keyword match on 'reasoning', 'soar')                       │
+│  ├─ Semantic:   0.869 (high conceptual relevance)                                          │
+│  └─ Activation: 0.916 (accessed 31x, 30 commits, last used 19 minutes ago)                 │
+│ Git: 30 commits, last modified 1768838464                                                  │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
 
 # Slash command
 /aur:search "authentication"
@@ -79,17 +113,40 @@ aur mem search "authentication"
 Works across any domain (code, writing, research).
 
 ```bash
-$ aur goals "Add payment processing"
+$ aur goals "how can i improve the speed of aur mem search that takes 30 seconds loading when
+it starts" -t claude
+╭──────────────────────────────────────── Aurora Goals ───────────────────────────────────────╮
+│ how can i improve the speed of aur mem search that takes 30 seconds loading when it starts  │
+╰─────────────────────────────────────── Tool: claude ────────────────────────────────────────╯
+╭──────────────────────────────── Plan Decomposition Summary ─────────────────────────────────╮
+│ Goal: how can i improve the speed of aur mem search that takes 30 seconds loading when it   │
+│ starts                                                                                      │
+│                                                                                             │
+│ Subgoals: 5                                                                                 │
+│                                                                                             │
+│   [++] Locate and identify the 'aur mem search' code in the codebase: @code-developer       │
+│   [+] Analyze the startup/initialization logic to identify performance bottlenecks:         │
+│ @code-developer (ideal: @performance-engineer)                                              │
+│   [++] Review system architecture for potential design improvements (lazy loading, caching, │
+│ indexing): @system-architect                                                                │
+│   [++] Implement optimization strategies (lazy loading, caching, indexing, parallel         │
+│ processing): @code-developer                                                                │
+│   [++] Measure and validate performance improvements with benchmarks: @quality-assurance    │
+╰─────────────────────────────────────────────────────────────────────────────────────────────╯
 
-Memory matches: 3 files found
-Subgoals: 4
-  sg-1: Set up Stripe SDK (@code-developer)
-  sg-2: Create payment endpoints (@code-developer)
-  sg-3: Implement checkout UI (@ui-designer)
-  sg-4: Configure PCI compliance (@security-engineer -> NOT FOUND)
+╭────────────────────────────────────────── Summary ──────────────────────────────────────────╮
+│ Agent Matching: 4 excellent, 1 acceptable                                                   │
+│ Gaps Detected: 1 subgoals need attention                                                    │
+│ Context: 1 files (avg relevance: 0.60)                                                      │
+│ Complexity: COMPLEX                                                                         │
+│ Source: soar                                                                                │
+│                                                                                             │
+│ Warnings:                                                                                   │
+│   ! Agent gaps detected: 1 subgoals need attention                                          │
+│                                                                                             │
+│ Legend: [++] excellent | [+] acceptable | [-] insufficient                                  │
+╰─────────────────────────────────────────────────────────────────────────────────────────────╯
 
-Gaps detected:
-  - Missing @security-engineer
 ```
 
 ---
@@ -105,7 +162,40 @@ Gaps detected:
 5. Simple multi-orchestration with agent recovery (stateful)
 
 ```bash
-aur soar "How does the payment flow work?"
+aur soar "write a 3 paragraph sci-fi story about a bug the gained llm conscsiousness" -t claude
+╭──────────────────────────────────────── Aurora SOAR ────────────────────────────────────────╮
+│ write a 3 paragraph sci-fi story about a bug the gained llm conscsiousness                  │
+╰─────────────────────────────────────── Tool: claude ────────────────────────────────────────╯
+Initializing...
+
+
+[ORCHESTRATOR] Phase 1: Assess
+  Analyzing query complexity...
+  Complexity: MEDIUM
+
+[ORCHESTRATOR] Phase 2: Retrieve
+  Looking up memory index...
+  Matched: 10 chunks from memory
+
+[LLM → claude] Phase 3: Decompose
+  Breaking query into subgoals...
+  ✓ 1 subgoals identified
+
+[LLM → claude] Phase 4: Verify
+  Validating decomposition and assigning agents...
+  ✓ PASS (1 subgoals routed)
+
+                                      Plan Decomposition
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ #    ┃ Subgoal                                       ┃ Agent                ┃ Match        ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│ 1    │ Write a 3-paragraph sci-fi short story about  │ @creative-writer*    │ ✗ Spawned    │
+└──────┴───────────────────────────────────────────────┴──────────────────────┴──────────────┘
+╭────────────────────────────────────────── Summary ──────────────────────────────────────────╮
+│ 1 subgoal • 0 assigned • 1 spawned                                                          │
+│                                                                                             │
+│ Spawned (no matching agent): @creative-writer                                               │
+╰─────────────────────────────────────────────────────────────────────────────────────────────
 ```
 
 ---

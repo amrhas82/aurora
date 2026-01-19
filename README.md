@@ -119,9 +119,6 @@ it starts" -t claude
 │ how can i improve the speed of aur mem search that takes 30 seconds loading when it starts  │
 ╰─────────────────────────────────────── Tool: claude ────────────────────────────────────────╯
 ╭──────────────────────────────── Plan Decomposition Summary ─────────────────────────────────╮
-│ Goal: how can i improve the speed of aur mem search that takes 30 seconds loading when it   │
-│ starts                                                                                      │
-│                                                                                             │
 │ Subgoals: 5                                                                                 │
 │                                                                                             │
 │   [++] Locate and identify the 'aur mem search' code in the codebase: @code-developer       │

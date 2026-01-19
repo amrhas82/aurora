@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-01-19
+
+### Fixed
+
+**Spawner: Rate Limit Error Handling:**
+- Rate limit errors now fail fast without wasteful retries
+  - Detects patterns: "rate limit", "429", "quota exceeded", "too many requests"
+  - Prevents 2-4 retry attempts that would hit the same quota limit
+  - Retry policy now skips rate limits with clear message: "Rate limit exceeded - quota exhausted, retries would fail"
+- Circuit breaker no longer opens on rate limit errors
+  - Rate limits are external API constraints, not agent failures
+  - Agents remain healthy in circuit breaker even when quota exhausted
+  - Early exit in `record_failure()` prevents tracking as circuit breaker failure
+- New `FailureReason.RATE_LIMIT` metric for separate tracking
+  - Distinct from inference failures in observability system
+  - Allows monitoring of quota-related issues separately
+- Files changed:
+  - `packages/spawner/src/aurora_spawner/observability.py` - Added RATE_LIMIT enum
+  - `packages/spawner/src/aurora_spawner/spawner.py` - Added rate limit detection
+  - `packages/spawner/src/aurora_spawner/timeout_policy.py` - Prevent rate limit retries
+  - `packages/spawner/src/aurora_spawner/circuit_breaker.py` - Skip circuit breaker for rate limits
+
+### Testing
+
+- Comprehensive test coverage for rate limit handling:
+  - 19 new unit tests in `tests/unit/spawner/test_rate_limit_handling.py`
+  - Tests cover detection, retry prevention, circuit breaker isolation, metrics, and edge cases
+  - All existing tests continue to pass
+
+### Documentation
+
+- Removed "Rate Limit Error Handling" from FEATURES_BACKLOG.md (now implemented)
+- Updated backlog last modified date to January 19, 2026
+
+---
+
 ## [0.9.1] - 2026-01-16
 
 ### Performance

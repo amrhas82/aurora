@@ -30,6 +30,7 @@ class FailureReason(Enum):
     CIRCUIT_OPEN = "circuit_open"
     CRASH = "crash"
     KILLED = "killed"
+    RATE_LIMIT = "rate_limit"
     UNKNOWN = "unknown"
 
 

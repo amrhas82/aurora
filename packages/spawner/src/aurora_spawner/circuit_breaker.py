@@ -141,6 +141,17 @@ class CircuitBreaker:
             fast_fail: If True, open circuit immediately on consecutive failures
             failure_type: Type of failure (inference, timeout, error_pattern, crash, etc.)
         """
+        # Rate limit failures should NOT trigger circuit breaker or fast-fail
+        # The agent isn't broken - API quota is exhausted (external constraint)
+        # Check this FIRST before tracking any failure state
+        is_rate_limit = failure_type == "rate_limit"
+        if is_rate_limit:
+            logger.warning(
+                f"Agent '{agent_id}' hit rate limit (quota exhausted) - "
+                f"not opening circuit breaker (agent not broken, API quota issue)"
+            )
+            return  # Early exit - don't track as circuit breaker failure
+
         now = time.time()
         circuit = self._get_circuit(agent_id)
         circuit.failure_count += 1
@@ -260,7 +271,7 @@ class CircuitBreaker:
             elapsed = now - circuit.last_failure_time
             if elapsed >= self.reset_timeout:
                 logger.info(
-                    f"Circuit HALF_OPEN for agent '{agent_id}': " f"testing after {elapsed:.0f}s"
+                    f"Circuit HALF_OPEN for agent '{agent_id}': testing after {elapsed:.0f}s"
                 )
                 circuit.state = CircuitState.HALF_OPEN
                 circuit.last_attempt_time = now

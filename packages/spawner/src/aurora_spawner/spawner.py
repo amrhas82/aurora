@@ -1008,12 +1008,12 @@ async def spawn_parallel_tracked(
         if task_stagger > 0:
             if on_progress:
                 on_progress(
-                    f"  Task {idx+1}/{total_tasks} ({agent_id}) starting in {task_stagger:.0f}s..."
+                    f"  Task {idx + 1}/{total_tasks} ({agent_id}) starting in {task_stagger:.0f}s..."
                 )
             await asyncio.sleep(task_stagger)
 
         if on_progress:
-            on_progress(f"  Task {idx+1}/{total_tasks} ({agent_id}) starting now")
+            on_progress(f"  Task {idx + 1}/{total_tasks} ({agent_id}) starting now")
 
         task_start = time.time()
 
@@ -1413,15 +1413,27 @@ async def spawn_with_retry_and_fallback(
             elif "error pattern" in reason_lower:
                 error_type = "error_pattern"
                 failure_type = "error_pattern"
+            elif any(
+                x in reason_lower
+                for x in ["rate limit", "429", "quota exceeded", "too many requests"]
+            ):
+                error_type = "rate_limit"
+                failure_type = "rate_limit"
             elif "inference" in reason_lower or "api" in reason_lower:
                 error_type = "inference"
                 failure_type = "inference"
             elif "crash" in reason_lower:
                 failure_type = "crash"
         elif result.error:
-            # Check error message for inference failures
+            # Check error message for rate limit errors first
             error_lower = result.error.lower()
-            if any(x in error_lower for x in ["api", "connection", "json", "parse", "model"]):
+            if any(
+                x in error_lower
+                for x in ["rate limit", "429", "quota exceeded", "too many requests"]
+            ):
+                error_type = "rate_limit"
+                failure_type = "rate_limit"
+            elif any(x in error_lower for x in ["api", "connection", "json", "parse", "model"]):
                 failure_type = "inference"
 
         # Check if should retry

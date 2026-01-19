@@ -117,6 +117,10 @@ class RetryPolicy:
         if error_type == "error_pattern" and not self.retry_on_error_patterns:
             return False, "Retry on error patterns disabled"
 
+        # Rate limits: Don't retry (quota won't reset for hours)
+        if error_type == "rate_limit":
+            return False, "Rate limit exceeded - quota exhausted, retries would fail"
+
         return True, ""
 
 

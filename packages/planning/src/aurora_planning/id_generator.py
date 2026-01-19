@@ -161,7 +161,7 @@ def generate_plan_id(
 
     # If we exhausted retries, raise error
     raise ValueError(
-        f"Unable to generate unique plan ID after {max_retries} attempts. " f"Last tried: {plan_id}"
+        f"Unable to generate unique plan ID after {max_retries} attempts. Last tried: {plan_id}"
     )
 
 

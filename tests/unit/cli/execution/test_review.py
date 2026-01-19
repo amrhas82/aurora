@@ -16,7 +16,7 @@ class TestDecompositionReview:
     def test_create_review_without_gaps(self):
         """Test creating review with all agents assigned."""
         subgoals = [
-            {"description": "Implement auth", "agent_id": "@full-stack-dev", "goal": "Auth"},
+            {"description": "Implement auth", "agent_id": "@code-developer", "goal": "Auth"},
             {"description": "Write tests", "agent_id": "@qa-expert", "goal": "Tests"},
         ]
 
@@ -28,7 +28,7 @@ class TestDecompositionReview:
     def test_create_review_with_gaps(self):
         """Test creating review with agent gaps."""
         subgoals = [
-            {"description": "Implement auth", "agent_id": "@full-stack-dev", "goal": "Auth"},
+            {"description": "Implement auth", "agent_id": "@code-developer", "goal": "Auth"},
             {"description": "Deploy", "agent_id": "@devops-expert", "goal": "Deploy"},
         ]
 
@@ -47,7 +47,7 @@ class TestDecompositionReview:
         are shown by DecompositionSummary.display() to avoid duplicate output.
         """
         subgoals = [
-            {"description": "Implement auth", "agent_id": "@full-stack-dev", "goal": "Auth"}
+            {"description": "Implement auth", "agent_id": "@code-developer", "goal": "Auth"}
         ]
 
         review = DecompositionReview(subgoals, [])

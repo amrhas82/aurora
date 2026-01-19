@@ -101,11 +101,11 @@ Memory found 4 relevant files:
   src/api/routes.py (0.72)
 
 Decomposition:
-  sg-1: Add OAuth provider configuration (@full-stack-dev)
-  sg-2: Implement Google OAuth callback (@full-stack-dev)
-  sg-3: Create session management for OAuth users (@full-stack-dev)
-  sg-4: Update login UI with Google button (@ux-expert)
-  sg-5: Write OAuth integration tests (@qa-test-architect)
+  sg-1: Add OAuth provider configuration (@code-developer)
+  sg-2: Implement Google OAuth callback (@code-developer)
+  sg-3: Create session management for OAuth users (@code-developer)
+  sg-4: Update login UI with Google button (@ui-designer)
+  sg-5: Write OAuth integration tests (@quality-assurance)
 
 Agent gaps: None
 
@@ -363,12 +363,12 @@ Dependency graph:
 
 Executing (max_concurrent=5)...
 
-[1/6] Task 1: Setup Stripe SDK       [@full-stack-dev] RUNNING
-[2/6] Task 2: Create payment models  [@full-stack-dev] RUNNING
+[1/6] Task 1: Setup Stripe SDK       [@code-developer] RUNNING
+[2/6] Task 2: Create payment models  [@code-developer] RUNNING
 [1/6] Task 1: Complete (23s)
-[3/6] Task 3: Add API endpoints      [@full-stack-dev] RUNNING
+[3/6] Task 3: Add API endpoints      [@code-developer] RUNNING
 [2/6] Task 2: Complete (31s)
-[4/6] Task 4: Payment UI             [@ux-expert] RUNNING
+[4/6] Task 4: Payment UI             [@ui-designer] RUNNING
 ...
 
 Summary:

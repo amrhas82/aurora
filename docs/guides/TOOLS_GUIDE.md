@@ -212,7 +212,7 @@ result = await spawn(
     prompt="Task description",
     tool="claude",
     model="sonnet",
-    agent="@full-stack-dev",
+    agent="@code-developer",
     timeout=300
 )
 
@@ -239,11 +239,11 @@ results = await spawn_parallel(
 # My Tasks
 
 - [ ] 1. Implement authentication endpoint
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 <!-- timeout: 600 -->
 
 - [ ] 2. Write integration tests
-<!-- agent: qa-test-architect -->
+<!-- agent: quality-assurance -->
 <!-- depends: 1 -->
 ```
 
@@ -486,7 +486,7 @@ aur mem search "api" --show-content
 aur agents list
 
 # Show agent details
-aur agents show full-stack-dev
+aur agents show code-developer
 
 # List by capability
 aur agents list --capability testing
@@ -528,7 +528,7 @@ aur goals "Implement user authentication system"
     {
       "id": "sg-1",
       "title": "Implement JWT token generation",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.89,
       "dependencies": []
     }
@@ -554,11 +554,11 @@ aur goals "Implement user authentication system"
 # Implementation Tasks
 
 - [ ] 1. Implement JWT token generation
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 <!-- goal: sg-1 -->
 
 - [ ] 2. Create login endpoint
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 <!-- goal: sg-2 -->
 <!-- depends: 1 -->
 ```
@@ -633,11 +633,11 @@ aur spawn tasks.md --sequential
 <!-- agent: architect -->
 
 - [ ] 3. Implement server
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 <!-- depends: 2 -->
 
 - [ ] 4. Write tests
-<!-- agent: qa-test-architect -->
+<!-- agent: quality-assurance -->
 <!-- depends: 3 -->
 ```
 

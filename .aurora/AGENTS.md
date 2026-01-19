@@ -187,7 +187,7 @@ New request?
     {
       "id": "sg-1",
       "description": "First subgoal",
-      "agent": "full-stack-dev"
+      "agent": "code-developer"
     }
   ]
 }

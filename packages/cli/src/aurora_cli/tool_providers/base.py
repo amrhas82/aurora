@@ -249,7 +249,7 @@ class CapabilityRouter:
         Returns:
             Dict mapping capability names to providers
         """
-        groups: dict[str, list["ToolProvider"]] = {
+        groups: dict[str, list[ToolProvider]] = {
             "streaming": [],
             "conversation": [],
             "system_prompt": [],

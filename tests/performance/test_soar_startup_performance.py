@@ -45,6 +45,7 @@ def temp_aurora_project() -> Generator[Path, None, None]:
 
         # Create minimal memory database
         from aurora_core.store.sqlite import SQLiteStore
+
         db_path = aurora_dir / "memory.db"
         store = SQLiteStore(str(db_path))
         store.close()
@@ -62,6 +63,7 @@ class TestSOARCommandStartup:
         initialization and help rendering.
         """
         from click.testing import CliRunner
+
         from aurora_cli.commands.soar import soar_command
 
         runner = CliRunner()
@@ -71,10 +73,9 @@ class TestSOARCommandStartup:
         elapsed = time.time() - start
 
         assert result.exit_code == 0
-        assert elapsed < 1.0, (
-            f"'aur soar --help' took {elapsed:.3f}s (target: <1.0s). "
-            "Help should be instant."
-        )
+        assert (
+            elapsed < 1.0
+        ), f"'aur soar --help' took {elapsed:.3f}s (target: <1.0s). Help should be instant."
 
     def test_critical_imports_fast(self):
         """Verify critical SOAR imports complete quickly (<2s)."""
@@ -82,7 +83,8 @@ class TestSOARCommandStartup:
 
         # Clear cached imports for accurate measurement
         modules_to_clear = [
-            k for k in list(sys.modules.keys())
+            k
+            for k in list(sys.modules.keys())
             if k.startswith("aurora_soar") or k.startswith("aurora_cli.commands.soar")
         ]
         for mod in modules_to_clear:
@@ -92,8 +94,8 @@ class TestSOARCommandStartup:
 
         # Import critical SOAR modules
         from aurora_cli.commands.soar import soar_command  # noqa: F401
-        from aurora_soar.orchestrator import SOAROrchestrator  # noqa: F401
         from aurora_soar.agent_registry import AgentRegistry  # noqa: F401
+        from aurora_soar.orchestrator import SOAROrchestrator  # noqa: F401
 
         elapsed = time.time() - start
 
@@ -141,10 +143,9 @@ class TestConfigurationLoading:
         config = Config()
         elapsed = time.time() - start
 
-        assert elapsed < 0.5, (
-            f"Config loading took {elapsed:.3f}s (target: <0.5s). "
-            "Config should load quickly."
-        )
+        assert (
+            elapsed < 0.5
+        ), f"Config loading took {elapsed:.3f}s (target: <0.5s). Config should load quickly."
         assert config is not None
 
 
@@ -207,6 +208,7 @@ class TestAgentDiscovery:
     def test_agent_manifest_loading_fast(self, temp_aurora_project: Path):
         """Verify agent manifest discovery is fast (<1s)."""
         import os
+
         original_cwd = os.getcwd()
 
         try:
@@ -232,10 +234,10 @@ class TestOrchestratorInitialization:
 
     def test_orchestrator_init_without_llm(self, temp_aurora_project: Path):
         """Verify orchestrator initialization is fast (<500ms)."""
+        from aurora_cli.config import Config
         from aurora_core.store.sqlite import SQLiteStore
         from aurora_soar.agent_registry import AgentRegistry
         from aurora_soar.orchestrator import SOAROrchestrator
-        from aurora_cli.config import Config
 
         db_path = temp_aurora_project / ".aurora" / "memory.db"
         store = SQLiteStore(str(db_path))
@@ -289,6 +291,7 @@ class TestBackgroundModelLoading:
         # This should use the lightweight cache check
         try:
             from aurora_context_code.model_cache import is_model_cached_fast
+
             is_cached = is_model_cached_fast()
         except ImportError:
             pytest.skip("aurora_context_code not installed")
@@ -299,10 +302,9 @@ class TestBackgroundModelLoading:
         heavy_deps = ["torch", "sentence_transformers"]
         for dep in heavy_deps:
             imported = [m for m in new_modules if dep in m.lower()]
-            assert not imported, (
-                f"Cache check imported {dep}: {imported}. "
-                "Cache checking should be lightweight."
-            )
+            assert (
+                not imported
+            ), f"Cache check imported {dep}: {imported}. Cache checking should be lightweight."
 
 
 class TestEndToEndStartup:
@@ -314,6 +316,7 @@ class TestEndToEndStartup:
         This is the most important metric - time until the user sees progress.
         """
         from click.testing import CliRunner
+
         from aurora_cli.commands.soar import soar_command
 
         runner = CliRunner()
@@ -331,6 +334,7 @@ class TestEndToEndStartup:
 
         try:
             from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+
             original_init = CLIPipeLLMClient.__init__
             CLIPipeLLMClient.__init__ = mock_llm_init
         except ImportError:
@@ -381,7 +385,8 @@ class TestRegressionGuards:
         import sys
 
         modules_to_clear = [
-            k for k in list(sys.modules.keys())
+            k
+            for k in list(sys.modules.keys())
             if "aurora_soar" in k or "aurora_cli.commands.soar" in k
         ]
         for mod in modules_to_clear:
@@ -389,6 +394,7 @@ class TestRegressionGuards:
 
         start = time.time()
         from aurora_cli.commands.soar import soar_command  # noqa: F401
+
         elapsed = time.time() - start
 
         assert elapsed < self.MAX_IMPORT_TIME, (
@@ -451,20 +457,18 @@ class TestStartupOptimizations:
         from aurora_cli.commands.soar import soar_command  # noqa: F401
 
         # These should NOT be imported yet
-        assert "sentence_transformers" not in sys.modules, (
-            "sentence_transformers imported too early"
-        )
-        assert "torch" not in sys.modules or "aurora_context_code" not in sys.modules, (
-            "torch imported too early (unless already loaded)"
-        )
+        assert (
+            "sentence_transformers" not in sys.modules
+        ), "sentence_transformers imported too early"
+        assert (
+            "torch" not in sys.modules or "aurora_context_code" not in sys.modules
+        ), "torch imported too early (unless already loaded)"
 
     def test_background_loading_exists(self):
         """Verify background model loading function exists and is callable."""
         from aurora_cli.commands.soar import _start_background_model_loading
 
-        assert callable(_start_background_model_loading), (
-            "Background loading function should exist"
-        )
+        assert callable(_start_background_model_loading), "Background loading function should exist"
 
 
 class TestProgressiveStartup:
@@ -472,10 +476,10 @@ class TestProgressiveStartup:
 
     def test_phase_callback_fires_early(self, temp_aurora_project: Path):
         """Verify phase callbacks fire early to show progress."""
-        from aurora_soar.orchestrator import SOAROrchestrator
-        from aurora_soar.agent_registry import AgentRegistry
-        from aurora_core.store.sqlite import SQLiteStore
         from aurora_cli.config import Config
+        from aurora_core.store.sqlite import SQLiteStore
+        from aurora_soar.agent_registry import AgentRegistry
+        from aurora_soar.orchestrator import SOAROrchestrator
 
         db_path = temp_aurora_project / ".aurora" / "memory.db"
         store = SQLiteStore(str(db_path))
@@ -486,16 +490,10 @@ class TestProgressiveStartup:
         callbacks_received = []
 
         def test_callback(phase_name: str, status: str, result: dict):
-            callbacks_received.append({
-                "phase": phase_name,
-                "status": status,
-                "time": time.time()
-            })
+            callbacks_received.append({"phase": phase_name, "status": status, "time": time.time()})
 
         mock_llm = MagicMock()
-        mock_llm.generate.return_value = MagicMock(
-            content='{"subgoals": [], "warnings": []}'
-        )
+        mock_llm.generate.return_value = MagicMock(content='{"subgoals": [], "warnings": []}')
 
         orchestrator = SOAROrchestrator(
             store=store,

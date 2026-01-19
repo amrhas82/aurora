@@ -131,7 +131,7 @@ def _apply_env_overrides(config: dict) -> None:
                 os.environ["AURORA_HEADLESS_TIMEOUT"]
             )
         except ValueError:
-            raise ConfigurationError(f"AURORA_HEADLESS_TIMEOUT must be an integer")
+            raise ConfigurationError("AURORA_HEADLESS_TIMEOUT must be an integer")
 
     if "AURORA_HEADLESS_BUDGET" in os.environ:
         try:

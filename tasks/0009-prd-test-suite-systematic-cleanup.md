@@ -1746,7 +1746,7 @@ Execution Time:
 
 ## Document Control
 
-**Author:** Claude Sonnet 4.5 (product-manager agent)
+**Author:** Claude Sonnet 4.5 (feature-planner agent)
 **Reviewer:** User (solo developer)
 **Approver:** User
 **Version:** 1.0

@@ -26,7 +26,6 @@ class TestInitMCPValidationIntegration:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock configurator
             mock_configurator = MagicMock()
             mock_configurator.tool_id = "claude"
@@ -68,7 +67,6 @@ class TestInitMCPValidationIntegration:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock configurator
             mock_configurator = MagicMock()
             mock_configurator.tool_id = "claude"
@@ -106,7 +104,6 @@ class TestInitMCPValidationIntegration:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock two configurators
             tools = []
 
@@ -173,7 +170,6 @@ class TestInitMCPValidationIntegration:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Test both command formats
             test_configs = [
                 {
@@ -232,7 +228,6 @@ class TestInitMCPValidationIntegration:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Create 3 tools with different validation issues
             tools = []
 

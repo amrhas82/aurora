@@ -28,7 +28,7 @@ class TestGoalsJsonFormat:
                 id="sg-1",
                 title="Implement OAuth provider",
                 description="Add Google/GitHub OAuth",
-                agent="@full-stack-dev",
+                agent="@code-developer",
                 confidence=0.85,
                 dependencies=[],
             ),
@@ -39,7 +39,7 @@ class TestGoalsJsonFormat:
                 subgoal_id="sg-2",
                 recommended_agent="@security-expert",
                 agent_exists=False,
-                fallback="@full-stack-dev",
+                fallback="@code-developer",
                 suggested_capabilities=["security", "audit"],
             ),
         ]
@@ -124,7 +124,7 @@ class TestGoalsJsonFormat:
             id="sg-1",
             title="Implement feature",
             description="Detailed description",
-            agent="@full-stack-dev",
+            agent="@code-developer",
             confidence=0.92,
             dependencies=["sg-0"],
         )
@@ -133,7 +133,7 @@ class TestGoalsJsonFormat:
         assert subgoal.id == "sg-1"
         assert subgoal.title == "Implement feature"
         assert subgoal.description == "Detailed description"
-        assert subgoal.agent == "@full-stack-dev"
+        assert subgoal.agent == "@code-developer"
         assert subgoal.confidence == 0.92
         assert subgoal.dependencies == ["sg-0"]
 
@@ -221,7 +221,7 @@ class TestGoalsJsonFormat:
                     id="sg-1",
                     title="Implement OAuth provider integration",
                     description="Add Google/GitHub OAuth providers",
-                    agent="@full-stack-dev",
+                    agent="@code-developer",
                     confidence=0.85,
                     dependencies=[],
                 ),
@@ -229,7 +229,7 @@ class TestGoalsJsonFormat:
                     id="sg-2",
                     title="Write OAuth integration tests",
                     description="Test OAuth flow end-to-end",
-                    agent="@qa-test-architect",
+                    agent="@quality-assurance",
                     confidence=0.92,
                     dependencies=["sg-1"],
                 ),
@@ -239,7 +239,7 @@ class TestGoalsJsonFormat:
                     subgoal_id="sg-3",
                     recommended_agent="@security-expert",
                     agent_exists=False,
-                    fallback="@full-stack-dev",
+                    fallback="@code-developer",
                     suggested_capabilities=["security", "audit"],
                 ),
             ],
@@ -258,7 +258,7 @@ class TestGoalsJsonFormat:
         assert data["memory_context"][0]["relevance"] == 0.85
         assert len(data["subgoals"]) == 2
         assert data["subgoals"][0]["id"] == "sg-1"
-        assert data["subgoals"][0]["agent"] == "@full-stack-dev"
+        assert data["subgoals"][0]["agent"] == "@code-developer"
         assert data["subgoals"][1]["dependencies"] == ["sg-1"]
         assert len(data["gaps"]) == 1
         assert data["gaps"][0]["subgoal_id"] == "sg-3"
@@ -307,7 +307,7 @@ class TestGoalsJsonFormat:
                     id="sg-1",
                     title="Task name",
                     description="Description",
-                    agent="@full-stack-dev",
+                    agent="@code-developer",
                     confidence=0.9,
                     dependencies=[],
                 ),

@@ -43,11 +43,11 @@ class ToolProviderRegistry:
     """
 
     _instance: "ToolProviderRegistry | None" = None
-    _providers: dict[str, Type[ToolProvider]]
+    _providers: dict[str, type[ToolProvider]]
 
     def __init__(self) -> None:
         """Initialize registry with empty provider map."""
-        self._providers: dict[str, Type[ToolProvider]] = {}
+        self._providers: dict[str, type[ToolProvider]] = {}
         self._instances: dict[str, ToolProvider] = {}
         self._configs: dict[str, dict[str, Any]] = {}
         self._generic_providers: dict[str, dict[str, Any]] = {}
@@ -79,7 +79,7 @@ class ToolProviderRegistry:
         self.register(GeminiToolProvider)
         self.register(CodexToolProvider)
 
-    def register(self, provider_class: Type[ToolProvider]) -> None:
+    def register(self, provider_class: type[ToolProvider]) -> None:
         """Register a tool provider class.
 
         Args:

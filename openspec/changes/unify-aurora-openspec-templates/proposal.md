@@ -95,7 +95,7 @@ Remove immediately - functionality covered by `aur:plan`.
 **tasks.md template** (add @agent field):
 ```markdown
 - [ ] 1. Create StructuralAnalyzer
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - File: `packages/cli/src/aurora_cli/planning/structural.py`
   - **Validation**: Unit test passes
 ```

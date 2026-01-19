@@ -37,6 +37,29 @@ logger = logging.getLogger(__name__)
 console = Console()
 
 
+def _start_background_model_loading() -> None:
+    """Start loading the embedding model in the background.
+
+    This is non-blocking - the model loads in a background thread while
+    other initialization continues. When embeddings are actually needed,
+    the code will wait for loading to complete (with a spinner if still loading).
+    """
+    try:
+        from aurora_context_code.model_cache import is_model_cached_fast, start_background_loading
+
+        if not is_model_cached_fast():
+            logger.debug("Model not cached, skipping background load")
+            return
+
+        start_background_loading()
+        logger.debug("Background model loading started")
+
+    except ImportError:
+        logger.debug("Context code package not available")
+    except Exception as e:
+        logger.debug("Background model loading failed to start: %s", e)
+
+
 @click.group(name="mem")
 def memory_group() -> None:
     r"""Memory management commands for indexing and searching code.
@@ -129,7 +152,7 @@ def run_indexing(
 
         model_name = config.embedding_model
         if not is_model_cached(model_name):
-            out.print(f"[cyan]Embedding model not cached, downloading...[/]")
+            out.print("[cyan]Embedding model not cached, downloading...[/]")
             if not ensure_model_downloaded(model_name, show_progress=True, console=out):
                 out.print(
                     "[yellow]Warning: Failed to download embedding model. "
@@ -462,6 +485,20 @@ def search_command(
         # Show detailed score explanations
         aur mem search "authentication" --show-scores
     """
+    # Start background model loading immediately (before any other work)
+    _start_background_model_loading()
+
+    # Show loading status if embedding model is not ready
+    try:
+        from aurora_context_code.model_cache import is_model_cached_fast
+        from aurora_context_code.semantic.model_utils import BackgroundModelLoader
+
+        loader = BackgroundModelLoader.get_instance()
+        if is_model_cached_fast() and loader.is_loading() and not loader.is_loaded():
+            console.print("[dim]⏳ Loading embedding model in background...[/]")
+    except ImportError:
+        pass  # ML dependencies not available, BM25-only mode
+
     # Load configuration
     config = Config()
 
@@ -494,12 +531,67 @@ def search_command(
         )
         raise click.Abort()
 
-    # Initialize memory manager with config
+    # Initialize retriever with lazy loading (same path as aur goals/soar)
     console.print(f"[dim]Searching memory from {db_path_resolved}...[/]")
-    manager = MemoryManager(config=config)
+    from aurora_cli.memory.retrieval import MemoryRetriever
+    from aurora_core.store.sqlite import SQLiteStore
 
-    # Perform search
-    results = manager.search(query, limit=limit, min_semantic_score=min_score)
+    store = SQLiteStore(str(db_path_resolved))
+    retriever = MemoryRetriever(store=store, config=config)
+
+    # Perform fast search - returns immediately, uses BM25-only if model still loading
+    raw_results, is_full_hybrid = retriever.retrieve_fast(
+        query, limit=limit, min_semantic_score=min_score
+    )
+
+    # Show search mode indicator
+    if not is_full_hybrid and retriever.is_embedding_model_loading():
+        console.print(
+            "[yellow]⚡ Fast mode (BM25+activation) - embedding model loading in background[/]"
+        )
+    elif not is_full_hybrid:
+        # Model not available at all (not installed or not cached)
+        console.print("[dim]Using BM25+activation search (semantic embeddings unavailable)[/]")
+
+    # Convert to SearchResult objects for display compatibility
+    results = []
+    for result in raw_results:
+        if isinstance(result, dict):
+            metadata = result.get("metadata", {})
+            results.append(
+                SearchResult(
+                    chunk_id=result.get("chunk_id", ""),
+                    file_path=metadata.get("file_path", ""),
+                    line_range=(
+                        metadata.get("line_start", 0),
+                        metadata.get("line_end", 0),
+                    ),
+                    content=result.get("content", ""),
+                    activation_score=result.get("activation_score", 0.0),
+                    semantic_score=result.get("semantic_score", 0.0),
+                    bm25_score=result.get("bm25_score", 0.0),
+                    hybrid_score=result.get("hybrid_score", 0.0),
+                    metadata=metadata,
+                )
+            )
+        else:
+            # CodeChunk object fallback
+            results.append(
+                SearchResult(
+                    chunk_id=getattr(result, "id", ""),
+                    file_path=getattr(result, "file_path", ""),
+                    line_range=(
+                        getattr(result, "line_start", 0),
+                        getattr(result, "line_end", 0),
+                    ),
+                    content=getattr(result, "content", ""),
+                    activation_score=getattr(result, "activation", 0.0),
+                    semantic_score=getattr(result, "score", 0.0),
+                    bm25_score=0.0,
+                    hybrid_score=getattr(result, "hybrid_score", 0.0),
+                    metadata={},
+                )
+            )
 
     # Filter by chunk type if specified
     if chunk_type:
@@ -1097,7 +1189,7 @@ def _format_score_box(
     if bm25_explanation:
         # Add star emoji for exact matches
         if "exact keyword match" in bm25_explanation:
-            bm25_text = f"{bm25_score_str} ⭐ ({bm25_explanation})"
+            bm25_text = f"{bm25_score_str} * ({bm25_explanation})"
         else:
             bm25_text = f"{bm25_score_str} ({bm25_explanation})"
     else:
@@ -1156,8 +1248,8 @@ def _format_score_box(
             git_padding = content_width - len(git_text)
             lines.append(f"│ {git_text}{' ' * git_padding}│")
 
-    # Footer line
-    footer_line = f"└{'─' * content_width}┘"
+    # Footer line (content_width + 1 to match header/content line widths)
+    footer_line = f"└{'─' * (content_width + 1)}┘"
     lines.append(footer_line)
 
     # Create Rich Text with styling

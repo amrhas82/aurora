@@ -364,7 +364,7 @@ class AgentRecommender:
         manifest: Optional AgentManifest to use for recommendations
         config: Optional configuration object
         score_threshold: Minimum score for agent match (default 0.5)
-        default_fallback: Default fallback agent (default "@full-stack-dev")
+        default_fallback: Default fallback agent (default "@code-developer")
     """
 
     def __init__(
@@ -372,7 +372,7 @@ class AgentRecommender:
         manifest: Optional["AgentManifest"] = None,
         config: Any | None = None,
         score_threshold: float = 0.5,
-        default_fallback: str = "@full-stack-dev",
+        default_fallback: str = "@code-developer",
         llm_client: Any | None = None,  # CLIPipeLLMClient
     ) -> None:
         """Initialize agent recommender.
@@ -560,7 +560,7 @@ Important:
             Formatted string with agent IDs and descriptions
         """
         if self.manifest is None or not self.manifest.agents:
-            return "- @full-stack-dev: General development tasks"
+            return "- @code-developer: General development tasks"
 
         lines = []
         for agent in self.manifest.agents:
@@ -616,7 +616,7 @@ Important:
         scores a specific agent that's already been assigned (e.g., by SOAR).
 
         Args:
-            agent_id: Agent ID with @ prefix (e.g., "@full-stack-dev")
+            agent_id: Agent ID with @ prefix (e.g., "@code-developer")
             subgoal: Subgoal to score against
 
         Returns:
@@ -696,7 +696,7 @@ Important:
         """Get default fallback agent ID.
 
         Returns:
-            Default fallback agent ID (e.g., "@full-stack-dev")
+            Default fallback agent ID (e.g., "@code-developer")
         """
         return self.default_fallback
 

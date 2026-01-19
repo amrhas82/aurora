@@ -81,12 +81,12 @@ def mock_agent_manifest():
     return MagicMock(
         agents=[
             MagicMock(
-                id="full-stack-dev",
+                id="code-developer",
                 when_to_use="code implementation, development, debugging",
                 skills=["python", "javascript", "testing", "development"],
             ),
             MagicMock(
-                id="qa-test-architect",
+                id="quality-assurance",
                 when_to_use="testing, quality assurance, test architecture",
                 skills=["testing", "quality", "automation", "integration"],
             ),
@@ -114,7 +114,7 @@ class TestPlanDecompositionE2E:
         # Setup mocks
         mock_decompose.return_value = MagicMock(
             subgoals=[
-                MagicMock(**sg, recommended_agent="@full-stack-dev", agent_exists=True)
+                MagicMock(**sg, recommended_agent="@code-developer", agent_exists=True)
                 for sg in mock_llm_response["subgoals"]
             ],
             complexity="moderate",

@@ -1816,7 +1816,7 @@ pytest tests/unit/planning/test_performance.py --benchmark-only
           "agent_id": {
             "type": "string",
             "pattern": "^@[a-z0-9-]+$",
-            "description": "Assigned agent (e.g., @full-stack-dev) - Phase 2"
+            "description": "Assigned agent (e.g., @code-developer) - Phase 2"
           },
           "status": {
             "type": "string",

@@ -599,12 +599,6 @@ async def spawn_parallel_with_recovery(
     elif isinstance(recovery_policy, str):
         recovery_policy = RP.from_name(recovery_policy)
 
-    # Allow explicit overrides to take precedence
-    effective_max_retries = max_retries if max_retries is not None else recovery_policy.max_retries
-    effective_fallback = (
-        fallback_to_llm if fallback_to_llm is not None else recovery_policy.fallback_to_llm
-    )
-
     semaphore = asyncio.Semaphore(max_concurrent)
     total = len(tasks)
 
@@ -720,7 +714,6 @@ async def spawn_parallel_with_state_tracking(
     state_machine = RecoveryStateMachine(policy=recovery_policy)
 
     semaphore = asyncio.Semaphore(max_concurrent)
-    total = len(tasks)
 
     async def spawn_with_state_tracking(idx: int, task: SpawnTask) -> SpawnResult:
         """Spawn single task with state machine tracking."""

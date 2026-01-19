@@ -259,7 +259,7 @@
     - `test_parse_empty_file` - Empty tasks.md returns empty list
     - `test_parse_single_task` - Parse single `- [ ] 1. Description` task
     - `test_parse_completed_task` - Parse `- [x] 1. Description` as completed=True
-    - `test_parse_agent_metadata` - Extract agent from `<!-- agent: full-stack-dev -->`
+    - `test_parse_agent_metadata` - Extract agent from `<!-- agent: code-developer -->`
     - `test_parse_model_metadata` - Extract model from `<!-- model: sonnet -->`
     - `test_parse_multiple_tasks` - Parse multiple tasks with correct ordering
     - `test_parse_nested_subtasks` - Handle subtasks (e.g., `  - [ ] 1.1 Sub-description`)

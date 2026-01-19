@@ -318,7 +318,7 @@ A 3-phase planning and execution framework (with PRD 0016 as prerequisite) that 
 - `aur plan expand 0001 --to-prd` generates detailed `prd.md` in <5s
 - PRD includes: functional requirements, acceptance criteria per subgoal, testing strategy
 - PRD references specific files from memory index (e.g., "Modify src/auth.py")
-- Agent recommendations included per subgoal (e.g., "@full-stack-dev for Backend Implementation")
+- Agent recommendations included per subgoal (e.g., "@code-developer for Backend Implementation")
 - PRD format follows OpenSpec standards (Requirements + Scenarios)
 
 **Testing Requirements**:
@@ -343,7 +343,7 @@ A 3-phase planning and execution framework (with PRD 0016 as prerequisite) that 
 
 **Example Task Output**:
 ```markdown
-## Subgoal 2: Backend Implementation (@full-stack-dev)
+## Subgoal 2: Backend Implementation (@code-developer)
 - [ ] 2.1 Modify `src/models/user.py` lines 15-30: Add oauth_provider, oauth_id fields
 - [ ] 2.2 Create `src/auth/oauth.py`: Implement Auth0 client wrapper
 - [ ] 2.3 Modify `src/api/routes.py` lines 78-92: Add /auth/login, /auth/callback endpoints
@@ -364,10 +364,10 @@ A 3-phase planning and execution framework (with PRD 0016 as prerequisite) that 
 
 **Acceptance Criteria**:
 - `aur plan execute 0001` reads plan and delegates subgoals sequentially
-- Subgoal 1 (Research) → spawns `@business-analyst` subprocess
-- Subgoal 2 (Design) → spawns `@holistic-architect` subprocess
-- Subgoal 3 (Implementation) → spawns `@full-stack-dev` subprocess
-- Subgoal 4 (Testing) → spawns `@qa-test-architect` subprocess
+- Subgoal 1 (Research) → spawns `@market-researcher` subprocess
+- Subgoal 2 (Design) → spawns `@system-architect` subprocess
+- Subgoal 3 (Implementation) → spawns `@code-developer` subprocess
+- Subgoal 4 (Testing) → spawns `@quality-assurance` subprocess
 - Progress saved to `~/.aurora/plans/active/0001-oauth-auth/state.json`
 - Execution completes in <30 minutes for 4-subgoal plan
 
@@ -386,7 +386,7 @@ A 3-phase planning and execution framework (with PRD 0016 as prerequisite) that 
 
 **Acceptance Criteria**:
 - Plan references `@technical-writer` but agent doesn't exist
-- Execution pauses with prompt: "Agent @technical-writer not found. Options: 1) Use @business-analyst, 2) Skip, 3) Abort"
+- Execution pauses with prompt: "Agent @technical-writer not found. Options: 1) Use @market-researcher, 2) Skip, 3) Abort"
 - User selection persisted in state.json
 - Execution continues with chosen fallback
 - Gap logged for post-execution review
@@ -540,7 +540,7 @@ def generate_plan_files(plan: Plan, plan_dir: Path):
       "id": "sg-1",
       "title": "Research & Architecture",
       "description": "Evaluate OAuth2 providers and design system",
-      "recommended_agent": "@business-analyst",
+      "recommended_agent": "@market-researcher",
       "agent_exists": true,
       "dependencies": []
     },
@@ -548,7 +548,7 @@ def generate_plan_files(plan: Plan, plan_dir: Path):
       "id": "sg-2",
       "title": "Backend Implementation",
       "description": "Implement Auth0 integration and API endpoints",
-      "recommended_agent": "@full-stack-dev",
+      "recommended_agent": "@code-developer",
       "agent_exists": true,
       "dependencies": ["sg-1"]
     }
@@ -572,16 +572,16 @@ def generate_plan_files(plan: Plan, plan_dir: Path):
 Preview: plan.md (first 3 subgoals)
 
 1.1 Design OAuth 2.0 flow architecture
-    Agent: @holistic-architect (exists)
+    Agent: @system-architect (exists)
     Context: src/auth/oauth.py, config/security.yaml
 
 1.2 Implement token storage with encryption
     Agent: @security-specialist (missing)
-    Fallback: @full-stack-dev
+    Fallback: @code-developer
     Gap: Need crypto + secure storage expertise
 
 1.3 Build authorization code flow handler
-    Agent: @full-stack-dev (exists)
+    Agent: @code-developer (exists)
 ───────────────────────────────────────────
 
 Continue to generate detailed PRD and tasks? (Y/n): _
@@ -687,15 +687,15 @@ Context:     5 files from indexed memory
 Subgoals (4):
 ──────────────────────────────────────────────────────────────────────────────
 
-1. Research & Architecture (@business-analyst ✓)
+1. Research & Architecture (@market-researcher ✓)
    Evaluate OAuth2 providers and design authentication architecture
    Dependencies: None
 
-2. Backend Implementation (@full-stack-dev ✓)
+2. Backend Implementation (@code-developer ✓)
    Implement Auth0 SDK integration and API endpoints
    Dependencies: Subgoal 1
 
-3. Testing & QA (@qa-test-architect ✓)
+3. Testing & QA (@quality-assurance ✓)
    Design test strategy and implement comprehensive tests
    Dependencies: Subgoal 2
 
@@ -705,7 +705,7 @@ Subgoals (4):
 
    ⚠ Agent Gap Detected:
    - Missing: @technical-writer
-   - Fallback: Use @business-analyst or @full-stack-dev
+   - Fallback: Use @market-researcher or @code-developer
    - Recommendation: Create technical-writer agent
 
 ──────────────────────────────────────────────────────────────────────────────
@@ -829,7 +829,7 @@ class Subgoal(BaseModel):
     )
     recommended_agent: str = Field(
         pattern=r'^@[a-z0-9-]+$',
-        description="Recommended agent (e.g., '@full-stack-dev')"
+        description="Recommended agent (e.g., '@code-developer')"
     )
     agent_exists: bool = Field(
         default=True,
@@ -854,7 +854,7 @@ class Subgoal(BaseModel):
     def validate_agent_format(cls, v: str) -> str:
         if not v.startswith('@'):
             raise ValueError(
-                f"Agent must start with '@' (e.g., '@full-stack-dev'). Got: {v}"
+                f"Agent must start with '@' (e.g., '@code-developer'). Got: {v}"
             )
         return v
 
@@ -1001,7 +1001,7 @@ VALIDATION_MESSAGES = {
 
     # Agent errors
     "AGENT_FORMAT_INVALID": (
-        "Agent must start with '@' (e.g., '@full-stack-dev'). Got: {value}"
+        "Agent must start with '@' (e.g., '@code-developer'). Got: {value}"
     ),
     "AGENT_NOT_FOUND": (
         "Agent '{agent}' not found in manifest. "
@@ -1608,7 +1608,7 @@ Provides secure authentication, token refresh, and logout flows.
 
 ## Functional Requirements
 
-### Subgoal 1: Research & Architecture (@business-analyst)
+### Subgoal 1: Research & Architecture (@market-researcher)
 
 #### FR-1.1: OAuth2 Provider Evaluation
 The system SHALL evaluate Auth0, Okta, and custom OAuth2 implementation.
@@ -1626,7 +1626,7 @@ The system SHALL design complete OAuth2 flow diagram.
 - Error handling for each step
 - Session management strategy
 
-### Subgoal 2: Backend Implementation (@full-stack-dev)
+### Subgoal 2: Backend Implementation (@code-developer)
 
 #### FR-2.1: User Model with OAuth Fields
 The system SHALL extend User model with OAuth fields.
@@ -1651,10 +1651,10 @@ The system SHALL extend User model with OAuth fields.
 
 ## Agent Assignments
 
-1. Research & Architecture: @business-analyst
-2. Backend Implementation: @full-stack-dev
-3. Testing & QA: @qa-test-architect
-4. Documentation: @technical-writer (⚠ NOT FOUND - use @business-analyst)
+1. Research & Architecture: @market-researcher
+2. Backend Implementation: @code-developer
+3. Testing & QA: @quality-assurance
+4. Documentation: @technical-writer (⚠ NOT FOUND - use @market-researcher)
 ```
 
 **Requirements**:
@@ -1737,7 +1737,7 @@ Status: 0 / 12 tasks completed
 
 ---
 
-## Subgoal 1: Research & Architecture (@business-analyst)
+## Subgoal 1: Research & Architecture (@market-researcher)
 
 **Dependencies**: None
 **Estimated Time**: 4-6 hours
@@ -1756,7 +1756,7 @@ Status: 0 / 12 tasks completed
 
 ---
 
-## Subgoal 2: Backend Implementation (@full-stack-dev)
+## Subgoal 2: Backend Implementation (@code-developer)
 
 **Dependencies**: Subgoal 1 (Research & Architecture)
 **Estimated Time**: 8-12 hours
@@ -1785,7 +1785,7 @@ Status: 0 / 12 tasks completed
 
 ---
 
-## Subgoal 3: Testing & QA (@qa-test-architect)
+## Subgoal 3: Testing & QA (@quality-assurance)
 
 **Dependencies**: Subgoal 2 (Backend Implementation)
 **Estimated Time**: 6-8 hours
@@ -2833,7 +2833,7 @@ class TestPRDModels:
         section = PRDSection(
             subgoal_id="sg-1",
             title="Authentication Architecture",
-            agent="@holistic-architect",
+            agent="@system-architect",
             requirements=[
                 Requirement(
                     id="FR-1.1",
@@ -2951,13 +2951,13 @@ def sample_plan():
                 id="sg-1",
                 title="Design auth flow",
                 description="Design the authentication flow",
-                recommended_agent="@holistic-architect"
+                recommended_agent="@system-architect"
             ),
             Subgoal(
                 id="sg-2",
                 title="Implement auth",
                 description="Implement authentication logic",
-                recommended_agent="@full-stack-dev",
+                recommended_agent="@code-developer",
                 dependencies=["sg-1"]
             )
         ]
@@ -2975,7 +2975,7 @@ def sample_prd():
             PRDSection(
                 subgoal_id="sg-1",
                 title="Design auth flow",
-                agent="@holistic-architect",
+                agent="@system-architect",
                 requirements=[
                     Requirement(
                         id="FR-1.1",
@@ -3212,7 +3212,7 @@ def spawn_agent(
   "current_subgoal": "sg-2",
   "completed_subgoals": ["sg-1"],
   "agent_resolutions": {
-    "sg-4": "business-analyst"
+    "sg-4": "market-researcher"
   },
   "task_progress": {
     "sg-1": {"total": 3, "completed": 3},
@@ -3233,21 +3233,21 @@ def spawn_agent(
 Executing Plan: 0001-oauth-auth
 ================================================================================
 
-Subgoal 1: Research & Architecture (@business-analyst)
+Subgoal 1: Research & Architecture (@market-researcher)
 --------------------------------------------------------------------------------
 [15:00:00] Starting agent subprocess...
 [15:15:00] Agent completed research
 [15:15:01] Results saved to results/sg-1/
 [15:15:01] ✓ Subgoal 1 completed (15 minutes)
 
-Subgoal 2: Backend Implementation (@full-stack-dev)
+Subgoal 2: Backend Implementation (@code-developer)
 --------------------------------------------------------------------------------
 [15:15:02] Starting agent subprocess...
 [15:45:00] Agent completed implementation
 [15:45:01] Results saved to results/sg-2/
 [15:45:01] ✓ Subgoal 2 completed (30 minutes)
 
-Subgoal 3: Testing & QA (@qa-test-architect)
+Subgoal 3: Testing & QA (@quality-assurance)
 --------------------------------------------------------------------------------
 [15:45:02] Starting agent subprocess...
 [16:10:00] Agent completed testing
@@ -3259,13 +3259,13 @@ Subgoal 4: Documentation (@technical-writer)
 ⚠ Agent @technical-writer not found
 
 Options:
-1) Use fallback: @business-analyst
+1) Use fallback: @market-researcher
 2) Skip this subgoal
 3) Abort execution
 
 Choice: 1
 
-[16:10:05] Using fallback: @business-analyst
+[16:10:05] Using fallback: @market-researcher
 [16:10:05] Starting agent subprocess...
 [16:30:00] Agent completed documentation
 [16:30:01] Results saved to results/sg-4/
@@ -3348,7 +3348,7 @@ def slash_implement(plan_id: str, **kwargs):
 
 **tasks.md Before Execution**:
 ```markdown
-## Subgoal 2: Backend Implementation (@full-stack-dev)
+## Subgoal 2: Backend Implementation (@code-developer)
 
 - [ ] 2.1 Modify User model with OAuth fields
 - [ ] 2.2 Create Auth0 SDK wrapper
@@ -3358,7 +3358,7 @@ def slash_implement(plan_id: str, **kwargs):
 
 **tasks.md During Execution** (after 2.1 and 2.2 complete):
 ```markdown
-## Subgoal 2: Backend Implementation (@full-stack-dev)
+## Subgoal 2: Backend Implementation (@code-developer)
 
 - [x] 2.1 Modify User model with OAuth fields
 - [x] 2.2 Create Auth0 SDK wrapper
@@ -3501,7 +3501,7 @@ class AgentGap(BaseModel):
     recommended_agent: str        # e.g., "@security-specialist"
     agent_exists: bool            # False
     suggested_capabilities: list[str]  # ["crypto", "secure-storage"]
-    fallback: str                 # e.g., "@full-stack-dev"
+    fallback: str                 # e.g., "@code-developer"
     impact: str                   # "Medium - May lack specialized knowledge"
 
 def detect_and_suggest_agents(plan: Plan, agents: list[AgentInfo]) -> list[AgentGap]:
@@ -3584,7 +3584,7 @@ Implement OAuth2 authentication using Auth0 to replace password-based login syst
 ## Subgoals
 
 ### Subgoal 1: Research & Architecture
-**Agent**: @business-analyst ✓
+**Agent**: @market-researcher ✓
 **Dependencies**: None
 **Estimated Time**: 4-6 hours
 
@@ -3598,7 +3598,7 @@ Evaluate OAuth2 providers (Auth0, Okta, custom) and design authentication archit
 ---
 
 ### Subgoal 2: Backend Implementation
-**Agent**: @full-stack-dev ✓
+**Agent**: @code-developer ✓
 **Dependencies**: Subgoal 1
 **Estimated Time**: 8-12 hours
 
@@ -3613,7 +3613,7 @@ Implement Auth0 SDK integration, extend User model with OAuth fields, create API
 ---
 
 ### Subgoal 3: Testing & QA
-**Agent**: @qa-test-architect ✓
+**Agent**: @quality-assurance ✓
 **Dependencies**: Subgoal 2
 **Estimated Time**: 6-8 hours
 
@@ -3637,7 +3637,7 @@ Create API documentation, integration guides, and troubleshooting resources.
 ⚠ **Agent Gap Detected**:
 - Missing agent: @technical-writer
 - Suggested capabilities: technical-writing, api-documentation, user-guides
-- Fallback options: @business-analyst, @full-stack-dev
+- Fallback options: @market-researcher, @code-developer
 - Recommendation: Consider creating technical-writer agent
 
 **Documentation Deliverables**:
@@ -3651,9 +3651,9 @@ Create API documentation, integration guides, and troubleshooting resources.
 
 | Subgoal | Agent | Status |
 |---------|-------|--------|
-| 1. Research & Architecture | @business-analyst | ✓ Found |
-| 2. Backend Implementation | @full-stack-dev | ✓ Found |
-| 3. Testing & QA | @qa-test-architect | ✓ Found |
+| 1. Research & Architecture | @market-researcher | ✓ Found |
+| 2. Backend Implementation | @code-developer | ✓ Found |
+| 3. Testing & QA | @quality-assurance | ✓ Found |
 | 4. Documentation | @technical-writer | ⚠ Not found |
 
 **Agent Gaps**: 1 (Documentation requires fallback)
@@ -3701,7 +3701,7 @@ Replace password-based authentication with OAuth2 using Auth0 as identity provid
 
 ## Functional Requirements
 
-### Subgoal 1: Research & Architecture (@business-analyst)
+### Subgoal 1: Research & Architecture (@market-researcher)
 
 #### FR-1.1: OAuth2 Provider Evaluation
 
@@ -3746,7 +3746,7 @@ The system SHALL design complete OAuth2 flow diagram.
 
 ---
 
-### Subgoal 2: Backend Implementation (@full-stack-dev)
+### Subgoal 2: Backend Implementation (@code-developer)
 
 #### FR-2.1: User Model Extension
 
@@ -3916,7 +3916,7 @@ def logout(access_token: str):
 
 ---
 
-### Subgoal 3: Testing & QA (@qa-test-architect)
+### Subgoal 3: Testing & QA (@quality-assurance)
 
 #### FR-3.1: Test Strategy Design
 
@@ -4003,7 +4003,7 @@ The system SHALL implement security tests.
 
 ---
 
-### Subgoal 4: Documentation (@technical-writer - FALLBACK: @business-analyst)
+### Subgoal 4: Documentation (@technical-writer - FALLBACK: @market-researcher)
 
 #### FR-4.1: API Documentation
 
@@ -4051,19 +4051,19 @@ The system SHALL provide developer integration guide.
 
 | Test Type | Coverage Target | Tools | Owner |
 |-----------|----------------|-------|-------|
-| Unit | ≥95% | pytest, pytest-cov | @full-stack-dev |
-| Integration | Key flows | pytest, requests-mock | @qa-test-architect |
-| E2E | Full user journey | pytest, selenium | @qa-test-architect |
-| Security | OWASP top-10 | bandit, safety | @qa-test-architect |
+| Unit | ≥95% | pytest, pytest-cov | @code-developer |
+| Integration | Key flows | pytest, requests-mock | @quality-assurance |
+| E2E | Full user journey | pytest, selenium | @quality-assurance |
+| Security | OWASP top-10 | bandit, safety | @quality-assurance |
 
 ---
 
 ## Agent Assignments
 
-1. **Research & Architecture**: @business-analyst
-2. **Backend Implementation**: @full-stack-dev
-3. **Testing & QA**: @qa-test-architect
-4. **Documentation**: @technical-writer (⚠ NOT FOUND - use @business-analyst)
+1. **Research & Architecture**: @market-researcher
+2. **Backend Implementation**: @code-developer
+3. **Testing & QA**: @quality-assurance
+4. **Documentation**: @technical-writer (⚠ NOT FOUND - use @market-researcher)
 
 ---
 
@@ -4131,7 +4131,7 @@ Generated by `aur plan tasks`. Includes file paths, line numbers, checkboxes.
       "id": "sg-1",
       "title": "Research & Architecture",
       "description": "Evaluate OAuth2 providers and design authentication architecture",
-      "recommended_agent": "@business-analyst",
+      "recommended_agent": "@market-researcher",
       "agent_exists": true,
       "dependencies": [],
       "estimated_hours": "4-6",
@@ -4145,7 +4145,7 @@ Generated by `aur plan tasks`. Includes file paths, line numbers, checkboxes.
       "id": "sg-2",
       "title": "Backend Implementation",
       "description": "Implement Auth0 SDK integration and API endpoints",
-      "recommended_agent": "@full-stack-dev",
+      "recommended_agent": "@code-developer",
       "agent_exists": true,
       "dependencies": ["sg-1"],
       "estimated_hours": "8-12",
@@ -4166,7 +4166,7 @@ Generated by `aur plan tasks`. Includes file paths, line numbers, checkboxes.
       "id": "sg-3",
       "title": "Testing & QA",
       "description": "Design test strategy and implement comprehensive tests",
-      "recommended_agent": "@qa-test-architect",
+      "recommended_agent": "@quality-assurance",
       "agent_exists": true,
       "dependencies": ["sg-2"],
       "estimated_hours": "6-8",
@@ -4215,8 +4215,8 @@ Generated by `aur plan tasks`. Includes file paths, line numbers, checkboxes.
         "developer-guides"
       ],
       "fallback_suggestions": [
-        "@business-analyst",
-        "@full-stack-dev"
+        "@market-researcher",
+        "@code-developer"
       ],
       "impact": "Medium - Documentation quality may be lower without specialized writer"
     }
@@ -4245,7 +4245,7 @@ Generated by `aur plan tasks`. Includes file paths, line numbers, checkboxes.
   "current_subgoal": "sg-3",
   "completed_subgoals": ["sg-1", "sg-2"],
   "agent_resolutions": {
-    "sg-4": "business-analyst"
+    "sg-4": "market-researcher"
   },
   "task_progress": {
     "sg-1": {"total": 3, "completed": 3},
@@ -4256,7 +4256,7 @@ Generated by `aur plan tasks`. Includes file paths, line numbers, checkboxes.
   "checkpoints": [
     {
       "subgoal_id": "sg-1",
-      "agent_id": "business-analyst",
+      "agent_id": "market-researcher",
       "started_at": "2026-01-15T15:00:00Z",
       "completed_at": "2026-01-15T15:30:00Z",
       "duration_minutes": 30,
@@ -4268,7 +4268,7 @@ Generated by `aur plan tasks`. Includes file paths, line numbers, checkboxes.
     },
     {
       "subgoal_id": "sg-2",
-      "agent_id": "full-stack-dev",
+      "agent_id": "code-developer",
       "started_at": "2026-01-15T15:30:01Z",
       "completed_at": "2026-01-15T16:00:00Z",
       "duration_minutes": 30,
@@ -5434,13 +5434,13 @@ def resume_execution(plan_id: str):
 
 ```
 Subgoal: Backend Implementation
-Agent: @full-stack-dev
+Agent: @code-developer
 Goal: "Implement Auth0 SDK integration and API endpoints"
 Context: src/models/user.py, src/api/routes.py
 Output: ~/.aurora/plans/active/0001-oauth-auth/results/sg-2/
 
 Command:
-  aur agent run full-stack-dev \
+  aur agent run code-developer \
     --goal "Implement Auth0 SDK integration and API endpoints" \
     --context src/models/user.py src/api/routes.py \
     --output ~/.aurora/plans/active/0001-oauth-auth/results/sg-2/ \

@@ -526,7 +526,7 @@ Summary/Analysis
 ## Part 3: Should Personas Explicitly Mention Techniques?
 
 ### The Question
-> Should I write in the business-analyst.md persona: "Use CoT, ReAct, Few-Shot for better predictions"?
+> Should I write in the market-researcher.md persona: "Use CoT, ReAct, Few-Shot for better predictions"?
 
 ### Short Answer
 **NO. Explicit technique mention in personas creates problems.**
@@ -1128,7 +1128,7 @@ Result: SOAR/ACT-R learns the optimization you derived in Phase 1
 ## Part 6: Deep Dive Example - Market Analysis
 
 ### Scenario
-You ask business-analyst agent: "What are the business opportunities in AI agent market?"
+You ask market-researcher agent: "What are the business opportunities in AI agent market?"
 
 ### Phase 1: What LLM Agent Does (Token Prediction)
 

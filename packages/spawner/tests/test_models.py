@@ -15,9 +15,9 @@ class TestSpawnTask:
 
     def test_spawn_task_custom_values(self):
         """Test SpawnTask accepts custom prompt, agent, timeout."""
-        task = SpawnTask(prompt="custom prompt", agent="full-stack-dev", timeout=600)
+        task = SpawnTask(prompt="custom prompt", agent="code-developer", timeout=600)
         assert task.prompt == "custom prompt"
-        assert task.agent == "full-stack-dev"
+        assert task.agent == "code-developer"
         assert task.timeout == 600
 
     def test_spawn_task_to_dict(self):

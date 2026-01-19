@@ -537,7 +537,7 @@
 
   You DO have finite operators:
   - Tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, etc.
-  - Agents: full-stack-dev, qa-test-architect, ux-expert, etc.
+  - Agents: code-developer, quality-assurance, ui-designer, etc.
 
   These ARE your operators. The LLM decides WHICH operator to apply. That's the selection phase.
 
@@ -885,9 +885,9 @@
   - If fail, worker fixes
 
   For Aurora:
-  - full-stack-dev implements
-  - qa-test-architect validates
-  - If issues, full-stack-dev fixes
+  - code-developer implements
+  - quality-assurance validates
+  - If issues, code-developer fixes
 
   Let me map out what they're describing:
 
@@ -937,7 +937,7 @@
   Key insights:
 
   1. Verification = Specialized agent spawn
-    - qa-test-architect for code quality
+    - quality-assurance for code quality
     - Could be domain-specific validators
   2. OpenSpec's role:
     - Plan: Generate detailed plan/tasks from decomposed subgoals
@@ -985,13 +985,13 @@
   Subgoal: "Implement OAuth login"
       │
       ▼
-  Worker Agent: full-stack-dev
+  Worker Agent: code-developer
       │ (implements)
       ▼
-  Validator Agent: qa-test-architect
+  Validator Agent: quality-assurance
       │ (reviews)
       ├─ PASS → Continue to next subgoal
-      └─ FAIL → Feedback to full-stack-dev → Re-implement → Re-verify
+      └─ FAIL → Feedback to code-developer → Re-implement → Re-verify
 
   This IS verification. No separate "verify phase" needed. The validator agent IS the verification.
 
@@ -999,13 +999,13 @@
   ┌───────────────────────┬────────────────────┬───────────────────┐
   │     Subgoal Type      │       Worker       │     Validator     │
   ├───────────────────────┼────────────────────┼───────────────────┤
-  │ Code implementation   │ full-stack-dev     │ qa-test-architect │
+  │ Code implementation   │ code-developer     │ quality-assurance │
   ├───────────────────────┼────────────────────┼───────────────────┤
-  │ UI design             │ ux-expert          │ qa-test-architect │
+  │ UI design             │ ui-designer          │ quality-assurance │
   ├───────────────────────┼────────────────────┼───────────────────┤
-  │ Architecture decision │ holistic-architect │ product-owner     │
+  │ Architecture decision │ system-architect │ backlog-manager     │
   ├───────────────────────┼────────────────────┼───────────────────┤
-  │ Documentation         │ scrum-master       │ product-owner     │
+  │ Documentation         │ story-writer       │ backlog-manager     │
   └───────────────────────┴────────────────────┴───────────────────┘
   ---
   OpenSpec's Current State vs Your Vision
@@ -1064,13 +1064,13 @@
   What if no agent matches a subgoal?
 
   Subgoal: "Optimize database queries"
-  Available agents: full-stack-dev, ux-expert, qa-test-architect
+  Available agents: code-developer, ui-designer, quality-assurance
   Match: ??? (no DB specialist)
 
   Options:
   - Fallback to generic LLM (current behavior)
   - Flag for human intervention
-  - Create composite task for closest match (full-stack-dev)
+  - Create composite task for closest match (code-developer)
 
   My take: Fallback to generic LLM is fine. Don't over-engineer.
 
@@ -1228,13 +1228,13 @@
      - Subgoal 3: Add OAuth UI components
      - Subgoal 4: Write OAuth tests
   → AGENT MATCH:
-     - Subgoal 1 → holistic-architect
-     - Subgoal 2 → full-stack-dev (validator: qa-test-architect)
-     - Subgoal 3 → ux-expert + full-stack-dev
-     - Subgoal 4 → qa-test-architect
+     - Subgoal 1 → system-architect
+     - Subgoal 2 → code-developer (validator: quality-assurance)
+     - Subgoal 3 → ui-designer + code-developer
+     - Subgoal 4 → quality-assurance
   → OPENSPEC PLAN: Generate detailed plan for each
   → EXECUTE: Spawn agents with plans
-  → VALIDATE: qa-test-architect reviews code subgoals
+  → VALIDATE: quality-assurance reviews code subgoals
   → CACHE: Store successful pattern
   → RESPOND: "OAuth implemented. Files changed: ..."
 
@@ -1421,7 +1421,7 @@
 
   Problem 5: Who Manages the Agent Assignments?
 
-  aur plan terminal: "Subgoal 2 should use full-stack-dev"
+  aur plan terminal: "Subgoal 2 should use code-developer"
   /plan OpenSpec: "Here's the spec for subgoal 2"
   implement: "Who executes subgoal 2 again? Let me check... somewhere..."
 
@@ -1466,10 +1466,10 @@
       │ │ Matching agents to subgoals...          │
       │ │                                         │
       │ │ Assignments:                            │
-      │ │   1. holistic-architect                 │
-      │ │   2. full-stack-dev → qa-test-architect │
-      │ │   3. ux-expert → full-stack-dev         │
-      │ │   4. qa-test-architect                  │
+      │ │   1. system-architect                 │
+      │ │   2. code-developer → quality-assurance │
+      │ │   3. ui-designer → code-developer         │
+      │ │   4. quality-assurance                  │
       │ │                                         │
       │ │ [a]pprove  [e]dit  [s]kip  [q]uit       │
       │ └─────────────────────────────────────────┘
@@ -1496,18 +1496,18 @@
       │ │                                         │
       │ │ Spawning agents...                      │
       │ │                                         │
-      │ │ [1/4] holistic-architect: Designing...  │
+      │ │ [1/4] system-architect: Designing...  │
       │ │       ✓ Complete                        │
       │ │                                         │
-      │ │ [2/4] full-stack-dev: Implementing...   │
-      │ │       qa-test-architect: Validating...  │
+      │ │ [2/4] code-developer: Implementing...   │
+      │ │       quality-assurance: Validating...  │
       │ │       ✓ Passed                          │
       │ │                                         │
-      │ │ [3/4] ux-expert: Designing UI...        │
-      │ │       full-stack-dev: Implementing...   │
+      │ │ [3/4] ui-designer: Designing UI...        │
+      │ │       code-developer: Implementing...   │
       │ │       ✓ Complete                        │
       │ │                                         │
-      │ │ [4/4] qa-test-architect: Writing tests..│
+      │ │ [4/4] quality-assurance: Writing tests..│
       │ │       ✓ Complete                        │
       │ │                                         │
       │ │ All subgoals complete.                  │

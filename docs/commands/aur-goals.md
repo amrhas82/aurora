@@ -232,7 +232,7 @@ Where:
       "id": "sg-1",
       "title": "Implement OAuth provider integration",
       "description": "Add Google/GitHub OAuth providers",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.85,
       "dependencies": []
     }
@@ -391,12 +391,12 @@ Common agents and their specializations:
 
 | Agent | Best For |
 |-------|----------|
-| `@full-stack-dev` | General development, APIs, full-stack |
-| `@qa-test-architect` | Testing, quality assurance, test design |
-| `@ux-expert` | UI/UX, design, frontend specs |
-| `@holistic-architect` | System design, architecture decisions |
-| `@product-manager` | Requirements, PRDs, feature specs |
-| `@business-analyst` | Research, analysis, documentation |
+| `@code-developer` | General development, APIs, full-stack |
+| `@quality-assurance` | Testing, quality assurance, test design |
+| `@ui-designer` | UI/UX, design, frontend specs |
+| `@system-architect` | System design, architecture decisions |
+| `@feature-planner` | Requirements, PRDs, feature specs |
+| `@market-researcher` | Research, analysis, documentation |
 
 ### Agent Gaps
 
@@ -408,7 +408,7 @@ When no suitable agent found (confidence < 0.5):
     {
       "subgoal_id": "sg-3",
       "suggested_capabilities": ["blockchain", "web3"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }

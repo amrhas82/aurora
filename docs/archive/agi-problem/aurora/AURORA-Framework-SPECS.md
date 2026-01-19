@@ -1279,7 +1279,7 @@ aurora analyze "what's the agentic AI marketplace?"
 aur analyze "what's the agentic AI marketplace?"
 
 # Stats querying
-aurora stats agent @business-analyst
+aurora stats agent @market-researcher
 aur stats learning --days 7
 aurora task list
 aur task show <task_id>
@@ -1352,9 +1352,9 @@ metrics = {
 
 ```bash
 # Get specific agent stats
-$ aurora stats agent @business-analyst
+$ aurora stats agent @market-researcher
 {
-  "agent_id": "@business-analyst",
+  "agent_id": "@market-researcher",
   "invocations": 42,
   "successes": 37,
   "utility": 0.881,

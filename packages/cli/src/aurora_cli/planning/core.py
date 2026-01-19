@@ -798,7 +798,7 @@ def _check_agent_availability(agent: str) -> bool:
     """Check if an agent is available in the manifest.
 
     Args:
-        agent: Agent ID (e.g., "@full-stack-dev")
+        agent: Agent ID (e.g., "@code-developer")
 
     Returns:
         True if agent exists, False otherwise
@@ -871,7 +871,7 @@ def _write_goals_only(
                 subgoal_id="",
                 ideal_agent=gap,
                 ideal_agent_desc="",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
             for gap in plan.agent_gaps
         ]
@@ -1355,14 +1355,14 @@ def _decompose_with_soar(
         )
 
         # Get agent names directly - Pydantic coerces to @-prefixed format
-        assigned_agent = sg_detail.get("agent", agent_info.get("agent_id", "full-stack-dev"))
+        assigned_agent = sg_detail.get("agent", agent_info.get("agent_id", "code-developer"))
         ideal_agent = sg_detail.get("ideal_agent", agent_info.get("ideal_agent", ""))
 
         # Get dependencies directly - Pydantic coerces to sg-N format
         dependencies = sg_data.get("depends_on", [])
 
         subgoal = Subgoal(
-            id=sg_data.get("id", f"sg-{i+1}"),
+            id=sg_data.get("id", f"sg-{i + 1}"),
             title=sg_detail.get("description", sg_data.get("description", ""))[:100],
             description=sg_data.get("description", ""),
             assigned_agent=assigned_agent,
@@ -1496,7 +1496,7 @@ def create_plan(
                 id="sg-1",
                 title="Implement goal",
                 description=goal,
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
         ]
         file_resolutions = {}
@@ -1766,27 +1766,27 @@ def _decompose_auth_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Design authentication architecture",
             description=f"Design the authentication system architecture for: {goal}",
-            assigned_agent="@holistic-architect",
+            assigned_agent="@system-architect",
         ),
         Subgoal(
             id="sg-2",
             title="Implement authentication logic",
             description="Implement the core authentication flow including login, logout, session management",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Add security measures",
             description="Add security measures: rate limiting, token validation, secure storage",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-2"],
         ),
         Subgoal(
             id="sg-4",
             title="Write authentication tests",
             description="Write comprehensive tests for authentication flows",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-2", "sg-3"],
         ),
     ]
@@ -1799,20 +1799,20 @@ def _decompose_api_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Design API contract",
             description=f"Design the API contract and endpoints for: {goal}",
-            assigned_agent="@holistic-architect",
+            assigned_agent="@system-architect",
         ),
         Subgoal(
             id="sg-2",
             title="Implement API endpoints",
             description="Implement the API endpoints with proper validation and error handling",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Write API tests",
             description="Write API integration tests and documentation",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-2"],
         ),
     ]
@@ -1825,20 +1825,20 @@ def _decompose_testing_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Analyze test requirements",
             description=f"Analyze and document test requirements for: {goal}",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
         ),
         Subgoal(
             id="sg-2",
             title="Implement test infrastructure",
             description="Set up test infrastructure, fixtures, and utilities",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Write test cases",
             description="Implement the test cases according to test plan",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-2"],
         ),
     ]
@@ -1851,34 +1851,34 @@ def _decompose_refactor_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Analyze current implementation",
             description=f"Analyze the current implementation and identify improvement areas for: {goal}",
-            assigned_agent="@holistic-architect",
+            assigned_agent="@system-architect",
         ),
         Subgoal(
             id="sg-2",
             title="Create refactoring plan",
             description="Create detailed refactoring plan with incremental steps",
-            assigned_agent="@holistic-architect",
+            assigned_agent="@system-architect",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Add tests for existing behavior",
             description="Add tests to capture existing behavior before refactoring",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-4",
             title="Execute refactoring",
             description="Execute refactoring in incremental steps, maintaining test coverage",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-2", "sg-3"],
         ),
         Subgoal(
             id="sg-5",
             title="Verify refactoring",
             description="Verify all tests pass and no regressions introduced",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-4"],
         ),
     ]
@@ -1891,20 +1891,20 @@ def _decompose_ui_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Design UI components",
             description=f"Design UI/UX for: {goal}",
-            assigned_agent="@ux-expert",
+            assigned_agent="@ui-designer",
         ),
         Subgoal(
             id="sg-2",
             title="Implement UI components",
             description="Implement the UI components following the design",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Write UI tests",
             description="Write UI tests including visual regression tests",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-2"],
         ),
     ]
@@ -1917,27 +1917,27 @@ def _decompose_generic_goal(goal: str) -> list[Subgoal]:
             id="sg-1",
             title="Analyze requirements",
             description=f"Analyze and document requirements for: {goal}",
-            assigned_agent="@business-analyst",
+            assigned_agent="@market-researcher",
         ),
         Subgoal(
             id="sg-2",
             title="Design solution",
             description="Design the solution architecture",
-            assigned_agent="@holistic-architect",
+            assigned_agent="@system-architect",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Implement solution",
             description="Implement the solution according to design",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-2"],
         ),
         Subgoal(
             id="sg-4",
             title="Test implementation",
             description="Write tests and verify implementation",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-3"],
         ),
     ]
@@ -1991,13 +1991,13 @@ Decompose this goal into 2-7 concrete subgoals. Each subgoal should:
 - List dependencies on other subgoals (if any)
 
 Available agents:
-- @full-stack-dev: General development tasks
-- @holistic-architect: System design and architecture
-- @qa-test-architect: Testing and quality assurance
-- @ux-expert: UI/UX design
-- @business-analyst: Requirements analysis
-- @product-manager: Product strategy
-- @product-owner: Backlog management
+- @code-developer: General development tasks
+- @system-architect: System design and architecture
+- @quality-assurance: Testing and quality assurance
+- @ui-designer: UI/UX design
+- @market-researcher: Requirements analysis
+- @feature-planner: Product strategy
+- @backlog-manager: Backlog management
 
 Return ONLY a JSON array with this exact structure:
 [

@@ -102,8 +102,8 @@
 After completing all tasks, verify:
 
 - [x] `aur agents list` shows agents from all 4 sources in <500ms ✅ (14 agents, 37ms operation)
-- [x] `aur agents search "test"` finds relevant agents with keyword matching ✅ (3 matches: qa-test-architect, 3-process-task-list, full-stack-dev)
-- [x] `aur agents show qa-test-architect` displays full agent details ✅ (role, category, goal, source)
+- [x] `aur agents search "test"` finds relevant agents with keyword matching ✅ (3 matches: quality-assurance, 3-process-task-list, code-developer)
+- [x] `aur agents show quality-assurance` displays full agent details ✅ (role, category, goal, source)
 - [x] `aur agents refresh` regenerates manifest in <2s ✅ (45ms operation)
 - [x] `aur query "test"` behavior unchanged (backward compatible) ✅ (--help shows same options)
 - [x] `aur query "test" --context file.py` uses specified files ✅ (--context/-c options added)

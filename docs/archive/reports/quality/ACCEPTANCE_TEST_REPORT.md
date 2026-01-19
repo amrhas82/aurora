@@ -109,7 +109,7 @@ The AURORA Phase 1 foundation meets all functional acceptance criteria and is re
 **Test Agents**:
 ```json
 {
-  "full-stack-dev": {
+  "code-developer": {
     "type": "local",
     "capabilities": ["code_implementation", "debugging"],
     "domains": ["python"]

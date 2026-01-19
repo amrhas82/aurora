@@ -47,8 +47,8 @@ class AgentScanner:
         >>> scanner = AgentScanner()
         >>> for file_path in scanner.scan_all_sources():
         ...     print(f"Found agent: {file_path}")
-        Found agent: /home/user/.claude/agents/qa-test-architect.md
-        Found agent: /home/user/.claude/agents/full-stack-dev.md
+        Found agent: /home/user/.claude/agents/quality-assurance.md
+        Found agent: /home/user/.claude/agents/code-developer.md
 
         >>> # With custom paths
         >>> scanner = AgentScanner(["/custom/agents"])
@@ -126,9 +126,9 @@ class AgentScanner:
             >>> agent_dir = Path("~/.claude/agents").expanduser()
             >>> for path in scanner.scan_directory(agent_dir):
             ...     print(path.name)
-            full-stack-dev.md
+            code-developer.md
             orchestrator.md
-            qa-test-architect.md
+            quality-assurance.md
         """
         if not directory.exists():
             logger.warning("Directory does not exist: %s", directory)

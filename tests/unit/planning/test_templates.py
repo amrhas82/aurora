@@ -36,14 +36,14 @@ def sample_plan():
                 id="sg-1",
                 title="First subgoal",
                 description="Description for first subgoal",
-                recommended_agent="@full-stack-dev",
+                recommended_agent="@code-developer",
                 dependencies=[],
             ),
             Subgoal(
                 id="sg-2",
                 title="Second subgoal",
                 description="Description for second subgoal",
-                recommended_agent="@qa-test-architect",
+                recommended_agent="@quality-assurance",
                 dependencies=["sg-1"],
             ),
         ],
@@ -103,7 +103,7 @@ class TestTemplateRenderer:
         assert "0001-test-plan" in content
         assert "Test goal for template rendering" in content
         assert "sg-1" in content
-        assert "@full-stack-dev" in content
+        assert "@code-developer" in content
 
     def test_title_filter(self):
         """Test custom title filter."""
@@ -231,8 +231,8 @@ class TestVariableSubstitution:
         assert "First subgoal" in plan_md
         assert "sg-2" in plan_md or "SG-2" in plan_md
         assert "Second subgoal" in plan_md
-        assert "@full-stack-dev" in plan_md
-        assert "@qa-test-architect" in plan_md
+        assert "@code-developer" in plan_md
+        assert "@quality-assurance" in plan_md
 
 
 class TestFilePermissions:

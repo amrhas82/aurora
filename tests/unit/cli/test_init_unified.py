@@ -1402,7 +1402,7 @@ More custom content below.
             try:
                 run_step_1_planning_setup(tmp_path)
             except Exception as e:
-                pytest.fail(f"Run {i+1} failed with error: {e}")
+                pytest.fail(f"Run {i + 1} failed with error: {e}")
 
         # Verify final state is correct
         assert (tmp_path / ".aurora" / "plans" / "active").exists()

@@ -103,7 +103,7 @@ async def test_parser_executor_with_agent_dispatch():
     from aurora_spawner.models import SpawnResult
 
     content = """- [ ] 1. Task for agent
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 <!-- model: sonnet -->
 
 - [ ] 2. Self task
@@ -119,7 +119,7 @@ async def test_parser_executor_with_agent_dispatch():
         tasks = parser.parse(content)
 
         assert len(tasks) == 2
-        assert tasks[0].agent == "full-stack-dev"
+        assert tasks[0].agent == "code-developer"
         assert tasks[0].model == "sonnet"
         assert tasks[1].agent == "self"
 
@@ -157,25 +157,25 @@ def test_parse_complex_real_world_example():
 - [ ] 1.0 Setup Kubernetes cluster
   - [x] 1.1 Configure ingress controller
   - [ ] 1.2 Setup monitoring
-<!-- agent: holistic-architect -->
+<!-- agent: system-architect -->
 <!-- model: opus -->
   - [ ] 1.3 Deploy logging stack
 
 ## Phase 2: Service Migration
 
 - [ ] 2.0 Migrate authentication service
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
   - [ ] 2.1 Containerize service
   - [ ] 2.2 Write Helm charts
   - [ ] 2.3 Deploy to staging
 
 - [ ] 3.0 Migrate API gateway
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 
 ## Phase 3: Testing
 
 - [ ] 4.0 Integration testing
-<!-- agent: qa-test-architect -->
+<!-- agent: quality-assurance -->
   - [ ] 4.1 Write test scenarios
   - [ ] 4.2 Execute test suite
   - [ ] 4.3 Performance testing
@@ -189,14 +189,14 @@ def test_parse_complex_real_world_example():
 
     # Check specific tasks
     task_12 = [t for t in tasks if t.id == "1.2"][0]
-    assert task_12.agent == "holistic-architect"
+    assert task_12.agent == "system-architect"
     assert task_12.model == "opus"
 
     task_20 = [t for t in tasks if t.id == "2.0"][0]
-    assert task_20.agent == "full-stack-dev"
+    assert task_20.agent == "code-developer"
 
     task_40 = [t for t in tasks if t.id == "4.0"][0]
-    assert task_40.agent == "qa-test-architect"
+    assert task_40.agent == "quality-assurance"
 
     # Verify completed status
     completed_tasks = [t for t in tasks if t.completed]

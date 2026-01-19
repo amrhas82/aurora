@@ -632,9 +632,8 @@ class SOAROrchestrator:
             List of available AgentInfo objects
         """
         if self._use_discovery:
-            # Use discovery adapter to get agents from manifest
-            manifest = self._manifest_manager.get_or_refresh()
-            return manifest.agents if manifest else []
+            # Use discovery adapter to get agents from manifest (already handles conversion)
+            return discovery_adapter.list_agents()
         else:
             # Use agent registry
             if not self.agent_registry:
@@ -1427,17 +1426,17 @@ class SOAROrchestrator:
             "subgoals": [single_subgoal],
         }
 
-        # Assign to full-stack-dev as default
+        # Assign to code-developer as default
         subgoal_details = [
             {
                 "index": 1,
                 "description": query,
-                "agent": "@full-stack-dev",
+                "agent": "@code-developer",
                 "is_critical": True,
                 "depends_on": [],
                 "is_spawn": False,
                 "match_quality": "excellent",
-                "ideal_agent": "@full-stack-dev",
+                "ideal_agent": "@code-developer",
                 "ideal_agent_desc": "General development tasks",
             }
         ]
@@ -1450,8 +1449,18 @@ class SOAROrchestrator:
                 file_path = chunk.file_path
                 score = getattr(chunk, "activation", 0.5)
             elif isinstance(chunk, dict):
-                file_path = chunk.get("file_path", chunk.get("file", ""))
-                score = chunk.get("activation", chunk.get("relevance", 0.5))
+                # Check top-level first, then metadata dict (hybrid retriever returns file_path in metadata)
+                file_path = chunk.get("file_path") or chunk.get("file", "")
+                if not file_path:
+                    metadata = chunk.get("metadata", {})
+                    if isinstance(metadata, dict):
+                        file_path = metadata.get("file_path", "")
+                # Score: prefer hybrid_score, then activation_score, then activation
+                score = (
+                    chunk.get("hybrid_score")
+                    or chunk.get("activation_score")
+                    or chunk.get("activation", 0.5)
+                )
             else:
                 continue
             if file_path:
@@ -1462,10 +1471,10 @@ class SOAROrchestrator:
             "agent_assignments": [
                 {
                     "index": 0,
-                    "agent_id": "@full-stack-dev",
+                    "agent_id": "@code-developer",
                     "match_quality": "excellent",
                     "is_spawn": False,
-                    "ideal_agent": "@full-stack-dev",
+                    "ideal_agent": "@code-developer",
                     "ideal_agent_desc": "General development tasks",
                 }
             ],
@@ -1540,8 +1549,18 @@ class SOAROrchestrator:
                 file_path = chunk.file_path
                 score = getattr(chunk, "activation", 0.5)
             elif isinstance(chunk, dict):
-                file_path = chunk.get("file_path", chunk.get("file", ""))
-                score = chunk.get("activation", chunk.get("relevance", 0.5))
+                # Check top-level first, then metadata dict (hybrid retriever returns file_path in metadata)
+                file_path = chunk.get("file_path") or chunk.get("file", "")
+                if not file_path:
+                    metadata = chunk.get("metadata", {})
+                    if isinstance(metadata, dict):
+                        file_path = metadata.get("file_path", "")
+                # Score: prefer hybrid_score, then activation_score, then activation
+                score = (
+                    chunk.get("hybrid_score")
+                    or chunk.get("activation_score")
+                    or chunk.get("activation", 0.5)
+                )
             else:
                 continue
             if file_path:

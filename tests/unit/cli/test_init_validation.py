@@ -167,7 +167,6 @@ class TestConfigureMCPServersValidation:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock configurator
             mock_configurator = MagicMock()
             mock_configurator.tool_id = "claude"
@@ -204,7 +203,6 @@ class TestConfigureMCPServersValidation:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock configurator
             mock_configurator = MagicMock()
             mock_configurator.tool_id = "claude"
@@ -238,7 +236,6 @@ class TestConfigureMCPServersValidation:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock configurator
             mock_configurator = MagicMock()
             mock_configurator.tool_id = "claude"
@@ -274,7 +271,6 @@ class TestConfigureMCPServersValidation:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock multiple configurators
             tools = []
             for tool_id, tool_name in [("claude", "Claude Code"), ("cursor", "Cursor")]:
@@ -349,7 +345,6 @@ class TestSoftFailureBehavior:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             mock_configurator = MagicMock()
             mock_configurator.tool_id = "claude"
             mock_configurator.name = "Claude Code"
@@ -382,7 +377,6 @@ class TestSoftFailureBehavior:
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get") as mock_get,
             patch("aurora_cli.configurators.mcp.MCPConfigRegistry.get_all") as mock_get_all,
         ):
-
             # Mock two configurators: one valid, one with issues
             tools = []
 

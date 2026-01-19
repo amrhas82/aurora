@@ -43,7 +43,7 @@ class TestAgentRecommender:
             id="sg-1",
             title="Implement OAuth2 authentication",
             description="Add OAuth2 authentication flow with token management",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         # Act
@@ -63,13 +63,13 @@ class TestAgentRecommender:
         """Test agent recommendation with high capability match."""
         # Arrange
         mock_agent1 = Mock()
-        mock_agent1.id = "full-stack-dev"
+        mock_agent1.id = "code-developer"
         mock_agent1.goal = "Full-stack development specialist"
         mock_agent1.when_to_use = "implementing features, coding, development"
         mock_agent1.capabilities = ["python", "javascript", "testing"]
 
         mock_agent2 = Mock()
-        mock_agent2.id = "qa-test-architect"
+        mock_agent2.id = "quality-assurance"
         mock_agent2.goal = "Quality assurance and testing specialist"
         mock_agent2.when_to_use = "testing, quality assurance, test architecture"
         mock_agent2.capabilities = ["testing", "quality", "pytest"]
@@ -86,14 +86,14 @@ class TestAgentRecommender:
             id="sg-1",
             title="Test architecture review",
             description="Review testing architecture and quality assurance processes",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         # Act
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
 
         # Assert
-        assert agent_id == "@qa-test-architect"  # Better match for testing/quality
+        assert agent_id == "@quality-assurance"  # Better match for testing/quality
         assert score >= 0.5  # Above threshold
 
     @patch("aurora_cli.planning.agents.ManifestManager")
@@ -118,14 +118,14 @@ class TestAgentRecommender:
             id="sg-1",
             title="Implement OAuth2 authentication",
             description="Add OAuth2 authentication flow",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         # Act
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
 
         # Assert
-        assert agent_id == "@full-stack-dev"  # Fallback
+        assert agent_id == "@code-developer"  # Fallback
         assert score < 0.5  # Below threshold
 
     @patch("aurora_cli.planning.agents.ManifestManager")
@@ -133,7 +133,7 @@ class TestAgentRecommender:
         """Test gap detection when agent score is low."""
         # Arrange
         mock_agent = Mock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_agent.goal = "Full Stack Dev specialist"
         mock_agent.when_to_use = "general development"
         mock_agent.capabilities = ["python", "javascript"]
@@ -153,20 +153,20 @@ class TestAgentRecommender:
                 id="sg-1",
                 title="Security audit",
                 description="Perform comprehensive security audit",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             ),
             Subgoal(
                 id="sg-2",
                 title="Implement feature",
                 description="Implement new feature",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             ),
         ]
 
         # Mock recommendations (low score for security audit)
         recommendations = {
             "sg-1": ("@security-expert", 0.3),  # Gap
-            "sg-2": ("@full-stack-dev", 0.8),  # Good match
+            "sg-2": ("@code-developer", 0.8),  # Good match
         }
 
         # Act
@@ -176,7 +176,7 @@ class TestAgentRecommender:
         assert len(gaps) == 1
         assert gaps[0].subgoal_id == "sg-1"
         assert gaps[0].ideal_agent == "@security-expert"
-        assert gaps[0].assigned_agent == "@full-stack-dev"  # Fallback
+        assert gaps[0].assigned_agent == "@code-developer"  # Fallback
         assert gaps[0].ideal_agent_desc  # Has description
 
     @patch("aurora_cli.planning.agents.ManifestManager")
@@ -184,12 +184,12 @@ class TestAgentRecommender:
         """Test agent existence verification."""
         # Arrange
         mock_agent = Mock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
 
         mock_manifest = Mock()
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent.side_effect = lambda agent_id: (
-            mock_agent if agent_id == "full-stack-dev" else None
+            mock_agent if agent_id == "code-developer" else None
         )
 
         mock_manager = Mock()
@@ -199,7 +199,7 @@ class TestAgentRecommender:
         recommender = AgentRecommender()
 
         # Act
-        exists_dev = recommender.verify_agent_exists("@full-stack-dev")
+        exists_dev = recommender.verify_agent_exists("@code-developer")
         exists_missing = recommender.verify_agent_exists("@missing-agent")
 
         # Assert
@@ -235,7 +235,7 @@ class TestAgentRecommender:
         fallback = recommender.get_fallback_agent()
 
         # Assert
-        assert fallback == "@full-stack-dev"
+        assert fallback == "@code-developer"
 
     @patch("aurora_cli.planning.agents.ManifestManager")
     def test_recommend_for_subgoal_manifest_unavailable(self, mock_manager_class) -> None:
@@ -257,7 +257,7 @@ class TestAgentRecommender:
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
 
         # Assert - should return fallback gracefully
-        assert agent_id == "@full-stack-dev"
+        assert agent_id == "@code-developer"
         assert score == 0.0
 
     @patch("aurora_cli.planning.agents.ManifestManager")

@@ -60,22 +60,22 @@ class TestAgentMatchingQuality:
             (
                 "Write unit tests for authentication",
                 "Create comprehensive unit tests for the OAuth2 authentication module",
-                "@qa-test-architect",
+                "@quality-assurance",
             ),
             (
                 "Add integration tests",
                 "Write integration tests for the payment processing pipeline",
-                "@qa-test-architect",
+                "@quality-assurance",
             ),
             (
                 "Test coverage and quality",
                 "Generate test coverage report and review quality assurance testing",
-                "@qa-test-architect",
+                "@quality-assurance",
             ),
             (
                 "Quality assurance review",
                 "Review code quality and testing strategy for the API layer",
-                "@qa-test-architect",
+                "@quality-assurance",
             ),
         ],
     )
@@ -83,17 +83,17 @@ class TestAgentMatchingQuality:
     def test_testing_queries_match_qa_agent(
         self, mock_manager_class, title, description, expected_agent
     ):
-        """Test that testing-related queries match qa-test-architect."""
+        """Test that testing-related queries match quality-assurance."""
         manifest = self._create_mock_manifest_with_agents(
             [
                 {
-                    "id": "qa-test-architect",
+                    "id": "quality-assurance",
                     "goal": "Quality assurance and testing specialist",
                     "when_to_use": "testing, quality assurance, test architecture, unit tests, integration tests",
                     "capabilities": ["testing", "quality", "pytest", "coverage", "integration"],
                 },
                 {
-                    "id": "full-stack-dev",
+                    "id": "code-developer",
                     "goal": "Full-stack development",
                     "when_to_use": "coding, implementation, features",
                     "capabilities": ["python", "javascript", "api"],
@@ -110,7 +110,7 @@ class TestAgentMatchingQuality:
             id="sg-1",
             title=title,
             description=description,
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
@@ -128,22 +128,22 @@ class TestAgentMatchingQuality:
             (
                 "Implement backend API",
                 "Add backend API implementation with python development coding",
-                "@full-stack-dev",
+                "@code-developer",
             ),
             (
                 "Debug and fix application bugs",
                 "Debug application issues and fix bugs in the codebase using debugging tools",
-                "@full-stack-dev",
+                "@code-developer",
             ),
             (
                 "Refactor backend code",
                 "Refactor backend code implementation for better coding patterns",
-                "@full-stack-dev",
+                "@code-developer",
             ),
             (
                 "Develop frontend features",
                 "Implement frontend javascript development for new features",
-                "@full-stack-dev",
+                "@code-developer",
             ),
         ],
     )
@@ -151,11 +151,11 @@ class TestAgentMatchingQuality:
     def test_development_queries_match_dev_agent(
         self, mock_manager_class, title, description, expected_agent
     ):
-        """Test that development queries match full-stack-dev."""
+        """Test that development queries match code-developer."""
         manifest = self._create_mock_manifest_with_agents(
             [
                 {
-                    "id": "full-stack-dev",
+                    "id": "code-developer",
                     "goal": "Full-stack development specialist",
                     "when_to_use": "implementing features, coding, development, api, debugging, refactoring, backend, frontend",
                     "capabilities": [
@@ -169,7 +169,7 @@ class TestAgentMatchingQuality:
                     ],
                 },
                 {
-                    "id": "qa-test-architect",
+                    "id": "quality-assurance",
                     "goal": "Testing specialist",
                     "when_to_use": "testing, qa",
                     "capabilities": ["testing"],
@@ -186,7 +186,7 @@ class TestAgentMatchingQuality:
             id="sg-1",
             title=title,
             description=description,
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
         )
 
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
@@ -204,22 +204,22 @@ class TestAgentMatchingQuality:
             (
                 "Design API architecture",
                 "Design RESTful API architecture with proper resource modeling",
-                "@holistic-architect",
+                "@system-architect",
             ),
             (
                 "Plan microservices migration",
                 "Create architecture plan for migrating from monolith to microservices",
-                "@holistic-architect",
+                "@system-architect",
             ),
             (
                 "System design review",
                 "Review and document system architecture for the payment platform",
-                "@holistic-architect",
+                "@system-architect",
             ),
             (
                 "Architecture infrastructure planning",
                 "Design system architecture and infrastructure planning for cloud deployment",
-                "@holistic-architect",
+                "@system-architect",
             ),
         ],
     )
@@ -227,17 +227,17 @@ class TestAgentMatchingQuality:
     def test_architecture_queries_match_architect_agent(
         self, mock_manager_class, title, description, expected_agent
     ):
-        """Test that architecture queries match holistic-architect."""
+        """Test that architecture queries match system-architect."""
         manifest = self._create_mock_manifest_with_agents(
             [
                 {
-                    "id": "holistic-architect",
+                    "id": "system-architect",
                     "goal": "System design and architecture specialist",
                     "when_to_use": "architecture, system design, API design, infrastructure planning",
                     "capabilities": ["design", "architecture", "api", "microservices", "database"],
                 },
                 {
-                    "id": "full-stack-dev",
+                    "id": "code-developer",
                     "goal": "Development",
                     "when_to_use": "coding",
                     "capabilities": ["python"],
@@ -254,7 +254,7 @@ class TestAgentMatchingQuality:
             id="sg-1",
             title=title,
             description=description,
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
@@ -272,22 +272,22 @@ class TestAgentMatchingQuality:
             (
                 "Create PRD for feature",
                 "Write product requirements document for the dashboard feature",
-                "@product-manager",
+                "@feature-planner",
             ),
             (
                 "Feature prioritization",
                 "Analyze and prioritize features for the upcoming release",
-                "@product-manager",
+                "@feature-planner",
             ),
             (
                 "Market research analysis",
                 "Research competitive landscape and market trends for pricing",
-                "@business-analyst",
+                "@market-researcher",
             ),
             (
                 "Write user stories",
                 "Create detailed user stories with acceptance criteria",
-                "@product-owner",
+                "@backlog-manager",
             ),
         ],
     )
@@ -299,7 +299,7 @@ class TestAgentMatchingQuality:
         manifest = self._create_mock_manifest_with_agents(
             [
                 {
-                    "id": "product-manager",
+                    "id": "feature-planner",
                     "goal": "Product strategy and requirements",
                     "when_to_use": "PRD creation, product strategy, feature prioritization, roadmap planning",
                     "capabilities": [
@@ -311,19 +311,19 @@ class TestAgentMatchingQuality:
                     ],
                 },
                 {
-                    "id": "product-owner",
+                    "id": "backlog-manager",
                     "goal": "Backlog and story management",
                     "when_to_use": "user stories, backlog management, acceptance criteria, sprint planning",
                     "capabilities": ["stories", "backlog", "acceptance", "criteria", "sprint"],
                 },
                 {
-                    "id": "business-analyst",
+                    "id": "market-researcher",
                     "goal": "Business analysis and research",
                     "when_to_use": "market research, competitive analysis, business requirements",
                     "capabilities": ["research", "market", "analysis", "competitive", "business"],
                 },
                 {
-                    "id": "full-stack-dev",
+                    "id": "code-developer",
                     "goal": "Development",
                     "when_to_use": "coding",
                     "capabilities": ["python"],
@@ -340,7 +340,7 @@ class TestAgentMatchingQuality:
             id="sg-1",
             title=title,
             description=description,
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
@@ -357,17 +357,17 @@ class TestAgentMatchingQuality:
             (
                 "Design dashboard wireframes",
                 "Create wireframes and mockups for the analytics dashboard",
-                "@ux-expert",
+                "@ui-designer",
             ),
             (
                 "Improve user experience",
                 "Optimize user flow and interaction patterns for onboarding",
-                "@ux-expert",
+                "@ui-designer",
             ),
             (
                 "UI UX design review",
                 "Review UI components and UX design for user experience optimization",
-                "@ux-expert",
+                "@ui-designer",
             ),
         ],
     )
@@ -375,17 +375,17 @@ class TestAgentMatchingQuality:
     def test_ux_queries_match_ux_agent(
         self, mock_manager_class, title, description, expected_agent
     ):
-        """Test that UX queries match ux-expert."""
+        """Test that UX queries match ui-designer."""
         manifest = self._create_mock_manifest_with_agents(
             [
                 {
-                    "id": "ux-expert",
+                    "id": "ui-designer",
                     "goal": "UI/UX design specialist",
                     "when_to_use": "UI/UX design, wireframes, prototypes, user experience optimization",
                     "capabilities": ["design", "wireframes", "ux", "accessibility", "ui", "user"],
                 },
                 {
-                    "id": "full-stack-dev",
+                    "id": "code-developer",
                     "goal": "Development",
                     "when_to_use": "coding",
                     "capabilities": ["python"],
@@ -402,7 +402,7 @@ class TestAgentMatchingQuality:
             id="sg-1",
             title=title,
             description=description,
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
@@ -424,7 +424,7 @@ class TestAgentGapDetection:
             "id": "sg-1",
             "ideal_agent": "@creative-writer",
             "ideal_agent_desc": "Specialist in creative writing and storytelling",
-            "assigned_agent": "@business-analyst",
+            "assigned_agent": "@market-researcher",
             "description": "Write creative marketing copy",
         }
 
@@ -434,15 +434,15 @@ class TestAgentGapDetection:
         assert result.is_gap is True
         assert result.gap_info is not None
         assert result.gap_info.ideal_agent == "@creative-writer"
-        assert result.gap_info.assigned_agent == "@business-analyst"
+        assert result.gap_info.assigned_agent == "@market-researcher"
 
     def test_no_gap_when_ideal_equals_assigned(self):
         """Test that no gap when ideal_agent == assigned_agent."""
         subgoal = {
             "id": "sg-1",
-            "ideal_agent": "@full-stack-dev",
+            "ideal_agent": "@code-developer",
             "ideal_agent_desc": "Development specialist",
-            "assigned_agent": "@full-stack-dev",
+            "assigned_agent": "@code-developer",
             "description": "Implement feature",
         }
 
@@ -459,13 +459,13 @@ class TestAgentGapDetection:
                 "id": "sg-1",
                 "ideal_agent": "@creative-writer",
                 "ideal_agent_desc": "Creative writing",
-                "assigned_agent": "@business-analyst",
+                "assigned_agent": "@market-researcher",
             },
             {
                 "id": "sg-2",
-                "ideal_agent": "@full-stack-dev",
+                "ideal_agent": "@code-developer",
                 "ideal_agent_desc": "Development",
-                "assigned_agent": "@full-stack-dev",
+                "assigned_agent": "@code-developer",
             },
             {
                 "id": "sg-3",
@@ -490,7 +490,7 @@ class TestAgentGapDetection:
             "id": "sg-1",
             "ideal_agent": "@creative-writer",
             "ideal_agent_desc": "Creative writing specialist",
-            "assigned_agent": "@business-analyst",
+            "assigned_agent": "@market-researcher",
             "description": "Write compelling marketing narrative",
         }
 
@@ -506,9 +506,9 @@ class TestAgentGapDetection:
         """Test spawn prompt not generated when no gap."""
         subgoal = {
             "id": "sg-1",
-            "ideal_agent": "@full-stack-dev",
+            "ideal_agent": "@code-developer",
             "ideal_agent_desc": "Development",
-            "assigned_agent": "@full-stack-dev",
+            "assigned_agent": "@code-developer",
             "description": "Implement feature",
         }
 
@@ -639,15 +639,15 @@ class TestDecompositionAccuracy:
 
         # Planning step should use architect
         plan_step = next(sg for sg in subgoals if "plan" in sg.title.lower())
-        assert plan_step.assigned_agent == "@holistic-architect"
+        assert plan_step.assigned_agent == "@system-architect"
 
         # Implementation step should use dev
         impl_step = next(sg for sg in subgoals if "implement" in sg.title.lower())
-        assert impl_step.assigned_agent == "@full-stack-dev"
+        assert impl_step.assigned_agent == "@code-developer"
 
         # Testing step should use QA
         test_step = next(sg for sg in subgoals if "test" in sg.title.lower())
-        assert test_step.assigned_agent == "@qa-test-architect"
+        assert test_step.assigned_agent == "@quality-assurance"
 
     def test_subgoal_ids_follow_format(self):
         """Test that subgoal IDs follow sg-N format."""
@@ -672,16 +672,16 @@ class TestDecompositionAccuracy:
                 "description": "Analyze authentication requirements",
                 "ideal_agent": "security-expert",
                 "ideal_agent_desc": "Security specialist",
-                "assigned_agent": "full-stack-dev",
+                "assigned_agent": "code-developer",
                 "is_critical": True,
                 "depends_on": [],
             },
             {
                 "id": "sg-2",
                 "description": "Implement OAuth2 authentication flow",
-                "ideal_agent": "full-stack-dev",
+                "ideal_agent": "code-developer",
                 "ideal_agent_desc": "Development specialist",
-                "assigned_agent": "full-stack-dev",
+                "assigned_agent": "code-developer",
                 "is_critical": True,
                 "depends_on": [0],
             },
@@ -701,7 +701,7 @@ class TestDecompositionAccuracy:
         # Check first subgoal
         assert subgoals[0].id == "sg-1"
         assert subgoals[0].ideal_agent == "@security-expert"
-        assert subgoals[0].assigned_agent == "@full-stack-dev"
+        assert subgoals[0].assigned_agent == "@code-developer"
 
         # Check second subgoal has dependency
         assert "sg-1" in subgoals[1].dependencies
@@ -833,7 +833,7 @@ class TestScoreAgentForSubgoal:
         """Test high score when agent matches task well."""
         mock_manifest = Mock()
         mock_agent = Mock()
-        mock_agent.id = "qa-test-architect"
+        mock_agent.id = "quality-assurance"
         mock_agent.goal = "Quality assurance and testing"
         mock_agent.when_to_use = "testing, quality, unit tests, integration tests"
         mock_agent.capabilities = ["testing", "pytest", "quality"]
@@ -849,10 +849,10 @@ class TestScoreAgentForSubgoal:
             id="sg-1",
             title="Write unit tests",
             description="Create comprehensive unit tests for authentication",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
         )
 
-        score = recommender.score_agent_for_subgoal("@qa-test-architect", subgoal)
+        score = recommender.score_agent_for_subgoal("@quality-assurance", subgoal)
 
         # Should have good score with boost for semantic understanding
         assert score >= 0.5, f"Expected score >= 0.5, got {score}"
@@ -862,7 +862,7 @@ class TestScoreAgentForSubgoal:
         """Test low score when agent doesn't match task."""
         mock_manifest = Mock()
         mock_agent = Mock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_agent.goal = "Development"
         mock_agent.when_to_use = "coding, backend, frontend"
         mock_agent.capabilities = ["python", "javascript"]
@@ -878,10 +878,10 @@ class TestScoreAgentForSubgoal:
             id="sg-1",
             title="Design database schema",
             description="Create normalized database schema for users and orders",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
-        score = recommender.score_agent_for_subgoal("@full-stack-dev", subgoal)
+        score = recommender.score_agent_for_subgoal("@code-developer", subgoal)
 
         # Score should be moderate (some overlap but not specialized)
         assert 0.2 <= score <= 0.7, f"Expected moderate score, got {score}"
@@ -972,7 +972,7 @@ class TestMatchQualityTiers:
         from aurora_reasoning.prompts.decompose import DecomposePromptTemplate
 
         template = DecomposePromptTemplate()
-        system_prompt = template.build_system_prompt(available_agents=["@full-stack-dev"])
+        system_prompt = template.build_system_prompt(available_agents=["@code-developer"])
 
         # Should mention match_quality in schema
         assert "match_quality" in system_prompt
@@ -983,12 +983,12 @@ class TestMatchQualityTiers:
     def test_excellent_match_quality_criteria(self):
         """Test criteria for excellent match quality."""
         # Excellent: Agent's core specialty matches task exactly
-        # e.g., @qa-test-architect for "Write unit tests"
+        # e.g., @quality-assurance for "Write unit tests"
 
         from aurora_reasoning.prompts.decompose import DecomposePromptTemplate
 
         template = DecomposePromptTemplate()
-        system_prompt = template.build_system_prompt(available_agents=["@qa-test-architect"])
+        system_prompt = template.build_system_prompt(available_agents=["@quality-assurance"])
 
         # Excellent criteria should be documented
         assert "excellent" in system_prompt.lower()
@@ -1021,14 +1021,14 @@ class TestAgentIdNormalization:
         """Test that @ prefix is added when missing."""
         matcher = AgentMatcher()
 
-        assert matcher._normalize_agent_id("full-stack-dev") == "@full-stack-dev"
-        assert matcher._normalize_agent_id("qa-test-architect") == "@qa-test-architect"
+        assert matcher._normalize_agent_id("code-developer") == "@code-developer"
+        assert matcher._normalize_agent_id("quality-assurance") == "@quality-assurance"
 
     def test_normalize_preserves_prefix(self):
         """Test that existing @ prefix is preserved."""
         matcher = AgentMatcher()
 
-        assert matcher._normalize_agent_id("@full-stack-dev") == "@full-stack-dev"
+        assert matcher._normalize_agent_id("@code-developer") == "@code-developer"
         assert matcher._normalize_agent_id("@master") == "@master"
 
     def test_normalize_empty_returns_unknown(self):

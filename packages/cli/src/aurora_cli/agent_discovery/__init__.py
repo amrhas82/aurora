@@ -28,7 +28,7 @@ Example:
     >>> print(f"Found {manifest.stats.total} agents")
     >>>
     >>> # Search for agents
-    >>> agent = manifest.get_agent("qa-test-architect")
+    >>> agent = manifest.get_agent("quality-assurance")
     >>> if agent:
     ...     print(f"Role: {agent.role}")
     ...     print(f"Goal: {agent.goal}")

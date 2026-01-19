@@ -126,7 +126,7 @@ class Subgoal(BaseModel):
     assigned_agent: str = Field(
         ...,
         description="Best AVAILABLE agent ID in '@agent-id' format",
-        examples=["@full-stack-dev", "@qa-test-architect"],
+        examples=["@code-developer", "@quality-assurance"],
     )
     match_quality: MatchQuality = Field(
         default=MatchQuality.EXCELLENT,
@@ -170,7 +170,7 @@ class Subgoal(BaseModel):
     def coerce_agent_format(cls, v: str) -> str:
         """Coerce agent ID to '@agent-id' format.
 
-        Accepts SOAR's format (e.g., "full-stack-dev") and normalizes to '@full-stack-dev'.
+        Accepts SOAR's format (e.g., "code-developer") and normalizes to '@code-developer'.
 
         Args:
             v: The agent ID to coerce
@@ -589,7 +589,7 @@ class AgentGap(BaseModel):
     assigned_agent: str = Field(
         default="",
         description="Best AVAILABLE agent from manifest",
-        examples=["@business-analyst", "@master"],
+        examples=["@market-researcher", "@master"],
     )
 
     @field_validator("subgoal_id")
@@ -777,7 +777,7 @@ class DecompositionSummary(BaseModel):
                     insufficient_count += 1
                     indicator = "[red][-][/red]"
                     agent_display = (
-                        f"[red]{sg.assigned_agent}[/red] " f"[dim](need: {sg.ideal_agent})[/dim]"
+                        f"[red]{sg.assigned_agent}[/red] [dim](need: {sg.ideal_agent})[/dim]"
                     )
 
                 content.append(f"  {indicator} {sg.title}: {agent_display}")
@@ -841,8 +841,7 @@ class DecompositionSummary(BaseModel):
             )
             source_color = "green" if source_display == "soar" else "yellow"
             summary.append(
-                f"[bold cyan]Source:[/bold cyan] "
-                f"[{source_color}]{source_display}[/{source_color}]"
+                f"[bold cyan]Source:[/bold cyan] [{source_color}]{source_display}[/{source_color}]"
             )
 
             # Warnings
@@ -897,8 +896,7 @@ class DecompositionSummary(BaseModel):
 
                 if is_gap:
                     print(
-                        f"  {indicator} {sg.title}: {sg.assigned_agent} "
-                        f"(ideal: {sg.ideal_agent})"
+                        f"  {indicator} {sg.title}: {sg.assigned_agent} (ideal: {sg.ideal_agent})"
                     )
                 else:
                     print(f"  {indicator} {sg.title}: {sg.assigned_agent}")
@@ -1023,7 +1021,7 @@ class SubgoalData(BaseModel):
         default=None,
         description="Best AVAILABLE agent ID with @ prefix (assigned_agent)",
         pattern=r"^@[a-z0-9-]+$",
-        examples=["@full-stack-dev", "@qa-test-architect"],
+        examples=["@code-developer", "@quality-assurance"],
     )
     match_quality: str = Field(
         default="excellent",

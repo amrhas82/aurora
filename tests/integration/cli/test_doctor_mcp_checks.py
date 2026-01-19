@@ -320,7 +320,6 @@ class TestDoctorMCPChecksIntegration:
                     patch("aurora_cli.health_checks.ConfigurationChecks.run_checks") as mock_config,
                     patch("aurora_cli.health_checks.ToolIntegrationChecks.run_checks") as mock_tool,
                 ):
-
                     mock_core.return_value = [("pass", "Core passed", {})]
                     mock_code.return_value = [("pass", "Code passed", {})]
                     mock_search.return_value = [("pass", "Search passed", {})]

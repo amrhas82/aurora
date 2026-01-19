@@ -9,7 +9,7 @@
 **Goal**: Clean removal of duplicate command
 
 - [x] 1. Remove aur:proposal from ALL_COMMANDS and templates
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Edit `packages/cli/src/aurora_cli/configurators/slash/base.py`:
     - Remove "proposal" from `ALL_COMMANDS`
   - Edit `packages/cli/src/aurora_cli/configurators/slash/claude.py`:
@@ -21,7 +21,7 @@
   - **Validation**: `grep -r "proposal" packages/cli/src/aurora_cli/configurators/slash/` returns no matches
 
 - [x] 2. Remove aur:proposal documentation references
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Search: `grep -r "aur:proposal" docs/ .aurora/`
   - Remove or redirect to `aur:plan`
   - Delete `.claude/commands/aur/proposal.md` if exists
@@ -34,7 +34,7 @@
 **Goal**: Match OpenSpec section structure exactly
 
 - [x] 3. Update aur:plan plan.md template sections
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Edit `packages/cli/src/aurora_cli/templates/slash_commands.py`:
   - Match OpenSpec sections exactly:
     ```markdown
@@ -55,7 +55,7 @@
   - **Validation**: Diff against openspec:proposal output
 
 - [x] 4. Add goals.json parsing and Goals Context table
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Update PLAN_TEMPLATE in `slash_commands.py`:
     - Detect if input ends with `.json`
     - Parse goals.json and extract:
@@ -67,7 +67,7 @@
   - **Validation**: `aur:plan goals.json` shows populated table
 
 - [x] 5. Add @agent field to tasks.md template
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Update tasks.md generation in plan template:
     - Add `<!-- @agent: @name -->` after each parent task
     - Agent assignment priority:
@@ -83,7 +83,7 @@
 **Goal**: Generate component specs for multi-capability plans
 
 - [x] 6. Detect multi-capability plans
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Analyze plan for >2 distinct components
   - Detection signals:
     - Multiple implementation phases with different focus
@@ -92,7 +92,7 @@
   - **Validation**: Correctly identifies capabilities
 
 - [x] 7. Generate specs/ subdirectory
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Create `specs/{capability}/spec.md` per component
   - Match OpenSpec format exactly:
     ```markdown
@@ -116,7 +116,7 @@
 **Goal**: Exact OpenSpec templates, Aurora branded
 
 - [x] 8. Rebrand AGENTS.md from OpenSpec template
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Copy `openspec/AGENTS.md` structure exactly
   - Replace:
     - "OpenSpec" -> "Aurora"
@@ -129,7 +129,7 @@
   - **Validation**: `.aurora/AGENTS.md` has same sections as `openspec/AGENTS.md`
 
 - [x] 9. Rebrand project.md from OpenSpec template
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Copy `openspec/project.md` structure exactly (if it exists)
   - Same replacements as AGENTS.md
   - **Validation**: `.aurora/project.md` matches OpenSpec structure
@@ -141,7 +141,7 @@
 **Goal**: Show meaningful descriptions instead of `<!-- AURORA:START -->`
 
 - [x] 10. Update skill registration to use proper descriptions
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Find where skill descriptions are registered for Claude Code skill listing
   - Current: Shows `<!-- AURORA:START --> (project)`
   - Fix: Added description line before AURORA markers in slash command files
@@ -158,7 +158,7 @@
   - **Validation**: `/aur:` shows proper descriptions
 
 - [x] 11. Update aur:implement to read specs/
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Read plan.md + specs/ + tasks.md from plan directory
   - Execute tasks sequentially
   - Mark tasks complete (`- [x]`) in tasks.md
@@ -167,7 +167,7 @@
   - **Validation**: `aur:implement` executes with checkpoint/resume
 
 - [x] 12. Update documentation
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Update .aurora/AGENTS.md with new structure
   - Document Goals Context table
   - Document @agent field in tasks.md

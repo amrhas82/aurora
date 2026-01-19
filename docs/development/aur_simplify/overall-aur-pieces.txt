@@ -133,7 +133,7 @@ Rearranged Architecture (Post-Zeroshot Learning)
     <!-- agent: architect -->
 
   - [ ] 2. Implement API
-    <!-- agent: full-stack-dev -->
+    <!-- agent: code-developer -->
     <!-- depends_on: 1 -->
 
   But that's a future enhancement. Start simple: parallel = independent tasks.
@@ -313,19 +313,19 @@ Rearranged Architecture (Post-Zeroshot Learning)
   discover agents        →      tasks.md (with agent per task)
   match agent to task    →      /openspec:apply (agent-aware)
                                 │
-                                ├─ task 1 → spawn full-stack-dev
-                                ├─ task 2 → spawn qa-test-architect
-                                └─ task 3 → spawn full-stack-dev
+                                ├─ task 1 → spawn code-developer
+                                ├─ task 2 → spawn quality-assurance
+                                └─ task 3 → spawn code-developer
 
   What Needs to Change
 
   1. tasks.md format (add agent field):
   ## Tasks
   - [ ] 1. Implement user authentication endpoint
-    <!-- agent: full-stack-dev -->
+    <!-- agent: code-developer -->
 
   - [ ] 2. Write integration tests for auth
-    <!-- agent: qa-test-architect -->
+    <!-- agent: quality-assurance -->
 
   - [ ] 3. Update API documentation
     <!-- agent: self -->
@@ -348,7 +348,7 @@ Rearranged Architecture (Post-Zeroshot Learning)
   OpenSpec's implement doesn't know or care about agents - it just follows instructions. The instructions currently say "do tasks sequentially." We change them to say "spawn appropriate agent per task."
 
   Claude Code's Task tool already supports subagent_type parameter. The mapping is direct:
-  - <!-- agent: full-stack-dev --> → Task(subagent_type="full-stack-dev", ...)
+  - <!-- agent: code-developer --> → Task(subagent_type="code-developer", ...)
 
   What Aurora Does Upfront
 

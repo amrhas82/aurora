@@ -10,7 +10,7 @@
 
 **Goal**: Build dependency graph from indexed metadata
 
-**Agent**: @holistic-architect (design), @full-stack-dev (implementation)
+**Agent**: @system-architect (design), @code-developer (implementation)
 
 - [ ] 1. Extract import metadata from memory chunks
   - Modify `packages/core/src/aurora_core/store/sqlite.py`
@@ -37,7 +37,7 @@
 
 **Goal**: Classify subgoals by change type for filtering
 
-**Agent**: @full-stack-dev
+**Agent**: @code-developer
 
 - [ ] 4. Define ChangeType enum and patterns
   - Create `packages/cli/src/aurora_cli/planning/change_types.py`
@@ -57,7 +57,7 @@
 
 **Goal**: Combine scoring factors with configurable weights
 
-**Agent**: @full-stack-dev
+**Agent**: @code-developer
 
 - [ ] 6. Implement MultiFactorScorer
   - Create `packages/cli/src/aurora_cli/planning/scoring.py`
@@ -84,7 +84,7 @@
 
 **Goal**: Integrate into FilePathResolver and validate improvements
 
-**Agent**: @full-stack-dev (integration), @qa-test-architect (testing)
+**Agent**: @code-developer (integration), @quality-assurance (testing)
 
 - [ ] 9. Enhance FilePathResolver with new components
   - Modify `packages/cli/src/aurora_cli/planning/memory.py`

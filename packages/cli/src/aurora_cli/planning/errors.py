@@ -41,7 +41,7 @@ VALIDATION_MESSAGES: dict[str, str] = {
     "SUBGOAL_CIRCULAR_DEPENDENCY": ("Circular dependency detected: {cycle}"),
     "TOO_MANY_SUBGOALS": ("Plan has {count} subgoals (max 10). Consider splitting."),
     # Agent errors
-    "AGENT_FORMAT_INVALID": ("Agent must start with '@' (e.g., '@full-stack-dev'). Got: {value}"),
+    "AGENT_FORMAT_INVALID": ("Agent must start with '@' (e.g., '@code-developer'). Got: {value}"),
     "AGENT_NOT_FOUND": (
         "Agent '{agent}' not found. Use 'aur agents list' to see available agents."
     ),

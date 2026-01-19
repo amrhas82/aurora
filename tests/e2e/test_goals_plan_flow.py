@@ -47,11 +47,11 @@ def valid_subgoal():
         id="sg-1",
         title="Implement test feature",
         description="Add test feature implementation",
-        agent="@full-stack-dev",
+        agent="@code-developer",
         confidence=0.9,
         dependencies=[],
         agent_exists=True,
-        recommended_agent="@full-stack-dev",
+        recommended_agent="@code-developer",
     )
 
 
@@ -84,21 +84,21 @@ class TestGoalsPlanIntegration:
                         id="sg-1",
                         title="Implement OAuth provider integration",
                         description="Add Google/GitHub OAuth providers",
-                        agent="@full-stack-dev",
+                        agent="@code-developer",
                         confidence=0.85,
                         dependencies=[],
                         agent_exists=True,
-                        recommended_agent="@full-stack-dev",
+                        recommended_agent="@code-developer",
                     ),
                     Mock(
                         id="sg-2",
                         title="Write integration tests",
                         description="Test OAuth flow",
-                        agent="@qa-test-architect",
+                        agent="@quality-assurance",
                         confidence=0.92,
                         dependencies=["sg-1"],
                         agent_exists=True,
-                        recommended_agent="@qa-test-architect",
+                        recommended_agent="@quality-assurance",
                     ),
                 ],
                 memory_context=[
@@ -221,31 +221,31 @@ class TestGoalsPlanIntegration:
                         id="sg-1",
                         title="Backend implementation task",
                         description="API implementation with proper error handling",
-                        agent="@full-stack-dev",
+                        agent="@code-developer",
                         confidence=0.90,
                         dependencies=[],
                         agent_exists=True,
-                        recommended_agent="@full-stack-dev",
+                        recommended_agent="@code-developer",
                     ),
                     Mock(
                         id="sg-2",
                         title="Frontend implementation task",
                         description="UI implementation with responsive design",
-                        agent="@ux-expert",
+                        agent="@ui-designer",
                         confidence=0.88,
                         dependencies=["sg-1"],
                         agent_exists=True,
-                        recommended_agent="@ux-expert",
+                        recommended_agent="@ui-designer",
                     ),
                     Mock(
                         id="sg-3",
                         title="Testing implementation task",
                         description="E2E tests implementation with full coverage",
-                        agent="@qa-test-architect",
+                        agent="@quality-assurance",
                         confidence=0.95,
                         dependencies=["sg-1", "sg-2"],
                         agent_exists=True,
-                        recommended_agent="@qa-test-architect",
+                        recommended_agent="@quality-assurance",
                     ),
                 ],
                 memory_context=[],
@@ -269,9 +269,9 @@ class TestGoalsPlanIntegration:
         goals_data = json.loads(goals_file.read_text())
 
         agents_found = [sg["agent"] for sg in goals_data["subgoals"]]
-        assert "@full-stack-dev" in agents_found
-        assert "@ux-expert" in agents_found
-        assert "@qa-test-architect" in agents_found
+        assert "@code-developer" in agents_found
+        assert "@ui-designer" in agents_found
+        assert "@quality-assurance" in agents_found
 
         # Verify /plan skill can use this to generate:
         # <!-- agent: @agent-id --> comments in tasks.md
@@ -287,7 +287,7 @@ class TestGoalsPlanIntegration:
         # After aur goals:
         goals_file = plan_dir / "goals.json"
         goals_file.write_text(
-            '{"id": "0001-example", "title": "Example goal for documentation", "status": "ready_for_planning", "subgoals": [{"id": "sg-1", "title": "Test", "description": "Test", "agent": "@full-stack-dev", "confidence": 0.9, "dependencies": []}], "memory_context": [], "gaps": []}'
+            '{"id": "0001-example", "title": "Example goal for documentation", "status": "ready_for_planning", "subgoals": [{"id": "sg-1", "title": "Test", "description": "Test", "agent": "@code-developer", "confidence": 0.9, "dependencies": []}], "memory_context": [], "gaps": []}'
         )
 
         assert goals_file.exists()

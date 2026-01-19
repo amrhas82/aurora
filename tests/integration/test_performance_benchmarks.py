@@ -163,7 +163,7 @@ class TestQueryLatency:
         # 20 queries should complete in <30s (avg 1.5s per query)
         assert total_elapsed < 30.0, (
             f"20 sequential queries took {total_elapsed:.2f}s (target: <30s). "
-            f"Average per query: {total_elapsed/20:.2f}s"
+            f"Average per query: {total_elapsed / 20:.2f}s"
         )
 
 
@@ -227,9 +227,9 @@ class TestMemoryUsage:
         stats = memory_manager.index_path(large_codebase)
 
         # Verify we have ~10K chunks
-        assert stats.chunks_created >= 8000, (
-            f"Expected ~10K chunks, got {stats.chunks_created}. " f"Test setup may be incorrect."
-        )
+        assert (
+            stats.chunks_created >= 8000
+        ), f"Expected ~10K chunks, got {stats.chunks_created}. Test setup may be incorrect."
 
         # Run several searches to exercise retrieval
         queries = [
@@ -396,6 +396,6 @@ class Class{i}:
         print(f"Chunks created: {stats.chunks_created}")
         print(f"Duration: {elapsed:.2f}s")
         print(
-            f"Throughput: {stats.files_indexed/elapsed:.2f} files/sec, "
-            f"{stats.chunks_created/elapsed:.2f} chunks/sec"
+            f"Throughput: {stats.files_indexed / elapsed:.2f} files/sec, "
+            f"{stats.chunks_created / elapsed:.2f} chunks/sec"
         )

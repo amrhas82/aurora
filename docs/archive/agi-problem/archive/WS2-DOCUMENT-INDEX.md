@@ -378,7 +378,7 @@
 ### Option 1: Research Agent Exploration
 Dispatch AI agents to read and synthesize these documents:
 ```
-@business-analyst:
+@market-researcher:
   Read all WS2 documents
   Identify key research questions
   Suggest experimentation approaches

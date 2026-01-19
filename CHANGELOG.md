@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-01-19
+
+### Fixed
+
+**Code Quality:**
+- Fixed lint errors in multiple files
+  - Removed unused variables in `packages/cli/src/aurora_cli/commands/memory.py`
+  - Removed unused variables in `packages/cli/src/aurora_cli/concurrent_executor.py`
+  - Removed unused variables in `packages/cli/src/aurora_cli/file_change_aggregator.py`
+  - Removed unused variables in `packages/spawner/src/aurora_spawner/spawner.py`
+  - Fixed import ordering across all packages (243 auto-fixes)
+
+### Changed
+
+**Project Organization:**
+- Moved development documentation from root to `docs/development/`
+  - `ADHOC_SPAWNING_VALIDATION.md`
+  - `EARLY_DETECTION_ENHANCEMENT_ANALYSIS.md`
+  - `GOALS_SOAR_REFACTOR_PLAN.md`
+  - `PARALLEL_SPAWN_FAILURE_ANALYSIS.md`
+  - `STARTUP_OPTIMIZATIONS.md`
+- Moved utility scripts from root to `tools/`
+  - `benchmark_startup.py`
+  - `profile_indexing.py`
+  - `profile_indexing_detailed.py`
+- Removed duplicate `CLAUDE (copy).md` file
+- Root directory now contains only essential files: README, CHANGELOG, CLAUDE.md, OPENCODE.md, conftest.py
+
+---
+
 ## [0.9.3] - 2026-01-19
 
 ### Fixed

@@ -24,22 +24,22 @@ class TestManifestManagerAdapter:
         """Create sample AgentInfo objects from discovery system."""
         return [
             DiscoveryAgentInfo(
-                id="qa-test-architect",
+                id="quality-assurance",
                 role="Test Architect & Quality Advisor",
                 goal="Ensure comprehensive test coverage and quality standards",
                 category=AgentCategory.QA,
                 skills=["test strategy design", "coverage analysis", "quality gate decisions"],
                 when_to_use="Use for test architecture review and quality decisions",
-                source_file="/home/user/.claude/agents/qa-test-architect.md",
+                source_file="/home/user/.claude/agents/quality-assurance.md",
             ),
             DiscoveryAgentInfo(
-                id="full-stack-dev",
+                id="code-developer",
                 role="Full Stack Developer",
                 goal="Implement features and fix bugs across the stack",
                 category=AgentCategory.ENG,
                 skills=["code implementation", "debugging", "refactoring"],
                 when_to_use="Use for code implementation and debugging",
-                source_file="/home/user/.claude/agents/full-stack-dev.md",
+                source_file="/home/user/.claude/agents/code-developer.md",
             ),
             DiscoveryAgentInfo(
                 id="orchestrator",
@@ -124,12 +124,12 @@ class TestManifestManagerAdapter:
             MockManager.return_value = mock_instance
 
             # Test getting agent by ID
-            agent = get_agent("qa-test-architect")
+            agent = get_agent("quality-assurance")
 
             # Verify we got the right agent
             assert agent is not None
             assert isinstance(agent, RegistryAgentInfo)
-            assert agent.id == "qa-test-architect"
+            assert agent.id == "quality-assurance"
             assert agent.name == "Test Architect & Quality Advisor"
             assert agent.agent_type == "local"  # All agents from discovery are 'local' type
 
@@ -168,8 +168,8 @@ class TestManifestManagerAdapter:
             assert len(agents) == 3
             assert all(isinstance(agent, RegistryAgentInfo) for agent in agents)
             assert {agent.id for agent in agents} == {
-                "qa-test-architect",
-                "full-stack-dev",
+                "quality-assurance",
+                "code-developer",
                 "orchestrator",
             }
 
@@ -266,7 +266,7 @@ class TestManifestManagerAdapter:
             MockManager.return_value = mock_instance
 
             # Test with custom path
-            agent = get_agent("qa-test-architect", manifest_path=custom_path)
+            agent = get_agent("quality-assurance", manifest_path=custom_path)
 
             # Verify the custom path was used
             assert agent is not None

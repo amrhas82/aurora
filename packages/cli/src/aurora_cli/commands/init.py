@@ -96,7 +96,7 @@ def validate_tool_ids(tool_ids: list[str]) -> None:
     if invalid_ids:
         available = ", ".join(sorted(valid_ids))
         invalid_str = ", ".join(invalid_ids)
-        raise ValueError(f"Invalid tool ID(s): {invalid_str}. " f"Available tools: {available}")
+        raise ValueError(f"Invalid tool ID(s): {invalid_str}. Available tools: {available}")
 
 
 def run_step_2_memory_indexing(project_path: Path) -> bool:

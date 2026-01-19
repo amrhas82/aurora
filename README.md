@@ -1,74 +1,162 @@
-# Aurora
+<div align="center">
 
-**Memory-Aware LLM Planning Framework**
+<pre>
+   █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗
+  ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
+  ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║
+  ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
+  ██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║
+  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
+ ┳┳┓┏┓┳┳┓┏┓┳┓┓┏  ┏┓┓ ┏┏┓┳┓┏┓  ┏┓┳┓┏┓┳┳┓┏┓┓ ┏┏┓┳┓┓┏
+ ┃┃┃┣ ┃┃┃┃┃┣┫┗┫━━┣┫┃┃┃┣┫┣┫┣ ━━┣ ┣┫┣┫┃┃┃┣ ┃┃┃┃┃┣┫┃┫
+ ┛ ┗┗┛┛ ┗┗┛┛┗┗┛  ┛┗┗┻┛┛┗┛┗┗┛  ┻ ┛┗┛┗┛ ┗┗┛┗┻┛┗┛┛┗┛┗
+Planning & Multi-Agent Orchestration
+</pre>
 
-Lightweight, LLM-agnostic, no-API framework that uses your existing CLI tools and agent configurations.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://img.shields.io/pypi/v/aurora-actr.svg)](https://pypi.org/project/aurora-actr/)
+
+</div>
+
+---
+
+## Summary
+
+### Aurora - Memory-aware Planning & Multi-Agent Orchestration Framework
+
+- **LLM-agnostic** - No API keys, works with 20+ CLI tools (Claude Code, Cursor, Aider, etc.)
+- **Smart Memory** - ACT-R activation decay, BM25, tree-sitter/cAST, git signals
+- **Memory-Aware Planning** - Decompose goals, assign agents, detect capability gaps
+- **Memory-Aware Research** - Multi-agent orchestration with recovery and state
+- **Task Execution** - Stop gates for feature creep and dangerous commands
+- **Headless Mode** - Isolated branch execution with max retries
+- **Session Checkpoints** - Save and resume session context
 
 ```bash
+# PyPI
 pip install aurora-actr
+
+# From source
+git clone https://github.com/amrhas82/aurora.git
+cd aurora && ./install.sh
 ```
 
 ---
 
-## What Aurora Does
+## Core Features
 
-Aurora answers planning questions without implementing anything:
+### Smart Memory (Slash Commands)
 
-**"What agents do I need?"** - `aur goals` decomposes any goal into subgoals, assigns agents you have, and identifies capability gaps.
+`aur:search` - Memory with activation decay from ACT-R. Indexes your code using:
 
-**"How does X work?"** - `aur soar` researches questions by spawning ad-hoc agents with lightweight recovery, synthesizing answers from parallel research.
+- **BM25** - Keyword search
+- **Git signals** - Recent changes rank higher
+- **Tree-sitter/cAST** - Code stored as class/method (Python, TypeScript, Java)
+- **Markdown indexing** - Search docs, save tokens
 
-**"Execute my plan"** - `aur spawn` runs tasks with gate checks for scope creep and safeguards (budget limits, dangerous command detection).
+```bash
+# Terminal
+aur mem index .
+aur mem search "authentication"
 
-**"Run unattended agent"** - `aur headless` executes agent tasks unattended (Ralph Wiggum mode with max retries).
-
-**"Search my code"** - `aur mem search` searches your indexed codebase using BM25, ACT-R activation, and git signals.
-
----
-
-## Memory System
-
-Aurora's memory combines multiple signals for intelligent retrieval:
-
-- **BM25 keyword search** - Fast, reliable, local
-- **ACT-R activation decay** - Frequently accessed code stays "hot"
-- **Git commit history** - Recent changes rank higher
-- **Tree-sitter AST** - Understands code structure (functions, classes)
-- **SOAR reasoning traces** - Stores past questions and answers
-
-No cloud APIs required for core functionality.
+# Slash command
+/aur:search "authentication"
+/aur:get 1  # Read chunk
+```
 
 ---
 
-## Key Commands
+### Memory-Aware Planning (Terminal)
 
-| Command | What It Does |
-|---------|--------------|
-| `aur goals "Add auth"` | Decompose goal, assign agents, detect gaps |
-| `aur soar "How does X work?"` | Research with parallel ad-hoc agents |
-| `aur spawn tasks.md` | Execute tasks with safeguards |
-| `aur headless tasks.md` | Run unattended (Ralph Wiggum mode with max retries) |
-| `aur mem search "query"` | Search indexed memory |
-| `aur mem index .` | Index codebase for memory search |
+`aur goals` - Decomposes any goal into subgoals:
 
-**Slash Commands (Claude Code):**
+1. Looks up existing memory for matches
+2. Breaks down into subgoals
+3. Assigns your existing subagents to each subgoal
+4. Detects capability gaps - tells you what agents to create
 
-| Command | What It Does |
-|---------|--------------|
-| `/aur:plan goals.json` | Generate PRD + tasks from goals |
-| `/aur:implement` | Execute tasks with checkpoints |
-| `/aur:archive plan-id` | Archive completed plan |
-| `/aur:checkpoint` | Save session context for recovery |
-| `/aur:search "query"` | Search memory, use `/aur:get` to read chunks |
+Works across any domain (code, writing, research).
+
+```bash
+$ aur goals "Add payment processing"
+
+Memory matches: 3 files found
+Subgoals: 4
+  sg-1: Set up Stripe SDK (@code-developer)
+  sg-2: Create payment endpoints (@code-developer)
+  sg-3: Implement checkout UI (@ui-designer)
+  sg-4: Configure PCI compliance (@security-engineer -> NOT FOUND)
+
+Gaps detected:
+  - Missing @security-engineer
+```
 
 ---
 
-## Workflows
+### Memory-Aware Research (Terminal)
 
-### Optimum Plan (Memory-Informed)
+`aur soar` - Research questions using your codebase:
+
+1. Looks up existing memory for matches
+2. Decomposes question into sub-questions
+3. Utilizes existing subagents
+4. Spawns agents on the fly
+5. Simple multi-orchestration with agent recovery (stateful)
+
+```bash
+aur soar "How does the payment flow work?"
+```
+
+---
+
+### Task Execution (Terminal)
+
+`aur spawn` - Takes predefined task list and executes with:
+
+- Stop gates for feature creep
+- Dangerous command detection (rm -rf, etc.)
+- Budget limits
+
+```bash
+aur spawn tasks.md --verbose
+```
+
+---
+
+### Headless Mode (Terminal)
+
+`aur headless` - Ralph Wiggum mode:
+
+- Runs in isolated branch
+- Max retries on failure
+- Unattended execution
+
+```bash
+aur headless prompt.md
+```
+
+---
+
+### Checkpoints (Slash Command)
+
+`aur:checkpoint` - Create digest of current session to resume later.
+
+```bash
+/aur:checkpoint
+
+# Output: .aurora/checkpoints/session-2026-01-15.md
+# Contains: goals, progress, decisions, next steps
+```
+
+---
+
+## Planning Workflow
+
+OpenSpec-based flow from goal to implementation:
 
 ```
-Terminal                    Claude Code              Claude Code
+Terminal                    Slash Command            Slash Command
 ┌─────────────────┐        ┌─────────────────┐      ┌─────────────────┐
 │   aur goals     │   ->   │  /aur:plan      │  ->  │  /aur:implement │
 │   "Add feature" │        │  goals.json     │      │                 │
@@ -77,67 +165,9 @@ Terminal                    Claude Code              Claude Code
         v                          v                        v
    goals.json               PRD + tasks.md            Implemented
    - subgoals               - specs/                  - checkpoints
-   - agent assignments      - agent hints             - validation
-   - capability gaps        - file hints
+   - agent assignments      - file hints              - validation
+   - capability gaps
 ```
-
-**When to use:** Large features, complex refactors, anything needing upfront analysis.
-
-### Regular Plan (Direct)
-
-```
-Claude Code                          Claude Code
-┌─────────────────────────┐         ┌─────────────────┐
-│  /aur:plan              │    ->   │  /aur:implement │
-│  "Add logout button"    │         │                 │
-└─────────────────────────┘         └─────────────────┘
-```
-
-**When to use:** Quick features, simple changes, already know what you want.
-
-### Research Flow
-
-```
-Terminal
-┌─────────────────────────────────────────┐
-│  aur soar "How does payment flow work?" │
-└─────────────────────────────────────────┘
-                    │
-                    v
-            ┌───────────────┐
-            │ Spawns ad-hoc │
-            │ agents for    │
-            │ parallel      │
-            │ research      │
-            └───────────────┘
-                    │
-                    v
-        Synthesized answer with citations
-```
-
-**When to use:** Understanding codebases, architectural questions, research.
-
-### Execution Flow
-
-```
-Terminal
-┌───────────────────────────────────────────────────┐
-│  aur spawn tasks.md --verbose                     │
-└───────────────────────────────────────────────────┘
-                        │
-                        v
-        ┌───────────────────────────────┐
-        │ Gate checks:                  │
-        │ - Scope creep detection       │
-        │ - Budget limits               │
-        │ - Dangerous command blocking  │
-        └───────────────────────────────┘
-                        │
-                        v
-            Parallel task execution
-```
-
-**When to use:** Running generated task lists, batch operations.
 
 ---
 
@@ -151,154 +181,55 @@ pip install aurora-actr
 cd your-project/
 aur init
 
-# Index codebase
+# Index codebase for memory
 aur mem index .
 
-# Optimum workflow
+# Plan with memory context
 aur goals "Add user authentication"
-# Output: .aurora/plans/0001-add-user-auth/goals.json
 
-# In Claude Code:
+# In your CLI tool (Claude Code, Cursor, etc.):
 /aur:plan goals.json
 /aur:implement
-
-# Or research first
-aur soar "How is auth currently handled?"
 ```
 
 ---
 
-## Agent Gap Detection
+## Commands Reference
 
-Aurora tells you what specialists you need:
-
-```bash
-$ aur goals "Add payment processing"
-
-Subgoals: 5
-  sg-1: Set up Stripe SDK (@full-stack-dev)
-  sg-2: Create payment endpoints (@full-stack-dev)
-  sg-3: Implement checkout UI (@ux-expert)
-  sg-4: Configure PCI compliance (@security-engineer -> NOT FOUND)
-
-Gaps detected:
-  - Missing @security-engineer
-  - Suggested capabilities: ["PCI DSS", "security audit"]
-  - Fallback: @full-stack-dev (review required)
-```
-
-Works for any goal, not just code:
-
-```bash
-$ aur goals "Write a sci-fi novel"
-
-Subgoals: 6
-  sg-1: Develop world-building (@worldbuilder -> NOT FOUND)
-  sg-2: Create character arcs (@character-designer -> NOT FOUND)
-  sg-3: Write plot outline (@story-architect -> NOT FOUND)
-  ...
-
-Gaps: 6 specialists needed
-```
+| Command | Type | Description |
+|---------|------|-------------|
+| `aur init` | Terminal | Initialize Aurora in project |
+| `aur doctor` | Terminal | Check installation and dependencies |
+| `aur mem index .` | Terminal | Index codebase |
+| `aur mem search "query"` | Terminal | Search memory |
+| `aur goals "goal"` | Terminal | Memory-aware planning |
+| `aur soar "question"` | Terminal | Memory-aware research |
+| `aur spawn tasks.md` | Terminal | Execute with safeguards |
+| `aur headless prompt.md` | Terminal | Unattended execution |
+| `/aur:search "query"` | Slash | Search indexed memory |
+| `/aur:get N` | Slash | Read chunk from search |
+| `/aur:plan goals.json` | Slash | Generate PRD + tasks |
+| `/aur:implement` | Slash | Execute plan |
+| `/aur:checkpoint` | Slash | Save session context |
+| `/aur:archive plan-id` | Slash | Archive completed plan |
 
 ---
 
-## Memory-Aware Planning
+## Supported Tools
 
-Unlike generic decomposition, Aurora uses your indexed codebase:
-
-```bash
-$ aur goals "Add OAuth support" --context src/auth/
-
-Memory search found relevant files:
-  - src/auth/login.py (0.92)
-  - src/auth/session.py (0.85)
-  - src/models/user.py (0.78)
-
-Planning informed by:
-  - Existing auth patterns
-  - Current session handling
-  - User model structure
-```
-
----
-
-## OpenSpec Integration
-
-Aurora extends OpenSpec planning with:
-
-- **File hints** - Suggests files to examine for each task
-- **Agent assignments** - Maps tasks to specialists
-- **Spec deltas** - Tracks changes to specs across implementation
-
-```
-goals.json       ->  /aur:plan  ->  PRD + tasks.md + specs/
-(from aur goals)      (OpenSpec)     (with agent + file hints)
-```
-
----
-
-## Session Recovery
-
-`/aur:checkpoint` saves succinct session context:
+Works with 20+ CLI tools: Claude Code, Cursor, Aider, Cline, Windsurf, Gemini CLI, and more.
 
 ```bash
-# Before compaction or handoff
-/aur:checkpoint
-
-# Output: .aurora/checkpoints/session-2026-01-15.md
-# Contains: goals, progress, decisions, next steps
-```
-
----
-
-## Configuration
-
-Works with 20+ CLI tools out of the box:
-
-```bash
-# Use any tool
-aur goals "Add feature" --tool claude
-aur goals "Add feature" --tool cursor
-aur goals "Add feature" --tool aider
-
-# Set defaults
-export AURORA_GOALS_TOOL=claude
-export AURORA_GOALS_MODEL=sonnet
-```
-
----
-
-## Installation
-
-**Standard:**
-```bash
-pip install aurora-actr  # Lightweight, no heavy ML dependencies
-```
-
-**For Development:**
-```bash
-pip install aurora-actr[dev]  # Includes testing tools
+aur init --tools=claude,cursor
 ```
 
 ---
 
 ## Documentation
 
-- [Commands Reference](docs/guides/COMMANDS.md) - Full CLI documentation
-- [Tools Guide](docs/guides/TOOLS_GUIDE.md) - Architecture and workflows
-- [Flows Guide](docs/guides/FLOWS.md) - All workflow patterns
-- [Configuration](docs/reference/CONFIG_REFERENCE.md) - Settings reference
-
----
-
-## Design Philosophy
-
-1. **Query, don't implement** - Analyze and plan before coding
-2. **Memory-first** - Use codebase context for informed decisions
-3. **Agent-aware** - Match tasks to specialists, detect gaps
-4. **LLM-agnostic** - Works with any CLI tool, no vendor lock-in
-5. **Local-first** - No cloud APIs required for core features
+- [Commands Reference](docs/guides/COMMANDS.md)
+- [Tools Guide](docs/guides/TOOLS_GUIDE.md)
+- [Flows Guide](docs/guides/FLOWS.md)
 
 ---
 

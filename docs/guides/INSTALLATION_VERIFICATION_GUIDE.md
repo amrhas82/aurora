@@ -447,7 +447,7 @@ pytest tests/unit/cli/ -v
 5. **Run Test Suite**: `pytest tests/unit/cli/ -v`
 6. **Explore API**: Create test script and run `python3 test_aurora.py`
 
-**For MCP Integration**: This is a future enhancement. Consider creating a feature request issue or using the `@business-analyst` agent to draft an MCP integration PRD.
+**For MCP Integration**: This is a future enhancement. Consider creating a feature request issue or using the `@market-researcher` agent to draft an MCP integration PRD.
 
 ---
 
@@ -458,4 +458,4 @@ pytest tests/unit/cli/ -v
 - **Configuration**: `tests/fixtures/test-config.json`
 - **Issues**: Check git history and existing test patterns
 
-**Questions?** Use `@orchestrator` or `@full-stack-dev` agents in Claude Code for troubleshooting.
+**Questions?** Use `@orchestrator` or `@code-developer` agents in Claude Code for troubleshooting.

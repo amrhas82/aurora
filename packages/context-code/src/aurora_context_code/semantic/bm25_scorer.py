@@ -343,8 +343,7 @@ class BM25Scorer:
         self.term_doc_counts = defaultdict(int, index_data["term_doc_counts"])
 
         logger.info(
-            f"Loaded BM25 index from {path} ({self.corpus_size} documents, "
-            f"{len(self.idf)} terms)"
+            f"Loaded BM25 index from {path} ({self.corpus_size} documents, {len(self.idf)} terms)"
         )
 
 

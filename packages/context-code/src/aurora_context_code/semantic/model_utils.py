@@ -155,9 +155,7 @@ def ensure_model_downloaded(
     try:
         from sentence_transformers import SentenceTransformer
     except ImportError:
-        logger.warning(
-            "sentence-transformers not installed. " "Semantic search will be unavailable."
-        )
+        logger.warning("sentence-transformers not installed. Semantic search will be unavailable.")
         return False
 
     # Download the model with progress display
@@ -229,7 +227,7 @@ class BackgroundModelLoader:
 
     def __init__(self) -> None:
         """Initialize the background loader (use get_instance() instead)."""
-        self._provider: "EmbeddingProvider | None" = None
+        self._provider: EmbeddingProvider | None = None
         self._thread: threading.Thread | None = None
         self._error: Exception | None = None
         self._loading = False

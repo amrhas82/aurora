@@ -13,9 +13,9 @@ Add interactive conversation mode to `aur spawn` that allows users to have multi
 The system MUST support launching interactive mode via `--interactive` flag.
 
 #### Scenario: Launch with specific agent
-**Given** user runs `aur spawn --interactive --agent qa-test-architect`
+**Given** user runs `aur spawn --interactive --agent quality-assurance`
 **When** command executes
-**Then** interactive REPL launches with @qa-test-architect
+**Then** interactive REPL launches with @quality-assurance
 **And** displays welcome banner
 **And** shows prompt for user input
 
@@ -144,8 +144,8 @@ The system MUST support slash commands for session management.
 
 #### Scenario: /agent command switches agent
 **Given** currently using @qa-expert
-**When** user enters "/agent full-stack-dev"
-**Then** agent switches to @full-stack-dev
+**When** user enters "/agent code-developer"
+**Then** agent switches to @code-developer
 **And** context is cleared (fresh conversation)
 
 #### Scenario: /stats command shows session info

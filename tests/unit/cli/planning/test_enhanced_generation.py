@@ -37,7 +37,7 @@ def sample_plan_with_files() -> Plan:
                 id="sg-1",
                 title="Setup authentication module",
                 description="Create authentication module with login/logout",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
                 dependencies=[],
             ),
             Subgoal(
@@ -51,7 +51,7 @@ def sample_plan_with_files() -> Plan:
                 id="sg-3",
                 title="Write integration tests",
                 description="Create integration tests for auth flow",
-                assigned_agent="@qa-test-architect",
+                assigned_agent="@quality-assurance",
                 dependencies=["sg-1", "sg-2"],
             ),
         ],
@@ -106,7 +106,7 @@ def sample_agent_gaps() -> list[AgentGap]:
             subgoal_id="sg-2",
             ideal_agent="@security-expert",
             ideal_agent_desc="Specialist in security, jwt, token, authentication",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
     ]
 

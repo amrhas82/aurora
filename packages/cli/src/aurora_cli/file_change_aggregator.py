@@ -66,7 +66,7 @@ class FileSnapshot:
     mtime: float = 0.0
 
     @classmethod
-    def capture(cls, path: Path) -> "FileSnapshot":
+    def capture(cls, path: Path) -> FileSnapshot:
         """Capture current state of a file."""
         if not path.exists():
             return cls(
@@ -229,8 +229,6 @@ class FileChangeAggregator:
 
     def _should_track(self, path: Path) -> bool:
         """Check if a path should be tracked."""
-        rel_path = str(path.relative_to(self.working_dir))
-
         # Check ignore patterns first
         for pattern in self.ignore_patterns:
             if path.match(pattern):

@@ -1665,7 +1665,7 @@ SCENARIO                    USE ELICITATION QUESTIONS    OR    USE AGENT
 Simple task, clear goal     ✓ Fast (30 sec)                 ✗ Overkill
 Complex task, unclear goal  ✗ Too generic                   ✓ Use orchestrator
 Familiar domain             ✓ Rules sufficient              ✗ Unnecessary
-Novel domain                ✗ No rules yet                  ✓ Use business-analyst
+Novel domain                ✗ No rules yet                  ✓ Use market-researcher
 Quick decision needed       ✓ Fast iteration                ✗ Too slow
 Deep analysis required      ✗ Insufficient depth           ✓ Use specialist
 User has expertise          ✓ Question + feedback           ✗ Assume knowledge

@@ -179,7 +179,7 @@ def _format_normal(
         for sg in subgoal_breakdown:
             critical_marker = " [CRITICAL]" if sg.get("is_critical") else ""
             deps = (
-                f" (depends on: {', '.join(str(d+1) for d in sg.get('depends_on', []))})"
+                f" (depends on: {', '.join(str(d + 1) for d in sg.get('depends_on', []))})"
                 if sg.get("depends_on")
                 else ""
             )

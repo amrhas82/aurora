@@ -60,7 +60,7 @@ The `goals.json` format follows the specification from PRD-0026 (FR-6.2):
 - **id**: Subgoal identifier in format `sg-N` (e.g., `sg-1`, `sg-2`)
 - **title**: Brief, actionable subgoal title
 - **description**: Detailed description of the subgoal including acceptance criteria
-- **agent**: Recommended agent ID (e.g., `@full-stack-dev`, `@qa-test-architect`)
+- **agent**: Recommended agent ID (e.g., `@code-developer`, `@quality-assurance`)
 - **confidence**: Confidence score for agent match from 0.0 to 1.0
   - >= 0.5: Good match (agent capabilities align well)
   - < 0.5: Potential gap (may need custom agent or fallback)
@@ -72,7 +72,7 @@ Reported when no suitable agent found (confidence < 0.5):
 
 - **subgoal_id**: The subgoal lacking a good agent match
 - **suggested_capabilities**: List of capabilities needed for this subgoal
-- **fallback**: Default agent to use (typically `@full-stack-dev`)
+- **fallback**: Default agent to use (typically `@code-developer`)
 
 ## Validation Rules
 
@@ -99,7 +99,7 @@ Created with: `aur goals "Fix bug in login form" --no-decompose`
       "id": "sg-1",
       "title": "Fix login validation",
       "description": "Fix email validation regex in login form",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.95,
       "dependencies": []
     }
@@ -113,7 +113,7 @@ Created with: `aur goals "Fix bug in login form" --no-decompose`
 See `goals-example.json` for a complete OAuth2 authentication example with:
 - 5 subgoals
 - Dependency chain (sg-1 → sg-2 → sg-3 → sg-4 → sg-5)
-- Multiple agents (@full-stack-dev, @qa-test-architect)
+- Multiple agents (@code-developer, @quality-assurance)
 - Memory context from 4 relevant files
 
 ### Goal with Agent Gap
@@ -127,7 +127,7 @@ See `goals-example.json` for a complete OAuth2 authentication example with:
       "id": "sg-1",
       "title": "Integrate blockchain adapter",
       "description": "Add Web3 integration for Ethereum transactions",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.42,
       "dependencies": []
     }
@@ -136,7 +136,7 @@ See `goals-example.json` for a complete OAuth2 authentication example with:
     {
       "subgoal_id": "sg-1",
       "suggested_capabilities": ["blockchain", "web3", "smart-contracts"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }

@@ -196,7 +196,7 @@ Sprint is **COMPLETE** when:
 **Acceptance Criteria**:
 - `aur agents list` shows all agents with categories in <500ms
 - `aur agents search "code review"` finds relevant agents
-- `aur agents show qa-test-architect` displays full agent details
+- `aur agents show quality-assurance` displays full agent details
 - Agents from multiple sources (claude, ampcode, droid, opencode) appear in one list
 - Malformed agent files logged as warnings, don't crash command
 
@@ -294,17 +294,17 @@ aur agents list --category product
 Available Agents (15 total):
 
 Engineering:
-  • full-stack-dev          Full Stack Developer
-  • holistic-architect      System Architect
-  • context-initializer     Context Initializer
+  • code-developer          Full Stack Developer
+  • system-architect      System Architect
+  • context-builder     Context Initializer
 
 QA:
-  • qa-test-architect       Test Architect & Quality Advisor
+  • quality-assurance       Test Architect & Quality Advisor
 
 Product:
-  • product-manager         Product Manager
-  • product-owner           Product Owner
-  • scrum-master            Scrum Master
+  • feature-planner         Product Manager
+  • backlog-manager           Product Owner
+  • story-writer            Scrum Master
 
 Use 'aur agents show <agent-id>' for details
 ```
@@ -338,15 +338,15 @@ aur agents search "code review"
 ```
 Search results for "test" (3 matches):
 
-1. qa-test-architect (QA)
+1. quality-assurance (QA)
    Test Architect & Quality Advisor
    Skills: test-architecture, quality-gates, code-review
 
-2. full-stack-dev (Engineering)
+2. code-developer (Engineering)
    Full Stack Developer
    Skills: testing, debugging, refactoring
 
-3. scrum-master (Product)
+3. story-writer (Product)
    Scrum Master
    Skills: story-creation, retrospectives, testing-coordination
 ```
@@ -365,12 +365,12 @@ Search results for "test" (3 matches):
 
 ```bash
 # Show specific agent
-aur agents show qa-test-architect
+aur agents show quality-assurance
 ```
 
 **Output Format**:
 ```
-Agent: qa-test-architect
+Agent: quality-assurance
 ================================================================================
 Role:        Test Architect & Quality Advisor
 Category:    QA
@@ -395,10 +395,10 @@ Examples:
   • Assess technical debt and quality metrics
 
 Dependencies:
-  • full-stack-dev (for implementation context)
-  • product-owner (for acceptance criteria)
+  • code-developer (for implementation context)
+  • backlog-manager (for acceptance criteria)
 
-Source: ~/.claude/agents/qa-test-architect.md
+Source: ~/.claude/agents/quality-assurance.md
 ```
 
 **Requirements**:
@@ -433,7 +433,7 @@ aur agents refresh
 2. Extract frontmatter from each `.md` file:
 ```yaml
 ---
-id: qa-test-architect
+id: quality-assurance
 role: Test Architect & Quality Advisor
 goal: Provide comprehensive test architecture review...
 category: qa
@@ -444,8 +444,8 @@ examples:
   - Review PR before merge
 when_to_use: Use for comprehensive test architecture review...
 dependencies:
-  - full-stack-dev
-  - product-owner
+  - code-developer
+  - backlog-manager
 ---
 ```
 
@@ -503,15 +503,15 @@ def parse_agent_file(file_path: Path) -> AgentInfo | None:
   ],
   "agents": [
     {
-      "id": "qa-test-architect",
+      "id": "quality-assurance",
       "role": "Test Architect & Quality Advisor",
       "goal": "Provide comprehensive test architecture review...",
       "category": "qa",
       "skills": ["test-architecture", "quality-gates", "code-review"],
       "examples": ["Review PR before merge"],
       "when_to_use": "Use for comprehensive test architecture review...",
-      "dependencies": ["full-stack-dev", "product-owner"],
-      "source_file": "~/.claude/agents/qa-test-architect.md"
+      "dependencies": ["code-developer", "backlog-manager"],
+      "source_file": "~/.claude/agents/quality-assurance.md"
     }
   ],
   "stats": {
@@ -577,7 +577,7 @@ class AgentInfo(BaseModel):
 ```python
 VALIDATION_MESSAGES = {
     "AGENT_ID_EMPTY": "Agent 'id' field is required and cannot be empty",
-    "AGENT_ID_INVALID_FORMAT": "Agent 'id' must be kebab-case (e.g., 'qa-test-architect')",
+    "AGENT_ID_INVALID_FORMAT": "Agent 'id' must be kebab-case (e.g., 'quality-assurance')",
     "AGENT_ROLE_TOO_SHORT": "Agent 'role' must be at least 5 characters",
     "AGENT_GOAL_TOO_SHORT": "Agent 'goal' must be at least 20 characters (describe purpose)",
     "AGENT_CATEGORY_INVALID": "Agent 'category' must be one of: eng, qa, product, general",
@@ -890,10 +890,10 @@ packages/
 def test_agent_discovery_multisource():
     """Discover agents from multiple sources."""
     # GIVEN: Agent files in 4 different directories
-    create_agent_file("~/.claude/agents/qa-test-architect.md")
-    create_agent_file("~/.config/ampcode/agents/full-stack-dev.md")
-    create_agent_file("~/.config/droid/agent/scrum-master.md")
-    create_agent_file("~/.config/opencode/agent/ux-expert.md")
+    create_agent_file("~/.claude/agents/quality-assurance.md")
+    create_agent_file("~/.config/ampcode/agents/code-developer.md")
+    create_agent_file("~/.config/droid/agent/story-writer.md")
+    create_agent_file("~/.config/opencode/agent/ui-designer.md")
 
     # WHEN: Run agent refresh
     result = runner.invoke(cli, ["agents", "refresh"])
@@ -901,8 +901,8 @@ def test_agent_discovery_multisource():
     # THEN: All 4 agents in manifest
     manifest = load_manifest()
     assert len(manifest["agents"]) == 4
-    assert "qa-test-architect" in agent_ids(manifest)
-    assert "full-stack-dev" in agent_ids(manifest)
+    assert "quality-assurance" in agent_ids(manifest)
+    assert "code-developer" in agent_ids(manifest)
     assert result.exit_code == 0
 ```
 
@@ -1009,10 +1009,10 @@ def test_aur_query_backward_compatible():
    - Run `aur agents search "code review"`
    - Verify keyword matching works
    - Check relevant agents returned
-   - **Pass criteria**: <500ms, qa-test-architect found
+   - **Pass criteria**: <500ms, quality-assurance found
 
 3. **test_36_agent_show_details.sh**
-   - Run `aur agents show qa-test-architect`
+   - Run `aur agents show quality-assurance`
    - Verify full details displayed
    - Check skills, category, description present
    - **Pass criteria**: Complete agent info shown
@@ -1191,7 +1191,7 @@ Each acceptance test should:
 **Example Valid Frontmatter**:
 ```yaml
 ---
-id: qa-test-architect
+id: quality-assurance
 role: Test Architect & Quality Advisor
 goal: Provide comprehensive test architecture review
 category: qa
@@ -1202,7 +1202,7 @@ examples:
   - Review PR before merge
 when_to_use: Use for comprehensive test architecture review
 dependencies:
-  - full-stack-dev
+  - code-developer
 ---
 ```
 
@@ -1302,11 +1302,11 @@ def load_manifest(config: Config) -> Manifest:
 
 ## APPENDIX A: SAMPLE AGENT FILE
 
-**File**: `~/.claude/agents/qa-test-architect.md`
+**File**: `~/.claude/agents/quality-assurance.md`
 
 ```markdown
 ---
-id: qa-test-architect
+id: quality-assurance
 role: Test Architect & Quality Advisor
 goal: Provide comprehensive test architecture review, quality gate decisions, and code improvement
 category: qa
@@ -1322,8 +1322,8 @@ examples:
   - Assess technical debt and quality metrics
 when_to_use: Use for comprehensive test architecture review, quality gate decisions, and code improvement. Provides thorough analysis including requirements traceability, risk assessment, and test strategy. Advisory only - teams choose their quality bar.
 dependencies:
-  - full-stack-dev
-  - product-owner
+  - code-developer
+  - backlog-manager
 ---
 
 # QA Test Architect & Quality Advisor
@@ -1353,7 +1353,7 @@ The QA Test Architect provides comprehensive test architecture review and qualit
   ],
   "agents": [
     {
-      "id": "qa-test-architect",
+      "id": "quality-assurance",
       "role": "Test Architect & Quality Advisor",
       "goal": "Provide comprehensive test architecture review, quality gate decisions, and code improvement",
       "category": "qa",
@@ -1371,10 +1371,10 @@ The QA Test Architect provides comprehensive test architecture review and qualit
       ],
       "when_to_use": "Use for comprehensive test architecture review, quality gate decisions, and code improvement. Provides thorough analysis including requirements traceability, risk assessment, and test strategy. Advisory only - teams choose their quality bar.",
       "dependencies": [
-        "full-stack-dev",
-        "product-owner"
+        "code-developer",
+        "backlog-manager"
       ],
-      "source_file": "/home/user/.claude/agents/qa-test-architect.md"
+      "source_file": "/home/user/.claude/agents/quality-assurance.md"
     }
   ],
   "stats": {

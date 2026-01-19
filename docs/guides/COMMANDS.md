@@ -231,8 +231,8 @@ aur goals "Add real-time notifications" \
 #    Using: claude (sonnet)
 #
 # 🤖 Agent matching results:
-#    [OK] sg-1: @full-stack-dev (exists)
-#    [OK] sg-2: @ux-expert (exists)
+#    [OK] sg-1: @code-developer (exists)
+#    [OK] sg-2: @ui-designer (exists)
 #    [WARN] sg-3: @devops-engineer (NOT FOUND)
 #
 # 📁 Plan directory:
@@ -269,9 +269,9 @@ $ aur goals "Add user authentication" --verbose
    Using: claude (sonnet)
 
 [bold]🤖 Agent matching results:[/]
-   [OK] sg-1: @full-stack-dev (exists)
+   [OK] sg-1: @code-developer (exists)
    [OK] sg-2: @security-engineer (exists)
-   [WARN] sg-3: @compliance-specialist (NOT FOUND - will use @full-stack-dev)
+   [WARN] sg-3: @compliance-specialist (NOT FOUND - will use @code-developer)
 
 [bold]📁 Plan directory:[/]
    .aurora/plans/0001-add-user-authentication/
@@ -501,9 +501,9 @@ aur goals "Add user authentication with JWT tokens" \
 # Output:
 # 📋 Decomposing goal into subgoals...
 # 🤖 Agent matching results:
-#    [OK] sg-1: Implement JWT middleware (@full-stack-dev)
-#    [OK] sg-2: Create login endpoints (@full-stack-dev)
-#    [OK] sg-3: Add token refresh logic (@full-stack-dev)
+#    [OK] sg-1: Implement JWT middleware (@code-developer)
+#    [OK] sg-2: Create login endpoints (@code-developer)
+#    [OK] sg-3: Add token refresh logic (@code-developer)
 #
 # 📁 Plan directory:
 #    .aurora/plans/0001-add-user-authentication-with-jwt/
@@ -575,15 +575,15 @@ Memory search found 8 relevant files:
   ...
 
 🤖 Agent matching results:
-   [OK] sg-1: Set up Stripe SDK integration (@full-stack-dev, confidence: 0.89)
-   [OK] sg-2: Create payment endpoints (@full-stack-dev, confidence: 0.91)
-   [OK] sg-3: Add webhook handlers (@full-stack-dev, confidence: 0.85)
-   [OK] sg-4: Implement payment UI (@ux-expert, confidence: 0.78)
+   [OK] sg-1: Set up Stripe SDK integration (@code-developer, confidence: 0.89)
+   [OK] sg-2: Create payment endpoints (@code-developer, confidence: 0.91)
+   [OK] sg-3: Add webhook handlers (@code-developer, confidence: 0.85)
+   [OK] sg-4: Implement payment UI (@ui-designer, confidence: 0.78)
    [WARN] sg-5: Configure PCI compliance (@security-engineer, NOT FOUND)
 
 Agent gaps detected:
   - Missing @security-engineer for sg-5 (PCI compliance)
-  - Fallback: @full-stack-dev (review required)
+  - Fallback: @code-developer (review required)
 
 📁 Plan directory:
    .aurora/plans/0001-implement-stripe-payment-processing/
@@ -633,7 +633,7 @@ $ cat goals.json
       "id": "sg-1",
       "title": "Set up Stripe SDK integration",
       "description": "Install Stripe Python SDK, configure API keys, create service wrapper",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.89,
       "dependencies": []
     },
@@ -643,7 +643,7 @@ $ cat goals.json
     {
       "subgoal_id": "sg-5",
       "suggested_capabilities": ["PCI compliance", "security audit"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }
@@ -666,11 +666,11 @@ $ cat tasks.md | head -50
 $ aur spawn tasks.md --verbose
 
 Spawning 5 tasks across 3 agents:
-  [@full-stack-dev] Task 1.0: Set up Stripe SDK... RUNNING
-  [@full-stack-dev] Task 2.0: Create payment endpoints... QUEUED
-  [@full-stack-dev] Task 3.0: Add webhook handlers... QUEUED
-  [@ux-expert] Task 4.0: Implement payment UI... RUNNING
-  [@full-stack-dev] Task 5.0: PCI compliance review... QUEUED
+  [@code-developer] Task 1.0: Set up Stripe SDK... RUNNING
+  [@code-developer] Task 2.0: Create payment endpoints... QUEUED
+  [@code-developer] Task 3.0: Add webhook handlers... QUEUED
+  [@ui-designer] Task 4.0: Implement payment UI... RUNNING
+  [@code-developer] Task 5.0: PCI compliance review... QUEUED
 
 Task 1.0 COMPLETE (45s)
 Task 4.0 COMPLETE (67s)
@@ -984,7 +984,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-1",
       "title": "Implement OAuth provider integration",
       "description": "Add Google/GitHub OAuth providers with PKCE flow",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.85,
       "dependencies": []
     },
@@ -992,7 +992,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-2",
       "title": "Create token management system",
       "description": "JWT token generation, refresh, and validation",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.89,
       "dependencies": ["sg-1"]
     },
@@ -1000,7 +1000,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-3",
       "title": "Add authentication UI",
       "description": "Login/logout buttons, user profile dropdown",
-      "agent": "@ux-expert",
+      "agent": "@ui-designer",
       "confidence": 0.78,
       "dependencies": ["sg-1"]
     }
@@ -1009,7 +1009,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
     {
       "subgoal_id": "sg-4",
       "suggested_capabilities": ["security audit", "penetration testing"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }
@@ -1044,7 +1044,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
 |-------|------|----------|-------------|
 | `subgoal_id` | string | Yes | ID of subgoal that lacks good agent match |
 | `suggested_capabilities` | array | Yes | List of missing capabilities needed |
-| `fallback` | string | Yes | Fallback agent to use (typically @full-stack-dev) |
+| `fallback` | string | Yes | Fallback agent to use (typically @code-developer) |
 
 ### Real-World Examples
 
@@ -1065,7 +1065,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-1",
       "title": "Design dark mode color scheme",
       "description": "Define dark mode colors, ensure WCAG AA contrast",
-      "agent": "@ux-expert",
+      "agent": "@ui-designer",
       "confidence": 0.92,
       "dependencies": []
     },
@@ -1073,7 +1073,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-2",
       "title": "Implement theme toggle component",
       "description": "React component with local storage persistence",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.88,
       "dependencies": ["sg-1"]
     }
@@ -1100,7 +1100,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-1",
       "title": "Set up Stripe SDK integration",
       "description": "Install SDK, configure API keys, create service wrapper",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.91,
       "dependencies": []
     },
@@ -1108,7 +1108,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-2",
       "title": "Create payment endpoints",
       "description": "REST endpoints for checkout, payment intent, webhooks",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.89,
       "dependencies": ["sg-1"]
     },
@@ -1116,7 +1116,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-3",
       "title": "Implement payment UI components",
       "description": "Checkout form, payment method selector, success/error states",
-      "agent": "@ux-expert",
+      "agent": "@ui-designer",
       "confidence": 0.85,
       "dependencies": ["sg-1"]
     },
@@ -1133,7 +1133,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
     {
       "subgoal_id": "sg-4",
       "suggested_capabilities": ["PCI DSS compliance", "security audit", "penetration testing"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }
@@ -1155,7 +1155,7 @@ The `aur goals` command creates a `goals.json` file that serves as input for the
       "id": "sg-1",
       "title": "Fix login session timeout issue",
       "description": "Investigate and fix session expiration bug in auth middleware",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.94,
       "dependencies": []
     }
@@ -1294,7 +1294,7 @@ aur goals "Your feature description" --help
 aur agents list                    # Agents for configured tools
 aur agents list --all              # All available agents
 aur agents search "test"           # Search by keyword
-aur agents show full-stack-dev     # Show specific agent details
+aur agents show code-developer     # Show specific agent details
 ```
 
 **"How do I configure my CLI tool?"**
@@ -1402,7 +1402,7 @@ aur goals "Your goal"
 1. **Use fallback agent (automatic):**
    ```bash
    # Gap detection suggests fallback automatically
-   # goals.json will use @full-stack-dev as fallback
+   # goals.json will use @code-developer as fallback
    ```
 
 2. **Install missing agent:**
@@ -1421,7 +1421,7 @@ aur goals "Your goal"
    nano .aurora/plans/0001-your-goal/goals.json
 
    # Change agent field:
-   # "agent": "@security-engineer"  ->  "agent": "@full-stack-dev"
+   # "agent": "@security-engineer"  ->  "agent": "@code-developer"
    ```
 
 #### Low confidence scores
@@ -1640,7 +1640,7 @@ aur goals "Implement secure payment system" --verbose
 # Output:
 # [WARN] sg-4: @security-engineer (NOT FOUND)
 # Gap: ["PCI compliance", "security audit"]
-# Fallback: @full-stack-dev
+# Fallback: @code-developer
 
 # 2. Option A: Create custom agent
 cat > ~/.aurora/agents/security-engineer.json << 'EOF'
@@ -1656,11 +1656,11 @@ EOF
 
 # 3. Option B: Split work across multiple agents
 # Edit goals.json to break sg-4 into:
-# - sg-4a: Security review (@full-stack-dev)
-# - sg-4b: PCI documentation (@product-owner)
+# - sg-4a: Security review (@code-developer)
+# - sg-4b: PCI documentation (@backlog-manager)
 
 # 4. Option C: Accept fallback and add manual review
-# Let @full-stack-dev handle it, then manual security review
+# Let @code-developer handle it, then manual security review
 ```
 
 ### Pattern 5: Batch Planning
@@ -1801,7 +1801,7 @@ cat goals.json | jq -r '.subgoals[] | "\(.title) -> \(.agent) (confidence: \(.co
 cat goals.json | jq -r '.subgoals[] | select(.confidence < 0.7)'
 
 # Update agent capabilities based on learnings
-# Edit ~/.aurora/agents/full-stack-dev.json to add new keywords
+# Edit ~/.aurora/agents/code-developer.json to add new keywords
 ```
 
 ## See Also

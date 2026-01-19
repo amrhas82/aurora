@@ -1,6 +1,6 @@
 # Project Overview: aurora
 
-<!-- Auto-detected by Aurora on 2026-01-15 -->
+<!-- Auto-detected by Aurora on 2026-01-19 -->
 
 ## Description
 

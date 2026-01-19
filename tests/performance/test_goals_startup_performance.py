@@ -48,7 +48,7 @@ def mock_llm_client():
     with patch("aurora_cli.planning.core.CLIPipeLLMClient") as mock_client:
         mock_instance = MagicMock()
         mock_instance.generate.return_value = MagicMock(
-            content='[{"id": "sg-1", "title": "Test", "description": "Test", "assigned_agent": "@full-stack-dev", "dependencies": []}]'
+            content='[{"id": "sg-1", "title": "Test", "description": "Test", "assigned_agent": "@code-developer", "dependencies": []}]'
         )
         mock_client.return_value = mock_instance
         yield mock_instance
@@ -239,10 +239,9 @@ class TestGoalsCommandStartup:
         is_valid, error = _validate_goal("Add OAuth2 authentication with JWT tokens")
         elapsed = time.time() - start
 
-        assert elapsed < 0.01, (
-            f"Goal validation took {elapsed:.3f}s (target: <0.01s). "
-            "Validation should be instant."
-        )
+        assert (
+            elapsed < 0.01
+        ), f"Goal validation took {elapsed:.3f}s (target: <0.01s). Validation should be instant."
         assert is_valid is True
         assert error is None
 
@@ -256,7 +255,7 @@ class TestGoalsCommandStartup:
                 id="sg-1",
                 title="Test subgoal",
                 description="Test description",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
         ]
 
@@ -533,8 +532,8 @@ class TestCLIStartupTime:
                                     "id": "sg-1",
                                     "title": "Test subgoal",
                                     "description": "Test description",
-                                    "assigned_agent": "@full-stack-dev",
-                                    "ideal_agent": "@full-stack-dev",
+                                    "assigned_agent": "@code-developer",
+                                    "ideal_agent": "@code-developer",
                                     "match_quality": "excellent",
                                     "dependencies": [],
                                 }

@@ -19,7 +19,7 @@ class DecomposePromptTemplate(PromptTemplate):
     # Agent capability mappings for better matching
     AGENT_CAPABILITIES = {
         # Core development agents
-        "full-stack-dev": {
+        "code-developer": {
             "specialties": [
                 "code implementation",
                 "debugging",
@@ -35,7 +35,7 @@ class DecomposePromptTemplate(PromptTemplate):
                 "simple DevOps tasks",
             ],
         },
-        "holistic-architect": {
+        "system-architect": {
             "specialties": [
                 "system design",
                 "architecture",
@@ -46,7 +46,7 @@ class DecomposePromptTemplate(PromptTemplate):
             ],
             "can_handle": ["code review", "dependency analysis", "data modeling"],
         },
-        "qa-test-architect": {
+        "quality-assurance": {
             "specialties": [
                 "test architecture",
                 "test strategy",
@@ -58,7 +58,7 @@ class DecomposePromptTemplate(PromptTemplate):
             "can_handle": ["code review for quality", "acceptance criteria validation"],
         },
         # Product/Business agents
-        "product-manager": {
+        "feature-planner": {
             "specialties": [
                 "PRD creation",
                 "product strategy",
@@ -68,7 +68,7 @@ class DecomposePromptTemplate(PromptTemplate):
             ],
             "can_handle": ["user research synthesis", "competitive analysis"],
         },
-        "product-owner": {
+        "backlog-manager": {
             "specialties": [
                 "backlog management",
                 "story refinement",
@@ -78,7 +78,7 @@ class DecomposePromptTemplate(PromptTemplate):
             ],
             "can_handle": ["user story validation", "requirement clarification"],
         },
-        "business-analyst": {
+        "market-researcher": {
             "specialties": [
                 "market research",
                 "competitive analysis",
@@ -89,7 +89,7 @@ class DecomposePromptTemplate(PromptTemplate):
             "can_handle": ["data analysis", "process documentation"],
         },
         # Design agents
-        "ux-expert": {
+        "ui-designer": {
             "specialties": [
                 "UI/UX design",
                 "wireframes",
@@ -100,7 +100,7 @@ class DecomposePromptTemplate(PromptTemplate):
             ],
             "can_handle": ["frontend specifications", "user flow design"],
         },
-        "scrum-master": {
+        "story-writer": {
             "specialties": [
                 "story creation",
                 "epic management",
@@ -141,9 +141,9 @@ For each subgoal, specify TWO agents:
 
 MATCH QUALITY RULES:
 - "excellent": Assign when task matches agent's SPECIALTIES
-  Examples: @qa-test-architect for testing, @holistic-architect for design
+  Examples: @quality-assurance for testing, @system-architect for design
 - "acceptable": Assign when agent CAN HANDLE the task but isn't specialized
-  Examples: @full-stack-dev for documentation, @business-analyst for basic research
+  Examples: @code-developer for documentation, @market-researcher for basic research
 - "insufficient": Assign when no agent is capable, using @master as fallback
   Examples: @master for creative writing, @master for video editing
 

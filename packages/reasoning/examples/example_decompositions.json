@@ -7,9 +7,9 @@
       "subgoals": [
         {
           "description": "Locate and read calculate_total function in utils.py",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Code reading and function analysis specialist",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
@@ -33,36 +33,36 @@
       "subgoals": [
         {
           "description": "Analyze existing user registration flow and identify integration points",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Code analysis and flow understanding",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Create email validation function with regex pattern and domain checks",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Implementation of validation logic",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0]
         },
         {
           "description": "Write unit tests for email validation function",
-          "ideal_agent": "qa-test-architect",
+          "ideal_agent": "quality-assurance",
           "ideal_agent_desc": "Test design and implementation specialist",
-          "assigned_agent": "qa-test-architect",
+          "assigned_agent": "quality-assurance",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [1]
         },
         {
           "description": "Integrate validation into registration form with user-friendly error messages",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Frontend/backend integration",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [1, 2]
@@ -101,9 +101,9 @@
       "subgoals": [
         {
           "description": "Analyze current payment processing implementation and identify tight coupling issues",
-          "ideal_agent": "holistic-architect",
+          "ideal_agent": "system-architect",
           "ideal_agent_desc": "System analysis and architecture assessment",
-          "assigned_agent": "holistic-architect",
+          "assigned_agent": "system-architect",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
@@ -112,52 +112,52 @@
           "description": "Audit payment-related security concerns and compliance requirements",
           "ideal_agent": "security-expert",
           "ideal_agent_desc": "Security auditing and compliance specialist",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Design payment provider interface with abstract base class and provider implementations",
-          "ideal_agent": "holistic-architect",
+          "ideal_agent": "system-architect",
           "ideal_agent_desc": "Interface and abstraction design",
-          "assigned_agent": "holistic-architect",
+          "assigned_agent": "system-architect",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0, 1]
         },
         {
           "description": "Implement retry logic with exponential backoff and circuit breaker pattern",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Resilience pattern implementation",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [2]
         },
         {
           "description": "Create comprehensive error handling with specific exception types and recovery strategies",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Error handling and exception design",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [2]
         },
         {
           "description": "Update existing code to use new provider abstraction layer",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Code refactoring and migration",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [3, 4]
         },
         {
           "description": "Write integration tests for each payment provider with mocked responses",
-          "ideal_agent": "qa-test-architect",
+          "ideal_agent": "quality-assurance",
           "ideal_agent_desc": "Integration testing and test architecture",
-          "assigned_agent": "qa-test-architect",
+          "assigned_agent": "quality-assurance",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [5]
@@ -166,7 +166,7 @@
           "description": "Update API documentation with new payment flow and error codes",
           "ideal_agent": "technical-writer",
           "ideal_agent_desc": "API documentation specialist",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "acceptable",
           "is_critical": false,
           "depends_on": [5]
@@ -210,9 +210,9 @@
       "subgoals": [
         {
           "description": "Perform comprehensive dependency analysis of current monolith to identify service boundaries",
-          "ideal_agent": "holistic-architect",
+          "ideal_agent": "system-architect",
           "ideal_agent_desc": "Dependency analysis and service boundary identification",
-          "assigned_agent": "holistic-architect",
+          "assigned_agent": "system-architect",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
@@ -221,7 +221,7 @@
           "description": "Audit data flow and database dependencies to plan data migration strategy",
           "ideal_agent": "data-architect",
           "ideal_agent_desc": "Database and data flow analysis specialist",
-          "assigned_agent": "holistic-architect",
+          "assigned_agent": "system-architect",
           "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": []
@@ -230,16 +230,16 @@
           "description": "Security assessment of API boundaries and authentication/authorization requirements",
           "ideal_agent": "security-expert",
           "ideal_agent_desc": "Security architecture and API security specialist",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Design microservices architecture with service contracts and communication patterns",
-          "ideal_agent": "holistic-architect",
+          "ideal_agent": "system-architect",
           "ideal_agent_desc": "Microservices architecture design",
-          "assigned_agent": "holistic-architect",
+          "assigned_agent": "system-architect",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0, 1, 2]
@@ -248,16 +248,16 @@
           "description": "Create deployment pipeline and infrastructure-as-code for each microservice",
           "ideal_agent": "devops-engineer",
           "ideal_agent_desc": "CI/CD and infrastructure automation specialist",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [3]
         },
         {
           "description": "Implement strangler fig pattern to gradually replace monolith components",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Migration pattern implementation",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [4]
@@ -266,7 +266,7 @@
           "description": "Build comprehensive monitoring and observability with distributed tracing",
           "ideal_agent": "devops-engineer",
           "ideal_agent_desc": "Observability and monitoring specialist",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [5]
@@ -275,7 +275,7 @@
           "description": "Create rollback procedures and disaster recovery plan",
           "ideal_agent": "devops-engineer",
           "ideal_agent_desc": "Disaster recovery and rollback planning",
-          "assigned_agent": "holistic-architect",
+          "assigned_agent": "system-architect",
           "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [5, 6]
@@ -284,16 +284,16 @@
           "description": "Execute phased migration with canary deployments and traffic shifting",
           "ideal_agent": "devops-engineer",
           "ideal_agent_desc": "Deployment orchestration specialist",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "acceptable",
           "is_critical": true,
           "depends_on": [6, 7]
         },
         {
           "description": "Validate system performance and conduct load testing for each phase",
-          "ideal_agent": "qa-test-architect",
+          "ideal_agent": "quality-assurance",
           "ideal_agent_desc": "Performance testing and validation specialist",
-          "assigned_agent": "qa-test-architect",
+          "assigned_agent": "quality-assurance",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [8]
@@ -347,45 +347,45 @@
       "subgoals": [
         {
           "description": "Analyze available user data sources and define key metrics to display",
-          "ideal_agent": "business-analyst",
+          "ideal_agent": "market-researcher",
           "ideal_agent_desc": "Data analysis and metrics definition",
-          "assigned_agent": "business-analyst",
+          "assigned_agent": "market-researcher",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": []
         },
         {
           "description": "Design dashboard UI/UX with wireframes and component layout",
-          "ideal_agent": "ux-expert",
+          "ideal_agent": "ui-designer",
           "ideal_agent_desc": "UI/UX design and wireframing specialist",
-          "assigned_agent": "ux-expert",
+          "assigned_agent": "ui-designer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0]
         },
         {
           "description": "Implement data aggregation API endpoints for dashboard metrics",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Backend API development",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [0]
         },
         {
           "description": "Build frontend dashboard components with chart library integration",
-          "ideal_agent": "full-stack-dev",
+          "ideal_agent": "code-developer",
           "ideal_agent_desc": "Frontend development and visualization",
-          "assigned_agent": "full-stack-dev",
+          "assigned_agent": "code-developer",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [1, 2]
         },
         {
           "description": "Write tests for dashboard components and API endpoints",
-          "ideal_agent": "qa-test-architect",
+          "ideal_agent": "quality-assurance",
           "ideal_agent_desc": "Test design and implementation",
-          "assigned_agent": "qa-test-architect",
+          "assigned_agent": "quality-assurance",
           "match_quality": "excellent",
           "is_critical": true,
           "depends_on": [3]

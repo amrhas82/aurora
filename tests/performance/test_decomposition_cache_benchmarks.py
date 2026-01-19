@@ -42,36 +42,36 @@ def sample_subgoals() -> list[Subgoal]:
             id="sg-1",
             title="Design approach",
             description="Design the solution architecture and data model",
-            ideal_agent="@holistic-architect",
+            ideal_agent="@system-architect",
             ideal_agent_desc="System architecture specialist",
-            assigned_agent="@holistic-architect",
+            assigned_agent="@system-architect",
             dependencies=[],
         ),
         Subgoal(
             id="sg-2",
             title="Implement core logic",
             description="Implement the core business logic and algorithms",
-            ideal_agent="@full-stack-dev",
+            ideal_agent="@code-developer",
             ideal_agent_desc="Full-stack development specialist",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-1"],
         ),
         Subgoal(
             id="sg-3",
             title="Add validation",
             description="Add input validation and error handling",
-            ideal_agent="@full-stack-dev",
+            ideal_agent="@code-developer",
             ideal_agent_desc="Full-stack development specialist",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-2"],
         ),
         Subgoal(
             id="sg-4",
             title="Write tests",
             description="Write comprehensive unit and integration tests",
-            ideal_agent="@qa-test-architect",
+            ideal_agent="@quality-assurance",
             ideal_agent_desc="Quality assurance and testing specialist",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-2", "sg-3"],
         ),
     ]
@@ -493,8 +493,8 @@ class TestEndToEndCacheSpeedup:
         assert speedup >= 50.0, f"Cache speedup insufficient: {speedup:.1f}x < 50x"
 
         print(
-            f"\nCache speedup: {speedup:.1f}x (non-cached: {non_cached_time*1000:.2f}ms, "
-            f"cached: {cached_time*1000:.3f}ms)"
+            f"\nCache speedup: {speedup:.1f}x (non-cached: {non_cached_time * 1000:.2f}ms, "
+            f"cached: {cached_time * 1000:.3f}ms)"
         )
 
     def test_cache_overhead_on_miss(self, memory_cache):
@@ -691,9 +691,9 @@ class TestCacheComparisonSummary:
         print("\n" + "=" * 60)
         print("CACHE PERFORMANCE SUMMARY")
         print("=" * 60)
-        print(f"Memory cache hit:          {memory_hit_time*1000:.3f}ms")
-        print(f"Memory cache miss:         {memory_miss_time*1000:.3f}ms")
-        print(f"Full decomposition (sim):  {simulated_decomposition_time*1000:.1f}ms")
+        print(f"Memory cache hit:          {memory_hit_time * 1000:.3f}ms")
+        print(f"Memory cache miss:         {memory_miss_time * 1000:.3f}ms")
+        print(f"Full decomposition (sim):  {simulated_decomposition_time * 1000:.1f}ms")
         print(f"Cache speedup:             {cache_speedup:.1f}x")
         print(f"Cache miss overhead:       {miss_overhead_pct:.1f}%")
         print("=" * 60)

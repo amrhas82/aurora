@@ -786,7 +786,7 @@
   │                                                                             │
   │  PURPOSE: Implementation, spawn worker+validator agents                     │
   │  REVIEW: Multiple checkpoints (terminal interactive)                        │
-  │  AGENTS: Implementation-focused (full-stack-dev, qa-test-architect)         │
+  │  AGENTS: Implementation-focused (code-developer, quality-assurance)         │
   │                                                                             │
   │  Flow (all terminal):                                                       │
   │  ┌────────────────────────────────────────────────────────────────────┐    │
@@ -822,12 +822,12 @@
   │  │ PHASE 4: EXECUTE (for each task)                                    │    │
   │  │                                                                     │    │
   │  │ Task 1/5: "Implement OAuth endpoints"                              │    │
-  │  │ Agent: full-stack-dev                                              │    │
-  │  │ Validator: qa-test-architect                                       │    │
+  │  │ Agent: code-developer                                              │    │
+  │  │ Validator: quality-assurance                                       │    │
   │  │                                                                     │    │
   │  │ [e]xecute  [s]kip  [q]uit                                          │    │
   │  │                                                                     │    │
-  │  │ Spawning full-stack-dev...                                         │    │
+  │  │ Spawning code-developer...                                         │    │
   │  │ ████████████████░░░░░░░░░░ 65%                                     │    │
   │  │                                                                     │    │
   │  │ Worker complete. Spawning validator...                             │    │
@@ -1231,7 +1231,7 @@
   def match_agent(
       subgoal: str,
       manifest: AgentManifest,
-      fallback: str = "full-stack-dev"
+      fallback: str = "code-developer"
   ) -> AgentInfo:
       """Match subgoal to best agent by capability keywords."""
 
@@ -1284,7 +1284,7 @@
 
           # Match agent
           worker = match_agent(task.description, manifest)
-          validator = manifest.get_agent("qa-test-architect")
+          validator = manifest.get_agent("quality-assurance")
 
           click.echo(f"Worker: {worker.id}")
           click.echo(f"Validator: {validator.id}")

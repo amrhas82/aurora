@@ -15,7 +15,7 @@ The Master PRD has been updated to reflect a **solo side project** where **AI ag
 
 #### 2. **Research Execution Model**
 - **Old**: Hire 6 researchers + operations team + grow to 11 FTE
-- **New**: AI agents (business-analyst, architect, explore) conduct research; you coordinate findings
+- **New**: AI agents (market-researcher, architect, explore) conduct research; you coordinate findings
 
 #### 3. **Infrastructure Requirements**
 - **Old**: $300K/year (compute, APIs, conferences, tools)

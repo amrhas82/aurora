@@ -32,10 +32,10 @@ class TestAgentToolsIntegration:
         agent_dir.mkdir(parents=True)
 
         # Create test agent files
-        qa_agent = agent_dir / "qa-test-architect.md"
+        qa_agent = agent_dir / "quality-assurance.md"
         qa_agent.write_text(
             """---
-id: qa-test-architect
+id: quality-assurance
 role: Test Architect & Quality Advisor
 goal: Ensure comprehensive test coverage
 category: qa
@@ -53,10 +53,10 @@ This agent provides comprehensive test architecture guidance.
 """
         )
 
-        dev_agent = agent_dir / "full-stack-dev.md"
+        dev_agent = agent_dir / "code-developer.md"
         dev_agent.write_text(
             """---
-id: full-stack-dev
+id: code-developer
 role: Full Stack Developer
 goal: Implement features and fix bugs
 category: eng
@@ -105,8 +105,8 @@ Expert in building full-stack applications.
 
         # Verify agents are present
         agent_ids = {agent["id"] for agent in response}
-        assert "qa-test-architect" in agent_ids
-        assert "full-stack-dev" in agent_ids
+        assert "quality-assurance" in agent_ids
+        assert "code-developer" in agent_ids
 
         # Verify required fields
         for agent in response:
@@ -125,11 +125,11 @@ Expert in building full-stack applications.
 
         response = json.loads(result)
         assert isinstance(response, list)
-        assert len(response) == 1  # Only qa-test-architect should match
+        assert len(response) == 1  # Only quality-assurance should match
 
         # Verify the matching agent
         agent = response[0]
-        assert agent["id"] == "qa-test-architect"
+        assert agent["id"] == "quality-assurance"
         assert "relevance_score" in agent
         assert agent["relevance_score"] > 0.0
 
@@ -139,13 +139,13 @@ Expert in building full-stack applications.
         monkeypatch.setenv("HOME", str(temp_agent_dir.parent.parent))
 
         # Get specific agent
-        result = mcp_server.tools.aurora_show_agent("full-stack-dev")
+        result = mcp_server.tools.aurora_show_agent("code-developer")
 
         response = json.loads(result)
 
         # Verify structure
         assert "id" in response
-        assert response["id"] == "full-stack-dev"
+        assert response["id"] == "code-developer"
         assert "title" in response
         assert "content" in response
 

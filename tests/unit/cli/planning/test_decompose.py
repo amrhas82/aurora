@@ -60,13 +60,13 @@ class TestPlanDecomposerSOARIntegration:
                 "id": "sg-1",
                 "title": "Setup auth",
                 "description": "Configure auth system",
-                "agent": "@full-stack-dev",
+                "agent": "@code-developer",
             },
             {
                 "id": "sg-2",
                 "title": "Add tests",
                 "description": "Write unit tests",
-                "agent": "@qa-test-architect",
+                "agent": "@quality-assurance",
             },
         ]
 
@@ -212,11 +212,11 @@ class TestAvailableAgentsList:
         """Test loading available agents from manifest."""
         # Setup mock manifest with agents
         mock_agent1 = Mock()
-        mock_agent1.id = "full-stack-dev"
+        mock_agent1.id = "code-developer"
         mock_agent2 = Mock()
-        mock_agent2.id = "qa-test-architect"
+        mock_agent2.id = "quality-assurance"
         mock_agent3 = Mock()
-        mock_agent3.id = "holistic-architect"
+        mock_agent3.id = "system-architect"
 
         mock_manifest = Mock()
         mock_manifest.agents = [mock_agent1, mock_agent2, mock_agent3]
@@ -229,9 +229,9 @@ class TestAvailableAgentsList:
         agents = decomposer._load_available_agents()
 
         assert agents is not None
-        assert "@full-stack-dev" in agents
-        assert "@qa-test-architect" in agents
-        assert "@holistic-architect" in agents
+        assert "@code-developer" in agents
+        assert "@quality-assurance" in agents
+        assert "@system-architect" in agents
         assert len(agents) == 3
 
     @patch("aurora_cli.planning.decompose.ManifestManager")
@@ -354,14 +354,14 @@ class TestFileResolutionIntegration:
                 "id": "sg-1",
                 "title": "Implement auth",
                 "description": "Add authentication",
-                "agent": "@full-stack-dev",
+                "agent": "@code-developer",
                 "dependencies": [],
             },
             {
                 "id": "sg-2",
                 "title": "Add tests",
                 "description": "Write tests for auth",
-                "agent": "@qa-test-architect",
+                "agent": "@quality-assurance",
                 "dependencies": ["sg-1"],
             },
         ]
@@ -445,14 +445,14 @@ class TestAgentRecommendationIntegration:
                 "id": "sg-1",
                 "title": "Implement auth",
                 "description": "Add authentication",
-                "agent": "@full-stack-dev",
+                "agent": "@code-developer",
                 "dependencies": [],
             },
             {
                 "id": "sg-2",
                 "title": "Add tests",
                 "description": "Write tests for auth",
-                "agent": "@qa-test-architect",
+                "agent": "@quality-assurance",
                 "dependencies": ["sg-1"],
             },
         ]
@@ -464,11 +464,11 @@ class TestAgentRecommendationIntegration:
 
         mock_recommender = Mock()
         mock_recommender.recommend_for_subgoal.side_effect = [
-            ("@full-stack-dev", 0.9),  # sg-1
-            ("@qa-test-architect", 0.8),  # sg-2
+            ("@code-developer", 0.9),  # sg-1
+            ("@quality-assurance", 0.8),  # sg-2
         ]
         mock_recommender.detect_gaps.return_value = []  # No gaps
-        mock_recommender.get_fallback_agent.return_value = "@full-stack-dev"
+        mock_recommender.get_fallback_agent.return_value = "@code-developer"
         mock_recommender_class.return_value = mock_recommender
 
         decomposer = PlanDecomposer()
@@ -486,8 +486,8 @@ class TestAgentRecommendationIntegration:
         # Agent recommendations should be keyed by subgoal ID
         assert "sg-1" in agent_recommendations
         assert "sg-2" in agent_recommendations
-        assert agent_recommendations["sg-1"] == ("@full-stack-dev", 0.9)
-        assert agent_recommendations["sg-2"] == ("@qa-test-architect", 0.8)
+        assert agent_recommendations["sg-1"] == ("@code-developer", 0.9)
+        assert agent_recommendations["sg-2"] == ("@quality-assurance", 0.8)
         # Gaps should be empty for high-scoring matches
         assert len(agent_gaps) == 0
 
@@ -500,14 +500,14 @@ class TestAgentRecommendationIntegration:
         mock_gap = AgentGap(
             subgoal_id="sg-1",
             assigned_agent="@specialized-agent",
-            fallback="@full-stack-dev",
+            fallback="@code-developer",
             suggested_capabilities=["specialized", "task"],
         )
 
         mock_recommender = Mock()
         mock_recommender.recommend_for_subgoal.return_value = ("@specialized-agent", 0.3)
         mock_recommender.detect_gaps.return_value = [mock_gap]
-        mock_recommender.get_fallback_agent.return_value = "@full-stack-dev"
+        mock_recommender.get_fallback_agent.return_value = "@code-developer"
         mock_recommender_class.return_value = mock_recommender
 
         decomposer = PlanDecomposer()

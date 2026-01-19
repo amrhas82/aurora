@@ -60,7 +60,7 @@ class TestIndexingThroughput:
                         f"def function_{i}_{j}(x, y):",
                         f'    """Function {i}_{j}."""',
                         f"    result = x + y + {i * j}",
-                        f"    return result",
+                        "    return result",
                         "",
                     ]
                 )
@@ -84,11 +84,11 @@ class TestIndexingThroughput:
                     [
                         f"def function_{i}_{j}(x, y, z=None):",
                         f'    """Function {i}_{j} with multiple operations."""',
-                        f"    temp = x + y",
+                        "    temp = x + y",
                         f"    result = temp * {i} + {j}",
-                        f"    if z:",
-                        f"        result += z",
-                        f"    return result",
+                        "    if z:",
+                        "        result += z",
+                        "    return result",
                         "",
                     ]
                 )
@@ -320,7 +320,7 @@ class TestConcurrentIndexing:
                         f"def func_{i}_{j}(a, b, c):",
                         f'    """Function {i}_{j}."""',
                         f"    result = (a + b) * c + {i * j}",
-                        f"    return result",
+                        "    return result",
                         "",
                     ]
                 )
@@ -359,9 +359,9 @@ class TestMemoryUsage:
                     [
                         f"def function_{i}_{j}(x, y):",
                         f'    """Function {i}_{j} does computations."""',
-                        f"    temp = x + y",
+                        "    temp = x + y",
                         f"    result = temp * {i * j}",
-                        f"    return result",
+                        "    return result",
                         "",
                     ]
                 )
@@ -389,7 +389,7 @@ class TestMemoryUsage:
         top_stats = snapshot_after.compare_to(snapshot_before, "lineno")
         total_diff = sum(stat.size_diff for stat in top_stats)
 
-        print(f"\n=== Memory Usage ===")
+        print("\n=== Memory Usage ===")
         print(f"Files indexed: {stats.files_indexed}")
         print(f"Chunks created: {stats.chunks_created}")
         print(f"Memory delta: {total_diff / 1024 / 1024:.2f} MB")
@@ -425,7 +425,7 @@ class TestRealWorldCodebase:
         assert result.files_indexed > 0
         assert result.chunks_created > 0
 
-        print(f"\n=== Aurora CLI Indexing ===")
+        print("\n=== Aurora CLI Indexing ===")
         print(f"Files indexed: {result.files_indexed}")
         print(f"Chunks created: {result.chunks_created}")
         print(f"Duration: {result.duration_seconds:.2f}s")

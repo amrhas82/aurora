@@ -438,7 +438,7 @@ SO THAT I can archive plans quickly when I know the state is valid
 - Keywords extracted from subgoal text
 - Scoring reflects capability match
 - Threshold (0.5) configurable via config
-- Default fallback: `@full-stack-dev`
+- Default fallback: `@code-developer`
 
 #### FR-4.2: Gap Detection and Recording
 
@@ -446,7 +446,7 @@ SO THAT I can archive plans quickly when I know the state is valid
 
 **The system must**:
 1. If no agent scores >= 0.5, mark as gap
-2. Record gap in `agents.json`: `{ "subgoal_id": "sg-X", "recommended_agent": "@<best-match>", "agent_exists": false, "fallback": "@full-stack-dev", "suggested_capabilities": ["keyword1", "keyword2"] }`
+2. Record gap in `agents.json`: `{ "subgoal_id": "sg-X", "recommended_agent": "@<best-match>", "agent_exists": false, "fallback": "@code-developer", "suggested_capabilities": ["keyword1", "keyword2"] }`
 3. Display gap warning during plan creation
 4. Suggest creating missing agent or using fallback
 
@@ -671,15 +671,15 @@ User: /aur:plan "Implement OAuth2"
    │  Goal: Implement OAuth2                     │
    │  Subgoals: 4                                │
    │    [sg-1] Design auth architecture          │
-   │           @holistic-architect               │
+   │           @system-architect               │
    │    [sg-2] Implement auth flow               │
-   │           @full-stack-dev                   │
+   │           @code-developer                   │
    │           depends: sg-1                     │
    │    [sg-3] Add security measures             │
-   │           @full-stack-dev                   │
+   │           @code-developer                   │
    │           depends: sg-2                     │
    │    [sg-4] Write auth tests                  │
-   │           @qa-test-architect (gap!)         │
+   │           @quality-assurance (gap!)         │
    │           depends: sg-2, sg-3               │
    │                                             │
    │  Files: 8 resolved (avg: 0.85)              │
@@ -718,7 +718,7 @@ User: /aur:plan "Implement OAuth2"
 |-----------------|----------|--------------|
 | LLM unavailable | Fallback to heuristics | "Using rule-based decomposition (LLM unavailable)" |
 | Memory not indexed | Generic paths, warning | "Memory not indexed. Run 'aur mem index .'" |
-| No agents found | Use default agent | "No agents in manifest. Using @full-stack-dev" |
+| No agents found | Use default agent | "No agents in manifest. Using @code-developer" |
 | Manifest load failure | Skip agent recommendations | "Agent manifest unavailable. Skipping recommendations." |
 | Archive validation failure | Abort with details | "Validation failed: <details>. Fix or use --no-validate." |
 
@@ -774,7 +774,7 @@ planning:
   agent_matching:
     enabled: true  # Enable agent capability matching
     score_threshold: 0.5  # Minimum score for match
-    default_fallback: "@full-stack-dev"  # Default fallback agent
+    default_fallback: "@code-developer"  # Default fallback agent
 
   checkpoint:
     enabled: true  # Enable user checkpoint

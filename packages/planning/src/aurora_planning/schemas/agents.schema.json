@@ -75,7 +75,7 @@
             "type": "string",
             "pattern": "^@[a-z0-9-]+$",
             "description": "Recommended agent for this subgoal (format: @agent-name)",
-            "examples": ["@full-stack-dev", "@qa-test-architect", "@holistic-architect"]
+            "examples": ["@code-developer", "@quality-assurance", "@system-architect"]
           },
           "status": {
             "type": "string",

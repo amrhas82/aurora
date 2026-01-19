@@ -25,15 +25,15 @@ class TestComplexityAssessmentIntegration:
         for query in simple_queries:
             result = assess_complexity(query, llm_client=None)
 
-            assert result["complexity"] == "SIMPLE", (
-                f"Query '{query}' should be classified as SIMPLE, " f"got {result['complexity']}"
-            )
-            assert result["confidence"] >= 0.5, (
-                f"Confidence should be >= 0.5 for SIMPLE query, " f"got {result['confidence']}"
-            )
-            assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for SIMPLE query, " f"got {result['method']}"
-            )
+            assert (
+                result["complexity"] == "SIMPLE"
+            ), f"Query '{query}' should be classified as SIMPLE, got {result['complexity']}"
+            assert (
+                result["confidence"] >= 0.5
+            ), f"Confidence should be >= 0.5 for SIMPLE query, got {result['confidence']}"
+            assert (
+                result["method"] == "keyword"
+            ), f"Method should be 'keyword' for SIMPLE query, got {result['method']}"
 
     def test_medium_query_classification(self):
         """Verify MEDIUM queries are correctly classified."""
@@ -48,15 +48,15 @@ class TestComplexityAssessmentIntegration:
         for query in medium_queries:
             result = assess_complexity(query, llm_client=None)
 
-            assert result["complexity"] == "MEDIUM", (
-                f"Query '{query}' should be classified as MEDIUM, " f"got {result['complexity']}"
-            )
-            assert result["confidence"] >= 0.5, (
-                f"Confidence should be >= 0.5 for MEDIUM query, " f"got {result['confidence']}"
-            )
-            assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for MEDIUM query, " f"got {result['method']}"
-            )
+            assert (
+                result["complexity"] == "MEDIUM"
+            ), f"Query '{query}' should be classified as MEDIUM, got {result['complexity']}"
+            assert (
+                result["confidence"] >= 0.5
+            ), f"Confidence should be >= 0.5 for MEDIUM query, got {result['confidence']}"
+            assert (
+                result["method"] == "keyword"
+            ), f"Method should be 'keyword' for MEDIUM query, got {result['method']}"
 
     def test_complex_query_classification(self):
         """Verify COMPLEX queries are correctly classified."""
@@ -71,15 +71,15 @@ class TestComplexityAssessmentIntegration:
         for query in complex_queries:
             result = assess_complexity(query, llm_client=None)
 
-            assert result["complexity"] == "COMPLEX", (
-                f"Query '{query}' should be classified as COMPLEX, " f"got {result['complexity']}"
-            )
-            assert result["confidence"] >= 0.5, (
-                f"Confidence should be >= 0.5 for COMPLEX query, " f"got {result['confidence']}"
-            )
-            assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for COMPLEX query, " f"got {result['method']}"
-            )
+            assert (
+                result["complexity"] == "COMPLEX"
+            ), f"Query '{query}' should be classified as COMPLEX, got {result['complexity']}"
+            assert (
+                result["confidence"] >= 0.5
+            ), f"Confidence should be >= 0.5 for COMPLEX query, got {result['confidence']}"
+            assert (
+                result["method"] == "keyword"
+            ), f"Method should be 'keyword' for COMPLEX query, got {result['method']}"
 
     def test_critical_query_classification(self):
         """Verify CRITICAL queries are correctly classified."""
@@ -95,15 +95,15 @@ class TestComplexityAssessmentIntegration:
         for query in critical_queries:
             result = assess_complexity(query, llm_client=None)
 
-            assert result["complexity"] == "CRITICAL", (
-                f"Query '{query}' should be classified as CRITICAL, " f"got {result['complexity']}"
-            )
-            assert result["confidence"] >= 0.9, (
-                f"Confidence should be >= 0.9 for CRITICAL query, " f"got {result['confidence']}"
-            )
-            assert result["method"] == "keyword", (
-                f"Method should be 'keyword' for CRITICAL query, " f"got {result['method']}"
-            )
+            assert (
+                result["complexity"] == "CRITICAL"
+            ), f"Query '{query}' should be classified as CRITICAL, got {result['complexity']}"
+            assert (
+                result["confidence"] >= 0.9
+            ), f"Confidence should be >= 0.9 for CRITICAL query, got {result['confidence']}"
+            assert (
+                result["method"] == "keyword"
+            ), f"Method should be 'keyword' for CRITICAL query, got {result['method']}"
 
     def test_orchestrator_receives_correct_format(self):
         """Verify orchestrator receives correct format from assess_complexity()."""
@@ -193,9 +193,7 @@ class TestComplexityAssessmentIntegration:
         latency_ms = (end_time - start_time) * 1000
 
         # Should complete in under 2ms (target from task 7.12)
-        assert latency_ms < 2.0, (
-            f"Complexity assessment took {latency_ms:.2f}ms, " f"should be < 2ms"
-        )
+        assert latency_ms < 2.0, f"Complexity assessment took {latency_ms:.2f}ms, should be < 2ms"
 
         # Verify result is valid
         assert result["complexity"] in ["SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL"]
@@ -238,6 +236,6 @@ class TestComplexityLevelCoverage:
         """Verify all 4 complexity levels can be reached."""
         result = assess_complexity(query, llm_client=None)
 
-        assert result["complexity"] == expected_level, (
-            f"Query '{query}' should be {expected_level}, " f"got {result['complexity']}"
-        )
+        assert (
+            result["complexity"] == expected_level
+        ), f"Query '{query}' should be {expected_level}, got {result['complexity']}"

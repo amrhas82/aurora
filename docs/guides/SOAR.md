@@ -222,16 +222,16 @@ aur soar "Explain how payment processing works in this codebase"
 # Phase 1: ASSESS → COMPLEX
 # Phase 2: RETRIEVE → Found 15 relevant chunks
 # Phase 3: DECOMPOSE → 4 subgoals:
-#   - Identify payment entry points (@full-stack-dev)
-#   - Trace payment validation logic (@full-stack-dev)
-#   - Map database transactions (@full-stack-dev)
-#   - Document external API calls (@full-stack-dev)
+#   - Identify payment entry points (@code-developer)
+#   - Trace payment validation logic (@code-developer)
+#   - Map database transactions (@code-developer)
+#   - Document external API calls (@code-developer)
 # Phase 4: VERIFY LITE → PASS (all agents found, no circular deps)
 # Phase 5: COLLECT → Executing 4 agents...
-#   [Agent 1/4] full-stack-dev: Starting...
-#   [Agent 1/4] full-stack-dev: Completed (3.2s)
-#   [Agent 2/4] full-stack-dev: Starting...
-#   [Agent 2/4] full-stack-dev: Completed (2.8s)
+#   [Agent 1/4] code-developer: Starting...
+#   [Agent 1/4] code-developer: Completed (3.2s)
+#   [Agent 2/4] code-developer: Starting...
+#   [Agent 2/4] code-developer: Completed (2.8s)
 #   ...
 # Phase 6: SYNTHESIZE → Combining 4 agent outputs
 # Phase 7: RECORD → Cached reasoning pattern (confidence: 0.89)
@@ -258,11 +258,11 @@ aur goals "Add OAuth2 authentication with JWT tokens" --verbose
 # Phase 1: ASSESS → COMPLEX
 # Phase 2: RETRIEVE → Found 12 relevant files in src/auth/
 # Phase 3: DECOMPOSE → 5 subgoals with agent assignments:
-#   sg-1: Set up OAuth2 provider integration (@full-stack-dev)
-#   sg-2: Implement JWT token management (@full-stack-dev)
-#   sg-3: Create login/logout endpoints (@full-stack-dev)
-#   sg-4: Add authentication middleware (@full-stack-dev)
-#   sg-5: Design authentication UI (@ux-expert)
+#   sg-1: Set up OAuth2 provider integration (@code-developer)
+#   sg-2: Implement JWT token management (@code-developer)
+#   sg-3: Create login/logout endpoints (@code-developer)
+#   sg-4: Add authentication middleware (@code-developer)
+#   sg-5: Design authentication UI (@ui-designer)
 # Phase 4: VERIFY LITE → PASS (all agents found, no circular deps)
 # Phase 5: (Skipped - goals mode doesn't execute agents)
 # Phase 6: (Skipped - goals mode outputs goals.json instead)
@@ -367,10 +367,10 @@ aur goals "Add Stripe payment processing" \
 # - Phase 1: ASSESS → Determines goal is COMPLEX
 # - Phase 2: RETRIEVE → Finds relevant files in src/checkout/
 # - Phase 3: DECOMPOSE → Creates 5 subgoals:
-#     sg-1: Set up Stripe SDK (@full-stack-dev)
-#     sg-2: Create payment endpoints (@full-stack-dev)
-#     sg-3: Add webhook handlers (@full-stack-dev)
-#     sg-4: Implement payment UI (@ux-expert)
+#     sg-1: Set up Stripe SDK (@code-developer)
+#     sg-2: Create payment endpoints (@code-developer)
+#     sg-3: Add webhook handlers (@code-developer)
+#     sg-4: Implement payment UI (@ui-designer)
 #     sg-5: Configure PCI compliance (@security-engineer)
 # - Phase 4: VERIFY LITE → Validates decomposition + assigns agents
 #     ✓ All agents found except security-engineer

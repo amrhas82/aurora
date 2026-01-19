@@ -27,22 +27,22 @@ class TestGapDetection:
                 id="sg-2",
                 title="Write tests",
                 description="Create test suite",
-                recommended_agent="@qa-test-architect",
+                recommended_agent="@quality-assurance",
             ),
         ]
 
         recommendations = {
-            "sg-1": ("@full-stack-dev", 0.15),  # Low confidence - gap
-            "sg-2": ("@qa-test-architect", 0.85),  # High confidence - no gap
+            "sg-1": ("@code-developer", 0.15),  # Low confidence - gap
+            "sg-2": ("@quality-assurance", 0.85),  # High confidence - no gap
         }
 
         # Mock manifest
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "qa-test-architect"
+        mock_agent.id = "quality-assurance"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(
-            side_effect=lambda x: mock_agent if x == "qa-test-architect" else None
+            side_effect=lambda x: mock_agent if x == "quality-assurance" else None
         )
 
         recommender = AgentRecommender(
@@ -56,7 +56,7 @@ class TestGapDetection:
         # Assert
         assert len(gaps) == 1
         assert gaps[0].subgoal_id == "sg-1"
-        assert gaps[0].fallback == "@full-stack-dev"
+        assert gaps[0].fallback == "@code-developer"
 
     def test_detect_gaps_no_gaps_all_high_confidence(self):
         """Test that no gaps detected when all confidence scores >= 0.5."""
@@ -66,26 +66,26 @@ class TestGapDetection:
                 id="sg-1",
                 title="Write tests",
                 description="Create test suite",
-                recommended_agent="@qa-test-architect",
+                recommended_agent="@quality-assurance",
             ),
             Subgoal(
                 id="sg-2",
                 title="Implement API",
                 description="Build REST API",
-                recommended_agent="@full-stack-dev",
+                recommended_agent="@code-developer",
             ),
         ]
 
         recommendations = {
-            "sg-1": ("@qa-test-architect", 0.85),
-            "sg-2": ("@full-stack-dev", 0.72),
+            "sg-1": ("@quality-assurance", 0.85),
+            "sg-2": ("@code-developer", 0.72),
         }
 
         mock_manifest = MagicMock()
         mock_agent1 = MagicMock()
-        mock_agent1.id = "qa-test-architect"
+        mock_agent1.id = "quality-assurance"
         mock_agent2 = MagicMock()
-        mock_agent2.id = "full-stack-dev"
+        mock_agent2.id = "code-developer"
         mock_manifest.agents = [mock_agent1, mock_agent2]
         mock_manifest.get_agent = MagicMock(return_value=mock_agent1)
 
@@ -113,12 +113,12 @@ class TestGapDetection:
         ]
 
         recommendations = {
-            "sg-1": ("@full-stack-dev", 0.15),  # Low confidence
+            "sg-1": ("@code-developer", 0.15),  # Low confidence
         }
 
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(return_value=None)  # Agent doesn't exist
 
@@ -151,12 +151,12 @@ class TestGapDetection:
         ]
 
         recommendations = {
-            "sg-1": ("@full-stack-dev", 0.25),
+            "sg-1": ("@code-developer", 0.25),
         }
 
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(return_value=None)
 
@@ -192,12 +192,12 @@ class TestGapDetection:
         ]
 
         recommendations = {
-            "sg-1": ("@full-stack-dev", 0.2),
+            "sg-1": ("@code-developer", 0.2),
         }
 
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(return_value=None)
 
@@ -235,22 +235,22 @@ class TestGapDetection:
                 id="sg-3",
                 title="Task 3",
                 description="General task",
-                recommended_agent="@full-stack-dev",
+                recommended_agent="@code-developer",
             ),
         ]
 
         recommendations = {
             "sg-1": ("@fallback", 0.15),
             "sg-2": ("@fallback", 0.25),
-            "sg-3": ("@full-stack-dev", 0.85),
+            "sg-3": ("@code-developer", 0.85),
         }
 
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(
-            side_effect=lambda x: mock_agent if x == "full-stack-dev" else None
+            side_effect=lambda x: mock_agent if x == "code-developer" else None
         )
 
         recommender = AgentRecommender(
@@ -330,14 +330,14 @@ class TestGapDetection:
         # Arrange
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "qa-test-architect"
+        mock_agent.id = "quality-assurance"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(return_value=mock_agent)
 
         recommender = AgentRecommender(manifest=mock_manifest)
 
         # Act
-        exists = recommender.verify_agent_exists("@qa-test-architect")
+        exists = recommender.verify_agent_exists("@quality-assurance")
 
         # Assert
         assert exists is True
@@ -362,15 +362,15 @@ class TestGapDetection:
         # Arrange
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(return_value=mock_agent)
 
         recommender = AgentRecommender(manifest=mock_manifest)
 
         # Act
-        with_prefix = recommender.verify_agent_exists("@full-stack-dev")
-        without_prefix = recommender.verify_agent_exists("full-stack-dev")
+        with_prefix = recommender.verify_agent_exists("@code-developer")
+        without_prefix = recommender.verify_agent_exists("code-developer")
 
         # Assert
         assert with_prefix is True

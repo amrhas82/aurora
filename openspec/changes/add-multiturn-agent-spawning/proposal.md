@@ -47,9 +47,9 @@ Add multi-turn capability to `aur spawn` that allows continuing conversations wi
 #### Pattern 1: Interactive REPL Mode
 ```bash
 # Spawn agent in interactive mode
-$ aur spawn --interactive --agent qa-test-architect
+$ aur spawn --interactive --agent quality-assurance
 
-Aurora Spawn Interactive (qa-test-architect)
+Aurora Spawn Interactive (quality-assurance)
 Type /help for commands, /exit to quit
 
 > Analyze test coverage for authentication module

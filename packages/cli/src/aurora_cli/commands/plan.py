@@ -476,7 +476,7 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
         if not sg.agent_exists:
             console.print("\n   [yellow]Agent Gap Detected:[/]")
             console.print(f"   - Missing: {sg.recommended_agent}")
-            console.print("   - Fallback: Use @business-analyst or @full-stack-dev")
+            console.print("   - Fallback: Use @market-researcher or @code-developer")
 
     if result.files_status:
         console.print("\n[bold]Files:[/]")

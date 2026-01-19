@@ -374,7 +374,7 @@ coders = registry.find_by_capability("code_implementation")
 print(f"Found {len(coders)} coding agents")
 
 # Get specific agent
-qa_agent = registry.get_agent("qa-test-architect")
+qa_agent = registry.get_agent("quality-assurance")
 if qa_agent:
     print(f"QA agent available: {qa_agent.availability}")
 ```

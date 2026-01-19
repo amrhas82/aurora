@@ -205,7 +205,7 @@ class TestSpawn:
     @pytest.mark.asyncio
     async def test_spawn_with_agent_flag(self):
         """Test spawn adds --agent flag when agent parameter provided."""
-        task = SpawnTask(prompt="test prompt", agent="full-stack-dev")
+        task = SpawnTask(prompt="test prompt", agent="code-developer")
 
         mock_process = AsyncMock()
         mock_process.communicate = AsyncMock(return_value=(b"output", b""))
@@ -222,7 +222,7 @@ class TestSpawn:
         call_args = mock_exec.call_args[0]
         assert "--agent" in call_args
         agent_index = call_args.index("--agent")
-        assert call_args[agent_index + 1] == "full-stack-dev"
+        assert call_args[agent_index + 1] == "code-developer"
 
     @pytest.mark.asyncio
     async def test_spawn_streaming_output(self):

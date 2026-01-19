@@ -2,11 +2,11 @@
 ## Clarifying the Relationship
 
 **Date**: December 5, 2025
-**Question**: Does the business-analyst agent persona use CoT, ReAct techniques mentioned in agents-optimize-token-prediction-analysis.md?
+**Question**: Does the market-researcher agent persona use CoT, ReAct techniques mentioned in agents-optimize-token-prediction-analysis.md?
 
 **Answer**: It's more nuanced. Let me clarify the difference between:
 1. **Token prediction optimization techniques** (CoT, ReAct, etc.)
-2. **Agent personas** (business-analyst, architect, etc.)
+2. **Agent personas** (market-researcher, architect, etc.)
 
 ---
 
@@ -158,7 +158,7 @@ Business Analyst Persona Instructions:
 ## Why the Confusion?
 
 You might have thought:
-> "The business-analyst agent uses CoT/ReAct techniques"
+> "The market-researcher agent uses CoT/ReAct techniques"
 
 This is **partially correct but slightly imprecise**:
 
@@ -178,7 +178,7 @@ This is **partially correct but slightly imprecise**:
 
 ### The System Prompt Stack
 
-When you use @business-analyst, here's what happens:
+When you use @market-researcher, here's what happens:
 
 ```
 ┌─────────────────────────────────┐
@@ -187,7 +187,7 @@ When you use @business-analyst, here's what happens:
              ↓
 ┌─────────────────────────────────┐
 │ SELECT PERSONA                  │
-│ Load: business-analyst.md       │
+│ Load: market-researcher.md       │
 │ Apply: Analytical, curious,     │
 │        structured, evidence-    │
 │        based instructions       │
@@ -277,7 +277,7 @@ Problems:
 
 ```
 User: "Analyze the AI agent market"
-System: You are business-analyst persona (analytical, structured)
+System: You are market-researcher persona (analytical, structured)
 
 LLM response (constrained by persona):
 "I'll analyze this systematically. First, let me ask clarifying questions:
@@ -354,7 +354,7 @@ So implicitly yes, but not explicitly in the persona definition.
 
 ## Summary: Your Understanding
 
-### You Asked: Does business-analyst use CoT/ReAct?
+### You Asked: Does market-researcher use CoT/ReAct?
 
 #### **My Answer Was Misleading** (In the token prediction doc)
 

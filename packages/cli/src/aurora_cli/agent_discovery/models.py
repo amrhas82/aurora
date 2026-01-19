@@ -39,7 +39,7 @@ class AgentInfo(BaseModel):
     """Agent metadata extracted from markdown frontmatter.
 
     Required fields:
-        id: Unique kebab-case identifier (e.g., 'qa-test-architect')
+        id: Unique kebab-case identifier (e.g., 'quality-assurance')
         role: Agent's primary role/title
         goal: Brief description of agent's purpose
 
@@ -53,7 +53,7 @@ class AgentInfo(BaseModel):
 
     Example frontmatter:
         ---
-        id: qa-test-architect
+        id: quality-assurance
         role: Test Architect & Quality Advisor
         goal: Ensure comprehensive test coverage and quality standards
         category: qa
@@ -123,7 +123,7 @@ class AgentInfo(BaseModel):
     def validate_kebab_case_id(cls, v: str) -> str:
         """Validate that agent ID is in kebab-case format.
 
-        Valid examples: 'qa-test-architect', 'full-stack-dev', 'orchestrator'
+        Valid examples: 'quality-assurance', 'code-developer', 'orchestrator'
         Invalid examples: 'QA_Test', 'fullStackDev', 'test architect'
 
         Args:
@@ -145,7 +145,7 @@ class AgentInfo(BaseModel):
         if not re.match(pattern, v):
             raise ValueError(
                 f"Agent ID must be kebab-case (lowercase letters, numbers, hyphens). "
-                f"Got: '{v}'. Examples: 'qa-test-architect', '1-create-prd'"
+                f"Got: '{v}'. Examples: 'quality-assurance', '1-create-prd'"
             )
 
         return v

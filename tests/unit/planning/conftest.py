@@ -66,7 +66,7 @@ def sample_plan_dir(temp_plans_dir: Path, sample_plan_data: dict[str, Any]) -> P
     # Create plan.md
     plan_md = plan_dir / "plan.md"
     plan_md.write_text(
-        f"""# {sample_plan_data['goal']}
+        f"""# {sample_plan_data["goal"]}
 
 ## Subgoals
 
@@ -81,7 +81,7 @@ Implement secure token exchange flow
     # Create prd.md
     prd_md = plan_dir / "prd.md"
     prd_md.write_text(
-        f"""# PRD: {sample_plan_data['goal']}
+        f"""# PRD: {sample_plan_data["goal"]}
 
 ## FR-1: Authentication
 FR-1.1: User must authenticate via OAuth 2.0

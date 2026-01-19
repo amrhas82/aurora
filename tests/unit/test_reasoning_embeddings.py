@@ -26,7 +26,7 @@ def test_reasoning_chunk_creation():
         ],
         tools_used=["Write", "Bash", "Edit"],
         success_score=0.9,
-        metadata={"agent": "full-stack-dev", "duration_seconds": 120},
+        metadata={"agent": "code-developer", "duration_seconds": 120},
     )
 
     assert chunk.id == "reas_001"

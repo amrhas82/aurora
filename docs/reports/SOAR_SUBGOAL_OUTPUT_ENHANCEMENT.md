@@ -44,11 +44,11 @@ Example output:
 --------------------------------------------------------------------------------
 SUBGOAL BREAKDOWN:
   1. Analyze current aur soar output format [CRITICAL]
-     Agent: full-stack-dev
+     Agent: code-developer
   2. Locate SOAR orchestrator code [CRITICAL]
-     Agent: full-stack-dev
+     Agent: code-developer
   3. Design output format for breakdown [CRITICAL] (depends on: 1, 2)
-     Agent: holistic-architect
+     Agent: system-architect
 ```
 
 #### VERBOSE Verbosity Enhancement (lines 251-263)
@@ -65,10 +65,10 @@ SUBGOAL DECOMPOSITION
 ================================================================================
 
 1. Analyze current aur soar output format and identify where subgoal decomposition information is missing [CRITICAL]
-   Assigned Agent: full-stack-dev
+   Assigned Agent: code-developer
 
 2. Design output format for subgoal breakdown that includes goal hierarchy, agent assignments, and dependencies [CRITICAL]
-   Assigned Agent: holistic-architect
+   Assigned Agent: system-architect
    Dependencies: Subgoals 1, 2
 ```
 

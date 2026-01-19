@@ -78,7 +78,7 @@ def get_template_dir() -> Path:
 
     if not template_dir.exists():
         raise FileNotFoundError(
-            f"Bundled templates not found at {template_dir}. " "Package may be corrupted."
+            f"Bundled templates not found at {template_dir}. Package may be corrupted."
         )
 
     return template_dir

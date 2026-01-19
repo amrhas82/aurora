@@ -16,7 +16,7 @@
       "description": "Analyze current aur spawn implementation to understand existing architecture, agent lifecycle, and limitations",
       "ideal_agent": "@system-architect",
       "ideal_agent_desc": "Expert in analyzing system architecture, identifying extension points, and understanding existing patterns",
-      "agent": "@holistic-architect",
+      "agent": "@system-architect",
       "dependencies": []
     },
     {
@@ -25,7 +25,7 @@
       "description": "Research multi-turn conversation patterns and state management approaches for agent systems",
       "ideal_agent": "@research-engineer",
       "ideal_agent_desc": "Expert in researching technical patterns, evaluating approaches, and synthesizing best practices",
-      "agent": "@business-analyst",
+      "agent": "@market-researcher",
       "dependencies": []
     },
     {
@@ -34,7 +34,7 @@
       "description": "Design multi-turn agent architecture including session management, context persistence, and conversation state",
       "ideal_agent": "@system-architect",
       "ideal_agent_desc": "Expert in designing scalable system architectures, state management, and API contracts",
-      "agent": "@holistic-architect",
+      "agent": "@system-architect",
       "dependencies": [
         "sg-1",
         "sg-2"
@@ -44,9 +44,9 @@
       "id": "sg-4",
       "title": "Create product requirements document defining features,...",
       "description": "Create product requirements document defining features, user flows, and acceptance criteria for multi-turn spawning",
-      "ideal_agent": "@product-manager",
+      "ideal_agent": "@feature-planner",
       "ideal_agent_desc": "Expert in defining product requirements, user stories, and feature specifications",
-      "agent": "@product-manager",
+      "agent": "@feature-planner",
       "dependencies": [
         "sg-3"
       ]
@@ -57,7 +57,7 @@
       "description": "Implement core multi-turn session management including state persistence and conversation context tracking",
       "ideal_agent": "@backend-engineer",
       "ideal_agent_desc": "Expert in implementing backend systems, state management, and data persistence",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "dependencies": [
         "sg-4"
       ]
@@ -68,7 +68,7 @@
       "description": "Implement CLI enhancements for multi-turn mode including interactive prompts and session controls",
       "ideal_agent": "@cli-engineer",
       "ideal_agent_desc": "Expert in CLI design, user interaction patterns, and command-line tools",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "dependencies": [
         "sg-5"
       ]
@@ -79,7 +79,7 @@
       "description": "Create comprehensive test suite covering multi-turn scenarios, state persistence, and error handling",
       "ideal_agent": "@qa-engineer",
       "ideal_agent_desc": "Expert in test strategy, quality assurance, and comprehensive test coverage",
-      "agent": "@qa-test-architect",
+      "agent": "@quality-assurance",
       "dependencies": [
         "sg-6"
       ]
@@ -101,37 +101,37 @@
       "subgoal_id": "sg-1",
       "ideal_agent": "@system-architect",
       "ideal_agent_desc": "Expert in analyzing system architecture, identifying extension points, and understanding existing patterns",
-      "assigned_agent": "@holistic-architect"
+      "assigned_agent": "@system-architect"
     },
     {
       "subgoal_id": "sg-2",
       "ideal_agent": "@research-engineer",
       "ideal_agent_desc": "Expert in researching technical patterns, evaluating approaches, and synthesizing best practices",
-      "assigned_agent": "@business-analyst"
+      "assigned_agent": "@market-researcher"
     },
     {
       "subgoal_id": "sg-3",
       "ideal_agent": "@system-architect",
       "ideal_agent_desc": "Expert in designing scalable system architectures, state management, and API contracts",
-      "assigned_agent": "@holistic-architect"
+      "assigned_agent": "@system-architect"
     },
     {
       "subgoal_id": "sg-5",
       "ideal_agent": "@backend-engineer",
       "ideal_agent_desc": "Expert in implementing backend systems, state management, and data persistence",
-      "assigned_agent": "@full-stack-dev"
+      "assigned_agent": "@code-developer"
     },
     {
       "subgoal_id": "sg-6",
       "ideal_agent": "@cli-engineer",
       "ideal_agent_desc": "Expert in CLI design, user interaction patterns, and command-line tools",
-      "assigned_agent": "@full-stack-dev"
+      "assigned_agent": "@code-developer"
     },
     {
       "subgoal_id": "sg-7",
       "ideal_agent": "@qa-engineer",
       "ideal_agent_desc": "Expert in test strategy, quality assurance, and comprehensive test coverage",
-      "assigned_agent": "@qa-test-architect"
+      "assigned_agent": "@quality-assurance"
     },
     {
       "subgoal_id": "sg-8",

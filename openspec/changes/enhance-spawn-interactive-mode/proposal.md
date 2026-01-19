@@ -46,10 +46,10 @@ Add `--interactive` mode that:
 
 ```bash
 # Start interactive session with specific agent
-$ aur spawn --interactive --agent qa-test-architect
+$ aur spawn --interactive --agent quality-assurance
 
 Aurora Spawn Interactive Mode
-Agent: @qa-test-architect
+Agent: @quality-assurance
 Type /help for commands, /exit to quit
 
 > Analyze test coverage for packages/cli

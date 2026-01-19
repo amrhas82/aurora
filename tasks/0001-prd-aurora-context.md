@@ -1323,9 +1323,9 @@ The system maintains an agent registry with auto-discovery:
   "agent_registry": {
     "agents": [
       {
-        "id": "full-stack-dev",
+        "id": "code-developer",
         "type": "mcp",
-        "path": "~/.claude/agents/full-stack-dev",
+        "path": "~/.claude/agents/code-developer",
         "endpoint": null,
         "capabilities": ["code_implementation", "debugging", "refactoring"],
         "domains": ["python", "javascript", "go"],
@@ -2430,8 +2430,8 @@ aurora: retrieving context (budget: 10)...
   code: chunks: 5 (auth.py:0.9, session.py:0.7, ...)
 aurora: decomposing...
   subgoal 1: "Research OAuth providers" → research-agent
-  subgoal 2: "Implement OAuth flow" → full-stack-dev
-  subgoal 3: "Write tests" → qa-test-architect
+  subgoal 2: "Implement OAuth flow" → code-developer
+  subgoal 3: "Write tests" → quality-assurance
 aurora: verifying (adversarial)...
   completeness: 0.9
   consistency: 1.0
@@ -2588,9 +2588,9 @@ File: `~/.aurora/logs/conversations/2025/12/oauth-authentication-2025-12-13.md`
   "output": {
     "subgoals": [
       {"id": "SG1", "description": "Research OAuth2 providers (Auth0, Okta, Custom)", "agent": "research-agent"},
-      {"id": "SG2", "description": "Design user model with OAuth fields", "agent": "full-stack-dev"},
-      {"id": "SG3", "description": "Implement token generation and validation", "agent": "full-stack-dev"},
-      {"id": "SG4", "description": "Write integration tests", "agent": "qa-test-architect"}
+      {"id": "SG2", "description": "Design user model with OAuth fields", "agent": "code-developer"},
+      {"id": "SG3", "description": "Implement token generation and validation", "agent": "code-developer"},
+      {"id": "SG4", "description": "Write integration tests", "agent": "quality-assurance"}
     ]
   },
   "duration_ms": 2100
@@ -2632,9 +2632,9 @@ File: `~/.aurora/logs/conversations/2025/12/oauth-authentication-2025-12-13.md`
   "output": {
     "routing": [
       {"subgoal_id": "SG1", "agent_id": "research-agent", "agent_type": "http", "endpoint": "https://api.example.com/agents/research"},
-      {"subgoal_id": "SG2", "agent_id": "full-stack-dev", "agent_type": "mcp", "path": "~/.claude/agents/full-stack-dev"},
-      {"subgoal_id": "SG3", "agent_id": "full-stack-dev", "agent_type": "mcp", "path": "~/.claude/agents/full-stack-dev"},
-      {"subgoal_id": "SG4", "agent_id": "qa-test-architect", "agent_type": "mcp", "path": "~/.claude/agents/qa-test-architect"}
+      {"subgoal_id": "SG2", "agent_id": "code-developer", "agent_type": "mcp", "path": "~/.claude/agents/code-developer"},
+      {"subgoal_id": "SG3", "agent_id": "code-developer", "agent_type": "mcp", "path": "~/.claude/agents/code-developer"},
+      {"subgoal_id": "SG4", "agent_id": "quality-assurance", "agent_type": "mcp", "path": "~/.claude/agents/quality-assurance"}
     ]
   },
   "duration_ms": 120
@@ -2685,11 +2685,11 @@ File: `~/.aurora/logs/conversations/2025/12/oauth-authentication-2025-12-13.md`
 }
 ```
 
-**Agent SG2: full-stack-dev** (User model design)
+**Agent SG2: code-developer** (User model design)
 ```json
 {
   "subgoal_id": "SG2",
-  "agent_id": "full-stack-dev",
+  "agent_id": "code-developer",
   "status": "success",
   "output": {
     "summary": "Created User model with OAuth fields: oauth_provider, oauth_id, access_token (encrypted), refresh_token (encrypted), token_expiry. Added migration and updated authentication middleware.",

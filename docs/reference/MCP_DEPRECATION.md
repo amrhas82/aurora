@@ -266,7 +266,7 @@ claude
 > "Search the codebase for authentication logic"
 # Claude may choose to use aurora_search_agents or aurora_context
 
-> "Show me the details of the qa-test-architect agent"
+> "Show me the details of the quality-assurance agent"
 # Claude may use aurora_show_agent
 ```
 

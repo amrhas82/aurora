@@ -153,7 +153,7 @@ class ExecutionContext:
     # Metadata
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def __enter__(self) -> "ExecutionContext":
+    def __enter__(self) -> ExecutionContext:
         """Enter context manager."""
         return self
 
@@ -166,7 +166,7 @@ class ExecutionContext:
             except Exception as e:
                 logger.warning(f"Cleanup failed for {self.execution_id}: {e}")
 
-    async def __aenter__(self) -> "ExecutionContext":
+    async def __aenter__(self) -> ExecutionContext:
         """Async enter context manager."""
         return self
 
@@ -553,7 +553,7 @@ class ResourceIsolationManager:
         self._lock_manager.cleanup()
         self._active_contexts.clear()
 
-    async def __aenter__(self) -> "ResourceIsolationManager":
+    async def __aenter__(self) -> ResourceIsolationManager:
         """Async context manager entry."""
         return self
 

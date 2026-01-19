@@ -131,7 +131,7 @@ def agents_group() -> None:
         aur agents list --all              # List agents from all tools
         aur agents list --category qa      # List only QA agents
         aur agents search "test"           # Search for test-related agents
-        aur agents show qa-test-architect  # Show agent details
+        aur agents show quality-assurance  # Show agent details
         aur agents refresh                 # Force manifest refresh
 
     \b
@@ -363,12 +363,12 @@ def show_command(agent_id: str) -> None:
     - Dependencies
     - Source file location
 
-    AGENT_ID is the kebab-case identifier of the agent (e.g., 'qa-test-architect').
+    AGENT_ID is the kebab-case identifier of the agent (e.g., 'quality-assurance').
 
     \b
     Examples:
-        aur agents show qa-test-architect
-        aur agents show full-stack-dev
+        aur agents show quality-assurance
+        aur agents show code-developer
     """
     manifest = get_manifest()
 

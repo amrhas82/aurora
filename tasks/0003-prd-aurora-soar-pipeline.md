@@ -1622,7 +1622,7 @@ def test_performance_benchmarks(benchmark_fixture):
         "id": "SG2",
         "description": "Design user model with OAuth fields",
         "requires": ["G1", "G2"],
-        "agent": "full-stack-dev",
+        "agent": "code-developer",
         "expected_output": "User model schema with OAuth fields",
         "depends_on": ["SG1"]
       },
@@ -1630,7 +1630,7 @@ def test_performance_benchmarks(benchmark_fixture):
         "id": "SG3",
         "description": "Implement token generation and validation",
         "requires": ["G1", "G2"],
-        "agent": "full-stack-dev",
+        "agent": "code-developer",
         "expected_output": "Token management implementation",
         "depends_on": ["SG2"]
       },
@@ -1638,7 +1638,7 @@ def test_performance_benchmarks(benchmark_fixture):
         "id": "SG4",
         "description": "Write integration tests for OAuth flow",
         "requires": ["G1", "G2"],
-        "agent": "qa-test-architect",
+        "agent": "quality-assurance",
         "expected_output": "Passing integration tests",
         "depends_on": ["SG3"]
       }

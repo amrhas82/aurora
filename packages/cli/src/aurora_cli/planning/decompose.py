@@ -428,7 +428,7 @@ class PlanDecomposer:
         use in SOAR decomposition.
 
         Returns:
-            List of agent IDs with @ prefix (e.g., ["@full-stack-dev", "@qa-test-architect"])
+            List of agent IDs with @ prefix (e.g., ["@code-developer", "@quality-assurance"])
             Returns None if manifest cannot be loaded.
             Returns empty list if manifest is empty.
         """
@@ -519,7 +519,7 @@ class PlanDecomposer:
                 # Fallback to legacy suggested_agent if new schema not present
                 if not assigned_agent:
                     assigned_agent = sg_dict.get(
-                        "suggested_agent", sg_dict.get("agent", "full-stack-dev")
+                        "suggested_agent", sg_dict.get("agent", "code-developer")
                     )
                 if not ideal_agent:
                     ideal_agent = assigned_agent  # Assume ideal == assigned for legacy
@@ -612,9 +612,9 @@ class PlanDecomposer:
                 id="sg-1",
                 title="Plan and design approach",
                 description=f"Analyze requirements and design approach for: {goal}",
-                ideal_agent="@holistic-architect",
+                ideal_agent="@system-architect",
                 ideal_agent_desc="System design and architecture specialist",
-                assigned_agent="@holistic-architect",
+                assigned_agent="@system-architect",
             )
         )
 
@@ -624,9 +624,9 @@ class PlanDecomposer:
                 id="sg-2",
                 title="Implement solution",
                 description=f"Implement the planned solution for: {goal}",
-                ideal_agent="@full-stack-dev",
+                ideal_agent="@code-developer",
                 ideal_agent_desc="Full-stack development and implementation",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
         )
 
@@ -636,9 +636,9 @@ class PlanDecomposer:
                 id="sg-3",
                 title="Test and verify",
                 description=f"Write tests and verify solution for: {goal}",
-                ideal_agent="@qa-test-architect",
+                ideal_agent="@quality-assurance",
                 ideal_agent_desc="Quality assurance and testing specialist",
-                assigned_agent="@qa-test-architect",
+                assigned_agent="@quality-assurance",
             )
         )
 
@@ -649,9 +649,9 @@ class PlanDecomposer:
                     id="sg-4",
                     title="Document changes",
                     description=f"Document implementation and update relevant docs for: {goal}",
-                    ideal_agent="@full-stack-dev",
+                    ideal_agent="@code-developer",
                     ideal_agent_desc="Full-stack development and documentation",
-                    assigned_agent="@full-stack-dev",
+                    assigned_agent="@code-developer",
                 )
             )
 

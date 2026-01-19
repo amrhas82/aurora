@@ -314,7 +314,7 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
                     match_display = "[green]✓ Excellent[/]"
                 elif match_quality == "acceptable":
                     agent_display = f"[cyan]@{agent_name}[/]"
-                    match_display = f"[yellow]⚠ Acceptable[/]"
+                    match_display = "[yellow]⚠ Acceptable[/]"
                 else:  # insufficient (shouldn't reach here if spawn logic works)
                     agent_display = f"[red]@{agent_name}[/]"
                     match_display = "[red]✗ Weak[/]"

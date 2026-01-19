@@ -303,7 +303,7 @@
       - For each agent in manifest, calculate score based on keyword overlap with `agent.skills` and `agent.when_to_use`
       - Score = (matching keywords) / (total keywords in subgoal)
       - Return highest-scoring agent with score >= threshold (default 0.5)
-      - Return `("@full-stack-dev", 0.0)` as fallback if no match
+      - Return `("@code-developer", 0.0)` as fallback if no match
     - **Test**: Write `test_recommend_agent_no_match_fallback` - verifies fallback agent used
   - [x] 4.4 Add AgentGap model to planning models
     - **Test First**: Write test in `test_planning_models.py` for `AgentGap` validation
@@ -313,7 +313,7 @@
           subgoal_id: str
           recommended_agent: str
           agent_exists: bool
-          fallback: str = "@full-stack-dev"
+          fallback: str = "@code-developer"
           suggested_capabilities: list[str] = []
       ```
     - Add `agent_gaps: list[AgentGap]` field to Plan model
@@ -324,7 +324,7 @@
       - For each subgoal, if score < threshold (0.5), create AgentGap
       - Record `recommended_agent` (best match even if low score)
       - Set `agent_exists = False` if agent not in manifest
-      - Set `fallback = "@full-stack-dev"`
+      - Set `fallback = "@code-developer"`
       - Set `suggested_capabilities` from extracted keywords
     - Return list of AgentGap objects
     - **Test**: Write test verifying gap metadata is complete

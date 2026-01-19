@@ -617,9 +617,9 @@ class AgentRegistry:
 {
   "agents": [
     {
-      "id": "full-stack-dev",
+      "id": "code-developer",
       "type": "mcp",
-      "path": "~/.claude/agents/full-stack-dev",
+      "path": "~/.claude/agents/code-developer",
       "capabilities": ["code_implementation", "debugging", "refactoring"],
       "domains": ["python", "typescript"],
       "availability": "always"
@@ -1090,7 +1090,7 @@ def test_agent_discovery():
     agents = registry.list_agents()
     assert len(agents) > 0
 
-    coder = registry.get_agent("full-stack-dev")
+    coder = registry.get_agent("code-developer")
     assert coder is not None
     assert "code_implementation" in coder.capabilities
 ```
@@ -1572,9 +1572,9 @@ know:stripe-api:charges:create
 {
   "agents": [
     {
-      "id": "full-stack-dev",
+      "id": "code-developer",
       "type": "mcp",
-      "path": "~/.claude/agents/full-stack-dev",
+      "path": "~/.claude/agents/code-developer",
       "capabilities": ["code_implementation", "debugging", "refactoring"],
       "domains": ["python", "typescript"],
       "availability": "always"

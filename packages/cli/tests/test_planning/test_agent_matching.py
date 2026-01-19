@@ -23,13 +23,13 @@ class TestAgentMatchingWithLLM:
             id="sg-1",
             title="Write comprehensive tests",
             description="Create unit tests and integration tests for the authentication module",
-            recommended_agent="@qa-test-architect",
+            recommended_agent="@quality-assurance",
         )
 
-        # Mock manifest with qa-test-architect
+        # Mock manifest with quality-assurance
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "qa-test-architect"
+        mock_agent.id = "quality-assurance"
         mock_agent.when_to_use = (
             "Use for testing, quality assurance, test architecture, unit tests, integration tests"
         )
@@ -51,7 +51,7 @@ class TestAgentMatchingWithLLM:
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
 
         # Assert
-        assert agent_id == "@qa-test-architect"
+        assert agent_id == "@quality-assurance"
         assert score > 0.0  # Should have some overlap with keywords
 
     def test_keyword_matching_low_score_no_llm(self):
@@ -61,13 +61,13 @@ class TestAgentMatchingWithLLM:
             id="sg-1",
             title="Implement quantum blockchain",
             description="Build quantum-resistant blockchain with zero-knowledge proofs",
-            recommended_agent="@full-stack-dev",
+            recommended_agent="@code-developer",
         )
 
         # Mock manifest with standard agents (no quantum expert)
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_agent.when_to_use = "General development tasks"
         mock_agent.capabilities = ["backend", "frontend", "api"]
         mock_manifest.agents = [mock_agent]
@@ -82,7 +82,7 @@ class TestAgentMatchingWithLLM:
         agent_id, score = recommender.recommend_for_subgoal(subgoal)
 
         # Assert
-        assert agent_id == "@full-stack-dev"  # Fallback
+        assert agent_id == "@code-developer"  # Fallback
         assert score < 0.5
 
     @pytest.mark.asyncio
@@ -93,19 +93,19 @@ class TestAgentMatchingWithLLM:
             id="sg-1",
             title="Design authentication flow",
             description="Create architecture for OAuth2 and JWT authentication",
-            recommended_agent="@holistic-architect",
+            recommended_agent="@system-architect",
         )
 
         # Mock manifest with no good match
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_agent.when_to_use = "General development"
         mock_agent.capabilities = ["coding"]
 
         # Need to properly configure mock agent
         mock_agent2 = MagicMock()
-        mock_agent2.id = "qa-test-architect"
+        mock_agent2.id = "quality-assurance"
         mock_agent2.when_to_use = "Testing"
         mock_agent2.capabilities = ["qa"]
 
@@ -114,7 +114,7 @@ class TestAgentMatchingWithLLM:
         # Mock LLM client
         mock_llm_response = LLMResponse(
             content="""{
-                "agent_id": "@holistic-architect",
+                "agent_id": "@system-architect",
                 "confidence": 0.92,
                 "reasoning": "Architecture design requires system architect"
             }""",
@@ -137,7 +137,7 @@ class TestAgentMatchingWithLLM:
         agent_id, score = await recommender.recommend_for_subgoal_async(subgoal)
 
         # Assert
-        assert agent_id == "@holistic-architect"
+        assert agent_id == "@system-architect"
         assert score == 0.92
         mock_llm_client.generate.assert_called_once()
 
@@ -149,16 +149,16 @@ class TestAgentMatchingWithLLM:
             id="sg-1",
             title="Create user dashboard UI",
             description="Design and implement user dashboard with charts",
-            recommended_agent="@ux-expert",
+            recommended_agent="@ui-designer",
         )
 
         mock_manifest = MagicMock()
         mock_agent1 = MagicMock()
-        mock_agent1.id = "ux-expert"
+        mock_agent1.id = "ui-designer"
         mock_agent1.when_to_use = "UI design"
         mock_agent1.capabilities = ["design"]
         mock_agent2 = MagicMock()
-        mock_agent2.id = "full-stack-dev"
+        mock_agent2.id = "code-developer"
         mock_agent2.when_to_use = "Development"
         mock_agent2.capabilities = ["code"]
         mock_manifest.agents = [mock_agent1, mock_agent2]
@@ -166,7 +166,7 @@ class TestAgentMatchingWithLLM:
         # Mock LLM response
         mock_llm_response = LLMResponse(
             content="""{
-                "agent_id": "@ux-expert",
+                "agent_id": "@ui-designer",
                 "confidence": 0.88,
                 "reasoning": "UI design and dashboard require UX expertise"
             }""",
@@ -189,7 +189,7 @@ class TestAgentMatchingWithLLM:
         agent_id, confidence = await recommender.recommend_for_subgoal_async(subgoal)
 
         # Assert
-        assert agent_id == "@ux-expert"
+        assert agent_id == "@ui-designer"
         assert 0.8 <= confidence <= 0.9
 
     @pytest.mark.asyncio
@@ -200,12 +200,12 @@ class TestAgentMatchingWithLLM:
             id="sg-1",
             title="Implement feature",
             description="Build a new feature",
-            recommended_agent="@full-stack-dev",
+            recommended_agent="@code-developer",
         )
 
         mock_manifest = MagicMock()
         mock_agent = MagicMock()
-        mock_agent.id = "full-stack-dev"
+        mock_agent.id = "code-developer"
         mock_agent.when_to_use = "General tasks"
         mock_agent.capabilities = ["dev"]
         mock_manifest.agents = [mock_agent]
@@ -218,14 +218,14 @@ class TestAgentMatchingWithLLM:
             manifest=mock_manifest,
             score_threshold=0.5,
             llm_client=mock_llm_client,
-            default_fallback="@full-stack-dev",
+            default_fallback="@code-developer",
         )
 
         # Act
         agent_id, score = await recommender.recommend_for_subgoal_async(subgoal)
 
         # Assert - should return fallback, not crash
-        assert agent_id == "@full-stack-dev"
+        assert agent_id == "@code-developer"
         assert score < 0.5
 
     @pytest.mark.asyncio
@@ -236,20 +236,20 @@ class TestAgentMatchingWithLLM:
             id="sg-1",
             title="Test task",
             description="Task description",
-            recommended_agent="@full-stack-dev",
+            recommended_agent="@code-developer",
         )
 
         mock_manifest = MagicMock()
         mock_agent1 = MagicMock()
-        mock_agent1.id = "full-stack-dev"
+        mock_agent1.id = "code-developer"
         mock_agent1.when_to_use = "Development tasks"
         mock_agent2 = MagicMock()
-        mock_agent2.id = "qa-test-architect"
+        mock_agent2.id = "quality-assurance"
         mock_agent2.when_to_use = "Testing tasks"
         mock_manifest.agents = [mock_agent1, mock_agent2]
 
         mock_llm_response = LLMResponse(
-            content='{"agent_id": "@full-stack-dev", "confidence": 0.7, "reasoning": "test"}',
+            content='{"agent_id": "@code-developer", "confidence": 0.7, "reasoning": "test"}',
             model="claude-sonnet",
             input_tokens=100,
             output_tokens=50,
@@ -273,6 +273,6 @@ class TestAgentMatchingWithLLM:
         call_args = mock_llm_client.generate.call_args
         prompt = call_args[0][0]
 
-        assert "full-stack-dev" in prompt
-        assert "qa-test-architect" in prompt
+        assert "code-developer" in prompt
+        assert "quality-assurance" in prompt
         assert "Development tasks" in prompt or "Testing tasks" in prompt

@@ -215,7 +215,7 @@ def record_pattern_lightweight(
     summary = synthesis_result.summary if hasattr(synthesis_result, "summary") else ""
 
     logger.info(
-        f"Recording pattern (lightweight): query='{query[:50]}...', " f"confidence={confidence:.2f}"
+        f"Recording pattern (lightweight): query='{query[:50]}...', confidence={confidence:.2f}"
     )
 
     # Apply caching policy

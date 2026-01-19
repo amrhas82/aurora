@@ -82,16 +82,16 @@ Aurora's execution pipeline lacks proper control mechanisms:
 │ Subgoals: 6                                                   │
 │                                                               │
 │  1. Profile current indexing performance                      │
-│     Agent: @full-stack-dev                                    │
+│     Agent: @code-developer                                    │
 │                                                               │
 │  2. Identify bottlenecks in BM25 scoring                      │
-│     Agent: @full-stack-dev                                    │
+│     Agent: @code-developer                                    │
 │                                                               │
 │  3. Optimize embedding generation                             │
 │     Agent: performance-engineer ⚠ GAP                         │
 │                                                               │
 │  4. Implement parallel indexing                               │
-│     Agent: @full-stack-dev                                    │
+│     Agent: @code-developer                                    │
 │                                                               │
 │ Summary:                                                      │
 │   ✓ 5 subgoals assigned to available agents                   │
@@ -135,13 +135,13 @@ class DecompositionReview:
 │ Tasks: 6                                        │
 │                                                 │
 │  1. [ ] Investigate current memory indexing     │
-│     Agent: @full-stack-dev                      │
+│     Agent: @code-developer                      │
 │                                                 │
 │  2. [ ] Analyze codebase architecture           │
 │     Agent: performance-engineer ⚠ GAP           │
 │                                                 │
 │  3. [ ] Research best practices                 │
-│     Agent: @business-analyst                    │
+│     Agent: @market-researcher                    │
 │  ...                                            │
 │                                                 │
 │ Summary:                                        │
@@ -395,7 +395,7 @@ During execution, show parent task context and current progress:
 │ Progress: [████████░░░░░░░░░░░░] 2/6              │
 │                                                   │
 │ Current: Identify bottlenecks in BM25 scoring     │
-│ Agent: @full-stack-dev                            │
+│ Agent: @code-developer                            │
 │ Status: Running (45s)                             │
 ╰───────────────────────────────────────────────────╯
 ```
@@ -403,7 +403,7 @@ During execution, show parent task context and current progress:
 On completion, update in place:
 ```
 │ Current: Identify bottlenecks in BM25 scoring     │
-│ Agent: @full-stack-dev                            │
+│ Agent: @code-developer                            │
 │ Status: Completed (67s)                           │
 ```
 

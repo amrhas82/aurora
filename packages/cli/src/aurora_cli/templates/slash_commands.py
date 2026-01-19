@@ -238,7 +238,7 @@ PLAN_REFERENCES = """**Reference**
 ```markdown
 ## Phase N: [Name]
 - [ ] N.1 Task description
-  <!-- @agent: @full-stack-dev -->
+  <!-- @agent: @code-developer -->
   - Details
   - **Validation**: How to verify
 ```"""

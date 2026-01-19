@@ -36,7 +36,7 @@ class ConnectionPool:
         db_path: str,
         timeout: float = 5.0,
         wal_mode: bool = True,
-        schema_initialized: bool = False
+        schema_initialized: bool = False,
     ) -> tuple[sqlite3.Connection, bool]:
         """Get or create a connection from the pool.
 
@@ -119,7 +119,7 @@ class ConnectionPool:
                 except:
                     pass
 
-    def clear_pool(self, db_path: Optional[str] = None) -> None:
+    def clear_pool(self, db_path: str | None = None) -> None:
         """Clear connections from pool.
 
         Args:
@@ -149,7 +149,7 @@ class ConnectionPool:
 
 
 # Global connection pool instance
-_global_pool: Optional[ConnectionPool] = None
+_global_pool: ConnectionPool | None = None
 _pool_lock = threading.Lock()
 
 
@@ -169,7 +169,7 @@ def get_connection_pool() -> ConnectionPool:
     return _global_pool
 
 
-def clear_connection_pool(db_path: Optional[str] = None) -> None:
+def clear_connection_pool(db_path: str | None = None) -> None:
     """Clear the global connection pool.
 
     Args:

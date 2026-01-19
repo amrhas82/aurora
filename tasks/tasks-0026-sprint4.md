@@ -262,7 +262,7 @@
           manifest: Optional[AgentManifest] = None,
           config: Optional[any] = None,
           score_threshold: float = 0.5,
-          default_fallback: str = "@full-stack-dev",
+          default_fallback: str = "@code-developer",
           llm_client: Optional[CLIPipeLLMClient] = None,  # NEW
       ) -> None:
           """Initialize with optional LLM client for fallback."""
@@ -622,7 +622,7 @@
             "id": "sg-1",
             "title": "Implement OAuth provider integration",
             "description": "Add Google/GitHub OAuth providers",
-            "agent": "@full-stack-dev",
+            "agent": "@code-developer",
             "confidence": 0.85,
             "dependencies": []
           },
@@ -630,7 +630,7 @@
             "id": "sg-2",
             "title": "Write OAuth integration tests",
             "description": "Test OAuth flow end-to-end",
-            "agent": "@qa-test-architect",
+            "agent": "@quality-assurance",
             "confidence": 0.92,
             "dependencies": ["sg-1"]
           }
@@ -639,7 +639,7 @@
           {
             "subgoal_id": "sg-3",
             "suggested_capabilities": ["security", "audit"],
-            "fallback": "@full-stack-dev"
+            "fallback": "@code-developer"
           }
         ]
       }
@@ -727,7 +727,7 @@
       # Step 4: Verify tasks.md format
       # Should have agent metadata comments:
       # - [ ] 1. Implement login endpoint
-      #   <!-- agent: @full-stack-dev -->
+      #   <!-- agent: @code-developer -->
 
       # Step 5: Test with different CLI tools
       aur goals "Add caching layer" --tool cursor --verbose
@@ -994,7 +994,7 @@ After Sprint 4, all five execution tracks are complete:
       "id": "sg-1",
       "title": "Implement OAuth provider integration",
       "description": "Add Google/GitHub OAuth providers",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.85,
       "dependencies": []
     },
@@ -1002,7 +1002,7 @@ After Sprint 4, all five execution tracks are complete:
       "id": "sg-2",
       "title": "Write OAuth integration tests",
       "description": "Test OAuth flow end-to-end",
-      "agent": "@qa-test-architect",
+      "agent": "@quality-assurance",
       "confidence": 0.92,
       "dependencies": ["sg-1"]
     }
@@ -1011,7 +1011,7 @@ After Sprint 4, all five execution tracks are complete:
     {
       "subgoal_id": "sg-3",
       "suggested_capabilities": ["security", "audit"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }

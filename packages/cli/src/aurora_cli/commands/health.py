@@ -272,15 +272,15 @@ def _display_summary_table(console: Console, all_metrics: dict):
 def _display_aggregate_stats(console: Console, summary: dict):
     """Display aggregate statistics across all agents."""
     panel_content = f"""
-Total Agents: {summary['total_agents']}
-Total Executions: {summary['total_executions']}
-Total Failures: {summary['total_failures']}
-Avg Failure Rate: {summary['avg_failure_rate'] * 100:.1f}%
-Avg Detection Latency: {summary['avg_detection_latency']:.2f}s
-Avg Recovery Rate: {summary['avg_recovery_rate'] * 100:.1f}%
+Total Agents: {summary["total_agents"]}
+Total Executions: {summary["total_executions"]}
+Total Failures: {summary["total_failures"]}
+Avg Failure Rate: {summary["avg_failure_rate"] * 100:.1f}%
+Avg Detection Latency: {summary["avg_detection_latency"]:.2f}s
+Avg Recovery Rate: {summary["avg_recovery_rate"] * 100:.1f}%
 
-Detection Latency P95: {summary['detection_latency_stats']['p95']:.2f}s
-Detection Latency P99: {summary['detection_latency_stats']['p99']:.2f}s
+Detection Latency P95: {summary["detection_latency_stats"]["p95"]:.2f}s
+Detection Latency P99: {summary["detection_latency_stats"]["p99"]:.2f}s
     """.strip()
 
     panel = Panel(

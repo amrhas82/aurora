@@ -187,9 +187,9 @@ class TestEndToEndSearchQuality:
                     print(f"  ✓ {query} → rank {rank}")
 
         # Assert MRR meets threshold
-        assert mrr >= 0.85, (
-            f"MRR {mrr:.3f} below threshold 0.85. " f"BM25 tri-hybrid search quality insufficient."
-        )
+        assert (
+            mrr >= 0.85
+        ), f"MRR {mrr:.3f} below threshold 0.85. BM25 tri-hybrid search quality insufficient."
 
     def test_exact_match_top_rank(self, memory_manager, memory_store, aurora_subset):
         """Test that exact identifier matches rank first."""
@@ -216,7 +216,7 @@ class TestEndToEndSearchQuality:
             top_result = results[0]
             if top_result.name != expected_name:
                 failures.append(
-                    f"{query}: expected '{expected_name}' at rank 1, " f"got '{top_result.name}'"
+                    f"{query}: expected '{expected_name}' at rank 1, got '{top_result.name}'"
                 )
 
         assert not failures, "Exact match queries must rank target at position 1:\n" + "\n".join(

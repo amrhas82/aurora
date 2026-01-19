@@ -6,6 +6,7 @@ Tests validate:
 2. Accuracy against test corpus (>85% required)
 3. Specific pattern detection
 """
+
 import pytest
 
 from aurora_soar.phases.assess import ComplexityAssessor, assess_complexity

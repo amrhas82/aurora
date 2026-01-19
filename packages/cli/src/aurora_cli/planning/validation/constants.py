@@ -46,7 +46,7 @@ class VALIDATION_MESSAGES:
     PLAN_WHAT_EMPTY = "What Changes section cannot be empty"
     PLAN_NO_MODIFICATIONS = "Plan must have at least one modification"
     PLAN_TOO_MANY_MODIFICATIONS = (
-        f"Consider splitting plans with more than {MAX_MODIFICATIONS_PER_PLAN} " "modifications"
+        f"Consider splitting plans with more than {MAX_MODIFICATIONS_PER_PLAN} modifications"
     )
     MODIFICATION_CAPABILITY_EMPTY = "Capability name cannot be empty"
     MODIFICATION_DESCRIPTION_EMPTY = "Modification description cannot be empty"

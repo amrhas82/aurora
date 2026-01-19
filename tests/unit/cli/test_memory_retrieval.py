@@ -339,6 +339,127 @@ class TestMemoryRetrieverGetContext:
             assert "No context available" in error
 
 
+class TestMemoryRetrieverAsyncLoading:
+    """Tests for async embedding model loading behavior."""
+
+    def test_is_embedding_model_ready_returns_false_when_not_loaded(
+        self, mock_store: MagicMock, mock_config: MagicMock
+    ) -> None:
+        """Returns False when embedding model is not loaded."""
+        with patch(
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+        ) as mock_loader_class:
+            mock_loader = MagicMock()
+            mock_loader.is_loaded.return_value = False
+            mock_loader_class.get_instance.return_value = mock_loader
+
+            retriever = MemoryRetriever(mock_store, mock_config)
+            result = retriever.is_embedding_model_ready()
+
+            assert result is False
+
+    def test_is_embedding_model_ready_returns_true_when_loaded(
+        self, mock_store: MagicMock, mock_config: MagicMock
+    ) -> None:
+        """Returns True when embedding model is loaded."""
+        with patch(
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+        ) as mock_loader_class:
+            mock_loader = MagicMock()
+            mock_loader.is_loaded.return_value = True
+            mock_loader_class.get_instance.return_value = mock_loader
+
+            retriever = MemoryRetriever(mock_store, mock_config)
+            result = retriever.is_embedding_model_ready()
+
+            assert result is True
+
+    def test_is_embedding_model_loading_returns_true_while_loading(
+        self, mock_store: MagicMock, mock_config: MagicMock
+    ) -> None:
+        """Returns True when embedding model is currently loading."""
+        with patch(
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+        ) as mock_loader_class:
+            mock_loader = MagicMock()
+            mock_loader.is_loading.return_value = True
+            mock_loader_class.get_instance.return_value = mock_loader
+
+            retriever = MemoryRetriever(mock_store, mock_config)
+            result = retriever.is_embedding_model_loading()
+
+            assert result is True
+
+    def test_retrieve_fast_returns_tuple(
+        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+    ) -> None:
+        """retrieve_fast returns (results, is_full_hybrid) tuple."""
+        with patch.object(MemoryRetriever, "_get_retriever_with_mode") as mock_get_retriever:
+            mock_hybrid = MagicMock()
+            mock_hybrid.retrieve.return_value = sample_chunks
+            mock_get_retriever.return_value = mock_hybrid
+
+            with patch.object(MemoryRetriever, "is_embedding_model_ready", return_value=True):
+                retriever = MemoryRetriever(mock_store, mock_config)
+                results, is_hybrid = retriever.retrieve_fast("test query")
+
+                assert len(results) == 2
+                assert is_hybrid is True
+
+    def test_retrieve_fast_indicates_bm25_only_when_model_not_ready(
+        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+    ) -> None:
+        """retrieve_fast returns is_full_hybrid=False when model not ready."""
+        with patch.object(MemoryRetriever, "_get_retriever_with_mode") as mock_get_retriever:
+            mock_hybrid = MagicMock()
+            mock_hybrid.retrieve.return_value = sample_chunks
+            mock_get_retriever.return_value = mock_hybrid
+
+            with patch.object(MemoryRetriever, "is_embedding_model_ready", return_value=False):
+                retriever = MemoryRetriever(mock_store, mock_config)
+                results, is_hybrid = retriever.retrieve_fast("test query")
+
+                assert len(results) == 2
+                assert is_hybrid is False
+
+    def test_retrieve_with_wait_false_does_not_block(
+        self, mock_store: MagicMock, mock_config: MagicMock
+    ) -> None:
+        """retrieve with wait_for_model=False doesn't block on model loading."""
+        with patch.object(MemoryRetriever, "_get_retriever_with_mode") as mock_get_retriever:
+            mock_hybrid = MagicMock()
+            mock_hybrid.retrieve.return_value = []
+            mock_get_retriever.return_value = mock_hybrid
+
+            retriever = MemoryRetriever(mock_store, mock_config)
+            retriever.retrieve("test", wait_for_model=False)
+
+            # Verify _get_retriever_with_mode was called with wait_for_model=False
+            mock_get_retriever.assert_called_once_with(wait_for_model=False)
+
+    def test_get_embedding_provider_returns_none_when_loading_and_not_waiting(
+        self, mock_store: MagicMock, mock_config: MagicMock
+    ) -> None:
+        """_get_embedding_provider returns None immediately when not waiting."""
+        with patch(
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+        ) as mock_loader_class:
+            mock_loader = MagicMock()
+            mock_loader.is_loading.return_value = True
+            mock_loader.get_provider_if_ready.return_value = None
+            mock_loader_class.get_instance.return_value = mock_loader
+
+            with patch(
+                "aurora_context_code.semantic.model_utils.is_model_cached", return_value=True
+            ):
+                retriever = MemoryRetriever(mock_store, mock_config)
+                provider = retriever._get_embedding_provider(wait_for_model=False)
+
+                assert provider is None
+                # Verify we didn't call wait_for_model
+                mock_loader.wait_for_model.assert_not_called()
+
+
 class TestDetectLanguage:
     """Tests for _detect_language helper function."""
 

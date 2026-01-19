@@ -28,13 +28,13 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Implement authentication",
                 description="Add OAuth2 authentication flow",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             ),
             Subgoal(
                 id="sg-2",
                 title="Add security tests",
                 description="Write security tests for auth flow",
-                assigned_agent="@qa-test-architect",
+                assigned_agent="@quality-assurance",
             ),
         ]
 
@@ -42,7 +42,7 @@ class TestDecompositionSummaryModel:
             AgentGap(
                 subgoal_id="sg-2",
                 assigned_agent="@security-expert",
-                fallback="@full-stack-dev",
+                fallback="@code-developer",
                 suggested_capabilities=["security", "testing"],
             )
         ]
@@ -93,7 +93,7 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Test task",
                 description="Test description",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
         ]
 
@@ -119,7 +119,7 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Test task",
                 description="Test description",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
         ]
 
@@ -145,7 +145,7 @@ class TestDecompositionSummaryModel:
                 id="sg-1",
                 title="Test task",
                 description="Test description for the task",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
         ]
 
@@ -173,7 +173,7 @@ class TestSummaryDisplay:
                 id="sg-1",
                 title="Test task",
                 description="Test description for the task",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             )
         ]
 

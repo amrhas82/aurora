@@ -98,11 +98,11 @@ async def test_execute_agent_task():
     from aurora_spawner.models import SpawnResult
 
     tasks = [
-        ParsedTask(id="1", description="Agent task", agent="full-stack-dev"),
+        ParsedTask(id="1", description="Agent task", agent="code-developer"),
     ]
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-        f.write("- [ ] 1. Agent task\n<!-- agent: full-stack-dev -->\n")
+        f.write("- [ ] 1. Agent task\n<!-- agent: code-developer -->\n")
         tasks_file = Path(f.name)
 
     try:
@@ -212,22 +212,22 @@ async def test_execute_sequential_order():
 def test_build_agent_prompt():
     """Agent prompt includes task description and context."""
     executor = TaskExecutor()
-    task = ParsedTask(id="1", description="Implement feature X", agent="full-stack-dev")
+    task = ParsedTask(id="1", description="Implement feature X", agent="code-developer")
 
     prompt = executor._build_agent_prompt(task)
 
     assert "Implement feature X" in prompt
-    assert "full-stack-dev" in prompt or "agent" in prompt.lower()
+    assert "code-developer" in prompt or "agent" in prompt.lower()
 
 
 def test_agent_dispatch_prompt_format():
     """Agent dispatch uses Task tool format."""
     executor = TaskExecutor()
-    task = ParsedTask(id="1", description="Build UI component", agent="ux-expert", model="sonnet")
+    task = ParsedTask(id="1", description="Build UI component", agent="ui-designer", model="sonnet")
 
     prompt = executor._build_agent_prompt(task)
 
     # Should include task description
     assert "Build UI component" in prompt
     # Should reference agent
-    assert "ux-expert" in prompt or "agent" in prompt.lower()
+    assert "ui-designer" in prompt or "agent" in prompt.lower()

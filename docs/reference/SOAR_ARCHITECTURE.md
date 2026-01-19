@@ -390,7 +390,7 @@ def detect_gaps(subgoals, agent_recommendations):
             gaps.append(AgentGap(
                 subgoal_id=sg.id,
                 suggested_capabilities=capabilities,
-                fallback=DEFAULT_FALLBACK_AGENT  # @full-stack-dev
+                fallback=DEFAULT_FALLBACK_AGENT  # @code-developer
             ))
     return gaps
 ```
@@ -426,7 +426,7 @@ async def recommend_agent_for_subgoal(subgoal):
         "security audit",
         "penetration testing"
       ],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }
@@ -437,13 +437,13 @@ async def recommend_agent_for_subgoal(subgoal):
 ⚠️ sg-5: Configure PCI compliance (@security-engineer, NOT FOUND)
    Gap detected: Missing agent capabilities
    Suggested capabilities: ["PCI DSS compliance", "security audit"]
-   Fallback: @full-stack-dev (review required)
+   Fallback: @code-developer (review required)
 ```
 
 **Benefits**:
 - **Early Detection**: Identifies missing capabilities before implementation
 - **Clear Guidance**: Suggests what capabilities are needed
-- **Fallback Safety**: Provides workable alternative (@full-stack-dev)
+- **Fallback Safety**: Provides workable alternative (@code-developer)
 - **User Choice**: User can install agent, split work, or accept fallback
 
 ### Phase 6: Collect (Agent Execution)
@@ -665,10 +665,10 @@ SOAR goal decomposition integrates with Aurora's planning workflow to provide en
 │  Phase 1: ASSESS → COMPLEX                                       │
 │  Phase 2: RETRIEVE → src/checkout/*.py (12 files, 0.89 avg rel) │
 │  Phase 3: DECOMPOSE → 5 subgoals:                                │
-│    sg-1: Set up Stripe SDK (@full-stack-dev)                     │
-│    sg-2: Create payment endpoints (@full-stack-dev)               │
-│    sg-3: Add webhook handlers (@full-stack-dev)                   │
-│    sg-4: Implement payment UI (@ux-expert)                        │
+│    sg-1: Set up Stripe SDK (@code-developer)                     │
+│    sg-2: Create payment endpoints (@code-developer)               │
+│    sg-3: Add webhook handlers (@code-developer)                   │
+│    sg-4: Implement payment UI (@ui-designer)                        │
 │    sg-5: PCI compliance (@security-engineer, MISSING)             │
 │  Phase 4: VERIFY → PASS (0.87 score)                             │
 │  Phase 5: ROUTE → Agents matched, 1 gap detected                 │

@@ -130,7 +130,7 @@ class ConflictDetector:
         return "".join(diff_lines)
 
     @classmethod
-    def detect_conflicts(cls, results: list["ToolResult"]) -> ConflictInfo:
+    def detect_conflicts(cls, results: list[ToolResult]) -> ConflictInfo:
         """Analyze tool results and detect conflicts."""
         successful = [r for r in results if r.success and r.output]
         if len(successful) < 2:
@@ -159,8 +159,7 @@ class ConflictDetector:
                 similarity_score=1.0,
             )
 
-        # Find minimum similarity (worst case)
-        min_sim = min(s[2] for s in similarities)
+        # Calculate average similarity
         avg_sim = sum(s[2] for s in similarities) / len(similarities)
 
         # Determine severity based on similarity
@@ -231,9 +230,9 @@ class ConflictResolver:
     @classmethod
     def resolve_by_consensus(
         cls,
-        results: list["ToolResult"],
+        results: list[ToolResult],
         threshold: float = 0.80,
-    ) -> tuple["ToolResult | None", ConflictInfo]:
+    ) -> tuple[ToolResult | None, ConflictInfo]:
         """Find consensus among results. Returns None if no consensus reached."""
         conflict_info = ConflictDetector.detect_conflicts(results)
 
@@ -248,9 +247,9 @@ class ConflictResolver:
     @classmethod
     def resolve_by_weighted_vote(
         cls,
-        results: list["ToolResult"],
+        results: list[ToolResult],
         weights: dict[str, float] | None = None,
-    ) -> tuple["ToolResult", ConflictInfo]:
+    ) -> tuple[ToolResult, ConflictInfo]:
         """Resolve using weighted voting. Each tool's output is weighted."""
         conflict_info = ConflictDetector.detect_conflicts(results)
         weights = weights or {}
@@ -276,7 +275,7 @@ class ConflictResolver:
     @classmethod
     def smart_merge(
         cls,
-        results: list["ToolResult"],
+        results: list[ToolResult],
     ) -> tuple[str, ConflictInfo]:
         """Intelligently merge outputs, preserving unique contributions."""
         conflict_info = ConflictDetector.detect_conflicts(results)
@@ -354,7 +353,7 @@ class AggregatedResult:
     winning_tool: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     conflict_info: ConflictInfo | None = None
-    file_changes: "FileAggregationResult | None" = None
+    file_changes: FileAggregationResult | None = None
 
 
 @dataclass
@@ -431,7 +430,7 @@ class ConcurrentToolExecutor:
         self._isolation_manager: Any = None
 
         # File change aggregator (created lazily if tracking enabled)
-        self._file_aggregator: "FileChangeAggregator | None" = None
+        self._file_aggregator: FileChangeAggregator | None = None
         if self.track_file_changes:
             from aurora_cli.file_change_aggregator import FileChangeAggregator
 
@@ -905,7 +904,7 @@ class ConcurrentToolExecutor:
     def _aggregate_file_changes(
         self,
         tool_results: list[ToolResult],
-    ) -> "FileAggregationResult | None":
+    ) -> FileAggregationResult | None:
         """Aggregate file changes from all tool executions.
 
         Args:

@@ -696,8 +696,8 @@ Central registry of all available agents and their capabilities.
   },
 
   "agents": {
-    "@business-analyst": {
-      "id": "@business-analyst",
+    "@market-researcher": {
+      "id": "@market-researcher",
       "name": "Business Analyst",
       "description": "Market and competitive analysis specialist",
       "registered_at": "2025-12-01T08:00:00Z",
@@ -757,8 +757,8 @@ Central registry of all available agents and their capabilities.
       }
     },
 
-    "@qa-test-architect": {
-      "id": "@qa-test-architect",
+    "@quality-assurance": {
+      "id": "@quality-assurance",
       "capabilities": [...],
       "current_status": {...},
       "performance_history": {...}
@@ -848,17 +848,17 @@ agents = registry.find_agents_for(
 )
 
 # Get agent stats
-stats = registry.get_agent_stats(agent_id="@business-analyst")
+stats = registry.get_agent_stats(agent_id="@market-researcher")
 
 # Check availability
 available = registry.check_availability(
-    agent_id="@business-analyst",
+    agent_id="@market-researcher",
     tasks_needed=1
 )
 
 # Get performance history
 history = registry.get_performance_history(
-    agent_id="@business-analyst",
+    agent_id="@market-researcher",
     days=7
 )
 ```
@@ -972,7 +972,7 @@ Orchestrator Decision:
   Query registry: "Who handles factual_queries + market_size?"
     ↓
 Candidate agents:
-  ├─ @business-analyst: success_rate=0.90, time=15s, cost=$0.30
+  ├─ @market-researcher: success_rate=0.90, time=15s, cost=$0.30
   ├─ @knowledge-specialist: success_rate=0.95, time=10s, cost=$0.20
   └─ direct_llm: success_rate=0.85, time=5s, cost=$0.00
     ↓
@@ -1036,7 +1036,7 @@ Orchestrator Routing (1s):
     Query registry → @research-analyst (success: 0.88)
 
   sg4 (synthesize, strategic_reasoning):
-    Query registry → @business-analyst (success: 0.87)
+    Query registry → @market-researcher (success: 0.87)
     ↓
 Self-Organization (optional):
   Validate: All three research agents can work in parallel? YES
@@ -1073,7 +1073,7 @@ ACT-R Learning (1s):
      ├─ @market-researcher: success + activation +0.15
      ├─ @trend-analyst: success + activation +0.15
      ├─ @research-analyst: success + activation +0.15
-     └─ @business-analyst: success + activation +0.15
+     └─ @market-researcher: success + activation +0.15
 
   3. Registry updated:
      ├─ @market-researcher.invocation_count: 42 → 43
@@ -1442,8 +1442,8 @@ def measure_success(response, followup_message=None):
       "mcp:websearch": 3,
       "mcp:reddit": 2,
       "bash": 4,
-      "@business-analyst": 6,
-      "@qa-test-architect": 2
+      "@market-researcher": 6,
+      "@quality-assurance": 2
     },
 
     "registry_updates": {
@@ -1466,7 +1466,7 @@ def measure_success(response, followup_message=None):
     "month": "December 2025",
     "total_prompts_processed": 427,
     "improvement_vs_last_month": "+0.08",
-    "most_effective_agent": "@business-analyst",
+    "most_effective_agent": "@market-researcher",
     "most_effective_resource": "mcp:websearch",
     "learning_velocity": "13 events/day"
   }
@@ -1831,7 +1831,7 @@ ORCHESTRATOR: WHO SHOULD DO WHAT?
 ├─ Query Registry: "Who handles trend_analysis?"
 │  └─ Found: @trend-analyst (success: 0.92)
 ├─ Query Registry: "Who handles synthesis?"
-│  └─ Found: @business-analyst (success: 0.87)
+│  └─ Found: @market-researcher (success: 0.87)
 └─ Output: {sg1→@market-researcher, sg2→@trend-analyst, ...}
     ↓
 SELF-ORGANIZATION (optional): CAN WE OPTIMIZE?
@@ -1858,7 +1858,7 @@ LEARNING: UPDATE KNOWLEDGE
 ├─ Update Registry:
 │  ├─ @market-researcher: invocation_count++ (success)
 │  ├─ @trend-analyst: invocation_count++ (success)
-│  └─ @business-analyst: invocation_count++ (success)
+│  └─ @market-researcher: invocation_count++ (success)
 └─ Log metrics: "SOAR+orchestrator+agents = success"
     ↓
 NEXT SIMILAR PROBLEM:
@@ -1980,8 +1980,8 @@ def invoke_subagents_parallel(subgoals, soar_result):
 
 ```json
 {
-  "@business-analyst": {
-    "id": "@business-analyst",
+  "@market-researcher": {
+    "id": "@market-researcher",
     "registered_at": "2025-12-01T08:00:00Z",
 
     "capabilities": [
@@ -2271,7 +2271,7 @@ improvements = registry.get_improvements(
 
 1. **Implement Phase 1 infrastructure** (memory store, assessment, basic SOAR-Assist)
 2. **Test end-to-end with 50 sample prompts** across SIMPLE/MEDIUM/COMPLEX
-3. **Integrate with actual subagents** (start with @business-analyst)
+3. **Integrate with actual subagents** (start with @market-researcher)
 4. **Measure learning curve** over 2-week period
 5. **Document learnings and optimizations** for Phase 2
 

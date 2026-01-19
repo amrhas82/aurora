@@ -4,6 +4,7 @@
 Runs the assessor against the test corpus and produces detailed metrics,
 identifying misclassifications for algorithm refinement.
 """
+
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
@@ -85,7 +86,7 @@ def evaluate_corpus(
             )
 
             if verbose:
-                print(f"\n{'='*60}")
+                print(f"\n{'=' * 60}")
                 print(f"MISCLASSIFICATION: expected={expected}, got={predicted}")
                 print(f"Prompt: {prompt[:80]}...")
                 print(f"Score: {result.score}, Confidence: {result.confidence:.2f}")
@@ -177,13 +178,13 @@ def print_report(result: EvaluationResult):
         print(f"\n  Over-classified (predicted too complex): {len(over_classified)}")
         for m in over_classified[:5]:  # Show first 5
             print(
-                f"    [{m['expected']}→{m['predicted']}] score={m['score']:3} \"{m['prompt'][:50]}...\""
+                f'    [{m["expected"]}→{m["predicted"]}] score={m["score"]:3} "{m["prompt"][:50]}..."'
             )
 
         print(f"\n  Under-classified (predicted too simple): {len(under_classified)}")
         for m in under_classified[:5]:  # Show first 5
             print(
-                f"    [{m['expected']}→{m['predicted']}] score={m['score']:3} \"{m['prompt'][:50]}...\""
+                f'    [{m["expected"]}→{m["predicted"]}] score={m["score"]:3} "{m["prompt"][:50]}..."'
             )
 
     # Score threshold analysis
@@ -206,16 +207,16 @@ def _analyze_thresholds(result: EvaluationResult):
 
     print(
         f"  Simple scores:  min={min(simple_scores):3}, max={max(simple_scores):3}, "
-        f"p90={sorted(simple_scores)[int(len(simple_scores)*0.9)]:3}"
+        f"p90={sorted(simple_scores)[int(len(simple_scores) * 0.9)]:3}"
     )
     print(
         f"  Medium scores:  min={min(medium_scores):3}, max={max(medium_scores):3}, "
-        f"p10={sorted(medium_scores)[int(len(medium_scores)*0.1)]:3}, "
-        f"p90={sorted(medium_scores)[int(len(medium_scores)*0.9)]:3}"
+        f"p10={sorted(medium_scores)[int(len(medium_scores) * 0.1)]:3}, "
+        f"p90={sorted(medium_scores)[int(len(medium_scores) * 0.9)]:3}"
     )
     print(
         f"  Complex scores: min={min(complex_scores):3}, max={max(complex_scores):3}, "
-        f"p10={sorted(complex_scores)[int(len(complex_scores)*0.1)]:3}"
+        f"p10={sorted(complex_scores)[int(len(complex_scores) * 0.1)]:3}"
     )
 
     # Find optimal thresholds

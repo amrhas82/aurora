@@ -80,7 +80,7 @@ class TestFilePathResolver:
             id="sg-1",
             title="Implement OAuth2 authentication",
             description="Add OAuth2 authentication flow",
-            recommended_agent="@full-stack-dev",
+            recommended_agent="@code-developer",
         )
 
         # Act

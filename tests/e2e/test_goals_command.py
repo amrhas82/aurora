@@ -48,11 +48,11 @@ def valid_subgoal():
         id="sg-1",
         title="Implement test feature",
         description="Add test feature implementation",
-        agent="@full-stack-dev",
+        agent="@code-developer",
         confidence=0.9,
         dependencies=[],
         agent_exists=True,
-        recommended_agent="@full-stack-dev",
+        recommended_agent="@code-developer",
     )
 
 

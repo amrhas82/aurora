@@ -72,7 +72,9 @@ class TestValidationIssue:
         """Test ValidationIssue raises error with invalid level."""
         with pytest.raises(ValidationError) as exc_info:
             ValidationIssue(
-                level="CRITICAL", path="test.md", message="Test"  # Not a valid ValidationLevel
+                level="CRITICAL",
+                path="test.md",
+                message="Test",  # Not a valid ValidationLevel
             )
         assert "validation error" in str(exc_info.value).lower()
 

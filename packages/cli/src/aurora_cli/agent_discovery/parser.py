@@ -31,10 +31,10 @@ class AgentParser:
 
     Example:
         >>> parser = AgentParser()
-        >>> agent = parser.parse_file(Path("~/.claude/agents/qa-test-architect.md"))
+        >>> agent = parser.parse_file(Path("~/.claude/agents/quality-assurance.md"))
         >>> if agent:
         ...     print(f"Agent: {agent.id} - {agent.role}")
-        Agent: qa-test-architect - Test Architect & Quality Advisor
+        Agent: quality-assurance - Test Architect & Quality Advisor
 
         >>> # Malformed file returns None
         >>> bad_agent = parser.parse_file(Path("malformed.md"))

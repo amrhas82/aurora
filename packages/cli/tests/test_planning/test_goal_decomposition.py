@@ -33,14 +33,14 @@ class TestGoalDecomposition:
                     "id": "sg-1",
                     "title": "Implement login endpoint",
                     "description": "Create API endpoint for user authentication",
-                    "recommended_agent": "@full-stack-dev",
+                    "recommended_agent": "@code-developer",
                     "dependencies": []
                 },
                 {
                     "id": "sg-2",
                     "title": "Add login UI",
                     "description": "Create login form component",
-                    "recommended_agent": "@ux-expert",
+                    "recommended_agent": "@ui-designer",
                     "dependencies": ["sg-1"]
                 }
             ]""",
@@ -61,7 +61,7 @@ class TestGoalDecomposition:
         assert len(subgoals) == 2
         assert subgoals[0].id == "sg-1"
         assert subgoals[0].title == "Implement login endpoint"
-        assert subgoals[0].recommended_agent == "@full-stack-dev"
+        assert subgoals[0].recommended_agent == "@code-developer"
         assert subgoals[0].dependencies == []
 
         assert subgoals[1].id == "sg-2"
@@ -80,35 +80,35 @@ class TestGoalDecomposition:
                     "id": "sg-1",
                     "title": "Design auth architecture",
                     "description": "Design OAuth2 flow and JWT structure",
-                    "recommended_agent": "@holistic-architect",
+                    "recommended_agent": "@system-architect",
                     "dependencies": []
                 },
                 {
                     "id": "sg-2",
                     "title": "Implement token generation",
                     "description": "Create JWT token generation logic",
-                    "recommended_agent": "@full-stack-dev",
+                    "recommended_agent": "@code-developer",
                     "dependencies": ["sg-1"]
                 },
                 {
                     "id": "sg-3",
                     "title": "Implement OAuth2 providers",
                     "description": "Add Google and GitHub OAuth providers",
-                    "recommended_agent": "@full-stack-dev",
+                    "recommended_agent": "@code-developer",
                     "dependencies": ["sg-1"]
                 },
                 {
                     "id": "sg-4",
                     "title": "Add refresh token flow",
                     "description": "Implement token refresh mechanism",
-                    "recommended_agent": "@full-stack-dev",
+                    "recommended_agent": "@code-developer",
                     "dependencies": ["sg-2"]
                 },
                 {
                     "id": "sg-5",
                     "title": "Write auth tests",
                     "description": "Comprehensive testing of auth flows",
-                    "recommended_agent": "@qa-test-architect",
+                    "recommended_agent": "@quality-assurance",
                     "dependencies": ["sg-2", "sg-3", "sg-4"]
                 }
             ]""",
@@ -146,7 +146,7 @@ class TestGoalDecomposition:
                 "id": "sg-1",
                 "title": "Analyze current auth code",
                 "description": "Review existing authentication implementation",
-                "recommended_agent": "@holistic-architect",
+                "recommended_agent": "@system-architect",
                 "dependencies": []
             }]""",
             model="claude-sonnet",
@@ -185,21 +185,21 @@ class TestGoalDecomposition:
                     "id": "sg-1",
                     "title": "Design API",
                     "description": "Design API endpoints",
-                    "recommended_agent": "@holistic-architect",
+                    "recommended_agent": "@system-architect",
                     "dependencies": []
                 },
                 {
                     "id": "sg-2",
                     "title": "Implement API",
                     "description": "Build API implementation",
-                    "recommended_agent": "@full-stack-dev",
+                    "recommended_agent": "@code-developer",
                     "dependencies": ["sg-1"]
                 },
                 {
                     "id": "sg-3",
                     "title": "Test API",
                     "description": "Write API tests",
-                    "recommended_agent": "@qa-test-architect",
+                    "recommended_agent": "@quality-assurance",
                     "dependencies": ["sg-2"]
                 }
             ]""",

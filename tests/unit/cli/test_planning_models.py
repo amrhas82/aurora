@@ -64,12 +64,12 @@ class TestSubgoalModel:
             id="sg-1",
             title="Implement authentication",
             description="Create OAuth2 authentication flow with JWT tokens",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
         )
 
         assert subgoal.id == "sg-1"
         assert subgoal.title == "Implement authentication"
-        assert subgoal.assigned_agent == "@full-stack-dev"
+        assert subgoal.assigned_agent == "@code-developer"
         assert subgoal.dependencies == []
 
     def test_subgoal_with_dependencies(self) -> None:
@@ -78,7 +78,7 @@ class TestSubgoalModel:
             id="sg-2",
             title="Write authentication tests",
             description="Create unit and integration tests for auth",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-1"],
         )
 
@@ -116,10 +116,10 @@ class TestSubgoalModel:
             id="sg-1",
             title="Some title here",
             description="Some description that is long enough",
-            assigned_agent="full-stack-dev",  # Missing @ - should be coerced
+            assigned_agent="code-developer",  # Missing @ - should be coerced
         )
 
-        assert subgoal.assigned_agent == "@full-stack-dev"
+        assert subgoal.assigned_agent == "@code-developer"
 
     def test_agent_with_uppercase_is_preserved(self) -> None:
         """Agent with uppercase is preserved (coercion only adds @ prefix)."""
@@ -166,7 +166,7 @@ class TestSubgoalModel:
             id="sg-3",
             title="Test subgoal title",
             description="This is a test description for the subgoal",
-            assigned_agent="@qa-test-architect",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-1", "sg-2"],
         )
 
@@ -214,13 +214,13 @@ class TestPlanModel:
                 id="sg-1",
                 title="Implement core feature",
                 description="Create the main functionality for the feature",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
             ),
             Subgoal(
                 id="sg-2",
                 title="Write unit tests",
                 description="Create comprehensive unit tests for the feature",
-                assigned_agent="@qa-test-architect",
+                assigned_agent="@quality-assurance",
                 dependencies=["sg-1"],
             ),
         ]

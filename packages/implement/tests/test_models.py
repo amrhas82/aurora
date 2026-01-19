@@ -29,14 +29,14 @@ def test_parsed_task_custom_values():
     task = ParsedTask(
         id="1.1",
         description="Implement feature X",
-        agent="full-stack-dev",
+        agent="code-developer",
         model="sonnet",
         completed=True,
     )
 
     assert task.id == "1.1"
     assert task.description == "Implement feature X"
-    assert task.agent == "full-stack-dev"
+    assert task.agent == "code-developer"
     assert task.model == "sonnet"
     assert task.completed is True
 
@@ -46,7 +46,7 @@ def test_parsed_task_to_dict():
     task = ParsedTask(
         id="2",
         description="Fix bug Y",
-        agent="qa-test-architect",
+        agent="quality-assurance",
         model="opus",
         completed=False,
     )
@@ -56,7 +56,7 @@ def test_parsed_task_to_dict():
     assert isinstance(result, dict)
     assert result["id"] == "2"
     assert result["description"] == "Fix bug Y"
-    assert result["agent"] == "qa-test-architect"
+    assert result["agent"] == "quality-assurance"
     assert result["model"] == "opus"
     assert result["completed"] is False
 
@@ -66,7 +66,7 @@ def test_parsed_task_from_dict():
     data = {
         "id": "3",
         "description": "Refactor module Z",
-        "agent": "holistic-architect",
+        "agent": "system-architect",
         "model": "sonnet",
         "completed": True,
     }
@@ -75,7 +75,7 @@ def test_parsed_task_from_dict():
 
     assert task.id == "3"
     assert task.description == "Refactor module Z"
-    assert task.agent == "holistic-architect"
+    assert task.agent == "system-architect"
     assert task.model == "sonnet"
     assert task.completed is True
 

@@ -264,7 +264,7 @@ class MemoryManager:
         config: Config | None = None,
         memory_store: Store | None = None,
         parser_registry: ParserRegistry | None = None,
-        embedding_provider: "EmbeddingProvider | None" = None,
+        embedding_provider: EmbeddingProvider | None = None,
     ):
         """Initialize MemoryManager.
 
@@ -296,7 +296,7 @@ class MemoryManager:
         logger.info("MemoryManager initialized")
 
     @property
-    def embedding_provider(self) -> "EmbeddingProvider":
+    def embedding_provider(self) -> EmbeddingProvider:
         """Get embedding provider (lazy-loaded on first access).
 
         Sets HF_HUB_OFFLINE=1 if model is cached to prevent network requests.

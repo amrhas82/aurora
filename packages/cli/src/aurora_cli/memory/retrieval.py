@@ -98,13 +98,19 @@ class MemoryRetriever:
 
         return self._retriever
 
-    def _get_embedding_provider(self) -> Any:
+    def _get_embedding_provider(self, wait_for_model: bool = True) -> Any:
         """Get embedding provider, using background loader if available.
 
         First checks if BackgroundModelLoader has a ready provider (from
         background loading started earlier). If so, returns it immediately.
-        If loading is in progress, waits with a progress indicator.
-        Otherwise falls back to creating a new EmbeddingProvider.
+
+        Behavior depends on wait_for_model:
+        - True (default): If loading is in progress, waits with progress indicator
+        - False: Returns None immediately if not ready, enabling BM25-only fallback
+
+        Args:
+            wait_for_model: If True, wait for model loading. If False, return None
+                           immediately when model is still loading.
 
         Returns:
             EmbeddingProvider if available, None for BM25-only mode
@@ -123,10 +129,15 @@ class MemoryRetriever:
                 logger.debug("Using pre-loaded embedding provider from background loader")
                 return provider
 
-            # Check if loading is in progress - wait with progress indicator
+            # Check if loading is in progress
             if loader.is_loading():
-                logger.debug("Waiting for background model loading to complete")
-                return self._wait_for_background_model(loader)
+                if wait_for_model:
+                    logger.debug("Waiting for background model loading to complete")
+                    return self._wait_for_background_model(loader)
+                else:
+                    # Non-blocking: return None, let caller use BM25-only
+                    logger.debug("Model still loading - using BM25-only for now")
+                    return None
 
             # Not loading and not loaded - try to create new provider
             # This happens if background loading wasn't started (e.g., model not cached)
@@ -156,6 +167,38 @@ class MemoryRetriever:
             )
             return None
 
+    def is_embedding_model_ready(self) -> bool:
+        """Check if embedding model is loaded and ready (non-blocking).
+
+        Returns:
+            True if embedding model is ready for use, False otherwise
+        """
+        try:
+            from aurora_context_code.semantic.model_utils import BackgroundModelLoader
+
+            loader = BackgroundModelLoader.get_instance()
+            return loader.is_loaded()
+        except ImportError:
+            return False
+        except Exception:
+            return False
+
+    def is_embedding_model_loading(self) -> bool:
+        """Check if embedding model is currently loading in background.
+
+        Returns:
+            True if model is currently loading, False otherwise
+        """
+        try:
+            from aurora_context_code.semantic.model_utils import BackgroundModelLoader
+
+            loader = BackgroundModelLoader.get_instance()
+            return loader.is_loading()
+        except ImportError:
+            return False
+        except Exception:
+            return False
+
     def _wait_for_background_model(self, loader: Any) -> Any:
         """Wait for background model loading with progress display.
 
@@ -168,24 +211,55 @@ class MemoryRetriever:
             EmbeddingProvider if loaded successfully, None otherwise
         """
         try:
+            import time
+
             from rich.console import Console
-            from rich.progress import Progress, SpinnerColumn, TextColumn
+            from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
             console = Console()
 
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
+                TimeElapsedColumn(),
                 console=console,
                 transient=True,
             ) as progress:
-                task = progress.add_task("Loading embedding model...", total=None)
-                provider = loader.wait_for_model(timeout=60.0)
-                if provider:
-                    progress.update(task, description="[green]Model ready[/]")
-                else:
-                    progress.update(task, description="[yellow]Model unavailable[/]")
-                return provider
+                task = progress.add_task(
+                    "[cyan]Loading embedding model (first search may be slow)...[/]",
+                    total=None,
+                )
+
+                # Poll with progress updates showing elapsed time
+                start_time = time.time()
+                while True:
+                    provider = loader.get_provider_if_ready()
+                    if provider is not None:
+                        elapsed = time.time() - start_time
+                        progress.update(
+                            task, description=f"[green]✓ Model ready ({elapsed:.1f}s)[/]"
+                        )
+                        return provider
+
+                    error = loader.get_error()
+                    if error is not None:
+                        progress.update(
+                            task, description="[yellow]Model unavailable - using BM25 only[/]"
+                        )
+                        return None
+
+                    if not loader.is_loading():
+                        progress.update(
+                            task, description="[yellow]Model not started - using BM25 only[/]"
+                        )
+                        return None
+
+                    elapsed = time.time() - start_time
+                    if elapsed > 60.0:
+                        progress.update(task, description="[yellow]Timeout - using BM25 only[/]")
+                        return None
+
+                    time.sleep(0.1)
 
         except ImportError:
             # Rich not available - wait without progress
@@ -230,6 +304,7 @@ class MemoryRetriever:
         limit: int = 20,
         mode: str = "hybrid",
         min_semantic_score: float | None = None,
+        wait_for_model: bool = True,
     ) -> list[CodeChunk]:
         """Retrieve relevant code chunks for a query.
 
@@ -241,6 +316,9 @@ class MemoryRetriever:
             limit: Maximum number of chunks to return (default: 20)
             mode: Retrieval mode - 'hybrid' (default), 'semantic', or 'bm25'
             min_semantic_score: Minimum semantic score threshold (uses config default if None)
+            wait_for_model: If True (default), wait for embedding model to load.
+                           If False, return BM25+activation results immediately if model
+                           is still loading (non-blocking fast path).
 
         Returns:
             List of CodeChunk objects sorted by relevance
@@ -253,7 +331,7 @@ class MemoryRetriever:
         start_time = time.time()
 
         try:
-            retriever = self._get_retriever()
+            retriever = self._get_retriever_with_mode(wait_for_model=wait_for_model)
 
             # Use config threshold if not specified
             threshold = min_semantic_score
@@ -287,6 +365,76 @@ class MemoryRetriever:
         except Exception as e:
             logger.error("Retrieval failed: %s", e)
             return []
+
+    def retrieve_fast(
+        self,
+        query: str,
+        limit: int = 20,
+        min_semantic_score: float | None = None,
+    ) -> tuple[list[CodeChunk], bool]:
+        """Fast retrieval that returns immediately, using BM25-only if model is loading.
+
+        This method provides the fastest possible response time by:
+        1. If embedding model is ready: uses full hybrid retrieval
+        2. If model is still loading: returns BM25+activation results immediately
+
+        Args:
+            query: Search query text
+            limit: Maximum number of chunks to return (default: 20)
+            min_semantic_score: Minimum semantic score threshold (uses config default if None)
+
+        Returns:
+            Tuple of (results, is_full_hybrid):
+            - results: List of matching chunks
+            - is_full_hybrid: True if semantic embeddings were used, False if BM25-only
+
+        Example:
+            >>> results, is_hybrid = retriever.retrieve_fast("authentication", limit=10)
+            >>> if not is_hybrid:
+            ...     print("Results are BM25-only (model still loading)")
+        """
+        # Check if model is ready (non-blocking check)
+        model_ready = self.is_embedding_model_ready()
+
+        # Perform retrieval (wait_for_model=False for fast path)
+        results = self.retrieve(
+            query,
+            limit=limit,
+            min_semantic_score=min_semantic_score,
+            wait_for_model=False,  # Don't wait - use BM25-only if needed
+        )
+
+        return results, model_ready
+
+    def _get_retriever_with_mode(self, wait_for_model: bool = True) -> Any:
+        """Get or create HybridRetriever with specified waiting behavior.
+
+        Args:
+            wait_for_model: If True, wait for embedding model. If False, use BM25-only.
+
+        Returns:
+            HybridRetriever instance
+        """
+        if self._store is None:
+            raise ValueError("Cannot retrieve: no memory store configured")
+
+        # For non-waiting mode, always create fresh retriever with current embedding state
+        # This ensures we use the latest embedding provider state
+        if not wait_for_model:
+            from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
+            from aurora_core.activation.engine import ActivationEngine
+
+            activation_engine = ActivationEngine()
+            embedding_provider = self._get_embedding_provider(wait_for_model=False)
+
+            return HybridRetriever(
+                self._store,
+                activation_engine,
+                embedding_provider,  # None = BM25-only mode
+            )
+
+        # Standard path: use cached retriever (creates if needed)
+        return self._get_retriever()
 
     def load_context_files(self, paths: list[Path]) -> list[CodeChunk]:
         """Load context directly from files (not from index).

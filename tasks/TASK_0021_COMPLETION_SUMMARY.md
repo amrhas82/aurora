@@ -209,9 +209,9 @@ aur plan archive 0001-oauth -y
 │                                                                              │
 │ Subgoals: 3                                                                  │
 │                                                                              │
-│    Plan and design approach (@holistic-architect)                            │
-│    Implement solution (@full-stack-dev)                                      │
-│    Test and verify (@qa-test-architect)                                      │
+│    Plan and design approach (@system-architect)                            │
+│    Implement solution (@code-developer)                                      │
+│    Test and verify (@quality-assurance)                                      │
 │                                                                              │
 │ Agents: 3 assigned                                                           │
 │ Files: 3 resolved (avg confidence: 0.85)                                     │

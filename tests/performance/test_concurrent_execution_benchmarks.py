@@ -164,7 +164,7 @@ class TestThroughputBenchmarks:
             elapsed = time.perf_counter() - start_time
 
             print(f"\nConcurrent execution: {num_concurrent} tasks in {elapsed:.3f}s")
-            print(f"Average: {elapsed/num_concurrent*1000:.1f}ms per execution")
+            print(f"Average: {elapsed / num_concurrent * 1000:.1f}ms per execution")
 
             assert all(r.success for r in results)
             # Concurrent execution should be faster than sequential
@@ -216,11 +216,11 @@ class TestLatencyBenchmarks:
             max_latency = max(latencies)
             p99_latency = sorted(latencies)[98]
 
-            print(f"\nExecution overhead:")
-            print(f"  Average: {avg_latency*1000:.3f}ms")
-            print(f"  Min: {min_latency*1000:.3f}ms")
-            print(f"  Max: {max_latency*1000:.3f}ms")
-            print(f"  P99: {p99_latency*1000:.3f}ms")
+            print("\nExecution overhead:")
+            print(f"  Average: {avg_latency * 1000:.3f}ms")
+            print(f"  Min: {min_latency * 1000:.3f}ms")
+            print(f"  Max: {max_latency * 1000:.3f}ms")
+            print(f"  P99: {p99_latency * 1000:.3f}ms")
 
             # Overhead should be under 10ms
             assert avg_latency < 0.01
@@ -270,7 +270,7 @@ class TestLatencyBenchmarks:
 
         print("\nStrategy latency comparison:")
         for strategy, latency in sorted(results.items(), key=lambda x: x[1]):
-            print(f"  {strategy}: {latency*1000:.2f}ms")
+            print(f"  {strategy}: {latency * 1000:.2f}ms")
 
 
 # ---------------------------------------------------------------------------
@@ -319,7 +319,7 @@ class TestScalability:
         print("\nScaling with tool count:")
         for count, elapsed in results.items():
             overhead_per_tool = elapsed / count * 1000
-            print(f"  {count} tools: {elapsed*1000:.1f}ms total, {overhead_per_tool:.1f}ms/tool")
+            print(f"  {count} tools: {elapsed * 1000:.1f}ms total, {overhead_per_tool:.1f}ms/tool")
 
         # With async parallel execution, time should not increase linearly
         # 20 tools should not take 20x the time of 1 tool
@@ -358,7 +358,7 @@ class TestScalability:
 
         print("\nScaling with output size (SMART_MERGE):")
         for size, elapsed in results.items():
-            print(f"  {size:6d} bytes: {elapsed*1000:.1f}ms")
+            print(f"  {size:6d} bytes: {elapsed * 1000:.1f}ms")
 
         # Large outputs should not cause exponential slowdown
         assert results[100000] < results[100] * 100
@@ -406,7 +406,7 @@ class TestMemoryUsage:
             current, peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
 
-            print(f"\nMemory usage after 100 executions:")
+            print("\nMemory usage after 100 executions:")
             print(f"  Current: {current / 1024:.1f} KB")
             print(f"  Peak: {peak / 1024:.1f} KB")
 
@@ -446,7 +446,7 @@ class TestMemoryUsage:
             current, peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
 
-            print(f"\nMemory for 2x 1MB outputs:")
+            print("\nMemory for 2x 1MB outputs:")
             print(f"  Current: {current / 1024 / 1024:.1f} MB")
             print(f"  Peak: {peak / 1024 / 1024:.1f} MB")
 
@@ -495,7 +495,7 @@ class TestStressScenarios:
             elapsed = time.perf_counter() - start
 
             print(f"\nRapid fire: {num_rapid} executions in {elapsed:.2f}s")
-            print(f"Rate: {num_rapid/elapsed:.0f} executions/second")
+            print(f"Rate: {num_rapid / elapsed:.0f} executions/second")
 
             # Should handle at least 100 executions per second
             assert num_rapid / elapsed > 100

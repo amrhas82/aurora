@@ -21,18 +21,18 @@ def sample_subgoals() -> list[Subgoal]:
             id="sg-1",
             title="Design approach",
             description="Design the solution architecture",
-            ideal_agent="@holistic-architect",
+            ideal_agent="@system-architect",
             ideal_agent_desc="Architecture specialist",
-            assigned_agent="@holistic-architect",
+            assigned_agent="@system-architect",
             dependencies=[],
         ),
         Subgoal(
             id="sg-2",
             title="Implement solution",
             description="Implement the designed solution",
-            ideal_agent="@full-stack-dev",
+            ideal_agent="@code-developer",
             ideal_agent_desc="Full-stack developer",
-            assigned_agent="@full-stack-dev",
+            assigned_agent="@code-developer",
             dependencies=["sg-1"],
         ),
     ]
@@ -491,7 +491,9 @@ class TestCacheMetrics:
     def test_expired_hit_tracking(self, sample_subgoals: list[Subgoal]) -> None:
         """Test tracking of expired cache entries."""
         cache = PlanDecompositionCache(
-            capacity=10, ttl_hours=1 / 3600, enable_metrics=True  # 1 second TTL
+            capacity=10,
+            ttl_hours=1 / 3600,
+            enable_metrics=True,  # 1 second TTL
         )
 
         goal = "Add authentication"
@@ -759,9 +761,9 @@ class TestCacheEdgeCases:
                 id=f"sg-{i}",
                 title=f"Subgoal {i}",
                 description=f"Description for subgoal {i}",
-                ideal_agent="@full-stack-dev",
+                ideal_agent="@code-developer",
                 ideal_agent_desc="Developer",
-                assigned_agent="@full-stack-dev",
+                assigned_agent="@code-developer",
                 dependencies=[],
             )
             for i in range(100)

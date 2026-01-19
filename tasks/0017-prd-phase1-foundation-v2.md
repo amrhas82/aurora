@@ -1684,7 +1684,7 @@ ruff check packages/planning/  # 0 critical issues
           "agent_id": {
             "type": "string",
             "pattern": "^@[a-z0-9-]+$",
-            "description": "Assigned agent ID (e.g., @business-analyst)"
+            "description": "Assigned agent ID (e.g., @market-researcher)"
           },
           "status": {
             "type": "string",
@@ -1729,7 +1729,7 @@ ruff check packages/planning/  # 0 critical issues
       "id": "sg-1",
       "title": "Research OAuth providers",
       "description": "Evaluate Auth0, Okta, and Google OAuth",
-      "agent_id": "@business-analyst",
+      "agent_id": "@market-researcher",
       "status": "completed",
       "dependencies": []
     },
@@ -1737,7 +1737,7 @@ ruff check packages/planning/  # 0 critical issues
       "id": "sg-2",
       "title": "Implement backend OAuth flow",
       "description": "Create Auth0 SDK integration and endpoints",
-      "agent_id": "@full-stack-dev",
+      "agent_id": "@code-developer",
       "status": "in_progress",
       "dependencies": ["sg-1"]
     }

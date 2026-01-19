@@ -204,7 +204,7 @@ class TestMCPSOARMultiTurnFlow:
         with patch("aurora_soar.phases.route.map_subgoals_to_agents") as mock_route:
             mock_route.return_value = {
                 "routing_plan": [
-                    {"subgoal": "Understand Flask-Login", "agent": "full-stack-dev"},
+                    {"subgoal": "Understand Flask-Login", "agent": "code-developer"},
                     {"subgoal": "Set up user model", "agent": "database-expert"},
                 ]
             }
@@ -224,7 +224,7 @@ class TestMCPSOARMultiTurnFlow:
         with patch("aurora_soar.phases.collect.generate_agent_tasks") as mock_collect:
             mock_collect.return_value = {
                 "agent_tasks": [
-                    {"agent": "full-stack-dev", "task_prompt": "Research Flask-Login..."}
+                    {"agent": "code-developer", "task_prompt": "Research Flask-Login..."}
                 ]
             }
 
@@ -249,7 +249,7 @@ class TestMCPSOARMultiTurnFlow:
             result = mcp_tools.aurora_query(
                 query="How do I implement authentication in Flask?",
                 phase="synthesize",
-                agent_results=[{"agent": "full-stack-dev", "output": "Use Flask-Login..."}],
+                agent_results=[{"agent": "code-developer", "output": "Use Flask-Login..."}],
             )
 
             result_data = json.loads(result)

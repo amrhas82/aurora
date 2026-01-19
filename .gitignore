@@ -93,3 +93,4 @@ saas_summary.json
 MagicMock/
 test_plans/
 fixtures/
+/.aurora/

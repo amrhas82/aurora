@@ -32,7 +32,7 @@ def sample_manifest(tmp_path: Path) -> AgentManifest:
     """Create a sample manifest with test agents."""
     agents = [
         AgentInfo(
-            id="qa-test-architect",
+            id="quality-assurance",
             role="Test Architect & Quality Advisor",
             goal="Ensure comprehensive test coverage",
             category=AgentCategory.QA,
@@ -40,14 +40,14 @@ def sample_manifest(tmp_path: Path) -> AgentManifest:
             when_to_use="Use for test architecture review",
         ),
         AgentInfo(
-            id="full-stack-dev",
+            id="code-developer",
             role="Full Stack Developer",
             goal="Implement features and fix bugs",
             category=AgentCategory.ENG,
             skills=["python", "javascript", "databases"],
         ),
         AgentInfo(
-            id="product-manager",
+            id="feature-planner",
             role="Product Manager",
             goal="Define product strategy",
             category=AgentCategory.PRODUCT,
@@ -86,9 +86,9 @@ class TestAgentsListCommand:
             result = cli_runner.invoke(agents_group, ["list"])
 
         assert result.exit_code == 0
-        assert "qa-test-architect" in result.output
-        assert "full-stack-dev" in result.output
-        assert "product-manager" in result.output
+        assert "quality-assurance" in result.output
+        assert "code-developer" in result.output
+        assert "feature-planner" in result.output
         assert "orchestrator" in result.output
         assert "4 agent(s)" in result.output
 
@@ -103,8 +103,8 @@ class TestAgentsListCommand:
             result = cli_runner.invoke(agents_group, ["list", "--category", "qa"])
 
         assert result.exit_code == 0
-        assert "qa-test-architect" in result.output
-        assert "full-stack-dev" not in result.output
+        assert "quality-assurance" in result.output
+        assert "code-developer" not in result.output
 
     def test_list_empty_manifest(self, cli_runner: CliRunner) -> None:
         """Shows message when no agents found."""
@@ -131,7 +131,7 @@ class TestAgentsListCommand:
 
         assert result.exit_code == 0
         # Simple format should still show agent info
-        assert "qa-test-architect" in result.output
+        assert "quality-assurance" in result.output
 
 
 class TestAgentsSearchCommand:
@@ -146,7 +146,7 @@ class TestAgentsSearchCommand:
             result = cli_runner.invoke(agents_group, ["search", "test"])
 
         assert result.exit_code == 0
-        assert "qa-test-architect" in result.output
+        assert "quality-assurance" in result.output
         assert "Found" in result.output
 
     def test_search_no_results(self, cli_runner: CliRunner, sample_manifest: AgentManifest) -> None:
@@ -183,7 +183,7 @@ class TestAgentsShowCommand:
             "aurora_cli.commands.agents.get_manifest",
             return_value=sample_manifest,
         ):
-            result = cli_runner.invoke(agents_group, ["show", "qa-test-architect"])
+            result = cli_runner.invoke(agents_group, ["show", "quality-assurance"])
 
         assert result.exit_code == 0
         assert "Test Architect" in result.output
@@ -252,18 +252,18 @@ class TestSearchAgentsFunction:
         results = _search_agents(sample_manifest, "test", limit=10)
 
         assert len(results) > 0
-        # qa-test-architect should be found
+        # quality-assurance should be found
         ids = [r[0].id for r in results]
-        assert "qa-test-architect" in ids
+        assert "quality-assurance" in ids
 
     def test_role_match(self, sample_manifest: AgentManifest) -> None:
         """Role matches are found."""
         results = _search_agents(sample_manifest, "developer", limit=10)
 
         assert len(results) > 0
-        # full-stack-dev has "Developer" in role
+        # code-developer has "Developer" in role
         ids = [r[0].id for r in results]
-        assert "full-stack-dev" in ids
+        assert "code-developer" in ids
 
     def test_skill_match(self, sample_manifest: AgentManifest) -> None:
         """Skill matches are found."""
@@ -271,7 +271,7 @@ class TestSearchAgentsFunction:
 
         assert len(results) > 0
         ids = [r[0].id for r in results]
-        assert "full-stack-dev" in ids
+        assert "code-developer" in ids
 
     def test_respects_limit(self, sample_manifest: AgentManifest) -> None:
         """Respects maximum result limit."""
@@ -288,7 +288,7 @@ class TestFindSimilarAgentsFunction:
         results = _find_similar_agents(sample_manifest, "qa-test")
 
         ids = [a.id for a in results]
-        assert "qa-test-architect" in ids
+        assert "quality-assurance" in ids
 
     def test_returns_top_5(self, sample_manifest: AgentManifest) -> None:
         """Returns at most 5 suggestions."""

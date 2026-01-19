@@ -655,9 +655,9 @@ Discovered 14 agent(s)
 
 General (14)
   1-create-prd - 1 Create Prd
-  business-analyst - Business Analyst
-  full-stack-dev - Full Stack Dev
-  qa-test-architect - Qa Test Architect
+  market-researcher - Business Analyst
+  code-developer - Full Stack Dev
+  quality-assurance - Qa Test Architect
   ...
 ```
 
@@ -688,9 +688,9 @@ Found 3 agent(s) matching 'test'
 ┌─────────────────────┬───────┬────────────────────────┬─────────────────┐
 │ Agent ID            │ Cate… │ Role                   │ Match           │
 ├─────────────────────┼───────┼────────────────────────┼─────────────────┤
-│ qa-test-architect   │ gene… │ Qa Test Architect      │ partial id match│
+│ quality-assurance   │ gene… │ Qa Test Architect      │ partial id match│
 │ 3-process-task-list │ gene… │ 3 Process Task List    │ in goal         │
-│ full-stack-dev      │ gene… │ Full Stack Dev         │ in goal         │
+│ code-developer      │ gene… │ Full Stack Dev         │ in goal         │
 └─────────────────────┴───────┴────────────────────────┴─────────────────┘
 ```
 
@@ -699,12 +699,12 @@ Found 3 agent(s) matching 'test'
 Display full details for a specific agent:
 
 ```bash
-aur agents show qa-test-architect
+aur agents show quality-assurance
 ```
 
 **Output:**
 ```
-╭───────────────────────────── qa-test-architect ──────────────────────────────╮
+╭───────────────────────────── quality-assurance ──────────────────────────────╮
 │ Qa Test Architect                                                            │
 │ Category: general                                                            │
 │                                                                              │
@@ -712,7 +712,7 @@ aur agents show qa-test-architect
 │ Use this agent for comprehensive quality assessment, test architecture       │
 │ review, and quality gate decisions...                                        │
 │                                                                              │
-│ Source: /home/user/.claude/agents/qa-test-architect.md                       │
+│ Source: /home/user/.claude/agents/quality-assurance.md                       │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -727,9 +727,9 @@ aur agents show non-existent
 Agent 'non-existent' not found.
 
 Did you mean:
-  - qa-test-architect
-  - holistic-architect
-  - context-initializer
+  - quality-assurance
+  - system-architect
+  - context-builder
 ```
 
 ### Refresh Agent Manifest
@@ -1694,8 +1694,8 @@ aur agents show AGENT_ID
 
 **Examples:**
 ```bash
-aur agents show qa-test-architect
-aur agents show full-stack-dev
+aur agents show quality-assurance
+aur agents show code-developer
 ```
 
 ##### `aur agents refresh`
@@ -1758,9 +1758,9 @@ When creating a plan, AURORA displays a decomposition summary before generating 
 │                                                                              │
 │ Subgoals: 3                                                                  │
 │                                                                              │
-│    Plan and design approach (@holistic-architect)                            │
-│    Implement solution (@full-stack-dev)                                      │
-│    Test and verify (@qa-test-architect)                                      │
+│    Plan and design approach (@system-architect)                            │
+│    Implement solution (@code-developer)                                      │
+│    Test and verify (@quality-assurance)                                      │
 │                                                                              │
 │ Agents: 3 assigned                                                           │
 │ Files: 3 resolved (avg confidence: 0.85)                                     │

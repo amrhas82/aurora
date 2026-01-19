@@ -1423,7 +1423,7 @@ This research foundation is designed to be handed off to a commercial team:
 - Can engage external advisors for validation
 
 **Mitigation**:
-- Use multiple AI agents (business-analyst, architect, explore)
+- Use multiple AI agents (market-researcher, architect, explore)
 - Publish findings for external review before finalization
 - Seek peer feedback from academic community
 - Monthly reflection on research direction
@@ -1479,8 +1479,8 @@ This is a solo side project where **AI agents conduct the research** while you c
 
 | Workstream | Research Agent | Capability | Estimated Output |
 |-----------|----------------|-----------|-----------------|
-| **WS1 - Portability** | business-analyst + explore agent | Deep research on knowledge transfer | 8,000+ word research plans |
-| **WS2 - Reasoning** | business-analyst + research agent | Analyze reasoning architectures | 8,000+ word analysis + frameworks |
+| **WS1 - Portability** | market-researcher + explore agent | Deep research on knowledge transfer | 8,000+ word research plans |
+| **WS2 - Reasoning** | market-researcher + research agent | Analyze reasoning architectures | 8,000+ word analysis + frameworks |
 | **WS3 - Framework Convergence** | architect + explore agent | Design universal abstractions | 8,000+ word IR specifications |
 | **WS4 - Self-Organization** | architect + research agent | Swarm intelligence research | 8,000+ word protocols + theory |
 | **WS5 - Test-Time Learning** | research agent | TAO integration analysis | 8,000+ word design documents |

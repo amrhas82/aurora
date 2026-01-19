@@ -30,13 +30,13 @@ def sample_subgoals() -> list[Subgoal]:
             id="sg-1",
             title="Implement authentication",
             description="Create OAuth2 authentication flow with JWT",
-            recommended_agent="@full-stack-dev",
+            recommended_agent="@code-developer",
         ),
         Subgoal(
             id="sg-2",
             title="Write unit tests",
             description="Create comprehensive tests for auth module",
-            recommended_agent="@qa-test-architect",
+            recommended_agent="@quality-assurance",
             dependencies=["sg-1"],
         ),
     ]

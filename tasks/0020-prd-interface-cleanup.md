@@ -166,19 +166,19 @@ All new agent MCP tools return JSON:
 // aurora_search_agents
 [
   {
-    "id": "qa-test-architect",
+    "id": "quality-assurance",
     "title": "Test Architect & Quality Advisor",
     "relevance_score": 0.92,
     "when_to_use": "Use for comprehensive test architecture review...",
-    "source_path": "/home/user/.claude/agents/qa-test-architect.md"
+    "source_path": "/home/user/.claude/agents/quality-assurance.md"
   }
 ]
 
 // aurora_show_agent
 {
-  "id": "ux-expert",
+  "id": "ui-designer",
   "title": "UX Expert",
-  "source_path": "/home/user/.claude/agents/ux-expert.md",
+  "source_path": "/home/user/.claude/agents/ui-designer.md",
   "when_to_use": "Use for UI/UX design, wireframes...",
   "full_content": "# UX Expert\n\nYou are an expert..."
 }

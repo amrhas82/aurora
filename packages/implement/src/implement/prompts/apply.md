@@ -79,17 +79,17 @@ Given this tasks.md:
 - [ ] 1.0 Setup infrastructure
   - [ ] 1.1 Create database schema
   - [ ] 1.2 Setup API endpoints
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 
 - [ ] 2.0 Design UI wireframes
-<!-- agent: ux-expert -->
+<!-- agent: ui-designer -->
 ```
 
 Execution:
 1. Parse: Found 3 tasks (1.0, 1.1, 1.2, 2.0)
 2. Execute 1.0 (self) → Success → Mark [x]
 3. Execute 1.1 (self) → Success → Mark [x]
-4. Execute 1.2 (full-stack-dev via spawner) → Success → Mark [x]
-5. Execute 2.0 (ux-expert via spawner) → Success → Mark [x]
+4. Execute 1.2 (code-developer via spawner) → Success → Mark [x]
+5. Execute 2.0 (ui-designer via spawner) → Success → Mark [x]
 
 Result: All tasks completed and marked in tasks.md

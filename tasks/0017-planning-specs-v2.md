@@ -144,7 +144,7 @@ packages/planning/
        {
          "id": "sg-1",
          "title": "Research OAuth providers",
-         "agent_id": "@business-analyst",
+         "agent_id": "@market-researcher",
          "status": "pending"
        }
      ]
@@ -257,7 +257,7 @@ Output: plan.md with SOAR subgoals + agent assignments
   "subgoal_id": "sg-4",
   "recommended_agent": "@technical-writer",
   "agent_exists": false,
-  "fallback": "@business-analyst",
+  "fallback": "@market-researcher",
   "suggested_capabilities": ["technical-writing", "api-docs"]
 }
 ```
@@ -274,7 +274,7 @@ Output: plan.md with SOAR subgoals + agent assignments
 
 **Example Output**:
 ```markdown
-## Subgoal 2: Backend Implementation (@full-stack-dev)
+## Subgoal 2: Backend Implementation (@code-developer)
 - [ ] 2.1 Modify User model with OAuth fields
   - **File**: `src/models/user.py` lines 15-30 (confidence: 0.92)
   - **Changes**: Add oauth_provider, oauth_id, tokens columns
@@ -409,7 +409,7 @@ Step 2 (if confirmed): Full Expansion
 ⚠ Agent @technical-writer not found for Subgoal 4
 
 Options:
-1) Use fallback: @business-analyst
+1) Use fallback: @market-researcher
 2) Skip this subgoal
 3) Abort execution
 
@@ -444,7 +444,7 @@ Execution Complete!
 Total Duration: 1 hour 30 minutes
 Subgoals: 4 / 4 ✓
 Tasks: 12 / 12 ✓
-Agent Gaps: 1 (Subgoal 4 used fallback @business-analyst)
+Agent Gaps: 1 (Subgoal 4 used fallback @market-researcher)
 
 Results: ~/.aurora/plans/active/0001-oauth-auth/results/
 

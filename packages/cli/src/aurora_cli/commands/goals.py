@@ -220,6 +220,19 @@ def goals_command(
         console.print("[dim]Install the tool or set a different one with --tool flag[/]")
         raise click.Abort()
 
+    # Display header with goal in a box (consistent with aur soar)
+    from rich.panel import Panel
+
+    console.print()
+    console.print(
+        Panel(
+            f"[cyan]{goal}[/]",
+            title="[bold]Aurora Goals[/]",
+            subtitle=f"[dim]Tool: {tool}[/]",
+            border_style="blue",
+        )
+    )
+
     if verbose:
         console.print(f"[dim]Using tool: {tool} (model: {model})[/]")
 

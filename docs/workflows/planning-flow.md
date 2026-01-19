@@ -52,7 +52,7 @@ Creates directory structure:
       "id": "sg-1",
       "title": "Implement OAuth provider integration",
       "description": "Add Google/GitHub OAuth providers with callback handling",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.85,
       "dependencies": []
     },
@@ -60,7 +60,7 @@ Creates directory structure:
       "id": "sg-2",
       "title": "Implement JWT token generation and validation",
       "description": "Create JWT utilities for token lifecycle management",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.90,
       "dependencies": ["sg-1"]
     },
@@ -68,7 +68,7 @@ Creates directory structure:
       "id": "sg-3",
       "title": "Write OAuth integration tests",
       "description": "Test OAuth flow end-to-end including token refresh",
-      "agent": "@qa-test-architect",
+      "agent": "@quality-assurance",
       "confidence": 0.92,
       "dependencies": ["sg-1", "sg-2"]
     }
@@ -151,7 +151,7 @@ The `/plan` skill reads `goals.json` and generates:
 # Tasks: Implement OAuth2 authentication with JWT tokens
 
 ## sg-1: Implement OAuth provider integration
-<!-- agent: @full-stack-dev -->
+<!-- agent: @code-developer -->
 - [ ] 1.1 Create OAuth provider configuration
   - Add Google OAuth client credentials
   - Add GitHub OAuth app credentials
@@ -162,7 +162,7 @@ The `/plan` skill reads `goals.json` and generates:
   - Store user OAuth profile
 
 ## sg-2: Implement JWT token generation and validation
-<!-- agent: @full-stack-dev -->
+<!-- agent: @code-developer -->
 <!-- depends: sg-1 -->
 - [ ] 2.1 Create JWT utilities
   - Generate access tokens (15 min expiry)
@@ -173,7 +173,7 @@ The `/plan` skill reads `goals.json` and generates:
   - Validate and issue new access token
 
 ## sg-3: Write OAuth integration tests
-<!-- agent: @qa-test-architect -->
+<!-- agent: @quality-assurance -->
 <!-- depends: sg-1, sg-2 -->
 - [ ] 3.1 Test OAuth authorization flow
   - Test Google OAuth flow
@@ -285,12 +285,12 @@ Aurora includes several specialized agents:
 
 | Agent ID | Capabilities | When to Use |
 |----------|--------------|-------------|
-| `@full-stack-dev` | General development, API, frontend, backend | Most implementation tasks |
-| `@qa-test-architect` | Testing, quality assurance, test design | Test writing, quality gates |
-| `@ux-expert` | UI/UX, design, frontend specs | Interface design, user flows |
-| `@holistic-architect` | System design, architecture decisions | Architecture, tech selection |
-| `@product-manager` | Requirements, PRDs, feature specs | Product planning, requirements |
-| `@business-analyst` | Research, analysis, documentation | Research, competitive analysis |
+| `@code-developer` | General development, API, frontend, backend | Most implementation tasks |
+| `@quality-assurance` | Testing, quality assurance, test design | Test writing, quality gates |
+| `@ui-designer` | UI/UX, design, frontend specs | Interface design, user flows |
+| `@system-architect` | System design, architecture decisions | Architecture, tech selection |
+| `@feature-planner` | Requirements, PRDs, feature specs | Product planning, requirements |
+| `@market-researcher` | Research, analysis, documentation | Research, competitive analysis |
 
 ## Agent Gaps
 
@@ -302,7 +302,7 @@ When Aurora cannot find a suitable agent for a subgoal, it reports a **gap**:
     {
       "subgoal_id": "sg-3",
       "suggested_capabilities": ["blockchain", "web3", "smart-contracts"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }

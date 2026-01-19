@@ -42,12 +42,12 @@ def test_parse_completed_task():
 def test_parse_agent_metadata():
     """Extract agent from HTML comment metadata."""
     content = """- [ ] 1. Implement feature X
-<!-- agent: full-stack-dev -->"""
+<!-- agent: code-developer -->"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
     assert len(tasks) == 1
-    assert tasks[0].agent == "full-stack-dev"
+    assert tasks[0].agent == "code-developer"
 
 
 def test_parse_model_metadata():
@@ -101,14 +101,14 @@ def test_parse_task_with_multiline_metadata():
     """Agent comment on separate line below task."""
     content = """- [ ] 1. Implement feature X
 
-<!-- agent: qa-test-architect -->
+<!-- agent: quality-assurance -->
 
 - [ ] 2. Another task"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
     assert len(tasks) == 2
-    assert tasks[0].agent == "qa-test-architect"
+    assert tasks[0].agent == "quality-assurance"
     assert tasks[1].agent == "self"
 
 
@@ -167,17 +167,17 @@ def test_parse_tasks_md_format():
 - [ ] 1.0 Setup infrastructure
   - [x] 1.1 Create database schema
   - [ ] 1.2 Setup API endpoints
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 <!-- model: sonnet -->
 
 - [ ] 2.0 Implement UI
   - [ ] 2.1 Design wireframes
-<!-- agent: ux-expert -->
+<!-- agent: ui-designer -->
   - [ ] 2.2 Build components
-<!-- agent: full-stack-dev -->
+<!-- agent: code-developer -->
 
 - [x] 3.0 Write tests
-<!-- agent: qa-test-architect -->"""
+<!-- agent: quality-assurance -->"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
@@ -193,32 +193,32 @@ def test_parse_tasks_md_format():
     assert task_11.completed is True
 
     task_12 = [t for t in tasks if t.id == "1.2"][0]
-    assert task_12.agent == "full-stack-dev"
+    assert task_12.agent == "code-developer"
     assert task_12.model == "sonnet"
 
     # Task 2.0 and subtasks
     task_21 = [t for t in tasks if t.id == "2.1"][0]
-    assert task_21.agent == "ux-expert"
+    assert task_21.agent == "ui-designer"
 
     task_22 = [t for t in tasks if t.id == "2.2"][0]
-    assert task_22.agent == "full-stack-dev"
+    assert task_22.agent == "code-developer"
 
     # Task 3.0
     task_30 = [t for t in tasks if t.id == "3.0"][0]
     assert task_30.completed is True
-    assert task_30.agent == "qa-test-architect"
+    assert task_30.agent == "quality-assurance"
 
 
 def test_parse_agent_and_model_together():
     """Parse both agent and model metadata for same task."""
     content = """- [ ] 1. Complex task
-<!-- agent: holistic-architect -->
+<!-- agent: system-architect -->
 <!-- model: opus -->"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
     assert len(tasks) == 1
-    assert tasks[0].agent == "holistic-architect"
+    assert tasks[0].agent == "system-architect"
     assert tasks[0].model == "opus"
 
 

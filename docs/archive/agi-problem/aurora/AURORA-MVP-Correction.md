@@ -1839,7 +1839,7 @@ When an agent's output fails verification:
 ```json
 {
   "agent_feedback": {
-    "agent_id": "full-stack-dev",
+    "agent_id": "code-developer",
     "subgoal_id": "SG2",
     "output_score": 0.55,
     "issues": [
@@ -2290,7 +2290,7 @@ The MCP server provides **declarative progress state** that CLI agents can displ
 │  │ aurora: verifying decomposition (adversarial)...            │   │
 │  │ aurora: → score: 0.85, PASS                                 │   │
 │  │ aurora: routing to agents...                                │   │
-│  │ aurora: → SG1 → full-stack-dev                              │   │
+│  │ aurora: → SG1 → code-developer                              │   │
 │  │ aurora: → SG2 → research-agent                              │   │
 │  │ aurora: verifying outputs...                                │   │
 │  │ aurora: → all passed                                        │   │
@@ -2308,8 +2308,8 @@ The MCP server provides **declarative progress state** that CLI agents can displ
 │  │   code chunks: 5 (auth.py:0.9, session.py:0.7, ...)         │   │
 │  │ aurora: decomposing...                                      │   │
 │  │   subgoal 1: "Research OAuth providers" → research-agent    │   │
-│  │   subgoal 2: "Implement OAuth flow" → full-stack-dev        │   │
-│  │   subgoal 3: "Write tests" → qa-test-architect              │   │
+│  │   subgoal 2: "Implement OAuth flow" → code-developer        │   │
+│  │   subgoal 3: "Write tests" → quality-assurance              │   │
 │  │ aurora: verifying (adversarial)...                          │   │
 │  │   completeness: 0.9                                         │   │
 │  │   consistency: 1.0                                          │   │

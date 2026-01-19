@@ -128,11 +128,11 @@ Chunks created: {r.chunks_created}
 Memory peak:    {r.memory_peak_mb:.1f} MB
 
 Phase Breakdown:
-  Discovery:  {r.discovery_seconds:.3f}s ({pct.get('discovery', 0):.1f}%)
-  Parsing:    {r.parsing_seconds:.3f}s ({pct.get('parsing', 0):.1f}%)
-  Git Blame:  {r.git_blame_seconds:.3f}s ({pct.get('git_blame', 0):.1f}%)
-  Embedding:  {r.embedding_seconds:.3f}s ({pct.get('embedding', 0):.1f}%)
-  Storing:    {r.storing_seconds:.3f}s ({pct.get('storing', 0):.1f}%)
+  Discovery:  {r.discovery_seconds:.3f}s ({pct.get("discovery", 0):.1f}%)
+  Parsing:    {r.parsing_seconds:.3f}s ({pct.get("parsing", 0):.1f}%)
+  Git Blame:  {r.git_blame_seconds:.3f}s ({pct.get("git_blame", 0):.1f}%)
+  Embedding:  {r.embedding_seconds:.3f}s ({pct.get("embedding", 0):.1f}%)
+  Storing:    {r.storing_seconds:.3f}s ({pct.get("storing", 0):.1f}%)
 
 Per-item Latencies:
   Embedding:  {r.ms_per_chunk_embedding:.2f} ms/chunk
@@ -149,7 +149,7 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
         "from typing import Any, Optional",
         "import logging",
         "",
-        f"logger = logging.getLogger(__name__)",
+        "logger = logging.getLogger(__name__)",
         "",
     ]
 
@@ -160,7 +160,7 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
             lines.extend(
                 [
                     f"def simple_func_{module_idx}_{j}(x: int, y: int) -> int:",
-                    f'    """Simple arithmetic function."""',
+                    '    """Simple arithmetic function."""',
                     f"    return x + y + {module_idx * j}",
                     "",
                 ]
@@ -170,12 +170,12 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
             lines.extend(
                 [
                     f"def logic_func_{module_idx}_{j}(data: list[Any], threshold: float = 0.5) -> list[Any]:",
-                    f'    """Filter data above threshold."""',
-                    f"    result = []",
-                    f"    for item in data:",
-                    f"        if isinstance(item, (int, float)) and item > threshold:",
-                    f"            result.append(item)",
-                    f"    return result",
+                    '    """Filter data above threshold."""',
+                    "    result = []",
+                    "    for item in data:",
+                    "        if isinstance(item, (int, float)) and item > threshold:",
+                    "            result.append(item)",
+                    "    return result",
                     "",
                 ]
             )
@@ -184,28 +184,28 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
             lines.extend(
                 [
                     f"def complex_func_{module_idx}_{j}(",
-                    f"    input_data: dict[str, Any],",
-                    f"    config: Optional[dict] = None,",
-                    f"    verbose: bool = False,",
-                    f") -> dict[str, Any]:",
-                    f'    """Process input data according to configuration.',
-                    f"",
-                    f"    Args:",
-                    f"        input_data: Dictionary of input values",
-                    f"        config: Optional configuration overrides",
-                    f"        verbose: Enable detailed logging",
-                    f"",
-                    f"    Returns:",
-                    f"        Processed data dictionary",
-                    f'    """',
-                    f"    if config is None:",
-                    f"        config = {{'default': True}}",
-                    f"    result = {{}}",
-                    f"    for key, value in input_data.items():",
-                    f"        if verbose:",
-                    f"            logger.debug(f'Processing {{key}}')",
+                    "    input_data: dict[str, Any],",
+                    "    config: Optional[dict] = None,",
+                    "    verbose: bool = False,",
+                    ") -> dict[str, Any]:",
+                    '    """Process input data according to configuration.',
+                    "",
+                    "    Args:",
+                    "        input_data: Dictionary of input values",
+                    "        config: Optional configuration overrides",
+                    "        verbose: Enable detailed logging",
+                    "",
+                    "    Returns:",
+                    "        Processed data dictionary",
+                    '    """',
+                    "    if config is None:",
+                    "        config = {'default': True}",
+                    "    result = {}",
+                    "    for key, value in input_data.items():",
+                    "        if verbose:",
+                    "            logger.debug(f'Processing {key}')",
                     f"        result[key] = value * {module_idx + 1}",
-                    f"    return result",
+                    "    return result",
                     "",
                 ]
             )
@@ -214,20 +214,20 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
     lines.extend(
         [
             f"class DataProcessor_{module_idx}:",
-            f'    """Process data with configurable behavior."""',
+            '    """Process data with configurable behavior."""',
             "",
-            f"    def __init__(self, config: dict[str, Any]) -> None:",
-            f'        """Initialize with configuration."""',
-            f"        self.config = config",
-            f"        self._cache: dict[str, Any] = {{}}",
+            "    def __init__(self, config: dict[str, Any]) -> None:",
+            '        """Initialize with configuration."""',
+            "        self.config = config",
+            "        self._cache: dict[str, Any] = {}",
             "",
-            f"    def process(self, data: Any) -> Any:",
-            f'        """Process single data item."""',
-            f"        return data",
+            "    def process(self, data: Any) -> Any:",
+            '        """Process single data item."""',
+            "        return data",
             "",
-            f"    def batch_process(self, items: list[Any]) -> list[Any]:",
-            f'        """Process multiple items efficiently."""',
-            f"        return [self.process(item) for item in items]",
+            "    def batch_process(self, items: list[Any]) -> list[Any]:",
+            '        """Process multiple items efficiently."""',
+            "        return [self.process(item) for item in items]",
             "",
         ]
     )
@@ -420,7 +420,7 @@ class TestComponentIsolation:
             times.append(elapsed)
 
         mean_time = statistics.mean(times)
-        print(f"\n=== File Discovery ===")
+        print("\n=== File Discovery ===")
         print(f"Files found: {len(files)}")
         print(f"Mean time: {mean_time * 1000:.2f}ms")
         print(f"Files/sec: {len(files) / mean_time:.0f}")
@@ -448,7 +448,7 @@ class TestComponentIsolation:
             total_chunks = chunk_count
 
         mean_time = statistics.mean(times)
-        print(f"\n=== Parsing Only ===")
+        print("\n=== Parsing Only ===")
         print(f"Files parsed: {len(files)}")
         print(f"Chunks extracted: {total_chunks}")
         print(f"Mean time: {mean_time * 1000:.2f}ms")
@@ -479,7 +479,7 @@ class TestComponentIsolation:
                     parts.append(f"{chunk.element_type} {chunk.name}")
                     texts.append("\n\n".join(parts))
 
-        print(f"\n=== Embedding Batch Size Comparison ===")
+        print("\n=== Embedding Batch Size Comparison ===")
         print(f"Total texts: {len(texts)}")
 
         batch_sizes = [8, 16, 32, 64, 128]
@@ -523,7 +523,7 @@ class TestComponentIsolation:
                     chunk.embeddings = np.random.randn(384).astype(np.float32).tobytes()
                     chunks_to_store.append(chunk)
 
-        print(f"\n=== Database Write Performance ===")
+        print("\n=== Database Write Performance ===")
         print(f"Chunks to store: {len(chunks_to_store)}")
 
         # Test individual writes
@@ -625,7 +625,7 @@ class TestOptimizationValidation:
         codebase = create_test_codebase(tmp_path, num_files=50, name="validation")
         result = run_indexed_with_timing(codebase, tmp_path / "validation.db")
 
-        print(f"\n=== Optimization Validation ===")
+        print("\n=== Optimization Validation ===")
         print(f"Current throughput: {result.files_per_second:.2f} files/sec")
         print(f"Baseline threshold: {BASELINE_METRICS['medium_files_per_sec']:.2f} files/sec")
 
@@ -642,7 +642,7 @@ class TestOptimizationValidation:
         result = run_indexed_with_timing(codebase, tmp_path / "bottleneck.db")
 
         pct = result.phase_percentages()
-        print(f"\n=== Bottleneck Analysis ===")
+        print("\n=== Bottleneck Analysis ===")
         for phase, percent in sorted(pct.items(), key=lambda x: -x[1]):
             print(f"  {phase}: {percent:.1f}%")
 
@@ -696,7 +696,7 @@ class TestRealWorldCodebase:
             )
 
         print(
-            f"\n{'TOTAL':>20} {total_files:>8} {total_chunks:>8} {total_time:>10.2f} {total_files/total_time:>10.1f}"
+            f"\n{'TOTAL':>20} {total_files:>8} {total_chunks:>8} {total_time:>10.2f} {total_files / total_time:>10.1f}"
         )
 
 

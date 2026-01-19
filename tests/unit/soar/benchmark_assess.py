@@ -7,6 +7,7 @@ Requirements:
 - Long prompt (500+ chars): <5ms target (~2.5ms expected)
 - Throughput: >1000/sec target (~2000/sec expected)
 """
+
 import time
 from statistics import mean, median, stdev
 

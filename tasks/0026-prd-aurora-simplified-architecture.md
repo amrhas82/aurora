@@ -345,7 +345,7 @@ class SpawnResult:
 Parse tasks.md format:
 ```markdown
 - [ ] 1. Implement auth endpoint
-  <!-- agent: full-stack-dev -->
+  <!-- agent: code-developer -->
   <!-- model: sonnet -->
 ```
 
@@ -505,7 +505,7 @@ def create_plan_directory(title: str) -> Path:
       "id": "sg-1",
       "title": "Implement OAuth provider integration",
       "description": "Add Google/GitHub OAuth providers",
-      "agent": "@full-stack-dev",
+      "agent": "@code-developer",
       "confidence": 0.85,
       "dependencies": []
     },
@@ -513,7 +513,7 @@ def create_plan_directory(title: str) -> Path:
       "id": "sg-2",
       "title": "Write OAuth integration tests",
       "description": "Test OAuth flow end-to-end",
-      "agent": "@qa-test-architect",
+      "agent": "@quality-assurance",
       "confidence": 0.92,
       "dependencies": ["sg-1"]
     }
@@ -522,7 +522,7 @@ def create_plan_directory(title: str) -> Path:
     {
       "subgoal_id": "sg-3",
       "suggested_capabilities": ["security", "audit"],
-      "fallback": "@full-stack-dev"
+      "fallback": "@code-developer"
     }
   ]
 }
@@ -539,10 +539,10 @@ $ aur goals "Add OAuth2 authentication"
    Created 4 subgoals
 
 🤖 Matching agents to subgoals...
-   sg-1: @full-stack-dev (0.85)
-   sg-2: @qa-test-architect (0.92)
-   sg-3: @full-stack-dev (0.45) ⚠️ gap detected
-   sg-4: @full-stack-dev (0.78)
+   sg-1: @code-developer (0.85)
+   sg-2: @quality-assurance (0.92)
+   sg-3: @code-developer (0.45) ⚠️ gap detected
+   sg-4: @code-developer (0.78)
 
 📁 Plan directory: .aurora/plans/0001-add-oauth2/
 
@@ -712,10 +712,10 @@ packages/
 ## Tasks
 
 - [ ] 1. Implement user authentication endpoint
-  <!-- agent: full-stack-dev -->
+  <!-- agent: code-developer -->
 
 - [ ] 2. Write integration tests for auth
-  <!-- agent: qa-test-architect -->
+  <!-- agent: quality-assurance -->
 
 - [ ] 3. Update API documentation
   <!-- agent: self -->

@@ -736,7 +736,15 @@ def init_command(config: bool, tools: str | None) -> None:
             raise SystemExit(1)
 
         # Run Step 3 only
-        console.print("[bold]AURORA Tool Configuration[/]")
+        console.print()
+        console.print("[bold cyan] █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ [/]")
+        console.print("[bold cyan]██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗[/]")
+        console.print("[bold cyan]███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║[/]")
+        console.print("[bold cyan]██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║[/]")
+        console.print("[bold cyan]██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║[/]")
+        console.print("[bold cyan]╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝[/]")
+        console.print()
+        console.print("[dim]Tool Configuration[/]")
         console.print()
         _, _, agent_count, tool_names = run_step_3_tool_configuration(
             project_path, tool_ids=parsed_tool_ids
@@ -770,7 +778,14 @@ def init_command(config: bool, tools: str | None) -> None:
         if rerun_choice == "config":
             # Run Step 3 only
             console.print()
-            console.print("[bold]AURORA Tool Configuration[/]")
+            console.print("[bold cyan] █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ [/]")
+            console.print("[bold cyan]██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗[/]")
+            console.print("[bold cyan]███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║[/]")
+            console.print("[bold cyan]██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║[/]")
+            console.print("[bold cyan]██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║[/]")
+            console.print("[bold cyan]╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝[/]")
+            console.print()
+            console.print("[dim]Tool Configuration[/]")
             console.print()
             _, _, agent_count, tool_names = run_step_3_tool_configuration(
                 project_path, tool_ids=parsed_tool_ids
@@ -863,13 +878,15 @@ def init_command(config: bool, tools: str | None) -> None:
 
         # Display banner for re-run
         console.print()
-        console.print("[bold cyan]╔═══════════════════════════════════════════╗[/]")
-        console.print(
-            "[bold cyan]║[/]          [bold]AURORA Re-initialization[/]         [bold cyan]║[/]"
-        )
-        console.print("[bold cyan]╚═══════════════════════════════════════════╝[/]")
+        console.print("[bold cyan] █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ [/]")
+        console.print("[bold cyan]██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗[/]")
+        console.print("[bold cyan]███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║[/]")
+        console.print("[bold cyan]██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║[/]")
+        console.print("[bold cyan]██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║[/]")
+        console.print("[bold cyan]╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝[/]")
         console.print()
-        console.print(f"[dim]Re-running steps: {steps_to_run}[/]")
+        console.print("[dim]Re-running initialization steps...[/]")
+        console.print(f"[dim]Selected steps: {steps_to_run}[/]")
         console.print()
 
         # Run selected steps
@@ -928,8 +945,12 @@ def init_command(config: bool, tools: str | None) -> None:
 
     # Display welcome banner
     console.print()
-    console.print("[bold cyan]AURORA Initialization[/]")
-    console.print("[bold cyan]═════════════════════[/]")
+    console.print("[bold cyan] █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ [/]")
+    console.print("[bold cyan]██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗[/]")
+    console.print("[bold cyan]███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║[/]")
+    console.print("[bold cyan]██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║[/]")
+    console.print("[bold cyan]██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║[/]")
+    console.print("[bold cyan]╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝[/]")
     console.print()
     console.print("[dim]Setting up Aurora for your project...[/]")
     console.print()

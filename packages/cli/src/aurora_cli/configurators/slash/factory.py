@@ -30,13 +30,6 @@ argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "checkpoint": """---
-name: Aurora: Checkpoint
-description: Save session context ["optional-name"]
-argument-hint: optional checkpoint name
-category: Aurora
-tags: [aurora, session, checkpoint]
----""",
     "implement": """---
 name: Aurora: Implement
 description: Execute plan tasks [plan-id]
@@ -58,7 +51,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".factory/commands/aurora-search.md",
     "get": ".factory/commands/aurora-get.md",
     "plan": ".factory/commands/aurora-plan.md",
-    "checkpoint": ".factory/commands/aurora-checkpoint.md",
     "implement": ".factory/commands/aurora-implement.md",
     "archive": ".factory/commands/aurora-archive.md",
 }

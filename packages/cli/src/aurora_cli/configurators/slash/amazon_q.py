@@ -36,15 +36,6 @@ The user has requested the following plan. Use the aurora instructions to create
 <UserRequest>
   $ARGUMENTS
 </UserRequest>""",
-    "checkpoint": """---
-description: Save session context ["optional-name"]
----
-
-The user wants to save session context. Use the aurora instructions to create a checkpoint.
-
-<UserRequest>
-  $ARGUMENTS
-</UserRequest>""",
     "implement": """---
 description: Execute plan tasks [plan-id]
 ---
@@ -70,7 +61,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".amazonq/prompts/aurora-search.md",
     "get": ".amazonq/prompts/aurora-get.md",
     "plan": ".amazonq/prompts/aurora-plan.md",
-    "checkpoint": ".amazonq/prompts/aurora-checkpoint.md",
     "implement": ".amazonq/prompts/aurora-implement.md",
     "archive": ".amazonq/prompts/aurora-archive.md",
 }

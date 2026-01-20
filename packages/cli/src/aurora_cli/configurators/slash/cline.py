@@ -12,7 +12,6 @@ DESCRIPTIONS: dict[str, str] = {
     "search": 'Search indexed code ["query" --limit N --type function]',
     "get": "Retrieve search result [N] from last search",
     "plan": "Create implementation plan with agent delegation [goal]",
-    "checkpoint": 'Save session context ["optional-name"]',
     "implement": "Execute plan tasks [plan-id]",
     "archive": "Archive completed plan with spec processing [plan-id]",
 }
@@ -22,7 +21,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".clinerules/workflows/aurora-search.md",
     "get": ".clinerules/workflows/aurora-get.md",
     "plan": ".clinerules/workflows/aurora-plan.md",
-    "checkpoint": ".clinerules/workflows/aurora-checkpoint.md",
     "implement": ".clinerules/workflows/aurora-implement.md",
     "archive": ".clinerules/workflows/aurora-archive.md",
 }

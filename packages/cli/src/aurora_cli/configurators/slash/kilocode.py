@@ -12,7 +12,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".kilocode/workflows/aurora-search.md",
     "get": ".kilocode/workflows/aurora-get.md",
     "plan": ".kilocode/workflows/aurora-plan.md",
-    "checkpoint": ".kilocode/workflows/aurora-checkpoint.md",
     "implement": ".kilocode/workflows/aurora-implement.md",
     "archive": ".kilocode/workflows/aurora-archive.md",
 }

@@ -11,7 +11,6 @@ DESCRIPTIONS: dict[str, str] = {
     "search": 'Search indexed code ["query" --limit N --type function]',
     "get": "Retrieve search result [N] from last search",
     "plan": "Create implementation plan with agent delegation [goal]",
-    "checkpoint": 'Save session context ["optional-name"]',
     "implement": "Execute plan tasks [plan-id]",
     "archive": "Archive completed plan with spec processing [plan-id]",
 }
@@ -21,7 +20,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".agent/workflows/aurora-search.md",
     "get": ".agent/workflows/aurora-get.md",
     "plan": ".agent/workflows/aurora-plan.md",
-    "checkpoint": ".agent/workflows/aurora-checkpoint.md",
     "implement": ".agent/workflows/aurora-implement.md",
     "archive": ".agent/workflows/aurora-archive.md",
 }

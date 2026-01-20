@@ -26,12 +26,6 @@ description: Create implementation plan with agent delegation [goal]
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "checkpoint": """---
-name: Aurora: Checkpoint
-description: Save session context ["optional-name"]
-category: Aurora
-tags: [aurora, session, checkpoint]
----""",
     "implement": """---
 name: Aurora: Implement
 description: Execute plan tasks [plan-id]
@@ -51,7 +45,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".crush/commands/aurora/search.md",
     "get": ".crush/commands/aurora/get.md",
     "plan": ".crush/commands/aurora/plan.md",
-    "checkpoint": ".crush/commands/aurora/checkpoint.md",
     "implement": ".crush/commands/aurora/implement.md",
     "archive": ".crush/commands/aurora/archive.md",
 }

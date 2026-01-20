@@ -29,13 +29,6 @@ description: Create implementation plan with agent delegation [goal]
 category: Aurora
 tags: [aurora, planning]
 ---""",
-    "checkpoint": """---
-name: Aurora: Checkpoint
-id: /aurora-checkpoint
-description: Save session context ["optional-name"]
-category: Aurora
-tags: [aurora, session, checkpoint]
----""",
     "implement": """---
 name: Aurora: Implement
 id: /aurora-implement
@@ -57,7 +50,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".iflow/commands/aurora-search.md",
     "get": ".iflow/commands/aurora-get.md",
     "plan": ".iflow/commands/aurora-plan.md",
-    "checkpoint": ".iflow/commands/aurora-checkpoint.md",
     "implement": ".iflow/commands/aurora-implement.md",
     "archive": ".iflow/commands/aurora-archive.md",
 }

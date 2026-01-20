@@ -24,11 +24,6 @@ description: Create implementation plan with agent delegation [goal]
 ---
 
 $ARGUMENTS""",
-    "checkpoint": """---
-description: Save session context ["optional-name"]
----
-
-$ARGUMENTS""",
     "implement": """---
 description: Execute plan tasks [plan-id]
 ---
@@ -46,7 +41,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".github/prompts/aurora-search.prompt.md",
     "get": ".github/prompts/aurora-get.prompt.md",
     "plan": ".github/prompts/aurora-plan.prompt.md",
-    "checkpoint": ".github/prompts/aurora-checkpoint.prompt.md",
     "implement": ".github/prompts/aurora-implement.prompt.md",
     "archive": ".github/prompts/aurora-archive.prompt.md",
 }

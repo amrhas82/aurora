@@ -11,7 +11,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".claude/commands/aur/search.md",
     "get": ".claude/commands/aur/get.md",
     "plan": ".claude/commands/aur/plan.md",
-    "checkpoint": ".claude/commands/aur/checkpoint.md",
     "implement": ".claude/commands/aur/implement.md",
     "archive": ".claude/commands/aur/archive.md",
 }
@@ -35,12 +34,6 @@ name: Aurora: Plan
 description: Create implementation plan with agent delegation [goal | goals.json]
 category: Aurora
 tags: [aurora, planning]
----""",
-    "checkpoint": """---
-name: Aurora: Checkpoint
-description: Save session context ["optional-name"]
-category: Aurora
-tags: [aurora, session, checkpoint]
 ---""",
     "implement": """---
 name: Aurora: Implement
@@ -120,7 +113,6 @@ class ClaudeSlashCommandConfigurator(SlashCommandConfigurator):
             "search": "Search indexed code with hybrid BM25 + embedding retrieval.",
             "get": "Retrieve full content of a search result by index.",
             "plan": "Create implementation plan with agent delegation and spec deltas.",
-            "checkpoint": "Save session context for compaction recovery or handoffs.",
             "implement": "Execute plan tasks with checkpoints and validation.",
             "archive": "Archive completed plan and process spec deltas.",
         }

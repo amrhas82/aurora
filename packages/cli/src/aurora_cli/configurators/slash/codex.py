@@ -15,7 +15,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".codex/prompts/aurora-search.md",
     "get": ".codex/prompts/aurora-get.md",
     "plan": ".codex/prompts/aurora-plan.md",
-    "checkpoint": ".codex/prompts/aurora-checkpoint.md",
     "implement": ".codex/prompts/aurora-implement.md",
     "archive": ".codex/prompts/aurora-archive.md",
 }
@@ -37,12 +36,6 @@ $ARGUMENTS""",
     "plan": """---
 description: Create implementation plan with agent delegation [goal]
 argument-hint: request or feature description
----
-
-$ARGUMENTS""",
-    "checkpoint": """---
-description: Save session context ["optional-name"]
-argument-hint: optional checkpoint name
 ---
 
 $ARGUMENTS""",

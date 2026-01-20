@@ -12,7 +12,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".cursor/commands/aurora-search.md",
     "get": ".cursor/commands/aurora-get.md",
     "plan": ".cursor/commands/aurora-plan.md",
-    "checkpoint": ".cursor/commands/aurora-checkpoint.md",
     "implement": ".cursor/commands/aurora-implement.md",
     "archive": ".cursor/commands/aurora-archive.md",
 }
@@ -39,13 +38,6 @@ id: /aurora-plan
 description: Create implementation plan with agent delegation [goal]
 category: Aurora
 tags: [aurora, planning]
----""",
-    "checkpoint": """---
-name: Aurora: Checkpoint
-id: /aurora-checkpoint
-description: Save session context ["optional-name"]
-category: Aurora
-tags: [aurora, session, checkpoint]
 ---""",
     "implement": """---
 name: Aurora: Implement

@@ -33,14 +33,6 @@ The user has requested the following plan. Use the aurora instructions to create
   $ARGUMENTS
 </UserRequest>
 """,
-    "checkpoint": """---
-description: Save session context ["optional-name"]
----
-The user wants to save session context. Use the aurora instructions to create a checkpoint.
-<UserRequest>
-  $ARGUMENTS
-</UserRequest>
-""",
     "implement": """---
 description: Execute plan tasks [plan-id]
 ---
@@ -64,7 +56,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".opencode/command/aurora-search.md",
     "get": ".opencode/command/aurora-get.md",
     "plan": ".opencode/command/aurora-plan.md",
-    "checkpoint": ".opencode/command/aurora-checkpoint.md",
     "implement": ".opencode/command/aurora-implement.md",
     "archive": ".opencode/command/aurora-archive.md",
 }

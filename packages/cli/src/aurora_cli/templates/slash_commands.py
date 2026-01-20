@@ -249,45 +249,6 @@ PLAN_TEMPLATE = f"""{PLAN_GUARDRAILS}
 
 {PLAN_REFERENCES}"""
 
-# /aur:checkpoint - Save session context
-CHECKPOINT_TEMPLATE = f"""{BASE_GUARDRAILS}
-
-**Usage**
-Save current session context to preserve conversation state across compaction or handoffs.
-
-**What it does**
-1. Captures current conversation context and key decisions
-2. Records active work in progress
-3. Stores important findings and insights
-4. Creates checkpoint file in `.aurora/checkpoints/`
-5. Enables context restoration after compaction
-
-**When to use**
-- Before long-running tasks that may trigger compaction
-- When handing off work to another agent or session
-- After completing major investigation or analysis
-- Before taking a break from complex multi-step work
-
-**Commands**
-```bash
-# Create checkpoint with auto-generated name
-aur checkpoint save
-
-# Create checkpoint with custom name
-aur checkpoint save "feature-auth-investigation"
-
-# List available checkpoints
-aur checkpoint list
-
-# Restore from checkpoint
-aur checkpoint restore <checkpoint-name>
-```
-
-**Reference**
-- Checkpoints stored in `.aurora/checkpoints/`
-- Automatically includes: timestamp, active plan, recent decisions
-- Maximum context retention with minimal token usage"""
-
 # /aur:archive - Archive completed plans
 ARCHIVE_TEMPLATE = f"""{BASE_GUARDRAILS}
 
@@ -331,7 +292,6 @@ COMMAND_TEMPLATES: dict[str, str] = {
     "search": SEARCH_TEMPLATE,
     "get": GET_TEMPLATE,
     "plan": PLAN_TEMPLATE,
-    "checkpoint": CHECKPOINT_TEMPLATE,
     "implement": IMPLEMENT_TEMPLATE,
     "archive": ARCHIVE_TEMPLATE,
 }

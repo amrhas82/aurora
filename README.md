@@ -225,19 +225,6 @@ aur headless prompt.md
 
 ---
 
-### Checkpoints (Slash Command)
-
-`aur:checkpoint` - Create digest of current session to resume later.
-
-```bash
-/aur:checkpoint
-
-# Output: .aurora/checkpoints/session-2026-01-15.md
-# Contains: goals, progress, decisions, next steps
-```
-
----
-
 ## Planning Workflow
 
 OpenSpec-based flow from goal to implementation:

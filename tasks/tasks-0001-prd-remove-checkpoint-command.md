@@ -1,0 +1,481 @@
+# Task List: Complete Removal of aur:checkpoint Slash Command
+
+**Plan ID**: `0001-remove-checkpoint-command`
+
+**PRD**: `/home/hamr/PycharmProjects/aurora/tasks/0001-prd-remove-checkpoint-command.md`
+
+**Status**: Ready for Implementation
+
+---
+
+## Relevant Files
+
+### Templates (1 file)
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/slash_commands.py` - Source of truth for command templates
+
+### Configurators (20 files)
+**Markdown tools (14):**
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/claude.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cursor.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/windsurf.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cline.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/github_copilot.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codex.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/opencode.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/amazon_q.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codebuddy.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/auggie.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/costrict.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/crush.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/antigravity.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/factory.py`
+
+**TOML tools (6):**
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/gemini.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qwen.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/kilocode.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/roocode.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qoder.py`
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/iflow.py`
+
+### Implementation Code (4 files)
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/spawn.py` - CLI command with checkpoint options
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/spawn_helpers.py` - Checkpoint helper functions
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/checkpoint.py` - Planning checkpoint module
+- `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution/checkpoint.py` - Execution checkpoint module
+
+### Documentation (5 files)
+- `/home/hamr/PycharmProjects/aurora/docs/reference/CONFIG_REFERENCE.md` - Configuration reference
+- `/home/hamr/PycharmProjects/aurora/docs/guides/TOOLS_GUIDE.md` - Tool integration guide
+- `/home/hamr/PycharmProjects/aurora/docs/guides/CLI_USAGE_GUIDE.md` - CLI usage documentation
+- `/home/hamr/PycharmProjects/aurora/CLAUDE.md` - Project instructions
+- `/home/hamr/PycharmProjects/aurora/README.md` - Main project README
+
+### Tests (5 files)
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/planning/test_checkpoint.py` - Planning checkpoint tests
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/execution/test_checkpoint.py` - Execution checkpoint tests
+- `/home/hamr/PycharmProjects/aurora/tests/integration/test_spawn_checkpoints.py` - Integration tests
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/test_*.py` - Configurator tests (20 files)
+- `/home/hamr/PycharmProjects/aurora/tests/unit/cli/templates/test_slash_commands.py` - Template tests
+
+---
+
+## Notes
+
+### Testing Framework
+- **Unit tests**: Use pytest with `@pytest.mark.unit` marker
+- **Integration tests**: Use pytest with `@pytest.mark.integration` marker
+- **Test command**: `make test` or `pytest tests/unit/ -v`
+- **Quality check**: `make quality-check` (runs lint, type-check, and tests)
+
+### Architecture Patterns
+- All configurators inherit from `SlashCommandConfigurator` or `TomlSlashCommandConfigurator`
+- Template bodies fetched via `get_command_body(command_id)` from `slash_commands.py`
+- Each configurator defines `FILE_PATHS` and `FRONTMATTER` (or `DESCRIPTIONS` for TOML)
+- Pattern: 5 entries in each dict (search, get, plan, implement, archive)
+
+### Important Considerations
+- **No user data deletion**: Leave existing `.aurora/checkpoints/` directories alone
+- **Graceful degradation**: Ignore checkpoint-related config keys silently
+- **Complete removal**: No deprecation warnings needed (feature wasn't in core workflows)
+- **Test after each phase**: Run unit tests incrementally to catch issues early
+
+---
+
+## Tasks
+
+- [x] 1.0 Remove Checkpoint Template from Source
+  - [x] 1.1 Remove CHECKPOINT_TEMPLATE constant from slash_commands.py (lines 252-289)
+    - tdd: no
+    - verify: `grep -n "CHECKPOINT_TEMPLATE" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/slash_commands.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/slash_commands.py`
+    - Search for: `CHECKPOINT_TEMPLATE = f"""{BASE_GUARDRAILS}` (line 253)
+    - Remove: Lines 252-289 (entire template definition including comment)
+    - Acceptance: CHECKPOINT_TEMPLATE constant no longer exists
+  - [x] 1.2 Remove "checkpoint" entry from COMMAND_TEMPLATES dict (line 334)
+    - tdd: no
+    - verify: `grep -n '"checkpoint"' /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/slash_commands.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/templates/slash_commands.py`
+    - Search for: `"checkpoint": CHECKPOINT_TEMPLATE,` (line 334)
+    - Remove: Entire line including trailing comma
+    - Acceptance: COMMAND_TEMPLATES dict has exactly 5 entries
+  - [x] 1.3 Add unit test to verify 5 commands in template dict
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/templates/test_slash_commands.py::test_command_templates_count -v`
+    - File: `/home/hamr/PycharmProjects/aurora/tests/unit/cli/templates/test_slash_commands.py`
+    - Add test function to verify `len(COMMAND_TEMPLATES) == 5`
+    - Add test to verify `"checkpoint" not in COMMAND_TEMPLATES`
+    - Add test that `get_command_body("checkpoint")` raises KeyError
+    - Acceptance: 3 new test cases pass
+  - [x] 1.4 Verify: `pytest tests/unit/cli/templates/ -v` - all tests pass
+
+- [x] 2.0 Update All 20 Tool Configurators
+  - [x] 2.1 Update claude.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/claude.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/claude.py`
+    - Remove from FILE_PATHS dict: `"checkpoint": ".claude/commands/aur/checkpoint.md",` (line 14)
+    - Remove from FRONTMATTER dict: Lines 39-44 (checkpoint frontmatter block)
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.2 Update cursor.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cursor.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cursor.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.3 Update windsurf.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/windsurf.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/windsurf.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.4 Update cline.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cline.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/cline.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.5 Update github_copilot.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/github_copilot.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/github_copilot.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.6 Update codex.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codex.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codex.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.7 Update opencode.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/opencode.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/opencode.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.8 Update amazon_q.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/amazon_q.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/amazon_q.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.9 Update codebuddy.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codebuddy.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/codebuddy.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.10 Update auggie.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/auggie.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/auggie.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.11 Update costrict.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/costrict.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/costrict.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.12 Update crush.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/crush.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/crush.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.13 Update antigravity.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/antigravity.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/antigravity.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.14 Update factory.py configurator (remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/factory.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/factory.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from FRONTMATTER dict: checkpoint frontmatter block
+    - Acceptance: FILE_PATHS and FRONTMATTER each have 5 entries
+  - [x] 2.15 Update gemini.py configurator (TOML - remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/gemini.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/gemini.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from DESCRIPTIONS dict: checkpoint description entry
+    - Acceptance: FILE_PATHS and DESCRIPTIONS each have 5 entries
+  - [x] 2.16 Update qwen.py configurator (TOML - remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qwen.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qwen.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from DESCRIPTIONS dict: checkpoint description entry
+    - Acceptance: FILE_PATHS and DESCRIPTIONS each have 5 entries
+  - [x] 2.17 Update kilocode.py configurator (TOML - remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/kilocode.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/kilocode.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from DESCRIPTIONS dict: checkpoint description entry
+    - Acceptance: FILE_PATHS and DESCRIPTIONS each have 5 entries
+  - [x] 2.18 Update roocode.py configurator (TOML - remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/roocode.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/roocode.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from DESCRIPTIONS dict: checkpoint description entry
+    - Acceptance: FILE_PATHS and DESCRIPTIONS each have 5 entries
+  - [x] 2.19 Update qoder.py configurator (TOML - remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qoder.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/qoder.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from DESCRIPTIONS dict: checkpoint description entry
+    - Acceptance: FILE_PATHS and DESCRIPTIONS each have 5 entries
+  - [x] 2.20 Update iflow.py configurator (TOML - remove checkpoint entries)
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/iflow.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/configurators/slash/iflow.py`
+    - Remove from FILE_PATHS dict: checkpoint entry
+    - Remove from DESCRIPTIONS dict: checkpoint description entry
+    - Acceptance: FILE_PATHS and DESCRIPTIONS each have 5 entries
+  - [x] 2.21 Update configurator unit tests to expect 5 commands
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/configurators/slash/ -v`
+    - Files: All test files in `/home/hamr/PycharmProjects/aurora/tests/unit/cli/configurators/slash/`
+    - Update assertions from 6 to 5 for FILE_PATHS length checks
+    - Update assertions to ensure "checkpoint" not in FILE_PATHS
+    - Update assertions for FRONTMATTER/DESCRIPTIONS length checks
+    - Acceptance: All configurator tests pass with 5-command expectation
+  - [x] 2.22 Verify: `pytest tests/unit/cli/configurators/slash/ -v` - all tests pass
+
+- [ ] 3.0 Remove CLI Implementation Code
+  - [x] 3.1 Analyze checkpoint module usage in codebase
+    - tdd: no
+    - verify: `grep -rn "from.*checkpoint import" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/ --include="*.py"`
+    - Search entire aurora_cli package for checkpoint imports
+    - Document all files importing checkpoint modules
+    - Identify all callsites using checkpoint functions
+    - Acceptance: Complete list of checkpoint dependencies documented
+  - [x] 3.2 Remove checkpoint imports from spawn.py
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/spawn.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/spawn.py`
+    - Remove imports related to checkpoint helpers
+    - Search for lines importing from spawn_helpers with checkpoint functions
+    - Acceptance: No checkpoint-related imports remain in spawn.py
+  - [x] 3.3 Remove checkpoint CLI options from spawn.py command
+    - tdd: no
+    - verify: `python -c "from aurora_cli.commands.spawn import spawn; print([p.name for p in spawn.params if 'checkpoint' in p.name])"`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/spawn.py`
+    - Remove @click.option decorators for: --resume, --list-checkpoints, --clean-checkpoints, --no-checkpoint
+    - Remove corresponding function parameters
+    - Remove conditional logic handling checkpoint options in function body
+    - Acceptance: spawn command has no checkpoint-related options
+  - [x] 3.4 Remove checkpoint helper functions from spawn_helpers.py
+    - tdd: no
+    - verify: `grep -n "^def.*checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/spawn_helpers.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/commands/spawn_helpers.py`
+    - Remove functions: list_checkpoints(), clean_checkpoints(), resume_from_checkpoint()
+    - Remove any checkpoint-related helper functions
+    - Remove checkpoint imports if any
+    - Acceptance: No checkpoint functions remain in spawn_helpers.py
+  - [x] 3.5 Delete planning/checkpoint.py module
+    - tdd: no
+    - verify: `test ! -f /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/checkpoint.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/planning/checkpoint.py`
+    - Delete entire file (implementation no longer needed)
+    - Verify no other modules import from this file
+    - Acceptance: File deleted, no import errors in codebase
+  - [x] 3.6 Delete execution/checkpoint.py module
+    - tdd: no
+    - verify: `test ! -f /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution/checkpoint.py`
+    - File: `/home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/execution/checkpoint.py`
+    - Delete entire file (implementation no longer needed)
+    - Verify no other modules import from this file
+    - Acceptance: File deleted, no import errors in codebase
+  - [x] 3.7 Clean up __pycache__ directories for deleted modules
+    - tdd: no
+    - verify: `find /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli -name "*checkpoint*.pyc" -type f | wc -l`
+    - Remove compiled Python files for deleted checkpoint modules
+    - Run: `find . -name "*checkpoint*.pyc" -delete` in project root
+    - Acceptance: No checkpoint .pyc files remain in codebase
+  - [x] 3.8 Verify: `python -c "from aurora_cli.commands import spawn"` - no import errors
+
+- [x] 3.0 Remove CLI Implementation Code
+
+- [ ] 4.0 Update Documentation
+  - [ ] 4.1 Update CONFIG_REFERENCE.md (remove checkpoint configuration)
+    - tdd: no
+    - verify: `grep -in "checkpoint" /home/hamr/PycharmProjects/aurora/docs/reference/CONFIG_REFERENCE.md | wc -l`
+    - File: `/home/hamr/PycharmProjects/aurora/docs/reference/CONFIG_REFERENCE.md`
+    - Search for all "checkpoint" references (case-insensitive)
+    - Remove checkpoint-related configuration sections
+    - Update command counts from 6 to 5
+    - Acceptance: Zero matches for "checkpoint" in file
+  - [ ] 4.2 Update TOOLS_GUIDE.md command count references (6→5)
+    - tdd: no
+    - verify: `grep -n "6 command" /home/hamr/PycharmProjects/aurora/docs/guides/TOOLS_GUIDE.md | wc -l`
+    - File: `/home/hamr/PycharmProjects/aurora/docs/guides/TOOLS_GUIDE.md`
+    - Find all "6 commands" references (lines 325, 329, 975, 1007, 1202, 1238, 1585)
+    - Replace with "5 commands"
+    - Update command lists to remove checkpoint.md examples
+    - Acceptance: Zero matches for "6 command" in file
+  - [ ] 4.3 Update TOOLS_GUIDE.md command examples (remove checkpoint)
+    - tdd: no
+    - verify: `grep -in "checkpoint" /home/hamr/PycharmProjects/aurora/docs/guides/TOOLS_GUIDE.md | wc -l`
+    - File: `/home/hamr/PycharmProjects/aurora/docs/guides/TOOLS_GUIDE.md`
+    - Remove checkpoint from "What It Creates" section examples
+    - Remove checkpoint from command lists and directory structures
+    - Update ALL_COMMANDS references from 6 to 5
+    - Acceptance: Only appropriate checkpoint references remain (if in historical context)
+  - [ ] 4.4 Update CLAUDE.md (remove checkpoint from command list)
+    - tdd: no
+    - verify: `grep -n "6 command" /home/hamr/PycharmProjects/aurora/CLAUDE.md`
+    - File: `/home/hamr/PycharmProjects/aurora/CLAUDE.md`
+    - Line 235: Change "6 commands generated" to "5 commands generated"
+    - Line 322: Change "file paths for 6 commands" to "file paths for 5 commands"
+    - Remove checkpoint from any command lists in configurator section
+    - Acceptance: Zero matches for "6 command" in file
+  - [ ] 4.5 Update README.md (remove checkpoint references)
+    - tdd: no
+    - verify: `grep -in "checkpoint" /home/hamr/PycharmProjects/aurora/README.md | wc -l`
+    - File: `/home/hamr/PycharmProjects/aurora/README.md`
+    - Search for checkpoint references
+    - Remove from feature lists, command examples
+    - Update any command counts if mentioned
+    - Acceptance: Only contextually appropriate checkpoint references remain
+  - [ ] 4.6 Update CLI_USAGE_GUIDE.md if it exists
+    - tdd: no
+    - verify: `test ! -f /home/hamr/PycharmProjects/aurora/docs/guides/CLI_USAGE_GUIDE.md || grep -in "checkpoint" /home/hamr/PycharmProjects/aurora/docs/guides/CLI_USAGE_GUIDE.md | wc -l`
+    - File: `/home/hamr/PycharmProjects/aurora/docs/guides/CLI_USAGE_GUIDE.md` (if exists)
+    - Remove checkpoint command documentation
+    - Update command lists to show 5 commands
+    - Acceptance: No checkpoint command documentation remains
+  - [ ] 4.7 Verify: `grep -rn "6 command" /home/hamr/PycharmProjects/aurora/docs/ /home/hamr/PycharmProjects/aurora/*.md` - zero matches
+
+- [ ] 5.0 Remove and Update Tests
+  - [ ] 5.1 Delete unit test file: test_checkpoint.py (planning)
+    - tdd: no
+    - verify: `test ! -f /home/hamr/PycharmProjects/aurora/tests/unit/cli/planning/test_checkpoint.py`
+    - File: `/home/hamr/PycharmProjects/aurora/tests/unit/cli/planning/test_checkpoint.py`
+    - Delete entire test file (tests no longer applicable)
+    - Acceptance: File deleted successfully
+  - [ ] 5.2 Delete unit test file: test_checkpoint.py (execution)
+    - tdd: no
+    - verify: `test ! -f /home/hamr/PycharmProjects/aurora/tests/unit/cli/execution/test_checkpoint.py`
+    - File: `/home/hamr/PycharmProjects/aurora/tests/unit/cli/execution/test_checkpoint.py`
+    - Delete entire test file (tests no longer applicable)
+    - Acceptance: File deleted successfully
+  - [ ] 5.3 Delete integration test file: test_spawn_checkpoints.py
+    - tdd: no
+    - verify: `test ! -f /home/hamr/PycharmProjects/aurora/tests/integration/test_spawn_checkpoints.py`
+    - File: `/home/hamr/PycharmProjects/aurora/tests/integration/test_spawn_checkpoints.py`
+    - Delete entire test file (checkpoint spawn tests no longer applicable)
+    - Acceptance: File deleted successfully
+  - [ ] 5.4 Clean up test __pycache__ directories
+    - tdd: no
+    - verify: `find /home/hamr/PycharmProjects/aurora/tests -name "*checkpoint*.pyc" -type f | wc -l`
+    - Remove compiled test files for deleted checkpoint tests
+    - Run: `find tests/ -name "*checkpoint*.pyc" -delete` in project root
+    - Acceptance: No checkpoint test .pyc files remain
+  - [ ] 5.5 Verify: `make test-unit` - all unit tests pass
+
+- [ ] 6.0 Verify and Integration Test
+  - [ ] 6.1 Run full unit test suite
+    - tdd: no
+    - verify: `make test-unit`
+    - Command: `make test-unit` or `pytest tests/unit/ -v`
+    - Verify all unit tests pass with checkpoint removal
+    - Check for any unexpected failures
+    - Acceptance: All unit tests pass, zero checkpoint-related failures
+  - [ ] 6.2 Run template validation tests
+    - tdd: no
+    - verify: `pytest tests/unit/cli/templates/test_slash_commands.py -v`
+    - Verify COMMAND_TEMPLATES has exactly 5 entries
+    - Verify "checkpoint" not in COMMAND_TEMPLATES
+    - Verify get_command_body("checkpoint") raises KeyError
+    - Acceptance: Template tests confirm 5-command structure
+  - [ ] 6.3 Run configurator tests for all 20 tools
+    - tdd: no
+    - verify: `pytest tests/unit/cli/configurators/slash/ -v`
+    - Verify all 20 configurators have 5 commands defined
+    - Verify no configurator references "checkpoint"
+    - Check both Markdown and TOML configurators
+    - Acceptance: All 20 configurator tests pass
+  - [ ] 6.4 Run quality checks (lint, type-check)
+    - tdd: no
+    - verify: `make quality-check`
+    - Command: `make quality-check` (runs lint, type-check, and tests)
+    - Fix any linting issues introduced by changes
+    - Fix any type-checking errors
+    - Acceptance: make quality-check passes completely
+  - [ ] 6.5 Integration test: Generate commands for multiple tools
+    - tdd: no
+    - verify: `cd /tmp/test-checkpoint-removal && aur init --tools=claude,cursor,gemini && ls .claude/commands/aur/ | wc -l`
+    - Create temp directory: `/tmp/test-checkpoint-removal`
+    - Run: `aur init --tools=claude,cursor,gemini`
+    - Verify exactly 5 files created per tool (not 6)
+    - List generated files: `ls .claude/commands/aur/`
+    - Expected: search.md, get.md, plan.md, implement.md, archive.md
+    - Acceptance: 5 files created, no checkpoint.md exists
+  - [ ] 6.6 Verify no checkpoint files generated across all tools
+    - tdd: no
+    - verify: `cd /tmp/test-checkpoint-removal && find . -name "*checkpoint*" -type f | wc -l`
+    - Working directory: `/tmp/test-checkpoint-removal` (from task 6.5)
+    - Search for any checkpoint files: `find . -name "*checkpoint*"`
+    - Check .claude/, .cursor/, .gemini/ directories
+    - Acceptance: Zero checkpoint files found
+  - [ ] 6.7 Verify spawn command has no checkpoint options
+    - tdd: no
+    - verify: `aur spawn --help | grep -i checkpoint | wc -l`
+    - Run: `aur spawn --help`
+    - Search output for "checkpoint" references
+    - Verify no --resume, --list-checkpoints, --clean-checkpoints options
+    - Acceptance: Zero matches for "checkpoint" in help output
+  - [ ] 6.8 Test graceful config degradation with old checkpoint config
+    - tdd: no
+    - verify: `cd /tmp/test-checkpoint-removal && aur init && echo '{"planning": {"enable_checkpoints": true}}' > .aurora/config.json && aur mem search test`
+    - Create config with checkpoint settings: `.aurora/config.json`
+    - Add: `{"planning": {"enable_checkpoints": true, "checkpoint_dir": ".aurora/checkpoints"}}`
+    - Run: `aur mem search "test"` (or any aur command)
+    - Verify command runs without errors
+    - Verify no warnings about unknown config keys
+    - Acceptance: Commands work normally, config silently ignores checkpoint keys
+  - [ ] 6.9 Verify: `./install.sh && aur init --tools=all` - complete installation succeeds
+
+- [ ] 7.0 Final Cleanup and Documentation
+  - [ ] 7.1 Search codebase for remaining checkpoint references
+    - tdd: no
+    - verify: `grep -rn "checkpoint" /home/hamr/PycharmProjects/aurora/packages/cli/src/aurora_cli/ --include="*.py" | grep -v "# " | wc -l`
+    - Run comprehensive grep: `grep -rn "checkpoint" packages/ --include="*.py"`
+    - Review matches - exclude comments and docstrings
+    - Verify only contextually appropriate references remain
+    - Acceptance: Only expected references (comments, historical context) remain
+  - [ ] 7.2 Update CHANGELOG.md with removal note
+    - tdd: no
+    - verify: `grep -n "checkpoint" /home/hamr/PycharmProjects/aurora/CHANGELOG.md`
+    - File: `/home/hamr/PycharmProjects/aurora/CHANGELOG.md`
+    - Add entry under "Removed" section for current version
+    - Note: "Removed aur:checkpoint slash command - functionality moved to standard slash commands"
+    - Add: "Breaking change: Users seeing 5 commands instead of 6 (checkpoint removed)"
+    - Acceptance: Clear changelog entry documenting removal
+  - [ ] 7.3 Run benchmark tests to verify no performance regression
+    - tdd: no
+    - verify: `make benchmark-soar`
+    - Command: `make benchmark-soar` (SOAR startup benchmarks)
+    - Compare against baseline: MAX_TOTAL_STARTUP_TIME = 3.0s
+    - Verify removal doesn't slow down startup
+    - Acceptance: Startup time within acceptable limits
+  - [ ] 7.4 Verify: Final comprehensive test - `make quality-check && make test` - all pass

@@ -30,9 +30,6 @@ from pathlib import Path
 import click
 from rich.console import Console
 
-from aurora_cli.commands.spawn_helpers import clean_checkpoints as _clean_checkpoints_impl
-from aurora_cli.commands.spawn_helpers import list_checkpoints as _list_checkpoints_impl
-from aurora_cli.commands.spawn_helpers import resume_from_checkpoint as _resume_from_checkpoint_impl
 from aurora_spawner import spawn_parallel_tracked
 from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
@@ -77,29 +74,6 @@ logger = logging.getLogger(__name__)
     help="Skip execution preview prompt",
 )
 @click.option(
-    "--resume",
-    type=str,
-    default=None,
-    help="Resume from checkpoint by execution ID",
-)
-@click.option(
-    "--list-checkpoints",
-    is_flag=True,
-    help="List resumable checkpoints and exit",
-)
-@click.option(
-    "--clean-checkpoints",
-    type=int,
-    default=None,
-    metavar="DAYS",
-    help="Clean checkpoints older than DAYS and exit",
-)
-@click.option(
-    "--no-checkpoint",
-    is_flag=True,
-    help="Disable checkpoint creation",
-)
-@click.option(
     "--max-concurrent",
     type=int,
     default=4,
@@ -129,16 +103,12 @@ def spawn_command(
     verbose: bool,
     dry_run: bool,
     yes: bool,
-    resume: str | None,
-    list_checkpoints: bool,
-    clean_checkpoints: int | None,
-    no_checkpoint: bool,
     max_concurrent: int,
     stagger_delay: float,
     policy: str,
     no_fallback: bool,
 ) -> None:
-    """Execute tasks from a markdown task file with checkpoint support.
+    """Execute tasks from a markdown task file.
 
     Loads tasks from TASK_FILE (default: tasks.md) and executes them using
     the aurora-spawner package. Tasks can specify agents via HTML comments:
@@ -146,13 +116,8 @@ def spawn_command(
         - [ ] 1. My task description
         <!-- agent: agent-name -->
 
-    By default, tasks are executed in parallel with max_concurrent=5.
+    By default, tasks are executed in parallel with max_concurrent=4.
     Use --sequential to force one-at-a-time execution.
-
-    Supports checkpoints for resume after interruption:
-        aur spawn --resume <execution-id>
-        aur spawn --list-checkpoints
-        aur spawn --clean-checkpoints 7
 
     Args:
         task_file: Path to task file (default: tasks.md)
@@ -161,35 +126,15 @@ def spawn_command(
         verbose: Show detailed output
         dry_run: Validate without executing
         yes: Skip execution preview prompt
-        resume: Resume from checkpoint ID
-        list_checkpoints: List resumable checkpoints
-        clean_checkpoints: Clean old checkpoints (days)
-        no_checkpoint: Disable checkpoint creation
         max_concurrent: Maximum concurrent tasks (default: 4)
         stagger_delay: Delay between task starts in seconds (default: 5.0)
         policy: Spawn timeout policy preset (default: patient)
         no_fallback: Disable LLM fallback on agent failure
     """
     try:
-        from aurora_cli.execution import CheckpointManager
-
-        # Handle utility flags first
-        if list_checkpoints:
-            _list_checkpoints()
-            return
-
-        if clean_checkpoints is not None:
-            _clean_checkpoints(clean_checkpoints)
-            return
-
-        # Load or resume tasks
-        if resume:
-            tasks, execution_id = _resume_from_checkpoint(resume)
-            console.print(f"[cyan]Resuming execution: {execution_id}[/]")
-        else:
-            # Load tasks from file
-            tasks = load_tasks(task_file)
-            execution_id = f"spawn-{int(__import__('time').time() * 1000)}"
+        # Load tasks from file
+        tasks = load_tasks(task_file)
+        execution_id = f"spawn-{int(__import__('time').time() * 1000)}"
 
         if not tasks:
             console.print("[yellow]No tasks found in file.[/]")
@@ -233,8 +178,8 @@ def spawn_command(
         except Exception as e:
             logger.warning(f"Policy check failed: {e}, proceeding without policy enforcement")
 
-        # Show execution preview (unless --yes or resuming)
-        if not yes and not resume:
+        # Show execution preview (unless --yes)
+        if not yes:
             from aurora_cli.execution import ExecutionPreview, ReviewDecision
 
             # Convert tasks to preview format
@@ -251,12 +196,6 @@ def spawn_command(
                 console.print("[yellow]Execution cancelled by user.[/]")
                 return
 
-        # Initialize checkpoint manager (unless disabled)
-        checkpoint_mgr = None
-        if not no_checkpoint:
-            checkpoint_mgr = CheckpointManager(execution_id, plan_id=None)
-            console.print(f"[dim]Checkpoint: {execution_id}[/]")
-
         # Determine execution mode
         use_parallel = parallel and not sequential
 
@@ -270,7 +209,6 @@ def spawn_command(
                     _execute_parallel(
                         tasks,
                         verbose,
-                        checkpoint_mgr=checkpoint_mgr,
                         max_concurrent=max_concurrent,
                         stagger_delay=stagger_delay,
                         policy_name=policy,
@@ -283,17 +221,12 @@ def spawn_command(
                     _execute_sequential(
                         tasks,
                         verbose,
-                        checkpoint_mgr=checkpoint_mgr,
                         policy_name=policy,
                         fallback_to_llm=not no_fallback,
                     )
                 )
         except KeyboardInterrupt:
-            if checkpoint_mgr:
-                checkpoint_mgr.mark_interrupted()
-                console.print(
-                    f"\n[yellow]Interrupted. Resume with:[/] aur spawn --resume {execution_id}"
-                )
+            console.print("\n[yellow]Execution interrupted by user.[/]")
             raise click.Abort()
 
         # Display summary
@@ -345,7 +278,6 @@ def load_tasks(file_path: Path) -> list[ParsedTask]:
 async def _execute_parallel(
     tasks: list[ParsedTask],
     verbose: bool,
-    checkpoint_mgr=None,
     max_concurrent: int = 4,
     stagger_delay: float = 5.0,
     policy_name: str = "patient",
@@ -363,7 +295,6 @@ async def _execute_parallel(
     Args:
         tasks: List of tasks to execute
         verbose: Show detailed output
-        checkpoint_mgr: Optional CheckpointManager for progress tracking
         max_concurrent: Maximum concurrent tasks (default: 4)
         stagger_delay: Delay between task starts in seconds (default: 5.0)
         policy_name: Spawn policy preset (default: "patient")
@@ -427,7 +358,6 @@ async def _execute_parallel(
 async def _execute_sequential(
     tasks: list[ParsedTask],
     verbose: bool,
-    checkpoint_mgr=None,
     policy_name: str = "patient",
     fallback_to_llm: bool = True,
 ) -> dict[str, int]:
@@ -439,7 +369,6 @@ async def _execute_sequential(
     Args:
         tasks: List of tasks to execute
         verbose: Show detailed output
-        checkpoint_mgr: Optional CheckpointManager for progress tracking
         policy_name: Spawn policy preset (default: "patient")
         fallback_to_llm: Fall back to LLM on agent failure (default: True)
 
@@ -502,18 +431,3 @@ def execute_tasks_parallel(tasks: list[ParsedTask]) -> dict[str, int]:
         Execution summary with total, completed, failed counts
     """
     return asyncio.run(_execute_parallel(tasks, verbose=False))
-
-
-def _list_checkpoints() -> None:
-    """List all resumable checkpoints."""
-    _list_checkpoints_impl()
-
-
-def _clean_checkpoints(days: int) -> None:
-    """Clean checkpoints older than specified days."""
-    _clean_checkpoints_impl(days)
-
-
-def _resume_from_checkpoint(execution_id: str) -> tuple[list[ParsedTask], str]:
-    """Resume execution from checkpoint."""
-    return _resume_from_checkpoint_impl(execution_id)

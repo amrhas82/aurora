@@ -1,6 +1,5 @@
 """Execution control module for Aurora CLI."""
 
-from aurora_cli.execution.checkpoint import CheckpointManager, CheckpointState, TaskState
 from aurora_cli.execution.recovery import AgentRecovery, RecoveryResult
 from aurora_cli.execution.review import (
     AgentGap,
@@ -16,7 +15,4 @@ __all__ = [
     "ExecutionPreview",
     "ReviewDecision",
     "AgentGap",
-    "CheckpointManager",
-    "CheckpointState",
-    "TaskState",
 ]

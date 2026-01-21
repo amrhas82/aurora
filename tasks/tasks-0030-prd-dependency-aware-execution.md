@@ -88,19 +88,19 @@
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_independent_subgoals_continue -v`
     - **Details**: Test sg-4 (no deps) executes successfully even when sg-2 (in different chain) fails
     - **PRD Ref**: FR3.3, US2, G3
-  - [ ] 2.6 Modify execute_agents() to use topological_sort() for wave-based execution
+  - [x] 2.6 Modify execute_agents() to use topological_sort() for wave-based execution
     - tdd: yes (tests written above)
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k context_passing -v`
     - **Details**: Replace single spawn_parallel_tracked call with loop over waves from topological_sort(), add outputs dict and failed_subgoals set
     - **PRD Ref**: FR1.1-1.4, Section 7.1 (pseudocode lines 397-403)
     - **Location**: In execute_agents() after building spawn_tasks list (around line 276)
-  - [ ] 2.7 Implement context injection logic with partial dependency support
+  - [x] 2.7 Implement context injection logic with partial dependency support
     - tdd: yes (tests written above)
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k partial_context -v`
     - **Details**: Before each wave execution, inject previous outputs using spawn_sequential format with ✓/✗ markers, add WARNING footer for partial deps
     - **PRD Ref**: FR2.1-2.6, FR3.2, Section 7.1 (pseudocode lines 408-432)
     - **Location**: Inside wave loop, before spawn_parallel_tracked call
-  - [ ] 2.8 Track failed subgoals and pass partial context to dependents
+  - [x] 2.8 Track failed subgoals and pass partial context to dependents
     - tdd: yes (tests written above)
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_with_failed_dependency -v`
     - **Details**: After each wave, update failed_subgoals set, mark subgoals with partial context (has_partial_context flag)
@@ -112,23 +112,23 @@
     - **Details**: 5 integration tests (context_passing, partial_context_with_failed, warning_footer, all_dependencies_failed, independent_subgoals_continue) must pass
 
 - [ ] 3.0 Validation Enhancement: Invalid Dependency Detection (~5 LOC)
-  - [ ] 3.1 Write test: test_verify_lite_invalid_dependency_ref
+  - [x] 3.1 Write test: test_verify_lite_invalid_dependency_ref
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_verify.py::test_verify_lite_invalid_dependency_ref -v`
     - **Details**: Test verify_lite() rejects plan where sg-2 depends_on=[1, 99] (99 doesn't exist), returns (False, _, ["Subgoal 2 depends on non-existent subgoals: [99]"])
     - **PRD Ref**: FR4.1-4.3, Section 9 Validation Tests
-  - [ ] 3.2 Write test: test_verify_lite_valid_deps_pass
+  - [x] 3.2 Write test: test_verify_lite_valid_deps_pass
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_verify.py::test_verify_lite_valid_deps_pass -v`
     - **Details**: Test verify_lite() passes plan with valid dependencies: sg-2 depends_on=[1] where sg-1 exists, returns (True, _, [])
     - **PRD Ref**: FR4.1-4.2, Section 9 Validation Tests
-  - [ ] 3.3 Add invalid dependency reference check to _check_circular_deps()
+  - [x] 3.3 Add invalid dependency reference check to _check_circular_deps()
     - tdd: yes (tests written above)
     - verify: `pytest packages/soar/tests/test_phases/test_verify.py::test_verify_lite_invalid_dependency_ref -v`
     - **Details**: After building graph (line 166), add valid_indices set, check each dep is in valid_indices, append issue for invalid deps
     - **PRD Ref**: FR4.1-4.3, Section 7.1 (pseudocode lines 457-462)
     - **Location**: In _check_circular_deps() after graph building, before DFS cycle detection
-  - [ ] 3.4 Verify: All validation tests pass
+  - [x] 3.4 Verify: All validation tests pass
     - tdd: no
     - verify: `pytest packages/soar/tests/test_phases/test_verify.py -k "invalid_dependency or valid_deps" -v`
     - **Details**: Both validation tests (invalid_dependency_ref, valid_deps_pass) must pass

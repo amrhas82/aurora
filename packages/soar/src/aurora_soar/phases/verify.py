@@ -148,6 +148,7 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
     """Check for circular dependencies in subgoal dependency graph.
 
     Uses depth-first search to detect cycles in the dependency graph.
+    Also validates that all dependency references point to existing subgoals.
 
     Args:
         subgoals: List of subgoal dicts with 'subgoal_index' and 'depends_on'
@@ -163,6 +164,15 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
         subgoal_index = subgoal.get("subgoal_index")
         depends_on = subgoal.get("depends_on", [])
         graph[subgoal_index] = depends_on
+
+    # Validate that all dependency references exist
+    valid_indices = set(graph.keys())
+    for subgoal_index, deps in graph.items():
+        invalid_deps = [d for d in deps if d not in valid_indices]
+        if invalid_deps:
+            issues.append(
+                f"Subgoal {subgoal_index} depends on non-existent subgoals: {invalid_deps}"
+            )
 
     # DFS to detect cycles
     visited: set[int] = set()

@@ -281,3 +281,92 @@ class TestVerifyLite:
         assert passed is False
         assert len(agent_assignments) == 0
         assert len(issues) > 0
+
+    def test_verify_lite_invalid_dependency_ref(self):
+        """Test verify_lite rejects plan where subgoal depends on non-existent subgoal.
+
+        sg-2 depends on [1, 99] where 99 doesn't exist.
+        Expected: (False, _, ["Subgoal 2 depends on non-existent subgoals: [99]"])
+        """
+        decomposition = {
+            "goal": "Test goal",
+            "subgoals": [
+                {
+                    "subgoal_index": 1,
+                    "description": "Test subgoal 1",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [],
+                },
+                {
+                    "subgoal_index": 2,
+                    "description": "Test subgoal 2",
+                    "suggested_agent": "test-agent",
+                    "is_critical": False,
+                    "depends_on": [1, 99],  # 99 doesn't exist
+                },
+            ],
+        }
+
+        available_agents = [
+            AgentInfo(
+                id="test-agent",
+                name="Test Agent",
+                description="Agent",
+                capabilities=["test"],
+                agent_type="local",
+            ),
+        ]
+
+        from aurora_soar.phases.verify import verify_lite
+
+        passed, agent_assignments, issues = verify_lite(decomposition, available_agents)
+
+        assert passed is False
+        assert len(issues) > 0
+        # Should have issue about non-existent subgoal 99
+        assert any("non-existent" in issue.lower() and "99" in issue for issue in issues)
+
+    def test_verify_lite_valid_deps_pass(self):
+        """Test verify_lite passes plan with valid dependencies.
+
+        sg-2 depends on [1] where sg-1 exists.
+        Expected: (True, _, [])
+        """
+        decomposition = {
+            "goal": "Test goal",
+            "subgoals": [
+                {
+                    "subgoal_index": 1,
+                    "description": "Test subgoal 1",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [],
+                },
+                {
+                    "subgoal_index": 2,
+                    "description": "Test subgoal 2",
+                    "suggested_agent": "test-agent",
+                    "is_critical": False,
+                    "depends_on": [1],  # Valid reference to subgoal 1
+                },
+            ],
+        }
+
+        available_agents = [
+            AgentInfo(
+                id="test-agent",
+                name="Test Agent",
+                description="Agent",
+                capabilities=["test"],
+                agent_type="local",
+            ),
+        ]
+
+        from aurora_soar.phases.verify import verify_lite
+
+        passed, agent_assignments, issues = verify_lite(decomposition, available_agents)
+
+        assert passed is True
+        assert len(agent_assignments) == 2
+        assert len(issues) == 0

@@ -31,6 +31,59 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def topological_sort(subgoals: list[dict]) -> list[list[dict]]:
+    """Group subgoals into dependency waves using Kahn's algorithm.
+
+    Args:
+        subgoals: List of subgoal dicts with 'subgoal_index' and 'depends_on'
+
+    Returns:
+        List of waves, where each wave is a list of subgoals that can execute in parallel
+    """
+    # Build in-degree map and dependency graph
+    in_degree = {}
+    graph = {}
+    subgoal_map = {}
+
+    for sg in subgoals:
+        idx = sg["subgoal_index"]
+        subgoal_map[idx] = sg
+        in_degree[idx] = 0
+        graph[idx] = []
+
+    # Build graph and count in-degrees
+    for sg in subgoals:
+        idx = sg["subgoal_index"]
+        deps = sg.get("depends_on", [])
+        in_degree[idx] = len(deps)
+        for dep in deps:
+            if dep in graph:
+                graph[dep].append(idx)
+
+    # Kahn's algorithm: process nodes wave by wave
+    waves = []
+    while any(deg == 0 for deg in in_degree.values()):
+        # Collect all nodes with in-degree 0 (current wave)
+        current_wave = [subgoal_map[idx] for idx, deg in in_degree.items() if deg == 0]
+
+        if not current_wave:
+            break
+
+        waves.append(current_wave)
+
+        # Remove processed nodes and update in-degrees
+        for sg in current_wave:
+            idx = sg["subgoal_index"]
+            in_degree[idx] = -1  # Mark as processed
+
+            # Decrease in-degree for neighbors
+            for neighbor in graph[idx]:
+                if in_degree[neighbor] > 0:
+                    in_degree[neighbor] -= 1
+
+    return waves
+
+
 def _get_agent_matcher():
     """Lazy import of AgentMatcher to avoid circular imports."""
     try:
@@ -42,7 +95,7 @@ def _get_agent_matcher():
         return None
 
 
-__all__ = ["execute_agents", "CollectResult", "AgentOutput"]
+__all__ = ["execute_agents", "CollectResult", "AgentOutput", "topological_sort"]
 
 
 # Default timeouts (in seconds)

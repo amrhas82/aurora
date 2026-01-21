@@ -51,12 +51,6 @@ class TestClaudeSlashCommandConfiguratorPaths:
         path = config.get_relative_path("plan")
         assert path == ".claude/commands/aur/plan.md"
 
-    def test_get_relative_path_checkpoint(self):
-        """Test get_relative_path returns correct path for 'checkpoint' command."""
-        config = ClaudeSlashCommandConfigurator()
-        path = config.get_relative_path("checkpoint")
-        assert path == ".claude/commands/aur/checkpoint.md"
-
     def test_get_relative_path_archive(self):
         """Test get_relative_path returns correct path for 'archive' command."""
         config = ClaudeSlashCommandConfigurator()
@@ -139,13 +133,6 @@ class TestClaudeSlashCommandConfiguratorFrontmatter:
                 "description:" in frontmatter
             ), f"Frontmatter for {cmd_id} should have description"
 
-    def test_get_frontmatter_checkpoint_has_session_tags(self):
-        """Test checkpoint command frontmatter includes session-related tags."""
-        config = ClaudeSlashCommandConfigurator()
-        frontmatter = config.get_frontmatter("checkpoint")
-
-        assert "checkpoint" in frontmatter.lower() or "session" in frontmatter.lower()
-
 
 class TestClaudeSlashCommandConfiguratorBody:
     """Tests for body content generation."""
@@ -157,14 +144,6 @@ class TestClaudeSlashCommandConfiguratorBody:
 
         # Should return the same content as get_command_body
         expected = get_command_body("plan")
-        assert body == expected
-
-    def test_get_body_checkpoint_returns_template(self):
-        """Test get_body returns content for checkpoint command."""
-        config = ClaudeSlashCommandConfigurator()
-        body = config.get_body("checkpoint")
-
-        expected = get_command_body("checkpoint")
         assert body == expected
 
     def test_get_body_all_commands(self):
@@ -188,12 +167,12 @@ class TestClaudeSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method."""
 
     def test_generate_all_creates_6_files(self, tmp_path: Path):
-        """Test generate_all creates 6 command files (one for each command)."""
+        """Test generate_all creates 5 command files (one for each command)."""
         config = ClaudeSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 6
+        assert len(created) == 5
 
     def test_generate_all_creates_files_in_claude_directory(self, tmp_path: Path):
         """Test generate_all creates files in .claude/commands/aur/ directory."""
@@ -259,7 +238,7 @@ class TestClaudeSlashCommandConfiguratorGenerateAll:
             assert path.startswith(".claude/commands/aur/")
 
     def test_generate_all_creates_all_6_command_files(self, tmp_path: Path):
-        """Test generate_all creates all 6 command files."""
+        """Test generate_all creates all 5 command files."""
         config = ClaudeSlashCommandConfigurator()
         config.generate_all(str(tmp_path), ".aurora")
 
@@ -267,7 +246,6 @@ class TestClaudeSlashCommandConfiguratorGenerateAll:
             "search.md",
             "get.md",
             "plan.md",
-            "checkpoint.md",
             "implement.md",
             "archive.md",
         ]
@@ -405,12 +383,12 @@ class TestClaudeSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
     def test_get_targets_returns_6_targets(self):
-        """Test get_targets returns 6 targets (one per command)."""
+        """Test get_targets returns 5 targets (one per command)."""
         config = ClaudeSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 6
+        assert len(targets) == 5
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

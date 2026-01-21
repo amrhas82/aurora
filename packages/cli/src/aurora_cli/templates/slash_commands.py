@@ -116,21 +116,17 @@ NO additional explanations, suggestions, or questions."""
 IMPLEMENT_TEMPLATE = f"""{BASE_GUARDRAILS}
 
 **Usage**
-Execute plan tasks sequentially with checkpoint support.
+Execute plan tasks sequentially with progress tracking.
 
 **What it does**
 1. Reads plan.md, tasks.md, and specs/ from plan directory
 2. Executes tasks in order, marking each `- [x]` when complete
-3. Saves checkpoint after each task for resume capability
-4. Validates completed work against spec scenarios when available
+3. Validates completed work against spec scenarios when available
 
 **Commands**
 ```bash
 # Implement specific plan
 /aur:implement 0001-add-auth
-
-# Resume interrupted implementation
-/aur:implement 0001-add-auth --resume
 
 # Interactive selection (lists active plans)
 /aur:implement
@@ -144,14 +140,7 @@ Execute plan tasks sequentially with checkpoint support.
    - Execute the implementation
    - Run validation (tests, checks) from task description
    - Mark task complete: `- [ ]` → `- [x]`
-   - Save checkpoint to `.aurora/checkpoints/`
 5. On completion: suggest `/aur:archive <plan-id>`
-
-**Resume Mode**
-When `--resume` is passed:
-1. Read latest checkpoint from `.aurora/checkpoints/`
-2. Skip already-completed tasks (marked `- [x]`)
-3. Continue from first incomplete task
 
 **Validation**
 - If `specs/<capability>/spec.md` exists, use scenarios as acceptance criteria
@@ -160,8 +149,7 @@ When `--resume` is passed:
 
 **Reference**
 - `aur plan list` - See active plans
-- `aur plan show <id>` - View plan details
-- Checkpoints stored in `.aurora/checkpoints/<plan-id>/`"""
+- `aur plan show <id>` - View plan details"""
 
 # /aur:plan - Plan generation command (matches OpenSpec proposal template exactly)
 PLAN_GUARDRAILS = f"""{BASE_GUARDRAILS}

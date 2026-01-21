@@ -458,10 +458,6 @@ class TestMarkdownToolUpdateExisting:
         # Only one file should be updated
         assert len(updated) == 1
 
-        # Other files should NOT have been created
-        checkpoint_path = tmp_path / config.get_relative_path("checkpoint")
-        assert not checkpoint_path.exists()
-
     @pytest.mark.parametrize(
         "tool_id,dir_pattern,file_pattern,frontmatter_fields", SIMPLE_MARKDOWN_TOOLS
     )

@@ -134,7 +134,6 @@ def spawn_command(
     try:
         # Load tasks from file
         tasks = load_tasks(task_file)
-        execution_id = f"spawn-{int(__import__('time').time() * 1000)}"
 
         if not tasks:
             console.print("[yellow]No tasks found in file.[/]")

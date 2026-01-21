@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+**Slash Commands:**
+- Removed `aur:checkpoint` slash command from all tool configurations
+  - All 20 tool configurators now generate 5 commands instead of 6 (search, get, plan, implement, archive)
+  - Removed checkpoint template from `templates/slash_commands.py`
+  - Removed checkpoint command from `templates/commands.py`
+  - Breaking change: Tools configured with `aur init --tools` will no longer generate checkpoint.md files
+  - Existing `.aurora/checkpoints/` directories are preserved (not deleted)
+  - Config keys related to checkpoints are silently ignored for backward compatibility
+
+**CLI Implementation:**
+- Removed checkpoint-related CLI options from `aur spawn` command
+  - Removed `--resume`, `--list-checkpoints`, `--clean-checkpoints`, `--no-checkpoint` flags
+  - Deleted `packages/cli/src/aurora_cli/planning/checkpoint.py`
+  - Deleted `packages/cli/src/aurora_cli/execution/checkpoint.py`
+  - Removed checkpoint helper functions from `spawn_helpers.py`
+
+**Documentation:**
+- Updated all documentation to reflect 5-command structure
+  - CLAUDE.md, README.md, TOOLS_GUIDE.md, CONFIG_REFERENCE.md
+  - Removed checkpoint references from implement command descriptions
+  - Updated command count references from 6 to 5
+
+**Tests:**
+- Removed checkpoint-specific test files
+  - `tests/unit/cli/planning/test_checkpoint.py`
+  - `tests/unit/cli/execution/test_checkpoint.py`
+  - `tests/integration/test_spawn_checkpoints.py`
+
 ## [0.9.4] - 2026-01-19
 
 ### Fixed

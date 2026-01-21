@@ -232,8 +232,8 @@ Works with 20+ tools via pipe interface:
 
 All 20 tools use same template bodies via `get_command_body(command_id)`.
 
-**6 commands generated:**
-- `search`, `get`, `plan`, `checkpoint`, `implement`, `archive`
+**5 commands generated:**
+- `search`, `get`, `plan`, `implement`, `archive`
 
 **Managed Block System:**
 ```markdown
@@ -319,7 +319,7 @@ def mycommand(arg: str, flag: str) -> None:
 3. Implement required methods:
    - `tool_id` (string identifier)
    - `is_available` (detection logic)
-   - `get_relative_path()` (file paths for 6 commands)
+   - `get_relative_path()` (file paths for 5 commands)
    - `get_frontmatter()` or `get_description()`
    - `get_body()` (uses `get_command_body()` from templates)
 4. Register in `packages/cli/src/aurora_cli/configurators/slash/registry.py`

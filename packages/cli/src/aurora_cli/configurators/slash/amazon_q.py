@@ -10,7 +10,7 @@ from aurora_cli.templates.slash_commands import get_command_body
 # Frontmatter for each command - includes $ARGUMENTS and <UserRequest> tags
 FRONTMATTER: dict[str, str] = {
     "search": """---
-description: Search indexed code ["query" --limit N --type function]
+description: Search indexed code ["query" --limit N --type X]
 ---
 
 The user wants to search indexed memory. Use the aurora instructions to search.
@@ -19,7 +19,7 @@ The user wants to search indexed memory. Use the aurora instructions to search.
   $ARGUMENTS
 </UserRequest>""",
     "get": """---
-description: Retrieve search result [N] from last search
+description: Retrieve last search result [N]
 ---
 
 The user wants to retrieve a specific chunk. Use the aurora instructions to get the chunk.
@@ -28,7 +28,7 @@ The user wants to retrieve a specific chunk. Use the aurora instructions to get 
   $ARGUMENTS
 </UserRequest>""",
     "plan": """---
-description: Create implementation plan with agent delegation [goal]
+description: Create implementation plan [goal | goals.json]
 ---
 
 The user has requested the following plan. Use the aurora instructions to create their plan.
@@ -46,7 +46,7 @@ The user wants to implement a plan. Use the aurora instructions for implementati
   $ARGUMENTS
 </UserRequest>""",
     "archive": """---
-description: Archive completed plan with spec processing [plan-id]
+description: Archive completed plan [plan-id]
 ---
 
 The user wants to archive a completed plan. Use the aurora instructions to archive the plan.
@@ -116,3 +116,21 @@ class AmazonQSlashCommandConfigurator(SlashCommandConfigurator):
             Command body content from templates
         """
         return get_command_body(command_id)
+
+    def get_description(self, command_id: str) -> str | None:
+        """Get brief description for skill listings.
+
+        Args:
+            command_id: Command identifier
+
+        Returns:
+            One-line description for skill listings
+        """
+        descriptions = {
+            "search": 'Search indexed code ["query" --limit N --type X]',
+            "get": "Retrieve last search result [N]",
+            "plan": "Create implementation plan [goal | goals.json]",
+            "implement": "Execute plan tasks [plan-id]",
+            "archive": "Archive completed plan [plan-id]",
+        }
+        return descriptions.get(command_id)

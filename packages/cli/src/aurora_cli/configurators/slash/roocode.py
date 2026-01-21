@@ -9,11 +9,11 @@ from aurora_cli.templates.slash_commands import get_command_body
 
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
-    "search": 'Search indexed code ["query" --limit N --type function]',
-    "get": "Retrieve search result [N] from last search",
-    "plan": "Create implementation plan with agent delegation [goal]",
+    "search": 'Search indexed code ["query" --limit N --type X]',
+    "get": "Retrieve last search result [N]",
+    "plan": "Create implementation plan [goal | goals.json]",
     "implement": "Execute plan tasks [plan-id]",
-    "archive": "Archive completed plan with spec processing [plan-id]",
+    "archive": "Archive completed plan [plan-id]",
 }
 
 # File paths for each command
@@ -82,3 +82,14 @@ class RooCodeSlashCommandConfigurator(SlashCommandConfigurator):
             Command body content from templates
         """
         return get_command_body(command_id)
+
+    def get_description(self, command_id: str) -> str | None:
+        """Get brief description for skill listings.
+
+        Args:
+            command_id: Command identifier
+
+        Returns:
+            One-line description for skill listings
+        """
+        return DESCRIPTIONS.get(command_id)

@@ -10,21 +10,21 @@ from aurora_cli.templates.slash_commands import get_command_body
 FRONTMATTER: dict[str, str] = {
     "search": """---
 name: Aurora: Search
-description: Search indexed code ["query" --limit N --type function]
+description: Search indexed code ["query" --limit N --type X]
 argument-hint: search query
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "get": """---
 name: Aurora: Get
-description: Retrieve search result [N] from last search
+description: Retrieve last search result [N]
 argument-hint: chunk index number
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "plan": """---
 name: Aurora: Plan
-description: Create implementation plan with agent delegation [goal]
+description: Create implementation plan [goal | goals.json]
 argument-hint: request or feature description
 category: Aurora
 tags: [aurora, planning]
@@ -38,7 +38,7 @@ tags: [aurora, planning, implementation]
 ---""",
     "archive": """---
 name: Aurora: Archive
-description: Archive completed plan with spec processing [plan-id]
+description: Archive completed plan [plan-id]
 argument-hint: plan ID to archive
 category: Aurora
 tags: [aurora, planning, archive]
@@ -104,3 +104,21 @@ class AuggieSlashCommandConfigurator(SlashCommandConfigurator):
             Command body content from templates
         """
         return get_command_body(command_id)
+
+    def get_description(self, command_id: str) -> str | None:
+        """Get brief description for skill listings.
+
+        Args:
+            command_id: Command identifier
+
+        Returns:
+            One-line description for skill listings
+        """
+        descriptions = {
+            "search": 'Search indexed code ["query" --limit N --type X]',
+            "get": "Retrieve last search result [N]",
+            "plan": "Create implementation plan [goal | goals.json]",
+            "implement": "Execute plan tasks [plan-id]",
+            "archive": "Archive completed plan [plan-id]",
+        }
+        return descriptions.get(command_id)

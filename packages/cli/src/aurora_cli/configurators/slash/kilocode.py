@@ -68,3 +68,21 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
             Command body content from templates
         """
         return get_command_body(command_id)
+
+    def get_description(self, command_id: str) -> str | None:
+        """Get brief description for skill listings.
+
+        Args:
+            command_id: Command identifier
+
+        Returns:
+            One-line description for skill listings
+        """
+        descriptions = {
+            "search": 'Search indexed code ["query" --limit N --type X]',
+            "get": "Retrieve last search result [N]",
+            "plan": "Create implementation plan [goal | goals.json]",
+            "implement": "Execute plan tasks [plan-id]",
+            "archive": "Archive completed plan [plan-id]",
+        }
+        return descriptions.get(command_id)

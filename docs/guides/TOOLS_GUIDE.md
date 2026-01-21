@@ -315,18 +315,17 @@ aur init --force
   +- search.md
   +- get.md
   +- plan.md
-  +- checkpoint.md
   +- implement.md
   +- archive.md
 
 .cursor/commands/
   +- aurora-search.md
   +- aurora-get.md
-  ... (same 6 commands)
+  ... (same 5 commands)
 
 .windsurf/commands/
   +- aurora-search.md
-  ... (same 6 commands)
+  ... (same 5 commands)
 
 ... (for all selected tools)
 ```
@@ -839,15 +838,14 @@ packages/cli/src/aurora_cli/
 **Single Source**: `templates/slash_commands.py`
 
 ```python
-# Defines 6 Aurora commands:
-ALL_COMMANDS = ["search", "get", "plan", "checkpoint", "implement", "archive"]
+# Defines 5 Aurora commands:
+ALL_COMMANDS = ["search", "get", "plan", "implement", "archive"]
 
 # Each command has a template:
 COMMAND_TEMPLATES = {
     "search": SEARCH_TEMPLATE,
     "get": GET_TEMPLATE,
     "plan": PLAN_TEMPLATE,
-    "checkpoint": CHECKPOINT_TEMPLATE,
     "implement": IMPLEMENT_TEMPLATE,
     "archive": ARCHIVE_TEMPLATE,
 }
@@ -960,7 +958,6 @@ FILE_PATHS: dict[str, str] = {
     "search": ".newtool/commands/aurora-search.md",
     "get": ".newtool/commands/aurora-get.md",
     "plan": ".newtool/commands/aurora-plan.md",
-    "checkpoint": ".newtool/commands/aurora-checkpoint.md",
     "implement": ".newtool/commands/aurora-implement.md",
     "archive": ".newtool/commands/aurora-archive.md",
 }
@@ -972,7 +969,7 @@ description: Search indexed code
 category: Aurora
 tags: [aurora, search]
 ---""",
-    # ... (repeat for all 6 commands)
+    # ... (repeat for all 5 commands)
 }
 
 
@@ -1004,7 +1001,7 @@ from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurato
 
 DESCRIPTIONS: dict[str, str] = {
     "search": "Search indexed code",
-    # ... (6 commands)
+    # ... (5 commands)
 }
 
 class NewToolSlashCommandConfigurator(TomlSlashCommandConfigurator):
@@ -1199,7 +1196,7 @@ cat .gemini/commands/aurora/search.toml
 - [ ] Markdown tools generate correct frontmatter
 - [ ] TOML tools generate valid syntax
 - [ ] Aurora markers present in all files
-- [ ] All 6 commands generated
+- [ ] All 5 commands generated
 - [ ] File paths follow tool's naming convention
 - [ ] Update preserves user content outside markers
 - [ ] Body content matches template
@@ -1235,7 +1232,7 @@ cat .gemini/commands/aurora/search.toml
 - [ ] Test search command: `/aur:search test limit 5`
 - [ ] Test get command: `/aur:get 1`
 - [ ] Verify "MANDATORY" sections are clear
-- [ ] Check all 6 commands render correctly
+- [ ] Check all 5 commands render correctly
 
 **For new tools**:
 - [ ] Tool added to `configurators/slash/registry.py`
@@ -1582,7 +1579,7 @@ prompt = """
 
 1. ✅ Create `configurators/slash/newtool.py`
 2. ✅ Choose format (Markdown or TOML)
-3. ✅ Define FILE_PATHS (6 commands)
+3. ✅ Define FILE_PATHS (5 commands)
 4. ✅ Define FRONTMATTER or DESCRIPTIONS
 5. ✅ Implement required methods
 6. ✅ Register in `registry.py`

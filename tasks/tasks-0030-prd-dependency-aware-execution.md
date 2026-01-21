@@ -1,0 +1,291 @@
+# Tasks: Dependency-Aware Execution (PRD 0030)
+
+**PRD:** `/home/hamr/PycharmProjects/aurora/tasks/0030-prd-dependency-aware-execution.md`
+**Status:** Ready for Implementation
+**Created:** 2026-01-21
+
+---
+
+## Relevant Files
+
+- `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/collect.py` - Core execution logic, contains execute_agents() (lines 181-363)
+- `/home/hamr/PycharmProjects/aurora/packages/soar/src/aurora_soar/phases/verify.py` - Validation logic, contains _check_circular_deps() (lines 148-199)
+- `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_collect.py` - Existing test file with fixtures (mock_agent_info, mock_context)
+- `/home/hamr/PycharmProjects/aurora/packages/soar/tests/test_phases/test_verify.py` - Existing test file for validation
+- `/home/hamr/PycharmProjects/aurora/packages/spawner/src/aurora_spawner/spawner.py` - Reference for spawn_parallel_tracked() (line 896+) and spawn_sequential format (lines 849-893)
+- `/home/hamr/PycharmProjects/aurora/packages/spawner/src/aurora_spawner/models.py` - SpawnResult, SpawnTask models
+
+### Notes
+
+- **Testing Framework**: Aurora uses pytest with markers (@pytest.mark.unit, @pytest.mark.integration)
+- **TDD Approach**: Write test first for each feature, watch it fail, then implement
+- **Reuse Patterns**: spawn_parallel_tracked handles all retry/fallback/circuit-breaker logic; spawn_sequential format for context passing
+- **Logging**: Use `logger = logging.getLogger(__name__)` from python logging module; INFO for user-visible events, DEBUG for internal details
+- **Async/Await**: All spawner functions are async; use `await spawn_parallel_tracked()`
+- **Verification Commands**: Run with `pytest <file>::<test> -v` for individual tests; `make test-unit` for full suite
+- **Performance Baseline**: No-dependency queries must complete within 5% of current speed (measured by existing test suite)
+- **Wave Terminology**: Topological waves (dependency groups) vs Execution waves (4-task chunks) - spawn_parallel_tracked handles execution wave chunking automatically
+
+---
+
+## Tasks
+
+- [ ] 1.0 Core Implementation: Topological Sorting (~25 LOC)
+  - [x] 1.1 Write test: test_topological_sort_no_deps
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_topological_sort_no_deps -v`
+    - **Details**: Test that subgoals with no dependencies all go into single wave [sg-1, sg-2, sg-3] → [[sg-1, sg-2, sg-3]]
+    - **PRD Ref**: FR1.1, Section 9 Test Scenarios
+  - [x] 1.2 Write test: test_topological_sort_linear_deps
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_topological_sort_linear_deps -v`
+    - **Details**: Test linear chain A → B → C produces 3 waves: [[A], [B], [C]]
+    - **PRD Ref**: FR1.2, Section 9 Test Scenarios
+  - [x] 1.3 Write test: test_topological_sort_diamond_deps
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_topological_sort_diamond_deps -v`
+    - **Details**: Test diamond pattern A → (B, C) → D produces 3 waves: [[A], [B, C], [D]]
+    - **PRD Ref**: FR1.2, Section 9 Test Scenarios
+  - [x] 1.4 Write test: test_topological_sort_parallel_chains
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_topological_sort_parallel_chains -v`
+    - **Details**: Test independent chains (A → B) and (C → D) produce 2 waves: [[A, C], [B, D]]
+    - **PRD Ref**: FR1.3, Section 9 Test Scenarios
+  - [x] 1.5 Implement topological_sort() function in collect.py
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k topological_sort -v`
+    - **Details**: Use Kahn's algorithm (~15 LOC): build in-degree map, queue nodes with 0 in-degree, process in waves
+    - **PRD Ref**: FR1.1-1.4, Section 7.1 (pseudocode lines 385-393)
+    - **Location**: Add after imports, before execute_agents() function
+  - [x] 1.6 Verify: All topological sort unit tests pass
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k topological_sort -v`
+    - **Details**: All 4 unit tests (no_deps, linear_deps, diamond_deps, parallel_chains) must pass
+
+- [ ] 2.0 Core Implementation: Context Passing with Partial Dependency Support (~30 LOC)
+  - [ ] 2.1 Write test: test_context_passing_between_waves
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_context_passing_between_waves -v`
+    - **Details**: Test sg-2 (depends on sg-1) receives sg-1's output in spawn_sequential format: "prompt\n\nPrevious context:\n✓ [sg-1]: output"
+    - **PRD Ref**: FR2.1-2.3, US1, Section 6.2 Example Execution Flow
+  - [ ] 2.2 Write test: test_partial_context_with_failed_dependency
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_with_failed_dependency -v`
+    - **Details**: Test sg-3 (depends on sg-1✓, sg-2✗) receives both success and failure markers: "✓ [sg-1]: output\n✗ [sg-2]: FAILED - timeout"
+    - **PRD Ref**: FR2.2-2.4, FR3.2, US2, Section 6.2 Partial Failure Case
+  - [ ] 2.3 Write test: test_partial_context_warning_footer
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_warning_footer -v`
+    - **Details**: Test WARNING footer appears when dependencies fail: "WARNING: 1/2 dependencies failed. Proceed with available context."
+    - **PRD Ref**: FR2.5, Section 6.2 Partial Failure Case
+  - [ ] 2.4 Write test: test_all_dependencies_failed
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_all_dependencies_failed -v`
+    - **Details**: Test subgoal receives context with ALL failure markers when all deps fail, still executes (not skipped)
+    - **PRD Ref**: FR2.4, FR3.2, G3
+  - [ ] 2.5 Write test: test_independent_subgoals_continue
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_independent_subgoals_continue -v`
+    - **Details**: Test sg-4 (no deps) executes successfully even when sg-2 (in different chain) fails
+    - **PRD Ref**: FR3.3, US2, G3
+  - [ ] 2.6 Modify execute_agents() to use topological_sort() for wave-based execution
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k context_passing -v`
+    - **Details**: Replace single spawn_parallel_tracked call with loop over waves from topological_sort(), add outputs dict and failed_subgoals set
+    - **PRD Ref**: FR1.1-1.4, Section 7.1 (pseudocode lines 397-403)
+    - **Location**: In execute_agents() after building spawn_tasks list (around line 276)
+  - [ ] 2.7 Implement context injection logic with partial dependency support
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k partial_context -v`
+    - **Details**: Before each wave execution, inject previous outputs using spawn_sequential format with ✓/✗ markers, add WARNING footer for partial deps
+    - **PRD Ref**: FR2.1-2.6, FR3.2, Section 7.1 (pseudocode lines 408-432)
+    - **Location**: Inside wave loop, before spawn_parallel_tracked call
+  - [ ] 2.8 Track failed subgoals and pass partial context to dependents
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_with_failed_dependency -v`
+    - **Details**: After each wave, update failed_subgoals set, mark subgoals with partial context (has_partial_context flag)
+    - **PRD Ref**: FR3.1-3.6, Section 7.1 (pseudocode lines 444-451)
+    - **Location**: After spawn_parallel_tracked results loop
+  - [ ] 2.9 Verify: All context passing integration tests pass
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k "context_passing or partial_context or independent_subgoals" -v`
+    - **Details**: 5 integration tests (context_passing, partial_context_with_failed, warning_footer, all_dependencies_failed, independent_subgoals_continue) must pass
+
+- [ ] 3.0 Validation Enhancement: Invalid Dependency Detection (~5 LOC)
+  - [ ] 3.1 Write test: test_verify_lite_invalid_dependency_ref
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_verify.py::test_verify_lite_invalid_dependency_ref -v`
+    - **Details**: Test verify_lite() rejects plan where sg-2 depends_on=[1, 99] (99 doesn't exist), returns (False, _, ["Subgoal 2 depends on non-existent subgoals: [99]"])
+    - **PRD Ref**: FR4.1-4.3, Section 9 Validation Tests
+  - [ ] 3.2 Write test: test_verify_lite_valid_deps_pass
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_verify.py::test_verify_lite_valid_deps_pass -v`
+    - **Details**: Test verify_lite() passes plan with valid dependencies: sg-2 depends_on=[1] where sg-1 exists, returns (True, _, [])
+    - **PRD Ref**: FR4.1-4.2, Section 9 Validation Tests
+  - [ ] 3.3 Add invalid dependency reference check to _check_circular_deps()
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_verify.py::test_verify_lite_invalid_dependency_ref -v`
+    - **Details**: After building graph (line 166), add valid_indices set, check each dep is in valid_indices, append issue for invalid deps
+    - **PRD Ref**: FR4.1-4.3, Section 7.1 (pseudocode lines 457-462)
+    - **Location**: In _check_circular_deps() after graph building, before DFS cycle detection
+  - [ ] 3.4 Verify: All validation tests pass
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_verify.py -k "invalid_dependency or valid_deps" -v`
+    - **Details**: Both validation tests (invalid_dependency_ref, valid_deps_pass) must pass
+
+- [ ] 4.0 Testing: Unit and Integration Tests (~140 LOC)
+  - [ ] 4.1 Write test: test_wave_execution_order
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_wave_execution_order -v`
+    - **Details**: Test waves execute sequentially: wave 1 completes before wave 2 starts (mock spawn_parallel_tracked, verify call order)
+    - **PRD Ref**: FR1.4, Section 9 Integration Tests
+  - [ ] 4.2 Write test: test_retry_chain_before_failure
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_retry_chain_before_failure -v`
+    - **Details**: Test spawn_parallel_tracked exhausts retries (primary + 2 retries + fallback) before marking SpawnResult.success=False
+    - **PRD Ref**: FR3.1, Section 9 Integration Tests
+  - [ ] 4.3 Write test: test_no_deps_single_wave
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_no_deps_single_wave -v`
+    - **Details**: Test query without dependencies executes in single wave, no performance overhead
+    - **PRD Ref**: FR1.1, G5, Section 9 Integration Tests
+  - [ ] 4.4 Write test: test_no_deps_performance_regression
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_no_deps_performance_regression -v`
+    - **Details**: Benchmark no-dependency execution completes within 5% of baseline (measure elapsed time, compare to stored baseline)
+    - **PRD Ref**: G5, Section 8 Success Metrics, Section 9 Performance Tests
+  - [ ] 4.5 Verify: All unit and integration tests pass
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -v`
+    - **Details**: Full test suite (topological sort, context passing, validation, performance) must pass; verify no regression in existing tests
+
+- [ ] 5.0 Progress Display and Logging (~integrated into core)
+  - [ ] 5.1 Write test: test_default_mode_streaming_output
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_default_mode_streaming_output -v`
+    - **Details**: Test default output shows "Wave X/Y (N subgoals)..." with ✓/✗/⚠ markers, final summary, no DEBUG logs (capture logs, assert INFO present, DEBUG absent)
+    - **PRD Ref**: FR5.1-5.4, FR2.7, Section 6.6 Default Mode, Acceptance Criteria #9, #13, #15
+  - [ ] 5.2 Write test: test_verbose_mode_streaming_output
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_verbose_mode_streaming_output -v`
+    - **Details**: Test --verbose flag adds DEBUG logs (topological sort details, context assembly, spawn results) - capture logs at DEBUG level, verify specific messages
+    - **PRD Ref**: FR5.5, FR6.2, Section 6.6 Verbose Mode, Acceptance Criteria #10, #14
+  - [ ] 5.3 Write test: test_final_summary_appears_after_waves
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_final_summary_appears_after_waves -v`
+    - **Details**: Test "EXECUTION COMPLETE: X/N succeeded, Y failed, Z partial" appears after all waves complete (verify log order, summary last)
+    - **PRD Ref**: FR2.7, Acceptance Criteria #13
+  - [ ] 5.4 Write test: test_partial_context_warning_in_output
+    - tdd: yes
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_warning_in_output -v`
+    - **Details**: Test WARNING footer appears in user output when dependencies fail, includes ⚠ marker in progress display
+    - **PRD Ref**: FR5.3-5.4, Section 6.6 Default Mode
+  - [ ] 5.5 Add wave progress logging to execute_agents()
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k streaming_output -v`
+    - **Details**: Add logger.info() at wave start: "Wave {wave_num}/{len(waves)} ({len(wave)} subgoals)...", add ✓/✗/⚠ markers after wave completion
+    - **PRD Ref**: FR5.1-5.4, FR6.1, Section 7.1 (pseudocode line 402)
+    - **Location**: Inside wave loop, before and after spawn_parallel_tracked call
+  - [ ] 5.6 Add DEBUG-level logging for topological sort and context assembly
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_verbose_mode_streaming_output -v`
+    - **Details**: Add logger.debug() for: topological sort result (waves structure), context building (accumulated chars), spawn result details
+    - **PRD Ref**: FR5.5, FR6.2, Section 6.6 Verbose Mode
+    - **Location**: In topological_sort() function and context injection loop
+  - [ ] 5.7 Add final execution summary logging
+    - tdd: yes (tests written above)
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_final_summary_appears_after_waves -v`
+    - **Details**: After all waves complete, log summary: "EXECUTION COMPLETE: X/N succeeded, Y failed, Z partial" with counts from outputs dict
+    - **PRD Ref**: FR2.7, Acceptance Criteria #13
+    - **Location**: After wave loop, before return CollectResult
+  - [ ] 5.8 Verify: All progress display and logging tests pass
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -k "streaming_output or final_summary or warning_in_output" -v`
+    - **Details**: 4 tests (default_mode, verbose_mode, final_summary, partial_context_warning) must pass
+
+- [ ] 6.0 End-to-End Integration and Acceptance Verification
+  - [ ] 6.1 Verify: Basic 3-wave example executes correctly (AC #1)
+    - tdd: no
+    - verify: Manual test with real SOAR query or integration test with A → (B, C) → D pattern
+    - **Details**: Create integration test or run `aur soar "test query"` with decomposed 3-wave plan, verify execution order
+    - **PRD Ref**: Acceptance Criteria #1, Section 6.2 Example Execution Flow
+  - [ ] 6.2 Verify: Dependent receives predecessor output in spawn_sequential format (AC #2)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_context_passing_between_waves -v`
+    - **Details**: Already verified by test 2.1, re-run to confirm
+    - **PRD Ref**: Acceptance Criteria #2
+  - [ ] 6.3 Verify: Partial context handling with ✓/✗ markers (AC #3)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_with_failed_dependency -v`
+    - **Details**: Already verified by test 2.2, re-run to confirm
+    - **PRD Ref**: Acceptance Criteria #3
+  - [ ] 6.4 Verify: WARNING footer with partial context (AC #4)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_warning_footer -v`
+    - **Details**: Already verified by test 2.3, re-run to confirm
+    - **PRD Ref**: Acceptance Criteria #4
+  - [ ] 6.5 Verify: ⚠ status marker in progress display (AC #5)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_warning_in_output -v`
+    - **Details**: Already verified by test 5.4, re-run to confirm
+    - **PRD Ref**: Acceptance Criteria #5
+  - [ ] 6.6 Verify: Independent subgoals continue despite failures (AC #6)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_independent_subgoals_continue -v`
+    - **Details**: Already verified by test 2.5, re-run to confirm
+    - **PRD Ref**: Acceptance Criteria #6
+  - [ ] 6.7 Verify: Retry chain exhaustion before failure (AC #7)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_retry_chain_before_failure -v`
+    - **Details**: Already verified by test 4.2, re-run to confirm
+    - **PRD Ref**: Acceptance Criteria #7
+  - [ ] 6.8 Verify: No performance regression for no-dependency queries (AC #8)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_no_deps_performance_regression -v`
+    - **Details**: Already verified by test 4.4, re-run to confirm; must be within 5% of baseline
+    - **PRD Ref**: Acceptance Criteria #8
+  - [ ] 6.9 Verify: Progress display format with emoji markers (AC #9)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_default_mode_streaming_output -v`
+    - **Details**: Already verified by test 5.1, re-run to confirm "Wave X/Y" format and ✓/✗/⚠ markers
+    - **PRD Ref**: Acceptance Criteria #9
+  - [ ] 6.10 Verify: INFO/DEBUG logging levels correct (AC #10)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_verbose_mode_streaming_output -v`
+    - **Details**: Already verified by test 5.2, re-run to confirm INFO for waves, DEBUG for sort details
+    - **PRD Ref**: Acceptance Criteria #10
+  - [ ] 6.11 Verify: Invalid dependency detection in verify_lite (AC #11)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_verify.py::test_verify_lite_invalid_dependency_ref -v`
+    - **Details**: Already verified by test 3.1, re-run to confirm
+    - **PRD Ref**: Acceptance Criteria #11
+  - [ ] 6.12 Verify: All existing collect.py tests still pass (AC #12)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py -v`
+    - **Details**: Run full test suite, confirm no regressions in existing tests (execute_agents basic functionality)
+    - **PRD Ref**: Acceptance Criteria #12
+  - [ ] 6.13 Verify: Final summary appears after all waves (AC #13)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_final_summary_appears_after_waves -v`
+    - **Details**: Already verified by test 5.3, re-run to confirm "EXECUTION COMPLETE" summary
+    - **PRD Ref**: Acceptance Criteria #13
+  - [ ] 6.14 Verify: --verbose flag shows DEBUG logs (AC #14)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_verbose_mode_streaming_output -v`
+    - **Details**: Already verified by test 5.2, re-run to confirm DEBUG logs present with --verbose
+    - **PRD Ref**: Acceptance Criteria #14
+  - [ ] 6.15 Verify: Default mode has clean output without DEBUG logs (AC #15)
+    - tdd: no
+    - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_default_mode_streaming_output -v`
+    - **Details**: Already verified by test 5.1, re-run to confirm DEBUG logs absent in default mode
+    - **PRD Ref**: Acceptance Criteria #15
+  - [ ] 6.16 Verify: Run full SOAR test suite for integration confidence
+    - tdd: no
+    - verify: `pytest packages/soar/tests/ -v --tb=short`
+    - **Details**: Run all SOAR tests to ensure no unintended side effects from collect.py and verify.py changes
+    - **PRD Ref**: Overall system integration
+  - [ ] 6.17 Verify: Run Aurora unit test suite for regression confidence
+    - tdd: no
+    - verify: `make test-unit`
+    - **Details**: Run full unit test suite to ensure no breaking changes across packages
+    - **PRD Ref**: Overall system stability

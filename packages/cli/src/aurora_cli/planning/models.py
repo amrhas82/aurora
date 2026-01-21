@@ -11,7 +11,7 @@ Models:
     - PlanManifest: Manifest for fast plan listing
     - FileResolution: File path with confidence score
     - AgentGap: Missing agent information
-    - DecompositionSummary: Summary for checkpoint display
+    - DecompositionSummary: Summary for plan decomposition
 """
 
 from __future__ import annotations
@@ -636,7 +636,7 @@ class AgentGap(BaseModel):
 
 
 class DecompositionSummary(BaseModel):
-    """Summary of plan decomposition for checkpoint display.
+    """Summary of plan decomposition for progress display.
 
     This model is used to show users a summary of the decomposition
     before generating plan files, allowing them to review and confirm

@@ -31,7 +31,6 @@ Planning & Multi-Agent Orchestration
 - **Memory-Aware Research** - Multi-agent orchestration with recovery and state
 - **Task Execution** - Stop gates for feature creep and dangerous commands
 - **Headless Mode** - Isolated branch execution with max retries
-- **Session Checkpoints** - Save and resume session context
 
 ```bash
 # PyPI
@@ -238,7 +237,6 @@ Terminal                    Slash Command            Slash Command
         │                          │                        │
         v                          v                        v
    goals.json               PRD + tasks.md            Implemented
-   - subgoals               - specs/                  - checkpoints
    - agent assignments      - file hints              - validation
    - capability gaps
 ```
@@ -284,7 +282,6 @@ aur goals "Add user authentication"
 | `/aur:get N` | Slash | Read chunk from search |
 | `/aur:plan goals.json` | Slash | Generate PRD + tasks |
 | `/aur:implement` | Slash | Execute plan |
-| `/aur:checkpoint` | Slash | Save session context |
 | `/aur:archive plan-id` | Slash | Archive completed plan |
 
 ---

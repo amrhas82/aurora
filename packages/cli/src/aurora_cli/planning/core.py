@@ -1577,7 +1577,7 @@ def create_plan(
     if files_resolved == 0:
         warnings.append("No relevant files found. Consider running 'aur mem index .'")
 
-    # Build decomposition summary for checkpoint
+    # Build decomposition summary for display
     from aurora_cli.planning.models import DecompositionSummary
 
     summary = DecompositionSummary(

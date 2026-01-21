@@ -19,13 +19,13 @@ FILE_PATHS: dict[str, str] = {
 FRONTMATTER: dict[str, str] = {
     "search": """---
 name: Aurora: Search
-description: Search indexed code ["query" --limit N --type function]
+description: Search indexed code ["query" --limit N --type X]
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
     "get": """---
 name: Aurora: Get
-description: Retrieve search result [N] from last search
+description: Retrieve last search result [N]
 category: Aurora
 tags: [aurora, search, memory]
 ---""",
@@ -43,7 +43,7 @@ tags: [aurora, planning, implementation]
 ---""",
     "archive": """---
 name: Aurora: Archive
-description: Archive completed plan with spec processing [plan-id]
+description: Archive completed plan [plan-id]
 category: Aurora
 tags: [aurora, planning, archive]
 ---""",
@@ -110,10 +110,10 @@ class ClaudeSlashCommandConfigurator(SlashCommandConfigurator):
             One-line description for Claude Code skill listings
         """
         descriptions = {
-            "search": "Search indexed code with hybrid BM25 + embedding retrieval.",
-            "get": "Retrieve full content of a search result by index.",
-            "plan": "Create implementation plan with agent delegation and spec deltas.",
-            "implement": "Execute plan tasks with checkpoints and validation.",
-            "archive": "Archive completed plan and process spec deltas.",
+            "search": 'Search indexed code ["query" --limit N --type X]',
+            "get": "Retrieve last search result [N]",
+            "plan": "Create implementation plan [goal | goals.json]",
+            "implement": "Execute plan tasks [plan-id]",
+            "archive": "Archive completed plan [plan-id]",
         }
         return descriptions.get(command_id)

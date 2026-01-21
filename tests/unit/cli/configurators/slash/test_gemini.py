@@ -151,12 +151,12 @@ class TestGeminiSlashCommandConfiguratorGenerateAll:
     """Tests for generate_all method with TOML output."""
 
     def test_generate_all_creates_6_files(self, tmp_path: Path):
-        """Test generate_all creates 6 command files (one for each command)."""
+        """Test generate_all creates 5 command files (one for each command)."""
         config = GeminiSlashCommandConfigurator()
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 6
+        assert len(created) == 5
 
     def test_generate_all_creates_toml_files(self, tmp_path: Path):
         """Test generate_all creates .toml files."""
@@ -336,12 +336,12 @@ class TestGeminiSlashCommandConfiguratorTargets:
     """Tests for get_targets method."""
 
     def test_get_targets_returns_6_targets(self):
-        """Test get_targets returns 6 targets (one per command)."""
+        """Test get_targets returns 5 targets (one per command)."""
         config = GeminiSlashCommandConfigurator()
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 6
+        assert len(targets) == 5
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

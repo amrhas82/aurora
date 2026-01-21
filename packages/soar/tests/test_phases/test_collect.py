@@ -636,3 +636,128 @@ async def test_collect_parallel_with_spawner():
         assert result.execution_metadata["total_subgoals"] == 3
         assert "total_duration_ms" in result.execution_metadata
         assert result.execution_metadata["failed_subgoals"] == 0
+
+
+# ============================================================================
+# TDD Tests for Dependency-Aware Execution (PRD 0030)
+# ============================================================================
+
+
+class TestTopologicalSort:
+    """TDD tests for topological sorting of subgoals."""
+
+    def test_topological_sort_no_deps(self):
+        """Test that subgoals with no dependencies all go into single wave.
+
+        Input: [sg-1, sg-2, sg-3] with no dependencies
+        Expected: [[sg-1, sg-2, sg-3]] (single wave with all subgoals)
+        """
+        from aurora_soar.phases.collect import topological_sort
+
+        subgoals = [
+            {"subgoal_index": 1, "description": "Task 1", "depends_on": []},
+            {"subgoal_index": 2, "description": "Task 2", "depends_on": []},
+            {"subgoal_index": 3, "description": "Task 3", "depends_on": []},
+        ]
+
+        waves = topological_sort(subgoals)
+
+        # All subgoals should be in a single wave
+        assert len(waves) == 1
+        assert len(waves[0]) == 3
+
+        # Verify all subgoals are present
+        wave_indices = {sg["subgoal_index"] for sg in waves[0]}
+        assert wave_indices == {1, 2, 3}
+
+    def test_topological_sort_linear_deps(self):
+        """Test linear chain A → B → C produces 3 waves.
+
+        Input: A (no deps), B (depends on A), C (depends on B)
+        Expected: [[A], [B], [C]] (3 waves, one subgoal each)
+        """
+        from aurora_soar.phases.collect import topological_sort
+
+        subgoals = [
+            {"subgoal_index": 1, "description": "Task A", "depends_on": []},
+            {"subgoal_index": 2, "description": "Task B", "depends_on": [1]},
+            {"subgoal_index": 3, "description": "Task C", "depends_on": [2]},
+        ]
+
+        waves = topological_sort(subgoals)
+
+        # Should have 3 waves
+        assert len(waves) == 3
+
+        # Each wave should have exactly 1 subgoal
+        assert len(waves[0]) == 1
+        assert len(waves[1]) == 1
+        assert len(waves[2]) == 1
+
+        # Verify correct ordering
+        assert waves[0][0]["subgoal_index"] == 1  # A first
+        assert waves[1][0]["subgoal_index"] == 2  # B second
+        assert waves[2][0]["subgoal_index"] == 3  # C third
+
+    def test_topological_sort_diamond_deps(self):
+        """Test diamond pattern A → (B, C) → D produces 3 waves.
+
+        Input: A (no deps), B (depends on A), C (depends on A), D (depends on B, C)
+        Expected: [[A], [B, C], [D]] (3 waves)
+        """
+        from aurora_soar.phases.collect import topological_sort
+
+        subgoals = [
+            {"subgoal_index": 1, "description": "Task A", "depends_on": []},
+            {"subgoal_index": 2, "description": "Task B", "depends_on": [1]},
+            {"subgoal_index": 3, "description": "Task C", "depends_on": [1]},
+            {"subgoal_index": 4, "description": "Task D", "depends_on": [2, 3]},
+        ]
+
+        waves = topological_sort(subgoals)
+
+        # Should have 3 waves
+        assert len(waves) == 3
+
+        # Wave 1: A only
+        assert len(waves[0]) == 1
+        assert waves[0][0]["subgoal_index"] == 1
+
+        # Wave 2: B and C (parallel)
+        assert len(waves[1]) == 2
+        wave2_indices = {sg["subgoal_index"] for sg in waves[1]}
+        assert wave2_indices == {2, 3}
+
+        # Wave 3: D only
+        assert len(waves[2]) == 1
+        assert waves[2][0]["subgoal_index"] == 4
+
+    def test_topological_sort_parallel_chains(self):
+        """Test independent chains (A → B) and (C → D) produce 2 waves.
+
+        Input: A (no deps), B (depends on A), C (no deps), D (depends on C)
+        Expected: [[A, C], [B, D]] (2 waves with parallel execution)
+        """
+        from aurora_soar.phases.collect import topological_sort
+
+        subgoals = [
+            {"subgoal_index": 1, "description": "Task A", "depends_on": []},
+            {"subgoal_index": 2, "description": "Task B", "depends_on": [1]},
+            {"subgoal_index": 3, "description": "Task C", "depends_on": []},
+            {"subgoal_index": 4, "description": "Task D", "depends_on": [3]},
+        ]
+
+        waves = topological_sort(subgoals)
+
+        # Should have 2 waves
+        assert len(waves) == 2
+
+        # Wave 1: A and C (independent, parallel)
+        assert len(waves[0]) == 2
+        wave1_indices = {sg["subgoal_index"] for sg in waves[0]}
+        assert wave1_indices == {1, 3}
+
+        # Wave 2: B and D (each depends on their respective chain root)
+        assert len(waves[1]) == 2
+        wave2_indices = {sg["subgoal_index"] for sg in waves[1]}
+        assert wave2_indices == {2, 4}

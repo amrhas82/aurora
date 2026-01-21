@@ -65,68 +65,6 @@ aur plan validate <plan-id>
 <!-- AURORA:END -->
 """
 
-CHECKPOINT_COMMAND = """---
-name: Checkpoint
-description: Save session context for continuity across compaction or handoffs.
-category: Aurora
-tags: [memory, session, context, handoff]
----
-<!-- AURORA:START -->
-**What this does:**
-Save current session state to `.aurora/session.md` for continuity across
-compaction or CLI handoffs. Keeps the last 3 checkpoints (~1500 tokens total).
-
-**When to use:**
-- Before context compaction
-- At critical decision points
-- Before switching between CLIs
-- End of complex work sessions
-
-**Steps:**
-1. Invoke `/checkpoint` (or `aur:checkpoint` depending on your CLI)
-2. Claude creates/updates `.aurora/session.md` with:
-   - Current intent and progress
-   - Key decisions made
-   - Current state and blockers
-   - Files being modified
-   - Next steps
-
-**After Compaction:**
-Reference session history with: `@.aurora/session.md`
-
-**Format:**
-```markdown
-# Session Checkpoints
-
----
-## @ 2024-01-04 15:45
-**Intent:** {What are we trying to accomplish?}
-**Progress:** {Checklist: [x] done, [ ] pending}
-**Decisions:** {Key choices made and why}
-**State:** {Current status, blockers}
-**Hot Files:** {Files actively modified}
-**Next:** {What should happen next}
-```
-
-**Rules:**
-- ~500 tokens per checkpoint (concise, specific)
-- Latest checkpoint prepended (newest on top)
-- Auto-trims to last 3 checkpoints
-- Survives compaction (file-based, not conversation)
-
-**Example Usage:**
-```
-You: /checkpoint
-Claude: [Saves session state to .aurora/session.md]
-
-[... auto-compaction happens ...]
-
-You: Continue from @.aurora/session.md
-Claude: [Reads checkpoints, resumes with context]
-```
-<!-- AURORA:END -->
-"""
-
 ARCHIVE_COMMAND = """---
 name: Aurora: Archive
 description: Archive completed plans with spec processing
@@ -219,7 +157,6 @@ aur headless --test-cmd "pytest tests/" --max=15
 # Dictionary of all command templates
 COMMAND_TEMPLATES: dict[str, str] = {
     "plan": PLAN_COMMAND,
-    "checkpoint": CHECKPOINT_COMMAND,
     "archive": ARCHIVE_COMMAND,
     "headless": HEADLESS_COMMAND,
 }

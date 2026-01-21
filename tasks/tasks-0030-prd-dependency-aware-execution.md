@@ -63,27 +63,27 @@
     - **Details**: All 4 unit tests (no_deps, linear_deps, diamond_deps, parallel_chains) must pass
 
 - [ ] 2.0 Core Implementation: Context Passing with Partial Dependency Support (~30 LOC)
-  - [ ] 2.1 Write test: test_context_passing_between_waves
+  - [x] 2.1 Write test: test_context_passing_between_waves
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_context_passing_between_waves -v`
     - **Details**: Test sg-2 (depends on sg-1) receives sg-1's output in spawn_sequential format: "prompt\n\nPrevious context:\n✓ [sg-1]: output"
     - **PRD Ref**: FR2.1-2.3, US1, Section 6.2 Example Execution Flow
-  - [ ] 2.2 Write test: test_partial_context_with_failed_dependency
+  - [x] 2.2 Write test: test_partial_context_with_failed_dependency
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_with_failed_dependency -v`
     - **Details**: Test sg-3 (depends on sg-1✓, sg-2✗) receives both success and failure markers: "✓ [sg-1]: output\n✗ [sg-2]: FAILED - timeout"
     - **PRD Ref**: FR2.2-2.4, FR3.2, US2, Section 6.2 Partial Failure Case
-  - [ ] 2.3 Write test: test_partial_context_warning_footer
+  - [x] 2.3 Write test: test_partial_context_warning_footer
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_partial_context_warning_footer -v`
     - **Details**: Test WARNING footer appears when dependencies fail: "WARNING: 1/2 dependencies failed. Proceed with available context."
     - **PRD Ref**: FR2.5, Section 6.2 Partial Failure Case
-  - [ ] 2.4 Write test: test_all_dependencies_failed
+  - [x] 2.4 Write test: test_all_dependencies_failed
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_all_dependencies_failed -v`
     - **Details**: Test subgoal receives context with ALL failure markers when all deps fail, still executes (not skipped)
     - **PRD Ref**: FR2.4, FR3.2, G3
-  - [ ] 2.5 Write test: test_independent_subgoals_continue
+  - [x] 2.5 Write test: test_independent_subgoals_continue
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_independent_subgoals_continue -v`
     - **Details**: Test sg-4 (no deps) executes successfully even when sg-2 (in different chain) fails

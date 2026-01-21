@@ -273,130 +273,196 @@ async def execute_agents(
         idx = sg.get("subgoal_index", i)
         subgoal_map[idx] = sg
 
-    # Build SpawnTask list and track SOAR-specific metadata per task
-    spawn_tasks: list[SpawnTask] = []
-    task_metadata: list[dict[str, Any]] = []  # Track subgoal_idx, agent, is_spawn per task
+    # Build agent assignment map
+    agent_map = {subgoal_idx: agent for subgoal_idx, agent in agent_assignments}
+
+    # Perform topological sort to get dependency waves
+    waves = topological_sort(subgoals)
+
+    # Track outputs and failures across waves
+    outputs: dict[int, SpawnResult] = {}
+    failed_subgoals: set[int] = set()
+    agent_outputs: list[AgentOutput] = []
+    fallback_agents: list[str] = []
+    total_failed = 0
+    total_fallback = 0
     agent_matcher = None
 
-    for subgoal_idx, agent in agent_assignments:
-        subgoal = subgoal_map.get(subgoal_idx, {})
-        is_spawn = agent.config.get("is_spawn", False)
+    # Execute waves sequentially
+    for wave_num, wave in enumerate(waves, 1):
+        logger.info(f"Wave {wave_num}/{len(waves)} ({len(wave)} subgoals)...")
 
-        if is_spawn:
-            # Ad-hoc spawn: use spawn prompt from AgentMatcher
-            if agent_matcher is None:
-                agent_matcher = _get_agent_matcher()
+        # Build SpawnTask list for this wave with context injection
+        spawn_tasks: list[SpawnTask] = []
+        task_metadata: list[dict[str, Any]] = []
 
-            if agent_matcher:
-                prompt = agent_matcher._create_spawn_prompt(
-                    agent_name=agent.id,
-                    agent_desc=getattr(agent, "description", ""),
-                    task_description=subgoal.get("description", ""),
-                )
+        for sg in wave:
+            subgoal_idx = sg["subgoal_index"]
+            agent = agent_map.get(subgoal_idx)
+            if not agent:
+                logger.warning(f"No agent assigned for subgoal {subgoal_idx}, skipping")
+                continue
+
+            # Inject previous outputs for dependencies
+            deps = sg.get("depends_on", [])
+            original_prompt = sg.get("prompt") or sg.get("description", "")
+
+            if deps:
+                successful_deps = [idx for idx in deps if idx in outputs and outputs[idx].success]
+                failed_deps = [idx for idx in deps if idx in outputs and not outputs[idx].success]
+
+                dep_outputs = []
+                # Add successful outputs with ✓ marker
+                for idx in successful_deps:
+                    dep_outputs.append(f"✓ [sg-{idx}]: {outputs[idx].output}")
+
+                # Add failure markers with ✗
+                for idx in failed_deps:
+                    error_summary = outputs[idx].error or "Unknown error"
+                    dep_outputs.append(f"✗ [sg-{idx}]: FAILED - {error_summary}")
+
+                if dep_outputs:
+                    accumulated = "\n".join(dep_outputs)
+                    warning = ""
+                    if failed_deps:
+                        warning = f"\n\nWARNING: {len(failed_deps)}/{len(deps)} dependencies failed. Proceed with available context."
+
+                    modified_prompt = f"{original_prompt}\n\nPrevious context ({len(successful_deps)}/{len(deps)} dependencies):\n{accumulated}{warning}"
+                    sg["has_partial_context"] = len(failed_deps) > 0
+                else:
+                    modified_prompt = original_prompt
             else:
-                # Fallback: build a simple spawn prompt without AgentMatcher
-                prompt = f"""For this specific request, act as a {agent.id} specialist - {getattr(agent, "description", "specialist agent")}.
+                modified_prompt = original_prompt
 
-Task: {subgoal.get("description", "")}
+            # Build prompt (regular or ad-hoc spawn)
+            is_spawn = agent.config.get("is_spawn", False)
+
+            if is_spawn:
+                # Ad-hoc spawn: use spawn prompt from AgentMatcher
+                if agent_matcher is None:
+                    agent_matcher = _get_agent_matcher()
+
+                if agent_matcher:
+                    prompt = agent_matcher._create_spawn_prompt(
+                        agent_name=agent.id,
+                        agent_desc=getattr(agent, "description", ""),
+                        task_description=modified_prompt,
+                    )
+                else:
+                    # Fallback: build a simple spawn prompt without AgentMatcher
+                    prompt = f"""For this specific request, act as a {agent.id} specialist - {getattr(agent, "description", "specialist agent")}.
+
+Task: {modified_prompt}
 
 IMPORTANT: Emit brief progress updates (e.g., "Analyzing...", "Found X...") as you work.
 
 Please complete this task directly without additional questions or preamble. Provide the complete deliverable."""
 
-            logger.info(f"Ad-hoc spawning agent '{agent.id}' for subgoal {subgoal_idx}")
-            spawn_agent = None  # Direct LLM call for ad-hoc
-        else:
-            # Regular agent: use standard prompt
-            prompt = _build_agent_prompt(subgoal, context)
-            spawn_agent = agent.id
+                logger.info(f"Ad-hoc spawning agent '{agent.id}' for subgoal {subgoal_idx}")
+                spawn_agent = None  # Direct LLM call for ad-hoc
+            else:
+                # Regular agent: use modified prompt with context
+                prompt = _build_agent_prompt(sg, context) if not deps else modified_prompt
+                spawn_agent = agent.id
 
-        spawn_tasks.append(
-            SpawnTask(
-                prompt=prompt,
-                agent=spawn_agent,
-                policy_name="patient",
-                display_name=agent.id,  # Show agent name in progress (even for ad-hoc)
-            )
-        )
-        task_metadata.append(
-            {
-                "subgoal_idx": subgoal_idx,
-                "agent": agent,
-                "is_spawn": is_spawn,
-            }
-        )
-
-    # Execute using shared spawn_parallel_tracked
-    # This handles: stagger, heartbeat, global timeout, circuit breaker, retry, fallback
-    results, exec_metadata = await spawn_parallel_tracked(
-        tasks=spawn_tasks,
-        max_concurrent=4,
-        stagger_delay=5.0,
-        policy_name="patient",
-        on_progress=on_progress,
-        fallback_to_llm=fallback_to_llm,
-        max_retries=max_retries,
-    )
-
-    # Convert SpawnResult list to AgentOutput list (SOAR-specific)
-    agent_outputs: list[AgentOutput] = []
-    fallback_agents: list[str] = []
-
-    for i, result in enumerate(results):
-        meta = task_metadata[i]
-        subgoal_idx = meta["subgoal_idx"]
-        agent = meta["agent"]
-        is_spawn = meta["is_spawn"]
-
-        if result.success:
-            agent_outputs.append(
-                AgentOutput(
-                    subgoal_index=subgoal_idx,
-                    agent_id=agent.id,
-                    success=True,
-                    summary=result.output,
-                    confidence=0.85,
-                    execution_metadata={
-                        "exit_code": result.exit_code,
-                        "spawned": is_spawn,
-                        "termination_reason": getattr(result, "termination_reason", None),
-                        "fallback": getattr(result, "fallback", False),
-                    },
+            spawn_tasks.append(
+                SpawnTask(
+                    prompt=prompt,
+                    agent=spawn_agent,
+                    policy_name="patient",
+                    display_name=agent.id,
                 )
             )
-        else:
-            agent_outputs.append(
-                AgentOutput(
-                    subgoal_index=subgoal_idx,
-                    agent_id=agent.id,
-                    success=False,
-                    summary="",
-                    confidence=0.0,
-                    error=result.error or "Agent execution failed",
-                    execution_metadata={
-                        "exit_code": result.exit_code,
-                        "spawned": is_spawn,
-                        "termination_reason": getattr(result, "termination_reason", None),
-                    },
-                )
+            task_metadata.append(
+                {
+                    "subgoal_idx": subgoal_idx,
+                    "agent": agent,
+                    "is_spawn": is_spawn,
+                    "subgoal": sg,
+                }
             )
 
-        # Track fallback usage
-        if getattr(result, "fallback", False):
-            fallback_agents.append(agent.id)
+        # Execute this wave using spawn_parallel_tracked
+        results, exec_metadata = await spawn_parallel_tracked(
+            tasks=spawn_tasks,
+            max_concurrent=4,
+            stagger_delay=5.0,
+            policy_name="patient",
+            on_progress=on_progress,
+            fallback_to_llm=fallback_to_llm,
+            max_retries=max_retries,
+        )
 
-    # Build execution metadata from spawn_parallel_tracked results
+        # Process results from this wave
+        for i, result in enumerate(results):
+            meta = task_metadata[i]
+            subgoal_idx = meta["subgoal_idx"]
+            agent = meta["agent"]
+            is_spawn = meta["is_spawn"]
+            sg = meta["subgoal"]
+
+            # Store result for context passing to dependent subgoals
+            outputs[subgoal_idx] = result
+
+            if not result.success:
+                failed_subgoals.add(subgoal_idx)
+                total_failed += 1
+                logger.warning(
+                    f"Subgoal {subgoal_idx} failed after retries, dependents will receive partial context"
+                )
+
+            # Track fallback usage
+            if getattr(result, "fallback", False):
+                fallback_agents.append(agent.id)
+                total_fallback += 1
+
+            # Build AgentOutput
+            if result.success:
+                agent_outputs.append(
+                    AgentOutput(
+                        subgoal_index=subgoal_idx,
+                        agent_id=agent.id,
+                        success=True,
+                        summary=result.output,
+                        confidence=0.85,
+                        execution_metadata={
+                            "exit_code": result.exit_code,
+                            "spawned": is_spawn,
+                            "termination_reason": getattr(result, "termination_reason", None),
+                            "fallback": getattr(result, "fallback", False),
+                            "partial_context": sg.get("has_partial_context", False),
+                        },
+                    )
+                )
+                if sg.get("has_partial_context"):
+                    logger.info(f"Subgoal {subgoal_idx} completed with partial context (⚠)")
+            else:
+                agent_outputs.append(
+                    AgentOutput(
+                        subgoal_index=subgoal_idx,
+                        agent_id=agent.id,
+                        success=False,
+                        summary="",
+                        confidence=0.0,
+                        error=result.error or "Agent execution failed",
+                        execution_metadata={
+                            "exit_code": result.exit_code,
+                            "spawned": is_spawn,
+                            "termination_reason": getattr(result, "termination_reason", None),
+                        },
+                    )
+                )
+
+    # Build execution metadata
     execution_metadata = {
-        "total_duration_ms": exec_metadata.get(
-            "total_duration_ms", int((time.time() - start_time) * 1000)
-        ),
-        "total_subgoals": len(agent_assignments),
-        "failed_subgoals": exec_metadata.get("failed_tasks", 0),
-        "fallback_count": exec_metadata.get("fallback_count", 0),
-        "circuit_blocked": exec_metadata.get("circuit_blocked", []),
-        "circuit_blocked_count": len(exec_metadata.get("circuit_blocked", [])),
-        "early_terminations": exec_metadata.get("early_terminations", []),
-        "retried_agents": exec_metadata.get("retried_tasks", []),
+        "total_duration_ms": int((time.time() - start_time) * 1000),
+        "total_subgoals": len(subgoals),
+        "failed_subgoals": total_failed,
+        "fallback_count": total_fallback,
+        "circuit_blocked": [],
+        "circuit_blocked_count": 0,
+        "early_terminations": [],
+        "retried_agents": [],
         "spawned_agents": [m["agent"].id for m in task_metadata if m["is_spawn"]],
         "spawn_count": sum(1 for m in task_metadata if m["is_spawn"]),
     }

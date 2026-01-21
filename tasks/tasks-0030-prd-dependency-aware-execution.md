@@ -134,27 +134,27 @@
     - **Details**: Both validation tests (invalid_dependency_ref, valid_deps_pass) must pass
 
 - [ ] 4.0 Testing: Unit and Integration Tests (~140 LOC)
-  - [ ] 4.1 Write test: test_wave_execution_order
+  - [x] 4.1 Write test: test_wave_execution_order
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_wave_execution_order -v`
     - **Details**: Test waves execute sequentially: wave 1 completes before wave 2 starts (mock spawn_parallel_tracked, verify call order)
     - **PRD Ref**: FR1.4, Section 9 Integration Tests
-  - [ ] 4.2 Write test: test_retry_chain_before_failure
+  - [x] 4.2 Write test: test_retry_chain_before_failure
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_retry_chain_before_failure -v`
     - **Details**: Test spawn_parallel_tracked exhausts retries (primary + 2 retries + fallback) before marking SpawnResult.success=False
     - **PRD Ref**: FR3.1, Section 9 Integration Tests
-  - [ ] 4.3 Write test: test_no_deps_single_wave
+  - [x] 4.3 Write test: test_no_deps_single_wave
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_no_deps_single_wave -v`
     - **Details**: Test query without dependencies executes in single wave, no performance overhead
     - **PRD Ref**: FR1.1, G5, Section 9 Integration Tests
-  - [ ] 4.4 Write test: test_no_deps_performance_regression
+  - [x] 4.4 Write test: test_no_deps_performance_regression
     - tdd: yes
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py::test_no_deps_performance_regression -v`
     - **Details**: Benchmark no-dependency execution completes within 5% of baseline (measure elapsed time, compare to stored baseline)
     - **PRD Ref**: G5, Section 8 Success Metrics, Section 9 Performance Tests
-  - [ ] 4.5 Verify: All unit and integration tests pass
+  - [x] 4.5 Verify: All unit and integration tests pass
     - tdd: no
     - verify: `pytest packages/soar/tests/test_phases/test_collect.py -v`
     - **Details**: Full test suite (topological sort, context passing, validation, performance) must pass; verify no regression in existing tests

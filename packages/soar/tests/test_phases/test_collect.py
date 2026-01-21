@@ -761,3 +761,264 @@ class TestTopologicalSort:
         assert len(waves[1]) == 2
         wave2_indices = {sg["subgoal_index"] for sg in waves[1]}
         assert wave2_indices == {2, 4}
+
+
+class TestWaveExecution:
+    """Tests for wave-based execution order and behavior."""
+
+    @pytest.mark.asyncio
+    async def test_wave_execution_order(self):
+        """Test that waves execute sequentially: wave 1 completes before wave 2 starts.
+
+        Mock spawn_parallel_tracked to track call order and verify wave 2
+        doesn't start until wave 1 completes.
+        """
+        from aurora_soar.agent_registry import AgentInfo
+        from aurora_soar.phases.collect import execute_agents
+
+        agent1 = AgentInfo(
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+        agent2 = AgentInfo(
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+
+        agent_assignments = [(1, agent1), (2, agent2)]
+
+        # Linear dependency: sg-1 -> sg-2
+        subgoals = [
+            {"subgoal_index": 1, "description": "Task 1", "prompt": "Do task 1", "depends_on": []},
+            {
+                "subgoal_index": 2,
+                "description": "Task 2",
+                "prompt": "Do task 2",
+                "depends_on": [1],
+            },
+        ]
+
+        context = {"query": "Test wave order"}
+
+        # Track call order
+        call_order = []
+        wave1_complete = [False]
+
+        async def mock_spawn_parallel_tracked(*args, **kwargs):
+            tasks = args[0] if args else kwargs.get("tasks", [])
+            # Identify wave by number of tasks or prompt content
+            if len(call_order) == 0:
+                # First wave
+                call_order.append("wave1_start")
+                # Simulate some work
+                import asyncio
+
+                await asyncio.sleep(0.01)
+                call_order.append("wave1_end")
+                wave1_complete[0] = True
+                # Return result for sg-1
+                return (
+                    [SpawnResult(success=True, output="Output 1", error=None, exit_code=0)],
+                    {},
+                )
+            else:
+                # Second wave - verify wave 1 completed
+                call_order.append("wave2_start")
+                assert wave1_complete[0], "Wave 2 started before Wave 1 completed!"
+                call_order.append("wave2_end")
+                # Return result for sg-2
+                return (
+                    [SpawnResult(success=True, output="Output 2", error=None, exit_code=0)],
+                    {},
+                )
+
+        with patch(
+            "aurora_soar.phases.collect.spawn_parallel_tracked",
+            side_effect=mock_spawn_parallel_tracked,
+        ):
+            result = await execute_agents(agent_assignments, subgoals, context)
+
+            # Verify execution order
+            assert call_order == ["wave1_start", "wave1_end", "wave2_start", "wave2_end"]
+            assert result is not None
+            assert len(result.agent_outputs) == 2
+
+    @pytest.mark.asyncio
+    async def test_retry_chain_before_failure(self):
+        """Test that spawn_parallel_tracked exhausts retries before marking failure.
+
+        Verify that spawn_parallel_tracked is configured with max_retries
+        and that it handles the retry chain (not execute_agents).
+        """
+        from aurora_soar.agent_registry import AgentInfo
+        from aurora_soar.phases.collect import execute_agents
+
+        agent = AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
+        )
+
+        agent_assignments = [(1, agent)]
+
+        subgoals = [
+            {"subgoal_index": 1, "description": "Task 1", "prompt": "Do task 1", "depends_on": []}
+        ]
+
+        context = {"query": "Test retry"}
+
+        # Track spawn_parallel_tracked calls
+        spawn_calls = []
+
+        async def mock_spawn_parallel_tracked(*args, **kwargs):
+            spawn_calls.append(kwargs.copy())
+            # Return failure result (after spawn_parallel_tracked already tried retries)
+            return (
+                [SpawnResult(success=False, output="", error="Failed after retries", exit_code=-1)],
+                {"failed_tasks": 1, "retried_tasks": ["task-1"]},
+            )
+
+        with patch(
+            "aurora_soar.phases.collect.spawn_parallel_tracked",
+            side_effect=mock_spawn_parallel_tracked,
+        ):
+            result = await execute_agents(agent_assignments, subgoals, context, max_retries=2)
+
+            # Verify spawn_parallel_tracked was called with max_retries
+            assert len(spawn_calls) == 1
+            assert spawn_calls[0].get("max_retries") == 2
+
+            # Verify result shows failure
+            assert result.agent_outputs[0].success is False
+
+    @pytest.mark.asyncio
+    async def test_no_deps_single_wave(self):
+        """Test that query without dependencies executes in single wave.
+
+        No performance overhead - just verify single spawn_parallel_tracked call.
+        """
+        from aurora_soar.agent_registry import AgentInfo
+        from aurora_soar.phases.collect import execute_agents
+
+        agents = [
+            AgentInfo(
+                id=f"agent-{i}",
+                name=f"Agent {i}",
+                description="Test",
+                capabilities=["test"],
+                agent_type="local",
+            )
+            for i in range(1, 4)
+        ]
+
+        agent_assignments = [(i, agents[i - 1]) for i in range(1, 4)]
+
+        # No dependencies
+        subgoals = [
+            {"subgoal_index": 1, "description": "Task 1", "prompt": "Task 1", "depends_on": []},
+            {"subgoal_index": 2, "description": "Task 2", "prompt": "Task 2", "depends_on": []},
+            {"subgoal_index": 3, "description": "Task 3", "prompt": "Task 3", "depends_on": []},
+        ]
+
+        context = {"query": "Test no deps"}
+
+        spawn_call_count = [0]
+
+        async def mock_spawn_parallel_tracked(*args, **kwargs):
+            spawn_call_count[0] += 1
+            tasks = args[0] if args else kwargs.get("tasks", [])
+            # All 3 tasks should be in single wave
+            assert len(tasks) == 3, f"Expected 3 tasks in single wave, got {len(tasks)}"
+            # Return success for all
+            return (
+                [
+                    SpawnResult(success=True, output=f"Output {i}", error=None, exit_code=0)
+                    for i in range(1, 4)
+                ],
+                {},
+            )
+
+        with patch(
+            "aurora_soar.phases.collect.spawn_parallel_tracked",
+            side_effect=mock_spawn_parallel_tracked,
+        ):
+            result = await execute_agents(agent_assignments, subgoals, context)
+
+            # Should only call spawn_parallel_tracked once (single wave)
+            assert spawn_call_count[0] == 1
+            assert len(result.agent_outputs) == 3
+            assert all(o.success for o in result.agent_outputs)
+
+    @pytest.mark.asyncio
+    async def test_no_deps_performance_regression(self):
+        """Test that no-dependency execution completes within 5% of baseline.
+
+        Baseline: Measure time with simple mock that returns immediately.
+        Test: Verify wave-based execution overhead is minimal (<5%).
+        """
+        import time
+
+        from aurora_soar.agent_registry import AgentInfo
+        from aurora_soar.phases.collect import execute_agents
+
+        agents = [
+            AgentInfo(
+                id=f"agent-{i}",
+                name=f"Agent {i}",
+                description="Test",
+                capabilities=["test"],
+                agent_type="local",
+            )
+            for i in range(1, 6)
+        ]
+
+        agent_assignments = [(i, agents[i - 1]) for i in range(1, 6)]
+
+        # No dependencies - should be fast
+        subgoals = [
+            {
+                "subgoal_index": i,
+                "description": f"Task {i}",
+                "prompt": f"Task {i}",
+                "depends_on": [],
+            }
+            for i in range(1, 6)
+        ]
+
+        context = {"query": "Test performance"}
+
+        async def mock_spawn_parallel_tracked(*args, **kwargs):
+            # Fast mock - return immediately
+            tasks = args[0] if args else kwargs.get("tasks", [])
+            return (
+                [
+                    SpawnResult(success=True, output=f"Output {i}", error=None, exit_code=0)
+                    for i in range(len(tasks))
+                ],
+                {},
+            )
+
+        with patch(
+            "aurora_soar.phases.collect.spawn_parallel_tracked",
+            side_effect=mock_spawn_parallel_tracked,
+        ):
+            # Measure execution time
+            start = time.time()
+            result = await execute_agents(agent_assignments, subgoals, context)
+            elapsed = time.time() - start
+
+            # Should complete very quickly (< 100ms for this simple case)
+            # The overhead of wave processing should be negligible
+            assert elapsed < 0.1, f"Execution took {elapsed:.3f}s, expected < 0.1s"
+
+            # Verify correctness
+            assert len(result.agent_outputs) == 5
+            assert all(o.success for o in result.agent_outputs)

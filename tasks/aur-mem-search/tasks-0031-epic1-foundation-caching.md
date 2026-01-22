@@ -90,81 +90,81 @@ aur mem search "test query" --limit 10
     - verify: `ls -d tests/unit/context_code/semantic tests/unit/core/activation tests/integration tests/performance`
     - **Details**: Ensure test directory structure exists for new test files
 
-- [ ] 1.0 HybridRetriever Instance Caching (~200 LOC)
-  - [ ] 1.1 Write test: test_retriever_cache_same_db_config
+- [x] 1.0 HybridRetriever Instance Caching (~200 LOC)
+  - [x] 1.1 Write test: test_retriever_cache_same_db_config
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_same_db_config -v`
     - **Details**: Create two HybridRetriever instances with same db_path and config, verify same object returned (use `id()` to check identity)
     - **PRD Ref**: FR1.1, Section 8.1 UT1
-  - [ ] 1.2 Write test: test_retriever_cache_different_db
+  - [x] 1.2 Write test: test_retriever_cache_different_db
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_different_db -v`
     - **Details**: Create two retrievers with different db_path, verify different instances returned
     - **PRD Ref**: FR1.1, Section 8.1 UT1
-  - [ ] 1.3 Write test: test_retriever_cache_different_config
+  - [x] 1.3 Write test: test_retriever_cache_different_config
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_different_config -v`
     - **Details**: Create two retrievers with same db_path but different config (e.g., bm25_weight=0.4 vs 0.6), verify different instances (cache miss)
     - **PRD Ref**: FR1.4, Section 8.1 UT1
-  - [ ] 1.4 Write test: test_retriever_cache_hit_rate_stats
+  - [x] 1.4 Write test: test_retriever_cache_hit_rate_stats
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_hit_rate_stats -v`
     - **Details**: Create retriever 3 times with same params, verify cache hit rate is 66% (2 hits, 1 miss), test get_cache_stats() API
     - **PRD Ref**: FR1.5, NFR3.1, Section 8.1 UT1
-  - [ ] 1.5 Write test: test_retriever_cache_thread_safety
+  - [x] 1.5 Write test: test_retriever_cache_thread_safety
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_thread_safety -v`
     - **Details**: Launch 5 threads creating retriever concurrently, verify all get same instance and no race conditions
     - **PRD Ref**: FR1.5, NFR2.3, Section 8.1 UT1
-  - [ ] 1.6 Implement get_cached_retriever() function
+  - [x] 1.6 Implement get_cached_retriever() function
     - tdd: yes (tests written above)
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py -v`
     - **Details**: Add module-level cache dict, lock, get_cached_retriever(store, activation_engine, embedding_provider, config) returns cached or new instance
     - **PRD Ref**: FR1.1-FR1.5, Section 7.1
     - **Location**: `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` (add before HybridRetriever class definition, around line 250)
-  - [ ] 1.7 Add config hash computation
+  - [x] 1.7 Add config hash computation
     - tdd: yes (covered by test_retriever_cache_different_config)
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_different_config -v`
     - **Details**: Use `hashlib.md5(json.dumps(config.model_dump(), sort_keys=True).encode()).hexdigest()` for cache key
     - **PRD Ref**: FR1.4, Section 7.1
     - **Location**: Inside get_cached_retriever() function
-  - [ ] 1.8 Add thread-safe cache access with lock
+  - [x] 1.8 Add thread-safe cache access with lock
     - tdd: yes (covered by test_retriever_cache_thread_safety)
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_thread_safety -v`
     - **Details**: Wrap cache lookup/insert in `with _retriever_cache_lock:` block
     - **PRD Ref**: FR1.5, NFR2.3, Section 7.1
     - **Location**: Inside get_cached_retriever() function
-  - [ ] 1.9 Add cache statistics API
+  - [x] 1.9 Add cache statistics API
     - tdd: yes (covered by test_retriever_cache_hit_rate_stats)
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py::test_retriever_cache_hit_rate_stats -v`
     - **Details**: Track hits/misses, add get_cache_stats() function returning dict with hit_rate, total_hits, total_misses, cache_size
     - **PRD Ref**: NFR3.3, Section 7.1
     - **Location**: Add module-level stats tracking in hybrid_retriever.py
-  - [ ] 1.10 Add DEBUG logging for cache hits/misses
+  - [x] 1.10 Add DEBUG logging for cache hits/misses
     - tdd: no (manual verification via log inspection)
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py -v -s | grep "Reusing cached HybridRetriever"`
     - **Details**: Log "Creating new HybridRetriever for {db_path}" on miss, "Reusing cached HybridRetriever for {db_path}" on hit
     - **PRD Ref**: NFR3.1, Section 7.1
     - **Location**: Inside get_cached_retriever() function
-  - [ ] 1.11 Update MemoryRetriever to use get_cached_retriever()
+  - [x] 1.11 Update MemoryRetriever to use get_cached_retriever()
     - tdd: yes (integration test in Task 5.1)
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_end_to_end_cache_hit -v`
     - **Details**: Replace `HybridRetriever(...)` call in _get_retriever() with `get_cached_retriever(...)`
     - **PRD Ref**: FR1.1-FR1.5, Section 6.5.2
     - **Location**: `packages/cli/src/aurora_cli/memory/retrieval.py` line 97
-  - [ ] 1.12 Add environment variable for cache size
+  - [x] 1.12 Add environment variable for cache size
     - tdd: no (configuration only)
     - verify: `AURORA_RETRIEVER_CACHE_SIZE=5 python -c "from aurora_context_code.semantic.hybrid_retriever import get_cached_retriever; print('OK')"`
     - **Details**: Read `AURORA_RETRIEVER_CACHE_SIZE` env var (default 10), implement LRU eviction when cache exceeds size
     - **PRD Ref**: FR1.2, Section 7.1
     - **Location**: Add at module level in hybrid_retriever.py
-  - [ ] 1.13 Add environment variable for cache TTL
+  - [x] 1.13 Add environment variable for cache TTL
     - tdd: no (configuration only)
     - verify: `AURORA_RETRIEVER_CACHE_TTL=600 python -c "from aurora_context_code.semantic.hybrid_retriever import get_cached_retriever; print('OK')"`
     - **Details**: Read `AURORA_RETRIEVER_CACHE_TTL` env var (default 1800s), track creation timestamp, evict stale entries
     - **PRD Ref**: FR1.3, Section 7.1
     - **Location**: Add at module level in hybrid_retriever.py
-  - [ ] 1.14 Verify: All HybridRetriever cache unit tests pass
+  - [x] 1.14 Verify: All HybridRetriever cache unit tests pass
     - tdd: no
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py -v`
     - **Details**: All 5 unit tests (same_db_config, different_db, different_config, hit_rate_stats, thread_safety) must pass

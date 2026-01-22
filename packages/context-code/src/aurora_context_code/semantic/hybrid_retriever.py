@@ -18,7 +18,10 @@ Classes:
 """
 
 import hashlib
+import json
 import logging
+import os
+import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -28,8 +31,17 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-
 logger = logging.getLogger(__name__)
+
+
+# Module-level cache for HybridRetriever instances
+_retriever_cache: dict[tuple[str, str], Any] = {}
+_retriever_cache_lock = threading.Lock()
+_retriever_cache_stats = {"hits": 0, "misses": 0}
+
+# Cache configuration from environment variables
+_RETRIEVER_CACHE_SIZE = int(os.environ.get("AURORA_RETRIEVER_CACHE_SIZE", "10"))
+_RETRIEVER_CACHE_TTL = int(os.environ.get("AURORA_RETRIEVER_CACHE_TTL", "1800"))  # 30 minutes
 
 
 @dataclass
@@ -227,6 +239,155 @@ class QueryEmbeddingCache:
     def size(self) -> int:
         """Get current cache size."""
         return len(self._cache)
+
+
+def _compute_config_hash(config: "HybridConfig") -> str:
+    """Compute MD5 hash of config for cache key.
+
+    Args:
+        config: HybridConfig instance
+
+    Returns:
+        MD5 hash of config as hex string
+
+    """
+    # Convert config to dict and sort keys for deterministic hashing
+    config_dict = {
+        "bm25_weight": config.bm25_weight,
+        "activation_weight": config.activation_weight,
+        "semantic_weight": config.semantic_weight,
+        "activation_top_k": config.activation_top_k,
+        "stage1_top_k": config.stage1_top_k,
+        "fallback_to_activation": config.fallback_to_activation,
+        "use_staged_retrieval": config.use_staged_retrieval,
+        "enable_query_cache": config.enable_query_cache,
+        "query_cache_size": config.query_cache_size,
+        "query_cache_ttl_seconds": config.query_cache_ttl_seconds,
+        "enable_bm25_persistence": config.enable_bm25_persistence,
+    }
+    config_json = json.dumps(config_dict, sort_keys=True)
+    return hashlib.md5(config_json.encode(), usedforsecurity=False).hexdigest()
+
+
+def get_cached_retriever(
+    store: Any,
+    activation_engine: Any,
+    embedding_provider: Any,
+    config: "HybridConfig | None" = None,
+    aurora_config: Any | None = None,
+) -> "HybridRetriever":
+    """Get or create cached HybridRetriever instance.
+
+    Returns cached retriever if one exists for the given db_path and config,
+    otherwise creates a new one and caches it. Thread-safe with LRU eviction.
+
+    Args:
+        store: Storage backend (must have db_path attribute)
+        activation_engine: ACT-R activation engine
+        embedding_provider: Embedding provider
+        config: Hybrid configuration (optional)
+        aurora_config: Global AURORA Config object (optional)
+
+    Returns:
+        Cached or new HybridRetriever instance
+
+    """
+    # Get db_path from store
+    db_path = getattr(store, "db_path", ":memory:")
+
+    # Use default config if none provided
+    if config is None:
+        config = HybridConfig()
+
+    # Compute config hash for cache key
+    config_hash = _compute_config_hash(config)
+    cache_key = (db_path, config_hash)
+
+    with _retriever_cache_lock:
+        # Check cache
+        if cache_key in _retriever_cache:
+            entry = _retriever_cache[cache_key]
+            retriever, timestamp = entry
+
+            # Check TTL
+            if time.time() - timestamp <= _RETRIEVER_CACHE_TTL:
+                _retriever_cache_stats["hits"] += 1
+                logger.debug(
+                    f"Reusing cached HybridRetriever for db_path={db_path} "
+                    f"(hit_rate={_get_hit_rate():.1%})",
+                )
+                return retriever
+
+            # TTL expired, remove from cache
+            logger.debug(
+                f"Cached HybridRetriever expired for db_path={db_path} (TTL={_RETRIEVER_CACHE_TTL}s)"
+            )
+            del _retriever_cache[cache_key]
+
+        # Cache miss - create new retriever
+        _retriever_cache_stats["misses"] += 1
+        logger.debug(
+            f"Creating new HybridRetriever for db_path={db_path} "
+            f"(hit_rate={_get_hit_rate():.1%})",
+        )
+
+        # Apply LRU eviction if at capacity
+        if len(_retriever_cache) >= _RETRIEVER_CACHE_SIZE:
+            # Evict oldest entry (first item in dict)
+            oldest_key = next(iter(_retriever_cache))
+            del _retriever_cache[oldest_key]
+            logger.debug(
+                f"Evicted oldest HybridRetriever from cache (size={_RETRIEVER_CACHE_SIZE})"
+            )
+
+        # Create new retriever
+        retriever = HybridRetriever(
+            store=store,
+            activation_engine=activation_engine,
+            embedding_provider=embedding_provider,
+            config=config,
+            aurora_config=aurora_config,
+        )
+
+        # Cache with timestamp
+        _retriever_cache[cache_key] = (retriever, time.time())
+
+        return retriever
+
+
+def _get_hit_rate() -> float:
+    """Calculate cache hit rate."""
+    total = _retriever_cache_stats["hits"] + _retriever_cache_stats["misses"]
+    return _retriever_cache_stats["hits"] / total if total > 0 else 0.0
+
+
+def get_cache_stats() -> dict[str, Any]:
+    """Get HybridRetriever cache statistics.
+
+    Returns:
+        Dict with keys:
+        - total_hits: Number of cache hits
+        - total_misses: Number of cache misses
+        - hit_rate: Cache hit rate (0.0-1.0)
+        - cache_size: Current number of cached retrievers
+
+    """
+    with _retriever_cache_lock:
+        return {
+            "total_hits": _retriever_cache_stats["hits"],
+            "total_misses": _retriever_cache_stats["misses"],
+            "hit_rate": _get_hit_rate(),
+            "cache_size": len(_retriever_cache),
+        }
+
+
+def clear_retriever_cache() -> None:
+    """Clear all cached HybridRetriever instances and reset statistics."""
+    with _retriever_cache_lock:
+        _retriever_cache.clear()
+        _retriever_cache_stats["hits"] = 0
+        _retriever_cache_stats["misses"] = 0
+        logger.debug("Cleared HybridRetriever cache")
 
 
 class HybridRetriever:

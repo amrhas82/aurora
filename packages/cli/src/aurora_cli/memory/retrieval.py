@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_core.chunks import CodeChunk
 
-
 if TYPE_CHECKING:
     from aurora_cli.config import Config
     from aurora_core.store.sqlite import SQLiteStore
@@ -86,7 +85,7 @@ class MemoryRetriever:
             raise ValueError("Cannot retrieve: no memory store configured")
 
         if self._retriever is None:
-            from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
+            from aurora_context_code.semantic.hybrid_retriever import get_cached_retriever
             from aurora_core.activation.engine import ActivationEngine
 
             activation_engine = ActivationEngine()
@@ -94,7 +93,8 @@ class MemoryRetriever:
             # Try to get embedding provider from background loader or create new one
             embedding_provider = self._get_embedding_provider()
 
-            self._retriever = HybridRetriever(
+            # Use cached retriever for performance (tasks/aur-mem-search Epic 1)
+            self._retriever = get_cached_retriever(
                 self._store,
                 activation_engine,
                 embedding_provider,  # None = BM25-only mode

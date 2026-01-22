@@ -700,7 +700,7 @@ class TestComplexQueryEdgeCases:
                     "groundedness": 0.60,
                     "routability": 0.63,
                     "feedback": "Decomposition lacks detail.",
-                }
+                },
             ),
             input_tokens=400,
             output_tokens=150,
@@ -716,7 +716,7 @@ class TestComplexQueryEdgeCases:
                     "groundedness": 0.79,
                     "routability": 0.78,
                     "feedback": "",
-                }
+                },
             ),
             input_tokens=400,
             output_tokens=150,
@@ -725,7 +725,8 @@ class TestComplexQueryEdgeCases:
         # Configure multiple responses for verification (retry pattern)
         # Use pattern specific to adversarial decomposition verification
         e2e_framework.mock_llm.configure_responses(
-            "RED TEAM adversarial verifier", [retry_response, pass_response]
+            "RED TEAM adversarial verifier",
+            [retry_response, pass_response],
         )
 
         # Need two decomposition responses (initial + retry)
@@ -736,7 +737,7 @@ class TestComplexQueryEdgeCases:
                     "subgoals": subgoals,
                     "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
                     "expected_tools": ["retry-tool"],
-                }
+                },
             ),
             input_tokens=500,
             output_tokens=200,

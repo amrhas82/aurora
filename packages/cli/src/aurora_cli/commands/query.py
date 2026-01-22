@@ -28,7 +28,10 @@ logger = logging.getLogger(__name__)
 @click.argument("query_text", required=True)
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed output")
 @click.option(
-    "--interactive", "-i", is_flag=True, help="Run blocking interactive SOAR (reads stdin)"
+    "--interactive",
+    "-i",
+    is_flag=True,
+    help="Run blocking interactive SOAR (reads stdin)",
 )
 def query_command(
     query_text: str,
@@ -49,6 +52,7 @@ def query_command(
 
         # Interactive blocking mode (pipe answers)
         echo -e '["goal1"]\\nPASS\\n["approach"]\\n["finding"]\\nsynthesis\\npattern\\nfinal answer' | aur query "question" -i
+
     """
     try:
         if interactive:
@@ -265,7 +269,7 @@ def _run_interactive(query_text: str, verbose: bool) -> None:
                 manager = MemoryManager(config=config)
                 stats = manager.index_path(log_path)
                 logger.debug(
-                    f"Indexed conversation log: {log_path} ({stats.chunks_created} chunks)"
+                    f"Indexed conversation log: {log_path} ({stats.chunks_created} chunks)",
                 )
         except Exception as e:
             logger.warning(f"Failed to auto-index conversation log: {e}")

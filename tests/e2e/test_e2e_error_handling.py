@@ -18,6 +18,7 @@ def run_cli_command(args: list[str], env: dict | None = None) -> tuple[int, str,
 
     Returns:
         Tuple of (exit_code, stdout, stderr)
+
     """
     # Merge environment variables
     cmd_env = os.environ.copy()
@@ -85,7 +86,8 @@ class TestErrorHandlingMemoryCommands:
         nonexistent_path = str(tmp_path / "nonexistent")
 
         exit_code, stdout, stderr = run_cli_command(
-            ["aur", "mem", "index", nonexistent_path], env=env
+            ["aur", "mem", "index", nonexistent_path],
+            env=env,
         )
 
         # Should fail with clear error
@@ -145,7 +147,8 @@ class TestDebugMode:
         env = {"AURORA_HOME": str(tmp_path)}
 
         exit_code, stdout, stderr = run_cli_command(
-            ["aur", "--debug", "mem", "search", "test"], env=env
+            ["aur", "--debug", "mem", "search", "test"],
+            env=env,
         )
 
         # Should fail
@@ -206,7 +209,8 @@ class TestExitCodes:
         try:
             env = {"AURORA_HOME": str(tmp_path)}
             exit_code, stdout, stderr = run_cli_command(
-                ["aur", "mem", "index", str(restricted_dir)], env=env
+                ["aur", "mem", "index", str(restricted_dir)],
+                env=env,
             )
 
             # Should fail but not crash
@@ -276,7 +280,7 @@ class TestSchemaErrorHandling:
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """
+        """,
         )
 
         cursor.execute(
@@ -288,7 +292,7 @@ class TestSchemaErrorHandling:
                 last_access_time REAL,
                 FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
             )
-        """
+        """,
         )
 
         conn.commit()

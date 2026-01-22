@@ -39,7 +39,11 @@ class TestUpdateCommand:
         return UpdateCommand()
 
     def test_update_creates_agents_md(
-        self, update_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        update_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should create AGENTS.md if it doesn't exist."""
         # Execute update command
@@ -60,7 +64,11 @@ class TestUpdateCommand:
         assert ".aurora/plans/AGENTS.md" in captured.out
 
     def test_update_replaces_existing_agents_md(
-        self, update_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        update_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should replace existing AGENTS.md with new template."""
         # Create existing AGENTS.md with old content
@@ -84,7 +92,8 @@ class TestUpdateCommand:
     def test_error_if_openspec_directory_missing(self, update_command, temp_dir):
         """Should throw error if .aurora/plans directory does not exist."""
         with pytest.raises(
-            RuntimeError, match="No Aurora plans directory found. Run .aur init' first."
+            RuntimeError,
+            match="No Aurora plans directory found. Run .aur init' first.",
         ):
             update_command.execute(str(temp_dir))
 
@@ -100,7 +109,10 @@ class TestUpdateCommand:
         assert "✓ Updated" in captured.out
 
     def test_agents_template_contains_key_sections(
-        self, update_command, setup_openspec_structure, temp_dir
+        self,
+        update_command,
+        setup_openspec_structure,
+        temp_dir,
     ):
         """Should verify AGENTS.md contains all key sections."""
         update_command.execute(str(temp_dir))
@@ -125,7 +137,10 @@ class TestUpdateCommand:
         assert "## Best Practices" in content
 
     def test_agents_template_has_critical_rules(
-        self, update_command, setup_openspec_structure, temp_dir
+        self,
+        update_command,
+        setup_openspec_structure,
+        temp_dir,
     ):
         """Should verify AGENTS.md contains critical formatting rules."""
         update_command.execute(str(temp_dir))

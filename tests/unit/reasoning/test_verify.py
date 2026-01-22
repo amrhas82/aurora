@@ -140,7 +140,7 @@ class TestVerifyDecomposition:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
             "expected_tools": ["code_reader"],

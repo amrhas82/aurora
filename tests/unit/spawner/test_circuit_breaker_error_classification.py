@@ -10,7 +10,7 @@ import time
 
 import pytest
 
-from aurora_spawner.circuit_breaker import CircuitBreaker, CircuitState
+from aurora_spawner.circuit_breaker import CircuitBreaker
 
 
 class TestPermanentErrorFastFail:

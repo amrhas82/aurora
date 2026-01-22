@@ -21,6 +21,7 @@ def get_cli_env() -> dict[str, str]:
 
     Returns:
         Environment dict with preserved PYTHONPATH
+
     """
     env = os.environ.copy()
 
@@ -51,6 +52,7 @@ def run_cli_command(
 
     Returns:
         CompletedProcess result
+
     """
     # Merge provided env with preserved PYTHONPATH
     env = get_cli_env()
@@ -58,7 +60,13 @@ def run_cli_command(
         env.update(kwargs.pop("env"))
 
     return subprocess.run(
-        args, cwd=cwd, capture_output=capture_output, text=text, check=check, env=env, **kwargs
+        args,
+        cwd=cwd,
+        capture_output=capture_output,
+        text=text,
+        check=check,
+        env=env,
+        **kwargs,
     )
 
 

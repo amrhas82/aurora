@@ -32,7 +32,8 @@ class TestListCommand:
     def test_missing_plans_changes_directory(self, list_command, temp_dir):
         """Should handle missing .aurora/plans/changes directory."""
         with pytest.raises(
-            RuntimeError, match="No Aurora plans directory found. Run 'aur init' first."
+            RuntimeError,
+            match="No Aurora plans directory found. Run 'aur init' first.",
         ):
             list_command.execute(str(temp_dir), mode="changes")
 
@@ -75,7 +76,7 @@ class TestListCommand:
 - [ ] Incomplete task 2
 - [ ] Incomplete task 3
 Regular text that should be ignored
-"""
+""",
         )
 
         list_command.execute(str(temp_dir), mode="changes")
@@ -89,7 +90,7 @@ Regular text that should be ignored
         (changes_dir / "completed-change").mkdir(parents=True)
 
         (changes_dir / "completed-change" / "tasks.md").write_text(
-            "- [x] Task 1\n- [x] Task 2\n- [x] Task 3\n"
+            "- [x] Task 1\n- [x] Task 2\n- [x] Task 3\n",
         )
 
         list_command.execute(str(temp_dir), mode="changes")
@@ -144,7 +145,7 @@ Regular text that should be ignored
         # Partial change
         (changes_dir / "partial").mkdir(parents=True)
         (changes_dir / "partial" / "tasks.md").write_text(
-            "- [x] Done\n- [ ] Not done\n- [ ] Also not done\n"
+            "- [x] Done\n- [ ] Not done\n- [ ] Also not done\n",
         )
 
         # No tasks
@@ -190,7 +191,7 @@ Users can log in.
 #### Scenario: Success
 - **WHEN** valid credentials
 - **THEN** login succeeds
-"""
+""",
         )
 
         list_command.execute(str(temp_dir), mode="specs")

@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from aurora_cli.errors import ConfigurationError, ErrorHandler
+from aurora_cli.errors import ConfigurationError
 
 
 logger = logging.getLogger(__name__)
@@ -91,11 +91,11 @@ def _apply_env_overrides(config: dict) -> None:
     if "AURORA_ESCALATION_THRESHOLD" in os.environ:
         try:
             config.setdefault("escalation", {})["threshold"] = float(
-                os.environ["AURORA_ESCALATION_THRESHOLD"]
+                os.environ["AURORA_ESCALATION_THRESHOLD"],
             )
         except ValueError:
             raise ConfigurationError(
-                f"AURORA_ESCALATION_THRESHOLD must be a number, got '{os.environ['AURORA_ESCALATION_THRESHOLD']}'"
+                f"AURORA_ESCALATION_THRESHOLD must be a number, got '{os.environ['AURORA_ESCALATION_THRESHOLD']}'",
             )
 
     # Logging
@@ -129,7 +129,7 @@ def _apply_env_overrides(config: dict) -> None:
     if "AURORA_HEADLESS_TIMEOUT" in os.environ:
         try:
             config.setdefault("headless", {})["timeout"] = int(
-                os.environ["AURORA_HEADLESS_TIMEOUT"]
+                os.environ["AURORA_HEADLESS_TIMEOUT"],
             )
         except ValueError:
             raise ConfigurationError("AURORA_HEADLESS_TIMEOUT must be an integer")
@@ -137,11 +137,11 @@ def _apply_env_overrides(config: dict) -> None:
     if "AURORA_HEADLESS_BUDGET" in os.environ:
         try:
             config.setdefault("headless", {})["budget"] = float(
-                os.environ["AURORA_HEADLESS_BUDGET"]
+                os.environ["AURORA_HEADLESS_BUDGET"],
             )
         except ValueError:
             raise ConfigurationError(
-                f"AURORA_HEADLESS_BUDGET must be a number, got '{os.environ['AURORA_HEADLESS_BUDGET']}'"
+                f"AURORA_HEADLESS_BUDGET must be a number, got '{os.environ['AURORA_HEADLESS_BUDGET']}'",
             )
 
     if "AURORA_HEADLESS_TIME_LIMIT" in os.environ:
@@ -150,12 +150,12 @@ def _apply_env_overrides(config: dict) -> None:
             # Must be integer (seconds), not float
             if "." in val:
                 raise ConfigurationError(
-                    f"AURORA_HEADLESS_TIME_LIMIT must be an integer, got '{val}'"
+                    f"AURORA_HEADLESS_TIME_LIMIT must be an integer, got '{val}'",
                 )
             config.setdefault("headless", {})["time_limit"] = int(val)
         except ValueError:
             raise ConfigurationError(
-                f"AURORA_HEADLESS_TIME_LIMIT must be an integer, got '{os.environ['AURORA_HEADLESS_TIME_LIMIT']}'"
+                f"AURORA_HEADLESS_TIME_LIMIT must be an integer, got '{os.environ['AURORA_HEADLESS_TIME_LIMIT']}'",
             )
 
 
@@ -171,6 +171,7 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
     Search order (if path not provided):
     1. Project mode (./.aurora exists): ./.aurora/config.json
     2. Global mode: ~/.aurora/config.json
+
     """
     # Load package defaults
     with open(DEFAULTS_FILE) as f:
@@ -210,6 +211,7 @@ def save_config(config: dict[str, Any], path: str | Path | None = None) -> None:
     Args:
         config: Config dict to save
         path: Optional path (defaults to ~/.aurora/config.json)
+
     """
     if path is None:
         path = _get_aurora_home() / "config.json"
@@ -230,6 +232,7 @@ def validate_config(config: dict[str, Any]) -> list[str]:
 
     Returns:
         List of validation error messages (empty if valid)
+
     """
     errors = []
 
@@ -276,12 +279,12 @@ def validate_config(config: dict[str, Any]) -> list[str]:
         max_retries = tool_config.get("max_retries")
         if max_retries is not None and max_retries < 0:
             errors.append(
-                f"headless.tool_configs.{tool_name}.max_retries must be non-negative, got {max_retries}"
+                f"headless.tool_configs.{tool_name}.max_retries must be non-negative, got {max_retries}",
             )
         retry_delay = tool_config.get("retry_delay")
         if retry_delay is not None and retry_delay < 0:
             errors.append(
-                f"headless.tool_configs.{tool_name}.retry_delay must be non-negative, got {retry_delay}"
+                f"headless.tool_configs.{tool_name}.retry_delay must be non-negative, got {retry_delay}",
             )
 
     return errors
@@ -354,6 +357,7 @@ class Config:
         Args:
             data: Config dict. If None, loads from file.
             **kwargs: Legacy field overrides (e.g., db_path="...")
+
         """
         if data is None:
             data = load_config()
@@ -385,7 +389,8 @@ class Config:
     @property
     def embedding_model(self) -> str:
         return self._data.get("search", {}).get(
-            "embedding_model", "sentence-transformers/all-MiniLM-L6-v2"
+            "embedding_model",
+            "sentence-transformers/all-MiniLM-L6-v2",
         )
 
     @property
@@ -411,7 +416,8 @@ class Config:
     @property
     def agents_manifest_path(self) -> str:
         return self._data.get("agents", {}).get(
-            "manifest_path", "./.aurora/cache/agent_manifest.json"
+            "manifest_path",
+            "./.aurora/cache/agent_manifest.json",
         )
 
     @property

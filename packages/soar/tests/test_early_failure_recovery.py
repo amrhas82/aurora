@@ -56,7 +56,7 @@ def test_circuit_breaker_recovery_triggered(orchestrator):
             success=False,
             error="Circuit open: 2 failures, retry in 120s",
             execution_metadata={},
-        )
+        ),
     ]
 
     result = CollectResult(
@@ -71,7 +71,9 @@ def test_circuit_breaker_recovery_triggered(orchestrator):
         with patch.object(orchestrator, "_phase5_collect", return_value=result):
             # Mock other phases
             with patch.object(
-                orchestrator, "_phase1_assess", return_value={"complexity": "MEDIUM"}
+                orchestrator,
+                "_phase1_assess",
+                return_value={"complexity": "MEDIUM"},
             ):
                 with patch.object(
                     orchestrator,
@@ -93,7 +95,9 @@ def test_circuit_breaker_recovery_triggered(orchestrator):
                             with patch.object(orchestrator, "_phase6_synthesize"):
                                 with patch.object(orchestrator, "_phase7_record"):
                                     with patch.object(
-                                        orchestrator, "_phase8_respond", return_value={}
+                                        orchestrator,
+                                        "_phase8_respond",
+                                        return_value={},
                                     ):
                                         try:
                                             orchestrator.execute("test query")
@@ -114,7 +118,7 @@ def test_early_termination_tracking(orchestrator):
             success=False,
             error="Killed: rate limit detected",
             execution_metadata={"termination_reason": "rate_limit_pattern"},
-        )
+        ),
     ]
 
     result = CollectResult(
@@ -167,7 +171,7 @@ def test_timeout_failure_tracking(orchestrator):
             success=False,
             error="Timeout after 300s",
             execution_metadata={},
-        )
+        ),
     ]
 
     result = CollectResult(

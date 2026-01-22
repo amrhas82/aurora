@@ -15,7 +15,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Callable
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class EarlyDetectionConfig:
         stderr_pattern_check: Enable stderr pattern matching (default: True)
         memory_limit_mb: Optional memory limit for process (default: None)
         callback_on_detection: Optional callback when failure detected
+
     """
 
     enabled: bool = True
@@ -61,6 +62,7 @@ class ExecutionState:
         consecutive_stalls: Count of consecutive stall detections
         terminated: Whether early termination was triggered
         termination_reason: Reason for termination
+
     """
 
     task_id: str
@@ -88,6 +90,7 @@ class EarlyDetectionMonitor:
 
         Args:
             config: Configuration for detection behavior
+
         """
         self.config = config or EarlyDetectionConfig()
         self._executions: dict[str, ExecutionState] = {}
@@ -109,7 +112,7 @@ class EarlyDetectionMonitor:
         self._monitor_task = asyncio.create_task(self._monitor_loop())
         logger.info(
             f"Early detection started: check_interval={self.config.check_interval}s, "
-            f"stall_threshold={self.config.stall_threshold}s"
+            f"stall_threshold={self.config.stall_threshold}s",
         )
 
     async def stop_monitoring(self) -> None:
@@ -141,6 +144,7 @@ class EarlyDetectionMonitor:
         Args:
             task_id: Unique task identifier
             agent_id: Agent being executed
+
         """
         if not self.config.enabled:
             return
@@ -167,6 +171,7 @@ class EarlyDetectionMonitor:
             task_id: Unique task identifier
             stdout_size: Current stdout size in bytes
             stderr_size: Current stderr size in bytes
+
         """
         if not self.config.enabled:
             return
@@ -189,6 +194,7 @@ class EarlyDetectionMonitor:
 
         Args:
             task_id: Unique task identifier
+
         """
         async with self._lock:
             self._executions.pop(task_id, None)
@@ -201,6 +207,7 @@ class EarlyDetectionMonitor:
 
         Returns:
             Tuple of (should_terminate, reason)
+
         """
         if not self.config.enabled:
             return False, None
@@ -246,6 +253,7 @@ class EarlyDetectionMonitor:
         Args:
             state: Execution state to check
             now: Current timestamp
+
         """
         if state.terminated:
             return  # Already terminated
@@ -271,7 +279,7 @@ class EarlyDetectionMonitor:
             f"Health check: task_id={state.task_id}, agent_id={state.agent_id}, "
             f"elapsed={elapsed:.1f}s, time_since_activity={time_since_activity:.1f}s, "
             f"stdout={state.stdout_size}b, stderr={state.stderr_size}b, "
-            f"output_grew={output_grew}"
+            f"output_grew={output_grew}",
         )
 
     async def _check_stall(
@@ -287,6 +295,7 @@ class EarlyDetectionMonitor:
 
         Returns:
             True if termination was triggered, False otherwise
+
         """
         # Only check stall if we've received some output
         if state.stdout_size < self.config.min_output_bytes:
@@ -308,7 +317,7 @@ class EarlyDetectionMonitor:
             # Log as debug since termination is typically disabled
             logger.debug(
                 f"Stall check: task_id={state.task_id}, "
-                f"idle={time_since_activity:.0f}s, checks={state.consecutive_stalls}"
+                f"idle={time_since_activity:.0f}s, checks={state.consecutive_stalls}",
             )
 
         return False
@@ -319,6 +328,7 @@ class EarlyDetectionMonitor:
         Args:
             state: Execution state
             reason: Reason for termination
+
         """
         # Skip actual termination if disabled - just log debug
         if not self.config.terminate_on_stall:
@@ -334,7 +344,7 @@ class EarlyDetectionMonitor:
 
         logger.error(
             f"Early termination triggered: task_id={state.task_id}, "
-            f"agent_id={state.agent_id}, reason={reason}"
+            f"agent_id={state.agent_id}, reason={reason}",
         )
 
         # Invoke callback if configured
@@ -354,6 +364,7 @@ def get_early_detection_monitor() -> EarlyDetectionMonitor:
 
     Returns:
         Global EarlyDetectionMonitor instance
+
     """
     global _global_monitor
     if _global_monitor is None:
@@ -371,6 +382,7 @@ def reset_early_detection_monitor(
 
     Returns:
         Fresh EarlyDetectionMonitor instance
+
     """
     global _global_monitor
     if _global_monitor is not None:

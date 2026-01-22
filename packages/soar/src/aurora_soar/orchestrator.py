@@ -79,6 +79,7 @@ class SOAROrchestrator:
         config: System configuration
         reasoning_llm: LLM client for reasoning tasks (assessment, decomposition, verification)
         solving_llm: LLM client for solving tasks (agent execution, synthesis)
+
     """
 
     def __init__(
@@ -109,6 +110,7 @@ class SOAROrchestrator:
                 - phase_name: str - Name of the phase (e.g., "assess", "decompose")
                 - status: str - Either "before" or "after"
                 - result_summary: dict - Summary of phase result (empty for "before")
+
         """
         self.store = store
         self.agent_registry = agent_registry
@@ -182,7 +184,7 @@ class SOAROrchestrator:
             health_monitor._proactive_config = proactive_config
             logger.debug(
                 f"Proactive health: interval={proactive_config.check_interval}s, "
-                f"threshold={proactive_config.no_output_threshold}s"
+                f"threshold={proactive_config.no_output_threshold}s",
             )
         else:
             logger.debug("Proactive health checking disabled")
@@ -201,7 +203,7 @@ class SOAROrchestrator:
             reset_early_detection_monitor(early_config)
             logger.debug(
                 f"Early detection: interval={early_config.check_interval}s, "
-                f"stall={early_config.stall_threshold}s"
+                f"stall={early_config.stall_threshold}s",
             )
         else:
             logger.debug("Early detection disabled")
@@ -211,11 +213,11 @@ class SOAROrchestrator:
 
         Returns:
             List of AgentInfo objects (from either registry or discovery)
+
         """
         if self._use_discovery:
             return discovery_adapter.list_agents()
-        else:
-            return self.agent_registry.list_all()
+        return self.agent_registry.list_all()
 
     def _get_agent(self, agent_id: str):
         """Get agent by ID using registry or discovery adapter.
@@ -225,25 +227,28 @@ class SOAROrchestrator:
 
         Returns:
             AgentInfo object if found, None otherwise
+
         """
         if self._use_discovery:
             return discovery_adapter.get_agent(agent_id)
-        else:
-            return self.agent_registry.get(agent_id)
+        return self.agent_registry.get(agent_id)
 
     def _get_or_create_fallback_agent(self):
         """Get or create a fallback agent when no suitable agent is found.
 
         Returns:
             AgentInfo object for fallback agent
+
         """
         if self._use_discovery:
             return discovery_adapter.create_fallback_agent()
-        else:
-            return self.agent_registry.create_fallback_agent()
+        return self.agent_registry.create_fallback_agent()
 
     def _invoke_callback(
-        self, phase_name: str, status: str, result_summary: dict[str, Any] | None = None
+        self,
+        phase_name: str,
+        status: str,
+        result_summary: dict[str, Any] | None = None,
     ) -> None:
         """Invoke phase callback if configured.
 
@@ -253,6 +258,7 @@ class SOAROrchestrator:
             phase_name: Name of the phase (e.g., "assess", "decompose")
             status: Either "before" or "after"
             result_summary: Summary of phase result (empty dict for "before")
+
         """
         if self.phase_callback is None:
             return
@@ -305,6 +311,7 @@ class SOAROrchestrator:
             BudgetExceededError: If query would exceed budget limits
             ValidationError: If query is invalid or malformed
             StorageError: If memory operations fail critically
+
         """
         self._start_time = time.time()
         self._phase_metadata = {}
@@ -326,7 +333,8 @@ class SOAROrchestrator:
             # Check budget with raise_on_exceeded=False to get tuple return
             # We'll raise manually with proper error attributes
             can_proceed, budget_message = self.cost_tracker.check_budget(
-                estimated_cost, raise_on_exceeded=False
+                estimated_cost,
+                raise_on_exceeded=False,
             )
 
             if not can_proceed:
@@ -368,7 +376,9 @@ class SOAROrchestrator:
 
             # Phase 3: Decompose query
             phase3_result = self._phase3_decompose(
-                query, phase2_result, phase1_result["complexity"]
+                query,
+                phase2_result,
+                phase1_result["complexity"],
             )
             self._phase_metadata["phase3_decompose"] = phase3_result
 
@@ -388,7 +398,8 @@ class SOAROrchestrator:
 
             # Call verify_lite which combines validation + agent assignment
             passed, agent_assignments, issues = verify.verify_lite(
-                decomposition_dict, available_agents
+                decomposition_dict,
+                available_agents,
             )
 
             # Build subgoal summary for display and output formatting
@@ -413,7 +424,7 @@ class SOAROrchestrator:
                         "match_quality": match_quality,
                         "ideal_agent": ideal_agent,
                         "ideal_agent_desc": ideal_agent_desc,
-                    }
+                    },
                 )
 
             # Invoke callback with result (including subgoal details for table display)
@@ -451,14 +462,18 @@ class SOAROrchestrator:
 
                 # Retry decomposition with feedback
                 phase3_result = self._phase3_decompose(
-                    query, phase2_result, phase1_result["complexity"], retry_feedback=retry_feedback
+                    query,
+                    phase2_result,
+                    phase1_result["complexity"],
+                    retry_feedback=retry_feedback,
                 )
                 self._phase_metadata["phase3_decompose_retry"] = phase3_result
 
                 # Retry verification
                 decomposition_dict = phase3_result.get("decomposition", phase3_result)
                 passed, agent_assignments, issues = verify.verify_lite(
-                    decomposition_dict, available_agents
+                    decomposition_dict,
+                    available_agents,
                 )
 
                 # Rebuild subgoal details for retry
@@ -481,7 +496,7 @@ class SOAROrchestrator:
                             "match_quality": match_quality,
                             "ideal_agent": ideal_agent,
                             "ideal_agent_desc": ideal_agent_desc,
-                        }
+                        },
                     )
 
                 phase4_result = {
@@ -522,7 +537,10 @@ class SOAROrchestrator:
 
             try:
                 phase5_result_obj = self._phase5_collect(
-                    agent_assignments, subgoals, collect_context, progress_callback
+                    agent_assignments,
+                    subgoals,
+                    collect_context,
+                    progress_callback,
                 )
                 # Store dict version in metadata with recovery info
                 phase5_dict = phase5_result_obj.to_dict()
@@ -532,12 +550,14 @@ class SOAROrchestrator:
 
                 # Extract early termination data
                 early_terminations = phase5_dict.get("execution_metadata", {}).get(
-                    "early_terminations", []
+                    "early_terminations",
+                    [],
                 )
 
                 # Extract circuit breaker data
                 circuit_blocked = phase5_dict.get("execution_metadata", {}).get(
-                    "circuit_blocked", []
+                    "circuit_blocked",
+                    [],
                 )
                 circuit_blocked_agents = [cb["agent_id"] for cb in circuit_blocked]
 
@@ -574,7 +594,9 @@ class SOAROrchestrator:
 
             # Phase 6: Synthesize results
             phase6_result_obj = self._phase6_synthesize(
-                phase5_result_obj, query, decomposition_dict
+                phase5_result_obj,
+                query,
+                decomposition_dict,
             )
             # Store dict version in metadata
             phase6_dict = phase6_result_obj.to_dict()
@@ -631,21 +653,22 @@ class SOAROrchestrator:
 
         Returns:
             List of available AgentInfo objects
+
         """
         if self._use_discovery:
             # Use discovery adapter to get agents from manifest (already handles conversion)
             return discovery_adapter.list_agents()
-        else:
-            # Use agent registry
-            if not self.agent_registry:
-                return []
-            return self.agent_registry.list_all()
+        # Use agent registry
+        if not self.agent_registry:
+            return []
+        return self.agent_registry.list_all()
 
     def _get_progress_callback(self) -> callable:
         """Create progress callback for streaming agent execution updates (Task 5.5).
 
         Returns:
             Callback function that prints progress messages
+
         """
 
         def progress_callback(message: str) -> None:
@@ -664,7 +687,9 @@ class SOAROrchestrator:
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             self._invoke_callback(
-                "assess", "after", {"complexity": result.get("complexity", "UNKNOWN")}
+                "assess",
+                "after",
+                {"complexity": result.get("complexity", "UNKNOWN")},
             )
             return result
         except Exception as e:
@@ -679,7 +704,9 @@ class SOAROrchestrator:
             return result
 
     def _inject_context_files(
-        self, phase2_result: dict[str, Any], context_files: list[str]
+        self,
+        phase2_result: dict[str, Any],
+        context_files: list[str],
     ) -> dict[str, Any]:
         """Inject explicit context files into phase 2 results.
 
@@ -692,6 +719,7 @@ class SOAROrchestrator:
 
         Returns:
             Modified phase2_result with injected context
+
         """
         from pathlib import Path
 
@@ -723,7 +751,7 @@ class SOAROrchestrator:
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             chunks_count = len(result.get("code_chunks", [])) + len(
-                result.get("reasoning_chunks", [])
+                result.get("reasoning_chunks", []),
             )
             self._invoke_callback("retrieve", "after", {"chunks_retrieved": chunks_count})
             return result
@@ -752,6 +780,7 @@ class SOAROrchestrator:
             context: Context from phase 2 (memory retrieval)
             complexity: Complexity level (simple/medium/complex)
             retry_feedback: Optional feedback from failed verification to guide retry
+
         """
         logger.info("Phase 3: Decomposing query")
         self._invoke_callback("decompose", "before", {})
@@ -807,6 +836,7 @@ class SOAROrchestrator:
 
         Returns:
             CollectResult object for use by phase 6
+
         """
         logger.info("Phase 5: Executing agents")
 
@@ -844,7 +874,7 @@ class SOAROrchestrator:
                     agent_timeout=agent_timeout,
                     max_retries=max_retries,
                     fallback_to_llm=fallback_to_llm,
-                )
+                ),
             )
 
             # Analyze failure patterns and trigger recovery
@@ -865,7 +895,7 @@ class SOAROrchestrator:
                     f"Fallback used: {len(result.fallback_agents)}, "
                     f"Early terminations: {early_term_count}, "
                     f"Circuit breaker: {len(circuit_failures)}, "
-                    f"Timeouts: {len(timeout_failures)}"
+                    f"Timeouts: {len(timeout_failures)}",
                 )
                 if early_term_details:
                     logger.info(f"Early termination details: {', '.join(early_term_details)}")
@@ -877,7 +907,7 @@ class SOAROrchestrator:
                 if early_term_count > 0:
                     logger.info(
                         f"Early termination system detected {early_term_count} problematic agents in real-time. "
-                        "Circuit breaker and retry policies active for future attempts."
+                        "Circuit breaker and retry policies active for future attempts.",
                     )
 
             findings_count = len(result.agent_outputs) if result.agent_outputs else 0
@@ -914,11 +944,16 @@ class SOAROrchestrator:
 
             self._invoke_callback("collect", "after", {"findings_count": 0, "error": str(e)})
             return CollectResult(
-                agent_outputs=[], execution_metadata={"error": str(e)}, user_interactions=[]
+                agent_outputs=[],
+                execution_metadata={"error": str(e)},
+                user_interactions=[],
             )
 
     def _phase6_synthesize(
-        self, collect_result: collect.CollectResult, query: str, decomposition: dict[str, Any]
+        self,
+        collect_result: collect.CollectResult,
+        query: str,
+        decomposition: dict[str, Any],
     ) -> synthesize.SynthesisResult:
         """Execute Phase 6: Result Synthesis (Task 5.7 - renumbered from phase 7)."""
         logger.info("Phase 6: Synthesizing results")
@@ -967,6 +1002,7 @@ class SOAROrchestrator:
 
         Returns:
             RecordResult with caching status
+
         """
         logger.info("Phase 7: Recording pattern (lightweight)")
         self._invoke_callback("record", "before", {})
@@ -1009,7 +1045,10 @@ class SOAROrchestrator:
 
         metadata = self._build_metadata()
         response = respond.format_response(
-            synthesis_result, record_result, metadata, Verbosity(verbosity.lower())
+            synthesis_result,
+            record_result,
+            metadata,
+            Verbosity(verbosity.lower()),
         )
 
         # Log conversation (async, non-blocking)
@@ -1037,7 +1076,10 @@ class SOAROrchestrator:
         return response.to_dict()
 
     def _execute_simple_path(
-        self, query: str, context: dict[str, Any], verbosity: str
+        self,
+        query: str,
+        context: dict[str, Any],
+        verbosity: str,
     ) -> dict[str, Any]:
         """Execute simplified path for SIMPLE queries (bypass decomposition).
 
@@ -1048,6 +1090,7 @@ class SOAROrchestrator:
 
         Returns:
             Formatted response
+
         """
         logger.info("Executing SIMPLE query path")
         start_time = time.time()
@@ -1188,7 +1231,10 @@ class SOAROrchestrator:
         return self._phase8_respond(synthesis, record, verbosity)
 
     def _handle_verification_failure(
-        self, query: str, verification: dict[str, Any], verbosity: str
+        self,
+        query: str,
+        verification: dict[str, Any],
+        verbosity: str,
     ) -> dict[str, Any]:
         """Handle decomposition verification failure.
 
@@ -1199,6 +1245,7 @@ class SOAROrchestrator:
 
         Returns:
             Error response with partial results
+
         """
         logger.error("Returning partial results due to verification failure")
         from aurora_soar.phases.record import RecordResult
@@ -1229,7 +1276,10 @@ class SOAROrchestrator:
         return self._phase8_respond(synthesis, record, verbosity)
 
     def _handle_decomposition_failure(
-        self, query: str, decomposition_result: dict[str, Any], verbosity: str
+        self,
+        query: str,
+        decomposition_result: dict[str, Any],
+        verbosity: str,
     ) -> dict[str, Any]:
         """Handle decomposition failure (Phase 3 error).
 
@@ -1240,6 +1290,7 @@ class SOAROrchestrator:
 
         Returns:
             Error response with partial results
+
         """
         error_msg = decomposition_result.get("_error", "Unknown decomposition error")
         logger.error(f"Returning partial results due to decomposition failure: {error_msg}")
@@ -1271,7 +1322,10 @@ class SOAROrchestrator:
         return self._phase8_respond(synthesis, record, verbosity)
 
     def _handle_critical_failure(
-        self, query: str, error_msg: str, verbosity: str
+        self,
+        query: str,
+        error_msg: str,
+        verbosity: str,
     ) -> dict[str, Any]:
         """Handle critical subgoal failure with recovery attempt.
 
@@ -1282,6 +1336,7 @@ class SOAROrchestrator:
 
         Returns:
             Error response with recovery information
+
         """
         logger.error(f"Handling critical failure: {error_msg}")
         from aurora_soar.phases.record import RecordResult
@@ -1332,6 +1387,7 @@ class SOAROrchestrator:
 
         Returns:
             Error response
+
         """
         logger.error(f"Handling execution error: {error}")
         from aurora_soar.phases.record import RecordResult
@@ -1375,6 +1431,7 @@ class SOAROrchestrator:
 
         Returns:
             Cost in USD
+
         """
         cost = self.cost_tracker.record_cost(
             model=model,
@@ -1390,7 +1447,7 @@ class SOAROrchestrator:
 
         logger.debug(
             f"LLM cost tracked: ${cost:.6f} for {operation} "
-            f"({input_tokens} in, {output_tokens} out)"
+            f"({input_tokens} in, {output_tokens} out)",
         )
 
         return cost
@@ -1411,6 +1468,7 @@ class SOAROrchestrator:
 
         Returns:
             Dict with single-subgoal decomposition
+
         """
         elapsed_time = time.time() - self._start_time
 
@@ -1439,7 +1497,7 @@ class SOAROrchestrator:
                 "match_quality": "excellent",
                 "ideal_agent": "@code-developer",
                 "ideal_agent_desc": "General development tasks",
-            }
+            },
         ]
 
         # Extract memory context
@@ -1477,7 +1535,7 @@ class SOAROrchestrator:
                     "is_spawn": False,
                     "ideal_agent": "@code-developer",
                     "ideal_agent_desc": "General development tasks",
-                }
+                },
             ],
             "subgoals_detailed": subgoal_details,
             "complexity": "SIMPLE",
@@ -1524,6 +1582,7 @@ class SOAROrchestrator:
 
         Returns:
             Dict with decomposition results for goals.json generation
+
         """
         elapsed_time = time.time() - self._start_time
 
@@ -1539,7 +1598,7 @@ class SOAROrchestrator:
                     "is_spawn": agent_config.get("is_spawn", False),
                     "ideal_agent": agent_config.get("ideal_agent", ""),
                     "ideal_agent_desc": agent_config.get("ideal_agent_desc", ""),
-                }
+                },
             )
 
         # Extract memory context for goals.json
@@ -1591,6 +1650,7 @@ class SOAROrchestrator:
 
         Returns:
             Dict with execution metadata including recovery information
+
         """
         elapsed_time = time.time() - self._start_time
 
@@ -1624,6 +1684,7 @@ class SOAROrchestrator:
 
         Returns:
             List of smaller chunks split by sections
+
         """
         from aurora_core.chunks import CodeChunk
 
@@ -1660,7 +1721,7 @@ class SOAROrchestrator:
                 original_len = len(content)
                 content = content[: max_chars - len(truncation_suffix)] + truncation_suffix
                 logger.debug(
-                    f"Section '{header}' truncated from {original_len} to {len(content)} chars"
+                    f"Section '{header}' truncated from {original_len} to {len(content)} chars",
                 )
 
             # Create new chunk with section suffix
@@ -1702,6 +1763,7 @@ class SOAROrchestrator:
                 - timeout_failures: List of agent IDs that timed out
                 - rate_limit_failures: List of agent IDs that hit rate limits
                 - auth_failures: List of agent IDs with authentication issues
+
         """
         failed_count = 0
         early_term_count = 0
@@ -1726,11 +1788,11 @@ class SOAROrchestrator:
                             "agent_id": output.agent_id,
                             "reason": term_reason,
                             "detection_time": metadata.get("duration_ms", 0),
-                        }
+                        },
                     )
                     logger.debug(
                         f"Agent {output.agent_id} early termination: {term_reason} "
-                        f"(detected in {metadata.get('duration_ms', 0)}ms)"
+                        f"(detected in {metadata.get('duration_ms', 0)}ms)",
                     )
 
                 # Track circuit breaker failures
@@ -1775,10 +1837,11 @@ class SOAROrchestrator:
 
         Args:
             failed_agents: List of agent IDs that were blocked by circuit breaker
+
         """
         logger.warning(
             f"Circuit breaker recovery triggered for {len(failed_agents)} agents: "
-            f"{', '.join(failed_agents)}"
+            f"{', '.join(failed_agents)}",
         )
 
         # Store circuit failure metadata for analysis
@@ -1791,7 +1854,7 @@ class SOAROrchestrator:
                     "agent_id": agent_id,
                     "timestamp": time.time(),
                     "query_id": self._query_id,
-                }
+                },
             )
 
         # Add circuit failure context to phase metadata
@@ -1799,12 +1862,12 @@ class SOAROrchestrator:
             self._phase_metadata["circuit_breaker_failures"] = []
 
         self._phase_metadata["circuit_breaker_failures"].extend(
-            [{"agent_id": aid, "timestamp": time.time()} for aid in failed_agents]
+            [{"agent_id": aid, "timestamp": time.time()} for aid in failed_agents],
         )
 
         logger.info(
             "Circuit breaker failures recorded. "
-            "Agents will be retried after reset timeout (typically 120s)."
+            "Agents will be retried after reset timeout (typically 120s).",
         )
 
     def _index_conversation_log(self, log_path) -> None:
@@ -1812,6 +1875,7 @@ class SOAROrchestrator:
 
         Args:
             log_path: Path to the conversation log markdown file
+
         """
         try:
             from pathlib import Path
@@ -1848,7 +1912,7 @@ class SOAROrchestrator:
                                 if len(docstring) > 2048:
                                     logger.warning(
                                         f"Section {section_chunk.id} still too large after splitting "
-                                        f"({len(docstring)} chars), truncating to 2048"
+                                        f"({len(docstring)} chars), truncating to 2048",
                                     )
                                     docstring = docstring[:2019] + "\n\n[... truncated ...]"
                                     section_chunk.docstring = docstring
@@ -1867,7 +1931,7 @@ class SOAROrchestrator:
                         # Safety check (should never trigger since we check > 2048 above)
                         if len(docstring) > 2048:
                             logger.warning(
-                                f"Chunk {chunk.id} unexpectedly too large ({len(docstring)} chars), truncating"
+                                f"Chunk {chunk.id} unexpectedly too large ({len(docstring)} chars), truncating",
                             )
                             docstring = docstring[:2019] + "\n\n[... truncated ...]"
                             chunk.docstring = docstring
@@ -1884,7 +1948,7 @@ class SOAROrchestrator:
 
             logger.info(
                 f"Indexed conversation log: {log_path} "
-                f"({indexed_count} chunks, {split_count} sections created from large chunks)"
+                f"({indexed_count} chunks, {split_count} sections created from large chunks)",
             )
 
         except Exception as e:

@@ -324,7 +324,7 @@ class TestTomlSlashCommandConfiguratorUpdateBody:
 
         file_path = tmp_path / "partial_markers.toml"
         file_path.write_text(
-            f'description = "test"\nprompt = """\n{AURORA_MARKERS["start"]}\ncontent\n"""'
+            f'description = "test"\nprompt = """\n{AURORA_MARKERS["start"]}\ncontent\n"""',
         )
 
         with pytest.raises(ValueError, match="Missing Aurora markers"):
@@ -336,7 +336,7 @@ class TestTomlSlashCommandConfiguratorUpdateBody:
 
         file_path = tmp_path / "partial_markers.toml"
         file_path.write_text(
-            f'description = "test"\nprompt = """\ncontent\n{AURORA_MARKERS["end"]}\n"""'
+            f'description = "test"\nprompt = """\ncontent\n{AURORA_MARKERS["end"]}\n"""',
         )
 
         with pytest.raises(ValueError, match="Missing Aurora markers"):
@@ -361,7 +361,7 @@ prompt = """
 Old body content
 {AURORA_MARKERS["end"]}
 """
-'''
+''',
         )
 
         # update_existing should only update the one file that exists
@@ -389,7 +389,7 @@ prompt = """
 Old body content
 {AURORA_MARKERS["end"]}
 """
-'''
+''',
         )
 
         config.update_existing(str(tmp_path), ".aurora")

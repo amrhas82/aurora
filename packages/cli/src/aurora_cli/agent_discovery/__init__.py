@@ -32,6 +32,7 @@ Example:
     >>> if agent:
     ...     print(f"Role: {agent.role}")
     ...     print(f"Goal: {agent.goal}")
+
 """
 
 from aurora_cli.agent_discovery.manifest import ManifestManager, should_refresh_manifest

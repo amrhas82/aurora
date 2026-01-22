@@ -82,6 +82,7 @@ class FactorySlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -93,6 +94,7 @@ class FactorySlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             YAML frontmatter with argument-hint
+
         """
         return FRONTMATTER[command_id]
 
@@ -106,6 +108,7 @@ class FactorySlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content with $ARGUMENTS placeholder
+
         """
         base_body = get_command_body(command_id)
         return f"{base_body}\n\n$ARGUMENTS"

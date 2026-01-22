@@ -81,7 +81,7 @@ def complex_function(items, threshold=10):
             filtered.append(abs(item))
 
     return filtered
-'''
+''',
         )
         return test_file
 
@@ -162,7 +162,7 @@ def complex_function(items, threshold=10):
             """
 def func_a():
     return 1
-"""
+""",
         )
 
         file2 = tmp_path / "module2.py"
@@ -170,7 +170,7 @@ def func_a():
             """
 def func_b():
     return 2
-"""
+""",
         )
 
         file3 = tmp_path / "module3.py"
@@ -179,7 +179,7 @@ def func_b():
 class ClassC:
     def method_c(self):
         return 3
-"""
+""",
         )
 
         # Parse all files and store chunks
@@ -205,7 +205,7 @@ class ClassC:
             """
 def original_function():
     return "original"
-"""
+""",
         )
 
         chunks = parser.parse(test_file)
@@ -220,7 +220,7 @@ def original_function():
 def original_function():
     """Now with docstring."""
     return "modified"
-'''
+''',
         )
 
         # Re-parse
@@ -278,7 +278,7 @@ def function_{i}(x, y):
         return y
     else:
         return 0
-'''
+''',
             )
         large_file.write_text("\n".join(lines))
 
@@ -316,7 +316,7 @@ def process_path(path: Path) -> str:
 def process_list(items: List[str]) -> Dict[str, int]:
     """Process a list."""
     return {item: len(item) for item in items}
-'''
+''',
         )
 
         chunks = parser.parse(file_with_imports)
@@ -355,7 +355,7 @@ class TestErrorHandling:
 def broken_function(x, y)
     # Missing colon
     return x + y
-"""
+""",
         )
 
         # Parser should handle gracefully (return empty or partial results)
@@ -377,7 +377,7 @@ def broken_function(x, y)
             """
 def test_func():
     return 42
-"""
+""",
         )
 
         chunks = parser.parse(test_file)
@@ -408,7 +408,7 @@ class TestPersistence:
             """
 def persistent_function():
     return "persisted"
-"""
+""",
         )
 
         chunks = parser.parse(test_file)

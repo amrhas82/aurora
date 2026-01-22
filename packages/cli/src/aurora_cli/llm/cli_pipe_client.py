@@ -32,6 +32,7 @@ class CLIPipeLLMClient(LLMClient):
     Attributes:
         _tool: Name of the CLI tool to pipe to
         _soar_dir: Directory for JSON placeholder files
+
     """
 
     def __init__(
@@ -49,12 +50,13 @@ class CLIPipeLLMClient(LLMClient):
 
         Raises:
             ValueError: If tool is not found in PATH
+
         """
         # Validate tool exists in PATH
         if not shutil.which(tool):
             raise ValueError(
                 f"Tool '{tool}' not found in PATH. "
-                f"Please install {tool} or specify a different tool."
+                f"Please install {tool} or specify a different tool.",
             )
 
         self._tool = tool
@@ -66,6 +68,7 @@ class CLIPipeLLMClient(LLMClient):
 
         Returns:
             Path to soar directory
+
         """
         if self._soar_dir is None:
             from aurora_core.paths import get_aurora_dir
@@ -81,6 +84,7 @@ class CLIPipeLLMClient(LLMClient):
         Args:
             phase_name: Current phase name
             status: Current status (e.g., "running", "complete")
+
         """
         soar_dir = self._ensure_soar_dir()
         state_file = soar_dir / "state.json"
@@ -119,6 +123,7 @@ class CLIPipeLLMClient(LLMClient):
         Raises:
             ValueError: If prompt is empty
             RuntimeError: If CLI tool fails
+
         """
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty")
@@ -260,6 +265,7 @@ class CLIPipeLLMClient(LLMClient):
         Raises:
             ValueError: If prompt is empty or output is not valid JSON
             RuntimeError: If CLI tool fails
+
         """
         # Enhance system prompt to enforce JSON output
         json_system = (
@@ -291,6 +297,7 @@ class CLIPipeLLMClient(LLMClient):
 
         Returns:
             Estimated token count
+
         """
         return len(text) // 4
 

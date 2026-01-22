@@ -347,10 +347,14 @@ class ComplexityAssessor:
 
         Returns:
             AssessmentResult with level, score, confidence, and signals
+
         """
         if not prompt or not prompt.strip():
             return AssessmentResult(
-                level="simple", score=0, confidence=1.0, signals=["empty_prompt"]
+                level="simple",
+                score=0,
+                confidence=1.0,
+                signals=["empty_prompt"],
             )
 
         prompt = prompt.strip()
@@ -446,6 +450,7 @@ class ComplexityAssessor:
 
         Returns:
             True if critical keywords detected, False otherwise
+
         """
         import re
 
@@ -644,14 +649,16 @@ class ComplexityAssessor:
 
         # Standards compliance
         if re.search(
-            r"\bfollowing\s+\w+\s*(?:guidelines?|standards?|practices?|rules?)\b", prompt_lower
+            r"\bfollowing\s+\w+\s*(?:guidelines?|standards?|practices?|rules?)\b",
+            prompt_lower,
         ):
             score += 10
             signals.append("standards_compliance")
 
         # Bounded scope detection (reduces complex verb impact)
         if complex_matches and re.search(
-            r"\b(?:this|the|a)\s+(?:function|method|class|component|file)\b", prompt_lower
+            r"\b(?:this|the|a)\s+(?:function|method|class|component|file)\b",
+            prompt_lower,
         ):
             if word_count <= 8:
                 score -= 10
@@ -691,7 +698,8 @@ class ComplexityAssessor:
 
         # Directory patterns
         dir_refs = re.findall(
-            r"\b(?:src|lib|tests?|docs?|components?|modules?|packages?)/\w+", prompt_lower
+            r"\b(?:src|lib|tests?|docs?|components?|modules?|packages?)/\w+",
+            prompt_lower,
         )
         if dir_refs:
             score += len(dir_refs) * 5
@@ -727,7 +735,7 @@ class ComplexityAssessor:
 
         # Negative constraints
         negatives = len(
-            re.findall(r"\b(?:don\'t|dont|do not|never|avoid|shouldn\'t|must not)\b", prompt_lower)
+            re.findall(r"\b(?:don\'t|dont|do not|never|avoid|shouldn\'t|must not)\b", prompt_lower),
         )
         if negatives > 0:
             score += negatives * 6
@@ -768,7 +776,7 @@ class ComplexityAssessor:
 
         # Conditional logic
         conditionals = len(
-            re.findall(r"\bif\b.*\bthen\b|\bwhen\b.*\bshould\b|\bdepending on\b", prompt.lower())
+            re.findall(r"\bif\b.*\bthen\b|\bwhen\b.*\bshould\b|\bdepending on\b", prompt.lower()),
         )
         if conditionals > 0:
             score += conditionals * 10
@@ -794,7 +802,8 @@ class ComplexityAssessor:
 
         # Framework/library mentions
         frameworks = re.findall(
-            r"\b(?:react|vue|angular|django|flask|fastapi|express|spring|rails)\b", prompt_lower
+            r"\b(?:react|vue|angular|django|flask|fastapi|express|spring|rails)\b",
+            prompt_lower,
         )
         if frameworks:
             score += len(set(frameworks)) * 5
@@ -952,6 +961,7 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
             - complexity_level: "SIMPLE" | "MEDIUM" | "COMPLEX" | "CRITICAL"
             - score: 0.0-1.0 (normalized score)
             - confidence: 0.0-1.0 (how confident in classification)
+
     """
     # Create assessor and run assessment
     assessor = ComplexityAssessor()
@@ -970,7 +980,7 @@ def _assess_tier1_keyword(query: str) -> tuple[str, float, float]:
     logger.debug(
         f"ComplexityAssessor result: {complexity_level} "
         f"(raw_score={result.score}, normalized_score={normalized_score:.3f}, "
-        f"confidence={confidence:.3f}, signals={result.signals[:3]})"
+        f"confidence={confidence:.3f}, signals={result.signals[:3]})",
     )
 
     return (complexity_level, normalized_score, confidence)
@@ -1002,6 +1012,7 @@ def _assess_tier2_llm(
             - reasoning: str (LLM's explanation)
             - indicators: list[str] (specific indicators noted by LLM)
             - recommended_verification: str (verification option recommendation)
+
     """
     try:
         # Import prompt template
@@ -1047,7 +1058,7 @@ def _assess_tier2_llm(
 
         logger.info(
             f"LLM assessment: {complexity} "
-            f"(confidence={confidence:.3f}, verification={recommended_verification})"
+            f"(confidence={confidence:.3f}, verification={recommended_verification})",
         )
 
         return {
@@ -1097,6 +1108,7 @@ def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[s
             - method: str (always "keyword")
             - reasoning: str (explanation of classification)
             - score: float (0-1, normalized complexity score)
+
     """
     # Use keyword classification only (LLM tier2 removed)
     # Rationale: LLM has no additional context and was less accurate than keyword classifier
@@ -1104,7 +1116,7 @@ def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[s
 
     logger.info(
         f"Complexity assessment: {complexity_level} "
-        f"(score={score:.3f}, confidence={confidence:.3f})"
+        f"(score={score:.3f}, confidence={confidence:.3f})",
     )
 
     return {

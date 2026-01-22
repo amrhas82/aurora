@@ -102,6 +102,7 @@ class ClaudeToolProvider(ToolProvider):
 
         Returns:
             ToolResult with execution status and output
+
         """
         import os
 
@@ -174,6 +175,7 @@ class ClaudeToolProvider(ToolProvider):
 
         Returns:
             ParsedOutput with extracted status, code blocks, file changes, etc.
+
         """
         return self._output_handler.parse(output)
 
@@ -190,6 +192,7 @@ class ClaudeToolProvider(ToolProvider):
 
         Returns:
             Normalized output string
+
         """
         parsed = self.parse_output(output)
         return parsed.clean_output
@@ -203,6 +206,6 @@ class ClaudeToolProvider(ToolProvider):
                 "supports_mcp": True,
                 "supports_system_prompt_file": True,
                 "permission_modes": ["interactive", "dangerously-skip-permissions"],
-            }
+            },
         )
         return info

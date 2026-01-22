@@ -27,31 +27,21 @@ EXIT_SYSTEM_ERROR = 2
 class AuroraError(Exception):
     """Base exception for all AURORA CLI errors."""
 
-    pass
-
 
 class BudgetExceededError(AuroraError):
     """Raised when budget limit is exceeded."""
-
-    pass
 
 
 class ConfigurationError(AuroraError):
     """Raised when configuration is invalid or missing."""
 
-    pass
-
 
 class APIError(AuroraError):
     """Raised when LLM API calls fail."""
 
-    pass
-
 
 class MemoryStoreError(AuroraError):
     """Raised when memory store operations fail."""
-
-    pass
 
 
 class ErrorHandler:
@@ -67,6 +57,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message string
+
         """
         error_type = type(error).__name__
         error_msg = str(error)
@@ -88,6 +79,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message string
+
         """
         return f"{problem}\n{solution}"
 
@@ -97,6 +89,7 @@ class ErrorHandler:
 
         Returns:
             Formatted suggestion message
+
         """
         return "Run 'aur doctor' for diagnostics"
 
@@ -110,6 +103,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message with recovery steps
+
         """
         error_str = str(error).lower()
 
@@ -200,6 +194,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message with setup instructions
+
         """
         import json
 
@@ -310,6 +305,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message with recovery steps
+
         """
         error_str = str(error).lower()
 
@@ -411,6 +407,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message with recovery steps
+
         """
         error_str = str(error).lower()
 
@@ -477,6 +474,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message with recovery steps
+
         """
         error_str = str(error).lower()
 
@@ -559,6 +557,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message with recovery steps
+
         """
         # Try to extract version info from the error if it's a SchemaMismatchError
         found_version = getattr(error, "found_version", "unknown")
@@ -584,7 +583,10 @@ class ErrorHandler:
 
     @staticmethod
     def handle_budget_error(
-        error: Exception, spent: float = 0.0, limit: float = 0.0, operation: str = "query execution"
+        error: Exception,
+        spent: float = 0.0,
+        limit: float = 0.0,
+        operation: str = "query execution",
     ) -> str:
         """Handle and format budget errors with spending details.
 
@@ -596,6 +598,7 @@ class ErrorHandler:
 
         Returns:
             Formatted error message with spending details
+
         """
         remaining = max(0.0, limit - spent)
 
@@ -631,6 +634,7 @@ class ErrorHandler:
         Example:
             >>> redact_api_key("sk-ant-1234567890abcdef")
             'sk-ant-...def'
+
         """
         if not key or len(key) < 10:
             return "***"
@@ -658,6 +662,7 @@ def handle_errors(f: F) -> F:
 
     Returns:
         Wrapped function with error handling
+
     """
 
     @functools.wraps(f)
@@ -688,7 +693,7 @@ def handle_errors(f: F) -> F:
                 console.print("[dim]Stack trace:[/]")
                 traceback.print_exc()
                 console.print(
-                    "\n[dim]Note: Use without --debug flag to see user-friendly error messages[/]\n"
+                    "\n[dim]Note: Use without --debug flag to see user-friendly error messages[/]\n",
                 )
                 sys.exit(EXIT_USER_ERROR)
 
@@ -725,12 +730,16 @@ def handle_errors(f: F) -> F:
                 exit_code = EXIT_SYSTEM_ERROR
             elif isinstance(e, PermissionError):
                 error_msg = error_handler.handle_path_error(
-                    e, str(getattr(e, "filename", "unknown")), "accessing file"
+                    e,
+                    str(getattr(e, "filename", "unknown")),
+                    "accessing file",
                 )
                 exit_code = EXIT_SYSTEM_ERROR
             elif isinstance(e, FileNotFoundError):
                 error_msg = error_handler.handle_path_error(
-                    e, str(getattr(e, "filename", "unknown")), "accessing file"
+                    e,
+                    str(getattr(e, "filename", "unknown")),
+                    "accessing file",
                 )
                 exit_code = EXIT_USER_ERROR
             elif isinstance(e, ValueError):

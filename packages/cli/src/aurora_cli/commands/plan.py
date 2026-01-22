@@ -71,7 +71,6 @@ def plan_group() -> None:
         aur plan view 0001-oauth-auth    # View plan details
         aur plan archive 0001-oauth      # Archive completed plan
     r"""
-    pass
 
 
 @plan_group.command(name="create")

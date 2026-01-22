@@ -15,7 +15,6 @@ class MockConfigurator:
 
     def configure(self, project_path: str, aurora_dir: str) -> None:
         """Mock configure method."""
-        pass
 
 
 @pytest.fixture(autouse=True)

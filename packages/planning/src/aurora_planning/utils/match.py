@@ -17,6 +17,7 @@ def levenshtein(a: str, b: str) -> int:
 
     Returns:
         Edit distance as integer
+
     """
     m = len(a)
     n = len(b)
@@ -55,6 +56,7 @@ def nearest_matches(input_str: str, candidates: list[str], max: int = 5) -> list
 
     Returns:
         List of nearest matches, sorted by distance (closest first)
+
     """
     if not candidates:
         return []

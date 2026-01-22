@@ -163,7 +163,7 @@ class TestVerifyDecomposition:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
             "expected_tools": ["code_reader"],
@@ -181,7 +181,7 @@ class TestVerifyDecomposition:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["code_reader"],
@@ -233,7 +233,11 @@ class TestVerifyDecomposition:
         )
 
     def test_pass_on_first_attempt(
-        self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification
+        self,
+        mock_verify_decomposition,
+        mock_llm_client,
+        sample_decomposition,
+        passing_verification,
     ):
         """Test verification passes on first attempt."""
         mock_verify_decomposition.return_value = passing_verification
@@ -254,7 +258,11 @@ class TestVerifyDecomposition:
         mock_verify_decomposition.assert_called_once()
 
     def test_fail_on_first_attempt(
-        self, mock_verify_decomposition, mock_llm_client, sample_decomposition, failing_verification
+        self,
+        mock_verify_decomposition,
+        mock_llm_client,
+        sample_decomposition,
+        failing_verification,
     ):
         """Test verification fails on first attempt."""
         mock_verify_decomposition.return_value = failing_verification
@@ -362,7 +370,11 @@ class TestVerifyDecomposition:
         # The behavior is correct (retry_count==2, final_verdict==FAIL) even if mocks don't capture calls
 
     def test_medium_uses_self_verification(
-        self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification
+        self,
+        mock_verify_decomposition,
+        mock_llm_client,
+        sample_decomposition,
+        passing_verification,
     ):
         """Test MEDIUM complexity uses self-verification."""
         mock_verify_decomposition.return_value = passing_verification
@@ -379,7 +391,11 @@ class TestVerifyDecomposition:
         assert call_args.kwargs["option"] == VerificationOption.SELF
 
     def test_complex_uses_adversarial_verification(
-        self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification
+        self,
+        mock_verify_decomposition,
+        mock_llm_client,
+        sample_decomposition,
+        passing_verification,
     ):
         """Test COMPLEX complexity uses adversarial verification."""
         mock_verify_decomposition.return_value = passing_verification
@@ -396,7 +412,11 @@ class TestVerifyDecomposition:
         assert call_args.kwargs["option"] == VerificationOption.ADVERSARIAL
 
     def test_context_summary_passed(
-        self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification
+        self,
+        mock_verify_decomposition,
+        mock_llm_client,
+        sample_decomposition,
+        passing_verification,
     ):
         """Test context summary is passed through."""
         mock_verify_decomposition.return_value = passing_verification
@@ -413,7 +433,11 @@ class TestVerifyDecomposition:
         assert call_args.kwargs["context_summary"] == "Available: 5 code chunks"
 
     def test_available_agents_passed(
-        self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification
+        self,
+        mock_verify_decomposition,
+        mock_llm_client,
+        sample_decomposition,
+        passing_verification,
     ):
         """Test available agents are passed through."""
         mock_verify_decomposition.return_value = passing_verification
@@ -431,7 +455,11 @@ class TestVerifyDecomposition:
         assert call_args.kwargs["available_agents"] == agents
 
     def test_timing_recorded(
-        self, mock_verify_decomposition, mock_llm_client, sample_decomposition, passing_verification
+        self,
+        mock_verify_decomposition,
+        mock_llm_client,
+        sample_decomposition,
+        passing_verification,
     ):
         """Test that timing is recorded."""
         mock_verify_decomposition.return_value = passing_verification
@@ -559,7 +587,10 @@ class TestVerifyWithRetrievalContext:
 
     @patch("aurora_reasoning.verify.verify_decomposition")
     def test_verify_with_retrieval_context_assesses_quality(
-        self, mock_verify, sample_decomposition, sample_verification
+        self,
+        mock_verify,
+        sample_decomposition,
+        sample_verification,
     ):
         """Test that quality assessment is called when retrieval_context provided."""
         mock_verify.return_value = sample_verification
@@ -622,7 +653,10 @@ class TestVerifyWithRetrievalContext:
 
     @patch("aurora_reasoning.verify.verify_decomposition")
     def test_verify_without_retrieval_context_no_assessment(
-        self, mock_verify, sample_decomposition, sample_verification
+        self,
+        mock_verify,
+        sample_decomposition,
+        sample_verification,
     ):
         """Test that quality assessment is skipped when no retrieval_context."""
         mock_verify.return_value = sample_verification
@@ -641,7 +675,10 @@ class TestVerifyWithRetrievalContext:
 
     @patch("aurora_reasoning.verify.verify_decomposition")
     def test_verify_result_includes_retrieval_quality_in_dict(
-        self, mock_verify, sample_decomposition, sample_verification
+        self,
+        mock_verify,
+        sample_decomposition,
+        sample_verification,
     ):
         """Test that to_dict() includes retrieval_quality field."""
         mock_verify.return_value = sample_verification

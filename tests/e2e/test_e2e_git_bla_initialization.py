@@ -143,7 +143,10 @@ def func_c(z: float) -> float:
             (repo_path / "module.py").write_text(content)
 
             subprocess.run(
-                ["git", "add", "module.py"], cwd=repo_path, check=True, capture_output=True
+                ["git", "add", "module.py"],
+                cwd=repo_path,
+                check=True,
+                capture_output=True,
             )
             subprocess.run(
                 ["git", "commit", "-m", f"Edit func_a: version {i}"],
@@ -161,7 +164,10 @@ def func_c(z: float) -> float:
             (repo_path / "module.py").write_text(content)
 
             subprocess.run(
-                ["git", "add", "module.py"], cwd=repo_path, check=True, capture_output=True
+                ["git", "add", "module.py"],
+                cwd=repo_path,
+                check=True,
+                capture_output=True,
             )
             subprocess.run(
                 ["git", "commit", "-m", f"Edit func_b: version {i}"],
@@ -210,7 +216,8 @@ class TestGitBasedBLAInitialization:
         assert len(commits) >= 10, f"Should have at least 10 commits, got {len(commits)}"
 
     def test_1_6_2_functions_have_different_commit_counts(
-        self, git_repo_with_history: Path
+        self,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.2: Create file with multiple functions, commit each function separately.
 
@@ -262,7 +269,9 @@ class TestGitBasedBLAInitialization:
         )
 
     def test_1_6_3_index_file_with_git_history(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.3: Edit one function multiple times (8 commits), another once (1 commit).
 
@@ -292,7 +301,9 @@ class TestGitBasedBLAInitialization:
         assert chunk_count >= 3, f"Should have indexed at least 3 functions, got {chunk_count}"
 
     def test_1_6_4_query_activation_scores_from_database(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.4: Index the file with `aur mem index`.
 
@@ -321,7 +332,7 @@ class TestGitBasedBLAInitialization:
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY c.name
-        """
+        """,
         )
 
         results = cursor.fetchall()
@@ -330,7 +341,9 @@ class TestGitBasedBLAInitialization:
         assert len(results) >= 3, f"Should have activation data for 3 functions, got {len(results)}"
 
     def test_1_6_5_base_level_varies_across_chunks(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.5: Query SQLite DB to check activation scores.
 
@@ -359,7 +372,7 @@ class TestGitBasedBLAInitialization:
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
-        """
+        """,
         )
 
         results = cursor.fetchall()
@@ -379,7 +392,9 @@ class TestGitBasedBLAInitialization:
         )
 
     def test_1_6_6_frequently_edited_function_has_higher_bla(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.7: Assert frequently-edited function has higher base_level than rarely-edited.
 
@@ -407,7 +422,7 @@ class TestGitBasedBLAInitialization:
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY c.name
-        """
+        """,
         )
 
         results = cursor.fetchall()
@@ -436,7 +451,9 @@ class TestGitBasedBLAInitialization:
             )
 
     def test_1_6_7_functions_in_same_file_have_different_bla(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.8: Assert functions in SAME file have DIFFERENT base_level values.
 
@@ -466,7 +483,7 @@ class TestGitBasedBLAInitialization:
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY a.base_level DESC
-        """
+        """,
         )
 
         results = cursor.fetchall()
@@ -490,7 +507,9 @@ class TestGitBasedBLAInitialization:
         )
 
     def test_1_6_8_git_metadata_stored_in_chunks(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.9: Assert git_hash, last_modified, commit_count stored in chunk metadata.
 
@@ -517,7 +536,7 @@ class TestGitBasedBLAInitialization:
             FROM chunks c
             WHERE c.file_path LIKE '%module.py%'
             LIMIT 3
-        """
+        """,
         )
 
         results = cursor.fetchall()
@@ -543,7 +562,9 @@ class TestGitBasedBLAInitialization:
         )
 
     def test_1_6_9_access_count_initialized_from_commits(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.10: Assert access_count matches commit_count for each function.
 
@@ -570,7 +591,7 @@ class TestGitBasedBLAInitialization:
             FROM chunks c
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
-        """
+        """,
         )
 
         results = cursor.fetchall()
@@ -594,14 +615,14 @@ class TestGitBasedBLAInitialization:
                     f"  - {name}: access_count={ac}, commit_count={cc}"
                     for name, ac, cc in mismatches
                 )
-                + "\n\nExpected: access_count should equal commit_count for each function"
+                + "\n\nExpected: access_count should equal commit_count for each function",
             )
 
         # If commit_count is missing entirely, that's also a failure
         if all(json.loads(r[1]).get("commit_count", 0) == 0 for r in results if r[1]):
             pytest.fail(
                 "ISSUE #16: commit_count not stored in metadata!\n"
-                "Git-based BLA initialization not implemented."
+                "Git-based BLA initialization not implemented.",
             )
 
     def test_1_6_10_non_git_directory_graceful_fallback(self, clean_aurora_home: Path) -> None:
@@ -620,7 +641,7 @@ class TestGitBasedBLAInitialization:
 def hello():
     """Say hello."""
     return "Hello"
-'''
+''',
             )
 
             # Index (should not crash)
@@ -650,7 +671,7 @@ def hello():
                     JOIN activations a ON c.chunk_id = a.chunk_id
                     WHERE c.file_path LIKE '%simple.py%'
                     LIMIT 1
-                """
+                """,
                 )
 
                 result_row = cursor.fetchone()
@@ -666,7 +687,9 @@ def hello():
                     ), f"Non-Git file should have default base_level\nGot: {base_level}"
 
     def test_1_6_11_comprehensive_git_bla_check(
-        self, clean_aurora_home: Path, git_repo_with_history: Path
+        self,
+        clean_aurora_home: Path,
+        git_repo_with_history: Path,
     ) -> None:
         """Test 1.6.12: Expected - Test FAILS because all base_level = 0.0 (Issue #16).
 
@@ -707,7 +730,7 @@ def hello():
             JOIN activations a ON c.chunk_id = a.chunk_id
             WHERE c.file_path LIKE '%module.py%'
             ORDER BY a.base_level DESC
-        """
+        """,
         )
 
         results = cursor.fetchall()
@@ -726,7 +749,7 @@ def hello():
         if unique_bla <= 1:
             issues.append(
                 f"❌ All functions have identical BLA (file-level, not function-level)\n"
-                f"   Functions: {len(base_levels)}, Unique BLA: {unique_bla}"
+                f"   Functions: {len(base_levels)}, Unique BLA: {unique_bla}",
             )
 
         # Check 3: Is Git metadata missing?
@@ -763,7 +786,7 @@ def hello():
                 "2. Use: git blame -L <start>,<end> <file> for each function\n"
                 "3. Extract unique commit SHAs and timestamps\n"
                 "4. Calculate BLA: ln(Σ (time_since)^(-0.5)) per function\n"
-                "5. Initialize: store.initialize_activation(chunk_id, base_level=BLA, access_count=commits)"
+                "5. Initialize: store.initialize_activation(chunk_id, base_level=BLA, access_count=commits)",
             )
 
 

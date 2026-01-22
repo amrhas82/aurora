@@ -234,7 +234,9 @@ class TestRetryMechanisms:
 
                 # Should succeed after retries
                 result = executor.execute_direct_llm(
-                    query="test query", api_key="sk-ant-test123", memory_store=store
+                    query="test query",
+                    api_key="sk-ant-test123",
+                    memory_store=store,
                 )
 
                 assert result == "Success after retry"
@@ -257,7 +259,9 @@ class TestRetryMechanisms:
                 # Should raise APIError after all retries exhausted
                 with pytest.raises(APIError):
                     executor.execute_direct_llm(
-                        query="test query", api_key="sk-ant-test123", memory_store=store
+                        query="test query",
+                        api_key="sk-ant-test123",
+                        memory_store=store,
                     )
 
                 # Verify it tried 3 times (initial + 2 retries)
@@ -288,7 +292,9 @@ class TestRetryMechanisms:
                 # Execute (will fail after retries)
                 with pytest.raises(APIError):
                     executor.execute_direct_llm(
-                        query="test query", api_key="sk-ant-test123", memory_store=store
+                        query="test query",
+                        api_key="sk-ant-test123",
+                        memory_store=store,
                     )
 
                 # Verify exponential backoff: 0.1s base, 0.2s, 0.4s (only 2 retries = 2 sleeps)
@@ -419,7 +425,9 @@ class TestErrorRecoveryInstructions:
         """Test path errors include diagnostic commands."""
         error = FileNotFoundError("path/to/file.py not found")
         formatted = ErrorHandler.handle_path_error(
-            error, path="path/to/file.py", operation="indexing"
+            error,
+            path="path/to/file.py",
+            operation="indexing",
         )
 
         assert "[Path]" in formatted

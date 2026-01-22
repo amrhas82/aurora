@@ -21,7 +21,6 @@ Key metrics tracked:
 
 import gc
 import statistics
-import tempfile
 import time
 import tracemalloc
 from dataclasses import dataclass, field
@@ -164,7 +163,7 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
                     '    """Simple arithmetic function."""',
                     f"    return x + y + {module_idx * j}",
                     "",
-                ]
+                ],
             )
         elif j % 3 == 1:
             # Function with logic
@@ -178,7 +177,7 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
                     "            result.append(item)",
                     "    return result",
                     "",
-                ]
+                ],
             )
         else:
             # Function with docstring and multiple operations
@@ -208,7 +207,7 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
                     f"        result[key] = value * {module_idx + 1}",
                     "    return result",
                     "",
-                ]
+                ],
             )
 
     # Add a class
@@ -230,7 +229,7 @@ def generate_realistic_python_file(module_idx: int, functions_per_file: int = 10
             '        """Process multiple items efficiently."""',
             "        return [self.process(item) for item in items]",
             "",
-        ]
+        ],
     )
 
     return "\n".join(lines)
@@ -297,7 +296,9 @@ def run_indexed_with_timing(
     config = Config(db_path=str(db_path))
     manager = MemoryManager(config=config)
     stats = manager.index_path(
-        codebase_path, progress_callback=progress_callback, batch_size=batch_size
+        codebase_path,
+        progress_callback=progress_callback,
+        batch_size=batch_size,
     )
     overall_duration = time.perf_counter() - overall_start
 
@@ -500,7 +501,7 @@ class TestComponentIsolation:
             ms_per_chunk = (mean_time / len(texts)) * 1000
 
             print(
-                f"  batch_size={batch_size:3d}: {mean_time:.3f}s total, {chunks_per_sec:.0f} chunks/sec, {ms_per_chunk:.2f} ms/chunk"
+                f"  batch_size={batch_size:3d}: {mean_time:.3f}s total, {chunks_per_sec:.0f} chunks/sec, {ms_per_chunk:.2f} ms/chunk",
             )
 
     def test_component_db_writes(self, test_codebase: Path, tmp_path: Path) -> None:
@@ -508,7 +509,6 @@ class TestComponentIsolation:
         import numpy as np
 
         from aurora_context_code.registry import get_global_registry
-        from aurora_core.chunks import Chunk
         from aurora_core.store import SQLiteStore
 
         registry = get_global_registry()
@@ -537,7 +537,7 @@ class TestComponentIsolation:
         single_time = time.perf_counter() - start
 
         print(
-            f"Individual writes: {single_time:.3f}s ({len(chunks_to_store) / single_time:.0f} chunks/sec)"
+            f"Individual writes: {single_time:.3f}s ({len(chunks_to_store) / single_time:.0f} chunks/sec)",
         )
         print(f"  Per-chunk latency: {(single_time / len(chunks_to_store)) * 1000:.3f} ms")
 
@@ -560,14 +560,16 @@ class TestScalability:
 
         for num_files in file_counts:
             codebase = create_test_codebase(
-                tmp_path, num_files=num_files, name=f"scale_{num_files}"
+                tmp_path,
+                num_files=num_files,
+                name=f"scale_{num_files}",
             )
             result = run_indexed_with_timing(codebase, tmp_path / f"scale_{num_files}.db")
             results.append((num_files, result))
 
             print(
                 f"{num_files:>8} {result.total_seconds:>10.2f} "
-                f"{result.files_per_second:>10.1f} {result.chunks_per_second:>10.1f}"
+                f"{result.files_per_second:>10.1f} {result.chunks_per_second:>10.1f}",
             )
 
         # Check for degradation
@@ -589,14 +591,17 @@ class TestScalability:
 
         for funcs in func_counts:
             codebase = create_test_codebase(
-                tmp_path, num_files=20, functions_per_file=funcs, name=f"funcs_{funcs}"
+                tmp_path,
+                num_files=20,
+                functions_per_file=funcs,
+                name=f"funcs_{funcs}",
             )
             result = run_indexed_with_timing(codebase, tmp_path / f"funcs_{funcs}.db")
             results.append((funcs, result))
 
             print(
                 f"{funcs:>12} {result.total_seconds:>10.2f} "
-                f"{result.chunks_created:>10} {result.chunks_per_second:>10.1f}"
+                f"{result.chunks_created:>10} {result.chunks_per_second:>10.1f}",
             )
 
 
@@ -693,11 +698,11 @@ class TestRealWorldCodebase:
             print(
                 f"{pkg_dir.name:>20} {result.files_indexed:>8} "
                 f"{result.chunks_created:>8} {result.total_seconds:>10.2f} "
-                f"{result.files_per_second:>10.1f}"
+                f"{result.files_per_second:>10.1f}",
             )
 
         print(
-            f"\n{'TOTAL':>20} {total_files:>8} {total_chunks:>8} {total_time:>10.2f} {total_files / total_time:>10.1f}"
+            f"\n{'TOTAL':>20} {total_files:>8} {total_chunks:>8} {total_time:>10.2f} {total_files / total_time:>10.1f}",
         )
 
 
@@ -724,7 +729,7 @@ class TestMemoryProfile:
 
             print(
                 f"{num_files:>8} {result.chunks_created:>8} "
-                f"{result.memory_peak_mb:>10.1f} {mb_per_file:>10.2f}"
+                f"{result.memory_peak_mb:>10.1f} {mb_per_file:>10.2f}",
             )
 
     def test_memory_leak_detection(self, tmp_path: Path) -> None:

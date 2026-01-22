@@ -34,6 +34,7 @@ class ViewCommand:
 
         Args:
             target_path: Target directory path (default: current directory)
+
         """
         target = Path(target_path)
         openspec_dir = target / ".aurora/plans"
@@ -65,7 +66,8 @@ class ViewCommand:
             print("-" * 60)
             for change in changes_data["active"]:
                 progress_bar = self._create_progress_bar(
-                    change["progress"]["completed"], change["progress"]["total"]
+                    change["progress"]["completed"],
+                    change["progress"]["total"],
                 )
                 percentage = (
                     round((change["progress"]["completed"] / change["progress"]["total"]) * 100)
@@ -89,7 +91,9 @@ class ViewCommand:
 
             # Sort specs by requirement count (descending)
             specs_data_sorted = sorted(
-                specs_data, key=lambda s: s["requirement_count"], reverse=True
+                specs_data,
+                key=lambda s: s["requirement_count"],
+                reverse=True,
             )
 
             for spec in specs_data_sorted:
@@ -201,7 +205,9 @@ class ViewCommand:
         return {"total": total, "completed": completed}
 
     def _display_summary(
-        self, changes_data: dict[str, list[dict[str, Any]]], specs_data: list[dict[str, Any]]
+        self,
+        changes_data: dict[str, list[dict[str, Any]]],
+        specs_data: list[dict[str, Any]],
     ) -> None:
         """Display summary metrics."""
         _ = (
@@ -232,7 +238,7 @@ class ViewCommand:
         if total_tasks > 0:
             overall_progress = round((completed_tasks / total_tasks) * 100)
             print(
-                f"  ● Task Progress: {completed_tasks}/{total_tasks} ({overall_progress}% complete)"
+                f"  ● Task Progress: {completed_tasks}/{total_tasks} ({overall_progress}% complete)",
             )
 
     def _create_progress_bar(self, completed: int, total: int, width: int = 20) -> str:

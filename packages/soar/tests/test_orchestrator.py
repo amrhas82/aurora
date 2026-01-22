@@ -114,7 +114,7 @@ def test_orchestrator_uses_manifest_manager(mock_store, mock_config, mock_llm):
             goal="Execute test tasks",
             category=AgentCategory.ENG,
             skills=["testing"],
-        )
+        ),
     ]
 
     sample_manifest = AgentManifest(
@@ -207,22 +207,22 @@ class TestOrchestratorSimplified:
                 # Return minimal mock objects based on phase
                 if phase_name == "assess":
                     return {"complexity": "MEDIUM", "assessment": "test"}
-                elif phase_name == "retrieve":
+                if phase_name == "retrieve":
                     return {"code_chunks": [], "reasoning_chunks": []}
-                elif phase_name == "decompose":
+                if phase_name == "decompose":
                     return {"decomposition": {"subgoals": [{"goal": "test"}]}}
-                elif phase_name == "verify":
+                if phase_name == "verify":
                     # Return verify_lite format: (passed, agent_assignments, issues)
                     return {"final_verdict": "PASS", "agent_assignments": []}
-                elif phase_name == "collect":
+                if phase_name == "collect":
                     from aurora_soar.phases.collect import CollectResult
 
                     return CollectResult([], {}, [], [])
-                elif phase_name == "synthesize":
+                if phase_name == "synthesize":
                     from aurora_soar.phases.synthesize import SynthesisResult
 
                     return SynthesisResult("answer", 0.9, [], {}, {})
-                elif phase_name == "record":
+                if phase_name == "record":
                     from aurora_soar.phases.record import RecordResult
 
                     return RecordResult(False, None, False, 0.0, {})
@@ -337,9 +337,8 @@ class TestOrchestratorSimplified:
                     [],
                     ["missing agent"],
                 )  # passed=False, agent_assignments=[], issues=[...]
-            else:
-                # Second call passes
-                return (True, [], [])  # passed=True, agent_assignments=[], issues=[]
+            # Second call passes
+            return (True, [], [])  # passed=True, agent_assignments=[], issues=[]
 
         monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
         monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
@@ -466,7 +465,7 @@ class TestOrchestratorSimplified:
             orchestrator,
             "_phase3_decompose",
             lambda q, ctx, c, retry_feedback=None: {
-                "decomposition": {"subgoals": [{"goal": "test"}]}
+                "decomposition": {"subgoals": [{"goal": "test"}]},
             },
         )
         monkeypatch.setattr(orchestrator, "_get_available_agents", lambda: [])
@@ -484,7 +483,10 @@ class TestOrchestratorSimplified:
             orchestrator,
             "_phase6_synthesize",
             lambda *args: MagicMock(
-                answer="test", confidence=0.9, summary="test", to_dict=lambda: {}
+                answer="test",
+                confidence=0.9,
+                summary="test",
+                to_dict=lambda: {},
             ),
         )
 
@@ -496,7 +498,10 @@ class TestOrchestratorSimplified:
             with tempfile.NamedTemporaryFile(suffix=".log", delete=False) as tmp:
                 temp_log_path = tmp.name
             result = record.record_pattern_lightweight(
-                orchestrator.store, query, synthesis_result, temp_log_path
+                orchestrator.store,
+                query,
+                synthesis_result,
+                temp_log_path,
             )
             return result
 
@@ -586,7 +591,7 @@ class TestOrchestratorSimplified:
                 phase_calls.append(phase_name)
                 if phase_name == "assess":
                     return {"complexity": "SIMPLE"}
-                elif phase_name == "retrieve":
+                if phase_name == "retrieve":
                     return {"code_chunks": [], "reasoning_chunks": []}
                 return {}
 

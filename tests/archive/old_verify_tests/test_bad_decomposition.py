@@ -51,7 +51,10 @@ class TestIncompleteSubgoals:
         )
 
     def test_incomplete_subgoals_caught(
-        self, mock_reasoning_verify, mock_llm_client, incomplete_decomposition
+        self,
+        mock_reasoning_verify,
+        mock_llm_client,
+        incomplete_decomposition,
     ):
         """Test that incomplete subgoals are caught by verification."""
         # Verification should detect incompleteness and return low completeness score
@@ -226,7 +229,7 @@ class TestMissingDependencies:
                     "phase": 1,
                     "parallelizable": [0, 1, 2],  # All parallel - incorrect!
                     "sequential": [],
-                }
+                },
             ],
             expected_tools=["file-reader", "processor", "file-writer"],
         )
@@ -312,7 +315,7 @@ class TestCircularDependencies:
                     "phase": 1,
                     "parallelizable": [],
                     "sequential": [0, 1, 2],  # Invalid - circular dependency
-                }
+                },
             ],
             expected_tools=["tool-a", "tool-b", "tool-c"],
         )
@@ -381,7 +384,7 @@ class TestRetryLoopExhaustion:
                     "suggested_agent": "impossible-agent",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["impossible-tool"],
@@ -499,14 +502,17 @@ class TestMultipleBadQualityDimensions:
                     "suggested_agent": "nonexistent-agent",  # Poor routability
                     "is_critical": True,
                     "depends_on": [1],  # Depends on missing subgoal - poor consistency
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["unknown-tool"],
         )
 
     def test_multiple_quality_issues(
-        self, mock_reasoning_verify, mock_llm_client, multi_issue_decomposition
+        self,
+        mock_reasoning_verify,
+        mock_llm_client,
+        multi_issue_decomposition,
     ):
         """Test that multiple quality issues are all caught."""
         # All dimensions score low

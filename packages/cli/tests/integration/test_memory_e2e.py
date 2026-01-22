@@ -32,7 +32,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-'''
+''',
             )
 
             (project_dir / "utils.py").write_text(
@@ -56,7 +56,7 @@ class Calculator:
     def subtract(self, a, b):
         """Subtract b from a."""
         return a - b
-'''
+''',
             )
 
             (project_dir / "tests").mkdir()
@@ -66,7 +66,7 @@ class Calculator:
 def test_main():
     """Test main function."""
     assert True
-'''
+''',
             )
 
             yield project_dir
@@ -173,7 +173,7 @@ class Calculator:
         if b == 0:
             raise ValueError("Cannot divide by zero")
         return a / b
-'''
+''',
             )
 
             # Index the project
@@ -410,7 +410,7 @@ def logout_user(session_id):
     """Log out a user."""
     # Invalidate session
     return True
-'''
+''',
             )
 
             # Step 1: Index

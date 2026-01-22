@@ -50,6 +50,7 @@ class KnowledgeParser:
             2. Read file content
             3. Split by ## headers (markdown sections)
             4. Create a chunk for each section with shared metadata
+
         """
         if not file_path.exists():
             self.logger.warning(f"File not found: {file_path}")
@@ -87,6 +88,7 @@ class KnowledgeParser:
 
         Returns:
             Dictionary with metadata (keywords, date, source_file)
+
         """
         filename = file_path.stem  # Without extension
 
@@ -112,7 +114,10 @@ class KnowledgeParser:
         return metadata
 
     def _split_by_sections(
-        self, content: str, base_metadata: dict[str, Any], file_path: Path
+        self,
+        content: str,
+        base_metadata: dict[str, Any],
+        file_path: Path,
     ) -> list[KnowledgeChunk]:
         """Split content by markdown ## headers.
 
@@ -123,6 +128,7 @@ class KnowledgeParser:
 
         Returns:
             List of KnowledgeChunk objects, one per section
+
         """
         chunks = []
 
@@ -171,6 +177,7 @@ def parse_knowledge_file(file_path: Path) -> list[KnowledgeChunk]:
 
     Returns:
         List of KnowledgeChunk objects
+
     """
     parser = KnowledgeParser()
     return parser.parse_conversation_log(file_path)

@@ -21,7 +21,7 @@ class TestDecompositionResult:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["code_reader"],
@@ -42,7 +42,7 @@ class TestDecompositionResult:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
             "expected_tools": ["code_reader"],
@@ -72,14 +72,14 @@ class TestDecomposeQuery:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": [
                 {
                     "phase": 1,
                     "parallelizable": [0],
                     "sequential": [],
-                }
+                },
             ],
             "expected_tools": ["code_reader"],
         }
@@ -111,7 +111,10 @@ class TestDecomposeQuery:
 
     @patch("aurora_reasoning.decompose.get_loader")
     def test_medium_query_gets_examples(
-        self, mock_get_loader, mock_llm_client, valid_decomposition_response
+        self,
+        mock_get_loader,
+        mock_llm_client,
+        valid_decomposition_response,
     ):
         """Test MEDIUM query gets 2 examples."""
         mock_loader = MagicMock()
@@ -152,7 +155,8 @@ class TestDecomposeQuery:
 
         # Verify examples were loaded
         mock_loader.get_examples_by_complexity.assert_called_once_with(
-            "example_decompositions.json", Complexity.MEDIUM
+            "example_decompositions.json",
+            Complexity.MEDIUM,
         )
 
         # Verify examples in user prompt
@@ -268,7 +272,7 @@ class TestDecomposeQuery:
                 {
                     "description": "Test",
                     # Missing suggested_agent, is_critical, depends_on
-                }
+                },
             ],
             "execution_order": [],
             "expected_tools": [],
@@ -294,7 +298,7 @@ class TestDecomposeQuery:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": "not a list",  # Should be list
             "expected_tools": [],
@@ -320,13 +324,13 @@ class TestDecomposeQuery:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": [
                 {
                     "parallelizable": [0],
                     # Missing phase field
-                }
+                },
             ],
             "expected_tools": [],
         }

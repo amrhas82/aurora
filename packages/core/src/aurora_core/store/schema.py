@@ -118,6 +118,7 @@ def get_schema_version_insert(version: int = SCHEMA_VERSION) -> str:
 
     Returns:
         SQL INSERT statement
+
     """
     return f"INSERT OR REPLACE INTO schema_version (version) VALUES ({version});"
 
@@ -127,6 +128,7 @@ def get_init_statements() -> list[str]:
 
     Returns:
         List of SQL statements to initialize the database schema
+
     """
     return INIT_SCHEMA + [get_schema_version_insert()]
 

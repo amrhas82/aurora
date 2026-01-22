@@ -35,6 +35,7 @@ class MalformedLLMClient(LLMClient):
                 - "markdown_wrapped": Valid JSON wrapped in markdown
                 - "unicode_issues": JSON with problematic unicode
                 - "oversized": Extremely large output
+
         """
         self._malformed_type = malformed_type
 
@@ -330,7 +331,7 @@ class TestMalformedDecomposition:
                     "suggested_agent": None,  # Invalid: None instead of string
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
             "expected_tools": ["tool"],
@@ -359,7 +360,7 @@ class TestMalformedDecomposition:
                     "suggested_agent": "test-agent",
                     "is_critical": True,
                     "depends_on": [999],  # Invalid: out of range
-                }
+                },
             ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
             "expected_tools": ["tool"],
@@ -396,7 +397,7 @@ class TestMalformedDecomposition:
                     "suggested_agent": "test-agent",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             # Missing execution_order field
             "expected_tools": ["tool"],

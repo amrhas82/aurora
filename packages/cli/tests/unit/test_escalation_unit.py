@@ -159,7 +159,7 @@ class TestAssessQueryKeywordClassification:
         result = handler.assess_query(
             "Analyze the entire codebase, refactor all authentication modules, "
             "implement comprehensive security testing, update architecture diagrams, "
-            "migrate database schema, and coordinate deployment across multiple environments"
+            "migrate database schema, and coordinate deployment across multiple environments",
         )
 
         # With enough complexity keywords, should escalate to AURORA
@@ -260,7 +260,7 @@ class TestShouldUseAurora:
 
         # Use lower threshold to ensure complex query escalates
         result = handler.should_use_aurora(
-            "Refactor authentication, update endpoints, add tests, update docs"
+            "Refactor authentication, update endpoints, add tests, update docs",
         )
 
         # With threshold=0.5, this should escalate (MEDIUM is 0.5)

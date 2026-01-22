@@ -8,13 +8,13 @@ Tests validate:
 5. Keyword extraction quality and stop word filtering
 """
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
-from aurora_cli.planning.agents import AgentMatcher, AgentRecommender, GapInfo, MatchResult
+from aurora_cli.planning.agents import AgentMatcher, AgentRecommender
 from aurora_cli.planning.decompose import PlanDecomposer
-from aurora_cli.planning.models import AgentGap, Complexity, Subgoal
+from aurora_cli.planning.models import Complexity, Subgoal
 
 
 # =============================================================================
@@ -33,6 +33,7 @@ class TestAgentMatchingQuality:
 
         Returns:
             Mock manifest object
+
         """
         mock_manifest = Mock()
         mock_agents = []
@@ -47,7 +48,7 @@ class TestAgentMatchingQuality:
 
         mock_manifest.agents = mock_agents
         mock_manifest.get_agent = Mock(
-            side_effect=lambda aid: next((a for a in mock_agents if a.id == aid), None)
+            side_effect=lambda aid: next((a for a in mock_agents if a.id == aid), None),
         )
         return mock_manifest
 
@@ -82,7 +83,11 @@ class TestAgentMatchingQuality:
     )
     @patch("aurora_cli.planning.agents.ManifestManager")
     def test_testing_queries_match_qa_agent(
-        self, mock_manager_class, title, description, expected_agent
+        self,
+        mock_manager_class,
+        title,
+        description,
+        expected_agent,
     ):
         """Test that testing-related queries match quality-assurance."""
         manifest = self._create_mock_manifest_with_agents(
@@ -99,7 +104,7 @@ class TestAgentMatchingQuality:
                     "when_to_use": "coding, implementation, features",
                     "capabilities": ["python", "javascript", "api"],
                 },
-            ]
+            ],
         )
 
         mock_manager = Mock()
@@ -150,7 +155,11 @@ class TestAgentMatchingQuality:
     )
     @patch("aurora_cli.planning.agents.ManifestManager")
     def test_development_queries_match_dev_agent(
-        self, mock_manager_class, title, description, expected_agent
+        self,
+        mock_manager_class,
+        title,
+        description,
+        expected_agent,
     ):
         """Test that development queries match code-developer."""
         manifest = self._create_mock_manifest_with_agents(
@@ -175,7 +184,7 @@ class TestAgentMatchingQuality:
                     "when_to_use": "testing, qa",
                     "capabilities": ["testing"],
                 },
-            ]
+            ],
         )
 
         mock_manager = Mock()
@@ -226,7 +235,11 @@ class TestAgentMatchingQuality:
     )
     @patch("aurora_cli.planning.agents.ManifestManager")
     def test_architecture_queries_match_architect_agent(
-        self, mock_manager_class, title, description, expected_agent
+        self,
+        mock_manager_class,
+        title,
+        description,
+        expected_agent,
     ):
         """Test that architecture queries match system-architect."""
         manifest = self._create_mock_manifest_with_agents(
@@ -243,7 +256,7 @@ class TestAgentMatchingQuality:
                     "when_to_use": "coding",
                     "capabilities": ["python"],
                 },
-            ]
+            ],
         )
 
         mock_manager = Mock()
@@ -294,7 +307,11 @@ class TestAgentMatchingQuality:
     )
     @patch("aurora_cli.planning.agents.ManifestManager")
     def test_product_queries_match_product_agents(
-        self, mock_manager_class, title, description, expected_agent
+        self,
+        mock_manager_class,
+        title,
+        description,
+        expected_agent,
     ):
         """Test that product queries match appropriate product agents."""
         manifest = self._create_mock_manifest_with_agents(
@@ -329,7 +346,7 @@ class TestAgentMatchingQuality:
                     "when_to_use": "coding",
                     "capabilities": ["python"],
                 },
-            ]
+            ],
         )
 
         mock_manager = Mock()
@@ -374,7 +391,11 @@ class TestAgentMatchingQuality:
     )
     @patch("aurora_cli.planning.agents.ManifestManager")
     def test_ux_queries_match_ux_agent(
-        self, mock_manager_class, title, description, expected_agent
+        self,
+        mock_manager_class,
+        title,
+        description,
+        expected_agent,
     ):
         """Test that UX queries match ui-designer."""
         manifest = self._create_mock_manifest_with_agents(
@@ -391,7 +412,7 @@ class TestAgentMatchingQuality:
                     "when_to_use": "coding",
                     "capabilities": ["python"],
                 },
-            ]
+            ],
         )
 
         mock_manager = Mock()
@@ -624,7 +645,8 @@ class TestDecompositionAccuracy:
         """Test COMPLEX complexity creates 4 subgoals with documentation."""
         decomposer = PlanDecomposer()
         subgoals = decomposer._fallback_to_heuristics(
-            "Implement payment system", Complexity.COMPLEX
+            "Implement payment system",
+            Complexity.COMPLEX,
         )
 
         assert len(subgoals) == 4

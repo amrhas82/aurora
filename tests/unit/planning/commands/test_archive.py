@@ -65,7 +65,11 @@ class TestArchiveCommand:
         assert not change_dir.exists()
 
     def test_warn_about_incomplete_tasks(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should warn about incomplete tasks."""
         change_name = "incomplete-feature"
@@ -84,7 +88,11 @@ class TestArchiveCommand:
         assert "2 incomplete task(s) found" in captured.out
 
     def test_update_specs_with_added_requirements(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should update specs when archiving (delta-based ADDED) and include change name in skeleton."""
         change_name = "spec-feature"
@@ -119,7 +127,11 @@ Then expected result happens"""
         assert "#### Scenario: Basic test" in updated_content
 
     def test_allow_removed_requirements_for_new_spec(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should allow REMOVED requirements when creating new spec file (issue #403)."""
         change_name = "new-spec-with-removed"
@@ -169,7 +181,11 @@ The system SHALL support logo and backgroundColor fields for gift cards.
         assert any(change_name in a.name for a in archives)
 
     def test_error_on_modified_for_new_spec(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should still error on MODIFIED when creating new spec file."""
         change_name = "new-spec-with-modified"
@@ -210,7 +226,11 @@ Modified content."""
         assert change_dir.exists()
 
     def test_error_on_renamed_for_new_spec(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should still error on RENAMED when creating new spec file."""
         change_name = "new-spec-with-renamed"
@@ -255,7 +275,10 @@ New feature description.
             archive_command.execute("non-existent-change", target_path=str(temp_dir), yes=True)
 
     def test_error_if_archive_already_exists(
-        self, archive_command, setup_openspec_structure, temp_dir
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
     ):
         """Should throw error if archive already exists."""
         change_name = "duplicate-feature"
@@ -272,7 +295,11 @@ New feature description.
             archive_command.execute(change_name, target_path=str(temp_dir), yes=True)
 
     def test_handle_changes_without_tasks(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should handle changes without tasks.md."""
         change_name = "no-tasks-feature"
@@ -292,7 +319,11 @@ New feature description.
         assert len(archives) == 1
 
     def test_handle_changes_without_specs(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should handle changes without specs."""
         change_name = "no-specs-feature"
@@ -483,7 +514,11 @@ content D"""
         assert "### Requirement: B" not in updated
 
     def test_error_on_missing_requirements(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should abort with error when MODIFIED/REMOVED reference non-existent requirements."""
         change_name = "validate-missing"
@@ -522,7 +557,11 @@ new text
         assert change_dir.exists()
 
     def test_modified_must_reference_new_header_after_rename(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should require MODIFIED to reference the NEW header when a rename exists."""
         change_name = "rename-modify-new-header"
@@ -603,7 +642,7 @@ Epsilon purpose.
 ## Requirements
 
 ### Requirement: E1
-e1"""
+e1""",
         )
 
         zeta_main = temp_dir / ".aurora/plans" / "specs" / "zeta" / "spec.md"
@@ -617,7 +656,7 @@ Zeta purpose.
 ## Requirements
 
 ### Requirement: Z1
-z1"""
+z1""",
         )
 
         # Delta: epsilon is valid modification; zeta tries to remove non-existent
@@ -626,14 +665,14 @@ z1"""
 
 ## MODIFIED Requirements
 ### Requirement: E1
-E1 updated"""
+E1 updated""",
         )
 
         (spec2_dir / "spec.md").write_text(
             """# Zeta - Changes
 
 ## REMOVED Requirements
-### Requirement: Missing"""
+### Requirement: Missing""",
         )
 
         archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
@@ -647,7 +686,11 @@ E1 updated"""
         assert change_dir.exists()
 
     def test_aggregated_totals_across_multiple_specs(
-        self, archive_command, setup_openspec_structure, temp_dir, capsys
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
+        capsys,
     ):
         """Should display aggregated totals across multiple specs."""
         change_name = "multi-spec-totals"
@@ -661,21 +704,21 @@ E1 updated"""
         omega_main = temp_dir / ".aurora/plans" / "specs" / "omega" / "spec.md"
         omega_main.parent.mkdir(parents=True)
         omega_main.write_text(
-            "# omega Specification\n\n## Purpose\nOmega purpose.\n\n## Requirements\n\n### Requirement: O1\no1"
+            "# omega Specification\n\n## Purpose\nOmega purpose.\n\n## Requirements\n\n### Requirement: O1\no1",
         )
 
         psi_main = temp_dir / ".aurora/plans" / "specs" / "psi" / "spec.md"
         psi_main.parent.mkdir(parents=True)
         psi_main.write_text(
-            "# psi Specification\n\n## Purpose\nPsi purpose.\n\n## Requirements\n\n### Requirement: P1\np1"
+            "# psi Specification\n\n## Purpose\nPsi purpose.\n\n## Requirements\n\n### Requirement: P1\np1",
         )
 
         # Deltas: omega add one, psi rename and modify
         (spec1_dir / "spec.md").write_text(
-            "# Omega - Changes\n\n## ADDED Requirements\n\n### Requirement: O2\nnew"
+            "# Omega - Changes\n\n## ADDED Requirements\n\n### Requirement: O2\nnew",
         )
         (spec2_dir / "spec.md").write_text(
-            "# Psi - Changes\n\n## RENAMED Requirements\n- FROM: `### Requirement: P1`\n- TO: `### Requirement: P2`\n\n## MODIFIED Requirements\n### Requirement: P2\nupdated"
+            "# Psi - Changes\n\n## RENAMED Requirements\n- FROM: `### Requirement: P1`\n- TO: `### Requirement: P2`\n\n## MODIFIED Requirements\n### Requirement: P2\nupdated",
         )
 
         archive_command.execute(change_name, target_path=str(temp_dir), yes=True, no_validate=True)
@@ -685,7 +728,10 @@ E1 updated"""
         assert "Totals: + 1, ~ 1, - 0, → 1" in captured.out
 
     def test_error_when_openspec_directory_missing(
-        self, archive_command, setup_openspec_structure, temp_dir
+        self,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
     ):
         """Should throw error when .aurora/plans directory does not exist."""
         # Remove .aurora/plans directory
@@ -699,7 +745,11 @@ E1 updated"""
 
     @patch("builtins.input", side_effect=["test-feature-a"])
     def test_interactive_change_selection(
-        self, mock_input, archive_command, setup_openspec_structure, temp_dir
+        self,
+        mock_input,
+        archive_command,
+        setup_openspec_structure,
+        temp_dir,
     ):
         """Should use interactive prompt for change selection when name not provided."""
         # Create test changes

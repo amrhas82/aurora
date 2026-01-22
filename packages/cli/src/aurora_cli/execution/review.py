@@ -55,6 +55,7 @@ class DecompositionReview:
             source: Decomposition source (soar, heuristic)
             files_count: Number of resolved files
             files_confidence: Average confidence score for files
+
         """
         self.subgoals = subgoals
         self.agent_gaps = agent_gaps or []
@@ -73,7 +74,6 @@ class DecompositionReview:
         """
         # Decomposition details already shown by DecompositionSummary.display()
         # This method intentionally does nothing to avoid duplicate output
-        pass
 
     def prompt(self, planning_only: bool = False) -> ReviewDecision:
         """Prompt user for decision.
@@ -84,6 +84,7 @@ class DecompositionReview:
 
         Returns:
             ReviewDecision enum value (PROCEED, FALLBACK, or ABORT)
+
         """
         console.print()
 
@@ -98,24 +99,25 @@ class DecompositionReview:
             if choice.upper() == "N":
                 return ReviewDecision.ABORT
             return ReviewDecision.PROCEED
-        else:
-            # Full prompt for execution contexts (aur spawn)
-            console.print("[bold]Options:[/bold]")
-            console.print("  [P]roceed   - Execute (try ad-hoc agents -> fallback to LLM)")
-            console.print("  [F]allback  - Execute (LLM directly for gaps, faster)")
-            console.print("  [A]bort     - Cancel and restart")
-            console.print()
+        # Full prompt for execution contexts (aur spawn)
+        console.print("[bold]Options:[/bold]")
+        console.print("  [P]roceed   - Execute (try ad-hoc agents -> fallback to LLM)")
+        console.print("  [F]allback  - Execute (LLM directly for gaps, faster)")
+        console.print("  [A]bort     - Cancel and restart")
+        console.print()
 
-            choice = Prompt.ask(
-                "Choice", choices=["P", "p", "F", "f", "A", "a"], default="P", show_choices=False
-            )
+        choice = Prompt.ask(
+            "Choice",
+            choices=["P", "p", "F", "f", "A", "a"],
+            default="P",
+            show_choices=False,
+        )
 
-            if choice.upper() == "P":
-                return ReviewDecision.PROCEED
-            elif choice.upper() == "F":
-                return ReviewDecision.FALLBACK
-            else:
-                return ReviewDecision.ABORT
+        if choice.upper() == "P":
+            return ReviewDecision.PROCEED
+        if choice.upper() == "F":
+            return ReviewDecision.FALLBACK
+        return ReviewDecision.ABORT
 
 
 class ExecutionPreview:
@@ -127,6 +129,7 @@ class ExecutionPreview:
         Args:
             tasks: List of task dictionaries with agent assignments
             agent_gaps: List of tasks with missing agents
+
         """
         self.tasks = tasks
         self.agent_gaps = agent_gaps or []
@@ -166,7 +169,7 @@ class ExecutionPreview:
         if gap_count > 0:
             # Collect unique ideal agents
             unique_agents = sorted(
-                set(gap.required_agent for gap in self.agent_gaps if gap.required_agent)
+                set(gap.required_agent for gap in self.agent_gaps if gap.required_agent),
             )
 
             if unique_agents:
@@ -174,7 +177,7 @@ class ExecutionPreview:
                 summary_lines.append(f"[yellow]⚠[/yellow] Agent gaps: {agents_display}")
             else:
                 summary_lines.append(
-                    f"[yellow]⚠[/yellow] {gap_count} gap(s) (will spawn ad-hoc or fallback)"
+                    f"[yellow]⚠[/yellow] {gap_count} gap(s) (will spawn ad-hoc or fallback)",
                 )
 
         summary_text = "\n".join(summary_lines)
@@ -186,6 +189,7 @@ class ExecutionPreview:
 
         Returns:
             ReviewDecision enum value (PROCEED, FALLBACK, or ABORT)
+
         """
         console.print()
         console.print("[bold]Options:[/bold]")
@@ -195,12 +199,14 @@ class ExecutionPreview:
         console.print()
 
         choice = Prompt.ask(
-            "Choice", choices=["P", "p", "F", "f", "A", "a"], default="P", show_choices=False
+            "Choice",
+            choices=["P", "p", "F", "f", "A", "a"],
+            default="P",
+            show_choices=False,
         )
 
         if choice.upper() == "P":
             return ReviewDecision.PROCEED
-        elif choice.upper() == "F":
+        if choice.upper() == "F":
             return ReviewDecision.FALLBACK
-        else:
-            return ReviewDecision.ABORT
+        return ReviewDecision.ABORT

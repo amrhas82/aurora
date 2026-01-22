@@ -18,7 +18,11 @@ Classes:
 """
 
 import hashlib
+import json
 import logging
+import os
+import pickle
+import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -28,8 +32,17 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-
 logger = logging.getLogger(__name__)
+
+
+# Module-level cache for HybridRetriever instances
+_retriever_cache: dict[tuple[str, str], Any] = {}
+_retriever_cache_lock = threading.Lock()
+_retriever_cache_stats = {"hits": 0, "misses": 0}
+
+# Cache configuration from environment variables
+_RETRIEVER_CACHE_SIZE = int(os.environ.get("AURORA_RETRIEVER_CACHE_SIZE", "10"))
+_RETRIEVER_CACHE_TTL = int(os.environ.get("AURORA_RETRIEVER_CACHE_TTL", "1800"))  # 30 minutes
 
 
 @dataclass
@@ -57,6 +70,7 @@ class HybridConfig:
     Example (dual-hybrid, legacy):
         >>> config = HybridConfig(bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4)
         >>> retriever = HybridRetriever(store, engine, provider, config)
+
     """
 
     bm25_weight: float = 0.3
@@ -88,7 +102,7 @@ class HybridConfig:
         if abs(total_weight - 1.0) > 1e-6:
             raise ValueError(
                 f"Weights must sum to 1.0, got {total_weight} "
-                f"(bm25={self.bm25_weight}, activation={self.activation_weight}, semantic={self.semantic_weight})"
+                f"(bm25={self.bm25_weight}, activation={self.activation_weight}, semantic={self.semantic_weight})",
             )
 
         if self.activation_top_k < 1:
@@ -99,7 +113,7 @@ class HybridConfig:
             raise ValueError(f"query_cache_size must be >= 1, got {self.query_cache_size}")
         if self.query_cache_ttl_seconds < 0:
             raise ValueError(
-                f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}"
+                f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}",
             )
 
 
@@ -128,6 +142,7 @@ class QueryEmbeddingCache:
         capacity: Maximum number of cached embeddings
         ttl_seconds: Time-to-live for cached entries
         stats: Cache statistics (hits, misses, evictions)
+
     """
 
     def __init__(self, capacity: int = 100, ttl_seconds: int = 1800):
@@ -136,6 +151,7 @@ class QueryEmbeddingCache:
         Args:
             capacity: Maximum cached embeddings (default 100)
             ttl_seconds: TTL in seconds (default 1800 = 30 min)
+
         """
         self.capacity = capacity
         self.ttl_seconds = ttl_seconds
@@ -150,6 +166,7 @@ class QueryEmbeddingCache:
 
         Returns:
             Normalized query (lowercase, stripped, single spaces)
+
         """
         return " ".join(query.lower().split())
 
@@ -161,6 +178,7 @@ class QueryEmbeddingCache:
 
         Returns:
             Hash-based cache key
+
         """
         normalized = self._normalize_query(query)
         return hashlib.md5(normalized.encode(), usedforsecurity=False).hexdigest()
@@ -173,6 +191,7 @@ class QueryEmbeddingCache:
 
         Returns:
             Cached embedding if found and not expired, None otherwise
+
         """
         key = self._make_key(query)
 
@@ -199,6 +218,7 @@ class QueryEmbeddingCache:
         Args:
             query: Query string
             embedding: Query embedding to cache
+
         """
         key = self._make_key(query)
 
@@ -220,6 +240,213 @@ class QueryEmbeddingCache:
     def size(self) -> int:
         """Get current cache size."""
         return len(self._cache)
+
+
+# Module-level shared query embedding cache
+_shared_query_cache: QueryEmbeddingCache | None = None
+_shared_query_cache_lock = threading.Lock()
+
+
+def get_shared_query_cache(capacity: int = 100, ttl_seconds: int = 1800) -> QueryEmbeddingCache:
+    """Get or create shared QueryEmbeddingCache instance.
+
+    Returns a singleton QueryEmbeddingCache that is shared across all
+    HybridRetriever instances. This allows query embeddings to be reused
+    even when different retrievers are created (e.g., in SOAR phases).
+
+    Note: The first call to this function sets the capacity and TTL.
+    Subsequent calls with different parameters will return the existing cache
+    with its original settings (capacity/TTL cannot be changed after creation).
+
+    Args:
+        capacity: Maximum cached embeddings (default 100)
+        ttl_seconds: TTL in seconds (default 1800 = 30 min)
+
+    Returns:
+        Shared QueryEmbeddingCache singleton
+
+    """
+    global _shared_query_cache
+
+    with _shared_query_cache_lock:
+        if _shared_query_cache is None:
+            logger.debug(
+                f"Creating shared QueryEmbeddingCache " f"(capacity={capacity}, ttl={ttl_seconds}s)"
+            )
+            _shared_query_cache = QueryEmbeddingCache(capacity=capacity, ttl_seconds=ttl_seconds)
+        elif (
+            _shared_query_cache.capacity != capacity
+            or _shared_query_cache.ttl_seconds != ttl_seconds
+        ):
+            # Warn if requesting different settings than existing cache
+            logger.debug(
+                f"Shared QueryEmbeddingCache already exists "
+                f"(capacity={_shared_query_cache.capacity}, "
+                f"ttl={_shared_query_cache.ttl_seconds}s), "
+                f"ignoring requested capacity={capacity}, ttl={ttl_seconds}s"
+            )
+        return _shared_query_cache
+
+
+def clear_shared_query_cache() -> None:
+    """Clear the shared QueryEmbeddingCache singleton.
+
+    This is primarily for testing purposes, to reset the cache between tests.
+    """
+    global _shared_query_cache
+
+    with _shared_query_cache_lock:
+        _shared_query_cache = None
+        logger.debug("Cleared shared QueryEmbeddingCache")
+
+
+def _compute_config_hash(config: "HybridConfig") -> str:
+    """Compute MD5 hash of config for cache key.
+
+    Args:
+        config: HybridConfig instance
+
+    Returns:
+        MD5 hash of config as hex string
+
+    """
+    # Convert config to dict and sort keys for deterministic hashing
+    config_dict = {
+        "bm25_weight": config.bm25_weight,
+        "activation_weight": config.activation_weight,
+        "semantic_weight": config.semantic_weight,
+        "activation_top_k": config.activation_top_k,
+        "stage1_top_k": config.stage1_top_k,
+        "fallback_to_activation": config.fallback_to_activation,
+        "use_staged_retrieval": config.use_staged_retrieval,
+        "enable_query_cache": config.enable_query_cache,
+        "query_cache_size": config.query_cache_size,
+        "query_cache_ttl_seconds": config.query_cache_ttl_seconds,
+        "enable_bm25_persistence": config.enable_bm25_persistence,
+    }
+    config_json = json.dumps(config_dict, sort_keys=True)
+    return hashlib.md5(config_json.encode(), usedforsecurity=False).hexdigest()
+
+
+def get_cached_retriever(
+    store: Any,
+    activation_engine: Any,
+    embedding_provider: Any,
+    config: "HybridConfig | None" = None,
+    aurora_config: Any | None = None,
+) -> "HybridRetriever":
+    """Get or create cached HybridRetriever instance.
+
+    Returns cached retriever if one exists for the given db_path and config,
+    otherwise creates a new one and caches it. Thread-safe with LRU eviction.
+
+    Args:
+        store: Storage backend (must have db_path attribute)
+        activation_engine: ACT-R activation engine
+        embedding_provider: Embedding provider
+        config: Hybrid configuration (optional)
+        aurora_config: Global AURORA Config object (optional)
+
+    Returns:
+        Cached or new HybridRetriever instance
+
+    """
+    # Get db_path from store
+    db_path = getattr(store, "db_path", ":memory:")
+
+    # Use default config if none provided
+    if config is None:
+        config = HybridConfig()
+
+    # Compute config hash for cache key
+    config_hash = _compute_config_hash(config)
+    cache_key = (db_path, config_hash)
+
+    with _retriever_cache_lock:
+        # Check cache
+        if cache_key in _retriever_cache:
+            entry = _retriever_cache[cache_key]
+            retriever, timestamp = entry
+
+            # Check TTL
+            if time.time() - timestamp <= _RETRIEVER_CACHE_TTL:
+                _retriever_cache_stats["hits"] += 1
+                logger.debug(
+                    f"Reusing cached HybridRetriever for db_path={db_path} "
+                    f"(hit_rate={_get_hit_rate():.1%})",
+                )
+                return retriever
+
+            # TTL expired, remove from cache
+            logger.debug(
+                f"Cached HybridRetriever expired for db_path={db_path} (TTL={_RETRIEVER_CACHE_TTL}s)"
+            )
+            del _retriever_cache[cache_key]
+
+        # Cache miss - create new retriever
+        _retriever_cache_stats["misses"] += 1
+        logger.debug(
+            f"Creating new HybridRetriever for db_path={db_path} "
+            f"(hit_rate={_get_hit_rate():.1%})",
+        )
+
+        # Apply LRU eviction if at capacity
+        if len(_retriever_cache) >= _RETRIEVER_CACHE_SIZE:
+            # Evict oldest entry (first item in dict)
+            oldest_key = next(iter(_retriever_cache))
+            del _retriever_cache[oldest_key]
+            logger.debug(
+                f"Evicted oldest HybridRetriever from cache (size={_RETRIEVER_CACHE_SIZE})"
+            )
+
+        # Create new retriever
+        retriever = HybridRetriever(
+            store=store,
+            activation_engine=activation_engine,
+            embedding_provider=embedding_provider,
+            config=config,
+            aurora_config=aurora_config,
+        )
+
+        # Cache with timestamp
+        _retriever_cache[cache_key] = (retriever, time.time())
+
+        return retriever
+
+
+def _get_hit_rate() -> float:
+    """Calculate cache hit rate."""
+    total = _retriever_cache_stats["hits"] + _retriever_cache_stats["misses"]
+    return _retriever_cache_stats["hits"] / total if total > 0 else 0.0
+
+
+def get_cache_stats() -> dict[str, Any]:
+    """Get HybridRetriever cache statistics.
+
+    Returns:
+        Dict with keys:
+        - total_hits: Number of cache hits
+        - total_misses: Number of cache misses
+        - hit_rate: Cache hit rate (0.0-1.0)
+        - cache_size: Current number of cached retrievers
+
+    """
+    with _retriever_cache_lock:
+        return {
+            "total_hits": _retriever_cache_stats["hits"],
+            "total_misses": _retriever_cache_stats["misses"],
+            "hit_rate": _get_hit_rate(),
+            "cache_size": len(_retriever_cache),
+        }
+
+
+def clear_retriever_cache() -> None:
+    """Clear all cached HybridRetriever instances and reset statistics."""
+    with _retriever_cache_lock:
+        _retriever_cache.clear()
+        _retriever_cache_stats["hits"] = 0
+        _retriever_cache_stats["misses"] = 0
+        logger.debug("Cleared HybridRetriever cache")
 
 
 class HybridRetriever:
@@ -256,6 +483,7 @@ class HybridRetriever:
         >>>
         >>> results = retriever.retrieve("SoarOrchestrator", top_k=5)
         >>> # Results will favor exact keyword matches with tri-hybrid scoring
+
     """
 
     def __init__(
@@ -278,6 +506,7 @@ class HybridRetriever:
         Note:
             If both config and aurora_config are provided, config takes precedence.
             If neither is provided, uses default HybridConfig values (tri-hybrid: 30/40/30).
+
         """
         self.store = store
         self.activation_engine = activation_engine
@@ -299,15 +528,15 @@ class HybridRetriever:
         if self.config.enable_bm25_persistence and self.config.bm25_weight > 0:
             self._try_load_bm25_index()
 
-        # Query embedding cache
+        # Query embedding cache (shared across all retrievers - Task 4.0)
         if self.config.enable_query_cache:
-            self._query_cache = QueryEmbeddingCache(
+            self._query_cache = get_shared_query_cache(
                 capacity=self.config.query_cache_size,
                 ttl_seconds=self.config.query_cache_ttl_seconds,
             )
             logger.debug(
-                f"Query cache enabled: size={self.config.query_cache_size}, "
-                f"ttl={self.config.query_cache_ttl_seconds}s"
+                f"Using shared query cache: size={self.config.query_cache_size}, "
+                f"ttl={self.config.query_cache_ttl_seconds}s",
             )
         else:
             self._query_cache = None
@@ -347,6 +576,7 @@ class HybridRetriever:
             ...     print(f"  BM25: {result['bm25_score']:.3f}")
             ...     print(f"  Semantic: {result['semantic_score']:.3f}")
             ...     print(f"  Activation: {result['activation_score']:.3f}")
+
         """
         # Validate inputs
         if not query or not query.strip():
@@ -417,7 +647,9 @@ class HybridRetriever:
         if use_two_phase and stage1_candidates:
             candidate_ids = [chunk.id for chunk in stage1_candidates]
             embeddings_map = self.store.fetch_embeddings_for_chunks(candidate_ids)
-            logger.debug(f"Fetched embeddings for {len(embeddings_map)}/{len(candidate_ids)} chunks")
+            logger.debug(
+                f"Fetched embeddings for {len(embeddings_map)}/{len(candidate_ids)} chunks"
+            )
 
             # Attach embeddings to chunks
             for chunk in stage1_candidates:
@@ -464,7 +696,7 @@ class HybridRetriever:
                     "raw_activation": activation_score,
                     "raw_semantic": semantic_score,
                     "raw_bm25": bm25_score,
-                }
+                },
             )
 
         # If no valid results, return empty
@@ -482,7 +714,7 @@ class HybridRetriever:
 
         # Normalize scores independently to [0, 1] range
         activation_scores_normalized = self._normalize_scores(
-            [r["raw_activation"] for r in results]
+            [r["raw_activation"] for r in results],
         )
         semantic_scores_normalized = self._normalize_scores([r["raw_semantic"] for r in results])
         bm25_scores_normalized = self._normalize_scores([r["raw_bm25"] for r in results])
@@ -515,7 +747,8 @@ class HybridRetriever:
 
             # Extract content and metadata from chunk (using cached access stats)
             content, metadata = self._extract_chunk_content_metadata(
-                chunk, access_stats_cache=access_stats_cache
+                chunk,
+                access_stats_cache=access_stats_cache,
             )
 
             final_results.append(
@@ -527,7 +760,7 @@ class HybridRetriever:
                     "semantic_score": semantic_norm,
                     "hybrid_score": hybrid_score,
                     "metadata": metadata,
-                }
+                },
             )
 
         # Sort by hybrid score (descending)
@@ -549,6 +782,7 @@ class HybridRetriever:
 
         Returns:
             Top stage1_top_k candidates by BM25 score
+
         """
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
 
@@ -590,6 +824,7 @@ class HybridRetriever:
 
         Returns:
             Content string (signature + docstring + name for CodeChunk)
+
         """
         # For CodeChunk: combine signature, docstring, and name
         if hasattr(chunk, "signature"):
@@ -601,13 +836,14 @@ class HybridRetriever:
             if getattr(chunk, "docstring", None):
                 parts.append(chunk.docstring)
             return " ".join(parts) if parts else ""
-        else:
-            # For other chunk types, use to_json() content
-            chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
-            return str(chunk_json.get("content", ""))
+        # For other chunk types, use to_json() content
+        chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
+        return str(chunk_json.get("content", ""))
 
     def _extract_chunk_content_metadata(
-        self, chunk: Any, access_stats_cache: dict[str, dict] | None = None
+        self,
+        chunk: Any,
+        access_stats_cache: dict[str, dict] | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Extract content and metadata from chunk.
 
@@ -617,6 +853,7 @@ class HybridRetriever:
 
         Returns:
             Tuple of (content, metadata)
+
         """
         # For CodeChunk: content is signature + docstring
         if hasattr(chunk, "signature") and hasattr(chunk, "docstring"):
@@ -695,6 +932,7 @@ class HybridRetriever:
 
         Returns:
             List of results with activation scores only (tri-hybrid format)
+
         """
         results = []
         for chunk in chunks[:top_k]:
@@ -709,7 +947,7 @@ class HybridRetriever:
                     "semantic_score": 0.0,
                     "hybrid_score": activation_score,  # Pure activation
                     "metadata": metadata,
-                }
+                },
             )
         return results
 
@@ -725,6 +963,7 @@ class HybridRetriever:
         Note:
             When all scores are equal, returns original scores unchanged
             to preserve meaningful zero values rather than inflating to 1.0.
+
         """
         if not scores:
             return []
@@ -750,6 +989,7 @@ class HybridRetriever:
 
         Raises:
             ValueError: If config values are invalid
+
         """
         # Load from context.code.hybrid_weights section
         weights = aurora_config.get("context.code.hybrid_weights", {})
@@ -786,6 +1026,7 @@ class HybridRetriever:
             - misses: Number of cache misses
             - hit_rate: Cache hit rate (0.0-1.0)
             - evictions: Number of LRU evictions
+
         """
         if self._query_cache is None:
             return {"enabled": False}
@@ -811,6 +1052,7 @@ class HybridRetriever:
 
         Returns:
             Path to BM25 index file, or None if not configured
+
         """
         if self.config.bm25_index_path:
             return Path(self.config.bm25_index_path).expanduser()
@@ -827,10 +1069,12 @@ class HybridRetriever:
 
         Returns:
             True if index was loaded successfully, False otherwise
+
         """
         index_path = self._get_bm25_index_path()
         if index_path is None or not index_path.exists():
-            logger.debug(f"No persistent BM25 index found at {index_path}")
+            # Changed from DEBUG to INFO for better visibility (Task 3.6)
+            logger.info(f"No persistent BM25 index found at {index_path}")
             return False
 
         try:
@@ -839,13 +1083,36 @@ class HybridRetriever:
             self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
             self.bm25_scorer.load_index(index_path)
             self._bm25_index_loaded = True
+
+            # Enhanced logging with corpus size and file size (Task 3.6)
+            file_size_mb = index_path.stat().st_size / (1024 * 1024)
+            corpus_size = self.bm25_scorer.corpus_size
+
+            # Validate loaded index has documents (Task 3.7)
+            if corpus_size == 0:
+                logger.warning(
+                    f"✗ Loaded BM25 index from {index_path} but corpus_size is 0 (empty index)"
+                )
+                self.bm25_scorer = None
+                self._bm25_index_loaded = False
+                return False
+
             logger.info(
-                f"Loaded BM25 index from {index_path} "
-                f"({self.bm25_scorer.corpus_size} documents)"
+                f"✓ Loaded BM25 index from {index_path} "
+                f"({corpus_size} documents, {file_size_mb:.2f} MB)"
             )
             return True
+        except (pickle.UnpicklingError, ModuleNotFoundError, EOFError) as e:
+            # Improved error handling for pickle format mismatches (Task 3.8)
+            error_type = type(e).__name__
+            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
+            self.bm25_scorer = None
+            self._bm25_index_loaded = False
+            return False
         except Exception as e:
-            logger.warning(f"Failed to load BM25 index from {index_path}: {e}")
+            # Catch-all for other errors
+            error_type = type(e).__name__
+            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
             self.bm25_scorer = None
             self._bm25_index_loaded = False
             return False
@@ -861,6 +1128,7 @@ class HybridRetriever:
 
         Returns:
             True if index was built and saved successfully, False otherwise
+
         """
         index_path = self._get_bm25_index_path()
         if index_path is None:
@@ -886,8 +1154,7 @@ class HybridRetriever:
             self.bm25_scorer.save_index(index_path)
             self._bm25_index_loaded = True
             logger.info(
-                f"Built and saved BM25 index to {index_path} "
-                f"({len(documents)} documents)"
+                f"Built and saved BM25 index to {index_path} " f"({len(documents)} documents)",
             )
             return True
 
@@ -900,6 +1167,7 @@ class HybridRetriever:
 
         Returns:
             List of (chunk_id, content) tuples
+
         """
         documents = []
         try:

@@ -26,6 +26,7 @@ def get_plans_dir() -> Path:
 
     Raises:
         ValueError: If plans directory is not writable
+
     """
     # Check environment variable first
     env_plans_dir = os.environ.get("AURORA_PLANS_DIR")
@@ -61,6 +62,7 @@ def get_template_dir() -> Path:
 
     Raises:
         FileNotFoundError: If templates directory doesn't exist
+
     """
     # Check environment variable first
     env_template_dir = os.environ.get("AURORA_TEMPLATE_DIR")
@@ -68,7 +70,7 @@ def get_template_dir() -> Path:
         template_dir = Path(env_template_dir).expanduser().resolve()
         if not template_dir.exists():
             raise FileNotFoundError(
-                f"AURORA_TEMPLATE_DIR set to {template_dir}, but directory doesn't exist"
+                f"AURORA_TEMPLATE_DIR set to {template_dir}, but directory doesn't exist",
             )
         return template_dir
 
@@ -78,7 +80,7 @@ def get_template_dir() -> Path:
 
     if not template_dir.exists():
         raise FileNotFoundError(
-            f"Bundled templates not found at {template_dir}. Package may be corrupted."
+            f"Bundled templates not found at {template_dir}. Package may be corrupted.",
         )
 
     return template_dir
@@ -92,6 +94,7 @@ def validate_plans_dir(plans_dir: Path | None = None) -> bool:
 
     Returns:
         True if valid, False otherwise
+
     """
     if plans_dir is None:
         try:
@@ -131,6 +134,7 @@ def init_plans_directory(base_dir: Path | None = None) -> Path:
 
     Raises:
         OSError: If unable to create directories
+
     """
     if base_dir is None:
         base_dir = Path.cwd() / ".aurora"
@@ -167,6 +171,7 @@ def get_config_value(key: str, default: str | None = None) -> str:
 
     Raises:
         KeyError: If key not found and no default provided
+
     """
     if key in PLANNING_CONFIG:
         return PLANNING_CONFIG[key]

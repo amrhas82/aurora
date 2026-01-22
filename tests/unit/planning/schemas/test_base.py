@@ -20,7 +20,7 @@ class TestScenarioSchema:
         scenario = Scenario(
             raw_text="Given a user is logged in\n"
             "When they click logout\n"
-            "Then they are redirected to login page"
+            "Then they are redirected to login page",
         )
         assert scenario.raw_text is not None
         assert "Given a user is logged in" in scenario.raw_text
@@ -47,8 +47,8 @@ class TestRequirementSchema:
                 Scenario(
                     raw_text="Given a user with valid credentials\n"
                     "When they submit the login form\n"
-                    "Then they are authenticated"
-                )
+                    "Then they are authenticated",
+                ),
             ],
         )
         assert requirement.text is not None
@@ -93,7 +93,7 @@ class TestRequirementSchema:
         requirement = Requirement(
             text="The system MUST log all authentication attempts",
             scenarios=[
-                Scenario(raw_text="Given an auth attempt\nWhen it occurs\nThen it is logged")
+                Scenario(raw_text="Given an auth attempt\nWhen it occurs\nThen it is logged"),
             ],
         )
         assert "MUST" in requirement.text

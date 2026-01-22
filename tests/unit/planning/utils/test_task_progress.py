@@ -87,7 +87,7 @@ class TestGetTaskProgressForPlan:
 - [x] Implement
 - [ ] Test
 - [ ] Deploy
-"""
+""",
         )
 
         progress = get_task_progress_for_plan(str(tmp_path / "plans"), "test-plan")

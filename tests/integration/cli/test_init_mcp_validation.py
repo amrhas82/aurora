@@ -47,7 +47,8 @@ class TestInitMCPValidationIntegration:
 
             # Write valid JSON first (configure will create it)
             config_path.write_text(
-                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}), encoding="utf-8"
+                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}),
+                encoding="utf-8",
             )
 
             # Run configuration
@@ -87,7 +88,8 @@ class TestInitMCPValidationIntegration:
 
             # Write config without Aurora server (will trigger warning)
             config_path.write_text(
-                json.dumps({"mcpServers": {"other-server": {"command": "other"}}}), encoding="utf-8"
+                json.dumps({"mcpServers": {"other-server": {"command": "other"}}}),
+                encoding="utf-8",
             )
 
             # Run configuration
@@ -115,7 +117,8 @@ class TestInitMCPValidationIntegration:
             valid_path = tmp_path / ".claude" / "mcp.json"
             valid_path.parent.mkdir(parents=True)
             valid_path.write_text(
-                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}), encoding="utf-8"
+                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}),
+                encoding="utf-8",
             )
             mock_result_valid = MagicMock()
             mock_result_valid.success = True
@@ -150,7 +153,8 @@ class TestInitMCPValidationIntegration:
 
             # Run configuration for both tools
             created, updated, skipped, warnings = await configure_mcp_servers(
-                tmp_path, ["claude", "cursor"]
+                tmp_path,
+                ["claude", "cursor"],
             )
 
             # Both tools should be configured
@@ -180,8 +184,8 @@ class TestInitMCPValidationIntegration:
                     "name": "python3 module command",
                     "config": {
                         "mcpServers": {
-                            "aurora": {"command": "python3", "args": ["-m", "aurora_mcp.server"]}
-                        }
+                            "aurora": {"command": "python3", "args": ["-m", "aurora_mcp.server"]},
+                        },
                     },
                 },
             ]
@@ -210,7 +214,8 @@ class TestInitMCPValidationIntegration:
 
                 # Run configuration
                 created, updated, skipped, warnings = await configure_mcp_servers(
-                    tmp_path, ["claude"]
+                    tmp_path,
+                    ["claude"],
                 )
 
                 # Should NOT have warnings about command format
@@ -240,7 +245,7 @@ class TestInitMCPValidationIntegration:
                         {"mcpServers": {"aurora": {"command": "wrong"}}},
                     ),  # Wrong command
                     ("cline", "Cline", {"mcpServers": {}}),  # Missing aurora
-                ]
+                ],
             ):
                 mock_conf = MagicMock()
                 mock_conf.tool_id = tool_id
@@ -270,7 +275,8 @@ class TestInitMCPValidationIntegration:
 
             # Run configuration
             created, updated, skipped, warnings = await configure_mcp_servers(
-                tmp_path, ["claude", "cursor", "cline"]
+                tmp_path,
+                ["claude", "cursor", "cline"],
             )
 
             # Should have warnings for all 3 tools

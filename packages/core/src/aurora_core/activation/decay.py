@@ -38,6 +38,7 @@ class DecayConfig(BaseModel):
         max_days: Maximum days for decay calculation (default 90)
         min_penalty: Minimum penalty value (most negative)
         grace_period_hours: Hours with no decay after creation (default 1)
+
     """
 
     decay_factor: float = Field(
@@ -47,10 +48,14 @@ class DecayConfig(BaseModel):
         description="Decay rate multiplier (standard ACT-R value is 0.5)",
     )
     max_days: float = Field(
-        default=90.0, ge=1.0, description="Maximum days for decay calculation (caps extreme values)"
+        default=90.0,
+        ge=1.0,
+        description="Maximum days for decay calculation (caps extreme values)",
     )
     min_penalty: float = Field(
-        default=-2.0, le=0.0, description="Minimum penalty value (most negative)"
+        default=-2.0,
+        le=0.0,
+        description="Minimum penalty value (most negative)",
     )
     grace_period_hours: float = Field(
         default=1.0,
@@ -97,6 +102,7 @@ class DecayCalculator:
         >>> penalty = decay.calculate(last_access)
         >>> print(f"30 days: {penalty:.3f}")
         30 days: -0.737
+
     """
 
     def __init__(self, config: DecayConfig | None = None):
@@ -104,6 +110,7 @@ class DecayCalculator:
 
         Args:
             config: Configuration for decay calculation (uses defaults if None)
+
         """
         self.config = config or DecayConfig()
 
@@ -121,6 +128,7 @@ class DecayCalculator:
             - Returns 0.0 for very recent accesses (within grace period)
             - Returns min_penalty for very old accesses (beyond max_days)
             - Uses log10 for realistic forgetting curve
+
         """
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -163,6 +171,7 @@ class DecayCalculator:
 
         Returns:
             Decay penalty (non-positive value)
+
         """
         # Apply grace period
         if hours_since_access <= self.config.grace_period_hours:
@@ -189,12 +198,15 @@ class DecayCalculator:
 
         Returns:
             Decay penalty (non-positive value)
+
         """
         # Convert to hours and use standard calculation
         return self.calculate_from_hours(days_since_access * 24.0)
 
     def get_decay_curve(
-        self, max_days: int | None = None, num_points: int = 50
+        self,
+        max_days: int | None = None,
+        num_points: int = 50,
     ) -> list[tuple[float, float]]:
         """Get decay curve data points for visualization.
 
@@ -210,6 +222,7 @@ class DecayCalculator:
             >>> curve = decay.get_decay_curve(max_days=30, num_points=10)
             >>> for days, penalty in curve:
             ...     print(f"Day {days:.1f}: {penalty:.3f}")
+
         """
         if max_days is None:
             max_days = int(self.config.max_days)
@@ -223,7 +236,9 @@ class DecayCalculator:
         return points
 
     def explain_decay(
-        self, last_access: datetime, current_time: datetime | None = None
+        self,
+        last_access: datetime,
+        current_time: datetime | None = None,
     ) -> dict[str, Any]:
         """Explain how decay was calculated.
 
@@ -239,6 +254,7 @@ class DecayCalculator:
                 - grace_period_applied: Whether grace period was applied
                 - capped_at_max: Whether capped at max_days
                 - formula: Formula used for calculation
+
         """
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -286,6 +302,7 @@ def calculate_decay(
 
     Returns:
         Decay penalty (non-positive value)
+
     """
     config = DecayConfig(decay_factor=decay_factor, max_days=max_days)
     calculator = DecayCalculator(config)

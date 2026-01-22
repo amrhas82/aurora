@@ -62,7 +62,13 @@ class TestHeadlessValidation:
     @patch("aurora_cli.commands.headless.subprocess.run")
     @patch("pathlib.Path.cwd")
     def test_allows_main_with_flag(
-        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+        self,
+        mock_cwd,
+        mock_run,
+        mock_which,
+        runner,
+        temp_prompt,
+        tmp_path,
     ):
         """Test that --allow-main overrides branch check."""
         mock_cwd.return_value = tmp_path
@@ -77,16 +83,17 @@ class TestHeadlessValidation:
                 mock.returncode = 0
                 mock.stdout = "main\n"
                 return mock
-            else:  # Subsequent calls are tool execution
-                mock = Mock()
-                mock.returncode = 0
-                mock.stdout = "Response"
-                return mock
+            # Subsequent calls are tool execution
+            mock = Mock()
+            mock.returncode = 0
+            mock.stdout = "Response"
+            return mock
 
         mock_run.side_effect = mock_subprocess
 
         result = runner.invoke(
-            headless_command, ["-p", str(temp_prompt), "--allow-main", "--max", "1"]
+            headless_command,
+            ["-p", str(temp_prompt), "--allow-main", "--max", "1"],
         )
 
         # Should not abort due to branch check
@@ -100,7 +107,13 @@ class TestHeadlessExecution:
     @patch("aurora_cli.commands.headless.subprocess.run")
     @patch("pathlib.Path.cwd")
     def test_single_iteration_success(
-        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+        self,
+        mock_cwd,
+        mock_run,
+        mock_which,
+        runner,
+        temp_prompt,
+        tmp_path,
     ):
         """Test successful single iteration."""
         mock_cwd.return_value = tmp_path
@@ -136,7 +149,13 @@ class TestHeadlessExecution:
     @patch("aurora_cli.commands.headless.subprocess.run")
     @patch("pathlib.Path.cwd")
     def test_multiple_iterations(
-        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+        self,
+        mock_cwd,
+        mock_run,
+        mock_which,
+        runner,
+        temp_prompt,
+        tmp_path,
     ):
         """Test multiple iterations loop correctly."""
         mock_cwd.return_value = tmp_path
@@ -167,7 +186,13 @@ class TestHeadlessExecution:
     @patch("aurora_cli.commands.headless.subprocess.run")
     @patch("pathlib.Path.cwd")
     def test_tool_failure_warns(
-        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+        self,
+        mock_cwd,
+        mock_run,
+        mock_which,
+        runner,
+        temp_prompt,
+        tmp_path,
     ):
         """Test that tool failure shows warning but continues."""
         mock_cwd.return_value = tmp_path
@@ -268,7 +293,13 @@ class TestHeadlessDefaults:
     @patch("aurora_cli.commands.headless.subprocess.run")
     @patch("pathlib.Path.cwd")
     def test_default_max_iter_is_10(
-        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+        self,
+        mock_cwd,
+        mock_run,
+        mock_which,
+        runner,
+        temp_prompt,
+        tmp_path,
     ):
         """Test that default max iterations is 10 (from config)."""
         mock_cwd.return_value = tmp_path

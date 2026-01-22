@@ -168,11 +168,11 @@ def main():
 
     if throughput_stats["prompts_per_second"] > 1000:
         print(
-            f"  ✓ PASS: Throughput {throughput_stats['prompts_per_second']:.0f} > 1000/sec target"
+            f"  ✓ PASS: Throughput {throughput_stats['prompts_per_second']:.0f} > 1000/sec target",
         )
     else:
         print(
-            f"  ✗ FAIL: Throughput {throughput_stats['prompts_per_second']:.0f} < 1000/sec target"
+            f"  ✗ FAIL: Throughput {throughput_stats['prompts_per_second']:.0f} < 1000/sec target",
         )
 
     print("\n" + "=" * 70)
@@ -187,9 +187,8 @@ def main():
     if all_pass:
         print("✓ ALL PERFORMANCE TARGETS MET")
         return 0
-    else:
-        print("✗ SOME PERFORMANCE TARGETS NOT MET")
-        return 1
+    print("✗ SOME PERFORMANCE TARGETS NOT MET")
+    return 1
 
 
 if __name__ == "__main__":

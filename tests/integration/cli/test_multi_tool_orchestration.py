@@ -7,13 +7,10 @@ Tests cover end-to-end multi-tool execution patterns combining:
 - Headless command integration with both execution paths
 """
 
-import asyncio
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from click.testing import CliRunner
-from rich.console import Console
 
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.concurrent_executor import (
@@ -53,7 +50,7 @@ Complete the multi-tool integration test.
 # Success Criteria
 - [ ] Both Claude and OpenCode execute successfully
 - [ ] Results are properly aggregated
-"""
+""",
     )
 
     scratchpad = headless_dir / "scratchpad.md"
@@ -63,7 +60,7 @@ STATUS: IN_PROGRESS
 
 ## Progress
 Starting multi-tool execution...
-"""
+""",
     )
 
     return {
@@ -219,10 +216,16 @@ class TestExecutorOrchestratorComparison:
             with patch.object(OpenCodeToolProvider, "execute") as mock_opencode:
                 # First fails, second succeeds
                 mock_claude.return_value = ToolResult(
-                    status=ToolStatus.FAILURE, stdout="", stderr="Error", return_code=1
+                    status=ToolStatus.FAILURE,
+                    stdout="",
+                    stderr="Error",
+                    return_code=1,
                 )
                 mock_opencode.return_value = ToolResult(
-                    status=ToolStatus.SUCCESS, stdout="Success", stderr="", return_code=0
+                    status=ToolStatus.SUCCESS,
+                    stdout="Success",
+                    stderr="",
+                    return_code=0,
                 )
 
                 providers = registry.get_multiple(["claude", "opencode"])
@@ -245,7 +248,11 @@ class TestCLIMultiToolIntegration:
     """Test CLI integration with multi-tool execution."""
 
     def test_cli_two_tools_parallel_mode(
-        self, runner, temp_headless_workspace, mock_tools_available, mock_git_branch
+        self,
+        runner,
+        temp_headless_workspace,
+        mock_tools_available,
+        mock_git_branch,
     ):
         """Test CLI invocation with two tools in parallel mode."""
         with patch("pathlib.Path.cwd", return_value=temp_headless_workspace["root"]):
@@ -273,7 +280,11 @@ class TestCLIMultiToolIntegration:
                 assert "parallel" in result.output or "claude, opencode" in result.output
 
     def test_cli_two_tools_sequential_mode(
-        self, runner, temp_headless_workspace, mock_tools_available, mock_git_branch
+        self,
+        runner,
+        temp_headless_workspace,
+        mock_tools_available,
+        mock_git_branch,
     ):
         """Test CLI invocation with two tools in sequential mode."""
         with patch("pathlib.Path.cwd", return_value=temp_headless_workspace["root"]):
@@ -351,13 +362,12 @@ class TestRealWorldWorkflows:
                         output="Claude found: unused variable on line 42",
                         execution_time=2.0,
                     )
-                else:
-                    return ConcurrentToolResult(
-                        tool="opencode",
-                        success=True,
-                        output="OpenCode found: missing error handling",
-                        execution_time=1.5,
-                    )
+                return ConcurrentToolResult(
+                    tool="opencode",
+                    success=True,
+                    output="OpenCode found: missing error handling",
+                    execution_time=1.5,
+                )
 
             mock_exec.side_effect = mock_execute
 
@@ -555,7 +565,7 @@ class TestScratchpadStateManagement:
                 # Simulate tool updating scratchpad
                 current = scratchpad.read_text()
                 scratchpad.write_text(
-                    current + f"\n\n## Tool Update {len(iteration_contexts)}\nProgress made..."
+                    current + f"\n\n## Tool Update {len(iteration_contexts)}\nProgress made...",
                 )
 
                 if len(iteration_contexts) >= 2:

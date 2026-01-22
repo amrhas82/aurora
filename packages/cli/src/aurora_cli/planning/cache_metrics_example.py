@@ -12,7 +12,9 @@ from aurora_cli.planning.models import Complexity, Subgoal
 
 # Configure logging to see cache operations
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", stream=sys.stdout
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    stream=sys.stdout,
 )
 
 
@@ -53,7 +55,10 @@ def demonstrate_metrics():
         # Create cache with metrics enabled
         print("Creating cache with metrics enabled...")
         cache = PlanDecompositionCache(
-            capacity=5, ttl_hours=24, persistent_path=cache_path, enable_metrics=True
+            capacity=5,
+            ttl_hours=24,
+            persistent_path=cache_path,
+            enable_metrics=True,
         )
         print()
 

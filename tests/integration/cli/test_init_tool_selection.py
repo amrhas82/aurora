@@ -50,7 +50,7 @@ def temp_project():
 def hello():
     """Say hello."""
     return "Hello, World!"
-'''
+''',
         )
 
         (project_path / "README.md").write_text("# Test Project\n")
@@ -61,7 +61,7 @@ version = "0.1.0"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-"""
+""",
         )
 
         yield project_path

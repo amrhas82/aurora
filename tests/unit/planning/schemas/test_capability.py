@@ -28,7 +28,7 @@ class TestCapabilitySchema:
                         Scenario(
                             raw_text="Given a user with valid credentials\n"
                             "When they submit the login form\n"
-                            "Then they are authenticated"
+                            "Then they are authenticated",
                         ),
                     ],
                 ),

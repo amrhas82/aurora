@@ -54,6 +54,7 @@ class GitSignalExtractor:
 
         Args:
             timeout: Timeout in seconds for Git commands (default 30, increased for full-file blame)
+
         """
         self.timeout = timeout
         self.available = True
@@ -74,7 +75,7 @@ class GitSignalExtractor:
             self.available = False
             logger.warning(
                 "Git disabled via AURORA_SKIP_GIT - BLA will use default activation (0.5)\n"
-                "→ Unset AURORA_SKIP_GIT to enable Git-based activation"
+                "→ Unset AURORA_SKIP_GIT to enable Git-based activation",
             )
 
     def _get_repo_root(self, file_path: Path) -> Path | None:
@@ -109,6 +110,7 @@ class GitSignalExtractor:
         Returns:
             Dict mapping line_num -> (sha, timestamp)
             Returns empty dict on error
+
         """
         file_key = str(file_path)
 
@@ -182,6 +184,7 @@ class GitSignalExtractor:
 
         Returns:
             Dict mapping line_num -> (sha, timestamp)
+
         """
         blame_data: dict[int, tuple[str, int]] = {}
 
@@ -224,7 +227,10 @@ class GitSignalExtractor:
         return blame_data
 
     def get_function_commit_times(
-        self, file_path: str, line_start: int, line_end: int
+        self,
+        file_path: str,
+        line_start: int,
+        line_end: int,
     ) -> list[int]:
         """Get commit timestamps for a specific function's line range.
 
@@ -248,6 +254,7 @@ class GitSignalExtractor:
             >>> extractor = GitSignalExtractor()
             >>> times = extractor.get_function_commit_times("file.py", 10, 25)
             >>> print(f"Function has {len(times)} commits")
+
         """
         # Check if Git is available
         if not self.available:
@@ -282,7 +289,7 @@ class GitSignalExtractor:
         timestamps.sort(reverse=True)
 
         logger.debug(
-            f"Extracted {len(timestamps)} commits for {path.name}:{line_start}-{line_end} (from cache)"
+            f"Extracted {len(timestamps)} commits for {path.name}:{line_start}-{line_end} (from cache)",
         )
 
         return timestamps
@@ -304,6 +311,7 @@ class GitSignalExtractor:
 
         Returns:
             List of unique commit SHAs (40-char hex strings) in order of first appearance
+
         """
         sha_pattern = re.compile(r"^([0-9a-f]{40})\s", re.MULTILINE)
         matches = sha_pattern.findall(output)
@@ -329,6 +337,7 @@ class GitSignalExtractor:
 
         Returns:
             Unix timestamp (seconds since epoch) or None if command fails
+
         """
         # Check cache first
         if sha in self._commit_timestamp_cache:
@@ -359,7 +368,10 @@ class GitSignalExtractor:
             return None
 
     def calculate_bla(
-        self, commit_times: list[int], decay: float = 0.5, current_time: int | None = None
+        self,
+        commit_times: list[int],
+        decay: float = 0.5,
+        current_time: int | None = None,
     ) -> float:
         """Calculate Base-Level Activation (BLA) from commit timestamps.
 
@@ -391,6 +403,7 @@ class GitSignalExtractor:
             >>> times = [1703001600]
             >>> bla = extractor.calculate_bla(times)
             >>> print(f"BLA: {bla:.4f}")  # Lower value
+
         """
         if not commit_times:
             # Fallback for non-Git or untracked files
@@ -421,7 +434,7 @@ class GitSignalExtractor:
             bla = 0.5
 
         logger.debug(
-            f"Calculated BLA={bla:.4f} from {len(commit_times)} commits (power_sum={power_law_sum:.6f})"
+            f"Calculated BLA={bla:.4f} from {len(commit_times)} commits (power_sum={power_law_sum:.6f})",
         )
 
         return bla

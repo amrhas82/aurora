@@ -6,9 +6,6 @@ across Store instances, eliminating redundant schema checks and pragma execution
 
 import sqlite3
 import threading
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Optional
 
 from aurora_core.exceptions import StorageError
 
@@ -25,6 +22,7 @@ class ConnectionPool:
 
         Args:
             max_connections: Maximum number of pooled connections per database
+
         """
         self._pools: dict[str, list[sqlite3.Connection]] = {}
         self._locks: dict[str, threading.Lock] = {}
@@ -51,6 +49,7 @@ class ConnectionPool:
 
         Raises:
             StorageError: If connection fails
+
         """
         # Get or create pool lock for this database
         with self._global_lock:
@@ -116,6 +115,7 @@ class ConnectionPool:
         Args:
             db_path: Database file path
             conn: Connection to return
+
         """
         with self._global_lock:
             if db_path not in self._locks:
@@ -143,6 +143,7 @@ class ConnectionPool:
 
         Args:
             db_path: Database to clear, or None to clear all
+
         """
         with self._global_lock:
             if db_path:
@@ -177,6 +178,7 @@ def get_connection_pool() -> ConnectionPool:
 
     Returns:
         Global ConnectionPool instance
+
     """
     global _global_pool
 
@@ -193,6 +195,7 @@ def clear_connection_pool(db_path: str | None = None) -> None:
 
     Args:
         db_path: Database to clear, or None to clear all
+
     """
     pool = get_connection_pool()
     pool.clear_pool(db_path)

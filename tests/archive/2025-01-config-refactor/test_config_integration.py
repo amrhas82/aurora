@@ -34,8 +34,8 @@ class TestConfigurationIntegration:
                 {
                     "storage": {"type": "sqlite", "path": ".aurora/memory.db"},
                     "logging": {"level": "DEBUG"},
-                }
-            )
+                },
+            ),
         )
 
         # 3. Load config
@@ -72,9 +72,9 @@ class TestConfigurationIntegration:
                         "reasoning_provider": "openai",
                         "reasoning_model": "gpt-4",
                         "api_key_env": "OPENAI_API_KEY",
-                    }
-                }
-            )
+                    },
+                },
+            ),
         )
 
         # Create project config
@@ -104,7 +104,7 @@ class TestConfigurationIntegration:
         project_config = project_dir / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
         project_config.write_text(
-            json.dumps({"storage": {"path": "/project/config.db"}, "logging": {"level": "DEBUG"}})
+            json.dumps({"storage": {"path": "/project/config.db"}, "logging": {"level": "DEBUG"}}),
         )
 
         # Load config
@@ -152,8 +152,8 @@ class TestConfigurationIntegration:
                 {
                     "storage": {"type": "sqlite", "path": ".aurora/memory.db"},
                     "logging": {"path": ".aurora/logs/"},
-                }
-            )
+                },
+            ),
         )
 
         # Load config
@@ -182,9 +182,9 @@ class TestConfigurationIntegration:
                     "storage": {
                         "type": "invalid_type",  # Invalid enum value
                         "path": "~/.aurora/memory.db",
-                    }
-                }
-            )
+                    },
+                },
+            ),
         )
 
         # Should raise clear error
@@ -270,7 +270,7 @@ class TestConfigurationIntegration:
                             "languages": ["python"],
                             "max_file_size_kb": 500,
                             "cache_ttl_hours": 24,
-                        }
+                        },
                     },
                     "agents": {
                         "discovery_paths": [".aurora/agents.json"],
@@ -283,8 +283,8 @@ class TestConfigurationIntegration:
                         "max_size_mb": 100,
                         "max_files": 10,
                     },
-                }
-            )
+                },
+            ),
         )
 
         # Load and validate
@@ -318,9 +318,9 @@ class TestConfigWithComponents:
                         "path": ".aurora/test.db",
                         "max_connections": 5,
                         "timeout_seconds": 10,
-                    }
-                }
-            )
+                    },
+                },
+            ),
         )
 
         config = Config.load(project_path=project_dir)
@@ -367,10 +367,10 @@ class TestConfigWithComponents:
                             "languages": ["python", "javascript"],
                             "max_file_size_kb": 1000,
                             "cache_ttl_hours": 48,
-                        }
-                    }
-                }
-            )
+                        },
+                    },
+                },
+            ),
         )
 
         config = Config.load(project_path=project_dir)

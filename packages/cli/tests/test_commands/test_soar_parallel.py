@@ -87,7 +87,11 @@ class TestSoarParallelResearch:
 
             # Execute parallel subgoals
             outputs = await _execute_parallel_subgoals(
-                subgoals, agent_map, context, timeout, metadata
+                subgoals,
+                agent_map,
+                context,
+                timeout,
+                metadata,
             )
 
             # Verify spawn_parallel was called
@@ -149,7 +153,11 @@ class TestSoarParallelResearch:
 
             # Execute parallel subgoals
             outputs = await _execute_parallel_subgoals(
-                subgoals, agent_map, context, timeout, metadata
+                subgoals,
+                agent_map,
+                context,
+                timeout,
+                metadata,
             )
 
             # Verify outputs
@@ -219,7 +227,11 @@ class TestSoarParallelResearch:
             ]
 
             outputs = await _execute_parallel_subgoals(
-                subgoals, agent_map, context, timeout, metadata
+                subgoals,
+                agent_map,
+                context,
+                timeout,
+                metadata,
             )
 
             # Verify order is preserved

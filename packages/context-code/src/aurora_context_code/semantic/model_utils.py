@@ -43,6 +43,7 @@ def is_model_cached_lightweight(model_name: str = DEFAULT_MODEL) -> bool:
 
     Returns:
         True if model files appear to be cached, False otherwise
+
     """
     # HuggingFace stores models with -- separator instead of /
     safe_name = model_name.replace("/", "--")
@@ -77,6 +78,7 @@ def get_model_cache_path(model_name: str = DEFAULT_MODEL) -> Path:
 
     Returns:
         Path to the model cache directory
+
     """
     # HuggingFace stores models with -- separator instead of /
     safe_name = model_name.replace("/", "--")
@@ -91,6 +93,7 @@ def is_model_cached(model_name: str = DEFAULT_MODEL) -> bool:
 
     Returns:
         True if model is cached and ready to use
+
     """
     cache_path = get_model_cache_path(model_name)
 
@@ -122,6 +125,7 @@ def get_model_size_mb(model_name: str = DEFAULT_MODEL) -> int:
 
     Returns:
         Approximate size in MB (0 if unknown)
+
     """
     # Known sizes for common models
     known_sizes = {
@@ -146,6 +150,7 @@ def ensure_model_downloaded(
     Returns:
         True if model is available (was cached or downloaded successfully)
         False if download failed
+
     """
     # Already cached - nothing to do
     if is_model_cached(model_name):
@@ -221,6 +226,7 @@ class BackgroundModelLoader:
         >>> provider = loader.wait_for_model(timeout=60.0)
         >>> if provider:
         ...     embedding = provider.embed_query("search query")
+
     """
 
     _instance: "BackgroundModelLoader | None" = None
@@ -243,6 +249,7 @@ class BackgroundModelLoader:
 
         Returns:
             The singleton BackgroundModelLoader instance
+
         """
         if cls._instance is None:
             with cls._lock:
@@ -274,6 +281,7 @@ class BackgroundModelLoader:
         Note:
             Calling this multiple times is safe - subsequent calls are ignored
             if loading is already in progress or complete.
+
         """
         with self._lock:
             # Already loading or loaded
@@ -326,6 +334,7 @@ class BackgroundModelLoader:
 
         Returns:
             True if loading is in progress
+
         """
         with self._lock:
             return self._loading
@@ -335,6 +344,7 @@ class BackgroundModelLoader:
 
         Returns:
             True if model is loaded and ready
+
         """
         with self._lock:
             return self._loaded
@@ -344,6 +354,7 @@ class BackgroundModelLoader:
 
         Returns:
             Exception if loading failed, None otherwise
+
         """
         with self._lock:
             return self._error
@@ -353,6 +364,7 @@ class BackgroundModelLoader:
 
         Returns:
             Load time in seconds (0 if not yet loaded)
+
         """
         with self._lock:
             if self._load_end_time > 0 and self._load_start_time > 0:
@@ -372,6 +384,7 @@ class BackgroundModelLoader:
 
         Returns:
             EmbeddingProvider if loaded successfully, None if failed/timeout
+
         """
         start = time.time()
 
@@ -397,6 +410,7 @@ class BackgroundModelLoader:
 
         Returns:
             EmbeddingProvider if loaded, None otherwise
+
         """
         with self._lock:
             if self._loaded:

@@ -66,6 +66,7 @@ class HeartbeatEmitter:
         Args:
             task_id: Unique identifier for this execution
             buffer_size: Maximum events to buffer
+
         """
         self.task_id = task_id
         self.buffer_size = buffer_size
@@ -90,6 +91,7 @@ class HeartbeatEmitter:
             agent_id: Optional agent identifier
             message: Optional message text
             **metadata: Additional metadata
+
         """
         timestamp = time.time()
 
@@ -125,6 +127,7 @@ class HeartbeatEmitter:
 
         Args:
             callback: Function called for each event (must be thread-safe)
+
         """
         with self._lock:
             self._subscribers.append(callback)
@@ -134,6 +137,7 @@ class HeartbeatEmitter:
 
         Returns:
             List of events in chronological order
+
         """
         with self._lock:
             return list(self._queue)
@@ -143,6 +147,7 @@ class HeartbeatEmitter:
 
         Returns:
             Latest event or None if no events
+
         """
         with self._lock:
             return self._queue[-1] if self._queue else None
@@ -152,6 +157,7 @@ class HeartbeatEmitter:
 
         Returns:
             Elapsed seconds or 0.0 if not started
+
         """
         with self._lock:
             if not self._start_time:
@@ -163,6 +169,7 @@ class HeartbeatEmitter:
 
         Returns:
             Seconds since activity or total runtime if no activity
+
         """
         with self._lock:
             if not self._last_activity:
@@ -177,6 +184,7 @@ class HeartbeatEmitter:
 
         Yields:
             HeartbeatEvent objects as they arrive
+
         """
         seen_count = 0
         while True:
@@ -214,6 +222,7 @@ class HeartbeatMonitor:
             total_timeout: Maximum total execution seconds
             activity_timeout: Maximum seconds without activity
             warning_threshold: Fraction of timeout before warning (0.0-1.0)
+
         """
         self.emitter = emitter
         self.total_timeout = total_timeout
@@ -226,6 +235,7 @@ class HeartbeatMonitor:
 
         Returns:
             (is_healthy, reason) tuple
+
         """
         elapsed = self.emitter.seconds_since_start()
         idle = self.emitter.seconds_since_activity()
@@ -256,6 +266,7 @@ class HeartbeatMonitor:
 
         Returns:
             (success, error_reason) tuple
+
         """
         while True:
             # Check for completion
@@ -283,6 +294,7 @@ def create_heartbeat_emitter(task_id: str) -> HeartbeatEmitter:
 
     Returns:
         Configured HeartbeatEmitter instance
+
     """
     return HeartbeatEmitter(task_id=task_id)
 
@@ -296,6 +308,7 @@ def create_heartbeat_monitor(emitter: HeartbeatEmitter, timeout: int = 300) -> H
 
     Returns:
         Configured HeartbeatMonitor instance
+
     """
     return HeartbeatMonitor(
         emitter=emitter,

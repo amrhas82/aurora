@@ -107,7 +107,11 @@ class TestFormatResponseQuiet:
         long_answer = "A" * 200  # 200 character answer
 
         synthesis_result = SynthesisResult(
-            answer=long_answer, confidence=0.8, traceability=[], metadata={}, timing={}
+            answer=long_answer,
+            confidence=0.8,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(
@@ -161,7 +165,7 @@ class TestFormatResponseNormal:
                 "assess": {"duration_ms": 50},
                 "retrieve": {"duration_ms": 100},
                 "decompose": {"duration_ms": 500},
-            }
+            },
         }
 
         result = format_response(
@@ -192,7 +196,11 @@ class TestFormatResponseNormal:
     def test_normal_format_cached_for_learning(self):
         """Test NORMAL format when pattern is cached but not marked."""
         synthesis_result = SynthesisResult(
-            answer="Partial success.", confidence=0.65, traceability=[], metadata={}, timing={}
+            answer="Partial success.",
+            confidence=0.65,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(
@@ -218,7 +226,11 @@ class TestFormatResponseNormal:
     def test_normal_format_not_cached(self):
         """Test NORMAL format when pattern is not cached."""
         synthesis_result = SynthesisResult(
-            answer="Low quality result.", confidence=0.3, traceability=[], metadata={}, timing={}
+            answer="Low quality result.",
+            confidence=0.3,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(
@@ -400,7 +412,11 @@ class TestFormatResponseVerbose:
     def test_verbose_format_not_cached(self):
         """Test VERBOSE format when pattern is not cached."""
         synthesis_result = SynthesisResult(
-            answer="Low quality.", confidence=0.3, traceability=[], metadata={}, timing={}
+            answer="Low quality.",
+            confidence=0.3,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(
@@ -426,7 +442,11 @@ class TestFormatResponseVerbose:
     def test_verbose_format_cached_not_pattern(self):
         """Test VERBOSE format when cached but not marked as pattern."""
         synthesis_result = SynthesisResult(
-            answer="Medium quality.", confidence=0.65, traceability=[], metadata={}, timing={}
+            answer="Medium quality.",
+            confidence=0.65,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(
@@ -531,7 +551,11 @@ class TestFormatResponseJSON:
     def test_json_format_with_none_chunk_id(self):
         """Test JSON format when reasoning_chunk_id is None (not cached)."""
         synthesis_result = SynthesisResult(
-            answer="Low quality.", confidence=0.3, traceability=[], metadata={}, timing={}
+            answer="Low quality.",
+            confidence=0.3,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(
@@ -609,7 +633,11 @@ class TestFormatResponseDefaultVerbosity:
     def test_default_verbosity_is_normal(self):
         """Test that default verbosity is NORMAL."""
         synthesis_result = SynthesisResult(
-            answer="Test.", confidence=0.8, traceability=[], metadata={}, timing={}
+            answer="Test.",
+            confidence=0.8,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(
@@ -622,7 +650,9 @@ class TestFormatResponseDefaultVerbosity:
 
         # Call without verbosity parameter
         result = format_response(
-            synthesis_result=synthesis_result, record_result=record_result, phase_metadata={}
+            synthesis_result=synthesis_result,
+            record_result=record_result,
+            phase_metadata={},
         )
 
         # Should produce NORMAL format
@@ -639,7 +669,7 @@ class TestFormatResponseRawData:
             answer="Test answer.",
             confidence=0.85,
             traceability=[
-                {"agent": "test-agent", "subgoal_id": "sg1", "subgoal_description": "Test subgoal"}
+                {"agent": "test-agent", "subgoal_id": "sg1", "subgoal_description": "Test subgoal"},
             ],
             metadata={"meta": "data"},
             timing={},
@@ -676,7 +706,11 @@ class TestFormatResponseRawData:
     def test_raw_data_includes_phase_metadata(self):
         """Test that raw_data includes phase_metadata fields."""
         synthesis_result = SynthesisResult(
-            answer="Test.", confidence=0.8, traceability=[], metadata={}, timing={}
+            answer="Test.",
+            confidence=0.8,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_result = RecordResult(

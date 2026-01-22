@@ -4,7 +4,6 @@ Tests the TerminationPolicy and early detection mechanisms in spawner.
 """
 
 import re
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -27,7 +26,10 @@ class TestTerminationPolicy:
 
         for stderr in test_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+                stdout="",
+                stderr=stderr,
+                elapsed=5.0,
+                last_activity=1.0,
             )
             assert should_term, f"Failed to detect: {stderr}"
             assert "rate" in reason.lower() or "429" in reason
@@ -45,7 +47,10 @@ class TestTerminationPolicy:
 
         for stderr in test_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=2.0, last_activity=0.5
+                stdout="",
+                stderr=stderr,
+                elapsed=2.0,
+                last_activity=0.5,
             )
             assert should_term, f"Failed to detect: {stderr}"
 
@@ -62,7 +67,10 @@ class TestTerminationPolicy:
 
         for stderr in test_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=1.0, last_activity=0.2
+                stdout="",
+                stderr=stderr,
+                elapsed=1.0,
+                last_activity=0.2,
             )
             assert should_term, f"Failed to detect: {stderr}"
 
@@ -77,7 +85,10 @@ class TestTerminationPolicy:
 
         for stderr in test_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=3.0, last_activity=0.8
+                stdout="",
+                stderr=stderr,
+                elapsed=3.0,
+                last_activity=0.8,
             )
             assert should_term, f"Failed to detect: {stderr}"
 
@@ -92,7 +103,10 @@ class TestTerminationPolicy:
 
         for stderr in test_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=2.0, last_activity=0.5
+                stdout="",
+                stderr=stderr,
+                elapsed=2.0,
+                last_activity=0.5,
             )
             assert should_term, f"Failed to detect: {stderr}"
 
@@ -107,7 +121,10 @@ class TestTerminationPolicy:
 
         for stderr in test_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=1.5, last_activity=0.3
+                stdout="",
+                stderr=stderr,
+                elapsed=1.5,
+                last_activity=0.3,
             )
             assert should_term, f"Failed to detect: {stderr}"
 
@@ -124,7 +141,10 @@ class TestTerminationPolicy:
 
         for stderr in benign_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+                stdout="",
+                stderr=stderr,
+                elapsed=5.0,
+                last_activity=1.0,
             )
             assert not should_term, f"False positive on: {stderr}"
 
@@ -141,7 +161,10 @@ class TestTerminationPolicy:
 
         for stderr in progress_cases:
             should_term, reason = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=3.0, last_activity=0.5
+                stdout="",
+                stderr=stderr,
+                elapsed=3.0,
+                last_activity=0.5,
             )
             assert not should_term, f"False positive on: {stderr}"
 
@@ -154,7 +177,10 @@ class TestTerminationPolicy:
         policy = TerminationPolicy(custom_predicates=[detect_memory_error])
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr="Fatal: Out of memory", elapsed=10.0, last_activity=2.0
+            stdout="",
+            stderr="Fatal: Out of memory",
+            elapsed=10.0,
+            last_activity=2.0,
         )
 
         assert should_term
@@ -173,13 +199,19 @@ class TestTerminationPolicy:
 
         # Test OOM detection
         should_term, _ = policy.should_terminate(
-            stdout="", stderr="Fatal: out of memory", elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr="Fatal: out of memory",
+            elapsed=5.0,
+            last_activity=1.0,
         )
         assert should_term
 
         # Test segfault detection
         should_term, _ = policy.should_terminate(
-            stdout="", stderr="Segmentation fault (core dumped)", elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr="Segmentation fault (core dumped)",
+            elapsed=5.0,
+            last_activity=1.0,
         )
         assert should_term
 
@@ -224,7 +256,10 @@ class TestTerminationPolicy:
 
         for stderr in test_cases:
             should_term, _ = policy.should_terminate(
-                stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+                stdout="",
+                stderr=stderr,
+                elapsed=5.0,
+                last_activity=1.0,
             )
             assert should_term, f"Case sensitivity issue: {stderr}"
 
@@ -241,7 +276,10 @@ class TestTerminationPolicy:
         """
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr=stderr,
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert should_term
@@ -274,7 +312,10 @@ class TestTerminationPolicyPatternCoverage:
 
         for var in variations:
             should_term, _ = policy.should_terminate(
-                stdout="", stderr=f"Error: {var} exceeded", elapsed=5.0, last_activity=1.0
+                stdout="",
+                stderr=f"Error: {var} exceeded",
+                elapsed=5.0,
+                last_activity=1.0,
             )
             assert should_term, f"Failed to match: {var}"
 
@@ -292,7 +333,10 @@ class TestTerminationPolicyPatternCoverage:
 
         for var in variations:
             should_term, _ = policy.should_terminate(
-                stdout="", stderr=f"Error: {var}", elapsed=5.0, last_activity=1.0
+                stdout="",
+                stderr=f"Error: {var}",
+                elapsed=5.0,
+                last_activity=1.0,
             )
             assert should_term, f"Failed to match: {var}"
 
@@ -309,7 +353,10 @@ class TestTerminationPolicyPatternCoverage:
 
         for var in variations:
             should_term, _ = policy.should_terminate(
-                stdout="", stderr=f"{var}: Service down", elapsed=5.0, last_activity=1.0
+                stdout="",
+                stderr=f"{var}: Service down",
+                elapsed=5.0,
+                last_activity=1.0,
             )
             assert should_term, f"Failed to match: {var}"
 
@@ -326,7 +373,10 @@ class TestTerminationPolicyPatternCoverage:
 
         for var in variations:
             should_term, _ = policy.should_terminate(
-                stdout="", stderr=f"Error: {var}", elapsed=5.0, last_activity=1.0
+                stdout="",
+                stderr=f"Error: {var}",
+                elapsed=5.0,
+                last_activity=1.0,
             )
             assert should_term, f"Failed to match: {var}"
 
@@ -378,7 +428,10 @@ class TestTerminationReason:
         policy = TerminationPolicy(custom_predicates=[custom_check])
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr="custom error occurred", elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr="custom error occurred",
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert should_term
@@ -393,7 +446,10 @@ class TestEdgeCases:
         policy = TerminationPolicy()
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr="", elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr="",
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert not should_term
@@ -405,7 +461,10 @@ class TestEdgeCases:
 
         # Should handle None gracefully
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=None, elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr=None,
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert not should_term
@@ -419,7 +478,10 @@ class TestEdgeCases:
         stderr = f"{padding}\nError: Rate limit exceeded (429)\n{padding}"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr=stderr,
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert should_term
@@ -429,7 +491,10 @@ class TestEdgeCases:
         policy = TerminationPolicy()
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr="Error: 429", elapsed=0.0, last_activity=0.0
+            stdout="",
+            stderr="Error: 429",
+            elapsed=0.0,
+            last_activity=0.0,
         )
 
         assert should_term  # Error pattern still detected
@@ -440,7 +505,10 @@ class TestEdgeCases:
 
         # Should handle gracefully
         should_term, reason = policy.should_terminate(
-            stdout="", stderr="Error: 429", elapsed=5.0, last_activity=-1.0
+            stdout="",
+            stderr="Error: 429",
+            elapsed=5.0,
+            last_activity=-1.0,
         )
 
         assert should_term  # Error pattern still detected

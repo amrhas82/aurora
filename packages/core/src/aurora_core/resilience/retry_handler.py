@@ -49,6 +49,7 @@ class RetryHandler:
         >>> def flaky_function():
         >>>     # ... may fail transiently ...
         >>>     pass
+
     """
 
     def __init__(
@@ -70,6 +71,7 @@ class RetryHandler:
 
         Raises:
             ValueError: If parameters are invalid
+
         """
         if max_retries <= 0:
             raise ValueError("max_retries must be positive")
@@ -107,6 +109,7 @@ class RetryHandler:
 
         Returns:
             True if error is recoverable and should be retried, False otherwise
+
         """
         # Check if error type is in recoverable list
         return isinstance(error, self._recoverable_errors)
@@ -121,6 +124,7 @@ class RetryHandler:
 
         Returns:
             Delay in seconds for this attempt
+
         """
         delay = self.base_delay * (self.backoff_factor ** (attempt - 1))
         return min(delay, self.max_delay)
@@ -149,6 +153,7 @@ class RetryHandler:
         Raises:
             Exception: The last exception if all retries are exhausted,
                       or immediately for non-recoverable errors
+
         """
         # Use call-specific recoverable errors if provided
         original_recoverable = self._recoverable_errors
@@ -204,6 +209,7 @@ class RetryHandler:
 
         Returns:
             Wrapped function with retry logic
+
         """
 
         @wraps(func)

@@ -25,9 +25,8 @@ class TestStoreContractSaveAndRetrieve:
         """Parametrized fixture providing both MemoryStore and SQLiteStore."""
         if request.param == "memory":
             return MemoryStore()
-        else:
-            db_path = tmp_path / "test.db"
-            return SQLiteStore(str(db_path))
+        db_path = tmp_path / "test.db"
+        return SQLiteStore(str(db_path))
 
     def test_save_chunk_returns_bool(self, store):
         """Contract: save_chunk must return a boolean."""
@@ -127,9 +126,8 @@ class TestStoreContractActivation:
         """Parametrized fixture providing both stores."""
         if request.param == "memory":
             return MemoryStore()
-        else:
-            db_path = tmp_path / "test.db"
-            return SQLiteStore(str(db_path))
+        db_path = tmp_path / "test.db"
+        return SQLiteStore(str(db_path))
 
     def test_update_activation_accepts_positive_and_negative_deltas(self, store):
         """Contract: update_activation must accept both positive and negative deltas."""
@@ -236,9 +234,8 @@ class TestStoreContractRelationships:
         """Parametrized fixture providing both stores."""
         if request.param == "memory":
             return MemoryStore()
-        else:
-            db_path = tmp_path / "test.db"
-            return SQLiteStore(str(db_path))
+        db_path = tmp_path / "test.db"
+        return SQLiteStore(str(db_path))
 
     def test_add_relationship_returns_bool(self, store):
         """Contract: add_relationship must return a boolean."""
@@ -263,7 +260,10 @@ class TestStoreContractRelationships:
         store.save_chunk(chunk2)
 
         result = store.add_relationship(
-            from_id="code:caller.py:func", to_id="code:callee.py:func", rel_type="calls", weight=1.0
+            from_id="code:caller.py:func",
+            to_id="code:callee.py:func",
+            rel_type="calls",
+            weight=1.0,
         )
         assert isinstance(result, bool), "add_relationship must return bool"
 
@@ -282,13 +282,17 @@ class TestStoreContractRelationships:
         # Missing source chunk
         with pytest.raises(ChunkNotFoundError):
             store.add_relationship(
-                from_id="code:missing.py:func", to_id="code:exists.py:func", rel_type="calls"
+                from_id="code:missing.py:func",
+                to_id="code:exists.py:func",
+                rel_type="calls",
             )
 
         # Missing target chunk
         with pytest.raises(ChunkNotFoundError):
             store.add_relationship(
-                from_id="code:exists.py:func", to_id="code:missing.py:func", rel_type="calls"
+                from_id="code:exists.py:func",
+                to_id="code:missing.py:func",
+                rel_type="calls",
             )
 
     def test_get_related_chunks_returns_list(self, store):
@@ -315,9 +319,8 @@ class TestStoreContractAccessTracking:
         """Parametrized fixture providing both stores."""
         if request.param == "memory":
             return MemoryStore()
-        else:
-            db_path = tmp_path / "test.db"
-            return SQLiteStore(str(db_path))
+        db_path = tmp_path / "test.db"
+        return SQLiteStore(str(db_path))
 
     def test_record_access_accepts_optional_parameters(self, store):
         """Contract: record_access must accept optional access_time and context.
@@ -350,7 +353,9 @@ class TestStoreContractAccessTracking:
 
         # With both - should not raise
         store.record_access(
-            "code:test.py:func", access_time=datetime.now(timezone.utc), context="another query"
+            "code:test.py:func",
+            access_time=datetime.now(timezone.utc),
+            context="another query",
         )
 
         # Verify at least one access was recorded
@@ -420,9 +425,8 @@ class TestStoreContractErrorHandling:
         """Parametrized fixture providing both stores."""
         if request.param == "memory":
             return MemoryStore()
-        else:
-            db_path = tmp_path / "test.db"
-            return SQLiteStore(str(db_path))
+        db_path = tmp_path / "test.db"
+        return SQLiteStore(str(db_path))
 
     def test_memory_store_closed_operations_raise_storage_error(self):
         """Contract: operations on closed MemoryStore must raise StorageError."""

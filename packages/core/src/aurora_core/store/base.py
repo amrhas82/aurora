@@ -44,8 +44,8 @@ class Store(ABC):
         Raises:
             StorageError: If storage operation fails
             ValidationError: If chunk fails validation
+
         """
-        pass
 
     @abstractmethod
     def get_chunk(self, chunk_id: ChunkID) -> Optional["Chunk"]:
@@ -59,8 +59,8 @@ class Store(ABC):
 
         Raises:
             StorageError: If storage operation fails
+
         """
-        pass
 
     @abstractmethod
     def update_activation(self, chunk_id: ChunkID, delta: float) -> None:
@@ -77,8 +77,8 @@ class Store(ABC):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
-        pass
 
     @abstractmethod
     def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
@@ -95,12 +95,16 @@ class Store(ABC):
 
         Raises:
             StorageError: If storage operation fails
+
         """
-        pass
 
     @abstractmethod
     def add_relationship(
-        self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
+        self,
+        from_id: ChunkID,
+        to_id: ChunkID,
+        rel_type: str,
+        weight: float = 1.0,
     ) -> bool:
         """Add a relationship between two chunks.
 
@@ -119,8 +123,8 @@ class Store(ABC):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If either chunk ID does not exist
+
         """
-        pass
 
     @abstractmethod
     def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
@@ -139,12 +143,15 @@ class Store(ABC):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
-        pass
 
     @abstractmethod
     def record_access(
-        self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
+        self,
+        chunk_id: ChunkID,
+        access_time: datetime | None = None,
+        context: str | None = None,
     ) -> None:
         """Record an access to a chunk for ACT-R activation tracking.
 
@@ -159,12 +166,14 @@ class Store(ABC):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
-        pass
 
     @abstractmethod
     def get_access_history(
-        self, chunk_id: ChunkID, limit: int | None = None
+        self,
+        chunk_id: ChunkID,
+        limit: int | None = None,
     ) -> list[dict[str, Any]]:
         """Retrieve access history for a chunk.
 
@@ -180,8 +189,8 @@ class Store(ABC):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
-        pass
 
     @abstractmethod
     def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
@@ -203,8 +212,8 @@ class Store(ABC):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
-        pass
 
     def get_access_stats_batch(self, chunk_ids: list[ChunkID]) -> dict[ChunkID, dict[str, Any]]:
         """Get access statistics for multiple chunks in a single query.
@@ -228,6 +237,7 @@ class Store(ABC):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         # Default implementation - subclasses should override for efficiency
         results: dict[ChunkID, dict[str, Any]] = {}
@@ -253,8 +263,8 @@ class Store(ABC):
 
         Raises:
             StorageError: If cleanup fails
+
         """
-        pass
 
     def get_chunk_count(self) -> int:
         """Get the total number of chunks in storage.
@@ -271,6 +281,7 @@ class Store(ABC):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         # Default implementation - subclasses should override for efficiency
         chunks = self.retrieve_by_activation(min_activation=-float("inf"), limit=1)

@@ -25,6 +25,7 @@ def get_default_discovery_paths() -> list[str]:
 
     Returns:
         List of agent directory paths for all 20 supported tools
+
     """
     from aurora_cli.configurators.slash.paths import get_all_agent_paths
 
@@ -56,6 +57,7 @@ class AgentScanner:
         >>> sources = scanner.discover_sources()
         >>> print(sources)
         [Path('/custom/agents')]
+
     """
 
     def __init__(self, discovery_paths: list[str] | None = None) -> None:
@@ -65,6 +67,7 @@ class AgentScanner:
             discovery_paths: Optional list of paths to scan. If not provided,
                            uses paths from the tool registry (all 20 tools).
                            Paths may contain tilde (~) for home directory expansion.
+
         """
         if discovery_paths is None:
             discovery_paths = get_default_discovery_paths()
@@ -77,6 +80,7 @@ class AgentScanner:
 
         Returns:
             List of configured discovery paths
+
         """
         return self._raw_paths.copy()
 
@@ -95,6 +99,7 @@ class AgentScanner:
             >>> for path in existing:
             ...     print(f"Source: {path}")
             Source: /home/user/.claude/agents
+
         """
         existing_paths: list[Path] = []
 
@@ -130,6 +135,7 @@ class AgentScanner:
             code-developer.md
             orchestrator.md
             quality-assurance.md
+
         """
         if not directory.exists():
             logger.warning("Directory does not exist: %s", directory)
@@ -171,6 +177,7 @@ class AgentScanner:
             >>> all_agents = list(scanner.scan_all_sources())
             >>> print(f"Found {len(all_agents)} agent files")
             Found 12 agent files
+
         """
         sources = self.discover_sources()
 
@@ -200,6 +207,7 @@ class AgentScanner:
             ...     print(f"{source}: {count} agents")
             /home/user/.claude/agents: 8 agents
             /home/user/.config/ampcode/agents: 3 agents
+
         """
         stats: dict[str, int] = {}
 

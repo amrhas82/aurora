@@ -34,7 +34,7 @@ def mock_routing():
             "phase": 1,
             "parallelizable": [{"subgoal_index": 0, "description": "Test subgoal"}],
             "sequential": [],
-        }
+        },
     ]
     return routing
 
@@ -129,7 +129,7 @@ class TestExecuteAgentsWithRetry:
                 "suggested_agent": "test-agent",
                 "is_critical": False,
                 "depends_on": [],
-            }
+            },
         ]
 
         context = {"query": "Test query"}
@@ -176,7 +176,7 @@ class TestExecuteAgentsWithRetry:
                 "suggested_agent": "test-agent",
                 "is_critical": False,
                 "depends_on": [],
-            }
+            },
         ]
         context = {"query": "Test query"}
 
@@ -218,7 +218,7 @@ class TestExecuteAgentsWithRetry:
                 "suggested_agent": "test-agent",
                 "is_critical": False,
                 "depends_on": [],
-            }
+            },
         ]
         context = {"query": "Test query"}
 
@@ -233,16 +233,26 @@ class TestExecuteAgentsWithRetry:
                 kwargs["on_progress"]("[Agent 1/1] test-agent: Running")
             tasks = args[0] if args else kwargs.get("tasks", [])
             return (
-                [SpawnResult(success=True, output="test output", error=None, exit_code=0) for _ in tasks],
+                [
+                    SpawnResult(success=True, output="test output", error=None, exit_code=0)
+                    for _ in tasks
+                ],
                 {},
             )
 
-        with patch("aurora_soar.phases.collect.spawn_parallel_tracked", side_effect=mock_spawn_parallel_tracked):
+        with patch(
+            "aurora_soar.phases.collect.spawn_parallel_tracked",
+            side_effect=mock_spawn_parallel_tracked,
+        ):
             await execute_agents(agent_assignments, subgoals, context, on_progress=on_progress)
 
             # Check format: [Agent X/Y] agent-id: Status
-            assert any("[Agent" in msg for msg in progress_calls), f"Expected '[Agent' in progress, got: {progress_calls}"
-            assert any("test-agent" in msg for msg in progress_calls), f"Expected 'test-agent' in progress, got: {progress_calls}"
+            assert any(
+                "[Agent" in msg for msg in progress_calls
+            ), f"Expected '[Agent' in progress, got: {progress_calls}"
+            assert any(
+                "test-agent" in msg for msg in progress_calls
+            ), f"Expected 'test-agent' in progress, got: {progress_calls}"
 
     @pytest.mark.asyncio
     async def test_calls_spawn_parallel_tracked(self):
@@ -264,18 +274,24 @@ class TestExecuteAgentsWithRetry:
                 "suggested_agent": "test-agent",
                 "is_critical": False,
                 "depends_on": [],
-            }
+            },
         ]
         context = {"query": "Test query"}
 
         async def mock_spawn_parallel_tracked(*args, **kwargs):
             tasks = args[0] if args else kwargs.get("tasks", [])
             return (
-                [SpawnResult(success=True, output="test output", error=None, exit_code=0) for _ in tasks],
+                [
+                    SpawnResult(success=True, output="test output", error=None, exit_code=0)
+                    for _ in tasks
+                ],
                 {},
             )
 
-        with patch("aurora_soar.phases.collect.spawn_parallel_tracked", side_effect=mock_spawn_parallel_tracked) as mock_spawn:
+        with patch(
+            "aurora_soar.phases.collect.spawn_parallel_tracked",
+            side_effect=mock_spawn_parallel_tracked,
+        ) as mock_spawn:
             await execute_agents(agent_assignments, subgoals, context)
 
             # Verify spawn_parallel_tracked was called
@@ -301,7 +317,7 @@ class TestExecuteAgentsWithRetry:
                 "suggested_agent": "test-agent",
                 "is_critical": False,
                 "depends_on": [],
-            }
+            },
         ]
         context = {"query": "Test query"}
 
@@ -566,19 +582,31 @@ async def test_collect_parallel_with_spawner():
         (
             0,
             AgentInfo(
-                id="agent-0", name="Agent 0", description="", capabilities=[], agent_type="local"
+                id="agent-0",
+                name="Agent 0",
+                description="",
+                capabilities=[],
+                agent_type="local",
             ),
         ),
         (
             1,
             AgentInfo(
-                id="agent-1", name="Agent 1", description="", capabilities=[], agent_type="local"
+                id="agent-1",
+                name="Agent 1",
+                description="",
+                capabilities=[],
+                agent_type="local",
             ),
         ),
         (
             2,
             AgentInfo(
-                id="agent-2", name="Agent 2", description="", capabilities=[], agent_type="local"
+                id="agent-2",
+                name="Agent 2",
+                description="",
+                capabilities=[],
+                agent_type="local",
             ),
         ),
     ]
@@ -611,13 +639,22 @@ async def test_collect_parallel_with_spawner():
         tasks = args[0] if args else kwargs.get("tasks", [])
         return (
             [
-                SpawnResult(success=True, output="test output", error=None, exit_code=0, fallback=False, retry_count=0)
+                SpawnResult(
+                    success=True,
+                    output="test output",
+                    error=None,
+                    exit_code=0,
+                    fallback=False,
+                    retry_count=0,
+                )
                 for _ in tasks
             ],
             {},
         )
 
-    with patch("aurora_soar.phases.collect.spawn_parallel_tracked", side_effect=mock_spawn_parallel_tracked) as mock_spawn:
+    with patch(
+        "aurora_soar.phases.collect.spawn_parallel_tracked", side_effect=mock_spawn_parallel_tracked
+    ) as mock_spawn:
         # Execute agents with new signature
         result = await execute_agents(agent_assignments, subgoals, context, agent_timeout=10)
 
@@ -766,8 +803,6 @@ class TestTopologicalSort:
         assert wave2_indices == {2, 4}
 
 
-
-
 class TestContextPassing:
     """TDD tests for context passing between dependency waves."""
 
@@ -828,7 +863,12 @@ class TestContextPassing:
             # Return success for all tasks
             return (
                 [
-                    SpawnResult(success=True, output=f"Output from task {len(captured_prompts)}", error=None, exit_code=0)
+                    SpawnResult(
+                        success=True,
+                        output=f"Output from task {len(captured_prompts)}",
+                        error=None,
+                        exit_code=0,
+                    )
                     for _ in tasks
                 ],
                 {},
@@ -865,13 +905,25 @@ class TestContextPassing:
         from aurora_soar.phases.collect import execute_agents
 
         agent1 = AgentInfo(
-            id="agent-1", name="Agent 1", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent2 = AgentInfo(
-            id="agent-2", name="Agent 2", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent3 = AgentInfo(
-            id="agent-3", name="Agent 3", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-3",
+            name="Agent 3",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
 
         agent_assignments = [(1, agent1), (2, agent2), (3, agent3)]
@@ -905,19 +957,23 @@ class TestContextPassing:
             if wave_count[0] == 1:
                 return (
                     [
-                        SpawnResult(success=True, output="Output from task 1", error=None, exit_code=0),
                         SpawnResult(
-                            success=False, output="", error="Timeout after 180s", exit_code=-1
+                            success=True, output="Output from task 1", error=None, exit_code=0
+                        ),
+                        SpawnResult(
+                            success=False,
+                            output="",
+                            error="Timeout after 180s",
+                            exit_code=-1,
                         ),
                     ],
                     {},
                 )
             # Wave 2: sg-3 executes with partial context
-            else:
-                return (
-                    [SpawnResult(success=True, output="Output from task 3", error=None, exit_code=0)],
-                    {},
-                )
+            return (
+                [SpawnResult(success=True, output="Output from task 3", error=None, exit_code=0)],
+                {},
+            )
 
         with patch(
             "aurora_soar.phases.collect.spawn_parallel_tracked",
@@ -952,13 +1008,25 @@ class TestContextPassing:
         from aurora_soar.phases.collect import execute_agents
 
         agent1 = AgentInfo(
-            id="agent-1", name="Agent 1", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent2 = AgentInfo(
-            id="agent-2", name="Agent 2", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent3 = AgentInfo(
-            id="agent-3", name="Agent 3", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-3",
+            name="Agent 3",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
 
         agent_assignments = [(1, agent1), (2, agent2), (3, agent3)]
@@ -994,11 +1062,10 @@ class TestContextPassing:
                     ],
                     {},
                 )
-            else:
-                return (
-                    [SpawnResult(success=True, output="Output 3", error=None, exit_code=0)],
-                    {},
-                )
+            return (
+                [SpawnResult(success=True, output="Output 3", error=None, exit_code=0)],
+                {},
+            )
 
         with patch(
             "aurora_soar.phases.collect.spawn_parallel_tracked",
@@ -1022,13 +1089,25 @@ class TestContextPassing:
         from aurora_soar.phases.collect import execute_agents
 
         agent1 = AgentInfo(
-            id="agent-1", name="Agent 1", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent2 = AgentInfo(
-            id="agent-2", name="Agent 2", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent3 = AgentInfo(
-            id="agent-3", name="Agent 3", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-3",
+            name="Agent 3",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
 
         agent_assignments = [(1, agent1), (2, agent2), (3, agent3)]
@@ -1065,12 +1144,11 @@ class TestContextPassing:
                     ],
                     {},
                 )
-            else:
-                # sg-3 still executes
-                return (
-                    [SpawnResult(success=True, output="Output 3", error=None, exit_code=0)],
-                    {},
-                )
+            # sg-3 still executes
+            return (
+                [SpawnResult(success=True, output="Output 3", error=None, exit_code=0)],
+                {},
+            )
 
         with patch(
             "aurora_soar.phases.collect.spawn_parallel_tracked",
@@ -1236,16 +1314,15 @@ class TestWaveExecution:
                     [SpawnResult(success=True, output="Output 1", error=None, exit_code=0)],
                     {},
                 )
-            else:
-                # Second wave - verify wave 1 completed
-                call_order.append("wave2_start")
-                assert wave1_complete[0], "Wave 2 started before Wave 1 completed!"
-                call_order.append("wave2_end")
-                # Return result for sg-2
-                return (
-                    [SpawnResult(success=True, output="Output 2", error=None, exit_code=0)],
-                    {},
-                )
+            # Second wave - verify wave 1 completed
+            call_order.append("wave2_start")
+            assert wave1_complete[0], "Wave 2 started before Wave 1 completed!"
+            call_order.append("wave2_end")
+            # Return result for sg-2
+            return (
+                [SpawnResult(success=True, output="Output 2", error=None, exit_code=0)],
+                {},
+            )
 
         with patch(
             "aurora_soar.phases.collect.spawn_parallel_tracked",
@@ -1279,7 +1356,7 @@ class TestWaveExecution:
         agent_assignments = [(1, agent)]
 
         subgoals = [
-            {"subgoal_index": 1, "description": "Task 1", "prompt": "Do task 1", "depends_on": []}
+            {"subgoal_index": 1, "description": "Task 1", "prompt": "Do task 1", "depends_on": []},
         ]
 
         context = {"query": "Test retry"}
@@ -1455,13 +1532,25 @@ class TestProgressDisplayAndLogging:
         caplog.set_level(logging.INFO)
 
         agent1 = AgentInfo(
-            id="agent-1", name="Agent 1", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent2 = AgentInfo(
-            id="agent-2", name="Agent 2", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent3 = AgentInfo(
-            id="agent-3", name="Agent 3", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-3",
+            name="Agent 3",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
 
         agent_assignments = [(1, agent1), (2, agent2), (3, agent3)]
@@ -1487,15 +1576,14 @@ class TestProgressDisplayAndLogging:
                     [SpawnResult(success=True, output="Output 1", error=None, exit_code=0)],
                     {},
                 )
-            else:
-                # Wave 2: sg-2 fails, sg-3 succeeds
-                return (
-                    [
-                        SpawnResult(success=False, output="", error="Timeout", exit_code=-1),
-                        SpawnResult(success=True, output="Output 3", error=None, exit_code=0),
-                    ],
-                    {},
-                )
+            # Wave 2: sg-2 fails, sg-3 succeeds
+            return (
+                [
+                    SpawnResult(success=False, output="", error="Timeout", exit_code=-1),
+                    SpawnResult(success=True, output="Output 3", error=None, exit_code=0),
+                ],
+                {},
+            )
 
         with patch(
             "aurora_soar.phases.collect.spawn_parallel_tracked",
@@ -1523,7 +1611,9 @@ class TestProgressDisplayAndLogging:
 
             # Verify final summary appears
             assert (
-                "EXECUTION COMPLETE" in log_output or "COMPLETE" in log_output or "complete" in log_output.lower()
+                "EXECUTION COMPLETE" in log_output
+                or "COMPLETE" in log_output
+                or "complete" in log_output.lower()
             ), "Expected final execution summary"
 
     @pytest.mark.asyncio
@@ -1544,10 +1634,18 @@ class TestProgressDisplayAndLogging:
         caplog.set_level(logging.DEBUG)
 
         agent1 = AgentInfo(
-            id="agent-1", name="Agent 1", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent2 = AgentInfo(
-            id="agent-2", name="Agent 2", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
 
         agent_assignments = [(1, agent1), (2, agent2)]
@@ -1567,7 +1665,12 @@ class TestProgressDisplayAndLogging:
             wave_count[0] += 1
 
             return (
-                [SpawnResult(success=True, output=f"Output {wave_count[0]}", error=None, exit_code=0) for _ in tasks],
+                [
+                    SpawnResult(
+                        success=True, output=f"Output {wave_count[0]}", error=None, exit_code=0
+                    )
+                    for _ in tasks
+                ],
                 {},
             )
 
@@ -1588,12 +1691,14 @@ class TestProgressDisplayAndLogging:
             debug_output = "\n".join([r.message for r in debug_logs])
 
             # Check for topological sort debug logs
-            assert "Topological sort complete" in debug_output or "wave" in debug_output.lower(), \
-                f"Expected topological sort details in DEBUG logs: {debug_output}"
+            assert (
+                "Topological sort complete" in debug_output or "wave" in debug_output.lower()
+            ), f"Expected topological sort details in DEBUG logs: {debug_output}"
 
             # Check for spawn result debug logs
-            assert "result:" in debug_output or "success=" in debug_output, \
-                f"Expected spawn result details in DEBUG logs: {debug_output}"
+            assert (
+                "result:" in debug_output or "success=" in debug_output
+            ), f"Expected spawn result details in DEBUG logs: {debug_output}"
 
             # Verify INFO logs still present
             info_logs = [r for r in caplog.records if r.levelno == logging.INFO]
@@ -1616,10 +1721,18 @@ class TestProgressDisplayAndLogging:
         caplog.set_level(logging.INFO)
 
         agent1 = AgentInfo(
-            id="agent-1", name="Agent 1", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent2 = AgentInfo(
-            id="agent-2", name="Agent 2", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
 
         agent_assignments = [(1, agent1), (2, agent2)]
@@ -1650,11 +1763,15 @@ class TestProgressDisplayAndLogging:
             await execute_agents(agent_assignments, subgoals, context)
 
             # Capture log messages
-            log_messages = [record.message for record in caplog.records if record.levelno == logging.INFO]
+            log_messages = [
+                record.message for record in caplog.records if record.levelno == logging.INFO
+            ]
             log_output = "\n".join(log_messages)
 
             # Verify final summary appears
-            assert "EXECUTION COMPLETE" in log_output, f"Expected 'EXECUTION COMPLETE' in logs: {log_output}"
+            assert (
+                "EXECUTION COMPLETE" in log_output
+            ), f"Expected 'EXECUTION COMPLETE' in logs: {log_output}"
 
             # Verify summary has correct format (X/N succeeded, Y failed, Z partial)
             assert "succeeded" in log_output.lower() or "failed" in log_output.lower()
@@ -1687,13 +1804,25 @@ class TestProgressDisplayAndLogging:
         caplog.set_level(logging.INFO)
 
         agent1 = AgentInfo(
-            id="agent-1", name="Agent 1", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-1",
+            name="Agent 1",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent2 = AgentInfo(
-            id="agent-2", name="Agent 2", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-2",
+            name="Agent 2",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
         agent3 = AgentInfo(
-            id="agent-3", name="Agent 3", description="Test", capabilities=["test"], agent_type="local"
+            id="agent-3",
+            name="Agent 3",
+            description="Test",
+            capabilities=["test"],
+            agent_type="local",
         )
 
         agent_assignments = [(1, agent1), (2, agent2), (3, agent3)]
@@ -1702,7 +1831,12 @@ class TestProgressDisplayAndLogging:
         subgoals = [
             {"subgoal_index": 1, "description": "Task 1", "prompt": "Do task 1", "depends_on": []},
             {"subgoal_index": 2, "description": "Task 2", "prompt": "Do task 2", "depends_on": []},
-            {"subgoal_index": 3, "description": "Task 3", "prompt": "Do task 3", "depends_on": [1, 2]},
+            {
+                "subgoal_index": 3,
+                "description": "Task 3",
+                "prompt": "Do task 3",
+                "depends_on": [1, 2],
+            },
         ]
 
         context = {"query": "Test partial warning"}
@@ -1727,12 +1861,11 @@ class TestProgressDisplayAndLogging:
                     ],
                     {},
                 )
-            else:
-                # Wave 2: sg-3 executes with partial context
-                return (
-                    [SpawnResult(success=True, output="Output 3", error=None, exit_code=0)],
-                    {},
-                )
+            # Wave 2: sg-3 executes with partial context
+            return (
+                [SpawnResult(success=True, output="Output 3", error=None, exit_code=0)],
+                {},
+            )
 
         with patch(
             "aurora_soar.phases.collect.spawn_parallel_tracked",
@@ -1747,7 +1880,9 @@ class TestProgressDisplayAndLogging:
 
             # Verify partial context marker in output (check agent_outputs metadata)
             sg3_output = [o for o in result.agent_outputs if o.subgoal_index == 3][0]
-            assert sg3_output.execution_metadata.get("partial_context", False), "Expected partial_context flag set"
+            assert sg3_output.execution_metadata.get(
+                "partial_context", False
+            ), "Expected partial_context flag set"
 
 
 class TestEndToEndIntegration:
@@ -1775,10 +1910,18 @@ class TestEndToEndIntegration:
 
         # Create agents
         agents = {
-            "A": AgentInfo(id="agent-a", name="Agent A", description="", capabilities=[], agent_type="local"),
-            "B": AgentInfo(id="agent-b", name="Agent B", description="", capabilities=[], agent_type="local"),
-            "C": AgentInfo(id="agent-c", name="Agent C", description="", capabilities=[], agent_type="local"),
-            "D": AgentInfo(id="agent-d", name="Agent D", description="", capabilities=[], agent_type="local"),
+            "A": AgentInfo(
+                id="agent-a", name="Agent A", description="", capabilities=[], agent_type="local"
+            ),
+            "B": AgentInfo(
+                id="agent-b", name="Agent B", description="", capabilities=[], agent_type="local"
+            ),
+            "C": AgentInfo(
+                id="agent-c", name="Agent C", description="", capabilities=[], agent_type="local"
+            ),
+            "D": AgentInfo(
+                id="agent-d", name="Agent D", description="", capabilities=[], agent_type="local"
+            ),
         }
 
         agent_assignments = [
@@ -1790,10 +1933,30 @@ class TestEndToEndIntegration:
 
         # Diamond pattern: A → (B, C) → D
         subgoals = [
-            {"subgoal_index": 1, "description": "Task A", "prompt": "Execute task A", "depends_on": []},
-            {"subgoal_index": 2, "description": "Task B", "prompt": "Execute task B", "depends_on": [1]},
-            {"subgoal_index": 3, "description": "Task C", "prompt": "Execute task C", "depends_on": [1]},
-            {"subgoal_index": 4, "description": "Task D", "prompt": "Execute task D", "depends_on": [2, 3]},
+            {
+                "subgoal_index": 1,
+                "description": "Task A",
+                "prompt": "Execute task A",
+                "depends_on": [],
+            },
+            {
+                "subgoal_index": 2,
+                "description": "Task B",
+                "prompt": "Execute task B",
+                "depends_on": [1],
+            },
+            {
+                "subgoal_index": 3,
+                "description": "Task C",
+                "prompt": "Execute task C",
+                "depends_on": [1],
+            },
+            {
+                "subgoal_index": 4,
+                "description": "Task D",
+                "prompt": "Execute task D",
+                "depends_on": [2, 3],
+            },
         ]
 
         context = {"query": "Test 3-wave diamond pattern"}
@@ -1838,7 +2001,10 @@ class TestEndToEndIntegration:
 
             return (results, {})
 
-        with patch("aurora_soar.phases.collect.spawn_parallel_tracked", side_effect=mock_spawn_parallel_tracked):
+        with patch(
+            "aurora_soar.phases.collect.spawn_parallel_tracked",
+            side_effect=mock_spawn_parallel_tracked,
+        ):
             result = await execute_agents(agent_assignments, subgoals, context)
 
             # Verify 3 waves executed
@@ -1850,7 +2016,10 @@ class TestEndToEndIntegration:
 
             # Verify wave 2 contains B and C (subgoals 2, 3) - order doesn't matter
             wave2_tasks = sorted([idx for wave, idx in execution_log if wave == 2])
-            assert wave2_tasks == [2, 3], f"Wave 2 should contain subgoals 2 and 3, got {wave2_tasks}"
+            assert wave2_tasks == [
+                2,
+                3,
+            ], f"Wave 2 should contain subgoals 2 and 3, got {wave2_tasks}"
 
             # Verify wave 3 contains only D (subgoal 4)
             wave3_tasks = [idx for wave, idx in execution_log if wave == 3]
@@ -1865,11 +2034,15 @@ class TestEndToEndIntegration:
 
             assert "Previous context" in prompt_b, "B should receive context from A"
             assert "Output from subgoal 1" in prompt_b, "B should have A's output"
-            assert "✓ [sg-1]:" in prompt_b or "[sg-1]:" in prompt_b, "B should have success marker for A"
+            assert (
+                "✓ [sg-1]:" in prompt_b or "[sg-1]:" in prompt_b
+            ), "B should have success marker for A"
 
             assert "Previous context" in prompt_c, "C should receive context from A"
             assert "Output from subgoal 1" in prompt_c, "C should have A's output"
-            assert "✓ [sg-1]:" in prompt_c or "[sg-1]:" in prompt_c, "C should have success marker for A"
+            assert (
+                "✓ [sg-1]:" in prompt_c or "[sg-1]:" in prompt_c
+            ), "C should have success marker for A"
 
             # Verify context passing: D should receive B and C's outputs
             assert 4 in captured_prompts, "Subgoal 4 (D) prompt not captured"
@@ -1880,5 +2053,7 @@ class TestEndToEndIntegration:
             assert "Output from subgoal 3" in prompt_d, "D should have C's output"
 
             # Verify all subgoals completed successfully
-            assert len(result.agent_outputs) == 4, f"Expected 4 outputs but got {len(result.agent_outputs)}"
+            assert (
+                len(result.agent_outputs) == 4
+            ), f"Expected 4 outputs but got {len(result.agent_outputs)}"
             assert all(o.success for o in result.agent_outputs), "All subgoals should succeed"

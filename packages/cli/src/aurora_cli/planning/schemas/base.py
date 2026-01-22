@@ -30,6 +30,7 @@ def validate_non_empty_string(v: str, field_name: str, error_msg: str) -> str:
 
     Raises:
         ValueError: If string is empty or whitespace-only
+
     """
     if not v or len(v.strip()) == 0:
         raise ValueError(error_msg)
@@ -47,6 +48,7 @@ def validate_scenario_text(v: str) -> str:
 
     Raises:
         ValueError: If scenario text is empty
+
     """
     if not isinstance(v, str):
         raise ValueError(VALIDATION_MESSAGES.SCENARIO_EMPTY)
@@ -69,6 +71,7 @@ def validate_requirement_text(v: str) -> str:
 
     Raises:
         ValueError: If text is empty or missing SHALL/MUST keyword
+
     """
     if not isinstance(v, str):
         raise ValueError(VALIDATION_MESSAGES.REQUIREMENT_EMPTY)
@@ -90,6 +93,7 @@ def validate_scenarios_list(v: list[Any]) -> list[Any]:
 
     Raises:
         ValueError: If scenarios list is empty
+
     """
     if not v or len(v) == 0:
         raise ValueError(VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS)
@@ -110,6 +114,7 @@ class Scenario(BaseModel):
 
     Attributes:
         raw_text: Full scenario text including WHEN/THEN/AND blocks
+
     """
 
     raw_text: ScenarioText
@@ -124,6 +129,7 @@ class Requirement(BaseModel):
     Attributes:
         text: Requirement statement (must contain SHALL or MUST)
         scenarios: List of test scenarios (minimum 1)
+
     """
 
     text: RequirementText

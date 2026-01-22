@@ -23,6 +23,7 @@ class ExecutionResult:
         output: Execution output
         error: Error message if failed
         skipped: Whether task was skipped (already completed)
+
     """
 
     task_id: str
@@ -46,6 +47,7 @@ class TaskExecutor:
 
         Args:
             config: Optional configuration dict (for tool/model settings)
+
         """
         self.config = config or {}
 
@@ -58,6 +60,7 @@ class TaskExecutor:
 
         Returns:
             List of ExecutionResult for each task
+
         """
         results: list[ExecutionResult] = []
 
@@ -70,7 +73,7 @@ class TaskExecutor:
                         success=True,
                         output="Task already completed",
                         skipped=True,
-                    )
+                    ),
                 )
                 continue
 
@@ -96,6 +99,7 @@ class TaskExecutor:
 
         Returns:
             ExecutionResult with success status
+
         """
         # Placeholder for direct execution
         # In the future, this could execute Python code directly
@@ -113,6 +117,7 @@ class TaskExecutor:
 
         Returns:
             ExecutionResult with agent output
+
         """
         # Build prompt for agent
         prompt = self._build_agent_prompt(task)
@@ -156,6 +161,7 @@ class TaskExecutor:
 
         Returns:
             Prompt string for agent
+
         """
         # Format: task description with agent context
         prompt = f"""As {task.agent}, complete this task:
@@ -173,6 +179,7 @@ Please execute this task and provide a summary of what was accomplished."""
         Args:
             tasks_file: Path to tasks.md file
             task_id: Task ID to mark complete
+
         """
         try:
             content = tasks_file.read_text(encoding="utf-8")

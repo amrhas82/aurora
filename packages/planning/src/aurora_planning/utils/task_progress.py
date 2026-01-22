@@ -19,6 +19,7 @@ class TaskProgress:
     Attributes:
         total: Total number of tasks
         completed: Number of completed tasks
+
     """
 
     total: int
@@ -42,6 +43,7 @@ def count_tasks_from_content(content: str) -> TaskProgress:
 
     Returns:
         TaskProgress with total and completed counts
+
     """
     lines = content.split("\n")
     total = 0
@@ -65,6 +67,7 @@ def get_task_progress_for_plan(plans_dir: str, plan_name: str) -> TaskProgress:
 
     Returns:
         TaskProgress for the plan (empty if no tasks.md)
+
     """
     tasks_path = Path(plans_dir) / plan_name / "tasks.md"
 
@@ -83,6 +86,7 @@ def format_task_status(progress: TaskProgress) -> str:
 
     Returns:
         Human-readable status string
+
     """
     if progress.total == 0:
         return "No tasks"

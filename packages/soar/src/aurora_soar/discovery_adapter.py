@@ -46,6 +46,7 @@ def get_manifest_manager() -> ManifestManager:
 
     Returns:
         ManifestManager instance (cached on first call)
+
     """
     global _manifest_manager_cache
 
@@ -75,6 +76,7 @@ def convert_agent_info(discovery_agent: DiscoveryAgentInfo) -> RegistryAgentInfo
 
     Returns:
         RegistryAgentInfo compatible with SOAR's AgentRegistry
+
     """
     # Start with skills as base capabilities
     capabilities = list(discovery_agent.skills) if discovery_agent.skills else []
@@ -113,6 +115,7 @@ def get_agent(
 
     Returns:
         RegistryAgentInfo if agent found, None otherwise
+
     """
     manager = get_manifest_manager()
 
@@ -147,6 +150,7 @@ def list_agents(
 
     Returns:
         List of all agents as RegistryAgentInfo objects
+
     """
     manager = get_manifest_manager()
 
@@ -169,6 +173,7 @@ def create_fallback_agent() -> RegistryAgentInfo:
 
     Returns:
         RegistryAgentInfo for the fallback LLM executor agent
+
     """
     return RegistryAgentInfo(
         id="llm-executor",

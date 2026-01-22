@@ -189,7 +189,9 @@ class TestConflictDetection:
         results = [
             ToolResult(tool="claude", success=True, output="Yes, this is safe and recommended."),
             ToolResult(
-                tool="opencode", success=True, output="No, this is dangerous and should be avoided."
+                tool="opencode",
+                success=True,
+                output="No, this is dangerous and should be avoided.",
             ),
         ]
         conflict = ConflictDetector.detect_conflicts(results)

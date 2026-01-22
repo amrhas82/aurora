@@ -34,7 +34,10 @@ class TestIndexCommand:
     @patch("aurora_cli.commands.memory.SQLiteStore")
     @pytest.mark.cli
     def test_index_command_with_default_path(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test index_command() with default path (current directory)."""
         # Setup mocks
@@ -80,7 +83,10 @@ class TestIndexCommand:
     @patch("aurora_cli.commands.memory.SQLiteStore")
     @pytest.mark.cli
     def test_index_command_with_custom_db_path(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test index_command() with custom --db-path option."""
         # Setup mocks
@@ -113,7 +119,10 @@ class TestIndexCommand:
     @patch("aurora_cli.commands.memory.SQLiteStore")
     @pytest.mark.cli
     def test_index_command_with_specific_file(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test index_command() with specific file path instead of directory."""
         # Setup mocks
@@ -146,7 +155,10 @@ class TestIndexCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_index_command_shows_progress(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test index_command() displays progress bar during indexing."""
         # Setup mocks
@@ -182,7 +194,10 @@ class TestIndexCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_index_command_with_errors(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test index_command() displays error count from indexing."""
         # Setup mocks
@@ -212,7 +227,10 @@ class TestIndexCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_index_command_handles_memory_store_error(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test index_command() handles MemoryStoreError gracefully."""
         # Setup mocks to raise MemoryStoreError
@@ -263,7 +281,10 @@ class TestSearchCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_search_command_with_results(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() with successful search results."""
         # Setup mocks
@@ -323,7 +344,10 @@ class TestSearchCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_search_command_with_custom_limit(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() with custom --limit option."""
         # Setup mocks
@@ -349,7 +373,10 @@ class TestSearchCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_search_command_with_no_results(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() with no search results found."""
         # Setup mocks
@@ -377,7 +404,10 @@ class TestSearchCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_search_command_with_json_format(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() with --format json option."""
         # Setup mocks
@@ -421,7 +451,10 @@ class TestSearchCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_search_command_with_show_content(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() with --show-content flag."""
         # Setup mocks
@@ -459,7 +492,9 @@ class TestSearchCommand:
 
     @patch("aurora_cli.commands.memory.ErrorHandler")
     def test_search_command_with_missing_database(
-        self, mock_error_handler_class: Mock, tmp_path: Path
+        self,
+        mock_error_handler_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() with missing database file."""
         # Mock ErrorHandler
@@ -479,7 +514,10 @@ class TestSearchCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_search_command_with_custom_db_path(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() with custom --db-path option."""
         # Setup mocks
@@ -503,7 +541,10 @@ class TestSearchCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_search_command_handles_memory_store_error(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test search_command() handles MemoryStoreError gracefully."""
         # Create database file
@@ -530,7 +571,10 @@ class TestStatsCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_stats_command_with_populated_database(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test stats_command() with populated database."""
         # Setup mocks
@@ -572,7 +616,10 @@ class TestStatsCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_stats_command_with_empty_database(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test stats_command() with empty database (no indexed files)."""
         # Setup mocks
@@ -618,7 +665,10 @@ class TestStatsCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_stats_command_with_custom_db_path(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test stats_command() with custom --db-path option."""
         # Setup mocks
@@ -649,7 +699,10 @@ class TestStatsCommand:
     @patch("aurora_cli.commands.memory.MemoryManager")
     @patch("aurora_cli.commands.memory.SQLiteStore")
     def test_stats_command_handles_memory_store_error(
-        self, mock_store_class: Mock, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_store_class: Mock,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test stats_command() handles MemoryStoreError gracefully."""
         # Create database file

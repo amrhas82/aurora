@@ -195,7 +195,10 @@ class TestLLMAPIErrorHandling:
 
         executor = QueryExecutor()
         result = executor.execute_direct_llm(
-            query="test query", api_key="test-key", memory_store=None, verbose=False
+            query="test query",
+            api_key="test-key",
+            memory_store=None,
+            verbose=False,
         )
 
         assert result == "Test response"
@@ -222,7 +225,10 @@ class TestLLMAPIErrorHandling:
 
         executor = QueryExecutor()
         result = executor.execute_direct_llm(
-            query="test query", api_key="test-key", memory_store=None, verbose=False
+            query="test query",
+            api_key="test-key",
+            memory_store=None,
+            verbose=False,
         )
 
         assert result == "Test response"
@@ -244,7 +250,10 @@ class TestLLMAPIErrorHandling:
 
         with pytest.raises(APIError) as exc_info:
             executor.execute_direct_llm(
-                query="test query", api_key="test-key", memory_store=None, verbose=False
+                query="test query",
+                api_key="test-key",
+                memory_store=None,
+                verbose=False,
             )
 
         assert "rate limit" in str(exc_info.value).lower()
@@ -265,7 +274,10 @@ class TestLLMAPIErrorHandling:
 
         with pytest.raises(APIError) as exc_info:
             executor.execute_direct_llm(
-                query="test query", api_key="test-key", memory_store=None, verbose=False
+                query="test query",
+                api_key="test-key",
+                memory_store=None,
+                verbose=False,
             )
 
         assert "authentication" in str(exc_info.value).lower()
@@ -360,7 +372,9 @@ class TestMemoryErrorHandling:
             ]
 
             with patch.object(
-                manager.parser_registry, "get_parser_for_file", return_value=mock_parser
+                manager.parser_registry,
+                "get_parser_for_file",
+                return_value=mock_parser,
             ):
                 # Mock the entire chunk building and storage process
                 with patch.object(manager, "_build_chunk_content", return_value="test content"):
@@ -469,7 +483,9 @@ class TestDryRunMode:
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ["query", "test query", "--dry-run"], env={"ANTHROPIC_API_KEY": "sk-ant-test123"}
+            cli,
+            ["query", "test query", "--dry-run"],
+            env={"ANTHROPIC_API_KEY": "sk-ant-test123"},
         )
 
         # Should succeed

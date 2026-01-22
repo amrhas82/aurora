@@ -42,7 +42,7 @@ class TestGapDetection:
         mock_agent.id = "quality-assurance"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(
-            side_effect=lambda x: mock_agent if x == "quality-assurance" else None
+            side_effect=lambda x: mock_agent if x == "quality-assurance" else None,
         )
 
         recommender = AgentRecommender(
@@ -250,7 +250,7 @@ class TestGapDetection:
         mock_agent.id = "code-developer"
         mock_manifest.agents = [mock_agent]
         mock_manifest.get_agent = MagicMock(
-            side_effect=lambda x: mock_agent if x == "code-developer" else None
+            side_effect=lambda x: mock_agent if x == "code-developer" else None,
         )
 
         recommender = AgentRecommender(

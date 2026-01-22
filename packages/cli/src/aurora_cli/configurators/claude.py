@@ -32,6 +32,7 @@ class ClaudeConfigurator(BaseConfigurator):
 
         Returns:
             Template content for CLAUDE.md (stub referencing AGENTS.md)
+
         """
         return get_claude_template()
 
@@ -50,6 +51,7 @@ class ClaudeConfigurator(BaseConfigurator):
         Args:
             project_path: Root path of the project
             aurora_dir: Name of Aurora directory
+
         """
         # Configure CLAUDE.md using base class method
         await super().configure(project_path, aurora_dir)

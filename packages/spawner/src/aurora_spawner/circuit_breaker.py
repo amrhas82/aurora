@@ -64,6 +64,7 @@ class CircuitBreaker:
         >>> cb.record_failure("agent-1")
         >>> cb.should_skip("agent-1")
         (True, "Circuit open: 2 failures in last 120s")
+
     """
 
     def __init__(
@@ -84,6 +85,7 @@ class CircuitBreaker:
             fast_fail_threshold: Consecutive failures to trigger immediate open (default: 2)
             adhoc_failure_threshold: Higher threshold for adhoc agents (default: 4)
             adhoc_fast_fail_window: Longer window for adhoc fast-fail detection (default: 30s)
+
         """
         self.failure_threshold = failure_threshold
         self.reset_timeout = reset_timeout
@@ -99,11 +101,11 @@ class CircuitBreaker:
         # Permanent error types that should trigger fast-fail
         # These errors won't be fixed by retrying - agent/config is broken
         self._permanent_error_types = {
-            "auth_error",       # Invalid API key, unauthorized
-            "forbidden",        # 403 - insufficient permissions
-            "invalid_model",    # Model identifier doesn't exist
+            "auth_error",  # Invalid API key, unauthorized
+            "forbidden",  # 403 - insufficient permissions
+            "invalid_model",  # Model identifier doesn't exist
             "invalid_request",  # 400 - malformed request
-            "not_found",        # 404 - endpoint/resource doesn't exist
+            "not_found",  # 404 - endpoint/resource doesn't exist
         }
 
     def _get_circuit(self, agent_id: str) -> AgentCircuit:
@@ -125,6 +127,7 @@ class CircuitBreaker:
 
         Returns:
             True if agent is adhoc
+
         """
         if agent_id in self._adhoc_agents:
             return True
@@ -138,12 +141,16 @@ class CircuitBreaker:
 
         Args:
             agent_id: Agent identifier to mark as adhoc
+
         """
         self._adhoc_agents.add(agent_id)
         logger.info(f"Agent '{agent_id}' marked as adhoc - using lenient circuit breaker policy")
 
     def record_failure(
-        self, agent_id: str, fast_fail: bool = True, failure_type: str | None = None
+        self,
+        agent_id: str,
+        fast_fail: bool = True,
+        failure_type: str | None = None,
     ) -> None:
         """Record a failure for an agent with fast-fail logic and adhoc-aware handling.
 
@@ -151,6 +158,7 @@ class CircuitBreaker:
             agent_id: The agent that failed
             fast_fail: If True, open circuit immediately on consecutive failures
             failure_type: Type of failure (inference, timeout, error_pattern, crash, etc.)
+
         """
         # Rate limit failures should NOT trigger circuit breaker or fast-fail
         # The agent isn't broken - API quota is exhausted (external constraint)
@@ -159,7 +167,7 @@ class CircuitBreaker:
         if is_rate_limit:
             logger.warning(
                 f"Agent '{agent_id}' hit rate limit (quota exhausted) - "
-                f"not opening circuit breaker (agent not broken, API quota issue)"
+                f"not opening circuit breaker (agent not broken, API quota issue)",
             )
             return  # Early exit - don't track as circuit breaker failure
 
@@ -198,7 +206,7 @@ class CircuitBreaker:
         if is_adhoc and is_inference_failure:
             logger.debug(
                 f"Adhoc agent '{agent_id}' inference failure #{recent_failures} "
-                f"(threshold: {effective_threshold}, no fast-fail for inference)"
+                f"(threshold: {effective_threshold}, no fast-fail for inference)",
             )
             fast_fail = False
 
@@ -208,7 +216,7 @@ class CircuitBreaker:
         if not is_permanent_error and failure_type not in [None, "inference"]:
             logger.debug(
                 f"Agent '{agent_id}' transient failure (type: {failure_type}) - "
-                f"allowing retries (no fast-fail)"
+                f"allowing retries (no fast-fail)",
             )
             fast_fail = False
 
@@ -224,7 +232,7 @@ class CircuitBreaker:
                             f"Circuit OPEN (fast-fail) for {agent_type} '{agent_id}': "
                             f"{recent_failures} failures in {self.failure_window:.0f}s window, "
                             f"last 2 within {time_between_failures:.1f}s "
-                            f"(fast-fail window: {fast_fail_window:.0f}s)"
+                            f"(fast-fail window: {fast_fail_window:.0f}s)",
                         )
                     circuit.state = CircuitState.OPEN
                     return
@@ -236,7 +244,7 @@ class CircuitBreaker:
                 logger.warning(
                     f"Circuit OPEN for {agent_type} '{agent_id}': "
                     f"{recent_failures} failures in {self.failure_window:.0f}s "
-                    f"(threshold: {effective_threshold})"
+                    f"(threshold: {effective_threshold})",
                 )
             circuit.state = CircuitState.OPEN
 
@@ -245,6 +253,7 @@ class CircuitBreaker:
 
         Args:
             agent_id: The agent that succeeded
+
         """
         circuit = self._get_circuit(agent_id)
         if circuit.state != CircuitState.CLOSED:
@@ -264,6 +273,7 @@ class CircuitBreaker:
 
         Returns:
             True if circuit is open and agent should be skipped
+
         """
         skip, _ = self.should_skip(agent_id)
         return skip
@@ -280,6 +290,7 @@ class CircuitBreaker:
 
         Returns:
             Tuple of (should_skip, reason)
+
         """
         circuit = self._get_circuit(agent_id)
         now = time.time()
@@ -292,17 +303,16 @@ class CircuitBreaker:
             elapsed = now - circuit.last_failure_time
             if elapsed >= self.reset_timeout:
                 logger.info(
-                    f"Circuit HALF_OPEN for agent '{agent_id}': testing after {elapsed:.0f}s"
+                    f"Circuit HALF_OPEN for agent '{agent_id}': testing after {elapsed:.0f}s",
                 )
                 circuit.state = CircuitState.HALF_OPEN
                 circuit.last_attempt_time = now
                 return False, ""  # Allow test request
-            else:
-                remaining = self.reset_timeout - elapsed
-                return (
-                    True,
-                    f"Circuit open: {circuit.failure_count} failures, retry in {remaining:.0f}s",
-                )
+            remaining = self.reset_timeout - elapsed
+            return (
+                True,
+                f"Circuit open: {circuit.failure_count} failures, retry in {remaining:.0f}s",
+            )
 
         if circuit.state == CircuitState.HALF_OPEN:
             # Only allow one test request
@@ -319,6 +329,7 @@ class CircuitBreaker:
 
         Args:
             agent_id: The agent to reset
+
         """
         if agent_id in self._circuits:
             logger.info(f"Circuit RESET for agent '{agent_id}'")
@@ -337,6 +348,7 @@ class CircuitBreaker:
 
         Returns:
             Failures per minute over the failure window
+
         """
         if agent_id not in self._failure_history:
             return 0.0
@@ -363,6 +375,7 @@ class CircuitBreaker:
 
         Returns:
             Dict with health metrics and risk indicators
+
         """
         circuit = self._get_circuit(agent_id)
         now = time.time()
@@ -403,6 +416,7 @@ class CircuitBreaker:
 
         Returns:
             Dict mapping agent_id to circuit status
+
         """
         return {
             agent_id: self.get_health_status(agent_id)
@@ -419,6 +433,7 @@ def get_circuit_breaker() -> CircuitBreaker:
 
     Returns:
         The default CircuitBreaker instance
+
     """
     global _default_circuit_breaker
     if _default_circuit_breaker is None:

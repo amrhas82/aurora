@@ -296,6 +296,7 @@ def get_command_body(command_id: str) -> str:
 
     Raises:
         KeyError: If command_id is not found
+
     """
     if command_id not in COMMAND_TEMPLATES:
         raise KeyError(f"Unknown command: {command_id}")

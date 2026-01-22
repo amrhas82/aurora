@@ -247,6 +247,7 @@ def process_payment(amount: float, card_number: str) -> dict:
 
         Returns:
             Dict with indexing stats (files_indexed, chunks_created, etc.)
+
         """
         result_json = self.tools.aurora_index(str(self.temp_dir), "*.py")
         return json.loads(result_json)
@@ -256,6 +257,7 @@ def process_payment(amount: float, card_number: str) -> dict:
 
         Returns:
             Dict with database counts (chunks, files)
+
         """
         conn = sqlite3.connect(str(self.db_path))
         cursor = conn.cursor()
@@ -267,7 +269,7 @@ def process_payment(amount: float, card_number: str) -> dict:
         # Count unique files from metadata JSON
         # metadata JSON contains file_path in some chunks
         cursor.execute(
-            "SELECT COUNT(DISTINCT json_extract(metadata, '$.file_path')) FROM chunks WHERE json_extract(metadata, '$.file_path') IS NOT NULL"
+            "SELECT COUNT(DISTINCT json_extract(metadata, '$.file_path')) FROM chunks WHERE json_extract(metadata, '$.file_path') IS NOT NULL",
         )
         total_files = cursor.fetchone()[0]
 
@@ -766,7 +768,8 @@ def bar():
     def test_context_file_with_no_functions(self, test_client):
         """Test 10: Context handles files with no functions gracefully."""
         file_path = test_client.create_sample_python_file(
-            "no_funcs.py", "# Just a comment\nX = 42\n"
+            "no_funcs.py",
+            "# Just a comment\nX = 42\n",
         )
 
         result = test_client.tools.aurora_context(str(file_path), function="anything")
@@ -1257,7 +1260,6 @@ class TestMCPErrorHandling:
         # Check if log file exists and has content
         # (Log location is ~/.aurora/mcp.log by default)
         # For test, we just verify no crash
-        pass
 
     def test_tools_recover_from_partial_failures(self, test_client):
         """Test 9: Tools recover gracefully from partial failures."""
@@ -1343,7 +1345,8 @@ class TestMCPPerformanceAndLogging:
         # Create moderate-sized test database
         for i in range(20):
             test_client.create_sample_python_file(
-                f"file{i}.py", f"def function_{i}():\n    '''Function {i}'''\n    pass\n"
+                f"file{i}.py",
+                f"def function_{i}():\n    '''Function {i}'''\n    pass\n",
             )
 
         test_client.index_test_codebase()

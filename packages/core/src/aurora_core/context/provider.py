@@ -40,8 +40,8 @@ class ContextProvider(ABC):
         Raises:
             ValueError: If query is empty or limit is invalid
             StorageError: If underlying storage access fails
+
         """
-        pass
 
     @abstractmethod
     def update(self, chunk_id: ChunkID, activation_delta: float) -> None:
@@ -59,8 +59,8 @@ class ContextProvider(ABC):
         Raises:
             ChunkNotFoundError: If chunk_id does not exist
             StorageError: If update operation fails
+
         """
-        pass
 
     @abstractmethod
     def refresh(self) -> None:
@@ -77,8 +77,8 @@ class ContextProvider(ABC):
 
         Raises:
             StorageError: If refresh operation fails
+
         """
-        pass
 
 
 __all__ = ["ContextProvider"]

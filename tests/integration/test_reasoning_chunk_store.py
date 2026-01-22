@@ -102,7 +102,9 @@ class TestReasoningChunkStoreIntegration:
     # ===== Memory Store Tests =====
 
     def test_memory_store_save_and_retrieve_simple_chunk(
-        self, memory_store, simple_reasoning_chunk
+        self,
+        memory_store,
+        simple_reasoning_chunk,
     ):
         """Test saving and retrieving simple ReasoningChunk from MemoryStore."""
         # Save chunk
@@ -120,7 +122,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.success_score == simple_reasoning_chunk.success_score
 
     def test_memory_store_save_and_retrieve_complex_chunk(
-        self, memory_store, complex_reasoning_chunk
+        self,
+        memory_store,
+        complex_reasoning_chunk,
     ):
         """Test saving and retrieving complex ReasoningChunk from MemoryStore."""
         # Save chunk
@@ -143,7 +147,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.metadata == complex_reasoning_chunk.metadata
 
     def test_memory_store_round_trip_preserves_nested_data(
-        self, memory_store, complex_reasoning_chunk
+        self,
+        memory_store,
+        complex_reasoning_chunk,
     ):
         """Test that nested data structures are preserved through round-trip."""
         # Save and retrieve
@@ -210,7 +216,9 @@ class TestReasoningChunkStoreIntegration:
     # ===== SQLite Store Tests =====
 
     def test_sqlite_store_save_and_retrieve_simple_chunk(
-        self, sqlite_store, simple_reasoning_chunk
+        self,
+        sqlite_store,
+        simple_reasoning_chunk,
     ):
         """Test saving and retrieving simple ReasoningChunk from SQLiteStore."""
         # Save chunk
@@ -228,7 +236,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.success_score == simple_reasoning_chunk.success_score
 
     def test_sqlite_store_save_and_retrieve_complex_chunk(
-        self, sqlite_store, complex_reasoning_chunk
+        self,
+        sqlite_store,
+        complex_reasoning_chunk,
     ):
         """Test saving and retrieving complex ReasoningChunk from SQLiteStore."""
         # Save chunk
@@ -251,7 +261,9 @@ class TestReasoningChunkStoreIntegration:
         assert retrieved_chunk.metadata == complex_reasoning_chunk.metadata
 
     def test_sqlite_store_round_trip_preserves_nested_data(
-        self, sqlite_store, complex_reasoning_chunk
+        self,
+        sqlite_store,
+        complex_reasoning_chunk,
     ):
         """Test that nested data structures are preserved through SQLite round-trip."""
         # Save and retrieve

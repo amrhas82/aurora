@@ -62,7 +62,12 @@ class TestGoalsPlanIntegration:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_aur_goals_creates_goals_json(
-        self, mock_which, mock_create_plan, mock_client, isolated_project, valid_subgoal
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        isolated_project,
+        valid_subgoal,
     ):
         """Test: aur goals creates valid goals.json that /plan can read."""
         # Setup
@@ -152,7 +157,12 @@ class TestGoalsPlanIntegration:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_goals_json_format_for_plan_skill(
-        self, mock_which, mock_create_plan, mock_client, isolated_project, valid_subgoal
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        isolated_project,
+        valid_subgoal,
     ):
         """Test: goals.json format is compatible with /plan skill expectations."""
         # Setup
@@ -199,7 +209,11 @@ class TestGoalsPlanIntegration:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_plan_skill_can_read_agent_metadata(
-        self, mock_which, mock_create_plan, mock_client, isolated_project
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        isolated_project,
     ):
         """Test: goals.json includes agent metadata for /plan to use in tasks.md."""
         # Setup
@@ -287,7 +301,7 @@ class TestGoalsPlanIntegration:
         # After aur goals:
         goals_file = plan_dir / "goals.json"
         goals_file.write_text(
-            '{"id": "0001-example", "title": "Example goal for documentation", "status": "ready_for_planning", "subgoals": [{"id": "sg-1", "title": "Test", "description": "Test", "agent": "@code-developer", "confidence": 0.9, "dependencies": []}], "memory_context": [], "gaps": []}'
+            '{"id": "0001-example", "title": "Example goal for documentation", "status": "ready_for_planning", "subgoals": [{"id": "sg-1", "title": "Test", "description": "Test", "agent": "@code-developer", "confidence": 0.9, "dependencies": []}], "memory_context": [], "gaps": []}',
         )
 
         assert goals_file.exists()
@@ -320,7 +334,12 @@ class TestGoalsPlanIntegration:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_goals_json_includes_memory_context_for_plan(
-        self, mock_which, mock_create_plan, mock_client, isolated_project, valid_subgoal
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        isolated_project,
+        valid_subgoal,
     ):
         """Test: goals.json includes memory context for /plan to reference in PRD."""
         # Setup

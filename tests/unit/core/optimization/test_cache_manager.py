@@ -120,7 +120,10 @@ class TestCacheEntry:
         """Test creating cache entry."""
         timestamp = time.time()
         entry = CacheEntry(
-            value="test_value", timestamp=timestamp, access_count=0, last_access=timestamp
+            value="test_value",
+            timestamp=timestamp,
+            access_count=0,
+            last_access=timestamp,
         )
 
         assert entry.value == "test_value"

@@ -494,7 +494,7 @@ class TestEndToEndCacheSpeedup:
 
         print(
             f"\nCache speedup: {speedup:.1f}x (non-cached: {non_cached_time * 1000:.2f}ms, "
-            f"cached: {cached_time * 1000:.3f}ms)"
+            f"cached: {cached_time * 1000:.3f}ms)",
         )
 
     def test_cache_overhead_on_miss(self, memory_cache):

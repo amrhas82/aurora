@@ -42,6 +42,7 @@ class ContinueMCPConfigurator(MCPConfigurator):
 
         Returns:
             Path to ~/.continue/config.json
+
         """
         return Path.home() / ".continue" / "config.json"
 
@@ -55,6 +56,7 @@ class ContinueMCPConfigurator(MCPConfigurator):
 
         Returns:
             Dictionary with Aurora server configuration
+
         """
         db_path = project_path / ".aurora" / "memory.db"
 
@@ -82,7 +84,7 @@ class ContinueMCPConfigurator(MCPConfigurator):
                         "PYTHONPATH": ":".join(pythonpath_parts),
                         "AURORA_DB_PATH": str(db_path),
                     },
-                }
+                },
             }
 
         return {
@@ -92,7 +94,7 @@ class ContinueMCPConfigurator(MCPConfigurator):
                 "env": {
                     "AURORA_DB_PATH": str(db_path),
                 },
-            }
+            },
         }
 
     def configure(self, project_path: Path) -> ConfigResult:
@@ -105,6 +107,7 @@ class ContinueMCPConfigurator(MCPConfigurator):
 
         Returns:
             ConfigResult with operation status
+
         """
         config_path = self.get_config_path(project_path)
         warnings: list[str] = []
@@ -186,6 +189,7 @@ class ContinueMCPConfigurator(MCPConfigurator):
 
         Returns:
             True if Aurora is in Continue's MCP servers list
+
         """
         config_path = self.get_config_path(project_path)
 

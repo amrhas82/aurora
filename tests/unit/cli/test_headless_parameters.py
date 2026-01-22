@@ -180,21 +180,21 @@ class TestConfigToolRetryValidation:
     def test_tool_config_accepts_valid_max_retries(self):
         """Test that tool config accepts valid max_retries (0 or positive)."""
         config = Config(
-            headless_tool_configs={"claude": {"max_retries": 3, "input_method": "argument"}}
+            headless_tool_configs={"claude": {"max_retries": 3, "input_method": "argument"}},
         )
         config.validate()  # Should not raise
 
     def test_tool_config_accepts_zero_retries(self):
         """Test that tool config accepts zero retries (no retry)."""
         config = Config(
-            headless_tool_configs={"claude": {"max_retries": 0, "input_method": "argument"}}
+            headless_tool_configs={"claude": {"max_retries": 0, "input_method": "argument"}},
         )
         config.validate()  # Should not raise
 
     def test_tool_config_rejects_negative_max_retries(self):
         """Test that tool config rejects negative max_retries."""
         config = Config(
-            headless_tool_configs={"claude": {"max_retries": -1, "input_method": "argument"}}
+            headless_tool_configs={"claude": {"max_retries": -1, "input_method": "argument"}},
         )
         with pytest.raises(ConfigurationError) as exc_info:
             config.validate()
@@ -203,21 +203,21 @@ class TestConfigToolRetryValidation:
     def test_tool_config_accepts_valid_retry_delay(self):
         """Test that tool config accepts valid retry_delay."""
         config = Config(
-            headless_tool_configs={"claude": {"retry_delay": 2.5, "input_method": "argument"}}
+            headless_tool_configs={"claude": {"retry_delay": 2.5, "input_method": "argument"}},
         )
         config.validate()  # Should not raise
 
     def test_tool_config_accepts_zero_retry_delay(self):
         """Test that tool config accepts zero retry_delay (immediate retry)."""
         config = Config(
-            headless_tool_configs={"claude": {"retry_delay": 0.0, "input_method": "argument"}}
+            headless_tool_configs={"claude": {"retry_delay": 0.0, "input_method": "argument"}},
         )
         config.validate()  # Should not raise
 
     def test_tool_config_rejects_negative_retry_delay(self):
         """Test that tool config rejects negative retry_delay."""
         config = Config(
-            headless_tool_configs={"claude": {"retry_delay": -1.0, "input_method": "argument"}}
+            headless_tool_configs={"claude": {"retry_delay": -1.0, "input_method": "argument"}},
         )
         with pytest.raises(ConfigurationError) as exc_info:
             config.validate()
@@ -405,7 +405,7 @@ class TestParameterEdgeCases:
     def test_max_retries_large_value(self):
         """Test that large max_retries values are accepted."""
         config = Config(
-            headless_tool_configs={"claude": {"max_retries": 100, "input_method": "argument"}}
+            headless_tool_configs={"claude": {"max_retries": 100, "input_method": "argument"}},
         )
         config.validate()  # Should not raise
 
@@ -458,7 +458,8 @@ class TestCombinedBudgetAndMaxRetriesCliParsing:
     def test_budget_and_max_retries_both_accepted(self, runner):
         """Test that --budget and --max-retries can be specified together."""
         result = runner.invoke(
-            headless_command, ["--budget", "10.0", "--max-retries", "3", "--help"]
+            headless_command,
+            ["--budget", "10.0", "--max-retries", "3", "--help"],
         )
         assert result.exit_code == 0
 
@@ -519,7 +520,7 @@ class TestCombinedBudgetAndMaxRetriesConfig:
         config = Config(
             headless_budget=50.0,
             headless_tool_configs={
-                "claude": {"max_retries": 3, "retry_delay": 1.5, "input_method": "argument"}
+                "claude": {"max_retries": 3, "retry_delay": 1.5, "input_method": "argument"},
             },
         )
         config.validate()  # Should not raise
@@ -543,7 +544,7 @@ class TestCombinedBudgetAndMaxRetriesConfig:
         config = Config(
             headless_budget=50.0,
             headless_tool_configs={
-                "claude": {"max_retries": -1, "input_method": "argument"}  # Invalid
+                "claude": {"max_retries": -1, "input_method": "argument"},  # Invalid
             },
         )
         with pytest.raises(ConfigurationError) as exc_info:
@@ -647,7 +648,13 @@ class TestCombinedBudgetAndMaxRetriesExecution:
     @patch("aurora_cli.commands.headless.subprocess.run")
     @patch("pathlib.Path.cwd")
     def test_execution_with_budget_and_retries(
-        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+        self,
+        mock_cwd,
+        mock_run,
+        mock_which,
+        runner,
+        temp_prompt,
+        tmp_path,
     ):
         """Test execution proceeds with both budget and retry settings."""
         mock_cwd.return_value = tmp_path
@@ -680,7 +687,13 @@ class TestCombinedBudgetAndMaxRetriesExecution:
     @patch("aurora_cli.commands.headless.subprocess.run")
     @patch("pathlib.Path.cwd")
     def test_budget_stops_before_retries_exhausted(
-        self, mock_cwd, mock_run, mock_which, runner, temp_prompt, tmp_path
+        self,
+        mock_cwd,
+        mock_run,
+        mock_which,
+        runner,
+        temp_prompt,
+        tmp_path,
     ):
         """Test that budget limit stops execution before retry limit is hit.
 
@@ -785,7 +798,7 @@ class TestCombinedParametersEdgeCases:
         config = Config(
             headless_budget=50.0,
             headless_tool_configs={
-                "claude": {"max_retries": 0, "input_method": "argument"}  # Valid (no retries)
+                "claude": {"max_retries": 0, "input_method": "argument"},  # Valid (no retries)
             },
         )
         config.validate()  # Should not raise
@@ -795,7 +808,7 @@ class TestCombinedParametersEdgeCases:
         config = Config(
             headless_budget=0.001,  # Tiny budget
             headless_tool_configs={
-                "claude": {"max_retries": 100, "input_method": "argument"}  # Many retries
+                "claude": {"max_retries": 100, "input_method": "argument"},  # Many retries
             },
         )
         config.validate()  # Config is valid; runtime behavior may limit execution
@@ -819,7 +832,7 @@ class TestCombinedParametersEdgeCases:
                     "max_retries": 0,  # No retries
                     "retry_delay": 0.0,  # Immediate
                     "input_method": "argument",
-                }
+                },
             },
         )
         config.validate()  # Should not raise

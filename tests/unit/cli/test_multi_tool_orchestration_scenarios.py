@@ -12,10 +12,8 @@ Tests cover advanced orchestration patterns for running multiple AI tools
 """
 
 import asyncio
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -23,10 +21,6 @@ from aurora_cli.concurrent_executor import (
     AggregatedResult,
     AggregationStrategy,
     ConcurrentToolExecutor,
-    ConflictDetector,
-    ConflictInfo,
-    ConflictResolver,
-    ConflictSeverity,
     ToolConfig,
     ToolResult,
 )
@@ -534,10 +528,16 @@ Performance considerations:
                 strategy_used=AggregationStrategy.ALL_COMPLETE,
                 tool_results=[
                     ToolResult(
-                        tool="claude", success=True, output=shared_conclusion, execution_time=1.0
+                        tool="claude",
+                        success=True,
+                        output=shared_conclusion,
+                        execution_time=1.0,
                     ),
                     ToolResult(
-                        tool="opencode", success=True, output=shared_conclusion, execution_time=1.0
+                        tool="opencode",
+                        success=True,
+                        output=shared_conclusion,
+                        execution_time=1.0,
                     ),
                 ],
             )
@@ -666,7 +666,10 @@ class TestMetadataTracking:
                 tool_results=[
                     ToolResult(tool="claude", success=True, output="A" * 500, execution_time=10.0),
                     ToolResult(
-                        tool="opencode", success=True, output="B" * 100, execution_time=30.0
+                        tool="opencode",
+                        success=True,
+                        output="B" * 100,
+                        execution_time=30.0,
                     ),
                 ],
             )

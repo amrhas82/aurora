@@ -40,5 +40,6 @@ class CursorMCPConfigurator(MCPConfigurator):
 
         Returns:
             Path to .cursor/mcp.json in project
+
         """
         return project_path / ".cursor" / "mcp.json"

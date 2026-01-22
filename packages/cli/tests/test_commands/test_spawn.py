@@ -238,7 +238,7 @@ class TestLoadTasks:
                 # Actually, let's skip this test as the parser behavior is different
                 # The parser will always extract something as description
                 pytest.skip(
-                    "Parser always extracts text after ID - validation not needed for this case"
+                    "Parser always extracts text after ID - validation not needed for this case",
                 )
 
     def test_empty_file_returns_empty_list(self):

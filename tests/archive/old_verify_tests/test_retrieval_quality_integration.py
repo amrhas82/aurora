@@ -35,7 +35,9 @@ class TestRetrievalQualityIntegration:
         """Test NONE quality when retrieval returns 0 chunks."""
         # Empty store - no chunks
         retrieval_result = retrieve_context(
-            query="nonexistent code", store=temp_store, complexity="MEDIUM"
+            query="nonexistent code",
+            store=temp_store,
+            complexity="MEDIUM",
         )
 
         assert retrieval_result["total_retrieved"] == 0
@@ -56,7 +58,9 @@ class TestRetrievalQualityIntegration:
 
         # Assess quality
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=0, total_chunks=0
+            verification=verification,
+            high_quality_chunks=0,
+            total_chunks=0,
         )
 
         assert quality == RetrievalQuality.NONE
@@ -82,7 +86,9 @@ class TestRetrievalQualityIntegration:
 
         # Retrieve
         retrieval_result = retrieve_context(
-            query="test query", store=temp_store, complexity="MEDIUM"
+            query="test query",
+            store=temp_store,
+            complexity="MEDIUM",
         )
 
         assert retrieval_result["high_quality_count"] == 5  # All high-quality
@@ -103,7 +109,9 @@ class TestRetrievalQualityIntegration:
 
         # Assess quality
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=5, total_chunks=5
+            verification=verification,
+            high_quality_chunks=5,
+            total_chunks=5,
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -129,7 +137,9 @@ class TestRetrievalQualityIntegration:
 
         # Retrieve
         retrieval_result = retrieve_context(
-            query="test query", store=temp_store, complexity="MEDIUM"
+            query="test query",
+            store=temp_store,
+            complexity="MEDIUM",
         )
 
         assert retrieval_result["high_quality_count"] == 2  # < 3
@@ -150,7 +160,9 @@ class TestRetrievalQualityIntegration:
 
         # Assess quality - should still be WEAK due to < 3 chunks
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=2, total_chunks=2
+            verification=verification,
+            high_quality_chunks=2,
+            total_chunks=2,
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -176,7 +188,9 @@ class TestRetrievalQualityIntegration:
 
         # Retrieve
         retrieval_result = retrieve_context(
-            query="test query", store=temp_store, complexity="MEDIUM"
+            query="test query",
+            store=temp_store,
+            complexity="MEDIUM",
         )
 
         assert retrieval_result["total_retrieved"] == 10  # Many chunks
@@ -197,7 +211,9 @@ class TestRetrievalQualityIntegration:
 
         # Assess quality - WEAK due to 0 high-quality chunks
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=0, total_chunks=10
+            verification=verification,
+            high_quality_chunks=0,
+            total_chunks=10,
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -223,7 +239,9 @@ class TestRetrievalQualityIntegration:
 
         # Retrieve
         retrieval_result = retrieve_context(
-            query="good query", store=temp_store, complexity="MEDIUM"
+            query="good query",
+            store=temp_store,
+            complexity="MEDIUM",
         )
 
         assert retrieval_result["high_quality_count"] == 5
@@ -244,7 +262,9 @@ class TestRetrievalQualityIntegration:
 
         # Assess quality
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=5, total_chunks=5
+            verification=verification,
+            high_quality_chunks=5,
+            total_chunks=5,
         )
 
         assert quality == RetrievalQuality.GOOD
@@ -269,7 +289,9 @@ class TestRetrievalQualityIntegration:
 
         # Retrieve
         retrieval_result = retrieve_context(
-            query="boundary test", store=temp_store, complexity="MEDIUM"
+            query="boundary test",
+            store=temp_store,
+            complexity="MEDIUM",
         )
 
         # Activation >= 0.3 should count as high-quality
@@ -312,7 +334,9 @@ class TestRetrievalQualityIntegration:
 
         # Retrieve
         retrieval_result = retrieve_context(
-            query="mixed test", store=temp_store, complexity="MEDIUM"
+            query="mixed test",
+            store=temp_store,
+            complexity="MEDIUM",
         )
 
         assert retrieval_result["total_retrieved"] == 6
@@ -332,7 +356,9 @@ class TestRetrievalQualityIntegration:
         )
 
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=3, total_chunks=6
+            verification=verification,
+            high_quality_chunks=3,
+            total_chunks=6,
         )
 
         assert quality == RetrievalQuality.GOOD  # Exactly at boundary

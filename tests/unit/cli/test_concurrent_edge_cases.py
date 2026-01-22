@@ -11,11 +11,8 @@ Tests cover:
 
 import asyncio
 import gc
-import sys
 import weakref
-from dataclasses import dataclass
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -24,15 +21,12 @@ from aurora_cli.concurrent_executor import (
     AggregationStrategy,
     ConcurrentToolExecutor,
     ConflictDetector,
-    ConflictInfo,
     ConflictResolver,
     ConflictSeverity,
     ToolConfig,
     ToolResult,
 )
 from aurora_cli.tool_providers import ToolProviderRegistry
-from aurora_cli.tool_providers.base import ToolProvider, ToolStatus
-from aurora_cli.tool_providers.base import ToolResult as ProviderResult
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +107,10 @@ class TestBoundaryConditions:
                 tool_results=[
                     ToolResult(tool="claude", success=True, output="Answer A", execution_time=0.1),
                     ToolResult(
-                        tool="opencode", success=True, output="Answer A", execution_time=0.1
+                        tool="opencode",
+                        success=True,
+                        output="Answer A",
+                        execution_time=0.1,
                     ),
                     ToolResult(tool="cursor", success=True, output="Answer B", execution_time=0.1),
                 ],
@@ -132,7 +129,10 @@ class TestBoundaryConditions:
 
         with patch.object(executor, "_execute_tool") as mock_exec:
             mock_exec.return_value = ToolResult(
-                tool="claude", success=True, output="Response to empty", execution_time=0.1
+                tool="claude",
+                success=True,
+                output="Response to empty",
+                execution_time=0.1,
             )
 
             result = await executor.execute("")
@@ -148,7 +148,10 @@ class TestBoundaryConditions:
 
         with patch.object(executor, "_execute_tool") as mock_exec:
             mock_exec.return_value = ToolResult(
-                tool="claude", success=True, output="Handled long prompt", execution_time=5.0
+                tool="claude",
+                success=True,
+                output="Handled long prompt",
+                execution_time=5.0,
             )
 
             result = await executor.execute(long_prompt)
@@ -248,13 +251,12 @@ class TestRaceConditions:
             if tool.name == "claude":
                 await asyncio.sleep(0.001)
                 return ToolResult(tool="claude", success=True, output="Quick", execution_time=0.001)
-            else:
-                try:
-                    await asyncio.sleep(10.0)  # Long task
-                except asyncio.CancelledError:
-                    cancelled["opencode"] = True
-                    raise
-                return ToolResult(tool="opencode", success=True, output="Slow", execution_time=10.0)
+            try:
+                await asyncio.sleep(10.0)  # Long task
+            except asyncio.CancelledError:
+                cancelled["opencode"] = True
+                raise
+            return ToolResult(tool="opencode", success=True, output="Slow", execution_time=10.0)
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test")
@@ -521,14 +523,19 @@ class TestResourceManagement:
                 if tool.name == "claude":
                     task_states["completed"] += 1
                     return ToolResult(
-                        tool="claude", success=True, output="Done", execution_time=0.01
+                        tool="claude",
+                        success=True,
+                        output="Done",
+                        execution_time=0.01,
                     )
-                else:
-                    await asyncio.sleep(10.0)
-                    task_states["completed"] += 1
-                    return ToolResult(
-                        tool="opencode", success=True, output="Slow", execution_time=10.0
-                    )
+                await asyncio.sleep(10.0)
+                task_states["completed"] += 1
+                return ToolResult(
+                    tool="opencode",
+                    success=True,
+                    output="Slow",
+                    execution_time=10.0,
+                )
             except asyncio.CancelledError:
                 task_states["cancelled"] += 1
                 raise
@@ -553,7 +560,11 @@ class TestConflictResolutionEdgeCases:
         results = [
             ToolResult(tool="claude", success=False, output="", error="Error", execution_time=0.1),
             ToolResult(
-                tool="opencode", success=False, output="", error="Error", execution_time=0.1
+                tool="opencode",
+                success=False,
+                output="",
+                error="Error",
+                execution_time=0.1,
             ),
         ]
 
@@ -569,7 +580,8 @@ class TestConflictResolutionEdgeCases:
         ]
 
         winner, _ = ConflictResolver.resolve_by_weighted_vote(
-            results, weights={"claude": 1.0, "opencode": 1.0}
+            results,
+            weights={"claude": 1.0, "opencode": 1.0},
         )
 
         # Should still pick one
@@ -637,7 +649,10 @@ class TestToolConfigEdgeCases:
 
         with patch.object(executor, "_execute_tool") as mock_exec:
             mock_exec.return_value = ToolResult(
-                tool="opencode", success=True, output="Success", execution_time=0.1
+                tool="opencode",
+                success=True,
+                output="Success",
+                execution_time=0.1,
             )
 
             result = await executor.execute("Test")
@@ -659,7 +674,10 @@ class TestToolConfigEdgeCases:
 
         with patch.object(executor, "_execute_direct") as mock_direct:
             mock_direct.return_value = ToolResult(
-                tool="custom", success=True, output="Custom output", execution_time=0.1
+                tool="custom",
+                success=True,
+                output="Custom output",
+                execution_time=0.1,
             )
 
             await executor.execute("Test")
@@ -733,7 +751,10 @@ class TestAsyncBehavior:
             if tool.name == "claude":
                 raise ValueError("Claude exploded")
             return ToolResult(
-                tool="opencode", success=True, output="OpenCode OK", execution_time=0.1
+                tool="opencode",
+                success=True,
+                output="OpenCode OK",
+                execution_time=0.1,
             )
 
         with patch.object(executor, "_execute_tool", side_effect=mixed_execute):

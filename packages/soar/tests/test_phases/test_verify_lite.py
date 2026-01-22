@@ -64,7 +64,7 @@ class TestVerifyLite:
                     "suggested_agent": "nonexistent-agent",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
         }
 
@@ -163,7 +163,7 @@ class TestVerifyLite:
                     "suggested_agent": "test-agent",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
         }
 
@@ -196,7 +196,7 @@ class TestVerifyLite:
                     "suggested_agent": "test-agent",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
         }
 
@@ -233,7 +233,7 @@ class TestVerifyLite:
                     "suggested_agent": "missing-agent",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
         }
 

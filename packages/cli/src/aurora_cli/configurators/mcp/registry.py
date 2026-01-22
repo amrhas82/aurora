@@ -50,6 +50,7 @@ class MCPConfigRegistry:
 
         Note:
             Tool IDs are normalized (lowercase, spaces to dashes).
+
         """
         tool_id = cls._normalize_tool_id(configurator.tool_id)
         cls._configurators[tool_id] = configurator
@@ -63,6 +64,7 @@ class MCPConfigRegistry:
 
         Returns:
             Configurator instance or None if not found
+
         """
         cls._ensure_initialized()
         normalized_id = cls._normalize_tool_id(tool_id)
@@ -74,6 +76,7 @@ class MCPConfigRegistry:
 
         Returns:
             List of all configurator instances
+
         """
         cls._ensure_initialized()
         return list(cls._configurators.values())
@@ -84,6 +87,7 @@ class MCPConfigRegistry:
 
         Returns:
             List of tool IDs (e.g., ['claude', 'cursor', 'cline', 'continue'])
+
         """
         cls._ensure_initialized()
         return list(cls._configurators.keys())
@@ -97,6 +101,7 @@ class MCPConfigRegistry:
 
         Returns:
             True if tool has an MCP configurator registered
+
         """
         cls._ensure_initialized()
         normalized_id = cls._normalize_tool_id(tool_id)
@@ -120,5 +125,6 @@ class MCPConfigRegistry:
 
         Returns:
             Normalized tool ID (lowercase, spaces to dashes)
+
         """
         return tool_id.lower().replace(" ", "-")

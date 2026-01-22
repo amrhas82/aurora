@@ -44,6 +44,7 @@ class BenchmarkResult:
         passed: Whether benchmark met target criteria.
         target_ms: Target execution time (if specified).
         metadata: Additional metadata.
+
     """
 
     name: str
@@ -76,7 +77,7 @@ class BenchmarkResult:
                     f"  Median: {self.median_ms:.2f}ms",
                     f"  Std Dev: {self.std_dev_ms:.2f}ms",
                     f"  Range: {self.min_ms:.2f}ms - {self.max_ms:.2f}ms",
-                ]
+                ],
             )
 
         if self.target_ms:
@@ -110,6 +111,7 @@ class PerformanceTimer:
         >>> result = operation()
         >>> timer.stop()
         >>> assert timer.elapsed_ms < 100
+
     """
 
     def __init__(self) -> None:
@@ -128,6 +130,7 @@ class PerformanceTimer:
 
         Returns:
             Elapsed time in milliseconds.
+
         """
         if self.start_time is None:
             raise RuntimeError("Timer was not started")
@@ -174,6 +177,7 @@ class PerformanceBenchmark:
         >>> # With memory profiling
         >>> result = benchmark.run(operation, track_memory=True)
         >>> print(f"Memory: {result.memory_peak_mb:.2f}MB")
+
     """
 
     def __init__(self, name: str = "Benchmark") -> None:
@@ -181,6 +185,7 @@ class PerformanceBenchmark:
 
         Args:
             name: Benchmark name for reporting.
+
         """
         self.name = name
         self.target_ms: float | None = None
@@ -192,6 +197,7 @@ class PerformanceBenchmark:
 
         Args:
             target_ms: Target execution time in milliseconds.
+
         """
         self.target_ms = target_ms
 
@@ -200,6 +206,7 @@ class PerformanceBenchmark:
 
         Args:
             iterations: Number of warmup iterations.
+
         """
         self.warmup_iterations = iterations
 
@@ -223,6 +230,7 @@ class PerformanceBenchmark:
 
         Raises:
             AssertionError: If fail_on_target_miss and target not met.
+
         """
         # Warmup
         for _ in range(self.warmup_iterations):
@@ -296,7 +304,7 @@ class PerformanceBenchmark:
             raise AssertionError(
                 f"Benchmark '{self.name}' failed: "
                 f"{mean_ms if iterations > 1 else total_duration:.2f}ms > "
-                f"{self.target_ms}ms target"
+                f"{self.target_ms}ms target",
             )
 
         return result
@@ -317,6 +325,7 @@ class PerformanceBenchmark:
 
         Raises:
             ValueError: If no results available.
+
         """
         if not self.results_history:
             raise ValueError("No benchmark results available")
@@ -355,6 +364,7 @@ def benchmark(
         >>> @benchmark(track_memory=True, iterations=10)
         ... def memory_intensive():
         ...     return [0] * 1000000
+
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -406,6 +416,7 @@ class MemoryProfiler:
         >>> data = [0] * 1000000
         >>> stats = profiler.stop()
         >>> print(f"Peak: {stats['peak_mb']:.2f}MB")
+
     """
 
     def __init__(self) -> None:
@@ -430,6 +441,7 @@ class MemoryProfiler:
 
         Args:
             label: Optional label for snapshot.
+
         """
         if not self.is_running:
             raise RuntimeError("Profiler not running")
@@ -442,6 +454,7 @@ class MemoryProfiler:
 
         Returns:
             Dictionary with memory statistics in MB.
+
         """
         if not self.is_running:
             raise RuntimeError("Profiler not running")
@@ -470,6 +483,7 @@ class MemoryProfiler:
             ...     data = create_large_data()
             ...     profiler.snapshot("after creation")
             >>> stats = profiler.stop()
+
         """
         self.start()
         try:
@@ -493,6 +507,7 @@ class BenchmarkSuite:
         >>> suite.add("Large file", lambda: parser.parse(large), target_ms=200)
         >>> results = suite.run_all()
         >>> suite.print_summary()
+
     """
 
     def __init__(self, name: str = "Benchmark Suite") -> None:
@@ -500,6 +515,7 @@ class BenchmarkSuite:
 
         Args:
             name: Suite name.
+
         """
         self.name = name
         self.benchmarks: list[tuple[str, Callable[..., Any], dict[str, Any]]] = []
@@ -521,6 +537,7 @@ class BenchmarkSuite:
             target_ms: Performance target.
             iterations: Number of iterations.
             track_memory: Whether to track memory.
+
         """
         options = {
             "target_ms": target_ms,
@@ -534,6 +551,7 @@ class BenchmarkSuite:
 
         Returns:
             List of benchmark results.
+
         """
         self.results.clear()
 
@@ -576,5 +594,6 @@ class BenchmarkSuite:
 
         Returns:
             True if all passed, False otherwise.
+
         """
         return all(r.passed for r in self.results)

@@ -31,6 +31,7 @@ class SynthesisResult:
         traceability: List of claim-to-source mappings
         metadata: Synthesis metadata (retry count, verification scores, etc.)
         timing: Timing information
+
     """
 
     def __init__(
@@ -94,6 +95,7 @@ def synthesize_results(
 
     Raises:
         RuntimeError: If synthesis fails after retries
+
     """
     start_time = time.time()
 
@@ -110,7 +112,7 @@ def synthesize_results(
                 "confidence": output.confidence,
                 "success": output.success,
                 "data": output.data or {},
-            }
+            },
         )
 
     # Aggregate metadata
@@ -155,7 +157,7 @@ def synthesize_results(
     logger.info(
         f"Synthesis complete: confidence={synthesis_result.confidence:.2f}, "
         f"duration={duration_ms}ms, "
-        f"retry_count={synthesis_result.metadata.get('retry_count', 0)}"
+        f"retry_count={synthesis_result.metadata.get('retry_count', 0)}",
     )
 
     # Add aggregated metadata
@@ -166,7 +168,7 @@ def synthesize_results(
             "subgoals_failed": subgoals_failed,
             "total_files_modified": total_files_modified,
             "user_interactions_count": user_interactions_count,
-        }
+        },
     )
 
     # Estimate token counts for cost tracking

@@ -27,6 +27,7 @@ class TimeoutLLMClient(LLMClient):
         Args:
             timeout_after_seconds: Seconds before timing out
             fail_count: Number of times to fail before succeeding
+
         """
         self._timeout_after = timeout_after_seconds
         self._fail_count = fail_count

@@ -10,8 +10,6 @@ from typing import Any
 class BudgetExceededError(Exception):
     """Raised when an operation would exceed the budget limit."""
 
-    pass
-
 
 @dataclass
 class ModelPricing:
@@ -32,6 +30,7 @@ class ModelPricing:
 
         Returns:
             Total cost in USD
+
         """
         input_cost = (input_tokens / 1_000_000) * self.input_price_per_mtok
         output_cost = (output_tokens / 1_000_000) * self.output_price_per_mtok
@@ -129,6 +128,7 @@ class CostTracker:
         ... )
         >>> status = tracker.get_status()
         >>> print(f"Remaining: ${status['remaining_usd']:.2f}")
+
     """
 
     def __init__(
@@ -145,6 +145,7 @@ class CostTracker:
             tracker_path: Path to tracker file (defaults to ~/.aurora/budget_tracker.json)
             budget_file: Alias for tracker_path (for backward compatibility)
             total_budget: Alias for monthly_limit_usd (for backward compatibility)
+
         """
         # Support legacy parameter names for backward compatibility
         if total_budget is not None:
@@ -254,6 +255,7 @@ class CostTracker:
 
         Returns:
             ModelPricing for the model (or default if unknown)
+
         """
         return MODEL_PRICING.get(model, DEFAULT_PRICING)
 
@@ -272,6 +274,7 @@ class CostTracker:
 
         Returns:
             Cost in USD
+
         """
         pricing = self.get_model_pricing(model)
         return pricing.calculate_cost(input_tokens, output_tokens)
@@ -293,6 +296,7 @@ class CostTracker:
 
         Returns:
             Estimated cost in USD
+
         """
         estimated_input_tokens = prompt_length // 4
         # Assume we'll use about 50% of max output tokens on average
@@ -301,7 +305,9 @@ class CostTracker:
         return self.calculate_cost(model, estimated_input_tokens, estimated_output_tokens)
 
     def check_budget(
-        self, estimated_cost: float = 0.0, raise_on_exceeded: bool = True
+        self,
+        estimated_cost: float = 0.0,
+        raise_on_exceeded: bool = True,
     ) -> tuple[bool, str]:
         """Check if query can proceed within budget.
 
@@ -316,6 +322,7 @@ class CostTracker:
 
         Raises:
             BudgetExceededError: If raise_on_exceeded=True and budget is exceeded
+
         """
         # Check if we need to roll over to new period
         if self.budget.period != self.current_period:
@@ -378,6 +385,7 @@ class CostTracker:
 
         Returns:
             Cost in USD
+
         """
         cost = self.calculate_cost(model, input_tokens, output_tokens)
 
@@ -402,6 +410,7 @@ class CostTracker:
 
         Returns:
             Dictionary with budget status information
+
         """
         return {
             "period": self.budget.period,
@@ -419,6 +428,7 @@ class CostTracker:
 
         Returns:
             Dictionary mapping operation names to total costs
+
         """
         breakdown: dict[str, float] = {}
         for entry in self.budget.entries:
@@ -430,6 +440,7 @@ class CostTracker:
 
         Returns:
             Dictionary mapping model names to total costs
+
         """
         breakdown: dict[str, float] = {}
         for entry in self.budget.entries:
@@ -443,6 +454,7 @@ class CostTracker:
 
         Args:
             amount: New budget limit in USD
+
         """
         self.budget.limit_usd = amount
         self.monthly_limit_usd = amount
@@ -460,6 +472,7 @@ class CostTracker:
 
         Returns:
             Total spent in USD
+
         """
         return self.budget.consumed_usd
 
@@ -468,6 +481,7 @@ class CostTracker:
 
         Returns:
             List of dictionaries with query information
+
         """
         return [
             {
@@ -500,6 +514,7 @@ class CostTracker:
             model: Model used
             input_tokens: Input tokens used
             output_tokens: Output tokens generated
+
         """
         entry = CostEntry(
             timestamp=datetime.now().isoformat(),
@@ -519,5 +534,3 @@ class CostTracker:
 
 class BudgetTracker(CostTracker):
     """Alias for CostTracker for backward compatibility."""
-
-    pass

@@ -116,9 +116,10 @@ class AgentHealthMonitor:
 
         Args:
             proactive_config: Optional configuration for proactive health checking
+
         """
         self._agent_metrics: dict[str, HealthMetrics] = defaultdict(
-            lambda: HealthMetrics(agent_id="")
+            lambda: HealthMetrics(agent_id=""),
         )
         self._failure_events: list[FailureEvent] = []
         self._detection_latencies: list[float] = []
@@ -143,7 +144,9 @@ class AgentHealthMonitor:
 
         self._health_check_stop_event.clear()
         self._health_check_thread = threading.Thread(
-            target=self._health_check_loop, daemon=True, name="HealthCheckMonitor"
+            target=self._health_check_loop,
+            daemon=True,
+            name="HealthCheckMonitor",
         )
         self._health_check_thread.start()
         logger.info("Proactive health monitoring started")
@@ -171,6 +174,7 @@ class AgentHealthMonitor:
             agent_id: Agent identifier
             termination_callback: Optional callback to trigger early termination
                 Signature: callback(task_id, reason)
+
         """
         if not self._proactive_config.enabled:
             return
@@ -190,7 +194,10 @@ class AgentHealthMonitor:
         logger.debug(f"Registered task {task_id} for proactive monitoring")
 
     def update_execution_activity(
-        self, task_id: str, stdout_size: int = 0, stderr_size: int = 0
+        self,
+        task_id: str,
+        stdout_size: int = 0,
+        stderr_size: int = 0,
     ) -> None:
         """Update execution activity metrics (called when output is received).
 
@@ -198,6 +205,7 @@ class AgentHealthMonitor:
             task_id: Unique task identifier
             stdout_size: Current size of stdout in bytes
             stderr_size: Current size of stderr in bytes
+
         """
         if not self._proactive_config.enabled:
             return
@@ -216,6 +224,7 @@ class AgentHealthMonitor:
 
         Args:
             task_id: Unique task identifier
+
         """
         with self._lock:
             self._active_executions.pop(task_id, None)
@@ -244,7 +253,8 @@ class AgentHealthMonitor:
                 self._check_execution_health(execution, now)
             except Exception as e:
                 logger.error(
-                    f"Health check failed for task {execution.task_id}: {e}", exc_info=True
+                    f"Health check failed for task {execution.task_id}: {e}",
+                    exc_info=True,
                 )
 
     def _check_execution_health(self, execution: ActiveExecution, now: float) -> None:
@@ -253,6 +263,7 @@ class AgentHealthMonitor:
         Args:
             execution: Active execution to check
             now: Current timestamp
+
         """
         metrics = self._agent_metrics[execution.agent_id]
         metrics.proactive_checks += 1
@@ -303,7 +314,10 @@ class AgentHealthMonitor:
         )
 
     def _trigger_early_termination(
-        self, execution: ActiveExecution, reason: str, metrics: HealthMetrics
+        self,
+        execution: ActiveExecution,
+        reason: str,
+        metrics: HealthMetrics,
     ) -> None:
         """Trigger early termination for an execution.
 
@@ -311,6 +325,7 @@ class AgentHealthMonitor:
             execution: Active execution to terminate
             reason: Reason for termination
             metrics: Agent metrics to update
+
         """
         # Skip if termination is disabled - just track metrics silently
         if not self._proactive_config.terminate_on_failure:
@@ -367,6 +382,7 @@ class AgentHealthMonitor:
         Note:
             Termination is disabled - policy timeouts in spawner main loop
             are the single source of truth for timeout decisions.
+
         """
         # Disabled: Let SpawnPolicy.timeout_policy control all timeouts
         # The spawner's main loop (spawner.py:259-278) handles this properly
@@ -380,7 +396,10 @@ class AgentHealthMonitor:
             return False, None
 
     def record_execution_start(
-        self, task_id: str, agent_id: str, policy_name: str | None = None
+        self,
+        task_id: str,
+        agent_id: str,
+        policy_name: str | None = None,
     ) -> None:
         """Record the start of an agent execution.
 
@@ -388,6 +407,7 @@ class AgentHealthMonitor:
             task_id: Unique task identifier
             agent_id: Agent identifier
             policy_name: Optional policy name being used
+
         """
         start_time = time.time()
         self._start_times[task_id] = start_time
@@ -415,6 +435,7 @@ class AgentHealthMonitor:
             task_id: Unique task identifier
             agent_id: Agent identifier
             output_size: Size of output in bytes
+
         """
         end_time = time.time()
         start_time = self._start_times.get(task_id)
@@ -464,6 +485,7 @@ class AgentHealthMonitor:
             error_message: Optional error description
             retry_attempt: Current retry attempt number
             metadata: Additional context
+
         """
         end_time = time.time()
         start_time = self._start_times.get(task_id, end_time)
@@ -494,7 +516,7 @@ class AgentHealthMonitor:
         # Update average detection latency
         if self._detection_latencies:
             metrics.avg_detection_latency = sum(self._detection_latencies) / len(
-                self._detection_latencies
+                self._detection_latencies,
             )
 
         # Use DEBUG level for all failures - progress callbacks handle user-facing output
@@ -554,6 +576,7 @@ class AgentHealthMonitor:
             task_id: Unique task identifier
             agent_id: Agent identifier
             recovery_time: Time taken to recover (seconds)
+
         """
         self._recovery_times.append(recovery_time)
 
@@ -587,6 +610,7 @@ class AgentHealthMonitor:
         Args:
             agent_id: Agent identifier
             reason: Reason for circuit opening
+
         """
         metrics = self._agent_metrics[agent_id]
         metrics.agent_id = agent_id
@@ -608,6 +632,7 @@ class AgentHealthMonitor:
 
         Args:
             agent_id: Agent identifier
+
         """
         logger.info(
             "Circuit breaker closed",
@@ -625,6 +650,7 @@ class AgentHealthMonitor:
 
         Returns:
             HealthMetrics for the agent
+
         """
         metrics = self._agent_metrics[agent_id]
         metrics.agent_id = agent_id
@@ -635,6 +661,7 @@ class AgentHealthMonitor:
 
         Returns:
             Dictionary mapping agent_id to HealthMetrics
+
         """
         return dict(self._agent_metrics)
 
@@ -643,6 +670,7 @@ class AgentHealthMonitor:
 
         Returns:
             Dictionary with latency statistics (avg, p50, p95, p99)
+
         """
         if not self._detection_latencies:
             return {
@@ -667,7 +695,9 @@ class AgentHealthMonitor:
         }
 
     def get_failure_events(
-        self, agent_id: str | None = None, limit: int | None = None
+        self,
+        agent_id: str | None = None,
+        limit: int | None = None,
     ) -> list[FailureEvent]:
         """Get failure events, optionally filtered by agent.
 
@@ -677,6 +707,7 @@ class AgentHealthMonitor:
 
         Returns:
             List of failure events (most recent first)
+
         """
         events = self._failure_events
         if agent_id:
@@ -694,6 +725,7 @@ class AgentHealthMonitor:
 
         Returns:
             Dictionary with aggregate health metrics and failure categorization
+
         """
         all_metrics = list(self._agent_metrics.values())
 
@@ -755,6 +787,7 @@ def get_health_monitor() -> AgentHealthMonitor:
 
     Returns:
         Global AgentHealthMonitor instance
+
     """
     global _global_health_monitor
     if _global_health_monitor is None:
@@ -773,6 +806,7 @@ def reset_health_monitor(config: ProactiveHealthConfig | None = None) -> AgentHe
 
     Returns:
         Fresh AgentHealthMonitor instance
+
     """
     global _global_health_monitor
     if _global_health_monitor is not None:
@@ -792,6 +826,7 @@ def configure_structured_logging(
         level: Logging level (default: INFO)
         include_context: Whether to include contextual fields in logs
         json_format: Whether to output logs in JSON format (default: False for human readability)
+
     """
     import json
 
@@ -850,35 +885,34 @@ def configure_structured_logging(
                 # JSON output for log aggregation systems
                 log_data.update(extra_fields)
                 return json.dumps(log_data)
-            else:
-                # Human-readable output for development
-                base_msg = f"[{log_data['timestamp']}] {log_data['level']} {log_data['logger']}: {log_data['message']}"
+            # Human-readable output for development
+            base_msg = f"[{log_data['timestamp']}] {log_data['level']} {log_data['logger']}: {log_data['message']}"
 
-                # Add key metrics to base message for failure events
-                if extra_fields.get("event") == "execution.failure":
-                    metrics = []
-                    if "detection_latency_ms" in extra_fields:
-                        metrics.append(f"latency={extra_fields['detection_latency_ms']:.0f}ms")
-                    if "reason" in extra_fields:
-                        metrics.append(f"reason={extra_fields['reason']}")
-                    if "retry_attempt" in extra_fields:
-                        metrics.append(f"retry={extra_fields['retry_attempt']}")
-                    if metrics:
-                        base_msg += f" ({', '.join(metrics)})"
+            # Add key metrics to base message for failure events
+            if extra_fields.get("event") == "execution.failure":
+                metrics = []
+                if "detection_latency_ms" in extra_fields:
+                    metrics.append(f"latency={extra_fields['detection_latency_ms']:.0f}ms")
+                if "reason" in extra_fields:
+                    metrics.append(f"reason={extra_fields['reason']}")
+                if "retry_attempt" in extra_fields:
+                    metrics.append(f"retry={extra_fields['retry_attempt']}")
+                if metrics:
+                    base_msg += f" ({', '.join(metrics)})"
 
-                # Add structured fields as key-value pairs if present
-                if extra_fields:
-                    # Filter to most important fields for readability
-                    important_fields = ["agent_id", "task_id", "event"]
-                    structured = ", ".join(
-                        f"{k}={v}"
-                        for k, v in extra_fields.items()
-                        if k in important_fields and k not in log_data
-                    )
-                    if structured:
-                        base_msg += f" [{structured}]"
+            # Add structured fields as key-value pairs if present
+            if extra_fields:
+                # Filter to most important fields for readability
+                important_fields = ["agent_id", "task_id", "event"]
+                structured = ", ".join(
+                    f"{k}={v}"
+                    for k, v in extra_fields.items()
+                    if k in important_fields and k not in log_data
+                )
+                if structured:
+                    base_msg += f" [{structured}]"
 
-                return base_msg
+            return base_msg
 
     # Configure root logger
     handler = logging.StreamHandler()

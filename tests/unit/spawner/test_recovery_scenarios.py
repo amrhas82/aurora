@@ -6,20 +6,18 @@ in the spawner's recovery pipeline.
 
 import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from aurora_spawner import SpawnResult, SpawnTask, spawn_parallel_with_recovery
-from aurora_spawner.circuit_breaker import CircuitBreaker, CircuitState
+from aurora_spawner.circuit_breaker import CircuitBreaker
 from aurora_spawner.spawner import spawn_with_retry_and_fallback
 from aurora_spawner.timeout_policy import (
     RetryPolicy,
     RetryStrategy,
     SpawnPolicy,
-    TerminationPolicy,
     TimeoutMode,
-    TimeoutPolicy,
 )
 
 
@@ -63,7 +61,9 @@ class TestPartialFailureRecovery:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow multiple retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -118,7 +118,9 @@ class TestPartialFailureRecovery:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -168,7 +170,9 @@ class TestPartialFailureRecovery:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -215,14 +219,20 @@ class TestPartialFailureRecovery:
             if idx == 2:
                 if task.agent:
                     return SpawnResult(
-                        success=False, output="", error="fallback needed", exit_code=-1
+                        success=False,
+                        output="",
+                        error="fallback needed",
+                        exit_code=-1,
                     )
                 return SpawnResult(success=True, output="fallback success", error=None, exit_code=0)
 
             # Task 3: Complete failure
             if idx == 3:
                 return SpawnResult(
-                    success=False, output="", error="permanent failure", exit_code=-1
+                    success=False,
+                    output="",
+                    error="permanent failure",
+                    exit_code=-1,
                 )
 
             return SpawnResult(success=True, output="default", error=None, exit_code=0)
@@ -233,7 +243,9 @@ class TestPartialFailureRecovery:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -432,7 +444,9 @@ class TestRetryExhaustion:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -477,7 +491,9 @@ class TestRetryExhaustion:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -515,7 +531,9 @@ class TestRetryExhaustion:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -560,7 +578,9 @@ class TestRetryExhaustion:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -594,7 +614,9 @@ class TestRetryExhaustion:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -942,7 +964,7 @@ class TestRecoveryCallbacks:
                     "agent_id": agent_id,
                     "retry_count": retry_count,
                     "fallback": used_fallback,
-                }
+                },
             )
 
         async def mock_spawn(task, **kwargs):
@@ -970,7 +992,9 @@ class TestRecoveryCallbacks:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -996,7 +1020,7 @@ class TestRecoveryCallbacks:
                     "agent_id": agent_id,
                     "retry_count": retry_count,
                     "fallback": used_fallback,
-                }
+                },
             )
 
         async def mock_spawn(task, **kwargs):
@@ -1020,7 +1044,9 @@ class TestRecoveryCallbacks:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1046,7 +1072,7 @@ class TestRecoveryCallbacks:
                     "total": total,
                     "agent_id": agent_id,
                     "status": status,
-                }
+                },
             )
 
         attempt_count = 0
@@ -1076,7 +1102,9 @@ class TestRecoveryCallbacks:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1132,7 +1160,9 @@ class TestCascadingRetries:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow multiple retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1182,7 +1212,9 @@ class TestCascadingRetries:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1224,7 +1256,9 @@ class TestCascadingRetries:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1283,7 +1317,9 @@ class TestCascadingRetries:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1329,7 +1365,10 @@ class TestPartialFailureWithRecoveryChain:
             if task_idx == 2:
                 if task.agent:
                     return SpawnResult(
-                        success=False, output="", error="need fallback", exit_code=-1
+                        success=False,
+                        output="",
+                        error="need fallback",
+                        exit_code=-1,
                     )
                 return SpawnResult(success=True, output="fallback success", error=None, exit_code=0)
 
@@ -1345,7 +1384,9 @@ class TestPartialFailureWithRecoveryChain:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1396,7 +1437,9 @@ class TestPartialFailureWithRecoveryChain:
             with patch("aurora_spawner.circuit_breaker.get_circuit_breaker") as mock_cb:
                 # High thresholds to allow retry cascades without circuit opening
                 cb = CircuitBreaker(
-                    failure_threshold=20, fast_fail_threshold=20, failure_window=600.0
+                    failure_threshold=20,
+                    fast_fail_threshold=20,
+                    failure_window=600.0,
                 )
                 mock_cb.return_value = cb
 
@@ -1543,16 +1586,36 @@ class TestMultiTaskCascadingFailure:
         # Simulate results from spawn_parallel_with_recovery
         results = [
             SpawnResult(
-                success=True, output="ok", error=None, exit_code=0, retry_count=0, fallback=False
+                success=True,
+                output="ok",
+                error=None,
+                exit_code=0,
+                retry_count=0,
+                fallback=False,
             ),
             SpawnResult(
-                success=True, output="ok", error=None, exit_code=0, retry_count=2, fallback=False
+                success=True,
+                output="ok",
+                error=None,
+                exit_code=0,
+                retry_count=2,
+                fallback=False,
             ),
             SpawnResult(
-                success=True, output="ok", error=None, exit_code=0, retry_count=3, fallback=True
+                success=True,
+                output="ok",
+                error=None,
+                exit_code=0,
+                retry_count=3,
+                fallback=True,
             ),
             SpawnResult(
-                success=False, output="", error="failed", exit_code=-1, retry_count=3, fallback=True
+                success=False,
+                output="",
+                error="failed",
+                exit_code=-1,
+                retry_count=3,
+                fallback=True,
             ),
         ]
 
@@ -1806,7 +1869,7 @@ class TestRecoveryPolicyConfig:
                 "max_retries": 5,
                 "fallback_to_llm": True,
                 "base_delay": 2.0,
-            }
+            },
         )
 
         assert policy.strategy == RecoveryStrategy.RETRY_THEN_FALLBACK
@@ -1825,9 +1888,9 @@ class TestRecoveryPolicyConfig:
                     "slow-agent": {
                         "max_retries": 5,
                         "base_delay": 5.0,
-                    }
+                    },
                 },
-            }
+            },
         )
 
         assert policy.max_retries == 2
@@ -1855,8 +1918,8 @@ class TestRecoveryPolicyConfig:
                 "recovery": {
                     "preset": "patient",
                     "max_retries": 10,  # Override
-                }
-            }
+                },
+            },
         }
 
         policy = RecoveryPolicy.from_config(config)

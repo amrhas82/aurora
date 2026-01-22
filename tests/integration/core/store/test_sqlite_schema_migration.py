@@ -51,7 +51,7 @@ class TestSchemaVersionDetection:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
+        """,
         )
         conn.execute(
             """
@@ -61,7 +61,7 @@ class TestSchemaVersionDetection:
                 last_access TIMESTAMP NOT NULL,
                 access_count INTEGER DEFAULT 1
             )
-        """
+        """,
         )
         conn.commit()
         conn.close()
@@ -128,7 +128,7 @@ class TestSchemaVersionDetection:
                 version INTEGER PRIMARY KEY,
                 applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
+        """,
         )
         conn.execute("INSERT INTO schema_version (version) VALUES (2)")
         conn.execute(
@@ -144,7 +144,7 @@ class TestSchemaVersionDetection:
                 first_access TIMESTAMP,
                 last_access TIMESTAMP
             )
-        """
+        """,
         )
         conn.commit()
         conn.close()
@@ -199,7 +199,7 @@ class TestSchemaCompatibilityCheck:
                 created_at TIMESTAMP,
                 updated_at TIMESTAMP
             )
-        """
+        """,
         )
         conn.commit()
         conn.close()

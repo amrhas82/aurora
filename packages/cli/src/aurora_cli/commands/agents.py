@@ -56,6 +56,7 @@ def get_manifest_path(config: Config | None = None) -> Path:
 
     Returns:
         Path to the agent manifest file
+
     """
     if config is None:
         # Load config silently for path lookup
@@ -81,6 +82,7 @@ def get_manifest(force_refresh: bool = False, config: Config | None = None) -> A
 
     Returns:
         AgentManifest with discovered agents
+
     """
     if config is None:
         # Load config silently
@@ -138,7 +140,6 @@ def agents_group() -> None:
     \b
     Tip: Run 'aur init' and select option [4] to refresh agent discovery.
     """
-    pass
 
 
 @agents_group.command(name="list")
@@ -210,7 +211,7 @@ def list_command(category: str | None, output_format: str, show_all: bool) -> No
             console.print(
                 "\n[yellow]No tools configured in this project.[/]\n"
                 "Run [cyan]aur init[/] to configure tools and discover agents.\n"
-                "\n[dim]Tip: Use [cyan]aur agents list --all[/] to see all agents.[/]"
+                "\n[dim]Tip: Use [cyan]aur agents list --all[/] to see all agents.[/]",
             )
             return
 
@@ -224,7 +225,7 @@ def list_command(category: str | None, output_format: str, show_all: bool) -> No
         if not selected_agent_paths:
             console.print(
                 "\n[yellow]No agent directories found for configured tools.[/]\n"
-                "Run [cyan]aur init[/] and select option [4] to refresh agent discovery."
+                "Run [cyan]aur init[/] and select option [4] to refresh agent discovery.",
             )
             return
 
@@ -238,12 +239,12 @@ def list_command(category: str | None, output_format: str, show_all: bool) -> No
         if show_all:
             console.print(
                 "\n[yellow]No agents found.[/]\n"
-                "Add agent files to tool-specific directories like ~/.claude/agents/"
+                "Add agent files to tool-specific directories like ~/.claude/agents/",
             )
         else:
             console.print(
                 f"\n[yellow]No agents found for configured tools ({tool_context}).[/]\n"
-                "Add agent files to the appropriate directories or use [cyan]--all[/] to search everywhere."
+                "Add agent files to the appropriate directories or use [cyan]--all[/] to search everywhere.",
             )
         return
 
@@ -441,7 +442,7 @@ def refresh_command() -> None:
             "\n".join(summary_lines),
             title="Refresh Summary",
             border_style="green",
-        )
+        ),
     )
     console.print()
 
@@ -457,6 +458,7 @@ def _display_agents_list(
         agents_by_category: Dictionary mapping category to agent list
         output_format: 'rich', 'simple', or 'plan'
         total: Total agent count for header
+
     """
     # Plan format: clean output for plan.md (no headers, just @agent - goal)
     if output_format == "plan":
@@ -505,6 +507,7 @@ def _display_agent_details(agent: AgentInfo) -> None:
 
     Args:
         agent: AgentInfo to display
+
     """
     # Build content sections
     sections = []
@@ -556,7 +559,7 @@ def _display_agent_details(agent: AgentInfo) -> None:
             "\n".join(sections),
             title=f"[bold green]{agent.id}[/]",
             border_style="green",
-        )
+        ),
     )
     console.print()
 
@@ -575,6 +578,7 @@ def _search_agents(
 
     Returns:
         List of (agent, match_info) tuples sorted by relevance
+
     """
     keyword_lower = keyword.lower()
     results: list[tuple[AgentInfo, str, int]] = []  # (agent, match_info, score)
@@ -633,6 +637,7 @@ def _find_similar_agents(
 
     Returns:
         List of similar agents (up to 5)
+
     """
     agent_id_lower = agent_id.lower()
     similarities: list[tuple[AgentInfo, float]] = []
@@ -657,6 +662,7 @@ def _truncate(text: str, max_length: int) -> str:
 
     Returns:
         Truncated text
+
     """
     if len(text) <= max_length:
         return text

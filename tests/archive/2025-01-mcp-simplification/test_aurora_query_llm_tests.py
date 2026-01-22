@@ -396,7 +396,9 @@ class TestMemoryGracefulDegradation:
         with patch.object(tools, "_get_api_key", return_value="test-key"):
             with patch.object(tools, "_check_budget", return_value=True):
                 with patch.object(
-                    tools, "_get_memory_context", side_effect=Exception("Memory unavailable")
+                    tools,
+                    "_get_memory_context",
+                    side_effect=Exception("Memory unavailable"),
                 ):
                     # Should not raise exception
                     result = tools.aurora_query("Test query")
@@ -493,7 +495,9 @@ class TestErrorLogging:
         with patch("aurora.mcp.tools.logger") as mock_logger:
             with patch.object(tools, "_get_api_key", return_value="test-key"):
                 with patch.object(
-                    tools, "_check_budget", side_effect=RuntimeError("Unexpected error")
+                    tools,
+                    "_check_budget",
+                    side_effect=RuntimeError("Unexpected error"),
                 ):
                     result = tools.aurora_query("Test query")
                     response = json.loads(result)
@@ -574,7 +578,8 @@ class TestProgressTracking:
 
                 for phase in response["phases"]:
                     assert isinstance(
-                        phase["duration"], (int, float)
+                        phase["duration"],
+                        (int, float),
                     ), f"Phase duration should be numeric, got {type(phase['duration'])}"
                     assert phase["duration"] >= 0, "Phase duration should be non-negative"
 
@@ -674,8 +679,8 @@ class TestEnhancedVerbosity:
                             "execution_path": "soar_pipeline",
                             "phase_trace": {
                                 "phases": [
-                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
-                                ]
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"},
+                                ],
                             },
                             "duration": 1.0,
                             "cost": 0.01,
@@ -711,8 +716,8 @@ class TestEnhancedVerbosity:
                             "execution_path": "soar_pipeline",
                             "phase_trace": {
                                 "phases": [
-                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
-                                ]
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"},
+                                ],
                             },
                             "duration": 1.0,
                             "cost": 0.01,
@@ -745,8 +750,8 @@ class TestEnhancedVerbosity:
                             "execution_path": "soar_pipeline",
                             "phase_trace": {
                                 "phases": [
-                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
-                                ]
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"},
+                                ],
                             },
                             "duration": 1.0,
                             "cost": 0.01,
@@ -780,8 +785,8 @@ class TestEnhancedVerbosity:
                             "execution_path": "soar_pipeline",
                             "phase_trace": {
                                 "phases": [
-                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
-                                ]
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"},
+                                ],
                             },
                             "duration": 1.0,
                             "cost": 0.01,
@@ -817,8 +822,8 @@ class TestEnhancedVerbosity:
                             "execution_path": "soar_pipeline",
                             "phase_trace": {
                                 "phases": [
-                                    {"phase": "Assess", "duration": 0.1, "status": "completed"}
-                                ]
+                                    {"phase": "Assess", "duration": 0.1, "status": "completed"},
+                                ],
                             },
                             "duration": 1.0,
                             "cost": 0.01,

@@ -40,7 +40,7 @@ class TestArchiveCommandEndToEnd:
 - [x] Task 1
 - [x] Task 2
 - [ ] Task 3
-"""
+""",
             )
 
             # Create proposal.md
@@ -52,7 +52,7 @@ This is a test plan to verify archive functionality works end-to-end.
 
 ## What Changes
 Test changes for verification.
-"""
+""",
             )
 
             # Execute archive command
@@ -115,7 +115,7 @@ The system SHALL have existing functionality.
 Given existing setup
 When using feature
 Then it works
-"""
+""",
             )
 
             # Create plan with spec updates
@@ -133,7 +133,7 @@ The system SHALL implement new feature.
 Given new setup
 When using new feature
 Then new result
-"""
+""",
             )
 
             # Execute archive with spec updates
@@ -175,7 +175,10 @@ Then new result
             # Try to archive again - should fail
             with pytest.raises(RuntimeError) as exc_info:
                 command.execute(
-                    plan_name=plan_id, target_path=str(target), yes=True, skip_specs=True
+                    plan_name=plan_id,
+                    target_path=str(target),
+                    yes=True,
+                    skip_specs=True,
                 )
 
             assert "already exists" in str(exc_info.value)
@@ -210,7 +213,10 @@ Then new result
             command = ArchiveCommand()
             with pytest.raises(RuntimeError) as exc_info:
                 command.execute(
-                    plan_name="any-plan", target_path=str(target), yes=True, skip_specs=True
+                    plan_name="any-plan",
+                    target_path=str(target),
+                    yes=True,
+                    skip_specs=True,
                 )
 
             assert "Aurora plans directory" in str(exc_info.value)
@@ -238,7 +244,7 @@ Then new result
 - [ ] Task 3
 - [ ] Task 4
 - [ ] Task 5
-"""
+""",
             )
 
             command = ArchiveCommand()
@@ -276,7 +282,10 @@ class TestArchiveCommandFlagCombinations:
             # Execute with both flags
             command = ArchiveCommand()
             command.execute(
-                plan_name="test-plan", target_path=str(target), yes=True, skip_specs=True
+                plan_name="test-plan",
+                target_path=str(target),
+                yes=True,
+                skip_specs=True,
             )
 
             # Verify archived

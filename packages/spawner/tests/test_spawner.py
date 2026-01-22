@@ -248,7 +248,7 @@ class TestSpawn:
                 return line
 
         mock_process.stdout.readline = AsyncMock(
-            side_effect=[b"line1\n", b"line2\n", b"line3\n", b""]
+            side_effect=[b"line1\n", b"line2\n", b"line3\n", b""],
         )
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_process):
@@ -771,14 +771,13 @@ class TestSpawnWithRetryAndFallback:
                     error="Temporary failure",
                     exit_code=1,
                 )
-            else:
-                # Second attempt succeeds
-                return SpawnResult(
-                    success=True,
-                    output="retry success",
-                    error=None,
-                    exit_code=0,
-                )
+            # Second attempt succeeds
+            return SpawnResult(
+                success=True,
+                output="retry success",
+                error=None,
+                exit_code=0,
+            )
 
         from aurora_spawner.spawner import spawn_with_retry_and_fallback
 
@@ -809,14 +808,13 @@ class TestSpawnWithRetryAndFallback:
                     error=f"Failure {call_count}",
                     exit_code=1,
                 )
-            else:
-                # Fallback to LLM succeeds
-                return SpawnResult(
-                    success=True,
-                    output="fallback llm output",
-                    error=None,
-                    exit_code=0,
-                )
+            # Fallback to LLM succeeds
+            return SpawnResult(
+                success=True,
+                output="fallback llm output",
+                error=None,
+                exit_code=0,
+            )
 
         from aurora_spawner.spawner import spawn_with_retry_and_fallback
 
@@ -841,15 +839,14 @@ class TestSpawnWithRetryAndFallback:
             call_count += 1
             if call_count <= 2:
                 return SpawnResult(success=False, output="", error="Fail", exit_code=1)
-            else:
-                # Verify fallback task has agent=None
-                assert t.agent is None
-                return SpawnResult(
-                    success=True,
-                    output="fallback output",
-                    error=None,
-                    exit_code=0,
-                )
+            # Verify fallback task has agent=None
+            assert t.agent is None
+            return SpawnResult(
+                success=True,
+                output="fallback output",
+                error=None,
+                exit_code=0,
+            )
 
         from aurora_spawner.spawner import spawn_with_retry_and_fallback
 
@@ -876,13 +873,12 @@ class TestSpawnWithRetryAndFallback:
             call_count += 1
             if call_count <= 2:
                 return SpawnResult(success=False, output="", error="Fail", exit_code=1)
-            else:
-                return SpawnResult(
-                    success=True,
-                    output="fallback output",
-                    error=None,
-                    exit_code=0,
-                )
+            return SpawnResult(
+                success=True,
+                output="fallback output",
+                error=None,
+                exit_code=0,
+            )
 
         from aurora_spawner.spawner import spawn_with_retry_and_fallback
 
@@ -914,14 +910,13 @@ class TestSpawnWithRetryAndFallback:
                     error="Process timed out after 10 seconds",
                     exit_code=-1,
                 )
-            else:
-                # Retry succeeds
-                return SpawnResult(
-                    success=True,
-                    output="retry success",
-                    error=None,
-                    exit_code=0,
-                )
+            # Retry succeeds
+            return SpawnResult(
+                success=True,
+                output="retry success",
+                error=None,
+                exit_code=0,
+            )
 
         from aurora_spawner.spawner import spawn_with_retry_and_fallback
 
@@ -945,15 +940,14 @@ class TestSpawnWithRetryAndFallback:
             call_count += 1
             if call_count <= 2:
                 return SpawnResult(success=False, output="", error="Fail", exit_code=1)
-            else:
-                # Capture agent value on fallback attempt
-                fallback_task_agent = t.agent
-                return SpawnResult(
-                    success=True,
-                    output="fallback output",
-                    error=None,
-                    exit_code=0,
-                )
+            # Capture agent value on fallback attempt
+            fallback_task_agent = t.agent
+            return SpawnResult(
+                success=True,
+                output="fallback output",
+                error=None,
+                exit_code=0,
+            )
 
         from aurora_spawner.spawner import spawn_with_retry_and_fallback
 

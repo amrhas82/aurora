@@ -22,6 +22,7 @@ class JsonConverter:
 
         Returns:
             JSON string representation of the capability
+
         """
         content = Path(file_path).read_text(encoding="utf-8")
         parser = MarkdownParser(content)
@@ -54,6 +55,7 @@ class JsonConverter:
 
         Returns:
             JSON string representation of the plan
+
         """
         content = Path(file_path).read_text(encoding="utf-8")
         plan_dir = str(Path(file_path).parent)
@@ -92,6 +94,7 @@ class JsonConverter:
 
         Returns:
             Extracted name
+
         """
         # Normalize to forward slashes
         normalized = file_path.replace("\\", "/")

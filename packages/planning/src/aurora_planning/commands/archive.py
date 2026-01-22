@@ -57,6 +57,7 @@ class ArchiveCommand:
             skip_specs: Skip spec updates
             no_validate: Skip validation (alias for validate=False)
             validate: Explicit validation flag
+
         """
         target = Path(target_path)
         changes_dir = target / ".aurora/plans" / "changes"
@@ -137,7 +138,7 @@ class ArchiveCommand:
                 print("\033[31m")
                 print("Validation failed. Please fix the errors before archiving.")
                 print(
-                    "\033[33mTo skip validation (not recommended), use --no-validate flag.\033[0m"
+                    "\033[33mTo skip validation (not recommended), use --no-validate flag.\033[0m",
                 )
                 return
         else:
@@ -146,7 +147,7 @@ class ArchiveCommand:
 
             if not yes:
                 response = input(
-                    "\033[33m⚠️  WARNING: Skipping validation may archive invalid specs. Continue? (y/N) \033[0m"
+                    "\033[33m⚠️  WARNING: Skipping validation may archive invalid specs. Continue? (y/N) \033[0m",
                 )
                 if response.lower() != "y":
                     print("Archive cancelled.")
@@ -168,14 +169,14 @@ class ArchiveCommand:
         if incomplete_tasks > 0:
             if not yes:
                 response = input(
-                    f"Warning: {incomplete_tasks} incomplete task(s) found. Continue? (y/N) "
+                    f"Warning: {incomplete_tasks} incomplete task(s) found. Continue? (y/N) ",
                 )
                 if response.lower() != "y":
                     print("Archive cancelled.")
                     return
             else:
                 print(
-                    f"Warning: {incomplete_tasks} incomplete task(s) found. Continuing due to --yes flag."
+                    f"Warning: {incomplete_tasks} incomplete task(s) found. Continuing due to --yes flag.",
                 )
 
         # Handle spec updates unless skipSpecs flag is set
@@ -210,7 +211,7 @@ class ArchiveCommand:
                                     "update": update,
                                     "rebuilt": built["rebuilt"],
                                     "counts": built["counts"],
-                                }
+                                },
                             )
                     except Exception as err:
                         print(str(err))
@@ -223,12 +224,13 @@ class ArchiveCommand:
                         spec_name = p["update"].target.parent.name
                         if not skip_validation:
                             report = Validator().validate_capability_content(
-                                spec_name, p["rebuilt"]
+                                spec_name,
+                                p["rebuilt"],
                             )
                             if not report.valid:
                                 print("\033[31m")
                                 print(
-                                    f"Validation errors in rebuilt spec for {spec_name} (will not write changes):"
+                                    f"Validation errors in rebuilt spec for {spec_name} (will not write changes):",
                                 )
                                 for issue in report.issues:
                                     if issue.level == "ERROR":
@@ -246,7 +248,7 @@ class ArchiveCommand:
                         totals.renamed += p["counts"].renamed
 
                     print(
-                        f"Totals: + {totals.added}, ~ {totals.modified}, - {totals.removed}, → {totals.renamed}"
+                        f"Totals: + {totals.added}, ~ {totals.modified}, - {totals.removed}, → {totals.renamed}",
                     )
                     print("Specs updated successfully.")
 
@@ -374,7 +376,7 @@ class ArchiveCommand:
             name = normalize_requirement_name(add.name)
             if name in added_names:
                 raise RuntimeError(
-                    f"{spec_name} validation failed - duplicate requirement in ADDED for header '### Requirement: {add.name}'"
+                    f"{spec_name} validation failed - duplicate requirement in ADDED for header '### Requirement: {add.name}'",
                 )
             added_names.add(name)
 
@@ -383,7 +385,7 @@ class ArchiveCommand:
             name = normalize_requirement_name(mod.name)
             if name in modified_names:
                 raise RuntimeError(
-                    f"{spec_name} validation failed - duplicate requirement in MODIFIED for header '### Requirement: {mod.name}'"
+                    f"{spec_name} validation failed - duplicate requirement in MODIFIED for header '### Requirement: {mod.name}'",
                 )
             modified_names.add(name)
 
@@ -392,7 +394,7 @@ class ArchiveCommand:
             name = normalize_requirement_name(rem)
             if name in removed_names_set:
                 raise RuntimeError(
-                    f"{spec_name} validation failed - duplicate requirement in REMOVED for header '### Requirement: {rem}'"
+                    f"{spec_name} validation failed - duplicate requirement in REMOVED for header '### Requirement: {rem}'",
                 )
             removed_names_set.add(name)
 
@@ -403,11 +405,11 @@ class ArchiveCommand:
             to_norm = normalize_requirement_name(rename["to"])
             if from_norm in renamed_from_set:
                 raise RuntimeError(
-                    f"{spec_name} validation failed - duplicate FROM in RENAMED for header '### Requirement: {rename['from']}'"
+                    f"{spec_name} validation failed - duplicate FROM in RENAMED for header '### Requirement: {rename['from']}'",
                 )
             if to_norm in renamed_to_set:
                 raise RuntimeError(
-                    f"{spec_name} validation failed - duplicate TO in RENAMED for header '### Requirement: {rename['to']}'"
+                    f"{spec_name} validation failed - duplicate TO in RENAMED for header '### Requirement: {rename['to']}'",
                 )
             renamed_from_set.add(from_norm)
             renamed_to_set.add(to_norm)
@@ -429,18 +431,18 @@ class ArchiveCommand:
             to_norm = normalize_requirement_name(rename["to"])
             if from_norm in modified_names:
                 raise RuntimeError(
-                    f"{spec_name} validation failed - when a rename exists, MODIFIED must reference the NEW header '### Requirement: {rename['to']}'"
+                    f"{spec_name} validation failed - when a rename exists, MODIFIED must reference the NEW header '### Requirement: {rename['to']}'",
                 )
             # Detect ADDED colliding with a RENAMED TO
             if to_norm in added_names:
                 raise RuntimeError(
-                    f"{spec_name} validation failed - RENAMED TO header collides with ADDED for '### Requirement: {rename['to']}'"
+                    f"{spec_name} validation failed - RENAMED TO header collides with ADDED for '### Requirement: {rename['to']}'",
                 )
 
         if conflicts:
             c = conflicts[0]
             raise RuntimeError(
-                f"{spec_name} validation failed - requirement present in multiple sections ({c['a']} and {c['b']}) for header '### Requirement: {c['name']}'"
+                f"{spec_name} validation failed - requirement present in multiple sections ({c['a']} and {c['b']}) for header '### Requirement: {c['name']}'",
             )
 
         has_any_delta = (
@@ -449,7 +451,7 @@ class ArchiveCommand:
         if not has_any_delta:
             raise RuntimeError(
                 f"Delta parsing found no operations for {update.source.parent.name}. "
-                "Provide ADDED/MODIFIED/REMOVED/RENAMED sections in change spec."
+                "Provide ADDED/MODIFIED/REMOVED/RENAMED sections in change spec.",
             )
 
         # Load or create base target content
@@ -461,12 +463,12 @@ class ArchiveCommand:
             if plan.modified or plan.renamed:
                 raise RuntimeError(
                     f"{spec_name}: target spec does not exist; only ADDED requirements are allowed for new specs. "
-                    "MODIFIED and RENAMED operations require an existing spec."
+                    "MODIFIED and RENAMED operations require an existing spec.",
                 ) from e
             # Warn about REMOVED requirements being ignored for new specs
             if plan.removed:
                 print(
-                    f"\033[33m⚠️  Warning: {spec_name} - {len(plan.removed)} REMOVED requirement(s) ignored for new spec (nothing to remove).\033[0m"
+                    f"\033[33m⚠️  Warning: {spec_name} - {len(plan.removed)} REMOVED requirement(s) ignored for new spec (nothing to remove).\033[0m",
                 )
             is_new_spec = True
             target_content = self._build_spec_skeleton(spec_name, plan_name)
@@ -484,11 +486,11 @@ class ArchiveCommand:
             to_key = normalize_requirement_name(rename["to"])
             if from_key not in name_to_block:
                 raise RuntimeError(
-                    f"{spec_name} RENAMED failed for header '### Requirement: {rename['from']}' - source not found"
+                    f"{spec_name} RENAMED failed for header '### Requirement: {rename['from']}' - source not found",
                 )
             if to_key in name_to_block:
                 raise RuntimeError(
-                    f"{spec_name} RENAMED failed for header '### Requirement: {rename['to']}' - target already exists"
+                    f"{spec_name} RENAMED failed for header '### Requirement: {rename['to']}' - target already exists",
                 )
             block = name_to_block[from_key]
             new_header = f"### Requirement: {to_key}"
@@ -508,7 +510,7 @@ class ArchiveCommand:
             if key not in name_to_block:
                 if not is_new_spec:
                     raise RuntimeError(
-                        f"{spec_name} REMOVED failed for header '### Requirement: {name}' - not found"
+                        f"{spec_name} REMOVED failed for header '### Requirement: {name}' - not found",
                     )
                 continue
             del name_to_block[key]
@@ -518,13 +520,13 @@ class ArchiveCommand:
             key = normalize_requirement_name(mod.name)
             if key not in name_to_block:
                 raise RuntimeError(
-                    f"{spec_name} MODIFIED failed for header '### Requirement: {mod.name}' - not found"
+                    f"{spec_name} MODIFIED failed for header '### Requirement: {mod.name}' - not found",
                 )
             # Replace block with provided raw
             mod_header_match = mod.raw.split("\n")[0]
             if not mod_header_match.startswith("### Requirement:"):
                 raise RuntimeError(
-                    f"{spec_name} MODIFIED failed for header '### Requirement: {mod.name}' - header mismatch in content"
+                    f"{spec_name} MODIFIED failed for header '### Requirement: {mod.name}' - header mismatch in content",
                 )
             name_to_block[key] = mod
 
@@ -533,7 +535,7 @@ class ArchiveCommand:
             key = normalize_requirement_name(add.name)
             if key in name_to_block:
                 raise RuntimeError(
-                    f"{spec_name} ADDED failed for header '### Requirement: {add.name}' - already exists"
+                    f"{spec_name} ADDED failed for header '### Requirement: {add.name}' - already exists",
                 )
             name_to_block[key] = add
 
@@ -583,7 +585,10 @@ class ArchiveCommand:
         return {"rebuilt": rebuilt, "counts": counts}
 
     def _write_updated_spec(
-        self, update: SpecUpdate, rebuilt: str, counts: OperationCounts
+        self,
+        update: SpecUpdate,
+        rebuilt: str,
+        counts: OperationCounts,
     ) -> None:
         """Write updated spec to disk."""
         # Create target directory if needed

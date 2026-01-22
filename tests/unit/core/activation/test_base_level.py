@@ -182,7 +182,9 @@ class TestBaseLevelActivation:
 
         # Approximate with 5 accesses
         activation = bla.calculate_from_access_counts(
-            access_count=5, last_access=last_access, current_time=now
+            access_count=5,
+            last_access=last_access,
+            current_time=now,
         )
 
         # Should produce a reasonable activation value
@@ -194,7 +196,9 @@ class TestBaseLevelActivation:
         now = datetime.now(timezone.utc)
 
         activation = bla.calculate_from_access_counts(
-            access_count=0, last_access=now, current_time=now
+            access_count=0,
+            last_access=now,
+            current_time=now,
         )
 
         assert activation == -5.0  # default_activation

@@ -50,7 +50,7 @@ anomalies:
   scope_multiplier: 2
   unexpected_file_types:
     - "*.sql"
-"""
+""",
         )
         path = Path(f.name)
     yield path
@@ -68,7 +68,7 @@ class TestPoliciesEngine:
         # Should load defaults
         assert engine.config is not None
         assert engine.config.budget.monthly_limit_usd == 100.0
-        assert engine.config.agent_recovery.timeout_seconds == 120
+        assert engine.config.agent_recovery.timeout_seconds == 300
         assert engine.config.agent_recovery.max_retries == 2
 
     def test_load_custom_policies(self, temp_policies_file):

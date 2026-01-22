@@ -102,7 +102,9 @@ class TestAutoEscalation:
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch("click.confirm", return_value=False),
             patch.object(
-                executor, "execute_direct_llm", return_value="Direct LLM response"
+                executor,
+                "execute_direct_llm",
+                return_value="Direct LLM response",
             ) as mock_llm,
             patch.object(executor, "execute_aurora") as mock_soar,
         ):
@@ -131,7 +133,9 @@ class TestAutoEscalation:
             patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch("aurora_soar.phases.assess.assess_complexity", return_value=mock_assessment),
             patch.object(
-                executor, "execute_direct_llm", return_value="Direct LLM response"
+                executor,
+                "execute_direct_llm",
+                return_value="Direct LLM response",
             ) as mock_llm,
             patch.object(executor, "execute_aurora") as mock_soar,
         ):

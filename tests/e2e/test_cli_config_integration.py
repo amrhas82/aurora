@@ -231,8 +231,8 @@ class TestConfigFileSystemIntegration:
                 "index_paths": [
                     str(project_dir / "src"),
                     str(project_dir / "tests"),
-                ]
-            }
+                ],
+            },
         }
 
         with open(config_path, "w") as f:
@@ -282,7 +282,7 @@ class TestConfigWithMemoryCommands:
                 "chunk_size": 500,
                 "overlap": 100,
                 "index_paths": [str(tmp_path / "src")],
-            }
+            },
         }
 
         with open(config_path, "w") as f:

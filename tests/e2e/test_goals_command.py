@@ -63,7 +63,12 @@ class TestGoalsCommandE2E:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_full_flow_with_yes_flag(
-        self, mock_which, mock_create_plan, mock_client, isolated_project, valid_subgoal
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        isolated_project,
+        valid_subgoal,
     ):
         """Test full workflow: goal → decompose → match → output with --yes flag."""
         # Setup plan directory
@@ -118,7 +123,12 @@ class TestGoalsCommandE2E:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_directory_creation_and_file_output(
-        self, mock_which, mock_create_plan, mock_client, isolated_project, valid_subgoal
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        isolated_project,
+        valid_subgoal,
     ):
         """Test that directory and goals.json file are created correctly."""
         # Setup
@@ -185,7 +195,11 @@ class TestGoalsCommandE2E:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_error_during_plan_creation(
-        self, mock_which, mock_create_plan, mock_client, isolated_project
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        isolated_project,
     ):
         """Test error handling when plan creation fails."""
         # Mock LLM client

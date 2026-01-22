@@ -144,7 +144,13 @@ class TestToolResolution:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_tool_cli_flag_overrides_env(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test that --tool flag overrides AURORA_GOALS_TOOL env var."""
         monkeypatch.setenv("AURORA_GOALS_TOOL", "cursor")
@@ -182,7 +188,13 @@ class TestToolResolution:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/cursor")
     def test_tool_env_overrides_default(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test that AURORA_GOALS_TOOL env var overrides default."""
         monkeypatch.setenv("AURORA_GOALS_TOOL", "cursor")
@@ -223,7 +235,13 @@ class TestModelResolution:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_model_cli_flag_overrides_env(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test that --model flag overrides AURORA_GOALS_MODEL env var."""
         monkeypatch.setenv("AURORA_GOALS_MODEL", "opus")
@@ -260,7 +278,13 @@ class TestModelResolution:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_model_env_overrides_default(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test that AURORA_GOALS_MODEL env var overrides default."""
         monkeypatch.setenv("AURORA_GOALS_MODEL", "opus")
@@ -382,7 +406,13 @@ class TestMemorySearchDisplay:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_displays_found_files_with_scores(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test displays found files with relevance scores."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -438,7 +468,13 @@ class TestMemorySearchDisplay:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_handles_empty_memory_results(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test handles empty results with helpful message."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -475,7 +511,7 @@ class TestMemorySearchDisplay:
             ),
             plan_dir=plan_dir,
             warnings=[
-                "No relevant context found in memory. Run 'aur mem index .' to index codebase."
+                "No relevant context found in memory. Run 'aur mem index .' to index codebase.",
             ],
         )
 
@@ -492,7 +528,13 @@ class TestMemorySearchDisplay:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_verbose_shows_detailed_memory_search(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test verbose mode shows detailed search info."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -550,7 +592,13 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_displays_plan_summary_before_confirmation(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test displays plan summary before asking for confirmation."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -669,7 +717,13 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_waits_for_user_confirmation(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test waits for user confirmation before proceeding."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -722,7 +776,13 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_yes_flag_skips_confirmation(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test --yes flag skips all confirmation prompts."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -775,7 +835,13 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_can_abort_before_saving(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test can abort the process before saving goals.json."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -832,7 +898,13 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_creates_goals_json_file(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test successfully creates goals.json file after confirmation."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -894,7 +966,13 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.create_plan")
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_shows_next_steps_message(
-        self, mock_which, mock_create_plan, mock_client, cli_runner, temp_aurora_dir, monkeypatch
+        self,
+        mock_which,
+        mock_create_plan,
+        mock_client,
+        cli_runner,
+        temp_aurora_dir,
+        monkeypatch,
     ):
         """Test shows message about next steps after saving."""
         monkeypatch.chdir(temp_aurora_dir.parent)

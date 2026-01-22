@@ -52,6 +52,7 @@ class QwenSlashCommandConfigurator(TomlSlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -63,6 +64,7 @@ class QwenSlashCommandConfigurator(TomlSlashCommandConfigurator):
 
         Returns:
             Description string
+
         """
         return DESCRIPTIONS[command_id]
 
@@ -74,5 +76,6 @@ class QwenSlashCommandConfigurator(TomlSlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)

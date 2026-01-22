@@ -50,6 +50,7 @@ def validate_capability_name(v: str) -> str:
 
     Raises:
         ValueError: If capability name is empty
+
     """
     if not isinstance(v, str):
         raise ValueError(VALIDATION_MESSAGES.MODIFICATION_CAPABILITY_EMPTY)
@@ -69,6 +70,7 @@ def validate_modification_description(v: str) -> str:
 
     Raises:
         ValueError: If description is empty
+
     """
     if not isinstance(v, str):
         raise ValueError(VALIDATION_MESSAGES.MODIFICATION_DESCRIPTION_EMPTY)
@@ -88,6 +90,7 @@ def validate_plan_name(v: str) -> str:
 
     Raises:
         ValueError: If plan name is empty
+
     """
     if not isinstance(v, str):
         raise ValueError(VALIDATION_MESSAGES.PLAN_NAME_EMPTY)
@@ -110,6 +113,7 @@ def validate_why_section(v: str) -> str:
 
     Raises:
         ValueError: If text is too short or too long
+
     """
     if not isinstance(v, str):
         raise ValueError(VALIDATION_MESSAGES.PLAN_WHY_TOO_SHORT)
@@ -131,6 +135,7 @@ def validate_what_changes(v: str) -> str:
 
     Raises:
         ValueError: If text is empty
+
     """
     if not isinstance(v, str):
         raise ValueError(VALIDATION_MESSAGES.PLAN_WHAT_EMPTY)
@@ -150,6 +155,7 @@ def validate_modifications_list(v: list[Modification]) -> list[Modification]:
 
     Raises:
         ValueError: If list is empty or has too many items
+
     """
     if not v or len(v) == 0:
         raise ValueError(VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS)
@@ -175,6 +181,7 @@ class RenameInfo(BaseModel):
     Attributes:
         from_name: Original requirement name
         to_name: New requirement name
+
     """
 
     model_config = {"populate_by_name": True}
@@ -199,6 +206,7 @@ class Modification(BaseModel):
         requirement: Single requirement (for ADDED/MODIFIED operations)
         requirements: Multiple requirements (for batch operations)
         rename: Rename information (for RENAMED operations)
+
     """
 
     capability: CapabilityName
@@ -218,6 +226,7 @@ class PlanMetadata(BaseModel):
         version: Schema version (default: "1.0.0")
         format: Format identifier (default: "aurora-plan")
         source_path: Optional path to source file
+
     """
 
     version: str = "1.0.0"
@@ -239,6 +248,7 @@ class Plan(BaseModel):
         what_changes: Summary of what will change
         modifications: List of detailed modifications (1-10)
         metadata: Optional metadata (version, format, source path)
+
     """
 
     name: PlanName

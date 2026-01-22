@@ -77,6 +77,7 @@ def is_code_file(file_path: str) -> bool:
 
     Returns:
         True if file has a code extension, False otherwise
+
     """
     path = PathLib(file_path)
 
@@ -126,6 +127,7 @@ def search_memory_for_goal(
         ...     print(f"{path}: {score:.2f}")
         src/auth/oauth.py: 0.85
         src/auth/jwt.py: 0.72
+
     """
     # Load config if not provided
     if config is None:
@@ -214,6 +216,7 @@ class FilePathResolver:
         Args:
             store: SQLite store for memory retrieval (uses default if None)
             config: Configuration object (uses default if None)
+
         """
         self.config = config or Config()
         self.store = store
@@ -228,6 +231,7 @@ class FilePathResolver:
 
         Returns:
             List of FileResolution objects with paths, line ranges, and confidence
+
         """
         # Check if memory is indexed (silently degrade - caller shows user message)
         if not self.has_indexed_memory():
@@ -258,6 +262,7 @@ class FilePathResolver:
 
         Returns:
             True if memory is indexed, False otherwise
+
         """
         return self.retriever.has_indexed_memory()
 
@@ -274,6 +279,7 @@ class FilePathResolver:
 
         Returns:
             Formatted string for display
+
         """
         # Build base path string
         if resolution.line_start is not None and resolution.line_end is not None:
@@ -285,12 +291,11 @@ class FilePathResolver:
         if resolution.confidence >= 0.8:
             # High confidence - no annotation needed
             return path_str
-        elif resolution.confidence >= 0.6:
+        if resolution.confidence >= 0.6:
             # Medium confidence - suggest it's a suggestion
             return f"{path_str} (suggested)"
-        else:
-            # Low confidence - warn user
-            return f"{path_str} (low confidence)"
+        # Low confidence - warn user
+        return f"{path_str} (low confidence)"
 
     def _generate_generic_paths(self, subgoal: Subgoal) -> list[FileResolution]:
         """Generate generic file paths when memory not indexed.
@@ -303,6 +308,7 @@ class FilePathResolver:
 
         Returns:
             List of generic FileResolution objects with low confidence
+
         """
         # Create a slug from the subgoal title
         slug = subgoal.title.lower().replace(" ", "_")
@@ -318,5 +324,5 @@ class FilePathResolver:
                 line_start=None,
                 line_end=None,
                 confidence=0.1,  # Very low confidence to mark as placeholder
-            )
+            ),
         ]

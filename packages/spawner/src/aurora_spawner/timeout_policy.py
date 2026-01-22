@@ -50,6 +50,7 @@ class RetryPolicy:
         1.0
         >>> policy.get_delay(1)  # Second retry (2^1 * 1.0 = 2.0 + jitter)
         2.123
+
     """
 
     max_attempts: int = 3
@@ -71,6 +72,7 @@ class RetryPolicy:
 
         Returns:
             Delay in seconds before next retry
+
         """
         if self.strategy == RetryStrategy.IMMEDIATE:
             delay = 0.0
@@ -108,6 +110,7 @@ class RetryPolicy:
 
         Returns:
             Tuple of (should_retry, reason)
+
         """
         if attempt >= self.max_attempts:
             return False, f"Max attempts ({self.max_attempts}) reached"
@@ -159,9 +162,9 @@ class TimeoutPolicy:
         """Get initial timeout based on mode."""
         if self.mode == TimeoutMode.FIXED:
             return self.timeout
-        elif self.mode == TimeoutMode.PROGRESSIVE:
+        if self.mode == TimeoutMode.PROGRESSIVE:
             return self.initial_timeout
-        elif self.mode == TimeoutMode.ADAPTIVE:
+        if self.mode == TimeoutMode.ADAPTIVE:
             # Start with initial timeout until we have history
             return self.initial_timeout
         return self.timeout
@@ -176,6 +179,7 @@ class TimeoutPolicy:
 
         Returns:
             True if timeout should be extended
+
         """
         if self.mode != TimeoutMode.PROGRESSIVE:
             return False
@@ -198,6 +202,7 @@ class TimeoutPolicy:
 
         Returns:
             New extended timeout value
+
         """
         # Extend by 50% or to max, whichever is smaller
         extended = current_timeout * 1.5
@@ -231,12 +236,16 @@ class TerminationPolicy:
             r"invalid.?api.?key",
             r"unauthorized",
             r"forbidden",
-        ]
+        ],
     )
     custom_predicates: list[Callable[[str, str], bool]] = field(default_factory=list)
 
     def should_terminate(
-        self, stdout: str, stderr: str, elapsed: float, last_activity: float
+        self,
+        stdout: str,
+        stderr: str,
+        elapsed: float,
+        last_activity: float,
     ) -> tuple[bool, str]:
         """Check if process should be terminated early.
 
@@ -248,6 +257,7 @@ class TerminationPolicy:
 
         Returns:
             Tuple of (should_terminate, reason)
+
         """
         if not self.enabled:
             return False, ""
@@ -451,6 +461,7 @@ class SpawnPolicy:
 
         Raises:
             ValueError: If name is not a valid preset
+
         """
         presets = {
             "default": cls.default,
@@ -463,7 +474,7 @@ class SpawnPolicy:
 
         if name not in presets:
             raise ValueError(
-                f"Unknown policy preset '{name}'. Available: {', '.join(presets.keys())}"
+                f"Unknown policy preset '{name}'. Available: {', '.join(presets.keys())}",
             )
 
         return presets[name]()

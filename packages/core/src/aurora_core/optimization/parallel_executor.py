@@ -28,6 +28,7 @@ class AgentPriority(Enum):
         HIGH: Important but not blocking
         NORMAL: Standard priority
         LOW: Optional, can be skipped on timeout
+
     """
 
     CRITICAL = 1
@@ -47,6 +48,7 @@ class AgentTask:
         kwargs: Keyword arguments for callable
         priority: Task priority level
         timeout_seconds: Maximum execution time
+
     """
 
     agent_id: str
@@ -72,6 +74,7 @@ class AgentResult:
         error: Error message (if failed)
         execution_time_ms: Execution time in milliseconds
         priority: Agent priority level
+
     """
 
     agent_id: str
@@ -95,6 +98,7 @@ class ExecutionStats:
         avg_response_time_ms: Average response time per task
         concurrency_used: Maximum concurrency level used
         critical_failures: Number of critical agent failures
+
     """
 
     total_tasks: int = 0
@@ -152,6 +156,7 @@ class ParallelAgentExecutor:
         - Early termination saves 40-60% cost on failures
         - Result streaming reduces perceived latency by 40-50%
         - Optimal concurrency is workload-dependent (monitor stats)
+
     """
 
     def __init__(
@@ -173,6 +178,7 @@ class ParallelAgentExecutor:
             - scaling_factor controls how quickly concurrency adjusts
             - Lower values = more conservative scaling
             - Higher values = more aggressive scaling
+
         """
         self.min_concurrency = min_concurrency
         self.max_concurrency = max_concurrency
@@ -204,6 +210,7 @@ class ParallelAgentExecutor:
             - Respects task priorities
             - Applies dynamic concurrency scaling
             - Early terminates on critical failures (if enabled)
+
         """
         start_time = time.time()
         stats = ExecutionStats(total_tasks=len(tasks))
@@ -310,6 +317,7 @@ class ParallelAgentExecutor:
             ...         print(f"Got result from {result.agent_id}")
             ...         # Start processing immediately
             ...         process_partial_result(result)
+
         """
         # Sort tasks by priority
         sorted_tasks = sorted(tasks, key=lambda t: t.priority.value)
@@ -384,6 +392,7 @@ class ParallelAgentExecutor:
 
         Returns:
             AgentResult with execution outcome
+
         """
         start_time = time.time()
 
@@ -420,6 +429,7 @@ class ParallelAgentExecutor:
 
         Args:
             response_time_ms: Response time to record
+
         """
         self.recent_response_times.append(response_time_ms)
 
@@ -455,7 +465,8 @@ class ParallelAgentExecutor:
         # Apply adjustment with bounds
         new_concurrency = self.current_concurrency + adjustment
         self.current_concurrency = max(
-            self.min_concurrency, min(self.max_concurrency, new_concurrency)
+            self.min_concurrency,
+            min(self.max_concurrency, new_concurrency),
         )
 
     def reset_concurrency(self) -> None:

@@ -64,7 +64,10 @@ class TestActivationConfig:
     def test_disable_all_components(self):
         """Test disabling all components."""
         config = ActivationConfig(
-            enable_bla=False, enable_spreading=False, enable_context=False, enable_decay=False
+            enable_bla=False,
+            enable_spreading=False,
+            enable_context=False,
+            enable_decay=False,
         )
         assert config.enable_bla is False
         assert config.enable_spreading is False
@@ -87,7 +90,11 @@ class TestActivationComponents:
     def test_components_can_be_set(self):
         """Test components can be set to custom values."""
         components = ActivationComponents(
-            bla=2.5, spreading=0.7, context_boost=0.3, decay=-1.2, total=2.3
+            bla=2.5,
+            spreading=0.7,
+            context_boost=0.3,
+            decay=-1.2,
+            total=2.3,
         )
         assert components.bla == 2.5
         assert components.spreading == 0.7
@@ -180,7 +187,9 @@ class TestActivationEngine:
         access_history = [AccessHistoryEntry(timestamp=now - timedelta(days=1))]
 
         components = engine.calculate_total(
-            access_history=access_history, spreading_activation=0.5, current_time=now
+            access_history=access_history,
+            spreading_activation=0.5,
+            current_time=now,
         )
 
         assert components.bla == 0.0  # Disabled
@@ -196,7 +205,9 @@ class TestActivationEngine:
         access_history = [AccessHistoryEntry(timestamp=now - timedelta(days=1))]
 
         components = engine.calculate_total(
-            access_history=access_history, spreading_activation=0.5, current_time=now
+            access_history=access_history,
+            spreading_activation=0.5,
+            current_time=now,
         )
 
         assert components.bla != 0.0  # Enabled
@@ -212,7 +223,8 @@ class TestActivationEngine:
         chunk_keywords = {"database", "query"}
 
         components = engine.calculate_total(
-            query_keywords=query_keywords, chunk_keywords=chunk_keywords
+            query_keywords=query_keywords,
+            chunk_keywords=chunk_keywords,
         )
 
         assert components.context_boost == 0.0  # Disabled
@@ -227,7 +239,9 @@ class TestActivationEngine:
         last_access = now - timedelta(days=30)
 
         components = engine.calculate_total(
-            last_access=last_access, spreading_activation=0.5, current_time=now
+            last_access=last_access,
+            spreading_activation=0.5,
+            current_time=now,
         )
 
         assert components.decay == 0.0  # Disabled
@@ -237,7 +251,10 @@ class TestActivationEngine:
     def test_calculate_total_all_disabled_returns_zero(self):
         """Test that disabling all components returns zero total."""
         config = ActivationConfig(
-            enable_bla=False, enable_spreading=False, enable_context=False, enable_decay=False
+            enable_bla=False,
+            enable_spreading=False,
+            enable_context=False,
+            enable_decay=False,
         )
         engine = ActivationEngine(config)
         now = datetime.now(timezone.utc)
@@ -793,7 +810,8 @@ class TestActivationEngineEdgeCases:
         chunk_keywords = {"network", "socket"}
 
         components = engine.calculate_total(
-            query_keywords=query_keywords, chunk_keywords=chunk_keywords
+            query_keywords=query_keywords,
+            chunk_keywords=chunk_keywords,
         )
 
         assert components.context_boost == 0.0
@@ -818,7 +836,9 @@ class TestActivationEngineEdgeCases:
         last_access = now - timedelta(days=365)
 
         components = engine.calculate_total(
-            access_history=access_history, last_access=last_access, current_time=now
+            access_history=access_history,
+            last_access=last_access,
+            current_time=now,
         )
 
         # Both BLA and decay should be negative
@@ -865,7 +885,9 @@ class TestActivationEngineFormula:
         last_access = now - timedelta(days=10)
 
         components = engine.calculate_total(
-            spreading_activation=1.0, last_access=last_access, current_time=now
+            spreading_activation=1.0,
+            last_access=last_access,
+            current_time=now,
         )
 
         # Decay should be negative

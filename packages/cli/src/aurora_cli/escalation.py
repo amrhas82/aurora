@@ -37,6 +37,7 @@ class EscalationConfig:
     Example:
         >>> config = EscalationConfig(threshold=0.6, enable_keyword_only=True)
         >>> handler = AutoEscalationHandler(config=config)
+
     """
 
     threshold: float = 0.6
@@ -72,6 +73,7 @@ class EscalationResult:
         ... else:
         ...     # Use direct LLM call
         ...     response = llm_client.generate(query)
+
     """
 
     use_aurora: bool
@@ -101,6 +103,7 @@ class AutoEscalationHandler:
         >>> result = handler.assess_query("What is a function?")
         >>> print(f"Use AURORA: {result.use_aurora}")
         >>> print(f"Complexity: {result.complexity}")
+
     """
 
     def __init__(
@@ -113,6 +116,7 @@ class AutoEscalationHandler:
         Args:
             config: Escalation configuration (uses defaults if None)
             llm_client: Optional LLM client for Tier 2 verification
+
         """
         self.config = config or EscalationConfig()
         self.llm_client = llm_client
@@ -133,6 +137,7 @@ class AutoEscalationHandler:
             ...     print("Using full AURORA pipeline")
             ... else:
             ...     print("Using direct LLM")
+
         """
         # Check for forced modes
         if self.config.force_aurora:
@@ -174,7 +179,7 @@ class AutoEscalationHandler:
         logger.info(
             f"Escalation decision: {'AURORA' if use_aurora else 'Direct LLM'} "
             f"(complexity={complexity}, score={score:.3f}, "
-            f"threshold={self.config.threshold:.3f}, confidence={confidence:.3f})"
+            f"threshold={self.config.threshold:.3f}, confidence={confidence:.3f})",
         )
 
         return EscalationResult(
@@ -194,6 +199,7 @@ class AutoEscalationHandler:
 
         Returns:
             Numeric score (0.0-1.0)
+
         """
         mapping = {
             "SIMPLE": 0.2,
@@ -220,6 +226,7 @@ class AutoEscalationHandler:
             ... else:
             ...     # Use direct LLM
             ...     pass
+
         """
         result = self.assess_query(query)
         return result.use_aurora
@@ -237,6 +244,7 @@ class AutoEscalationHandler:
             >>> handler = AutoEscalationHandler()
             >>> mode = handler.get_execution_mode("What is a class?")
             >>> print(f"Execution mode: {mode}")
+
         """
         result = self.assess_query(query)
         return "aurora" if result.use_aurora else "direct"

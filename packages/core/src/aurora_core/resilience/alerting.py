@@ -32,6 +32,7 @@ class AlertRule:
         comparison: Comparison operator ("gt", "lt", "gte", "lte", "eq")
         severity: Alert severity level
         description: Human-readable description of what the alert means
+
     """
 
     name: str
@@ -49,6 +50,7 @@ class AlertRule:
 
         Returns:
             True if alert should fire, False otherwise
+
         """
         if self.comparison == "gt":
             return metric_value > self.threshold
@@ -74,6 +76,7 @@ class Alert:
         threshold: Threshold that was exceeded
         severity: Alert severity
         message: Human-readable alert message
+
     """
 
     rule_name: str
@@ -118,6 +121,7 @@ class Alerting:
         >>>     # Send to monitoring system
         >>>     pass
         >>> alerting.add_notification_handler(webhook_handler)
+
     """
 
     def __init__(self) -> None:
@@ -134,6 +138,7 @@ class Alerting:
 
         Raises:
             ValueError: If a rule with the same name already exists
+
         """
         if rule.name in self.rules:
             raise ValueError(f"Alert rule '{rule.name}' already exists")
@@ -147,6 +152,7 @@ class Alerting:
 
         Raises:
             KeyError: If rule does not exist
+
         """
         if rule_name not in self.rules:
             raise KeyError(f"Alert rule '{rule_name}' not found")
@@ -200,6 +206,7 @@ class Alerting:
 
         Args:
             handler: Callable that takes an Alert and sends notification
+
         """
         self.notification_handlers.append(handler)
 
@@ -220,6 +227,7 @@ class Alerting:
             >>> }
             >>> alerts = alerting.evaluate(metrics)
             >>> # Returns 3 alerts (all thresholds exceeded)
+
         """
         alerts = []
 
@@ -256,6 +264,7 @@ class Alerting:
 
         Args:
             alert: The alert to notify about
+
         """
         # Always log the alert
         log_level = (
@@ -278,6 +287,7 @@ class Alerting:
 
         Returns:
             List of fired alerts
+
         """
         if severity is None:
             return list(self.fired_alerts)
@@ -298,6 +308,7 @@ class Alerting:
                 "alerts_by_severity": dict[str, int],
                 "alerts_by_rule": dict[str, int]
             }
+
         """
         alerts_by_severity = {
             severity.value: sum(1 for a in self.fired_alerts if a.severity == severity)

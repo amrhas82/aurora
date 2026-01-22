@@ -69,7 +69,10 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = ImportError("Not installed")
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Doctor should complete even with failures
@@ -92,7 +95,10 @@ class TestDoctorMCPChecksIntegration:
             mock_home.return_value = isolated_environment["project_dir"]
 
             result = runner.invoke(
-                doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                doctor_command,
+                [],
+                catch_exceptions=False,
+                obj=isolated_environment["config"],
             )
 
         # Should report JSON syntax error
@@ -108,12 +114,15 @@ class TestDoctorMCPChecksIntegration:
 
             # Mock MCP config check to pass
             with patch(
-                "aurora_cli.health_checks.MCPFunctionalChecks._check_mcp_config_syntax"
+                "aurora_cli.health_checks.MCPFunctionalChecks._check_mcp_config_syntax",
             ) as mock_check:
                 mock_check.return_value = ("pass", "MCP config valid", {})
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should report missing database
@@ -139,7 +148,10 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should report Aurora MCP tools issue
@@ -165,7 +177,10 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should report SOAR phases issue
@@ -198,7 +213,10 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should report missing tool
@@ -214,13 +232,13 @@ class TestDoctorMCPChecksIntegration:
 
             # Mock checks to return fixable issue
             with patch(
-                "aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues"
+                "aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues",
             ) as mock_fixable:
                 mock_fixable.return_value = [
                     {
                         "name": "Missing memory database",
                         "fix_func": lambda: None,  # Mock fix function
-                    }
+                    },
                 ]
 
                 # Use input to decline auto-fix (to avoid interactive prompt in test)
@@ -250,7 +268,7 @@ class TestDoctorMCPChecksIntegration:
 
             # Mock checks to return fixable issue
             with patch(
-                "aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues"
+                "aurora_cli.health_checks.MCPFunctionalChecks.get_fixable_issues",
             ) as mock_fixable:
                 mock_fixable.return_value = [{"name": "Test fixable issue", "fix_func": mock_fix}]
 
@@ -276,13 +294,13 @@ class TestDoctorMCPChecksIntegration:
 
             # Mock checks to return manual issue
             with patch(
-                "aurora_cli.health_checks.MCPFunctionalChecks.get_manual_issues"
+                "aurora_cli.health_checks.MCPFunctionalChecks.get_manual_issues",
             ) as mock_manual:
                 mock_manual.return_value = [
                     {
                         "name": "Invalid MCP configuration",
                         "solution": "Run 'aur init --config' to reconfigure MCP server",
-                    }
+                    },
                 ]
 
                 result = runner.invoke(
@@ -316,7 +334,7 @@ class TestDoctorMCPChecksIntegration:
                     patch("aurora_cli.health_checks.CoreSystemChecks.run_checks") as mock_core,
                     patch("aurora_cli.health_checks.CodeAnalysisChecks.run_checks") as mock_code,
                     patch(
-                        "aurora_cli.health_checks.SearchRetrievalChecks.run_checks"
+                        "aurora_cli.health_checks.SearchRetrievalChecks.run_checks",
                     ) as mock_search,
                     patch("aurora_cli.health_checks.ConfigurationChecks.run_checks") as mock_config,
                     patch("aurora_cli.health_checks.ToolIntegrationChecks.run_checks") as mock_tool,
@@ -360,7 +378,10 @@ class TestDoctorMCPChecksIntegration:
                 mock_import.side_effect = import_side_effect
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should report which phases failed
@@ -434,7 +455,10 @@ class TestDoctorMemoryDatabaseChecks:
                 mock_store.return_value = mock_instance
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should attempt to check database
@@ -456,7 +480,10 @@ class TestDoctorMemoryDatabaseChecks:
                 mock_store.side_effect = Exception("Database corrupted")
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should report database error
@@ -541,7 +568,10 @@ class TestDoctorFullFlow:
                 mock_import.side_effect = ImportError("Import failed")
 
                 result = runner.invoke(
-                    doctor_command, [], catch_exceptions=False, obj=isolated_environment["config"]
+                    doctor_command,
+                    [],
+                    catch_exceptions=False,
+                    obj=isolated_environment["config"],
                 )
 
         # Should show multiple failures

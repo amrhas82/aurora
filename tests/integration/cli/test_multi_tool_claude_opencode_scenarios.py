@@ -7,9 +7,7 @@ These tests are designed to validate the complete integration path from
 CLI invocation through to result aggregation and conflict resolution.
 """
 
-import asyncio
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -17,13 +15,11 @@ from click.testing import CliRunner
 from aurora_cli.commands.headless import (
     _display_multi_tool_results,
     _run_multi_tool_loop,
-    _run_single_tool_loop,
     headless_command,
 )
 from aurora_cli.concurrent_executor import (
     AggregatedResult,
     AggregationStrategy,
-    ConcurrentToolExecutor,
     ConflictInfo,
     ConflictSeverity,
     ToolResult,
@@ -58,7 +54,7 @@ Implement a feature using both Claude and OpenCode.
 - [ ] Feature is complete
 - [ ] Both tools agree on approach
 - [ ] Tests pass
-"""
+""",
     )
 
     # Create scratchpad
@@ -70,7 +66,7 @@ Implement a feature using both Claude and OpenCode.
 
 ## Current State
 Starting fresh.
-"""
+""",
     )
 
     return {
@@ -93,7 +89,8 @@ def mock_claude_opencode_available():
     with patch("shutil.which", side_effect=which_side_effect):
         with patch("aurora_cli.commands.headless.shutil.which", side_effect=which_side_effect):
             with patch(
-                "aurora_cli.concurrent_executor.shutil.which", side_effect=which_side_effect
+                "aurora_cli.concurrent_executor.shutil.which",
+                side_effect=which_side_effect,
             ):
                 yield
 
@@ -191,7 +188,10 @@ class TestClaudeOpenCodeParallel:
                     strategy_used=AggregationStrategy.FIRST_SUCCESS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Fast Claude", execution_time=1.0
+                            tool="claude",
+                            success=True,
+                            output="Fast Claude",
+                            execution_time=1.0,
                         ),
                     ],
                     winning_tool="claude",
@@ -230,7 +230,10 @@ class TestClaudeOpenCodeParallel:
                             execution_time=0.8,
                         ),
                         ToolResult(
-                            tool="claude", success=True, output="Slower Claude", execution_time=2.0
+                            tool="claude",
+                            success=True,
+                            output="Slower Claude",
+                            execution_time=2.0,
                         ),
                     ],
                     winning_tool="opencode",
@@ -651,7 +654,7 @@ class TestMultiIterationScenarios:
                             ),
                         ],
                     )
-                elif iteration_count[0] == 2:
+                if iteration_count[0] == 2:
                     return AggregatedResult(
                         success=True,
                         primary_output="Refined implementation",
@@ -671,27 +674,26 @@ class TestMultiIterationScenarios:
                             ),
                         ],
                     )
-                else:
-                    temp_workspace["scratchpad"].write_text("STATUS: DONE")
-                    return AggregatedResult(
-                        success=True,
-                        primary_output="Final implementation",
-                        strategy_used=AggregationStrategy.ALL_COMPLETE,
-                        tool_results=[
-                            ToolResult(
-                                tool="claude",
-                                success=True,
-                                output="Final by Claude",
-                                execution_time=1.0,
-                            ),
-                            ToolResult(
-                                tool="opencode",
-                                success=True,
-                                output="Final by OpenCode",
-                                execution_time=1.2,
-                            ),
-                        ],
-                    )
+                temp_workspace["scratchpad"].write_text("STATUS: DONE")
+                return AggregatedResult(
+                    success=True,
+                    primary_output="Final implementation",
+                    strategy_used=AggregationStrategy.ALL_COMPLETE,
+                    tool_results=[
+                        ToolResult(
+                            tool="claude",
+                            success=True,
+                            output="Final by Claude",
+                            execution_time=1.0,
+                        ),
+                        ToolResult(
+                            tool="opencode",
+                            success=True,
+                            output="Final by OpenCode",
+                            execution_time=1.2,
+                        ),
+                    ],
+                )
 
             mock_executor.execute = mock_execute
 
@@ -734,7 +736,10 @@ class TestMultiIterationScenarios:
                     strategy_used=AggregationStrategy.CONSENSUS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Claude output", execution_time=1.0
+                            tool="claude",
+                            success=True,
+                            output="Claude output",
+                            execution_time=1.0,
                         ),
                         ToolResult(
                             tool="opencode",
@@ -792,7 +797,10 @@ class TestBudgetAndTimeLimit:
                     strategy_used=AggregationStrategy.FIRST_SUCCESS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Progress", execution_time=1.0
+                            tool="claude",
+                            success=True,
+                            output="Progress",
+                            execution_time=1.0,
                         ),
                     ],
                 )
@@ -831,7 +839,10 @@ class TestResultsDisplay:
             tool_results=[
                 ToolResult(tool="claude", success=True, output="Claude did X", execution_time=2.0),
                 ToolResult(
-                    tool="opencode", success=True, output="OpenCode did Y", execution_time=2.5
+                    tool="opencode",
+                    success=True,
+                    output="OpenCode did Y",
+                    execution_time=2.5,
                 ),
             ],
             conflict_info=ConflictInfo(
@@ -846,7 +857,7 @@ class TestResultsDisplay:
                         "tool2": "opencode",
                         "count1": 2,
                         "count2": 3,
-                    }
+                    },
                 ],
             ),
             metadata={
@@ -895,7 +906,11 @@ class TestCLIIntegration:
     """Test CLI integration for Claude + OpenCode scenarios."""
 
     def test_cli_parallel_invocation(
-        self, runner, temp_workspace, mock_claude_opencode_available, mock_git_safe
+        self,
+        runner,
+        temp_workspace,
+        mock_claude_opencode_available,
+        mock_git_safe,
     ):
         """Test CLI correctly invokes parallel execution."""
         with patch("pathlib.Path.cwd", return_value=temp_workspace["root"]):

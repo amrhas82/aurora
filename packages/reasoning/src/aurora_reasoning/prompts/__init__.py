@@ -20,6 +20,7 @@ class PromptTemplate(ABC):
         Args:
             name: Template identifier
             version: Template version for tracking changes
+
         """
         self.name = name
         self.version = version
@@ -33,8 +34,8 @@ class PromptTemplate(ABC):
 
         Returns:
             System prompt string
+
         """
-        pass
 
     @abstractmethod
     def build_user_prompt(self, **kwargs: Any) -> str:
@@ -45,11 +46,14 @@ class PromptTemplate(ABC):
 
         Returns:
             User prompt string
+
         """
-        pass
 
     def build_prompt(
-        self, *, examples: list[dict[str, Any]] | None = None, **kwargs: Any
+        self,
+        *,
+        examples: list[dict[str, Any]] | None = None,
+        **kwargs: Any,
     ) -> dict[str, str]:
         """Build complete prompt with system and user messages.
 
@@ -59,6 +63,7 @@ class PromptTemplate(ABC):
 
         Returns:
             Dict with 'system' and 'user' keys
+
         """
         system_prompt = self.build_system_prompt(**kwargs)
         user_prompt = self.build_user_prompt(**kwargs)
@@ -81,6 +86,7 @@ class PromptTemplate(ABC):
 
         Returns:
             Formatted examples string
+
         """
         if not examples:
             return ""
@@ -102,8 +108,8 @@ class PromptTemplate(ABC):
 
         Returns:
             Formatted example string
+
         """
-        pass
 
 
 __all__ = ["PromptTemplate"]

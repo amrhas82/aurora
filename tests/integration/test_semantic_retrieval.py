@@ -82,7 +82,9 @@ class MockStore:
         self.chunks[chunk.id] = chunk
 
     def retrieve_by_activation(
-        self, min_activation: float = 0.0, limit: int = 100
+        self,
+        min_activation: float = 0.0,
+        limit: int = 100,
     ) -> list[MockChunk]:
         """Retrieve chunks sorted by activation."""
         # Filter by minimum activation
@@ -106,7 +108,9 @@ class MockActivationEngine:
         self.config = config or ActivationConfig()
 
     def calculate_activation(
-        self, chunk_id: str, context_keywords: set[str] | None = None
+        self,
+        chunk_id: str,
+        context_keywords: set[str] | None = None,
     ) -> float:
         """Return pre-calculated activation from chunk."""
         chunk = self.store.chunks.get(chunk_id)
@@ -119,6 +123,7 @@ def create_test_dataset(embedding_provider: EmbeddingProvider, now: datetime):
     Returns:
         - store: MockStore with chunks
         - ground_truth: Dict mapping queries to relevant chunk IDs
+
     """
     # Define chunks with content that can be semantically embedded
     # Format: (id, content, access_pattern)
@@ -232,7 +237,9 @@ def create_test_dataset(embedding_provider: EmbeddingProvider, now: datetime):
 
 
 def calculate_precision_at_k(
-    results: list[dict[str, Any]], relevant_ids: set[str], k: int
+    results: list[dict[str, Any]],
+    relevant_ids: set[str],
+    k: int,
 ) -> float:
     """Calculate precision@k metric."""
     if k == 0:
@@ -323,7 +330,10 @@ class TestSemanticRetrievalIntegration:
             semantic_weight=0.0,
         )
         retriever_activation = HybridRetriever(
-            store, engine, embedding_provider, config=config_activation
+            store,
+            engine,
+            embedding_provider,
+            config=config_activation,
         )
         results_activation = retriever_activation.retrieve(query, top_k=5)
         precision_activation = calculate_precision_at_k(results_activation, relevant_ids, k=5)
@@ -343,7 +353,10 @@ class TestSemanticRetrievalIntegration:
             semantic_weight=1.0,
         )
         retriever_semantic = HybridRetriever(
-            store, engine, embedding_provider, config=config_semantic
+            store,
+            engine,
+            embedding_provider,
+            config=config_semantic,
         )
         results_semantic = retriever_semantic.retrieve(query, top_k=5)
         precision_semantic = calculate_precision_at_k(results_semantic, relevant_ids, k=5)
@@ -441,7 +454,7 @@ class TestSemanticRetrievalIntegration:
                     f"    {i}. {chunk_id:20s} "
                     f"(hybrid: {result['hybrid_score']:.3f}, "
                     f"act: {result['activation_score']:.3f}, "
-                    f"sem: {result['semantic_score']:.3f}) {relevant}"
+                    f"sem: {result['semantic_score']:.3f}) {relevant}",
                 )
 
         # Calculate average precision
@@ -503,14 +516,20 @@ class TestSemanticRetrievalIntegration:
         # High activation weight
         config_high_act = HybridConfig(activation_weight=0.9, semantic_weight=0.1)
         retriever_high_act = HybridRetriever(
-            store, engine, embedding_provider, config=config_high_act
+            store,
+            engine,
+            embedding_provider,
+            config=config_high_act,
         )
         results_high_act = retriever_high_act.retrieve(query, top_k=5)
 
         # High semantic weight
         config_high_sem = HybridConfig(activation_weight=0.1, semantic_weight=0.9)
         retriever_high_sem = HybridRetriever(
-            store, engine, embedding_provider, config=config_high_sem
+            store,
+            engine,
+            embedding_provider,
+            config=config_high_sem,
         )
         results_high_sem = retriever_high_sem.retrieve(query, top_k=5)
 
@@ -551,7 +570,9 @@ class TestSemanticRetrievalEdgeCases:
             retriever.retrieve("valid query", top_k=-1)
 
     def test_chunks_without_embeddings_with_fallback_disabled(
-        self, embedding_provider, test_dataset
+        self,
+        embedding_provider,
+        test_dataset,
     ):
         """Test behavior when embeddings missing and fallback disabled."""
         store, ground_truth = test_dataset

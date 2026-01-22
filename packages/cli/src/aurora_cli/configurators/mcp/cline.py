@@ -39,5 +39,6 @@ class ClineMCPConfigurator(MCPConfigurator):
 
         Returns:
             Path to .cline/mcp_servers.json in project
+
         """
         return project_path / ".cline" / "mcp_servers.json"

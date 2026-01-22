@@ -26,6 +26,7 @@ class CodeParser(ABC):
 
     Attributes:
         language: Programming language identifier (e.g., "python", "typescript")
+
     """
 
     def __init__(self, language: str):
@@ -33,6 +34,7 @@ class CodeParser(ABC):
 
         Args:
             language: Programming language this parser handles
+
         """
         self.language = language
 
@@ -58,8 +60,8 @@ class CodeParser(ABC):
         Raises:
             This method should NOT raise exceptions for parse failures.
             Log errors and return empty list instead for resilience.
+
         """
-        pass
 
     @abstractmethod
     def can_parse(self, file_path: Path) -> bool:
@@ -73,8 +75,8 @@ class CodeParser(ABC):
 
         Returns:
             True if this parser can handle the file, False otherwise
+
         """
-        pass
 
     def __repr__(self) -> str:
         """Return string representation."""

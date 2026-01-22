@@ -75,7 +75,7 @@ Configure OAuth 2.0 provider settings
 
 ### SG-2: Implement Token Exchange
 Implement secure token exchange flow
-"""
+""",
     )
 
     # Create prd.md
@@ -85,7 +85,7 @@ Implement secure token exchange flow
 
 ## FR-1: Authentication
 FR-1.1: User must authenticate via OAuth 2.0
-"""
+""",
     )
 
     # Create tasks.md
@@ -95,7 +95,7 @@ FR-1.1: User must authenticate via OAuth 2.0
 
 - [ ] Setup OAuth provider
 - [ ] Implement token exchange
-"""
+""",
     )
 
     return plan_dir
@@ -112,5 +112,5 @@ def mock_config(tmp_path: Path) -> dict[str, Any]:
             "base_dir": str(plans_dir),
             "auto_increment": True,
             "archive_on_complete": False,
-        }
+        },
     }

@@ -10,9 +10,7 @@ Tests cover:
 """
 
 import asyncio
-from dataclasses import dataclass
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -21,7 +19,6 @@ from aurora_cli.concurrent_executor import (
     AggregationStrategy,
     ConcurrentToolExecutor,
     ConflictDetector,
-    ConflictInfo,
     ConflictResolver,
     ConflictSeverity,
     ToolConfig,
@@ -98,7 +95,7 @@ class TestToolConfiguration:
     def test_mixed_tools(self, mock_registry, mock_which):
         """Test mixing string and ToolConfig tools."""
         executor = ConcurrentToolExecutor(
-            tools=["claude", ToolConfig(name="opencode", timeout=300.0)]
+            tools=["claude", ToolConfig(name="opencode", timeout=300.0)],
         )
 
         assert executor.tools[0].name == "claude"
@@ -211,7 +208,10 @@ class TestBasicExecution:
 
         with patch.object(executor, "_execute_tool") as mock_execute:
             mock_execute.return_value = ToolResult(
-                tool="claude", success=True, output="Output", execution_time=0.5
+                tool="claude",
+                success=True,
+                output="Output",
+                execution_time=0.5,
             )
 
             result = await executor.execute("Test prompt")
@@ -242,13 +242,18 @@ class TestFirstSuccessStrategy:
             if tool.name == "claude":
                 await asyncio.sleep(0.01)  # Claude is faster
                 return ToolResult(
-                    tool="claude", success=True, output="Claude first", execution_time=0.01
+                    tool="claude",
+                    success=True,
+                    output="Claude first",
+                    execution_time=0.01,
                 )
-            else:
-                await asyncio.sleep(0.1)
-                return ToolResult(
-                    tool="opencode", success=True, output="OpenCode", execution_time=0.1
-                )
+            await asyncio.sleep(0.1)
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="OpenCode",
+                execution_time=0.1,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -268,13 +273,19 @@ class TestFirstSuccessStrategy:
         async def mock_execute(tool, prompt, cancel_event=None):
             if tool.name == "claude":
                 return ToolResult(
-                    tool="claude", success=False, output="", error="Failed", execution_time=0.01
+                    tool="claude",
+                    success=False,
+                    output="",
+                    error="Failed",
+                    execution_time=0.01,
                 )
-            else:
-                await asyncio.sleep(0.02)
-                return ToolResult(
-                    tool="opencode", success=True, output="OpenCode success", execution_time=0.02
-                )
+            await asyncio.sleep(0.02)
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="OpenCode success",
+                execution_time=0.02,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -292,7 +303,10 @@ class TestFirstSuccessStrategy:
 
         with patch.object(executor, "_execute_tool") as mock_execute:
             mock_execute.return_value = ToolResult(
-                tool="claude", success=False, output="Error output", error="Failed"
+                tool="claude",
+                success=False,
+                output="Error output",
+                error="Failed",
             )
 
             result = await executor.execute("Test prompt")
@@ -317,7 +331,10 @@ class TestAllCompleteStrategy:
         async def mock_execute(tool, prompt, cancel_event=None):
             completed_tools.append(tool.name)
             return ToolResult(
-                tool=tool.name, success=True, output=f"{tool.name} output", execution_time=0.1
+                tool=tool.name,
+                success=True,
+                output=f"{tool.name} output",
+                execution_time=0.1,
             )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
@@ -412,13 +429,22 @@ class TestVotingStrategy:
                 strategy_used=AggregationStrategy.ALL_COMPLETE,
                 tool_results=[
                     ToolResult(
-                        tool="claude", success=True, output="Consensus answer", execution_time=0.1
+                        tool="claude",
+                        success=True,
+                        output="Consensus answer",
+                        execution_time=0.1,
                     ),
                     ToolResult(
-                        tool="opencode", success=True, output="Consensus answer", execution_time=0.1
+                        tool="opencode",
+                        success=True,
+                        output="Consensus answer",
+                        execution_time=0.1,
                     ),
                     ToolResult(
-                        tool="cursor", success=True, output="Different answer", execution_time=0.1
+                        tool="cursor",
+                        success=True,
+                        output="Different answer",
+                        execution_time=0.1,
                     ),
                 ],
             )
@@ -449,7 +475,10 @@ class TestBestScoreStrategy:
                 tool_results=[
                     ToolResult(tool="claude", success=False, output="Failed", execution_time=1.0),
                     ToolResult(
-                        tool="opencode", success=True, output="A" * 500, execution_time=25.0
+                        tool="opencode",
+                        success=True,
+                        output="A" * 500,
+                        execution_time=25.0,
                     ),
                 ],
             )
@@ -482,7 +511,10 @@ class TestBestScoreStrategy:
                 tool_results=[
                     ToolResult(tool="claude", success=False, output="", execution_time=100.0),
                     ToolResult(
-                        tool="opencode", success=True, output="A" * 1000, execution_time=1.0
+                        tool="opencode",
+                        success=True,
+                        output="A" * 1000,
+                        execution_time=1.0,
                     ),
                 ],
             )
@@ -510,7 +542,10 @@ class TestMergeStrategy:
                 strategy_used=AggregationStrategy.ALL_COMPLETE,
                 tool_results=[
                     ToolResult(
-                        tool="claude", success=True, output="Claude's analysis", execution_time=0.1
+                        tool="claude",
+                        success=True,
+                        output="Claude's analysis",
+                        execution_time=0.1,
                     ),
                     ToolResult(
                         tool="opencode",
@@ -599,7 +634,10 @@ class TestTimeoutHandling:
         async def slow_execute(tool, prompt, cancel_event=None):
             await asyncio.sleep(1.0)  # Longer than timeout
             return ToolResult(
-                tool="claude", success=True, output="Never reached", execution_time=1.0
+                tool="claude",
+                success=True,
+                output="Never reached",
+                execution_time=1.0,
             )
 
         # Need to test the actual timeout mechanism in _execute_direct
@@ -629,15 +667,18 @@ class TestTimeoutHandling:
         async def mock_execute(tool, prompt, cancel_event=None):
             if tool.name == "claude":
                 return ToolResult(tool="claude", success=True, output="Quick", execution_time=0.01)
-            else:
-                # Simulate slow tool that gets cancelled
-                try:
-                    await asyncio.sleep(10.0)
-                except asyncio.CancelledError:
-                    return ToolResult(
-                        tool="opencode", success=False, output="", error="Cancelled", exit_code=-2
-                    )
-                return ToolResult(tool="opencode", success=True, output="Slow", execution_time=10.0)
+            # Simulate slow tool that gets cancelled
+            try:
+                await asyncio.sleep(10.0)
+            except asyncio.CancelledError:
+                return ToolResult(
+                    tool="opencode",
+                    success=False,
+                    output="",
+                    error="Cancelled",
+                    exit_code=-2,
+                )
+            return ToolResult(tool="opencode", success=True, output="Slow", execution_time=10.0)
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -863,7 +904,10 @@ class TestProviderExecution:
 
         with patch.object(executor, "_execute_direct") as mock_direct:
             mock_direct.return_value = ToolResult(
-                tool="claude", success=True, output="Direct output", execution_time=0.1
+                tool="claude",
+                success=True,
+                output="Direct output",
+                execution_time=0.1,
             )
 
             result = await executor._execute_tool(executor.tools[0], "Test prompt")
@@ -901,7 +945,10 @@ class TestProviderExecution:
             )
 
             result = await executor._execute_with_provider(
-                mock_provider, executor.tools[0], "Test prompt", 0.0
+                mock_provider,
+                executor.tools[0],
+                "Test prompt",
+                0.0,
             )
 
             # Should timeout
@@ -929,7 +976,10 @@ class TestEdgeCases:
 
         with patch.object(executor, "_execute_tool") as mock_execute:
             mock_execute.return_value = ToolResult(
-                tool="claude", success=True, output="", execution_time=0.1
+                tool="claude",
+                success=True,
+                output="",
+                execution_time=0.1,
             )
 
             result = await executor.execute("Test prompt")
@@ -944,7 +994,10 @@ class TestEdgeCases:
 
         with patch.object(executor, "_execute_tool") as mock_execute:
             mock_execute.return_value = ToolResult(
-                tool="claude", success=True, output="Hello World", execution_time=0.1
+                tool="claude",
+                success=True,
+                output="Hello World",
+                execution_time=0.1,
             )
 
             result = await executor.execute("Test prompt")
@@ -961,7 +1014,10 @@ class TestEdgeCases:
 
         with patch.object(executor, "_execute_tool") as mock_execute:
             mock_execute.return_value = ToolResult(
-                tool="claude", success=True, output=large_output, execution_time=0.1
+                tool="claude",
+                success=True,
+                output=large_output,
+                execution_time=0.1,
             )
 
             result = await executor.execute("Test prompt")
@@ -1096,7 +1152,9 @@ class TestConflictResolver:
         """Test smart merge with different outputs adds header."""
         results = [
             ToolResult(
-                tool="claude", success=True, output="First unique content here that is long enough."
+                tool="claude",
+                success=True,
+                output="First unique content here that is long enough.",
             ),
             ToolResult(
                 tool="opencode",

@@ -29,6 +29,7 @@ class MockLLMResponse:
         tokens_used: Number of tokens consumed.
         model: Model identifier.
         latency_ms: Simulated latency in milliseconds.
+
     """
 
     content: str
@@ -62,6 +63,7 @@ class MockLLM:
         >>> llm = MockLLM()
         >>> llm.set_error_mode(exception=RuntimeError("API error"))
         >>> # llm.complete("prompt")  # Raises RuntimeError
+
     """
 
     def __init__(
@@ -76,6 +78,7 @@ class MockLLM:
             default_response: Default response text.
             default_tokens: Default token count.
             default_latency_ms: Default simulated latency.
+
         """
         self.default_response = default_response
         self.default_tokens = default_tokens
@@ -113,6 +116,7 @@ class MockLLM:
             ...     lambda p: len(p) > 100,
             ...     lambda p: f"Long prompt ({len(p)} chars)"
             ... )
+
         """
         response_func = (lambda _: response) if isinstance(response, str) else response
 
@@ -123,6 +127,7 @@ class MockLLM:
 
         Args:
             exception: Exception to raise on complete() calls.
+
         """
         self.error_mode = True
         self.error_exception = exception
@@ -133,7 +138,11 @@ class MockLLM:
         self.error_exception = None
 
     def complete(
-        self, prompt: str, temperature: float = 0.7, max_tokens: int | None = None, **kwargs: Any
+        self,
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+        **kwargs: Any,
     ) -> MockLLMResponse:
         """Generate completion for prompt.
 
@@ -148,6 +157,7 @@ class MockLLM:
 
         Raises:
             Exception: If error mode is enabled.
+
         """
         # Track call
         self.call_count += 1
@@ -192,6 +202,7 @@ class MockLLM:
 
         Returns:
             Last prompt string, or None if no calls made.
+
         """
         if self.calls:
             return str(self.calls[-1]["prompt"])
@@ -202,6 +213,7 @@ class MockLLM:
 
         Raises:
             AssertionError: If no calls were made.
+
         """
         assert self.call_count > 0, "MockLLM was not called"
 
@@ -213,6 +225,7 @@ class MockLLM:
 
         Raises:
             AssertionError: If substring not found in any prompt.
+
         """
         for call in self.calls:
             if prompt_substring in call["prompt"]:
@@ -227,6 +240,7 @@ class MockLLM:
 
         Raises:
             AssertionError: If call count doesn't match.
+
         """
         assert (
             self.call_count == expected_count
@@ -250,6 +264,7 @@ class MockAgent:
         domains: List of supported domains.
         is_available: Whether agent is currently available.
         execution_results: Predefined results for execute calls.
+
     """
 
     agent_id: str
@@ -273,6 +288,7 @@ class MockAgent:
 
         Returns:
             Predefined result or generic response.
+
         """
         call_info = {
             "task": task,
@@ -302,6 +318,7 @@ class MockAgent:
 
         Returns:
             True if agent supports the capability and domain.
+
         """
         if capability not in self.capabilities:
             return False
@@ -324,6 +341,7 @@ class MockParser:
         >>> parser.set_parse_result([mock_chunk1, mock_chunk2])
         >>> chunks = parser.parse(Path("/test.py"))
         >>> assert len(chunks) == 2
+
     """
 
     def __init__(self, language: str = "mock") -> None:
@@ -331,6 +349,7 @@ class MockParser:
 
         Args:
             language: Language identifier.
+
         """
         self.language = language
         self.parse_results: dict[str, list[Chunk]] = {}
@@ -347,6 +366,7 @@ class MockParser:
 
         Returns:
             True if file extension matches language.
+
         """
         # Mock parser accepts files matching its language
         if self.language == "python":
@@ -366,6 +386,7 @@ class MockParser:
 
         Raises:
             Exception: If failure mode is enabled.
+
         """
         self.calls.append(file_path)
 
@@ -390,6 +411,7 @@ class MockParser:
         Args:
             chunks: List of chunks to return.
             file_path: Specific file path, or None for default.
+
         """
         if file_path:
             self.parse_results[str(file_path)] = chunks
@@ -401,6 +423,7 @@ class MockParser:
 
         Args:
             exception: Exception to raise on parse.
+
         """
         self.should_fail = True
         self.failure_exception = exception
@@ -447,6 +470,7 @@ class MockStore:
 
         Raises:
             Exception: If failure mode is enabled.
+
         """
         self.save_calls.append(chunk.id)
 
@@ -466,6 +490,7 @@ class MockStore:
 
         Raises:
             Exception: If failure mode is enabled.
+
         """
         self.retrieve_calls.append(chunk_id)
 
@@ -479,6 +504,7 @@ class MockStore:
 
         Returns:
             List of chunk IDs.
+
         """
         return list(self.chunks.keys())
 
@@ -490,6 +516,7 @@ class MockStore:
 
         Returns:
             True if deleted, False if not found.
+
         """
         if chunk_id in self.chunks:
             del self.chunks[chunk_id]
@@ -501,6 +528,7 @@ class MockStore:
 
         Args:
             exception: Exception to raise on save.
+
         """
         self.save_should_fail = True
         self.failure_exception = exception
@@ -510,6 +538,7 @@ class MockStore:
 
         Args:
             exception: Exception to raise on retrieve.
+
         """
         self.retrieve_should_fail = True
         self.failure_exception = exception

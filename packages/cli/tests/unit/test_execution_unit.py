@@ -53,7 +53,9 @@ class TestExecuteDirectLLM:
     @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
     @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_with_valid_query(
-        self, mock_call_llm: Mock, mock_init_llm: Mock
+        self,
+        mock_call_llm: Mock,
+        mock_init_llm: Mock,
     ) -> None:
         """Test execute_direct_llm() with valid query and API key."""
         # Setup mocks
@@ -78,7 +80,9 @@ class TestExecuteDirectLLM:
     @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
     @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_with_memory_context(
-        self, mock_call_llm: Mock, mock_init_llm: Mock
+        self,
+        mock_call_llm: Mock,
+        mock_init_llm: Mock,
     ) -> None:
         """Test execute_direct_llm() includes memory context when store provided."""
         # Setup mocks
@@ -97,7 +101,7 @@ class TestExecuteDirectLLM:
             {
                 "content": "def hello(): pass",
                 "metadata": {"file_path": "test.py"},
-            }
+            },
         ]
 
         # Execute
@@ -149,7 +153,9 @@ class TestExecuteDirectLLM:
     @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
     @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_with_verbose_logging(
-        self, mock_call_llm: Mock, mock_init_llm: Mock
+        self,
+        mock_call_llm: Mock,
+        mock_init_llm: Mock,
     ) -> None:
         """Test execute_direct_llm() with verbose=True logs detailed info."""
         # Setup mocks
@@ -173,7 +179,9 @@ class TestExecuteDirectLLM:
     @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
     @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_uses_config_params(
-        self, mock_call_llm: Mock, mock_init_llm: Mock
+        self,
+        mock_call_llm: Mock,
+        mock_init_llm: Mock,
     ) -> None:
         """Test execute_direct_llm() uses config parameters for LLM call."""
         # Setup mocks
@@ -204,7 +212,9 @@ class TestExecuteDirectLLM:
     @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
     @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_api_error_is_propagated(
-        self, mock_call_llm: Mock, mock_init_llm: Mock
+        self,
+        mock_call_llm: Mock,
+        mock_init_llm: Mock,
     ) -> None:
         """Test execute_direct_llm() propagates APIError from LLM client."""
         # Setup mocks
@@ -222,7 +232,9 @@ class TestExecuteDirectLLM:
     @patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client")
     @patch("aurora_cli.query_executor.QueryExecutor._call_llm_with_retry")
     def test_execute_direct_llm_generic_error_wrapped_as_api_error(
-        self, mock_call_llm: Mock, mock_init_llm: Mock
+        self,
+        mock_call_llm: Mock,
+        mock_init_llm: Mock,
     ) -> None:
         """Test execute_direct_llm() wraps generic exceptions as APIError."""
         # Setup mocks
@@ -259,7 +271,9 @@ class TestExecuteAurora:
         # Execute
         executor = QueryExecutor()
         result = executor.execute_aurora(
-            query="Complex query", api_key="sk-ant-test123", memory_store=mock_store
+            query="Complex query",
+            api_key="sk-ant-test123",
+            memory_store=mock_store,
         )
 
         # Verify
@@ -347,7 +361,8 @@ class TestInitializeLLMClient:
 
     @patch("aurora_cli.execution.AnthropicClient")
     def test_initialize_llm_client_creates_anthropic_client(
-        self, mock_anthropic_class: Mock
+        self,
+        mock_anthropic_class: Mock,
     ) -> None:
         """Test _initialize_llm_client() creates AnthropicClient with API key."""
         mock_client = Mock()
@@ -358,7 +373,8 @@ class TestInitializeLLMClient:
 
         # Verify client was created with correct parameters
         mock_anthropic_class.assert_called_once_with(
-            api_key="sk-ant-test123", default_model="claude-sonnet-4-20250514"
+            api_key="sk-ant-test123",
+            default_model="claude-sonnet-4-20250514",
         )
         assert result == mock_client
 
@@ -374,7 +390,8 @@ class TestInitializeLLMClient:
 
         # Verify client was created with custom model
         mock_anthropic_class.assert_called_once_with(
-            api_key="sk-ant-test123", default_model="claude-opus-4-20250514"
+            api_key="sk-ant-test123",
+            default_model="claude-opus-4-20250514",
         )
 
 
@@ -411,7 +428,8 @@ class TestInitializeOrchestrator:
         # Execute
         executor = QueryExecutor()
         result = executor._initialize_orchestrator(
-            api_key="sk-ant-test123", memory_store=mock_store
+            api_key="sk-ant-test123",
+            memory_store=mock_store,
         )
 
         # Verify orchestrator was created with correct parameters
@@ -551,16 +569,20 @@ class TestGetPhaseSummary:
         # Test different phase types
         assert "Complexity:" in executor._get_phase_summary("assess", {"complexity": "high"})
         assert "Retrieved 5 chunks" in executor._get_phase_summary(
-            "retrieve", {"chunks_retrieved": 5}
+            "retrieve",
+            {"chunks_retrieved": 5},
         )
         assert "Created 3 subgoals" in executor._get_phase_summary(
-            "decompose", {"subgoals": ["g1", "g2", "g3"]}
+            "decompose",
+            {"subgoals": ["g1", "g2", "g3"]},
         )
         assert "Quality score: 0.95" in executor._get_phase_summary(
-            "verify", {"quality_score": 0.95}
+            "verify",
+            {"quality_score": 0.95},
         )
         assert "Assigned 2 agents" in executor._get_phase_summary(
-            "route", {"agent_assignments": ["a1", "a2"]}
+            "route",
+            {"agent_assignments": ["a1", "a2"]},
         )
 
     def test_get_phase_summary_with_missing_data_returns_completed(self) -> None:
@@ -707,7 +729,8 @@ class TestCallLLMWithRetry:
 
     @patch("aurora_cli.execution.time.sleep")
     def test_call_llm_with_retry_does_not_retry_non_retryable_errors(
-        self, mock_sleep: Mock
+        self,
+        mock_sleep: Mock,
     ) -> None:
         """Test _call_llm_with_retry() does not retry on non-retryable errors."""
         mock_llm = Mock()
@@ -730,7 +753,9 @@ class TestCallLLMWithRetry:
     @patch("aurora_cli.execution.time.sleep")
     @patch("aurora_cli.execution.logger")
     def test_call_llm_with_retry_logs_retry_attempts_when_verbose(
-        self, mock_logger: Mock, mock_sleep: Mock
+        self,
+        mock_logger: Mock,
+        mock_sleep: Mock,
     ) -> None:
         """Test _call_llm_with_retry() logs retry attempts with verbose=True."""
         mock_llm = Mock()

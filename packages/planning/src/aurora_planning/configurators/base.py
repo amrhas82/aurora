@@ -41,5 +41,6 @@ class ToolConfigurator(ABC):
         Args:
             project_path: Project root path
             aurora_dir: Aurora directory name (e.g., ".aurora")
+
         """
         ...

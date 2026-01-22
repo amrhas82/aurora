@@ -88,7 +88,10 @@ class TaskRecoveryState:
     used_fallback: bool = False
 
     def transition(
-        self, to_state: RecoveryState, reason: str | None = None, error: str | None = None
+        self,
+        to_state: RecoveryState,
+        reason: str | None = None,
+        error: str | None = None,
     ) -> None:
         """Record state transition.
 
@@ -96,6 +99,7 @@ class TaskRecoveryState:
             to_state: Target state
             reason: Optional reason for transition
             error: Optional error message
+
         """
         transition = RecoveryStateTransition(
             from_state=self.state,
@@ -139,6 +143,7 @@ class TaskRecoveryState:
 
         Returns:
             The new state after failure handling
+
         """
         self.attempt += 1
 
@@ -174,13 +179,13 @@ class TaskRecoveryState:
 
         Returns:
             The new state after circuit open handling
+
         """
         if self.fallback_enabled:
             self.transition(RecoveryState.CIRCUIT_OPEN, reason="circuit_breaker_open")
             return self.state
-        else:
-            self.transition(RecoveryState.FAILED, reason="circuit_open_no_fallback")
-            return self.state
+        self.transition(RecoveryState.FAILED, reason="circuit_open_no_fallback")
+        return self.state
 
     @property
     def is_terminal(self) -> bool:
@@ -249,6 +254,7 @@ class RecoveryStateMachine:
         >>> state.start_retry()
         >>> # ... retry ...
         >>> state.succeed()
+
     """
 
     def __init__(
@@ -261,6 +267,7 @@ class RecoveryStateMachine:
         Args:
             policy: Recovery policy (uses default if None)
             circuit_breaker: Optional circuit breaker (uses singleton if None)
+
         """
         self._policy = policy or RecoveryPolicy.default()
         self._circuit_breaker = circuit_breaker
@@ -290,6 +297,7 @@ class RecoveryStateMachine:
 
         Returns:
             TaskRecoveryState for tracking
+
         """
         policy = policy_override or self._policy.get_for_agent(agent_id)
 
@@ -311,6 +319,7 @@ class RecoveryStateMachine:
 
         Returns:
             TaskRecoveryState or None if not found
+
         """
         return self._task_states.get(task_id)
 
@@ -323,6 +332,7 @@ class RecoveryStateMachine:
 
         Returns:
             Tuple of (should_skip, reason)
+
         """
         return self.circuit_breaker.should_skip(agent_id)
 
@@ -331,6 +341,7 @@ class RecoveryStateMachine:
 
         Args:
             agent_id: Agent that succeeded
+
         """
         self.circuit_breaker.record_success(agent_id)
 
@@ -340,6 +351,7 @@ class RecoveryStateMachine:
         Args:
             agent_id: Agent that failed
             failure_type: Type of failure for circuit breaker
+
         """
         self.circuit_breaker.record_failure(agent_id, failure_type=failure_type)
 
@@ -348,6 +360,7 @@ class RecoveryStateMachine:
 
         Returns:
             Summary dictionary with counts by state
+
         """
         states = list(self._task_states.values())
         by_state = {}
@@ -433,10 +446,11 @@ class ErrorClassifier:
         <ErrorCategory.TRANSIENT: 'transient'>
         >>> classifier.classify("Invalid API key")
         <ErrorCategory.PERMANENT: 'permanent'>
+
     """
 
     patterns: dict[ErrorCategory, list[str]] = field(
-        default_factory=lambda: dict(DEFAULT_ERROR_PATTERNS)
+        default_factory=lambda: dict(DEFAULT_ERROR_PATTERNS),
     )
 
     def classify(self, error_text: str) -> ErrorCategory:
@@ -447,6 +461,7 @@ class ErrorClassifier:
 
         Returns:
             ErrorCategory indicating error type
+
         """
         import re
 
@@ -467,6 +482,7 @@ class ErrorClassifier:
 
         Returns:
             True if retry is recommended
+
         """
         return category in (
             ErrorCategory.TRANSIENT,
@@ -481,6 +497,7 @@ class ErrorClassifier:
         Args:
             category: Category to add pattern to
             pattern: Regex pattern to match
+
         """
         if category not in self.patterns:
             self.patterns[category] = []
@@ -496,6 +513,7 @@ class RecoveryMetrics:
         >>> metrics.record_attempt("agent-1", success=True, retries=2)
         >>> metrics.success_rate("agent-1")
         100.0
+
     """
 
     # Per-agent tracking
@@ -527,6 +545,7 @@ class RecoveryMetrics:
             used_fallback: Whether fallback was used
             recovery_time: Total recovery time in seconds
             error_category: Category of error if failed
+
         """
         self._attempts[agent_id] = self._attempts.get(agent_id, 0) + 1
         self._retries[agent_id] = self._retries.get(agent_id, 0) + retries
@@ -558,6 +577,7 @@ class RecoveryMetrics:
 
         Returns:
             Success rate as percentage (0-100)
+
         """
         if agent_id:
             attempts = self._attempts.get(agent_id, 0)
@@ -578,6 +598,7 @@ class RecoveryMetrics:
 
         Returns:
             Recovery rate as percentage
+
         """
         if agent_id:
             retries = self._retries.get(agent_id, 0)
@@ -598,6 +619,7 @@ class RecoveryMetrics:
 
         Returns:
             Average recovery time in seconds
+
         """
         if agent_id:
             times = self._recovery_times.get(agent_id, [])
@@ -741,6 +763,7 @@ class RecoveryPolicy:
 
         Returns:
             RecoveryPolicy (override if exists, else self)
+
         """
         return self.agent_overrides.get(agent_id, self)
 
@@ -753,6 +776,7 @@ class RecoveryPolicy:
 
         Returns:
             New RecoveryPolicy with override applied
+
         """
         # Create override policy
         override_dict = {
@@ -795,6 +819,7 @@ class RecoveryPolicy:
 
         Returns:
             Delay in seconds
+
         """
         delay = self.base_delay * (self.backoff_factor**attempt)
         delay = min(delay, self.max_delay)
@@ -876,6 +901,7 @@ class RecoveryPolicy:
 
         Raises:
             ValueError: If name is not a valid preset
+
         """
         presets = {
             "default": cls.default,
@@ -887,7 +913,7 @@ class RecoveryPolicy:
 
         if name not in presets:
             raise ValueError(
-                f"Unknown recovery preset '{name}'. Available: {', '.join(presets.keys())}"
+                f"Unknown recovery preset '{name}'. Available: {', '.join(presets.keys())}",
             )
 
         return presets[name]()
@@ -900,6 +926,7 @@ class RecoveryPolicy:
 
         Returns:
             True if error is retriable
+
         """
         category = self.error_classifier.classify(error_text)
         return self.error_classifier.should_retry(category)
@@ -912,6 +939,7 @@ class RecoveryPolicy:
 
         Returns:
             ErrorCategory
+
         """
         return self.error_classifier.classify(error_text)
 
@@ -948,6 +976,7 @@ class RecoveryPolicy:
             ...     "max_retries": 3,
             ...     "fallback_to_llm": True,
             ... })
+
         """
         # Parse strategy
         strategy_value = data.get("strategy", "retry_then_fallback")
@@ -1000,6 +1029,7 @@ class RecoveryPolicy:
             ...     }
             ... }
             >>> policy = RecoveryPolicy.from_config(config)
+
         """
         recovery_config = config.get("spawner", {}).get("recovery", {})
 
@@ -1025,6 +1055,7 @@ class RecoveryPolicy:
 
         Returns:
             New RecoveryPolicy with overrides applied
+
         """
         current = self.to_dict()
         current.update(overrides)

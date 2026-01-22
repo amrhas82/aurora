@@ -50,6 +50,7 @@ def clean_aurora_home(sample_python_project: Path) -> Generator[Path, None, None
 
     Yields:
         Path to the project's .aurora directory (may not exist initially)
+
     """
     aurora_dir = sample_python_project / ".aurora"
     yield aurora_dir
@@ -64,6 +65,7 @@ def sample_python_project() -> Generator[Path, None, None]:
 
     Yields:
         Path to the sample project directory
+
     """
     with tempfile.TemporaryDirectory() as tmp_project:
         project_path = Path(tmp_project)
@@ -123,7 +125,7 @@ class Calculator:
     def reset(self):
         """Reset calculator to zero."""
         self.result = 0
-'''
+''',
         )
 
         # Create another module for variety
@@ -143,7 +145,7 @@ def is_even(n: int) -> bool:
 def clamp(value: int, min_val: int, max_val: int) -> int:
     """Clamp a value between min and max."""
     return max(min_val, min(value, max_val))
-'''
+''',
         )
 
         # Create tests directory
@@ -168,7 +170,7 @@ def test_subtract():
 def test_divide_by_zero():
     with pytest.raises(ZeroDivisionError):
         divide(1, 0)
-'''
+''',
         )
 
         yield project_path
@@ -192,7 +194,9 @@ class TestNewUserWorkflowE2E:
         ), "Project .aurora directory should not exist before init"
 
     def test_1_1_2_aur_init_creates_planning_directory(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.2: aur init creates .aurora directory for planning.
 
@@ -226,7 +230,9 @@ class TestNewUserWorkflowE2E:
         assert clean_aurora_home.exists(), f".aurora directory should exist at {clean_aurora_home}"
 
     def test_1_1_3_aur_mem_index_writes_to_aurora_home(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.3: aur mem index . writes chunks to ./.aurora/memory.db (project-specific).
 
@@ -275,7 +281,9 @@ class TestNewUserWorkflowE2E:
         assert chunk_count > 0, f"Expected chunks in {expected_db}, got {chunk_count}"
 
     def test_1_1_4_aur_mem_stats_shows_correct_count(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.4: aur mem stats shows correct chunk count from ./.aurora/memory.db.
 
@@ -334,7 +342,9 @@ class TestNewUserWorkflowE2E:
         ), f"Stats should show {expected_count} chunks, got:\n{stats_result.stdout}"
 
     def test_1_1_5_aur_mem_search_returns_results(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.5: aur mem search "function" returns results from ./.aurora/memory.db.
 
@@ -383,7 +393,9 @@ class TestNewUserWorkflowE2E:
 
     @pytest.mark.skip(reason="aur query requires real API interaction - no dry-run mode available")
     def test_1_1_6_aur_query_retrieves_from_indexed_data(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.6: aur query "what is X?" retrieves from indexed data.
 
@@ -436,7 +448,9 @@ class TestNewUserWorkflowE2E:
         )
 
     def test_1_1_7_subprocess_commands_return_zero(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.7: Use subprocess.run() for CLI commands, assert returncode == 0.
 
@@ -501,7 +515,9 @@ class TestNewUserWorkflowE2E:
         assert search_result.returncode == 0, f"aur mem search failed: {search_result.stderr}"
 
     def test_1_1_8_no_local_aurora_db_created(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.8: Verify DB created in project .aurora directory, not project root.
 
@@ -545,7 +561,9 @@ class TestNewUserWorkflowE2E:
         )
 
     def test_1_1_9_overall_workflow_with_project_db(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.1.9: Complete workflow with project-specific database.
 
@@ -598,7 +616,9 @@ class TestNewUserWorkflowWithExplicitDbPath:
     """
 
     def test_explicit_db_path_workflow_succeeds(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Complete workflow works when using explicit --db-path.
 

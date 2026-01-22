@@ -277,5 +277,6 @@ def get_agents_template() -> str:
 
     Returns:
         AGENTS.md template string
+
     """
     return AGENTS_TEMPLATE

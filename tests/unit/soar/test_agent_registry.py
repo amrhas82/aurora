@@ -241,8 +241,8 @@ class TestAgentDiscovery:
                     "description": "First agent",
                     "capabilities": ["cap1"],
                     "type": "local",
-                }
-            ]
+                },
+            ],
         }
         config_file.write_text(json.dumps(config_data))
 
@@ -269,10 +269,10 @@ class TestAgentDiscovery:
                             "description": "First agent",
                             "capabilities": ["cap1"],
                             "type": "local",
-                        }
-                    ]
-                }
-            )
+                        },
+                    ],
+                },
+            ),
         )
 
         config2 = dir2 / "agents.json"
@@ -286,10 +286,10 @@ class TestAgentDiscovery:
                             "description": "Second agent",
                             "capabilities": ["cap2"],
                             "type": "remote",
-                        }
-                    ]
-                }
-            )
+                        },
+                    ],
+                },
+            ),
         )
 
         registry = AgentRegistry(discovery_paths=[dir1, dir2])
@@ -485,8 +485,8 @@ class TestAgentRefresh:
                     "description": "First version",
                     "capabilities": ["cap1"],
                     "type": "local",
-                }
-            ]
+                },
+            ],
         }
         config_file.write_text(json.dumps(config_data))
 
@@ -518,8 +518,8 @@ class TestAgentRefresh:
                     "description": "First version",
                     "capabilities": ["cap1"],
                     "type": "local",
-                }
-            ]
+                },
+            ],
         }
         config_file.write_text(json.dumps(config_data))
 

@@ -1,0 +1,184 @@
+ hamr@zor  ~/PycharmProjects/aurora  ↱ main ±✚  aur soar "how can i improve the speed of aur mem search command?" -t claude
+
+╭────────────────────────────────────── Aurora SOAR ───────────────────────────────────────╮
+│ how can i improve the speed of aur mem search command?                                   │
+╰────────────────────────────────────── Tool: claude ──────────────────────────────────────╯
+Initializing...
+
+
+[ORCHESTRATOR] Phase 1: Assess
+  Analyzing query complexity...
+  Complexity: COMPLEX
+
+[ORCHESTRATOR] Phase 2: Retrieve
+  Looking up memory index...
+  Matched: 15 chunks from memory
+
+[LLM → claude] Phase 3: Decompose
+  Breaking query into subgoals...
+  ✓ 7 subgoals identified
+
+[LLM → claude] Phase 4: Verify
+  Validating decomposition and assigning agents...
+  ✓ PASS (7 subgoals routed)
+
+                                     Plan Decomposition
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ #    ┃ Subgoal                                      ┃ Agent                ┃ Match       ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ 1    │ Analyze existing performance documentation   │ @code-developer      │ ✓ Excellent │
+│      │ an                                           │                      │             │
+│ 2    │ Review hybrid retrieval implementation in    │ @code-developer      │ ✓ Excellent │
+│      │ aur                                          │                      │             │
+│ 3    │ Analyze memory retrieval module in           │ @code-developer      │ ✓ Excellent │
+│      │ aurora_cli                                   │                      │             │
+│ 4    │ Evaluate embedding provider initialization   │ @code-developer      │ ⚠           │
+│      │ an                                           │                      │ Acceptable  │
+│      │ → Suggest: performance-engineer              │                      │             │
+│ 5    │ Assess SQLite query performance and          │ @code-developer      │ ⚠           │
+│      │ connectio                                    │                      │ Acceptable  │
+│      │ → Suggest: database-specialist               │                      │             │
+│ 6    │ Design caching strategy for BM25 scores,     │ @system-architect    │ ✓ Excellent │
+│      │ embe                                         │                      │             │
+│ 7    │ Propose concrete optimization                │ @system-architect    │ ✓ Excellent │
+│      │ recommendations                              │                      │             │
+└──────┴──────────────────────────────────────────────┴──────────────────────┴─────────────┘
+╭──────────────────────────────────────── Summary ─────────────────────────────────────────╮
+│ 7 subgoals • 7 assigned                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────╯
+
+[LLM → claude] Phase 5: Collect
+  Researching subgoals...
+
+  Wave 1/4 (3 subgoals)...
+  Task 1/3 (code-developer) starting now
+  Task 2/3 (code-developer) starting in 5s...
+  Task 3/3 (code-developer) starting in 10s...
+  ⠏ Working... 3 active (4s)  Task 2/3 (code-developer) starting now
+  ⠇ Working... 3 active (9s)  Task 3/3 (code-developer) starting now
+  ⠸ Working... 3 active (69s)  [1/3 done] code-developer done
+  [2/3 done] code-developer done
+  ⠇ Working... 1 active (70s)  [3/3 done] code-developer done
+
+  Wave 2/4 (2 subgoals)...
+  Task 1/2 (code-developer) starting now
+  Task 2/2 (code-developer) starting in 5s...
+  ⠏ Working... 2 active (4s)  Task 2/2 (code-developer) starting now
+  ⠋ Working... 2 active (74s)  [1/2 done] code-developer done
+  ⠸ Working... 1 active (98s)  [2/2 done] code-developer done
+
+  Wave 3/4 (1 subgoals)...
+  Task 1/1 (system-architect) starting now
+  ⠧ Working... 1 active (180s)  [1/1 done] system-architect done
+
+  Wave 4/4 (1 subgoals)...
+  Task 1/1 (system-architect) starting now
+  ⠋ Working... 1 active (120s)  [1/1 done] system-architect done
+  ✓ Research complete (7 findings)
+
+[LLM → claude] Phase 6: Synthesize
+  Combining findings...
+  ✓ Answer ready (confidence: 92%)
+
+[ORCHESTRATOR] Phase 7: Record
+  Caching reasoning pattern...
+  ✓ Pattern cached
+
+[LLM → claude] Phase 8: Respond
+  Formatting response...
+  ✓ Response formatted
+
+╭────────────────────────────────────── Final Answer ──────────────────────────────────────╮
+│ Based on comprehensive analysis of the Aurora codebase, here are the concrete ways to    │
+│ improve the speed of `aur mem search`:                                                   │
+│                                                                                          │
+│ Quick Wins (Immediate Impact)                                                            │
+│ ─────────────────────────────                                                            │
+│                                                                                          │
+│ 1. Cache the HybridRetriever Instance                                                    │
+│ Currently, a new HybridRetriever is created on every search call, which loses the query  │
+│ embedding cache and reloads the BM25 index. (Agent: code-developer, retrieval.py         │
+│ analysis)                                                                                │
+│ Fix: Cache the retriever at the `MemoryRetriever` level:                                 │
+│ ```python                                                                                │
+│ def __init__(self, ...):                                                                 │
+│ self._retriever = None                                                                   │
+│ def _get_retriever(self):                                                                │
+│ if self._retriever is None:                                                              │
+│ self._retriever = HybridRetriever(...)                                                   │
+│ return self._retriever                                                                   │
+│ ```                                                                                      │
+│ Expected improvement: 200-500ms per search, query cache hit rate 0% → 60%+               │
+│                                                                                          │
+│ 2. Cache the ActivationEngine Instance                                                   │
+│ The `ActivationEngine` (with 4 calculator objects) is reinstantiated on every retrieval  │
+│ call. (Agent: code-developer, retrieval.py:92-93)                                        │
+│ Fix: Cache at instance level.                                                            │
+│ Expected improvement: 50-100ms per search                                                │
+│                                                                                          │
+│ 3. Verify BM25 Index is Being Loaded                                                     │
+│ The `build_and_save_bm25_index()` function exists but may not be called during indexing. │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│ When no persistent index exists, BM25 is rebuilt from scratch on every query (51% of     │
+│ search time). (Agent: code-developer, hybrid_retriever.py:552-597)                       │
+│ Verification: Check if `.aurora/bm25_index.pkl` exists after running `aur mem index`.    │
+│                                                                                          │
+│ Medium-Term Optimizations                                                                │
+│ ─────────────────────────                                                                │
+│                                                                                          │
+│ 4. Share QueryEmbeddingCache Across Retrievers                                           │
+│ Currently each retriever gets a fresh empty cache. Pass a shared cache instance. (Agent: │
+│ code-developer)                                                                          │
+│                                                                                          │
+│ 5. Fix Double Tokenization in BM25 Scoring                                               │
+│ Documents are tokenized twice - once during `build_index()` and again during `score()`.  │
+│ Query is also re-tokenized for every candidate chunk. (Agent: code-developer,            │
+│ bm25_scorer.py:243-260)                                                                  │
+│                                                                                          │
+│ 6. Move Imports Out of Hot Loops                                                         │
+│ `cosine_similarity` is imported inside a per-chunk loop (hybrid_retriever.py:442-455).   │
+│ Move to module level. (Agent: code-developer)                                            │
+│                                                                                          │
+│ 7. Return Connections to Pool                                                            │
+│ The connection pool exists but `close()` never returns connections - it closes them      │
+│ directly.                                                                                │
+│                                                                                          │
+│                                                                                          │
+│                                                                                          │
+│ This means no actual connection reuse. (Agent: code-developer, sqlite.py:1009-1014)      │
+│                                                                                          │
+│ Longer-Term Improvements                                                                 │
+│ ────────────────────────                                                                 │
+│                                                                                          │
+│ 8. Content-Hash Embedding Cache                                                          │
+│ Re-indexing regenerates ALL embeddings even for unchanged files. Caching by content hash │
+│ could reduce re-index time from ~100s to ~15-25s. (Agent: system-architect)              │
+│                                                                                          │
+│ 9. Use Faster JSON Parser                                                                │
+│ Every chunk retrieval performs `json.loads()` twice. Using `orjson` (3-10x faster) would │
+│ help for large result sets. (Agent: code-developer)                                      │
+│                                                                                          │
+│ Performance Targets                                                                      │
+│ ───────────────────                                                                      │
+│ | Metric | Current | After Quick Wins | After All Optimizations |                        │
+│ |--------|---------|------------------|------------------------|                         │
+│ | Cold search | 15-19s | 8-10s | <3s |                                                   │
+│ | Warm search | 4-5s | 1-2s | <500ms |                                                   │
+│                                                                                          │
+│ Summary of Root Causes                                                                   │
+│ ──────────────────────                                                                   │
+│   1. **BM25 index not persisted/loaded** - 51% of cold search time (Agent:               │
+│ code-developer)                                                                          │
+│   2. **Embedding model load** - 9-12s on cold start (Agent: code-developer)              │
+│   3. **Object recreation** - Retriever, ActivationEngine, caches recreated per call      │
+│ (Agent: code-developer)                                                                  │
+│   4. **Tokenization redundancy** - 36,924 regex calls for 500 chunks (Agent:             │
+│ code-developer)                                                                          │
+│ The full design documents are available at:                                              │
+│   • `/docs/arch/HLD_CACHING_STRATEGY.md` (Agent: system-architect)                       │
+│   • `/docs/arch/OPTIMIZATION_RECOMMENDATIONS.md` (Agent: system-architect)               │
+╰──────────────────────────────────────────────────────────────────────────────────────────╯
+
+Completed in 546.9s

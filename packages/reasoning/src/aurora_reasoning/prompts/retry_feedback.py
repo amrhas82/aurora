@@ -41,6 +41,7 @@ Respond in plain text (NOT JSON) with a structured feedback message."""
 
         Returns:
             User prompt string
+
         """
         verification_result = kwargs.get("verification_result", {})
         attempt_number = kwargs.get("attempt_number", 1)

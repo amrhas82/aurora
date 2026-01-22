@@ -68,7 +68,7 @@ class TestConfigLoading:
         project_config = tmp_path / ".aurora" / "config.json"
         project_config.parent.mkdir(parents=True)
         project_config.write_text(
-            json.dumps({"storage": {"type": "memory", "path": "/custom/path.db"}})
+            json.dumps({"storage": {"type": "memory", "path": "/custom/path.db"}}),
         )
 
         config = Config.load(project_path=tmp_path)

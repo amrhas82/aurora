@@ -70,7 +70,7 @@ def calculate_median(numbers):
     if n % 2 == 0:
         return (sorted_nums[n//2-1] + sorted_nums[n//2]) / 2
     return sorted_nums[n//2]
-"""
+""",
         )
 
         return workspace
@@ -98,7 +98,9 @@ def calculate_median(numbers):
 
         # Spy on record_access method
         with patch.object(
-            manager.store, "record_access", wraps=manager.store.record_access
+            manager.store,
+            "record_access",
+            wraps=manager.store.record_access,
         ) as mock_record:
             # Perform search
             results = manager.search("calculate", limit=5)
@@ -155,7 +157,7 @@ def calculate_median(numbers):
             SELECT chunk_id, access_count
             FROM activations
             ORDER BY chunk_id
-        """
+        """,
         )
         initial_counts = {row[0]: row[1] for row in cursor.fetchall()}
 
@@ -169,7 +171,7 @@ def calculate_median(numbers):
             SELECT chunk_id, access_count
             FROM activations
             ORDER BY chunk_id
-        """
+        """,
         )
         updated_counts = {row[0]: row[1] for row in cursor.fetchall()}
         conn.close()
@@ -201,7 +203,7 @@ def calculate_median(numbers):
             """
             SELECT chunk_id, base_level, access_count
             FROM activations
-        """
+        """,
         )
         initial_state = {
             row[0]: {"base_level": row[1], "access_count": row[2]} for row in cursor.fetchall()
@@ -219,7 +221,7 @@ def calculate_median(numbers):
             """
             SELECT chunk_id, base_level, access_count
             FROM activations
-        """
+        """,
         )
         updated_state = {
             row[0]: {"base_level": row[1], "access_count": row[2]} for row in cursor.fetchall()
@@ -271,7 +273,7 @@ def calculate_median(numbers):
             FROM activations
             WHERE chunk_id IN ({})
         """.format(
-                ",".join("?" * len(result_ids))
+                ",".join("?" * len(result_ids)),
             ),
             tuple(result_ids),
         )
@@ -395,7 +397,7 @@ def calculate_median(numbers):
                     print(
                         "INFO: Search context not stored in activations table\n"
                         "Consider passing context={'query': query_text} to record_access()\n"
-                        "This helps with debugging and analysis but is not critical."
+                        "This helps with debugging and analysis but is not critical.",
                     )
 
         conn.close()
@@ -425,7 +427,7 @@ def frequently_used():
 def moderately_used():
     \"\"\"This function is moderately accessed.\"\"\"
     pass
-"""
+""",
         )
 
         db_path = tmp_path / "test_memory.db"
@@ -464,7 +466,7 @@ def moderately_used():
             FROM chunks c
             JOIN activations a ON c.id = a.chunk_id
             ORDER BY a.access_count DESC
-        """
+        """,
         )
         results = cursor.fetchall()
         conn.close()

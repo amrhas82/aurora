@@ -29,6 +29,7 @@ def run_smoke_test() -> bool:
 
     Returns:
         True if all tests pass, False otherwise
+
     """
     try:
         # Test 1: Create mocked dependencies
@@ -84,7 +85,8 @@ def run_smoke_test() -> bool:
         assert hasattr(orchestrator, "execute"), "Orchestrator should have execute method"
         assert hasattr(orchestrator, "cost_tracker"), "Orchestrator should have cost tracker"
         assert hasattr(
-            orchestrator, "conversation_logger"
+            orchestrator,
+            "conversation_logger",
         ), "Orchestrator should have conversation logger"
         print("    ✓ Components verified")
 

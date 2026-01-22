@@ -75,7 +75,9 @@ class TestAutoEscalation:
         return executor
 
     def test_low_confidence_triggers_escalation_non_interactive(
-        self, executor_non_interactive, mock_memory_store
+        self,
+        executor_non_interactive,
+        mock_memory_store,
     ):
         """Test that low confidence automatically escalates to SOAR in non-interactive mode.
 
@@ -107,7 +109,8 @@ class TestAutoEscalation:
         with (
             patch("aurora_cli.query_executor.QueryExecutor._initialize_llm_client"),
             patch(
-                "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+                "aurora_soar.phases.assess.assess_complexity",
+                return_value=low_confidence_result,
             ),
         ):
             with patch.object(executor, "execute_direct_llm", side_effect=mock_direct_llm):
@@ -116,7 +119,9 @@ class TestAutoEscalation:
 
                     # Execute with auto-escalation
                     result = executor.execute_with_auto_escalation(
-                        query=query, api_key="test-key", memory_store=mock_memory_store
+                        query=query,
+                        api_key="test-key",
+                        memory_store=mock_memory_store,
                     )
 
                     # ASSERTION: SOAR should be called (not direct LLM)
@@ -164,7 +169,8 @@ class TestAutoEscalation:
             return "SOAR response"
 
         with patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=high_confidence_result
+            "aurora_soar.phases.assess.assess_complexity",
+            return_value=high_confidence_result,
         ):
             with patch.object(executor, "execute_direct_llm", side_effect=mock_direct_llm):
                 with patch.object(executor, "execute_aurora", side_effect=mock_soar):
@@ -207,7 +213,8 @@ class TestAutoEscalation:
 
         # Mock user accepting escalation
         with patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+            "aurora_soar.phases.assess.assess_complexity",
+            return_value=low_confidence_result,
         ):
             with patch.object(executor, "execute_aurora", side_effect=mock_soar):
                 with patch("click.confirm", return_value=True) as mock_confirm:  # User says YES
@@ -259,7 +266,8 @@ class TestAutoEscalation:
             return "SOAR response"
 
         with patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+            "aurora_soar.phases.assess.assess_complexity",
+            return_value=low_confidence_result,
         ):
             with patch.object(executor, "execute_direct_llm", side_effect=mock_direct_llm):
                 with patch.object(executor, "execute_aurora", side_effect=mock_soar):
@@ -348,7 +356,8 @@ class TestEscalationLogging:
         }
 
         with patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+            "aurora_soar.phases.assess.assess_complexity",
+            return_value=low_confidence_result,
         ):
             with patch.object(executor, "execute_aurora", return_value="SOAR result"):
                 query = "ambiguous query"
@@ -395,7 +404,7 @@ class TestEscalationWithMemoryStore:
 def process_data(data):
     \"\"\"Process input data.\"\"\"
     return [x * 2 for x in data]
-"""
+""",
         )
 
         db_path = tmp_path / "test_memory.db"
@@ -435,10 +444,13 @@ def process_data(data):
             return "SOAR result"
 
         with patch(
-            "aurora_soar.phases.assess.assess_complexity", return_value=low_confidence_result
+            "aurora_soar.phases.assess.assess_complexity",
+            return_value=low_confidence_result,
         ):
             with patch.object(
-                executor, "execute_aurora", side_effect=capture_soar_call
+                executor,
+                "execute_aurora",
+                side_effect=capture_soar_call,
             ) as mock_soar:
                 query = "complex query about data processing"
 

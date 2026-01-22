@@ -4,9 +4,7 @@ Tests RecoveryResult, RecoverySummary, RecoveryPolicy presets, and the complete
 recovery flow covering success, retry, and permanent failure scenarios.
 """
 
-import asyncio
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -14,8 +12,6 @@ from aurora_spawner import SpawnResult, SpawnTask
 from aurora_spawner.circuit_breaker import CircuitBreaker
 from aurora_spawner.recovery import (
     ErrorCategory,
-    ErrorClassifier,
-    RecoveryMetrics,
     RecoveryPolicy,
     RecoveryResult,
     RecoveryStrategy,
@@ -188,7 +184,11 @@ class TestRecoverySummary:
         """Summary with detailed results."""
         results = [
             RecoveryResult(
-                task_index=0, agent_id="a", success=True, attempts=1, used_fallback=False
+                task_index=0,
+                agent_id="a",
+                success=True,
+                attempts=1,
+                used_fallback=False,
             ),
             RecoveryResult(
                 task_index=1,
@@ -225,7 +225,11 @@ class TestRecoverySummary:
         """Test conversion to dictionary."""
         results = [
             RecoveryResult(
-                task_index=0, agent_id="a", success=True, attempts=1, used_fallback=False
+                task_index=0,
+                agent_id="a",
+                success=True,
+                attempts=1,
+                used_fallback=False,
             ),
         ]
 
@@ -701,7 +705,10 @@ class TestParallelRecoveryFlow:
             if idx == 2:
                 if task.agent:
                     return SpawnResult(
-                        success=False, output="", error="need fallback", exit_code=-1
+                        success=False,
+                        output="",
+                        error="need fallback",
+                        exit_code=-1,
                     )
                 return SpawnResult(success=True, output="fallback worked", error=None, exit_code=0)
 
@@ -747,7 +754,7 @@ class TestParallelRecoveryFlow:
                     "agent_id": agent_id,
                     "retries": retry_count,
                     "fallback": used_fallback,
-                }
+                },
             )
 
         def on_progress(idx, total, agent_id, status):
@@ -757,7 +764,7 @@ class TestParallelRecoveryFlow:
                     "total": total,
                     "agent": agent_id,
                     "status": status,
-                }
+                },
             )
 
         attempt_count = 0
@@ -961,8 +968,8 @@ class TestRecoveryPolicyFromConfig:
                     "max_retries": 5,
                     "fallback_to_llm": False,
                     "base_delay": 2.0,
-                }
-            }
+                },
+            },
         }
 
         policy = RecoveryPolicy.from_config(config)
@@ -987,8 +994,8 @@ class TestRecoveryPolicyFromConfig:
                 "recovery": {
                     "preset": "patient",
                     "max_retries": 10,
-                }
-            }
+                },
+            },
         }
 
         policy = RecoveryPolicy.from_config(config)
@@ -1006,10 +1013,10 @@ class TestRecoveryPolicyFromConfig:
                         "slow-agent": {
                             "max_retries": 5,
                             "base_delay": 5.0,
-                        }
+                        },
                     },
-                }
-            }
+                },
+            },
         }
 
         policy = RecoveryPolicy.from_config(config)
@@ -1352,7 +1359,7 @@ class TestSpawnParallelWithStateTracking:
                     "agent": agent_id,
                     "from": from_state,
                     "to": to_state,
-                }
+                },
             )
 
         async def mock_spawn(task, **kwargs):

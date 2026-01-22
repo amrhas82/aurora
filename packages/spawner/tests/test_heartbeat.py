@@ -154,7 +154,10 @@ class TestHeartbeatEmitter:
         emitter = HeartbeatEmitter(task_id="test-010")
 
         emitter.emit(
-            HeartbeatEventType.STARTED, agent_id="test-agent", message="Starting", key="value"
+            HeartbeatEventType.STARTED,
+            agent_id="test-agent",
+            message="Starting",
+            key="value",
         )
 
         event = emitter.get_latest_event()

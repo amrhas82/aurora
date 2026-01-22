@@ -212,6 +212,7 @@ You MUST respond with valid JSON only. Use this exact schema:
 
         Returns:
             User prompt string
+
         """
         query = kwargs.get("query", "")
         context_summary = kwargs.get("context_summary")
@@ -229,7 +230,7 @@ You MUST respond with valid JSON only. Use this exact schema:
         if retry_feedback:
             prompt_parts.append(
                 f"\n⚠️ Previous decomposition had issues. Feedback:\n{retry_feedback}\n"
-                "Please revise your decomposition to address these concerns."
+                "Please revise your decomposition to address these concerns.",
             )
 
         prompt_parts.append("\nDecompose this query into actionable subgoals in JSON format.")
@@ -244,6 +245,7 @@ You MUST respond with valid JSON only. Use this exact schema:
 
         Returns:
             Formatted example string
+
         """
         decomposition = example.get("decomposition", {})
         return f"""Query: {example["query"]}

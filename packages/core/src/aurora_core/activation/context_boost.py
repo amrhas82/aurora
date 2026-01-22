@@ -33,19 +33,27 @@ class ContextBoostConfig(BaseModel):
         min_keyword_length: Minimum keyword length to consider (default 3)
         case_sensitive: Whether keyword matching is case-sensitive
         stemming_enabled: Whether to use basic stemming (not implemented yet)
+
     """
 
     boost_factor: float = Field(
-        default=0.5, ge=0.0, le=2.0, description="Maximum context boost value"
+        default=0.5,
+        ge=0.0,
+        le=2.0,
+        description="Maximum context boost value",
     )
     min_keyword_length: int = Field(
-        default=3, ge=1, description="Minimum keyword length to consider"
+        default=3,
+        ge=1,
+        description="Minimum keyword length to consider",
     )
     case_sensitive: bool = Field(
-        default=False, description="Whether keyword matching is case-sensitive"
+        default=False,
+        description="Whether keyword matching is case-sensitive",
     )
     stemming_enabled: bool = Field(
-        default=False, description="Whether to use basic stemming (future feature)"
+        default=False,
+        description="Whether to use basic stemming (future feature)",
     )
 
 
@@ -61,6 +69,7 @@ class KeywordExtractor:
         >>> keywords = extractor.extract("optimize database queries")
         >>> print(keywords)
         {'optimize', 'database', 'queries'}
+
     """
 
     # Common English stop words to filter out
@@ -228,6 +237,7 @@ class KeywordExtractor:
 
         Args:
             config: Configuration for keyword extraction
+
         """
         self.config = config or ContextBoostConfig()
 
@@ -245,6 +255,7 @@ class KeywordExtractor:
             - Filters stop words (unless they're programming terms)
             - Filters short words (< min_keyword_length)
             - Converts to lowercase (unless case_sensitive=True)
+
         """
         if not text:
             return set()
@@ -283,6 +294,7 @@ class KeywordExtractor:
 
         Returns:
             Combined set of keywords from all chunks
+
         """
         all_keywords = set()
         for chunk in chunks:
@@ -304,6 +316,7 @@ class ContextBoost:
         >>> score = boost.calculate(query_keywords, chunk_keywords)
         >>> print(f"Context boost: {score:.3f}")
         Context boost: 0.333
+
     """
 
     def __init__(self, config: ContextBoostConfig | None = None):
@@ -311,6 +324,7 @@ class ContextBoost:
 
         Args:
             config: Configuration for context boost calculation
+
         """
         self.config = config or ContextBoostConfig()
         self.extractor = KeywordExtractor(config)
@@ -329,6 +343,7 @@ class ContextBoost:
             - Returns 0.0 if no query keywords
             - Calculates fraction of query keywords present in chunk
             - Multiplies by boost_factor to get final boost
+
         """
         if not query_keywords:
             return 0.0
@@ -351,6 +366,7 @@ class ContextBoost:
 
         Returns:
             Context boost value
+
         """
         query_keywords = self.extractor.extract(query_text)
         chunk_keywords = self.extractor.extract(chunk_text)
@@ -384,6 +400,7 @@ class ContextBoost:
             - Name keywords count 2x
             - Docstring keywords count 1.5x
             - Signature and body keywords count 1x
+
         """
         query_keywords = self.extractor.extract(query_text)
 
@@ -439,6 +456,7 @@ class ContextBoost:
 
         Returns:
             Set of matching keywords
+
         """
         return query_keywords & chunk_keywords
 
@@ -456,6 +474,7 @@ class ContextBoost:
                 - chunk_keywords: Keywords extracted from chunk
                 - matching_keywords: Keywords that matched
                 - overlap_fraction: Fraction of query keywords that matched
+
         """
         query_keywords = self.extractor.extract(query_text)
         chunk_keywords = self.extractor.extract(chunk_text)
@@ -484,6 +503,7 @@ def calculate_context_boost(query_text: str, chunk_text: str, boost_factor: floa
 
     Returns:
         Context boost value
+
     """
     config = ContextBoostConfig(boost_factor=boost_factor)
     calculator = ContextBoost(config)

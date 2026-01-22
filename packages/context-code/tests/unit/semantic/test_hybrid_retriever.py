@@ -177,10 +177,10 @@ class TestHybridRetrieverInit:
                             "semantic": 0.2,
                             "top_k": 75,
                             "fallback_to_activation": False,
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         )
 
         retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
@@ -211,10 +211,10 @@ class TestHybridRetrieverInit:
                             "bm25": 0.0,
                             "activation": 0.9,
                             "semantic": 0.1,
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         )
 
         retriever = HybridRetriever(
@@ -244,10 +244,10 @@ class TestHybridRetrieverInit:
                             "activation": 0.75,
                             "semantic": 0.25,
                             # top_k and fallback_to_activation not specified
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         )
 
         retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
@@ -288,10 +288,10 @@ class TestHybridRetrieverInit:
                             "bm25": 0.3,
                             "activation": 0.5,
                             "semantic": 0.6,  # Sum > 1.0
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         )
 
         with pytest.raises(ValueError, match="Weights must sum to 1.0"):

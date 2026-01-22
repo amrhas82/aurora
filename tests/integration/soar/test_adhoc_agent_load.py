@@ -10,14 +10,12 @@ Validates fixes against real-world parallel spawning scenarios including:
 
 import asyncio
 import time
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from aurora_spawner.models import SpawnResult, SpawnTask
 from aurora_spawner.spawner import spawn_parallel
-from aurora_spawner.timeout_policy import SpawnPolicy
 
 
 class TestAdhocAgentLoadScenarios:
@@ -79,7 +77,7 @@ class TestAdhocAgentLoadScenarios:
                     agent=None,
                     timeout=30,
                     policy_name="test",
-                )
+                ),
             )
 
         # 5 named agents
@@ -90,7 +88,7 @@ class TestAdhocAgentLoadScenarios:
                     agent=f"agent-{i % 3}",  # 3 different agents
                     timeout=30,
                     policy_name="test",
-                )
+                ),
             )
 
         # Mock spawn with different behavior for adhoc vs named
@@ -105,17 +103,16 @@ class TestAdhocAgentLoadScenarios:
                     exit_code=0,
                     execution_time=0.1,
                 )
-            else:
-                # Named agents may fail and fallback
-                return SpawnResult(
-                    success=True,
-                    output=f"Named result: {task.prompt}",
-                    error=None,
-                    exit_code=0,
-                    execution_time=0.1,
-                    fallback=False,
-                    original_agent=task.agent,
-                )
+            # Named agents may fail and fallback
+            return SpawnResult(
+                success=True,
+                output=f"Named result: {task.prompt}",
+                error=None,
+                exit_code=0,
+                execution_time=0.1,
+                fallback=False,
+                original_agent=task.agent,
+            )
 
         with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn_mixed):
             results = await spawn_parallel(tasks, max_concurrent=10)
@@ -161,14 +158,13 @@ class TestAdhocAgentLoadScenarios:
                     termination_reason="Error pattern matched: rate limit",
                     execution_time=0.1,  # Fast failure
                 )
-            else:
-                return SpawnResult(
-                    success=True,
-                    output=f"Success: {task.prompt}",
-                    error=None,
-                    exit_code=0,
-                    execution_time=0.2,
-                )
+            return SpawnResult(
+                success=True,
+                output=f"Success: {task.prompt}",
+                error=None,
+                exit_code=0,
+                execution_time=0.2,
+            )
 
         with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn_with_failures):
             start_time = time.time()
@@ -276,15 +272,14 @@ class TestAdhocAgentLoadScenarios:
                     termination_reason="No activity for 10 seconds",
                     execution_time=0.2,  # Fast detection via test policy
                 )
-            else:
-                await asyncio.sleep(0.1)
-                return SpawnResult(
-                    success=True,
-                    output=f"Success: {task.prompt}",
-                    error=None,
-                    exit_code=0,
-                    execution_time=0.1,
-                )
+            await asyncio.sleep(0.1)
+            return SpawnResult(
+                success=True,
+                output=f"Success: {task.prompt}",
+                error=None,
+                exit_code=0,
+                execution_time=0.1,
+            )
 
         with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn_with_stalls):
             start_time = time.time()
@@ -433,17 +428,16 @@ class TestAdhocAgentLoadScenarios:
                     execution_time=2.0,
                     timeout_extended=True,  # Progressive timeout extended
                 )
-            else:
-                # Fast completion
-                await asyncio.sleep(0.2)
-                return SpawnResult(
-                    success=True,
-                    output=f"Fast result: {task.prompt}",
-                    error=None,
-                    exit_code=0,
-                    execution_time=0.2,
-                    timeout_extended=False,
-                )
+            # Fast completion
+            await asyncio.sleep(0.2)
+            return SpawnResult(
+                success=True,
+                output=f"Fast result: {task.prompt}",
+                error=None,
+                exit_code=0,
+                execution_time=0.2,
+                timeout_extended=False,
+            )
 
         with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn_progressive):
             start_time = time.time()

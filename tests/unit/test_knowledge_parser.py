@@ -43,7 +43,9 @@ Implement tri-hybrid: BM25 + Semantic + Activation scoring
 def temp_knowledge_file(sample_conversation_log):
     """Create a temporary knowledge file."""
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix="_semantic_search_bm25.md", delete=False
+        mode="w",
+        suffix="_semantic_search_bm25.md",
+        delete=False,
     ) as f:
         f.write(sample_conversation_log)
         temp_path = Path(f.name)
@@ -154,7 +156,7 @@ def test_multiple_files_parsing():
     files = []
     try:
         for i, content in enumerate(
-            ["# File 1\n## Section A\nContent A", "# File 2\n## Section B\nContent B"]
+            ["# File 1\n## Section A\nContent A", "# File 2\n## Section B\nContent B"],
         ):
             with tempfile.NamedTemporaryFile(mode="w", suffix=f"_file{i}.md", delete=False) as f:
                 f.write(content)

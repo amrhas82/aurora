@@ -198,7 +198,9 @@ class TestProgressiveTimeout:
         policy = SpawnPolicy(
             name="test",
             timeout_policy=TimeoutPolicy(
-                mode=TimeoutMode.FIXED, timeout=5.0, activity_check_interval=0.5
+                mode=TimeoutMode.FIXED,
+                timeout=5.0,
+                activity_check_interval=0.5,
             ),
             termination_policy=TerminationPolicy(kill_on_no_activity=False),
         )
@@ -252,7 +254,10 @@ class TestRetryLogic:
         )
 
         result = await spawn_with_retry_and_fallback(
-            task, policy=policy, fallback_to_llm=False, circuit_breaker=None
+            task,
+            policy=policy,
+            fallback_to_llm=False,
+            circuit_breaker=None,
         )
 
         assert result.success
@@ -370,7 +375,10 @@ class TestCircuitBreakerIntegration:
             if task.agent is None:
                 # Fallback LLM succeeds
                 return SpawnResult(
-                    success=True, output="Fallback response", error=None, exit_code=0
+                    success=True,
+                    output="Fallback response",
+                    error=None,
+                    exit_code=0,
                 )
             # Agent fails
             return SpawnResult(success=False, output="", error="Fail", exit_code=1)
@@ -394,7 +402,10 @@ class TestCircuitBreakerIntegration:
 
         # Next call should skip directly to fallback
         result = await spawn_with_retry_and_fallback(
-            task, policy=policy, fallback_to_llm=True, circuit_breaker=fresh_circuit_breaker
+            task,
+            policy=policy,
+            fallback_to_llm=True,
+            circuit_breaker=fresh_circuit_breaker,
         )
 
         assert result.success
@@ -440,7 +451,10 @@ class TestCircuitBreakerIntegration:
 
         # Successful attempt should close circuit
         result = await spawn_with_retry_and_fallback(
-            task, policy=policy, fallback_to_llm=False, circuit_breaker=fresh_circuit_breaker
+            task,
+            policy=policy,
+            fallback_to_llm=False,
+            circuit_breaker=fresh_circuit_breaker,
         )
 
         assert result.success
@@ -599,7 +613,10 @@ class TestComplexScenarios:
         )
 
         result = await spawn_with_retry_and_fallback(
-            task, policy=policy, fallback_to_llm=True, circuit_breaker=fresh_circuit_breaker
+            task,
+            policy=policy,
+            fallback_to_llm=True,
+            circuit_breaker=fresh_circuit_breaker,
         )
 
         assert result.success

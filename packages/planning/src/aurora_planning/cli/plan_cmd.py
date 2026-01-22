@@ -15,6 +15,7 @@ class PlanCommand:
 
         Args:
             project_root: Root directory of the project. Defaults to current directory.
+
         """
         self.project_root = project_root or Path.cwd()
 
@@ -36,6 +37,7 @@ class PlanCommand:
 
         Raises:
             NotImplementedError: This is a stub implementation
+
         """
         raise NotImplementedError("PlanCommand.create() not yet implemented")
 
@@ -47,6 +49,7 @@ class PlanCommand:
 
         Raises:
             NotImplementedError: This is a stub implementation
+
         """
         raise NotImplementedError("PlanCommand.list() not yet implemented")
 
@@ -61,5 +64,6 @@ class PlanCommand:
 
         Raises:
             NotImplementedError: This is a stub implementation
+
         """
         raise NotImplementedError("PlanCommand.view() not yet implemented")

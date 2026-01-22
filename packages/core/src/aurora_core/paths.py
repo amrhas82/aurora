@@ -31,6 +31,7 @@ def get_aurora_dir() -> Path:
         # In /tmp with no .aurora/ folder
         >>> get_aurora_dir()
         RuntimeError: Project not initialized...
+
     """
     # Check for project-local .aurora
     project_aurora = Path.cwd() / ".aurora"
@@ -41,7 +42,7 @@ def get_aurora_dir() -> Path:
     raise RuntimeError(
         "Project not initialized. Run 'aur init' first to create .aurora directory.\n"
         f"Current directory: {Path.cwd()}\n"
-        "This ensures all project artifacts are stored locally, not globally."
+        "This ensures all project artifacts are stored locally, not globally.",
     )
 
 
@@ -50,6 +51,7 @@ def get_db_path() -> Path:
 
     Returns:
         Path to memory.db
+
     """
     return get_aurora_dir() / "memory.db"
 
@@ -59,6 +61,7 @@ def get_logs_dir() -> Path:
 
     Returns:
         Path to logs directory
+
     """
     return get_aurora_dir() / "logs"
 
@@ -68,6 +71,7 @@ def get_conversations_dir() -> Path:
 
     Returns:
         Path to conversations directory
+
     """
     return get_logs_dir() / "conversations"
 
@@ -81,6 +85,7 @@ def get_budget_tracker_path() -> Path:
 
     Returns:
         Path to global budget_tracker.json
+
     """
     return Path.home() / ".aurora" / "budget_tracker.json"
 
@@ -93,6 +98,7 @@ def ensure_aurora_dir() -> Path:
 
     Returns:
         Path to .aurora directory (always project-local ./.aurora)
+
     """
     # Always use project-local .aurora (never global)
     project_aurora = Path.cwd() / ".aurora"
@@ -105,5 +111,6 @@ def is_project_mode() -> bool:
 
     Returns:
         True if project-local .aurora exists
+
     """
     return (Path.cwd() / ".aurora").exists()

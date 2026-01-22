@@ -88,6 +88,7 @@ def parse_complexity_output(output: str) -> dict[str, any]:
 
     Returns:
         Dictionary with complexity, score, confidence, decision
+
     """
     result = {
         "complexity": None,
@@ -429,7 +430,7 @@ class TestComplexityAssessment:
                 failures.append(
                     f"  ❌ '{query[:60]}...'\n"
                     f"     Expected: >= {expected_min}, Got: {actual}\n"
-                    f"     Reason: {reason}"
+                    f"     Reason: {reason}",
                 )
 
         if failures:
@@ -442,7 +443,7 @@ class TestComplexityAssessment:
                 "1. Add more domain keywords if needed\n"
                 "2. Tune multi-question detection\n"
                 "3. Adjust scope keyword weights\n\n"
-                "Implementation: packages/soar/src/aurora_soar/phases/assess.py"
+                "Implementation: packages/soar/src/aurora_soar/phases/assess.py",
             )
 
 

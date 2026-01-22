@@ -77,7 +77,6 @@ def memory_group() -> None:
         aur mem search "authentication"      # Search for code
         aur mem stats                        # Show database stats
     """
-    pass
 
 
 class _WarningFilter(logging.Filter):
@@ -126,6 +125,7 @@ def run_indexing(
 
     Raises:
         Any exceptions from MemoryManager.index_path()
+
     """
     from aurora_cli.memory_manager import MemoryManager
 
@@ -157,14 +157,14 @@ def run_indexing(
             if not ensure_model_downloaded(model_name, show_progress=True, console=out):
                 out.print(
                     "[yellow]Warning: Failed to download embedding model. "
-                    "Semantic search will be unavailable (BM25-only mode).[/]"
+                    "Semantic search will be unavailable (BM25-only mode).[/]",
                 )
         else:
             out.print(f"[dim]Embedding model: {model_name} (cached)[/]")
     except ImportError:
         out.print(
             "[yellow]Warning: sentence-transformers not installed. "
-            "Semantic search will be unavailable.[/]"
+            "Semantic search will be unavailable.[/]",
         )
 
     # Suppress parse warnings during indexing for cleaner progress output
@@ -259,6 +259,7 @@ def display_indexing_summary(
         total_warnings: Total warning count from run_indexing
         output_console: Console instance for output. Uses module console if None.
         log_path: Optional path to the index log file for skipped files info.
+
     """
     out = output_console or console
 
@@ -290,7 +291,7 @@ def display_indexing_summary(
 
         if stats.errors > 0:
             out.print(
-                f"│ [red]Errors[/]      │ {stats.errors:5} │ Files that failed to parse             │"
+                f"│ [red]Errors[/]      │ {stats.errors:5} │ Files that failed to parse             │",
             )
             out.print("│             │       │ → May be corrupted or binary files     │")
             out.print("│             │       │ → Action: Check with aur mem stats     │")
@@ -299,7 +300,7 @@ def display_indexing_summary(
             if stats.errors > 0:
                 out.print("├─────────────┼───────┼────────────────────────────────────────┤")
             out.print(
-                f"│ [yellow]Warnings[/]    │ {total_warnings:5} │ Files with syntax/parse issues         │"
+                f"│ [yellow]Warnings[/]    │ {total_warnings:5} │ Files with syntax/parse issues         │",
             )
             out.print("│             │       │ → Partial indexing succeeded           │")
             out.print("│             │       │ → Details: aur mem stats               │")
@@ -338,7 +339,11 @@ def display_indexing_summary(
 @click.pass_context
 @handle_errors
 def index_command(
-    ctx: click.Context, path: Path, db_path: Path | None, force: bool, workers: int | None
+    ctx: click.Context,
+    path: Path,
+    db_path: Path | None,
+    force: bool,
+    workers: int | None,
 ) -> None:
     r"""Index code files into memory store.
 
@@ -542,13 +547,15 @@ def search_command(
 
     # Perform fast search - returns immediately, uses BM25-only if model still loading
     raw_results, is_full_hybrid = retriever.retrieve_fast(
-        query, limit=limit, min_semantic_score=min_score
+        query,
+        limit=limit,
+        min_semantic_score=min_score,
     )
 
     # Show search mode indicator
     if not is_full_hybrid and retriever.is_embedding_model_loading():
         console.print(
-            "[yellow]⚡ Fast mode (BM25+activation) - embedding model loading in background[/]"
+            "[yellow]⚡ Fast mode (BM25+activation) - embedding model loading in background[/]",
         )
     elif not is_full_hybrid:
         # Model not available at all (not installed or not cached)
@@ -573,7 +580,7 @@ def search_command(
                     bm25_score=result.get("bm25_score", 0.0),
                     hybrid_score=result.get("hybrid_score", 0.0),
                     metadata=metadata,
-                )
+                ),
             )
         else:
             # CodeChunk object fallback
@@ -591,7 +598,7 @@ def search_command(
                     bm25_score=0.0,
                     hybrid_score=getattr(result, "hybrid_score", 0.0),
                     metadata={},
-                )
+                ),
             )
 
     # Filter by chunk type if specified
@@ -750,7 +757,9 @@ def stats_command(ctx: click.Context, db_path: Path | None) -> None:
     # Show files breakdown by language (from indexed files, not chunks)
     if stats.files_by_language:
         for lang, count in sorted(
-            stats.files_by_language.items(), key=lambda x: x[1], reverse=True
+            stats.files_by_language.items(),
+            key=lambda x: x[1],
+            reverse=True,
         ):
             table.add_row(f"  {lang}", f"{count:,} files")
     elif stats.languages:
@@ -856,6 +865,7 @@ def _display_rich_results(
         show_content: Whether to show content preview
         config: Configuration object with threshold settings
         show_scores: Whether to show detailed score breakdown
+
     """
     if not results:
         console.print("\n[yellow]No relevant results found.[/]")
@@ -864,7 +874,7 @@ def _display_rich_results(
             "Try:\n"
             "  - Broadening your search query\n"
             "  - Lowering the threshold with --min-score 0.2\n"
-            "  - Checking if the codebase has been indexed"
+            "  - Checking if the codebase has been indexed",
         )
         return
 
@@ -879,7 +889,7 @@ def _display_rich_results(
             "[dim]Consider:[/]\n"
             "  • [cyan]Broadening your search query[/]\n"
             "  • [cyan]Re-indexing if files are missing[/]: aur mem index .\n"
-            "  • [cyan]Using grep for exact matches[/]: grep -r 'term' .\n"
+            "  • [cyan]Using grep for exact matches[/]: grep -r 'term' .\n",
         )
 
     # Create results table
@@ -1012,6 +1022,7 @@ def _display_json_results(results: list[SearchResult]) -> None:
 
     Args:
         results: List of SearchResult objects
+
     """
     json_results = []
     for result in results:
@@ -1026,7 +1037,7 @@ def _display_json_results(results: list[SearchResult]) -> None:
                 "semantic_score": result.semantic_score,
                 "hybrid_score": result.hybrid_score,
                 "metadata": result.metadata,
-            }
+            },
         )
 
     console.print(json.dumps(json_results, indent=2))
@@ -1040,6 +1051,7 @@ def _format_score(score: float) -> Text:
 
     Returns:
         Rich Text object with colored score
+
     """
     if score >= 0.7:
         color = "green"
@@ -1060,6 +1072,7 @@ def _truncate_text(text: str, max_length: int) -> str:
 
     Returns:
         Truncated text with ellipsis if needed
+
     """
     if len(text) <= max_length:
         return text
@@ -1084,6 +1097,7 @@ def _get_type_abbreviation(element_type: str) -> str:
         'know'
         >>> _get_type_abbreviation("UNKNOWN")
         'unk'
+
     """
     # Mapping of full type names to abbreviations
     type_mapping = {
@@ -1103,7 +1117,10 @@ def _get_type_abbreviation(element_type: str) -> str:
 
 
 def _format_score_box(
-    result: SearchResult, rank: int, query: str = "", terminal_width: int = 78
+    result: SearchResult,
+    rank: int,
+    query: str = "",
+    terminal_width: int = 78,
 ) -> Text:
     """Format search result with rich box-drawing for score display.
 
@@ -1130,6 +1147,7 @@ def _format_score_box(
         │   └─ Activation: 0.650 (accessed 3x, 23 commits, 2 days ago) │
         │ Git: 23 commits, last modified 2 days ago              │
         └─────────────────────────────────────────────────────────┘
+
     """
     # Extract metadata
     file_path = result.metadata.get("file_path", "unknown")
@@ -1304,6 +1322,7 @@ def _explain_bm25_score(query: str, chunk_content: str, bm25_score: float) -> st
 
         >>> _explain_bm25_score("user auth flow", "User authentication...", 0.75)
         "strong term overlap (2/3 terms)"
+
     """
     # Import tokenizer from BM25Scorer
     from aurora_context_code.semantic.bm25_scorer import tokenize
@@ -1334,24 +1353,22 @@ def _explain_bm25_score(query: str, chunk_content: str, bm25_score: float) -> st
         matched_list = sorted(list(exact_matches))[:3]
         if len(exact_matches) == 1:
             return f"exact keyword match on '{matched_list[0]}'"
-        elif len(exact_matches) <= 3:
+        if len(exact_matches) <= 3:
             terms_str = "', '".join(matched_list)
             return f"exact keyword match on '{terms_str}'"
-        else:
-            terms_str = "', '".join(matched_list)
-            return f"exact keyword match on '{terms_str}', +{len(exact_matches) - 3} more"
+        terms_str = "', '".join(matched_list)
+        return f"exact keyword match on '{terms_str}', +{len(exact_matches) - 3} more"
 
-    elif match_ratio >= 0.5:
+    if match_ratio >= 0.5:
         # ≥50% query terms present - strong overlap
         return f"strong term overlap ({len(exact_matches)}/{len(query_terms)} terms)"
 
-    elif match_ratio > 0:
+    if match_ratio > 0:
         # Some terms present but <50% - partial match
         return f"partial match ({len(exact_matches)}/{len(query_terms)} terms)"
 
-    else:
-        # No matches
-        return ""
+    # No matches
+    return ""
 
 
 def _format_relative_time(seconds_ago: float) -> str:
@@ -1362,6 +1379,7 @@ def _format_relative_time(seconds_ago: float) -> str:
 
     Returns:
         Human-readable relative time (e.g., "2 days ago", "3 weeks ago")
+
     """
     from datetime import timedelta
 
@@ -1374,36 +1392,30 @@ def _format_relative_time(seconds_ago: float) -> str:
             minutes = int(delta.seconds / 60)
             if minutes == 0:
                 return "just now"
-            elif minutes == 1:
+            if minutes == 1:
                 return "1 minute ago"
-            else:
-                return f"{minutes} minutes ago"
-        elif hours == 1:
+            return f"{minutes} minutes ago"
+        if hours == 1:
             return "1 hour ago"
-        else:
-            return f"{hours} hours ago"
-    elif days == 1:
+        return f"{hours} hours ago"
+    if days == 1:
         return "1 day ago"
-    elif days < 7:
+    if days < 7:
         return f"{days} days ago"
-    elif days < 30:
+    if days < 30:
         weeks = days // 7
         if weeks == 1:
             return "1 week ago"
-        else:
-            return f"{weeks} weeks ago"
-    elif days < 365:
+        return f"{weeks} weeks ago"
+    if days < 365:
         months = days // 30
         if months == 1:
             return "1 month ago"
-        else:
-            return f"{months} months ago"
-    else:
-        years = days // 365
-        if years == 1:
-            return "1 year ago"
-        else:
-            return f"{years} years ago"
+        return f"{months} months ago"
+    years = days // 365
+    if years == 1:
+        return "1 year ago"
+    return f"{years} years ago"
 
 
 def _explain_semantic_score(semantic_score: float) -> str:
@@ -1427,15 +1439,15 @@ def _explain_semantic_score(semantic_score: float) -> str:
 
         >>> _explain_semantic_score(0.75)
         "moderate conceptual relevance"
+
     """
     if semantic_score >= 0.9:
         return "very high conceptual relevance"
-    elif semantic_score >= 0.8:
+    if semantic_score >= 0.8:
         return "high conceptual relevance"
-    elif semantic_score >= 0.7:
+    if semantic_score >= 0.7:
         return "moderate conceptual relevance"
-    else:
-        return "low conceptual relevance"
+    return "low conceptual relevance"
 
 
 def _explain_activation_score(metadata: dict[str, Any], activation_score: float) -> str:
@@ -1462,6 +1474,7 @@ def _explain_activation_score(metadata: dict[str, Any], activation_score: float)
         >>> metadata = {"access_count": 1}
         >>> _explain_activation_score(metadata, 0.45)
         "accessed 1x"
+
     """
     from datetime import datetime
 
@@ -1501,6 +1514,7 @@ def _save_search_cache(results: list[SearchResult]) -> None:
 
     Args:
         results: List of search results to cache
+
     """
     import pickle
     import tempfile
@@ -1518,6 +1532,7 @@ def _load_search_cache() -> list[SearchResult] | None:
 
     Returns:
         List of cached results, or None if cache doesn't exist or is expired
+
     """
     import pickle
     import tempfile
@@ -1548,6 +1563,7 @@ def _display_single_result(result: SearchResult, index: int, total: int) -> None
         result: Search result to display
         index: 1-based index in result list
         total: Total number of results
+
     """
     # Header
     console.print()

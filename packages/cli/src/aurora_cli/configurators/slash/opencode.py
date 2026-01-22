@@ -88,6 +88,7 @@ class OpenCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -99,6 +100,7 @@ class OpenCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             YAML frontmatter with $ARGUMENTS and <UserRequest> tags
+
         """
         return FRONTMATTER[command_id]
 
@@ -110,6 +112,7 @@ class OpenCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -121,6 +124,7 @@ class OpenCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             One-line description for skill listings
+
         """
         descriptions = {
             "search": 'Search indexed code ["query" --limit N --type X]',

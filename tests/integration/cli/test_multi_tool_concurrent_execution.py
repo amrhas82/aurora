@@ -13,10 +13,8 @@ scenarios including:
 """
 
 import asyncio
-import json
 import time
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -26,14 +24,11 @@ from aurora_cli.commands.headless import (
     _display_multi_tool_results,
     _run_backpressure,
     _run_multi_tool_loop,
-    _run_single_tool_loop,
     headless_command,
 )
 from aurora_cli.concurrent_executor import (
     AggregatedResult,
     AggregationStrategy,
-    ConcurrentToolExecutor,
-    ToolConfig,
     ToolResult,
 )
 
@@ -78,7 +73,7 @@ Implement a REST API endpoint for user authentication.
 # Technical Notes
 - Use bcrypt for password hashing
 - Token expiry: 24 hours
-"""
+""",
     )
 
     # Create initial scratchpad
@@ -100,7 +95,7 @@ None yet.
 2. Implement login endpoint
 3. Add JWT generation
 4. Write tests
-"""
+""",
     )
 
     return {
@@ -191,7 +186,8 @@ class TestEndToEndCLIExecution:
 
             with patch("subprocess.run", side_effect=mock_subprocess):
                 with patch(
-                    "aurora_cli.commands.headless.subprocess.run", side_effect=mock_subprocess
+                    "aurora_cli.commands.headless.subprocess.run",
+                    side_effect=mock_subprocess,
                 ):
                     with patch("aurora_cli.commands.headless.asyncio.run") as mock_asyncio:
                         mock_asyncio.return_value = None
@@ -229,7 +225,8 @@ class TestEndToEndCLIExecution:
 
             with patch("subprocess.run", side_effect=mock_subprocess):
                 with patch(
-                    "aurora_cli.commands.headless.subprocess.run", side_effect=mock_subprocess
+                    "aurora_cli.commands.headless.subprocess.run",
+                    side_effect=mock_subprocess,
                 ):
                     result = runner.invoke(
                         headless_command,
@@ -311,7 +308,10 @@ class TestSubprocessTimingBehavior:
                     strategy_used=AggregationStrategy.FIRST_SUCCESS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Claude done", execution_time=0.05
+                            tool="claude",
+                            success=True,
+                            output="Claude done",
+                            execution_time=0.05,
                         ),
                         ToolResult(
                             tool="opencode",
@@ -397,13 +397,22 @@ class TestAggregationStrategyE2E:
                     strategy_used=AggregationStrategy.VOTING,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Answer A", execution_time=1.0
+                            tool="claude",
+                            success=True,
+                            output="Answer A",
+                            execution_time=1.0,
                         ),
                         ToolResult(
-                            tool="opencode", success=True, output="Answer A", execution_time=1.0
+                            tool="opencode",
+                            success=True,
+                            output="Answer A",
+                            execution_time=1.0,
                         ),
                         ToolResult(
-                            tool="cursor", success=True, output="Answer B", execution_time=1.0
+                            tool="cursor",
+                            success=True,
+                            output="Answer B",
+                            execution_time=1.0,
                         ),
                     ],
                     winning_tool="claude",
@@ -441,10 +450,16 @@ class TestAggregationStrategyE2E:
                     strategy_used=AggregationStrategy.BEST_SCORE,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="A" * 100, execution_time=5.0
+                            tool="claude",
+                            success=True,
+                            output="A" * 100,
+                            execution_time=5.0,
                         ),
                         ToolResult(
-                            tool="opencode", success=True, output="B" * 50, execution_time=10.0
+                            tool="opencode",
+                            success=True,
+                            output="B" * 50,
+                            execution_time=10.0,
                         ),
                     ],
                     winning_tool="claude",
@@ -505,7 +520,7 @@ STATUS: IN_PROGRESS
 
 ## Next Steps
 - Implement login endpoint
-"""
+""",
                     )
                 elif iteration_count[0] == 2:
                     # Second iteration: implement
@@ -521,7 +536,7 @@ STATUS: IN_PROGRESS
 
 ## Next Steps
 - Add tests
-"""
+""",
                     )
                 else:
                     # Third iteration: complete
@@ -539,7 +554,7 @@ STATUS: DONE
 - src/auth/routes.py
 - src/auth/jwt.py
 - tests/test_auth.py
-"""
+""",
                     )
 
                 return AggregatedResult(
@@ -849,7 +864,7 @@ Review the authentication code for security and best practices.
 - [ ] Identify security vulnerabilities
 - [ ] Suggest improvements
 - [ ] Check for best practices
-"""
+""",
         )
 
         with patch("aurora_cli.concurrent_executor.ConcurrentToolExecutor") as MockExecutor:
@@ -872,7 +887,7 @@ STATUS: DONE
 
 ## Consensus
 Both reviewers agree code needs security improvements.
-"""
+""",
                 )
                 return AggregatedResult(
                     success=True,
@@ -936,7 +951,7 @@ Both reviewers agree code needs security improvements.
                             ),
                         ],
                     )
-                elif iteration_count[0] == 2:
+                if iteration_count[0] == 2:
                     # Phase 2: Implementation
                     return AggregatedResult(
                         success=True,
@@ -951,22 +966,21 @@ Both reviewers agree code needs security improvements.
                             ),
                         ],
                     )
-                else:
-                    # Phase 3: Testing - Done
-                    full_workspace["scratchpad"].write_text("STATUS: DONE")
-                    return AggregatedResult(
-                        success=True,
-                        primary_output="All tests passing",
-                        strategy_used=AggregationStrategy.FIRST_SUCCESS,
-                        tool_results=[
-                            ToolResult(
-                                tool="claude",
-                                success=True,
-                                output="Tests written and passing",
-                                execution_time=5.0,
-                            ),
-                        ],
-                    )
+                # Phase 3: Testing - Done
+                full_workspace["scratchpad"].write_text("STATUS: DONE")
+                return AggregatedResult(
+                    success=True,
+                    primary_output="All tests passing",
+                    strategy_used=AggregationStrategy.FIRST_SUCCESS,
+                    tool_results=[
+                        ToolResult(
+                            tool="claude",
+                            success=True,
+                            output="Tests written and passing",
+                            execution_time=5.0,
+                        ),
+                    ],
+                )
 
             mock_executor.execute = mock_execute
 
@@ -1000,7 +1014,11 @@ class TestResultsDisplay:
             tool_results=[
                 ToolResult(tool="claude", success=True, output="Claude output", execution_time=1.5),
                 ToolResult(
-                    tool="opencode", success=False, output="", error="Failed", execution_time=2.0
+                    tool="opencode",
+                    success=False,
+                    output="",
+                    error="Failed",
+                    execution_time=2.0,
                 ),
             ],
             winning_tool="claude",
@@ -1046,7 +1064,7 @@ class TestFinalStateCheck:
     def test_check_final_state_not_done(self, full_workspace, capsys):
         """Test final state when not done."""
         full_workspace["scratchpad"].write_text(
-            "# Scratchpad\n\nSTATUS: IN_PROGRESS\n\nStill working"
+            "# Scratchpad\n\nSTATUS: IN_PROGRESS\n\nStill working",
         )
 
         _check_final_state(full_workspace["scratchpad"])

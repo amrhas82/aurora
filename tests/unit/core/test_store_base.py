@@ -149,7 +149,10 @@ class StoreContractTests(ABC):
 
         # Add relationship
         result = store.add_relationship(
-            ChunkID(chunk1.id), ChunkID(chunk2.id), "depends_on", weight=1.0
+            ChunkID(chunk1.id),
+            ChunkID(chunk2.id),
+            "depends_on",
+            weight=1.0,
         )
         assert result is True, "add_relationship should return True on success"
 

@@ -74,7 +74,10 @@ class TestRetrievalConfig:
     def test_custom_config(self):
         """Test custom configuration values."""
         config = RetrievalConfig(
-            threshold=0.5, max_results=20, include_components=True, sort_by_activation=False
+            threshold=0.5,
+            max_results=20,
+            include_components=True,
+            sort_by_activation=False,
         )
         assert config.threshold == 0.5
         assert config.max_results == 20
@@ -113,7 +116,11 @@ class TestRetrievalResult:
         from aurora_core.activation.engine import ActivationComponents
 
         components = ActivationComponents(
-            bla=1.5, spreading=0.5, context_boost=0.3, decay=-0.2, total=2.1
+            bla=1.5,
+            spreading=0.5,
+            context_boost=0.3,
+            decay=-0.2,
+            total=2.1,
         )
 
         result = RetrievalResult(chunk_id="chunk_2", activation=2.1, components=components, rank=1)
@@ -305,12 +312,18 @@ class TestActivationRetriever:
 
         # Without spreading, activation is low
         results_no_spreading = retriever.retrieve(
-            candidates=[chunk], spreading_scores={}, threshold=-10.0, current_time=now
+            candidates=[chunk],
+            spreading_scores={},
+            threshold=-10.0,
+            current_time=now,
         )
 
         # With spreading, activation is boosted
         results_with_spreading = retriever.retrieve(
-            candidates=[chunk], spreading_scores={"chunk_1": 1.5}, threshold=-10.0, current_time=now
+            candidates=[chunk],
+            spreading_scores={"chunk_1": 1.5},
+            threshold=-10.0,
+            current_time=now,
         )
 
         # Spreading should increase activation
@@ -333,7 +346,10 @@ class TestActivationRetriever:
         )
 
         results = retriever.retrieve(
-            candidates=[chunk], query_keywords={"database"}, threshold=-10.0, current_time=now
+            candidates=[chunk],
+            query_keywords={"database"},
+            threshold=-10.0,
+            current_time=now,
         )
 
         assert len(results) == 1
@@ -492,7 +508,7 @@ class TestActivationRetrieverTopN:
                 access_history=[AccessHistoryEntry(timestamp=now - timedelta(hours=1))],
                 last_access=now - timedelta(hours=1),
                 keywords={"test"},
-            )
+            ),
         ]
 
         results = retriever.retrieve_top_n(candidates=chunks, n=5, current_time=now)
@@ -517,7 +533,10 @@ class TestActivationRetrieverTopN:
         }
 
         results = retriever.retrieve_top_n(
-            candidates=chunks, spreading_scores=spreading_scores, n=3, current_time=now
+            candidates=chunks,
+            spreading_scores=spreading_scores,
+            n=3,
+            current_time=now,
         )
 
         # Should be sorted by spreading (since no other activation)
@@ -552,7 +571,9 @@ class TestActivationCalculations:
         ]
 
         activations = retriever.calculate_activations(
-            candidates=chunks, query_keywords={"database"}, current_time=now
+            candidates=chunks,
+            query_keywords={"database"},
+            current_time=now,
         )
 
         # Should return activations for both chunks
@@ -574,7 +595,9 @@ class TestActivationCalculations:
         spreading_scores = {"chunk_1": 0.8}
 
         activations = retriever.calculate_activations(
-            candidates=[chunk], spreading_scores=spreading_scores, current_time=now
+            candidates=[chunk],
+            spreading_scores=spreading_scores,
+            current_time=now,
         )
 
         assert "chunk_1" in activations
@@ -602,7 +625,10 @@ class TestExplainRetrieval:
         )
 
         explanation = retriever.explain_retrieval(
-            chunk=chunk, query_keywords={"database"}, spreading_score=0.5, current_time=now
+            chunk=chunk,
+            query_keywords={"database"},
+            spreading_score=0.5,
+            current_time=now,
         )
 
         assert explanation["chunk_id"] == "chunk_1"
@@ -628,7 +654,9 @@ class TestExplainRetrieval:
         )
 
         explanation = retriever.explain_retrieval(
-            chunk=chunk, spreading_score=0.0, current_time=now
+            chunk=chunk,
+            spreading_score=0.0,
+            current_time=now,
         )
 
         assert explanation["chunk_id"] == "chunk_1"
@@ -685,7 +713,10 @@ class TestBatchRetriever:
         ]
 
         results = retriever.retrieve_batched(
-            candidates=chunks, threshold=-10.0, max_results=15, current_time=now
+            candidates=chunks,
+            threshold=-10.0,
+            max_results=15,
+            current_time=now,
         )
 
         # Should return top 15 across all batches
@@ -712,7 +743,10 @@ class TestBatchRetriever:
         ]
 
         results = retriever.retrieve_batched(
-            candidates=chunks, threshold=-10.0, max_results=5, current_time=now
+            candidates=chunks,
+            threshold=-10.0,
+            max_results=5,
+            current_time=now,
         )
 
         assert len(results) == 5
@@ -780,7 +814,10 @@ class TestRetrievalEdgeCases:
         )
 
         results = retriever.retrieve(
-            candidates=[chunk], query_keywords=set(), threshold=-10.0, current_time=now
+            candidates=[chunk],
+            query_keywords=set(),
+            threshold=-10.0,
+            current_time=now,
         )
 
         # Should still work without context boost
@@ -792,7 +829,10 @@ class TestRetrievalEdgeCases:
         retriever = ActivationRetriever(engine)
 
         chunk = MockChunk(
-            chunk_id="chunk_1", access_history=[], last_access=None, keywords={"test"}
+            chunk_id="chunk_1",
+            access_history=[],
+            last_access=None,
+            keywords={"test"},
         )
 
         results = retriever.retrieve(candidates=[chunk], query_keywords={"test"}, threshold=-10.0)
@@ -823,7 +863,9 @@ class TestRetrievalEdgeCases:
         )
 
         results = retriever.retrieve(
-            candidates=[chunk_positive, chunk_negative], threshold=0.0, current_time=now
+            candidates=[chunk_positive, chunk_negative],
+            threshold=0.0,
+            current_time=now,
         )
 
         # Only chunks with positive activation should be retrieved
@@ -868,7 +910,10 @@ class TestRetrievalEdgeCases:
 
         # Override with higher max
         results = retriever.retrieve(
-            candidates=chunks, threshold=-10.0, max_results=4, current_time=now
+            candidates=chunks,
+            threshold=-10.0,
+            max_results=4,
+            current_time=now,
         )
 
         # Should return 4 results
@@ -921,7 +966,10 @@ class TestRetrievalEdgeCases:
         ]
 
         results = retriever.retrieve(
-            candidates=chunks, query_keywords={"test"}, threshold=-10.0, current_time=now
+            candidates=chunks,
+            query_keywords={"test"},
+            threshold=-10.0,
+            current_time=now,
         )
 
         # All should be retrieved

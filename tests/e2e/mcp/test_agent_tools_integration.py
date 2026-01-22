@@ -51,7 +51,7 @@ This agent provides comprehensive test architecture guidance.
 - Test strategy design
 - Coverage analysis
 - Quality gate decisions
-"""
+""",
         )
 
         dev_agent = agent_dir / "code-developer.md"
@@ -72,7 +72,7 @@ Expert in building full-stack applications.
 - Frontend development
 - Backend services
 - Database design
-"""
+""",
         )
 
         return agent_dir

@@ -26,6 +26,7 @@ class Chunk(ABC):
         Args:
             chunk_id: Unique identifier for this chunk
             chunk_type: Type of chunk ("code", "kb", "soar")
+
         """
         self.id = chunk_id
         self.type = chunk_type
@@ -38,8 +39,8 @@ class Chunk(ABC):
 
         Returns:
             Dictionary containing all chunk data in JSON-serializable format
+
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -51,8 +52,8 @@ class Chunk(ABC):
 
         Returns:
             Reconstructed Chunk instance
+
         """
-        pass
 
     @abstractmethod
     def validate(self) -> bool:
@@ -63,8 +64,8 @@ class Chunk(ABC):
 
         Raises:
             ValueError: If chunk structure is invalid with descriptive message
+
         """
-        pass
 
     def __repr__(self) -> str:
         """Return string representation of chunk."""

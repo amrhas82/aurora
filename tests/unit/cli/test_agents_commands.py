@@ -93,7 +93,9 @@ class TestAgentsListCommand:
         assert "4 agent(s)" in result.output
 
     def test_list_filter_by_category(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
+        self,
+        cli_runner: CliRunner,
+        sample_manifest: AgentManifest,
     ) -> None:
         """Lists only agents in specified category."""
         with patch(
@@ -120,7 +122,9 @@ class TestAgentsListCommand:
         assert "No agents found" in result.output
 
     def test_list_simple_format(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
+        self,
+        cli_runner: CliRunner,
+        sample_manifest: AgentManifest,
     ) -> None:
         """Lists agents with simple (non-Rich) format."""
         with patch(
@@ -176,7 +180,9 @@ class TestAgentsShowCommand:
     """Tests for aur agents show command."""
 
     def test_show_existing_agent(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
+        self,
+        cli_runner: CliRunner,
+        sample_manifest: AgentManifest,
     ) -> None:
         """Shows full details for existing agent."""
         with patch(
@@ -191,7 +197,9 @@ class TestAgentsShowCommand:
         assert "test strategy" in result.output
 
     def test_show_nonexistent_agent(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
+        self,
+        cli_runner: CliRunner,
+        sample_manifest: AgentManifest,
     ) -> None:
         """Shows error and suggestions for nonexistent agent."""
         with patch(
@@ -204,7 +212,9 @@ class TestAgentsShowCommand:
         assert "not found" in result.output
 
     def test_show_case_insensitive(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
+        self,
+        cli_runner: CliRunner,
+        sample_manifest: AgentManifest,
     ) -> None:
         """Agent lookup is case-insensitive."""
         with patch(
@@ -221,7 +231,9 @@ class TestAgentsRefreshCommand:
     """Tests for aur agents refresh command."""
 
     def test_refresh_regenerates_manifest(
-        self, cli_runner: CliRunner, sample_manifest: AgentManifest
+        self,
+        cli_runner: CliRunner,
+        sample_manifest: AgentManifest,
     ) -> None:
         """Refresh regenerates the manifest."""
         with patch(

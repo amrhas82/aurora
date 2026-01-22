@@ -36,7 +36,7 @@ The system SHALL provide test functionality.
 GIVEN a test state
 WHEN an action occurs
 THEN the result is expected
-"""
+""",
         )
 
         result = converter.convert_capability_to_json(str(cap_file))
@@ -72,7 +72,7 @@ The system SHALL work.
 GIVEN state
 WHEN action
 THEN result
-"""
+""",
         )
 
         result = converter.convert_capability_to_json(str(cap_file))
@@ -111,7 +111,7 @@ This plan adds a new feature for testing purposes.
 
 - **test-cap:** Add test functionality
 - **other-cap:** Modify existing behavior
-"""
+""",
         )
 
         result = converter.convert_plan_to_json(str(plan_file))
@@ -140,7 +140,7 @@ Reason for the plan that is long enough.
 ## What Changes
 
 - **cap:** Change something
-"""
+""",
         )
 
         result = converter.convert_plan_to_json(str(plan_file))

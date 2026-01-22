@@ -227,7 +227,8 @@ class TestMemorySearchForGoal:
 
         # Act
         with patch(
-            "aurora_cli.planning.memory.MemoryRetriever", return_value=mock_retriever
+            "aurora_cli.planning.memory.MemoryRetriever",
+            return_value=mock_retriever,
         ) as MockRetriever:
             search_memory_for_goal(goal, config=mock_config, limit=10)
 

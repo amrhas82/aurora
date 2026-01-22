@@ -300,7 +300,7 @@ class TestClaudeSlashCommandConfiguratorUpdateExisting:
         old_body = "This is old body content that should be replaced."
 
         plan_file.write_text(
-            f"{frontmatter}\n{AURORA_MARKERS['start']}\n{old_body}\n{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n{AURORA_MARKERS['start']}\n{old_body}\n{AURORA_MARKERS['end']}\n",
         )
 
         # Update existing
@@ -329,7 +329,7 @@ custom_field: custom_value
 ---"""
 
         plan_file.write_text(
-            f"{custom_frontmatter}\n{AURORA_MARKERS['start']}\nOld body\n{AURORA_MARKERS['end']}\n"
+            f"{custom_frontmatter}\n{AURORA_MARKERS['start']}\nOld body\n{AURORA_MARKERS['end']}\n",
         )
 
         # Update existing
@@ -364,7 +364,7 @@ custom_field: custom_value
 
         frontmatter = config.get_frontmatter("plan")
         plan_file.write_text(
-            f"{frontmatter}\n{AURORA_MARKERS['start']}\nBody\n{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n{AURORA_MARKERS['start']}\nBody\n{AURORA_MARKERS['end']}\n",
         )
 
         # Update existing

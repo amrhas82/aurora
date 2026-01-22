@@ -215,7 +215,10 @@ class TestConversationLogger:
             json.loads(block)
 
     def test_format_log_execution_summary(
-        self, logger, sample_phase_data, sample_execution_summary
+        self,
+        logger,
+        sample_phase_data,
+        sample_execution_summary,
     ):
         """Test execution summary is formatted correctly."""
         content = logger._format_log(
@@ -249,10 +252,13 @@ class TestConversationLogger:
 
     # Test 18-20: Log interaction
     @pytest.mark.skip(
-        reason="Tests removed _write_async method - implementation changed to synchronous"
+        reason="Tests removed _write_async method - implementation changed to synchronous",
     )
     def test_log_interaction_creates_file(
-        self, logger, sample_phase_data, sample_execution_summary
+        self,
+        logger,
+        sample_phase_data,
+        sample_execution_summary,
     ):
         """Test log_interaction creates log file."""
         # Mock async write to make it synchronous for testing
@@ -269,7 +275,10 @@ class TestConversationLogger:
             mock_write.assert_called_once()
 
     def test_log_interaction_disabled(
-        self, temp_log_dir, sample_phase_data, sample_execution_summary
+        self,
+        temp_log_dir,
+        sample_phase_data,
+        sample_execution_summary,
     ):
         """Test log_interaction returns None when disabled."""
         logger = ConversationLogger(base_path=temp_log_dir, enabled=False)
@@ -284,10 +293,13 @@ class TestConversationLogger:
         assert log_path is None
 
     @pytest.mark.skip(
-        reason="Tests removed _write_async method - implementation changed to synchronous"
+        reason="Tests removed _write_async method - implementation changed to synchronous",
     )
     def test_log_interaction_creates_directory(
-        self, logger, sample_phase_data, sample_execution_summary
+        self,
+        logger,
+        sample_phase_data,
+        sample_execution_summary,
     ):
         """Test log_interaction creates year/month directories."""
         with patch.object(logger, "_write_async", new_callable=AsyncMock):
@@ -306,7 +318,7 @@ class TestConversationLogger:
     # Test 21-22: Async writing
     @pytest.mark.asyncio
     @pytest.mark.skip(
-        reason="Tests removed _write_async method - implementation changed to synchronous"
+        reason="Tests removed _write_async method - implementation changed to synchronous",
     )
     async def test_write_async_success(self, logger, temp_log_dir):
         """Test async file writing succeeds."""
@@ -321,7 +333,7 @@ class TestConversationLogger:
 
     @pytest.mark.asyncio
     @pytest.mark.skip(
-        reason="Tests removed _write_async method - implementation changed to synchronous"
+        reason="Tests removed _write_async method - implementation changed to synchronous",
     )
     async def test_write_async_error_handling(self, logger, capsys):
         """Test async write handles errors gracefully."""
@@ -362,7 +374,11 @@ class TestConversationLogger:
 
     # Test 24: Error handling
     def test_log_interaction_error_handling(
-        self, logger, sample_phase_data, sample_execution_summary, capsys
+        self,
+        logger,
+        sample_phase_data,
+        sample_execution_summary,
+        capsys,
     ):
         """Test log_interaction handles errors gracefully."""
         # Mock _format_log to raise exception
@@ -390,7 +406,11 @@ class TestConversationLogger:
 
     # Test 26: Log re-parsing
     def test_log_can_be_reparsed(
-        self, logger, sample_phase_data, sample_execution_summary, temp_log_dir
+        self,
+        logger,
+        sample_phase_data,
+        sample_execution_summary,
+        temp_log_dir,
     ):
         """Test generated log can be re-parsed (JSON blocks valid)."""
         content = logger._format_log(
@@ -439,7 +459,7 @@ class TestConversationLogger:
 
     # Test 29: Integration test
     @pytest.mark.skip(
-        reason="Tests removed _write_async method - implementation changed to synchronous"
+        reason="Tests removed _write_async method - implementation changed to synchronous",
     )
     def test_full_logging_workflow(self, logger, sample_phase_data, sample_execution_summary):
         """Test complete logging workflow."""
@@ -470,10 +490,13 @@ class TestConversationLogger:
 
     # Test 30: Edge cases
     @pytest.mark.skip(
-        reason="Tests removed _write_async method - implementation changed to synchronous"
+        reason="Tests removed _write_async method - implementation changed to synchronous",
     )
     def test_log_interaction_with_special_characters(
-        self, logger, sample_phase_data, sample_execution_summary
+        self,
+        logger,
+        sample_phase_data,
+        sample_execution_summary,
     ):
         """Test logging handles special characters in query."""
         query = "Parse 'JSON' & validate <XML>!"
@@ -489,7 +512,7 @@ class TestConversationLogger:
             assert log_path is not None
 
     @pytest.mark.skip(
-        reason="Tests removed _write_async method - implementation changed to synchronous"
+        reason="Tests removed _write_async method - implementation changed to synchronous",
     )
     def test_log_interaction_with_empty_phases(self, logger, sample_execution_summary):
         """Test logging with empty phase data."""

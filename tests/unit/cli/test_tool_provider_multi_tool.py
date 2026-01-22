@@ -9,20 +9,15 @@ Tests cover:
 """
 
 import asyncio
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from aurora_cli.tool_providers import ToolProviderRegistry
 from aurora_cli.tool_providers.base import (
     CapabilityRouter,
-    InputMethod,
     OutputNormalizer,
     ToolCapabilities,
-    ToolProvider,
-    ToolResult,
-    ToolStatus,
 )
 
 

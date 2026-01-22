@@ -3,8 +3,7 @@
 import importlib
 import logging
 import pkgutil
-from pathlib import Path
-from typing import Any, Type
+from typing import Any
 
 from aurora_cli.tool_providers.base import ToolProvider
 
@@ -85,6 +84,7 @@ class ToolProviderRegistry:
 
         Args:
             provider_class: The provider class to register
+
         """
         # Create temporary instance to get name
         instance = provider_class()
@@ -114,6 +114,7 @@ class ToolProviderRegistry:
                 "flags": ["--no-tty"],
                 "timeout": 600,
             })
+
         """
         self._generic_providers[name] = config
         logger.debug(f"Registered generic tool provider: {name}")
@@ -126,6 +127,7 @@ class ToolProviderRegistry:
 
         Returns:
             True if provider was unregistered, False if not found
+
         """
         removed = False
         if name in self._providers:
@@ -144,6 +146,7 @@ class ToolProviderRegistry:
         Args:
             name: Provider name
             config: Configuration dict (timeout, flags, input_method, priority)
+
         """
         self._configs[name] = config
         # Update existing instance if cached
@@ -159,6 +162,7 @@ class ToolProviderRegistry:
 
         Returns:
             Provider instance or None if not found
+
         """
         # Return cached instance if exists
         if name in self._instances:
@@ -196,6 +200,7 @@ class ToolProviderRegistry:
 
         Returns:
             List of provider instances (skips unknown names)
+
         """
         providers = []
         for name in names:
@@ -209,6 +214,7 @@ class ToolProviderRegistry:
 
         Returns:
             List of provider instances sorted by priority (lowest first)
+
         """
         providers = []
         for name in self.list_available():
@@ -246,6 +252,7 @@ class ToolProviderRegistry:
 
         Raises:
             KeyError: If provider name is not registered
+
         """
         effective_config = self._configs.get(name, {}).copy()
         if config:
@@ -273,6 +280,7 @@ class ToolProviderRegistry:
 
         Returns:
             Number of providers discovered and registered
+
         """
         if package_path is None:
             package_path = "aurora_cli.tool_providers"
@@ -317,6 +325,7 @@ class ToolProviderRegistry:
 
         Returns:
             Number of providers configured
+
         """
         count = 0
         for name, config in tool_configs.items():

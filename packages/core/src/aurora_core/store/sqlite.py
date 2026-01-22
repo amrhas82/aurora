@@ -49,10 +49,14 @@ class SQLiteStore(Store):
         db_path: Path to SQLite database file (":memory:" for in-memory)
         timeout: Connection timeout in seconds (default: 5.0)
         wal_mode: Enable Write-Ahead Logging for better concurrency (default: True)
+
     """
 
     def __init__(
-        self, db_path: str = "~/.aurora/memory.db", timeout: float = 5.0, wal_mode: bool = True
+        self,
+        db_path: str = "~/.aurora/memory.db",
+        timeout: float = 5.0,
+        wal_mode: bool = True,
     ):
         """Initialize SQLite store with connection pooling."""
         # Expand user home directory in path
@@ -81,6 +85,7 @@ class SQLiteStore(Store):
 
         Returns:
             Thread-local SQLite connection
+
         """
         if not hasattr(self._local, "connection") or self._local.connection is None:
             # Try to get pooled connection first
@@ -113,6 +118,7 @@ class SQLiteStore(Store):
         Raises:
             SchemaMismatchError: If database has incompatible schema version
             StorageError: If schema initialization fails
+
         """
         conn = self._get_connection()
 
@@ -145,6 +151,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If the chunks table doesn't exist or query fails
+
         """
         from aurora_core.store.schema import SCHEMA_VERSION
 
@@ -153,11 +160,11 @@ class SQLiteStore(Store):
         try:
             # First, check if schema_version table exists and has a version
             cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'"
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'",
             )
             if cursor.fetchone() is not None:
                 cursor = conn.execute(
-                    "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1"
+                    "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1",
                 )
                 row = cursor.fetchone()
                 if row is not None:
@@ -168,7 +175,7 @@ class SQLiteStore(Store):
 
             # No schema_version table - check if chunks table exists
             cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='chunks'"
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='chunks'",
             )
             if cursor.fetchone() is None:
                 # No chunks table - this is a fresh database
@@ -185,12 +192,11 @@ class SQLiteStore(Store):
             # Legacy schemas had fewer columns (e.g., 7 columns without first_access/last_access)
             if column_count >= 9:
                 return (SCHEMA_VERSION, column_count)
-            elif column_count == 7:
+            if column_count == 7:
                 # Legacy schema without first_access/last_access
                 return (1, column_count)
-            else:
-                # Unknown legacy schema
-                return (0, column_count)
+            # Unknown legacy schema
+            return (0, column_count)
 
         except sqlite3.Error as e:
             raise StorageError("Failed to detect schema version", details=str(e))
@@ -205,6 +211,7 @@ class SQLiteStore(Store):
         Raises:
             SchemaMismatchError: If database schema version is incompatible
             StorageError: If schema detection fails
+
         """
         from aurora_core.store.schema import SCHEMA_VERSION
 
@@ -236,6 +243,7 @@ class SQLiteStore(Store):
 
         Yields:
             SQLite connection with transaction support
+
         """
         conn = self._get_connection()
         try:
@@ -265,6 +273,7 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If storage operation fails
             ValidationError: If chunk validation fails
+
         """
         # Validate chunk before saving
         try:
@@ -328,6 +337,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         conn = self._get_connection()
         try:
@@ -363,6 +373,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If deserialization fails
+
         """
         from aurora_core.chunks import CodeChunk, ReasoningChunk
 
@@ -392,7 +403,7 @@ class SQLiteStore(Store):
                 import logging
 
                 logging.getLogger(__name__).debug(
-                    f"Skipping unknown chunk type '{chunk_type}': {row_data['id']}"
+                    f"Skipping unknown chunk type '{chunk_type}': {row_data['id']}",
                 )
                 return None
 
@@ -405,7 +416,8 @@ class SQLiteStore(Store):
 
         except (KeyError, json.JSONDecodeError, ValueError) as e:
             raise StorageError(
-                f"Failed to deserialize chunk: {row_data.get('id', 'unknown')}", details=str(e)
+                f"Failed to deserialize chunk: {row_data.get('id', 'unknown')}",
+                details=str(e),
             )
 
     def update_activation(self, chunk_id: ChunkID, delta: float) -> None:
@@ -418,6 +430,7 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk doesn't exist
+
         """
         with self._transaction() as conn:
             try:
@@ -438,7 +451,8 @@ class SQLiteStore(Store):
 
             except sqlite3.Error as e:
                 raise StorageError(
-                    f"Failed to update activation for chunk: {chunk_id}", details=str(e)
+                    f"Failed to update activation for chunk: {chunk_id}",
+                    details=str(e),
                 )
 
     def get_activation(self, chunk_id: ChunkID) -> float:
@@ -452,6 +466,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         conn = self._get_connection()
         try:
@@ -482,6 +497,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         conn = self._get_connection()
         try:
@@ -492,7 +508,10 @@ class SQLiteStore(Store):
             raise StorageError("Failed to get chunk count", details=str(e))
 
     def retrieve_by_activation(
-        self, min_activation: float, limit: int, include_embeddings: bool = True
+        self,
+        min_activation: float,
+        limit: int,
+        include_embeddings: bool = True,
     ) -> list["Chunk"]:
         """Retrieve chunks by activation threshold.
 
@@ -507,6 +526,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         conn = self._get_connection()
         try:
@@ -576,6 +596,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         if not chunk_ids:
             return {}
@@ -600,7 +621,11 @@ class SQLiteStore(Store):
             raise StorageError("Failed to fetch embeddings", details=str(e))
 
     def add_relationship(
-        self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
+        self,
+        from_id: ChunkID,
+        to_id: ChunkID,
+        rel_type: str,
+        weight: float = 1.0,
     ) -> bool:
         """Add a relationship between chunks.
 
@@ -616,12 +641,14 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If either chunk doesn't exist
+
         """
         with self._transaction() as conn:
             try:
                 # Verify both chunks exist
                 cursor = conn.execute(
-                    "SELECT COUNT(*) as cnt FROM chunks WHERE id IN (?, ?)", (from_id, to_id)
+                    "SELECT COUNT(*) as cnt FROM chunks WHERE id IN (?, ?)",
+                    (from_id, to_id),
                 )
                 count = cursor.fetchone()["cnt"]
                 if count < 2:
@@ -640,7 +667,8 @@ class SQLiteStore(Store):
 
             except sqlite3.Error as e:
                 raise StorageError(
-                    f"Failed to add relationship: {from_id} -> {to_id}", details=str(e)
+                    f"Failed to add relationship: {from_id} -> {to_id}",
+                    details=str(e),
                 )
 
     def get_related_chunks(self, chunk_id: ChunkID, max_depth: int = 2) -> list["Chunk"]:
@@ -656,6 +684,7 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If starting chunk doesn't exist
+
         """
         conn = self._get_connection()
 
@@ -702,7 +731,10 @@ class SQLiteStore(Store):
             raise StorageError(f"Failed to retrieve related chunks for: {chunk_id}", details=str(e))
 
     def record_access(
-        self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
+        self,
+        chunk_id: ChunkID,
+        access_time: datetime | None = None,
+        context: str | None = None,
     ) -> None:
         """Record an access to a chunk for ACT-R activation tracking.
 
@@ -718,6 +750,7 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
         from aurora_core.activation.base_level import AccessHistoryEntry, calculate_bla
 
@@ -733,7 +766,8 @@ class SQLiteStore(Store):
 
             # Get current access history from activations table
             cursor = conn.execute(
-                "SELECT access_history FROM activations WHERE chunk_id = ?", (chunk_id,)
+                "SELECT access_history FROM activations WHERE chunk_id = ?",
+                (chunk_id,),
             )
             row = cursor.fetchone()
 
@@ -744,7 +778,9 @@ class SQLiteStore(Store):
                 # Calculate initial BLA (single access)
                 history_entries = [AccessHistoryEntry(timestamp=access_time)]
                 new_base_level = calculate_bla(
-                    history_entries, decay_rate=0.5, current_time=access_time
+                    history_entries,
+                    decay_rate=0.5,
+                    current_time=access_time,
                 )
 
                 conn.execute(
@@ -761,14 +797,16 @@ class SQLiteStore(Store):
                 history_entries = [
                     AccessHistoryEntry(
                         timestamp=datetime.fromisoformat(
-                            str(entry["timestamp"]).replace("Z", "+00:00")
-                        )
+                            str(entry["timestamp"]).replace("Z", "+00:00"),
+                        ),
                     )
                     for entry in access_history
                     if entry.get("timestamp")
                 ]
                 new_base_level = calculate_bla(
-                    history_entries, decay_rate=0.5, current_time=access_time
+                    history_entries,
+                    decay_rate=0.5,
+                    current_time=access_time,
                 )
 
                 # Update activations table with new base_level
@@ -798,7 +836,9 @@ class SQLiteStore(Store):
             raise StorageError(f"Failed to record access for chunk: {chunk_id}", details=str(e))
 
     def get_access_history(
-        self, chunk_id: ChunkID, limit: int | None = None
+        self,
+        chunk_id: ChunkID,
+        limit: int | None = None,
     ) -> list[dict[str, Any]]:
         """Retrieve access history for a chunk.
 
@@ -814,6 +854,7 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
         conn = self._get_connection()
 
@@ -825,7 +866,8 @@ class SQLiteStore(Store):
 
             # Get access history from activations table
             cursor = conn.execute(
-                "SELECT access_history FROM activations WHERE chunk_id = ?", (chunk_id,)
+                "SELECT access_history FROM activations WHERE chunk_id = ?",
+                (chunk_id,),
             )
             row = cursor.fetchone()
 
@@ -845,7 +887,8 @@ class SQLiteStore(Store):
 
         except sqlite3.Error as e:
             raise StorageError(
-                f"Failed to retrieve access history for chunk: {chunk_id}", details=str(e)
+                f"Failed to retrieve access history for chunk: {chunk_id}",
+                details=str(e),
             )
 
     def get_access_stats(self, chunk_id: ChunkID) -> dict[str, Any]:
@@ -867,6 +910,7 @@ class SQLiteStore(Store):
         Raises:
             StorageError: If storage operation fails
             ChunkNotFoundError: If chunk_id does not exist
+
         """
         conn = self._get_connection()
 
@@ -897,11 +941,13 @@ class SQLiteStore(Store):
 
         except sqlite3.Error as e:
             raise StorageError(
-                f"Failed to retrieve access stats for chunk: {chunk_id}", details=str(e)
+                f"Failed to retrieve access stats for chunk: {chunk_id}",
+                details=str(e),
             )
 
     def get_access_stats_batch(
-        self, chunk_ids: list[ChunkID]
+        self,
+        chunk_ids: list[ChunkID],
     ) -> dict[ChunkID, dict[str, Any]]:
         """Get access statistics for multiple chunks in a single query.
 
@@ -916,6 +962,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If storage operation fails
+
         """
         if not chunk_ids:
             return {}
@@ -957,6 +1004,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If cleanup fails
+
         """
         if hasattr(self._local, "connection") and self._local.connection is not None:
             try:
@@ -978,6 +1026,7 @@ class SQLiteStore(Store):
 
         Raises:
             StorageError: If reset operation fails
+
         """
         if self.db_path == ":memory:":
             # For in-memory databases, just reinitialize
@@ -1027,6 +1076,7 @@ def backup_database(db_path: str) -> str:
 
     Raises:
         StorageError: If backup operation fails
+
     """
     db_file = Path(db_path)
 

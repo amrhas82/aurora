@@ -40,6 +40,7 @@ def topological_sort(subgoals: list[dict]) -> list[list[dict]]:
 
     Returns:
         List of waves, where each wave is a list of subgoals that can execute in parallel
+
     """
     # Build in-degree map and dependency graph
     in_degree = {}
@@ -129,7 +130,10 @@ async def _spawn_with_spinner(
 
     # Create the spawn task with configurable recovery
     spawn_coro = spawn_with_retry_and_fallback(
-        task, on_progress=progress_cb, max_retries=max_retries, fallback_to_llm=fallback_to_llm
+        task,
+        on_progress=progress_cb,
+        max_retries=max_retries,
+        fallback_to_llm=fallback_to_llm,
     )
 
     if not show_spinner:
@@ -144,7 +148,7 @@ async def _spawn_with_spinner(
         elapsed = time.time() - start_time
         spinner = SPINNER_CHARS[spinner_idx % len(SPINNER_CHARS)]
         sys.stdout.write(
-            f"\r[Agent {agent_idx}/{total_agents}] {agent_id}: {spinner} Working... ({elapsed:.0f}s)"
+            f"\r[Agent {agent_idx}/{total_agents}] {agent_id}: {spinner} Working... ({elapsed:.0f}s)",
         )
         sys.stdout.flush()
         spinner_idx += 1
@@ -169,6 +173,7 @@ class AgentOutput:
         confidence: Agent's confidence in the output (0-1)
         execution_metadata: Metadata about execution (duration, tools used, etc.)
         error: Error message if execution failed
+
     """
 
     def __init__(
@@ -213,6 +218,7 @@ class CollectResult:
         execution_metadata: Overall execution metadata (total time, parallel speedup, etc.)
         user_interactions: List of user interactions during execution
         fallback_agents: List of agent IDs that used fallback to LLM
+
     """
 
     def __init__(
@@ -271,6 +277,7 @@ async def execute_agents(
 
     Returns:
         CollectResult with all agent outputs and fallback metadata
+
     """
     start_time = time.time()
 
@@ -342,7 +349,7 @@ async def execute_agents(
                     # DEBUG: Log context assembly
                     logger.debug(
                         f"Subgoal {subgoal_idx}: assembled context from {len(successful_deps)} successful "
-                        f"+ {len(failed_deps)} failed dependencies ({len(accumulated)} chars)"
+                        f"+ {len(failed_deps)} failed dependencies ({len(accumulated)} chars)",
                     )
                 else:
                     modified_prompt = original_prompt
@@ -386,7 +393,7 @@ Please complete this task directly without additional questions or preamble. Pro
                     agent=spawn_agent,
                     policy_name="patient",
                     display_name=agent.id,
-                )
+                ),
             )
             task_metadata.append(
                 {
@@ -394,7 +401,7 @@ Please complete this task directly without additional questions or preamble. Pro
                     "agent": agent,
                     "is_spawn": is_spawn,
                     "subgoal": sg,
-                }
+                },
             )
 
         # Execute this wave using spawn_parallel_tracked
@@ -423,14 +430,14 @@ Please complete this task directly without additional questions or preamble. Pro
             logger.debug(
                 f"Subgoal {subgoal_idx} result: success={result.success}, "
                 f"exit_code={result.exit_code}, output_len={len(result.output) if result.output else 0}, "
-                f"fallback={getattr(result, 'fallback', False)}"
+                f"fallback={getattr(result, 'fallback', False)}",
             )
 
             if not result.success:
                 failed_subgoals.add(subgoal_idx)
                 total_failed += 1
                 logger.warning(
-                    f"Subgoal {subgoal_idx} failed after retries, dependents will receive partial context"
+                    f"Subgoal {subgoal_idx} failed after retries, dependents will receive partial context",
                 )
 
             # Track fallback usage
@@ -454,7 +461,7 @@ Please complete this task directly without additional questions or preamble. Pro
                             "fallback": getattr(result, "fallback", False),
                             "partial_context": sg.get("has_partial_context", False),
                         },
-                    )
+                    ),
                 )
                 if sg.get("has_partial_context"):
                     logger.info(f"Subgoal {subgoal_idx} completed with partial context (⚠)")
@@ -472,13 +479,15 @@ Please complete this task directly without additional questions or preamble. Pro
                             "spawned": is_spawn,
                             "termination_reason": getattr(result, "termination_reason", None),
                         },
-                    )
+                    ),
                 )
 
         # Log wave completion with emoji markers
         wave_success_count = sum(1 for r in results if r.success)
         wave_fail_count = sum(1 for r in results if not r.success)
-        wave_partial_count = sum(1 for m in task_metadata if m["subgoal"].get("has_partial_context", False))
+        wave_partial_count = sum(
+            1 for m in task_metadata if m["subgoal"].get("has_partial_context", False)
+        )
 
         markers = []
         if wave_success_count > 0:
@@ -507,11 +516,11 @@ Please complete this task directly without additional questions or preamble. Pro
     # Calculate final summary counts
     total_subgoals = len(agent_outputs)
     succeeded = sum(1 for o in agent_outputs if o.success)
-    failed = execution_metadata['failed_subgoals']
+    failed = execution_metadata["failed_subgoals"]
     partial = sum(1 for o in agent_outputs if o.execution_metadata.get("partial_context", False))
 
     logger.info(
-        f"EXECUTION COMPLETE: {succeeded}/{total_subgoals} succeeded, {failed} failed, {partial} partial"
+        f"EXECUTION COMPLETE: {succeeded}/{total_subgoals} succeeded, {failed} failed, {partial} partial",
     )
 
     return CollectResult(
@@ -540,6 +549,7 @@ async def _execute_parallel_subgoals(
 
     Returns:
         List of AgentOutput objects in input order
+
     """
     logger.debug(f"Executing {len(subgoals)} subgoals in parallel with spawn_parallel()")
 
@@ -614,7 +624,7 @@ async def _execute_parallel_subgoals(
     total_duration = int((time.time() - start_time) * 1000)
     logger.info(
         f"Parallel execution complete: {len(agent_outputs)} subgoals "
-        f"in {total_duration}ms ({metadata['failed_subgoals']} failed)"
+        f"in {total_duration}ms ({metadata['failed_subgoals']} failed)",
     )
 
     return agent_outputs
@@ -638,6 +648,7 @@ async def _execute_sequential_subgoals(
 
     Returns:
         List of AgentOutput objects
+
     """
     logger.debug(f"Executing {len(subgoals)} subgoals sequentially")
 
@@ -657,7 +668,7 @@ async def _execute_sequential_subgoals(
                     agent_id=agent.id,
                     success=False,
                     error=str(e),
-                )
+                ),
             )
             metadata["failed_subgoals"] += 1
 
@@ -696,6 +707,7 @@ async def _execute_single_subgoal(
 
     Raises:
         RuntimeError: If critical subgoal fails after all retries
+
     """
     logger.info(f"Executing subgoal {idx} with agent '{agent.id}' (attempt {retry_count + 1})")
 
@@ -714,7 +726,7 @@ async def _execute_single_subgoal(
 
         logger.info(
             f"Subgoal {idx} completed in {output.execution_metadata.get('duration_ms', 0)}ms "
-            f"(confidence: {output.confidence:.2f})"
+            f"(confidence: {output.confidence:.2f})",
         )
 
         return output
@@ -727,7 +739,14 @@ async def _execute_single_subgoal(
             metadata["retries"] += 1
             logger.info(f"Retrying subgoal {idx} (attempt {retry_count + 2})")
             return await _execute_single_subgoal(
-                idx, subgoal, agent, context, timeout, metadata, retry_count + 1, max_retries
+                idx,
+                subgoal,
+                agent,
+                context,
+                timeout,
+                metadata,
+                retry_count + 1,
+                max_retries,
             )
 
         # Max retries exceeded - check criticality
@@ -752,14 +771,21 @@ async def _execute_single_subgoal(
             metadata["retries"] += 1
             logger.info(f"Retrying subgoal {idx} after error (attempt {retry_count + 2})")
             return await _execute_single_subgoal(
-                idx, subgoal, agent, context, timeout, metadata, retry_count + 1, max_retries
+                idx,
+                subgoal,
+                agent,
+                context,
+                timeout,
+                metadata,
+                retry_count + 1,
+                max_retries,
             )
 
         # Max retries exceeded - check criticality
         is_critical = subgoal.get("is_critical", False)
         if is_critical:
             raise RuntimeError(
-                f"Critical subgoal {idx} failed after {max_retries + 1} attempts: {e}"
+                f"Critical subgoal {idx} failed after {max_retries + 1} attempts: {e}",
             )
 
         # Non-critical: graceful degradation
@@ -793,6 +819,7 @@ async def _mock_agent_execution(
 
     Returns:
         AgentOutput with mock results
+
     """
     # TODO: Replace with actual agent execution
     # For now, simulate execution with a small delay
@@ -836,6 +863,7 @@ async def _execute_agent(
 
     Raises:
         Never - errors are captured in AgentOutput.error
+
     """
     start_time = time.time()
     subgoal_index = subgoal.get("subgoal_index", 0)
@@ -889,7 +917,7 @@ async def _execute_agent(
 
         logger.info(
             f"Agent '{agent.id}' completed subgoal {subgoal_index} "
-            f"(success={output.success}, duration={duration_ms}ms)"
+            f"(success={output.success}, duration={duration_ms}ms)",
         )
 
         return output
@@ -922,6 +950,7 @@ def _build_agent_prompt(subgoal: dict[str, Any], context: dict[str, Any]) -> str
 
     Returns:
         Formatted prompt string for the agent
+
     """
     description = subgoal.get("description", "")
 
@@ -963,6 +992,7 @@ def _validate_agent_output(output: AgentOutput) -> None:
 
     Raises:
         ValueError: If required fields are missing or invalid
+
     """
     if output.confidence < 0 or output.confidence > 1:
         raise ValueError(f"Agent confidence must be in [0, 1], got {output.confidence}")

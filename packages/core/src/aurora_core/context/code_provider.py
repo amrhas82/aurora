@@ -45,6 +45,7 @@ class CodeContextProvider(ContextProvider):
         >>> registry = get_global_registry()
         >>> provider = CodeContextProvider(store, registry)
         >>> results = provider.retrieve("parse json data", limit=5)
+
     """
 
     # Common English stopwords to filter out from queries
@@ -95,6 +96,7 @@ class CodeContextProvider(ContextProvider):
 
         Returns:
             List of keywords extracted from query
+
         """
         if not query:
             return []
@@ -132,6 +134,7 @@ class CodeContextProvider(ContextProvider):
 
         Returns:
             Relevance score between 0.0 and 1.0
+
         """
         if not keywords:
             return 0.0
@@ -164,6 +167,7 @@ class CodeContextProvider(ContextProvider):
         Args:
             store: Storage backend for chunks
             parser_registry: Registry of code parsers for file indexing
+
         """
         self._store = store
         self._parser_registry = parser_registry
@@ -182,6 +186,7 @@ class CodeContextProvider(ContextProvider):
 
         Raises:
             ValueError: If query is empty or limit is invalid
+
         """
         # Validate inputs
         if not query or not query.strip():
@@ -236,6 +241,7 @@ class CodeContextProvider(ContextProvider):
 
         Raises:
             ChunkNotFoundError: If chunk does not exist
+
         """
         logger.debug(f"Updating activation for {chunk_id}: delta={activation_delta}")
 
@@ -250,6 +256,7 @@ class CodeContextProvider(ContextProvider):
 
         Raises:
             StorageError: If refresh fails
+
         """
         logger.debug("Refreshing CodeContextProvider cache")
 
@@ -257,7 +264,6 @@ class CodeContextProvider(ContextProvider):
         # - Check file mtimes
         # - Invalidate changed files
         # - Re-parse and re-index
-        pass
 
 
 __all__ = ["CodeContextProvider"]

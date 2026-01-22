@@ -35,7 +35,7 @@ role: Agent One Role
 goal: First agent goal
 category: eng
 ---
-"""
+""",
         )
 
         (agents_dir / "agent2.md").write_text(
@@ -45,7 +45,7 @@ role: Agent Two Role
 goal: Second agent goal
 category: qa
 ---
-"""
+""",
         )
 
         manager = ManifestManager()
@@ -58,7 +58,9 @@ category: qa
         assert manifest.stats.by_category["qa"] == 1
 
     def test_generate_handles_malformed_files(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Counts malformed files and continues with valid ones."""
         agents_dir = tmp_path / "agents"
@@ -71,7 +73,7 @@ id: valid-agent
 role: Valid Role
 goal: Valid goal
 ---
-"""
+""",
         )
 
         # Malformed agent (missing required fields)
@@ -80,7 +82,7 @@ goal: Valid goal
 id: invalid-agent
 # Missing role and goal
 ---
-"""
+""",
         )
 
         manager = ManifestManager()
@@ -93,7 +95,9 @@ id: invalid-agent
         assert manifest.agents[0].id == "valid-agent"
 
     def test_generate_deduplicates_by_id(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Warns and skips duplicate agent IDs."""
         dir1 = tmp_path / "source1"
@@ -104,7 +108,7 @@ id: duplicate-id
 role: First Role
 goal: First goal
 ---
-"""
+""",
         )
 
         dir2 = tmp_path / "source2"
@@ -115,7 +119,7 @@ id: duplicate-id
 role: Second Role
 goal: Second goal
 ---
-"""
+""",
         )
 
         manager = ManifestManager()
@@ -179,7 +183,7 @@ class TestManifestManagerSaveLoad:
                     goal="Test goal",
                     category=AgentCategory.ENG,
                     skills=["skill1", "skill2"],
-                )
+                ),
             ],
         )
         manifest.stats.total = 1
@@ -230,7 +234,9 @@ class TestManifestManagerSaveLoad:
         assert result is None
 
     def test_load_returns_none_for_invalid_json(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns for invalid JSON."""
         invalid_file = tmp_path / "invalid.json"
@@ -245,7 +251,9 @@ class TestManifestManagerSaveLoad:
         assert "Invalid JSON" in caplog.text
 
     def test_load_returns_none_for_invalid_manifest(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns for valid JSON but invalid manifest."""
         invalid_file = tmp_path / "not_manifest.json"
@@ -313,7 +321,7 @@ id: existing-agent
 role: Existing Role
 goal: Existing goal
 ---
-"""
+""",
         )
 
         manager = ManifestManager()
@@ -342,7 +350,7 @@ id: new-agent
 role: New Role
 goal: New goal
 ---
-"""
+""",
         )
 
         # Create manager with custom scanner pointing to our dir
@@ -438,7 +446,7 @@ id: findable-agent
 role: Findable Role
 goal: Can be found
 ---
-"""
+""",
         )
 
         manager = ManifestManager()
@@ -458,7 +466,7 @@ id: my-agent
 role: My Role
 goal: My goal
 ---
-"""
+""",
         )
 
         manager = ManifestManager()
@@ -481,7 +489,7 @@ role: Eng One
 goal: Engineering
 category: eng
 ---
-"""
+""",
         )
         (agents_dir / "eng2.md").write_text(
             """---
@@ -490,7 +498,7 @@ role: Eng Two
 goal: Engineering
 category: eng
 ---
-"""
+""",
         )
         (agents_dir / "qa1.md").write_text(
             """---
@@ -499,7 +507,7 @@ role: QA One
 goal: Testing
 category: qa
 ---
-"""
+""",
         )
 
         manager = ManifestManager()

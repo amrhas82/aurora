@@ -42,5 +42,6 @@ def get_project_template() -> str:
 
     Returns:
         project.md template string
+
     """
     return PROJECT_TEMPLATE

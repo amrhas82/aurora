@@ -65,6 +65,7 @@ class CacheMetrics:
         Args:
             latency_ms: Operation latency in milliseconds
             source: Hit source ("memory" or "persistent")
+
         """
         self.hits += 1
         self.total_get_latency_ms += latency_ms
@@ -80,6 +81,7 @@ class CacheMetrics:
 
         Args:
             latency_ms: Operation latency in milliseconds
+
         """
         self.misses += 1
         self.total_get_latency_ms += latency_ms
@@ -98,6 +100,7 @@ class CacheMetrics:
 
         Args:
             latency_ms: Operation latency in milliseconds
+
         """
         self.write_operations += 1
         self.total_set_latency_ms += latency_ms
@@ -134,6 +137,7 @@ class DecompositionCacheEntry:
         access_count: Number of times accessed
         last_access: Unix timestamp of last access
         goal_hash: Hash of the goal for verification
+
     """
 
     subgoals: list[dict[str, Any]]  # Serialized Subgoal objects
@@ -151,6 +155,7 @@ class DecompositionCacheEntry:
 
         Returns:
             True if expired, False otherwise
+
         """
         current_time = time.time()
         return (current_time - self.timestamp) > ttl_seconds
@@ -170,6 +175,7 @@ class PlanDecompositionCache:
         >>> result = cache.get("Add auth", Complexity.MODERATE)
         >>> if result:
         ...     subgoals, source = result
+
     """
 
     def __init__(
@@ -186,6 +192,7 @@ class PlanDecompositionCache:
             ttl_hours: Time-to-live for cache entries in hours (default: 24)
             persistent_path: Optional path to SQLite database for persistence
             enable_metrics: Enable detailed metrics tracking (default: True)
+
         """
         self.capacity = capacity
         self.ttl_seconds = ttl_hours * 3600
@@ -231,6 +238,7 @@ class PlanDecompositionCache:
 
         Returns:
             Tuple of (subgoals, source) if cache hit, None otherwise
+
         """
         start_time = time.perf_counter()
         cache_key = self._compute_cache_key(goal, complexity, context_files)
@@ -353,6 +361,7 @@ class PlanDecompositionCache:
             subgoals: List of decomposed subgoals
             source: Decomposition source ("soar" or "heuristic")
             context_files: Optional list of context file paths
+
         """
         start_time = time.perf_counter()
         cache_key = self._compute_cache_key(goal, complexity, context_files)
@@ -391,7 +400,11 @@ class PlanDecompositionCache:
         )
 
     def _set_in_memory(
-        self, cache_key: str, goal: str, subgoals: list[Subgoal], source: str
+        self,
+        cache_key: str,
+        goal: str,
+        subgoals: list[Subgoal],
+        source: str,
     ) -> None:
         """Set entry in in-memory cache with LRU eviction.
 
@@ -400,6 +413,7 @@ class PlanDecompositionCache:
             goal: Original goal for hash verification
             subgoals: List of subgoals
             source: Decomposition source
+
         """
         # Evict LRU if at capacity
         if cache_key not in self._cache and len(self._cache) >= self.capacity:
@@ -464,6 +478,7 @@ class PlanDecompositionCache:
                 - Performance: hit_rate, avg_get_latency_ms, avg_set_latency_ms
                 - Detailed metrics: memory_hits, persistent_hits, expired_hits
                 - Legacy fields for backwards compatibility
+
         """
         if self.enable_metrics:
             return {
@@ -497,19 +512,18 @@ class PlanDecompositionCache:
                 ),
                 "total_operations": self._metrics.hits + self._metrics.misses,
             }
-        else:
-            # Legacy mode - minimal statistics
-            total_requests = self._hits + self._misses
-            hit_rate = self._hits / total_requests if total_requests > 0 else 0.0
+        # Legacy mode - minimal statistics
+        total_requests = self._hits + self._misses
+        hit_rate = self._hits / total_requests if total_requests > 0 else 0.0
 
-            return {
-                "size": len(self._cache),
-                "capacity": self.capacity,
-                "hits": self._hits,
-                "misses": self._misses,
-                "hit_rate": hit_rate,
-                "evictions": self._evictions,
-            }
+        return {
+            "size": len(self._cache),
+            "capacity": self.capacity,
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_rate": hit_rate,
+            "evictions": self._evictions,
+        }
 
     def get_metrics(self) -> CacheMetrics:
         """Get detailed cache metrics object.
@@ -519,6 +533,7 @@ class PlanDecompositionCache:
 
         Raises:
             RuntimeError: If metrics are disabled
+
         """
         if not self.enable_metrics:
             raise RuntimeError("Metrics are disabled for this cache instance")
@@ -554,6 +569,7 @@ class PlanDecompositionCache:
 
         Returns:
             Hash-based cache key (32 chars)
+
         """
         # Include context files in key to handle context-dependent decompositions
         context_key = ""
@@ -573,6 +589,7 @@ class PlanDecompositionCache:
 
         Returns:
             Hex digest of SHA256 hash
+
         """
         return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
@@ -584,6 +601,7 @@ class PlanDecompositionCache:
 
         Returns:
             Dictionary representation
+
         """
         return subgoal.model_dump()
 
@@ -595,6 +613,7 @@ class PlanDecompositionCache:
 
         Returns:
             Subgoal object (Pydantic BaseModel)
+
         """
         return Subgoal.model_validate(data)
 
@@ -619,14 +638,14 @@ class PlanDecompositionCache:
                     access_count INTEGER DEFAULT 0,
                     last_access REAL NOT NULL
                 )
-                """
+                """,
             )
             # Index on timestamp for TTL cleanup
             conn.execute(
                 """
                 CREATE INDEX IF NOT EXISTS idx_timestamp
                 ON decomposition_cache(timestamp)
-                """
+                """,
             )
             conn.commit()
             conn.close()
@@ -643,6 +662,7 @@ class PlanDecompositionCache:
 
         Returns:
             Tuple of (subgoals, source) if found and not expired, None otherwise
+
         """
         if not self.persistent_path or not self.persistent_path.exists():
             return None
@@ -684,7 +704,11 @@ class PlanDecompositionCache:
             return None
 
     def _set_in_persistent(
-        self, cache_key: str, goal: str, subgoals: list[Subgoal], source: str
+        self,
+        cache_key: str,
+        goal: str,
+        subgoals: list[Subgoal],
+        source: str,
     ) -> None:
         """Set entry in persistent storage.
 
@@ -693,6 +717,7 @@ class PlanDecompositionCache:
             goal: Original goal
             subgoals: List of subgoals
             source: Decomposition source
+
         """
         if not self.persistent_path:
             return
@@ -727,6 +752,7 @@ class PlanDecompositionCache:
 
         Args:
             cache_key: Cache key
+
         """
         if not self.persistent_path or not self.persistent_path.exists():
             return
@@ -752,6 +778,7 @@ class PlanDecompositionCache:
 
         Args:
             cache_key: Cache key
+
         """
         if not self.persistent_path or not self.persistent_path.exists():
             return
@@ -769,6 +796,7 @@ class PlanDecompositionCache:
 
         Returns:
             Number of expired entries removed
+
         """
         if not self.persistent_path or not self.persistent_path.exists():
             return 0
@@ -778,7 +806,8 @@ class PlanDecompositionCache:
 
             conn = sqlite3.connect(self.persistent_path)
             cursor = conn.execute(
-                "DELETE FROM decomposition_cache WHERE timestamp < ?", (cutoff_time,)
+                "DELETE FROM decomposition_cache WHERE timestamp < ?",
+                (cutoff_time,),
             )
             removed = cursor.rowcount
             conn.commit()

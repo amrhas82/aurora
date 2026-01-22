@@ -25,7 +25,7 @@ class TestMerge_mcp_config:
         existing = {
             "mcpServers": {
                 "other-server": {"command": "node", "args": ["server.js"]},
-            }
+            },
         }
         aurora = {"aurora": {"command": "python3", "args": ["-m", "aurora.mcp.server"]}}
 
@@ -40,7 +40,7 @@ class TestMerge_mcp_config:
         existing = {
             "mcpServers": {
                 "aurora": {"command": "old-python", "args": ["old"]},
-            }
+            },
         }
         aurora = {"aurora": {"command": "python3", "args": ["-m", "aurora.mcp.server"]}}
 
@@ -170,7 +170,7 @@ class TestMCPConfiguratorBase:
         config_path = tmp_path / ".test-tool" / "mcp.json"
         config_path.parent.mkdir(parents=True)
         config_path.write_text(
-            json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}})
+            json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}}),
         )
 
         assert configurator.is_configured(tmp_path) is True
@@ -200,8 +200,8 @@ class TestMCPConfiguratorBase:
                 {
                     "mcpServers": {"other": {"command": "node"}},
                     "setting": "value",
-                }
-            )
+                },
+            ),
         )
 
         result = configurator.configure(tmp_path)

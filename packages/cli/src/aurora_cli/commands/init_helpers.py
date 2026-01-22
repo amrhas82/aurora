@@ -31,6 +31,7 @@ def detect_git_repository(project_path: Path) -> bool:
 
     Returns:
         True if .git directory exists
+
     """
     git_dir = project_path / ".git"
     return git_dir.exists()
@@ -43,6 +44,7 @@ def prompt_git_init() -> bool:
 
     Returns:
         True if user wants to initialize git, False otherwise
+
     """
     console.print()
     console.print("[yellow]Git repository not found.[/]")
@@ -64,6 +66,7 @@ def detect_existing_setup(project_path: Path) -> bool:
 
     Returns:
         True if .aurora directory exists
+
     """
     aurora_dir = project_path / AURORA_DIR_NAME
     return aurora_dir.exists()
@@ -77,6 +80,7 @@ def detect_configured_tools(project_path: Path) -> dict[str, bool]:
 
     Returns:
         Dictionary mapping SlashCommandRegistry tool IDs to configured status
+
     """
     configured = {}
 
@@ -114,6 +118,7 @@ def count_configured_tools(project_path: Path) -> int:
 
     Returns:
         Number of configured tools
+
     """
     configured = detect_configured_tools(project_path)
     return sum(1 for is_configured in configured.values() if is_configured)
@@ -130,6 +135,7 @@ def get_configured_tool_ids(project_path: Path) -> list[str]:
 
     Returns:
         List of configured tool IDs (e.g., ['claude', 'cursor'])
+
     """
     # Use slash tool detection which covers all 20 tools
     configured = detect_configured_slash_tools(project_path)
@@ -151,6 +157,7 @@ def detect_configured_slash_tools(project_path: Path) -> dict[str, bool]:
 
     Returns:
         Dictionary mapping tool IDs to configured status (True if configured)
+
     """
     import os
 
@@ -213,6 +220,7 @@ def create_directory_structure(project_path: Path) -> None:
 
     Args:
         project_path: Path to project root
+
     """
     aurora_dir = project_path / AURORA_DIR_NAME
 
@@ -247,6 +255,7 @@ def detect_project_metadata(project_path: Path) -> dict:
 
     Returns:
         Dictionary with keys: name, date, tech_stack (markdown string)
+
     """
     metadata = {
         "name": project_path.name,
@@ -332,6 +341,7 @@ def create_project_md(project_path: Path) -> None:
 
     Args:
         project_path: Path to project root
+
     """
     aurora_dir = project_path / AURORA_DIR_NAME
     project_md = aurora_dir / "project.md"
@@ -397,6 +407,7 @@ def create_agents_md(project_path: Path) -> None:
 
     Args:
         project_path: Path to project root
+
     """
     from aurora_cli.templates import get_agents_template
 
@@ -423,6 +434,7 @@ def create_headless_templates(project_path: Path) -> None:
 
     Args:
         project_path: Path to project root
+
     """
     aurora_dir = project_path / AURORA_DIR_NAME
     headless_dir = aurora_dir / "headless"
@@ -560,6 +572,7 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
 
     Returns:
         List of selected tool IDs
+
     """
     while True:
         # Build checkbox choices with grouped sections
@@ -568,8 +581,8 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
         # Header for all native providers
         choices.append(
             questionary.Separator(
-                "\nNatively supported providers (✔ Aurora custom slash commands available)"
-            )
+                "\nNatively supported providers (✔ Aurora custom slash commands available)",
+            ),
         )
 
         # Add all tools sorted alphabetically
@@ -591,7 +604,7 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
                     title=label,
                     value=tool_id,
                     checked=is_configured,
-                )
+                ),
             )
 
         # Show selection prompt
@@ -611,7 +624,7 @@ async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:
                     ("highlighted", "fg:cyan"),
                     ("checkbox", "fg:white"),
                     ("separator", "fg:white dim"),
-                ]
+                ],
             ),
         ).ask_async()
 
@@ -665,6 +678,7 @@ async def configure_tools(
 
     Returns:
         Tuple of (created tools, updated tools)
+
     """
     # Map from SlashCommandRegistry ID to ToolRegistry ID
     # SlashCommandRegistry uses short IDs like "claude"
@@ -725,6 +739,7 @@ async def configure_slash_commands(
 
     Returns:
         Tuple of (created_tools, updated_tools) - lists of tool names
+
     """
     created: list[str] = []
     updated: list[str] = []
@@ -768,6 +783,7 @@ def show_status_summary(project_path: Path) -> None:
 
     Args:
         project_path: Path to project root
+
     """
     import sqlite3
     from datetime import datetime
@@ -794,12 +810,12 @@ def show_status_summary(project_path: Path) -> None:
             mtime = datetime.fromtimestamp(project_md.stat().st_mtime)
             mtime_str = mtime.strftime("%Y-%m-%d %H:%M")
             console.print(
-                f"[green]✓[/] Step 1: Planning setup [dim](last modified: {mtime_str})[/]"
+                f"[green]✓[/] Step 1: Planning setup [dim](last modified: {mtime_str})[/]",
             )
         elif plans_active.exists():
             # Directory exists but no project.md
             console.print(
-                "[yellow]●[/] Step 1: Planning setup [dim](incomplete - missing project.md)[/]"
+                "[yellow]●[/] Step 1: Planning setup [dim](incomplete - missing project.md)[/]",
             )
         else:
             console.print("[yellow]●[/] Step 1: Planning setup [dim](not complete)[/]")
@@ -861,6 +877,7 @@ def prompt_rerun_options() -> str:
 
     Returns:
         One of: "all", "selective", "config", "agents", "exit"
+
     """
     console.print()
     console.print("[bold cyan]Aurora is already initialized in this project.[/]")
@@ -878,17 +895,16 @@ def prompt_rerun_options() -> str:
 
         if choice == "1":
             return "all"
-        elif choice == "2":
+        if choice == "2":
             return "selective"
-        elif choice == "3":
+        if choice == "3":
             return "config"
-        elif choice == "4":
+        if choice == "4":
             return "agents"
-        elif choice == "5":
+        if choice == "5":
             return "exit"
-        else:
-            console.print(f"[yellow]Invalid choice: {choice}. Please enter 1, 2, 3, 4, or 5.[/]")
-            console.print()
+        console.print(f"[yellow]Invalid choice: {choice}. Please enter 1, 2, 3, 4, or 5.[/]")
+        console.print()
 
 
 def selective_step_selection() -> list[int]:
@@ -901,6 +917,7 @@ def selective_step_selection() -> list[int]:
 
     Returns:
         List of selected step numbers (e.g., [1, 3] or [])
+
     """
     choices = [
         {"name": "Step 1: Planning setup (git, directories, project.md)", "value": "1"},
@@ -934,6 +951,7 @@ def detect_configured_mcp_tools(project_path: Path) -> dict[str, bool]:
 
     Returns:
         Dictionary mapping tool IDs to configured status (True if configured)
+
     """
     from aurora_cli.configurators.mcp import MCPConfigRegistry
 
@@ -954,6 +972,7 @@ def count_configured_mcp_tools(project_path: Path) -> int:
 
     Returns:
         Number of configured MCP tools
+
     """
     configured = detect_configured_mcp_tools(project_path)
     return sum(1 for is_configured in configured.values() if is_configured)
@@ -982,6 +1001,7 @@ async def configure_mcp_servers(
         - updated_tools: Tools where MCP config was updated
         - skipped_tools: Tools in tool_ids that don't support MCP
         - validation_warnings: List of validation warning messages
+
     """
     from aurora_cli.configurators.mcp import MCPConfigRegistry
 
@@ -1043,6 +1063,7 @@ def get_mcp_capable_from_selection(tool_ids: list[str]) -> list[str]:
 
     Returns:
         List of tool IDs that have MCP support
+
     """
     from aurora_cli.configurators.mcp import MCPConfigRegistry
 
@@ -1068,6 +1089,7 @@ def _validate_mcp_config(config_path: Path, project_path: Path) -> tuple[bool, l
         Tuple of (success: bool, warnings: list[str])
         - success: False if critical validation failed, True if config is valid
         - warnings: List of warning messages for non-fatal issues
+
     """
     warnings: list[str] = []
 

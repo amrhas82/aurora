@@ -24,6 +24,7 @@ class UpdateCommand:
         Args:
             project_path: Path to the project root (default: current directory)
             verbose: Enable verbose output (default: False)
+
         """
         project = Path(project_path).resolve()
         openspec_dir = project / ".aurora/plans"

@@ -341,7 +341,10 @@ class TestFileResolutionIntegration:
     @patch("aurora_cli.planning.decompose.decompose_query")
     @patch("aurora_cli.planning.decompose.LLMClient")
     def test_file_resolution_called_for_subgoals(
-        self, mock_llm_client, mock_decompose_query, mock_resolver_class
+        self,
+        mock_llm_client,
+        mock_decompose_query,
+        mock_resolver_class,
     ):
         """Test that file resolution is called for each subgoal."""
         # Setup mocks
@@ -379,7 +382,7 @@ class TestFileResolutionIntegration:
                 line_start=10,
                 line_end=50,
                 confidence=0.9,
-            )
+            ),
         ]
         mock_resolver.has_indexed_memory.return_value = True
         mock_resolver_class.return_value = mock_resolver
@@ -413,7 +416,8 @@ class TestFileResolutionIntegration:
 
         # Use heuristic fallback
         subgoals, file_resolutions, source = decomposer.decompose_with_files(
-            "Test goal", complexity=Complexity.SIMPLE
+            "Test goal",
+            complexity=Complexity.SIMPLE,
         )
 
         # Assert - should still succeed
@@ -432,7 +436,10 @@ class TestAgentRecommendationIntegration:
     @patch("aurora_cli.planning.decompose.decompose_query")
     @patch("aurora_cli.planning.decompose.LLMClient")
     def test_agent_recommendation_called_for_subgoals(
-        self, mock_llm_client, mock_decompose_query, mock_recommender_class
+        self,
+        mock_llm_client,
+        mock_decompose_query,
+        mock_recommender_class,
     ):
         """Test that agent recommendation is called for each subgoal."""
         # Setup mocks
@@ -475,7 +482,7 @@ class TestAgentRecommendationIntegration:
 
         # Act
         subgoals, agent_recommendations, agent_gaps, source = decomposer.decompose_with_agents(
-            "Test goal"
+            "Test goal",
         )
 
         # Assert
@@ -514,7 +521,8 @@ class TestAgentRecommendationIntegration:
 
         # Use heuristic fallback
         subgoals, agent_recommendations, agent_gaps, source = decomposer.decompose_with_agents(
-            "Test goal", complexity=Complexity.SIMPLE
+            "Test goal",
+            complexity=Complexity.SIMPLE,
         )
 
         # Assert

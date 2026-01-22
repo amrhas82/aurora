@@ -20,6 +20,7 @@ class ConfigResult:
         config_path: Path to the config file that was modified
         message: Human-readable status message
         warnings: List of warning messages (non-fatal issues)
+
     """
 
     success: bool
@@ -47,6 +48,7 @@ def merge_mcp_config(existing: dict[str, Any], aurora_config: dict[str, Any]) ->
         >>> aurora = {"aurora": {"command": "python3", ...}}
         >>> merge_mcp_config(existing, aurora)
         {"mcpServers": {"other": {...}, "aurora": {...}}}
+
     """
     result = existing.copy()
 
@@ -112,6 +114,7 @@ class MCPConfigurator(ABC):
 
         Returns:
             Path to the MCP configuration file
+
         """
         ...
 
@@ -127,6 +130,7 @@ class MCPConfigurator(ABC):
         Note:
             Default implementation returns standard Aurora MCP server config.
             Override in subclasses for tool-specific formats.
+
         """
         db_path = project_path / ".aurora" / "memory.db"
 
@@ -156,8 +160,8 @@ class MCPConfigurator(ABC):
                             "PYTHONPATH": ":".join(pythonpath_parts),
                             "AURORA_DB_PATH": str(db_path),
                         },
-                    }
-                }
+                    },
+                },
             }
 
         return {
@@ -169,8 +173,8 @@ class MCPConfigurator(ABC):
                     "env": {
                         "AURORA_DB_PATH": str(db_path),
                     },
-                }
-            }
+                },
+            },
         }
 
     def is_configured(self, project_path: Path) -> bool:
@@ -184,6 +188,7 @@ class MCPConfigurator(ABC):
 
         Returns:
             True if Aurora is correctly configured in MCP config
+
         """
         config_path = self.get_config_path(project_path)
 
@@ -229,6 +234,7 @@ class MCPConfigurator(ABC):
 
         Returns:
             ConfigResult with operation status
+
         """
         config_path = self.get_config_path(project_path)
         warnings: list[str] = []
@@ -292,5 +298,6 @@ class MCPConfigurator(ABC):
 
         Returns:
             ConfigResult if permissions were configured, None if not needed
+
         """
         return None

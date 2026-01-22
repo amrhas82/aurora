@@ -41,7 +41,10 @@ class TestDecayConfig:
     def test_custom_config(self):
         """Test custom configuration values."""
         config = DecayConfig(
-            decay_factor=1.0, max_days=30.0, min_penalty=-3.0, grace_period_hours=2.0
+            decay_factor=1.0,
+            max_days=30.0,
+            min_penalty=-3.0,
+            grace_period_hours=2.0,
         )
         assert config.decay_factor == 1.0
         assert config.max_days == 30.0

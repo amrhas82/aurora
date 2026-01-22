@@ -39,6 +39,7 @@ class ToolRegistry:
 
         Args:
             configurator: Tool configurator to register
+
         """
         cls._initialize()
         tool_id = configurator.name.lower().replace(" ", "-")
@@ -53,6 +54,7 @@ class ToolRegistry:
 
         Returns:
             Configurator if found, None otherwise
+
         """
         cls._initialize()
         return cls._tools.get(tool_id)
@@ -63,6 +65,7 @@ class ToolRegistry:
 
         Returns:
             List of all configurators
+
         """
         cls._initialize()
         return list(cls._tools.values())
@@ -73,6 +76,7 @@ class ToolRegistry:
 
         Returns:
             List of available configurators (is_available=True)
+
         """
         cls._initialize()
         return [tool for tool in cls._tools.values() if tool.is_available]

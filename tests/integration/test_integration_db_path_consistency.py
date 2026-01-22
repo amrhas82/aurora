@@ -60,7 +60,7 @@ class Calculator:
     def add(self, a, b):
         \"\"\"Add two numbers.\"\"\"
         return a + b
-"""
+""",
         )
 
         return workspace
@@ -79,7 +79,10 @@ class Calculator:
         return config
 
     def test_memory_manager_respects_config_db_path(
-        self, config_with_custom_path, custom_db_path, temp_workspace
+        self,
+        config_with_custom_path,
+        custom_db_path,
+        temp_workspace,
     ):
         """Test that MemoryManager creates database at config-specified path.
 
@@ -115,7 +118,10 @@ class Calculator:
         )
 
     def test_all_operations_use_same_database(
-        self, config_with_custom_path, custom_db_path, temp_workspace
+        self,
+        config_with_custom_path,
+        custom_db_path,
+        temp_workspace,
     ):
         """Test that stats, search, and retrieval all use the same database.
 
@@ -146,7 +152,10 @@ class Calculator:
         )
 
     def test_search_uses_config_database(
-        self, config_with_custom_path, custom_db_path, temp_workspace
+        self,
+        config_with_custom_path,
+        custom_db_path,
+        temp_workspace,
     ):
         """Test that search operation uses config-specified database.
 
@@ -302,7 +311,7 @@ class TestDatabaseMigration:
                 name TEXT,
                 content TEXT
             )
-        """
+        """,
         )
 
         # Insert sample data
@@ -329,7 +338,6 @@ class TestDatabaseMigration:
         This test is SKIPPED until migration logic is implemented in task 3.5.
         """
         # This will be implemented in task 3.5
-        pass
 
     @pytest.mark.skip(reason="Migration logic not yet implemented (task 3.5)")
     def test_migrate_data_to_new_location(self, old_db_path, new_db_path):
@@ -338,7 +346,6 @@ class TestDatabaseMigration:
         This test is SKIPPED until migration logic is implemented in task 3.5.
         """
         # This will be implemented in task 3.5
-        pass
 
 
 # Mark all tests in this file with integration marker

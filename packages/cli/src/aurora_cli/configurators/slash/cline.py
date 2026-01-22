@@ -52,6 +52,7 @@ class ClineSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -68,6 +69,7 @@ class ClineSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Markdown heading format frontmatter
+
         """
         description = DESCRIPTIONS[command_id]
         command_name = command_id.capitalize()
@@ -81,6 +83,7 @@ class ClineSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -92,5 +95,6 @@ class ClineSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             One-line description for skill listings
+
         """
         return DESCRIPTIONS.get(command_id)

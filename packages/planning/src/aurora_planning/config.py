@@ -24,6 +24,7 @@ class AIToolOption:
         value: ID value for the tool
         available: Whether the tool is available
         success_label: Optional label to show on success
+
     """
 
     name: str
@@ -69,6 +70,7 @@ class AuroraConfig:
 
     Attributes:
         ai_tools: List of AI tool IDs to configure
+
     """
 
     ai_tools: list[str]

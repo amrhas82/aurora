@@ -67,5 +67,6 @@ def get_default_policies_yaml() -> str:
 
     Returns:
         Default policies configuration as YAML string
+
     """
     return DEFAULT_POLICIES_YAML

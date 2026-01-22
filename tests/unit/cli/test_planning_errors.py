@@ -298,7 +298,8 @@ class TestExceptionHierarchy:
 
         for exc_class in exception_classes:
             assert issubclass(
-                exc_class, PlanningError
+                exc_class,
+                PlanningError,
             ), f"{exc_class.__name__} does not inherit from PlanningError"
 
     def test_all_exceptions_inherit_from_exception(self) -> None:
@@ -315,7 +316,8 @@ class TestExceptionHierarchy:
 
         for exc_class in exception_classes:
             assert issubclass(
-                exc_class, Exception
+                exc_class,
+                Exception,
             ), f"{exc_class.__name__} does not inherit from Exception"
 
     def test_exceptions_can_be_caught_by_planning_error(self) -> None:

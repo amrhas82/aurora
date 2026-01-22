@@ -38,6 +38,7 @@ class CacheEntry:
         timestamp: When the entry was cached
         access_count: Number of times accessed
         last_access: Most recent access timestamp
+
     """
 
     value: Any
@@ -57,6 +58,7 @@ class CacheEntry:
 
         Returns:
             True if expired, False otherwise
+
         """
         current_time = time.time()
         return (current_time - self.timestamp) > ttl_seconds
@@ -76,6 +78,7 @@ class CacheStats:
         evictions: Number of cache evictions (LRU)
         promotions: Number of promotions to hot cache
         total_queries: Total number of cache queries
+
     """
 
     hot_hits: int = 0
@@ -127,6 +130,7 @@ class LRUCache:
         >>> value = cache.get('key1')
         >>> if value:
         ...     print(value['data'])
+
     """
 
     def __init__(self, capacity: int = 1000):
@@ -134,6 +138,7 @@ class LRUCache:
 
         Args:
             capacity: Maximum number of items to cache (default 1000)
+
         """
         self.capacity = capacity
         self.cache: OrderedDict[str, CacheEntry] = OrderedDict()
@@ -146,6 +151,7 @@ class LRUCache:
 
         Returns:
             Cached value if found, None otherwise
+
         """
         if key not in self.cache:
             return None
@@ -167,6 +173,7 @@ class LRUCache:
 
         Returns:
             True if eviction occurred, False otherwise
+
         """
         evicted = False
 
@@ -180,7 +187,10 @@ class LRUCache:
 
         # Add new entry at end (most recent)
         entry = CacheEntry(
-            value=value, timestamp=time.time(), access_count=0, last_access=time.time()
+            value=value,
+            timestamp=time.time(),
+            access_count=0,
+            last_access=time.time(),
         )
         self.cache[key] = entry
 
@@ -216,6 +226,7 @@ class PersistentCache:
         Args:
             cache_path: Path to SQLite cache file
             max_entries: Maximum number of entries to store (default 10000)
+
         """
         self.cache_path = Path(cache_path).expanduser()
         self.max_entries = max_entries
@@ -235,7 +246,8 @@ class PersistentCache:
     def _init_schema(self) -> None:
         """Initialize cache database schema."""
         conn = self._get_connection()
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS chunk_cache (
                 chunk_id TEXT PRIMARY KEY,
                 data TEXT NOT NULL,
@@ -243,11 +255,14 @@ class PersistentCache:
                 last_access REAL NOT NULL,
                 created_at REAL NOT NULL
             )
-        """)
-        conn.execute("""
+        """
+        )
+        conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_cache_access
             ON chunk_cache(access_count DESC, last_access DESC)
-        """)
+        """
+        )
         conn.commit()
 
     def get(self, chunk_id: ChunkID) -> Any | None:
@@ -258,12 +273,13 @@ class PersistentCache:
 
         Returns:
             Cached chunk data if found, None otherwise
+
         """
         conn = self._get_connection()
         try:
             cursor = conn.execute(
                 "SELECT data FROM chunk_cache WHERE chunk_id = ?",
-                (chunk_id,)
+                (chunk_id,),
             )
             row = cursor.fetchone()
             if row is None:
@@ -273,7 +289,7 @@ class PersistentCache:
             now = time.time()
             conn.execute(
                 "UPDATE chunk_cache SET access_count = access_count + 1, last_access = ? WHERE chunk_id = ?",
-                (now, chunk_id)
+                (now, chunk_id),
             )
             conn.commit()
 
@@ -287,6 +303,7 @@ class PersistentCache:
         Args:
             chunk_id: Chunk identifier
             data: Chunk data to cache (must be JSON-serializable)
+
         """
         conn = self._get_connection()
         try:
@@ -298,7 +315,7 @@ class PersistentCache:
                 (chunk_id, data, access_count, last_access, created_at)
                 VALUES (?, ?, COALESCE((SELECT access_count FROM chunk_cache WHERE chunk_id = ?), 0) + 1, ?, ?)
                 """,
-                (chunk_id, serialized, chunk_id, now, now)
+                (chunk_id, serialized, chunk_id, now, now),
             )
             conn.commit()
 
@@ -316,7 +333,7 @@ class PersistentCache:
                         LIMIT ?
                     )
                     """,
-                    (delete_count,)
+                    (delete_count,),
                 )
                 conn.commit()
 
@@ -331,6 +348,7 @@ class PersistentCache:
 
         Returns:
             List of (chunk_id, data) tuples ordered by access frequency
+
         """
         conn = self._get_connection()
         try:
@@ -340,7 +358,7 @@ class PersistentCache:
                 ORDER BY access_count DESC, last_access DESC
                 LIMIT ?
                 """,
-                (limit,)
+                (limit,),
             )
             return [(row["chunk_id"], json.loads(row["data"])) for row in cursor]
         except (sqlite3.Error, json.JSONDecodeError):
@@ -408,6 +426,7 @@ class CacheManager:
         - Persistent cache lookups: <5ms
         - Activation cache reduces recalculation by 70-80%
         - Memory usage: ~10KB per cached chunk (10MB for 1000 chunks)
+
     """
 
     def __init__(
@@ -432,6 +451,7 @@ class CacheManager:
         Notes:
             - Persistent cache provides disk-backed storage that survives restarts
             - When enabled, hot cache is pre-warmed with most accessed entries
+
         """
         self.hot_cache = LRUCache(capacity=hot_cache_size)
         self.activation_cache: dict[ChunkID, CacheEntry] = {}
@@ -445,7 +465,7 @@ class CacheManager:
             cache_path = persistent_cache_path or Path("~/.aurora/cache/chunks.db")
             self._persistent_cache = PersistentCache(
                 cache_path=cache_path,
-                max_entries=persistent_cache_max_entries
+                max_entries=persistent_cache_max_entries,
             )
 
             # Warm hot cache from persistent cache
@@ -466,6 +486,7 @@ class CacheManager:
 
         Returns:
             Cached chunk data if found, None otherwise
+
         """
         self.stats.total_queries += 1
 
@@ -494,6 +515,7 @@ class CacheManager:
         Args:
             chunk_id: Chunk identifier
             chunk_data: Chunk data to cache
+
         """
         # Set in hot cache
         evicted = self.hot_cache.set(chunk_id, chunk_data)
@@ -512,6 +534,7 @@ class CacheManager:
 
         Returns:
             Number of entries loaded
+
         """
         if self._persistent_cache is None:
             return 0
@@ -523,7 +546,9 @@ class CacheManager:
         return len(entries)
 
     def get_activation(
-        self, chunk_id: ChunkID, current_time: datetime | None = None
+        self,
+        chunk_id: ChunkID,
+        current_time: datetime | None = None,
     ) -> float | None:
         """Get cached activation score if not expired.
 
@@ -533,6 +558,7 @@ class CacheManager:
 
         Returns:
             Cached activation score if found and not expired, None otherwise
+
         """
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -564,9 +590,13 @@ class CacheManager:
         Args:
             chunk_id: Chunk identifier
             activation: Activation score to cache
+
         """
         entry = CacheEntry(
-            value=activation, timestamp=time.time(), access_count=0, last_access=time.time()
+            value=activation,
+            timestamp=time.time(),
+            access_count=0,
+            last_access=time.time(),
         )
         self.activation_cache[chunk_id] = entry
 
@@ -576,6 +606,7 @@ class CacheManager:
         Args:
             chunk_id: Chunk identifier
             chunk_data: Chunk data to promote
+
         """
         evicted = self.hot_cache.set(chunk_id, chunk_data)
         if evicted:
@@ -602,6 +633,7 @@ class CacheManager:
 
         Returns:
             CacheStats object with current statistics
+
         """
         return self.stats
 
@@ -618,6 +650,7 @@ class CacheManager:
             This is a rough estimate assuming:
             - ~10KB per chunk in hot cache
             - ~100 bytes per activation score entry
+
         """
         # Rough estimates
         hot_cache_bytes = self.hot_cache.size() * 10_000  # ~10KB per chunk
@@ -634,6 +667,7 @@ class CacheManager:
 
         Returns:
             Number of expired entries removed
+
         """
         expired_keys = []
 

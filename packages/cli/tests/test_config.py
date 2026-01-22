@@ -513,7 +513,7 @@ class TestConfigEdgeCases:
                 "always_on": True,
                 "log_file": "/custom/mcp.log",
                 "max_results": 50,
-            }
+            },
         }
 
         with open(config_path, "w") as f:

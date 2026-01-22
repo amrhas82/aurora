@@ -87,7 +87,7 @@ class TestMCPSOARMultiTurnFlow:
                     "content": "Python is a high-level programming language.",
                     "score": 0.92,
                     "source": "code",
-                }
+                },
             ]
 
             result = mcp_tools.aurora_query(query="What is Python?", phase="retrieve")
@@ -133,7 +133,8 @@ class TestMCPSOARMultiTurnFlow:
             }
 
             result = mcp_tools.aurora_query(
-                query="How do I implement authentication in Flask?", phase="assess"
+                query="How do I implement authentication in Flask?",
+                phase="assess",
             )
 
             result_data = json.loads(result)
@@ -149,11 +150,12 @@ class TestMCPSOARMultiTurnFlow:
                     "content": "Flask authentication",
                     "score": 0.9,
                     "source": "code",
-                }
+                },
             ]
 
             result = mcp_tools.aurora_query(
-                query="How do I implement authentication in Flask?", phase="retrieve"
+                query="How do I implement authentication in Flask?",
+                phase="retrieve",
             )
 
             result_data = json.loads(result)
@@ -207,7 +209,7 @@ class TestMCPSOARMultiTurnFlow:
                 "routing_plan": [
                     {"subgoal": "Understand Flask-Login", "agent": "code-developer"},
                     {"subgoal": "Set up user model", "agent": "database-expert"},
-                ]
+                ],
             }
 
             result = mcp_tools.aurora_query(
@@ -225,8 +227,8 @@ class TestMCPSOARMultiTurnFlow:
         with patch("aurora_soar.phases.collect.generate_agent_tasks") as mock_collect:
             mock_collect.return_value = {
                 "agent_tasks": [
-                    {"agent": "code-developer", "task_prompt": "Research Flask-Login..."}
-                ]
+                    {"agent": "code-developer", "task_prompt": "Research Flask-Login..."},
+                ],
             }
 
             result = mcp_tools.aurora_query(
@@ -304,7 +306,8 @@ class TestMCPSOARMultiTurnFlow:
             }
 
             result = mcp_tools.aurora_query(
-                query="Design a microservices architecture with distributed caching", phase="assess"
+                query="Design a microservices architecture with distributed caching",
+                phase="assess",
             )
 
             result_data = json.loads(result)
@@ -349,7 +352,9 @@ class TestMCPSOARMultiTurnFlow:
             }
 
             result = mcp_tools.aurora_query(
-                query="Test query", phase="verify", subgoals=["Do something", "Check stuff"]
+                query="Test query",
+                phase="verify",
+                subgoals=["Do something", "Check stuff"],
             )
 
             result_data = json.loads(result)
@@ -430,7 +435,7 @@ class TestMCPSOARMultiTurnFlow:
         # Phase 1: Retrieve and populate cache
         with patch.object(mcp_tools, "_retrieve_chunks") as mock_retrieve:
             mock_retrieve.return_value = [
-                {"chunk_id": "c1", "content": "Test content", "score": 0.9, "source": "code"}
+                {"chunk_id": "c1", "content": "Test content", "score": 0.9, "source": "code"},
             ]
 
             result1 = mcp_tools.aurora_query(query="Test query", phase="retrieve")  # noqa: F841
@@ -444,11 +449,13 @@ class TestMCPSOARMultiTurnFlow:
 
         with patch("aurora_soar.phases.decompose.generate_decomposition_prompt") as mock_decompose:
             mock_decompose.return_value = {
-                "prompt_template": "Decompose based on cached context..."
+                "prompt_template": "Decompose based on cached context...",
             }
 
             result2 = mcp_tools.aurora_query(  # noqa: F841
-                query="Test query", phase="decompose", context={"chunks": mcp_tools._session_cache}
+                query="Test query",
+                phase="decompose",
+                context={"chunks": mcp_tools._session_cache},
             )
 
             # Cache should be accessible
@@ -495,7 +502,9 @@ class TestMCPSOARErrorHandling:
             mock_decompose.return_value = {"prompt_template": "test"}
 
             result = mcp_tools.aurora_query(
-                query="Test query", phase="decompose", context="invalid string instead of dict"
+                query="Test query",
+                phase="decompose",
+                context="invalid string instead of dict",
             )
 
             # Should handle gracefully or return error

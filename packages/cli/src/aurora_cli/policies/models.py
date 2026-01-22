@@ -69,7 +69,7 @@ class DestructiveConfig:
     """Configuration for destructive operation policies."""
 
     file_delete: dict[str, Any] = field(
-        default_factory=lambda: {"action": "prompt", "max_files": 5}
+        default_factory=lambda: {"action": "prompt", "max_files": 5},
     )
     git_force_push: dict[str, Any] = field(default_factory=lambda: {"action": "deny"})
     git_push_main: dict[str, Any] = field(default_factory=lambda: {"action": "prompt"})
@@ -86,7 +86,7 @@ class SafetyConfig:
     max_files_modified: int = 20
     max_lines_changed: int = 1000
     protected_paths: list[str] = field(
-        default_factory=lambda: [".git/", "node_modules/", "vendor/", ".env", "*.pem", "*.key"]
+        default_factory=lambda: [".git/", "node_modules/", "vendor/", ".env", "*.pem", "*.key"],
     )
 
 
@@ -96,7 +96,7 @@ class AnomalyConfig:
 
     scope_multiplier: int = 3
     unexpected_file_types: list[str] = field(
-        default_factory=lambda: ["*.sql", "*.sh", "Dockerfile"]
+        default_factory=lambda: ["*.sql", "*.sh", "Dockerfile"],
     )
 
 

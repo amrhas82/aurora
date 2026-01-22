@@ -58,7 +58,7 @@ class TypeScriptParser(CodeParser):
             self.tsx_parser = None
             logger.warning(
                 "Tree-sitter unavailable - using text chunking (reduced quality)\n"
-                "Install with: pip install tree-sitter tree-sitter-typescript"
+                "Install with: pip install tree-sitter tree-sitter-typescript",
             )
 
     def can_parse(self, file_path: Path) -> bool:
@@ -118,7 +118,10 @@ class TypeScriptParser(CodeParser):
             return []
 
     def _extract_functions(
-        self, root_node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        root_node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> list[CodeChunk]:
         """Extract function definitions from the AST."""
         chunks: list[CodeChunk] = []
@@ -156,7 +159,10 @@ class TypeScriptParser(CodeParser):
         return chunks
 
     def _extract_function_chunk(
-        self, node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> CodeChunk | None:
         """Extract a function declaration into a CodeChunk."""
         try:
@@ -198,7 +204,10 @@ class TypeScriptParser(CodeParser):
             return None
 
     def _extract_arrow_function(
-        self, node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> CodeChunk | None:
         """Extract arrow function from lexical declaration."""
         try:
@@ -252,7 +261,10 @@ class TypeScriptParser(CodeParser):
             return None
 
     def _extract_classes_and_methods(
-        self, root_node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        root_node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> list[CodeChunk]:
         """Extract class definitions and their methods."""
         chunks: list[CodeChunk] = []
@@ -295,7 +307,7 @@ class TypeScriptParser(CodeParser):
                 body_node = class_node.child_by_field_name("body")
                 if body_node:
                     chunks.extend(
-                        self._extract_methods(body_node, class_name, file_path, source_code)
+                        self._extract_methods(body_node, class_name, file_path, source_code),
                     )
 
             except Exception as e:
@@ -362,7 +374,10 @@ class TypeScriptParser(CodeParser):
         return chunks
 
     def _extract_interfaces(
-        self, root_node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        root_node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> list[CodeChunk]:
         """Extract interface definitions."""
         chunks: list[CodeChunk] = []
@@ -408,7 +423,10 @@ class TypeScriptParser(CodeParser):
         return chunks
 
     def _extract_type_aliases(
-        self, root_node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        root_node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> list[CodeChunk]:
         """Extract type alias definitions."""
         chunks: list[CodeChunk] = []

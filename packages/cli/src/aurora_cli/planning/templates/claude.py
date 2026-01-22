@@ -27,5 +27,6 @@ def get_claude_template() -> str:
 
     Returns:
         CLAUDE.md template string
+
     """
     return CLAUDE_TEMPLATE

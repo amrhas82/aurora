@@ -62,7 +62,7 @@ class StringHelper:
     def capitalize_words(text: str) -> str:
         '''Capitalize each word in a string.'''
         return ' '.join(word.capitalize() for word in text.split())
-"""
+""",
     )
 
     models_file = code_dir / "models.py"
@@ -86,7 +86,7 @@ class User:
 
     def __repr__(self) -> str:
         return f"User({self.first_name}, {self.last_name})"
-"""
+""",
     )
 
     services_file = code_dir / "services.py"
@@ -115,7 +115,7 @@ class UserService:
     def get_user_count(self) -> int:
         '''Get total number of users.'''
         return len(self.users)
-"""
+""",
     )
 
     # Index the codebase
@@ -150,8 +150,8 @@ def temp_aurora_config(tmp_path):
                     "verbosity": "normal",
                 },
                 "budget": {"monthly_limit_usd": 50.0},
-            }
-        )
+            },
+        ),
     )
 
     return tmp_path
@@ -282,7 +282,7 @@ class TestE2EIndexQueryGet:
 
             # Complex query
             complex_result = tools.aurora_query(
-                "analyze and compare the user validation and creation logic"
+                "analyze and compare the user validation and creation logic",
             )
             complex_response = json.loads(complex_result)
 
@@ -483,7 +483,7 @@ class TestE2EEdgeCases:
 def new_function():
     '''A brand new function.'''
     return "new"
-"""
+""",
         )
 
         # Re-index

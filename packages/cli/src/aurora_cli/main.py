@@ -208,7 +208,7 @@ def verify_command() -> None:
         console.print(f"✓ Python version: {py_version.major}.{py_version.minor}.{py_version.micro}")
     else:
         console.print(
-            f"✗ Python version: {py_version.major}.{py_version.minor}.{py_version.micro} [red](requires >= 3.10)[/]"
+            f"✗ Python version: {py_version.major}.{py_version.minor}.{py_version.micro} [red](requires >= 3.10)[/]",
         )
         all_ok = False
 
@@ -239,7 +239,7 @@ def verify_command() -> None:
         sys.exit(0)
     elif all_ok:
         console.print(
-            "[bold yellow]⚠ AURORA partially installed - some optional features unavailable[/]\n"
+            "[bold yellow]⚠ AURORA partially installed - some optional features unavailable[/]\n",
         )
         sys.exit(1)
     else:

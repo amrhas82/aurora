@@ -76,7 +76,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-'''
+''',
         )
 
         (project_path / "helpers.py").write_text(
@@ -90,7 +90,7 @@ def helper_one():
 def helper_two():
     """Second helper function."""
     return "helper2"
-'''
+''',
         )
 
         yield project_path
@@ -104,7 +104,9 @@ class TestDatabasePersistence:
     """
 
     def test_1_2_1_index_then_multiple_commands_same_db(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.2.1: Write test that indexes data, then runs multiple commands.
 
@@ -169,7 +171,9 @@ class TestDatabasePersistence:
         )
 
     def test_1_2_2_all_commands_use_same_database(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.2.2: Verify all commands (index, search, query, stats) use same database.
 
@@ -241,7 +245,9 @@ class TestDatabasePersistence:
         assert len(search_result.stdout) > 0, "Search should return results from indexed DB"
 
     def test_1_2_3_data_persists_across_command_invocations(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.2.3: Test data persists across command invocations.
 
@@ -323,7 +329,9 @@ class TestDatabasePersistence:
         ), f"Chunk count should persist: initial={initial_count}, final={final_count}"
 
     def test_1_2_4_deleting_local_aurora_db_does_not_affect_operations(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.2.4: Test deleting local aurora.db (if exists) doesn't affect Aurora operations.
 
@@ -389,7 +397,9 @@ class TestDatabasePersistence:
         )
 
     def test_1_2_5_verify_aurora_home_db_contains_expected_chunks(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.2.5: Verify ~/.aurora/memory.db contains expected chunks after all operations.
 
@@ -464,7 +474,9 @@ class TestDatabasePersistence:
         conn.close()
 
     def test_1_2_6_database_path_consistency_bug_detection(
-        self, clean_aurora_home: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        sample_python_project: Path,
     ) -> None:
         """Test 1.2.6: Detect and document the database path consistency bug (Issue #2).
 
@@ -510,7 +522,7 @@ class TestDatabasePersistence:
                 f"Found {len(databases_found)} databases:\n"
                 + "\n".join(f"  - {db}" for db in databases_found)
                 + f"\n\nShould only have one database at: {expected_db}\n"
-                f"Fix: All commands must use config.get_db_path()"
+                f"Fix: All commands must use config.get_db_path()",
             )
 
         # If no database at expected location, fail
@@ -519,7 +531,7 @@ class TestDatabasePersistence:
                 f"ISSUE #2 DETECTED: Database not at expected location!\n"
                 f"Expected: {expected_db}\n"
                 f"Found: {databases_found if databases_found else 'No databases found'}\n"
-                f"Fix: All commands must use config.get_db_path() which returns ~/.aurora/memory.db"
+                f"Fix: All commands must use config.get_db_path() which returns ~/.aurora/memory.db",
             )
 
 

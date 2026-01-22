@@ -15,6 +15,7 @@ Performance Targets:
 References:
     Anderson, J. R. (2007). How Can the Human Mind Occur in the Physical Universe?
     Oxford University Press. Chapter 5: Production System.
+
 """
 
 from dataclasses import dataclass
@@ -71,6 +72,7 @@ class QueryOptimizationStats:
         optimization_time_ms: Time spent in optimization
         type_filter_applied: Whether type filtering was used
         inferred_types: Chunk types inferred from query
+
     """
 
     total_chunks: int = 0
@@ -135,6 +137,7 @@ class QueryOptimizer:
         - Threshold filtering skips 70-80% of remaining chunks
         - Batch processing reduces overhead by 30-40%
         - Combined: 10-20x speedup for large codebases
+
     """
 
     def __init__(
@@ -155,6 +158,7 @@ class QueryOptimizer:
             enable_type_filtering: Enable type-based pre-filtering (default True)
             batch_size: Number of chunks to process per batch (default 100)
             retrieval_config: Optional retrieval configuration
+
         """
         self.engine = engine
         self.store = store
@@ -192,6 +196,7 @@ class QueryOptimizer:
 
             >>> optimizer.infer_chunk_types("test cases for login")
             ['test', 'function']
+
         """
         query_lower = query.lower()
         set(query_lower.split())
@@ -228,6 +233,7 @@ class QueryOptimizer:
             - If chunk_types provided, uses those directly
             - If query provided and type_filtering enabled, infers types
             - If no filtering criteria, returns all chunks
+
         """
         # Determine chunk types to filter by
         types_to_filter = chunk_types
@@ -266,6 +272,7 @@ class QueryOptimizer:
             - Processes chunks in batches of size self.batch_size
             - Returns only total activation (not components) for speed
             - Applies threshold filtering - only returns chunks above threshold
+
         """
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -343,6 +350,7 @@ class QueryOptimizer:
             >>>
             >>> if stats:
             ...     print(f"Reduced search by {stats.reduction_ratio:.1%}")
+
         """
         import time
 
@@ -427,6 +435,7 @@ class QueryOptimizer:
 
         Returns:
             List of RetrievalResult objects above threshold
+
         """
         if threshold is None:
             threshold = self.activation_threshold
@@ -453,6 +462,7 @@ class QueryOptimizer:
 
         Returns:
             Set of lowercase keywords
+
         """
         # Simple extraction - split on whitespace
         words = query.lower().split()

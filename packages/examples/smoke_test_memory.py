@@ -30,6 +30,7 @@ def run_smoke_test() -> bool:
 
     Returns:
         True if all tests pass, False otherwise
+
     """
     try:
         # Test 1: Create store instance

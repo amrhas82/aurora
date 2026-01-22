@@ -76,10 +76,12 @@ class TestBaseLevelActivationLiterature:
         expected = -0.5 * math.log(t_seconds)
 
         assert activation == pytest.approx(
-            expected, abs=0.01
+            expected,
+            abs=0.01,
         ), f"Expected BLA={expected:.3f} for single access 1 day ago, got {activation:.3f}"
         assert expected == pytest.approx(
-            -5.686, abs=0.01
+            -5.686,
+            abs=0.01,
         ), "Sanity check: Anderson's published value"
 
     def test_anderson_1998_multiple_access_example(self):
@@ -112,7 +114,8 @@ class TestBaseLevelActivationLiterature:
         expected = math.log(sum_powers)
 
         assert activation == pytest.approx(
-            expected, abs=0.01
+            expected,
+            abs=0.01,
         ), f"Expected BLA={expected:.3f} for 3 accesses, got {activation:.3f}"
 
         # Verify intermediate calculations
@@ -120,10 +123,12 @@ class TestBaseLevelActivationLiterature:
         #   = 3600^-0.5 + 86400^-0.5 + 604800^-0.5
         #   = 0.01667 + 0.00340 + 0.00129 = 0.02135
         assert sum_powers == pytest.approx(
-            0.02135, abs=0.001
+            0.02135,
+            abs=0.001,
         ), f"Sum of power terms should be ~0.02135, got {sum_powers}"
         assert expected == pytest.approx(
-            -3.846, abs=0.05
+            -3.846,
+            abs=0.05,
         ), f"Final activation should be ~-3.846, got {expected}"
 
     def test_anderson_2004_power_law_of_practice(self):
@@ -167,10 +172,12 @@ class TestBaseLevelActivationLiterature:
         expected_increment = math.log(4)  # For same-time accesses
 
         assert diff_1_to_4 == pytest.approx(
-            expected_increment, abs=0.01
+            expected_increment,
+            abs=0.01,
         ), f"1→4 accesses should increase by {expected_increment:.3f}, got {diff_1_to_4:.3f}"
         assert diff_4_to_16 == pytest.approx(
-            expected_increment, abs=0.01
+            expected_increment,
+            abs=0.01,
         ), f"4→16 accesses should increase by {expected_increment:.3f}, got {diff_4_to_16:.3f}"
 
     def test_anderson_2007_power_law_of_forgetting(self):
@@ -188,10 +195,12 @@ class TestBaseLevelActivationLiterature:
         # Single access at different time points
         activation_1d = bla.calculate([AccessHistoryEntry(timestamp=now - timedelta(days=1))], now)
         activation_10d = bla.calculate(
-            [AccessHistoryEntry(timestamp=now - timedelta(days=10))], now
+            [AccessHistoryEntry(timestamp=now - timedelta(days=10))],
+            now,
         )
         activation_100d = bla.calculate(
-            [AccessHistoryEntry(timestamp=now - timedelta(days=100))], now
+            [AccessHistoryEntry(timestamp=now - timedelta(days=100))],
+            now,
         )
 
         # Verify power law decay
@@ -201,10 +210,12 @@ class TestBaseLevelActivationLiterature:
         diff_10d_to_100d = activation_10d - activation_100d
 
         assert diff_1d_to_10d == pytest.approx(
-            expected_decrement, abs=0.01
+            expected_decrement,
+            abs=0.01,
         ), f"1d→10d should decrease by {expected_decrement:.3f}, got {diff_1d_to_10d:.3f}"
         assert diff_10d_to_100d == pytest.approx(
-            expected_decrement, abs=0.01
+            expected_decrement,
+            abs=0.01,
         ), f"10d→100d should decrease by {expected_decrement:.3f}, got {diff_10d_to_100d:.3f}"
 
 
@@ -242,7 +253,8 @@ class TestSpreadingActivationLiterature:
 
         expected = 1.0 * 0.7  # W × F^1
         assert activations["B"] == pytest.approx(
-            expected, abs=0.001
+            expected,
+            abs=0.001,
         ), f"Expected spreading={expected:.3f}, got {activations['B']:.3f}"
 
     def test_anderson_1983_distance_decay(self):
@@ -300,7 +312,8 @@ class TestSpreadingActivationLiterature:
         expected_total = 2 * expected_per_path
 
         assert activations["D"] == pytest.approx(
-            expected_total, abs=0.001
+            expected_total,
+            abs=0.001,
         ), f"Expected D={expected_total:.3f}, got {activations['D']:.3f}"
 
     def test_anderson_1983_fan_effect(self):
@@ -426,7 +439,7 @@ class TestDecayPenaltyLiterature:
             DecayConfig(
                 decay_factor=0.5,
                 grace_period_hours=0,  # No grace period
-            )
+            ),
         )
 
         now = datetime.now(timezone.utc)
@@ -488,7 +501,7 @@ class TestTotalActivationFormula:
                 spreading_config=SpreadingConfig(spread_factor=0.7),
                 context_config=ContextBoostConfig(boost_factor=0.5),
                 decay_config=DecayConfig(decay_factor=0.5, grace_period_hours=24),
-            )
+            ),
         )
 
         now = datetime.now(timezone.utc)
@@ -567,8 +580,11 @@ class TestTotalActivationFormula:
         # Test with all components enabled
         engine_all = ActivationEngine(
             ActivationConfig(
-                enable_bla=True, enable_spreading=True, enable_context=True, enable_decay=True
-            )
+                enable_bla=True,
+                enable_spreading=True,
+                enable_context=True,
+                enable_decay=True,
+            ),
         )
 
         result_all = engine_all.calculate_total(
@@ -582,8 +598,11 @@ class TestTotalActivationFormula:
         # Test with only BLA enabled
         engine_bla_only = ActivationEngine(
             ActivationConfig(
-                enable_bla=True, enable_spreading=False, enable_context=False, enable_decay=False
-            )
+                enable_bla=True,
+                enable_spreading=False,
+                enable_context=False,
+                enable_decay=False,
+            ),
         )
 
         result_bla = engine_bla_only.calculate_total(
@@ -635,11 +654,13 @@ class TestACTRPrincipleValidation:
         ]
 
         result_low = engine.calculate_total(
-            access_history=history_low, last_access=now - timedelta(days=5)
+            access_history=history_low,
+            last_access=now - timedelta(days=5),
         )
 
         result_high = engine.calculate_total(
-            access_history=history_high, last_access=now - timedelta(days=1)
+            access_history=history_high,
+            last_access=now - timedelta(days=1),
         )
 
         assert (
@@ -661,11 +682,13 @@ class TestACTRPrincipleValidation:
         history_recent = [AccessHistoryEntry(timestamp=now - timedelta(hours=1))]
 
         result_old = engine.calculate_total(
-            access_history=history_old, last_access=now - timedelta(days=30)
+            access_history=history_old,
+            last_access=now - timedelta(days=30),
         )
 
         result_recent = engine.calculate_total(
-            access_history=history_recent, last_access=now - timedelta(hours=1)
+            access_history=history_recent,
+            last_access=now - timedelta(hours=1),
         )
 
         assert (

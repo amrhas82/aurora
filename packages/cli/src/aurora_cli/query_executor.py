@@ -35,6 +35,7 @@ class QueryExecutor:
     Attributes:
         config: Configuration dictionary with execution settings
         interactive_mode: Whether to prompt user for weak retrieval matches
+
     """
 
     def __init__(self, config: dict[str, Any] | None = None, interactive_mode: bool = False):
@@ -48,6 +49,7 @@ class QueryExecutor:
                 - max_tokens: Maximum tokens for generation
             interactive_mode: If True, prompt user when retrieval quality is weak.
                 Only applicable to CLI usage (not MCP tools). Default: False.
+
         """
         self.config = config or {}
         self.interactive_mode = interactive_mode
@@ -79,6 +81,7 @@ class QueryExecutor:
         Raises:
             ValueError: If query is empty or API key is invalid
             RuntimeError: If API call fails after retries
+
         """
         if not query or not query.strip():
             raise ValueError("Query cannot be empty")
@@ -130,7 +133,7 @@ class QueryExecutor:
 
             if verbose:
                 logger.info(
-                    f"Calling LLM: model={model}, temp={temperature}, max_tokens={max_tokens}"
+                    f"Calling LLM: model={model}, temp={temperature}, max_tokens={max_tokens}",
                 )
 
             response = self._call_llm_with_retry(
@@ -146,7 +149,9 @@ class QueryExecutor:
 
             # Record actual cost after successful LLM call
             actual_cost = tracker.calculate_cost(
-                model, response.input_tokens, response.output_tokens
+                model,
+                response.input_tokens,
+                response.output_tokens,
             )
             tracker.record_cost(
                 model=model,
@@ -160,7 +165,7 @@ class QueryExecutor:
                 logger.info(
                     f"LLM response: {response.output_tokens} tokens, "
                     f"{duration:.2f}s, "
-                    f"~${actual_cost:.4f}"
+                    f"~${actual_cost:.4f}",
                 )
 
             # Type assertion: we know response.content is a string from LLM client
@@ -207,6 +212,7 @@ class QueryExecutor:
         Raises:
             ValueError: If query is empty or memory store is None
             RuntimeError: If execution fails
+
         """
         if not query or not query.strip():
             raise ValueError("Query cannot be empty")
@@ -226,7 +232,7 @@ class QueryExecutor:
 
             logger.info(
                 f"Complexity assessment: {complexity} "
-                f"(confidence={confidence:.3f}, method={assessment.get('method')})"
+                f"(confidence={confidence:.3f}, method={assessment.get('method')})",
             )
 
             # Determine if escalation is needed
@@ -234,7 +240,7 @@ class QueryExecutor:
             if confidence < confidence_threshold:
                 logger.info(
                     f"Low confidence ({confidence:.3f} < {confidence_threshold}), "
-                    "considering escalation to SOAR"
+                    "considering escalation to SOAR",
                 )
 
                 if self.interactive_mode:
@@ -265,25 +271,24 @@ class QueryExecutor:
                     memory_store=memory_store,
                     verbose=verbose,
                 )
-            else:
-                logger.info("Executing with direct LLM")
-                response = self.execute_direct_llm(
-                    query=query,
-                    api_key=api_key,
-                    memory_store=memory_store,
-                    verbose=verbose,
-                )
+            logger.info("Executing with direct LLM")
+            response = self.execute_direct_llm(
+                query=query,
+                api_key=api_key,
+                memory_store=memory_store,
+                verbose=verbose,
+            )
 
-                if verbose:
-                    # Return response with assessment metadata
-                    metadata = {
-                        "method": "direct_llm",
-                        "assessment": assessment,
-                        "escalated": False,
-                    }
-                    return response, metadata
+            if verbose:
+                # Return response with assessment metadata
+                metadata = {
+                    "method": "direct_llm",
+                    "assessment": assessment,
+                    "escalated": False,
+                }
+                return response, metadata
 
-                return response
+            return response
 
         except Exception as e:
             logger.error(f"Auto-escalation execution failed: {e}", exc_info=True)
@@ -314,6 +319,7 @@ class QueryExecutor:
         Raises:
             ValueError: If query is empty or memory store is None
             RuntimeError: If orchestrator execution fails
+
         """
         if not query or not query.strip():
             raise ValueError("Query cannot be empty")
@@ -343,7 +349,7 @@ class QueryExecutor:
                 # Build phase trace
                 phase_trace = self._build_phase_trace(result, duration)
                 logger.info(
-                    f"AURORA execution complete: {duration:.2f}s, cost=${result.get('cost_usd', 0):.4f}"
+                    f"AURORA execution complete: {duration:.2f}s, cost=${result.get('cost_usd', 0):.4f}",
                 )
                 return str(final_response), phase_trace
 
@@ -365,6 +371,7 @@ class QueryExecutor:
 
         Returns:
             Configured LLMClient instance
+
         """
         model = self.config.get("model", "claude-sonnet-4-20250514")
         return AnthropicClient(api_key=api_key, default_model=model)
@@ -382,6 +389,7 @@ class QueryExecutor:
 
         Returns:
             Configured SOAROrchestrator instance
+
         """
         from aurora_cli.config import Config
         from aurora_soar.agent_registry import AgentRegistry
@@ -427,6 +435,7 @@ class QueryExecutor:
 
         Returns:
             Formatted context string (empty if no results)
+
         """
         try:
             # Use MemoryManager to perform hybrid search with activation scoring
@@ -466,6 +475,7 @@ class QueryExecutor:
 
         Returns:
             Dictionary with phase trace information
+
         """
         reasoning_trace = result.get("reasoning_trace", {})
         metadata = result.get("metadata", {})
@@ -490,7 +500,7 @@ class QueryExecutor:
                         "name": phase_name.capitalize(),
                         "duration": phase_data.get("duration_ms", 0) / 1000.0,
                         "summary": self._get_phase_summary(phase_name, phase_data),
-                    }
+                    },
                 )
 
         return {
@@ -511,6 +521,7 @@ class QueryExecutor:
 
         Returns:
             Brief summary string
+
         """
         summaries = {
             "assess": lambda d: f"Complexity: {d.get('complexity', 'unknown')}",
@@ -541,6 +552,7 @@ class QueryExecutor:
 
         Returns:
             Estimated cost in USD
+
         """
         # Claude Sonnet 4 pricing (approximate)
         INPUT_COST_PER_1K = 0.003
@@ -580,6 +592,7 @@ class QueryExecutor:
 
         Raises:
             APIError: If all retries are exhausted or non-retryable error occurs
+
         """
         base_delay = 0.1  # Start with 100ms
         last_error = None
@@ -624,13 +637,14 @@ class QueryExecutor:
                 if verbose or is_rate_limit:
                     logger.info(
                         f"Retrying LLM call in {total_delay:.2f}s... "
-                        f"(attempt {attempt + 1}/{max_retries})"
+                        f"(attempt {attempt + 1}/{max_retries})",
                     )
 
                 time.sleep(total_delay)
 
         # Should never reach here, but just in case
         error_msg = self.error_handler.handle_api_error(
-            last_error or Exception("Unknown error"), "LLM API call"
+            last_error or Exception("Unknown error"),
+            "LLM API call",
         )
         raise APIError(error_msg)

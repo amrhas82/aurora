@@ -60,6 +60,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
 
         Returns:
             Path to ~/.claude/plugins/aurora/.mcp.json
+
         """
         return Path.home() / ".claude" / "plugins" / "aurora" / ".mcp.json"
 
@@ -68,6 +69,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
 
         Returns:
             Path to ~/.claude/settings.local.json
+
         """
         return Path.home() / ".claude" / "settings.local.json"
 
@@ -79,6 +81,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
 
         Returns:
             Dictionary with Aurora server configuration
+
         """
         db_path = project_path / ".aurora" / "memory.db"
 
@@ -110,8 +113,8 @@ class ClaudeMCPConfigurator(MCPConfigurator):
                         "env": {
                             "AURORA_DB_PATH": str(db_path),
                         },
-                    }
-                }
+                    },
+                },
             }
 
         # Use python with module path for development
@@ -125,8 +128,8 @@ class ClaudeMCPConfigurator(MCPConfigurator):
                         "PYTHONPATH": ":".join(pythonpath_parts),
                         "AURORA_DB_PATH": str(db_path),
                     },
-                }
-            }
+                },
+            },
         }
 
     def configure_permissions(self, project_path: Path) -> ConfigResult:
@@ -139,6 +142,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
 
         Returns:
             ConfigResult with operation status
+
         """
         permissions_path = self.get_permissions_path()
         warnings: list[str] = []
@@ -217,6 +221,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
 
         Returns:
             ConfigResult with combined operation status
+
         """
         # First configure the MCP server
         mcp_result = super().configure(project_path)
@@ -254,6 +259,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
 
         Returns:
             True if both MCP config and basic permissions exist
+
         """
         # Check MCP config
         if not super().is_configured(project_path):

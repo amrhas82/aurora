@@ -39,6 +39,7 @@ class GenericToolProvider(ToolProvider):
         Args:
             name: Unique tool identifier
             config: Configuration dictionary
+
         """
         super().__init__(config)
         self._name = name
@@ -130,6 +131,7 @@ class GenericToolProvider(ToolProvider):
 
         Returns:
             ToolResult with execution status and output
+
         """
         if not self.is_available():
             return ToolResult(

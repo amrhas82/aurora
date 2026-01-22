@@ -55,6 +55,7 @@ class VerificationResult:
         suggestions: List of improvement suggestions
         option_used: Which verification option was used
         raw_response: Raw LLM response text
+
     """
 
     def __init__(
@@ -142,6 +143,7 @@ def verify_decomposition(
     Raises:
         ValueError: If LLM response is invalid or missing required fields
         RuntimeError: If LLM call fails after retries
+
     """
     # Select prompt template based on option
     prompt_template: VerifySelfPromptTemplate | VerifyAdversarialPromptTemplate
@@ -170,7 +172,7 @@ def verify_decomposition(
     if not isinstance(verification, dict):
         raise ValueError(
             f"LLM returned non-dict response: {type(verification)}\n"
-            f"Response: {str(verification)[:500]}"
+            f"Response: {str(verification)[:500]}",
         )
 
     # Validate required fields
@@ -185,7 +187,7 @@ def verify_decomposition(
     missing = [f for f in required_fields if f not in verification]
     if missing:
         raise ValueError(
-            f"Verification missing required fields: {missing}\nResponse: {verification}"
+            f"Verification missing required fields: {missing}\nResponse: {verification}",
         )
 
     # Validate score ranges
@@ -205,7 +207,7 @@ def verify_decomposition(
         verdict = VerificationVerdict(verification["verdict"])
     except ValueError as e:
         raise ValueError(
-            f"Invalid verdict: {verification['verdict']} (must be PASS, RETRY, or FAIL)"
+            f"Invalid verdict: {verification['verdict']} (must be PASS, RETRY, or FAIL)",
         ) from e
 
     # Calculate expected overall score and validate
@@ -266,6 +268,7 @@ def _calculate_overall_score(
 
     Returns:
         Weighted overall score (0.0-1.0)
+
     """
     return 0.4 * completeness + 0.2 * consistency + 0.2 * groundedness + 0.2 * routability
 
@@ -288,6 +291,7 @@ def _auto_correct_verdict(verdict: VerificationVerdict, score: float) -> Verific
 
     Returns:
         Corrected verdict based on score thresholds
+
     """
     import logging
 
@@ -305,7 +309,7 @@ def _auto_correct_verdict(verdict: VerificationVerdict, score: float) -> Verific
     if verdict != correct_verdict:
         logger.warning(
             f"Auto-correcting verdict from {verdict.value} to {correct_verdict.value} "
-            f"(score={score:.2f})"
+            f"(score={score:.2f})",
         )
         return correct_verdict
 

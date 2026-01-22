@@ -24,6 +24,7 @@ class SlashCommandTarget:
         command_id: Command identifier (e.g., "plan", "query")
         path: Relative path to the command file
         kind: Always "slash" for slash commands
+
     """
 
     command_id: str
@@ -69,6 +70,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             List of SlashCommandTarget objects
+
         """
         return [
             SlashCommandTarget(command_id=cmd_id, path=self.get_relative_path(cmd_id), kind="slash")
@@ -84,6 +86,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             List of created/updated file paths (relative to project_path)
+
         """
         created_or_updated: list[str] = []
 
@@ -129,6 +132,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             List of updated file paths (relative to project_path)
+
         """
         updated: list[str] = []
 
@@ -151,6 +155,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             Relative path from project root
+
         """
         ...
 
@@ -163,6 +168,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             YAML frontmatter string or None
+
         """
         ...
 
@@ -175,6 +181,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             Command body content
+
         """
         ...
 
@@ -189,6 +196,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             Brief description string or None
+
         """
         return None
 
@@ -201,6 +209,7 @@ class SlashCommandConfigurator(ABC):
 
         Returns:
             Absolute path to the command file
+
         """
         rel = self.get_relative_path(command_id)
         return str(Path(project_path) / rel)
@@ -214,6 +223,7 @@ class SlashCommandConfigurator(ABC):
 
         Raises:
             ValueError: If Aurora markers are missing
+
         """
         content = Path(file_path).read_text(encoding="utf-8")
 

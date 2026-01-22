@@ -18,6 +18,7 @@ Functions:
 References:
     - Okapi BM25: https://en.wikipedia.org/wiki/Okapi_BM25
     - Robertson et al., "Okapi at TREC-3" (1994)
+
 """
 
 import logging
@@ -55,6 +56,7 @@ def tokenize(text: str, _recursion_level: int = 0) -> list[str]:
 
         >>> tokenize("user_manager.auth_token")
         ['user', 'manager', 'user_manager', 'auth', 'token', 'auth_token']
+
     """
     if not text:
         return []
@@ -159,6 +161,7 @@ class BM25Scorer:
         >>> scorer.build_index(docs)
         >>> score = scorer.score("authenticate", "authenticate user token")
         >>> print(f"BM25 score: {score:.3f}")
+
     """
 
     def __init__(self, k1: float = 1.5, b: float = 0.75):
@@ -170,6 +173,7 @@ class BM25Scorer:
 
         Raises:
             ValueError: If k1 < 0 or b not in [0, 1]
+
         """
         if k1 < 0:
             raise ValueError(f"k1 must be >= 0, got {k1}")
@@ -197,6 +201,7 @@ class BM25Scorer:
         Example:
             >>> docs = [("d1", "auth user"), ("d2", "user session")]
             >>> scorer.build_index(docs)
+
         """
         logger.info(f"Building BM25 index for {len(documents)} documents...")
 
@@ -232,7 +237,7 @@ class BM25Scorer:
 
         logger.info(
             f"BM25 index built: {len(self.idf)} unique terms, "
-            f"avg_doc_length={self.avg_doc_length:.2f}"
+            f"avg_doc_length={self.avg_doc_length:.2f}",
         )
 
     def score(self, query: str, document: str) -> float:
@@ -248,6 +253,7 @@ class BM25Scorer:
         Example:
             >>> score = scorer.score("authenticate user", "authenticate user session")
             >>> print(f"Score: {score:.3f}")
+
         """
         query_tokens = tokenize(query)
         doc_tokens = tokenize(document)
@@ -278,7 +284,7 @@ class BM25Scorer:
 
         logger.debug(
             f"BM25 score for query='{query}': {bm25_score:.3f} "
-            f"(doc_length={doc_length}, query_terms={len(query_tokens)})"
+            f"(doc_length={doc_length}, query_terms={len(query_tokens)})",
         )
 
         return bm25_score
@@ -291,6 +297,7 @@ class BM25Scorer:
 
         Example:
             >>> scorer.save_index(Path("~/.aurora/indexes/bm25_index.pkl"))
+
         """
         index_data = {
             "version": "1.0",
@@ -322,6 +329,7 @@ class BM25Scorer:
 
         Example:
             >>> scorer.load_index(Path("~/.aurora/indexes/bm25_index.pkl"))
+
         """
         if not path.exists():
             raise FileNotFoundError(f"BM25 index not found: {path}")
@@ -344,7 +352,7 @@ class BM25Scorer:
         self.term_doc_counts = defaultdict(int, index_data["term_doc_counts"])
 
         logger.info(
-            f"Loaded BM25 index from {path} ({self.corpus_size} documents, {len(self.idf)} terms)"
+            f"Loaded BM25 index from {path} ({self.corpus_size} documents, {len(self.idf)} terms)",
         )
 
 
@@ -364,6 +372,7 @@ def calculate_idf(term: str, corpus_size: int, term_doc_count: int) -> float:
     Example:
         >>> idf = calculate_idf("auth", corpus_size=100, term_doc_count=10)
         >>> print(f"IDF: {idf:.3f}")
+
     """
     if corpus_size == 0:
         return 0.0
@@ -400,6 +409,7 @@ def calculate_bm25(
         >>> doc = ["auth", "user", "session", "token"]
         >>> idfs = {"auth": 2.0, "user": 1.5}
         >>> score = calculate_bm25(query, doc, len(doc), 5.0, idfs)
+
     """
     term_freqs = Counter(doc_terms)
     score = 0.0

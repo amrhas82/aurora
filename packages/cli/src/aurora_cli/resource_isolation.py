@@ -100,7 +100,7 @@ class IsolationConfig:
             "AWS_REGION",
             "AURORA_*",
             "CLAUDE_*",
-        ]
+        ],
     )
 
     # Environment variables to explicitly set
@@ -193,6 +193,7 @@ class FileLockManager:
 
         Args:
             lock_dir: Directory for lock files (default: system temp)
+
         """
         self.lock_dir = lock_dir or Path(tempfile.gettempdir()) / "aurora_locks"
         self.lock_dir.mkdir(parents=True, exist_ok=True)
@@ -215,6 +216,7 @@ class FileLockManager:
 
         Yields:
             Lock file path
+
         """
         import time as time_module
 
@@ -264,6 +266,7 @@ class FileLockManager:
 
         Yields:
             Lock file path
+
         """
         lock_path = self._lock_path(resource_id)
         lock_type = fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH
@@ -330,6 +333,7 @@ class ResourceIsolationManager:
         Args:
             config: Isolation configuration
             base_working_dir: Base working directory for isolated executions
+
         """
         self.config = config or IsolationConfig()
         self.base_working_dir = base_working_dir or Path.cwd()
@@ -429,6 +433,7 @@ class ResourceIsolationManager:
 
         Returns:
             ExecutionContext with isolated resources
+
         """
         execution_id = f"{tool_name}-{uuid.uuid4().hex[:8]}"
 
@@ -522,6 +527,7 @@ class ResourceIsolationManager:
 
         Yields:
             ExecutionContext with isolated resources
+
         """
         context = await self.acquire_context(tool_name, extra_env)
         try:
@@ -582,6 +588,7 @@ def create_isolation_manager(
 
     Returns:
         Configured ResourceIsolationManager
+
     """
     config = IsolationConfig(
         level=IsolationLevel(level),
@@ -615,6 +622,7 @@ async def with_isolation(
 
     Returns:
         Result of func execution
+
     """
     manager = create_isolation_manager(level=isolation_level)
 
@@ -631,5 +639,4 @@ async def with_isolation(
 
             if asyncio.iscoroutinefunction(func):
                 return await func(*args, **kwargs)
-            else:
-                return func(*args, **kwargs)
+            return func(*args, **kwargs)

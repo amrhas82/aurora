@@ -35,6 +35,7 @@ class Validator:
 
         Args:
             strict_mode: If True, warnings cause validation to fail
+
         """
         self._strict_mode = strict_mode
 
@@ -46,6 +47,7 @@ class Validator:
 
         Returns:
             ValidationReport with issues and validity status
+
         """
         issues: list[ValidationIssue] = []
         capability_name = self._extract_name_from_path(file_path)
@@ -71,7 +73,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="file",
                     message=enriched,
-                )
+                ),
             )
         except Exception as e:
             issues.append(
@@ -79,7 +81,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="file",
                     message=str(e),
-                )
+                ),
             )
 
         return self._create_report(issues)
@@ -95,6 +97,7 @@ class Validator:
 
         Returns:
             ValidationReport with issues and validity status
+
         """
         issues: list[ValidationIssue] = []
 
@@ -115,7 +118,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="file",
                     message=enriched,
-                )
+                ),
             )
         except Exception as e:
             issues.append(
@@ -123,7 +126,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="file",
                     message=str(e),
-                )
+                ),
             )
 
         return self._create_report(issues)
@@ -136,6 +139,7 @@ class Validator:
 
         Returns:
             ValidationReport with issues and validity status
+
         """
         issues: list[ValidationIssue] = []
         plan_name = self._extract_name_from_path(file_path)
@@ -161,7 +165,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="file",
                     message=enriched,
-                )
+                ),
             )
         except Exception as e:
             issues.append(
@@ -169,7 +173,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="file",
                     message=str(e),
-                )
+                ),
             )
 
         return self._create_report(issues)
@@ -189,6 +193,7 @@ class Validator:
 
         Returns:
             ValidationReport with issues and validity status
+
         """
         issues: list[ValidationIssue] = []
         specs_dir = Path(plan_dir) / "specs"
@@ -203,9 +208,10 @@ class Validator:
                         level=ValidationLevel.ERROR,
                         path="file",
                         message=self._enrich_top_level_error(
-                            "plan", VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS
+                            "plan",
+                            VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS,
                         ),
-                    )
+                    ),
                 )
                 return self._create_report(issues)
 
@@ -267,7 +273,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Duplicate requirement in ADDED: "{block.name}"',
-                            )
+                            ),
                         )
                     else:
                         added_names.add(key)
@@ -279,7 +285,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'ADDED "{block.name}" is missing requirement text',
-                            )
+                            ),
                         )
                     elif not self._contains_shall_or_must(req_text):
                         issues.append(
@@ -287,7 +293,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'ADDED "{block.name}" must contain SHALL or MUST',
-                            )
+                            ),
                         )
 
                     scenario_count = self._count_scenarios(block.raw)
@@ -297,7 +303,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'ADDED "{block.name}" must include at least one scenario',
-                            )
+                            ),
                         )
 
                 # Validate MODIFIED
@@ -311,7 +317,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Duplicate requirement in MODIFIED: "{block.name}"',
-                            )
+                            ),
                         )
                     else:
                         modified_names.add(key)
@@ -323,7 +329,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'MODIFIED "{block.name}" is missing requirement text',
-                            )
+                            ),
                         )
                     elif not self._contains_shall_or_must(req_text):
                         issues.append(
@@ -331,7 +337,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'MODIFIED "{block.name}" must contain SHALL or MUST',
-                            )
+                            ),
                         )
 
                     scenario_count = self._count_scenarios(block.raw)
@@ -341,7 +347,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'MODIFIED "{block.name}" must include at least one scenario',
-                            )
+                            ),
                         )
 
                 # Validate REMOVED
@@ -355,7 +361,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Duplicate requirement in REMOVED: "{name}"',
-                            )
+                            ),
                         )
                     else:
                         removed_names.add(key)
@@ -372,7 +378,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Duplicate FROM in RENAMED: "{rename["from"]}"',
-                            )
+                            ),
                         )
                     else:
                         renamed_from.add(from_key)
@@ -383,7 +389,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Duplicate TO in RENAMED: "{rename["to"]}"',
-                            )
+                            ),
                         )
                     else:
                         renamed_to.add(to_key)
@@ -396,7 +402,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Requirement present in both MODIFIED and REMOVED: "{n}"',
-                            )
+                            ),
                         )
                     if n in added_names:
                         issues.append(
@@ -404,7 +410,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Requirement present in both MODIFIED and ADDED: "{n}"',
-                            )
+                            ),
                         )
 
                 for n in added_names:
@@ -414,7 +420,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'Requirement present in both ADDED and REMOVED: "{n}"',
-                            )
+                            ),
                         )
 
                 for rename in plan.renamed:
@@ -427,7 +433,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'MODIFIED references old name from RENAMED. Use new header for "{rename["to"]}"',
-                            )
+                            ),
                         )
                     if to_key in added_names:
                         issues.append(
@@ -435,7 +441,7 @@ class Validator:
                                 level=ValidationLevel.ERROR,
                                 path=entry_path,
                                 message=f'RENAMED TO collides with ADDED for "{rename["to"]}"',
-                            )
+                            ),
                         )
 
         except OSError:
@@ -453,7 +459,7 @@ class Validator:
                         f"but no requirement entries parsed. Ensure each section includes at least one "
                         f'"### Requirement:" block (REMOVED may use bullet list syntax).'
                     ),
-                )
+                ),
             )
 
         # Report missing headers
@@ -466,7 +472,7 @@ class Validator:
                         'No delta sections found. Add headers such as "## ADDED Requirements" '
                         "or move non-delta notes outside specs/."
                     ),
-                )
+                ),
             )
 
         # Check for at least one modification
@@ -476,9 +482,10 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="file",
                     message=self._enrich_top_level_error(
-                        "plan", VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS
+                        "plan",
+                        VALIDATION_MESSAGES.PLAN_NO_MODIFICATIONS,
                     ),
-                )
+                ),
             )
 
         return self._create_report(issues)
@@ -494,6 +501,7 @@ class Validator:
 
         Returns:
             List of validation issues
+
         """
         issues: list[ValidationIssue] = []
 
@@ -504,7 +512,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="name",
                     message=VALIDATION_MESSAGES.CAPABILITY_NAME_EMPTY,
-                )
+                ),
             )
 
         # Overview validation
@@ -514,7 +522,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="overview",
                     message=VALIDATION_MESSAGES.CAPABILITY_PURPOSE_EMPTY,
-                )
+                ),
             )
 
         # Requirements validation
@@ -524,7 +532,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="requirements",
                     message=VALIDATION_MESSAGES.CAPABILITY_NO_REQUIREMENTS,
-                )
+                ),
             )
         else:
             for i, req in enumerate(capability.requirements):
@@ -535,7 +543,7 @@ class Validator:
                             level=ValidationLevel.ERROR,
                             path=f"requirements[{i}].text",
                             message=VALIDATION_MESSAGES.REQUIREMENT_NO_SHALL,
-                        )
+                        ),
                     )
 
                 # Check scenarios
@@ -545,7 +553,7 @@ class Validator:
                             level=ValidationLevel.ERROR,
                             path=f"requirements[{i}].scenarios",
                             message=VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS,
-                        )
+                        ),
                     )
 
         return issues
@@ -558,6 +566,7 @@ class Validator:
 
         Returns:
             List of validation issues
+
         """
         issues: list[ValidationIssue] = []
 
@@ -568,7 +577,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="name",
                     message=VALIDATION_MESSAGES.PLAN_NAME_EMPTY,
-                )
+                ),
             )
 
         # Why validation (length check)
@@ -583,7 +592,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="why",
                     message=VALIDATION_MESSAGES.PLAN_WHY_TOO_SHORT,
-                )
+                ),
             )
         elif len(plan.why) > MAX_WHY_SECTION_LENGTH:
             issues.append(
@@ -591,7 +600,7 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="why",
                     message=VALIDATION_MESSAGES.PLAN_WHY_TOO_LONG,
-                )
+                ),
             )
 
         # What changes validation
@@ -601,13 +610,15 @@ class Validator:
                     level=ValidationLevel.ERROR,
                     path="what_changes",
                     message=VALIDATION_MESSAGES.PLAN_WHAT_EMPTY,
-                )
+                ),
             )
 
         return issues
 
     def _apply_capability_rules(
-        self, capability: ParsedCapability, content: str
+        self,
+        capability: ParsedCapability,
+        content: str,
     ) -> list[ValidationIssue]:
         """Apply additional validation rules to capability.
 
@@ -617,6 +628,7 @@ class Validator:
 
         Returns:
             List of validation issues (mostly warnings)
+
         """
         issues: list[ValidationIssue] = []
 
@@ -627,7 +639,7 @@ class Validator:
                     level=ValidationLevel.WARNING,
                     path="overview",
                     message=VALIDATION_MESSAGES.PURPOSE_TOO_BRIEF,
-                )
+                ),
             )
 
         # Check requirements
@@ -639,7 +651,7 @@ class Validator:
                         level=ValidationLevel.INFO,
                         path=f"requirements[{i}]",
                         message=VALIDATION_MESSAGES.REQUIREMENT_TOO_LONG,
-                    )
+                    ),
                 )
 
             # Warn about missing scenarios
@@ -652,7 +664,7 @@ class Validator:
                             f"{VALIDATION_MESSAGES.REQUIREMENT_NO_SCENARIOS}. "
                             f"{VALIDATION_MESSAGES.GUIDE_SCENARIO_FORMAT}"
                         ),
-                    )
+                    ),
                 )
 
         return issues
@@ -666,6 +678,7 @@ class Validator:
 
         Returns:
             List of validation issues (mostly warnings)
+
         """
         issues: list[ValidationIssue] = []
 
@@ -677,7 +690,7 @@ class Validator:
                         level=ValidationLevel.WARNING,
                         path=f"modifications[{i}].description",
                         message=VALIDATION_MESSAGES.MODIFICATION_DESCRIPTION_TOO_BRIEF,
-                    )
+                    ),
                 )
 
             # Check for requirements on ADDED/MODIFIED
@@ -693,7 +706,7 @@ class Validator:
                                 f"{mod.operation.value} "
                                 f"{VALIDATION_MESSAGES.MODIFICATION_MISSING_REQUIREMENTS}"
                             ),
-                        )
+                        ),
                     )
 
         return issues
@@ -707,6 +720,7 @@ class Validator:
 
         Returns:
             Enriched error message
+
         """
         msg = base_message.strip()
 
@@ -734,6 +748,7 @@ class Validator:
 
         Returns:
             Extracted name
+
         """
         path = Path(file_path)
         parts = path.parts
@@ -755,6 +770,7 @@ class Validator:
 
         Returns:
             ValidationReport
+
         """
         errors = sum(1 for i in issues if i.level == ValidationLevel.ERROR)
         warnings = sum(1 for i in issues if i.level == ValidationLevel.WARNING)
@@ -774,6 +790,7 @@ class Validator:
 
         Returns:
             Requirement text or None
+
         """
         lines = block_raw.split("\n")
         # Skip header line (index 0)
@@ -807,6 +824,7 @@ class Validator:
 
         Returns:
             True if contains SHALL or MUST
+
         """
         return bool(re.search(r"\b(SHALL|MUST)\b", text))
 
@@ -818,6 +836,7 @@ class Validator:
 
         Returns:
             Number of scenarios
+
         """
         matches = re.findall(r"^####\s+", block_raw, re.MULTILINE)
         return len(matches)
@@ -830,6 +849,7 @@ class Validator:
 
         Returns:
             Formatted string
+
         """
         if not sections:
             return ""
@@ -848,5 +868,6 @@ class Validator:
 
         Returns:
             True if valid
+
         """
         return report.valid

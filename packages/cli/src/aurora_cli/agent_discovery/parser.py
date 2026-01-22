@@ -41,11 +41,12 @@ class AgentParser:
         >>> bad_agent = parser.parse_file(Path("malformed.md"))
         >>> print(bad_agent)
         None
+
     """
 
     def __init__(self) -> None:
         """Initialize the AgentParser."""
-        pass  # No initialization needed currently
+        # No initialization needed currently
 
     def parse_file(self, path: Path) -> AgentInfo | None:
         """Parse an agent markdown file and extract validated metadata.
@@ -65,6 +66,7 @@ class AgentParser:
             >>> agent = parser.parse_file(Path("agent.md"))
             >>> if agent:
             ...     print(agent.role)
+
         """
         # Resolve and expand path
         resolved_path = Path(path).expanduser().resolve()
@@ -145,7 +147,7 @@ class AgentParser:
             error_details = []
             if missing_fields:
                 error_details.append(
-                    f"missing required fields: {', '.join(str(f) for f in missing_fields)}"
+                    f"missing required fields: {', '.join(str(f) for f in missing_fields)}",
                 )
             for field, msg in invalid_fields:
                 error_details.append(f"invalid '{field}': {msg}")
@@ -182,6 +184,7 @@ class AgentParser:
             >>> agent = parser.parse_content(content)
             >>> print(agent.id)
             test-agent
+
         """
         try:
             post = frontmatter.loads(content)
@@ -240,6 +243,7 @@ class AgentParser:
             >>> raw = parser.extract_frontmatter(Path("agent.md"))
             >>> print(raw)
             {'id': 'my-agent', 'role': 'My Role', ...}
+
         """
         resolved_path = Path(path).expanduser().resolve()
 

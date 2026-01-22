@@ -59,7 +59,7 @@ class TestBasicExecution:
                 agent_id="agent1",
                 callable=fast_task,
                 args=("result1",),
-            )
+            ),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -93,7 +93,7 @@ class TestBasicExecution:
 
         executor = ParallelAgentExecutor()
         tasks = [
-            AgentTask(agent_id="agent1", callable=task_with_kwargs, args=(5,), kwargs={"y": 20})
+            AgentTask(agent_id="agent1", callable=task_with_kwargs, args=(5,), kwargs={"y": 20}),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -109,7 +109,7 @@ class TestBasicExecution:
                 agent_id="agent1",
                 callable=slow_task,
                 args=("result", 0.05),  # 50ms delay
-            )
+            ),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -128,7 +128,7 @@ class TestFailureHandling:
             AgentTask(
                 agent_id="failing_agent",
                 callable=failing_task,
-            )
+            ),
         ]
 
         results, stats = executor.execute_all(tasks)
@@ -171,7 +171,10 @@ class TestPriorityExecution:
 
         tasks = [
             AgentTask(
-                agent_id="low", callable=fast_task, args=("low",), priority=AgentPriority.LOW
+                agent_id="low",
+                callable=fast_task,
+                args=("low",),
+                priority=AgentPriority.LOW,
             ),
             AgentTask(
                 agent_id="critical",
@@ -207,7 +210,9 @@ class TestEarlyTermination:
 
         tasks = [
             AgentTask(
-                agent_id="critical_failing", callable=failing_task, priority=AgentPriority.CRITICAL
+                agent_id="critical_failing",
+                callable=failing_task,
+                priority=AgentPriority.CRITICAL,
             ),
             AgentTask(
                 agent_id="agent2",
@@ -233,7 +238,9 @@ class TestEarlyTermination:
 
         tasks = [
             AgentTask(
-                agent_id="critical_failing", callable=failing_task, priority=AgentPriority.CRITICAL
+                agent_id="critical_failing",
+                callable=failing_task,
+                priority=AgentPriority.CRITICAL,
             ),
             AgentTask(
                 agent_id="agent2",
@@ -297,7 +304,9 @@ class TestResultStreaming:
 
         tasks = [
             AgentTask(
-                agent_id="critical_failing", callable=failing_task, priority=AgentPriority.CRITICAL
+                agent_id="critical_failing",
+                callable=failing_task,
+                priority=AgentPriority.CRITICAL,
             ),
             AgentTask(
                 agent_id="agent2",

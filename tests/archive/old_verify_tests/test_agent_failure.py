@@ -43,10 +43,10 @@ class TestAgentTimeout:
                             "subgoal_index": 0,
                             "description": "Non-critical task",
                             "is_critical": False,
-                        }
+                        },
                     ],
                     "sequential": [],
-                }
+                },
             ],
             routing_metadata={},
         )
@@ -73,7 +73,13 @@ class TestAgentTimeout:
         # Use impossible timeout and max retries = 0
         with pytest.raises(RuntimeError, match="Critical subgoal .* timed out"):
             await _execute_single_subgoal(
-                0, subgoal, failing_agent, context, 0.001, metadata, max_retries=0
+                0,
+                subgoal,
+                failing_agent,
+                context,
+                0.001,
+                metadata,
+                max_retries=0,
             )
 
 
@@ -93,10 +99,10 @@ class TestAgentErrors:
                             "subgoal_index": 0,
                             "description": "Non-critical task",
                             "is_critical": False,
-                        }
+                        },
                     ],
                     "sequential": [],
-                }
+                },
             ],
             routing_metadata={},
         )
@@ -124,7 +130,13 @@ class TestRetryExhaustion:
 
         # Use impossible timeout to force retries
         output = await _execute_single_subgoal(
-            0, subgoal, failing_agent, context, 0.001, metadata, max_retries=2
+            0,
+            subgoal,
+            failing_agent,
+            context,
+            0.001,
+            metadata,
+            max_retries=2,
         )
 
         # Should eventually return failed output (not raise)
@@ -146,7 +158,13 @@ class TestRetryExhaustion:
         # Use impossible timeout to force retries and eventual failure
         with pytest.raises(RuntimeError, match="Critical subgoal .* timed out"):
             await _execute_single_subgoal(
-                0, subgoal, failing_agent, context, 0.001, metadata, max_retries=1
+                0,
+                subgoal,
+                failing_agent,
+                context,
+                0.001,
+                metadata,
+                max_retries=1,
             )
 
 
@@ -182,7 +200,7 @@ class TestPartialResults:
                         },
                     ],
                     "sequential": [],
-                }
+                },
             ],
             routing_metadata={},
         )
@@ -234,7 +252,7 @@ class TestMultipleFailures:
                         },
                     ],
                     "sequential": [],
-                }
+                },
             ],
             routing_metadata={},
         )
@@ -309,10 +327,10 @@ class TestQueryTimeout:
                             "subgoal_index": 0,
                             "description": "Task",
                             "is_critical": False,
-                        }
+                        },
                     ],
                     "sequential": [],
-                }
+                },
             ],
             routing_metadata={},
         )
@@ -344,10 +362,10 @@ class TestMetadataTracking:
                             "subgoal_index": 0,
                             "description": "Task",
                             "is_critical": False,
-                        }
+                        },
                     ],
                     "sequential": [],
-                }
+                },
             ],
             routing_metadata={},
         )

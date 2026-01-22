@@ -38,7 +38,7 @@ def function_{i}(x, y):
         return y
     else:
         return 0
-"""
+""",
             )
         test_file.write_text("\n".join(lines))
         return test_file
@@ -64,7 +64,7 @@ class Class_{i}:
             if i % 2 == 0:
                 x += i
         return x + y
-"""
+""",
             )
         test_file.write_text("\n".join(lines))
         return test_file
@@ -93,7 +93,7 @@ class LargeClass_{i}:
             else:
                 result.append(0)
         return result
-"""
+""",
             )
         test_file.write_text("\n".join(lines))
         return test_file
@@ -175,7 +175,7 @@ def function_{i}(x):
     if x > 0:
         return x * 2
     return 0
-"""
+""",
             )
         test_file.write_text("\n".join(lines))
 
@@ -210,7 +210,7 @@ class TestParserMemoryUsage:
 def function_{i}():
     return {i}
 """
-                * 10
+                * 10,
             )
             files.append(test_file)
 
@@ -301,7 +301,7 @@ class TestColdStartPerformance:
             """
 def test():
     return 42
-"""
+""",
         )
 
         parser = PythonParser()

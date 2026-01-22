@@ -72,6 +72,7 @@ class GitHubCopilotSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -83,6 +84,7 @@ class GitHubCopilotSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             YAML frontmatter with $ARGUMENTS placeholder
+
         """
         return FRONTMATTER[command_id]
 
@@ -94,6 +96,7 @@ class GitHubCopilotSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -105,6 +108,7 @@ class GitHubCopilotSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             One-line description for skill listings
+
         """
         descriptions = {
             "search": 'Search indexed code ["query" --limit N --type X]',

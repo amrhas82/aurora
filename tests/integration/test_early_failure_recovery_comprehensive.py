@@ -522,7 +522,9 @@ class TestSpawnerSOARIntegration:
 
             # First execution - should fail after 3 attempts
             result1 = await spawn_with_retry_and_fallback(
-                task, policy=policy, fallback_to_llm=False
+                task,
+                policy=policy,
+                fallback_to_llm=False,
             )
             assert not result1.success
             assert attempt_count == 3
@@ -530,7 +532,9 @@ class TestSpawnerSOARIntegration:
             # Second execution - should skip immediately
             attempt_count = 0
             result2 = await spawn_with_retry_and_fallback(
-                task, policy=policy, fallback_to_llm=False
+                task,
+                policy=policy,
+                fallback_to_llm=False,
             )
             assert not result2.success
             assert attempt_count == 0  # Skipped due to circuit breaker
@@ -617,7 +621,10 @@ class TestEndToEndFailureRecovery:
             policy = SpawnPolicy.production()
 
             result = await spawn_with_retry_and_fallback(
-                task, policy=policy, fallback_to_llm=True, max_retries=1
+                task,
+                policy=policy,
+                fallback_to_llm=True,
+                max_retries=1,
             )
 
             # Should fall back to LLM after agent failure
@@ -638,10 +645,9 @@ class TestEndToEndFailureRecovery:
 
             if task.agent == "agent-1":
                 return SpawnResult(success=False, output="", error="Failure", exit_code=1)
-            elif task.agent == "agent-2":
+            if task.agent == "agent-2":
                 return SpawnResult(success=True, output="Success", error=None, exit_code=0)
-            else:
-                return SpawnResult(success=False, output="", error="Unknown agent", exit_code=1)
+            return SpawnResult(success=False, output="", error="Unknown agent", exit_code=1)
 
         import aurora_spawner.spawner
 
@@ -666,7 +672,9 @@ class TestEndToEndFailureRecovery:
             execution_log.clear()
             task2 = SpawnTask(prompt="test", agent="agent-2", timeout=60)
             result2 = await spawn_with_retry_and_fallback(
-                task2, policy=policy, fallback_to_llm=False
+                task2,
+                policy=policy,
+                fallback_to_llm=False,
             )
             assert result2.success
             assert len(execution_log) == 1  # Only one attempt needed

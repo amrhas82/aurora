@@ -252,7 +252,10 @@ class TestCostBudgetIntegration:
 
         # Track costs for Opus (expensive)
         opus_cost = orchestrator.cost_tracker.record_cost(
-            model="claude-opus-4-20250514", input_tokens=1000, output_tokens=500, operation="test"
+            model="claude-opus-4-20250514",
+            input_tokens=1000,
+            output_tokens=500,
+            operation="test",
         )
 
         # Opus should be significantly more expensive than Haiku
@@ -303,7 +306,9 @@ class TestBudgetEnforcementScenarios:
 
         # Try one expensive Opus query
         cost = tracker.estimate_cost(
-            model="claude-opus-4-20250514", prompt_length=10000, max_output_tokens=4096
+            model="claude-opus-4-20250514",
+            prompt_length=10000,
+            max_output_tokens=4096,
         )
 
         # Should exceed budget

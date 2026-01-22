@@ -380,27 +380,27 @@ aur mem search "test query" --limit 10
     - verify: `pytest tests/performance/test_cache_performance.py::test_cache_memory_overhead -v`
     - **Details**: Create 10 retrievers + 100 cached embeddings, measure memory usage via tracemalloc, verify <50MB
     - **PRD Ref**: NFR1.3, Section 8.3 PT1
-  - [ ] 6.4 Run benchmark: Cold search performance
+  - [x] 6.4 Run benchmark: Cold search performance
     - tdd: no
     - verify: Save output to `/tmp/epic1-cold-after.txt`, compare to baseline
     - **Details**: Run `make benchmark-soar`, verify cold search time improved from 15-19s to 10-12s (30-40% improvement)
     - **PRD Ref**: G1, Section 9.1
-  - [ ] 6.5 Run benchmark: Warm search performance
+  - [x] 6.5 Run benchmark: Warm search performance
     - tdd: no
     - verify: Save output to `/tmp/epic1-warm-after.txt`, compare to baseline
     - **Details**: Run `aur mem search "test query" --limit 10` twice, verify second run improved from 4-5s to 2-3s (40-50% improvement)
     - **PRD Ref**: G2, Section 9.1
-  - [ ] 6.6 Verify: HybridRetriever cache hit rate ≥60%
+  - [x] 6.6 Verify: HybridRetriever cache hit rate ≥60%
     - tdd: no
     - verify: Parse cache stats from logs or API, verify ≥60% hit rate in typical usage
     - **Details**: Run 10 searches with 4 unique queries, verify 6/10 cache hits (60%)
     - **PRD Ref**: G3, Section 9.2
-  - [ ] 6.7 Verify: ActivationEngine cache hit rate ≥80%
+  - [x] 6.7 Verify: ActivationEngine cache hit rate ≥80%
     - tdd: no
     - verify: Parse cache stats from logs or API, verify ≥80% hit rate in typical usage
     - **Details**: Run 10 searches with same db_path, verify 9/10 cache hits (90% > 80% target)
     - **PRD Ref**: G4, Section 9.2
-  - [ ] 6.8 Verify: BM25 index load time <100ms
+  - [x] 6.8 Verify: BM25 index load time <100ms
     - tdd: no
     - verify: Parse logs for "Loaded BM25 index" timing, verify <100ms (98% improvement from 9.7s)
     - **Details**: Measure time between HybridRetriever init and first search, verify BM25 load <100ms
@@ -437,32 +437,32 @@ aur mem search "test query" --limit 10
     - **Location**: `/home/hamr/PycharmProjects/aurora/CLAUDE.md` (Memory System section)
 
 - [ ] 8.0 Final Validation and Cleanup
-  - [ ] 8.1 Run full test suite
+  - [x] 8.1 Run full test suite
     - tdd: no
     - verify: `make test-unit && make test-integration`
     - **Details**: Verify all unit and integration tests pass (existing + new tests)
     - **PRD Ref**: Section 14.2
-  - [ ] 8.2 Run code quality checks
+  - [x] 8.2 Run code quality checks
     - tdd: no
     - verify: `make quality-check`
     - **Details**: Run lint, type-check, ensure no regressions
     - **PRD Ref**: Section 14.3
-  - [ ] 8.3 Compare before/after benchmarks
+  - [x] 8.3 Compare before/after benchmarks
     - tdd: no
     - verify: `diff /tmp/baseline-epic1-cold.txt /tmp/epic1-cold-after.txt`
     - **Details**: Generate comparison report showing 30-40% cold search improvement, 40-50% warm search improvement
     - **PRD Ref**: Section 9.1, Section 14.3
-  - [ ] 8.4 Verify all success metrics met
+  - [x] 8.4 Verify all success metrics met
     - tdd: no
     - verify: Review checklist in Section 9 of PRD
     - **Details**: Cold search 10-12s (✓), warm search 2-3s (✓), HybridRetriever cache hit ≥60% (✓), ActivationEngine cache hit ≥80% (✓), BM25 load <100ms (✓)
     - **PRD Ref**: Section 9 Success Metrics
-  - [ ] 8.5 Verify backward compatibility
+  - [x] 8.5 Verify backward compatibility
     - tdd: no
     - verify: Run existing test suite without modifications, verify no failures
     - **Details**: Ensure no breaking changes to public APIs, search results identical (equivalence tests pass)
     - **PRD Ref**: Section 6.1 PC2, Section 6.1 PC3
-  - [ ] 8.6 Create performance comparison report
+  - [x] 8.6 Create performance comparison report
     - tdd: no
     - verify: Save report to `/home/hamr/PycharmProjects/aurora/tasks/aur-mem-search/EPIC1_PERFORMANCE_REPORT.md`
     - **Details**: Document baseline vs after for cold/warm searches, cache hit rates, memory overhead

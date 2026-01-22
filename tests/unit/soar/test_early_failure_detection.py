@@ -6,12 +6,12 @@ to prevent waiting for full timeouts before detecting failures.
 
 import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from aurora_soar.phases.collect import AgentOutput, CollectResult, execute_agents
-from aurora_spawner import SpawnResult, SpawnTask
+from aurora_spawner import SpawnResult
 from aurora_spawner.timeout_policy import (
     RetryStrategy,
     SpawnPolicy,
@@ -30,7 +30,10 @@ class TestEarlyTerminationDetection:
         stderr = "Error: rate limit exceeded (429 Too Many Requests)"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr=stderr,
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert should_term
@@ -42,7 +45,10 @@ class TestEarlyTerminationDetection:
         stderr = "Authentication failed: Invalid API key"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=2.0, last_activity=0.5
+            stdout="",
+            stderr=stderr,
+            elapsed=2.0,
+            last_activity=0.5,
         )
 
         assert should_term
@@ -54,7 +60,10 @@ class TestEarlyTerminationDetection:
         stderr = "Error: ECONNRESET - connection reset by peer"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=1.0, last_activity=0.2
+            stdout="",
+            stderr=stderr,
+            elapsed=1.0,
+            last_activity=0.2,
         )
 
         assert should_term
@@ -66,7 +75,10 @@ class TestEarlyTerminationDetection:
         stderr = "API error: Service unavailable"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=3.0, last_activity=0.8
+            stdout="",
+            stderr=stderr,
+            elapsed=3.0,
+            last_activity=0.8,
         )
 
         assert should_term
@@ -78,7 +90,10 @@ class TestEarlyTerminationDetection:
         stderr = "Warning: Cache miss, fetching from source\nInfo: Processing chunk 3/10"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr=stderr,
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert not should_term
@@ -94,7 +109,10 @@ class TestEarlyTerminationDetection:
         stderr = "Fatal error: Out of memory (OOM)"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=2.0, last_activity=0.5
+            stdout="",
+            stderr=stderr,
+            elapsed=2.0,
+            last_activity=0.5,
         )
 
         assert should_term
@@ -106,7 +124,10 @@ class TestEarlyTerminationDetection:
         stderr = "Error: rate limit exceeded"
 
         should_term, reason = policy.should_terminate(
-            stdout="", stderr=stderr, elapsed=5.0, last_activity=1.0
+            stdout="",
+            stderr=stderr,
+            elapsed=5.0,
+            last_activity=1.0,
         )
 
         assert not should_term
@@ -128,7 +149,9 @@ class TestProgressiveTimeoutDetection:
         # Activity within threshold - should extend
         current_timeout = 60.0
         should_extend = policy.should_extend(
-            elapsed=55.0, last_activity=5.0, current_timeout=current_timeout
+            elapsed=55.0,
+            last_activity=5.0,
+            current_timeout=current_timeout,
         )
 
         assert should_extend
@@ -148,7 +171,9 @@ class TestProgressiveTimeoutDetection:
         # No activity beyond threshold - shouldn't extend
         current_timeout = 60.0
         should_extend = policy.should_extend(
-            elapsed=55.0, last_activity=25.0, current_timeout=current_timeout
+            elapsed=55.0,
+            last_activity=25.0,
+            current_timeout=current_timeout,
         )
 
         assert not should_extend
@@ -164,7 +189,9 @@ class TestProgressiveTimeoutDetection:
 
         # Already at max - shouldn't extend
         should_extend = policy.should_extend(
-            elapsed=115.0, last_activity=5.0, current_timeout=120.0
+            elapsed=115.0,
+            last_activity=5.0,
+            current_timeout=120.0,
         )
 
         assert not should_extend
@@ -172,7 +199,9 @@ class TestProgressiveTimeoutDetection:
     def test_progressive_timeout_early_detection_vs_fixed(self):
         """Progressive timeout detects failures earlier than fixed timeout."""
         progressive = TimeoutPolicy(
-            mode=TimeoutMode.PROGRESSIVE, initial_timeout=30.0, no_activity_timeout=15.0
+            mode=TimeoutMode.PROGRESSIVE,
+            initial_timeout=30.0,
+            no_activity_timeout=15.0,
         )
 
         fixed = TimeoutPolicy(mode=TimeoutMode.FIXED, timeout=120.0)
@@ -404,7 +433,9 @@ class TestFailurePatternAnalysis:
         )
 
         collect_result = CollectResult(
-            agent_outputs=[timeout_output], execution_metadata={}, fallback_agents=[]
+            agent_outputs=[timeout_output],
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         # Mock orchestrator
@@ -438,7 +469,9 @@ class TestFailurePatternAnalysis:
         )
 
         collect_result = CollectResult(
-            agent_outputs=[rate_limit_output], execution_metadata={}, fallback_agents=[]
+            agent_outputs=[rate_limit_output],
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         mock_store = MagicMock()
@@ -471,7 +504,9 @@ class TestFailurePatternAnalysis:
         )
 
         collect_result = CollectResult(
-            agent_outputs=[auth_output], execution_metadata={}, fallback_agents=[]
+            agent_outputs=[auth_output],
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         mock_store = MagicMock()
@@ -504,7 +539,9 @@ class TestFailurePatternAnalysis:
         )
 
         collect_result = CollectResult(
-            agent_outputs=[early_term_output], execution_metadata={}, fallback_agents=[]
+            agent_outputs=[early_term_output],
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         mock_store = MagicMock()

@@ -40,6 +40,7 @@ class ProgressUI:
 
         Args:
             console: Rich console instance (creates default if None)
+
         """
         self.console = console or Console()
         self.agents: dict[str, AgentStatus] = {}
@@ -54,6 +55,7 @@ class ProgressUI:
 
         Returns:
             (icon, color) tuple
+
         """
         icons = {
             "idle": ("⏸", "dim"),
@@ -75,6 +77,7 @@ class ProgressUI:
 
         Returns:
             Formatted string (e.g., "2m 30s")
+
         """
         if seconds < 60:
             return f"{seconds:.1f}s"
@@ -87,6 +90,7 @@ class ProgressUI:
 
         Returns:
             Rich Table object
+
         """
         table = Table(title="Agent Execution Monitor", expand=True)
         table.add_column("Agent", style="cyan", no_wrap=True)
@@ -131,6 +135,7 @@ class ProgressUI:
 
         Args:
             event: Heartbeat event to process
+
         """
         agent_id = event.agent_id or "llm"
 
@@ -175,6 +180,7 @@ class ProgressUI:
         Args:
             emitter: Heartbeat emitter to monitor
             poll_interval: Seconds between display updates
+
         """
         self._running = True
 
@@ -199,6 +205,7 @@ class ProgressUI:
 
         Returns:
             Dictionary with counts and timing
+
         """
         total = len(self.agents)
         completed = sum(1 for a in self.agents.values() if a.state == "completed")
@@ -223,6 +230,7 @@ class MultiAgentProgressUI:
 
         Args:
             console: Rich console instance
+
         """
         self.console = console or Console()
         self.emitters: dict[str, HeartbeatEmitter] = {}
@@ -236,6 +244,7 @@ class MultiAgentProgressUI:
         Args:
             task_id: Unique task identifier
             emitter: Heartbeat emitter to monitor
+
         """
         self.emitters[task_id] = emitter
         # Subscribe to events
@@ -247,6 +256,7 @@ class MultiAgentProgressUI:
         Args:
             task_id: Task identifier
             event: Heartbeat event
+
         """
         agent_id = event.agent_id or "llm"
         key = f"{task_id}:{agent_id}"
@@ -280,6 +290,7 @@ class MultiAgentProgressUI:
 
         Returns:
             Rich Table object
+
         """
         table = Table(title="Multi-Agent Execution Monitor", expand=True)
         table.add_column("Task ID", style="dim")
@@ -323,6 +334,7 @@ class MultiAgentProgressUI:
 
         Args:
             poll_interval: Seconds between display updates
+
         """
         self._running = True
 

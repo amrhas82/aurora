@@ -60,6 +60,7 @@ def get_default_plans_path() -> Path:
 
     Returns:
         Path to ./.aurora/plans (project-local)
+
     """
     return Path.cwd() / ".aurora" / "plans"
 
@@ -82,6 +83,7 @@ def validate_plan_structure(plan_dir: Path, plan_id: str) -> tuple[list[str], li
         >>> errors, warnings = validate_plan_structure(Path("/path/to/plan"), "0001-test")
         >>> if errors:
         ...     print("Validation failed:", errors)
+
     """
     errors: list[str] = []
     warnings: list[str] = []
@@ -123,7 +125,7 @@ def validate_plan_structure(plan_dir: Path, plan_id: str) -> tuple[list[str], li
             if plan.plan_id != plan_id and not plan_id.startswith(plan.plan_id):
                 errors.append(
                     f"Plan ID mismatch: agents.json has '{plan.plan_id}' "
-                    f"but directory is '{plan_id}'"
+                    f"but directory is '{plan_id}'",
                 )
 
         except Exception as e:
@@ -155,6 +157,7 @@ def init_planning_directory(
         >>> result = init_planning_directory()
         >>> if result.success:
         ...     print(f"Initialized at {result.path}")
+
     """
     target = path or get_default_plans_path()
     target = Path(target).expanduser().resolve()
@@ -235,6 +238,7 @@ def _get_plans_dir(config: Config | None = None) -> Path:
 
     Returns:
         Path to plans directory
+
     """
     if config is not None and hasattr(config, "get_plans_path"):
         return Path(config.get_plans_path()).expanduser().resolve()
@@ -249,6 +253,7 @@ def _load_manifest(plans_dir: Path) -> PlanManifest:
 
     Returns:
         PlanManifest instance (new if not found)
+
     """
     manifest_path = plans_dir / "manifest.json"
     if manifest_path.exists():
@@ -265,6 +270,7 @@ def _save_manifest(plans_dir: Path, manifest: PlanManifest) -> None:
     Args:
         plans_dir: Path to plans directory
         manifest: Manifest to save
+
     """
     manifest_path = plans_dir / "manifest.json"
     manifest.updated_at = datetime.utcnow()
@@ -284,6 +290,7 @@ def _update_manifest(
         plan_id: Plan ID being modified
         action: Action type ("active", "archive", "remove")
         archived_id: New ID after archiving (for archive action)
+
     """
     manifest = _load_manifest(plans_dir)
 
@@ -310,6 +317,7 @@ def rebuild_manifest(plans_dir: Path) -> PlanManifest:
 
     Returns:
         Newly rebuilt PlanManifest
+
     """
     manifest = PlanManifest()
 
@@ -344,6 +352,7 @@ def _get_existing_plan_ids(plans_dir: Path) -> list[str]:
 
     Returns:
         List of plan ID strings
+
     """
     ids = []
     active_dir = plans_dir / "active"
@@ -376,6 +385,7 @@ def list_plans(
 
     Returns:
         ListResult with plan summaries or warning/errors
+
     """
     plans_dir = _get_plans_dir(config)
 
@@ -473,6 +483,7 @@ def show_plan(
 
     Returns:
         ShowResult with plan details or error message
+
     """
     plans_dir = _get_plans_dir(config)
 
@@ -573,6 +584,7 @@ def archive_plan(
 
     Returns:
         ArchiveResult with archive details or error message
+
     """
     plans_dir = _get_plans_dir(config)
     active_dir = plans_dir / "active"
@@ -675,6 +687,7 @@ def _generate_plan_id(goal: str, plans_dir: Path) -> str:
 
     Returns:
         Unique plan ID string
+
     """
     existing_ids = _get_existing_plan_ids(plans_dir)
 
@@ -764,6 +777,7 @@ def _validate_goal(goal: str) -> tuple[bool, str | None]:
 
     Returns:
         Tuple of (is_valid, error_message)
+
     """
     if len(goal) < 10:
         return False, VALIDATION_MESSAGES["GOAL_TOO_SHORT"]
@@ -781,6 +795,7 @@ def _assess_complexity(goal: str, subgoals: list[Subgoal]) -> Complexity:
 
     Returns:
         Complexity enum value
+
     """
     # Heuristic: count dependencies and keywords
     total_deps = sum(len(sg.dependencies) for sg in subgoals)
@@ -789,10 +804,9 @@ def _assess_complexity(goal: str, subgoals: list[Subgoal]) -> Complexity:
 
     if len(subgoals) >= 5 or total_deps >= 5 or has_complex_keyword:
         return Complexity.COMPLEX
-    elif len(subgoals) >= 3 or total_deps >= 2:
+    if len(subgoals) >= 3 or total_deps >= 2:
         return Complexity.MODERATE
-    else:
-        return Complexity.SIMPLE
+    return Complexity.SIMPLE
 
 
 def _check_agent_availability(agent: str) -> bool:
@@ -803,6 +817,7 @@ def _check_agent_availability(agent: str) -> bool:
 
     Returns:
         True if agent exists, False otherwise
+
     """
     try:
         # Try to load agent manifest
@@ -859,6 +874,7 @@ def _write_goals_only(
 
     Raises:
         OSError: If directory creation or file write fails
+
     """
     # Create directory
     plan_dir.mkdir(parents=True, exist_ok=True)
@@ -909,6 +925,7 @@ def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
 
     Raises:
         OSError: If file write or move fails
+
     """
     # Use atomic file generation with templates
     if USE_TEMPLATES:
@@ -925,7 +942,9 @@ def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
             # Render all files to temp directory
             created_files = render_plan_files(plan, temp_dir)
             logger.debug(
-                "Generated %d files using templates for plan %s", len(created_files), plan.plan_id
+                "Generated %d files using templates for plan %s",
+                len(created_files),
+                plan.plan_id,
             )
 
             # Validate all files were created and have content
@@ -997,6 +1016,7 @@ def _generate_plan_md(plan: Plan) -> str:
 
     Returns:
         Markdown content string
+
     """
     lines = [
         f"# Plan: {plan.plan_id}",
@@ -1042,6 +1062,7 @@ def _generate_prd_md(plan: Plan) -> str:
 
     Returns:
         Markdown content string
+
     """
     return f"""# Product Requirements: {plan.plan_id}
 
@@ -1078,6 +1099,7 @@ def _generate_tasks_md(plan: Plan) -> str:
 
     Returns:
         Markdown content string
+
     """
     lines = [
         f"# Tasks: {plan.plan_id}",
@@ -1129,6 +1151,7 @@ def generate_goals_json(
         >>> memory = [("src/api.py", 0.85)]
         >>> goals = generate_goals_json("0001-test", "Test goal", subgoals, memory, [])
         >>> print(goals.model_dump_json(indent=2))
+
     """
     from aurora_cli.planning.models import Goals, MemoryContext, SubgoalData
 
@@ -1168,7 +1191,7 @@ def generate_goals_json(
                 agent=sg.assigned_agent,
                 match_quality=match_quality,
                 dependencies=clean_deps,
-            )
+            ),
         )
 
     # Create Goals object
@@ -1211,8 +1234,8 @@ def _decompose_with_soar(
         - file_resolutions: Dict mapping subgoal_id to resolved files
         - decomposition_source: String indicating source ("soar_llm")
         - memory_context: List of (file_path, score) tuples
+
     """
-    from typing import Any
 
     from rich.console import Console
 
@@ -1254,7 +1277,7 @@ def _decompose_with_soar(
             else:
                 tool = getattr(config, "soar_default_tool", "claude") if config else "claude"
                 console.print(
-                    f"\n[green][LLM -> {tool}][/] Phase {phase_num}: {phase_name.title()}"
+                    f"\n[green][LLM -> {tool}][/] Phase {phase_num}: {phase_name.title()}",
                 )
             console.print(f"  {description}")
         else:  # status == "after"
@@ -1294,7 +1317,7 @@ def _decompose_with_soar(
                 description=agent.goal or "",
                 capabilities=agent.skills or [],
                 agent_type="local",
-            )
+            ),
         )
     logger.info(f"Discovered {len(manifest.agents)} agents for decomposition")
 
@@ -1352,7 +1375,8 @@ def _decompose_with_soar(
 
         # Get match quality from detailed info
         match_quality = sg_detail.get(
-            "match_quality", agent_info.get("match_quality", "acceptable")
+            "match_quality",
+            agent_info.get("match_quality", "acceptable"),
         )
 
         # Get agent names directly - Pydantic coerces to @-prefixed format
@@ -1370,7 +1394,8 @@ def _decompose_with_soar(
             dependencies=dependencies,
             ideal_agent=ideal_agent,
             ideal_agent_desc=sg_detail.get(
-                "ideal_agent_desc", agent_info.get("ideal_agent_desc", "")
+                "ideal_agent_desc",
+                agent_info.get("ideal_agent_desc", ""),
             ),
             match_quality=match_quality,
         )
@@ -1420,6 +1445,7 @@ def create_plan(
         >>> result = create_plan("Implement OAuth2 authentication", goals_only=True)
         >>> if result.success:
         ...     print(f"Created plan: {result.plan.plan_id}")
+
     """
     plans_dir = _get_plans_dir(config)
 
@@ -1498,7 +1524,7 @@ def create_plan(
                 title="Implement goal",
                 description=goal,
                 assigned_agent="@code-developer",
-            )
+            ),
         ]
         file_resolutions = {}
         decomposition_source = "heuristic"
@@ -1548,7 +1574,7 @@ def create_plan(
                     ideal_agent=ideal,
                     ideal_agent_desc=sg.ideal_agent_desc or "",
                     assigned_agent=assigned,
-                )
+                ),
             )
         else:
             agents_assigned += 1
@@ -1611,15 +1637,17 @@ def create_plan(
                     "description": f"{sg.title}: {sg.description}",
                     "agent_id": sg.assigned_agent,
                     "goal": sg.title,
-                }
+                },
             )
 
             # Add to gaps if mismatch between ideal and assigned
             if sg.ideal_agent and sg.ideal_agent != sg.assigned_agent:
                 review_agent_gaps.append(
                     ReviewAgentGap(
-                        subgoal_index=i, description=sg.title, required_agent=sg.ideal_agent
-                    )
+                        subgoal_index=i,
+                        description=sg.title,
+                        required_agent=sg.ideal_agent,
+                    ),
                 )
 
         # Show review UI
@@ -1738,6 +1766,7 @@ def _decompose_goal_soar(
 
     Returns:
         List of Subgoal objects
+
     """
     subgoals = []
     goal_lower = goal.lower()
@@ -1973,6 +2002,7 @@ async def decompose_goal(
         >>> subgoals = await decompose_goal("Add OAuth2", context, client)
         >>> len(subgoals)
         4
+
     """
     # Build context section
     context_section = ""

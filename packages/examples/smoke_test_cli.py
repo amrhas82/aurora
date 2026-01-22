@@ -54,7 +54,9 @@ def print_warning(msg: str) -> None:
 
 
 def run_cli_command(
-    args: list[str], env: dict[str, str] | None = None, input_text: str | None = None
+    args: list[str],
+    env: dict[str, str] | None = None,
+    input_text: str | None = None,
 ) -> tuple[int, str, str]:
     """Run CLI command and return exit code, stdout, stderr.
 
@@ -65,6 +67,7 @@ def run_cli_command(
 
     Returns:
         Tuple of (exit_code, stdout, stderr)
+
     """
     # Merge environment variables
     cmd_env = os.environ.copy()
@@ -141,7 +144,7 @@ class TestClass:
     def get_value(self):
         '''Get the value attribute.'''
         return self.value
-"""
+""",
     )
     files.append(file1)
 
@@ -156,7 +159,7 @@ def utility_function(x: int, y: int) -> int:
 def helper_function(name: str) -> str:
     '''Return a greeting message.'''
     return f"Hello, {name}!"
-"""
+""",
     )
     files.append(file2)
 
@@ -182,7 +185,7 @@ Test the headless mode configuration and validation.
 
 ## Context
 This is a smoke test to validate headless mode setup.
-"""
+""",
     )
     return prompt_file
 
@@ -263,9 +266,8 @@ def test_init_command_with_config() -> bool:
                 if "version" in config_data and "llm" in config_data:
                     print_success("Config file has valid structure")
                     return True
-                else:
-                    print_warning("Config file missing expected fields")
-                    return True  # Still pass - config was created
+                print_warning("Config file missing expected fields")
+                return True  # Still pass - config was created
             except json.JSONDecodeError:
                 print_warning("Config file is not valid JSON")
                 return True  # Still pass - config was created
@@ -375,12 +377,10 @@ def test_query_command() -> bool:
             if "API" in combined_output or "key" in combined_output.lower():
                 print_success("Query command fails gracefully with helpful error")
                 return True
-            else:
-                print_warning("Query command failed (expected without real API key)")
-                return True
-        else:
-            print_success("Query command executed successfully")
+            print_warning("Query command failed (expected without real API key)")
             return True
+        print_success("Query command executed successfully")
+        return True
 
 
 def test_headless_dry_run() -> bool:
@@ -412,13 +412,11 @@ def test_headless_dry_run() -> bool:
             if "Configuration valid" in stdout or "Dry run" in stdout:
                 print_success("Headless dry-run validates configuration")
                 return True
-            else:
-                print_warning("Dry-run succeeded but output unexpected")
-                return True
-        else:
-            print_warning(f"Dry-run failed with exit code {exit_code}")
-            print_warning("This may be expected if headless dependencies are missing")
+            print_warning("Dry-run succeeded but output unexpected")
             return True
+        print_warning(f"Dry-run failed with exit code {exit_code}")
+        print_warning("This may be expected if headless dependencies are missing")
+        return True
 
 
 def test_headless_flag_syntax() -> bool:
@@ -449,9 +447,8 @@ def test_headless_flag_syntax() -> bool:
         if exit_code in [0, 1]:
             print_success("Headless flag syntax accepted")
             return True
-        else:
-            print_warning(f"Headless flag failed with exit code {exit_code}")
-            return True
+        print_warning(f"Headless flag failed with exit code {exit_code}")
+        return True
 
 
 def test_verify_command() -> bool:
@@ -469,9 +466,8 @@ def test_verify_command() -> bool:
         else:
             print_warning("Installation has critical issues (check output)")
         return True
-    else:
-        print_warning(f"Verify command had unexpected exit code {exit_code}")
-        return True
+    print_warning(f"Verify command had unexpected exit code {exit_code}")
+    return True
 
 
 def test_error_conditions() -> bool:
@@ -480,7 +476,7 @@ def test_error_conditions() -> bool:
 
     # Test 1: Non-existent file
     exit_code, stdout, stderr = run_cli_command(
-        ["aur", "headless", "/nonexistent/file.md", "--dry-run"]
+        ["aur", "headless", "/nonexistent/file.md", "--dry-run"],
     )
 
     if exit_code != 0:
@@ -523,9 +519,8 @@ def test_memory_help() -> bool:
     if "Examples:" in stdout or "example" in stdout.lower():
         print_success("Memory help includes examples")
         return True
-    else:
-        print_warning("Memory help text may be missing examples")
-        return True
+    print_warning("Memory help text may be missing examples")
+    return True
 
 
 def test_init_help() -> bool:
@@ -542,9 +537,8 @@ def test_init_help() -> bool:
     if "Examples:" in stdout or "example" in stdout.lower():
         print_success("Init help includes examples")
         return True
-    else:
-        print_warning("Init help text may be missing examples")
-        return True
+    print_warning("Init help text may be missing examples")
+    return True
 
 
 def run_smoke_tests() -> bool:
@@ -552,6 +546,7 @@ def run_smoke_tests() -> bool:
 
     Returns:
         True if all tests pass, False otherwise
+
     """
     print("\n" + "=" * 70)
     print("AURORA CLI Smoke Test Suite")
@@ -603,9 +598,8 @@ def run_smoke_tests() -> bool:
     if passed == total:
         print(f"\n{GREEN}✓ All CLI smoke tests passed!{RESET}\n")
         return True
-    else:
-        print(f"\n{RED}✗ Some CLI smoke tests failed{RESET}\n")
-        return False
+    print(f"\n{RED}✗ Some CLI smoke tests failed{RESET}\n")
+    return False
 
 
 def main():

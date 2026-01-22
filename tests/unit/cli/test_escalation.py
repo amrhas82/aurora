@@ -415,7 +415,7 @@ class TestEscalationIntegration:
         handler = AutoEscalationHandler()
         result = handler.assess_query(
             "Design and implement a distributed microservices architecture "
-            "with service discovery and load balancing"
+            "with service discovery and load balancing",
         )
 
         # Should have reasonable assessment (keyword classifier may be conservative)

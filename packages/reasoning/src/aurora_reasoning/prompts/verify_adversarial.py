@@ -85,6 +85,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             User prompt string
+
         """
         query = kwargs.get("query", "")
         decomposition = kwargs.get("decomposition", {})
@@ -104,7 +105,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         prompt_parts.append(
             "\n⚠️ RED TEAM MODE: Find all flaws, edge cases, and potential failures."
-            "\nBe critical and thorough. Provide verification results in JSON format."
+            "\nBe critical and thorough. Provide verification results in JSON format.",
         )
 
         return "\n".join(prompt_parts)
@@ -117,6 +118,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             Formatted example string
+
         """
         return f"""Query: {example["query"]}
 Decomposition: {json.dumps(example.get("decomposition", {}), indent=2)}

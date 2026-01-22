@@ -116,7 +116,7 @@ class AuthManager:
     def user_exists(self, username: str) -> bool:
         """Check if a user exists."""
         return username in self.users
-'''
+''',
         )
 
         # Create tests directory
@@ -151,7 +151,7 @@ def test_authenticate_failure():
     auth.create_user("charlie", "pass789")
     user = auth.authenticate("charlie", "wrongpass")
     assert user is None
-'''
+''',
         )
 
         # Create README
@@ -164,7 +164,7 @@ A sample authentication system for testing AURORA CLI.
 - User management
 - Password hashing
 - Authentication logic
-"""
+""",
         )
 
         # Git commit all files
@@ -288,7 +288,6 @@ class TestCompleteCLIWorkflow:
         # Step 3: Query with mocked LLM response
         # This would require mocking the LLM client in the query command
         # Deferred to future enhancement when we have better LLM mocking infrastructure
-        pass
 
     def test_e2e_cli_stats_after_indexing(self, isolated_aurora_env):
         """Test that stats command works after indexing."""
@@ -382,7 +381,7 @@ class TestNewUserSetupWorkflow:
                     del os.environ["AURORA_HOME"]
 
     @pytest.mark.skip(
-        reason="Requires tree-sitter Python parser to be built - covered by subprocess test"
+        reason="Requires tree-sitter Python parser to be built - covered by subprocess test",
     )
     def test_e2e_new_user_direct_api_workflow(self, temp_cli_project):
         """Test new user workflow using direct API calls (coverage contribution).
@@ -461,7 +460,7 @@ class TestMultiDirectoryIndexing:
 def authenticate_user(username: str, password: str) -> bool:
     """Authenticate user credentials."""
     return True
-'''
+''',
             )
 
             # Project 2: Database service
@@ -472,7 +471,7 @@ def authenticate_user(username: str, password: str) -> bool:
 def connect_to_database(host: str, port: int) -> object:
     """Connect to database."""
     return object()
-'''
+''',
             )
 
             # Project 3: API service
@@ -483,7 +482,7 @@ def connect_to_database(host: str, port: int) -> object:
 def handle_request(request: dict) -> dict:
     """Handle API request."""
     return {"status": "ok"}
-'''
+''',
             )
 
             aurora_home = base_path / ".aurora"
@@ -743,7 +742,7 @@ class Class_{i}:
     def method_{i}(self):
         """Method in class {i}."""
         return {i}
-'''
+''',
                 )
 
             yield project_path
@@ -829,7 +828,6 @@ class TestQueryEscalationWorkflow:
         # 3. Real query executor with escalation logic
 
         # Deferred to future work when we have better LLM mocking infrastructure
-        pass
 
     def test_e2e_escalation_decision_logic(self):
         """Test escalation decision logic without full pipeline."""

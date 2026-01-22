@@ -31,6 +31,7 @@ def temp_db() -> SQLiteStore:
 
     Returns:
         SQLiteStore instance with temporary database
+
     """
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = Path(tmp.name)
@@ -54,6 +55,7 @@ def populated_store(temp_db: SQLiteStore) -> SQLiteStore:
 
     Returns:
         Store populated with test chunks
+
     """
     # Add test chunks as CodeChunk objects
     test_chunks = [
@@ -197,7 +199,7 @@ class TestQueryExecutorWithRealStore:
             {
                 "content": "class DataProcessor:\n    def process(self): pass",
                 "metadata": {"file_path": "/test/processor.py"},
-            }
+            },
         ]
         populated_store.search_keyword = Mock(return_value=mock_search_results)
 

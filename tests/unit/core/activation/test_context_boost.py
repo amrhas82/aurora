@@ -32,7 +32,10 @@ class TestContextBoostConfig:
     def test_custom_config(self):
         """Test custom configuration values."""
         config = ContextBoostConfig(
-            boost_factor=1.0, min_keyword_length=2, case_sensitive=True, stemming_enabled=True
+            boost_factor=1.0,
+            min_keyword_length=2,
+            case_sensitive=True,
+            stemming_enabled=True,
         )
         assert config.boost_factor == 1.0
         assert config.min_keyword_length == 2
@@ -314,7 +317,9 @@ class TestCalculateFromChunkFields:
         docstring = "Optimize database queries for performance"
 
         score = boost.calculate_from_chunk_fields(
-            query_text=query_text, chunk_name=chunk_name, chunk_docstring=docstring
+            query_text=query_text,
+            chunk_name=chunk_name,
+            chunk_docstring=docstring,
         )
 
         # Should find matches in docstring
@@ -432,7 +437,8 @@ class TestCalculateContextBoostFunction:
     def test_calculate_with_defaults(self):
         """Test standalone function with default parameters."""
         score = calculate_context_boost(
-            query_text="database query", chunk_text="database connection and query execution"
+            query_text="database query",
+            chunk_text="database connection and query execution",
         )
 
         assert score > 0.0
@@ -441,7 +447,9 @@ class TestCalculateContextBoostFunction:
     def test_calculate_with_custom_boost_factor(self):
         """Test standalone function with custom boost factor."""
         score = calculate_context_boost(
-            query_text="database query", chunk_text="database query", boost_factor=1.0
+            query_text="database query",
+            chunk_text="database query",
+            boost_factor=1.0,
         )
 
         # Perfect match with boost_factor=1.0 should give 1.0
@@ -520,14 +528,18 @@ class TestRealWorldScenarios:
         relevant_name = "validate_user_input"
         relevant_doc = "Validate user input for security"
         relevant_score = boost.calculate_from_chunk_fields(
-            query_text=query_text, chunk_name=relevant_name, chunk_docstring=relevant_doc
+            query_text=query_text,
+            chunk_name=relevant_name,
+            chunk_docstring=relevant_doc,
         )
 
         # Irrelevant function
         irrelevant_name = "database_connect"
         irrelevant_doc = "Connect to database"
         irrelevant_score = boost.calculate_from_chunk_fields(
-            query_text=query_text, chunk_name=irrelevant_name, chunk_docstring=irrelevant_doc
+            query_text=query_text,
+            chunk_name=irrelevant_name,
+            chunk_docstring=irrelevant_doc,
         )
 
         # Relevant should score higher

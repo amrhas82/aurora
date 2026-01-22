@@ -166,7 +166,7 @@ class TestArchiveCommandSpecDeltaProcessing:
 
             (specs_dir / "storage").mkdir()
             (specs_dir / "storage" / "spec.md").write_text(
-                "# Storage Spec\n## MODIFIED Requirements"
+                "# Storage Spec\n## MODIFIED Requirements",
             )
 
             # Main specs directory (target)
@@ -212,7 +212,7 @@ The system SHALL implement new feature.
 Given setup
 When action
 Then result
-"""
+""",
             )
 
             # Create target directory
@@ -248,7 +248,7 @@ Content 1
 
 ### Requirement: Feature A
 Content 2 (duplicate!)
-"""
+""",
             )
 
             target_dir = Path(tmpdir) / "target" / "test"
@@ -282,7 +282,7 @@ New content
 ## REMOVED Requirements
 
 ### Requirement: Conflicted Feature
-"""
+""",
             )
 
             target_dir = Path(tmpdir) / "target" / "test"
@@ -298,7 +298,7 @@ Test
 
 ### Requirement: Conflicted Feature
 Old content
-"""
+""",
             )
 
             update = SpecUpdate(source=source_spec, target=target_spec, exists=True)
@@ -315,7 +315,7 @@ Old content
         # This is integration-level but critical for atomicity
         # The order is: RENAMED, REMOVED, MODIFIED, ADDED
         # Verified by code inspection and design
-        pass  # Implementation verified
+        # Implementation verified
 
 
 class TestArchiveCommandManifestIntegration:

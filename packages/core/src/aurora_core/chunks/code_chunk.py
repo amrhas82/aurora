@@ -30,6 +30,7 @@ class CodeChunk(Chunk):
         dependencies: List of chunk IDs this element depends on
         complexity_score: Cyclomatic complexity normalized to [0.0, 1.0]
         language: Programming language ("python", "typescript", "go", etc.)
+
     """
 
     file_path: str
@@ -78,6 +79,7 @@ class CodeChunk(Chunk):
 
         Raises:
             ValueError: If validation fails
+
         """
         # Initialize base class
         super().__init__(chunk_id=chunk_id, chunk_type="code")
@@ -106,6 +108,7 @@ class CodeChunk(Chunk):
 
         Returns:
             Dictionary in the format expected by the storage layer
+
         """
         # Base metadata
         metadata_dict = {
@@ -155,6 +158,7 @@ class CodeChunk(Chunk):
 
         Raises:
             ValueError: If required fields are missing or invalid
+
         """
         try:
             content = data["content"]
@@ -226,6 +230,7 @@ class CodeChunk(Chunk):
 
         Raises:
             ValueError: If validation fails with descriptive message
+
         """
         # Validate line numbers
         if self.line_start <= 0:
@@ -233,14 +238,14 @@ class CodeChunk(Chunk):
 
         if self.line_end < self.line_start:
             raise ValueError(
-                f"line_end ({self.line_end}) must be >= line_start ({self.line_start})"
+                f"line_end ({self.line_end}) must be >= line_start ({self.line_start})",
             )
 
         # Validate file path is absolute
         if not Path(self.file_path).is_absolute():
             raise ValueError(
                 f"file_path must be absolute, got '{self.file_path}'. "
-                f"Convert relative paths to absolute before creating CodeChunk."
+                f"Convert relative paths to absolute before creating CodeChunk.",
             )
 
         # Validate complexity score range
@@ -251,7 +256,7 @@ class CodeChunk(Chunk):
         valid_types = {"function", "class", "method", "knowledge", "document"}
         if self.element_type not in valid_types:
             raise ValueError(
-                f"element_type must be one of {valid_types}, got '{self.element_type}'"
+                f"element_type must be one of {valid_types}, got '{self.element_type}'",
             )
 
         # Validate name is not empty

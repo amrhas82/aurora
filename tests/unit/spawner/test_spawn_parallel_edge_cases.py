@@ -6,7 +6,7 @@ resource contention in the spawn_parallel function.
 
 import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -291,7 +291,7 @@ class TestProgressCallback:
                     "total": total,
                     "agent_id": agent_id,
                     "status": status,
-                }
+                },
             )
 
         async def mock_spawn(task, **kwargs):

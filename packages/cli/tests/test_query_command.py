@@ -59,7 +59,8 @@ class TestQueryExecutor:
         # Verify
         assert response == "This is a test response"
         mock_client_class.assert_called_once_with(
-            api_key="test-api-key", default_model="claude-sonnet-4-20250514"
+            api_key="test-api-key",
+            default_model="claude-sonnet-4-20250514",
         )
         mock_llm.generate.assert_called_once()
         call_kwargs = mock_llm.generate.call_args[1]
@@ -189,7 +190,11 @@ class TestQueryExecutor:
     @patch("aurora_core.config.loader.Config")
     @patch("aurora_cli.execution.AnthropicClient")
     def test_execute_aurora_basic(
-        self, mock_client_class, mock_config_class, mock_registry_class, mock_orchestrator_class
+        self,
+        mock_client_class,
+        mock_config_class,
+        mock_registry_class,
+        mock_orchestrator_class,
     ):
         """Test basic AURORA execution."""
         # Setup mocks
@@ -228,7 +233,8 @@ class TestQueryExecutor:
         # Verify
         assert response == "This is the AURORA response"
         mock_orchestrator.execute.assert_called_once_with(
-            query="Complex query requiring AURORA", verbosity="NORMAL"
+            query="Complex query requiring AURORA",
+            verbosity="NORMAL",
         )
 
     @patch("aurora_soar.orchestrator.SOAROrchestrator")
@@ -236,7 +242,11 @@ class TestQueryExecutor:
     @patch("aurora_core.config.loader.Config")
     @patch("aurora_cli.execution.AnthropicClient")
     def test_execute_aurora_with_verbose(
-        self, mock_client_class, mock_config_class, mock_registry_class, mock_orchestrator_class
+        self,
+        mock_client_class,
+        mock_config_class,
+        mock_registry_class,
+        mock_orchestrator_class,
     ):
         """Test AURORA execution with verbose mode returns phase trace."""
         # Setup mocks
@@ -285,7 +295,8 @@ class TestQueryExecutor:
         assert "total_cost" in phase_trace
         assert phase_trace["total_cost"] == 0.08
         mock_orchestrator.execute.assert_called_once_with(
-            query="Complex query", verbosity="VERBOSE"
+            query="Complex query",
+            verbosity="VERBOSE",
         )
 
     def test_execute_aurora_empty_query(self):
@@ -321,7 +332,8 @@ class TestQueryExecutor:
         client = executor._initialize_llm_client("test-api-key")
 
         mock_client_class.assert_called_once_with(
-            api_key="test-api-key", default_model="custom-model"
+            api_key="test-api-key",
+            default_model="custom-model",
         )
         assert client == mock_llm
 
@@ -412,7 +424,8 @@ class TestQueryExecutor:
 
         # Test decompose phase
         summary = executor._get_phase_summary(
-            "decompose", {"subgoals": ["goal1", "goal2", "goal3"]}
+            "decompose",
+            {"subgoals": ["goal1", "goal2", "goal3"]},
         )
         assert summary == "Created 3 subgoals"
 

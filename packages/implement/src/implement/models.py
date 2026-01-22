@@ -21,6 +21,7 @@ class ParsedTask:
         agent: Agent to execute task (default: "self" for direct execution)
         model: Model to use for execution (default: None, uses agent's default)
         completed: Whether task is completed (default: False)
+
     """
 
     id: str
@@ -34,6 +35,7 @@ class ParsedTask:
 
         Returns:
             Dictionary with all task fields
+
         """
         return {
             "id": self.id,
@@ -56,6 +58,7 @@ class ParsedTask:
 
         Raises:
             KeyError: If required fields (id, description) are missing
+
         """
         return cls(
             id=data["id"],

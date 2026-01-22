@@ -57,7 +57,7 @@ def add(a: int, b: int) -> int:
 
 if __name__ == "__main__":
     print(hello_world())
-'''
+''',
         )
 
         (project_path / "src" / "utils.py").write_text(
@@ -74,7 +74,7 @@ def divide(a: float, b: float) -> float:
     if b == 0:
         raise ValueError("Cannot divide by zero")
     return a / b
-'''
+''',
         )
 
         # Create a README
@@ -86,7 +86,7 @@ This is a sample project for testing AURORA CLI.
 ## Features
 - Hello world functionality
 - Basic arithmetic operations
-"""
+""",
         )
 
         yield project_path
@@ -160,7 +160,10 @@ class TestCLIMemIndex:
         assert db_path.exists(), "Database file should be created"
 
     def test_index_command_parses_python_files(
-        self, cli_runner, temp_project_dir, temp_aurora_home
+        self,
+        cli_runner,
+        temp_project_dir,
+        temp_aurora_home,
     ):
         """Test that 'aur mem index' correctly parses Python files."""
         # Initialize config first
@@ -197,7 +200,10 @@ class TestCLIMemIndex:
         conn.close()
 
     def test_index_command_handles_empty_directory(
-        self, cli_runner, temp_project_dir, temp_aurora_home
+        self,
+        cli_runner,
+        temp_project_dir,
+        temp_aurora_home,
     ):
         """Test that 'aur mem index' handles empty directories gracefully."""
         empty_dir = temp_project_dir / "empty"
@@ -302,7 +308,6 @@ class TestCLIQuery:
         """Test that 'aur query' respects git safety configuration."""
         # This test would require setting up a git repository
         # and configuring safety checks - deferred to E2E tests
-        pass
 
 
 # ==============================================================================

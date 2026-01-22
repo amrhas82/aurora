@@ -10,17 +10,14 @@ Tests cover:
 
 import asyncio
 import gc
-import sys
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from aurora_cli.concurrent_executor import (
-    AggregatedResult,
     AggregationStrategy,
     ConcurrentToolExecutor,
-    ToolConfig,
     ToolResult,
 )
 from aurora_cli.tool_providers import ToolProviderRegistry
@@ -597,7 +594,10 @@ class TestResourceCleanup:
             async def slow_execute(tool, prompt, cancel_event=None):
                 if tool.name == "claude":
                     return ToolResult(
-                        tool="claude", success=True, output="Quick", execution_time=0.01
+                        tool="claude",
+                        success=True,
+                        output="Quick",
+                        execution_time=0.01,
                     )
                 # Slow tool that should be cancelled
                 await asyncio.sleep(10.0)

@@ -16,6 +16,7 @@ class ToolConfigurator(Protocol):
         name: Human-readable tool name (e.g., "Claude Code")
         config_file_name: Name of config file (e.g., "CLAUDE.md")
         is_available: Whether this tool is available/supported
+
     """
 
     name: str
@@ -32,6 +33,7 @@ class ToolConfigurator(Protocol):
         Args:
             project_path: Root path of the project
             aurora_dir: Name of Aurora directory (e.g., ".aurora")
+
         """
         ...
 
@@ -50,7 +52,6 @@ class BaseConfigurator(ABC):
 
     def __init__(self) -> None:
         """Initialize the configurator."""
-        pass
 
     @property
     @abstractmethod
@@ -81,6 +82,7 @@ class BaseConfigurator(ABC):
 
         Returns:
             Template content to write
+
         """
         ...
 
@@ -94,6 +96,7 @@ class BaseConfigurator(ABC):
         Args:
             project_path: Root path of the project
             aurora_dir: Name of Aurora directory
+
         """
         file_path = project_path / self.config_file_name
         content = await self.get_template_content(aurora_dir)
@@ -122,6 +125,7 @@ class BaseConfigurator(ABC):
             new_content: New content to insert
             start_marker: Start marker string
             end_marker: End marker string
+
         """
         if file_path.exists():
             # Read existing content
@@ -139,11 +143,10 @@ class BaseConfigurator(ABC):
 
                 file_path.write_text(updated, encoding="utf-8")
                 return
-            else:
-                # File exists but no markers - prepend stub to preserve existing content
-                managed_block = f"{start_marker}\n{new_content}\n{end_marker}\n\n"
-                file_path.write_text(managed_block + existing, encoding="utf-8")
-                return
+            # File exists but no markers - prepend stub to preserve existing content
+            managed_block = f"{start_marker}\n{new_content}\n{end_marker}\n\n"
+            file_path.write_text(managed_block + existing, encoding="utf-8")
+            return
 
         # File doesn't exist - write entire content with markers
         managed_block = f"{start_marker}\n{new_content}\n{end_marker}\n"

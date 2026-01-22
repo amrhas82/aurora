@@ -19,6 +19,7 @@ Examples:
 
     # Show verbose output
     aur spawn --verbose
+
 """
 
 from __future__ import annotations
@@ -131,6 +132,7 @@ def spawn_command(
         stagger_delay: Delay between task starts in seconds (default: 5.0)
         policy: Spawn timeout policy preset (default: patient)
         no_fallback: Disable LLM fallback on agent failure
+
     """
     try:
         # Load tasks from file
@@ -168,7 +170,7 @@ def spawn_command(
                         console.print(f"[red]Policy violation:[/] {result.reason}")
                         console.print(f"[red]Task blocked:[/] {task.description}")
                         return
-                    elif result.action == PolicyAction.PROMPT and not yes:
+                    if result.action == PolicyAction.PROMPT and not yes:
                         console.print(f"[yellow]Warning:[/] {result.reason}")
                         console.print(f"[yellow]Task:[/] {task.description}")
                         if not click.confirm("Proceed with this task?"):
@@ -203,7 +205,7 @@ def spawn_command(
             if use_parallel:
                 console.print(
                     f"[cyan]Executing {len(tasks)} tasks in parallel "
-                    f"(max_concurrent={max_concurrent}, policy={policy}, stagger={stagger_delay}s)...[/]"
+                    f"(max_concurrent={max_concurrent}, policy={policy}, stagger={stagger_delay}s)...[/]",
                 )
                 result = asyncio.run(
                     _execute_parallel(
@@ -213,7 +215,7 @@ def spawn_command(
                         stagger_delay=stagger_delay,
                         policy_name=policy,
                         fallback_to_llm=not no_fallback,
-                    )
+                    ),
                 )
             else:
                 console.print("[cyan]Executing tasks sequentially...[/]")
@@ -223,7 +225,7 @@ def spawn_command(
                         verbose,
                         policy_name=policy,
                         fallback_to_llm=not no_fallback,
-                    )
+                    ),
                 )
         except KeyboardInterrupt:
             console.print("\n[yellow]Execution interrupted by user.[/]")
@@ -254,6 +256,7 @@ def load_tasks(file_path: Path) -> list[ParsedTask]:
     Raises:
         FileNotFoundError: If task file doesn't exist
         ValueError: If tasks are malformed
+
     """
     if not file_path.exists():
         raise FileNotFoundError(f"Task file not found: {file_path}")
@@ -269,7 +272,7 @@ def load_tasks(file_path: Path) -> list[ParsedTask]:
     for task in tasks:
         if not task.id or not task.description or not task.description.strip():
             raise ValueError(
-                f"Task missing required fields: task {task.id} has empty or missing description"
+                f"Task missing required fields: task {task.id} has empty or missing description",
             )
 
     return tasks
@@ -302,6 +305,7 @@ async def _execute_parallel(
 
     Returns:
         Execution summary with total, completed, failed counts
+
     """
     if not tasks:
         return {"total": 0, "completed": 0, "failed": 0}
@@ -374,6 +378,7 @@ async def _execute_sequential(
 
     Returns:
         Execution summary with total, completed, failed counts
+
     """
     if not tasks:
         return {"total": 0, "completed": 0, "failed": 0}
@@ -429,5 +434,6 @@ def execute_tasks_parallel(tasks: list[ParsedTask]) -> dict[str, int]:
 
     Returns:
         Execution summary with total, completed, failed counts
+
     """
     return asyncio.run(_execute_parallel(tasks, verbose=False))

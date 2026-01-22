@@ -60,6 +60,7 @@ async def spawn(
 
     Raises:
         ValueError: If tool is not found in PATH
+
     """
     # Tool resolution: CLI flag -> env var -> config -> default
     resolved_tool = tool or os.environ.get("AURORA_SPAWN_TOOL")
@@ -150,7 +151,7 @@ async def spawn(
         last_activity_time = time.time()
 
         logger.debug(
-            f"Spawn started: agent={agent_id}, timeout={current_timeout:.0f}s/{policy.timeout_policy.max_timeout:.0f}s"
+            f"Spawn started: agent={agent_id}, timeout={current_timeout:.0f}s/{policy.timeout_policy.max_timeout:.0f}s",
         )
 
         async def read_stdout():
@@ -273,7 +274,10 @@ async def spawn(
 
                 # Check early termination conditions
                 should_terminate, reason = policy.termination_policy.should_terminate(
-                    stdout_so_far, stderr_so_far, elapsed, time_since_activity
+                    stdout_so_far,
+                    stderr_so_far,
+                    elapsed,
+                    time_since_activity,
                 )
 
                 if should_terminate:
@@ -298,7 +302,7 @@ async def spawn(
                 ):
                     logger.debug(
                         f"No activity for {time_since_activity:.1f}s "
-                        f"(threshold: {policy.timeout_policy.no_activity_timeout}s)"
+                        f"(threshold: {policy.timeout_policy.no_activity_timeout}s)",
                     )
                     termination_reason = f"No activity for {time_since_activity:.0f} seconds"
                     if heartbeat_emitter:
@@ -315,12 +319,14 @@ async def spawn(
 
                 # Check if timeout should be extended (progressive mode)
                 if policy.timeout_policy.should_extend(
-                    elapsed, time_since_activity, current_timeout
+                    elapsed,
+                    time_since_activity,
+                    current_timeout,
                 ):
                     new_timeout = policy.timeout_policy.get_extended_timeout(current_timeout)
                     logger.debug(
                         f"Extending timeout: {current_timeout:.0f}s -> {new_timeout:.0f}s "
-                        f"(activity detected: {time_since_activity:.1f}s ago)"
+                        f"(activity detected: {time_since_activity:.1f}s ago)",
                     )
                     current_timeout = new_timeout
                     timeout_extended = True
@@ -328,7 +334,7 @@ async def spawn(
                 # Check absolute timeout
                 if elapsed > current_timeout:
                     logger.info(
-                        f"Spawn timeout triggered: elapsed={elapsed:.0f}s > current_timeout={current_timeout:.0f}s"
+                        f"Spawn timeout triggered: elapsed={elapsed:.0f}s > current_timeout={current_timeout:.0f}s",
                     )
                     termination_reason = f"Process timed out after {current_timeout:.0f} seconds"
                     if heartbeat_emitter:
@@ -439,7 +445,9 @@ async def spawn(
         # Record execution outcome for health monitoring
         if success:
             health_monitor.record_execution_success(
-                task_id=task_id, agent_id=agent_id, output_size=len(stdout_text.encode())
+                task_id=task_id,
+                agent_id=agent_id,
+                output_size=len(stdout_text.encode()),
             )
         else:
             health_monitor.record_execution_failure(
@@ -500,6 +508,7 @@ async def spawn_parallel(
 
     Returns:
         List of SpawnResults in input order
+
     """
     if not tasks:
         return []
@@ -588,6 +597,7 @@ async def spawn_parallel_with_recovery(
     Example - Per-agent overrides:
         >>> policy = RecoveryPolicy.default().with_override("slow-agent", max_retries=5)
         >>> results = await spawn_parallel_with_recovery(tasks=tasks, recovery_policy=policy)
+
     """
     if not tasks:
         return []
@@ -699,6 +709,7 @@ async def spawn_parallel_with_state_tracking(
         ...     on_state_change=lambda tid, aid, f, t: print(f"{aid}: {f} -> {t}"),
         ... )
         >>> print(f"Recovered: {summary['recovered']}, Failed: {summary['failed']}")
+
     """
     if not tasks:
         return [], {"total_tasks": 0}
@@ -762,15 +773,14 @@ async def spawn_parallel_with_state_tracking(
                         emit_state_change(old_state, task_state.state.value)
 
                         return result
-                    else:
-                        # No fallback, just failed
-                        return SpawnResult(
-                            success=False,
-                            output="",
-                            error=skip_reason,
-                            exit_code=-1,
-                            retry_count=0,
-                        )
+                    # No fallback, just failed
+                    return SpawnResult(
+                        success=False,
+                        output="",
+                        error=skip_reason,
+                        exit_code=-1,
+                        retry_count=0,
+                    )
 
             # Start execution
             old_state = task_state.state.value
@@ -848,7 +858,10 @@ async def spawn_parallel_with_state_tracking(
 
 
 async def spawn_sequential(
-    tasks: list[SpawnTask], pass_context: bool = True, stop_on_failure: bool = False, **kwargs: Any
+    tasks: list[SpawnTask],
+    pass_context: bool = True,
+    stop_on_failure: bool = False,
+    **kwargs: Any,
 ) -> list[SpawnResult]:
     """Spawn subprocesses sequentially with optional context passing.
 
@@ -860,6 +873,7 @@ async def spawn_sequential(
 
     Returns:
         List of SpawnResults in execution order
+
     """
     if not tasks:
         return []
@@ -942,6 +956,7 @@ async def spawn_parallel_tracked(
         - retried_tasks: Tasks that required retries
         - circuit_blocked: Agents blocked by circuit breaker pre-spawn
         - heartbeat_metrics: Per-task heartbeat summaries
+
     """
     import math
 
@@ -983,7 +998,7 @@ async def spawn_parallel_tracked(
     logger.info(
         f"spawn_parallel_tracked: tasks={total_tasks}, waves={num_waves}, "
         f"max_concurrent={max_concurrent}, policy={policy_name}, "
-        f"global_timeout={global_timeout:.0f}s"
+        f"global_timeout={global_timeout:.0f}s",
     )
 
     # Track progress
@@ -1002,7 +1017,7 @@ async def spawn_parallel_tracked(
         if task_stagger > 0:
             if on_progress:
                 on_progress(
-                    f"  Task {idx + 1}/{total_tasks} ({agent_id}) starting in {task_stagger:.0f}s..."
+                    f"  Task {idx + 1}/{total_tasks} ({agent_id}) starting in {task_stagger:.0f}s...",
                 )
             await asyncio.sleep(task_stagger)
 
@@ -1021,7 +1036,7 @@ async def spawn_parallel_tracked(
                         "agent_id": agent_id,
                         "task_index": idx,
                         "reason": skip_reason,
-                    }
+                    },
                 )
 
                 if fallback_to_llm:
@@ -1058,7 +1073,7 @@ async def spawn_parallel_tracked(
             def on_warning(event):
                 if event.event_type == HeartbeatEventType.TIMEOUT_WARNING and on_progress:
                     on_progress(
-                        f"  [{completed_count}/{total_tasks}] {agent_id}: approaching timeout"
+                        f"  [{completed_count}/{total_tasks}] {agent_id}: approaching timeout",
                     )
 
             heartbeat.subscribe(on_warning)
@@ -1101,7 +1116,7 @@ async def spawn_parallel_tracked(
                         "task_index": idx,
                         "reason": result.termination_reason,
                         "detection_time_ms": duration_ms,
-                    }
+                    },
                 )
 
             # Track fallback usage
@@ -1116,7 +1131,7 @@ async def spawn_parallel_tracked(
                         "agent_id": agent_id,
                         "task_index": idx,
                         "retries": retry_count,
-                    }
+                    },
                 )
 
             # Track failure
@@ -1132,7 +1147,7 @@ async def spawn_parallel_tracked(
                         "event_count": len(heartbeat.get_all_events()),
                         "elapsed_s": heartbeat.seconds_since_start(),
                         "idle_s": heartbeat.seconds_since_activity(),
-                    }
+                    },
                 )
 
             return result
@@ -1144,7 +1159,7 @@ async def spawn_parallel_tracked(
 
             if on_progress:
                 on_progress(
-                    f"  [{completed_count}/{total_tasks} done] {agent_id} error: {str(e)[:50]}"
+                    f"  [{completed_count}/{total_tasks} done] {agent_id} error: {str(e)[:50]}",
                 )
 
             return SpawnResult(
@@ -1204,7 +1219,7 @@ async def spawn_parallel_tracked(
         # Handle timeout - cancel pending
         if pending:
             logger.warning(
-                f"Global timeout ({global_timeout:.0f}s) hit, {len(pending)} tasks pending"
+                f"Global timeout ({global_timeout:.0f}s) hit, {len(pending)} tasks pending",
             )
             if on_progress:
                 on_progress(f"  Timeout: {len(pending)} tasks cancelled, using partial results")
@@ -1237,7 +1252,7 @@ async def spawn_parallel_tracked(
                     output="",
                     error="Task cancelled (global timeout)",
                     exit_code=-1,
-                )
+                ),
             )
             metadata["failed_tasks"] += 1
         else:
@@ -1250,7 +1265,7 @@ async def spawn_parallel_tracked(
         f"spawn_parallel_tracked complete: {total_tasks} tasks, "
         f"{metadata['failed_tasks']} failed, {metadata['fallback_count']} fallbacks, "
         f"{len(metadata['circuit_blocked'])} circuit blocked, "
-        f"duration={metadata['total_duration_ms']}ms"
+        f"duration={metadata['total_duration_ms']}ms",
     )
 
     return final_results, metadata
@@ -1285,6 +1300,7 @@ async def spawn_with_retry_and_fallback(
 
     Returns:
         SpawnResult with retry/fallback metadata
+
     """
     import asyncio
 
@@ -1333,17 +1349,16 @@ async def spawn_with_retry_and_fallback(
                     # Don't record success for fallback - agent is still broken
                     pass
                 return result
-            else:
-                # No fallback, return circuit open error
-                return SpawnResult(
-                    success=False,
-                    output="",
-                    error=skip_reason,
-                    exit_code=-1,
-                    fallback=False,
-                    original_agent=task.agent,
-                    retry_count=0,
-                )
+            # No fallback, return circuit open error
+            return SpawnResult(
+                success=False,
+                output="",
+                error=skip_reason,
+                exit_code=-1,
+                fallback=False,
+                original_agent=task.agent,
+                retry_count=0,
+            )
 
     max_agent_attempts = effective_max_retries + 1  # Initial attempt + retries
     max_total_attempts = max_agent_attempts + (1 if fallback_to_llm else 0)
@@ -1368,7 +1383,9 @@ async def spawn_with_retry_and_fallback(
                 logger.debug(f"Retry delay: {delay:.2f}s")
                 if on_progress:
                     on_progress(
-                        attempt_num, max_total_attempts, f"Waiting {delay:.1f}s before retry"
+                        attempt_num,
+                        max_total_attempts,
+                        f"Waiting {delay:.1f}s before retry",
                     )
                 await asyncio.sleep(delay)
 
@@ -1431,16 +1448,29 @@ async def spawn_with_retry_and_fallback(
                 failure_type = "rate_limit"
 
             # Permanent errors - should trigger fast-fail (config/agent broken)
-            elif any(x in error_lower for x in ["unauthorized", "401", "invalid api key", "authentication failed"]):
+            elif any(
+                x in error_lower
+                for x in ["unauthorized", "401", "invalid api key", "authentication failed"]
+            ):
                 error_type = "api_error"
                 failure_type = "auth_error"
             elif any(x in error_lower for x in ["forbidden", "403", "insufficient permissions"]):
                 error_type = "api_error"
                 failure_type = "forbidden"
-            elif any(x in error_lower for x in ["invalid model", "model identifier", "model not found", "model not available"]):
+            elif any(
+                x in error_lower
+                for x in [
+                    "invalid model",
+                    "model identifier",
+                    "model not found",
+                    "model not available",
+                ]
+            ):
                 error_type = "api_error"
                 failure_type = "invalid_model"
-            elif any(x in error_lower for x in ["400", "bad request", "invalid request", "malformed"]):
+            elif any(
+                x in error_lower for x in ["400", "bad request", "invalid request", "malformed"]
+            ):
                 error_type = "api_error"
                 failure_type = "invalid_request"
             elif any(x in error_lower for x in ["404", "not found", "endpoint not found"]):
@@ -1448,7 +1478,18 @@ async def spawn_with_retry_and_fallback(
                 failure_type = "not_found"
 
             # Transient errors - allow retries (temporary issues)
-            elif any(x in error_lower for x in ["500", "502", "503", "504", "internal server error", "bad gateway", "service unavailable"]):
+            elif any(
+                x in error_lower
+                for x in [
+                    "500",
+                    "502",
+                    "503",
+                    "504",
+                    "internal server error",
+                    "bad gateway",
+                    "service unavailable",
+                ]
+            ):
                 error_type = "api_error"
                 failure_type = "transient_error"
             elif any(x in error_lower for x in ["connection", "econnreset", "network", "timeout"]):
@@ -1482,7 +1523,7 @@ async def spawn_with_retry_and_fallback(
             on_progress(max_agent_attempts + 1, max_total_attempts, "Fallback to LLM")
 
         logger.debug(
-            f"Agent '{agent_id}' failed after {max_agent_attempts} attempts, falling back to LLM"
+            f"Agent '{agent_id}' failed after {max_agent_attempts} attempts, falling back to LLM",
         )
         fallback_task = SpawnTask(
             prompt=task.prompt,

@@ -117,7 +117,7 @@ class DatabaseManager:
         """Close database connection."""
         if self.connection:
             self.connection.close()
-'''
+''',
         )
 
         # Create HTTP/API module
@@ -178,7 +178,7 @@ class APIClient:
         response = self.session.post(url, json=data, headers=headers)
         response.raise_for_status()
         return response.json()
-'''
+''',
         )
 
         # Create file I/O module
@@ -249,7 +249,7 @@ class FileHandler:
             List of matching file paths
         """
         return list(self.base_dir.glob(pattern))
-'''
+''',
         )
 
         # Create math/algorithm module
@@ -314,7 +314,7 @@ def factorial(n: int) -> int:
     for i in range(2, n + 1):
         result *= i
     return result
-'''
+''',
         )
 
         yield project_path
@@ -381,7 +381,9 @@ class TestSearchScoring:
     """
 
     def test_search_returns_varied_activation_scores(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test that activation scores are properly attached to chunks.
 
@@ -453,7 +455,9 @@ class TestSearchScoring:
             )
 
     def test_search_returns_varied_semantic_scores(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test that semantic scores vary based on query relevance.
 
@@ -489,7 +493,9 @@ class TestSearchScoring:
         )
 
     def test_search_returns_varied_hybrid_scores(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test that hybrid scores vary and are in valid range [0.0, 1.0].
 
@@ -531,11 +537,13 @@ class TestSearchScoring:
                 pytest.fail(
                     f"Too many scores at exactly 1.000 (Bug 3 not fixed)!\n"
                     f"Found {score_1_count} occurrences of '1.000' in {total_result_count} results\n"
-                    f"Expected varied scores, not all 1.000"
+                    f"Expected varied scores, not all 1.000",
                 )
 
     def test_search_ranks_relevant_results_higher(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test that top-ranked results contain query-relevant content."""
         # Index the project
@@ -575,7 +583,9 @@ class TestSearchScoring:
         )
 
     def test_activation_frequency_affects_score(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test that repeated searches increase activation scores.
 
@@ -633,7 +643,9 @@ class TestSearchScoring:
         )
 
     def test_git_bla_initialization_varies_by_function(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test that functions in same file have different base_level values.
 
@@ -663,7 +675,7 @@ class TestSearchScoring:
             JOIN activations a ON c.id = a.chunk_id
             WHERE c.type = 'code'
             LIMIT 20
-            """
+            """,
         )
         rows = cursor.fetchall()
         conn.close()
@@ -693,7 +705,9 @@ class TestNormalizationEdgeCases:
     """Test normalization edge cases are handled correctly."""
 
     def test_equal_scores_not_normalized_to_one(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Verify that equal scores are preserved, not inflated to 1.0.
 
@@ -726,7 +740,7 @@ class TestNormalizationEdgeCases:
                 pytest.fail(
                     "All base_level values are 0.0!\n"
                     "This indicates Git BLA initialization is not working\n"
-                    "Expected varied base_level values"
+                    "Expected varied base_level values",
                 )
 
 

@@ -39,6 +39,7 @@ class AgentInfo:
         capabilities: List of capability identifiers this agent provides
         agent_type: Type of agent ('local', 'remote', 'mcp')
         config: Additional configuration as key-value pairs
+
     """
 
     id: str
@@ -58,7 +59,7 @@ class AgentInfo:
         # Suppress warning as it's expected for agents loaded from markdown files
         if self.agent_type not in ["local", "remote", "mcp"]:
             raise ValueError(
-                f"Invalid agent type: {self.agent_type}. Must be one of: local, remote, mcp"
+                f"Invalid agent type: {self.agent_type}. Must be one of: local, remote, mcp",
             )
 
 
@@ -83,6 +84,7 @@ class AgentRegistry:
 
         .. deprecated::
             AgentRegistry is deprecated. Use ManifestManager with discovery_adapter instead.
+
         """
         warnings.warn(
             "AgentRegistry is deprecated. Use aurora_cli.agent_discovery.ManifestManager instead.",
@@ -98,6 +100,7 @@ class AgentRegistry:
 
         Args:
             agent: AgentInfo instance to register
+
         """
         if agent.id in self.agents:
             logger.warning(f"Overwriting existing agent: {agent.id}")
@@ -113,6 +116,7 @@ class AgentRegistry:
 
         Returns:
             AgentInfo if found, None otherwise
+
         """
         return self.agents.get(agent_id)
 
@@ -121,6 +125,7 @@ class AgentRegistry:
 
         Returns:
             List of all registered AgentInfo instances
+
         """
         return list(self.agents.values())
 
@@ -132,6 +137,7 @@ class AgentRegistry:
 
         Returns:
             List of agents that have the specified capability
+
         """
         return [agent for agent in self.agents.values() if capability in agent.capabilities]
 
@@ -143,6 +149,7 @@ class AgentRegistry:
 
         Returns:
             List of agents that have all specified capabilities
+
         """
         return [
             agent
@@ -158,6 +165,7 @@ class AgentRegistry:
 
         Returns:
             List of agents matching the specified type
+
         """
         return [agent for agent in self.agents.values() if agent.agent_type == agent_type]
 
@@ -169,6 +177,7 @@ class AgentRegistry:
 
         Returns:
             Tuple of (is_valid, error_message)
+
         """
         required_fields = ["id", "name", "description", "capabilities", "type"]
 
@@ -214,6 +223,7 @@ class AgentRegistry:
 
         Args:
             path: Path to search for agent configuration files
+
         """
         # Look for agents.json files
         if path.is_file() and path.name == "agents.json":
@@ -229,6 +239,7 @@ class AgentRegistry:
 
         Args:
             config_file: Path to agent configuration JSON file
+
         """
         try:
             with open(config_file) as f:
@@ -285,6 +296,7 @@ class AgentRegistry:
 
         Returns:
             AgentInfo for the fallback LLM executor agent
+
         """
         return AgentInfo(
             id="llm-executor",
@@ -303,6 +315,7 @@ class AgentRegistry:
 
         Returns:
             AgentInfo for the requested agent, or fallback agent if not found
+
         """
         agent = self.get(agent_id)
         if agent is None:

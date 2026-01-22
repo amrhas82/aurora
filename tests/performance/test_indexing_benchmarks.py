@@ -4,7 +4,6 @@ Provides comprehensive benchmarking suite to measure and validate indexing perfo
 Run with: pytest tests/performance/test_indexing_benchmarks.py -v --benchmark-only
 """
 
-import tempfile
 import time
 from pathlib import Path
 
@@ -38,7 +37,7 @@ class TestIndexingThroughput:
                         f'    """Function {i}_{j}."""',
                         f"    return x + y + {i * j}",
                         "",
-                    ]
+                    ],
                 )
             (codebase / f"module_{i}.py").write_text("\n".join(content_lines))
 
@@ -63,7 +62,7 @@ class TestIndexingThroughput:
                         f"    result = x + y + {i * j}",
                         "    return result",
                         "",
-                    ]
+                    ],
                 )
             (codebase / f"module_{i}.py").write_text("\n".join(content_lines))
 
@@ -91,7 +90,7 @@ class TestIndexingThroughput:
                         "        result += z",
                         "    return result",
                         "",
-                    ]
+                    ],
                 )
             (codebase / f"module_{i}.py").write_text("\n".join(content_lines))
 
@@ -161,7 +160,7 @@ class TestBatchSizeImpact:
                         f'    """Function {i}_{j}."""',
                         f"    return x * {i} + {j}",
                         "",
-                    ]
+                    ],
                 )
             (codebase / f"module_{i}.py").write_text("\n".join(content_lines))
 
@@ -245,7 +244,7 @@ class TestPhaseTimingBreakdown:
                         f'        """Method {j}."""',
                         f"        return x + {i} * {j}",
                         "",
-                    ]
+                    ],
                 )
             (codebase / f"module_{i}.py").write_text("\n".join(content_lines))
 
@@ -323,7 +322,7 @@ class TestConcurrentIndexing:
                         f"    result = (a + b) * c + {i * j}",
                         "    return result",
                         "",
-                    ]
+                    ],
                 )
             (codebase / f"module_{i}.py").write_text("\n".join(content_lines))
 
@@ -364,7 +363,7 @@ class TestMemoryUsage:
                         f"    result = temp * {i * j}",
                         "    return result",
                         "",
-                    ]
+                    ],
                 )
             (codebase / f"module_{i}.py").write_text("\n".join(content_lines))
 
@@ -469,7 +468,7 @@ class TestClass:
     def method_two(self, value):
         """Method two."""
         return value * 2
-'''
+''',
         )
 
         return codebase
@@ -560,7 +559,7 @@ class TestProgressReporting:
 def function_{i}():
     """Function {i}."""
     return {i}
-'''
+''',
             )
 
         return codebase
@@ -580,7 +579,7 @@ def function_{i}():
                     "current": progress.current,
                     "total": progress.total,
                     "file_path": progress.file_path,
-                }
+                },
             )
 
         stats = manager.index_path(test_codebase, progress_callback=progress_callback)
@@ -617,7 +616,7 @@ class TestErrorHandling:
 def valid_function():
     """Valid function."""
     return True
-'''
+''',
         )
 
         # Invalid file
@@ -627,7 +626,7 @@ def valid_function():
 def broken_function(
     # Missing closing paren
     return True
-'''
+''',
         )
 
         db_path = tmp_path / "error.db"

@@ -23,6 +23,7 @@ class ReasoningChunk(Chunk):
         tool_sequence: Ordered list of tool invocations
         success_score: Overall success score [0.0, 1.0]
         metadata: Additional metadata (timing, agent info, etc.)
+
     """
 
     pattern: str = ""
@@ -58,6 +59,7 @@ class ReasoningChunk(Chunk):
             tool_sequence: Ordered list of tool invocations
             success_score: Overall success score [0.0, 1.0]
             metadata: Additional metadata
+
         """
         super().__init__(chunk_id=chunk_id, chunk_type="soar")
 
@@ -78,6 +80,7 @@ class ReasoningChunk(Chunk):
 
         Returns:
             Dictionary in the format expected by the storage layer
+
         """
         return {
             "id": self.id,
@@ -110,6 +113,7 @@ class ReasoningChunk(Chunk):
 
         Raises:
             ValueError: If required fields are missing
+
         """
         try:
             content = data["content"]
@@ -145,6 +149,7 @@ class ReasoningChunk(Chunk):
 
         Raises:
             ValueError: If validation fails
+
         """
         # Validate success_score range
         if not (0.0 <= self.success_score <= 1.0):
@@ -158,7 +163,7 @@ class ReasoningChunk(Chunk):
         valid_complexities = ["SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL"]
         if self.complexity not in valid_complexities:
             raise ValueError(
-                f"complexity must be one of {valid_complexities}, got {self.complexity}"
+                f"complexity must be one of {valid_complexities}, got {self.complexity}",
             )
 
         # Validate subgoals structure

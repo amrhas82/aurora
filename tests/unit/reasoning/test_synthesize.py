@@ -154,7 +154,7 @@ class TestExtractTraceability:
         """Test extraction with single agent reference."""
         answer = "According to agent-1, the implementation is complete."
         summaries = [
-            {"agent": "agent-1", "subgoal_id": 0, "subgoal_description": "Implement feature"}
+            {"agent": "agent-1", "subgoal_id": 0, "subgoal_description": "Implement feature"},
         ]
 
         traceability = _extract_traceability(answer, summaries)
@@ -335,7 +335,7 @@ CONFIDENCE: 0.85
                 "confidence": 0.9,
                 "success": True,
                 "data": {},
-            }
+            },
         ]
 
         decomposition = {

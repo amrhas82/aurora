@@ -25,6 +25,7 @@ class ParserRegistry:
         >>> from aurora_context_code.languages.python import PythonParser
         >>> registry.register(PythonParser())
         >>> parser = registry.get_parser_for_file(Path("example.py"))
+
     """
 
     def __init__(self) -> None:
@@ -40,11 +41,12 @@ class ParserRegistry:
 
         Raises:
             ValueError: If a parser for this language is already registered
+
         """
         if parser.language in self._parsers:
             logger.warning(
                 f"Parser for language '{parser.language}' already registered, "
-                f"replacing with {parser.__class__.__name__}"
+                f"replacing with {parser.__class__.__name__}",
             )
 
         self._parsers[parser.language] = parser
@@ -58,6 +60,7 @@ class ParserRegistry:
 
         Returns:
             Parser instance if registered, None otherwise
+
         """
         return self._parsers.get(language)
 
@@ -71,6 +74,7 @@ class ParserRegistry:
 
         Returns:
             Parser instance that can handle the file, None if no parser found
+
         """
         for parser in self._parsers.values():
             if parser.can_parse(file_path):
@@ -85,6 +89,7 @@ class ParserRegistry:
 
         Returns:
             List of language identifiers
+
         """
         return list(self._parsers.keys())
 
@@ -96,6 +101,7 @@ class ParserRegistry:
 
         Returns:
             True if parser was unregistered, False if not found
+
         """
         if language in self._parsers:
             del self._parsers[language]
@@ -125,6 +131,7 @@ def get_global_registry() -> ParserRegistry:
 
     Returns:
         Global ParserRegistry instance
+
     """
     global _global_registry
     if _global_registry is None:
@@ -142,6 +149,7 @@ def _register_builtin_parsers(registry: ParserRegistry) -> None:
 
     Args:
         registry: Registry to register parsers in
+
     """
     try:
         from aurora_context_code.languages.python import PythonParser

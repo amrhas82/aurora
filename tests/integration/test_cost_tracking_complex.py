@@ -88,7 +88,10 @@ class TestComplexQueryCostTracking:
     """Test cost tracking for complex multi-phase SOAR queries."""
 
     def test_complex_query_full_pipeline_cost_tracking(
-        self, orchestrator, reasoning_llm, solving_llm
+        self,
+        orchestrator,
+        reasoning_llm,
+        solving_llm,
     ):
         """Test cost tracking for SIMPLE query path (most common in practice).
 
@@ -170,7 +173,7 @@ class TestComplexQueryCostTracking:
         def track_cost_checkpoint(phase_name):
             status = orchestrator.cost_tracker.get_status()
             costs_at_checkpoints.append(
-                {"phase": phase_name, "consumed_usd": status["consumed_usd"]}
+                {"phase": phase_name, "consumed_usd": status["consumed_usd"]},
             )
 
         # Phase 1: Assess
@@ -256,7 +259,10 @@ class TestComplexQueryCostTracking:
         assert total_tracked_output > 0, "No output tokens tracked"
 
     def test_reasoning_vs_solving_llm_cost_separation(
-        self, orchestrator, reasoning_llm, solving_llm
+        self,
+        orchestrator,
+        reasoning_llm,
+        solving_llm,
     ):
         """Test that reasoning and solving LLM costs are tracked separately."""
         # Configure different models
@@ -348,7 +354,7 @@ class TestComplexQueryCostTracking:
             print(f"Total cost: ${metadata['total_cost_usd']:.6f}")
             print(f"Tokens used: {tokens['input']} input, {tokens['output']} output")
             print(
-                f"Budget: ${budget['consumed_usd']:.4f} / ${budget.get('limit_usd', 0):.2f} ({budget['percent_consumed']:.1f}%)"
+                f"Budget: ${budget['consumed_usd']:.4f} / ${budget.get('limit_usd', 0):.2f} ({budget['percent_consumed']:.1f}%)",
             )
 
         except Exception as e:
@@ -394,7 +400,8 @@ class TestCostEstimation:
 
         # Should fail budget check
         can_proceed, message = orchestrator.cost_tracker.check_budget(
-            estimated_cost, raise_on_exceeded=False
+            estimated_cost,
+            raise_on_exceeded=False,
         )
 
         assert can_proceed is False, "Should reject query exceeding budget"

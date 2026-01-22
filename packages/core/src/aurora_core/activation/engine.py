@@ -46,6 +46,7 @@ class ActivationConfig(BaseModel):
         enable_spreading: Whether to include spreading in total activation
         enable_context: Whether to include context boost in total activation
         enable_decay: Whether to include decay in total activation
+
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -57,7 +58,8 @@ class ActivationConfig(BaseModel):
 
     enable_bla: bool = Field(default=True, description="Include base-level activation in total")
     enable_spreading: bool = Field(
-        default=True, description="Include spreading activation in total"
+        default=True,
+        description="Include spreading activation in total",
     )
     enable_context: bool = Field(default=True, description="Include context boost in total")
     enable_decay: bool = Field(default=True, description="Include decay penalty in total")
@@ -75,6 +77,7 @@ class ActivationComponents(BaseModel):
         context_boost: Context boost component
         decay: Decay penalty component
         total: Total activation (sum of all components)
+
     """
 
     bla: float = Field(default=0.0, description="Base-level activation")
@@ -111,6 +114,7 @@ class ActivationEngine:
         ...     chunk_keywords={'database', 'query', 'performance'}
         ... )
         >>> print(f"Total activation: {activation.total:.3f}")
+
     """
 
     def __init__(self, config: ActivationConfig | None = None):
@@ -118,6 +122,7 @@ class ActivationEngine:
 
         Args:
             config: Configuration for all activation components
+
         """
         self.config = config or ActivationConfig()
 
@@ -153,6 +158,7 @@ class ActivationEngine:
             - Components can be disabled via config (enable_* flags)
             - Missing data for a component results in 0.0 for that component
             - Total = BLA + Spreading + Context - Decay
+
         """
         components = ActivationComponents()
 
@@ -162,7 +168,8 @@ class ActivationEngine:
         # Calculate BLA
         if self.config.enable_bla and access_history is not None:
             components.bla = self.bla_calculator.calculate(
-                access_history=access_history, current_time=current_time
+                access_history=access_history,
+                current_time=current_time,
             )
 
         # Add spreading activation (pre-calculated)
@@ -172,13 +179,15 @@ class ActivationEngine:
         # Calculate context boost
         if self.config.enable_context and query_keywords and chunk_keywords:
             components.context_boost = self.context_calculator.calculate(
-                query_keywords=query_keywords, chunk_keywords=chunk_keywords
+                query_keywords=query_keywords,
+                chunk_keywords=chunk_keywords,
             )
 
         # Calculate decay penalty
         if self.config.enable_decay and last_access is not None:
             components.decay = self.decay_calculator.calculate(
-                last_access=last_access, current_time=current_time
+                last_access=last_access,
+                current_time=current_time,
             )
 
         # Calculate total activation
@@ -192,7 +201,9 @@ class ActivationEngine:
         return components
 
     def calculate_bla_only(
-        self, access_history: list[AccessHistoryEntry], current_time: datetime | None = None
+        self,
+        access_history: list[AccessHistoryEntry],
+        current_time: datetime | None = None,
     ) -> float:
         """Calculate only base-level activation.
 
@@ -202,11 +213,15 @@ class ActivationEngine:
 
         Returns:
             BLA value
+
         """
         return self.bla_calculator.calculate(access_history, current_time)
 
     def calculate_spreading_only(
-        self, source_chunks: list[str], graph: RelationshipGraph, bidirectional: bool = True
+        self,
+        source_chunks: list[str],
+        graph: RelationshipGraph,
+        bidirectional: bool = True,
     ) -> dict[str, float]:
         """Calculate only spreading activation.
 
@@ -217,9 +232,12 @@ class ActivationEngine:
 
         Returns:
             Dictionary mapping chunk_id -> spreading_activation
+
         """
         return self.spreading_calculator.calculate(
-            source_chunks=source_chunks, graph=graph, bidirectional=bidirectional
+            source_chunks=source_chunks,
+            graph=graph,
+            bidirectional=bidirectional,
         )
 
     def calculate_context_only(self, query_keywords: set[str], chunk_keywords: set[str]) -> float:
@@ -231,11 +249,14 @@ class ActivationEngine:
 
         Returns:
             Context boost value
+
         """
         return self.context_calculator.calculate(query_keywords, chunk_keywords)
 
     def calculate_decay_only(
-        self, last_access: datetime, current_time: datetime | None = None
+        self,
+        last_access: datetime,
+        current_time: datetime | None = None,
     ) -> float:
         """Calculate only decay penalty.
 
@@ -245,6 +266,7 @@ class ActivationEngine:
 
         Returns:
             Decay penalty (non-positive value)
+
         """
         return self.decay_calculator.calculate(last_access, current_time)
 
@@ -277,6 +299,7 @@ class ActivationEngine:
                 - context_details: Context boost details (if applicable)
                 - decay_details: Decay calculation details (if applicable)
                 - enabled_components: List of enabled component names
+
         """
         components = self.calculate_total(
             access_history=access_history,
@@ -340,6 +363,7 @@ class ActivationEngine:
             spreading_config: New spreading configuration
             context_config: New context boost configuration
             decay_config: New decay configuration
+
         """
         if bla_config:
             self.config.bla_config = bla_config

@@ -8,7 +8,7 @@ Tests cover:
 """
 
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from rich.console import Console
@@ -87,7 +87,9 @@ class TestOrchestratorInit:
         providers = [create_mock_provider("claude")]
 
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.FAILOVER, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.FAILOVER,
+            console=mock_console,
         )
 
         assert orchestrator.strategy == ExecutionStrategy.FAILOVER
@@ -122,7 +124,9 @@ class TestRoundRobinStrategy:
             create_mock_provider("opencode", output="OpenCode output"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -139,7 +143,9 @@ class TestRoundRobinStrategy:
             create_mock_provider("opencode", output="OpenCode output"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=2)
@@ -154,7 +160,9 @@ class TestRoundRobinStrategy:
             create_mock_provider("opencode", output="OpenCode"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
 
         # Iteration 3 should wrap to first provider (index 0)
@@ -170,7 +178,9 @@ class TestRoundRobinStrategy:
             create_mock_provider("cursor"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
 
         # Test sequence: 1->claude, 2->opencode, 3->cursor, 4->claude
@@ -185,7 +195,9 @@ class TestRoundRobinStrategy:
             create_mock_provider("claude", success=False),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -209,7 +221,9 @@ class TestParallelStrategy:
             create_mock_provider("opencode", output="OpenCode success"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.PARALLEL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.PARALLEL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -225,7 +239,9 @@ class TestParallelStrategy:
             create_mock_provider("opencode", output="OpenCode success"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.PARALLEL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.PARALLEL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -240,7 +256,9 @@ class TestParallelStrategy:
             create_mock_provider("opencode", success=False),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.PARALLEL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.PARALLEL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -255,7 +273,9 @@ class TestParallelStrategy:
             create_mock_provider("opencode", output="OpenCode output"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.PARALLEL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.PARALLEL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -268,7 +288,9 @@ class TestParallelStrategy:
         """Test parallel with single provider."""
         providers = [create_mock_provider("claude", output="Only one")]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.PARALLEL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.PARALLEL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -292,7 +314,9 @@ class TestSequentialStrategy:
             create_mock_provider("opencode", output="OpenCode success"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.SEQUENTIAL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.SEQUENTIAL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -309,7 +333,9 @@ class TestSequentialStrategy:
             create_mock_provider("opencode", output="OpenCode success"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.SEQUENTIAL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.SEQUENTIAL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -326,7 +352,9 @@ class TestSequentialStrategy:
             create_mock_provider("cursor", success=False),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.SEQUENTIAL, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.SEQUENTIAL,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -351,7 +379,9 @@ class TestFailoverStrategy:
             create_mock_provider("opencode", output="Backup"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.FAILOVER, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.FAILOVER,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -368,7 +398,9 @@ class TestFailoverStrategy:
             create_mock_provider("opencode", output="Failover success"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.FAILOVER, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.FAILOVER,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -384,7 +416,9 @@ class TestFailoverStrategy:
             create_mock_provider("opencode", output="Backup success"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.FAILOVER, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.FAILOVER,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -400,7 +434,9 @@ class TestFailoverStrategy:
             create_mock_provider("cursor", output="Third time's the charm"),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.FAILOVER, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.FAILOVER,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -416,7 +452,9 @@ class TestFailoverStrategy:
             create_mock_provider("opencode", success=False),
         ]
         orchestrator = ToolOrchestrator(
-            providers, strategy=ExecutionStrategy.FAILOVER, console=mock_console
+            providers,
+            strategy=ExecutionStrategy.FAILOVER,
+            console=mock_console,
         )
 
         result = orchestrator.execute("test context", iteration=1)
@@ -509,7 +547,9 @@ class TestExecutionParameters:
         """Test working directory is passed to provider."""
         provider = create_mock_provider("claude")
         orchestrator = ToolOrchestrator(
-            [provider], strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            [provider],
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
         working_dir = Path("/tmp/test")
 
@@ -521,7 +561,9 @@ class TestExecutionParameters:
         """Test timeout is passed to provider."""
         provider = create_mock_provider("claude")
         orchestrator = ToolOrchestrator(
-            [provider], strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            [provider],
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
 
         orchestrator.execute("context", iteration=1, timeout=300)
@@ -563,7 +605,9 @@ class TestMultiToolScenarios:
         opencode = create_mock_provider("opencode", output="OpenCode handled it")
 
         orchestrator = ToolOrchestrator(
-            [claude, opencode], strategy=ExecutionStrategy.FAILOVER, console=mock_console
+            [claude, opencode],
+            strategy=ExecutionStrategy.FAILOVER,
+            console=mock_console,
         )
 
         result = orchestrator.execute("Fix the bug", iteration=1)
@@ -577,7 +621,9 @@ class TestMultiToolScenarios:
         opencode = create_mock_provider("opencode", output="OpenCode review")
 
         orchestrator = ToolOrchestrator(
-            [claude, opencode], strategy=ExecutionStrategy.ROUND_ROBIN, console=mock_console
+            [claude, opencode],
+            strategy=ExecutionStrategy.ROUND_ROBIN,
+            console=mock_console,
         )
 
         # Simulate multiple review iterations

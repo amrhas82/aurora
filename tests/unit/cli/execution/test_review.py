@@ -47,7 +47,7 @@ class TestDecompositionReview:
         are shown by DecompositionSummary.display() to avoid duplicate output.
         """
         subgoals = [
-            {"description": "Implement auth", "agent_id": "@code-developer", "goal": "Auth"}
+            {"description": "Implement auth", "agent_id": "@code-developer", "goal": "Auth"},
         ]
 
         review = DecompositionReview(subgoals, [])
@@ -179,7 +179,9 @@ class TestAgentGap:
     def test_create_agent_gap(self):
         """Test creating AgentGap."""
         gap = AgentGap(
-            subgoal_index=0, description="Deploy to production", required_agent="@devops-expert"
+            subgoal_index=0,
+            description="Deploy to production",
+            required_agent="@devops-expert",
         )
 
         assert gap.subgoal_index == 0

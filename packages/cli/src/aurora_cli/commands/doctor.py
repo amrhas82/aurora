@@ -128,7 +128,12 @@ def doctor_command(fix: bool) -> None:
         # Handle --fix flag if requested
         if fix and (fail_count > 0 or warning_count > 0):
             _handle_auto_fix(
-                core_checks, code_checks, search_checks, config_checks, tool_checks, mcp_checks
+                core_checks,
+                code_checks,
+                search_checks,
+                config_checks,
+                tool_checks,
+                mcp_checks,
             )
 
         # Determine exit code
@@ -154,6 +159,7 @@ def _display_results(results: list[tuple[str, str, dict]]) -> None:
 
     Args:
         results: List of (status, message, details) tuples
+
     """
     for status, message, details in results:
         # Choose icon and color based on status
@@ -178,6 +184,7 @@ def _display_summary(pass_count: int, warning_count: int, fail_count: int) -> No
         pass_count: Number of passed checks
         warning_count: Number of warnings
         fail_count: Number of failures
+
     """
     console.print("[bold]Summary:[/]")
 
@@ -211,6 +218,7 @@ def _handle_auto_fix(
         config_checks: Configuration health checks instance
         tool_checks: Tool integration health checks instance
         mcp_checks: MCP functional health checks instance
+
     """
     console.print()
     console.print("[bold cyan]Analyzing fixable issues...[/]")
@@ -244,7 +252,7 @@ def _handle_auto_fix(
     # Prompt user for confirmation if there are fixable issues
     if fixable_issues:
         if click.confirm(
-            f"Fix {len(fixable_issues)} issue{'s' if len(fixable_issues) != 1 else ''} automatically?"
+            f"Fix {len(fixable_issues)} issue{'s' if len(fixable_issues) != 1 else ''} automatically?",
         ):
             console.print()
             console.print("[bold cyan]Applying fixes...[/]")

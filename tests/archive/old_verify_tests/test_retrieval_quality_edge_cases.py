@@ -56,7 +56,9 @@ class TestRetrievalQualityEdgeCases:
         )
 
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=5, total_chunks=5
+            verification=verification,
+            high_quality_chunks=5,
+            total_chunks=5,
         )
 
         assert quality == RetrievalQuality.GOOD
@@ -77,7 +79,9 @@ class TestRetrievalQualityEdgeCases:
 
         # 10 total chunks but 0 high-quality
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=0, total_chunks=10
+            verification=verification,
+            high_quality_chunks=0,
+            total_chunks=10,
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -97,8 +101,7 @@ class TestRetrievalQualityEdgeCases:
         def get_activation_side_effect(chunk_id):
             if chunk_id in ["chunk0", "chunk1"]:
                 return 0.5  # High quality (>= 0.3)
-            else:
-                return 0.1  # Low quality (< 0.3)
+            return 0.1  # Low quality (< 0.3)
 
         mock_store.get_activation = Mock(side_effect=get_activation_side_effect)
 
@@ -291,7 +294,9 @@ class TestRetrievalQualityEdgeCases:
         )
 
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=5, total_chunks=5
+            verification=verification,
+            high_quality_chunks=5,
+            total_chunks=5,
         )
 
         assert quality == RetrievalQuality.WEAK
@@ -311,7 +316,9 @@ class TestRetrievalQualityEdgeCases:
         )
 
         quality = assess_retrieval_quality(
-            verification=verification, high_quality_chunks=3, total_chunks=3
+            verification=verification,
+            high_quality_chunks=3,
+            total_chunks=3,
         )
 
         assert quality == RetrievalQuality.GOOD

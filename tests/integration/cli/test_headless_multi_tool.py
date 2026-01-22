@@ -8,8 +8,7 @@ between headless command, ConcurrentToolExecutor, and ToolProviderRegistry.
 """
 
 import asyncio
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -20,7 +19,6 @@ from aurora_cli.commands.headless import (
     _parse_tools_callback,
     _run_backpressure,
     _run_multi_tool_loop,
-    _run_single_tool_loop,
     headless_command,
 )
 from aurora_cli.concurrent_executor import AggregatedResult, AggregationStrategy, ToolResult
@@ -196,7 +194,12 @@ class TestSequentialMultiTool:
     """Test sequential (round-robin) multi-tool execution."""
 
     def test_sequential_round_robin(
-        self, runner, temp_prompt, mock_tools_available, mock_git_check, tmp_path
+        self,
+        runner,
+        temp_prompt,
+        mock_tools_available,
+        mock_git_check,
+        tmp_path,
     ):
         """Test sequential execution rotates through tools."""
         with patch("pathlib.Path.cwd", return_value=tmp_path):
@@ -256,7 +259,10 @@ class TestParallelMultiTool:
                     strategy_used=AggregationStrategy.FIRST_SUCCESS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Claude output", execution_time=1.0
+                            tool="claude",
+                            success=True,
+                            output="Claude output",
+                            execution_time=1.0,
                         ),
                     ],
                     winning_tool="claude",
@@ -337,7 +343,11 @@ class TestResultsDisplay:
             tool_results=[
                 ToolResult(tool="claude", success=True, output="Claude output", execution_time=1.5),
                 ToolResult(
-                    tool="opencode", success=False, output="", error="Failed", execution_time=2.0
+                    tool="opencode",
+                    success=False,
+                    output="",
+                    error="Failed",
+                    execution_time=2.0,
                 ),
             ],
             winning_tool="claude",
@@ -494,7 +504,12 @@ class TestEndToEndMultiTool:
     """End-to-end tests for multi-tool scenarios."""
 
     def test_parallel_two_tools_success(
-        self, runner, temp_prompt, mock_tools_available, mock_git_check, tmp_path
+        self,
+        runner,
+        temp_prompt,
+        mock_tools_available,
+        mock_git_check,
+        tmp_path,
     ):
         """Test successful parallel execution with two tools."""
         with patch("pathlib.Path.cwd", return_value=tmp_path):
@@ -519,7 +534,12 @@ class TestEndToEndMultiTool:
                 mock_asyncio.assert_called_once()
 
     def test_tool_count_determines_mode(
-        self, runner, temp_prompt, mock_tools_available, mock_git_check, tmp_path
+        self,
+        runner,
+        temp_prompt,
+        mock_tools_available,
+        mock_git_check,
+        tmp_path,
     ):
         """Test that tool count determines execution mode."""
         with patch("pathlib.Path.cwd", return_value=tmp_path):

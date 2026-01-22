@@ -35,6 +35,7 @@ class AgentRecovery:
 
         Args:
             config: Recovery configuration
+
         """
         self.timeout = config.timeout_seconds
         self.max_retries = config.max_retries
@@ -57,6 +58,7 @@ class AgentRecovery:
 
         Returns:
             RecoveryResult with execution details
+
         """
         max_attempts = self.max_retries + 1  # Initial attempt + retries
         original_agent = agent_id
@@ -72,7 +74,8 @@ class AgentRecovery:
 
             try:
                 result = await asyncio.wait_for(
-                    execute_fn(agent_id, task, self.timeout), timeout=self.timeout
+                    execute_fn(agent_id, task, self.timeout),
+                    timeout=self.timeout,
                 )
 
                 if result.get("success", False):
@@ -87,12 +90,12 @@ class AgentRecovery:
                     )
 
                 logger.debug(
-                    f"Agent {agent_id} failed on attempt {attempt_num}: {result.get('error')}"
+                    f"Agent {agent_id} failed on attempt {attempt_num}: {result.get('error')}",
                 )
 
             except asyncio.TimeoutError:
                 logger.debug(
-                    f"Agent {agent_id} timed out on attempt {attempt_num} ({self.timeout}s)"
+                    f"Agent {agent_id} timed out on attempt {attempt_num} ({self.timeout}s)",
                 )
             except Exception as e:
                 logger.warning(f"Agent {agent_id} exception on attempt {attempt_num}: {e}")
@@ -100,7 +103,7 @@ class AgentRecovery:
         # All attempts failed, try fallback if enabled
         if self.fallback_enabled:
             logger.info(
-                f"Agent {agent_id} failed after {max_attempts} attempts, using LLM fallback"
+                f"Agent {agent_id} failed after {max_attempts} attempts, using LLM fallback",
             )
 
             if on_progress:
@@ -147,11 +150,13 @@ class AgentRecovery:
 
         Returns:
             Dict with success, output, error keys
+
         """
         try:
             # Execute with agent_id=None to indicate direct LLM call
             result = await asyncio.wait_for(
-                execute_fn(None, task, self.timeout), timeout=self.timeout
+                execute_fn(None, task, self.timeout),
+                timeout=self.timeout,
             )
             return result
         except asyncio.TimeoutError:

@@ -333,7 +333,7 @@ class TestCodexSlashCommandConfiguratorUpdateExisting:
         plan_file = prompts_dir / "aurora-plan.md"
         frontmatter = config.get_frontmatter("plan")
         plan_file.write_text(
-            f"{frontmatter}\n{AURORA_MARKERS['start']}\nOld body\n{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n{AURORA_MARKERS['start']}\nOld body\n{AURORA_MARKERS['end']}\n",
         )
 
         with patch.dict(os.environ, {"CODEX_HOME": custom_codex_home}):
@@ -359,7 +359,7 @@ class TestCodexSlashCommandConfiguratorUpdateExisting:
         frontmatter = config.get_frontmatter("plan")
         old_body = "This is old content"
         plan_file.write_text(
-            f"{frontmatter}\n{AURORA_MARKERS['start']}\n{old_body}\n{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n{AURORA_MARKERS['start']}\n{old_body}\n{AURORA_MARKERS['end']}\n",
         )
 
         with patch.dict(os.environ, {"CODEX_HOME": custom_codex_home}):

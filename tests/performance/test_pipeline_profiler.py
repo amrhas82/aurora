@@ -16,13 +16,12 @@ Output includes:
 """
 
 import json
-import tempfile
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -129,7 +128,9 @@ class PipelineProfiler:
 
         # Sort by total time descending
         sorted_stats = sorted(
-            self.timings.values(), key=lambda s: s.total_ms, reverse=True
+            self.timings.values(),
+            key=lambda s: s.total_ms,
+            reverse=True,
         )
 
         for stats in sorted_stats:
@@ -155,9 +156,11 @@ class PipelineProfiler:
                     "avg_ms": stats.avg_ms,
                     "min_ms": stats.min_ms if stats.min_ms != float("inf") else 0,
                     "max_ms": stats.max_ms,
-                    "pct_of_total": (stats.total_ms / self.total_search_ms * 100)
-                    if self.total_search_ms > 0
-                    else 0,
+                    "pct_of_total": (
+                        (stats.total_ms / self.total_search_ms * 100)
+                        if self.total_search_ms > 0
+                        else 0
+                    ),
                 }
                 for name, stats in self.timings.items()
             },
@@ -208,7 +211,8 @@ class TestActivationRetrieval:
     """Profile ACT-R activation retrieval component."""
 
     def test_profile_activation_retrieval(
-        self, profiled_store: tuple[Any, PipelineProfiler]
+        self,
+        profiled_store: tuple[Any, PipelineProfiler],
     ):
         """Profile time spent in activation-based retrieval."""
         store, profiler = profiled_store
@@ -228,9 +232,9 @@ class TestActivationRetrieval:
 
         assert len(candidates) > 0
         # Activation retrieval should be fast (<100ms for 500 chunks)
-        assert profiler.timings["activation_retrieval"].total_ms < 100, (
-            f"Activation retrieval too slow: {profiler.timings['activation_retrieval'].total_ms:.2f}ms"
-        )
+        assert (
+            profiler.timings["activation_retrieval"].total_ms < 100
+        ), f"Activation retrieval too slow: {profiler.timings['activation_retrieval'].total_ms:.2f}ms"
 
 
 class TestBM25Components:
@@ -365,9 +369,7 @@ class TestSemanticComponents:
         profiler = PipelineProfiler()
 
         # Simulate stored embeddings (bytes)
-        stored_embeddings = [
-            np.random.randn(384).astype(np.float32).tobytes() for _ in range(100)
-        ]
+        stored_embeddings = [np.random.randn(384).astype(np.float32).tobytes() for _ in range(100)]
 
         profiler.start_search()
 
@@ -390,7 +392,6 @@ class TestFullPipelineProfile:
         """Profile the full HybridRetriever.retrieve() method."""
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
         from aurora_context_code.semantic.embedding_provider import cosine_similarity
-        from aurora_core.activation import ActivationEngine
 
         store, profiler = profiled_store
 
@@ -408,7 +409,8 @@ class TestFullPipelineProfile:
         # Phase 1: Activation Retrieval
         with profiler.measure("phase1_activation_retrieval"):
             candidates = store.retrieve_by_activation(
-                min_activation=0.0, limit=activation_top_k
+                min_activation=0.0,
+                limit=activation_top_k,
             )
 
         # Phase 2: Query Embedding
@@ -460,12 +462,14 @@ class TestFullPipelineProfile:
                 else:
                     semantic_score = 0.0
 
-                results.append({
-                    "chunk": chunk,
-                    "bm25_score": bm25_score,
-                    "activation_score": activation_score,
-                    "semantic_score": semantic_score,
-                })
+                results.append(
+                    {
+                        "chunk": chunk,
+                        "bm25_score": bm25_score,
+                        "activation_score": activation_score,
+                        "semantic_score": semantic_score,
+                    }
+                )
 
         # Phase 6: Score Normalization and Hybrid Scoring
         with profiler.measure("phase6_score_normalization"):
@@ -490,9 +494,7 @@ class TestFullPipelineProfile:
             # Weights: BM25=0.3, Activation=0.3, Semantic=0.4
             for i, result in enumerate(results):
                 hybrid_score = (
-                    0.3 * bm25_norm[i] +
-                    0.3 * activation_norm[i] +
-                    0.4 * semantic_norm[i]
+                    0.3 * bm25_norm[i] + 0.3 * activation_norm[i] + 0.4 * semantic_norm[i]
                 )
                 result["hybrid_score"] = hybrid_score
 
@@ -512,9 +514,9 @@ class TestFullPipelineProfile:
 
         # Assertions
         assert len(final_results) == top_k
-        assert profiler.total_search_ms < 500, (
-            f"Total search too slow: {profiler.total_search_ms:.2f}ms"
-        )
+        assert (
+            profiler.total_search_ms < 500
+        ), f"Total search too slow: {profiler.total_search_ms:.2f}ms"
 
 
 class TestAccessRecordingPerformance:
@@ -617,9 +619,9 @@ class TestScalabilityProfile:
         store.close()
 
         # Linear scaling check
-        assert profiler.total_search_ms < num_chunks * 2, (
-            f"Search scales poorly: {profiler.total_search_ms:.2f}ms for {num_chunks} chunks"
-        )
+        assert (
+            profiler.total_search_ms < num_chunks * 2
+        ), f"Search scales poorly: {profiler.total_search_ms:.2f}ms for {num_chunks} chunks"
 
 
 class TestQueryCacheProfile:

@@ -230,7 +230,9 @@ class TestStoragePerformance:
         @measure_time_ms
         def add_relationship():
             return sqlite_store.add_relationship(
-                ChunkID(chunk1.id), ChunkID(chunk2.id), "depends_on"
+                ChunkID(chunk1.id),
+                ChunkID(chunk2.id),
+                "depends_on",
             )
 
         _, elapsed_ms = add_relationship()
@@ -249,7 +251,9 @@ class TestStoragePerformance:
 
         for i in range(len(chunks) - 1):
             sqlite_store.add_relationship(
-                ChunkID(chunks[i].id), ChunkID(chunks[i + 1].id), "depends_on"
+                ChunkID(chunks[i].id),
+                ChunkID(chunks[i + 1].id),
+                "depends_on",
             )
 
         @measure_time_ms

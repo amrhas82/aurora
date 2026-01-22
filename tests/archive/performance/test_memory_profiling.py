@@ -294,7 +294,7 @@ class TestMemoryProfiling:
             leaked < stored * 0.3
         ), f"Memory leak detected: {leaked:.2f} MB (stored {stored:.2f} MB)"
         print(
-            f"✓ Memory properly released on close (leaked {leaked:.2f} MB / {stored:.2f} MB = {leaked / stored * 100:.1f}%)"
+            f"✓ Memory properly released on close (leaked {leaked:.2f} MB / {stored:.2f} MB = {leaked / stored * 100:.1f}%)",
         )
 
     def test_reasoning_chunk_10k_patterns_memory_usage(self):

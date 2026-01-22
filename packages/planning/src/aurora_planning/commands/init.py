@@ -45,6 +45,7 @@ class InitCommand:
 
         Args:
             target_path: Target directory path (default: current directory)
+
         """
         target = Path(target_path)
         openspec_dir = target / ".aurora" / "plans"

@@ -29,6 +29,7 @@ def get_global_config_dir() -> Path:
 
     Returns:
         Path to global config directory
+
     """
     # XDG_CONFIG_HOME takes precedence on all platforms
     xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
@@ -59,6 +60,7 @@ def get_global_data_dir() -> Path:
 
     Returns:
         Path to global data directory
+
     """
     # XDG_DATA_HOME takes precedence on all platforms
     xdg_data_home = os.environ.get("XDG_DATA_HOME")
@@ -86,6 +88,7 @@ def get_global_config() -> dict[str, Any]:
 
     Returns:
         Global configuration dictionary
+
     """
     config_dir = get_global_config_dir()
     config_file = config_dir / GLOBAL_CONFIG_FILE_NAME
@@ -116,6 +119,7 @@ def save_global_config(config: dict[str, Any]) -> None:
 
     Raises:
         IOError: If unable to write config file
+
     """
     config_dir = get_global_config_dir()
     config_file = config_dir / GLOBAL_CONFIG_FILE_NAME

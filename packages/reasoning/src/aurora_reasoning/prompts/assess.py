@@ -49,6 +49,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             User prompt string
+
         """
         query = kwargs.get("query", "")
         keyword_result = kwargs.get("keyword_result")
@@ -58,10 +59,10 @@ You MUST respond with valid JSON only. Use this exact format:
         if keyword_result:
             prompt_parts.append(
                 f"\nKeyword-based classification: {keyword_result.get('complexity')} "
-                f"(score: {keyword_result.get('score'):.2f}, confidence: {keyword_result.get('confidence'):.2f})"
+                f"(score: {keyword_result.get('score'):.2f}, confidence: {keyword_result.get('confidence'):.2f})",
             )
             prompt_parts.append(
-                "\nThe keyword classifier was uncertain. Please provide the final classification."
+                "\nThe keyword classifier was uncertain. Please provide the final classification.",
             )
 
         prompt_parts.append("\nProvide your complexity assessment in JSON format.")
@@ -76,6 +77,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             Formatted example string
+
         """
         return f"""Query: {example["query"]}
 Classification: {

@@ -62,6 +62,7 @@ def calculate_mrr(results: list[tuple[str, list[str]]]) -> float:
 
     Returns:
         MRR score between 0 and 1
+
     """
     reciprocal_ranks = []
 
@@ -217,11 +218,11 @@ class TestEndToEndSearchQuality:
             top_result = results[0]
             if top_result.name != expected_name:
                 failures.append(
-                    f"{query}: expected '{expected_name}' at rank 1, got '{top_result.name}'"
+                    f"{query}: expected '{expected_name}' at rank 1, got '{top_result.name}'",
                 )
 
         assert not failures, "Exact match queries must rank target at position 1:\n" + "\n".join(
-            failures
+            failures,
         )
 
     def test_camelcase_splitting_works(self, memory_manager, memory_store, aurora_subset):

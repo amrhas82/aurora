@@ -79,6 +79,7 @@ class PlanningError(Exception):
     Example:
         >>> raise PlanningError("PLAN_NOT_FOUND", plan_id="0001-oauth")
         PlanningError: Plan '0001-oauth' not found. Use 'aur plan list' to see available plans.
+
     """
 
     def __init__(self, code: str, **kwargs: str | int) -> None:
@@ -87,6 +88,7 @@ class PlanningError(Exception):
         Args:
             code: Error code from VALIDATION_MESSAGES
             **kwargs: Format arguments for message placeholders
+
         """
         self.code = code
         template = VALIDATION_MESSAGES.get(code, code)
@@ -107,6 +109,7 @@ class PlanNotFoundError(PlanningError):
     Example:
         >>> raise PlanNotFoundError("0001-oauth-auth")
         PlanNotFoundError: Plan '0001-oauth-auth' not found. Use 'aur plan list'...
+
     """
 
     def __init__(self, plan_id: str) -> None:
@@ -114,6 +117,7 @@ class PlanNotFoundError(PlanningError):
 
         Args:
             plan_id: ID of the plan that was not found
+
         """
         super().__init__("PLAN_NOT_FOUND", plan_id=plan_id)
 
@@ -130,9 +134,10 @@ class PlanValidationError(PlanningError):
     Example:
         >>> raise PlanValidationError("GOAL_TOO_SHORT")
         PlanValidationError: Goal must be at least 10 characters...
+
     """
 
-    pass  # Uses any validation error code from VALIDATION_MESSAGES
+    # Uses any validation error code from VALIDATION_MESSAGES
 
 
 class PlanDirectoryError(PlanningError):
@@ -146,9 +151,10 @@ class PlanDirectoryError(PlanningError):
     Example:
         >>> raise PlanDirectoryError("PLANS_DIR_NOT_INITIALIZED")
         PlanDirectoryError: Planning directory not initialized...
+
     """
 
-    pass  # Uses directory-related error codes
+    # Uses directory-related error codes
 
 
 class PlanArchiveError(PlanningError):
@@ -162,9 +168,10 @@ class PlanArchiveError(PlanningError):
     Example:
         >>> raise PlanArchiveError("ARCHIVE_FAILED", error="disk full")
         PlanArchiveError: Failed to archive plan: disk full...
+
     """
 
-    pass  # Uses archive-related error codes
+    # Uses archive-related error codes
 
 
 class PlanFileError(PlanningError):
@@ -177,9 +184,10 @@ class PlanFileError(PlanningError):
     Example:
         >>> raise PlanFileError("PLAN_FILE_CORRUPT", file="agents.json")
         PlanFileError: Plan file 'agents.json' is corrupt or invalid JSON...
+
     """
 
-    pass  # Uses file-related error codes
+    # Uses file-related error codes
 
 
 class ContextError(PlanningError):
@@ -192,6 +200,7 @@ class ContextError(PlanningError):
     Example:
         >>> raise ContextError("CONTEXT_FILE_NOT_FOUND", file="auth.py")
         ContextError: Context file 'auth.py' not found...
+
     """
 
-    pass  # Uses context-related error codes
+    # Uses context-related error codes

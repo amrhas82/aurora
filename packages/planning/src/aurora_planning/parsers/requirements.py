@@ -54,7 +54,7 @@ class ModificationPlan:
             "modified": False,
             "removed": False,
             "renamed": False,
-        }
+        },
     )
 
 
@@ -70,6 +70,7 @@ def normalize_requirement_name(name: str) -> str:
 
     Returns:
         Normalized requirement name
+
     """
     return name.strip()
 
@@ -82,6 +83,7 @@ def _normalize_line_endings(content: str) -> str:
 
     Returns:
         Content with Unix line endings only
+
     """
     return re.sub(r"\r\n?", "\n", content)
 
@@ -97,6 +99,7 @@ def extract_requirements_section(content: str) -> RequirementsSectionParts:
 
     Returns:
         RequirementsSectionParts with parsed sections and blocks
+
     """
     normalized = _normalize_line_endings(content)
     lines = normalized.split("\n")
@@ -172,7 +175,7 @@ def extract_requirements_section(content: str) -> RequirementsSectionParts:
                 header_line=header_line_candidate,
                 name=name,
                 raw=raw,
-            )
+            ),
         )
 
     after = "\n".join(lines[end_index:])
@@ -195,6 +198,7 @@ def _split_top_level_sections(content: str) -> dict[str, str]:
 
     Returns:
         Dict mapping section titles to their body content
+
     """
     lines = content.split("\n")
     result: dict[str, str] = {}
@@ -227,6 +231,7 @@ def _get_section_case_insensitive(sections: dict[str, str], desired: str) -> tup
 
     Returns:
         Tuple of (section body, found flag)
+
     """
     target = desired.lower()
     for title, body in sections.items():
@@ -243,6 +248,7 @@ def _parse_requirement_blocks_from_section(section_body: str) -> list[Requiremen
 
     Returns:
         List of RequirementBlock objects
+
     """
     if not section_body:
         return []
@@ -284,7 +290,7 @@ def _parse_requirement_blocks_from_section(section_body: str) -> list[Requiremen
                 header_line=header_line,
                 name=name,
                 raw="\n".join(buf).rstrip(),
-            )
+            ),
         )
 
     return blocks
@@ -300,6 +306,7 @@ def _parse_removed_names(section_body: str) -> list[str]:
 
     Returns:
         List of requirement names marked for removal
+
     """
     if not section_body:
         return []
@@ -334,6 +341,7 @@ def _parse_renamed_pairs(section_body: str) -> list[dict[str, str]]:
 
     Returns:
         List of rename dicts with 'from' and 'to' keys
+
     """
     if not section_body:
         return []
@@ -356,7 +364,7 @@ def _parse_renamed_pairs(section_body: str) -> list[dict[str, str]]:
                     {
                         "from": current["from"],
                         "to": current["to"],
-                    }
+                    },
                 )
                 current = {}
 
@@ -374,6 +382,7 @@ def parse_modification_spec(content: str) -> ModificationPlan:
 
     Returns:
         ModificationPlan with categorized requirements
+
     """
     normalized = _normalize_line_endings(content)
     sections = _split_top_level_sections(normalized)

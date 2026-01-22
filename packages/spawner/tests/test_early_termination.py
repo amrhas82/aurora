@@ -418,7 +418,10 @@ async def test_max_retries_override():
 
         # But override to 2 retries (3 total attempts)
         result = await spawn_with_retry_and_fallback(
-            task, max_retries=2, policy=policy, fallback_to_llm=False
+            task,
+            max_retries=2,
+            policy=policy,
+            fallback_to_llm=False,
         )
 
         assert not result.success

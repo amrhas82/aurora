@@ -17,6 +17,7 @@ class MockRetryLLMClient(LLMClient):
         Args:
             fail_first: If True, first verification fails, second passes
             always_retry: If True, all verifications return RETRY (for max retry test)
+
         """
         self.fail_first = fail_first
         self.always_retry = always_retry
@@ -46,7 +47,11 @@ class MockRetryLLMClient(LLMClient):
         )
 
     def generate_json(
-        self, prompt: str, system: str = "", schema: dict | None = None, **kwargs
+        self,
+        prompt: str,
+        system: str = "",
+        schema: dict | None = None,
+        **kwargs,
     ) -> dict:
         """Generate JSON response."""
         self.call_count += 1
@@ -103,7 +108,7 @@ class MockRetryLLMClient(LLMClient):
                     "suggested_agent": "test",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
             "expected_tools": ["test-tool"],
@@ -125,7 +130,7 @@ class TestVerificationRetry:
                     "suggested_agent": "test",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["test-tool"],
@@ -157,7 +162,7 @@ class TestVerificationRetry:
                     "suggested_agent": "test",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["test-tool"],
@@ -189,7 +194,7 @@ class TestVerificationRetry:
                     "suggested_agent": "test",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["test-tool"],

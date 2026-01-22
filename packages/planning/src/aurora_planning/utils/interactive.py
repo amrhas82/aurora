@@ -16,6 +16,7 @@ def is_interactive(options: dict[str, Any] | None = None) -> bool:
 
     Returns:
         True if environment is interactive, False otherwise
+
     """
     # Check if explicitly disabled via options
     if options:

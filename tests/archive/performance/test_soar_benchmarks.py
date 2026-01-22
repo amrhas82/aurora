@@ -84,7 +84,11 @@ class MockLLMClientFast(LLMClient):
         )
 
     def generate_json(
-        self, prompt: str, system: str = "", schema: dict | None = None, **kwargs
+        self,
+        prompt: str,
+        system: str = "",
+        schema: dict | None = None,
+        **kwargs,
     ) -> dict:
         """Generate JSON response."""
         import json
@@ -152,7 +156,7 @@ class TestSOARPerformance:
                 description="Test agent for performance testing",
                 capabilities=["test"],
                 agent_type="local",
-            )
+            ),
         )
         return registry
 
@@ -164,7 +168,7 @@ class TestSOARPerformance:
                 "budget": {"monthly_limit_usd": 999999.0},
                 "logging": {"conversation_logging_enabled": False},
                 "soar": {"timeout_seconds": 60, "max_retries": 2},
-            }
+            },
         )
 
     @pytest.fixture
@@ -267,7 +271,7 @@ class TestSOARPerformance:
         total_time = end - start
         queries_per_second = len(queries) / total_time
         print(
-            f"\nSequential throughput: {queries_per_second:.2f} queries/second ({total_time:.3f}s total for {len(queries)} queries)"
+            f"\nSequential throughput: {queries_per_second:.2f} queries/second ({total_time:.3f}s total for {len(queries)} queries)",
         )
 
         # No strict assertion, just measuring and reporting
@@ -361,12 +365,12 @@ class TestPhasePerformance:
                     "agent_name": "test-agent",
                     "agent_output": "Test output",
                     "status": "completed",
-                }
+                },
             ],
             decomposition={
                 "goal": "Test query",
                 "subgoals": [
-                    {"id": "sg1", "description": "Test subgoal", "suggested_agent": "test-agent"}
+                    {"id": "sg1", "description": "Test subgoal", "suggested_agent": "test-agent"},
                 ],
                 "execution_order": ["sg1"],
                 "expected_tools": [],

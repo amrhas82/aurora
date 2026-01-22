@@ -35,6 +35,7 @@ def memory_store() -> Generator[MemoryStore, None, None]:
 
     Yields:
         MemoryStore: Fresh memory store instance.
+
     """
     store = MemoryStore()
     yield store
@@ -47,6 +48,7 @@ def sqlite_store() -> Generator[SQLiteStore, None, None]:
 
     Yields:
         SQLiteStore: Fresh SQLite store with :memory: database.
+
     """
     store = SQLiteStore(db_path=":memory:")
     yield store
@@ -62,6 +64,7 @@ def sqlite_file_store(tmp_path: Path) -> Generator[SQLiteStore, None, None]:
 
     Yields:
         SQLiteStore: SQLite store backed by temporary file.
+
     """
     db_path = tmp_path / "test_aurora.db"
     store = SQLiteStore(db_path=str(db_path))
@@ -80,6 +83,7 @@ def sample_code_chunk() -> CodeChunk:
 
     Returns:
         CodeChunk: Basic code chunk with minimal fields.
+
     """
     return CodeChunk(
         chunk_id="code:test.py:func",
@@ -97,6 +101,7 @@ def sample_code_chunk_with_metadata() -> CodeChunk:
 
     Returns:
         CodeChunk: Code chunk with all optional fields populated.
+
     """
     return CodeChunk(
         chunk_id="code:parser.py:parse_file",
@@ -119,6 +124,7 @@ def sample_class_chunk() -> CodeChunk:
 
     Returns:
         CodeChunk: Class chunk with typical metadata.
+
     """
     return CodeChunk(
         chunk_id="code:models.py:UserModel",
@@ -141,6 +147,7 @@ def sample_method_chunk() -> CodeChunk:
 
     Returns:
         CodeChunk: Method chunk with parent class context.
+
     """
     return CodeChunk(
         chunk_id="code:service.py:ApiClient.fetch_data",
@@ -163,6 +170,7 @@ def chunk_collection() -> list[CodeChunk]:
 
     Returns:
         List[CodeChunk]: List of chunks with different characteristics.
+
     """
     return [
         CodeChunk(
@@ -227,6 +235,7 @@ def python_parser() -> PythonParser:
 
     Returns:
         PythonParser: Fresh parser instance.
+
     """
     return PythonParser()
 
@@ -237,6 +246,7 @@ def parser_registry() -> Any:  # ParserRegistry type not imported
 
     Returns:
         ParserRegistry: Registry with Python parser.
+
     """
     return get_global_registry()
 
@@ -256,13 +266,16 @@ def code_context_provider(memory_store: MemoryStore, parser_registry: Any) -> Co
 
     Returns:
         CodeContextProvider: Configured context provider.
+
     """
     return CodeContextProvider(memory_store, parser_registry)
 
 
 @pytest.fixture
 def populated_context_provider(
-    memory_store: MemoryStore, parser_registry: Any, chunk_collection: list[CodeChunk]
+    memory_store: MemoryStore,
+    parser_registry: Any,
+    chunk_collection: list[CodeChunk],
 ) -> CodeContextProvider:
     """Create a CodeContextProvider pre-populated with sample chunks.
 
@@ -273,6 +286,7 @@ def populated_context_provider(
 
     Returns:
         CodeContextProvider: Context provider with data already stored.
+
     """
     provider = CodeContextProvider(memory_store, parser_registry)
     for chunk in chunk_collection:
@@ -294,6 +308,7 @@ def sample_python_file(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to created Python file.
+
     """
     test_file = tmp_path / "sample.py"
     test_file.write_text(
@@ -319,7 +334,7 @@ class SimpleClass:
             if item:
                 result.append(item)
         return result
-'''
+''',
     )
     return test_file
 
@@ -333,6 +348,7 @@ def complex_python_file(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to created Python file.
+
     """
     test_file = tmp_path / "complex.py"
     test_file.write_text(
@@ -410,7 +426,7 @@ def standalone_function(data: Dict[str, Any]) -> bool:
         return False
 
     return True
-'''
+''',
     )
     return test_file
 
@@ -424,6 +440,7 @@ def broken_python_file(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to created Python file with syntax errors.
+
     """
     test_file = tmp_path / "broken.py"
     test_file.write_text(
@@ -439,7 +456,7 @@ class BrokenClass
 
 # Unclosed string
 message = "this string is not closed
-"""
+""",
     )
     return test_file
 
@@ -453,6 +470,7 @@ def python_file_collection(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to directory containing multiple Python files.
+
     """
     project_dir = tmp_path / "project"
     project_dir.mkdir()
@@ -465,7 +483,7 @@ def python_file_collection(tmp_path: Path) -> Path:
 def helper_function(x):
     """Helper utility."""
     return x * 2
-'''
+''',
     )
 
     (project_dir / "models.py").write_text(
@@ -478,7 +496,7 @@ class DataModel:
 
     def validate(self):
         return bool(self.name)
-'''
+''',
     )
 
     subdir = project_dir / "submodule"
@@ -489,7 +507,7 @@ class DataModel:
 def process(data):
     """Process data."""
     return [x for x in data if x]
-'''
+''',
     )
 
     return project_dir
@@ -504,6 +522,7 @@ def empty_python_file(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to empty Python file.
+
     """
     test_file = tmp_path / "empty.py"
     test_file.write_text("")
@@ -519,6 +538,7 @@ def python_file_with_only_docstring(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to Python file with only docstring.
+
     """
     test_file = tmp_path / "docstring_only.py"
     test_file.write_text('"""This module has only a docstring."""\n')
@@ -539,6 +559,7 @@ def large_python_file(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to large Python file.
+
     """
     test_file = tmp_path / "large.py"
     lines = []
@@ -562,7 +583,7 @@ class LargeClass_{i}:
             else:
                 result.append(0)
         return result
-'''
+''',
         )
 
     test_file.write_text("\n".join(lines))
@@ -578,6 +599,7 @@ def scalable_python_file_factory(tmp_path: Path) -> Callable[[int], Path]:
 
     Returns:
         Callable: Function that creates Python file with N functions.
+
     """
 
     def create_file(num_functions: int) -> Path:
@@ -588,6 +610,7 @@ def scalable_python_file_factory(tmp_path: Path) -> Callable[[int], Path]:
 
         Returns:
             Path: Path to generated file.
+
         """
         test_file = tmp_path / f"scale_{num_functions}.py"
         lines = []
@@ -603,7 +626,7 @@ def function_{i}(x, y):
         return y
     else:
         return 0
-'''
+''',
             )
 
         test_file.write_text("\n".join(lines))
@@ -626,6 +649,7 @@ def temp_config_dir(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to config directory.
+
     """
     config_dir = tmp_path / "config"
     config_dir.mkdir()
@@ -641,6 +665,7 @@ def sample_agent_config(tmp_path: Path) -> Path:
 
     Returns:
         Path: Path to agent config JSON file.
+
     """
     import json
 
@@ -663,7 +688,7 @@ def sample_agent_config(tmp_path: Path) -> Path:
                 "capabilities": ["analyze", "review"],
                 "domains": ["python", "javascript"],
             },
-        ]
+        ],
     }
 
     config_file.write_text(json.dumps(config_data, indent=2))
@@ -676,6 +701,7 @@ def fixtures_dir() -> Path:
 
     Returns:
         Path: Path to tests/fixtures directory.
+
     """
     return Path("/home/hamr/PycharmProjects/aurora/tests/fixtures")
 
@@ -689,5 +715,6 @@ def sample_python_files_dir(fixtures_dir: Path) -> Path:
 
     Returns:
         Path: Path to sample_python_files directory.
+
     """
     return fixtures_dir / "sample_python_files"

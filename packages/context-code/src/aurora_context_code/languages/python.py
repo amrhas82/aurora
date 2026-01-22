@@ -62,7 +62,7 @@ class PythonParser(CodeParser):
             self.parser = None
             logger.warning(
                 "Tree-sitter unavailable - using text chunking (reduced quality)\n"
-                "→ Install with: pip install tree-sitter tree-sitter-python"
+                "→ Install with: pip install tree-sitter tree-sitter-python",
             )
 
     def can_parse(self, file_path: Path) -> bool:
@@ -73,6 +73,7 @@ class PythonParser(CodeParser):
 
         Returns:
             True if file has .py or .pyi extension, False otherwise
+
         """
         return file_path.suffix in self.EXTENSIONS
 
@@ -85,6 +86,7 @@ class PythonParser(CodeParser):
         Returns:
             List of CodeChunk instances for functions, classes, and methods.
             Returns empty list if parsing fails or file contains no elements.
+
         """
         try:
             # Validate file path
@@ -126,7 +128,9 @@ class PythonParser(CodeParser):
 
             # Extract classes and methods
             class_and_method_chunks = self._extract_classes_and_methods(
-                tree.root_node, file_path, source_code
+                tree.root_node,
+                file_path,
+                source_code,
             )
             chunks.extend(class_and_method_chunks)
 
@@ -146,7 +150,10 @@ class PythonParser(CodeParser):
             return []
 
     def _extract_functions(
-        self, root_node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        root_node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> list[CodeChunk]:
         """Extract function definitions from the AST.
 
@@ -157,6 +164,7 @@ class PythonParser(CodeParser):
 
         Returns:
             List of CodeChunk instances for functions
+
         """
         chunks: list[CodeChunk] = []
 
@@ -219,7 +227,10 @@ class PythonParser(CodeParser):
         return chunks
 
     def _extract_classes_and_methods(
-        self, root_node: tree_sitter.Node, file_path: Path, source_code: str
+        self,
+        root_node: tree_sitter.Node,
+        file_path: Path,
+        source_code: str,
     ) -> list[CodeChunk]:
         """Extract class definitions and their methods from the AST.
 
@@ -230,6 +241,7 @@ class PythonParser(CodeParser):
 
         Returns:
             List of CodeChunk instances for classes and methods
+
         """
         chunks: list[CodeChunk] = []
 
@@ -286,7 +298,10 @@ class PythonParser(CodeParser):
                 class_body = class_node.child_by_field_name("body")
                 if class_body:
                     method_chunks = self._extract_methods(
-                        class_body, class_name, file_path, source_code
+                        class_body,
+                        class_name,
+                        file_path,
+                        source_code,
                     )
                     chunks.extend(method_chunks)
 
@@ -313,6 +328,7 @@ class PythonParser(CodeParser):
 
         Returns:
             List of CodeChunk instances for methods
+
         """
         chunks: list[CodeChunk] = []
 
@@ -381,6 +397,7 @@ class PythonParser(CodeParser):
 
         Returns:
             List of matching nodes
+
         """
         results: list[tree_sitter.Node] = []
 
@@ -401,6 +418,7 @@ class PythonParser(CodeParser):
 
         Returns:
             True if node is inside a class, False otherwise
+
         """
         current = node.parent
         while current:
@@ -421,6 +439,7 @@ class PythonParser(CodeParser):
 
         Returns:
             Docstring text if found, None otherwise
+
         """
         try:
             # Get the body node
@@ -458,6 +477,7 @@ class PythonParser(CodeParser):
 
         Returns:
             Cleaned docstring text, or None if empty
+
         """
         # Remove triple quotes or single quotes
         cleaned = raw_string.strip()
@@ -490,6 +510,7 @@ class PythonParser(CodeParser):
 
         Returns:
             Normalized complexity score in range [0.0, 1.0]
+
         """
         # Node types that represent branch points
         branch_types = {
@@ -539,6 +560,7 @@ class PythonParser(CodeParser):
 
         Returns:
             Set of imported names (modules, functions, classes)
+
         """
         imports: set[str] = set()
 
@@ -570,7 +592,10 @@ class PythonParser(CodeParser):
         return imports
 
     def _identify_dependencies(
-        self, chunk: CodeChunk, imports: set[str], all_chunks: list[CodeChunk]
+        self,
+        chunk: CodeChunk,
+        imports: set[str],
+        all_chunks: list[CodeChunk],
     ) -> list[str]:
         """Identify dependencies for a code chunk.
 
@@ -588,6 +613,7 @@ class PythonParser(CodeParser):
 
         Returns:
             List of chunk IDs this chunk depends on
+
         """
         # For now, return empty list
         # Full implementation would:
@@ -610,6 +636,7 @@ class PythonParser(CodeParser):
 
         Returns:
             Unique chunk identifier
+
         """
         # Create a deterministic ID based on file path, name, and location
         unique_string = f"{file_path}:{element_name}:{line_start}"
@@ -628,6 +655,7 @@ class PythonParser(CodeParser):
 
         Returns:
             List of CodeChunk instances with basic text chunks
+
         """
         chunks: list[CodeChunk] = []
         lines = content.split("\n")

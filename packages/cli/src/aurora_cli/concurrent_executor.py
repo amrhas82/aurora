@@ -212,7 +212,7 @@ class ConflictDetector:
                         "tool2": t2,
                         "count1": len(code1),
                         "count2": len(code2),
-                    }
+                    },
                 )
 
         return ConflictInfo(
@@ -387,6 +387,7 @@ class ConcurrentToolExecutor:
         timeout: Global timeout for all executions
         scratchpad_path: Optional path for shared scratchpad
         isolation_level: Resource isolation level ("none", "light", "full")
+
     """
 
     def __init__(
@@ -415,6 +416,7 @@ class ConcurrentToolExecutor:
             max_per_tool: Maximum concurrent executions per tool type
             track_file_changes: Enable file change tracking and conflict resolution
             working_dir: Working directory for file change tracking
+
         """
         self.tools = self._normalize_tools(tools)
         self.strategy = strategy
@@ -541,6 +543,7 @@ class ConcurrentToolExecutor:
 
         Returns:
             ToolResult with execution details
+
         """
         isolation_manager = self._get_isolation_manager()
 
@@ -566,6 +569,7 @@ class ConcurrentToolExecutor:
 
         Returns:
             ToolResult with execution details
+
         """
         start_time = time.time()
 
@@ -610,6 +614,7 @@ class ConcurrentToolExecutor:
 
         Returns:
             ToolResult with execution details
+
         """
         from aurora_cli.tool_providers import ToolProviderRegistry
 
@@ -628,7 +633,12 @@ class ConcurrentToolExecutor:
 
         if provider and provider.is_available():
             return await self._execute_with_provider(
-                provider, tool, prompt, start_time, working_dir, env
+                provider,
+                tool,
+                prompt,
+                start_time,
+                working_dir,
+                env,
             )
 
         # Fallback to direct subprocess execution
@@ -655,6 +665,7 @@ class ConcurrentToolExecutor:
 
         Returns:
             ToolResult with execution details
+
         """
         try:
             # Use provider's retry-enabled async execution
@@ -739,6 +750,7 @@ class ConcurrentToolExecutor:
 
         Returns:
             ToolResult with execution details
+
         """
         # Build command
         if tool.command:
@@ -860,6 +872,7 @@ class ConcurrentToolExecutor:
 
         Returns:
             AggregatedResult with combined results
+
         """
         start_time = time.time()
         enabled_tools = [t for t in self.tools if t.enabled]
@@ -913,6 +926,7 @@ class ConcurrentToolExecutor:
 
         Returns:
             FileAggregationResult with merged changes and conflict info
+
         """
         if not self._file_aggregator:
             return None
@@ -1014,7 +1028,7 @@ class ConcurrentToolExecutor:
                         output="",
                         error=str(result),
                         exit_code=-1,
-                    )
+                    ),
                 )
             else:
                 tool_results.append(result)
@@ -1186,7 +1200,8 @@ class ConcurrentToolExecutor:
 
         # Try consensus resolution
         winner, conflict_info = ConflictResolver.resolve_by_consensus(
-            results.tool_results, threshold=threshold
+            results.tool_results,
+            threshold=threshold,
         )
 
         if winner:
@@ -1240,6 +1255,7 @@ def run_concurrent(
 
     Returns:
         AggregatedResult
+
     """
     strategy_enum = AggregationStrategy(strategy)
     executor = ConcurrentToolExecutor(tools, strategy=strategy_enum, timeout=timeout)

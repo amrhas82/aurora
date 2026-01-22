@@ -53,6 +53,7 @@ class ResponseResult:
     Attributes:
         formatted_output: Formatted response string
         raw_data: Complete structured data (for JSON mode or programmatic access)
+
     """
 
     def __init__(
@@ -84,6 +85,7 @@ def format_response(
 
     Returns:
         ResponseResult with formatted output and raw data
+
     """
     # Build complete response data structure
     raw_data = {
@@ -128,6 +130,7 @@ def _format_quiet(synthesis_result: SynthesisResult) -> str:
 
     Returns:
         Single line formatted string
+
     """
     score = synthesis_result.confidence
     status = "✓" if score >= 0.7 else "⚠" if score >= 0.5 else "✗"
@@ -149,6 +152,7 @@ def _format_normal(
 
     Returns:
         Multi-line formatted string
+
     """
     lines = []
 
@@ -168,7 +172,7 @@ def _format_normal(
     lines.append(
         f"  Subgoals: {synthesis_result.metadata.get('subgoals_completed', 0)} completed, "
         f"{synthesis_result.metadata.get('subgoals_partial', 0)} partial, "
-        f"{synthesis_result.metadata.get('subgoals_failed', 0)} failed"
+        f"{synthesis_result.metadata.get('subgoals_failed', 0)} failed",
     )
     lines.append(f"  Files Modified: {synthesis_result.metadata.get('total_files_modified', 0)}")
 
@@ -225,6 +229,7 @@ def _format_verbose(
 
     Returns:
         Multi-line formatted string with full details
+
     """
     lines = []
 
@@ -275,7 +280,7 @@ def _format_verbose(
         for i, trace in enumerate(synthesis_result.traceability, 1):
             lines.append(
                 f"{i}. Agent: {trace['agent']} | "
-                f"Subgoal {trace['subgoal_id']}: {trace['subgoal_description']}"
+                f"Subgoal {trace['subgoal_id']}: {trace['subgoal_description']}",
             )
     else:
         lines.append("  No traceability information available")
@@ -289,7 +294,7 @@ def _format_verbose(
     lines.append(f"Subgoals Failed: {synthesis_result.metadata.get('subgoals_failed', 0)}")
     lines.append(f"Files Modified: {synthesis_result.metadata.get('total_files_modified', 0)}")
     lines.append(
-        f"User Interactions: {synthesis_result.metadata.get('user_interactions_count', 0)}"
+        f"User Interactions: {synthesis_result.metadata.get('user_interactions_count', 0)}",
     )
 
     # Phase Timing
@@ -332,7 +337,7 @@ def _format_verbose(
             lines.append(
                 f"Tokens: {tokens.get('input', 0)} input + "
                 f"{tokens.get('output', 0)} output = "
-                f"{tokens.get('total', 0)} total"
+                f"{tokens.get('total', 0)} total",
             )
 
     lines.append("\n" + "=" * 80)
@@ -348,6 +353,7 @@ def _extract_subgoal_breakdown(phase_metadata: dict[str, Any]) -> list[dict[str,
 
     Returns:
         List of subgoal detail dicts, or empty list if not available
+
     """
     phases = phase_metadata.get("phases", {})
 

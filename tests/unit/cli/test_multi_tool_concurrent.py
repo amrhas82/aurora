@@ -12,9 +12,7 @@ multiple AI tools (Claude, OpenCode) simultaneously:
 """
 
 import asyncio
-from dataclasses import dataclass
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -23,7 +21,6 @@ from aurora_cli.concurrent_executor import (
     AggregationStrategy,
     ConcurrentToolExecutor,
     ConflictDetector,
-    ConflictInfo,
     ConflictResolver,
     ConflictSeverity,
     ToolConfig,
@@ -147,19 +144,18 @@ class TestRaceConditions:
                     output="Quick response",
                     execution_time=0.01,
                 )
-            else:
-                # Slow tool that checks for cancellation
-                try:
-                    await asyncio.sleep(0.5)
-                except asyncio.CancelledError:
-                    cancellation_received["opencode"] = True
-                    raise
-                return ToolResult(
-                    tool="opencode",
-                    success=True,
-                    output="Slow response",
-                    execution_time=0.5,
-                )
+            # Slow tool that checks for cancellation
+            try:
+                await asyncio.sleep(0.5)
+            except asyncio.CancelledError:
+                cancellation_received["opencode"] = True
+                raise
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="Slow response",
+                execution_time=0.5,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -257,7 +253,7 @@ class TestToolFailureRecovery:
                     exit_code=-1,
                     execution_time=60.0,
                 )
-            elif tool.name == "opencode":
+            if tool.name == "opencode":
                 return ToolResult(
                     tool="opencode",
                     success=False,
@@ -266,13 +262,12 @@ class TestToolFailureRecovery:
                     exit_code=1,
                     execution_time=0.1,
                 )
-            else:
-                return ToolResult(
-                    tool="cursor",
-                    success=True,
-                    output="Cursor works!",
-                    execution_time=0.5,
-                )
+            return ToolResult(
+                tool="cursor",
+                success=True,
+                output="Cursor works!",
+                execution_time=0.5,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -297,7 +292,10 @@ class TestConflictDetection:
         results = [
             ToolResult(tool="claude", success=True, output="The answer is 42", execution_time=1.0),
             ToolResult(
-                tool="opencode", success=True, output="The answer is 42", execution_time=1.0
+                tool="opencode",
+                success=True,
+                output="The answer is 42",
+                execution_time=1.0,
             ),
         ]
 
@@ -311,7 +309,10 @@ class TestConflictDetection:
         results = [
             ToolResult(tool="claude", success=True, output="The answer is 42", execution_time=1.0),
             ToolResult(
-                tool="opencode", success=True, output="The  answer   is  42", execution_time=1.0
+                tool="opencode",
+                success=True,
+                output="The  answer   is  42",
+                execution_time=1.0,
             ),
         ]
 
@@ -421,7 +422,10 @@ class TestConflictResolution:
         results = [
             ToolResult(tool="claude", success=True, output="The answer is 42", execution_time=1.0),
             ToolResult(
-                tool="opencode", success=True, output="The answer is 42", execution_time=1.0
+                tool="opencode",
+                success=True,
+                output="The answer is 42",
+                execution_time=1.0,
             ),
         ]
 
@@ -435,10 +439,16 @@ class TestConflictResolution:
         """Test consensus resolution when no agreement."""
         results = [
             ToolResult(
-                tool="claude", success=True, output="Use Python for this.", execution_time=1.0
+                tool="claude",
+                success=True,
+                output="Use Python for this.",
+                execution_time=1.0,
             ),
             ToolResult(
-                tool="opencode", success=True, output="Use Rust for this.", execution_time=1.0
+                tool="opencode",
+                success=True,
+                output="Use Rust for this.",
+                execution_time=1.0,
             ),
         ]
 
@@ -451,16 +461,23 @@ class TestConflictResolution:
         """Test weighted voting resolution."""
         results = [
             ToolResult(
-                tool="claude", success=True, output="Answer A" * 100, execution_time=10.0
+                tool="claude",
+                success=True,
+                output="Answer A" * 100,
+                execution_time=10.0,
             ),  # Slow, long
             ToolResult(
-                tool="opencode", success=True, output="Answer B", execution_time=1.0
+                tool="opencode",
+                success=True,
+                output="Answer B",
+                execution_time=1.0,
             ),  # Fast, short
         ]
 
         # Weight claude higher
         winner, conflict_info = ConflictResolver.resolve_by_weighted_vote(
-            results, weights={"claude": 5.0, "opencode": 1.0}
+            results,
+            weights={"claude": 5.0, "opencode": 1.0},
         )
 
         assert winner is not None
@@ -471,7 +488,10 @@ class TestConflictResolution:
         results = [
             ToolResult(tool="claude", success=True, output="The answer is 42.", execution_time=1.0),
             ToolResult(
-                tool="opencode", success=True, output="The answer is 42", execution_time=1.0
+                tool="opencode",
+                success=True,
+                output="The answer is 42",
+                execution_time=1.0,
             ),
         ]
 
@@ -529,7 +549,10 @@ class TestStrategyEdgeCases:
                 tool_results=[
                     ToolResult(tool="claude", success=True, output="Answer A", execution_time=0.1),
                     ToolResult(
-                        tool="opencode", success=True, output="Answer B", execution_time=0.1
+                        tool="opencode",
+                        success=True,
+                        output="Answer B",
+                        execution_time=0.1,
                     ),
                     ToolResult(tool="cursor", success=True, output="Answer C", execution_time=0.1),
                     ToolResult(tool="copilot", success=True, output="Answer D", execution_time=0.1),
@@ -583,7 +606,10 @@ class TestStrategyEdgeCases:
                 tool_results=[
                     ToolResult(tool="claude", success=True, output="", execution_time=0.1),
                     ToolResult(
-                        tool="opencode", success=True, output="Only content", execution_time=0.1
+                        tool="opencode",
+                        success=True,
+                        output="Only content",
+                        execution_time=0.1,
                     ),
                 ],
             )
@@ -847,7 +873,10 @@ class TestExecutionMetadata:
                 tool_results=[
                     ToolResult(tool="claude", success=True, output="A" * 500, execution_time=20.0),
                     ToolResult(
-                        tool="opencode", success=True, output="B" * 100, execution_time=50.0
+                        tool="opencode",
+                        success=True,
+                        output="B" * 100,
+                        execution_time=50.0,
                     ),
                 ],
             )

@@ -79,7 +79,7 @@ def greet(name):
 
 def add(a, b):
     return a + b
-"""
+""",
         )
         return test_file
 
@@ -110,7 +110,7 @@ def add(a, b):
             """
 def simple():
     return 42
-"""
+""",
         )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -141,7 +141,7 @@ class Calculator:
     def subtract(self, x, y):
         \"\"\"Subtract two numbers.\"\"\"
         return x - y
-"""
+""",
         )
         return test_file
 
@@ -185,7 +185,7 @@ class Parent:
 class Child(Parent):
     \"\"\"A child class.\"\"\"
     pass
-"""
+""",
         )
         chunks = parser.parse(test_file)
 
@@ -214,7 +214,7 @@ class TestDocstringExtraction:
 def func():
     'Single quote docstring'
     pass
-"""
+""",
         )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -228,7 +228,7 @@ def func():
 def func():
     """Triple quote docstring"""
     pass
-'''
+''',
         )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -245,7 +245,7 @@ def func():
     multiline docstring.
     """
     pass
-'''
+''',
         )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -271,7 +271,7 @@ def simple():
     x = 1
     y = 2
     return x + y
-"""
+""",
         )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -286,7 +286,7 @@ def with_if(x):
     if x > 0:
         return x
     return 0
-"""
+""",
         )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -308,7 +308,7 @@ def complex_func(x, y):
                     except ZeroDivisionError:
                         pass
     return x + y
-"""
+""",
         )
         chunks = parser.parse(test_file)
         assert len(chunks) == 1
@@ -342,7 +342,7 @@ class TestErrorHandling:
             """
 def broken_function(:  # Syntax error
     return "broken"
-"""
+""",
         )
         # Should not raise exception, return partial results or empty
         chunks = parser.parse(test_file)
@@ -363,7 +363,7 @@ def broken_function(:  # Syntax error
             """
 # This is a comment
 # Another comment
-"""
+""",
         )
         chunks = parser.parse(test_file)
         assert chunks == []

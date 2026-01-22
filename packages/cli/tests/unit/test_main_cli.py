@@ -209,7 +209,9 @@ class TestQueryCommand:
     @patch("aurora_cli.main.QueryExecutor")
     @patch("aurora_cli.main.AutoEscalationHandler")
     def test_query_command_with_show_reasoning(
-        self, mock_handler_class: Mock, mock_executor_class: Mock
+        self,
+        mock_handler_class: Mock,
+        mock_executor_class: Mock,
     ) -> None:
         """Test query_command() with --show-reasoning flag displays analysis."""
         # Mock dependencies
@@ -243,7 +245,10 @@ class TestVerifyCommand:
     @patch("importlib.import_module")
     @patch("sys.exit")
     def test_verify_command_displays_checks(
-        self, mock_exit: Mock, mock_import: Mock, mock_which: Mock
+        self,
+        mock_exit: Mock,
+        mock_import: Mock,
+        mock_which: Mock,
     ) -> None:
         """Test verify_command() displays installation checks."""
         runner = CliRunner()
@@ -257,7 +262,10 @@ class TestVerifyCommand:
     @patch("importlib.import_module")
     @patch("sys.exit")
     def test_verify_command_detects_missing_packages(
-        self, mock_exit: Mock, mock_import: Mock, mock_which: Mock
+        self,
+        mock_exit: Mock,
+        mock_import: Mock,
+        mock_which: Mock,
     ) -> None:
         """Test verify_command() detects missing packages."""
 
@@ -282,7 +290,10 @@ class TestHelperFunctions:
     @patch("aurora_core.activation.engine.ActivationEngine")
     @patch("aurora_context_code.semantic.hybrid_retriever.HybridRetriever")
     def test_is_memory_empty_with_empty_store(
-        self, mock_retriever_class: Mock, mock_engine: Mock, mock_provider: Mock
+        self,
+        mock_retriever_class: Mock,
+        mock_engine: Mock,
+        mock_provider: Mock,
     ) -> None:
         """Test _is_memory_empty() returns True for empty store."""
         # Mock the retriever to return no results
@@ -299,7 +310,10 @@ class TestHelperFunctions:
     @patch("aurora_core.activation.engine.ActivationEngine")
     @patch("aurora_context_code.semantic.hybrid_retriever.HybridRetriever")
     def test_is_memory_empty_with_populated_store(
-        self, mock_retriever_class: Mock, mock_engine: Mock, mock_provider: Mock
+        self,
+        mock_retriever_class: Mock,
+        mock_engine: Mock,
+        mock_provider: Mock,
     ) -> None:
         """Test _is_memory_empty() returns False for populated store."""
         # Mock the retriever to return results
@@ -347,7 +361,9 @@ class TestHelperFunctions:
     @patch("aurora_cli.main.AutoEscalationHandler")
     @patch("aurora_core.store.SQLiteStore")
     def test_execute_dry_run_displays_configuration(
-        self, mock_store: Mock, mock_handler_class: Mock
+        self,
+        mock_store: Mock,
+        mock_handler_class: Mock,
     ) -> None:
         """Test _execute_dry_run() displays dry-run configuration."""
         # Mock dependencies
@@ -410,7 +426,9 @@ class TestHelperFunctions:
 
     @patch("aurora_cli.memory_manager.MemoryManager")
     def test_perform_auto_index_indexes_directory(
-        self, mock_manager_class: Mock, tmp_path: Path
+        self,
+        mock_manager_class: Mock,
+        tmp_path: Path,
     ) -> None:
         """Test _perform_auto_index() performs indexing with progress."""
         # Mock MemoryManager
@@ -459,7 +477,8 @@ class TestQueryCommandInteractiveMode:
 
             runner = CliRunner()
             result = runner.invoke(
-                cli, ["query", "What is Python?", "--non-interactive", "--force-direct"]
+                cli,
+                ["query", "What is Python?", "--non-interactive", "--force-direct"],
             )
 
             # Verify query executed successfully
@@ -505,7 +524,8 @@ class TestQueryCommandInteractiveMode:
     @patch("aurora_cli.main.QueryExecutor")
     @patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"})
     def test_query_command_interactive_flag_passed_to_executor(
-        self, mock_executor_class: Mock
+        self,
+        mock_executor_class: Mock,
     ) -> None:
         """Test that interactive mode flag is correctly propagated to QueryExecutor."""
         # Mock executor instance

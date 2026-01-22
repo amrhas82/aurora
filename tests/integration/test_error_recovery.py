@@ -26,7 +26,7 @@ class TestTransientErrorRecovery:
                 TimeoutError("LLM timeout"),
                 TimeoutError("LLM timeout"),
                 {"response": "success"},
-            ]
+            ],
         )
 
         # Execute with retry
@@ -54,7 +54,7 @@ class TestTransientErrorRecovery:
 
         # Mock database operation that's locked initially
         db_operation = Mock(
-            side_effect=[StorageError("Database is locked", "SQLite lock"), "success"]
+            side_effect=[StorageError("Database is locked", "SQLite lock"), "success"],
         )
 
         result = handler.execute(db_operation)
@@ -68,7 +68,7 @@ class TestTransientErrorRecovery:
 
         # Mock network operation that fails once
         network_call = Mock(
-            side_effect=[ConnectionError("Connection refused"), {"data": "success"}]
+            side_effect=[ConnectionError("Connection refused"), {"data": "success"}],
         )
 
         result = handler.execute(network_call)
@@ -199,7 +199,7 @@ class TestMetricsAndAlertingIntegration:
                 "error_rate": stats["errors"]["error_rate"],
                 "p95_latency": stats["queries"]["p95_latency"],
                 "cache_hit_rate": 0.5,  # Good cache rate
-            }
+            },
         )
 
         # Should trigger high error rate alert (80% > 5%)
@@ -226,7 +226,7 @@ class TestMetricsAndAlertingIntegration:
                 "error_rate": stats["errors"]["error_rate"],
                 "p95_latency": stats["queries"]["p95_latency"],
                 "cache_hit_rate": 0.5,
-            }
+            },
         )
 
         # Should trigger high p95 latency alert (>10s)
@@ -253,7 +253,7 @@ class TestMetricsAndAlertingIntegration:
                 "error_rate": 0.0,
                 "p95_latency": 1.0,
                 "cache_hit_rate": stats["cache"]["hit_rate"],
-            }
+            },
         )
 
         # Should trigger low cache hit rate alert (10% < 20%)
@@ -309,7 +309,7 @@ class TestFullResilienceWorkflow:
                 "error_rate": stats["errors"]["error_rate"],
                 "p95_latency": stats["queries"]["p95_latency"],
                 "cache_hit_rate": 1.0,  # Assume perfect cache
-            }
+            },
         )
 
         # Verify results

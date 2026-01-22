@@ -53,6 +53,7 @@ class WindsurfSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -66,6 +67,7 @@ class WindsurfSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             YAML frontmatter string with description and auto_execution_mode
+
         """
         description = DESCRIPTIONS[command_id]
         return f"""---
@@ -81,6 +83,7 @@ auto_execution_mode: 3
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -92,5 +95,6 @@ auto_execution_mode: 3
 
         Returns:
             One-line description for skill listings
+
         """
         return DESCRIPTIONS.get(command_id)

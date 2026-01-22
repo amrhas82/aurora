@@ -266,7 +266,7 @@ prompt = """
 Old body content
 {AURORA_MARKERS["end"]}
 """
-'''
+''',
         )
 
         config.update_existing(str(tmp_path), ".aurora")
@@ -293,7 +293,7 @@ prompt = """
 {old_body}
 {AURORA_MARKERS["end"]}
 """
-'''
+''',
         )
 
         config.update_existing(str(tmp_path), ".aurora")
@@ -320,7 +320,7 @@ prompt = """
 Body
 {AURORA_MARKERS["end"]}
 """
-'''
+''',
         )
 
         updated = config.update_existing(str(tmp_path), ".aurora")

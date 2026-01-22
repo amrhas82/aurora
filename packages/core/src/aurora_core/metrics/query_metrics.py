@@ -65,6 +65,7 @@ class QueryMetrics:
 
         Args:
             db_path: Path to SQLite database (default: project-local .aurora/memory.db)
+
         """
         if db_path is None:
             db_path = get_db_path()
@@ -94,20 +95,20 @@ class QueryMetrics:
                         year_month TEXT NOT NULL,  -- 'YYYY-MM' for fast monthly queries
                         metadata TEXT  -- JSON for extensibility
                     )
-                """
+                """,
                 )
                 # Index for monthly aggregations
                 conn.execute(
                     """
                     CREATE INDEX IF NOT EXISTS idx_query_metrics_year_month
                     ON query_metrics(year_month)
-                """
+                """,
                 )
                 conn.execute(
                     """
                     CREATE INDEX IF NOT EXISTS idx_query_metrics_query_type
                     ON query_metrics(query_type)
-                """
+                """,
                 )
                 conn.commit()
         except Exception as e:
@@ -141,6 +142,7 @@ class QueryMetrics:
             phase_count: Number of SOAR phases executed
             claude_calls: Number of Claude API/CLI calls made
             metadata: Additional metadata as JSON
+
         """
         try:
             now = datetime.now()
@@ -188,6 +190,7 @@ class QueryMetrics:
 
         Returns:
             QueryMetricsSummary with aggregated stats
+
         """
         if year_month is None:
             year_month = datetime.now().strftime("%Y-%m")
@@ -203,12 +206,12 @@ class QueryMetrics:
                 summary.total_queries = row["total"] if row else 0
 
                 row = conn.execute(
-                    "SELECT COUNT(*) as total FROM query_metrics WHERE query_type = 'soar'"
+                    "SELECT COUNT(*) as total FROM query_metrics WHERE query_type = 'soar'",
                 ).fetchone()
                 summary.total_soar_queries = row["total"] if row else 0
 
                 row = conn.execute(
-                    "SELECT COUNT(*) as total FROM query_metrics WHERE query_type = 'simple'"
+                    "SELECT COUNT(*) as total FROM query_metrics WHERE query_type = 'simple'",
                 ).fetchone()
                 summary.total_simple_queries = row["total"] if row else 0
 
@@ -233,7 +236,7 @@ class QueryMetrics:
                         MIN(duration_ms) as min_duration,
                         MAX(duration_ms) as max_duration
                     FROM query_metrics
-                    """
+                    """,
                 ).fetchone()
                 if row and row["avg_duration"]:
                     summary.avg_duration_ms = row["avg_duration"]
@@ -242,7 +245,7 @@ class QueryMetrics:
 
                 # SOAR-specific timing
                 row = conn.execute(
-                    "SELECT AVG(duration_ms) as avg FROM query_metrics WHERE query_type = 'soar'"
+                    "SELECT AVG(duration_ms) as avg FROM query_metrics WHERE query_type = 'soar'",
                 ).fetchone()
                 if row and row["avg"]:
                     summary.avg_soar_duration_ms = row["avg"]
@@ -254,7 +257,7 @@ class QueryMetrics:
                         COUNT(*) as total,
                         SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) as failed
                     FROM query_metrics
-                    """
+                    """,
                 ).fetchone()
                 if row and row["total"] > 0:
                     summary.failed_queries = row["failed"]
@@ -286,7 +289,7 @@ class QueryMetrics:
 
                 # Last query time
                 row = conn.execute(
-                    "SELECT timestamp FROM query_metrics ORDER BY id DESC LIMIT 1"
+                    "SELECT timestamp FROM query_metrics ORDER BY id DESC LIMIT 1",
                 ).fetchone()
                 if row:
                     summary.last_query_time = row["timestamp"]
@@ -304,6 +307,7 @@ class QueryMetrics:
 
         Returns:
             List of dicts with year_month and counts
+
         """
         try:
             with sqlite3.connect(str(self.db_path)) as conn:

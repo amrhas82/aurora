@@ -149,7 +149,9 @@ def test_bla_from_access_counts_approximation():
 
     # 10 accesses over last week
     result = bla.calculate_from_access_counts(
-        access_count=10, last_access=last_access, current_time=current_time
+        access_count=10,
+        last_access=last_access,
+        current_time=current_time,
     )
 
     # Should be reasonable value (recent + frequent accesses)
@@ -166,7 +168,9 @@ def test_bla_from_access_counts_zero_count():
     last_access = current_time - timedelta(days=1)
 
     result = bla.calculate_from_access_counts(
-        access_count=0, last_access=last_access, current_time=current_time
+        access_count=0,
+        last_access=last_access,
+        current_time=current_time,
     )
 
     assert result == bla.config.default_activation

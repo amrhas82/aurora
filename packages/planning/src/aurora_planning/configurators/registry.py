@@ -21,6 +21,7 @@ class ToolRegistry:
 
         Args:
             tool: The tool configurator to register
+
         """
         tool_id = tool.name.lower().replace(" ", "-")
         cls._tools[tool_id] = tool
@@ -34,6 +35,7 @@ class ToolRegistry:
 
         Returns:
             The tool configurator if found, None otherwise
+
         """
         return cls._tools.get(tool_id)
 
@@ -43,6 +45,7 @@ class ToolRegistry:
 
         Returns:
             List of all registered tool configurators
+
         """
         return list(cls._tools.values())
 
@@ -52,6 +55,7 @@ class ToolRegistry:
 
         Returns:
             List of tool configurators that are currently available
+
         """
         return [tool for tool in cls._tools.values() if tool.is_available]
 

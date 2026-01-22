@@ -31,6 +31,7 @@ class ExamplesLoader:
         Args:
             examples_dir: Directory containing example JSON files
                          (defaults to packages/reasoning/examples/)
+
         """
         if examples_dir is None:
             # Default to examples directory relative to this file
@@ -55,6 +56,7 @@ class ExamplesLoader:
         Raises:
             FileNotFoundError: If examples file doesn't exist
             ValueError: If JSON is invalid
+
         """
         # Check cache first
         if filename in self._cache:
@@ -91,6 +93,7 @@ class ExamplesLoader:
 
         Returns:
             List of examples (0, 2, 4, or 6 based on complexity)
+
         """
         all_examples = self.load_examples(filename)
 
@@ -122,6 +125,7 @@ class ExamplesLoader:
 
         Returns:
             List of matching examples (up to max_count)
+
         """
         all_examples = self.load_examples(filename)
 
@@ -146,6 +150,7 @@ def get_loader() -> ExamplesLoader:
 
     Returns:
         Global ExamplesLoader instance
+
     """
     global _default_loader
     if _default_loader is None:

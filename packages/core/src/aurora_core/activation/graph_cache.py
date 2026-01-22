@@ -50,6 +50,7 @@ class RelationshipProvider(Protocol):
                 - to_chunk: Target chunk ID
                 - relationship_type: Type of relationship
                 - weight: Relationship weight (default 1.0)
+
         """
         ...
 
@@ -62,6 +63,7 @@ class GraphCacheConfig:
         max_edges: Maximum edges to include in cached graph
         cache_enabled: Whether caching is enabled (True by default)
         ttl_seconds: Optional time-to-live in seconds (None = no expiry)
+
     """
 
     def __init__(
@@ -78,6 +80,7 @@ class GraphCacheConfig:
             max_edges: Maximum edges in cache (default 1000)
             cache_enabled: Enable/disable caching (default True)
             ttl_seconds: Cache TTL in seconds (None = no expiry)
+
         """
         self.rebuild_interval = rebuild_interval
         self.max_edges = max_edges
@@ -103,6 +106,7 @@ class RelationshipGraphCache:
         >>> graph = cache.get_graph()  # Subsequent calls reuse
         >>> # After 100 retrievals, automatically rebuilds
         >>> graph = cache.get_graph()
+
     """
 
     def __init__(self, provider: RelationshipProvider, config: GraphCacheConfig | None = None):
@@ -111,6 +115,7 @@ class RelationshipGraphCache:
         Args:
             provider: Object that provides relationship data
             config: Cache configuration (uses defaults if None)
+
         """
         self.provider = provider
         self.config = config or GraphCacheConfig()
@@ -135,6 +140,7 @@ class RelationshipGraphCache:
             RelationshipGraph instance
 
         Thread-safe: Multiple threads can safely call this method.
+
         """
         with self._lock:
             # Check if cache is disabled
@@ -163,6 +169,7 @@ class RelationshipGraphCache:
 
         Returns:
             True if rebuild is needed, False otherwise
+
         """
         # No graph exists
         if self._graph is None:
@@ -189,6 +196,7 @@ class RelationshipGraphCache:
         Notes:
             - Limited to max_edges relationships
             - Most recent relationships prioritized if limit exceeded
+
         """
         graph = RelationshipGraph()
 
@@ -226,6 +234,7 @@ class RelationshipGraphCache:
             Newly built RelationshipGraph
 
         Thread-safe: Can be called from any thread.
+
         """
         with self._lock:
             self.invalidate()
@@ -244,6 +253,7 @@ class RelationshipGraphCache:
                 - build_time: When cache was last built
                 - edge_count: Number of edges in cached graph
                 - chunk_count: Number of chunks in cached graph
+
         """
         with self._lock:
             total_requests = self._cache_hits + self._cache_misses
@@ -291,6 +301,7 @@ class CachedSpreadingActivation:
         >>>
         >>> # Subsequent calls reuse cached graph
         >>> result2 = cached_calc.calculate(['chunk_b'])
+
     """
 
     def __init__(
@@ -305,12 +316,15 @@ class CachedSpreadingActivation:
             provider: Object that provides relationship data
             spreading_activation: SpreadingActivation calculator instance
             cache_config: Cache configuration (uses defaults if None)
+
         """
         self.spreading_activation = spreading_activation
         self.cache = RelationshipGraphCache(provider, cache_config)
 
     def calculate(
-        self, source_chunks: list[ChunkID], bidirectional: bool = True
+        self,
+        source_chunks: list[ChunkID],
+        bidirectional: bool = True,
     ) -> dict[str, float]:
         """Calculate spreading activation with caching.
 
@@ -320,17 +334,23 @@ class CachedSpreadingActivation:
 
         Returns:
             Dictionary mapping chunk_id -> spreading_activation_score
+
         """
         graph = self.cache.get_graph()
         # Convert ChunkIDs to strings for spreading calculation
         source_chunk_strs: list[str] = [str(chunk_id) for chunk_id in source_chunks]
         result: dict[str, float] = self.spreading_activation.calculate(
-            source_chunks=source_chunk_strs, graph=graph, bidirectional=bidirectional
+            source_chunks=source_chunk_strs,
+            graph=graph,
+            bidirectional=bidirectional,
         )
         return result
 
     def get_related_chunks(
-        self, source_chunks: list[ChunkID], min_activation: float = 0.0, bidirectional: bool = True
+        self,
+        source_chunks: list[ChunkID],
+        min_activation: float = 0.0,
+        bidirectional: bool = True,
     ) -> list[tuple[str, float]]:
         """Get related chunks sorted by spreading activation.
 
@@ -341,6 +361,7 @@ class CachedSpreadingActivation:
 
         Returns:
             List of (chunk_id, activation) tuples, sorted descending
+
         """
         graph = self.cache.get_graph()
         # Convert ChunkIDs to strings for spreading calculation
@@ -362,6 +383,7 @@ class CachedSpreadingActivation:
 
         Returns:
             Dictionary with cache metrics
+
         """
         return self.cache.get_stats()
 

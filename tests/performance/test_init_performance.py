@@ -55,6 +55,7 @@ def create_test_files(project_path: Path, count: int) -> list[Path]:
 
     Returns:
         List of created file paths
+
     """
     files = []
     for i in range(count):
@@ -73,14 +74,18 @@ class Class{i}:
     def method_{i}(self, value):
         """Method {i} docstring."""
         return value * {i}
-'''
+''',
         )
         files.append(file_path)
     return files
 
 
 def test_init_performance_100_files(
-    temp_project, mock_git_init, mock_memory_manager, mock_config, benchmark
+    temp_project,
+    mock_git_init,
+    mock_memory_manager,
+    mock_config,
+    benchmark,
 ):
     """Test init performance with 100 files (target: <7s)."""
     # Create 100 test files
@@ -113,7 +118,11 @@ def test_init_performance_100_files(
 
 @pytest.mark.slow
 def test_init_performance_1000_files(
-    temp_project, mock_git_init, mock_memory_manager, mock_config, benchmark
+    temp_project,
+    mock_git_init,
+    mock_memory_manager,
+    mock_config,
+    benchmark,
 ):
     """Test init performance with 1000 files (target: <30s)."""
     # Create 1000 test files

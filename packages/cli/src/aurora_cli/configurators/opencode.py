@@ -29,6 +29,7 @@ class OpenCodeConfigurator(BaseConfigurator):
 
         Returns:
             Template content for OPENCODE.md (stub referencing AGENTS.md)
+
         """
         # Use same stub template as CLAUDE.md
         return get_claude_template()

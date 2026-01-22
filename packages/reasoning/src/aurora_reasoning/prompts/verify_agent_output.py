@@ -47,6 +47,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             User prompt string
+
         """
         subgoal = kwargs.get("subgoal", "")
         agent_output = kwargs.get("agent_output", {})

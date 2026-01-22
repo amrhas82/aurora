@@ -5,7 +5,6 @@ configurable routing rules and tool-specific settings.
 """
 
 import asyncio
-import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -132,7 +131,7 @@ def _parse_tool_env_callback(ctx, param, value):
             "merge",
             "smart_merge",
             "consensus",
-        ]
+        ],
     ),
     default=None,
     help="Multi-tool aggregation strategy (default: from config or first_success)",
@@ -435,7 +434,7 @@ def headless_command(
             if not quiet_mode:
                 console.print(f"[red]Error: Prompt not found: {prompt_path}[/]")
                 console.print(
-                    "[dim]Create a prompt file with your goal, or use -p to specify one.[/]"
+                    "[dim]Create a prompt file with your goal, or use -p to specify one.[/]",
                 )
             raise click.Abort()
         prompt = prompt_path.read_text(encoding="utf-8")
@@ -462,7 +461,7 @@ def headless_command(
                 if not quiet_mode:
                     console.print("[red]Error: Cannot run on main/master branch[/]")
                     console.print(
-                        "[dim]Use --allow-main to override, or create a feature branch first.[/]"
+                        "[dim]Use --allow-main to override, or create a feature branch first.[/]",
                     )
                 raise click.Abort()
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
@@ -512,7 +511,7 @@ def headless_command(
                 budget=budget,
                 time_limit=time_limit,
                 output_format=output_format,
-            )
+            ),
         )
     else:
         # Single-tool or sequential multi-tool execution
@@ -572,8 +571,8 @@ def _run_single_tool_loop(
                 if json_mode:
                     print(
                         json_module.dumps(
-                            {"status": "time_limit", "iterations": i - 1, "results": json_results}
-                        )
+                            {"status": "time_limit", "iterations": i - 1, "results": json_results},
+                        ),
                     )
                 return
 
@@ -582,14 +581,14 @@ def _run_single_tool_loop(
             if not quiet_mode and not json_mode:
                 console.print(f"\n[yellow]Budget limit reached (${budget:.2f})[/]")
                 console.print(
-                    f"[dim]Total cost: ${total_cost:.2f}, Iterations completed: {i - 1}[/]"
+                    f"[dim]Total cost: ${total_cost:.2f}, Iterations completed: {i - 1}[/]",
                 )
             _check_final_state(scratchpad, output_format)
             if json_mode:
                 print(
                     json_module.dumps(
-                        {"status": "budget_limit", "iterations": i - 1, "results": json_results}
-                    )
+                        {"status": "budget_limit", "iterations": i - 1, "results": json_results},
+                    ),
                 )
             return
 
@@ -604,8 +603,8 @@ def _run_single_tool_loop(
             if json_mode:
                 print(
                     json_module.dumps(
-                        {"status": "done", "iterations": i - 1, "results": json_results}
-                    )
+                        {"status": "done", "iterations": i - 1, "results": json_results},
+                    ),
                 )
             return
 
@@ -636,11 +635,11 @@ def _run_single_tool_loop(
             if not result.success:
                 if not quiet_mode and not json_mode:
                     console.print(
-                        f"[yellow]Warning: {tool_name} exited with code {result.return_code}[/]"
+                        f"[yellow]Warning: {tool_name} exited with code {result.return_code}[/]",
                     )
                     if result.metadata.get("retry_attempts"):
                         console.print(
-                            f"[dim]After {result.metadata['retry_attempts']} retry attempts[/]"
+                            f"[dim]After {result.metadata['retry_attempts']} retry attempts[/]",
                         )
                     if result.stderr:
                         console.print(f"[dim]{result.stderr[:500]}[/]")
@@ -668,7 +667,7 @@ def _run_single_tool_loop(
                 if proc_result.returncode != 0:
                     if not quiet_mode and not json_mode:
                         console.print(
-                            f"[yellow]Warning: {tool_name} exited with code {proc_result.returncode}[/]"
+                            f"[yellow]Warning: {tool_name} exited with code {proc_result.returncode}[/]",
                         )
                         if proc_result.stderr:
                             console.print(f"[dim]{proc_result.stderr[:500]}[/]")
@@ -696,8 +695,8 @@ def _run_single_tool_loop(
     if json_mode:
         print(
             json_module.dumps(
-                {"status": "max_iterations", "iterations": max_iter, "results": json_results}
-            )
+                {"status": "max_iterations", "iterations": max_iter, "results": json_results},
+            ),
         )
 
 
@@ -748,8 +747,8 @@ async def _run_multi_tool_loop(
                 if json_mode:
                     print(
                         json_module.dumps(
-                            {"status": "time_limit", "iterations": i - 1, "results": json_results}
-                        )
+                            {"status": "time_limit", "iterations": i - 1, "results": json_results},
+                        ),
                     )
                 return
 
@@ -758,14 +757,14 @@ async def _run_multi_tool_loop(
             if not quiet_mode and not json_mode:
                 console.print(f"\n[yellow]Budget limit reached (${budget:.2f})[/]")
                 console.print(
-                    f"[dim]Total cost: ${total_cost:.2f}, Iterations completed: {i - 1}[/]"
+                    f"[dim]Total cost: ${total_cost:.2f}, Iterations completed: {i - 1}[/]",
                 )
             _check_final_state(scratchpad, output_format)
             if json_mode:
                 print(
                     json_module.dumps(
-                        {"status": "budget_limit", "iterations": i - 1, "results": json_results}
-                    )
+                        {"status": "budget_limit", "iterations": i - 1, "results": json_results},
+                    ),
                 )
             return
 
@@ -780,8 +779,8 @@ async def _run_multi_tool_loop(
             if json_mode:
                 print(
                     json_module.dumps(
-                        {"status": "done", "iterations": i - 1, "results": json_results}
-                    )
+                        {"status": "done", "iterations": i - 1, "results": json_results},
+                    ),
                 )
             return
 
@@ -814,8 +813,8 @@ async def _run_multi_tool_loop(
     if json_mode:
         print(
             json_module.dumps(
-                {"status": "max_iterations", "iterations": max_iter, "results": json_results}
-            )
+                {"status": "max_iterations", "iterations": max_iter, "results": json_results},
+            ),
         )
 
 
@@ -865,13 +864,13 @@ def _display_multi_tool_results(result, strategy: str) -> None:
 
         if ci.severity in (ConflictSeverity.MODERATE, ConflictSeverity.MAJOR):
             console.print(
-                "[yellow]Review recommended: Tools produced significantly different outputs[/]"
+                "[yellow]Review recommended: Tools produced significantly different outputs[/]",
             )
             if ci.conflicting_sections:
                 for section in ci.conflicting_sections:
                     console.print(
                         f"[dim]  - {section.get('type', 'unknown')}: "
-                        f"{section.get('tool1')} vs {section.get('tool2')}[/]"
+                        f"{section.get('tool1')} vs {section.get('tool2')}[/]",
                     )
 
     # Display consensus-specific metadata
@@ -880,10 +879,10 @@ def _display_multi_tool_results(result, strategy: str) -> None:
             console.print("[green]Consensus reached[/]")
         else:
             console.print(
-                f"[yellow]No consensus (threshold: {result.metadata.get('threshold', 0.8):.0%})[/]"
+                f"[yellow]No consensus (threshold: {result.metadata.get('threshold', 0.8):.0%})[/]",
             )
             console.print(
-                f"[dim]Resolution: {result.metadata.get('resolution_method', 'fallback')}[/]"
+                f"[dim]Resolution: {result.metadata.get('resolution_method', 'fallback')}[/]",
             )
 
     # Display file change information if available
@@ -1082,15 +1081,18 @@ def _show_effective_config(
     settings_table.add_row("Timeout", f"{timeout}s")
     settings_table.add_row("Budget", f"${budget:.2f}" if budget is not None else "(unlimited)")
     settings_table.add_row(
-        "Time Limit", f"{time_limit}s" if time_limit is not None else "(unlimited)"
+        "Time Limit",
+        f"{time_limit}s" if time_limit is not None else "(unlimited)",
     )
     settings_table.add_row("Test Command", test_cmd or "(none)")
     settings_table.add_row("Model", model or "(default)")
     settings_table.add_row(
-        "Max Retries", str(max_retries) if max_retries is not None else "(default: 2)"
+        "Max Retries",
+        str(max_retries) if max_retries is not None else "(default: 2)",
     )
     settings_table.add_row(
-        "Retry Delay", f"{retry_delay}s" if retry_delay is not None else "(default: 1.0)"
+        "Retry Delay",
+        f"{retry_delay}s" if retry_delay is not None else "(default: 1.0)",
     )
     settings_table.add_row("Output Format", output_format)
 
@@ -1100,14 +1102,16 @@ def _show_effective_config(
     # CLI tool overrides
     if tool_flags or tool_env:
         override_table = Table(
-            title="CLI Tool Overrides", show_header=True, header_style="bold cyan"
+            title="CLI Tool Overrides",
+            show_header=True,
+            header_style="bold cyan",
         )
         override_table.add_column("Tool", style="cyan")
         override_table.add_column("Extra Flags", style="green")
         override_table.add_column("Env Vars", style="yellow")
 
         all_tools = set(tool_flags.keys() if tool_flags else []) | set(
-            tool_env.keys() if tool_env else []
+            tool_env.keys() if tool_env else [],
         )
         for tool_name in sorted(all_tools):
             flags = " ".join(tool_flags.get(tool_name, [])) if tool_flags else ""

@@ -40,7 +40,7 @@ dependencies:
 # Test Agent
 
 This is the agent content.
-"""
+""",
         )
 
         parser = AgentParser()
@@ -68,7 +68,7 @@ goal: Minimal goal
 ---
 
 # Minimal Agent
-"""
+""",
         )
 
         parser = AgentParser()
@@ -81,7 +81,9 @@ goal: Minimal goal
         assert agent.when_to_use is None  # Default
 
     def test_returns_none_for_missing_file(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns for missing file."""
         missing_file = tmp_path / "nonexistent.md"
@@ -95,7 +97,9 @@ goal: Minimal goal
         assert "not found" in caplog.text
 
     def test_returns_none_for_directory(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns when path is directory."""
         parser = AgentParser()
@@ -107,7 +111,9 @@ goal: Minimal goal
         assert "not a file" in caplog.text
 
     def test_returns_none_for_no_frontmatter(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns when no frontmatter present."""
         agent_file = tmp_path / "no_frontmatter.md"
@@ -122,7 +128,9 @@ goal: Minimal goal
         assert "No frontmatter found" in caplog.text
 
     def test_returns_none_for_missing_required_fields(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns when required fields missing.
 
@@ -137,7 +145,7 @@ id: incomplete-agent
 ---
 
 # Incomplete
-"""
+""",
         )
 
         parser = AgentParser()
@@ -150,7 +158,9 @@ id: incomplete-agent
         assert "goal" in caplog.text
 
     def test_returns_none_for_invalid_id(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns for invalid kebab-case ID."""
         agent_file = tmp_path / "bad_id.md"
@@ -160,7 +170,7 @@ id: Invalid_ID_With_Underscores
 role: Bad Agent
 goal: Test invalid ID
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -172,7 +182,9 @@ goal: Test invalid ID
         assert "Validation failed" in caplog.text
 
     def test_returns_none_for_invalid_yaml(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Returns None and warns for invalid YAML syntax."""
         agent_file = tmp_path / "bad_yaml.md"
@@ -181,7 +193,7 @@ goal: Test invalid ID
 id: test
 role: : : invalid yaml syntax
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -203,7 +215,7 @@ goal: Test extra fields
 custom_field: should be ignored
 another_unknown: also ignored
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -233,7 +245,7 @@ role: Category Test
 goal: Test category normalization
 category: {category_input}
 ---
-"""
+""",
             )
 
             parser = AgentParser()
@@ -306,7 +318,7 @@ id: raw-agent
 role: Raw Role
 custom_field: custom value
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -349,7 +361,7 @@ goal: Test \u4e2d\u6587 content
 skills:
   - \u65e5\u672c\u8a9e skill
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -370,7 +382,7 @@ goal: |
   goal that spans
   multiple lines
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -389,7 +401,7 @@ role: Empty Skills Role
 goal: Test empty skills
 skills: []
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -408,7 +420,7 @@ role: Single Skill Role
 goal: Test single skill
 skills: just-one-skill
 ---
-"""
+""",
         )
 
         parser = AgentParser()
@@ -426,7 +438,7 @@ id: MY-UPPERCASE-ID
 role: Uppercase ID Role
 goal: Test ID normalization
 ---
-"""
+""",
         )
 
         parser = AgentParser()

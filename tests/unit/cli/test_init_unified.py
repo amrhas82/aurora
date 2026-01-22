@@ -257,7 +257,9 @@ class TestStep2MemoryIndexing:
                 from aurora_cli.memory_manager import IndexStats
 
                 mock_instance.index_path.return_value = IndexStats(
-                    files_indexed=5, chunks_created=20, duration_seconds=1.5
+                    files_indexed=5,
+                    chunks_created=20,
+                    duration_seconds=1.5,
                 )
 
                 run_step_2_memory_indexing(tmp_path)
@@ -311,7 +313,9 @@ class TestStep2MemoryIndexing:
                     from aurora_cli.memory_manager import IndexStats
 
                     mock_instance.index_path.return_value = IndexStats(
-                        files_indexed=1, chunks_created=5, duration_seconds=0.5
+                        files_indexed=1,
+                        chunks_created=5,
+                        duration_seconds=0.5,
                     )
 
                     run_step_2_memory_indexing(tmp_path)
@@ -382,7 +386,9 @@ class TestStep2MemoryIndexing:
                 from aurora_cli.memory_manager import IndexStats
 
                 mock_instance.index_path.return_value = IndexStats(
-                    files_indexed=10, chunks_created=50, duration_seconds=2.0
+                    files_indexed=10,
+                    chunks_created=50,
+                    duration_seconds=2.0,
                 )
 
                 with patch("rich.progress.Progress") as mock_progress:
@@ -434,7 +440,9 @@ class TestStep2MemoryIndexing:
                 from aurora_cli.memory_manager import IndexStats
 
                 mock_instance.index_path.return_value = IndexStats(
-                    files_indexed=1, chunks_created=5, duration_seconds=0.5
+                    files_indexed=1,
+                    chunks_created=5,
+                    duration_seconds=0.5,
                 )
 
                 with patch("click.confirm") as mock_confirm:
@@ -455,7 +463,8 @@ class TestStep3ToolConfiguration:
 
         # Mock the detection and configuration functions (patch where they're imported)
         with patch(
-            "aurora_cli.commands.init.detect_configured_tools", return_value={}
+            "aurora_cli.commands.init.detect_configured_tools",
+            return_value={},
         ) as mock_detect:
             with patch(
                 "aurora_cli.commands.init.prompt_tool_selection",
@@ -486,7 +495,8 @@ class TestStep3ToolConfiguration:
         }
 
         with patch(
-            "aurora_cli.commands.init.detect_configured_tools", return_value=configured_tools
+            "aurora_cli.commands.init.detect_configured_tools",
+            return_value=configured_tools,
         ):
             with patch(
                 "aurora_cli.commands.init.prompt_tool_selection",
@@ -701,7 +711,8 @@ class TestStep3ToolConfiguration:
         from aurora_cli.commands.init import run_step_3_tool_configuration
 
         with patch(
-            "aurora_cli.commands.init.detect_configured_tools", return_value={"claude": True}
+            "aurora_cli.commands.init.detect_configured_tools",
+            return_value={"claude": True},
         ):
             with patch(
                 "aurora_cli.commands.init.prompt_tool_selection",
@@ -812,13 +823,16 @@ class TestInitCommandMain:
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch(
-                    "aurora_cli.commands.init.run_step_1_planning_setup", return_value=True
+                    "aurora_cli.commands.init.run_step_1_planning_setup",
+                    return_value=True,
                 ) as mock_step1:
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ) as mock_step2:
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -844,11 +858,13 @@ class TestInitCommandMain:
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -873,11 +889,13 @@ class TestInitCommandMain:
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -904,7 +922,8 @@ class TestInitCommandMain:
             # Mock the re-run behavior to return "exit" (user chooses to exit)
             with patch("aurora_cli.commands.init_helpers.show_status_summary"):
                 with patch(
-                    "aurora_cli.commands.init_helpers.prompt_rerun_options", return_value="exit"
+                    "aurora_cli.commands.init_helpers.prompt_rerun_options",
+                    return_value="exit",
                 ):
                     result = runner.invoke(init_command, [])
 
@@ -924,11 +943,13 @@ class TestInitCommandMain:
         runner = CliRunner()
         with runner.isolated_filesystem(temp_dir=tmp_path):
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -980,7 +1001,7 @@ class TestShowStatusSummary:
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """
+        """,
         )
         cursor.execute(
             """
@@ -988,7 +1009,7 @@ class TestShowStatusSummary:
             ('chunk1', 'content1', 'file1.py', 1, 10, '{}', 1.0),
             ('chunk2', 'content2', 'file2.py', 1, 20, '{}', 2.0),
             ('chunk3', 'content3', 'file3.py', 1, 30, '{}', 3.0)
-        """
+        """,
         )
         conn.commit()
         conn.close()
@@ -1061,7 +1082,7 @@ class TestShowStatusSummary:
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """
+        """,
         )
         for i in range(42):
             cursor.execute(
@@ -1330,7 +1351,7 @@ Original Aurora content
 <!-- AURORA:END -->
 
 More custom content below.
-"""
+""",
         )
 
         # Run configure_tools - should update markers but preserve custom content
@@ -1362,10 +1383,10 @@ More custom content below.
                 metadata TEXT,
                 created_at REAL NOT NULL
             )
-        """
+        """,
         )
         cursor.execute(
-            "INSERT INTO chunks VALUES ('test1', 'content1', 'file1.py', 1, 10, '{}', 1.0)"
+            "INSERT INTO chunks VALUES ('test1', 'content1', 'file1.py', 1, 10, '{}', 1.0)",
         )
         conn.commit()
         conn.close()

@@ -53,6 +53,7 @@ class ClaudeCommandsConfigurator:
 
         Returns:
             List of created command file names
+
         """
         commands_dir = project_path / ".claude" / "commands" / "aur"
         commands_dir.mkdir(parents=True, exist_ok=True)
@@ -89,6 +90,7 @@ class ClaudeCommandsConfigurator:
             new_content: New content to insert (already includes markers)
             start_marker: Start marker string
             end_marker: End marker string
+
         """
         if file_path.exists():
             existing = file_path.read_text(encoding="utf-8")
@@ -122,5 +124,6 @@ class ClaudeCommandsConfigurator:
 
         Returns:
             List of command names that will be created
+
         """
         return list(get_all_command_templates().keys())

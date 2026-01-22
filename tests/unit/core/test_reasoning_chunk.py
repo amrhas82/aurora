@@ -81,7 +81,10 @@ class TestReasoningChunkValidation:
     def test_valid_chunk_passes_validation(self):
         """Test that valid chunk passes validation."""
         chunk = ReasoningChunk(
-            chunk_id="test-valid", pattern="valid pattern", complexity="MEDIUM", success_score=0.5
+            chunk_id="test-valid",
+            pattern="valid pattern",
+            complexity="MEDIUM",
+            success_score=0.5,
         )
         # Should not raise
         assert chunk.validate() is True
@@ -109,12 +112,16 @@ class TestReasoningChunkValidation:
     def test_success_score_at_boundaries_passes(self):
         """Test that success_score at 0.0 and 1.0 passes validation."""
         chunk1 = ReasoningChunk(
-            chunk_id="test-score-zero", pattern="test pattern", success_score=0.0
+            chunk_id="test-score-zero",
+            pattern="test pattern",
+            success_score=0.0,
         )
         assert chunk1.success_score == 0.0
 
         chunk2 = ReasoningChunk(
-            chunk_id="test-score-one", pattern="test pattern", success_score=1.0
+            chunk_id="test-score-one",
+            pattern="test pattern",
+            success_score=1.0,
         )
         assert chunk2.success_score == 1.0
 
@@ -122,14 +129,18 @@ class TestReasoningChunkValidation:
         """Test that invalid complexity level fails validation."""
         with pytest.raises(ValueError, match="complexity must be one of"):
             ReasoningChunk(
-                chunk_id="test-invalid-complexity", pattern="test pattern", complexity="INVALID"
+                chunk_id="test-invalid-complexity",
+                pattern="test pattern",
+                complexity="INVALID",
             )
 
     def test_valid_complexity_levels_pass(self):
         """Test that all valid complexity levels pass validation."""
         for complexity in ["SIMPLE", "MEDIUM", "COMPLEX", "CRITICAL"]:
             chunk = ReasoningChunk(
-                chunk_id=f"test-{complexity.lower()}", pattern="test pattern", complexity=complexity
+                chunk_id=f"test-{complexity.lower()}",
+                pattern="test pattern",
+                complexity=complexity,
             )
             assert chunk.complexity == complexity
 
@@ -456,7 +467,10 @@ class TestReasoningChunkRepresentation:
     def test_repr_short_pattern_not_truncated(self):
         """Test that short patterns are not truncated."""
         chunk = ReasoningChunk(
-            chunk_id="test-short-repr", pattern="short", complexity="SIMPLE", success_score=0.5
+            chunk_id="test-short-repr",
+            pattern="short",
+            complexity="SIMPLE",
+            success_score=0.5,
         )
 
         repr_str = repr(chunk)
@@ -551,7 +565,8 @@ class TestReasoningChunkEdgeCases:
     def test_unicode_in_pattern(self):
         """Test that unicode characters in pattern are handled correctly."""
         chunk = ReasoningChunk(
-            chunk_id="test-unicode", pattern="Implement feature with émojis 🚀 and spëcial çhars"
+            chunk_id="test-unicode",
+            pattern="Implement feature with émojis 🚀 and spëcial çhars",
         )
 
         assert "émojis" in chunk.pattern
@@ -589,7 +604,9 @@ class TestReasoningChunkEdgeCases:
     def test_float_precision_in_success_score(self):
         """Test that float precision is preserved for success_score."""
         chunk = ReasoningChunk(
-            chunk_id="test-float-precision", pattern="test pattern", success_score=0.123456789
+            chunk_id="test-float-precision",
+            pattern="test pattern",
+            success_score=0.123456789,
         )
 
         assert chunk.success_score == 0.123456789
@@ -619,7 +636,9 @@ class TestReasoningChunkComplexityLevels:
     def test_complex_complexity(self):
         """Test COMPLEX complexity level."""
         chunk = ReasoningChunk(
-            chunk_id="test-complex", pattern="complex query", complexity="COMPLEX"
+            chunk_id="test-complex",
+            pattern="complex query",
+            complexity="COMPLEX",
         )
 
         assert chunk.complexity == "COMPLEX"
@@ -627,7 +646,9 @@ class TestReasoningChunkComplexityLevels:
     def test_critical_complexity(self):
         """Test CRITICAL complexity level."""
         chunk = ReasoningChunk(
-            chunk_id="test-critical", pattern="critical query", complexity="CRITICAL"
+            chunk_id="test-critical",
+            pattern="critical query",
+            complexity="CRITICAL",
         )
 
         assert chunk.complexity == "CRITICAL"
@@ -639,7 +660,9 @@ class TestReasoningChunkSuccessScores:
     def test_zero_success_score(self):
         """Test success_score of 0.0 (complete failure)."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-zero", pattern="failed pattern", success_score=0.0
+            chunk_id="test-score-zero",
+            pattern="failed pattern",
+            success_score=0.0,
         )
 
         assert chunk.success_score == 0.0
@@ -647,7 +670,9 @@ class TestReasoningChunkSuccessScores:
     def test_partial_success_score(self):
         """Test success_score between 0.0 and 1.0."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-partial", pattern="partial success", success_score=0.5
+            chunk_id="test-score-partial",
+            pattern="partial success",
+            success_score=0.5,
         )
 
         assert chunk.success_score == 0.5
@@ -655,7 +680,9 @@ class TestReasoningChunkSuccessScores:
     def test_high_success_score(self):
         """Test success_score close to 1.0."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-high", pattern="high success", success_score=0.95
+            chunk_id="test-score-high",
+            pattern="high success",
+            success_score=0.95,
         )
 
         assert chunk.success_score == 0.95
@@ -663,7 +690,9 @@ class TestReasoningChunkSuccessScores:
     def test_perfect_success_score(self):
         """Test success_score of 1.0 (perfect success)."""
         chunk = ReasoningChunk(
-            chunk_id="test-score-perfect", pattern="perfect pattern", success_score=1.0
+            chunk_id="test-score-perfect",
+            pattern="perfect pattern",
+            success_score=1.0,
         )
 
         assert chunk.success_score == 1.0

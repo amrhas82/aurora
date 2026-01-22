@@ -36,6 +36,7 @@ class RateLimiter:
         >>> # Or use as context manager:
         >>> with limiter:
         >>>     # Make API call
+
     """
 
     def __init__(
@@ -51,6 +52,7 @@ class RateLimiter:
 
         Raises:
             ValueError: If parameters are invalid
+
         """
         if requests_per_minute <= 0:
             raise ValueError("requests_per_minute must be positive")
@@ -92,6 +94,7 @@ class RateLimiter:
 
         Raises:
             ValueError: If tokens <= 0
+
         """
         if tokens <= 0:
             raise ValueError("tokens must be positive")
@@ -117,6 +120,7 @@ class RateLimiter:
         Raises:
             ValueError: If tokens <= 0
             TimeoutError: If wait time would exceed max_wait_time
+
         """
         if tokens <= 0:
             raise ValueError("tokens must be positive")
@@ -138,7 +142,7 @@ class RateLimiter:
         if wait_time > self.max_wait_time:
             raise TimeoutError(
                 f"Rate limit wait time would exceed max_wait_time "
-                f"({wait_time:.2f}s > {self.max_wait_time:.2f}s)"
+                f"({wait_time:.2f}s > {self.max_wait_time:.2f}s)",
             )
 
         # Wait for tokens to refill
@@ -159,12 +163,15 @@ class RateLimiter:
         Example:
             >>> with limiter:
             >>>     # Make rate-limited API call
+
         """
         self.wait_if_needed()
         return self
 
     def __exit__(
-        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
     ) -> None:
         """Context manager exit: no cleanup needed."""
-        pass

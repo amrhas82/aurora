@@ -15,6 +15,7 @@ def _get_type_abbreviation(element_type: str) -> str:
 
     Returns:
         Abbreviated type (e.g., "func", "know")
+
     """
     # This is just a stub for testing - real implementation will be in memory.py
     raise NotImplementedError("Stub - implement in memory.py")

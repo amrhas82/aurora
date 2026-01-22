@@ -65,7 +65,9 @@ class TestMemoryRetrieverInit:
     """Tests for MemoryRetriever initialization."""
 
     def test_init_stores_config_and_store(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Stores config and store references."""
         retriever = MemoryRetriever(mock_store, mock_config)
@@ -100,7 +102,10 @@ class TestMemoryRetrieverHasIndexedMemory:
         assert result is False
 
     def test_returns_true_when_chunks_exist(
-        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        sample_chunks: list[CodeChunk],
     ) -> None:
         """Returns True when store has chunks."""
         with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
@@ -114,7 +119,9 @@ class TestMemoryRetrieverHasIndexedMemory:
             assert result is True
 
     def test_returns_false_when_no_chunks(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Returns False when store is empty."""
         with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
@@ -144,7 +151,10 @@ class TestMemoryRetrieverRetrieve:
     """Tests for retrieve method."""
 
     def test_retrieves_chunks(
-        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        sample_chunks: list[CodeChunk],
     ) -> None:
         """Retrieves chunks using hybrid retriever."""
         with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
@@ -205,7 +215,10 @@ class TestMemoryRetrieverLoadContextFiles:
     """Tests for load_context_files method."""
 
     def test_loads_existing_files(
-        self, tmp_path: Path, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        tmp_path: Path,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Loads content from existing files."""
         test_file = tmp_path / "test.py"
@@ -253,7 +266,10 @@ class TestMemoryRetrieverLoadContextFiles:
         assert "not a file" in caplog.text
 
     def test_loads_multiple_files(
-        self, tmp_path: Path, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        tmp_path: Path,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Loads multiple files."""
         file1 = tmp_path / "file1.py"
@@ -271,7 +287,10 @@ class TestMemoryRetrieverFormatForPrompt:
     """Tests for format_for_prompt method."""
 
     def test_formats_chunks(
-        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        sample_chunks: list[CodeChunk],
     ) -> None:
         """Formats chunks with headers and code blocks."""
         retriever = MemoryRetriever(mock_store, mock_config)
@@ -283,7 +302,9 @@ class TestMemoryRetrieverFormatForPrompt:
         assert "def authenticate" in formatted
 
     def test_returns_empty_for_no_chunks(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Returns empty string for empty chunk list."""
         retriever = MemoryRetriever(mock_store, mock_config)
@@ -296,7 +317,10 @@ class TestMemoryRetrieverGetContext:
     """Tests for get_context method."""
 
     def test_uses_context_files_when_provided(
-        self, tmp_path: Path, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        tmp_path: Path,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Uses context files when provided (priority 1)."""
         test_file = tmp_path / "context.py"
@@ -309,7 +333,10 @@ class TestMemoryRetrieverGetContext:
         assert error == ""
 
     def test_uses_indexed_memory_when_no_files(
-        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        sample_chunks: list[CodeChunk],
     ) -> None:
         """Uses indexed memory when no context files (priority 2)."""
         with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
@@ -324,7 +351,9 @@ class TestMemoryRetrieverGetContext:
             assert error == ""
 
     def test_returns_error_when_no_context(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Returns error when no context available."""
         with patch.object(MemoryRetriever, "_get_retriever") as mock_get_retriever:
@@ -343,11 +372,13 @@ class TestMemoryRetrieverAsyncLoading:
     """Tests for async embedding model loading behavior."""
 
     def test_is_embedding_model_ready_returns_false_when_not_loaded(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Returns False when embedding model is not loaded."""
         with patch(
-            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader",
         ) as mock_loader_class:
             mock_loader = MagicMock()
             mock_loader.is_loaded.return_value = False
@@ -359,11 +390,13 @@ class TestMemoryRetrieverAsyncLoading:
             assert result is False
 
     def test_is_embedding_model_ready_returns_true_when_loaded(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Returns True when embedding model is loaded."""
         with patch(
-            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader",
         ) as mock_loader_class:
             mock_loader = MagicMock()
             mock_loader.is_loaded.return_value = True
@@ -375,11 +408,13 @@ class TestMemoryRetrieverAsyncLoading:
             assert result is True
 
     def test_is_embedding_model_loading_returns_true_while_loading(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """Returns True when embedding model is currently loading."""
         with patch(
-            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader",
         ) as mock_loader_class:
             mock_loader = MagicMock()
             mock_loader.is_loading.return_value = True
@@ -391,7 +426,10 @@ class TestMemoryRetrieverAsyncLoading:
             assert result is True
 
     def test_retrieve_fast_returns_tuple(
-        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        sample_chunks: list[CodeChunk],
     ) -> None:
         """retrieve_fast returns (results, is_full_hybrid) tuple."""
         with patch.object(MemoryRetriever, "_get_retriever_with_mode") as mock_get_retriever:
@@ -407,7 +445,10 @@ class TestMemoryRetrieverAsyncLoading:
                 assert is_hybrid is True
 
     def test_retrieve_fast_indicates_bm25_only_when_model_not_ready(
-        self, mock_store: MagicMock, mock_config: MagicMock, sample_chunks: list[CodeChunk]
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
+        sample_chunks: list[CodeChunk],
     ) -> None:
         """retrieve_fast returns is_full_hybrid=False when model not ready."""
         with patch.object(MemoryRetriever, "_get_retriever_with_mode") as mock_get_retriever:
@@ -423,7 +464,9 @@ class TestMemoryRetrieverAsyncLoading:
                 assert is_hybrid is False
 
     def test_retrieve_with_wait_false_does_not_block(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """retrieve with wait_for_model=False doesn't block on model loading."""
         with patch.object(MemoryRetriever, "_get_retriever_with_mode") as mock_get_retriever:
@@ -438,11 +481,13 @@ class TestMemoryRetrieverAsyncLoading:
             mock_get_retriever.assert_called_once_with(wait_for_model=False)
 
     def test_get_embedding_provider_returns_none_when_loading_and_not_waiting(
-        self, mock_store: MagicMock, mock_config: MagicMock
+        self,
+        mock_store: MagicMock,
+        mock_config: MagicMock,
     ) -> None:
         """_get_embedding_provider returns None immediately when not waiting."""
         with patch(
-            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader",
         ) as mock_loader_class:
             mock_loader = MagicMock()
             mock_loader.is_loading.return_value = True
@@ -450,7 +495,8 @@ class TestMemoryRetrieverAsyncLoading:
             mock_loader_class.get_instance.return_value = mock_loader
 
             with patch(
-                "aurora_context_code.semantic.model_utils.is_model_cached", return_value=True
+                "aurora_context_code.semantic.model_utils.is_model_cached",
+                return_value=True,
             ):
                 retriever = MemoryRetriever(mock_store, mock_config)
                 provider = retriever._get_embedding_provider(wait_for_model=False)

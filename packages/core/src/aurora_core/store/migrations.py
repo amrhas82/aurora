@@ -20,6 +20,7 @@ class Migration:
         to_version: Target schema version
         upgrade_fn: Function that performs the migration
         description: Human-readable description of the migration
+
     """
 
     def __init__(
@@ -42,6 +43,7 @@ class Migration:
 
         Raises:
             StorageError: If migration fails
+
         """
         try:
             self.upgrade_fn(conn)
@@ -49,7 +51,8 @@ class Migration:
         except sqlite3.Error as e:
             conn.rollback()
             raise StorageError(
-                f"Migration failed: v{self.from_version} -> v{self.to_version}", details=str(e)
+                f"Migration failed: v{self.from_version} -> v{self.to_version}",
+                details=str(e),
             )
 
 
@@ -77,7 +80,7 @@ class MigrationManager:
                 to_version=2,
                 upgrade_fn=self._migrate_v1_to_v2,
                 description="Add access history tracking (access_history JSON, first_access, last_access)",
-            )
+            ),
         )
 
         # Migration v2 -> v3: Add embeddings support
@@ -87,7 +90,7 @@ class MigrationManager:
                 to_version=3,
                 upgrade_fn=self._migrate_v2_to_v3,
                 description="Add embeddings column to chunks table for semantic retrieval",
-            )
+            ),
         )
 
     def _migrate_v1_to_v2(self, conn: sqlite3.Connection) -> None:
@@ -129,7 +132,7 @@ class MigrationManager:
                 )
             )
             WHERE access_history IS NULL
-        """
+        """,
         )
 
         # Copy last_access from activations to chunks table for consistency
@@ -143,7 +146,7 @@ class MigrationManager:
                 SELECT last_access FROM activations WHERE activations.chunk_id = chunks.id
             )
             WHERE id IN (SELECT chunk_id FROM activations)
-        """
+        """,
         )
 
         conn.commit()
@@ -169,6 +172,7 @@ class MigrationManager:
 
         Args:
             migration: Migration to register
+
         """
         self._migrations.append(migration)
 
@@ -180,10 +184,11 @@ class MigrationManager:
 
         Returns:
             Current schema version, or 0 if schema_version table doesn't exist
+
         """
         try:
             cursor = conn.execute(
-                "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1"
+                "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1",
             )
             row = cursor.fetchone()
             return row[0] if row else 0
@@ -199,6 +204,7 @@ class MigrationManager:
 
         Returns:
             True if database schema is older than current version
+
         """
         current_version = self.get_current_version(conn)
         return current_version < SCHEMA_VERSION
@@ -214,6 +220,7 @@ class MigrationManager:
 
         Raises:
             StorageError: If migration fails
+
         """
         current_version = self.get_current_version(conn)
 
@@ -224,7 +231,7 @@ class MigrationManager:
         if current_version > SCHEMA_VERSION:
             raise StorageError(
                 f"Database schema version {current_version} is newer than "
-                f"supported version {SCHEMA_VERSION}. Please upgrade AURORA."
+                f"supported version {SCHEMA_VERSION}. Please upgrade AURORA.",
             )
 
         # Find and apply migrations in order
@@ -259,6 +266,7 @@ class MigrationManager:
 
         Raises:
             StorageError: If backup fails
+
         """
         if db_path == ":memory:":
             # Can't backup in-memory database
@@ -278,7 +286,9 @@ class MigrationManager:
             raise StorageError(f"Failed to backup database: {db_path}", details=str(e))
 
     def migrate_with_backup(
-        self, conn: sqlite3.Connection, db_path: str | None = None
+        self,
+        conn: sqlite3.Connection,
+        db_path: str | None = None,
     ) -> str | None:
         """Migrate database with automatic backup.
 
@@ -291,6 +301,7 @@ class MigrationManager:
 
         Raises:
             StorageError: If migration fails
+
         """
         backup_path = None
 
@@ -316,6 +327,7 @@ def get_migration_manager() -> MigrationManager:
 
     Returns:
         Global MigrationManager instance
+
     """
     return _migration_manager
 

@@ -62,6 +62,7 @@ def get_access_recorder(store: Any) -> BackgroundAccessRecorder:
 
     Returns:
         BackgroundAccessRecorder instance
+
     """
     global _access_recorder
     with _access_recorder_lock:
@@ -88,6 +89,7 @@ class BackgroundAccessRecorder:
         Args:
             store: Memory store instance (SQLiteStore)
             max_queue_size: Maximum items in queue before dropping oldest
+
         """
         self._store = store
         self._queue: Queue[tuple[ChunkID, datetime, str | None]] = Queue(maxsize=max_queue_size)
@@ -122,7 +124,10 @@ class BackgroundAccessRecorder:
                 continue
 
     def record_access(
-        self, chunk_id: ChunkID, access_time: datetime, context: str | None = None
+        self,
+        chunk_id: ChunkID,
+        access_time: datetime,
+        context: str | None = None,
     ) -> None:
         """Queue an access record for background processing.
 
@@ -130,6 +135,7 @@ class BackgroundAccessRecorder:
             chunk_id: Chunk that was accessed
             access_time: When the access occurred
             context: Optional context (e.g., query string)
+
         """
         try:
             # Non-blocking put with drop-oldest semantics
@@ -147,6 +153,7 @@ class BackgroundAccessRecorder:
 
         Args:
             timeout: Maximum time to wait for queue drain
+
         """
         self._shutdown.set()
         if self._thread and self._thread.is_alive():
@@ -162,6 +169,7 @@ def compute_file_hash(file_path: Path) -> str:
 
     Returns:
         Hex-encoded SHA-256 hash string
+
     """
     hasher = hashlib.sha256()
     try:
@@ -186,6 +194,7 @@ def get_git_changed_files(root: Path) -> set[str] | None:
 
     Returns:
         Set of relative file paths that have changes, or None if not a git repo
+
     """
     import subprocess
 
@@ -264,6 +273,7 @@ class IndexProgress:
         total: Total items in phase
         file_path: Current file being processed (if applicable)
         detail: Additional detail string (e.g., function name)
+
     """
 
     phase: str
@@ -286,6 +296,7 @@ class IndexStats:
         files_skipped: Number of files skipped (unchanged in incremental mode)
         files_deleted: Number of deleted files cleaned up from index
         parallel_workers: Number of parallel workers used
+
     """
 
     files_indexed: int
@@ -312,6 +323,7 @@ class SearchResult:
         bm25_score: BM25 keyword matching score
         hybrid_score: Combined hybrid score
         metadata: Additional metadata dictionary
+
     """
 
     chunk_id: str
@@ -340,6 +352,7 @@ class MemoryStats:
         success_rate: Percentage of parseable files successfully indexed (0.0-1.0)
         files_by_language: Dictionary mapping language to indexed file count
         total_parseable: Total parseable files discovered
+
     """
 
     total_chunks: int
@@ -365,6 +378,7 @@ class MemoryManager:
         memory_store: Store instance for persisting chunks
         parser_registry: Registry of code parsers
         embedding_provider: Provider for generating embeddings
+
     """
 
     def __init__(
@@ -386,6 +400,7 @@ class MemoryManager:
             Either config or memory_store must be provided.
             If both provided, memory_store takes precedence.
             New code should use config parameter.
+
         """
         # Create store from config if needed
         if memory_store is None:
@@ -456,6 +471,7 @@ class MemoryManager:
         Raises:
             ValueError: If path does not exist
             RuntimeError: If indexing fails catastrophically
+
         """
         path_obj = Path(path).resolve()
 
@@ -508,7 +524,7 @@ class MemoryManager:
 
             if incremental:
                 report_progress(
-                    IndexProgress("checking", 0, total_files, detail="Checking for changes...")
+                    IndexProgress("checking", 0, total_files, detail="Checking for changes..."),
                 )
 
                 # Load file index from database (content hashes and mtimes)
@@ -566,7 +582,7 @@ class MemoryManager:
                     logger.info(f"Cleaned up {deleted_count} deleted files from index")
 
                 logger.info(
-                    f"Incremental: {len(files_to_process)} changed, {stats['skipped']} unchanged, {deleted_count} deleted"
+                    f"Incremental: {len(files_to_process)} changed, {stats['skipped']} unchanged, {deleted_count} deleted",
                 )
             else:
                 files_to_process = files
@@ -583,7 +599,7 @@ class MemoryManager:
                 logger.debug(f"Initialized GitSignalExtractor for {path}")
             except Exception as e:
                 logger.warning(
-                    f"Could not initialize Git extractor: {e}. Using default BLA values."
+                    f"Could not initialize Git extractor: {e}. Using default BLA values.",
                 )
                 git_extractor = None
 
@@ -608,7 +624,7 @@ class MemoryManager:
                         total_chunks_processed,
                         total_chunks_processed + batch_len,
                         detail=f"Batch of {batch_len} chunks",
-                    )
+                    ),
                 )
 
                 # Extract texts for batch embedding
@@ -624,7 +640,7 @@ class MemoryManager:
                         total_chunks_processed,
                         total_chunks_processed + batch_len,
                         detail=f"Writing {batch_len} chunks to database",
-                    )
+                    ),
                 )
 
                 # Store each chunk with its embedding
@@ -668,7 +684,7 @@ class MemoryManager:
                         0,
                         total_to_process,
                         detail=f"Parallel parsing ({actual_workers} workers)",
-                    )
+                    ),
                 )
 
                 # Define the parsing function for parallel execution
@@ -724,7 +740,7 @@ class MemoryManager:
                                 total_to_process,
                                 file_path=str(file_path.name),
                                 detail=f"Parsed {processed_count}/{total_to_process}",
-                            )
+                            ),
                         )
 
                         try:
@@ -750,7 +766,7 @@ class MemoryManager:
                                         total_to_process,
                                         file_path=str(file_path.name),
                                         detail=f"Git history for {file_path.name}",
-                                    )
+                                    ),
                                 )
 
                             # Process all chunks for this file
@@ -772,7 +788,8 @@ class MemoryManager:
 
                                         if commit_times:
                                             initial_bla = git_extractor.calculate_bla(
-                                                commit_times, decay=0.5
+                                                commit_times,
+                                                decay=0.5,
                                             )
                                             commit_count = len(commit_times)
 
@@ -787,7 +804,7 @@ class MemoryManager:
                                             chunk.metadata["commit_count"] = commit_count
                                     except Exception as e:
                                         logger.debug(
-                                            f"Could not extract Git signals for {chunk.name}: {e}"
+                                            f"Could not extract Git signals for {chunk.name}: {e}",
                                         )
 
                                 # Build content and add to batch
@@ -799,7 +816,7 @@ class MemoryManager:
                                         initial_bla,
                                         commit_count,
                                         str(file_path),
-                                    )
+                                    ),
                                 )
 
                                 # Flush batch when it reaches batch_size
@@ -840,7 +857,7 @@ class MemoryManager:
                                 total_to_process,
                                 file_path=str(file_path.name),
                                 detail=f"Parsing {file_path.name}",
-                            )
+                            ),
                         )
 
                         # Parse file
@@ -865,7 +882,7 @@ class MemoryManager:
                                     total_to_process,
                                     file_path=str(file_path.name),
                                     detail=f"Git history for {file_path.name}",
-                                )
+                                ),
                             )
 
                         # Process all chunks for this file
@@ -887,7 +904,8 @@ class MemoryManager:
 
                                     if commit_times:
                                         initial_bla = git_extractor.calculate_bla(
-                                            commit_times, decay=0.5
+                                            commit_times,
+                                            decay=0.5,
                                         )
                                         commit_count = len(commit_times)
 
@@ -899,13 +917,19 @@ class MemoryManager:
                                         chunk.metadata["commit_count"] = commit_count
                                 except Exception as e:
                                     logger.debug(
-                                        f"Could not extract Git signals for {chunk.name}: {e}"
+                                        f"Could not extract Git signals for {chunk.name}: {e}",
                                     )
 
                             # Build content and add to batch
                             content_to_embed = self._build_chunk_content(chunk)
                             pending_chunks.append(
-                                (chunk, content_to_embed, initial_bla, commit_count, str(file_path))
+                                (
+                                    chunk,
+                                    content_to_embed,
+                                    initial_bla,
+                                    commit_count,
+                                    str(file_path),
+                                ),
                             )
 
                             # Flush batch when it reaches batch_size
@@ -949,8 +973,11 @@ class MemoryManager:
             if stats["chunks"] > 0:
                 report_progress(
                     IndexProgress(
-                        "bm25_index", stats["chunks"], stats["chunks"], detail="Building BM25 index"
-                    )
+                        "bm25_index",
+                        stats["chunks"],
+                        stats["chunks"],
+                        detail="Building BM25 index",
+                    ),
                 )
                 self._build_bm25_index()
 
@@ -962,7 +989,7 @@ class MemoryManager:
                 f"Indexing complete: {stats['files']} files, "
                 f"{stats['chunks']} chunks, {stats['errors']} errors, "
                 f"{stats['warnings']} warnings, {stats['skipped']} skipped, "
-                f"{duration:.2f}s ({actual_workers} workers)"
+                f"{duration:.2f}s ({actual_workers} workers)",
             )
 
             # Calculate success rate (indexed / parseable files)
@@ -971,7 +998,11 @@ class MemoryManager:
 
             # Save indexing metadata for stats command
             self._save_indexing_metadata(
-                failed_files, warning_messages, success_rate, files_by_language, total_files
+                failed_files,
+                warning_messages,
+                success_rate,
+                files_by_language,
+                total_files,
             )
 
             # Write detailed log file
@@ -1006,7 +1037,10 @@ class MemoryManager:
             raise MemoryStoreError(error_msg) from e
 
     def search(
-        self, query: str, limit: int = 5, min_semantic_score: float | None = None
+        self,
+        query: str,
+        limit: int = 5,
+        min_semantic_score: float | None = None,
     ) -> list[SearchResult]:
         """Search memory store for relevant chunks.
 
@@ -1024,6 +1058,7 @@ class MemoryManager:
 
         Raises:
             RuntimeError: If search fails
+
         """
         try:
             from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
@@ -1063,7 +1098,7 @@ class MemoryManager:
                         bm25_score=result.get("bm25_score", 0.0),
                         hybrid_score=result["hybrid_score"],
                         metadata=metadata,
-                    )
+                    ),
                 )
 
             # Record access asynchronously in background thread (Issue #4: Activation Tracking)
@@ -1097,6 +1132,7 @@ class MemoryManager:
 
         Raises:
             RuntimeError: If stats retrieval fails
+
         """
         try:
             # Query memory store for statistics
@@ -1147,6 +1183,7 @@ class MemoryManager:
 
         Returns:
             List of file paths that can be parsed
+
         """
         files = []
 
@@ -1176,6 +1213,7 @@ class MemoryManager:
 
         Returns:
             True if path should be skipped
+
         """
         # Check if any part of the path matches skip list
         for part in path.parts:
@@ -1191,6 +1229,7 @@ class MemoryManager:
 
         Returns:
             Language identifier (e.g., "python", "javascript")
+
         """
         # Get parser for this file
         parser = self.parser_registry.get_parser_for_file(file_path)
@@ -1224,6 +1263,7 @@ class MemoryManager:
 
         Returns:
             Content string combining signature, docstring, and metadata
+
         """
         parts = []
 
@@ -1245,6 +1285,7 @@ class MemoryManager:
 
         Returns:
             Number of chunks in the database
+
         """
         try:
             # Use _transaction() context manager for direct SQL access
@@ -1265,6 +1306,7 @@ class MemoryManager:
 
         Returns:
             Number of unique files indexed
+
         """
         try:
             # Use _transaction() context manager for direct SQL access
@@ -1272,7 +1314,7 @@ class MemoryManager:
             if hasattr(self.memory_store, "_transaction"):
                 with self.memory_store._transaction() as conn:
                     cursor = conn.execute(
-                        "SELECT COUNT(DISTINCT json_extract(content, '$.file')) FROM chunks WHERE type = 'code'"
+                        "SELECT COUNT(DISTINCT json_extract(content, '$.file')) FROM chunks WHERE type = 'code'",
                     )
                     result = cursor.fetchone()
                     return result[0] if result else 0
@@ -1288,6 +1330,7 @@ class MemoryManager:
 
         Returns:
             Dictionary mapping language name to chunk count
+
         """
         try:
             # Use _transaction() context manager for direct SQL access
@@ -1300,13 +1343,13 @@ class MemoryManager:
                         FROM chunks
                         WHERE type = 'code'
                         GROUP BY lang
-                        """
+                        """,
                     )
                     results = cursor.fetchall()
                     return {row[0]: row[1] for row in results if row[0] is not None}
             else:
                 logger.warning(
-                    "Store does not support _transaction(), cannot get language distribution"
+                    "Store does not support _transaction(), cannot get language distribution",
                 )
                 return {}
         except Exception as e:
@@ -1318,6 +1361,7 @@ class MemoryManager:
 
         Returns:
             Database size in MB
+
         """
         try:
             # Check if store has a database file path
@@ -1347,6 +1391,7 @@ class MemoryManager:
 
         Raises:
             MemoryStoreError: If all retries exhausted or non-retryable error
+
         """
         base_delay = 0.1  # Start with 100ms
         last_error: Exception | None = None
@@ -1367,7 +1412,7 @@ class MemoryManager:
                         delay = base_delay * (2**attempt)
                         logger.debug(
                             f"Database locked, retrying in {delay:.2f}s "
-                            f"(attempt {attempt + 1}/{max_retries})"
+                            f"(attempt {attempt + 1}/{max_retries})",
                         )
                         time.sleep(delay)
                         continue
@@ -1406,6 +1451,7 @@ class MemoryManager:
 
         Returns:
             Path to .aurora/.indexing_metadata.json
+
         """
         db_path = Path(self.config.get_db_path())
         return db_path.parent / ".indexing_metadata.json"
@@ -1415,6 +1461,7 @@ class MemoryManager:
 
         Returns:
             Path to .aurora/.mtime_cache.json
+
         """
         db_path = Path(self.config.get_db_path())
         return db_path.parent / ".mtime_cache.json"
@@ -1424,6 +1471,7 @@ class MemoryManager:
 
         Returns:
             Dictionary mapping file paths to last indexed mtime
+
         """
         cache_path = self._get_mtime_cache_path()
         if not cache_path.exists():
@@ -1444,6 +1492,7 @@ class MemoryManager:
 
         Args:
             cache: Dictionary mapping file paths to mtime
+
         """
         cache_path = self._get_mtime_cache_path()
         try:
@@ -1456,6 +1505,7 @@ class MemoryManager:
 
         Returns:
             Dictionary mapping file paths to {"hash": str, "mtime": float, "chunk_count": int}
+
         """
         file_index: dict[str, dict[str, Any]] = {}
 
@@ -1464,14 +1514,14 @@ class MemoryManager:
                 with self.memory_store._transaction() as conn:
                     # Check if file_index table exists
                     cursor = conn.execute(
-                        "SELECT name FROM sqlite_master WHERE type='table' AND name='file_index'"
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name='file_index'",
                     )
                     if cursor.fetchone() is None:
                         # Table doesn't exist yet, return empty (will be created on save)
                         return {}
 
                     cursor = conn.execute(
-                        "SELECT file_path, content_hash, mtime, chunk_count FROM file_index"
+                        "SELECT file_path, content_hash, mtime, chunk_count FROM file_index",
                     )
                     for row in cursor:
                         file_index[row[0]] = {
@@ -1493,6 +1543,7 @@ class MemoryManager:
 
         Args:
             file_info: Dictionary mapping file paths to {"hash": str, "mtime": float, "chunk_count": int}
+
         """
         try:
             if hasattr(self.memory_store, "_transaction"):
@@ -1507,7 +1558,7 @@ class MemoryManager:
                             indexed_at TIMESTAMP NOT NULL,
                             chunk_count INTEGER DEFAULT 0
                         )
-                    """
+                    """,
                     )
 
                     now = datetime.now(timezone.utc).isoformat()
@@ -1533,6 +1584,7 @@ class MemoryManager:
         Args:
             file_path: Path to the file
             mtime: New modification time
+
         """
         try:
             if hasattr(self.memory_store, "_transaction"):
@@ -1545,7 +1597,9 @@ class MemoryManager:
             logger.debug(f"Failed to update mtime in file index: {e}")
 
     def _cleanup_deleted_files(
-        self, file_index: dict[str, dict[str, Any]], current_files: set[str]
+        self,
+        file_index: dict[str, dict[str, Any]],
+        current_files: set[str],
     ) -> int:
         """Remove chunks from files that no longer exist.
 
@@ -1555,6 +1609,7 @@ class MemoryManager:
 
         Returns:
             Number of files cleaned up
+
         """
         deleted_count = 0
 
@@ -1597,6 +1652,7 @@ class MemoryManager:
 
         Returns:
             Dictionary with metadata or empty dict if not found
+
         """
         import json
 
@@ -1626,6 +1682,7 @@ class MemoryManager:
             success_rate: Success rate (0.0-1.0) - indexed / parseable files
             files_by_language: Dict mapping language to indexed file count
             total_parseable: Total parseable files discovered
+
         """
         import json
 
@@ -1666,6 +1723,7 @@ class MemoryManager:
             files_by_language: Dict mapping language to file count
             total_parseable: Total parseable files discovered
             duration: Indexing duration in seconds
+
         """
         # Determine log directory (next to db or in indexed path)
         if self.config:
@@ -1715,7 +1773,7 @@ class MemoryManager:
                 lines.append("")
                 lines.append(f"## Skipped Files ({len(skipped_files)})")
                 lines.append(
-                    "# Files with parsers but no extractable elements (empty or only comments)"
+                    "# Files with parsers but no extractable elements (empty or only comments)",
                 )
                 for file_path, reason in skipped_files:
                     lines.append(f"  {file_path}")
@@ -1736,6 +1794,7 @@ class MemoryManager:
 
         Returns:
             True if index was built successfully, False otherwise
+
         """
         try:
             from aurora_context_code.semantic.hybrid_retriever import HybridRetriever

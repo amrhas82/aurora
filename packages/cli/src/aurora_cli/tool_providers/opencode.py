@@ -99,6 +99,7 @@ class OpenCodeToolProvider(ToolProvider):
 
         Returns:
             ToolResult with execution status and output
+
         """
         import os
 
@@ -167,6 +168,7 @@ class OpenCodeToolProvider(ToolProvider):
 
         Returns:
             ParsedOutput with extracted status, code blocks, file changes, etc.
+
         """
         return self._output_handler.parse(output)
 
@@ -183,6 +185,7 @@ class OpenCodeToolProvider(ToolProvider):
 
         Returns:
             Normalized output string
+
         """
         parsed = self.parse_output(output)
         return parsed.clean_output
@@ -194,6 +197,6 @@ class OpenCodeToolProvider(ToolProvider):
             {
                 "model_family": "opencode",
                 "supports_json_mode": True,
-            }
+            },
         )
         return info

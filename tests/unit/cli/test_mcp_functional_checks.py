@@ -52,16 +52,24 @@ class TestRunChecks:
         """Should return list of HealthCheckResult tuples."""
         with (
             patch.object(
-                mcp_checks, "_check_mcp_config_syntax", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_mcp_config_syntax",
+                return_value=("pass", "Valid", {}),
             ),
             patch.object(
-                mcp_checks, "_check_aurora_mcp_tools_importable", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_aurora_mcp_tools_importable",
+                return_value=("pass", "Valid", {}),
             ),
             patch.object(
-                mcp_checks, "_check_soar_phases_importable", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_soar_phases_importable",
+                return_value=("pass", "Valid", {}),
             ),
             patch.object(
-                mcp_checks, "_check_memory_database_accessible", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_memory_database_accessible",
+                return_value=("pass", "Valid", {}),
             ),
             patch.object(
                 mcp_checks,
@@ -69,7 +77,9 @@ class TestRunChecks:
                 return_value=("pass", "Valid", {}),
             ),
             patch.object(
-                mcp_checks, "_check_mcp_server_tools_complete", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_mcp_server_tools_complete",
+                return_value=("pass", "Valid", {}),
             ),
         ):
             results = mcp_checks.run_checks()
@@ -210,7 +220,8 @@ class TestCheckSoarPhasesImportable:
             return Mock()
 
         with patch(
-            "aurora_cli.health_checks.importlib.import_module", side_effect=mock_import_side_effect
+            "aurora_cli.health_checks.importlib.import_module",
+            side_effect=mock_import_side_effect,
         ):
             status, message, details = mcp_checks._check_soar_phases_importable()
 
@@ -267,7 +278,9 @@ class TestCheckMemoryDatabaseAccessible:
         assert "not found" in message.lower() or "missing" in message.lower()
 
     def test_database_connection_error(
-        self, mcp_checks: MCPFunctionalChecks, tmp_path: Path
+        self,
+        mcp_checks: MCPFunctionalChecks,
+        tmp_path: Path,
     ) -> None:
         """Should fail when database connection fails."""
         mcp_checks.project_path = tmp_path
@@ -382,7 +395,9 @@ class TestGetFixableIssues:
             assert "fix" in issue
 
     def test_missing_aurora_directory(
-        self, mcp_checks: MCPFunctionalChecks, tmp_path: Path
+        self,
+        mcp_checks: MCPFunctionalChecks,
+        tmp_path: Path,
     ) -> None:
         """Should detect missing .aurora directory as fixable."""
         # Remove .aurora directory
@@ -393,7 +408,9 @@ class TestGetFixableIssues:
             shutil.rmtree(aurora_dir)
 
         with patch.object(
-            mcp_checks, "run_checks", return_value=[("warning", "Database not found", {})]
+            mcp_checks,
+            "run_checks",
+            return_value=[("warning", "Database not found", {})],
         ):
             fixable = mcp_checks.get_fixable_issues()
 
@@ -406,7 +423,9 @@ class TestGetFixableIssues:
     def test_missing_memory_database(self, mcp_checks: MCPFunctionalChecks, tmp_path: Path) -> None:
         """Should detect missing memory.db as fixable."""
         with patch.object(
-            mcp_checks, "run_checks", return_value=[("warning", "Database not found", {})]
+            mcp_checks,
+            "run_checks",
+            return_value=[("warning", "Database not found", {})],
         ):
             fixable = mcp_checks.get_fixable_issues()
 
@@ -473,10 +492,14 @@ class TestMCPFunctionalChecksIntegration:
         # Mock all checks to return various statuses
         with (
             patch.object(
-                mcp_checks, "_check_mcp_config_syntax", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_mcp_config_syntax",
+                return_value=("pass", "Valid", {}),
             ),
             patch.object(
-                mcp_checks, "_check_aurora_mcp_tools_importable", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_aurora_mcp_tools_importable",
+                return_value=("pass", "Valid", {}),
             ),
             patch.object(
                 mcp_checks,
@@ -494,7 +517,9 @@ class TestMCPFunctionalChecksIntegration:
                 return_value=("pass", "Valid", {}),
             ),
             patch.object(
-                mcp_checks, "_check_mcp_server_tools_complete", return_value=("pass", "Valid", {})
+                mcp_checks,
+                "_check_mcp_server_tools_complete",
+                return_value=("pass", "Valid", {}),
             ),
         ):
             results = mcp_checks.run_checks()

@@ -35,6 +35,7 @@ def load_ignore_patterns(root_path: Path) -> list[str]:
 
     Returns:
         List of ignore patterns (includes defaults + user patterns)
+
     """
     patterns = DEFAULT_IGNORE_PATTERNS.copy()
 
@@ -64,6 +65,7 @@ def should_ignore(file_path: Path, root_path: Path, patterns: list[str]) -> bool
 
     Returns:
         True if file should be ignored
+
     """
     try:
         # Get relative path from root
@@ -94,6 +96,7 @@ def matches_pattern(path: str, pattern: str) -> bool:
 
     Returns:
         True if path matches pattern
+
     """
     import fnmatch
 

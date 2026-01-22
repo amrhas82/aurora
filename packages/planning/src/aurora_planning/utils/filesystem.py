@@ -15,6 +15,7 @@ def find_project_root(start_path: Path | None = None) -> Path | None:
 
     Returns:
         Path to project root, or None if not found
+
     """
     current = start_path or Path.cwd()
 
@@ -42,6 +43,7 @@ def read_markdown_file(file_path: str) -> str:
     Raises:
         FileNotFoundError: If file doesn't exist
         IOError: If file cannot be read
+
     """
     path = Path(file_path)
 

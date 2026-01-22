@@ -85,7 +85,7 @@ class Calculator:
     def multiply(self, x: float, y: float) -> float:
         '''Multiply two numbers.'''
         return x * y
-"""
+""",
     )
 
     # Index the test code
@@ -116,8 +116,8 @@ def temp_aurora_dir(tmp_path):
                     "verbosity": "normal",
                 },
                 "budget": {"monthly_limit_usd": 50.0},
-            }
-        )
+            },
+        ),
     )
 
     return aurora_dir
@@ -283,7 +283,7 @@ def func1():
 
 def func2():
     return 2
-"""
+""",
         )
 
         result = tools.aurora_context(str(test_file), function="func2")

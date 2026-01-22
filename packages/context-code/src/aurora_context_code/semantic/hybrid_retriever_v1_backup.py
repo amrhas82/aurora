@@ -40,6 +40,7 @@ class HybridConfig:
     Example:
         >>> config = HybridConfig(activation_weight=0.7, semantic_weight=0.3)
         >>> retriever = HybridRetriever(store, engine, provider, config)
+
     """
 
     activation_weight: float = 0.6
@@ -55,7 +56,7 @@ class HybridConfig:
             raise ValueError(f"semantic_weight must be in [0, 1], got {self.semantic_weight}")
         if abs(self.activation_weight + self.semantic_weight - 1.0) > 1e-6:
             raise ValueError(
-                f"Weights must sum to 1.0, got {self.activation_weight + self.semantic_weight}"
+                f"Weights must sum to 1.0, got {self.activation_weight + self.semantic_weight}",
             )
         if self.activation_top_k < 1:
             raise ValueError(f"activation_top_k must be >= 1, got {self.activation_top_k}")
@@ -87,6 +88,7 @@ class HybridRetriever:
         >>> retriever = HybridRetriever(store, engine, provider)
         >>>
         >>> results = retriever.retrieve("calculate total price", top_k=5)
+
     """
 
     def __init__(
@@ -109,6 +111,7 @@ class HybridRetriever:
         Note:
             If both config and aurora_config are provided, config takes precedence.
             If neither is provided, uses default HybridConfig values.
+
         """
         self.store = store
         self.activation_engine = activation_engine
@@ -153,6 +156,7 @@ class HybridRetriever:
             >>> results = retriever.retrieve("how to calculate totals", top_k=5)
             >>> for result in results:
             ...     print(f"{result['chunk_id']}: {result['hybrid_score']:.3f}")
+
         """
         # Validate inputs
         if not query or not query.strip():
@@ -216,7 +220,7 @@ class HybridRetriever:
                     "chunk": chunk,
                     "raw_activation": activation_score,
                     "raw_semantic": semantic_score,
-                }
+                },
             )
 
         # If no valid results, return empty
@@ -234,7 +238,7 @@ class HybridRetriever:
 
         # Step 4: Normalize scores to [0, 1] range
         activation_scores_normalized = self._normalize_scores(
-            [r["raw_activation"] for r in results]
+            [r["raw_activation"] for r in results],
         )
         semantic_scores_normalized = self._normalize_scores([r["raw_semantic"] for r in results])
 
@@ -288,7 +292,7 @@ class HybridRetriever:
                     "semantic_score": semantic_norm,
                     "hybrid_score": hybrid_score,
                     "metadata": metadata,
-                }
+                },
             )
 
         # Step 6: Sort by hybrid score (descending)
@@ -306,6 +310,7 @@ class HybridRetriever:
 
         Returns:
             List of results with activation scores only
+
         """
         results = []
         for chunk in chunks[:top_k]:
@@ -322,7 +327,7 @@ class HybridRetriever:
                         "name": getattr(chunk, "name", ""),
                         "file_path": getattr(chunk, "file_path", ""),
                     },
-                }
+                },
             )
         return results
 
@@ -338,6 +343,7 @@ class HybridRetriever:
         Note:
             When all scores are equal, returns original scores unchanged
             to preserve meaningful zero values rather than inflating to 1.0.
+
         """
         if not scores:
             return []
@@ -363,6 +369,7 @@ class HybridRetriever:
 
         Raises:
             ValueError: If config values are invalid
+
         """
         # Load from context.code.hybrid_weights section
         weights = aurora_config.get("context.code.hybrid_weights", {})

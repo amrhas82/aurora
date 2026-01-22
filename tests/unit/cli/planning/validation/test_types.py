@@ -183,7 +183,7 @@ class TestValidationReport:
 
         # Add issues directly to the list
         report.issues.append(
-            ValidationIssue(level=ValidationLevel.ERROR, path="test.md", message="New error")
+            ValidationIssue(level=ValidationLevel.ERROR, path="test.md", message="New error"),
         )
         # Summary should update automatically on next access
         assert report.summary.errors == 1
@@ -192,8 +192,11 @@ class TestValidationReport:
         """Test ValidationReport serialization includes summary."""
         issues = [
             ValidationIssue(
-                level=ValidationLevel.WARNING, path="test.md", message="Warning", line=10
-            )
+                level=ValidationLevel.WARNING,
+                path="test.md",
+                message="Warning",
+                line=10,
+            ),
         ]
         report = ValidationReport(valid=True, issues=issues)
         data = report.model_dump()
@@ -209,8 +212,11 @@ class TestValidationReport:
         """Test ValidationReport JSON serialization."""
         issues = [
             ValidationIssue(
-                level=ValidationLevel.ERROR, path="src/main.py", message="Syntax error", line=5
-            )
+                level=ValidationLevel.ERROR,
+                path="src/main.py",
+                message="Syntax error",
+                line=5,
+            ),
         ]
         report = ValidationReport(valid=False, issues=issues)
         json_str = report.model_dump_json()
@@ -231,7 +237,7 @@ class TestValidationReport:
                     "message": "Test error",
                     "line": 10,
                     "column": None,
-                }
+                },
             ],
         }
         report = ValidationReport(**data)

@@ -51,6 +51,7 @@ class AntigravitySlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -62,6 +63,7 @@ class AntigravitySlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             YAML frontmatter string
+
         """
         description = DESCRIPTIONS[command_id]
         return f"---\ndescription: {description}\n---"
@@ -74,6 +76,7 @@ class AntigravitySlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -85,5 +88,6 @@ class AntigravitySlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             One-line description for skill listings
+
         """
         return DESCRIPTIONS.get(command_id)

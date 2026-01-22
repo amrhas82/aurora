@@ -27,6 +27,7 @@ class SynthesisResult:
         metadata: Additional synthesis metadata
         raw_response: Raw LLM response text
         prompt_used: Prompt text sent to LLM
+
     """
 
     def __init__(
@@ -95,6 +96,7 @@ def synthesize_results(
     Raises:
         ValueError: If synthesis fails validation
         RuntimeError: If LLM call fails after retries
+
     """
     retry_count = 0
     feedback = None
@@ -115,7 +117,7 @@ def synthesize_results(
                     "agent": output.get("agent_name", "unknown"),
                     "summary": output.get("summary", ""),
                     "confidence": output.get("confidence", 0.0),
-                }
+                },
             )
 
         # Build synthesis prompt
@@ -140,7 +142,7 @@ def synthesize_results(
         except ValueError as e:
             if retry_count >= max_retries:
                 raise ValueError(
-                    f"Synthesis parsing failed after {max_retries} retries: {e}"
+                    f"Synthesis parsing failed after {max_retries} retries: {e}",
                 ) from e
             feedback = (
                 f"Previous synthesis had parsing error: {e}. Please ensure proper formatting."
@@ -240,6 +242,7 @@ def verify_synthesis(
     Raises:
         ValueError: If verification response is invalid
         RuntimeError: If LLM call fails after retries
+
     """
     prompt_template = VerifySynthesisPromptTemplate()
 
@@ -261,7 +264,7 @@ def verify_synthesis(
     if not isinstance(verification, dict):
         raise ValueError(
             f"LLM returned non-dict response: {type(verification)}\n"
-            f"Response: {str(verification)[:500]}"
+            f"Response: {str(verification)[:500]}",
         )
 
     # Validate required fields
@@ -269,7 +272,7 @@ def verify_synthesis(
     missing = [f for f in required_fields if f not in verification]
     if missing:
         raise ValueError(
-            f"Verification missing required fields: {missing}\nResponse: {verification}"
+            f"Verification missing required fields: {missing}\nResponse: {verification}",
         )
 
     # Validate score ranges
@@ -332,11 +335,11 @@ def _build_synthesis_user_prompt(
             f"\nSubgoal {summary['subgoal_id']}: {summary['subgoal_description']}\n"
             f"Agent: {summary['agent']}\n"
             f"Summary: {summary['summary']}\n"
-            f"Confidence: {summary['confidence']:.2f}\n"
+            f"Confidence: {summary['confidence']:.2f}\n",
         )
 
     prompt_parts.append(
-        "\n---\n\nPlease synthesize the above agent outputs into a coherent answer to the original query."
+        "\n---\n\nPlease synthesize the above agent outputs into a coherent answer to the original query.",
     )
 
     return "".join(prompt_parts)
@@ -353,6 +356,7 @@ def _parse_synthesis_response(response: str) -> dict[str, Any]:
 
     Raises:
         ValueError: If response format is invalid
+
     """
     lines = response.strip().split("\n")
 
@@ -403,6 +407,7 @@ def _validate_traceability(answer: str, summaries: list[dict[str, Any]]) -> None
 
     Raises:
         ValueError: If traceability is insufficient
+
     """
     # Check if answer references at least one agent
     has_reference = False
@@ -415,7 +420,7 @@ def _validate_traceability(answer: str, summaries: list[dict[str, Any]]) -> None
     if not has_reference and len(summaries) > 0:
         raise ValueError(
             "Answer does not reference any agent outputs. "
-            "Please include inline citations like (Agent: <agent_name>)."
+            "Please include inline citations like (Agent: <agent_name>).",
         )
 
 
@@ -428,6 +433,7 @@ def _extract_traceability(answer: str, summaries: list[dict[str, Any]]) -> list[
 
     Returns:
         List of dicts with 'claim' and 'source' keys
+
     """
     traceability = []
 
@@ -440,7 +446,7 @@ def _extract_traceability(answer: str, summaries: list[dict[str, Any]]) -> list[
                     "agent": agent_name,
                     "subgoal_id": summary["subgoal_id"],
                     "subgoal_description": summary["subgoal_description"],
-                }
+                },
             )
 
     return traceability

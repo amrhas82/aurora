@@ -84,7 +84,9 @@ class MockStore:
         self.chunks[chunk.id] = chunk
 
     def retrieve_by_activation(
-        self, min_activation: float = 0.0, limit: int = 100
+        self,
+        min_activation: float = 0.0,
+        limit: int = 100,
     ) -> list[MockChunk]:
         """Retrieve chunks sorted by activation."""
         candidates = [chunk for chunk in self.chunks.values() if chunk.activation >= min_activation]
@@ -100,7 +102,9 @@ class MockActivationEngine:
         self.config = config or ActivationConfig()
 
     def calculate_activation(
-        self, chunk_id: str, context_keywords: set[str] | None = None
+        self,
+        chunk_id: str,
+        context_keywords: set[str] | None = None,
     ) -> float:
         """Return pre-calculated activation from chunk."""
         chunk = self.store.chunks.get(chunk_id)
@@ -119,6 +123,7 @@ def create_comprehensive_dataset(embedding_provider: EmbeddingProvider, now: dat
     Returns:
         - store: MockStore with chunks
         - ground_truth: Dict mapping queries to relevant chunk IDs
+
     """
     # Define chunks with semantic clarity and balanced activation
     # Format: (id, content, activation_level)
@@ -342,7 +347,9 @@ def create_comprehensive_dataset(embedding_provider: EmbeddingProvider, now: dat
 
 
 def calculate_precision_at_k(
-    results: list[dict[str, Any]], relevant_ids: set[str], k: int
+    results: list[dict[str, Any]],
+    relevant_ids: set[str],
+    k: int,
 ) -> float:
     """Calculate precision@k metric."""
     if k == 0 or len(results) == 0:
@@ -452,7 +459,7 @@ class TestHybridRetrievalPrecisionBenchmark:
                 semantic_score = result["semantic_score"]
                 print(
                     f"    {i}. {chunk_id:25s} "
-                    f"(h:{hybrid_score:.2f}, s:{semantic_score:.2f}) {relevant}"
+                    f"(h:{hybrid_score:.2f}, s:{semantic_score:.2f}) {relevant}",
                 )
 
         return avg_precision, results_per_query
@@ -464,10 +471,12 @@ class TestHybridRetrievalPrecisionBenchmark:
         """
         # Run both approaches
         keyword_precision, keyword_results = self.test_keyword_only_baseline(
-            embedding_provider, comprehensive_dataset
+            embedding_provider,
+            comprehensive_dataset,
         )
         hybrid_precision, hybrid_results = self.test_hybrid_retrieval_precision(
-            embedding_provider, comprehensive_dataset
+            embedding_provider,
+            comprehensive_dataset,
         )
 
         # Calculate improvement

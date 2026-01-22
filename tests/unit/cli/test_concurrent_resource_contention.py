@@ -10,8 +10,7 @@ Tests cover:
 
 import asyncio
 import threading
-import time
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -67,7 +66,10 @@ class TestSharedStateAccess:
             # Simulate varying execution times
             await asyncio.sleep(0.001 * hash(tool.name) % 10)
             result = ToolResult(
-                tool=tool.name, success=True, output=f"{tool.name} output", execution_time=0.01
+                tool=tool.name,
+                success=True,
+                output=f"{tool.name} output",
+                execution_time=0.01,
             )
             collected_results.append(result)
             return result
@@ -93,7 +95,10 @@ class TestSharedStateAccess:
         async def mock_execute(tool, prompt, cancel_event=None):
             large_output = f"[{tool.name}]\n" + ("x" * 10000)
             return ToolResult(
-                tool=tool.name, success=True, output=large_output, execution_time=0.01
+                tool=tool.name,
+                success=True,
+                output=large_output,
+                execution_time=0.01,
             )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
@@ -127,20 +132,22 @@ class TestCancelEventSynchronization:
             if tool.name == "fast":
                 await asyncio.sleep(0.001)
                 return ToolResult(tool="fast", success=True, output="Quick", execution_time=0.001)
-            else:
-                try:
-                    # Check cancel event periodically
-                    for _ in range(100):
-                        if cancel_event and cancel_event.is_set():
-                            cancel_received[tool.name] = True
-                            return ToolResult(
-                                tool=tool.name, success=False, output="", error="Cancelled"
-                            )
-                        await asyncio.sleep(0.01)
-                except asyncio.CancelledError:
-                    cancel_received[tool.name] = True
-                    return ToolResult(tool=tool.name, success=False, output="", error="Cancelled")
-                return ToolResult(tool=tool.name, success=True, output="Slow", execution_time=1.0)
+            try:
+                # Check cancel event periodically
+                for _ in range(100):
+                    if cancel_event and cancel_event.is_set():
+                        cancel_received[tool.name] = True
+                        return ToolResult(
+                            tool=tool.name,
+                            success=False,
+                            output="",
+                            error="Cancelled",
+                        )
+                    await asyncio.sleep(0.01)
+            except asyncio.CancelledError:
+                cancel_received[tool.name] = True
+                return ToolResult(tool=tool.name, success=False, output="", error="Cancelled")
+            return ToolResult(tool=tool.name, success=True, output="Slow", execution_time=1.0)
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -223,10 +230,16 @@ class TestResultAggregationRaceConditions:
                 strategy_used=AggregationStrategy.ALL_COMPLETE,
                 tool_results=[
                     ToolResult(
-                        tool="tool1", success=True, output="Same" * 100, execution_time=30.0
+                        tool="tool1",
+                        success=True,
+                        output="Same" * 100,
+                        execution_time=30.0,
                     ),
                     ToolResult(
-                        tool="tool2", success=True, output="Same" * 100, execution_time=30.0
+                        tool="tool2",
+                        success=True,
+                        output="Same" * 100,
+                        execution_time=30.0,
                     ),
                 ],
             )
@@ -278,7 +291,10 @@ class TestMemorySafety:
         async def mock_execute(tool, prompt, cancel_event=None):
             await asyncio.sleep(0.001)
             return ToolResult(
-                tool=tool.name, success=True, output=f"Output {tool.name}", execution_time=0.001
+                tool=tool.name,
+                success=True,
+                output=f"Output {tool.name}",
+                execution_time=0.001,
             )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
@@ -410,7 +426,10 @@ class TestConflictDetectionThreadSafety:
         """Test conflict detection with concurrent access."""
         results = [
             ToolResult(
-                tool=f"tool{i}", success=True, output=f"Output {i}" * 100, execution_time=0.1
+                tool=f"tool{i}",
+                success=True,
+                output=f"Output {i}" * 100,
+                execution_time=0.1,
             )
             for i in range(5)
         ]
@@ -505,7 +524,10 @@ class TestExecutorStateIsolation:
         async def mock_execute(tool, prompt, cancel_event=None):
             execution_count[0] += 1
             return ToolResult(
-                tool="tool1", success=True, output=f"Run {execution_count[0]}", execution_time=0.01
+                tool="tool1",
+                success=True,
+                output=f"Run {execution_count[0]}",
+                execution_time=0.01,
             )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):

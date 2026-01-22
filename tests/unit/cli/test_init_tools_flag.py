@@ -183,7 +183,8 @@ class TestToolsFlagIntegration:
 
             with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                 with patch(
-                    "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                    "aurora_cli.commands.init.run_step_2_memory_indexing",
+                    return_value=True,
                 ):
                     with patch(
                         "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -207,11 +208,13 @@ class TestToolsFlagIntegration:
             (Path.cwd() / ".git").mkdir()
 
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -231,11 +234,13 @@ class TestToolsFlagIntegration:
             (Path.cwd() / ".git").mkdir()
 
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -255,14 +260,17 @@ class TestToolsFlagIntegration:
             (Path.cwd() / ".git").mkdir()
 
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ):
                         with patch(
-                            "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+                            "aurora_cli.commands.init.prompt_tool_selection",
+                            new_callable=AsyncMock,
                         ) as mock_prompt:
                             with patch(
                                 "aurora_cli.commands.init.configure_tools",
@@ -287,7 +295,8 @@ class TestToolsFlagIntegration:
             (Path.cwd() / ".git").mkdir()
 
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 result = runner.invoke(init_command, ["--tools=not-a-real-tool"])
 
@@ -307,7 +316,8 @@ class TestToolsFlagIntegration:
             (Path.cwd() / ".git").mkdir()
 
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 result = runner.invoke(init_command, ["--tools=claude,invalid-tool"])
 
@@ -323,11 +333,13 @@ class TestToolsFlagIntegration:
             (Path.cwd() / ".git").mkdir()
 
             with patch(
-                "aurora_cli.commands.init_helpers.detect_existing_setup", return_value=False
+                "aurora_cli.commands.init_helpers.detect_existing_setup",
+                return_value=False,
             ):
                 with patch("aurora_cli.commands.init.run_step_1_planning_setup", return_value=True):
                     with patch(
-                        "aurora_cli.commands.init.run_step_2_memory_indexing", return_value=True
+                        "aurora_cli.commands.init.run_step_2_memory_indexing",
+                        return_value=True,
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
@@ -369,7 +381,8 @@ class TestToolsFlagWithConfigOption:
             (Path.cwd() / ".aurora").mkdir()
 
             with patch(
-                "aurora_cli.commands.init.run_step_3_tool_configuration", return_value=([], [])
+                "aurora_cli.commands.init.run_step_3_tool_configuration",
+                return_value=([], []),
             ) as mock_step3:
                 result = runner.invoke(init_command, ["--config", "--tools=none"])
 

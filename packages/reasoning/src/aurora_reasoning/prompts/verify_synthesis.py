@@ -47,6 +47,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             User prompt string
+
         """
         query = kwargs.get("query", "")
         synthesis_answer = kwargs.get("synthesis_answer", "")
@@ -62,11 +63,11 @@ You MUST respond with valid JSON only. Use this exact format:
             prompt_parts.append(
                 f"\nAgent {i} ({output.get('agent_name', 'unknown')}):"
                 f"\nSummary: {output.get('summary', '')}"
-                f"\nConfidence: {output.get('confidence', 0.0)}"
+                f"\nConfidence: {output.get('confidence', 0.0)}",
             )
 
         prompt_parts.append(
-            "\n\nVerify this synthesis and provide quality assessment in JSON format."
+            "\n\nVerify this synthesis and provide quality assessment in JSON format.",
         )
 
         return "\n".join(prompt_parts)

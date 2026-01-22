@@ -34,6 +34,7 @@ See Also:
     - docs/semantic-retrieval.md: Semantic retrieval architecture
     - tests/unit/context_code/semantic/: Unit tests
     - tests/integration/test_semantic_retrieval.py: Integration tests
+
 """
 
 from aurora_context_code.semantic.embedding_provider import EmbeddingProvider, cosine_similarity

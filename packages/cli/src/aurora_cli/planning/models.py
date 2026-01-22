@@ -89,6 +89,7 @@ class Subgoal(BaseModel):
         assigned_agent: Best AVAILABLE agent ID in '@agent-id' format
         match_quality: How well assigned agent matches task requirements
         dependencies: List of subgoal IDs this depends on
+
     """
 
     model_config = ConfigDict(
@@ -153,6 +154,7 @@ class Subgoal(BaseModel):
 
         Raises:
             ValueError: If ID format is invalid
+
         """
         if not v:
             return v
@@ -177,6 +179,7 @@ class Subgoal(BaseModel):
 
         Returns:
             Normalized agent ID with '@' prefix
+
         """
         # Allow empty strings for optional ideal_agent field
         if not v:
@@ -199,6 +202,7 @@ class Subgoal(BaseModel):
 
         Returns:
             List of dependency IDs in 'sg-N' format
+
         """
         if v is None:
             return []
@@ -245,6 +249,7 @@ class Plan(BaseModel):
         decomposition_source: Source of decomposition ("soar" or "heuristic")
         context_summary: Summary of available context
         file_resolutions: Map of subgoal ID to file resolutions
+
     """
 
     model_config = ConfigDict(
@@ -327,6 +332,7 @@ class Plan(BaseModel):
 
         Raises:
             ValueError: If ID format is invalid (only when non-empty)
+
         """
         # Allow empty plan_id (will be generated later)
         if not v:
@@ -335,7 +341,7 @@ class Plan(BaseModel):
         pattern = r"^\d{4}-[a-z0-9-]+$"
         if not re.match(pattern, v):
             raise ValueError(
-                f"Plan ID must be 'NNNN-slug' format (e.g., '0001-oauth-auth'). Got: {v}"
+                f"Plan ID must be 'NNNN-slug' format (e.g., '0001-oauth-auth'). Got: {v}",
             )
         return v
 
@@ -345,6 +351,7 @@ class Plan(BaseModel):
 
         Raises:
             ValueError: If a dependency references an unknown subgoal
+
         """
         valid_ids = {sg.id for sg in self.subgoals}
 
@@ -353,7 +360,7 @@ class Plan(BaseModel):
                 if dep not in valid_ids:
                     raise ValueError(
                         f"Subgoal '{sg.id}' references unknown dependency: {dep}. "
-                        f"Valid subgoal IDs: {sorted(valid_ids)}"
+                        f"Valid subgoal IDs: {sorted(valid_ids)}",
                     )
 
         return self
@@ -366,6 +373,7 @@ class Plan(BaseModel):
 
         Raises:
             ValueError: If circular dependency detected
+
         """
         # Build adjacency list
         graph: dict[str, list[str]] = {sg.id: sg.dependencies for sg in self.subgoals}
@@ -404,6 +412,7 @@ class Plan(BaseModel):
 
         Returns:
             JSON string representation
+
         """
         return self.model_dump_json(indent=2)
 
@@ -416,6 +425,7 @@ class Plan(BaseModel):
 
         Returns:
             Plan instance
+
         """
         return cls.model_validate_json(data)
 
@@ -432,6 +442,7 @@ class PlanManifest(BaseModel):
         active_plans: List of active plan IDs
         archived_plans: List of archived plan IDs
         stats: Aggregate statistics
+
     """
 
     model_config = ConfigDict(
@@ -465,6 +476,7 @@ class PlanManifest(BaseModel):
 
         Args:
             plan_id: Plan ID to add
+
         """
         if plan_id not in self.active_plans:
             self.active_plans.append(plan_id)
@@ -476,6 +488,7 @@ class PlanManifest(BaseModel):
         Args:
             plan_id: Original plan ID
             archived_id: New archived ID (defaults to plan_id)
+
         """
         if plan_id in self.active_plans:
             self.active_plans.remove(plan_id)
@@ -501,6 +514,7 @@ class FileResolution(BaseModel):
         line_start: Starting line number (optional)
         line_end: Ending line number (optional)
         confidence: Confidence score from 0.0 to 1.0
+
     """
 
     model_config = ConfigDict(
@@ -539,6 +553,7 @@ class FileResolution(BaseModel):
 
         Raises:
             ValueError: If line_end < line_start
+
         """
         if (
             self.line_start is not None
@@ -546,7 +561,7 @@ class FileResolution(BaseModel):
             and self.line_end < self.line_start
         ):
             raise ValueError(
-                f"line_end ({self.line_end}) must be >= line_start ({self.line_start})"
+                f"line_end ({self.line_end}) must be >= line_start ({self.line_start})",
             )
         return self
 
@@ -564,6 +579,7 @@ class AgentGap(BaseModel):
         ideal_agent: Agent that SHOULD handle this task (unconstrained)
         ideal_agent_desc: Description of the ideal agent's capabilities
         assigned_agent: Best AVAILABLE agent from manifest
+
     """
 
     model_config = ConfigDict(
@@ -605,6 +621,7 @@ class AgentGap(BaseModel):
 
         Raises:
             ValueError: If format is invalid
+
         """
         pattern = r"^sg-\d+$"
         if not re.match(pattern, v):
@@ -624,6 +641,7 @@ class AgentGap(BaseModel):
 
         Raises:
             ValueError: If format is invalid (only when non-empty)
+
         """
         # Allow empty strings for optional fields
         if not v:
@@ -652,6 +670,7 @@ class DecompositionSummary(BaseModel):
         complexity: Assessed complexity level
         decomposition_source: Source of decomposition ("soar" or "heuristic")
         warnings: List of warning messages
+
     """
 
     model_config = ConfigDict(
@@ -717,6 +736,7 @@ class DecompositionSummary(BaseModel):
 
         Raises:
             ValueError: If source is not a recognized value
+
         """
         valid_sources = {"soar", "soar_llm", "heuristic"}
         if v not in valid_sources:
@@ -810,7 +830,7 @@ class DecompositionSummary(BaseModel):
             if gap_count > 0:
                 summary.append(
                     f"[bold cyan]Gaps Detected:[/bold cyan] "
-                    f"[yellow]{gap_count} subgoals need attention[/yellow]"
+                    f"[yellow]{gap_count} subgoals need attention[/yellow]",
                 )
 
             # Context files summary
@@ -830,7 +850,7 @@ class DecompositionSummary(BaseModel):
             complexity_color = complexity_colors[self.complexity]
             summary.append(
                 f"[bold cyan]Complexity:[/bold cyan] "
-                f"[{complexity_color}]{self.complexity.value.upper()}[/{complexity_color}]"
+                f"[{complexity_color}]{self.complexity.value.upper()}[/{complexity_color}]",
             )
 
             # Decomposition source
@@ -841,7 +861,7 @@ class DecompositionSummary(BaseModel):
             )
             source_color = "green" if source_display == "soar" else "yellow"
             summary.append(
-                f"[bold cyan]Source:[/bold cyan] [{source_color}]{source_display}[/{source_color}]"
+                f"[bold cyan]Source:[/bold cyan] [{source_color}]{source_display}[/{source_color}]",
             )
 
             # Warnings
@@ -855,7 +875,7 @@ class DecompositionSummary(BaseModel):
             if insufficient_count > 0 or acceptable_count > 0:
                 summary.append("")
                 summary.append(
-                    "[dim]Legend: [++] excellent | [+] acceptable | [-] insufficient[/dim]"
+                    "[dim]Legend: [++] excellent | [+] acceptable | [-] insufficient[/dim]",
                 )
 
             panel2 = Panel(
@@ -896,7 +916,7 @@ class DecompositionSummary(BaseModel):
 
                 if is_gap:
                     print(
-                        f"  {indicator} {sg.title}: {sg.assigned_agent} (ideal: {sg.ideal_agent})"
+                        f"  {indicator} {sg.title}: {sg.assigned_agent} (ideal: {sg.ideal_agent})",
                     )
                 else:
                     print(f"  {indicator} {sg.title}: {sg.assigned_agent}")
@@ -909,13 +929,13 @@ class DecompositionSummary(BaseModel):
             print("=" * 60)
             print(
                 f"Agent Matching: {excellent_count} excellent, "
-                f"{acceptable_count} acceptable, {insufficient_count} insufficient"
+                f"{acceptable_count} acceptable, {insufficient_count} insufficient",
             )
             if len(self.agent_gaps) > 0:
                 print(f"Gaps Detected: {len(self.agent_gaps)} subgoals need attention")
             if self.files_resolved > 0:
                 print(
-                    f"Context: {self.files_resolved} files (avg relevance: {self.avg_confidence:.2f})"
+                    f"Context: {self.files_resolved} files (avg relevance: {self.avg_confidence:.2f})",
                 )
             print(f"Complexity: {self.complexity.value.upper()}")
             source_display = (
@@ -941,6 +961,7 @@ class MemoryContext(BaseModel):
     Attributes:
         file: File path
         relevance: Relevance score (0.0-1.0)
+
     """
 
     model_config = ConfigDict(
@@ -982,6 +1003,7 @@ class SubgoalData(BaseModel):
         agent: Best AVAILABLE agent ID with @ prefix (assigned_agent)
         match_quality: How well agent matches task (excellent/acceptable/insufficient)
         dependencies: List of dependent subgoal IDs
+
     """
 
     model_config = ConfigDict(
@@ -1048,6 +1070,7 @@ class Goals(BaseModel):
         memory_context: Relevant files from memory search
         subgoals: List of subgoals with agent assignments
         gaps: List of agent gaps (missing agents)
+
     """
 
     model_config = ConfigDict(

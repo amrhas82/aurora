@@ -64,7 +64,7 @@ class TestAgentRegistryDeprecation:
                 goal="Execute test tasks",
                 category=AgentCategory.ENG,
                 skills=["testing"],
-            )
+            ),
         ]
 
         sample_manifest = AgentManifest(

@@ -34,6 +34,7 @@ def get_all_tool_ids() -> list[str]:
 
     Returns:
         List of all 20 tool IDs (e.g., ['amazon-q', 'claude', 'cursor', ...])
+
     """
     return [c.tool_id for c in SlashCommandRegistry.get_all()]
 
@@ -54,6 +55,7 @@ def parse_tools_flag(tools_str: str) -> list[str]:
         []
         >>> parse_tools_flag('claude,cursor')
         ['claude', 'cursor']
+
     """
     if not tools_str or tools_str.strip() == "":
         return []
@@ -87,6 +89,7 @@ def validate_tool_ids(tool_ids: list[str]) -> None:
     Raises:
         ValueError: If any tool ID is invalid, with message listing invalid IDs
                    and available tool IDs
+
     """
     if not tool_ids:
         return
@@ -119,6 +122,7 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
     Note:
         This function is idempotent - safe to run multiple times.
         Uses the same indexing implementation as `aur mem index`.
+
     """
     from aurora_cli.commands.memory import display_indexing_summary, run_indexing
     from aurora_cli.config import Config
@@ -132,7 +136,8 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
     # Check if database already exists
     if db_path.exists():
         if not click.confirm(
-            f"Memory database exists at {db_path}. Re-index codebase?", default=True
+            f"Memory database exists at {db_path}. Re-index codebase?",
+            default=True,
         ):
             console.print("[yellow]⚠[/] Skipping memory indexing")
             return False
@@ -166,9 +171,8 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
 
         if stats.files_indexed > 0:
             return True
-        else:
-            console.print("  [yellow]⚠[/] No files found to index")
-            return False
+        console.print("  [yellow]⚠[/] No files found to index")
+        return False
 
     except Exception as e:
         console.print(f"[red]✗[/] Indexing failed: {e}")
@@ -177,9 +181,8 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
         if click.confirm("Skip this step and continue?", default=False):
             console.print("[yellow]⚠[/] Skipping memory indexing")
             return False
-        else:
-            console.print("[red]Aborting initialization[/]")
-            raise SystemExit(1)
+        console.print("[red]Aborting initialization[/]")
+        raise SystemExit(1)
 
 
 def run_step_1_planning_setup(project_path: Path) -> bool:
@@ -200,6 +203,7 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
     Note:
         This function is idempotent - safe to run multiple times.
         Preserves existing project.md if already present.
+
     """
     console.print("\n[bold]Step 1/3: Planning Setup[/]")
     console.print("[dim]Setting up git and Aurora directory structure...[/]\n")
@@ -304,6 +308,7 @@ def run_step_3_tool_configuration(
     Note:
         This function is idempotent - safe to run multiple times.
         Uses marker-based updates to preserve custom content.
+
     """
     console.print("\n[bold]Step 3/3: Tool Configuration[/]")
     console.print("[dim]Configure AI coding tools with Aurora integration...[/]\n")
@@ -336,7 +341,7 @@ def run_step_3_tool_configuration(
     # Configure selected tools using slash command configurators
     console.print("[dim]Configuring slash commands...[/]")
     slash_created, slash_updated = asyncio.run(
-        configure_slash_commands(project_path, selected_tool_ids)
+        configure_slash_commands(project_path, selected_tool_ids),
     )
 
     # MCP configuration is currently dormant - skip MCP setup
@@ -431,7 +436,7 @@ def run_step_3_tool_configuration(
     total_tools = len(unique_tools)
     if total_tools > 0:
         console.print(
-            f"\n[bold green]✓[/] Configured {total_tools} tool{'s' if total_tools != 1 else ''}"
+            f"\n[bold green]✓[/] Configured {total_tools} tool{'s' if total_tools != 1 else ''}",
         )
 
     console.print()
@@ -465,6 +470,7 @@ def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler)
     Note:
         This function handles SchemaMismatchError gracefully by prompting
         the user for action rather than displaying a traceback.
+
     """
     from aurora_core.exceptions import SchemaMismatchError
     from aurora_core.store.sqlite import SQLiteStore, backup_database
@@ -492,7 +498,8 @@ def check_and_handle_schema_mismatch(db_path: Path, error_handler: ErrorHandler)
 
         # Ask if user wants to proceed
         if not click.confirm(
-            "Reset database and re-index? (your data will need to be re-indexed)", default=True
+            "Reset database and re-index? (your data will need to be re-indexed)",
+            default=True,
         ):
             click.echo("Aborted. Database unchanged.")
             click.echo("Note: You can manually backup and delete the database file to reset.")
@@ -540,6 +547,7 @@ def detect_local_db() -> Path | None:
 
     Returns:
         Path to local aurora.db if found, None otherwise
+
     """
     local_db = Path.cwd() / "aurora.db"
     if local_db.exists() and local_db.is_file():
@@ -561,6 +569,7 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
 
     Raises:
         sqlite3.Error: If migration fails
+
     """
     # Ensure destination parent directory exists
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -594,7 +603,7 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                     metadata TEXT,
                     created_at REAL NOT NULL
                 )
-            """
+            """,
             )
 
             # Copy data
@@ -602,7 +611,7 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                 """
                 INSERT OR REPLACE INTO chunks
                 SELECT * FROM source.chunks
-            """
+            """,
             )
             chunks_migrated = cursor.rowcount
 
@@ -618,7 +627,7 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                     last_access_time REAL,
                     FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
                 )
-            """
+            """,
             )
 
             # Copy data
@@ -626,7 +635,7 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                 """
                 INSERT OR REPLACE INTO activations
                 SELECT * FROM source.activations
-            """
+            """,
             )
             activations_migrated = cursor.rowcount
 
@@ -641,14 +650,14 @@ def migrate_database(src: Path, dst: Path) -> tuple[int, int]:
                     created_at REAL NOT NULL,
                     FOREIGN KEY (chunk_id) REFERENCES chunks(chunk_id)
                 )
-            """
+            """,
             )
 
             cursor.execute(
                 """
                 INSERT OR REPLACE INTO embeddings
                 SELECT * FROM source.embeddings
-            """
+            """,
             )
 
         # Detach source database
@@ -748,7 +757,8 @@ def init_command(config: bool, tools: str | None) -> None:
         console.print("[dim]Tool Configuration[/]")
         console.print()
         _, _, agent_count, tool_names = run_step_3_tool_configuration(
-            project_path, tool_ids=parsed_tool_ids
+            project_path,
+            tool_ids=parsed_tool_ids,
         )
         console.print("[bold green]✓[/] Tool configuration complete")
         if tool_names:
@@ -789,7 +799,8 @@ def init_command(config: bool, tools: str | None) -> None:
             console.print("[dim]Tool Configuration[/]")
             console.print()
             _, _, agent_count, tool_names = run_step_3_tool_configuration(
-                project_path, tool_ids=parsed_tool_ids
+                project_path,
+                tool_ids=parsed_tool_ids,
             )
             console.print("[bold green]✓[/] Tool configuration complete")
             if tool_names:
@@ -811,7 +822,7 @@ def init_command(config: bool, tools: str | None) -> None:
             if not configured_tool_ids:
                 console.print("[yellow]⚠[/] No tools configured in this project.")
                 console.print(
-                    "[dim]Run 'aur init' with tool selection to configure tools first.[/]"
+                    "[dim]Run 'aur init' with tool selection to configure tools first.[/]",
                 )
                 console.print()
                 return
@@ -851,7 +862,7 @@ def init_command(config: bool, tools: str | None) -> None:
                 console.print()
                 console.print("[bold green]✓[/] Agent discovery complete")
                 console.print(
-                    f"[dim]Found {agent_count} unique agent(s) from {len(manifest.sources)} source(s)[/]"
+                    f"[dim]Found {agent_count} unique agent(s) from {len(manifest.sources)} source(s)[/]",
                 )
 
                 if agent_count > 0:
@@ -910,7 +921,8 @@ def init_command(config: bool, tools: str | None) -> None:
         tool_names: list[str] = []
         if 3 in steps_to_run:
             created_tools, updated_tools, agent_count, tool_names = run_step_3_tool_configuration(
-                project_path, tool_ids=parsed_tool_ids
+                project_path,
+                tool_ids=parsed_tool_ids,
             )
         else:
             console.print("[dim]⊘ Skipping Step 3: Tool Configuration[/]")
@@ -936,7 +948,7 @@ def init_command(config: bool, tools: str | None) -> None:
             total_tools = len(tool_names)
             if total_tools > 0:
                 console.print(
-                    f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured: {', '.join(tool_names)}"
+                    f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured: {', '.join(tool_names)}",
                 )
 
         console.print()
@@ -965,7 +977,8 @@ def init_command(config: bool, tools: str | None) -> None:
 
     # Step 3: Tool Configuration (includes agent discovery for selected tools)
     created_tools, updated_tools, agent_count, tool_names = run_step_3_tool_configuration(
-        project_path, tool_ids=parsed_tool_ids
+        project_path,
+        tool_ids=parsed_tool_ids,
     )
 
     # Display success summary
@@ -987,7 +1000,7 @@ def init_command(config: bool, tools: str | None) -> None:
     total_tools = len(tool_names)
     if total_tools > 0:
         console.print(
-            f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured: {', '.join(tool_names)}"
+            f"  [green]✓[/] {total_tools} tool{'s' if total_tools != 1 else ''} configured: {', '.join(tool_names)}",
         )
 
     if agent_count > 0:

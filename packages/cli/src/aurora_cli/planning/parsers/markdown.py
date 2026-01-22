@@ -28,6 +28,7 @@ class Section:
         title: Section title text
         content: Section content (text before next same-level header)
         children: Nested subsections
+
     """
 
     level: int
@@ -45,6 +46,7 @@ class ParsedScenario:
 
     Attributes:
         raw_text: Raw scenario content including WHEN/THEN/AND blocks
+
     """
 
     raw_text: str
@@ -60,6 +62,7 @@ class ParsedRequirement:
     Attributes:
         text: Requirement statement text
         scenarios: List of parsed scenarios
+
     """
 
     text: str
@@ -73,6 +76,7 @@ class ParsedCapabilityMetadata:
     Attributes:
         version: Schema version (default: "1.0.0")
         format: Format identifier (default: "aurora-capability")
+
     """
 
     version: str = "1.0.0"
@@ -90,6 +94,7 @@ class ParsedCapability:
         overview: Purpose/overview text from Purpose section
         requirements: List of parsed requirements
         metadata: Optional metadata
+
     """
 
     name: str
@@ -111,6 +116,7 @@ class ParsedModification:
         requirement: Single requirement (for single-item operations)
         requirements: Multiple requirements (for batch operations)
         rename: Rename information dict with 'from' and 'to' keys
+
     """
 
     capability: str
@@ -128,6 +134,7 @@ class ParsedPlanMetadata:
     Attributes:
         version: Schema version (default: "1.0.0")
         format: Format identifier (default: "aurora-plan")
+
     """
 
     version: str = "1.0.0"
@@ -146,6 +153,7 @@ class ParsedPlan:
         what_changes: Summary of what will change
         modifications: List of parsed modifications
         metadata: Optional metadata
+
     """
 
     name: str
@@ -168,6 +176,7 @@ class MarkdownParser:
 
         Args:
             content: Raw markdown content to parse
+
         """
         normalized = self._normalize_content(content)
         self._lines = normalized.split("\n")
@@ -184,6 +193,7 @@ class MarkdownParser:
 
         Returns:
             Content with Unix line endings only
+
         """
         return re.sub(r"\r\n?", "\n", content)
 
@@ -198,6 +208,7 @@ class MarkdownParser:
 
         Raises:
             ValueError: If required sections (Purpose, Requirements) are missing
+
         """
         sections = self._parse_sections()
         purpose_section = self._find_section(sections, "Purpose")
@@ -234,6 +245,7 @@ class MarkdownParser:
 
         Raises:
             ValueError: If required sections (Why, What Changes) are missing
+
         """
         sections = self._parse_sections()
         why_section = self._find_section(sections, "Why")
@@ -269,6 +281,7 @@ class MarkdownParser:
 
         Returns:
             List of top-level sections with nested children
+
         """
         sections: list[Section] = []
         stack: list[Section] = []
@@ -311,6 +324,7 @@ class MarkdownParser:
 
         Returns:
             Content as string (stripped)
+
         """
         content_lines: list[str] = []
 
@@ -336,6 +350,7 @@ class MarkdownParser:
 
         Returns:
             Found section or None
+
         """
         for section in sections:
             if section.title.lower() == title.lower():
@@ -356,6 +371,7 @@ class MarkdownParser:
 
         Returns:
             List of ParsedRequirement objects (unvalidated)
+
         """
         requirements: list[ParsedRequirement] = []
 
@@ -391,7 +407,7 @@ class MarkdownParser:
                 ParsedRequirement(
                     text=text,
                     scenarios=scenarios,
-                )
+                ),
             )
 
         return requirements
@@ -406,6 +422,7 @@ class MarkdownParser:
 
         Returns:
             List of ParsedScenario objects (unvalidated)
+
         """
         scenarios: list[ParsedScenario] = []
 
@@ -430,6 +447,7 @@ class MarkdownParser:
 
         Returns:
             List of ParsedModification objects (unvalidated)
+
         """
         modifications: list[ParsedModification] = []
         lines = content.split("\n")
@@ -447,7 +465,8 @@ class MarkdownParser:
                 # Use word boundaries to avoid false matches
                 # Check RENAMED first since it's more specific
                 if re.search(r"\brename[sd]?\b", lower_desc) or re.search(
-                    r"\brenamed\s+(to|from)\b", lower_desc
+                    r"\brenamed\s+(to|from)\b",
+                    lower_desc,
                 ):
                     operation = ModificationOperation.RENAMED
                 elif (
@@ -457,7 +476,8 @@ class MarkdownParser:
                 ):
                     operation = ModificationOperation.ADDED
                 elif re.search(r"\bremove[sd]?\b", lower_desc) or re.search(
-                    r"\bdelete[sd]?\b", lower_desc
+                    r"\bdelete[sd]?\b",
+                    lower_desc,
                 ):
                     operation = ModificationOperation.REMOVED
 
@@ -466,7 +486,7 @@ class MarkdownParser:
                         capability=capability_name,
                         operation=operation,
                         description=description,
-                    )
+                    ),
                 )
 
         return modifications

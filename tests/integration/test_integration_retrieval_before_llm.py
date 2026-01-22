@@ -88,7 +88,7 @@ class DatabaseConnection:
         cursor = self.connection.cursor()
         cursor.execute(query, params or ())
         return cursor.fetchall()
-"""
+""",
         )
 
         return workspace
@@ -124,7 +124,8 @@ class DatabaseConnection:
 
         # Patch the LLM client's generate method
         with patch(
-            "aurora_reasoning.llm_client.AnthropicClient.generate", return_value=mock_response
+            "aurora_reasoning.llm_client.AnthropicClient.generate",
+            return_value=mock_response,
         ) as mock_generate:
             # Execute query about indexed code
             query = "How does DatabaseConnection handle connection failures?"
@@ -249,12 +250,16 @@ class DatabaseConnection:
         memory_manager = MemoryManager(config=config)
 
         executor = QueryExecutor(
-            config=config, memory_store=memory_manager.store, interactive_mode=False
+            config=config,
+            memory_store=memory_manager.store,
+            interactive_mode=False,
         )
 
         # Mock LLM
         with patch.object(
-            executor.llm_client, "generate", return_value="Generic response"
+            executor.llm_client,
+            "generate",
+            return_value="Generic response",
         ) as mock_generate:
             query = "What is Python?"
             result = executor.execute_direct_llm(query)

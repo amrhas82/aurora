@@ -114,6 +114,7 @@ class MarkdownParser:
 
         Args:
             content: Raw markdown content to parse
+
         """
         normalized = self._normalize_content(content)
         self._lines = normalized.split("\n")
@@ -128,6 +129,7 @@ class MarkdownParser:
 
         Returns:
             Content with Unix line endings only
+
         """
         return re.sub(r"\r\n?", "\n", content)
 
@@ -142,6 +144,7 @@ class MarkdownParser:
 
         Raises:
             ValueError: If required sections are missing
+
         """
         sections = self._parse_sections()
         purpose_section = self._find_section(sections, "Purpose")
@@ -178,6 +181,7 @@ class MarkdownParser:
 
         Raises:
             ValueError: If required sections are missing
+
         """
         sections = self._parse_sections()
         why_section = self._find_section(sections, "Why")
@@ -210,6 +214,7 @@ class MarkdownParser:
 
         Returns:
             List of top-level sections with nested children
+
         """
         sections: list[Section] = []
         stack: list[Section] = []
@@ -252,6 +257,7 @@ class MarkdownParser:
 
         Returns:
             Content as string
+
         """
         content_lines: list[str] = []
 
@@ -275,6 +281,7 @@ class MarkdownParser:
 
         Returns:
             Found section or None
+
         """
         for section in sections:
             if section.title.lower() == title.lower():
@@ -292,6 +299,7 @@ class MarkdownParser:
 
         Returns:
             List of ParsedRequirement objects (unvalidated)
+
         """
         requirements: list[ParsedRequirement] = []
 
@@ -327,7 +335,7 @@ class MarkdownParser:
                 ParsedRequirement(
                     text=text,
                     scenarios=scenarios,
-                )
+                ),
             )
 
         return requirements
@@ -340,6 +348,7 @@ class MarkdownParser:
 
         Returns:
             List of ParsedScenario objects (unvalidated)
+
         """
         scenarios: list[ParsedScenario] = []
 
@@ -358,6 +367,7 @@ class MarkdownParser:
 
         Returns:
             List of ParsedModification objects (unvalidated)
+
         """
         modifications: list[ParsedModification] = []
         lines = content.split("\n")
@@ -375,7 +385,8 @@ class MarkdownParser:
                 # Use word boundaries to avoid false matches
                 # Check RENAMED first since it's more specific
                 if re.search(r"\brename[sd]?\b", lower_desc) or re.search(
-                    r"\brenamed\s+(to|from)\b", lower_desc
+                    r"\brenamed\s+(to|from)\b",
+                    lower_desc,
                 ):
                     operation = ModificationOperation.RENAMED
                 elif (
@@ -385,7 +396,8 @@ class MarkdownParser:
                 ):
                     operation = ModificationOperation.ADDED
                 elif re.search(r"\bremove[sd]?\b", lower_desc) or re.search(
-                    r"\bdelete[sd]?\b", lower_desc
+                    r"\bdelete[sd]?\b",
+                    lower_desc,
                 ):
                     operation = ModificationOperation.REMOVED
 
@@ -394,7 +406,7 @@ class MarkdownParser:
                         capability=capability_name,
                         operation=operation,
                         description=description,
-                    )
+                    ),
                 )
 
         return modifications

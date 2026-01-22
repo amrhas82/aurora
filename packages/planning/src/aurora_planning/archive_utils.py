@@ -26,6 +26,7 @@ def generate_archive_name(plan_id: str, archive_date: datetime | None = None) ->
     Examples:
         >>> generate_archive_name("0001-oauth-auth", datetime(2026, 1, 3))
         '2026-01-03-0001-oauth-auth'
+
     """
     if archive_date is None:
         archive_date = datetime.now()
@@ -59,6 +60,7 @@ def archive_plan(
     Examples:
         >>> archive_plan("0001-oauth-auth")
         PosixPath('/home/user/.aurora/plans/archive/2026-01-03-0001-oauth-auth')
+
     """
     if plans_dir is None:
         plans_dir = get_plans_dir()
@@ -134,6 +136,7 @@ def restore_plan(
     Examples:
         >>> restore_plan("2026-01-03-0001-oauth-auth")
         PosixPath('/home/user/.aurora/plans/active/0001-oauth-auth')
+
     """
     if plans_dir is None:
         plans_dir = get_plans_dir()
@@ -198,6 +201,7 @@ def list_archived_plans(plans_dir: Path | None = None) -> list[tuple[str, str, d
     Examples:
         >>> list_archived_plans()
         [('2026-01-03-0001-oauth-auth', '0001-oauth-auth', datetime(2026, 1, 3))]
+
     """
     if plans_dir is None:
         plans_dir = get_plans_dir()

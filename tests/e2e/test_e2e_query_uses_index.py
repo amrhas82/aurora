@@ -139,7 +139,7 @@ class HybridRetriever:
         """Calculate semantic similarity scores."""
         # Placeholder for actual implementation
         return {}
-'''
+''',
         )
 
         # Create another unique module
@@ -195,7 +195,7 @@ class ComplexityAssessor:
             "confidence": confidence,
             "question_count": question_count,
         }
-'''
+''',
         )
 
         yield project_path
@@ -209,7 +209,9 @@ class TestQueryUsesIndex:
     """
 
     def test_1_4_1_index_codebase_with_specific_patterns(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """Test 1.4.1: Write test that indexes codebase with specific code patterns.
 
@@ -233,7 +235,9 @@ class TestQueryUsesIndex:
         ), f"Should have indexed our specific files:\n{result.stdout}"
 
     def test_1_4_2_query_for_existing_code(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """Test 1.4.2: Query for information that exists in indexed code.
 
@@ -273,7 +277,9 @@ class TestQueryUsesIndex:
         )
 
     def test_1_4_3_query_with_verbose_shows_retrieval(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """Test 1.4.7: Test with --verbose flag to see retrieval logs.
 
@@ -315,7 +321,9 @@ class TestQueryUsesIndex:
         )
 
     def test_1_4_4_search_before_query_shows_code_exists(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """Baseline test: Verify search CAN find the code we'll query about.
 
@@ -349,7 +357,9 @@ class TestQueryUsesIndex:
         # Now query should also find it (but currently doesn't - Issue #15)
 
     def test_1_4_5_query_output_references_actual_code(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """Test 1.4.6: Verify response references actual code (not generic answer).
 
@@ -402,7 +412,9 @@ class TestQueryUsesIndex:
         )
 
     def test_1_4_6_query_vs_search_consistency(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """Verify query uses same data that search can find.
 
@@ -456,7 +468,9 @@ class TestQueryUsesIndex:
             )
 
     def test_1_4_7_comprehensive_query_retrieval_check(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """Test 1.4.8: Expected - Test FAILS because query doesn't retrieve from index (Issue #15).
 
@@ -515,7 +529,7 @@ class TestQueryUsesIndex:
                 f"Root cause: execute_direct_llm() doesn't call memory_manager.search()\n"
                 f"Fix: Add retrieval step before LLM call:\n"
                 f"  context_chunks = memory_manager.search(query, limit=10)\n"
-                f"  prompt = format_context(context_chunks) + query"
+                f"  prompt = format_context(context_chunks) + query",
             )
 
 
@@ -526,7 +540,9 @@ class TestQueryRetrievalWithoutAPI:
     """
 
     def test_query_dry_run_shows_retrieval_intent(
-        self, clean_aurora_home: Path, project_with_unique_patterns: Path
+        self,
+        clean_aurora_home: Path,
+        project_with_unique_patterns: Path,
     ) -> None:
         """With --dry-run, query should at least ATTEMPT retrieval.
 

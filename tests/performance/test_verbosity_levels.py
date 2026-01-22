@@ -65,7 +65,10 @@ def test_query_verbose():
         return
 
     result = subprocess.run(
-        ["aur", "query", "test verbosity", "-v"], capture_output=True, text=True, timeout=10
+        ["aur", "query", "test verbosity", "-v"],
+        capture_output=True,
+        text=True,
+        timeout=10,
     )
     print(f"Exit code: {result.returncode}")
     print(f"Stdout (first 500 chars): {result.stdout[:500]}")

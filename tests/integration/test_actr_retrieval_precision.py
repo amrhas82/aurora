@@ -134,7 +134,10 @@ class TestActivationRetrievalPrecision:
     """Test that activation-based ranking improves retrieval precision."""
 
     def calculate_precision_at_k(
-        self, results: list[RetrievalResult], relevant_ids: set[str], k: int
+        self,
+        results: list[RetrievalResult],
+        relevant_ids: set[str],
+        k: int,
     ) -> float:
         """Calculate Precision@K metric."""
         if k <= 0 or len(results) == 0:
@@ -157,7 +160,7 @@ class TestActivationRetrievalPrecision:
                 decay_rate=0.0,
                 spread_factor=0.0,
                 context_weight=1.0,
-            )
+            ),
         )
         retriever = ActivationRetriever(engine)
 
@@ -202,7 +205,8 @@ class TestActivationRetrievalPrecision:
         # Full activation configuration (default is balanced)
         engine = ActivationEngine(config=ActivationConfig())
         retriever = ActivationRetriever(
-            engine, config=RetrievalConfig(max_results=10, threshold=-10.0)
+            engine,
+            config=RetrievalConfig(max_results=10, threshold=-10.0),
         )
 
         query = "database query"

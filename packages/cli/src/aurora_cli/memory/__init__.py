@@ -22,6 +22,7 @@ Example:
     >>> if retriever.has_indexed_memory():
     ...     chunks = retriever.retrieve("authentication", limit=10)
     ...     formatted = retriever.format_for_prompt(chunks)
+
 """
 
 from aurora_cli.memory.retrieval import MemoryRetriever

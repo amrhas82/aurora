@@ -4,7 +4,6 @@ Tests timeout scenarios, agent crashes, stall detection, and recovery validation
 """
 
 import asyncio
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,7 +11,6 @@ import pytest
 from aurora_spawner.early_detection import (
     EarlyDetectionConfig,
     EarlyDetectionMonitor,
-    ExecutionState,
     get_early_detection_monitor,
     reset_early_detection_monitor,
 )

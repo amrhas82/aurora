@@ -34,6 +34,7 @@ def get_template_dir() -> Path:
 
     Returns:
         Path to templates directory
+
     """
     # Templates are in the package
     package_dir = Path(__file__).parent
@@ -48,6 +49,7 @@ class TemplateRenderer:
 
         Args:
             template_dir: Optional custom template directory (default: package templates)
+
         """
         self.template_dir = template_dir or get_template_dir()
         self.env = Environment(
@@ -78,6 +80,7 @@ class TemplateRenderer:
 
         Raises:
             FileNotFoundError: If template not found
+
         """
         try:
             template = self.env.get_template(template_name)
@@ -94,6 +97,7 @@ class TemplateRenderer:
 
         Returns:
             Template context dictionary
+
         """
         # Extract plan name from ID (e.g., "0001-oauth-auth" -> "oauth-auth")
         plan_name = plan.plan_id.split("-", 1)[1] if "-" in plan.plan_id else plan.plan_id
@@ -127,7 +131,7 @@ class TemplateRenderer:
                     "match_quality": match_quality,
                     "is_gap": is_gap,
                     "dependencies": sg.dependencies,
-                }
+                },
             )
 
         # Calculate agent statistics
@@ -198,6 +202,7 @@ def render_plan_files(
 
     Raises:
         OSError: If file write fails
+
     """
     renderer = TemplateRenderer(template_dir)
     context = renderer.build_context(plan)

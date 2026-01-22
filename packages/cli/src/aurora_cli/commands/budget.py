@@ -120,6 +120,7 @@ def set_command(amount: float) -> None:
     Examples:
         aur budget set 20.00    # Set budget to $20
         aur budget set 5.50     # Set budget to $5.50
+
     """
     if amount <= 0:
         console.print("\n[bold red]Error:[/] Budget amount must be positive\n", style="red")
@@ -170,7 +171,8 @@ def reset_command(confirm: bool) -> None:
     """
     if not confirm:
         response = click.confirm(
-            "\nThis will reset spending to $0.00 for the current period. Continue?", default=False
+            "\nThis will reset spending to $0.00 for the current period. Continue?",
+            default=False,
         )
         if not response:
             console.print("\n[dim]Reset cancelled[/]\n")
@@ -194,7 +196,7 @@ def reset_command(confirm: bool) -> None:
         tracker.reset_spending()
 
         console.print(
-            f"\n[bold green]✓[/] Spending reset from [bold]${old_spent:.4f}[/] to [bold]$0.00[/]\n"
+            f"\n[bold green]✓[/] Spending reset from [bold]${old_spent:.4f}[/] to [bold]$0.00[/]\n",
         )
         console.print(f"[dim]Budget limit remains: ${budget_limit:.2f}[/]\n")
 
@@ -247,7 +249,7 @@ def history_command(limit: int, show_all: bool) -> None:
 
         # Display history table
         console.print(
-            f"\n[bold]Query History[/] (showing {len(entries_to_show)} of {len(history)} entries)"
+            f"\n[bold]Query History[/] (showing {len(entries_to_show)} of {len(history)} entries)",
         )
 
         table = Table(show_header=True, header_style="bold magenta")

@@ -18,6 +18,7 @@ class AuroraError(Exception):
         Args:
             message: User-friendly error message
             details: Optional technical details for debugging
+
         """
         self.message = message
         self.details = details
@@ -37,9 +38,8 @@ class StorageError(AuroraError):
         - Write/read errors
         - Transaction rollback failures
         - Disk space issues
-    """
 
-    pass
+    """
 
 
 class ParseError(AuroraError):
@@ -50,9 +50,8 @@ class ParseError(AuroraError):
         - Unsupported language
         - Tree-sitter parsing failures
         - Malformed AST structures
-    """
 
-    pass
+    """
 
 
 class ConfigurationError(AuroraError):
@@ -63,9 +62,8 @@ class ConfigurationError(AuroraError):
         - Invalid configuration values
         - Schema validation failures
         - Conflicting configuration settings
-    """
 
-    pass
+    """
 
 
 class ValidationError(AuroraError):
@@ -76,9 +74,8 @@ class ValidationError(AuroraError):
         - Out-of-range values
         - Missing required fields
         - Type mismatches
-    """
 
-    pass
+    """
 
 
 class ChunkNotFoundError(StorageError):
@@ -93,6 +90,7 @@ class ChunkNotFoundError(StorageError):
 
         Args:
             chunk_id: The ID of the chunk that was not found
+
         """
         message = f"Chunk not found: {chunk_id}"
         super().__init__(message)
@@ -109,6 +107,7 @@ class SchemaMismatchError(StorageError):
         - Old database with 7-column chunks table vs new 9-column schema
         - Missing schema_version table in legacy databases
         - Schema version in database lower than current SCHEMA_VERSION
+
     """
 
     def __init__(
@@ -123,6 +122,7 @@ class SchemaMismatchError(StorageError):
             found_version: The schema version found in the database
             expected_version: The schema version required by the application
             db_path: Optional path to the database file
+
         """
         self.found_version = found_version
         self.expected_version = expected_version
@@ -148,6 +148,7 @@ class FatalError(AuroraError):
         - System resource exhaustion
 
     These errors should fail fast with recovery instructions.
+
     """
 
     def __init__(self, message: str, recovery_hint: str | None = None):
@@ -156,6 +157,7 @@ class FatalError(AuroraError):
         Args:
             message: User-friendly error message
             recovery_hint: Optional hint for how to recover
+
         """
         details = f"Recovery: {recovery_hint}" if recovery_hint else None
         super().__init__(message, details)
@@ -171,6 +173,7 @@ class BudgetExceededError(AuroraError):
         - Cost estimation indicates budget overrun
 
     These errors allow the system to gracefully reject expensive queries.
+
     """
 
     def __init__(
@@ -187,6 +190,7 @@ class BudgetExceededError(AuroraError):
             consumed_usd: Amount of budget already consumed
             limit_usd: Budget limit
             estimated_cost: Estimated cost of the rejected query
+
         """
         super().__init__(message)
         self.consumed_usd = consumed_usd

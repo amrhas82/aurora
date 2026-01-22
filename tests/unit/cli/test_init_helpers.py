@@ -134,12 +134,14 @@ More custom content
         # Create two configured tools
         claude_md = tmp_path / "CLAUDE.md"
         claude_md.write_text(
-            "<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->", encoding="utf-8"
+            "<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->",
+            encoding="utf-8",
         )
 
         opencode_md = tmp_path / "OPENCODE.md"
         opencode_md.write_text(
-            "<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->", encoding="utf-8"
+            "<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->",
+            encoding="utf-8",
         )
 
         result = count_configured_tools(tmp_path)
@@ -300,7 +302,8 @@ name = "test"
         """detect_project_metadata() should detect JavaScript from package.json."""
         package_json = tmp_path / "package.json"
         package_json.write_text(
-            json.dumps({"name": "test-project", "version": "1.0.0"}), encoding="utf-8"
+            json.dumps({"name": "test-project", "version": "1.0.0"}),
+            encoding="utf-8",
         )
 
         result = detect_project_metadata(tmp_path)
@@ -333,7 +336,7 @@ class TestPromptToolSelection:
         # Mock questionary to return specific selections
         with patch("aurora_cli.commands.init_helpers.questionary") as mock_questionary:
             mock_questionary.checkbox.return_value.ask_async = AsyncMock(
-                return_value=["claude", "cursor"]
+                return_value=["claude", "cursor"],
             )
 
             result = await prompt_tool_selection(configured_tools={})
@@ -345,7 +348,7 @@ class TestPromptToolSelection:
         """prompt_tool_selection() should return the IDs user selected."""
         with patch("aurora_cli.commands.init_helpers.questionary") as mock_questionary:
             mock_questionary.checkbox.return_value.ask_async = AsyncMock(
-                return_value=["claude", "cursor", "gemini"]
+                return_value=["claude", "cursor", "gemini"],
             )
 
             result = await prompt_tool_selection(configured_tools={})
@@ -386,7 +389,7 @@ class TestPromptToolSelection:
             mock_questionary.checkbox.return_value.ask_async = AsyncMock(return_value=[])
             created_choices = []
             mock_questionary.Choice = MagicMock(
-                side_effect=lambda **kwargs: created_choices.append(kwargs) or kwargs
+                side_effect=lambda **kwargs: created_choices.append(kwargs) or kwargs,
             )
 
             await prompt_tool_selection(configured_tools=configured_tools)
@@ -418,7 +421,7 @@ class TestPromptToolSelection:
             mock_questionary.checkbox.return_value.ask_async = AsyncMock(return_value=[])
             created_choices = []
             mock_questionary.Choice = MagicMock(
-                side_effect=lambda **kwargs: created_choices.append(kwargs) or kwargs
+                side_effect=lambda **kwargs: created_choices.append(kwargs) or kwargs,
             )
 
             await prompt_tool_selection(configured_tools=configured_tools)
@@ -441,7 +444,7 @@ class TestPromptToolSelection:
             mock_questionary.checkbox.return_value.ask_async = AsyncMock(return_value=[])
             created_choices = []
             mock_questionary.Choice = MagicMock(
-                side_effect=lambda **kwargs: created_choices.append(kwargs) or kwargs
+                side_effect=lambda **kwargs: created_choices.append(kwargs) or kwargs,
             )
 
             await prompt_tool_selection(configured_tools={})

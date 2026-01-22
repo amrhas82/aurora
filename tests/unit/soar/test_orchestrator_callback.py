@@ -211,24 +211,24 @@ class TestPhaseCallbackResultSummary:
     def test_retrieve_callback_includes_chunks(self):
         """Retrieve phase callback includes chunks_retrieved in result."""
         # Similar structure - verify chunks_retrieved key in result
-        pass  # Will be implemented when testing actual execution
+        # Will be implemented when testing actual execution
 
     def test_decompose_callback_includes_subgoal_count(self):
         """Decompose phase callback includes subgoal_count in result."""
-        pass  # Will be implemented when testing actual execution
+        # Will be implemented when testing actual execution
 
     def test_verify_callback_includes_verdict(self):
         """Verify phase callback includes verdict in result."""
-        pass  # Will be implemented when testing actual execution
+        # Will be implemented when testing actual execution
 
     def test_route_callback_includes_agents(self):
         """Route phase callback includes agents list in result."""
-        pass  # Will be implemented when testing actual execution
+        # Will be implemented when testing actual execution
 
     def test_synthesize_callback_includes_confidence(self):
         """Synthesize phase callback includes confidence in result."""
-        pass  # Will be implemented when testing actual execution
+        # Will be implemented when testing actual execution
 
     def test_record_callback_includes_cached(self):
         """Record phase callback includes cached flag in result."""
-        pass  # Will be implemented when testing actual execution
+        # Will be implemented when testing actual execution

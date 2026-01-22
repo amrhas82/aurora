@@ -298,7 +298,7 @@ class TestBM25OnlyFallback:
         mock_loader.is_loaded.return_value = False
 
         with patch(
-            "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+            "aurora_context_code.semantic.model_utils.BackgroundModelLoader",
         ) as mock_loader_class:
             mock_loader_class.get_instance.return_value = mock_loader
 
@@ -353,7 +353,7 @@ class TestEmbeddingProviderLazyLoading:
             return_value=True,
         ):
             with patch(
-                "aurora_context_code.semantic.embedding_provider._SentenceTransformer"
+                "aurora_context_code.semantic.embedding_provider._SentenceTransformer",
             ) as mock_st:
                 provider = EmbeddingProvider.__new__(EmbeddingProvider)
                 provider.model_name = "all-MiniLM-L6-v2"
@@ -605,7 +605,7 @@ class TestHFHubOfflineMode:
                 return_value=True,
             ):
                 with patch(
-                    "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+                    "aurora_context_code.semantic.model_utils.BackgroundModelLoader",
                 ) as mock_loader_class:
                     mock_loader_class.get_instance.return_value = mock_loader
 

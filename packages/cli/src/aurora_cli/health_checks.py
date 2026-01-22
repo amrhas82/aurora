@@ -37,6 +37,7 @@ class CoreSystemChecks:
 
         Args:
             config: Optional Config object. If None, loads from default location.
+
         """
         self.config = config or Config()
 
@@ -45,6 +46,7 @@ class CoreSystemChecks:
 
         Returns:
             List of health check results
+
         """
         results = []
 
@@ -81,8 +83,7 @@ class CoreSystemChecks:
                         {"path": str(db_path), "size_mb": size_mb},
                     )
                 return ("pass", "Database exists", {"path": str(db_path), "size_mb": size_mb})
-            else:
-                return ("warning", "Database not found", {"path": str(db_path)})
+            return ("warning", "Database not found", {"path": str(db_path)})
         except Exception as e:
             return ("fail", f"Database check failed: {e}", {})
 
@@ -96,8 +97,7 @@ class CoreSystemChecks:
             # Check if writable
             if os.access(aurora_dir, os.W_OK):
                 return ("pass", ".aurora directory writable", {"path": str(aurora_dir)})
-            else:
-                return ("fail", ".aurora directory not writable", {"path": str(aurora_dir)})
+            return ("fail", ".aurora directory not writable", {"path": str(aurora_dir)})
         except Exception as e:
             return ("fail", f"Permission check failed: {e}", {})
 
@@ -106,6 +106,7 @@ class CoreSystemChecks:
 
         Returns:
             List of dicts with 'name' and 'fix_func' keys
+
         """
         issues = []
 
@@ -116,7 +117,7 @@ class CoreSystemChecks:
                 {
                     "name": "Missing .aurora directory",
                     "fix_func": lambda: aurora_dir.mkdir(parents=True, exist_ok=True),
-                }
+                },
             )
 
         # Check if database missing
@@ -137,6 +138,7 @@ class CoreSystemChecks:
 
         Returns:
             List of dicts with 'name' and 'solution' keys
+
         """
         issues = []
 
@@ -151,7 +153,7 @@ class CoreSystemChecks:
                 {
                     "name": "No API key configured",
                     "solution": "Set ANTHROPIC_API_KEY environment variable or add to config.json",
-                }
+                },
             )
 
         # Check directory permissions
@@ -161,7 +163,7 @@ class CoreSystemChecks:
                 {
                     "name": ".aurora directory not writable",
                     "solution": f"Run: chmod u+w {aurora_dir}",
-                }
+                },
             )
 
         return issues
@@ -175,6 +177,7 @@ class CodeAnalysisChecks:
 
         Args:
             config: Optional Config object. If None, loads from default location.
+
         """
         self.config = config or Config()
 
@@ -183,6 +186,7 @@ class CodeAnalysisChecks:
 
         Returns:
             List of health check results
+
         """
         results = []
 
@@ -231,12 +235,11 @@ class CodeAnalysisChecks:
                     f"Tree-sitter parsers available ({len(available_languages)} languages: {lang_display})",
                     {"languages": available_languages, "count": len(available_languages)},
                 )
-            else:
-                return (
-                    "warning",
-                    "Tree-sitter installed but no language parsers found",
-                    {"languages": [], "count": 0},
-                )
+            return (
+                "warning",
+                "Tree-sitter installed but no language parsers found",
+                {"languages": [], "count": 0},
+            )
         except ImportError:
             return (
                 "warning",
@@ -263,12 +266,11 @@ class CodeAnalysisChecks:
                     f"Index is {age_days:.0f} days old",
                     {"age_days": age_days, "path": str(db_path)},
                 )
-            else:
-                return (
-                    "pass",
-                    f"Index is {age_days:.1f} days old",
-                    {"age_days": age_days, "path": str(db_path)},
-                )
+            return (
+                "pass",
+                f"Index is {age_days:.1f} days old",
+                {"age_days": age_days, "path": str(db_path)},
+            )
         except Exception as e:
             return ("fail", f"Index age check failed: {e}", {})
 
@@ -277,6 +279,7 @@ class CodeAnalysisChecks:
 
         Returns:
             List of dicts with 'name' and 'fix_func' keys
+
         """
         # No auto-fixable issues for code analysis yet
         return []
@@ -286,6 +289,7 @@ class CodeAnalysisChecks:
 
         Returns:
             List of dicts with 'name' and 'solution' keys
+
         """
         issues = []
 
@@ -297,7 +301,7 @@ class CodeAnalysisChecks:
                 {
                     "name": "Tree-sitter not available",
                     "solution": "Install with: pip install tree-sitter",
-                }
+                },
             )
 
         return issues
@@ -311,6 +315,7 @@ class SearchRetrievalChecks:
 
         Args:
             config: Optional Config object. If None, loads from default location.
+
         """
         self.config = config or Config()
 
@@ -319,6 +324,7 @@ class SearchRetrievalChecks:
 
         Returns:
             List of health check results
+
         """
         results = []
 
@@ -360,8 +366,7 @@ class SearchRetrievalChecks:
 
             if result.returncode == 0:
                 return ("pass", "Git BLA available", {"git_dir": result.stdout.strip()})
-            else:
-                return ("warning", "Not a git repository (BLA disabled)", {})
+            return ("warning", "Not a git repository (BLA disabled)", {})
         except FileNotFoundError:
             return ("warning", "Git not installed (BLA disabled)", {})
         except Exception as e:
@@ -384,12 +389,11 @@ class SearchRetrievalChecks:
                     f"Cache large ({size_mb:.1f} MB)",
                     {"path": str(cache_dir), "size_mb": size_mb},
                 )
-            else:
-                return (
-                    "pass",
-                    f"Cache size OK ({size_mb:.1f} MB)",
-                    {"path": str(cache_dir), "size_mb": size_mb},
-                )
+            return (
+                "pass",
+                f"Cache size OK ({size_mb:.1f} MB)",
+                {"path": str(cache_dir), "size_mb": size_mb},
+            )
         except Exception as e:
             return ("fail", f"Cache size check failed: {e}", {})
 
@@ -398,6 +402,7 @@ class SearchRetrievalChecks:
 
         Returns:
             List of dicts with 'name' and 'fix_func' keys
+
         """
         issues = []
 
@@ -416,7 +421,7 @@ class SearchRetrievalChecks:
                     cache_dir.mkdir(parents=True, exist_ok=True)
 
                 issues.append(
-                    {"name": f"Clear large cache ({size_mb:.1f} MB)", "fix_func": clear_cache}
+                    {"name": f"Clear large cache ({size_mb:.1f} MB)", "fix_func": clear_cache},
                 )
 
         return issues
@@ -426,6 +431,7 @@ class SearchRetrievalChecks:
 
         Returns:
             List of dicts with 'name' and 'solution' keys
+
         """
         issues = []
 
@@ -442,14 +448,14 @@ class SearchRetrievalChecks:
                     {
                         "name": "Not a git repository",
                         "solution": "Run 'git init' to enable commit-based activation (BLA)",
-                    }
+                    },
                 )
         except FileNotFoundError:
             issues.append(
                 {
                     "name": "Git not installed",
                     "solution": "Install git to enable commit-based activation (BLA)",
-                }
+                },
             )
 
         return issues
@@ -463,6 +469,7 @@ class ConfigurationChecks:
 
         Args:
             config: Optional Config object. If None, loads from default location.
+
         """
         self.config = config or Config()
 
@@ -471,6 +478,7 @@ class ConfigurationChecks:
 
         Returns:
             List of health check results
+
         """
         results = []
 
@@ -490,8 +498,7 @@ class ConfigurationChecks:
                 # Try to validate config
                 self.config.validate()
                 return ("pass", "Config file valid", {"path": str(config_path)})
-            else:
-                return ("warning", "No config file (using defaults)", {"path": str(config_path)})
+            return ("warning", "No config file (using defaults)", {"path": str(config_path)})
         except Exception as e:
             return ("fail", f"Config validation failed: {e}", {})
 
@@ -509,8 +516,7 @@ class ConfigurationChecks:
             if result.returncode == 0:
                 repo_root = result.stdout.strip()
                 return ("pass", "Git repository detected", {"repo_root": repo_root})
-            else:
-                return ("warning", "Not a git repository", {})
+            return ("warning", "Not a git repository", {})
         except FileNotFoundError:
             return ("warning", "Git not installed", {})
         except Exception as e:
@@ -521,6 +527,7 @@ class ConfigurationChecks:
 
         Returns:
             List of dicts with 'name' and 'fix_func' keys
+
         """
         # No auto-fixable configuration issues yet
         return []
@@ -530,6 +537,7 @@ class ConfigurationChecks:
 
         Returns:
             List of dicts with 'name' and 'solution' keys
+
         """
         # No manual configuration issues to report yet
         return []
@@ -543,6 +551,7 @@ class ToolIntegrationChecks:
 
         Args:
             config: Optional Config object. If None, loads from default location.
+
         """
         self.config = config or Config()
 
@@ -551,6 +560,7 @@ class ToolIntegrationChecks:
 
         Returns:
             List of health check results
+
         """
         results = []
 
@@ -589,12 +599,11 @@ class ToolIntegrationChecks:
                     f"CLI tools installed ({len(found_tools)} found: {', '.join(found_tools[:3])}{'...' if len(found_tools) > 3 else ''})",
                     {"found_tools": found_tools, "count": len(found_tools)},
                 )
-            else:
-                return (
-                    "warning",
-                    "No AI CLI tools detected",
-                    {"found_tools": [], "count": 0},
-                )
+            return (
+                "warning",
+                "No AI CLI tools detected",
+                {"found_tools": [], "count": 0},
+            )
         except Exception as e:
             return ("fail", f"CLI tools check failed: {e}", {})
 
@@ -617,12 +626,11 @@ class ToolIntegrationChecks:
                     "Slash commands not configured",
                     {"configured": False, "count": 0},
                 )
-            else:
-                return (
-                    "pass",
-                    f"Slash commands configured ({configured_count} tools)",
-                    {"configured": True, "count": configured_count},
-                )
+            return (
+                "pass",
+                f"Slash commands configured ({configured_count} tools)",
+                {"configured": True, "count": configured_count},
+            )
         except Exception as e:
             return ("fail", f"Slash command check failed: {e}", {})
 
@@ -645,15 +653,14 @@ class ToolIntegrationChecks:
                     "MCP servers not configured",
                     {"configured": False, "count": 0},
                 )
-            else:
-                configured_list = [
-                    tool_id for tool_id, is_configured in configured_tools.items() if is_configured
-                ]
-                return (
-                    "pass",
-                    f"MCP servers configured ({', '.join(configured_list)})",
-                    {"configured": True, "count": configured_count, "tools": configured_list},
-                )
+            configured_list = [
+                tool_id for tool_id, is_configured in configured_tools.items() if is_configured
+            ]
+            return (
+                "pass",
+                f"MCP servers configured ({', '.join(configured_list)})",
+                {"configured": True, "count": configured_count, "tools": configured_list},
+            )
         except Exception as e:
             return ("fail", f"MCP server check failed: {e}", {})
 
@@ -662,6 +669,7 @@ class ToolIntegrationChecks:
 
         Returns:
             List of dicts with 'name' and 'fix_func' keys
+
         """
         # Tool integration issues are fixed via 'aur init --config --tools=<tool>'
         # Not auto-fixable through doctor command
@@ -672,6 +680,7 @@ class ToolIntegrationChecks:
 
         Returns:
             List of dicts with 'name' and 'solution' keys
+
         """
         issues = []
 
@@ -692,7 +701,7 @@ class ToolIntegrationChecks:
                     {
                         "name": "Slash commands not configured",
                         "solution": "Run 'aur init --config --tools=all' or specify tools like --tools=claude,cursor",
-                    }
+                    },
                 )
 
             # Check MCP servers
@@ -704,7 +713,7 @@ class ToolIntegrationChecks:
                     {
                         "name": "MCP servers not configured",
                         "solution": "Run 'aur init --config' to configure MCP servers",
-                    }
+                    },
                 )
 
         except Exception:
@@ -722,6 +731,7 @@ class MCPFunctionalChecks:
 
         Args:
             config: Optional Config object. If None, loads from default location.
+
         """
         self.config = config or Config()
         # Config doesn't have project_dir, always use cwd
@@ -732,6 +742,7 @@ class MCPFunctionalChecks:
 
         Returns:
             List of health check results
+
         """
         results = []
 
@@ -813,12 +824,11 @@ class MCPFunctionalChecks:
                     "All 3 Aurora MCP tools importable",
                     {"found": found_methods, "count": 3},
                 )
-            else:
-                return (
-                    "fail",
-                    f"Missing {len(missing_methods)} Aurora MCP tool(s)",
-                    {"found": found_methods, "missing": missing_methods},
-                )
+            return (
+                "fail",
+                f"Missing {len(missing_methods)} Aurora MCP tool(s)",
+                {"found": found_methods, "missing": missing_methods},
+            )
 
         except ImportError as e:
             return (
@@ -860,18 +870,17 @@ class MCPFunctionalChecks:
                     "All 9 SOAR phases importable",
                     {"phases": importable_phases, "count": 9},
                 )
-            elif len(importable_phases) > 0:
+            if len(importable_phases) > 0:
                 return (
                     "fail",
                     f"{len(failed_phases)} SOAR phase(s) missing",
                     {"importable": importable_phases, "failed": failed_phases},
                 )
-            else:
-                return (
-                    "fail",
-                    "No SOAR phases importable",
-                    {"suggestion": "Check aurora-soar package installation"},
-                )
+            return (
+                "fail",
+                "No SOAR phases importable",
+                {"suggestion": "Check aurora-soar package installation"},
+            )
 
         except Exception as e:
             return ("fail", f"SOAR phases check failed: {e}", {})
@@ -959,20 +968,19 @@ class MCPFunctionalChecks:
                     "MCP server has exactly 3 tools",
                     {"tools": found_required, "count": 3},
                 )
-            elif len(missing_required) > 0:
+            if len(missing_required) > 0:
                 return (
                     "fail",
                     f"Missing {len(missing_required)} required tool(s)",
                     {"found": found_required, "missing": missing_required},
                 )
-            elif len(extra_methods) > 0:
+            if len(extra_methods) > 0:
                 return (
                     "warning",
                     f"Extra {len(extra_methods)} tool(s) registered",
                     {"required": found_required, "extra": extra_methods},
                 )
-            else:
-                return ("pass", "MCP server tools complete", {"tools": found_required})
+            return ("pass", "MCP server tools complete", {"tools": found_required})
 
         except ImportError as e:
             return ("fail", "Cannot import aurora_mcp.tools", {"error": str(e)})
@@ -984,6 +992,7 @@ class MCPFunctionalChecks:
 
         Returns:
             List of dicts with 'problem', 'fix', and 'name' keys
+
         """
         issues = []
 
@@ -1000,7 +1009,7 @@ class MCPFunctionalChecks:
                     "problem": f"Project missing .aurora directory at {aurora_dir}",
                     "fix": "Create .aurora directory",
                     "fix_func": create_aurora_dir,
-                }
+                },
             )
 
         # Check if memory database is missing
@@ -1018,7 +1027,7 @@ class MCPFunctionalChecks:
                     "problem": f"Memory database not found at {db_path}",
                     "fix": "Initialize memory database",
                     "fix_func": create_database,
-                }
+                },
             )
 
         return issues
@@ -1028,6 +1037,7 @@ class MCPFunctionalChecks:
 
         Returns:
             List of dicts with 'name', 'problem', and 'solution' keys
+
         """
         issues = []
 
@@ -1042,7 +1052,7 @@ class MCPFunctionalChecks:
                             "name": "Invalid MCP config syntax",
                             "problem": f"MCP config has invalid JSON syntax: {details.get('error', 'unknown error')}",
                             "solution": "Fix JSON syntax in ~/.claude/claude_desktop_config.json or run 'aur init --config'",
-                        }
+                        },
                     )
                 elif "aurora_mcp.tools" in message or "Aurora MCP tools" in message:
                     issues.append(
@@ -1050,7 +1060,7 @@ class MCPFunctionalChecks:
                             "name": "Aurora MCP tools not available",
                             "problem": "Cannot import aurora_mcp.tools module",
                             "solution": "Ensure aurora-mcp package is installed: pip install -e packages/mcp",
-                        }
+                        },
                     )
                 elif "SOAR phases" in message:
                     missing = details.get("failed", [])
@@ -1059,7 +1069,7 @@ class MCPFunctionalChecks:
                             "name": "SOAR phases missing",
                             "problem": f"Missing SOAR phase modules: {', '.join(missing)}",
                             "solution": "Ensure aurora-soar package is installed: pip install -e packages/soar",
-                        }
+                        },
                     )
                 elif "Missing" in message and "tool" in message:
                     missing = details.get("missing", [])
@@ -1068,7 +1078,7 @@ class MCPFunctionalChecks:
                             "name": "MCP tools incomplete",
                             "problem": f"Missing required MCP tools: {', '.join(missing)}",
                             "solution": "Check aurora_mcp.tools.AuroraMCPTools class has all 3 methods: aurora_query, aurora_search, aurora_get",
-                        }
+                        },
                     )
 
         return issues

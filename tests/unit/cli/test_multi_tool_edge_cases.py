@@ -10,8 +10,7 @@ Tests cover scenarios that are difficult to reproduce in integration tests:
 """
 
 import asyncio
-from dataclasses import dataclass
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -19,10 +18,6 @@ from aurora_cli.concurrent_executor import (
     AggregatedResult,
     AggregationStrategy,
     ConcurrentToolExecutor,
-    ConflictDetector,
-    ConflictInfo,
-    ConflictResolver,
-    ConflictSeverity,
     ToolConfig,
     ToolResult,
 )
@@ -106,7 +101,11 @@ class TestFirstSuccessRaceConditions:
             # tool1 and tool2 fail quickly
             await asyncio.sleep(0.001)
             return ToolResult(
-                tool=tool.name, success=False, output="", error="Failed fast", execution_time=0.001
+                tool=tool.name,
+                success=False,
+                output="",
+                error="Failed fast",
+                execution_time=0.001,
             )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
@@ -128,14 +127,21 @@ class TestFirstSuccessRaceConditions:
         async def mock_execute(tool, prompt, cancel_event=None):
             if tool.name == "claude":
                 return ToolResult(
-                    tool="claude", success=True, output="Output", execution_time=0.001
+                    tool="claude",
+                    success=True,
+                    output="Output",
+                    execution_time=0.001,
                 )
             # opencode hangs and gets cancelled
             try:
                 await asyncio.sleep(10.0)
             except asyncio.CancelledError:
                 return ToolResult(
-                    tool="opencode", success=False, output="", error="Cancelled", exit_code=-2
+                    tool="opencode",
+                    success=False,
+                    output="",
+                    error="Cancelled",
+                    exit_code=-2,
                 )
             return ToolResult(tool="opencode", success=True, output="Slow", execution_time=10.0)
 
@@ -195,7 +201,10 @@ class TestTimeoutScenarios:
         async def mock_execute(tool, prompt, cancel_event=None):
             if tool.name == "fast_tool":
                 return ToolResult(
-                    tool="fast_tool", success=True, output="Fast success", execution_time=0.001
+                    tool="fast_tool",
+                    success=True,
+                    output="Fast success",
+                    execution_time=0.001,
                 )
             return ToolResult(
                 tool="slow_tool",
@@ -229,7 +238,11 @@ class TestTimeoutScenarios:
             except asyncio.CancelledError:
                 cleanup_called[0] = True
                 return ToolResult(
-                    tool="claude", success=False, output="", error="Cancelled", exit_code=-2
+                    tool="claude",
+                    success=False,
+                    output="",
+                    error="Cancelled",
+                    exit_code=-2,
                 )
             return ToolResult(tool="claude", success=True, output="Never", execution_time=10.0)
 
@@ -269,10 +282,16 @@ class TestLargeOutputHandling:
                 strategy_used=AggregationStrategy.ALL_COMPLETE,
                 tool_results=[
                     ToolResult(
-                        tool="claude", success=True, output=large_output_1, execution_time=1.0
+                        tool="claude",
+                        success=True,
+                        output=large_output_1,
+                        execution_time=1.0,
                     ),
                     ToolResult(
-                        tool="opencode", success=True, output=large_output_2, execution_time=1.0
+                        tool="opencode",
+                        success=True,
+                        output=large_output_2,
+                        execution_time=1.0,
                     ),
                 ],
             )
@@ -411,25 +430,37 @@ class TestPartialCompletion:
             if tool.name == "fast":
                 completed_tools.append("fast")
                 return ToolResult(
-                    tool="fast", success=True, output="Fast done", execution_time=0.001
+                    tool="fast",
+                    success=True,
+                    output="Fast done",
+                    execution_time=0.001,
                 )
-            elif tool.name == "medium":
+            if tool.name == "medium":
                 await asyncio.sleep(0.01)
                 completed_tools.append("medium")
                 return ToolResult(
-                    tool="medium", success=True, output="Medium done", execution_time=0.01
+                    tool="medium",
+                    success=True,
+                    output="Medium done",
+                    execution_time=0.01,
                 )
-            else:
-                try:
-                    await asyncio.sleep(100.0)
-                except asyncio.CancelledError:
-                    completed_tools.append("slow_cancelled")
-                    return ToolResult(
-                        tool="slow", success=False, output="", error="Cancelled", exit_code=-2
-                    )
+            try:
+                await asyncio.sleep(100.0)
+            except asyncio.CancelledError:
+                completed_tools.append("slow_cancelled")
                 return ToolResult(
-                    tool="slow", success=True, output="Slow done", execution_time=100.0
+                    tool="slow",
+                    success=False,
+                    output="",
+                    error="Cancelled",
+                    exit_code=-2,
                 )
+            return ToolResult(
+                tool="slow",
+                success=True,
+                output="Slow done",
+                execution_time=100.0,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -582,7 +613,10 @@ class TestStrategyEdgeCases:
                 tool_results=[
                     ToolResult(tool="claude", success=True, output="Answer A", execution_time=1.0),
                     ToolResult(
-                        tool="opencode", success=True, output="Answer B", execution_time=1.0
+                        tool="opencode",
+                        success=True,
+                        output="Answer B",
+                        execution_time=1.0,
                     ),
                     ToolResult(tool="cursor", success=True, output="Answer C", execution_time=1.0),
                 ],
@@ -609,10 +643,16 @@ class TestStrategyEdgeCases:
                 strategy_used=AggregationStrategy.ALL_COMPLETE,
                 tool_results=[
                     ToolResult(
-                        tool="claude", success=True, output="Same length", execution_time=10.0
+                        tool="claude",
+                        success=True,
+                        output="Same length",
+                        execution_time=10.0,
                     ),
                     ToolResult(
-                        tool="opencode", success=True, output="Same length", execution_time=10.0
+                        tool="opencode",
+                        success=True,
+                        output="Same length",
+                        execution_time=10.0,
                     ),
                 ],
             )
@@ -646,7 +686,10 @@ class TestStrategyEdgeCases:
                 tool_results=[
                     ToolResult(tool="claude", success=True, output=base_output, execution_time=1.0),
                     ToolResult(
-                        tool="opencode", success=True, output=modified_output, execution_time=1.0
+                        tool="opencode",
+                        success=True,
+                        output=modified_output,
+                        execution_time=1.0,
                     ),
                 ],
             )

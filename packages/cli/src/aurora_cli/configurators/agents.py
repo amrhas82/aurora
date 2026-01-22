@@ -30,5 +30,6 @@ class AgentsStandardConfigurator(BaseConfigurator):
 
         Returns:
             Template content for AGENTS.md (comprehensive instructions)
+
         """
         return get_agents_template()

@@ -69,7 +69,7 @@ class InteractiveWizard:
                 "Estimated time: 2 minutes",
                 title="[bold]Welcome[/]",
                 border_style="cyan",
-            )
+            ),
         )
 
         # Auto-detect environment
@@ -104,7 +104,8 @@ class InteractiveWizard:
         console.print("AURORA can index your codebase for semantic search and context retrieval.")
 
         self.should_index = click.confirm(
-            "Index current directory for memory search?", default=True
+            "Index current directory for memory search?",
+            default=True,
         )
 
         if self.should_index:
@@ -153,14 +154,17 @@ class InteractiveWizard:
         console.print("\n[bold]Step 3/7: API Key[/]")
         console.print("Enter your API key for the selected provider.")
         console.print(
-            "[dim]Note: API keys are stored in config and can also be set via environment variables[/]"
+            "[dim]Note: API keys are stored in config and can also be set via environment variables[/]",
         )
 
         provider = self.config_data.get("provider", "anthropic")
 
         while True:
             api_key = click.prompt(
-                "API key (or press Enter to skip)", default="", show_default=False, hide_input=True
+                "API key (or press Enter to skip)",
+                default="",
+                show_default=False,
+                hide_input=True,
             )
 
             # Allow skipping
@@ -225,7 +229,9 @@ class InteractiveWizard:
             console.print(f"  [green]✓[/] Created directory: {config_dir}")
         except PermissionError as e:
             error_msg = self.error_handler.handle_path_error(
-                e, str(config_dir), "creating config directory"
+                e,
+                str(config_dir),
+                "creating config directory",
             )
             console.print(f"  [red]✗[/] {error_msg}")
             raise click.Abort()
@@ -294,7 +300,7 @@ class InteractiveWizard:
             if stats.files_indexed > 0:
                 console.print(
                     f"  [green]✓[/] Indexed {stats.files_indexed} files, "
-                    f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s"
+                    f"{stats.chunks_created} chunks in {stats.duration_seconds:.2f}s",
                 )
             else:
                 console.print("  [yellow]⚠[/] No Python files found to index")
@@ -311,7 +317,7 @@ class InteractiveWizard:
                 "[bold green]✓ Setup Complete![/]\n\nAURORA is now configured and ready to use.",
                 title="[bold]Success[/]",
                 border_style="green",
-            )
+            ),
         )
 
         # Display configuration summary
@@ -336,11 +342,11 @@ class InteractiveWizard:
         if not self.api_key:
             if provider == "anthropic":
                 next_steps.append(
-                    "[yellow]1. Set API key:[/]\n   [cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]"
+                    "[yellow]1. Set API key:[/]\n   [cyan]export ANTHROPIC_API_KEY=sk-ant-...[/]",
                 )
             elif provider == "openai":
                 next_steps.append(
-                    "[yellow]1. Set API key:[/]\n   [cyan]export OPENAI_API_KEY=sk-...[/]"
+                    "[yellow]1. Set API key:[/]\n   [cyan]export OPENAI_API_KEY=sk-...[/]",
                 )
 
         next_steps.extend(
@@ -348,11 +354,11 @@ class InteractiveWizard:
                 "[bold]2. Verify setup:[/]\n   [cyan]aur doctor[/]",
                 "[bold]3. Check version:[/]\n   [cyan]aur version[/]",
                 "[bold]4. Start querying:[/]\n   [cyan]aur query 'your question'[/]",
-            ]
+            ],
         )
 
         console.print(
-            Panel("\n\n".join(next_steps), title="[bold]Next Steps[/]", border_style="green")
+            Panel("\n\n".join(next_steps), title="[bold]Next Steps[/]", border_style="green"),
         )
 
         console.print("\n[dim]For help: aur --help or aur <command> --help[/]\n")

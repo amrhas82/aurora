@@ -107,7 +107,7 @@ def sample_agent_gaps() -> list[AgentGap]:
             ideal_agent="@security-expert",
             ideal_agent_desc="Specialist in security, jwt, token, authentication",
             assigned_agent="@code-developer",
-        )
+        ),
     ]
 
 
@@ -115,7 +115,10 @@ class TestEnhancedTasksGeneration:
     """Test enhanced tasks.md generation with file paths."""
 
     def test_tasks_md_includes_file_paths_high_confidence(
-        self, sample_plan_with_files, sample_file_resolutions, tmp_path
+        self,
+        sample_plan_with_files,
+        sample_file_resolutions,
+        tmp_path,
     ):
         """Test tasks.md includes file paths for high confidence resolutions."""
         renderer = TemplateRenderer()
@@ -135,7 +138,10 @@ class TestEnhancedTasksGeneration:
         assert "(low confidence)" not in content.split("src/auth/module.py")[1].split("\n")[0]
 
     def test_tasks_md_includes_medium_confidence_marker(
-        self, sample_plan_with_files, sample_file_resolutions, tmp_path
+        self,
+        sample_plan_with_files,
+        sample_file_resolutions,
+        tmp_path,
     ):
         """Test tasks.md marks medium confidence files with (suggested)."""
         renderer = TemplateRenderer()
@@ -152,7 +158,10 @@ class TestEnhancedTasksGeneration:
         assert len(auth_init_line) > 0
 
     def test_tasks_md_includes_low_confidence_marker(
-        self, sample_plan_with_files, sample_file_resolutions, tmp_path
+        self,
+        sample_plan_with_files,
+        sample_file_resolutions,
+        tmp_path,
     ):
         """Test tasks.md marks low confidence files with (low confidence)."""
         renderer = TemplateRenderer()
@@ -178,7 +187,10 @@ class TestEnhancedTasksGeneration:
         assert "sg-1" in content.lower() or "SG-1" in content
 
     def test_tasks_md_groups_by_subgoal(
-        self, sample_plan_with_files, sample_file_resolutions, tmp_path
+        self,
+        sample_plan_with_files,
+        sample_file_resolutions,
+        tmp_path,
     ):
         """Test tasks.md groups tasks by subgoal."""
         renderer = TemplateRenderer()
@@ -228,7 +240,10 @@ class TestEnhancedAgentsJsonGeneration:
         assert "25 code chunks" in content
 
     def test_agents_json_includes_agent_gaps(
-        self, sample_plan_with_files, sample_agent_gaps, tmp_path
+        self,
+        sample_plan_with_files,
+        sample_agent_gaps,
+        tmp_path,
     ):
         """Test agents.json includes agent_gaps array."""
         renderer = TemplateRenderer()
@@ -251,7 +266,10 @@ class TestEnhancedAgentsJsonGeneration:
         assert '"agent_gaps"' in content or "agent_gaps" in context
 
     def test_agents_json_includes_file_resolutions(
-        self, sample_plan_with_files, sample_file_resolutions, tmp_path
+        self,
+        sample_plan_with_files,
+        sample_file_resolutions,
+        tmp_path,
     ):
         """Test agents.json includes file_resolutions map."""
         renderer = TemplateRenderer()

@@ -47,8 +47,8 @@ class TestBuildContextSummary:
             "reasoning_chunks": [],
         }
         summary = _build_context_summary(context)
-        assert "3 code chunks" in summary
-        assert "Reasoning patterns" not in summary
+        assert "3 elements found" in summary
+        assert "Previous Solutions" not in summary
 
     def test_with_reasoning_chunks_only(self):
         """Test summary with only reasoning chunks."""
@@ -57,8 +57,8 @@ class TestBuildContextSummary:
             "reasoning_chunks": [{"id": 1}, {"id": 2}],
         }
         summary = _build_context_summary(context)
-        assert "2 previous successful" in summary
-        assert "code context" not in summary
+        assert "2 relevant patterns available" in summary
+        assert "Relevant Code" not in summary
 
     def test_with_both_chunk_types(self):
         """Test summary with both chunk types."""
@@ -67,8 +67,8 @@ class TestBuildContextSummary:
             "reasoning_chunks": [{"id": 2}],
         }
         summary = _build_context_summary(context)
-        assert "1 code chunks" in summary
-        assert "1 previous successful" in summary
+        assert "1 elements found" in summary
+        assert "1 relevant patterns available" in summary
 
     def test_with_no_chunks(self):
         """Test summary with no chunks."""
@@ -141,14 +141,17 @@ class TestDecomposeQuery:
                     "suggested_agent": "code-analyzer",
                     "is_critical": True,
                     "depends_on": [],
-                }
+                },
             ],
             execution_order=[{"phase": 1, "parallelizable": [0], "sequential": []}],
             expected_tools=["code_reader"],
         )
 
     def test_decompose_simple_query(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test decomposing a simple query."""
         clear_cache()  # Clear cache before test
@@ -177,7 +180,10 @@ class TestDecomposeQuery:
         assert call_args.kwargs["complexity"] == Complexity.SIMPLE
 
     def test_decompose_with_caching(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that identical queries are cached."""
         clear_cache()
@@ -206,7 +212,10 @@ class TestDecomposeQuery:
         assert mock_reasoning_decompose.call_count == 1  # Not called again
 
     def test_cache_disabled_with_retry_feedback(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that cache is bypassed when retry feedback is provided."""
         clear_cache()
@@ -235,7 +244,10 @@ class TestDecomposeQuery:
         assert mock_reasoning_decompose.call_count == 2
 
     def test_cache_disabled_by_parameter(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that cache can be disabled via parameter."""
         clear_cache()
@@ -264,7 +276,10 @@ class TestDecomposeQuery:
         assert mock_reasoning_decompose.call_count == 2
 
     def test_context_summary_passed(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that context summary is built and passed."""
         clear_cache()
@@ -284,11 +299,14 @@ class TestDecomposeQuery:
 
         call_args = mock_reasoning_decompose.call_args
         context_summary = call_args.kwargs["context_summary"]
-        assert "2 code chunks" in context_summary
-        assert "1 previous successful" in context_summary
+        assert "2 elements found" in context_summary
+        assert "1 relevant patterns available" in context_summary
 
     def test_available_agents_passed(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that available agents are passed through."""
         clear_cache()
@@ -309,7 +327,10 @@ class TestDecomposeQuery:
         assert call_args.kwargs["available_agents"] == agents
 
     def test_retry_feedback_passed(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that retry feedback is passed through."""
         clear_cache()
@@ -330,7 +351,10 @@ class TestDecomposeQuery:
         assert call_args.kwargs["retry_feedback"] == feedback
 
     def test_invalid_complexity(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test handling of invalid complexity level."""
         clear_cache()
@@ -345,7 +369,10 @@ class TestDecomposeQuery:
             )
 
     def test_clear_cache_function(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that clear_cache() works."""
         clear_cache()
@@ -376,7 +403,10 @@ class TestDecomposeQuery:
         assert mock_reasoning_decompose.call_count == 2
 
     def test_decompose_with_empty_context_includes_note(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that empty context note is passed to LLM (Task 3.47)."""
         clear_cache()
@@ -399,7 +429,10 @@ class TestDecomposeQuery:
         assert "Using LLM general knowledge" in context_summary
 
     def test_decompose_caching_with_empty_context(
-        self, mock_reasoning_decompose, mock_llm_client, sample_decomposition
+        self,
+        mock_reasoning_decompose,
+        mock_llm_client,
+        sample_decomposition,
     ):
         """Test that caching works with empty context (Task 3.47)."""
         clear_cache()

@@ -71,6 +71,7 @@ class PlanDecomposer:
     Attributes:
         config: Optional configuration object for LLM settings
         cache: Specialized cache for decomposition results with LRU+TTL
+
     """
 
     def __init__(
@@ -92,6 +93,7 @@ class PlanDecomposer:
             cache_capacity: Maximum number of decompositions to cache (default: 100)
             cache_ttl_hours: Cache entry TTL in hours (default: 24)
             enable_persistent_cache: Enable persistent cache storage (default: True)
+
         """
         import warnings
 
@@ -133,6 +135,7 @@ class PlanDecomposer:
         Returns:
             Tuple of (subgoals list, decomposition_source)
             decomposition_source is "soar" or "heuristic"
+
         """
         # Use MODERATE as default complexity if not specified
         if complexity is None:
@@ -186,6 +189,7 @@ class PlanDecomposer:
             - subgoals: List of Subgoal objects
             - file_resolutions: Dict mapping subgoal IDs to list of FileResolution
             - decomposition_source: "soar" or "heuristic"
+
         """
         # First decompose to get subgoals
         subgoals, source = self.decompose(goal, complexity, context_files)
@@ -230,6 +234,7 @@ class PlanDecomposer:
             - agent_recommendations: Dict mapping subgoal IDs to (agent_id, score)
             - agent_gaps: List of AgentGap objects for low-scoring matches
             - decomposition_source: "soar" or "heuristic"
+
         """
         # First decompose to get subgoals
         subgoals, source = self.decompose(goal, complexity, context_files)
@@ -264,6 +269,7 @@ class PlanDecomposer:
 
         Returns:
             Dictionary with cache statistics including size, hits, misses, hit_rate
+
         """
         return self.cache.get_stats()
 
@@ -288,6 +294,7 @@ class PlanDecomposer:
 
         Returns:
             Context dictionary with code_chunks and reasoning_chunks
+
         """
         code_chunks: list[Any] = []
         reasoning_chunks: list[Any] = []
@@ -326,7 +333,11 @@ class PlanDecomposer:
         return {"code_chunks": code_chunks, "reasoning_chunks": reasoning_chunks}
 
     def _read_file_lines(
-        self, file_path: str, line_start: int, line_end: int, max_lines: int = 50
+        self,
+        file_path: str,
+        line_start: int,
+        line_end: int,
+        max_lines: int = 50,
     ) -> str:
         """Read specific lines from a file."""
         try:
@@ -354,6 +365,7 @@ class PlanDecomposer:
 
         Returns:
             Summary string with actual code the LLM can use for decomposition.
+
         """
         code_chunks = context.get("code_chunks", [])
         reasoning_chunks = context.get("reasoning_chunks", [])
@@ -414,7 +426,7 @@ class PlanDecomposer:
 
         if reasoning_chunks:
             summary_parts.append(
-                f"\n## Previous Solutions: {len(reasoning_chunks)} relevant patterns"
+                f"\n## Previous Solutions: {len(reasoning_chunks)} relevant patterns",
             )
 
         if not summary_parts:
@@ -432,6 +444,7 @@ class PlanDecomposer:
             List of agent IDs with @ prefix (e.g., ["@code-developer", "@quality-assurance"])
             Returns None if manifest cannot be loaded.
             Returns empty list if manifest is empty.
+
         """
         if not MANIFEST_AVAILABLE or not ManifestManager:
             logger.debug("ManifestManager not available, agent discovery disabled")
@@ -459,7 +472,10 @@ class PlanDecomposer:
             return None
 
     def _call_soar(
-        self, goal: str, context: dict[str, Any], complexity: Complexity
+        self,
+        goal: str,
+        context: dict[str, Any],
+        complexity: Complexity,
     ) -> list[Subgoal]:
         """Call SOAR decompose_query and convert result to Subgoals.
 
@@ -475,6 +491,7 @@ class PlanDecomposer:
             ImportError: If SOAR is not available
             RuntimeError: If SOAR call fails
             TimeoutError: If SOAR call times out (30s)
+
         """
         if not SOAR_AVAILABLE or not decompose_query:
             raise ImportError("SOAR not available")
@@ -520,7 +537,8 @@ class PlanDecomposer:
                 # Fallback to legacy suggested_agent if new schema not present
                 if not assigned_agent:
                     assigned_agent = sg_dict.get(
-                        "suggested_agent", sg_dict.get("agent", "code-developer")
+                        "suggested_agent",
+                        sg_dict.get("agent", "code-developer"),
                     )
                 if not ideal_agent:
                     ideal_agent = assigned_agent  # Assume ideal == assigned for legacy
@@ -574,6 +592,7 @@ class PlanDecomposer:
 
         Raises:
             RuntimeError: If LLM client cannot be created
+
         """
         if not LLMClient:
             raise RuntimeError("LLMClient not available")
@@ -591,7 +610,9 @@ class PlanDecomposer:
             raise RuntimeError(f"Failed to create LLM client: {e}")
 
     def _fallback_to_heuristics(
-        self, goal: str, complexity: Complexity | None = None
+        self,
+        goal: str,
+        complexity: Complexity | None = None,
     ) -> list[Subgoal]:
         """Fallback to rule-based decomposition when SOAR unavailable.
 
@@ -601,6 +622,7 @@ class PlanDecomposer:
 
         Returns:
             List of Subgoal objects from heuristic decomposition
+
         """
         logger.info("Using heuristic decomposition (SOAR unavailable)")
 
@@ -616,7 +638,7 @@ class PlanDecomposer:
                 ideal_agent="@system-architect",
                 ideal_agent_desc="System design and architecture specialist",
                 assigned_agent="@system-architect",
-            )
+            ),
         )
 
         # Always: Implementation
@@ -628,7 +650,7 @@ class PlanDecomposer:
                 ideal_agent="@code-developer",
                 ideal_agent_desc="Full-stack development and implementation",
                 assigned_agent="@code-developer",
-            )
+            ),
         )
 
         # Always: Testing
@@ -640,7 +662,7 @@ class PlanDecomposer:
                 ideal_agent="@quality-assurance",
                 ideal_agent_desc="Quality assurance and testing specialist",
                 assigned_agent="@quality-assurance",
-            )
+            ),
         )
 
         # If complex, add documentation
@@ -653,7 +675,7 @@ class PlanDecomposer:
                     ideal_agent="@code-developer",
                     ideal_agent_desc="Full-stack development and documentation",
                     assigned_agent="@code-developer",
-                )
+                ),
             )
 
         return subgoals

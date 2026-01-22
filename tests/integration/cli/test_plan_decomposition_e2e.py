@@ -90,7 +90,7 @@ def mock_agent_manifest():
                 when_to_use="testing, quality assurance, test architecture",
                 skills=["testing", "quality", "automation", "integration"],
             ),
-        ]
+        ],
     )
 
 
@@ -312,7 +312,7 @@ class TestEnhancedFileGeneration:
                 line_start=1,
                 line_end=50,
                 similarity_score=0.9,  # High confidence
-            )
+            ),
         ]
         mock_retriever_cls.return_value = mock_retriever
 

@@ -28,6 +28,7 @@ Examples:
 
     # Non-interactive mode
     aur goals "Add user dashboard" --yes
+
 """
 
 from __future__ import annotations
@@ -64,6 +65,7 @@ def _start_background_model_loading(verbose: bool = False) -> None:
 
     Args:
         verbose: Whether to enable verbose logging
+
     """
     try:
         # Use lightweight cache check that doesn't import torch
@@ -231,7 +233,7 @@ def goals_command(
             title="[bold]Aurora Goals[/]",
             subtitle=f"[dim]Tool: {tool}[/]",
             border_style="blue",
-        )
+        ),
     )
 
     if verbose:
@@ -283,7 +285,7 @@ def goals_command(
             color = "yellow" if is_gap else "green"
             console.print(
                 f"   {status} sg-{i}: {sg.assigned_agent} "
-                f"([{color}]{'GAP' if is_gap else 'MATCHED'}[/{color}])"
+                f"([{color}]{'GAP' if is_gap else 'MATCHED'}[/{color}])",
             )
 
     if not result.success:
@@ -311,7 +313,10 @@ def goals_command(
     # Ask user to review (unless --yes flag)
     if not (yes or non_interactive):
         review_response = click.prompt(
-            "\nReview goals in editor? [y/N]", default="n", show_default=False, type=str
+            "\nReview goals in editor? [y/N]",
+            default="n",
+            show_default=False,
+            type=str,
         )
 
         if review_response.lower() in ("y", "yes"):
@@ -375,7 +380,7 @@ def goals_command(
         f"\n[dim]Summary: {total} subgoals | "
         f"[green]{excellent_count} excellent[/], "
         f"[yellow]{acceptable_count} acceptable[/], "
-        f"[red]{insufficient_count} spawned[/][/]"
+        f"[red]{insufficient_count} spawned[/][/]",
     )
 
     if result.warnings:
@@ -390,6 +395,6 @@ def goals_command(
     console.print("\n[bold]Next steps:[/]")
     console.print(f"1. Review goals:   cat {result.plan_dir}/goals.json")
     console.print(
-        "2. Generate PRD:   Run [bold]/plan[/] in Claude Code to create prd.md, tasks.md, specs/"
+        "2. Generate PRD:   Run [bold]/plan[/] in Claude Code to create prd.md, tasks.md, specs/",
     )
     console.print("3. Start work:     aur implement or aur spawn tasks.md")

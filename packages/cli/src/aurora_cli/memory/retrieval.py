@@ -49,6 +49,7 @@ class MemoryRetriever:
         >>> # File-only usage (no store needed)
         >>> retriever = MemoryRetriever(config=config)
         >>> chunks = retriever.load_context_files([Path("auth.py")])
+
     """
 
     def __init__(
@@ -61,6 +62,7 @@ class MemoryRetriever:
         Args:
             store: SQLite memory store with indexed chunks (optional for file-only usage)
             config: CLI configuration with retrieval settings (optional)
+
         """
         self._store = store
         self._config = config
@@ -78,6 +80,7 @@ class MemoryRetriever:
 
         Raises:
             ValueError: If no store is configured
+
         """
         if self._store is None:
             raise ValueError("Cannot retrieve: no memory store configured")
@@ -115,6 +118,7 @@ class MemoryRetriever:
 
         Returns:
             EmbeddingProvider if available, None for BM25-only mode
+
         """
         try:
             from aurora_context_code.semantic.model_utils import (
@@ -135,17 +139,16 @@ class MemoryRetriever:
                 if wait_for_model:
                     logger.debug("Waiting for background model loading to complete")
                     return self._wait_for_background_model(loader)
-                else:
-                    # Non-blocking: return None, let caller use BM25-only
-                    logger.debug("Model still loading - using BM25-only for now")
-                    return None
+                # Non-blocking: return None, let caller use BM25-only
+                logger.debug("Model still loading - using BM25-only for now")
+                return None
 
             # Not loading and not loaded - try to create new provider
             # This happens if background loading wasn't started (e.g., model not cached)
             if not is_model_cached():
                 logger.info(
                     "Embedding model not cached. Using BM25-only search. "
-                    "Run 'aur mem index .' to download the embedding model."
+                    "Run 'aur mem index .' to download the embedding model.",
                 )
                 return None
 
@@ -173,6 +176,7 @@ class MemoryRetriever:
 
         Returns:
             True if embedding model is ready for use, False otherwise
+
         """
         try:
             from aurora_context_code.semantic.model_utils import BackgroundModelLoader
@@ -189,6 +193,7 @@ class MemoryRetriever:
 
         Returns:
             True if model is currently loading, False otherwise
+
         """
         try:
             from aurora_context_code.semantic.model_utils import BackgroundModelLoader
@@ -210,6 +215,7 @@ class MemoryRetriever:
 
         Returns:
             EmbeddingProvider if loaded successfully, None otherwise
+
         """
         try:
             import time
@@ -238,20 +244,23 @@ class MemoryRetriever:
                     if provider is not None:
                         elapsed = time.time() - start_time
                         progress.update(
-                            task, description=f"[green]✓ Model ready ({elapsed:.1f}s)[/]"
+                            task,
+                            description=f"[green]✓ Model ready ({elapsed:.1f}s)[/]",
                         )
                         return provider
 
                     error = loader.get_error()
                     if error is not None:
                         progress.update(
-                            task, description="[yellow]Model unavailable - using BM25 only[/]"
+                            task,
+                            description="[yellow]Model unavailable - using BM25 only[/]",
                         )
                         return None
 
                     if not loader.is_loading():
                         progress.update(
-                            task, description="[yellow]Model not started - using BM25 only[/]"
+                            task,
+                            description="[yellow]Model not started - using BM25 only[/]",
                         )
                         return None
 
@@ -278,6 +287,7 @@ class MemoryRetriever:
         Example:
             >>> if retriever.has_indexed_memory():
             ...     chunks = retriever.retrieve("query")
+
         """
         if self._store is None:
             return False
@@ -328,6 +338,7 @@ class MemoryRetriever:
             >>> chunks = retriever.retrieve("authentication", limit=10)
             >>> for chunk in chunks:
             ...     print(f"{chunk.file_path}: {chunk.name}")
+
         """
         start_time = time.time()
 
@@ -393,6 +404,7 @@ class MemoryRetriever:
             >>> results, is_hybrid = retriever.retrieve_fast("authentication", limit=10)
             >>> if not is_hybrid:
             ...     print("Results are BM25-only (model still loading)")
+
         """
         # Check if model is ready (non-blocking check)
         model_ready = self.is_embedding_model_ready()
@@ -415,6 +427,7 @@ class MemoryRetriever:
 
         Returns:
             HybridRetriever instance
+
         """
         if self._store is None:
             raise ValueError("Cannot retrieve: no memory store configured")
@@ -454,6 +467,7 @@ class MemoryRetriever:
             ...     Path("src/auth.py"),
             ...     Path("src/config.py"),
             ... ])
+
         """
         start_time = time.time()
         chunks: list[CodeChunk] = []
@@ -542,6 +556,7 @@ class MemoryRetriever:
             ```python
             def authenticate(user, password):
                 ...
+
         """
         if not chunks:
             return ""
@@ -591,6 +606,7 @@ class MemoryRetriever:
             ...     print(f"Error: {error}")
             >>> else:
             ...     formatted = retriever.format_for_prompt(chunks)
+
         """
         # Priority 1: Explicit context files
         if context_files:
@@ -601,16 +617,14 @@ class MemoryRetriever:
                     len(chunks),
                 )
                 return chunks, ""
-            else:
-                return [], "No valid context files found"
+            return [], "No valid context files found"
 
         # Priority 2: Indexed memory
         if self.has_indexed_memory():
             chunks = self.retrieve(query, limit=limit)
             if chunks:
                 return chunks, ""
-            else:
-                return [], "No relevant chunks found in indexed memory"
+            return [], "No relevant chunks found in indexed memory"
 
         # Priority 3: Neither available
         return [], (
@@ -628,6 +642,7 @@ def _detect_language(path: Path) -> str:
 
     Returns:
         Language identifier string
+
     """
     extension_map = {
         ".py": "python",

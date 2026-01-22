@@ -329,7 +329,7 @@ description: My custom description
 <!-- AURORA:START -->
 Old content
 <!-- AURORA:END -->
-"""
+""",
         )
 
         config = ClaudeCommandsConfigurator()

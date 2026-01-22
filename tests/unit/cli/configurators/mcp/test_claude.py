@@ -186,7 +186,7 @@ class TestClaudeMCPConfiguratorIsConfigured:
         mcp_path = tmp_path / ".claude" / "plugins" / "aurora" / ".mcp.json"
         mcp_path.parent.mkdir(parents=True)
         mcp_path.write_text(
-            json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}})
+            json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp", "args": []}}}),
         )
 
         # Create permissions with Aurora permission
@@ -196,9 +196,9 @@ class TestClaudeMCPConfiguratorIsConfigured:
                 {
                     "permissions": {
                         "allow": [AURORA_MCP_PERMISSIONS[0]],
-                    }
-                }
-            )
+                    },
+                },
+            ),
         )
 
         with patch.object(Path, "home", return_value=tmp_path):

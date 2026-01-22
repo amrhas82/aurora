@@ -34,6 +34,7 @@ def extract_plan_number(directory_name: str) -> int | None:
         42
         >>> extract_plan_number("not-a-plan")
         None
+
     """
     match = PLAN_ID_PATTERN.match(directory_name)
     if match:
@@ -54,6 +55,7 @@ def scan_existing_plans(plans_dir: Path | None = None) -> int:
         >>> # With plans 0001-*, 0002-*, 0005-*
         >>> scan_existing_plans()
         5
+
     """
     if plans_dir is None:
         plans_dir = get_plans_dir()
@@ -96,6 +98,7 @@ def generate_slug(goal: str, max_length: int = 30) -> str:
         'implement-oauth-2-0-authentication'
         >>> generate_slug("A very long goal that exceeds the maximum length allowed", max_length=20)
         'very-long-goal-that'
+
     """
     slug = slugify(goal, max_length=max_length, word_boundary=True)
 
@@ -133,6 +136,7 @@ def generate_plan_id(
         '0001-implement-oauth-authentication'
         >>> # If 0001-* already exists:
         '0002-implement-oauth-authentication'
+
     """
     if not goal or len(goal.strip()) < 3:
         raise ValueError("Goal must be at least 3 characters")
@@ -161,7 +165,7 @@ def generate_plan_id(
 
     # If we exhausted retries, raise error
     raise ValueError(
-        f"Unable to generate unique plan ID after {max_retries} attempts. Last tried: {plan_id}"
+        f"Unable to generate unique plan ID after {max_retries} attempts. Last tried: {plan_id}",
     )
 
 
@@ -181,6 +185,7 @@ def validate_plan_id_format(plan_id: str) -> bool:
         False
         >>> validate_plan_id_format("not-a-plan-id")
         False
+
     """
     # Check format: NNNN-slug (exactly 4 digits, hyphen, then slug)
     pattern = re.compile(r"^\d{4}-[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -204,6 +209,7 @@ def parse_plan_id(plan_id: str) -> tuple[int, str]:
         (1, 'oauth-auth')
         >>> parse_plan_id("0042-user-registration")
         (42, 'user-registration')
+
     """
     if not validate_plan_id_format(plan_id):
         raise ValueError(f"Invalid plan ID format: {plan_id}")

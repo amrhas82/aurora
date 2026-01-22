@@ -159,7 +159,7 @@ class TestErrorHandling:
                 "function_name": "func",
                 "score": 0.9,
                 "line_range": [1, 1],
-            }
+            },
         ]
         tools._last_search_results = mock_results
         tools._last_search_timestamp = time.time()
@@ -189,7 +189,7 @@ class TestErrorHandling:
                 "function_name": "func",
                 "score": 0.9,
                 "line_range": [1, 1],
-            }
+            },
         ]
         tools._last_search_results = mock_results
         tools._last_search_timestamp = time.time()
@@ -278,7 +278,7 @@ class TestSessionCache:
                 "content": "def func(): pass",
                 "metadata": {"file_path": "test.py", "name": "func", "line_range": [1, 1]},
                 "hybrid_score": 0.9,
-            }
+            },
         ]
 
         with patch.object(tools, "_retriever") as mock_retriever:
@@ -307,7 +307,7 @@ class TestSessionCache:
                 "content": "first content",
                 "metadata": {"file_path": "first.py", "name": "func1", "line_range": [1, 1]},
                 "hybrid_score": 0.9,
-            }
+            },
         ]
 
         # Second search (different results)
@@ -317,7 +317,7 @@ class TestSessionCache:
                 "content": "second content",
                 "metadata": {"file_path": "second.py", "name": "func2", "line_range": [1, 1]},
                 "hybrid_score": 0.85,
-            }
+            },
         ]
 
         with patch.object(tools, "_retriever") as mock_retriever:
@@ -355,7 +355,7 @@ class TestSessionCache:
                 "function_name": "func",
                 "score": 0.9,
                 "line_range": [1, 1],
-            }
+            },
         ]
         tools._last_search_results = mock_results
         tools._last_search_timestamp = time.time() - (11 * 60)  # 11 minutes ago
@@ -394,7 +394,7 @@ class TestResponseFormat:
                 "function_name": "my_function",
                 "score": 0.95,
                 "line_range": [10, 11],
-            }
+            },
         ]
         tools._last_search_results = mock_results
         tools._last_search_timestamp = time.time()

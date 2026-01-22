@@ -88,6 +88,7 @@ class GapInfo:
         ideal_agent: Agent that SHOULD handle this task (unconstrained)
         ideal_agent_desc: Description of the ideal agent's capabilities
         assigned_agent: Best AVAILABLE agent from manifest
+
     """
 
     subgoal_id: str
@@ -108,6 +109,7 @@ class MatchResult:
         is_gap: True if ideal != assigned
         gap_info: Gap details if is_gap is True
         spawn_prompt: Prompt for ad-hoc spawning (aur soar only)
+
     """
 
     subgoal_id: str
@@ -130,6 +132,7 @@ class AgentMatcher:
     Attributes:
         manifest: AgentManifest for checking agent existence
         available_agents_list: Formatted list of available agents for spawn prompts
+
     """
 
     def __init__(self, manifest: Optional["AgentManifest"] = None) -> None:
@@ -137,6 +140,7 @@ class AgentMatcher:
 
         Args:
             manifest: Optional AgentManifest (loads from cache if None)
+
         """
         self.manifest = manifest
         self._available_agents_list: str | None = None
@@ -157,6 +161,7 @@ class AgentMatcher:
 
         Returns:
             MatchResult with gap detection and optional spawn prompt
+
         """
         subgoal_id = subgoal.get("id", "unknown")
         ideal = subgoal.get("ideal_agent", "")
@@ -211,6 +216,7 @@ class AgentMatcher:
 
         Returns:
             List of GapInfo for subgoals where ideal != assigned
+
         """
         gaps = []
         for subgoal in subgoals:
@@ -227,6 +233,7 @@ class AgentMatcher:
 
         Returns:
             True if agent exists in manifest
+
         """
         if self.manifest is None:
             self._load_manifest()
@@ -259,6 +266,7 @@ class AgentMatcher:
 
         Returns:
             Formatted spawn prompt for LLM
+
         """
         # Get available agents list for context
         available_list = self._get_available_agents_list()
@@ -290,6 +298,7 @@ Available agents for reference:
 
         Returns:
             Formatted string with agent IDs and descriptions
+
         """
         if self._available_agents_list is not None:
             return self._available_agents_list
@@ -326,6 +335,7 @@ Available agents for reference:
 
         Returns:
             Agent ID with @ prefix
+
         """
         if not agent_id:
             return "@unknown"
@@ -366,6 +376,7 @@ class AgentRecommender:
         config: Optional configuration object
         score_threshold: Minimum score for agent match (default 0.5)
         default_fallback: Default fallback agent (default "@code-developer")
+
     """
 
     def __init__(
@@ -384,6 +395,7 @@ class AgentRecommender:
             score_threshold: Minimum score for agent match (default 0.5)
             default_fallback: Default fallback agent ID
             llm_client: Optional LLM client for fallback classification
+
         """
         self.manifest = manifest
         self.config = config
@@ -404,6 +416,7 @@ class AgentRecommender:
             Tuple of (agent_id, score)
             - agent_id: Recommended agent ID with @ prefix
             - score: Match score from 0.0 to 1.0
+
         """
         # Load manifest if not provided
         if self.manifest is None:
@@ -450,6 +463,7 @@ class AgentRecommender:
             Tuple of (agent_id, score)
             - agent_id: Recommended agent ID with @ prefix
             - score: Match score from 0.0 to 1.0
+
         """
         # Try keyword matching first
         agent_id, score = self.recommend_for_subgoal(subgoal)
@@ -484,6 +498,7 @@ class AgentRecommender:
 
         Raises:
             ValueError: If LLM response is invalid
+
         """
         if self.llm_client is None:
             raise ValueError("LLM client not available")
@@ -559,6 +574,7 @@ Important:
 
         Returns:
             Formatted string with agent IDs and descriptions
+
         """
         if self.manifest is None or not self.manifest.agents:
             return "- @code-developer: General development tasks"
@@ -588,6 +604,7 @@ Important:
 
         Returns:
             List of AgentGap objects for subgoals with score < threshold
+
         """
         gaps = []
 
@@ -622,6 +639,7 @@ Important:
 
         Returns:
             Match score from 0.0 to 1.0
+
         """
         # Load manifest if not provided
         if self.manifest is None:
@@ -674,6 +692,7 @@ Important:
 
         Returns:
             True if agent exists, False otherwise
+
         """
         # Load manifest if not available
         if self.manifest is None:
@@ -698,6 +717,7 @@ Important:
 
         Returns:
             Default fallback agent ID (e.g., "@code-developer")
+
         """
         return self.default_fallback
 
@@ -711,6 +731,7 @@ Important:
 
         Returns:
             Set of unique keywords
+
         """
         # Combine title and description
         text = f"{subgoal.title} {subgoal.description}"
@@ -741,6 +762,7 @@ Important:
 
         Returns:
             Score from 0.0 to 1.0 based on keyword overlap
+
         """
         if not keywords:
             return 0.0
@@ -824,6 +846,7 @@ Important:
         Raises:
             RuntimeError: If ManifestManager not available
             Exception: If manifest cannot be loaded
+
         """
         if not MANIFEST_AVAILABLE or not ManifestManager:
             raise RuntimeError("ManifestManager not available")
@@ -856,6 +879,7 @@ Important:
             Tuple of (agent_id, score)
             - agent_id: Best matching agent ID with @ prefix
             - score: Match score from 0.0 to 1.0
+
         """
         # Load manifest if not provided
         if self.manifest is None:

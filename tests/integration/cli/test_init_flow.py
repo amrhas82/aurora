@@ -52,7 +52,7 @@ def temp_project():
 def hello():
     """Say hello."""
     return "Hello, World!"
-'''
+''',
         )
 
         (project_path / "README.md").write_text("# Test Project\n")
@@ -63,7 +63,7 @@ version = "0.1.0"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-"""
+""",
         )
 
         yield project_path
@@ -86,6 +86,7 @@ def run_in_dir(runner: CliRunner, directory: Path, *args, **kwargs):
 
     Returns:
         Result from runner.invoke
+
     """
     import os
 
@@ -121,12 +122,18 @@ def test_first_time_init_full_flow(temp_project, runner):
 
     # Mock the async prompt_tool_selection function
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = ["claude-code"]  # User selects Claude Code
 
         result = run_in_dir(
-            runner, temp_project, cli, ["init"], input=user_input, catch_exceptions=False
+            runner,
+            temp_project,
+            cli,
+            ["init"],
+            input=user_input,
+            catch_exceptions=False,
         )
 
     # Verify command succeeded
@@ -185,7 +192,8 @@ def test_init_without_git(temp_project, runner):
     user_input = "n\n"
 
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []  # No tools
 
@@ -238,7 +246,8 @@ def test_config_flag_skips_early_steps(temp_project, runner):
     (aurora_dir / "logs").mkdir()
 
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = ["Claude Code"]
 
@@ -312,7 +321,8 @@ def test_idempotent_rerun_exit_option(temp_project, runner):
 
     # First run
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 
@@ -374,7 +384,8 @@ def test_rerun_all_steps_with_backup(temp_project, runner):
 
     # First run
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 
@@ -397,7 +408,8 @@ def test_rerun_all_steps_with_backup(temp_project, runner):
 
     # Second run - re-run all
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 
@@ -436,7 +448,8 @@ def test_selective_step_rerun(temp_project, runner):
 
     # First run
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 
@@ -453,7 +466,8 @@ def test_selective_step_rerun(temp_project, runner):
 
     # Second run - exit immediately to avoid complex mocking
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 
@@ -485,7 +499,8 @@ def test_indexing_failure_recovery(temp_project, runner):
     """
 
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 
@@ -518,7 +533,9 @@ def test_init_preserves_existing_git_history(temp_project, runner):
     # Initialize git manually and make a commit
     subprocess.run(["git", "init"], cwd=temp_project, check=True)
     subprocess.run(
-        ["git", "config", "user.email", "test@example.com"], cwd=temp_project, check=True
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=temp_project,
+        check=True,
     )
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_project, check=True)
     (temp_project / "test.txt").write_text("test")
@@ -527,12 +544,17 @@ def test_init_preserves_existing_git_history(temp_project, runner):
 
     # Get commit count before
     log_before = subprocess.run(
-        ["git", "log", "--oneline"], cwd=temp_project, capture_output=True, text=True, check=True
+        ["git", "log", "--oneline"],
+        cwd=temp_project,
+        capture_output=True,
+        text=True,
+        check=True,
     )
 
     # Run init
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 
@@ -548,7 +570,11 @@ def test_init_preserves_existing_git_history(temp_project, runner):
 
     # Verify git history preserved
     log_after = subprocess.run(
-        ["git", "log", "--oneline"], cwd=temp_project, capture_output=True, text=True, check=True
+        ["git", "log", "--oneline"],
+        cwd=temp_project,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     assert "Initial commit" in log_after.stdout
 
@@ -557,7 +583,8 @@ def test_init_detects_project_metadata(temp_project, runner):
     """Test project.md includes detected metadata."""
 
     with patch(
-        "aurora_cli.commands.init.prompt_tool_selection", new_callable=AsyncMock
+        "aurora_cli.commands.init.prompt_tool_selection",
+        new_callable=AsyncMock,
     ) as mock_prompt:
         mock_prompt.return_value = []
 

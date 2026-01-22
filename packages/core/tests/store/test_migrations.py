@@ -52,7 +52,10 @@ class TestMigration:
             connection.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)")
 
         migration = Migration(
-            from_version=0, to_version=1, upgrade_fn=create_table, description="Create test table"
+            from_version=0,
+            to_version=1,
+            upgrade_fn=create_table,
+            description="Create test table",
         )
 
         migration.apply(conn)
@@ -116,7 +119,10 @@ class TestMigrationManagerBasics:
             pass
 
         custom_migration = Migration(
-            from_version=99, to_version=100, upgrade_fn=dummy_upgrade, description="Custom"
+            from_version=99,
+            to_version=100,
+            upgrade_fn=dummy_upgrade,
+            description="Custom",
         )
 
         manager.add_migration(custom_migration)
@@ -201,7 +207,7 @@ class TestMigrationV1ToV2:
                 content TEXT NOT NULL,
                 metadata TEXT
             )
-        """
+        """,
         )
 
         conn.execute(
@@ -212,7 +218,7 @@ class TestMigrationV1ToV2:
                 last_access TIMESTAMP,
                 FOREIGN KEY (chunk_id) REFERENCES chunks (id)
             )
-        """
+        """,
         )
 
         conn.execute("CREATE TABLE schema_version (version INTEGER)")
@@ -239,7 +245,8 @@ class TestMigrationV1ToV2:
             chunk_id = f"chunk_{i:03d}"
             activation = float(i) / 50.0
             conn.execute(
-                "INSERT INTO activations VALUES (?, ?, ?)", (chunk_id, activation, timestamp)
+                "INSERT INTO activations VALUES (?, ?, ?)",
+                (chunk_id, activation, timestamp),
             )
 
         conn.commit()
@@ -269,7 +276,8 @@ class TestMigrationV1ToV2:
             chunk_id = f"chunk_{i:03d}"
             expected_activation = float(i) / 50.0
             cursor = conn.execute(
-                "SELECT activation FROM activations WHERE chunk_id = ?", (chunk_id,)
+                "SELECT activation FROM activations WHERE chunk_id = ?",
+                (chunk_id,),
             )
             row = cursor.fetchone()
             assert row is not None
@@ -400,7 +408,10 @@ class TestMigrationRollback:
             connection.execute("INSERT INTO test VALUES (1)")
 
         migration = Migration(
-            from_version=0, to_version=1, upgrade_fn=failing_migration, description="Failing"
+            from_version=0,
+            to_version=1,
+            upgrade_fn=failing_migration,
+            description="Failing",
         )
 
         with pytest.raises(StorageError):
@@ -431,7 +442,10 @@ class TestMigrationRollback:
             connection.execute("CREATE TABLE test (id INTEGER)")  # This will fail - table exists
 
         migration = Migration(
-            from_version=0, to_version=1, upgrade_fn=partial_migration, description="Atomic test"
+            from_version=0,
+            to_version=1,
+            upgrade_fn=partial_migration,
+            description="Atomic test",
         )
 
         with pytest.raises(StorageError):
@@ -452,7 +466,10 @@ class TestMigrationRollback:
             connection.execute("SELECT * FROM nonexistent_table")
 
         migration = Migration(
-            from_version=5, to_version=6, upgrade_fn=failing_migration, description="Test"
+            from_version=5,
+            to_version=6,
+            upgrade_fn=failing_migration,
+            description="Test",
         )
 
         with pytest.raises(StorageError) as exc_info:
@@ -534,7 +551,10 @@ class TestMigrationErrorConditions:
             raise sqlite3.OperationalError("database or disk is full")
 
         migration = Migration(
-            from_version=0, to_version=1, upgrade_fn=disk_full_migration, description="Disk full"
+            from_version=0,
+            to_version=1,
+            upgrade_fn=disk_full_migration,
+            description="Disk full",
         )
 
         with pytest.raises(StorageError) as exc_info:
@@ -606,13 +626,19 @@ class TestMigrationManager:
         # Add migrations in non-sequential order
         manager.add_migration(
             Migration(
-                from_version=1, to_version=2, upgrade_fn=track_migration(2), description="v1->v2"
-            )
+                from_version=1,
+                to_version=2,
+                upgrade_fn=track_migration(2),
+                description="v1->v2",
+            ),
         )
         manager.add_migration(
             Migration(
-                from_version=0, to_version=1, upgrade_fn=track_migration(1), description="v0->v1"
-            )
+                from_version=0,
+                to_version=1,
+                upgrade_fn=track_migration(1),
+                description="v0->v1",
+            ),
         )
 
         # Mock SCHEMA_VERSION to 2 for this test
@@ -666,7 +692,7 @@ class TestMigrationManager:
                     content TEXT NOT NULL,
                     metadata TEXT
                 )
-            """
+            """,
             )
             conn.execute(
                 """
@@ -676,7 +702,7 @@ class TestMigrationManager:
                     last_access TIMESTAMP,
                     FOREIGN KEY (chunk_id) REFERENCES chunks (id)
                 )
-            """
+            """,
             )
             conn.execute("CREATE TABLE schema_version (version INTEGER)")
             conn.execute("INSERT INTO schema_version (version) VALUES (1)")
@@ -726,7 +752,7 @@ class TestMigrationV2ToV3:
                 first_access TIMESTAMP,
                 last_access TIMESTAMP
             )
-        """
+        """,
         )
 
         conn.execute(
@@ -738,7 +764,7 @@ class TestMigrationV2ToV3:
                 access_history JSON,
                 FOREIGN KEY (chunk_id) REFERENCES chunks (id)
             )
-        """
+        """,
         )
 
         conn.execute("CREATE TABLE schema_version (version INTEGER)")

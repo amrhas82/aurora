@@ -57,6 +57,7 @@ class HybridConfig:
     Example (dual-hybrid, legacy):
         >>> config = HybridConfig(bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4)
         >>> retriever = HybridRetriever(store, engine, provider, config)
+
     """
 
     bm25_weight: float = 0.3
@@ -88,7 +89,7 @@ class HybridConfig:
         if abs(total_weight - 1.0) > 1e-6:
             raise ValueError(
                 f"Weights must sum to 1.0, got {total_weight} "
-                f"(bm25={self.bm25_weight}, activation={self.activation_weight}, semantic={self.semantic_weight})"
+                f"(bm25={self.bm25_weight}, activation={self.activation_weight}, semantic={self.semantic_weight})",
             )
 
         if self.activation_top_k < 1:
@@ -99,7 +100,7 @@ class HybridConfig:
             raise ValueError(f"query_cache_size must be >= 1, got {self.query_cache_size}")
         if self.query_cache_ttl_seconds < 0:
             raise ValueError(
-                f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}"
+                f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}",
             )
 
 
@@ -128,6 +129,7 @@ class QueryEmbeddingCache:
         capacity: Maximum number of cached embeddings
         ttl_seconds: Time-to-live for cached entries
         stats: Cache statistics (hits, misses, evictions)
+
     """
 
     def __init__(self, capacity: int = 100, ttl_seconds: int = 1800):
@@ -136,6 +138,7 @@ class QueryEmbeddingCache:
         Args:
             capacity: Maximum cached embeddings (default 100)
             ttl_seconds: TTL in seconds (default 1800 = 30 min)
+
         """
         self.capacity = capacity
         self.ttl_seconds = ttl_seconds
@@ -150,6 +153,7 @@ class QueryEmbeddingCache:
 
         Returns:
             Normalized query (lowercase, stripped, single spaces)
+
         """
         return " ".join(query.lower().split())
 
@@ -161,6 +165,7 @@ class QueryEmbeddingCache:
 
         Returns:
             Hash-based cache key
+
         """
         normalized = self._normalize_query(query)
         return hashlib.md5(normalized.encode(), usedforsecurity=False).hexdigest()
@@ -173,6 +178,7 @@ class QueryEmbeddingCache:
 
         Returns:
             Cached embedding if found and not expired, None otherwise
+
         """
         key = self._make_key(query)
 
@@ -199,6 +205,7 @@ class QueryEmbeddingCache:
         Args:
             query: Query string
             embedding: Query embedding to cache
+
         """
         key = self._make_key(query)
 
@@ -256,6 +263,7 @@ class HybridRetriever:
         >>>
         >>> results = retriever.retrieve("SoarOrchestrator", top_k=5)
         >>> # Results will favor exact keyword matches with tri-hybrid scoring
+
     """
 
     def __init__(
@@ -278,6 +286,7 @@ class HybridRetriever:
         Note:
             If both config and aurora_config are provided, config takes precedence.
             If neither is provided, uses default HybridConfig values (tri-hybrid: 30/40/30).
+
         """
         self.store = store
         self.activation_engine = activation_engine
@@ -307,7 +316,7 @@ class HybridRetriever:
             )
             logger.debug(
                 f"Query cache enabled: size={self.config.query_cache_size}, "
-                f"ttl={self.config.query_cache_ttl_seconds}s"
+                f"ttl={self.config.query_cache_ttl_seconds}s",
             )
         else:
             self._query_cache = None
@@ -347,6 +356,7 @@ class HybridRetriever:
             ...     print(f"  BM25: {result['bm25_score']:.3f}")
             ...     print(f"  Semantic: {result['semantic_score']:.3f}")
             ...     print(f"  Activation: {result['activation_score']:.3f}")
+
         """
         # Validate inputs
         if not query or not query.strip():
@@ -417,7 +427,9 @@ class HybridRetriever:
         if use_two_phase and stage1_candidates:
             candidate_ids = [chunk.id for chunk in stage1_candidates]
             embeddings_map = self.store.fetch_embeddings_for_chunks(candidate_ids)
-            logger.debug(f"Fetched embeddings for {len(embeddings_map)}/{len(candidate_ids)} chunks")
+            logger.debug(
+                f"Fetched embeddings for {len(embeddings_map)}/{len(candidate_ids)} chunks"
+            )
 
             # Attach embeddings to chunks
             for chunk in stage1_candidates:
@@ -464,7 +476,7 @@ class HybridRetriever:
                     "raw_activation": activation_score,
                     "raw_semantic": semantic_score,
                     "raw_bm25": bm25_score,
-                }
+                },
             )
 
         # If no valid results, return empty
@@ -482,7 +494,7 @@ class HybridRetriever:
 
         # Normalize scores independently to [0, 1] range
         activation_scores_normalized = self._normalize_scores(
-            [r["raw_activation"] for r in results]
+            [r["raw_activation"] for r in results],
         )
         semantic_scores_normalized = self._normalize_scores([r["raw_semantic"] for r in results])
         bm25_scores_normalized = self._normalize_scores([r["raw_bm25"] for r in results])
@@ -515,7 +527,8 @@ class HybridRetriever:
 
             # Extract content and metadata from chunk (using cached access stats)
             content, metadata = self._extract_chunk_content_metadata(
-                chunk, access_stats_cache=access_stats_cache
+                chunk,
+                access_stats_cache=access_stats_cache,
             )
 
             final_results.append(
@@ -527,7 +540,7 @@ class HybridRetriever:
                     "semantic_score": semantic_norm,
                     "hybrid_score": hybrid_score,
                     "metadata": metadata,
-                }
+                },
             )
 
         # Sort by hybrid score (descending)
@@ -549,6 +562,7 @@ class HybridRetriever:
 
         Returns:
             Top stage1_top_k candidates by BM25 score
+
         """
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
 
@@ -590,6 +604,7 @@ class HybridRetriever:
 
         Returns:
             Content string (signature + docstring + name for CodeChunk)
+
         """
         # For CodeChunk: combine signature, docstring, and name
         if hasattr(chunk, "signature"):
@@ -601,13 +616,14 @@ class HybridRetriever:
             if getattr(chunk, "docstring", None):
                 parts.append(chunk.docstring)
             return " ".join(parts) if parts else ""
-        else:
-            # For other chunk types, use to_json() content
-            chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
-            return str(chunk_json.get("content", ""))
+        # For other chunk types, use to_json() content
+        chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
+        return str(chunk_json.get("content", ""))
 
     def _extract_chunk_content_metadata(
-        self, chunk: Any, access_stats_cache: dict[str, dict] | None = None
+        self,
+        chunk: Any,
+        access_stats_cache: dict[str, dict] | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Extract content and metadata from chunk.
 
@@ -617,6 +633,7 @@ class HybridRetriever:
 
         Returns:
             Tuple of (content, metadata)
+
         """
         # For CodeChunk: content is signature + docstring
         if hasattr(chunk, "signature") and hasattr(chunk, "docstring"):
@@ -695,6 +712,7 @@ class HybridRetriever:
 
         Returns:
             List of results with activation scores only (tri-hybrid format)
+
         """
         results = []
         for chunk in chunks[:top_k]:
@@ -709,7 +727,7 @@ class HybridRetriever:
                     "semantic_score": 0.0,
                     "hybrid_score": activation_score,  # Pure activation
                     "metadata": metadata,
-                }
+                },
             )
         return results
 
@@ -725,6 +743,7 @@ class HybridRetriever:
         Note:
             When all scores are equal, returns original scores unchanged
             to preserve meaningful zero values rather than inflating to 1.0.
+
         """
         if not scores:
             return []
@@ -750,6 +769,7 @@ class HybridRetriever:
 
         Raises:
             ValueError: If config values are invalid
+
         """
         # Load from context.code.hybrid_weights section
         weights = aurora_config.get("context.code.hybrid_weights", {})
@@ -786,6 +806,7 @@ class HybridRetriever:
             - misses: Number of cache misses
             - hit_rate: Cache hit rate (0.0-1.0)
             - evictions: Number of LRU evictions
+
         """
         if self._query_cache is None:
             return {"enabled": False}
@@ -811,6 +832,7 @@ class HybridRetriever:
 
         Returns:
             Path to BM25 index file, or None if not configured
+
         """
         if self.config.bm25_index_path:
             return Path(self.config.bm25_index_path).expanduser()
@@ -827,6 +849,7 @@ class HybridRetriever:
 
         Returns:
             True if index was loaded successfully, False otherwise
+
         """
         index_path = self._get_bm25_index_path()
         if index_path is None or not index_path.exists():
@@ -841,7 +864,7 @@ class HybridRetriever:
             self._bm25_index_loaded = True
             logger.info(
                 f"Loaded BM25 index from {index_path} "
-                f"({self.bm25_scorer.corpus_size} documents)"
+                f"({self.bm25_scorer.corpus_size} documents)",
             )
             return True
         except Exception as e:
@@ -861,6 +884,7 @@ class HybridRetriever:
 
         Returns:
             True if index was built and saved successfully, False otherwise
+
         """
         index_path = self._get_bm25_index_path()
         if index_path is None:
@@ -886,8 +910,7 @@ class HybridRetriever:
             self.bm25_scorer.save_index(index_path)
             self._bm25_index_loaded = True
             logger.info(
-                f"Built and saved BM25 index to {index_path} "
-                f"({len(documents)} documents)"
+                f"Built and saved BM25 index to {index_path} " f"({len(documents)} documents)",
             )
             return True
 
@@ -900,6 +923,7 @@ class HybridRetriever:
 
         Returns:
             List of (chunk_id, content) tuples
+
         """
         documents = []
         try:

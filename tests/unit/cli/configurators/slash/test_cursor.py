@@ -271,7 +271,7 @@ class TestCursorSlashCommandConfiguratorUpdateExisting:
 
         frontmatter = config.get_frontmatter("plan")
         plan_file.write_text(
-            f"{frontmatter}\n{AURORA_MARKERS['start']}\nBody\n{AURORA_MARKERS['end']}\n"
+            f"{frontmatter}\n{AURORA_MARKERS['start']}\nBody\n{AURORA_MARKERS['end']}\n",
         )
 
         # Update existing

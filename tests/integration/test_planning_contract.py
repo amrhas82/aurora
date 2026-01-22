@@ -49,7 +49,7 @@ class TestPlanSchemaContract:
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
                         description="New test feature",
-                    )
+                    ),
                 ],
             )
 
@@ -67,7 +67,7 @@ class TestPlanSchemaContract:
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
                         description="New test feature",
-                    )
+                    ),
                 ],
             )
 
@@ -85,7 +85,7 @@ class TestPlanSchemaContract:
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
                         description="New test feature",
-                    )
+                    ),
                 ],
             )
 
@@ -103,7 +103,7 @@ class TestPlanSchemaContract:
                         capability="test-feature",
                         operation=ModificationOperation.ADDED,
                         description="New test feature",
-                    )
+                    ),
                 ],
             )
 
@@ -154,10 +154,12 @@ class TestPlanSchemaContract:
                     capability="test-feature",
                     operation=ModificationOperation.ADDED,
                     description="New test feature with validation",
-                )
+                ),
             ],
             metadata=PlanMetadata(
-                version="1.0.0", format="aurora-plan", source_path="/path/to/plan.json"
+                version="1.0.0",
+                format="aurora-plan",
+                source_path="/path/to/plan.json",
             ),
         )
 
@@ -196,7 +198,9 @@ class TestModificationSchemaContract:
         """Contract: Modification description must not be empty."""
         with pytest.raises(ValidationError) as exc_info:
             Modification(
-                capability="test-feature", operation=ModificationOperation.ADDED, description=""
+                capability="test-feature",
+                operation=ModificationOperation.ADDED,
+                description="",
             )
 
         assert any("description" in str(error).lower() for error in exc_info.value.errors())
@@ -223,7 +227,9 @@ class TestModificationSchemaContract:
 
         for op in operations:
             mod = Modification(
-                capability="test-feature", operation=op, description="Test modification"
+                capability="test-feature",
+                operation=op,
+                description="Test modification",
             )
             assert mod.operation == op
             assert mod.capability == "test-feature"
@@ -315,7 +321,9 @@ class TestPlanMetadataSchemaContract:
     def test_plan_metadata_accepts_custom_values(self):
         """Contract: PlanMetadata accepts custom values."""
         metadata = PlanMetadata(
-            version="2.0.0", format="custom-format", source_path="/path/to/source.json"
+            version="2.0.0",
+            format="custom-format",
+            source_path="/path/to/source.json",
         )
 
         assert metadata.version == "2.0.0"
@@ -337,7 +345,7 @@ class TestSchemaSerializationContract:
                     capability="test-feature",
                     operation=ModificationOperation.ADDED,
                     description="New test feature",
-                )
+                ),
             ],
         )
 
@@ -359,7 +367,7 @@ class TestSchemaSerializationContract:
                     "capability": "test-feature",
                     "operation": "ADDED",
                     "description": "New test feature",
-                }
+                },
             ],
         }
 
@@ -383,13 +391,15 @@ class TestSchemaSerializationContract:
                     requirement=Requirement(
                         text="The system SHALL have better tests",
                         scenarios=[
-                            Scenario(raw_text="Given a test suite, when tests run, then all pass")
+                            Scenario(raw_text="Given a test suite, when tests run, then all pass"),
                         ],
                     ),
-                )
+                ),
             ],
             metadata=PlanMetadata(
-                version="1.0.0", format="aurora-plan", source_path="/path/to/plan.json"
+                version="1.0.0",
+                format="aurora-plan",
+                source_path="/path/to/plan.json",
             ),
         )
 
@@ -425,7 +435,7 @@ class TestSchemaBackwardCompatibility:
                     "capability": "test-feature",
                     "operation": "ADDED",
                     "description": "New test feature",
-                }
+                },
             ],
             "extra_field": "This should be ignored",  # Extra field
         }

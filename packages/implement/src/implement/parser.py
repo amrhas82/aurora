@@ -17,7 +17,8 @@ COMPLETED_TASK_PATTERN = re.compile(r"^[-*]\s+\[x\]", re.IGNORECASE)
 # Handles: - [ ] 1. Description or - [ ] 1.1 Description (period after ID is optional)
 # Very flexible whitespace handling: -[ ]3.Task and - [ ] 1. Task both work
 TASK_LINE_PATTERN = re.compile(
-    r"^\s*[-*]\s*\[\s*([ x])\s*\]\s*(\d+(?:\.\d+)?)\.?\s*(.+)$", re.IGNORECASE
+    r"^\s*[-*]\s*\[\s*([ x])\s*\]\s*(\d+(?:\.\d+)?)\.?\s*(.+)$",
+    re.IGNORECASE,
 )
 
 # Regex for metadata extraction from HTML comments
@@ -45,6 +46,7 @@ class TaskParser:
 
         Returns:
             List of ParsedTask objects in order of appearance
+
         """
         if not content or not content.strip():
             return []

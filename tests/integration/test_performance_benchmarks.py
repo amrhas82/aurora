@@ -280,7 +280,7 @@ class Class{i}:
     def method_c(self): return {i}
     def method_d(self): return {i}
     def method_e(self): return {i}
-'''
+''',
             )
 
         # Index
@@ -348,7 +348,7 @@ class Class{i}:
     def method_b(self):
         """Method B."""
         return {i} * 2
-'''
+''',
             )
 
         # Index and measure time
@@ -398,5 +398,5 @@ class Class{i}:
         print(f"Duration: {elapsed:.2f}s")
         print(
             f"Throughput: {stats.files_indexed / elapsed:.2f} files/sec, "
-            f"{stats.chunks_created / elapsed:.2f} chunks/sec"
+            f"{stats.chunks_created / elapsed:.2f} chunks/sec",
         )

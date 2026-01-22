@@ -10,30 +10,23 @@ Tests cover full integration scenarios for running Claude and OpenCode together:
 """
 
 import asyncio
-import time
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.headless import (
-    _check_final_state,
     _display_multi_tool_results,
     _run_multi_tool_loop,
-    _run_single_tool_loop,
     headless_command,
 )
 from aurora_cli.concurrent_executor import (
     AggregatedResult,
     AggregationStrategy,
-    ConcurrentToolExecutor,
     ConflictInfo,
     ConflictSeverity,
-    ToolConfig,
     ToolResult,
 )
-from aurora_cli.tool_providers import ToolProviderRegistry
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +62,7 @@ Implement a feature using multi-tool execution.
 
 # Context
 This is a test prompt for multi-tool execution.
-"""
+""",
     )
 
     return workspace
@@ -103,7 +96,11 @@ class TestFullCLIExecution:
     """Test full CLI command execution with multi-tool options."""
 
     def test_multi_tool_parallel_invocation(
-        self, runner, temp_workspace, mock_both_tools, mock_git_feature_branch
+        self,
+        runner,
+        temp_workspace,
+        mock_both_tools,
+        mock_git_feature_branch,
     ):
         """Test invoking headless command with parallel multi-tool execution."""
         prompt_path = temp_workspace / ".aurora" / "headless" / "prompt.md"
@@ -133,7 +130,11 @@ class TestFullCLIExecution:
                 assert "claude" in result.output.lower() or "opencode" in result.output.lower()
 
     def test_multi_tool_sequential_invocation(
-        self, runner, temp_workspace, mock_both_tools, mock_git_feature_branch
+        self,
+        runner,
+        temp_workspace,
+        mock_both_tools,
+        mock_git_feature_branch,
     ):
         """Test invoking headless command with sequential multi-tool execution."""
         prompt_path = temp_workspace / ".aurora" / "headless" / "prompt.md"
@@ -479,7 +480,8 @@ class TestBackpressureIntegration:
                 return result
 
             with patch(
-                "aurora_cli.commands.headless.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.commands.headless.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 await _run_multi_tool_loop(
                     tools_list=["claude"],
@@ -597,7 +599,7 @@ class TestWorkflowSimulation:
 - [x] Initial implementation
 - [ ] Add tests
 STATUS: IN_PROGRESS
-"""
+""",
                     )
                 elif iteration[0] == 2:
                     scratchpad.write_text(
@@ -606,7 +608,7 @@ STATUS: IN_PROGRESS
 - [x] Add tests
 - [ ] Fix linting
 STATUS: IN_PROGRESS
-"""
+""",
                     )
                 elif iteration[0] == 3:
                     scratchpad.write_text(
@@ -615,7 +617,7 @@ STATUS: IN_PROGRESS
 - [x] Add tests
 - [x] Fix linting
 STATUS: DONE
-"""
+""",
                     )
 
                 return AggregatedResult(
@@ -624,7 +626,10 @@ STATUS: DONE
                     strategy_used=AggregationStrategy.ALL_COMPLETE,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Claude output", execution_time=1.0
+                            tool="claude",
+                            success=True,
+                            output="Claude output",
+                            execution_time=1.0,
                         ),
                         ToolResult(
                             tool="opencode",
@@ -741,7 +746,10 @@ class TestResultsDisplay:
             tool_results=[
                 ToolResult(tool="claude", success=True, output="Claude output", execution_time=2.5),
                 ToolResult(
-                    tool="opencode", success=True, output="OpenCode output", execution_time=3.1
+                    tool="opencode",
+                    success=True,
+                    output="OpenCode output",
+                    execution_time=3.1,
                 ),
             ],
             winning_tool="claude",

@@ -91,7 +91,9 @@ class TestAgentScannerDiscoverSources:
         assert len(sources) == 1
 
     def test_logs_missing_directories(
-        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Logs debug message for missing directories."""
         missing_path = "/nonexistent/path/agents"

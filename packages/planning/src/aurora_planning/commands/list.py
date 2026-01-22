@@ -43,6 +43,7 @@ class ListCommand:
             target_path: Target directory path (default: current directory)
             mode: List mode - 'changes' or 'specs' (default: 'changes')
             options: Optional dict with 'sort' ('recent' or 'name') and 'json' (bool)
+
         """
         if options is None:
             options = {}
@@ -93,7 +94,7 @@ class ListCommand:
                     completed_tasks=progress["completed"],
                     total_tasks=progress["total"],
                     last_modified=last_modified,
-                )
+                ),
             )
 
         # Sort by preference (default: recent first)
@@ -118,7 +119,7 @@ class ListCommand:
                         "totalTasks": c.total_tasks,
                         "lastModified": c.last_modified.isoformat(),
                         "status": status,
-                    }
+                    },
                 )
             print(json.dumps({"changes": json_output_data}, indent=2))
             return
@@ -259,11 +260,10 @@ class ListCommand:
 
         if diff_days > 30:
             return date.strftime("%Y-%m-%d")
-        elif diff_days > 0:
+        if diff_days > 0:
             return f"{diff_days}d ago"
-        elif diff_hours > 0:
+        if diff_hours > 0:
             return f"{diff_hours}h ago"
-        elif diff_minutes > 0:
+        if diff_minutes > 0:
             return f"{diff_minutes}m ago"
-        else:
-            return "just now"
+        return "just now"

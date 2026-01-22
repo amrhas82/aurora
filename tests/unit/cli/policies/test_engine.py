@@ -50,7 +50,7 @@ anomalies:
   scope_multiplier: 2
   unexpected_file_types:
     - "*.sql"
-"""
+""",
         )
         path = Path(f.name)
     yield path

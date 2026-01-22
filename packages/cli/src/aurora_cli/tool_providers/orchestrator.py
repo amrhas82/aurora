@@ -51,6 +51,7 @@ class ToolOrchestrator:
             providers: List of tool providers to orchestrate
             strategy: Execution strategy to use
             console: Rich console for output (optional)
+
         """
         if not providers:
             raise ValueError("At least one tool provider is required")
@@ -77,17 +78,17 @@ class ToolOrchestrator:
 
         Returns:
             OrchestratorResult with execution details
+
         """
         if self.strategy == ExecutionStrategy.ROUND_ROBIN:
             return self._execute_round_robin(context, iteration, working_dir, timeout)
-        elif self.strategy == ExecutionStrategy.PARALLEL:
+        if self.strategy == ExecutionStrategy.PARALLEL:
             return self._execute_parallel(context, iteration, working_dir, timeout)
-        elif self.strategy == ExecutionStrategy.SEQUENTIAL:
+        if self.strategy == ExecutionStrategy.SEQUENTIAL:
             return self._execute_sequential(context, iteration, working_dir, timeout)
-        elif self.strategy == ExecutionStrategy.FAILOVER:
+        if self.strategy == ExecutionStrategy.FAILOVER:
             return self._execute_failover(context, iteration, working_dir, timeout)
-        else:
-            raise ValueError(f"Unknown strategy: {self.strategy}")
+        raise ValueError(f"Unknown strategy: {self.strategy}")
 
     def _execute_round_robin(
         self,

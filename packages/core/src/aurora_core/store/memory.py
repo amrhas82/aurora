@@ -72,6 +72,7 @@ class MemoryStore(Store):
         Raises:
             StorageError: If store is closed
             ValidationError: If chunk validation fails
+
         """
         self._check_closed()
 
@@ -105,6 +106,7 @@ class MemoryStore(Store):
 
         Raises:
             StorageError: If store is closed
+
         """
         self._check_closed()
         return self._chunks.get(str(chunk_id))
@@ -119,6 +121,7 @@ class MemoryStore(Store):
         Raises:
             StorageError: If store is closed
             ChunkNotFoundError: If chunk doesn't exist
+
         """
         self._check_closed()
 
@@ -150,6 +153,7 @@ class MemoryStore(Store):
 
         Raises:
             StorageError: If store is closed
+
         """
         self._check_closed()
 
@@ -166,7 +170,11 @@ class MemoryStore(Store):
         return [chunk for chunk, _ in results[:limit]]
 
     def add_relationship(
-        self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
+        self,
+        from_id: ChunkID,
+        to_id: ChunkID,
+        rel_type: str,
+        weight: float = 1.0,
     ) -> bool:
         """Add a relationship between chunks.
 
@@ -182,6 +190,7 @@ class MemoryStore(Store):
         Raises:
             StorageError: If store is closed
             ChunkNotFoundError: If either chunk doesn't exist
+
         """
         self._check_closed()
 
@@ -201,7 +210,7 @@ class MemoryStore(Store):
                 "to_chunk": to_id_str,
                 "relationship_type": rel_type,
                 "weight": weight,
-            }
+            },
         )
 
         return True
@@ -219,6 +228,7 @@ class MemoryStore(Store):
         Raises:
             StorageError: If store is closed
             ChunkNotFoundError: If starting chunk doesn't exist
+
         """
         self._check_closed()
 
@@ -249,7 +259,10 @@ class MemoryStore(Store):
         return [self._chunks[cid] for cid in visited if cid in self._chunks]
 
     def record_access(
-        self, chunk_id: ChunkID, access_time: datetime | None = None, context: str | None = None
+        self,
+        chunk_id: ChunkID,
+        access_time: datetime | None = None,
+        context: str | None = None,
     ) -> None:
         """Record an access to a chunk for ACT-R activation tracking.
 
@@ -261,6 +274,7 @@ class MemoryStore(Store):
         Raises:
             StorageError: If store is closed
             ChunkNotFoundError: If chunk_id does not exist
+
         """
         self._check_closed()
         chunk_id_str = str(chunk_id)
@@ -284,11 +298,13 @@ class MemoryStore(Store):
             activation["access_count"] += 1
             activation["last_access"] = access_time
             activation["access_history"].append(
-                {"timestamp": access_time.isoformat(), "context": context}
+                {"timestamp": access_time.isoformat(), "context": context},
             )
 
     def get_access_history(
-        self, chunk_id: ChunkID, limit: int | None = None
+        self,
+        chunk_id: ChunkID,
+        limit: int | None = None,
     ) -> list[dict[str, Any]]:
         """Retrieve access history for a chunk.
 
@@ -304,6 +320,7 @@ class MemoryStore(Store):
         Raises:
             StorageError: If store is closed
             ChunkNotFoundError: If chunk_id does not exist
+
         """
         self._check_closed()
         chunk_id_str = str(chunk_id)
@@ -341,6 +358,7 @@ class MemoryStore(Store):
         Raises:
             StorageError: If store is closed
             ChunkNotFoundError: If chunk_id does not exist
+
         """
         self._check_closed()
         chunk_id_str = str(chunk_id)
@@ -368,7 +386,8 @@ class MemoryStore(Store):
         }
 
     def get_access_stats_batch(
-        self, chunk_ids: list[ChunkID]
+        self,
+        chunk_ids: list[ChunkID],
     ) -> dict[ChunkID, dict[str, Any]]:
         """Get access statistics for multiple chunks.
 
@@ -383,6 +402,7 @@ class MemoryStore(Store):
 
         Raises:
             StorageError: If store is closed
+
         """
         self._check_closed()
 
@@ -424,6 +444,7 @@ class MemoryStore(Store):
 
         Raises:
             StorageError: Never (included for interface compatibility)
+
         """
         self._closed = True
         # Clear all data structures to release memory

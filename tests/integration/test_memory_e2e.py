@@ -87,7 +87,7 @@ def hash_password(password: str) -> str:
     """
     # Simplified hashing (not production ready)
     return f"hashed_{password}"
-'''
+''',
         )
 
         # File 2: Calculator module
@@ -129,7 +129,7 @@ def calculate_total(items: list[float]) -> float:
         Sum of all items
     """
     return sum(items)
-'''
+''',
         )
 
         # File 3: Database module
@@ -176,7 +176,7 @@ class DatabaseConnection:
         cursor = self.connection.cursor()
         cursor.execute(query)
         return cursor.fetchall()
-'''
+''',
         )
 
         return codebase
@@ -277,7 +277,7 @@ def test_function():
 def another_function():
     """Another test function."""
     return "hello"
-'''
+''',
         )
 
         return codebase
@@ -374,7 +374,7 @@ class TestExportImportFlow:
 def export_function(x: int) -> int:
     """A function to export."""
     return x * 2
-'''
+''',
         )
         return test_file
 
@@ -403,7 +403,7 @@ def export_function(x: int) -> int:
                 import base64
 
                 chunk_dict["embeddings"] = base64.b64encode(chunk_dict["embeddings"]).decode(
-                    "utf-8"
+                    "utf-8",
                 )
             chunks_data.append(chunk_dict)
 
@@ -587,7 +587,7 @@ class TestErrorHandling:
 def broken_function(x, y)
     # Missing colon - syntax error
     return x + y
-"""
+""",
         )
 
         # Should handle gracefully

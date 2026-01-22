@@ -13,22 +13,18 @@ These tests mock the subprocess layer but test full integration between:
 - Aggregation strategies
 """
 
-import asyncio
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.headless import (
     _run_multi_tool_loop,
-    _run_single_tool_loop,
     headless_command,
 )
 from aurora_cli.concurrent_executor import (
     AggregatedResult,
     AggregationStrategy,
-    ConcurrentToolExecutor,
     ToolResult,
 )
 
@@ -64,7 +60,7 @@ Implement a new feature for the application.
 
 # Context
 Working on a Python project.
-"""
+""",
     )
 
     # Create initial scratchpad
@@ -79,7 +75,7 @@ Working on a Python project.
 
 ## Next Steps
 - Analyze requirements
-"""
+""",
     )
 
     return {
@@ -137,7 +133,11 @@ class TestCLIMultiToolInvocation:
     """Test CLI invocation with multiple tools."""
 
     def test_parallel_mode_two_tools(
-        self, runner, temp_workspace, mock_tools_in_path, mock_git_feature_branch
+        self,
+        runner,
+        temp_workspace,
+        mock_tools_in_path,
+        mock_git_feature_branch,
     ):
         """Test parallel execution with Claude and OpenCode via CLI."""
         with patch("pathlib.Path.cwd", return_value=temp_workspace["root"]):
@@ -163,7 +163,11 @@ class TestCLIMultiToolInvocation:
                 assert "parallel" in result.output or "claude, opencode" in result.output
 
     def test_sequential_mode_two_tools(
-        self, runner, temp_workspace, mock_tools_in_path, mock_git_feature_branch
+        self,
+        runner,
+        temp_workspace,
+        mock_tools_in_path,
+        mock_git_feature_branch,
     ):
         """Test sequential execution with --sequential flag."""
         with patch("pathlib.Path.cwd", return_value=temp_workspace["root"]):
@@ -189,7 +193,11 @@ class TestCLIMultiToolInvocation:
                 assert call_kwargs["sequential_multi"] is True
 
     def test_comma_separated_tools(
-        self, runner, temp_workspace, mock_tools_in_path, mock_git_feature_branch
+        self,
+        runner,
+        temp_workspace,
+        mock_tools_in_path,
+        mock_git_feature_branch,
     ):
         """Test comma-separated tool specification."""
         with patch("pathlib.Path.cwd", return_value=temp_workspace["root"]):
@@ -233,7 +241,7 @@ class TestParallelExecutionLoop:
                 iteration_count[0] += 1
                 # Mark done after first iteration
                 temp_workspace["scratchpad"].write_text(
-                    "# Scratchpad\n\nSTATUS: DONE\n\nTask completed!"
+                    "# Scratchpad\n\nSTATUS: DONE\n\nTask completed!",
                 )
                 return AggregatedResult(
                     success=True,
@@ -241,7 +249,10 @@ class TestParallelExecutionLoop:
                     strategy_used=AggregationStrategy.FIRST_SUCCESS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Claude done", execution_time=1.0
+                            tool="claude",
+                            success=True,
+                            output="Claude done",
+                            execution_time=1.0,
                         ),
                         ToolResult(
                             tool="opencode",
@@ -286,10 +297,16 @@ class TestParallelExecutionLoop:
                     strategy_used=AggregationStrategy.ALL_COMPLETE,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Progress", execution_time=0.5
+                            tool="claude",
+                            success=True,
+                            output="Progress",
+                            execution_time=0.5,
                         ),
                         ToolResult(
-                            tool="opencode", success=True, output="Progress", execution_time=0.5
+                            tool="opencode",
+                            success=True,
+                            output="Progress",
+                            execution_time=0.5,
                         ),
                     ],
                 )
@@ -325,7 +342,10 @@ class TestParallelExecutionLoop:
                     strategy_used=AggregationStrategy.FIRST_SUCCESS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Working", execution_time=0.5
+                            tool="claude",
+                            success=True,
+                            output="Working",
+                            execution_time=0.5,
                         ),
                     ],
                 )
@@ -418,7 +438,10 @@ class TestAggregationStrategyIntegration:
                     strategy_used=AggregationStrategy.FIRST_SUCCESS,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Claude done", execution_time=0.5
+                            tool="claude",
+                            success=True,
+                            output="Claude done",
+                            execution_time=0.5,
                         ),
                     ],
                     winning_tool="claude",
@@ -455,13 +478,22 @@ class TestAggregationStrategyIntegration:
                     strategy_used=AggregationStrategy.VOTING,
                     tool_results=[
                         ToolResult(
-                            tool="claude", success=True, output="Answer A", execution_time=0.5
+                            tool="claude",
+                            success=True,
+                            output="Answer A",
+                            execution_time=0.5,
                         ),
                         ToolResult(
-                            tool="opencode", success=True, output="Answer A", execution_time=0.5
+                            tool="opencode",
+                            success=True,
+                            output="Answer A",
+                            execution_time=0.5,
                         ),
                         ToolResult(
-                            tool="cursor", success=True, output="Answer B", execution_time=0.5
+                            tool="cursor",
+                            success=True,
+                            output="Answer B",
+                            execution_time=0.5,
                         ),
                     ],
                     winning_tool="claude",
@@ -638,7 +670,10 @@ class TestMultiToolErrorHandling:
                     tool_results=[
                         ToolResult(tool="claude", success=False, output="", error="Claude crashed"),
                         ToolResult(
-                            tool="opencode", success=True, output="Success", execution_time=0.5
+                            tool="opencode",
+                            success=True,
+                            output="Success",
+                            execution_time=0.5,
                         ),
                     ],
                     winning_tool="opencode",
@@ -708,7 +743,7 @@ Review the code changes in this PR for bugs and improvements.
 # Success Criteria
 - [ ] All critical issues identified
 - [ ] Suggestions for improvements documented
-"""
+""",
         )
         temp_workspace["scratchpad"].write_text(
             """# Scratchpad
@@ -717,7 +752,7 @@ STATUS: IN_PROGRESS
 ## Files to Review
 - src/main.py
 - src/utils.py
-"""
+""",
         )
 
         workflow_steps = []
@@ -737,7 +772,7 @@ STATUS: DONE
 - Claude found: potential null reference in main.py:45
 - OpenCode found: unused import in utils.py:3
 - Both agree: code is generally well-structured
-"""
+""",
                 )
                 return AggregatedResult(
                     success=True,
@@ -783,7 +818,7 @@ Fix the authentication bug where users are logged out unexpectedly.
 - [ ] Root cause identified
 - [ ] Fix implemented
 - [ ] Tests pass
-"""
+""",
         )
 
         iteration_count = [0]
@@ -810,7 +845,7 @@ Fix the authentication bug where users are logged out unexpectedly.
                         ],
                         winning_tool="claude",
                     )
-                elif iteration_count[0] == 2:
+                if iteration_count[0] == 2:
                     # Second iteration: fix
                     return AggregatedResult(
                         success=True,
@@ -826,15 +861,14 @@ Fix the authentication bug where users are logged out unexpectedly.
                         ],
                         winning_tool="opencode",
                     )
-                else:
-                    # Third iteration: done
-                    temp_workspace["scratchpad"].write_text("STATUS: DONE")
-                    return AggregatedResult(
-                        success=True,
-                        primary_output="All tests pass",
-                        strategy_used=AggregationStrategy.FIRST_SUCCESS,
-                        tool_results=[],
-                    )
+                # Third iteration: done
+                temp_workspace["scratchpad"].write_text("STATUS: DONE")
+                return AggregatedResult(
+                    success=True,
+                    primary_output="All tests pass",
+                    strategy_used=AggregationStrategy.FIRST_SUCCESS,
+                    tool_results=[],
+                )
 
             mock_executor.execute = mock_execute
 
@@ -859,7 +893,11 @@ class TestConfigurationVariations:
     """Test various configuration combinations."""
 
     def test_custom_timeout(
-        self, runner, temp_workspace, mock_tools_in_path, mock_git_feature_branch
+        self,
+        runner,
+        temp_workspace,
+        mock_tools_in_path,
+        mock_git_feature_branch,
     ):
         """Test custom timeout configuration."""
         with patch("pathlib.Path.cwd", return_value=temp_workspace["root"]):

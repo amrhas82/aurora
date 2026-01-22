@@ -22,7 +22,8 @@ from aurora_mcp.tools import AuroraMCPTools
 
 # Skip all tests if no API key is available
 pytestmark = pytest.mark.skipif(
-    not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY environment variable not set"
+    not os.getenv("ANTHROPIC_API_KEY"),
+    reason="ANTHROPIC_API_KEY environment variable not set",
 )
 
 
@@ -54,8 +55,8 @@ def temp_aurora_config(tmp_path):
                     "verbosity": "normal",
                 },
                 "budget": {"monthly_limit_usd": 100.0},  # High limit for testing
-            }
-        )
+            },
+        ),
     )
 
     # Create budget tracker with low usage
@@ -111,7 +112,7 @@ class TestAuroraQueryE2E:
                 del tools._config_cache
 
             result = tools.aurora_query(
-                "Compare and analyze different software architecture patterns"
+                "Compare and analyze different software architecture patterns",
             )
             response = json.loads(result)
 

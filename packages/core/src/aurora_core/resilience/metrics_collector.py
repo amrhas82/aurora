@@ -43,6 +43,7 @@ class MetricsCollector:
         >>> collector.record_cache_hit()
         >>> metrics = collector.get_metrics()
         >>> print(f"Average latency: {metrics['queries']['avg_latency']}")
+
     """
 
     def __init__(self) -> None:
@@ -74,6 +75,7 @@ class MetricsCollector:
 
         Raises:
             ValueError: If latency is negative
+
         """
         if latency < 0:
             raise ValueError("latency must be non-negative")
@@ -99,6 +101,7 @@ class MetricsCollector:
 
         Args:
             error_type: The type of error (e.g., "TimeoutError", "ConnectionError")
+
         """
         self._total_errors += 1
         self._errors_by_type[error_type] += 1
@@ -127,6 +130,7 @@ class MetricsCollector:
                     "by_type": dict[str, int]
                 }
             }
+
         """
         return {
             "queries": {
@@ -159,6 +163,7 @@ class MetricsCollector:
 
         Returns:
             The 95th percentile latency, or 0.0 if no latencies recorded
+
         """
         if not self._latencies:
             return 0.0

@@ -135,7 +135,10 @@ class TestStagedRetrievalArchitecture:
         return chunks
 
     def test_stage1_bm25_filtering(
-        self, mock_store, mock_activation_engine, mock_embedding_provider
+        self,
+        mock_store,
+        mock_activation_engine,
+        mock_embedding_provider,
     ):
         """UT-HYBRID-01: Test Stage 1 BM25 filtering.
 
@@ -188,7 +191,10 @@ class TestStagedRetrievalArchitecture:
             use_staged_retrieval=False,  # Disable staged for this test
         )
         retriever = HybridRetriever(
-            mock_store, mock_activation_engine, mock_embedding_provider, config
+            mock_store,
+            mock_activation_engine,
+            mock_embedding_provider,
+            config,
         )
 
         # Execute: Search for exact match query
@@ -207,7 +213,10 @@ class TestStagedRetrievalArchitecture:
         # Full tri-hybrid ranking is tested in UT-HYBRID-02
 
     def test_stage2_reranking_with_trihybrid(
-        self, mock_store, mock_activation_engine, mock_embedding_provider
+        self,
+        mock_store,
+        mock_activation_engine,
+        mock_embedding_provider,
     ):
         """UT-HYBRID-02: Test Stage 2 tri-hybrid re-ranking.
 
@@ -255,10 +264,16 @@ class TestStagedRetrievalArchitecture:
 
         # Create retriever with dual-hybrid for testing (bm25_weight=0.0)
         config = HybridConfig(
-            bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False
+            bm25_weight=0.0,
+            activation_weight=0.6,
+            semantic_weight=0.4,
+            use_staged_retrieval=False,
         )
         retriever = HybridRetriever(
-            mock_store, mock_activation_engine, mock_embedding_provider, config
+            mock_store,
+            mock_activation_engine,
+            mock_embedding_provider,
+            config,
         )
 
         # Execute
@@ -288,7 +303,10 @@ class TestStagedRetrievalArchitecture:
         assert top_result["chunk_id"] == "high_semantic_activation"
 
     def test_score_preservation_no_normalization_conflicts(
-        self, mock_store, mock_activation_engine, mock_embedding_provider
+        self,
+        mock_store,
+        mock_activation_engine,
+        mock_embedding_provider,
     ):
         """UT-HYBRID-03: Test score preservation without normalization conflicts.
 
@@ -333,10 +351,16 @@ class TestStagedRetrievalArchitecture:
         mock_embedding_provider.embed_query.return_value = np.array([0.7, 0.3, 0.0, 0.0])
 
         config = HybridConfig(
-            bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False
+            bm25_weight=0.0,
+            activation_weight=0.6,
+            semantic_weight=0.4,
+            use_staged_retrieval=False,
         )
         retriever = HybridRetriever(
-            mock_store, mock_activation_engine, mock_embedding_provider, config
+            mock_store,
+            mock_activation_engine,
+            mock_embedding_provider,
+            config,
         )
 
         # Execute
@@ -372,7 +396,10 @@ class TestStagedRetrievalArchitecture:
             ), "Results not sorted by hybrid score"
 
     def test_empty_query_handling(
-        self, mock_store, mock_activation_engine, mock_embedding_provider
+        self,
+        mock_store,
+        mock_activation_engine,
+        mock_embedding_provider,
     ):
         """UT-HYBRID-04: Test empty query handling.
 
@@ -385,10 +412,16 @@ class TestStagedRetrievalArchitecture:
 
         # Use dual-hybrid mode for testing
         config = HybridConfig(
-            bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4, use_staged_retrieval=False
+            bm25_weight=0.0,
+            activation_weight=0.6,
+            semantic_weight=0.4,
+            use_staged_retrieval=False,
         )
         retriever = HybridRetriever(
-            mock_store, mock_activation_engine, mock_embedding_provider, config
+            mock_store,
+            mock_activation_engine,
+            mock_embedding_provider,
+            config,
         )
 
         # Test 1: Empty string
@@ -405,7 +438,10 @@ class TestStagedRetrievalArchitecture:
         assert result == []  # Empty result is fine, just shouldn't raise
 
     def test_stage1_topk_configuration(
-        self, mock_store, mock_activation_engine, mock_embedding_provider
+        self,
+        mock_store,
+        mock_activation_engine,
+        mock_embedding_provider,
     ):
         """Test that Stage 1 top_k configuration is respected.
 
@@ -440,7 +476,10 @@ class TestStagedRetrievalArchitecture:
             use_staged_retrieval=False,
         )
         retriever = HybridRetriever(
-            mock_store, mock_activation_engine, mock_embedding_provider, config
+            mock_store,
+            mock_activation_engine,
+            mock_embedding_provider,
+            config,
         )
 
         # Execute: Request top 10 results

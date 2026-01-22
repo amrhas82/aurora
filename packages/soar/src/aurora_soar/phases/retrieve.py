@@ -54,6 +54,7 @@ def filter_by_activation(chunks: list[Any], store: Store | None = None) -> tuple
         Tuple of (all_chunks, high_quality_count) where:
             - all_chunks: All chunks (unchanged, for backward compatibility)
             - high_quality_count: Count of chunks with activation >= ACTIVATION_THRESHOLD
+
     """
     high_quality_count = 0
 
@@ -111,6 +112,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
             - retrieval_time_ms: float (retrieval duration)
             - budget: int (max chunks allocated)
             - budget_used: int (actual chunks retrieved)
+
     """
     start_time = time.time()
 
@@ -182,7 +184,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
             f"Retrieved {total_retrieved} chunks "
             f"(code={len(code_chunks)}, reasoning={len(reasoning_chunks)}, "
             f"high_quality={high_quality_count}) "
-            f"in {elapsed_ms:.1f}ms"
+            f"in {elapsed_ms:.1f}ms",
         )
 
         return {

@@ -142,6 +142,7 @@ class OutputHandler:
 
         Args:
             tool_name: Name of the tool this handler is for
+
         """
         self.tool_name = tool_name
 
@@ -153,6 +154,7 @@ class OutputHandler:
 
         Returns:
             ParsedOutput with extracted information
+
         """
         clean = self._clean_output(output)
         result = ParsedOutput(
@@ -179,6 +181,7 @@ class OutputHandler:
 
         Returns:
             Cleaned output
+
         """
         if not output:
             return ""
@@ -201,6 +204,7 @@ class OutputHandler:
 
         Returns:
             Tuple of (status, optional status message)
+
         """
         for status, patterns in self.STATUS_PATTERNS.items():
             for pattern in patterns:
@@ -225,6 +229,7 @@ class OutputHandler:
 
         Returns:
             List of CodeBlock objects
+
         """
         blocks = []
 
@@ -235,7 +240,7 @@ class OutputHandler:
                     language=match.group(1) or "",
                     file_path=match.group(2),
                     content=match.group(3).strip(),
-                )
+                ),
             )
 
         # Then find regular code blocks (avoid duplicates)
@@ -247,7 +252,7 @@ class OutputHandler:
                     CodeBlock(
                         language=match.group(1) or "",
                         content=content,
-                    )
+                    ),
                 )
 
         return blocks
@@ -262,6 +267,7 @@ class OutputHandler:
 
         Returns:
             List of FileChange objects
+
         """
         changes = []
 
@@ -299,6 +305,7 @@ class OutputHandler:
 
         Returns:
             List of error messages
+
         """
         errors = []
 
@@ -325,6 +332,7 @@ class OutputHandler:
 
         Returns:
             List of warning messages
+
         """
         warnings = []
 
@@ -350,6 +358,7 @@ class OutputHandler:
 
         Returns:
             List of next step descriptions
+
         """
         steps = []
 
@@ -374,6 +383,7 @@ class OutputHandler:
 
         Returns:
             Dictionary of scratchpad field updates
+
         """
         updates: dict[str, Any] = {}
 
@@ -445,6 +455,7 @@ class ClaudeOutputHandler(OutputHandler):
 
         Returns:
             List of ToolCommand objects
+
         """
         commands = []
 
@@ -472,6 +483,7 @@ class ClaudeOutputHandler(OutputHandler):
 
         Returns:
             ParsedOutput with extracted information
+
         """
         result = super().parse(output)
         result.tool_commands = self._extract_tool_commands(result.clean_output)
@@ -517,6 +529,7 @@ class OpenCodeOutputHandler(OutputHandler):
 
         Returns:
             ParsedOutput with extracted information
+
         """
         result = super().parse(output)
         result.metadata["tool"] = "opencode"
@@ -548,6 +561,7 @@ def get_handler(tool_name: str) -> OutputHandler:
 
     Returns:
         OutputHandler instance for the tool
+
     """
     handlers = {
         "claude": ClaudeOutputHandler,

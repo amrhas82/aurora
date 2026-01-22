@@ -17,6 +17,7 @@ Example:
 
     # Analyze and resolve conflicts
     result = aggregator.resolve(strategy=MergeStrategy.PREFER_FIRST)
+
 """
 
 from __future__ import annotations
@@ -24,7 +25,6 @@ from __future__ import annotations
 import difflib
 import hashlib
 import logging
-import re
 import subprocess
 from dataclasses import dataclass, field
 from enum import Enum
@@ -128,7 +128,7 @@ class FileChange:
                     fromfile=f"{self.path} (before {self.tool})",
                     tofile=f"{self.path} (after {self.tool})",
                     n=3,
-                )
+                ),
             )
         return "".join(self.diff_lines)
 
@@ -197,6 +197,7 @@ class FileChangeAggregator:
             working_dir: Working directory to track (default: cwd)
             track_patterns: Glob patterns to track (default: common code files)
             ignore_patterns: Glob patterns to ignore (default: node_modules, .git, etc.)
+
         """
         self.working_dir = working_dir or Path.cwd()
         self.track_patterns = track_patterns or [
@@ -265,6 +266,7 @@ class FileChangeAggregator:
 
         Returns:
             List of FileChange objects for files that changed
+
         """
         if tool not in self._changes:
             self._changes[tool] = []
@@ -322,6 +324,7 @@ class FileChangeAggregator:
 
         Returns:
             List of FileChange objects for files that changed
+
         """
         try:
             result = subprocess.run(
@@ -388,6 +391,7 @@ class FileChangeAggregator:
 
         Returns:
             List of FileConflict objects describing detected conflicts
+
         """
         conflicts = []
 
@@ -511,6 +515,7 @@ class FileChangeAggregator:
 
         Returns:
             AggregationResult with merged changes
+
         """
         conflicts = self.detect_conflicts()
         merged_changes: dict[Path, str] = {}
@@ -693,6 +698,7 @@ class FileChangeAggregator:
 
         Returns:
             Dict mapping paths to success status
+
         """
         applied: dict[Path, bool] = {}
 

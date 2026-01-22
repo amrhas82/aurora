@@ -79,10 +79,16 @@ class TestEmbeddingProviderFailures:
         # Create chunks with valid embeddings and activations
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.9, embeddings=np.random.rand(384).astype(np.float32)
+                "1",
+                "chunk one",
+                activation=0.9,
+                embeddings=np.random.rand(384).astype(np.float32),
             ),
             MockChunk(
-                "2", "chunk two", activation=0.7, embeddings=np.random.rand(384).astype(np.float32)
+                "2",
+                "chunk two",
+                activation=0.7,
+                embeddings=np.random.rand(384).astype(np.float32),
             ),
             MockChunk(
                 "3",
@@ -120,7 +126,10 @@ class TestEmbeddingProviderFailures:
         """Test that errors propagate when fallback is disabled."""
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.9, embeddings=np.random.rand(384).astype(np.float32)
+                "1",
+                "chunk one",
+                activation=0.9,
+                embeddings=np.random.rand(384).astype(np.float32),
             ),
         ]
 
@@ -143,7 +152,10 @@ class TestEmbeddingProviderFailures:
         """Test fallback when provider raises ValueError (invalid input)."""
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.8, embeddings=np.random.rand(384).astype(np.float32)
+                "1",
+                "chunk one",
+                activation=0.8,
+                embeddings=np.random.rand(384).astype(np.float32),
             ),
         ]
 
@@ -169,7 +181,10 @@ class TestEmbeddingProviderFailures:
         """Test fallback when provider has missing attributes."""
         chunks = [
             MockChunk(
-                "1", "chunk one", activation=0.6, embeddings=np.random.rand(384).astype(np.float32)
+                "1",
+                "chunk one",
+                activation=0.6,
+                embeddings=np.random.rand(384).astype(np.float32),
             ),
         ]
 
@@ -294,7 +309,10 @@ class TestChunksMissingEmbeddings:
         chunks = [
             MockChunk("1", "database query", activation=0.5, embeddings=chunk1_embedding),
             MockChunk(
-                "2", "file operations", activation=0.9, embeddings=None
+                "2",
+                "file operations",
+                activation=0.9,
+                embeddings=None,
             ),  # High activation, no embedding
             MockChunk("3", "network request", activation=0.4, embeddings=chunk3_embedding),
         ]

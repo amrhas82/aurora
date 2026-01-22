@@ -104,7 +104,9 @@ class TestSQLiteStore(StoreContractTests):
         """Test that ~ in path is expanded to home directory."""
         # Mock expanduser to use tmp_path
         monkeypatch.setattr(
-            Path, "expanduser", lambda self: tmp_path / str(self).replace("~", "home")
+            Path,
+            "expanduser",
+            lambda self: tmp_path / str(self).replace("~", "home"),
         )
 
         store = SQLiteStore(db_path="~/aurora.db")
@@ -221,7 +223,8 @@ class TestSQLiteStore(StoreContractTests):
 
         conn = store._get_connection()
         cursor = conn.execute(
-            "SELECT base_level, access_count FROM activations WHERE chunk_id = ?", (chunk.id,)
+            "SELECT base_level, access_count FROM activations WHERE chunk_id = ?",
+            (chunk.id,),
         )
         row = cursor.fetchone()
 
@@ -240,7 +243,8 @@ class TestSQLiteStore(StoreContractTests):
 
         conn = store._get_connection()
         cursor = conn.execute(
-            "SELECT access_count FROM activations WHERE chunk_id = ?", (chunk.id,)
+            "SELECT access_count FROM activations WHERE chunk_id = ?",
+            (chunk.id,),
         )
         count = cursor.fetchone()[0]
         assert count == 2, "Access count should be incremented"
@@ -266,7 +270,7 @@ class TestSQLiteStore(StoreContractTests):
             FROM chunks c
             JOIN activations a ON c.id = a.chunk_id
             ORDER BY a.base_level DESC
-        """
+        """,
         )
 
         rows = cursor.fetchall()
@@ -274,7 +278,8 @@ class TestSQLiteStore(StoreContractTests):
 
         # Check that activations are in descending order
         assert activations == sorted(
-            activations, reverse=True
+            activations,
+            reverse=True,
         ), "Results should be ordered by activation (highest first)"
 
     def test_get_related_chunks_depth_limit(self, store):

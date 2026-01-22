@@ -102,6 +102,7 @@ class ToolCapabilities:
 
         Returns:
             True if all required capabilities are met
+
         """
         if required.supports_streaming and not self.supports_streaming:
             return False
@@ -158,6 +159,7 @@ class OutputNormalizer:
 
         Returns:
             List of (language, code) tuples
+
         """
         pattern = re.compile(r"```(\w*)\n(.*?)```", re.DOTALL)
         return pattern.findall(text)
@@ -183,6 +185,7 @@ class OutputNormalizer:
 
         Returns:
             Normalized text
+
         """
         if not text:
             return ""
@@ -215,6 +218,7 @@ class CapabilityRouter:
 
         Returns:
             List of matching providers sorted by priority
+
         """
         matching = [p for p in available if p.is_available() and p.capabilities.matches(required)]
         # Sort by priority (lower is better)
@@ -236,6 +240,7 @@ class CapabilityRouter:
 
         Returns:
             Best matching provider or None
+
         """
         matching = CapabilityRouter.select_tools(available, required, max_tools=1)
         return matching[0] if matching else None
@@ -248,6 +253,7 @@ class CapabilityRouter:
 
         Returns:
             Dict mapping capability names to providers
+
         """
         groups: dict[str, list[ToolProvider]] = {
             "streaming": [],
@@ -299,6 +305,7 @@ class ToolProvider(ABC):
         Args:
             config: Optional configuration dict to override defaults.
                    Supports keys: timeout, flags, input_method, priority
+
         """
         self._config = config or {}
 
@@ -407,6 +414,7 @@ class ToolProvider(ABC):
 
         Returns:
             ToolResult with execution status and output
+
         """
         ...
 
@@ -419,6 +427,7 @@ class ToolProvider(ABC):
 
         Returns:
             List of command line arguments
+
         """
         ...
 
@@ -444,6 +453,7 @@ class ToolProvider(ABC):
 
         Returns:
             ToolResult with execution status and output
+
         """
         import logging
         import time
@@ -508,6 +518,7 @@ class ToolProvider(ABC):
 
         Returns:
             ToolResult with execution status and output
+
         """
         loop = asyncio.get_event_loop()
         return await asyncio.wait_for(
@@ -534,6 +545,7 @@ class ToolProvider(ABC):
 
         Returns:
             ToolResult with execution status and output
+
         """
         import logging
 
@@ -566,7 +578,7 @@ class ToolProvider(ABC):
 
                 backoff = delay * (2**attempt) + random.uniform(0, 0.5)
                 logger.info(
-                    f"{self.name}: Async attempt {attempt + 1} failed, retrying in {backoff:.2f}s"
+                    f"{self.name}: Async attempt {attempt + 1} failed, retrying in {backoff:.2f}s",
                 )
                 await asyncio.sleep(backoff)
 
@@ -610,6 +622,7 @@ class ToolProvider(ABC):
 
         Returns:
             Normalized output string
+
         """
         return OutputNormalizer.normalize(output)
 
@@ -622,6 +635,7 @@ class ToolProvider(ABC):
 
         Args:
             config: Configuration dict with keys like timeout, flags, etc.
+
         """
         self._config.update(config)
 

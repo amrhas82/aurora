@@ -84,6 +84,7 @@ class SlashCommandRegistry:
 
         Note:
             Tool IDs are normalized (lowercase, spaces to dashes).
+
         """
         tool_id = cls._normalize_tool_id(configurator.tool_id)
         cls._configurators[tool_id] = configurator
@@ -97,6 +98,7 @@ class SlashCommandRegistry:
 
         Returns:
             Configurator instance or None if not found
+
         """
         cls._ensure_initialized()
         normalized_id = cls._normalize_tool_id(tool_id)
@@ -108,6 +110,7 @@ class SlashCommandRegistry:
 
         Returns:
             List of all configurator instances
+
         """
         cls._ensure_initialized()
         return list(cls._configurators.values())
@@ -118,6 +121,7 @@ class SlashCommandRegistry:
 
         Returns:
             List of configurators where is_available is True
+
         """
         cls._ensure_initialized()
         return [c for c in cls._configurators.values() if c.is_available]
@@ -140,5 +144,6 @@ class SlashCommandRegistry:
 
         Returns:
             Normalized tool ID (lowercase, spaces to dashes)
+
         """
         return tool_id.lower().replace(" ", "-")

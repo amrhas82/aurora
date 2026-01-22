@@ -273,7 +273,6 @@ class TestErrorHandling:
         """Test that partial files are cleaned up on error."""
         # This is tested in atomic generation
         # The renderer itself doesn't clean up, that's in _write_plan_files
-        pass
 
 
 class TestAtomicGeneration:

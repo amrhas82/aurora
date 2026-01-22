@@ -42,6 +42,7 @@ def verify_lite(
         - passed: True if all checks pass, False otherwise
         - agent_assignments: List of (subgoal_index, AgentInfo) tuples for valid subgoals
         - issues: List of issue strings describing validation failures
+
     """
     issues: list[str] = []
     agent_assignments: list[tuple[int, Any]] = []
@@ -81,7 +82,7 @@ def verify_lite(
 
         if not assigned_agent:
             issues.append(
-                f"Subgoal {subgoal_index} missing agent field (assigned_agent or suggested_agent)"
+                f"Subgoal {subgoal_index} missing agent field (assigned_agent or suggested_agent)",
             )
             continue
 
@@ -108,7 +109,7 @@ def verify_lite(
                 continue
             else:
                 issues.append(
-                    f"Subgoal {subgoal_index} marked insufficient but missing ideal agent info"
+                    f"Subgoal {subgoal_index} marked insufficient but missing ideal agent info",
                 )
                 continue
 
@@ -159,6 +160,7 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
 
     Returns:
         List of issue strings describing circular dependencies found
+
     """
     issues: list[str] = []
 
@@ -170,7 +172,7 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
         # Validate subgoal has valid index
         if subgoal_index is None:
             issues.append(
-                f"Subgoal is missing 'subgoal_index' field (found: {subgoal.get('task', 'unknown task')})"
+                f"Subgoal is missing 'subgoal_index' field (found: {subgoal.get('task', 'unknown task')})",
             )
             continue
 
@@ -183,7 +185,7 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
         invalid_deps = [d for d in deps if d not in valid_indices]
         if invalid_deps:
             issues.append(
-                f"Subgoal {subgoal_index} depends on non-existent subgoals: {invalid_deps}"
+                f"Subgoal {subgoal_index} depends on non-existent subgoals: {invalid_deps}",
             )
 
     # DFS to detect cycles
@@ -213,7 +215,7 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
         if subgoal_index not in visited:
             if has_cycle(subgoal_index):
                 issues.append(
-                    f"Circular dependency detected in subgoal dependency graph involving subgoal {subgoal_index}"
+                    f"Circular dependency detected in subgoal dependency graph involving subgoal {subgoal_index}",
                 )
                 break  # One cycle detection is enough
 

@@ -5,11 +5,9 @@ including lenient thresholds, inference failure handling, and fast-fail windows.
 """
 
 import time
-from unittest.mock import MagicMock
 
-import pytest
 
-from aurora_spawner.circuit_breaker import CircuitBreaker, CircuitState
+from aurora_spawner.circuit_breaker import CircuitBreaker
 
 
 class TestAdhocAgentDetection:

@@ -65,7 +65,7 @@ def function_one():
 def function_two():
     """Second function."""
     return "two"
-'''
+''',
         )
 
         # File 2
@@ -82,7 +82,7 @@ class Calculator:
     def subtract(self, x, y):
         """Subtract two numbers."""
         return x - y
-'''
+''',
         )
 
         return codebase
@@ -102,7 +102,7 @@ class Calculator:
 def new_function():
     """A new function."""
     return "new"
-'''
+''',
         )
 
         # Step 3: Clear index (simulate full rebuild)
@@ -152,7 +152,7 @@ def new_function():
         conn = sqlite3.connect(memory_store.db_path)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id FROM chunks WHERE json_extract(content, '$.file_path') LIKE '%module1.py'"
+            "SELECT id FROM chunks WHERE json_extract(content, '$.file_path') LIKE '%module1.py'",
         )
         initial_chunk_ids = [row[0] for row in cursor.fetchall()]
         conn.close()
@@ -177,7 +177,7 @@ def function_two():
 def function_three():
     """Third function - NEW."""
     return "three"
-'''
+''',
         )
 
         # Step 3: Clear and reindex (simulating incremental update)
@@ -204,7 +204,7 @@ def function_three():
             SELECT json_extract(content, '$.name')
             FROM chunks
             WHERE json_extract(content, '$.file_path') LIKE '%module1.py'
-            """
+            """,
         )
         function_names = [row[0] for row in cursor.fetchall()]
         conn.close()
@@ -270,7 +270,7 @@ class TestBM25IdfRecalculation:
 def unique_function():
     """A unique function."""
     return "unique"
-'''
+''',
         )
 
         # Index small corpus
@@ -295,7 +295,7 @@ def unique_function():
 def unique_function_{i}():
     """A unique function {i}."""
     return "unique"
-'''
+''',
             )
 
         # Clear and reindex with larger corpus
@@ -333,7 +333,7 @@ def unique_function_{i}():
 def function_alpha():
     """Alpha function."""
     return "alpha"
-'''
+''',
         )
 
         # Index
@@ -351,7 +351,7 @@ def function_alpha():
 def function_beta_{i}():
     """Beta function {i}."""
     return "beta"
-'''
+''',
             )
 
         # Clear and reindex
@@ -389,7 +389,7 @@ def function_beta_{i}():
 def common_function():
     """A common function."""
     return "common"
-'''
+''',
         )
 
         # File 2: Contains "common" term
@@ -399,7 +399,7 @@ def common_function():
 def another_common():
     """Another common function."""
     return "common"
-'''
+''',
         )
 
         # File 3: Contains "rare" term only
@@ -409,7 +409,7 @@ def another_common():
 def rare_function():
     """A rare function."""
     return "rare"
-'''
+''',
         )
 
         # Index corpus

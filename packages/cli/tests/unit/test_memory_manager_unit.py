@@ -381,7 +381,9 @@ class TestSearch:
     @patch("aurora_context_code.semantic.hybrid_retriever.HybridRetriever")
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_with_results(
-        self, mock_activation_class: Mock, mock_retriever_class: Mock
+        self,
+        mock_activation_class: Mock,
+        mock_retriever_class: Mock,
     ) -> None:
         """Test search() returns SearchResult objects."""
         # Setup mocks
@@ -404,7 +406,7 @@ class TestSearch:
                     "line_start": 1,
                     "line_end": 1,
                 },
-            }
+            },
         ]
 
         # Execute
@@ -427,7 +429,9 @@ class TestSearch:
     @patch("aurora_context_code.semantic.hybrid_retriever.HybridRetriever")
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_with_no_results(
-        self, mock_activation_class: Mock, mock_retriever_class: Mock
+        self,
+        mock_activation_class: Mock,
+        mock_retriever_class: Mock,
     ) -> None:
         """Test search() with no matching results."""
         # Setup mocks
@@ -448,7 +452,9 @@ class TestSearch:
     @patch("aurora_context_code.semantic.hybrid_retriever.HybridRetriever")
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_handles_missing_metadata(
-        self, mock_activation_class: Mock, mock_retriever_class: Mock
+        self,
+        mock_activation_class: Mock,
+        mock_retriever_class: Mock,
     ) -> None:
         """Test search() handles results with missing metadata gracefully."""
         # Setup mocks
@@ -465,7 +471,7 @@ class TestSearch:
                 "semantic_score": 0.6,
                 "hybrid_score": 0.55,
                 "metadata": {},  # Empty metadata
-            }
+            },
         ]
 
         # Execute
@@ -480,7 +486,9 @@ class TestSearch:
     @patch("aurora_context_code.semantic.hybrid_retriever.HybridRetriever")
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_propagates_memory_store_error(
-        self, mock_activation_class: Mock, mock_retriever_class: Mock
+        self,
+        mock_activation_class: Mock,
+        mock_retriever_class: Mock,
     ) -> None:
         """Test search() propagates MemoryStoreError."""
         # Setup mocks
@@ -500,7 +508,9 @@ class TestSearch:
     @patch("aurora_context_code.semantic.hybrid_retriever.HybridRetriever")
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_wraps_generic_errors(
-        self, mock_activation_class: Mock, mock_retriever_class: Mock
+        self,
+        mock_activation_class: Mock,
+        mock_retriever_class: Mock,
     ) -> None:
         """Test search() wraps generic errors in MemoryStoreError."""
         # Setup mocks

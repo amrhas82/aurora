@@ -51,6 +51,7 @@ class ConversationLogger:
     Attributes:
         base_path: Base directory for conversation logs
         enabled: Whether logging is enabled
+
     """
 
     def __init__(self, base_path: Path | None = None, enabled: bool = True):
@@ -59,6 +60,7 @@ class ConversationLogger:
         Args:
             base_path: Base directory for logs (default: project-local .aurora/logs/conversations)
             enabled: Whether to enable logging
+
         """
         if base_path is None:
             base_path = get_conversations_dir()
@@ -85,6 +87,7 @@ class ConversationLogger:
 
         Returns:
             Path to created log file, or None if logging disabled/failed
+
         """
         if not self.enabled:
             return None
@@ -135,6 +138,7 @@ class ConversationLogger:
 
         Returns:
             List of keywords (lowercase, alphanumeric)
+
         """
         # Common stop words to filter
         stop_words = {
@@ -196,6 +200,7 @@ class ConversationLogger:
 
         Returns:
             Filename string
+
         """
         keywords = self._extract_keywords(query)
 
@@ -219,6 +224,7 @@ class ConversationLogger:
 
         Returns:
             Unique file path
+
         """
         if not path.exists():
             return path
@@ -255,6 +261,7 @@ class ConversationLogger:
 
         Returns:
             Markdown-formatted log content
+
         """
         lines = []
 
@@ -373,6 +380,7 @@ class ConversationLogger:
 
         Args:
             max_files_per_month: Maximum log files to keep per month
+
         """
         if not self.enabled:
             return

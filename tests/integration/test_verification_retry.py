@@ -48,6 +48,7 @@ class MockLLMClientWithRetry(LLMClient):
                 - "fail_then_pass": First attempt gets low score, second attempt passes
                 - "fail_twice": Both attempts get low scores
                 - "pass_first": First attempt passes (no retry needed)
+
         """
         self.retry_scenario = retry_scenario
         self.call_count = 0
@@ -61,7 +62,11 @@ class MockLLMClientWithRetry(LLMClient):
         return "mock-model"
 
     def generate_json(
-        self, prompt: str, system: str = "", schema: dict | None = None, **kwargs
+        self,
+        prompt: str,
+        system: str = "",
+        schema: dict | None = None,
+        **kwargs,
     ) -> dict:
         """Generate JSON response (not used in these tests)."""
         response = self.generate(prompt, system, **kwargs)
@@ -144,7 +149,7 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}, {"phase": 2, "parallelizable": [1], "sequential": []}, {"phase": 3, "parallelizable": [2], "sequential": []}],
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
-"""
+""",
                 )
             if self.retry_scenario == "fail_twice":
                 # Still incomplete even after retry
@@ -163,7 +168,7 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
   "expected_tools": ["file_reader"]
 }
-"""
+""",
                 )
             # pass_first - shouldn't reach here
             return self._make_response("mock response")
@@ -189,7 +194,7 @@ class MockLLMClientWithRetry(LLMClient):
     "Report generation not specified"
   ]
 }
-"""
+""",
                     )
                 # Second decomposition passes
                 return self._make_response(
@@ -203,7 +208,7 @@ class MockLLMClientWithRetry(LLMClient):
   "verdict": "PASS",
   "issues": []
 }
-"""
+""",
                 )
             if self.retry_scenario == "fail_twice":
                 # Both verifications fail
@@ -221,7 +226,7 @@ class MockLLMClientWithRetry(LLMClient):
     "No vulnerability identification subgoal"
   ]
 }
-"""
+""",
                 )
             # pass_first
             # First verification passes
@@ -236,7 +241,7 @@ class MockLLMClientWithRetry(LLMClient):
   "verdict": "PASS",
   "issues": []
 }
-"""
+""",
             )
 
         # Decomposition request
@@ -259,7 +264,7 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
   "expected_tools": ["file_reader"]
 }
-"""
+""",
                     )
                 # Second attempt: complete decomposition (Phase 2 format)
                 return self._make_response(
@@ -289,7 +294,7 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}, {"phase": 2, "parallelizable": [1], "sequential": []}, {"phase": 3, "parallelizable": [2], "sequential": []}],
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
-"""
+""",
                 )
             if self.retry_scenario == "fail_twice":
                 # Both attempts: incomplete decomposition (Phase 2 format)
@@ -308,7 +313,7 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}],
   "expected_tools": ["file_reader"]
 }
-"""
+""",
                 )
             # pass_first
             # First attempt: complete decomposition (Phase 2 format)
@@ -339,7 +344,7 @@ class MockLLMClientWithRetry(LLMClient):
   "execution_order": [{"phase": 1, "parallelizable": [0], "sequential": []}, {"phase": 2, "parallelizable": [1], "sequential": []}, {"phase": 3, "parallelizable": [2], "sequential": []}],
   "expected_tools": ["file_reader", "security_analyzer", "report_generator"]
 }
-"""
+""",
             )
 
         # Feedback generation request (check for verification result in prompt)
@@ -418,7 +423,7 @@ class TestVerificationRetry:
                 description="Reads and parses code files",
                 capabilities=["read_code", "parse_syntax"],
                 agent_type="local",
-            )
+            ),
         )
         registry.register(
             AgentInfo(
@@ -427,7 +432,7 @@ class TestVerificationRetry:
                 description="Analyzes code for security vulnerabilities",
                 capabilities=["security_audit", "vulnerability_scan"],
                 agent_type="local",
-            )
+            ),
         )
         registry.register(
             AgentInfo(
@@ -436,7 +441,7 @@ class TestVerificationRetry:
                 description="Generates formatted reports",
                 capabilities=["generate_report", "format_output"],
                 agent_type="local",
-            )
+            ),
         )
         return registry
 

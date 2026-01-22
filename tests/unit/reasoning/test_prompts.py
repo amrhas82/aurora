@@ -87,7 +87,8 @@ class TestDecomposePromptTemplate:
         """Test user prompt includes retry feedback."""
         template = DecomposePromptTemplate()
         user = template.build_user_prompt(
-            query="Test query", retry_feedback="Try again with more detail"
+            query="Test query",
+            retry_feedback="Try again with more detail",
         )
 
         assert "Try again with more detail" in user
@@ -222,7 +223,8 @@ class TestExamplesLoader:
         # Note: This will fail if example file doesn't exist, but that's expected
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json", Complexity.SIMPLE
+                "example_decompositions.json",
+                Complexity.SIMPLE,
             )
             assert len(examples) == 0
         except FileNotFoundError:
@@ -234,7 +236,8 @@ class TestExamplesLoader:
         loader = ExamplesLoader()
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json", Complexity.MEDIUM
+                "example_decompositions.json",
+                Complexity.MEDIUM,
             )
             assert len(examples) == 2
         except FileNotFoundError:
@@ -245,7 +248,8 @@ class TestExamplesLoader:
         loader = ExamplesLoader()
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json", Complexity.COMPLEX
+                "example_decompositions.json",
+                Complexity.COMPLEX,
             )
             assert len(examples) == 4
         except FileNotFoundError:
@@ -256,7 +260,8 @@ class TestExamplesLoader:
         loader = ExamplesLoader()
         try:
             examples = loader.get_examples_by_complexity(
-                "example_decompositions.json", Complexity.CRITICAL
+                "example_decompositions.json",
+                Complexity.CRITICAL,
             )
             assert len(examples) == 6
         except FileNotFoundError:
@@ -281,7 +286,7 @@ class TestPromptTemplateWithExamples:
                 "complexity": "SIMPLE",
                 "confidence": 0.9,
                 "reasoning": "Direct question",
-            }
+            },
         ]
 
         prompt = template.build_prompt(query="Test query", examples=examples)

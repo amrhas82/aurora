@@ -66,7 +66,9 @@ class TestPlanDecompositionCache:
         assert stats["hits"] == 0
 
     def test_cache_hit(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test cache hit returns cached result."""
         goal = "Add authentication"
@@ -90,7 +92,9 @@ class TestPlanDecompositionCache:
         assert stats["misses"] == 0
 
     def test_cache_with_context_files(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test cache considers context files in key."""
         goal = "Add authentication"
@@ -113,7 +117,9 @@ class TestPlanDecompositionCache:
         assert result is None
 
     def test_lru_eviction(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test LRU eviction when cache is full."""
         # Cache is capacity 10, fill it up
@@ -140,7 +146,9 @@ class TestPlanDecompositionCache:
         assert result is not None
 
     def test_lru_ordering(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test LRU ordering - most recently used should be preserved."""
         # Fill cache
@@ -162,7 +170,9 @@ class TestPlanDecompositionCache:
         assert result is None
 
     def test_ttl_expiration(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test TTL-based expiration."""
         # Create cache with very short TTL (1 second)
@@ -189,7 +199,9 @@ class TestPlanDecompositionCache:
         assert stats["misses"] == 1
 
     def test_complexity_in_key(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test that complexity is part of cache key."""
         goal = "Add authentication"
@@ -206,7 +218,9 @@ class TestPlanDecompositionCache:
         assert result is None
 
     def test_clear_cache(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test clearing cache."""
         # Add multiple items
@@ -229,7 +243,9 @@ class TestPlanDecompositionCache:
         assert result is None
 
     def test_cache_stats(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test cache statistics tracking."""
         # Initial stats
@@ -257,7 +273,9 @@ class TestPlanDecompositionCache:
         assert stats["hit_rate"] == 0.5
 
     def test_access_count_tracking(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test that access count is tracked correctly."""
         goal = "Add authentication"
@@ -275,7 +293,9 @@ class TestPlanDecompositionCache:
         assert stats["hits"] == 5
 
     def test_persistent_cache_storage(
-        self, persistent_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        persistent_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test persistent cache storage."""
         goal = "Add authentication"
@@ -306,7 +326,9 @@ class TestPlanDecompositionCache:
 
             # Create cache with very short TTL
             cache = PlanDecompositionCache(
-                capacity=10, ttl_hours=1 / 3600, persistent_path=cache_path
+                capacity=10,
+                ttl_hours=1 / 3600,
+                persistent_path=cache_path,
             )
 
             goal = "Add authentication"
@@ -332,7 +354,9 @@ class TestPlanDecompositionCache:
 
             # Create cache with very short TTL
             cache = PlanDecompositionCache(
-                capacity=10, ttl_hours=1 / 3600, persistent_path=cache_path
+                capacity=10,
+                ttl_hours=1 / 3600,
+                persistent_path=cache_path,
             )
 
             # Add multiple items
@@ -351,7 +375,9 @@ class TestPersistentCachePromotion:
     """Tests for cache promotion from persistent to in-memory."""
 
     def test_persistent_to_memory_promotion(
-        self, persistent_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        persistent_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test that persistent cache hits get promoted to in-memory cache."""
         goal = "Add authentication"
@@ -403,7 +429,8 @@ class TestCacheKeyGeneration:
         assert key1 != key2
 
     def test_different_keys_for_different_complexity(
-        self, memory_cache: PlanDecompositionCache
+        self,
+        memory_cache: PlanDecompositionCache,
     ) -> None:
         """Test that different complexity levels generate different keys."""
         goal = "Add authentication"
@@ -470,7 +497,10 @@ class TestCacheMetrics:
         with TemporaryDirectory() as tmpdir:
             cache_path = Path(tmpdir) / "test_cache.db"
             cache = PlanDecompositionCache(
-                capacity=10, ttl_hours=1, persistent_path=cache_path, enable_metrics=True
+                capacity=10,
+                ttl_hours=1,
+                persistent_path=cache_path,
+                enable_metrics=True,
             )
 
             goal = "Add authentication"
@@ -619,7 +649,9 @@ class TestCacheMetrics:
         assert "memory_hits" not in stats
 
     def test_log_performance_summary(
-        self, sample_subgoals: list[Subgoal], caplog: pytest.LogCaptureFixture
+        self,
+        sample_subgoals: list[Subgoal],
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test logging of performance summary."""
         cache = PlanDecompositionCache(capacity=10, ttl_hours=1, enable_metrics=True)
@@ -641,7 +673,9 @@ class TestCacheLogging:
     """Tests for cache logging functionality."""
 
     def test_cache_hit_logging(
-        self, sample_subgoals: list[Subgoal], caplog: pytest.LogCaptureFixture
+        self,
+        sample_subgoals: list[Subgoal],
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test that cache hits are logged with details."""
         cache = PlanDecompositionCache(capacity=10, ttl_hours=1, enable_metrics=True)
@@ -665,7 +699,9 @@ class TestCacheLogging:
         assert any("Cache MISS" in record.message for record in caplog.records)
 
     def test_cache_set_logging(
-        self, sample_subgoals: list[Subgoal], caplog: pytest.LogCaptureFixture
+        self,
+        sample_subgoals: list[Subgoal],
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test that cache SET operations are logged."""
         cache = PlanDecompositionCache(capacity=10, ttl_hours=1, enable_metrics=True)
@@ -677,7 +713,9 @@ class TestCacheLogging:
         assert any("Cache SET" in record.message for record in caplog.records)
 
     def test_eviction_logging(
-        self, sample_subgoals: list[Subgoal], caplog: pytest.LogCaptureFixture
+        self,
+        sample_subgoals: list[Subgoal],
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test that evictions are logged."""
         cache = PlanDecompositionCache(capacity=2, ttl_hours=1, enable_metrics=True)
@@ -698,7 +736,9 @@ class TestCacheEdgeCases:
     """Tests for cache edge cases and boundary conditions."""
 
     def test_empty_goal_string(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test caching with empty goal string."""
         goal = ""
@@ -712,7 +752,9 @@ class TestCacheEdgeCases:
         assert len(subgoals) == 2
 
     def test_very_long_goal_string(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test caching with very long goal string."""
         goal = "A" * 10000  # 10K character goal
@@ -723,7 +765,9 @@ class TestCacheEdgeCases:
         assert result is not None
 
     def test_unicode_goal_string(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test caching with unicode characters in goal."""
         goal = "添加身份验证系统 🔐"  # Chinese + emoji
@@ -777,7 +821,9 @@ class TestCacheEdgeCases:
         assert len(subgoals) == 100
 
     def test_empty_context_files_list(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test caching with empty context files list."""
         goal = "Add authentication"
@@ -795,7 +841,9 @@ class TestCacheEdgeCases:
         assert result is not None
 
     def test_duplicate_context_files(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test caching with duplicate context files."""
         goal = "Add authentication"
@@ -807,7 +855,9 @@ class TestCacheEdgeCases:
         assert result is not None
 
     def test_special_characters_in_context_files(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test caching with special characters in context file paths."""
         goal = "Add authentication"
@@ -859,7 +909,9 @@ class TestCacheEdgeCases:
         assert result is None
 
     def test_same_goal_different_source(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test overwriting cache entry with different source."""
         goal = "Add authentication"
@@ -906,7 +958,9 @@ class TestCacheEdgeCases:
             assert result is None
 
     def test_update_existing_entry_access_count(
-        self, memory_cache: PlanDecompositionCache, sample_subgoals: list[Subgoal]
+        self,
+        memory_cache: PlanDecompositionCache,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test that updating an entry resets its access count."""
         goal = "Add authentication"
@@ -941,7 +995,8 @@ class TestCachePersistentEdgeCases:
     """Tests for persistent cache edge cases."""
 
     def test_persistent_path_with_nonexistent_directory(
-        self, sample_subgoals: list[Subgoal]
+        self,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test persistent cache creates directory if it doesn't exist."""
         with TemporaryDirectory() as tmpdir:
@@ -1020,7 +1075,7 @@ class TestCachePersistentEdgeCases:
                             ideal_agent_desc="Developer",
                             assigned_agent="@dev",
                             dependencies=[],
-                        )
+                        ),
                     ],
                     "soar",
                 )
@@ -1104,7 +1159,8 @@ class TestCacheInvalidation:
     """Tests for cache invalidation scenarios."""
 
     def test_clear_preserves_persistent_but_clears_memory(
-        self, sample_subgoals: list[Subgoal]
+        self,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """Test that clear_hot_cache preserves persistent storage."""
         with TemporaryDirectory() as tmpdir:

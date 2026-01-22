@@ -5,15 +5,14 @@ Tests end-to-end scenarios with real timeout policies and spawner integration.
 
 import asyncio
 import time
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from aurora_cli.config import Config
 from aurora_soar.orchestrator import SOAROrchestrator
 from aurora_soar.phases.collect import execute_agents
-from aurora_spawner import SpawnResult, SpawnTask
+from aurora_spawner import SpawnResult
 
 
 @pytest.fixture
@@ -114,14 +113,21 @@ class TestEarlyTimeoutDetection:
                 # This agent never completes
                 await asyncio.sleep(999)
                 return SpawnResult(
-                    success=True, output="Never reached", error=None, exit_code=0, fallback=False
+                    success=True,
+                    output="Never reached",
+                    error=None,
+                    exit_code=0,
+                    fallback=False,
                 )
-            else:
-                # Normal agents complete quickly
-                await asyncio.sleep(0.1)
-                return SpawnResult(
-                    success=True, output="Completed", error=None, exit_code=0, fallback=False
-                )
+            # Normal agents complete quickly
+            await asyncio.sleep(0.1)
+            return SpawnResult(
+                success=True,
+                output="Completed",
+                error=None,
+                exit_code=0,
+                fallback=False,
+            )
 
         with patch("aurora_soar.phases.collect.spawn", side_effect=mock_spawn_selective_hang):
             agents = []
@@ -298,7 +304,9 @@ class TestOrchestratorFailureAnalysis:
         ]
 
         collect_result = CollectResult(
-            agent_outputs=outputs, execution_metadata={}, fallback_agents=[]
+            agent_outputs=outputs,
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         # Analyze failures
@@ -336,7 +344,9 @@ class TestOrchestratorFailureAnalysis:
         ]
 
         collect_result = CollectResult(
-            agent_outputs=outputs, execution_metadata={}, fallback_agents=[]
+            agent_outputs=outputs,
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         analysis = orchestrator._analyze_execution_failures(collect_result)
@@ -368,16 +378,15 @@ class TestProgressiveTimeoutInPipeline:
                     exit_code=-2,  # Special code for "extended"
                     fallback=False,
                 )
-            else:
-                # Second call after extension - complete successfully
-                await asyncio.sleep(0.1)
-                return SpawnResult(
-                    success=True,
-                    output="Completed after extension",
-                    error=None,
-                    exit_code=0,
-                    fallback=False,
-                )
+            # Second call after extension - complete successfully
+            await asyncio.sleep(0.1)
+            return SpawnResult(
+                success=True,
+                output="Completed after extension",
+                error=None,
+                exit_code=0,
+                fallback=False,
+            )
 
         with patch("aurora_soar.phases.collect.spawn", side_effect=mock_spawn_with_activity):
             mock_agent = MagicMock()
@@ -412,7 +421,7 @@ class TestFallbackMetadataTracking:
                 success=True,
                 summary="Completed via fallback",
                 execution_metadata={"duration_ms": 5000, "fallback_used": True},
-            )
+            ),
         ]
 
         collect_result = CollectResult(
@@ -435,7 +444,7 @@ class TestFallbackMetadataTracking:
                 success=True,
                 summary="Success",
                 execution_metadata={},
-            )
+            ),
         ]
 
         collect_result = CollectResult(
@@ -465,11 +474,13 @@ class TestRecoveryLogging:
                 success=False,
                 error="Circuit open: Agent failed 3 times recently",
                 execution_metadata={"duration_ms": 100},
-            )
+            ),
         ]
 
         collect_result = CollectResult(
-            agent_outputs=outputs, execution_metadata={}, fallback_agents=[]
+            agent_outputs=outputs,
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         # Analyze and trigger circuit recovery
@@ -511,7 +522,9 @@ class TestRecoveryLogging:
         ]
 
         collect_result = CollectResult(
-            agent_outputs=outputs, execution_metadata={}, fallback_agents=[]
+            agent_outputs=outputs,
+            execution_metadata={},
+            fallback_agents=[],
         )
 
         # Analyze failures (should log summary)

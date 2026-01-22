@@ -198,7 +198,7 @@ Some general description of changes without specific deltas"""
                 "",
                 "## What Changes",
                 "- **alpha:** Add cross-platform parsing coverage",
-            ]
+            ],
         )
 
         parser = MarkdownParser(content)

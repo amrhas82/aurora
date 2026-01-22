@@ -431,7 +431,7 @@ class TestDoctorFixFlag:
             ("fail", "Config missing", {"fixable": True}),
         ]
         mock_core_checks.return_value.get_fixable_issues.return_value = [
-            {"name": "Config missing", "fix_func": lambda: None}
+            {"name": "Config missing", "fix_func": lambda: None},
         ]
         mock_code_checks.return_value.run_checks.return_value = []
         mock_code_checks.return_value.get_fixable_issues.return_value = []
@@ -468,7 +468,7 @@ class TestDoctorFixFlag:
             ("fail", "Config missing", {"fixable": True}),
         ]
         mock_core_checks.return_value.get_fixable_issues.return_value = [
-            {"name": "Config missing", "fix_func": mock_fix_func}
+            {"name": "Config missing", "fix_func": mock_fix_func},
         ]
         mock_code_checks.return_value.run_checks.return_value = []
         mock_code_checks.return_value.get_fixable_issues.return_value = []
@@ -505,7 +505,7 @@ class TestDoctorFixFlag:
             ("fail", "Config missing", {"fixable": True}),
         ]
         mock_core_checks.return_value.get_fixable_issues.return_value = [
-            {"name": "Config missing", "fix_func": mock_fix_func}
+            {"name": "Config missing", "fix_func": mock_fix_func},
         ]
         mock_code_checks.return_value.run_checks.return_value = []
         mock_code_checks.return_value.get_fixable_issues.return_value = []
@@ -542,7 +542,7 @@ class TestDoctorFixFlag:
         ]
         mock_core_checks.return_value.get_fixable_issues.return_value = []
         mock_core_checks.return_value.get_manual_issues.return_value = [
-            {"name": "API key missing", "solution": "Set ANTHROPIC_API_KEY"}
+            {"name": "API key missing", "solution": "Set ANTHROPIC_API_KEY"},
         ]
         mock_code_checks.return_value.run_checks.return_value = []
         mock_code_checks.return_value.get_fixable_issues.return_value = []

@@ -29,6 +29,7 @@ def _can_import_ml_deps() -> bool:
 
     Returns:
         True if both torch and sentence_transformers are available, False otherwise.
+
     """
     import importlib.util
 
@@ -43,6 +44,7 @@ def _lazy_import() -> bool:
 
     Returns:
         True if imports succeeded, False otherwise.
+
     """
     global _torch, _SentenceTransformer, _HAS_SENTENCE_TRANSFORMERS
 
@@ -93,11 +95,12 @@ def cosine_similarity(
         >>> vec2 = np.array([0.0, 1.0, 0.0])
         >>> cosine_similarity(vec1, vec2)
         0.0
+
     """
     # Validate input dimensions
     if vec1.shape != vec2.shape:
         raise ValueError(
-            f"Vectors must have same dimension: vec1.shape={vec1.shape}, vec2.shape={vec2.shape}"
+            f"Vectors must have same dimension: vec1.shape={vec1.shape}, vec2.shape={vec2.shape}",
         )
 
     # Check for zero-length vectors
@@ -112,7 +115,7 @@ def cosine_similarity(
     if norm1 == 0.0 or norm2 == 0.0:
         raise ValueError(
             "Cannot compute cosine similarity with zero vector "
-            "(at least one vector has zero magnitude)"
+            "(at least one vector has zero magnitude)",
         )
 
     # Calculate cosine similarity: dot product divided by product of magnitudes
@@ -144,6 +147,7 @@ class EmbeddingProvider:
         >>> embedding = provider.embed_chunk("def calculate(x): return x * 2")
         >>> embedding.shape
         (384,)
+
     """
 
     # Known embedding dimensions for common models (avoid loading model just to get dim)
@@ -174,11 +178,12 @@ class EmbeddingProvider:
 
         Raises:
             ImportError: If sentence-transformers is not installed
+
         """
         if not _can_import_ml_deps():
             raise ImportError(
                 "sentence-transformers is required for semantic embeddings. "
-                "Install with: pip install aurora-context-code[ml]"
+                "Install with: pip install aurora-context-code[ml]",
             )
 
         self.model_name = model_name
@@ -227,6 +232,7 @@ class EmbeddingProvider:
 
         Note:
             This method is idempotent - calling it multiple times is safe.
+
         """
         if self._model is None:
             import logging
@@ -264,6 +270,7 @@ class EmbeddingProvider:
 
         Returns:
             True if model is loaded, False if still lazy (not yet loaded)
+
         """
         return self._model is not None
 
@@ -281,6 +288,7 @@ class EmbeddingProvider:
             >>> thread.start()
             >>> # ... do other initialization work ...
             >>> thread.join()  # Wait for model to be ready
+
         """
         self._ensure_model_loaded()
 
@@ -303,6 +311,7 @@ class EmbeddingProvider:
             >>> provider = EmbeddingProvider()
             >>> text = "def add(a, b): return a + b"
             >>> embedding = provider.embed_chunk(text)
+
         """
         # Validate input type
         if not isinstance(text, str):
@@ -319,7 +328,7 @@ class EmbeddingProvider:
         if len(text) > max_chars:
             raise ValueError(
                 f"Text too long: {len(text)} chars exceeds limit of {max_chars} "
-                f"(~512 tokens). Consider chunking the code into smaller pieces."
+                f"(~512 tokens). Consider chunking the code into smaller pieces.",
             )
 
         # Ensure model is loaded (lazy initialization)
@@ -355,6 +364,7 @@ class EmbeddingProvider:
         Example:
             >>> provider = EmbeddingProvider()
             >>> query_embedding = provider.embed_query("how to calculate total price")
+
         """
         # Validate input type
         if not isinstance(query, str):
@@ -370,7 +380,7 @@ class EmbeddingProvider:
         if len(query) > max_chars:
             raise ValueError(
                 f"Query too long: {len(query)} chars exceeds limit of {max_chars} "
-                f"(~512 tokens). Please shorten the query."
+                f"(~512 tokens). Please shorten the query.",
             )
 
         # Ensure model is loaded (lazy initialization)
@@ -412,6 +422,7 @@ class EmbeddingProvider:
             >>> embeddings = provider.embed_batch(texts)
             >>> embeddings.shape
             (2, 384)
+
         """
         if not texts:
             return np.array([], dtype=np.float32).reshape(0, self.embedding_dim)

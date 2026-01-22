@@ -40,6 +40,7 @@ class SummaryRecord:
         log_file: Path to full session log
         keywords: Extracted keywords for retrieval
         timestamp: Unix timestamp of record creation
+
     """
 
     id: str
@@ -72,6 +73,7 @@ class RecordResult:
         pattern_marked: Whether pattern was marked as reusable
         activation_update: Activation adjustment applied
         timing: Timing information
+
     """
 
     def __init__(
@@ -115,6 +117,7 @@ def _extract_keywords(query: str, summary: str) -> list[str]:
 
     Returns:
         List of up to 10 keyword strings
+
     """
     # Common stop words to filter
     stop_words = {
@@ -209,6 +212,7 @@ def record_pattern_lightweight(
 
     Raises:
         RuntimeError: If caching fails
+
     """
     start_time = time.time()
 
@@ -216,7 +220,7 @@ def record_pattern_lightweight(
     summary = synthesis_result.summary if hasattr(synthesis_result, "summary") else ""
 
     logger.info(
-        f"Recording pattern (lightweight): query='{query[:50]}...', confidence={confidence:.2f}"
+        f"Recording pattern (lightweight): query='{query[:50]}...', confidence={confidence:.2f}",
     )
 
     # Apply caching policy
@@ -292,7 +296,7 @@ def record_pattern_lightweight(
     logger.info(
         f"Pattern cached (lightweight): chunk_id={chunk_id}, "
         f"marked_as_pattern={pattern_marked}, "
-        f"activation_update=+{activation_update}"
+        f"activation_update=+{activation_update}",
     )
 
     return RecordResult(

@@ -72,20 +72,20 @@ def mock_llm_json_response():
             {
                 "goal": "Test goal",
                 "subgoals": ["Subgoal 1", "Subgoal 2"],
-            }
+            },
         ),
         "verify": json.dumps(
             {
                 "valid": True,
                 "verdict": "VALID",
                 "rationale": "All subgoals are clear",
-            }
+            },
         ),
         "synthesize": json.dumps(
             {
                 "answer": "This is the synthesized answer",
                 "confidence": 0.85,
-            }
+            },
         ),
         "respond": "This is the formatted final answer from the LLM.",
     }
@@ -136,7 +136,8 @@ def test_soar_full_execution_mocked(runner, tmp_path, mock_llm_json_response):
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "What is SOAR?"])
@@ -181,7 +182,8 @@ def test_soar_full_execution_with_tool_flag(runner, tmp_path, mock_llm_json_resp
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/cursor"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/cursor"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query", "--tool", "cursor"])
@@ -281,7 +283,8 @@ def test_soar_phase_callback_output_header(runner, tmp_path, mock_llm_json_respo
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "What is the SOAR orchestrator?"])
@@ -318,7 +321,8 @@ def test_soar_phase_callback_output_phases(runner, tmp_path, mock_llm_json_respo
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query"])
@@ -349,7 +353,8 @@ def test_soar_phase_callback_output_final_answer(runner, tmp_path, mock_llm_json
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query"])
@@ -380,7 +385,8 @@ def test_soar_output_includes_completion_time(runner, tmp_path, mock_llm_json_re
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query"])
@@ -419,7 +425,8 @@ def test_soar_respects_env_var_tool(runner, tmp_path, monkeypatch, mock_llm_json
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/cursor"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/cursor"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query"])
@@ -454,7 +461,8 @@ def test_soar_cli_flag_overrides_env_var(runner, tmp_path, monkeypatch, mock_llm
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query", "--tool", "claude"])
@@ -488,7 +496,8 @@ def test_soar_verbose_mode(runner, tmp_path, mock_llm_json_response):
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query", "--verbose"])
@@ -520,7 +529,8 @@ def test_soar_model_parameter(runner, tmp_path, mock_llm_json_response):
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query", "--model", "opus"])
@@ -554,7 +564,8 @@ def test_soar_handles_subprocess_timeout(runner, tmp_path):
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 with patch("aurora_core.paths.get_aurora_dir", return_value=tmp_path):
                     result = runner.invoke(cli, ["soar", "Test query"])
@@ -601,7 +612,8 @@ def test_soar_creates_json_placeholder_files(runner, tmp_path, mock_llm_json_res
     with patch("aurora_cli.commands.soar.shutil.which", return_value="/usr/bin/claude"):
         with patch("aurora_cli.llm.cli_pipe_client.shutil.which", return_value="/usr/bin/claude"):
             with patch(
-                "aurora_cli.llm.cli_pipe_client.subprocess.run", side_effect=mock_subprocess_run
+                "aurora_cli.llm.cli_pipe_client.subprocess.run",
+                side_effect=mock_subprocess_run,
             ):
                 # Patch at the command level where _ensure_soar_dir is called
                 with patch("aurora_cli.commands.soar._ensure_soar_dir", return_value=soar_dir):

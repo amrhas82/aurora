@@ -119,7 +119,7 @@ BAD_DECOMPOSITION_1 = {
             },
         ],
         "execution_order": [
-            {"phase": 1, "parallelizable": [0, 1], "sequential": []}  # Missing dependencies
+            {"phase": 1, "parallelizable": [0, 1], "sequential": []},  # Missing dependencies
         ],
         "expected_tools": [],  # Empty tools list
     },
@@ -146,7 +146,7 @@ BAD_DECOMPOSITION_2 = {
             },
         ],
         "execution_order": [
-            {"phase": 1, "parallelizable": [0, 1], "sequential": []}  # Contradicts depends_on
+            {"phase": 1, "parallelizable": [0, 1], "sequential": []},  # Contradicts depends_on
         ],
         "expected_tools": ["sql", "react"],
     },
@@ -260,7 +260,11 @@ class MockLLMClient:
         self.call_count = 0
 
     def generate_json(
-        self, prompt: str, system: str = "", temperature: float = 0.1, **kwargs
+        self,
+        prompt: str,
+        system: str = "",
+        temperature: float = 0.1,
+        **kwargs,
     ) -> dict:
         """Generate mock verification response based on prompt content."""
         self.call_count += 1

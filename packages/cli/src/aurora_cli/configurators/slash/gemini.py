@@ -53,6 +53,7 @@ class GeminiSlashCommandConfigurator(TomlSlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -64,6 +65,7 @@ class GeminiSlashCommandConfigurator(TomlSlashCommandConfigurator):
 
         Returns:
             Description string for the command
+
         """
         return DESCRIPTIONS[command_id]
 
@@ -75,5 +77,6 @@ class GeminiSlashCommandConfigurator(TomlSlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)

@@ -41,6 +41,7 @@ def is_model_cached_fast(model_name: str = DEFAULT_MODEL) -> bool:
 
     Returns:
         True if model appears to be cached
+
     """
     # Convert model name to cache path format
     safe_name = model_name.replace("/", "--")
@@ -78,6 +79,7 @@ def start_background_loading(model_name: str = "all-MiniLM-L6-v2") -> bool:
 
     Returns:
         True if background loading was started, False if not possible
+
     """
     import threading
 

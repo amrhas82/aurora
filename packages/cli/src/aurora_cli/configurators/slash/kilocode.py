@@ -43,6 +43,7 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -56,6 +57,7 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             None (no frontmatter)
+
         """
         return None
 
@@ -67,6 +69,7 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -78,6 +81,7 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             One-line description for skill listings
+
         """
         descriptions = {
             "search": 'Search indexed code ["query" --limit N --type X]',

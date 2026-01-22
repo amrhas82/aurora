@@ -34,6 +34,7 @@ class PoliciesEngine:
 
         Args:
             policies_path: Path to policies.yaml file. If None, uses .aurora/policies.yaml
+
         """
         self.policies_path = policies_path or self._get_default_policies_path()
         self.config = self._load_policies()
@@ -43,6 +44,7 @@ class PoliciesEngine:
 
         Returns:
             Path to .aurora/policies.yaml
+
         """
         aurora_dir = get_aurora_dir()
         return aurora_dir / "policies.yaml"
@@ -52,6 +54,7 @@ class PoliciesEngine:
 
         Returns:
             PoliciesConfig object
+
         """
         if not self.policies_path.exists():
             logger.info(f"Policies file not found at {self.policies_path}, using defaults")
@@ -63,7 +66,7 @@ class PoliciesEngine:
             return self._parse_yaml(yaml_content)
         except Exception as e:
             logger.warning(
-                f"Failed to load policies from {self.policies_path}: {e}, using defaults"
+                f"Failed to load policies from {self.policies_path}: {e}, using defaults",
             )
             return self._parse_yaml(get_default_policies_yaml())
 
@@ -75,6 +78,7 @@ class PoliciesEngine:
 
         Returns:
             PoliciesConfig object
+
         """
         try:
             data = yaml.safe_load(yaml_content)
@@ -103,7 +107,8 @@ class PoliciesEngine:
             destructive_data = data.get("destructive", {})
             destructive = DestructiveConfig(
                 file_delete=destructive_data.get(
-                    "file_delete", {"action": "prompt", "max_files": 5}
+                    "file_delete",
+                    {"action": "prompt", "max_files": 5},
                 ),
                 git_force_push=destructive_data.get("git_force_push", {"action": "deny"}),
                 git_push_main=destructive_data.get("git_push_main", {"action": "prompt"}),
@@ -129,7 +134,8 @@ class PoliciesEngine:
             anomalies = AnomalyConfig(
                 scope_multiplier=anomalies_data.get("scope_multiplier", 3),
                 unexpected_file_types=anomalies_data.get(
-                    "unexpected_file_types", ["*.sql", "*.sh", "Dockerfile"]
+                    "unexpected_file_types",
+                    ["*.sql", "*.sh", "Dockerfile"],
                 ),
             )
 
@@ -154,6 +160,7 @@ class PoliciesEngine:
 
         Returns:
             PolicyResult with action (ALLOW|PROMPT|DENY) and reason
+
         """
         if operation.type == OperationType.FILE_DELETE:
             config = self.config.destructive.file_delete
@@ -176,7 +183,7 @@ class PoliciesEngine:
                 reason=f"Deleting {operation.count} files",
             )
 
-        elif operation.type == OperationType.GIT_FORCE_PUSH:
+        if operation.type == OperationType.GIT_FORCE_PUSH:
             config = self.config.destructive.git_force_push
             action_str = config.get("action", "deny")
             return PolicyResult(
@@ -184,7 +191,7 @@ class PoliciesEngine:
                 reason="Force push detected",
             )
 
-        elif operation.type == OperationType.GIT_PUSH_MAIN:
+        if operation.type == OperationType.GIT_PUSH_MAIN:
             config = self.config.destructive.git_push_main
             action_str = config.get("action", "prompt")
             return PolicyResult(
@@ -192,7 +199,7 @@ class PoliciesEngine:
                 reason=f"Pushing to main/master branch: {operation.target}",
             )
 
-        elif operation.type == OperationType.SQL_DROP:
+        if operation.type == OperationType.SQL_DROP:
             config = self.config.destructive.drop_table
             action_str = config.get("action", "deny")
             return PolicyResult(
@@ -200,7 +207,7 @@ class PoliciesEngine:
                 reason=f"DROP TABLE detected: {operation.target}",
             )
 
-        elif operation.type == OperationType.SQL_TRUNCATE:
+        if operation.type == OperationType.SQL_TRUNCATE:
             config = self.config.destructive.truncate
             action_str = config.get("action", "prompt")
             return PolicyResult(
@@ -222,6 +229,7 @@ class PoliciesEngine:
 
         Returns:
             PolicyResult with action and reason
+
         """
         # This would integrate with existing CostTracker
         # For now, just return ALLOW
@@ -239,6 +247,7 @@ class PoliciesEngine:
 
         Returns:
             PolicyResult with action and reason
+
         """
         max_files = self.config.safety.max_files_modified
         max_lines = self.config.safety.max_lines_changed
@@ -267,6 +276,7 @@ class PoliciesEngine:
 
         Returns:
             List of protected path patterns
+
         """
         return self.config.safety.protected_paths
 
@@ -275,6 +285,7 @@ class PoliciesEngine:
 
         Returns:
             RecoveryConfig object
+
         """
         return self.config.agent_recovery
 
@@ -286,6 +297,7 @@ class PoliciesEngine:
 
         Returns:
             PolicyAction enum value
+
         """
         action_map = {
             "allow": PolicyAction.ALLOW,
@@ -299,6 +311,7 @@ class PoliciesEngine:
 
         Returns:
             Path to created file
+
         """
         policies_path = self._get_default_policies_path()
         policies_path.parent.mkdir(parents=True, exist_ok=True)

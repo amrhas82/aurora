@@ -6,13 +6,13 @@ race conditions, and recovery mechanisms in parallel execution contexts.
 
 import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from aurora_soar.phases.collect import execute_agents
 from aurora_spawner import SpawnResult, SpawnTask, spawn_parallel
-from aurora_spawner.circuit_breaker import CircuitBreaker, get_circuit_breaker
+from aurora_spawner.circuit_breaker import get_circuit_breaker
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ class TestParallelSpawnConcurrency:
                     {
                         "description": f"Task for adhoc agent {i}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             result = await execute_agents(
@@ -109,7 +109,7 @@ class TestParallelSpawnConcurrency:
                     {
                         "description": f"Task {i}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             result = await execute_agents(
@@ -154,7 +154,8 @@ class TestParallelSpawnConcurrency:
             )
 
         with patch(
-            "aurora_soar.phases.collect.spawn_with_retry_and_fallback", side_effect=mock_spawn
+            "aurora_soar.phases.collect.spawn_with_retry_and_fallback",
+            side_effect=mock_spawn,
         ):
             agents = []
             subgoals = []
@@ -171,7 +172,7 @@ class TestParallelSpawnConcurrency:
                     {
                         "description": f"Task {i}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             result = await execute_agents(
@@ -431,7 +432,7 @@ class TestCircuitBreakerEdgeCases:
                     {
                         "description": f"Task {i}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             result = await execute_agents(
@@ -502,7 +503,8 @@ class TestResourceContention:
             )
 
         with patch(
-            "aurora_soar.phases.collect.spawn_with_retry_and_fallback", side_effect=mock_spawn_slow
+            "aurora_soar.phases.collect.spawn_with_retry_and_fallback",
+            side_effect=mock_spawn_slow,
         ):
             agents = []
             subgoals = []
@@ -517,7 +519,7 @@ class TestResourceContention:
                     {
                         "description": f"Task {i}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             agent_timeout = 20.0
@@ -594,7 +596,7 @@ class TestFailurePatternDetection:
                     fallback=False,
                     termination_reason="Process timed out after 60 seconds",
                 )
-            elif "auth" in task.prompt:
+            if "auth" in task.prompt:
                 return SpawnResult(
                     success=False,
                     output="",
@@ -603,14 +605,13 @@ class TestFailurePatternDetection:
                     fallback=False,
                     termination_reason="Early detection: auth failure pattern detected",
                 )
-            else:
-                return SpawnResult(
-                    success=True,
-                    output="Success",
-                    error=None,
-                    exit_code=0,
-                    fallback=False,
-                )
+            return SpawnResult(
+                success=True,
+                output="Success",
+                error=None,
+                exit_code=0,
+                fallback=False,
+            )
 
         with patch(
             "aurora_soar.phases.collect.spawn_with_retry_and_fallback",
@@ -629,7 +630,7 @@ class TestFailurePatternDetection:
                     {
                         "description": f"Task with {failure_type}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             result = await execute_agents(
@@ -741,7 +742,7 @@ class TestRecoveryMechanisms:
                     {
                         "description": f"Task {outcome} {i}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             result = await execute_agents(
@@ -791,7 +792,8 @@ class TestEdgeCasesAndBoundaries:
             )
 
         with patch(
-            "aurora_soar.phases.collect.spawn_with_retry_and_fallback", side_effect=mock_spawn
+            "aurora_soar.phases.collect.spawn_with_retry_and_fallback",
+            side_effect=mock_spawn,
         ):
             agent = MagicMock()
             agent.id = "solo-agent"
@@ -824,7 +826,8 @@ class TestEdgeCasesAndBoundaries:
             )
 
         with patch(
-            "aurora_soar.phases.collect.spawn_with_retry_and_fallback", side_effect=mock_spawn_fast
+            "aurora_soar.phases.collect.spawn_with_retry_and_fallback",
+            side_effect=mock_spawn_fast,
         ):
             agents = []
             subgoals = []
@@ -839,7 +842,7 @@ class TestEdgeCasesAndBoundaries:
                     {
                         "description": f"Task {i}",
                         "subgoal_index": i,
-                    }
+                    },
                 )
 
             start = time.time()

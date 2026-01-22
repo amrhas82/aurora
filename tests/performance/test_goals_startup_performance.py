@@ -49,7 +49,7 @@ def mock_llm_client():
     with patch("aurora_cli.planning.core.CLIPipeLLMClient") as mock_client:
         mock_instance = MagicMock()
         mock_instance.generate.return_value = MagicMock(
-            content='[{"id": "sg-1", "title": "Test", "description": "Test", "assigned_agent": "@code-developer", "dependencies": []}]'
+            content='[{"id": "sg-1", "title": "Test", "description": "Test", "assigned_agent": "@code-developer", "dependencies": []}]',
         )
         mock_client.return_value = mock_instance
         yield mock_instance
@@ -66,7 +66,8 @@ class TestEmbeddingProviderStartup:
 
         # Mock the sentence-transformers to prevent actual model loading
         with patch(
-            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS", True
+            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS",
+            True,
         ):
             with patch("aurora_context_code.semantic.embedding_provider.SentenceTransformer"):
                 with patch("aurora_context_code.semantic.embedding_provider.torch", MagicMock()):
@@ -91,10 +92,11 @@ class TestEmbeddingProviderStartup:
 
         # Mock to prevent actual model loading
         with patch(
-            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS", True
+            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS",
+            True,
         ):
             with patch(
-                "aurora_context_code.semantic.embedding_provider.SentenceTransformer"
+                "aurora_context_code.semantic.embedding_provider.SentenceTransformer",
             ) as mock_st:
                 with patch("aurora_context_code.semantic.embedding_provider.torch") as mock_torch:
                     mock_torch.cuda.is_available.return_value = False
@@ -257,7 +259,7 @@ class TestGoalsCommandStartup:
                 title="Test subgoal",
                 description="Test description",
                 assigned_agent="@code-developer",
-            )
+            ),
         ]
 
         start = time.time()
@@ -537,7 +539,7 @@ class TestCLIStartupTime:
                                     "ideal_agent": "@code-developer",
                                     "match_quality": "excellent",
                                     "dependencies": [],
-                                }
+                                },
                             ],
                             [],  # warnings
                         )
@@ -565,7 +567,8 @@ class TestBackgroundPreloading:
 
         # Create provider without loading model
         with patch(
-            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS", True
+            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS",
+            True,
         ):
             with patch("aurora_context_code.semantic.embedding_provider.SentenceTransformer"):
                 with patch("aurora_context_code.semantic.embedding_provider.torch") as mock_torch:
@@ -574,7 +577,8 @@ class TestBackgroundPreloading:
 
         # Verify preload_model method exists
         assert hasattr(
-            provider, "preload_model"
+            provider,
+            "preload_model",
         ), "EmbeddingProvider should have preload_model method"
         assert callable(provider.preload_model), "preload_model should be callable"
 
@@ -583,10 +587,11 @@ class TestBackgroundPreloading:
         from aurora_context_code.semantic import EmbeddingProvider
 
         with patch(
-            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS", True
+            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS",
+            True,
         ):
             with patch(
-                "aurora_context_code.semantic.embedding_provider.SentenceTransformer"
+                "aurora_context_code.semantic.embedding_provider.SentenceTransformer",
             ) as mock_st:
                 with patch("aurora_context_code.semantic.embedding_provider.torch") as mock_torch:
                     mock_torch.cuda.is_available.return_value = False
@@ -612,10 +617,11 @@ class TestBackgroundPreloading:
         from aurora_context_code.semantic import EmbeddingProvider
 
         with patch(
-            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS", True
+            "aurora_context_code.semantic.embedding_provider.HAS_SENTENCE_TRANSFORMERS",
+            True,
         ):
             with patch(
-                "aurora_context_code.semantic.embedding_provider.SentenceTransformer"
+                "aurora_context_code.semantic.embedding_provider.SentenceTransformer",
             ) as mock_st:
                 with patch("aurora_context_code.semantic.embedding_provider.torch") as mock_torch:
                     mock_torch.cuda.is_available.return_value = False
@@ -640,7 +646,8 @@ class TestModelLoadingTiming:
     """Tests to measure and guard actual model loading performance."""
 
     @pytest.mark.skipif(
-        os.environ.get("CI") == "true", reason="Model loading test requires local model cache"
+        os.environ.get("CI") == "true",
+        reason="Model loading test requires local model cache",
     )
     def test_cached_model_load_time(self):
         """Measure time to load cached model (informational, not blocking)."""
@@ -843,7 +850,7 @@ class TestStartupPathOptimizations:
                 return_value=True,
             ):
                 with patch(
-                    "aurora_context_code.semantic.model_utils.BackgroundModelLoader"
+                    "aurora_context_code.semantic.model_utils.BackgroundModelLoader",
                 ) as mock_loader_class:
                     mock_loader_class.get_instance.return_value = mock_loader
 

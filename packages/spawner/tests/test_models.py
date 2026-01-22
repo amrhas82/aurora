@@ -36,7 +36,10 @@ class TestSpawnResult:
     def test_spawn_result_success(self):
         """Test SpawnResult with success=True, output, no error."""
         result = SpawnResult(
-            success=True, output="task completed successfully", error=None, exit_code=0
+            success=True,
+            output="task completed successfully",
+            error=None,
+            exit_code=0,
         )
         assert result.success is True
         assert result.output == "task completed successfully"
@@ -46,7 +49,10 @@ class TestSpawnResult:
     def test_spawn_result_failure(self):
         """Test SpawnResult with success=False, error message, exit_code."""
         result = SpawnResult(
-            success=False, output="", error="Command failed with error", exit_code=1
+            success=False,
+            output="",
+            error="Command failed with error",
+            exit_code=1,
         )
         assert result.success is False
         assert result.output == ""

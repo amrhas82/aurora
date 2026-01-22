@@ -122,7 +122,8 @@ class TestMissingDependencies:
             with mock.patch.dict("sys.modules", {"anthropic": None}):
                 # Mock ImportError when trying to import anthropic
                 with mock.patch(
-                    "builtins.__import__", side_effect=ImportError("No module named 'anthropic'")
+                    "builtins.__import__",
+                    side_effect=ImportError("No module named 'anthropic'"),
                 ):
                     with pytest.raises(ImportError) as exc_info:
                         AnthropicClient()
@@ -139,7 +140,8 @@ class TestMissingDependencies:
         with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-openai-test"}):
             with mock.patch.dict("sys.modules", {"openai": None}):
                 with mock.patch(
-                    "builtins.__import__", side_effect=ImportError("No module named 'openai'")
+                    "builtins.__import__",
+                    side_effect=ImportError("No module named 'openai'"),
                 ):
                     with pytest.raises(ImportError) as exc_info:
                         OpenAIClient()
@@ -154,7 +156,8 @@ class TestMissingDependencies:
         """Test OllamaClient raises helpful error when ollama package missing."""
         with mock.patch.dict("sys.modules", {"ollama": None}):
             with mock.patch(
-                "builtins.__import__", side_effect=ImportError("No module named 'ollama'")
+                "builtins.__import__",
+                side_effect=ImportError("No module named 'ollama'"),
             ):
                 with pytest.raises(ImportError) as exc_info:
                     OllamaClient()

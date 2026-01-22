@@ -67,7 +67,12 @@ class TestBudgetExceededFaultInjection:
     """Fault injection tests for budget exceeded scenarios."""
 
     def test_budget_exceeded_before_execution(
-        self, store, agent_registry, config, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        config,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test query rejection when budget already exceeded."""
         # Create tracker at hard limit
@@ -93,7 +98,12 @@ class TestBudgetExceededFaultInjection:
         assert "exceeded" in str(error).lower()
 
     def test_budget_exceeded_with_expensive_model(
-        self, store, agent_registry, config, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        config,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test query rejection when using expensive model."""
         # Create tracker with low remaining budget
@@ -121,7 +131,12 @@ class TestBudgetExceededFaultInjection:
         assert error.estimated_cost > 0
 
     def test_budget_exceeded_mid_execution(
-        self, store, agent_registry, config, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        config,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test behavior when budget is exceeded during execution."""
         # Start with budget that will be exceeded during execution
@@ -153,7 +168,12 @@ class TestBudgetExceededFaultInjection:
             orchestrator.execute("Another query")
 
     def test_budget_error_message_details(
-        self, store, agent_registry, config, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        config,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test that budget error messages contain useful details."""
         # Use isolated temp directory to avoid loading persistent budget data
@@ -187,7 +207,12 @@ class TestBudgetExceededFaultInjection:
         assert error.estimated_cost > 0
 
     def test_budget_recovery_after_period_rollover(
-        self, store, agent_registry, config, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        config,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test that budget is recovered after monthly rollover."""
         from datetime import datetime
@@ -242,7 +267,12 @@ class TestBudgetExceededFaultInjection:
             assert can_proceed is True
 
     def test_concurrent_queries_budget_race_condition(
-        self, store, agent_registry, config, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        config,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test budget enforcement with concurrent queries (race condition)."""
         # This tests the race condition where multiple queries check budget
@@ -267,7 +297,9 @@ class TestBudgetExceededFaultInjection:
         # First query checks budget - should see 99.9% consumed
         # Any estimated cost will push over 100% limit
         estimated_cost = tracker.estimate_cost(
-            model="claude-sonnet-4-20250514", prompt_length=400, max_output_tokens=512
+            model="claude-sonnet-4-20250514",
+            prompt_length=400,
+            max_output_tokens=512,
         )
 
         can_proceed1, msg1 = tracker.check_budget(estimated_cost)
@@ -279,10 +311,14 @@ class TestBudgetExceededFaultInjection:
         assert can_proceed2 is False
 
     @pytest.mark.skip(
-        reason="Known issue: CostTracker has ZeroDivisionError with limit=0.0 (tracker.py:303)"
+        reason="Known issue: CostTracker has ZeroDivisionError with limit=0.0 (tracker.py:303)",
     )
     def test_budget_exceeded_with_zero_limit(
-        self, store, agent_registry, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test behavior with zero budget limit (disabled tracking).
 
@@ -313,7 +349,12 @@ class TestBudgetExceededFaultInjection:
             orchestrator.execute("Any query")
 
     def test_budget_exceeded_error_attributes(
-        self, store, agent_registry, config, mock_llm_client, temp_tracker_path
+        self,
+        store,
+        agent_registry,
+        config,
+        mock_llm_client,
+        temp_tracker_path,
     ):
         """Test that BudgetExceededError has all required attributes."""
         tracker = CostTracker(monthly_limit_usd=1.0, tracker_path=temp_tracker_path)

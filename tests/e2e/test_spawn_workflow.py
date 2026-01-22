@@ -187,7 +187,7 @@ class TestSpawnWorkflowE2E:
                     "duration_seconds": 300,
                     "exit_code": 0,
                 },
-            )
+            ),
         ]
 
         # Save and load

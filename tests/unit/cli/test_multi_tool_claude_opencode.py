@@ -10,10 +10,7 @@ Tests cover specific scenarios for running Claude and OpenCode together:
 """
 
 import asyncio
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -22,15 +19,12 @@ from aurora_cli.concurrent_executor import (
     AggregationStrategy,
     ConcurrentToolExecutor,
     ConflictDetector,
-    ConflictInfo,
-    ConflictResolver,
     ConflictSeverity,
     ToolConfig,
     ToolResult,
 )
 from aurora_cli.tool_providers import ToolProviderRegistry
-from aurora_cli.tool_providers.base import InputMethod, ToolCapabilities, ToolProvider, ToolStatus
-from aurora_cli.tool_providers.base import ToolResult as ProviderResult
+from aurora_cli.tool_providers.base import InputMethod, ToolCapabilities
 
 
 # ---------------------------------------------------------------------------
@@ -248,13 +242,18 @@ class TestClaudeOpenCodeParallel:
             if tool.name == "claude":
                 await asyncio.sleep(0.01)  # Claude is faster
                 return ToolResult(
-                    tool="claude", success=True, output="Claude wins", execution_time=0.01
+                    tool="claude",
+                    success=True,
+                    output="Claude wins",
+                    execution_time=0.01,
                 )
-            else:
-                await asyncio.sleep(0.1)  # OpenCode is slower
-                return ToolResult(
-                    tool="opencode", success=True, output="OpenCode", execution_time=0.1
-                )
+            await asyncio.sleep(0.1)  # OpenCode is slower
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="OpenCode",
+                execution_time=0.1,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -275,11 +274,13 @@ class TestClaudeOpenCodeParallel:
             if tool.name == "claude":
                 await asyncio.sleep(0.1)  # Claude is slower
                 return ToolResult(tool="claude", success=True, output="Claude", execution_time=0.1)
-            else:
-                await asyncio.sleep(0.01)  # OpenCode is faster
-                return ToolResult(
-                    tool="opencode", success=True, output="OpenCode wins", execution_time=0.01
-                )
+            await asyncio.sleep(0.01)  # OpenCode is faster
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="OpenCode wins",
+                execution_time=0.01,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -305,14 +306,13 @@ class TestClaudeOpenCodeParallel:
                     error="Rate limited",
                     execution_time=0.01,
                 )
-            else:
-                await asyncio.sleep(0.02)
-                return ToolResult(
-                    tool="opencode",
-                    success=True,
-                    output="OpenCode saved the day",
-                    execution_time=0.02,
-                )
+            await asyncio.sleep(0.02)
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="OpenCode saved the day",
+                execution_time=0.02,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -536,10 +536,16 @@ class TestClaudeOpenCodeStrategies:
                 strategy_used=AggregationStrategy.ALL_COMPLETE,
                 tool_results=[
                     ToolResult(
-                        tool="claude", success=True, output="The answer is 42", execution_time=1.0
+                        tool="claude",
+                        success=True,
+                        output="The answer is 42",
+                        execution_time=1.0,
                     ),
                     ToolResult(
-                        tool="opencode", success=True, output="The answer is 42", execution_time=1.0
+                        tool="opencode",
+                        success=True,
+                        output="The answer is 42",
+                        execution_time=1.0,
                     ),
                 ],
             )
@@ -647,10 +653,12 @@ class TestToolSpecificErrorHandling:
                     exit_code=1,
                     execution_time=0.5,
                 )
-            else:
-                return ToolResult(
-                    tool="opencode", success=True, output="OpenCode response", execution_time=1.0
-                )
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="OpenCode response",
+                execution_time=1.0,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -680,10 +688,12 @@ class TestToolSpecificErrorHandling:
                     exit_code=1,
                     execution_time=0.1,
                 )
-            else:
-                return ToolResult(
-                    tool="claude", success=True, output="Claude response", execution_time=1.0
-                )
+            return ToolResult(
+                tool="claude",
+                success=True,
+                output="Claude response",
+                execution_time=1.0,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")
@@ -712,10 +722,12 @@ class TestToolSpecificErrorHandling:
                     exit_code=-1,
                     execution_time=0.1,
                 )
-            else:
-                return ToolResult(
-                    tool="opencode", success=True, output="OpenCode completed", execution_time=2.0
-                )
+            return ToolResult(
+                tool="opencode",
+                success=True,
+                output="OpenCode completed",
+                execution_time=2.0,
+            )
 
         with patch.object(executor, "_execute_tool", side_effect=mock_execute):
             result = await executor.execute("Test prompt")

@@ -324,8 +324,8 @@ class TestMemoryManager:
                         "line_start": 1,
                         "line_end": 1,
                     },
-                }
-            ]
+                },
+            ],
         )
         mock_retriever_class.return_value = mock_retriever
 

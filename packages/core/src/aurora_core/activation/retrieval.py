@@ -65,12 +65,14 @@ class RetrievalConfig(BaseModel):
         max_results: Maximum number of results to return (default 10)
         include_components: Include component breakdown in results
         sort_by_activation: Sort results by activation (default True)
+
     """
 
     threshold: float = Field(default=0.3, description="Minimum activation threshold for retrieval")
     max_results: int = Field(default=10, ge=1, description="Maximum number of results to return")
     include_components: bool = Field(
-        default=False, description="Include activation component breakdown"
+        default=False,
+        description="Include activation component breakdown",
     )
     sort_by_activation: bool = Field(default=True, description="Sort results by activation score")
 
@@ -83,12 +85,14 @@ class RetrievalResult(BaseModel):
         activation: Total activation score
         components: Optional breakdown of activation components
         rank: Result rank (1-indexed)
+
     """
 
     chunk_id: ChunkID = Field(description="Chunk identifier")
     activation: float = Field(description="Total activation score")
     components: ActivationComponents | None = Field(
-        default=None, description="Activation component breakdown"
+        default=None,
+        description="Activation component breakdown",
     )
     rank: int = Field(default=0, ge=0, description="Result rank (1-indexed)")
 
@@ -120,6 +124,7 @@ class ActivationRetriever:
         >>>
         >>> for result in results:
         ...     print(f"{result.rank}. {result.chunk_id}: {result.activation:.3f}")
+
     """
 
     def __init__(self, engine: ActivationEngine, config: RetrievalConfig | None = None):
@@ -128,6 +133,7 @@ class ActivationRetriever:
         Args:
             engine: ActivationEngine for calculating activation
             config: Configuration for retrieval (uses defaults if None)
+
         """
         self.engine = engine
         self.config = config or RetrievalConfig()
@@ -158,6 +164,7 @@ class ActivationRetriever:
             - Only chunks above threshold are returned
             - Results are sorted by activation (highest first)
             - Rank is 1-indexed
+
         """
         if threshold is None:
             threshold = self.config.threshold
@@ -237,6 +244,7 @@ class ActivationRetriever:
         Notes:
             - If source_chunks is None, no spreading is calculated
             - If relationship_graph is None, no spreading is calculated
+
         """
         spreading_scores = {}
 
@@ -245,7 +253,9 @@ class ActivationRetriever:
             # Convert ChunkIDs to strings for spreading calculation
             source_chunk_strs: list[str] = [str(chunk_id) for chunk_id in source_chunks]
             raw_scores = self.engine.calculate_spreading_only(
-                source_chunks=source_chunk_strs, graph=relationship_graph, bidirectional=True
+                source_chunks=source_chunk_strs,
+                graph=relationship_graph,
+                bidirectional=True,
             )
             # Convert back to ChunkID keys
             spreading_scores = {ChunkID(k): v for k, v in raw_scores.items()}
@@ -278,6 +288,7 @@ class ActivationRetriever:
 
         Returns:
             Top N chunks by activation score
+
         """
         return self.retrieve(
             candidates=candidates,
@@ -307,6 +318,7 @@ class ActivationRetriever:
 
         Returns:
             Dictionary mapping chunk_id -> ActivationComponents
+
         """
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -354,6 +366,7 @@ class ActivationRetriever:
                 - above_threshold: Whether above retrieval threshold
                 - threshold: Current threshold value
                 - explanation: Human-readable explanation
+
         """
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -395,7 +408,10 @@ class BatchRetriever:
     """
 
     def __init__(
-        self, engine: ActivationEngine, config: RetrievalConfig | None = None, batch_size: int = 100
+        self,
+        engine: ActivationEngine,
+        config: RetrievalConfig | None = None,
+        batch_size: int = 100,
     ):
         """Initialize the batch retriever.
 
@@ -403,6 +419,7 @@ class BatchRetriever:
             engine: ActivationEngine for calculations
             config: Retrieval configuration
             batch_size: Number of chunks to process per batch
+
         """
         self.retriever = ActivationRetriever(engine, config)
         self.batch_size = batch_size
@@ -428,6 +445,7 @@ class BatchRetriever:
 
         Returns:
             Combined results from all batches, sorted by activation
+
         """
         all_results: list[RetrievalResult] = []
 

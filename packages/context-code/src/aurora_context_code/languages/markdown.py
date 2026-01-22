@@ -45,6 +45,7 @@ class MarkdownParser(CodeParser):
 
         Returns:
             True if file has .md or .markdown extension, False otherwise
+
         """
         return file_path.suffix.lower() in self.EXTENSIONS
 
@@ -65,6 +66,7 @@ class MarkdownParser(CodeParser):
 
         Raises:
             Does NOT raise exceptions - logs errors and returns empty list.
+
         """
         try:
             # Parse markdown into knowledge chunks

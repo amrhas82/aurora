@@ -72,6 +72,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             User prompt string
+
         """
         query = kwargs.get("query", "")
         decomposition = kwargs.get("decomposition", {})
@@ -97,6 +98,7 @@ You MUST respond with valid JSON only. Use this exact format:
 
         Returns:
             Formatted example string
+
         """
         return f"""Query: {example["query"]}
 Decomposition: {json.dumps(example.get("decomposition", {}), indent=2)}

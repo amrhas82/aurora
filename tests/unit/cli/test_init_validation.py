@@ -32,7 +32,7 @@ class TestMCPValidationHelpers:
         config_path.parent.mkdir(parents=True)
         config_path.write_text(
             json.dumps(
-                {"mcpServers": {"aurora": {"type": "stdio", "command": "aurora-mcp", "args": []}}}
+                {"mcpServers": {"aurora": {"type": "stdio", "command": "aurora-mcp", "args": []}}},
             ),
             encoding="utf-8",
         )
@@ -65,7 +65,8 @@ class TestMCPValidationHelpers:
         config_path = tmp_path / ".cursor" / "mcp.json"
         config_path.parent.mkdir(parents=True)
         config_path.write_text(
-            json.dumps({"mcpServers": {"other-server": {"command": "other"}}}), encoding="utf-8"
+            json.dumps({"mcpServers": {"other-server": {"command": "other"}}}),
+            encoding="utf-8",
         )
 
         success, warnings = _validate_mcp_config(config_path, tmp_path)
@@ -83,7 +84,7 @@ class TestMCPValidationHelpers:
         config_path.parent.mkdir(parents=True)
         config_path.write_text(
             json.dumps(
-                {"mcpServers": {"aurora": {"type": "stdio", "command": "aurora-mcp", "args": []}}}
+                {"mcpServers": {"aurora": {"type": "stdio", "command": "aurora-mcp", "args": []}}},
             ),
             encoding="utf-8",
         )
@@ -114,9 +115,9 @@ class TestMCPValidationHelpers:
                             "type": "stdio",
                             "command": "python3",
                             "args": ["-m", "aurora_mcp.server"],
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             ),
             encoding="utf-8",
         )
@@ -388,7 +389,8 @@ class TestSoftFailureBehavior:
             valid_path = tmp_path / ".claude" / "mcp.json"
             valid_path.parent.mkdir(parents=True)
             valid_path.write_text(
-                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}), encoding="utf-8"
+                json.dumps({"mcpServers": {"aurora": {"command": "aurora-mcp"}}}),
+                encoding="utf-8",
             )
             mock_result_valid = MagicMock()
             mock_result_valid.success = True

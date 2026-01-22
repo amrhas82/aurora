@@ -29,6 +29,7 @@ class DecompositionResult:
         expected_tools: List of expected tool types
         raw_response: Raw LLM response text
         prompt_used: Prompt text sent to LLM
+
     """
 
     def __init__(
@@ -98,6 +99,7 @@ def decompose_query(
     Raises:
         ValueError: If LLM response is invalid or missing required fields
         RuntimeError: If LLM call fails after retries
+
     """
     # Load few-shot examples based on complexity
     examples_loader = get_loader()
@@ -131,7 +133,7 @@ def decompose_query(
     if not isinstance(decomposition, dict):
         raise ValueError(
             f"LLM returned non-dict response: {type(decomposition)}\n"
-            f"Response: {str(decomposition)[:500]}"
+            f"Response: {str(decomposition)[:500]}",
         )
 
     # Validate required fields
@@ -139,7 +141,7 @@ def decompose_query(
     missing = [f for f in required_fields if f not in decomposition]
     if missing:
         raise ValueError(
-            f"Decomposition missing required fields: {missing}\nResponse: {decomposition}"
+            f"Decomposition missing required fields: {missing}\nResponse: {decomposition}",
         )
 
     # Validate subgoals structure
@@ -153,7 +155,7 @@ def decompose_query(
         missing_sg = [f for f in required_subgoal_fields if f not in subgoal]
         if missing_sg:
             raise ValueError(
-                f"Subgoal {i} missing required fields: {missing_sg}\nSubgoal: {subgoal}"
+                f"Subgoal {i} missing required fields: {missing_sg}\nSubgoal: {subgoal}",
             )
 
         # Check for new schema fields OR legacy field
@@ -163,7 +165,7 @@ def decompose_query(
         if not has_new_schema and not has_legacy_schema:
             raise ValueError(
                 f"Subgoal {i} missing agent fields. Expected 'ideal_agent' + 'assigned_agent' "
-                f"(or legacy 'suggested_agent').\nSubgoal: {subgoal}"
+                f"(or legacy 'suggested_agent').\nSubgoal: {subgoal}",
             )
 
         # If legacy schema, convert to new schema for downstream compatibility
@@ -178,7 +180,7 @@ def decompose_query(
         if match_quality not in valid_qualities:
             raise ValueError(
                 f"Subgoal {i} has invalid match_quality '{match_quality}'. "
-                f"Must be one of: {valid_qualities}\nSubgoal: {subgoal}"
+                f"Must be one of: {valid_qualities}\nSubgoal: {subgoal}",
             )
         # Ensure field exists for downstream consumers
         subgoal["match_quality"] = match_quality
@@ -186,7 +188,7 @@ def decompose_query(
     # Validate execution_order structure
     if not isinstance(decomposition["execution_order"], list):
         raise ValueError(
-            f"'execution_order' must be a list, got {type(decomposition['execution_order'])}"
+            f"'execution_order' must be a list, got {type(decomposition['execution_order'])}",
         )
 
     for i, phase in enumerate(decomposition["execution_order"]):
@@ -194,7 +196,7 @@ def decompose_query(
             raise ValueError(f"Execution phase {i} missing 'phase' field: {phase}")
         if "parallelizable" not in phase and "sequential" not in phase:
             raise ValueError(
-                f"Execution phase {i} must have 'parallelizable' or 'sequential': {phase}"
+                f"Execution phase {i} must have 'parallelizable' or 'sequential': {phase}",
             )
 
     # Create result

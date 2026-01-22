@@ -50,8 +50,8 @@ def temp_aurora_dir(tmp_path):
                     "verbosity": "normal",
                 },
                 "budget": {"monthly_limit_usd": 50.0},
-            }
-        )
+            },
+        ),
     )
 
     return aurora_dir
@@ -106,7 +106,7 @@ def mock_soar_response():
                 {"phase": "Synthesize", "duration": 0.8, "status": "completed"},
                 {"phase": "Record", "duration": 0.2, "status": "completed"},
                 {"phase": "Respond", "duration": 0.2, "status": "completed"},
-            ]
+            ],
         },
     }
 
@@ -183,7 +183,10 @@ class TestDirectLLMExecution:
                 assert "temperature" in metadata
 
     def test_cost_tracking_updated_after_query(
-        self, tools_with_temp_home, mock_llm_response, tmp_path
+        self,
+        tools_with_temp_home,
+        mock_llm_response,
+        tmp_path,
     ):
         """Test that cost tracking is checked before query."""
         tools = tools_with_temp_home
@@ -243,7 +246,9 @@ class TestSOARPipelineExecution:
         with patch.object(tools, "_get_api_key", return_value="test-key"):
             with patch.object(tools, "_execute_soar", return_value=mock_soar_response):
                 result = tools.aurora_query(
-                    "Analyze complex pattern", force_soar=True, verbose=True
+                    "Analyze complex pattern",
+                    force_soar=True,
+                    verbose=True,
                 )
                 response = json.loads(result)
 
@@ -490,7 +495,9 @@ class TestQueryParameterOverrides:
 
         with patch.object(tools, "_get_api_key", return_value="test-key"):
             with patch.object(
-                tools, "_execute_direct_llm", return_value=mock_llm_response
+                tools,
+                "_execute_direct_llm",
+                return_value=mock_llm_response,
             ) as mock_exec:
                 tools.aurora_query("Test", max_tokens=2000)
 

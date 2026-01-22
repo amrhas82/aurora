@@ -33,6 +33,7 @@ class ValidationIssue(BaseModel):
         message: Human-readable description of the issue
         line: Optional line number where issue occurs
         column: Optional column number where issue occurs
+
     """
 
     level: ValidationLevel
@@ -60,6 +61,7 @@ class ValidationReport(BaseModel):
         valid: True if no ERROR-level issues exist
         issues: List of all validation issues found
         summary: Auto-computed summary counts (read-only property)
+
     """
 
     valid: bool
@@ -72,6 +74,7 @@ class ValidationReport(BaseModel):
 
         Returns:
             ValidationSummary with counts of errors, warnings, and info messages.
+
         """
         errors = sum(1 for i in self.issues if i.level == ValidationLevel.ERROR)
         warnings = sum(1 for i in self.issues if i.level == ValidationLevel.WARNING)

@@ -60,7 +60,8 @@ class TestRecordPatternHighScore:
         ]
 
         collect_result = CollectResult(
-            agent_outputs=agent_outputs, execution_metadata={"total_duration_ms": 1500}
+            agent_outputs=agent_outputs,
+            execution_metadata={"total_duration_ms": 1500},
         )
 
         synthesis_result = SynthesisResult(
@@ -138,7 +139,11 @@ class TestRecordPatternHighScore:
         collect_result = CollectResult(agent_outputs=agent_outputs, execution_metadata={})
 
         synthesis_result = SynthesisResult(
-            answer="Done", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Done",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_pattern(
@@ -378,7 +383,11 @@ class TestRecordPatternLowScore:
         collect_result = CollectResult(agent_outputs=[], execution_metadata={})
 
         synthesis_result = SynthesisResult(
-            answer="Complete failure", confidence=0.0, traceability=[], metadata={}, timing={}
+            answer="Complete failure",
+            confidence=0.0,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         result = record_pattern(
@@ -409,13 +418,17 @@ class TestRecordPatternEdgeCases:
                     "agent1",
                     True,
                     execution_metadata={},  # No tools_used or tool_sequence
-                )
+                ),
             ],
             execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         result = record_pattern(
@@ -444,13 +457,17 @@ class TestRecordPatternEdgeCases:
                     "agent1",
                     True,
                     execution_metadata=None,  # Explicitly None
-                )
+                ),
             ],
             execution_metadata={},
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.85, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.85,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         result = record_pattern(
@@ -477,7 +494,11 @@ class TestRecordPatternEdgeCases:
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         record_pattern(
@@ -538,7 +559,11 @@ class TestRecordPatternEdgeCases:
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         with pytest.raises(RuntimeError, match="Failed to cache reasoning pattern"):
@@ -562,7 +587,11 @@ class TestRecordPatternEdgeCases:
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         # Should not raise, just log warning
@@ -591,7 +620,11 @@ class TestRecordPatternChunkIdGeneration:
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         result = record_pattern(
@@ -619,7 +652,11 @@ class TestRecordPatternChunkIdGeneration:
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         # Generate multiple IDs
@@ -652,7 +689,11 @@ class TestRecordResultTiming:
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         result = record_pattern(
@@ -751,7 +792,11 @@ class TestRecordPatternComplexityLevels:
         )
 
         synthesis_result = SynthesisResult(
-            answer="Success", confidence=0.9, traceability=[], metadata={}, timing={}
+            answer="Success",
+            confidence=0.9,
+            traceability=[],
+            metadata={},
+            timing={},
         )
 
         result = record_pattern(

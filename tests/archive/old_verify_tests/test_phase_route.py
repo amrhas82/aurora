@@ -28,7 +28,7 @@ def agent_registry():
             description="Analyzes code structure",
             capabilities=["code", "analysis"],
             agent_type="local",
-        )
+        ),
     )
 
     registry.register(
@@ -38,7 +38,7 @@ def agent_registry():
             description="Runs tests",
             capabilities=["testing", "validation"],
             agent_type="local",
-        )
+        ),
     )
 
     registry.register(
@@ -48,7 +48,7 @@ def agent_registry():
             description="Refactors code",
             capabilities=["code", "refactoring"],
             agent_type="local",
-        )
+        ),
     )
 
     return registry

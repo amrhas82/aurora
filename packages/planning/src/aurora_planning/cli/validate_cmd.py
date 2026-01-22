@@ -17,6 +17,7 @@ class ValidationResult:
             valid: Whether the plan is valid
             errors: List of error messages
             warnings: List of warning messages
+
         """
         self.valid = valid
         self.errors = errors
@@ -31,6 +32,7 @@ class ValidateCommand:
 
         Args:
             project_root: Root directory of the project. Defaults to current directory.
+
         """
         self.project_root = project_root or Path.cwd()
 
@@ -46,6 +48,7 @@ class ValidateCommand:
 
         Raises:
             NotImplementedError: This is a stub implementation
+
         """
         raise NotImplementedError("ValidateCommand.validate() not yet implemented")
 
@@ -60,5 +63,6 @@ class ValidateCommand:
 
         Raises:
             NotImplementedError: This is a stub implementation
+
         """
         raise NotImplementedError("ValidateCommand.validate_all() not yet implemented")

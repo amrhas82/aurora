@@ -27,6 +27,7 @@ class ToolPaths:
         commands: Global path to user commands directory (e.g., "~/.claude/commands")
         slash_commands: Project-local path for Aurora slash commands (e.g., ".claude/commands/aur")
         mcp: Path to MCP configuration (e.g., "~/.claude/mcp_servers.json")
+
     """
 
     tool_id: str
@@ -181,6 +182,7 @@ def get_all_agent_paths() -> list[str]:
 
     Returns:
         List of agent directory paths (unexpanded, with ~)
+
     """
     return [tp.agents for tp in TOOL_PATHS.values() if tp.agents]
 
@@ -193,6 +195,7 @@ def get_tool_paths(tool_id: str) -> ToolPaths | None:
 
     Returns:
         ToolPaths for the tool, or None if not found
+
     """
     normalized = tool_id.lower().replace(" ", "-")
     return TOOL_PATHS.get(normalized)
@@ -203,5 +206,6 @@ def get_all_tools() -> list[str]:
 
     Returns:
         List of tool identifiers
+
     """
     return list(TOOL_PATHS.keys())

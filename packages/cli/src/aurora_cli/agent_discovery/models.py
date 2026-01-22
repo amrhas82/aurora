@@ -134,6 +134,7 @@ class AgentInfo(BaseModel):
 
         Raises:
             ValueError: If ID is not valid kebab-case
+
         """
         # Normalize to lowercase
         v = v.lower().strip()
@@ -145,7 +146,7 @@ class AgentInfo(BaseModel):
         if not re.match(pattern, v):
             raise ValueError(
                 f"Agent ID must be kebab-case (lowercase letters, numbers, hyphens). "
-                f"Got: '{v}'. Examples: 'quality-assurance', '1-create-prd'"
+                f"Got: '{v}'. Examples: 'quality-assurance', '1-create-prd'",
             )
 
         return v
@@ -163,6 +164,7 @@ class AgentInfo(BaseModel):
 
         Raises:
             ValueError: If category is not recognized
+
         """
         if v is None:
             return AgentCategory.GENERAL
@@ -210,6 +212,7 @@ class AgentInfo(BaseModel):
 
         Returns:
             List of strings
+
         """
         if v is None:
             return []
@@ -228,6 +231,7 @@ class ManifestStats(BaseModel):
         total: Total number of agents in manifest
         by_category: Count of agents per category
         malformed_files: Number of files that failed to parse
+
     """
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -258,6 +262,7 @@ class AgentManifest(BaseModel):
         stats: Aggregated statistics
         agents_by_id: Index for O(1) lookup by agent ID
         agents_by_category: Index for category-based filtering
+
     """
 
     model_config = ConfigDict(
@@ -310,6 +315,7 @@ class AgentManifest(BaseModel):
 
         Returns:
             AgentInfo if found, None otherwise
+
         """
         return self._agents_by_id.get(agent_id.lower())
 
@@ -321,6 +327,7 @@ class AgentManifest(BaseModel):
 
         Returns:
             List of agents in the category
+
         """
         return self._agents_by_category.get(category, [])
 
@@ -334,6 +341,7 @@ class AgentManifest(BaseModel):
 
         Returns:
             True if added, False if duplicate
+
         """
         if agent.id in self._agents_by_id:
             return False
@@ -348,6 +356,7 @@ class AgentManifest(BaseModel):
 
         Returns:
             Dictionary suitable for JSON serialization
+
         """
         return {
             "version": self.version,
@@ -366,6 +375,7 @@ class AgentManifest(BaseModel):
 
         Returns:
             AgentManifest instance
+
         """
         agents = [AgentInfo.model_validate(a) for a in data.get("agents", [])]
         stats = ManifestStats.model_validate(data.get("stats", {}))

@@ -31,6 +31,7 @@ def create_linear_graph(size: int) -> RelationshipGraph:
 
     Returns:
         Linear relationship graph
+
     """
     graph = RelationshipGraph()
     for i in range(size - 1):
@@ -52,6 +53,7 @@ def create_tree_graph(depth: int, branching_factor: int) -> RelationshipGraph:
 
     Returns:
         Tree relationship graph
+
     """
     graph = RelationshipGraph()
     node_counter = 0
@@ -84,6 +86,7 @@ def create_dense_graph(size: int, edges_per_node: int) -> RelationshipGraph:
 
     Returns:
         Dense relationship graph
+
     """
     graph = RelationshipGraph()
 
@@ -102,7 +105,9 @@ def create_dense_graph(size: int, edges_per_node: int) -> RelationshipGraph:
 
 
 def create_clustered_graph(
-    num_clusters: int, cluster_size: int, inter_cluster_edges: int
+    num_clusters: int,
+    cluster_size: int,
+    inter_cluster_edges: int,
 ) -> RelationshipGraph:
     """Create a clustered graph with dense clusters and sparse inter-cluster connections.
 
@@ -113,6 +118,7 @@ def create_clustered_graph(
 
     Returns:
         Clustered relationship graph
+
     """
     graph = RelationshipGraph()
 
@@ -163,7 +169,9 @@ class TestSpreadingPerformanceLinear:
 
         def calculate():
             return spreading_calculator.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=False
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=False,
             )
 
         result = benchmark(calculate)
@@ -185,7 +193,9 @@ class TestSpreadingPerformanceLinear:
 
         def calculate():
             return spreading_calculator.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=False
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=False,
             )
 
         result = benchmark(calculate)
@@ -209,7 +219,9 @@ class TestSpreadingPerformanceTree:
 
         def calculate():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=False
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=False,
             )
 
         result = benchmark(calculate)
@@ -231,7 +243,9 @@ class TestSpreadingPerformanceTree:
 
         def calculate():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=False
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=False,
             )
 
         result = benchmark(calculate)
@@ -259,7 +273,9 @@ class TestSpreadingPerformanceDense:
 
         def calculate():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=True
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=True,
             )
 
         result = benchmark(calculate)
@@ -286,7 +302,9 @@ class TestSpreadingPerformanceDense:
 
         def calculate():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=True
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=True,
             )
 
         result = benchmark(calculate)
@@ -301,7 +319,7 @@ class TestSpreadingPerformanceDense:
         ), f"Dense spreading (1000 edges) too slow: {mean_time_ms:.1f}ms > 200ms (PRD target)"
 
         print(
-            f"\n*** PRD TARGET *** Dense graph (200 chunks, 1000 edges): {mean_time_ms:.1f}ms (target: <200ms)"
+            f"\n*** PRD TARGET *** Dense graph (200 chunks, 1000 edges): {mean_time_ms:.1f}ms (target: <200ms)",
         )
 
     def test_spreading_dense_500_chunks_3edges(self, benchmark, spreading_calculator_3hops):
@@ -312,7 +330,9 @@ class TestSpreadingPerformanceDense:
 
         def calculate():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=True
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=True,
             )
 
         result = benchmark(calculate)
@@ -326,7 +346,7 @@ class TestSpreadingPerformanceDense:
         ), f"Large sparse graph too slow: {mean_time_ms:.1f}ms > 250ms"
 
         print(
-            f"\nLarge sparse graph (500 chunks, 1500 edges, limited to 1000): {mean_time_ms:.1f}ms"
+            f"\nLarge sparse graph (500 chunks, 1500 edges, limited to 1000): {mean_time_ms:.1f}ms",
         )
 
 
@@ -341,7 +361,9 @@ class TestSpreadingPerformanceClustered:
 
         def calculate():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=True
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=True,
             )
 
         result = benchmark(calculate)
@@ -363,7 +385,9 @@ class TestSpreadingPerformanceClustered:
 
         def calculate():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=True
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=True,
             )
 
         result = benchmark(calculate)
@@ -386,7 +410,9 @@ class TestSpreadingEdgeCases:
 
         def calculate():
             return spreading_calculator.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=False
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=False,
             )
 
         result = benchmark(calculate)
@@ -404,7 +430,9 @@ class TestSpreadingEdgeCases:
 
         def calculate():
             return spreading_calculator.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=False
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=False,
             )
 
         result = benchmark(calculate)
@@ -424,7 +452,9 @@ class TestSpreadingEdgeCases:
 
         def calculate():
             return calculator.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=True
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=True,
             )
 
         result = benchmark(calculate)
@@ -450,12 +480,14 @@ class TestSpreadingScalability:
         # Test with increasing hop counts
         for max_hops in [1, 2, 3, 4]:
             calculator = SpreadingActivation(
-                config=SpreadingConfig(max_hops=max_hops, max_edges=1000)
+                config=SpreadingConfig(max_hops=max_hops, max_edges=1000),
             )
 
             def calculate():
                 return calculator.calculate(
-                    source_chunks=source_chunks, graph=graph, bidirectional=True
+                    source_chunks=source_chunks,
+                    graph=graph,
+                    bidirectional=True,
                 )
 
             result = calculate()
@@ -472,7 +504,9 @@ class TestSpreadingScalability:
         # Bidirectional should find more chunks but take slightly longer
         def calculate_bidirectional():
             return spreading_calculator_3hops.calculate(
-                source_chunks=source_chunks, graph=graph, bidirectional=True
+                source_chunks=source_chunks,
+                graph=graph,
+                bidirectional=True,
             )
 
         result = benchmark(calculate_bidirectional)

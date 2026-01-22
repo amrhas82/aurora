@@ -42,10 +42,10 @@ def simple_routing(test_agent):
                         "subgoal_index": 0,
                         "description": "Test subgoal",
                         "is_critical": True,
-                    }
+                    },
                 ],
                 "sequential": [],
-            }
+            },
         ],
         routing_metadata={},
     )
@@ -80,7 +80,7 @@ def parallel_routing(test_agent):
                     },
                 ],
                 "sequential": [],
-            }
+            },
         ],
         routing_metadata={},
     )
@@ -379,7 +379,13 @@ class TestExecuteSingleSubgoal:
         # Use very short timeout (mock agent takes 0.1s)
         # Since timeout is very short, it may time out and retry
         output = await _execute_single_subgoal(
-            0, subgoal, test_agent, context, 0.001, metadata, max_retries=0
+            0,
+            subgoal,
+            test_agent,
+            context,
+            0.001,
+            metadata,
+            max_retries=0,
         )
 
         # With max_retries=0 and non-critical, should return failed output
@@ -480,7 +486,13 @@ class TestRetryLogic:
         # First attempt will timeout, but with max_retries we can test retry logic
         # Use a timeout that's challenging but not impossible
         output = await _execute_single_subgoal(
-            0, subgoal, test_agent, context, 0.05, metadata, max_retries=1
+            0,
+            subgoal,
+            test_agent,
+            context,
+            0.05,
+            metadata,
+            max_retries=1,
         )
 
         # Metadata should track retries if they occurred
@@ -495,7 +507,13 @@ class TestRetryLogic:
 
         # Use impossible timeout to force retries
         output = await _execute_single_subgoal(
-            0, subgoal, test_agent, context, 0.001, metadata, max_retries=2
+            0,
+            subgoal,
+            test_agent,
+            context,
+            0.001,
+            metadata,
+            max_retries=2,
         )
 
         # Should eventually give up

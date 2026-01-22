@@ -15,6 +15,7 @@ def get_command_template(command_name: str) -> str | None:
 
     Returns:
         Template content or None if command not found
+
     """
     return COMMAND_TEMPLATES.get(command_name)
 
@@ -24,6 +25,7 @@ def get_all_command_templates() -> dict[str, str]:
 
     Returns:
         Dictionary mapping command names to template content
+
     """
     return COMMAND_TEMPLATES.copy()
 

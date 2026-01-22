@@ -42,7 +42,9 @@ class TestFilePathResolver:
         assert resolver is not None
 
     def test_resolve_paths_with_indexed_memory(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test file path resolution when memory is indexed."""
         # Arrange
@@ -132,7 +134,9 @@ class TestFilePathResolver:
         assert resolutions[0].line_end == 200
 
     def test_resolve_paths_memory_not_indexed(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test graceful degradation when memory not indexed."""
         # Arrange
@@ -171,7 +175,10 @@ class TestFilePathResolver:
 
         high_conf = FileResolution(path="src/auth.py", line_start=10, line_end=50, confidence=0.95)
         medium_conf = FileResolution(
-            path="src/auth.py", line_start=10, line_end=50, confidence=0.75
+            path="src/auth.py",
+            line_start=10,
+            line_end=50,
+            confidence=0.75,
         )
         low_conf = FileResolution(path="src/auth.py", line_start=10, line_end=50, confidence=0.45)
 
@@ -192,7 +199,10 @@ class TestFilePathResolver:
         assert "(low confidence)" in low_str  # Low has warning annotation
 
     def test_graceful_degradation(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test plan still generates when memory not indexed."""
         # Arrange
@@ -251,7 +261,10 @@ class TestFilePathResolver:
         # Arrange
         resolver = FilePathResolver()
         resolution = FileResolution(
-            path="src/test.py", line_start=None, line_end=None, confidence=0.85
+            path="src/test.py",
+            line_start=None,
+            line_end=None,
+            confidence=0.85,
         )
 
         # Act

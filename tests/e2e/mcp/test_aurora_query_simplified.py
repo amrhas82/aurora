@@ -29,7 +29,7 @@ from aurora_mcp.tools import AuroraMCPTools
 # Skip all tests in this file - MCP functionality is dormant (PRD-0024)
 # aurora_query tool was never implemented, only aurora_search and aurora_get exist
 pytestmark = pytest.mark.skip(
-    reason="MCP aurora_query not implemented - functionality dormant (PRD-0024)"
+    reason="MCP aurora_query not implemented - functionality dormant (PRD-0024)",
 )
 
 
@@ -115,7 +115,7 @@ class TestResponseFormat:
                     "file_path": "test.py",
                     "line_range": [1, 1],
                     "relevance_score": 0.9,
-                }
+                },
             ],
         ):
             result = tools.aurora_query("test query")
@@ -191,7 +191,7 @@ class TestResponseFormat:
                 "file_path": "test.py",
                 "line_range": [1, 1],
                 "relevance_score": 0.85,
-            }
+            },
         ]
 
         with patch.object(tools, "_retrieve_chunks", return_value=mock_chunks):
@@ -224,7 +224,7 @@ class TestConfidenceHandling:
                 "file_path": "test.py",
                 "line_range": [1, 1],
                 "relevance_score": 0.3,
-            }
+            },
         ]
 
         with patch.object(tools, "_retrieve_chunks", return_value=mock_chunks):
@@ -337,11 +337,13 @@ class TestTypeFiltering:
                 "file_path": None,
                 "line_range": None,
                 "relevance_score": 0.85,
-            }
+            },
         ]
 
         with patch.object(
-            tools, "_retrieve_chunks", return_value=mock_reas_chunks
+            tools,
+            "_retrieve_chunks",
+            return_value=mock_reas_chunks,
         ) as mock_retrieve:
             result = tools.aurora_query("test query", type_filter="reas")
             response = json.loads(result)
@@ -365,11 +367,13 @@ class TestTypeFiltering:
                 "file_path": None,
                 "line_range": None,
                 "relevance_score": 0.8,
-            }
+            },
         ]
 
         with patch.object(
-            tools, "_retrieve_chunks", return_value=mock_know_chunks
+            tools,
+            "_retrieve_chunks",
+            return_value=mock_know_chunks,
         ) as mock_retrieve:
             result = tools.aurora_query("test query", type_filter="know")
             response = json.loads(result)
@@ -412,7 +416,9 @@ class TestTypeFiltering:
         ]
 
         with patch.object(
-            tools, "_retrieve_chunks", return_value=mock_mixed_chunks
+            tools,
+            "_retrieve_chunks",
+            return_value=mock_mixed_chunks,
         ) as mock_retrieve:
             result = tools.aurora_query("test query", type_filter=None)
             response = json.loads(result)

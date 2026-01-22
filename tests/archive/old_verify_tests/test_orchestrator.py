@@ -208,7 +208,7 @@ def test_complex_query_full_pipeline(
                 "criticality": "MEDIUM",
                 "dependencies": [],
                 "inputs": {},
-            }
+            },
         ],
         execution_order=[0],
         expected_tools=["test"],
@@ -439,7 +439,10 @@ def test_budget_check_before_execution(test_orchestrator):
 @patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_budget_tracking_during_execution(
-    mock_respond, mock_retrieve, mock_assess, test_orchestrator
+    mock_respond,
+    mock_retrieve,
+    mock_assess,
+    test_orchestrator,
 ):
     """Test budget tracking accumulates cost during execution."""
     # Configure mocks
@@ -659,7 +662,10 @@ def test_verbose_mode(mock_respond, mock_retrieve, mock_assess, test_orchestrato
 @patch("aurora_soar.orchestrator.retrieve.retrieve_context")
 @patch("aurora_soar.orchestrator.respond.format_response")
 def test_conversation_logging_integration(
-    mock_respond, mock_retrieve, mock_assess, test_orchestrator
+    mock_respond,
+    mock_retrieve,
+    mock_assess,
+    test_orchestrator,
 ):
     """Test conversation logger integration."""
     # Enable logging for this test

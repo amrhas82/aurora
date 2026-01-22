@@ -28,6 +28,7 @@ def run_smoke_test() -> bool:
 
     Returns:
         True if all tests pass, False otherwise
+
     """
     # Check if API key is available
     api_key = os.environ.get("ANTHROPIC_API_KEY")

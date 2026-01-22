@@ -33,7 +33,10 @@ class TestRelationship:
     def test_create_relationship_with_weight(self):
         """Test creating relationship with custom weight."""
         rel = Relationship(
-            from_chunk="func_a", to_chunk="func_b", rel_type="depends_on", weight=0.75
+            from_chunk="func_a",
+            to_chunk="func_b",
+            rel_type="depends_on",
+            weight=0.75,
         )
         assert rel.weight == 0.75
 

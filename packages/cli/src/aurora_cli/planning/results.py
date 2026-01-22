@@ -38,6 +38,7 @@ class InitResult:
         message: Success message
         warning: Warning message (e.g., already exists)
         error: Error message (if failed)
+
     """
 
     success: bool
@@ -60,6 +61,7 @@ class PlanResult:
         plan_dir: Path to plan directory
         warnings: List of warning messages
         error: Error message (if failed)
+
     """
 
     success: bool
@@ -79,6 +81,7 @@ class ListResult:
         plans: List of plan summaries
         warning: Warning message (e.g., not initialized)
         errors: List of errors encountered while loading plans
+
     """
 
     plans: list[PlanSummary] = field(default_factory=list)
@@ -98,6 +101,7 @@ class ShowResult:
         plan_dir: Path to plan directory
         files_status: Map of filename to exists bool
         error: Error message (if failed)
+
     """
 
     success: bool
@@ -120,6 +124,7 @@ class ArchiveResult:
         target_dir: Archive destination directory
         duration_days: Days from creation to archive
         error: Error message (if failed)
+
     """
 
     success: bool
@@ -144,6 +149,7 @@ class PlanSummary:
         status: Plan status string
         subgoal_count: Number of subgoals
         agent_gaps: Count of missing agents
+
     """
 
     plan_id: str
@@ -163,6 +169,7 @@ class PlanSummary:
 
         Returns:
             PlanSummary instance
+
         """
         goal = plan.goal[:50] + "..." if len(plan.goal) > 50 else plan.goal
         return cls(

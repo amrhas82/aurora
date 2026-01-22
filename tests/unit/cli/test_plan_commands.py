@@ -86,6 +86,7 @@ def create_complete_plan_structure(plan_dir: Path, plan: Plan) -> None:
     Args:
         plan_dir: Directory to create plan in
         plan: Plan object to write
+
     """
     plan_dir.mkdir(parents=True, exist_ok=True)
 
@@ -104,7 +105,7 @@ def create_complete_plan_structure(plan_dir: Path, plan: Plan) -> None:
 ## Subgoals
 
 {chr(10).join(f"### {i}. {sg.title}" + chr(10) + sg.description for i, sg in enumerate(plan.subgoals, 1))}
-"""
+""",
     )
 
     # Create prd.md
@@ -122,7 +123,7 @@ def create_complete_plan_structure(plan_dir: Path, plan: Plan) -> None:
 ## Functional Requirements
 
 <!-- Add functional requirements here -->
-"""
+""",
     )
 
     # Create tasks.md
@@ -134,7 +135,7 @@ Goal: {plan.goal}
 ## Implementation Tasks
 
 {chr(10).join(f"- [ ] {i}.0 {sg.title}" for i, sg in enumerate(plan.subgoals, 1))}
-"""
+""",
     )
 
 
@@ -349,7 +350,10 @@ class TestListCommand:
     """Tests for aur plan list CLI command."""
 
     def test_list_cli_active_plans(
-        self, cli_runner: CliRunner, tmp_path: Path, sample_plan: Plan
+        self,
+        cli_runner: CliRunner,
+        tmp_path: Path,
+        sample_plan: Plan,
     ) -> None:
         """aur plan list shows active plans."""
         plans_dir = tmp_path / "plans"
@@ -366,7 +370,10 @@ class TestListCommand:
         assert "0001-oauth" in result.output or "Active Plans" in result.output
 
     def test_list_cli_json_output(
-        self, cli_runner: CliRunner, tmp_path: Path, sample_plan: Plan
+        self,
+        cli_runner: CliRunner,
+        tmp_path: Path,
+        sample_plan: Plan,
     ) -> None:
         """aur plan list --format json outputs valid JSON."""
         plans_dir = tmp_path / "plans"
@@ -469,7 +476,10 @@ class TestShowCommand:
     """Tests for aur plan show CLI command."""
 
     def test_show_cli_existing_plan(
-        self, cli_runner: CliRunner, tmp_path: Path, sample_plan: Plan
+        self,
+        cli_runner: CliRunner,
+        tmp_path: Path,
+        sample_plan: Plan,
     ) -> None:
         """aur plan show displays plan details."""
         plans_dir = tmp_path / "plans"
@@ -486,7 +496,10 @@ class TestShowCommand:
         assert "OAuth2" in result.output
 
     def test_show_cli_json_output(
-        self, cli_runner: CliRunner, tmp_path: Path, sample_plan: Plan
+        self,
+        cli_runner: CliRunner,
+        tmp_path: Path,
+        sample_plan: Plan,
     ) -> None:
         """aur plan show --format json outputs valid JSON."""
         plans_dir = tmp_path / "plans"
@@ -497,7 +510,8 @@ class TestShowCommand:
 
         with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
             result = cli_runner.invoke(
-                plan_group, ["view", sample_plan.plan_id, "--format", "json"]
+                plan_group,
+                ["view", sample_plan.plan_id, "--format", "json"],
             )
 
         assert result.exit_code == 0
@@ -549,7 +563,9 @@ class TestArchivePlan:
         assert "already archived" in result.error.lower()
 
     def test_archive_duration_calculation(
-        self, tmp_path: Path, sample_subgoals: list[Subgoal]
+        self,
+        tmp_path: Path,
+        sample_subgoals: list[Subgoal],
     ) -> None:
         """archive_plan calculates duration_days correctly."""
         plans_dir = tmp_path / "plans"
@@ -587,7 +603,7 @@ class TestArchivePlan:
 
         # Check manifest updated
         updated_manifest = PlanManifest.model_validate_json(
-            (plans_dir / "manifest.json").read_text()
+            (plans_dir / "manifest.json").read_text(),
         )
         assert sample_plan.plan_id not in updated_manifest.active_plans
         assert len(updated_manifest.archived_plans) == 1
@@ -597,7 +613,10 @@ class TestArchiveCommand:
     """Tests for aur plan archive CLI command."""
 
     def test_archive_cli_with_confirmation(
-        self, cli_runner: CliRunner, tmp_path: Path, sample_plan: Plan
+        self,
+        cli_runner: CliRunner,
+        tmp_path: Path,
+        sample_plan: Plan,
     ) -> None:
         """aur plan archive with confirmation."""
         plans_dir = tmp_path / "plans"
@@ -613,7 +632,10 @@ class TestArchiveCommand:
         assert "archived" in result.output.lower()
 
     def test_archive_cli_yes_flag(
-        self, cli_runner: CliRunner, tmp_path: Path, sample_plan: Plan
+        self,
+        cli_runner: CliRunner,
+        tmp_path: Path,
+        sample_plan: Plan,
     ) -> None:
         """aur plan archive --yes skips confirmation."""
         plans_dir = tmp_path / "plans"

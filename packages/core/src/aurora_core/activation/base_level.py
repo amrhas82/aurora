@@ -33,11 +33,13 @@ class AccessHistoryEntry(BaseModel):
     Attributes:
         timestamp: UTC timestamp when the chunk was accessed
         context: Optional context information (e.g., query terms)
+
     """
 
     timestamp: datetime = Field(description="UTC timestamp of the access")
     context: str | None = Field(
-        default=None, description="Optional context information for this access"
+        default=None,
+        description="Optional context information for this access",
     )
 
     @field_validator("timestamp")
@@ -56,6 +58,7 @@ class BLAConfig(BaseModel):
         decay_rate: The decay rate (d) in the power law formula (default 0.5)
         min_activation: Minimum activation value to return (prevents log(0))
         default_activation: Activation for chunks with no access history
+
     """
 
     decay_rate: float = Field(
@@ -66,7 +69,8 @@ class BLAConfig(BaseModel):
     )
     min_activation: float = Field(default=-10.0, description="Minimum activation value (log space)")
     default_activation: float = Field(
-        default=-5.0, description="Default activation for never-accessed chunks"
+        default=-5.0,
+        description="Default activation for never-accessed chunks",
     )
 
 
@@ -86,6 +90,7 @@ class BaseLevelActivation:
         ... ]
         >>> activation = bla.calculate(history)
         >>> print(f"BLA: {activation:.3f}")
+
     """
 
     def __init__(self, config: BLAConfig | None = None):
@@ -93,11 +98,14 @@ class BaseLevelActivation:
 
         Args:
             config: Configuration for BLA calculation (uses defaults if None)
+
         """
         self.config = config or BLAConfig()
 
     def calculate(
-        self, access_history: list[AccessHistoryEntry], current_time: datetime | None = None
+        self,
+        access_history: list[AccessHistoryEntry],
+        current_time: datetime | None = None,
     ) -> float:
         """Calculate Base-Level Activation for a chunk.
 
@@ -112,6 +120,7 @@ class BaseLevelActivation:
             - Returns default_activation if no access history
             - Clamps result to min_activation to prevent extreme negative values
             - Uses power law: BLA = ln(Σ t_j^(-d))
+
         """
         if not access_history:
             return self.config.default_activation
@@ -143,7 +152,9 @@ class BaseLevelActivation:
         return max(bla, self.config.min_activation)
 
     def calculate_from_timestamps(
-        self, timestamps: list[datetime], current_time: datetime | None = None
+        self,
+        timestamps: list[datetime],
+        current_time: datetime | None = None,
     ) -> float:
         """Convenience method to calculate BLA from a list of timestamps.
 
@@ -153,6 +164,7 @@ class BaseLevelActivation:
 
         Returns:
             BLA value (log space)
+
         """
         history = [AccessHistoryEntry(timestamp=ts) for ts in timestamps]
         return self.calculate(history, current_time)
@@ -177,6 +189,7 @@ class BaseLevelActivation:
 
         Returns:
             Approximate BLA value
+
         """
         if access_count == 0:
             return self.config.default_activation
@@ -227,6 +240,7 @@ def calculate_bla(
 
     Returns:
         BLA value (log space)
+
     """
     config = BLAConfig(decay_rate=decay_rate)
     calculator = BaseLevelActivation(config)

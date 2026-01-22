@@ -83,6 +83,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Path to the global prompts directory
+
         """
         codex_home_env = os.environ.get("CODEX_HOME", "").strip()
 
@@ -104,6 +105,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root (used for display/tracking)
+
         """
         return FILE_PATHS[command_id]
 
@@ -118,6 +120,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             YAML frontmatter string with $ARGUMENTS placeholder
+
         """
         return FRONTMATTER[command_id]
 
@@ -129,6 +132,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -140,6 +144,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             One-line description for skill listings
+
         """
         descriptions = {
             "search": 'Search indexed code ["query" --limit N --type X]',
@@ -161,6 +166,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Absolute path to the command file in global prompts directory
+
         """
         prompts_dir = self._get_global_prompts_dir()
         filename = Path(FILE_PATHS[command_id]).name
@@ -178,6 +184,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             List of created/updated file paths (relative paths for tracking)
+
         """
         created_or_updated: list[str] = []
         prompts_dir = Path(self._get_global_prompts_dir())
@@ -220,6 +227,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             List of updated file paths (relative paths for tracking)
+
         """
         updated: list[str] = []
         prompts_dir = Path(self._get_global_prompts_dir())

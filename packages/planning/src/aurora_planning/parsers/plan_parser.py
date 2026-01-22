@@ -36,6 +36,7 @@ class PlanParser(MarkdownParser):
         Args:
             content: Raw markdown content to parse
             plan_dir: Path to plan directory (for delta specs)
+
         """
         super().__init__(content)
         self._plan_dir = Path(plan_dir)
@@ -53,6 +54,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             ParsedPlan with modifications from both sources
+
         """
         sections = self._parse_sections()
         why_section = self._find_section(sections, "Why")
@@ -96,6 +98,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             List of modifications from delta spec files
+
         """
         modifications: list[ParsedModification] = []
 
@@ -136,6 +139,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             List of modifications parsed from the spec
+
         """
         modifications: list[ParsedModification] = []
         sections = self._parse_sections_from_content(content)
@@ -152,7 +156,7 @@ class PlanParser(MarkdownParser):
                         description=f"Add requirement: {req.text}",
                         requirement=req,
                         requirements=[req],
-                    )
+                    ),
                 )
 
         # Parse MODIFIED requirements
@@ -167,7 +171,7 @@ class PlanParser(MarkdownParser):
                         description=f"Modify requirement: {req.text}",
                         requirement=req,
                         requirements=[req],
-                    )
+                    ),
                 )
 
         # Parse REMOVED requirements
@@ -182,7 +186,7 @@ class PlanParser(MarkdownParser):
                         description=f"Remove requirement: {req.text}",
                         requirement=req,
                         requirements=[req],
-                    )
+                    ),
                 )
 
         # Parse RENAMED requirements
@@ -196,7 +200,7 @@ class PlanParser(MarkdownParser):
                         operation=ModificationOperation.RENAMED,
                         description=f'Rename requirement from "{rename["from"]}" to "{rename["to"]}"',
                         rename=rename,
-                    )
+                    ),
                 )
 
         return modifications
@@ -212,6 +216,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             List of parsed requirements
+
         """
         requirements: list[ParsedRequirement] = []
 
@@ -224,7 +229,7 @@ class PlanParser(MarkdownParser):
                 ParsedRequirement(
                     text=text,
                     scenarios=scenarios,
-                )
+                ),
             )
 
         return requirements
@@ -241,6 +246,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             The requirement text (first non-metadata line with SHALL/MUST)
+
         """
         # Start with section title as fallback
         text = section.title
@@ -286,6 +292,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             List of rename dicts with 'from' and 'to' keys
+
         """
         renames: list[dict[str, str]] = []
         lines = self._normalize_content(content).split("\n")
@@ -306,7 +313,7 @@ class PlanParser(MarkdownParser):
                         {
                             "from": current_rename["from"],
                             "to": current_rename["to"],
-                        }
+                        },
                     )
                     current_rename = {}
 
@@ -322,6 +329,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             List of sections
+
         """
         normalized_content = self._normalize_content(content)
         lines = normalized_content.split("\n")
@@ -356,7 +364,10 @@ class PlanParser(MarkdownParser):
         return sections
 
     def _get_content_until_next_header_from_lines(
-        self, lines: list[str], start_line: int, current_level: int
+        self,
+        lines: list[str],
+        start_line: int,
+        current_level: int,
     ) -> list[str]:
         """Get content lines until next header of same or higher level.
 
@@ -367,6 +378,7 @@ class PlanParser(MarkdownParser):
 
         Returns:
             List of content lines
+
         """
         content_lines: list[str] = []
 

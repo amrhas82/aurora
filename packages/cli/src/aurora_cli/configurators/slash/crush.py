@@ -76,6 +76,7 @@ class CrushSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Relative path from project root
+
         """
         return FILE_PATHS[command_id]
 
@@ -87,6 +88,7 @@ class CrushSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             YAML frontmatter string
+
         """
         return FRONTMATTER[command_id]
 
@@ -98,6 +100,7 @@ class CrushSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Command body content from templates
+
         """
         return get_command_body(command_id)
 
@@ -109,6 +112,7 @@ class CrushSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             One-line description for skill listings
+
         """
         descriptions = {
             "search": 'Search indexed code ["query" --limit N --type X]',

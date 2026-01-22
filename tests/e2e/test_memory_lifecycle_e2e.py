@@ -51,7 +51,7 @@ def hello():
 def goodbye():
     """Say goodbye."""
     return "Goodbye, world!"
-'''
+''',
     )
 
     (project_dir / "module2.py").write_text(
@@ -67,7 +67,7 @@ class Calculator:
     def subtract(self, a: int, b: int) -> int:
         """Subtract two numbers."""
         return a - b
-'''
+''',
     )
 
     return {
@@ -138,7 +138,7 @@ def goodbye():
 def greet(name: str) -> str:
     """Greet someone by name."""
     return f"Hello, {name}!"
-'''
+''',
     )
 
     # Small delay to ensure filesystem timestamp changes
@@ -260,7 +260,7 @@ class DataProcessor:
     def filter_data(self, data: list, threshold: int) -> list:
         """Filter data by threshold."""
         return [x for x in data if x > threshold]
-'''
+''',
     )
 
     # Step 3: Re-index (should detect new file)
@@ -334,7 +334,7 @@ def test_memory_lifecycle_concurrent_access(temp_memory_project, temp_db_path):
         '''"""Module 4."""
 def test():
     return "test"
-'''
+''',
     )
 
     # Index new file
@@ -384,7 +384,7 @@ def new_func():
 
 def another_func():
     return "another"
-'''
+''',
     )
     time.sleep(0.1)
     manager.index_path(str(project_dir))
@@ -448,7 +448,7 @@ def add_numbers(x, y):
 def subtract_numbers(x, y):
     """Subtract two numbers."""
     return x - y
-'''
+''',
     )
     time.sleep(0.1)
     manager.index_path(str(project_dir))

@@ -37,6 +37,7 @@ class TomlSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Always None for TOML format
+
         """
         return None
 
@@ -51,6 +52,7 @@ class TomlSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Description string for the command
+
         """
         ...
 
@@ -63,6 +65,7 @@ class TomlSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             List of created/updated file paths (relative to project_path)
+
         """
         created_or_updated: list[str] = []
 
@@ -92,6 +95,7 @@ class TomlSlashCommandConfigurator(SlashCommandConfigurator):
 
         Returns:
             Complete TOML file content
+
         """
         description = self.get_description(command_id)
 
@@ -118,6 +122,7 @@ prompt = """
 
         Raises:
             ValueError: If Aurora markers are missing
+
         """
         content = Path(file_path).read_text(encoding="utf-8")
 

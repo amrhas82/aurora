@@ -78,7 +78,7 @@ def legacy_database(clean_aurora_home: Path) -> Path:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """
+    """,
     )
     conn.execute(
         """
@@ -88,7 +88,7 @@ def legacy_database(clean_aurora_home: Path) -> Path:
             last_access TIMESTAMP NOT NULL,
             access_count INTEGER DEFAULT 1
         )
-    """
+    """,
     )
     # Add some test data
     conn.execute(
@@ -114,7 +114,7 @@ def sample_python_project() -> Generator[Path, None, None]:
 def test_function():
     """A test function."""
     return 42
-'''
+''',
         )
 
         yield project_path
@@ -225,7 +225,10 @@ class TestReindexingAfterReset:
     """Test that data can be re-indexed after schema reset."""
 
     def test_index_works_after_reset(
-        self, clean_aurora_home: Path, legacy_database: Path, sample_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        legacy_database: Path,
+        sample_python_project: Path,
     ):
         """Test that 'aur mem index' works after resetting schema."""
         # Reset the database: skip API key, yes to reset, no to backup, no to index

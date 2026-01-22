@@ -68,7 +68,7 @@ def hello_world(name: str) -> str:
 def add_numbers(a: int, b: int) -> int:
     """Add two numbers together."""
     return a + b
-'''
+''',
         )
 
         return codebase
@@ -353,7 +353,7 @@ class TestMCPHarnessPerformance:
 def function_{i}(x):
     """Function {i} implementation."""
     return x * {i}
-'''
+''',
             )
 
         # Index

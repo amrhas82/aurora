@@ -80,7 +80,10 @@ class TestViewCommand:
         assert "no-tasks-change" not in completed_names
 
     def test_sorts_active_changes_by_completion_percentage_ascending(
-        self, view_command, temp_dir, capsys
+        self,
+        view_command,
+        temp_dir,
+        capsys,
     ):
         """Should sort active changes by completion percentage ascending with deterministic tie-breakers."""
         changes_dir = temp_dir / ".aurora/plans" / "changes"
@@ -89,7 +92,7 @@ class TestViewCommand:
         # gamma-change: 2/3 = 66.67%
         (changes_dir / "gamma-change").mkdir(parents=True)
         (changes_dir / "gamma-change" / "tasks.md").write_text(
-            "- [x] Done\n- [x] Also done\n- [ ] Not done\n"
+            "- [x] Done\n- [x] Also done\n- [ ] Not done\n",
         )
 
         # beta-change: 1/2 = 50%

@@ -63,8 +63,8 @@ class LLMClient(ABC):
         Raises:
             ValueError: If prompt is empty or invalid
             RuntimeError: If API call fails after retries
+
         """
-        pass
 
     @abstractmethod
     def generate_json(
@@ -96,8 +96,8 @@ class LLMClient(ABC):
         Raises:
             ValueError: If prompt is empty, invalid, or output is not valid JSON
             RuntimeError: If API call fails after retries
+
         """
-        pass
 
     @abstractmethod
     def count_tokens(self, text: str) -> int:
@@ -108,14 +108,13 @@ class LLMClient(ABC):
 
         Returns:
             Estimated token count
+
         """
-        pass
 
     @property
     @abstractmethod
     def default_model(self) -> str:
         """Get the default model identifier for this client."""
-        pass
 
 
 def extract_json_from_text(text: str) -> dict[str, Any]:
@@ -129,6 +128,7 @@ def extract_json_from_text(text: str) -> dict[str, Any]:
 
     Raises:
         ValueError: If no valid JSON found
+
     """
     # Try direct parse first
     try:
@@ -183,12 +183,13 @@ class AnthropicClient(LLMClient):
 
         Raises:
             ValueError: If no API key provided
+
         """
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not self._api_key:
             raise ValueError(
                 "Anthropic API key required. Set ANTHROPIC_API_KEY environment variable "
-                "or pass api_key parameter."
+                "or pass api_key parameter.",
             )
 
         self._default_model = default_model
@@ -203,7 +204,7 @@ class AnthropicClient(LLMClient):
             self._client = anthropic.Anthropic(api_key=self._api_key)
         except ImportError as e:
             raise ImportError(
-                "anthropic package required. Install with: pip install anthropic"
+                "anthropic package required. Install with: pip install anthropic",
             ) from e
 
     def _rate_limit(self) -> None:
@@ -245,6 +246,7 @@ class AnthropicClient(LLMClient):
         Raises:
             ValueError: If prompt is empty
             RuntimeError: If API call fails after retries
+
         """
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty")
@@ -301,6 +303,7 @@ class AnthropicClient(LLMClient):
         Raises:
             ValueError: If prompt is empty or output is not valid JSON
             RuntimeError: If API call fails after retries
+
         """
         # Enhance system prompt to enforce JSON output
         json_system = (
@@ -332,6 +335,7 @@ class AnthropicClient(LLMClient):
 
         Returns:
             Estimated token count
+
         """
         # Anthropic doesn't provide a public tokenizer, use heuristic
         return len(text) // 4
@@ -365,12 +369,13 @@ class OpenAIClient(LLMClient):
 
         Raises:
             ValueError: If no API key provided
+
         """
         self._api_key = api_key or os.environ.get("OPENAI_API_KEY")
         if not self._api_key:
             raise ValueError(
                 "OpenAI API key required. Set OPENAI_API_KEY environment variable "
-                "or pass api_key parameter."
+                "or pass api_key parameter.",
             )
 
         self._default_model = default_model
@@ -425,6 +430,7 @@ class OpenAIClient(LLMClient):
         Raises:
             ValueError: If prompt is empty
             RuntimeError: If API call fails after retries
+
         """
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty")
@@ -486,6 +492,7 @@ class OpenAIClient(LLMClient):
         Raises:
             ValueError: If prompt is empty or output is not valid JSON
             RuntimeError: If API call fails after retries
+
         """
         # Enhance system prompt to enforce JSON output
         json_system = (
@@ -521,6 +528,7 @@ class OpenAIClient(LLMClient):
 
         Returns:
             Estimated token count
+
         """
         # OpenAI has tiktoken but it's an extra dependency, use heuristic
         return len(text) // 4
@@ -551,6 +559,7 @@ class OllamaClient(LLMClient):
         Args:
             endpoint: Ollama server endpoint
             default_model: Default model to use
+
         """
         self._endpoint = endpoint
         self._default_model = default_model
@@ -605,6 +614,7 @@ class OllamaClient(LLMClient):
         Raises:
             ValueError: If prompt is empty
             RuntimeError: If API call fails after retries
+
         """
         if not prompt or not prompt.strip():
             raise ValueError("Prompt cannot be empty")
@@ -677,6 +687,7 @@ class OllamaClient(LLMClient):
         Raises:
             ValueError: If prompt is empty or output is not valid JSON
             RuntimeError: If API call fails after retries
+
         """
         # Enhance system prompt to enforce JSON output
         json_system = (
@@ -708,6 +719,7 @@ class OllamaClient(LLMClient):
 
         Returns:
             Estimated token count
+
         """
         # Ollama doesn't provide a public tokenizer, use heuristic
         return len(text) // 4

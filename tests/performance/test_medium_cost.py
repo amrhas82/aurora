@@ -91,7 +91,7 @@ def test_medium_query_cost():
         print(f"\n📊 Total Cost: ${status['consumed_usd']:.6f}")
         print(f"📝 Total Entries: {status['total_entries']}")
         print(
-            f"💰 Budget Remaining: ${status['remaining_usd']:.2f} / ${status.get('limit_usd', 50.0):.2f}"
+            f"💰 Budget Remaining: ${status['remaining_usd']:.2f} / ${status.get('limit_usd', 50.0):.2f}",
         )
         print(f"📈 Budget Used: {status['percent_consumed']:.1f}%")
 

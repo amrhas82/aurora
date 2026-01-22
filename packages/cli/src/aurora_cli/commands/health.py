@@ -16,7 +16,6 @@ from aurora_spawner.observability import get_health_monitor
 @click.group(name="health")
 def health_cmd():
     """View agent health metrics and failure detection statistics."""
-    pass
 
 
 @health_cmd.command(name="status")
@@ -142,7 +141,9 @@ def recent_failures(agent: str | None, limit: int, output_json: bool):
 
     # Rich table output
     table = Table(
-        title=f"Recent Failures (Last {limit})", show_header=True, header_style="bold red"
+        title=f"Recent Failures (Last {limit})",
+        show_header=True,
+        header_style="bold red",
     )
     table.add_column("Timestamp", style="dim")
     table.add_column("Agent", style="cyan")
@@ -206,7 +207,7 @@ def circuit_status(output_json: bool):
         last_failure = circuit_info.get("last_failure", 0)
         if last_failure:
             last_failure_str = datetime.datetime.fromtimestamp(last_failure).strftime(
-                "%Y-%m-%d %H:%M:%S"
+                "%Y-%m-%d %H:%M:%S",
             )
         else:
             last_failure_str = "N/A"

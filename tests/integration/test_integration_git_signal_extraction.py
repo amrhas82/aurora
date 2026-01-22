@@ -65,7 +65,9 @@ class TestGitSignalExtraction:
         subprocess.run(["git", "init"], cwd=repo_dir, check=True)
         subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_dir, check=True)
         subprocess.run(
-            ["git", "config", "user.email", "test@example.com"], cwd=repo_dir, check=True
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=repo_dir,
+            check=True,
         )
 
         # Create Python file with 3 functions
@@ -83,7 +85,7 @@ def moderately_edited_function(x):
 def rarely_edited_function(x):
     \"\"\"This function will be edited once (initial commit only).\"\"\"
     return x - 1
-"""
+""",
         )
 
         # Initial commit
@@ -132,7 +134,8 @@ def rarely_edited_function(x):
         return repo_dir, test_file
 
     @pytest.mark.skipif(
-        not GIT_EXTRACTOR_EXISTS, reason="GitSignalExtractor not yet implemented (task 4.1)"
+        not GIT_EXTRACTOR_EXISTS,
+        reason="GitSignalExtractor not yet implemented (task 4.1)",
     )
     def test_get_function_commit_times_extracts_per_function(self, git_repo_with_function_history):
         """Test that get_function_commit_times() returns function-specific commit times.
@@ -145,17 +148,23 @@ def rarely_edited_function(x):
 
         # Get commit times for frequently_edited_function (lines 2-4)
         freq_commits = extractor.get_function_commit_times(
-            file_path=test_file, line_start=2, line_end=4
+            file_path=test_file,
+            line_start=2,
+            line_end=4,
         )
 
         # Get commit times for moderately_edited_function (lines 6-8)
         mod_commits = extractor.get_function_commit_times(
-            file_path=test_file, line_start=6, line_end=8
+            file_path=test_file,
+            line_start=6,
+            line_end=8,
         )
 
         # Get commit times for rarely_edited_function (lines 10-12)
         rare_commits = extractor.get_function_commit_times(
-            file_path=test_file, line_start=10, line_end=12
+            file_path=test_file,
+            line_start=10,
+            line_end=12,
         )
 
         # ASSERTION 1: Frequently edited function should have 2 unique commits

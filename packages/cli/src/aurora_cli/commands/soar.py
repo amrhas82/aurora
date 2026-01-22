@@ -83,6 +83,7 @@ def _start_background_model_loading(verbose: bool = False) -> None:
 
     Args:
         verbose: Whether to enable verbose logging
+
     """
     import logging
 
@@ -118,6 +119,7 @@ def _format_markdown_answer(text: str) -> str:
 
     Returns:
         Formatted text with visual separators and proper spacing
+
     """
     # First, ensure paragraph breaks are preserved
     # If text has no blank lines but has multiple sentences, add paragraph spacing
@@ -201,6 +203,7 @@ def _extract_json(text: str) -> dict:
 
     Raises:
         ValueError: If no valid JSON found
+
     """
     # Try to find ```json blocks first
     json_block_match = re.search(r"```json\s*([\s\S]*?)\s*```", text)
@@ -226,6 +229,7 @@ def _ensure_soar_dir() -> Path:
 
     Returns:
         Path to soar directory
+
     """
     aurora_dir = get_aurora_dir()
     soar_dir = aurora_dir / "soar"
@@ -242,6 +246,7 @@ def _print_phase(owner: str, phase_num: int, name: str, description: str, tool: 
         name: Phase name
         description: Brief description
         tool: Tool name for LLM phases
+
     """
     if owner == "ORCHESTRATOR":
         console.print(f"\n[blue][ORCHESTRATOR][/] Phase {phase_num}: {name}")
@@ -256,6 +261,7 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
     Args:
         phase_num: Phase number (1-8, simplified pipeline)
         result: Phase result dictionary
+
     """
     if phase_num == 1:
         # Assess phase
@@ -280,7 +286,7 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
             console.print(f"  [yellow]⚠️  PASS (marginal - score: {score:.2f})[/]")
             issues_count = len(result.get("issues", []))
             console.print(
-                f"  [yellow]└─ {issues_count} concerns, {agents_assigned} subgoals routed[/]"
+                f"  [yellow]└─ {issues_count} concerns, {agents_assigned} subgoals routed[/]",
             )
         else:
             if agents_assigned > 0:
@@ -388,6 +394,7 @@ def _create_phase_callback(tool: str):
 
     Returns:
         Callback function for SOAROrchestrator
+
     """
 
     def callback(phase_name: str, status: str, result_summary: dict[str, Any]) -> None:
@@ -538,7 +545,7 @@ def soar_command(
             title="[bold]Aurora SOAR[/]",
             subtitle=f"[dim]Tool: {tool}[/]",
             border_style="blue",
-        )
+        ),
     )
 
     start_time = time.time()
@@ -555,7 +562,6 @@ def soar_command(
     # Import here to avoid circular imports and allow lazy loading
     from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
     from aurora_core.store.sqlite import SQLiteStore
-    from aurora_soar.agent_registry import AgentRegistry
     from aurora_soar.orchestrator import SOAROrchestrator
 
     # Create CLI-based LLM client
@@ -669,7 +675,7 @@ def soar_command(
                 concern_text,
                 title="[yellow]⚠️  Verification Concerns[/]",
                 border_style="yellow",
-            )
+            ),
         )
 
     console.print()
@@ -678,7 +684,7 @@ def soar_command(
             answer,
             title="[bold]Final Answer[/]",
             border_style="green",
-        )
+        ),
     )
 
     # Show metadata

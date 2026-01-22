@@ -54,6 +54,7 @@ class ManifestManager:
         >>> # Save and load manifest
         >>> manager.save(manifest, Path("~/.aurora/cache/agent_manifest.json"))
         >>> loaded = manager.load(Path("~/.aurora/cache/agent_manifest.json"))
+
     """
 
     def __init__(
@@ -66,6 +67,7 @@ class ManifestManager:
         Args:
             scanner: Optional AgentScanner instance (creates default if not provided)
             parser: Optional AgentParser instance (creates default if not provided)
+
         """
         self.scanner = scanner or AgentScanner()
         self.parser = parser or AgentParser()
@@ -90,6 +92,7 @@ class ManifestManager:
             >>> manifest = manager.generate()
             >>> print(f"Categories: {list(manifest.stats.by_category.keys())}")
             Categories: ['eng', 'qa', 'product', 'general']
+
         """
         # Create scanner with custom sources if provided
         if sources:
@@ -174,6 +177,7 @@ class ManifestManager:
             >>> manager = ManifestManager()
             >>> manifest = manager.generate()
             >>> manager.save(manifest, Path("~/.aurora/cache/agent_manifest.json"))
+
         """
         resolved_path = Path(path).expanduser().resolve()
 
@@ -222,6 +226,7 @@ class ManifestManager:
             >>> manifest = manager.load(Path("~/.aurora/cache/agent_manifest.json"))
             >>> if manifest:
             ...     print(f"Loaded {manifest.stats.total} agents")
+
         """
         resolved_path = Path(path).expanduser().resolve()
 
@@ -267,6 +272,7 @@ class ManifestManager:
             >>> if manager.should_refresh(Path("manifest.json"), refresh_interval_hours=24):
             ...     manifest = manager.generate()
             ...     manager.save(manifest, Path("manifest.json"))
+
         """
         resolved_path = Path(path).expanduser().resolve()
 
@@ -329,6 +335,7 @@ class ManifestManager:
             ...     refresh_interval_hours=24
             ... )
             >>> print(f"Got {manifest.stats.total} agents")
+
         """
         # Check if we should refresh
         needs_refresh = auto_refresh and self.should_refresh(path, refresh_interval_hours)
@@ -366,6 +373,7 @@ def should_refresh_manifest(manifest_path: Path, config: Config) -> bool:
         >>> if should_refresh_manifest(Path("manifest.json"), config):
         ...     # Perform refresh
         ...     pass
+
     """
     # Check if auto_refresh is enabled
     auto_refresh = getattr(config, "agents_auto_refresh", True)

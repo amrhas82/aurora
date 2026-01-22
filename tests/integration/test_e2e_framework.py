@@ -48,6 +48,7 @@ class MockLLMClient(LLMClient):
 
         Args:
             default_model: Default model identifier
+
         """
         self._default_model = default_model
         self._responses: dict[str, list[MockLLMResponse]] = {}
@@ -67,6 +68,7 @@ class MockLLMClient(LLMClient):
 
         Returns:
             Approximate token count
+
         """
         # Simple approximation: 1 token per 4 characters
         return len(text) // 4
@@ -77,6 +79,7 @@ class MockLLMClient(LLMClient):
         Args:
             pattern: Pattern to match in prompt (substring match)
             response: Response to return
+
         """
         if pattern not in self._responses:
             self._responses[pattern] = []
@@ -88,6 +91,7 @@ class MockLLMClient(LLMClient):
         Args:
             pattern: Pattern to match in prompt
             responses: List of responses to return in sequence
+
         """
         self._responses[pattern] = responses.copy()
 
@@ -96,6 +100,7 @@ class MockLLMClient(LLMClient):
 
         Returns:
             List of call records with prompt, model, response
+
         """
         return self._calls.copy()
 
@@ -104,6 +109,7 @@ class MockLLMClient(LLMClient):
 
         Returns:
             Number of calls
+
         """
         return self._call_count
 
@@ -134,6 +140,7 @@ class MockLLMClient(LLMClient):
 
         Returns:
             LLMResponse object
+
         """
         from aurora_reasoning.llm_client import LLMResponse
 
@@ -153,7 +160,7 @@ class MockLLMClient(LLMClient):
                         "response": response.content,
                         "input_tokens": response.input_tokens,
                         "output_tokens": response.output_tokens,
-                    }
+                    },
                 )
                 return LLMResponse(
                     content=response.content,
@@ -173,7 +180,7 @@ class MockLLMClient(LLMClient):
                 "response": default_content,
                 "input_tokens": 100,
                 "output_tokens": 50,
-            }
+            },
         )
         return LLMResponse(
             content=default_content,
@@ -206,6 +213,7 @@ class MockLLMClient(LLMClient):
 
         Returns:
             Parsed JSON object
+
         """
         model = model or self._default_model
         self._call_count += 1
@@ -223,7 +231,7 @@ class MockLLMClient(LLMClient):
                         "response": response.content,
                         "input_tokens": response.input_tokens,
                         "output_tokens": response.output_tokens,
-                    }
+                    },
                 )
                 return json.loads(response.content)
 
@@ -237,7 +245,7 @@ class MockLLMClient(LLMClient):
                 "response": default_response,
                 "input_tokens": 100,
                 "output_tokens": 50,
-            }
+            },
         )
         return default_response
 
@@ -261,6 +269,7 @@ class MockAgent:
             response: Response to return (optional)
             execution_time: Simulated execution time in seconds
             should_fail: Whether agent should fail
+
         """
         self.agent_id = agent_id
         self.capabilities = capabilities
@@ -285,6 +294,7 @@ class MockAgent:
 
         Raises:
             RuntimeError: If agent configured to fail
+
         """
         self._calls.append({"subgoal": subgoal, "context": context})
 
@@ -301,6 +311,7 @@ class MockAgent:
 
         Returns:
             List of call records
+
         """
         return self._calls.copy()
 
@@ -324,6 +335,7 @@ class E2ETestFramework:
 
         Args:
             temp_dir: Temporary directory for test files
+
         """
         self.temp_dir = temp_dir
 
@@ -337,7 +349,8 @@ class E2ETestFramework:
 
         tracker_path = Path(temp_dir) / "test_budget_tracker.json"
         self.cost_tracker = CostTracker(
-            monthly_limit_usd=1000.0, tracker_path=tracker_path
+            monthly_limit_usd=1000.0,
+            tracker_path=tracker_path,
         )  # High limit for tests
         self.conversation_logger = ConversationLogger(enabled=False)
 
@@ -349,6 +362,7 @@ class E2ETestFramework:
 
         Returns:
             Test configuration
+
         """
         config_data = {
             "budget": {"monthly_limit_usd": 100.0},
@@ -365,6 +379,7 @@ class E2ETestFramework:
 
         Returns:
             Test store
+
         """
         import os
 
@@ -376,6 +391,7 @@ class E2ETestFramework:
 
         Returns:
             Test orchestrator
+
         """
         return SOAROrchestrator(
             store=self.store,
@@ -392,6 +408,7 @@ class E2ETestFramework:
 
         Args:
             agent: Mock agent to register
+
         """
         from aurora_soar.agent_registry import AgentInfo
 
@@ -412,6 +429,7 @@ class E2ETestFramework:
         Args:
             complexity: Complexity level (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
             confidence: Assessment confidence
+
         """
         response = MockLLMResponse(
             content=json.dumps(
@@ -419,7 +437,7 @@ class E2ETestFramework:
                     "complexity": complexity,
                     "confidence": confidence,
                     "reasoning": f"Mock assessment: {complexity}",
-                }
+                },
             ),
             input_tokens=200,
             output_tokens=50,
@@ -434,6 +452,7 @@ class E2ETestFramework:
 
         Args:
             subgoals: List of subgoal dictionaries with proper Phase 2 format
+
         """
         # Convert subgoals to proper format if needed
         formatted_subgoals = []
@@ -448,7 +467,7 @@ class E2ETestFramework:
 
         # Create proper execution_order structure
         execution_order = [
-            {"phase": 1, "parallelizable": list(range(len(subgoals))), "sequential": []}
+            {"phase": 1, "parallelizable": list(range(len(subgoals))), "sequential": []},
         ]
 
         response = MockLLMResponse(
@@ -458,7 +477,7 @@ class E2ETestFramework:
                     "subgoals": formatted_subgoals,
                     "execution_order": execution_order,
                     "expected_tools": ["mock-tool"],
-                }
+                },
             ),
             input_tokens=500,
             output_tokens=200,
@@ -469,7 +488,10 @@ class E2ETestFramework:
         self.mock_llm.configure_response("break down", response)
 
     def configure_verification_response(
-        self, verdict: str, score: float, feedback: str = ""
+        self,
+        verdict: str,
+        score: float,
+        feedback: str = "",
     ) -> None:
         """Configure mock response for verification.
 
@@ -477,6 +499,7 @@ class E2ETestFramework:
             verdict: Verification verdict (PASS, RETRY, FAIL)
             score: Verification score (0-1)
             feedback: Feedback message
+
         """
         response = MockLLMResponse(
             content=json.dumps(
@@ -489,7 +512,7 @@ class E2ETestFramework:
                     "verdict": verdict,
                     "issues": [feedback] if feedback else [],
                     "suggestions": [],
-                }
+                },
             ),
             input_tokens=400,
             output_tokens=150,
@@ -500,7 +523,10 @@ class E2ETestFramework:
         self.mock_llm.configure_response("ROUTABILITY", response)
 
     def configure_synthesis_response(
-        self, answer: str, confidence: float = 0.9, agent_name: str | None = None
+        self,
+        answer: str,
+        confidence: float = 0.9,
+        agent_name: str | None = None,
     ) -> None:
         """Configure mock response for synthesis.
 
@@ -509,6 +535,7 @@ class E2ETestFramework:
             confidence: Synthesis confidence
             agent_name: Optional agent name to reference for traceability.
                        If not provided, uses first registered agent or "mock-agent".
+
         """
         # Auto-detect agent name from registered agents if not provided
         if agent_name is None:
@@ -535,7 +562,7 @@ class E2ETestFramework:
                     "completeness": 0.9,
                     "factuality": 0.9,
                     "overall_score": 0.9,
-                }
+                },
             ),
             input_tokens=200,
             output_tokens=50,
@@ -552,6 +579,7 @@ class E2ETestFramework:
         Args:
             response: Orchestrator response
             phase_name: Phase name to check (e.g., "phase1_assess")
+
         """
         assert "metadata" in response, "Response missing metadata"
         assert "phases" in response["metadata"], "Metadata missing phases"
@@ -563,6 +591,7 @@ class E2ETestFramework:
         Args:
             response: Orchestrator response
             max_duration_ms: Maximum allowed duration in milliseconds
+
         """
         assert "metadata" in response, "Response missing metadata"
         duration = response["metadata"].get("total_duration_ms", 0)
@@ -576,6 +605,7 @@ class E2ETestFramework:
         Args:
             response: Orchestrator response
             max_cost_usd: Maximum allowed cost in USD
+
         """
         assert "metadata" in response, "Response missing metadata"
         cost = response["metadata"].get("total_cost_usd", 0)
@@ -589,6 +619,7 @@ class E2ETestFramework:
 
         Returns:
             Tuple of (result, duration_ms)
+
         """
         start_time = time.time()
         result = func()
@@ -611,6 +642,7 @@ def create_mock_decomposition(num_subgoals: int = 3) -> dict[str, Any]:
 
     Returns:
         Mock decomposition dictionary
+
     """
     subgoals = []
     for i in range(num_subgoals):
@@ -621,7 +653,7 @@ def create_mock_decomposition(num_subgoals: int = 3) -> dict[str, Any]:
                 "agent_type": f"mock-agent-{i % 2}",
                 "inputs": {},
                 "dependencies": [],
-            }
+            },
         )
 
     return {
@@ -641,6 +673,7 @@ def create_mock_agent_response(agent_id: str, confidence: float = 0.9) -> dict[s
 
     Returns:
         Mock agent response dictionary
+
     """
     return {
         "summary": f"Mock response from {agent_id}",

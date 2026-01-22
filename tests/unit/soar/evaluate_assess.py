@@ -27,7 +27,8 @@ class EvaluationResult:
 
 
 def evaluate_corpus(
-    assessor: ComplexityAssessor | None = None, verbose: bool = False
+    assessor: ComplexityAssessor | None = None,
+    verbose: bool = False,
 ) -> EvaluationResult:
     """Evaluate assessor against the full test corpus.
 
@@ -82,7 +83,7 @@ def evaluate_corpus(
                     "category": category,
                     "notes": notes,
                     "breakdown": result.breakdown,
-                }
+                },
             )
 
             if verbose:
@@ -135,10 +136,10 @@ def print_report(result: EvaluationResult):
         stats = result.by_level[level]
         if stats["total"] > 0:  # Only show if we have test cases for this level
             print(
-                f"  {level.upper():8} {stats['accuracy']:6.1%} ({stats['correct']}/{stats['total']})"
+                f"  {level.upper():8} {stats['accuracy']:6.1%} ({stats['correct']}/{stats['total']})",
             )
             print(
-                f"           Score range: {stats['min_score']}-{stats['max_score']}, avg: {stats['avg_score']:.1f}"
+                f"           Score range: {stats['min_score']}-{stats['max_score']}, avg: {stats['avg_score']:.1f}",
             )
 
     # Confusion matrix
@@ -146,7 +147,7 @@ def print_report(result: EvaluationResult):
     print("CONFUSION MATRIX:")
     print("-" * 40)
     print(
-        f"{'Expected':<12} {'→ Simple':<12} {'→ Medium':<12} {'→ Complex':<12} {'→ Critical':<12}"
+        f"{'Expected':<12} {'→ Simple':<12} {'→ Medium':<12} {'→ Complex':<12} {'→ Critical':<12}",
     )
     for expected in ["simple", "medium", "complex", "critical"]:
         row = result.confusion_matrix.get(expected, {})
@@ -178,13 +179,13 @@ def print_report(result: EvaluationResult):
         print(f"\n  Over-classified (predicted too complex): {len(over_classified)}")
         for m in over_classified[:5]:  # Show first 5
             print(
-                f'    [{m["expected"]}→{m["predicted"]}] score={m["score"]:3} "{m["prompt"][:50]}..."'
+                f'    [{m["expected"]}→{m["predicted"]}] score={m["score"]:3} "{m["prompt"][:50]}..."',
             )
 
         print(f"\n  Under-classified (predicted too simple): {len(under_classified)}")
         for m in under_classified[:5]:  # Show first 5
             print(
-                f'    [{m["expected"]}→{m["predicted"]}] score={m["score"]:3} "{m["prompt"][:50]}..."'
+                f'    [{m["expected"]}→{m["predicted"]}] score={m["score"]:3} "{m["prompt"][:50]}..."',
             )
 
     # Score threshold analysis
@@ -207,16 +208,16 @@ def _analyze_thresholds(result: EvaluationResult):
 
     print(
         f"  Simple scores:  min={min(simple_scores):3}, max={max(simple_scores):3}, "
-        f"p90={sorted(simple_scores)[int(len(simple_scores) * 0.9)]:3}"
+        f"p90={sorted(simple_scores)[int(len(simple_scores) * 0.9)]:3}",
     )
     print(
         f"  Medium scores:  min={min(medium_scores):3}, max={max(medium_scores):3}, "
         f"p10={sorted(medium_scores)[int(len(medium_scores) * 0.1)]:3}, "
-        f"p90={sorted(medium_scores)[int(len(medium_scores) * 0.9)]:3}"
+        f"p90={sorted(medium_scores)[int(len(medium_scores) * 0.9)]:3}",
     )
     print(
         f"  Complex scores: min={min(complex_scores):3}, max={max(complex_scores):3}, "
-        f"p10={sorted(complex_scores)[int(len(complex_scores) * 0.1)]:3}"
+        f"p10={sorted(complex_scores)[int(len(complex_scores) * 0.1)]:3}",
     )
 
     # Find optimal thresholds
@@ -225,7 +226,7 @@ def _analyze_thresholds(result: EvaluationResult):
     print("  Current: simple<=15, medium<=35")
     print(
         f"  Optimal: simple<={best_simple_thresh}, medium<={best_medium_thresh} "
-        f"(would achieve {best_acc:.1%})"
+        f"(would achieve {best_acc:.1%})",
     )
 
 
@@ -285,10 +286,16 @@ def main():
 
     parser = argparse.ArgumentParser(description="Evaluate complexity assessor")
     parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Show details during evaluation"
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Show details during evaluation",
     )
     parser.add_argument(
-        "--analyze", "-a", action="store_true", help="Deep analysis of misclassifications"
+        "--analyze",
+        "-a",
+        action="store_true",
+        help="Deep analysis of misclassifications",
     )
 
     args = parser.parse_args()
@@ -304,9 +311,8 @@ def main():
     if result.accuracy >= 0.85:
         print(f"\n✓ Target accuracy (85%) achieved: {result.accuracy:.1%}")
         return 0
-    else:
-        print(f"\n✗ Below target accuracy (85%): {result.accuracy:.1%}")
-        return 1
+    print(f"\n✗ Below target accuracy (85%): {result.accuracy:.1%}")
+    return 1
 
 
 if __name__ == "__main__":

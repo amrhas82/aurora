@@ -118,7 +118,7 @@ class DatabaseManager:
         """Close database connection."""
         if self.connection:
             self.connection.close()
-'''
+''',
         )
 
         # Create HTTP/API module
@@ -179,7 +179,7 @@ class APIClient:
         response = self.session.post(url, json=data, headers=headers)
         response.raise_for_status()
         return response.json()
-'''
+''',
         )
 
         # Create file I/O module
@@ -250,7 +250,7 @@ class FileHandler:
             List of matching file paths
         """
         return list(self.base_dir.glob(pattern))
-'''
+''',
         )
 
         # Create math/algorithm module
@@ -315,7 +315,7 @@ def factorial(n: int) -> int:
     for i in range(2, n + 1):
         result *= i
     return result
-'''
+''',
         )
 
         yield project_path
@@ -329,7 +329,9 @@ class TestSearchAccuracy:
     """
 
     def test_1_3_1_index_codebase_with_diverse_content(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.1: Write test that indexes codebase with diverse content.
 
@@ -352,7 +354,9 @@ class TestSearchAccuracy:
         ), f"Should have indexed files:\n{result.stdout}"
 
     def test_1_3_2_different_queries_return_different_results(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.2: Run 3+ different searches with varied queries.
 
@@ -420,7 +424,9 @@ class TestSearchAccuracy:
         )
 
     def test_1_3_3_parse_json_output(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.3: Parse JSON output from `aur mem search --output json`.
 
@@ -469,7 +475,9 @@ class TestSearchAccuracy:
             pytest.skip("--output json not supported or search failed")
 
     def test_1_3_4_top_results_differ_across_queries(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.4: Assert top results differ across queries (not identical).
 
@@ -540,7 +548,9 @@ class TestSearchAccuracy:
         )
 
     def test_1_3_5_activation_scores_have_variance(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.5: Assert activation scores vary across chunks (stddev > 0.1).
 
@@ -591,7 +601,9 @@ class TestSearchAccuracy:
             pytest.skip("--output json not supported")
 
     def test_1_3_6_semantic_scores_vary_by_relevance(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.6: Assert semantic scores vary based on relevance.
 
@@ -649,7 +661,9 @@ class TestSearchAccuracy:
             pytest.skip("--output json not supported")
 
     def test_1_3_7_line_ranges_not_all_zero(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.7: Assert line ranges are not all "0-0".
 
@@ -715,7 +729,9 @@ class TestSearchAccuracy:
             pytest.skip("--output json not supported")
 
     def test_1_3_8_search_accuracy_comprehensive_check(
-        self, clean_aurora_home: Path, diverse_python_project: Path
+        self,
+        clean_aurora_home: Path,
+        diverse_python_project: Path,
     ) -> None:
         """Test 1.3.8: Expected - Test FAILS because all results identical (Issue #4).
 
@@ -763,7 +779,9 @@ class TestSearchAccuracy:
 
         # Outputs should be substantially different
         similarity_ratio = len(set(search1.stdout) & set(search2.stdout)) / max(
-            len(search1.stdout), len(search2.stdout), 1
+            len(search1.stdout),
+            len(search2.stdout),
+            1,
         )
 
         # If outputs are >80% similar despite completely different queries, that's Issue #4
@@ -774,7 +792,7 @@ class TestSearchAccuracy:
                 f"Query 2: 'algorithm' returned:\n{search2.stdout[:200]}...\n\n"
                 f"Similarity: {similarity_ratio * 100:.1f}% (should be <50% for different queries)\n\n"
                 f"Root cause: Activation tracking broken (all base_level = 0.0)\n"
-                f"Fix: Call store.record_access() during search"
+                f"Fix: Call store.record_access() during search",
             )
 
 

@@ -49,7 +49,7 @@ The system SHALL do something.
 GIVEN state
 WHEN action
 THEN result
-"""
+""",
         )
 
         import os
@@ -86,7 +86,7 @@ Text here.
 GIVEN state
 WHEN action
 THEN result
-"""
+""",
         )
 
         import os
@@ -123,11 +123,13 @@ The system SHALL support test functionality.
 GIVEN initial state
 WHEN action occurs
 THEN result happens
-"""
+""",
         )
 
         result = validate_command.validate_capability(
-            str(cap_file), strict=False, json_output=False
+            str(cap_file),
+            strict=False,
+            json_output=False,
         )
         assert "valid" in result.lower()
 
@@ -138,7 +140,9 @@ THEN result happens
         assert "not found" in str(exc_info.value).lower()
 
     def test_validate_capability_json_output(
-        self, tmp_path: Path, validate_command: ValidateCommand
+        self,
+        tmp_path: Path,
+        validate_command: ValidateCommand,
     ):
         """Test JSON output for capability validation."""
         cap_file = tmp_path / "test-capability.md"
@@ -155,7 +159,7 @@ The system SHALL do something.
 GIVEN state
 WHEN action
 THEN result
-"""
+""",
         )
 
         result = validate_command.validate_capability(str(cap_file), strict=False, json_output=True)

@@ -25,6 +25,7 @@ class DecomposePhaseResult:
         cached: Whether result was retrieved from cache
         query_hash: Hash of query for cache lookup
         timing_ms: Time taken in milliseconds
+
     """
 
     def __init__(
@@ -62,6 +63,7 @@ def _compute_query_hash(query: str, complexity: str) -> str:
 
     Returns:
         SHA256 hash as hex string
+
     """
     content = f"{query}|{complexity}"
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
@@ -100,6 +102,7 @@ def decompose_query(
     Raises:
         ValueError: If complexity is invalid or decomposition fails validation
         RuntimeError: If LLM call fails
+
     """
     import time
 
@@ -166,6 +169,7 @@ def _read_file_lines(file_path: str, line_start: int, line_end: int, max_lines: 
 
     Returns:
         File content or empty string if read fails
+
     """
     try:
         from pathlib import Path
@@ -201,6 +205,7 @@ def _build_context_summary(context: dict[str, Any]) -> str:
 
     Returns:
         Summary string with actual code the LLM can use for decomposition.
+
     """
     code_chunks = context.get("code_chunks", [])
     reasoning_chunks = context.get("reasoning_chunks", [])
@@ -264,7 +269,7 @@ def _build_context_summary(context: dict[str, Any]) -> str:
 
     if reasoning_chunks:
         summary_parts.append(
-            f"\n## Previous Solutions: {len(reasoning_chunks)} relevant patterns available"
+            f"\n## Previous Solutions: {len(reasoning_chunks)} relevant patterns available",
         )
 
     if not summary_parts:

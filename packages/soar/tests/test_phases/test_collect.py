@@ -838,7 +838,7 @@ class TestContextPassing:
             "aurora_soar.phases.collect.spawn_parallel_tracked",
             side_effect=mock_spawn_parallel_tracked,
         ):
-            result = await execute_agents(agent_assignments, subgoals, context)
+            await execute_agents(agent_assignments, subgoals, context)
 
             # Verify two prompts were captured (one per wave)
             assert len(captured_prompts) == 2
@@ -923,7 +923,7 @@ class TestContextPassing:
             "aurora_soar.phases.collect.spawn_parallel_tracked",
             side_effect=mock_spawn_parallel_tracked,
         ):
-            result = await execute_agents(agent_assignments, subgoals, context)
+            await execute_agents(agent_assignments, subgoals, context)
 
             # Verify three prompts captured
             assert len(captured_prompts) == 3
@@ -1004,7 +1004,7 @@ class TestContextPassing:
             "aurora_soar.phases.collect.spawn_parallel_tracked",
             side_effect=mock_spawn_parallel_tracked,
         ):
-            result = await execute_agents(agent_assignments, subgoals, context)
+            await execute_agents(agent_assignments, subgoals, context)
 
             # Verify sg-3 prompt has WARNING footer
             sg3_prompt = captured_prompts[2]
@@ -1076,7 +1076,7 @@ class TestContextPassing:
             "aurora_soar.phases.collect.spawn_parallel_tracked",
             side_effect=mock_spawn_parallel_tracked,
         ):
-            result = await execute_agents(agent_assignments, subgoals, context)
+            await execute_agents(agent_assignments, subgoals, context)
 
             # Verify three prompts captured (sg-3 NOT skipped)
             assert len(captured_prompts) == 3
@@ -1135,7 +1135,7 @@ class TestContextPassing:
         results_by_wave = []
 
         async def mock_spawn_parallel_tracked(*args, **kwargs):
-            tasks = args[0] if args else kwargs.get("tasks", [])
+            args[0] if args else kwargs.get("tasks", [])
             wave_count[0] += 1
 
             # Wave 1: sg-1 and sg-3 succeed
@@ -1220,7 +1220,7 @@ class TestWaveExecution:
         wave1_complete = [False]
 
         async def mock_spawn_parallel_tracked(*args, **kwargs):
-            tasks = args[0] if args else kwargs.get("tasks", [])
+            args[0] if args else kwargs.get("tasks", [])
             # Identify wave by number of tasks or prompt content
             if len(call_order) == 0:
                 # First wave
@@ -1478,7 +1478,7 @@ class TestProgressDisplayAndLogging:
         wave_count = [0]
 
         async def mock_spawn_parallel_tracked(*args, **kwargs):
-            tasks = args[0] if args else kwargs.get("tasks", [])
+            args[0] if args else kwargs.get("tasks", [])
             wave_count[0] += 1
 
             if wave_count[0] == 1:
@@ -1501,7 +1501,7 @@ class TestProgressDisplayAndLogging:
             "aurora_soar.phases.collect.spawn_parallel_tracked",
             side_effect=mock_spawn_parallel_tracked,
         ):
-            result = await execute_agents(agent_assignments, subgoals, context)
+            await execute_agents(agent_assignments, subgoals, context)
 
             # Capture log output
             log_output = "\n".join([record.message for record in caplog.records])
@@ -1575,10 +1575,10 @@ class TestProgressDisplayAndLogging:
             "aurora_soar.phases.collect.spawn_parallel_tracked",
             side_effect=mock_spawn_parallel_tracked,
         ):
-            result = await execute_agents(agent_assignments, subgoals, context)
+            await execute_agents(agent_assignments, subgoals, context)
 
             # Capture log output
-            log_output = "\n".join([record.message for record in caplog.records])
+            "\n".join([record.message for record in caplog.records])
 
             # Verify DEBUG logs present
             debug_logs = [r for r in caplog.records if r.levelno == logging.DEBUG]
@@ -1633,7 +1633,7 @@ class TestProgressDisplayAndLogging:
         context = {"query": "Test final summary"}
 
         async def mock_spawn_parallel_tracked(*args, **kwargs):
-            tasks = args[0] if args else kwargs.get("tasks", [])
+            args[0] if args else kwargs.get("tasks", [])
             # Return 1 success, 1 failure
             return (
                 [
@@ -1647,7 +1647,7 @@ class TestProgressDisplayAndLogging:
             "aurora_soar.phases.collect.spawn_parallel_tracked",
             side_effect=mock_spawn_parallel_tracked,
         ):
-            result = await execute_agents(agent_assignments, subgoals, context)
+            await execute_agents(agent_assignments, subgoals, context)
 
             # Capture log messages
             log_messages = [record.message for record in caplog.records if record.levelno == logging.INFO]

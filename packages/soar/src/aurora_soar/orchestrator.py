@@ -33,7 +33,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 from aurora_core.budget import CostTracker
 from aurora_core.exceptions import BudgetExceededError
@@ -52,13 +52,10 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
-
 if TYPE_CHECKING:
-    from typing import Any
-
     from aurora_core.store.base import Store
     from aurora_reasoning.llm_client import LLMClient
-    from aurora_soar.agent_registry import AgentRegistry
+    from aurora_soar.agent_registry import AgentInfo, AgentRegistry
 
     # Config can be a dict or Config wrapper class - both support .get() method
     Config = dict[str, Any]
@@ -208,7 +205,7 @@ class SOAROrchestrator:
         else:
             logger.debug("Early detection disabled")
 
-    def _list_agents(self):
+    def _list_agents(self) -> list["AgentInfo"]:
         """List all available agents using registry or discovery adapter.
 
         Returns:
@@ -217,9 +214,11 @@ class SOAROrchestrator:
         """
         if self._use_discovery:
             return discovery_adapter.list_agents()
+        if self.agent_registry is None:
+            return []
         return self.agent_registry.list_all()
 
-    def _get_agent(self, agent_id: str):
+    def _get_agent(self, agent_id: str) -> "AgentInfo | None":
         """Get agent by ID using registry or discovery adapter.
 
         Args:
@@ -231,9 +230,11 @@ class SOAROrchestrator:
         """
         if self._use_discovery:
             return discovery_adapter.get_agent(agent_id)
+        if self.agent_registry is None:
+            return None
         return self.agent_registry.get(agent_id)
 
-    def _get_or_create_fallback_agent(self):
+    def _get_or_create_fallback_agent(self) -> "AgentInfo":
         """Get or create a fallback agent when no suitable agent is found.
 
         Returns:
@@ -242,6 +243,8 @@ class SOAROrchestrator:
         """
         if self._use_discovery:
             return discovery_adapter.create_fallback_agent()
+        if self.agent_registry is None:
+            raise RuntimeError("No agent registry available to create fallback agent")
         return self.agent_registry.create_fallback_agent()
 
     def _invoke_callback(
@@ -517,13 +520,17 @@ class SOAROrchestrator:
 
             # Early exit for goals-only mode (aur goals uses stop_after_verify=True)
             if stop_after_verify:
+                # Get detailed subgoals from phase4 result or default to empty
+                raw_detailed = phase4_result.get("subgoals_detailed", [])
+                # Cast to the expected type - the verify phase returns list[dict]
+                detailed_subgoals = cast(list[dict[str, Any]], raw_detailed)
                 return self._build_verify_only_result(
                     query=query,
                     complexity=phase1_result["complexity"],
                     context=phase2_result,
                     decomposition=decomposition_dict,
                     agent_assignments=agent_assignments,
-                    subgoal_details=phase4_result.get("subgoals_detailed", subgoal_details),
+                    subgoal_details=detailed_subgoals,
                     issues=issues,
                 )
 
@@ -663,7 +670,7 @@ class SOAROrchestrator:
             return []
         return self.agent_registry.list_all()
 
-    def _get_progress_callback(self) -> callable:
+    def _get_progress_callback(self) -> Callable[[str], None]:
         """Create progress callback for streaming agent execution updates (Task 5.5).
 
         Returns:
@@ -824,7 +831,7 @@ class SOAROrchestrator:
         agent_assignments: list[tuple[int, Any]],
         subgoals: list[dict[str, Any]],
         context: dict[str, Any],
-        on_progress: callable = None,
+        on_progress: Callable[[str], None] | None = None,
     ) -> collect.CollectResult:
         """Execute Phase 5: Agent Execution (Task 5.4 - updated signature).
 
@@ -1675,7 +1682,7 @@ class SOAROrchestrator:
 
         return metadata
 
-    def _split_large_chunk_by_sections(self, chunk, max_chars: int = 2048):
+    def _split_large_chunk_by_sections(self, chunk: Any, max_chars: int = 2048) -> list[Any]:
         """Split a large chunk by H2 markdown sections.
 
         Args:
@@ -1693,9 +1700,9 @@ class SOAROrchestrator:
             return [chunk]
 
         # Split by H2 headers (##)
-        sections = []
-        current_section = []
-        current_header = None
+        sections: list[tuple[str | None, str]] = []
+        current_section: list[str] = []
+        current_header: str | None = None
 
         for line in text.split("\n"):
             if line.strip().startswith("## "):
@@ -1870,7 +1877,7 @@ class SOAROrchestrator:
             "Agents will be retried after reset timeout (typically 120s).",
         )
 
-    def _index_conversation_log(self, log_path) -> None:
+    def _index_conversation_log(self, log_path: Any) -> None:
         """Index conversation log as knowledge chunk for future retrieval.
 
         Args:
@@ -1937,7 +1944,7 @@ class SOAROrchestrator:
                             chunk.docstring = docstring
 
                         embedding = embedding_provider.embed_chunk(docstring)
-                        chunk.embeddings = embedding
+                        chunk.embeddings = embedding  # type: ignore[assignment]
                         self.store.save_chunk(chunk)
                         indexed_count += 1
                         logger.debug(f"Indexed conversation chunk: {chunk.id}")

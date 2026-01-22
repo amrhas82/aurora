@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 __all__ = [
     "verify_lite",
 ]
@@ -212,7 +211,7 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
     # Check each subgoal for cycles
     for subgoal in subgoals:
         subgoal_index = subgoal.get("subgoal_index")
-        if subgoal_index not in visited:
+        if subgoal_index is not None and subgoal_index not in visited:
             if has_cycle(subgoal_index):
                 issues.append(
                     f"Circular dependency detected in subgoal dependency graph involving subgoal {subgoal_index}",

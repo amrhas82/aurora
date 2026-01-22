@@ -151,7 +151,7 @@
     - verify: `pytest tests/unit/context_code/ -v`
   - [x] 1.8 Verify: `mypy packages/context-code/src --strict` - zero errors
 
-- [ ] 2.0 Fix type errors in packages/soar (13 errors)
+- [x] 2.0 Fix type errors in packages/soar (13 errors)
   - [x] 2.1 Add test for assess.py type consistency before fixing
     - tdd: yes
     - verify: `pytest tests/unit/soar/test_assess_types.py::test_complexity_score_type -v`
@@ -176,15 +176,13 @@
   - [x] 2.8 Fix collect.py:94 - Add type annotations to _get_agent_matcher
     - tdd: no
     - verify: `mypy packages/soar/src/aurora_soar/phases/collect.py --strict`
-  - [ ] 2.9 Fix orchestrator.py:209,220,234,1618 - Add type annotations to helper methods
+  - [x] 2.9 Fix orchestrator.py:209,220,234,1618 - Add type annotations to helper methods
     - tdd: no
     - verify: `mypy packages/soar/src/aurora_soar/orchestrator.py --strict`
-    - note: BLOCKED - requires aurora_spawner py.typed marker
   - [x] 2.10 Run all soar tests to ensure no regressions
     - tdd: no
     - verify: `pytest tests/unit/soar/ tests/integration/soar/ -v`
-  - [ ] 2.11 Verify: `mypy packages/soar/src --strict` - zero errors
-    - note: BLOCKED - orchestrator.py depends on untyped aurora_spawner
+  - [x] 2.11 Verify: `mypy packages/soar/src --strict` - zero errors
 
 - [ ] 3.0 Fix type errors in packages/core (remaining errors)
   - [ ] 3.1 Add test for Store base class compatibility before fixing

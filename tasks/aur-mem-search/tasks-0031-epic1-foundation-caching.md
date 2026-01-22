@@ -328,7 +328,7 @@ aur mem search "test query" --limit 10
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py -v`
     - **Details**: All 5 unit tests (shared_across_retrievers, lru_eviction, ttl_expiration, thread_safety, stats_aggregation) must pass
 
-- [ ] 5.0 Integration Testing (~150 LOC)
+- [x] 5.0 Integration Testing (~150 LOC)
   - [x] 5.1 Write test: test_end_to_end_cache_hit
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_end_to_end_cache_hit -v`
@@ -364,18 +364,18 @@ aur mem search "test query" --limit 10
     - verify: `pytest tests/integration/test_memory_search_caching.py -v`
     - **Details**: All 6 integration tests (end_to_end_cache_hit, search_result_equivalence, bm25_persistence, soar_multi_phase, concurrent_searches, cache_failure) must pass
 
-- [ ] 6.0 Performance Testing and Validation (~100 LOC)
-  - [ ] 6.1 Write test: test_cache_lookup_overhead
+- [x] 6.0 Performance Testing and Validation (~100 LOC)
+  - [x] 6.1 Write test: test_cache_lookup_overhead
     - tdd: yes
     - verify: `pytest tests/performance/test_cache_performance.py::test_cache_lookup_overhead -v`
     - **Details**: Measure cache lookup time (avg over 100 iterations), verify <10ms per lookup
     - **PRD Ref**: NFR1.1, Section 8.3 PT1
-  - [ ] 6.2 Write test: test_thread_contention_overhead
+  - [x] 6.2 Write test: test_thread_contention_overhead
     - tdd: yes
     - verify: `pytest tests/performance/test_cache_performance.py::test_thread_contention_overhead -v`
     - **Details**: Measure lock contention with 5 concurrent threads, verify <5ms overhead vs single-threaded
     - **PRD Ref**: NFR1.2, Section 8.3 PT1
-  - [ ] 6.3 Write test: test_cache_memory_overhead
+  - [x] 6.3 Write test: test_cache_memory_overhead
     - tdd: yes
     - verify: `pytest tests/performance/test_cache_performance.py::test_cache_memory_overhead -v`
     - **Details**: Create 10 retrievers + 100 cached embeddings, measure memory usage via tracemalloc, verify <50MB
@@ -405,7 +405,7 @@ aur mem search "test query" --limit 10
     - verify: Parse logs for "Loaded BM25 index" timing, verify <100ms (98% improvement from 9.7s)
     - **Details**: Measure time between HybridRetriever init and first search, verify BM25 load <100ms
     - **PRD Ref**: G5, Section 9.1
-  - [ ] 6.9 Verify: All performance tests pass
+  - [x] 6.9 Verify: All performance tests pass
     - tdd: no
     - verify: `pytest tests/performance/test_cache_performance.py -v`
     - **Details**: All 3 performance tests (cache_lookup_overhead, thread_contention_overhead, cache_memory_overhead) must pass
@@ -436,7 +436,7 @@ aur mem search "test query" --limit 10
     - **PRD Ref**: Section 13 Q5, NFR4.2
     - **Location**: `/home/hamr/PycharmProjects/aurora/CLAUDE.md` (Memory System section)
 
-- [ ] 8.0 Final Validation and Cleanup
+- [x] 8.0 Final Validation and Cleanup
   - [x] 8.1 Run full test suite
     - tdd: no
     - verify: `make test-unit && make test-integration`
@@ -473,20 +473,33 @@ aur mem search "test query" --limit 10
 ## Self-Verification Checklist
 
 ### Coverage Check
-- [ ] All PRD requirements (FR1-FR4) have corresponding tasks
-- [ ] All parent tasks end with Verify subtask
-- [ ] Filename matches PRD: `tasks-0031-epic1-foundation-caching.md` ✓
+- [x] All PRD requirements (FR1-FR4) have corresponding tasks
+  - FR1 (HybridRetriever caching): Tasks 1.1-1.14
+  - FR2 (ActivationEngine caching): Tasks 2.1-2.10
+  - FR3 (BM25 persistence): Tasks 3.1-3.9
+  - FR4 (Shared QueryEmbeddingCache): Tasks 4.1-4.10
+- [x] All parent tasks end with Verify subtask
+  - 1.14, 2.10, 3.9, 4.10, 5.7, 6.9, 8.6 are verification tasks
+- [x] Filename matches PRD: `tasks-0031-epic1-foundation-caching.md`
 
 ### Bloat/Redundancy Check
-- [ ] No duplicate tasks covering same functionality
-- [ ] No over-granular tasks (all tasks are appropriately scoped)
-- [ ] No vague tasks (each has clear, specific action)
-- [ ] No tasks outside PRD scope
+- [x] No duplicate tasks covering same functionality
+  - Verified: Each task addresses a unique aspect of caching implementation
+- [x] No over-granular tasks (all tasks are appropriately scoped)
+  - Tasks are appropriately scoped (test + implementation pairs)
+- [x] No vague tasks (each has clear, specific action)
+  - Each task has concrete verify command and PRD reference
+- [x] No tasks outside PRD scope
+  - All tasks map directly to FR1-FR4 requirements
 
 ### TDD Check
-- [ ] Every implementation task has corresponding test task(s) written FIRST
-- [ ] All tests have clear verification commands
-- [ ] TDD markers correctly identify which tasks require tests
+- [x] Every implementation task has corresponding test task(s) written FIRST
+  - Tasks 1.1-1.5, 2.1-2.5, 3.1-3.5, 4.1-4.5, 5.1-5.6, 6.1-6.3 are test tasks
+  - Implementation tasks (1.6+, 2.6+, etc.) follow test tasks
+- [x] All tests have clear verification commands
+  - Each test task includes `verify: pytest <path>::<test_name> -v`
+- [x] TDD markers correctly identify which tasks require tests
+  - All test tasks marked `tdd: yes`, implementation marked appropriately
 
 ---
 

@@ -7,16 +7,23 @@ Validates that caching achieves target performance improvements:
 - Memory overhead: <50MB
 """
 
+import concurrent.futures
+import os
+import statistics
+import tempfile
+import threading
 import time
 
 import numpy as np
 import pytest
 
 
-def test_retriever_cache_overhead_under_10ms():
-    """Test that retriever cache lookup overhead is <10ms.
+@pytest.mark.performance
+def test_cache_lookup_overhead():
+    """Test that cache lookup overhead is <10ms per lookup.
 
-    Task 6.1: Measure get_cached_retriever() overhead for cache hit.
+    Task 6.1: Measure cache lookup time (avg over 100 iterations), verify <10ms per lookup.
+    PRD Ref: NFR1.1, Section 8.3 PT1
     """
     from aurora_context_code.semantic.hybrid_retriever import (
         HybridConfig,
@@ -26,58 +33,103 @@ def test_retriever_cache_overhead_under_10ms():
     from aurora_core.activation.engine import get_cached_engine
     from aurora_core.store import SQLiteStore
 
-    # Clear caches
+    # Setup
     clear_retriever_cache()
 
-    # Create store
-    db_path = "/tmp/perf_test.db"
-    store = SQLiteStore(db_path)
-    engine = get_cached_engine(store)
-    config = HybridConfig()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = os.path.join(tmpdir, "test_cache_lookup.db")
+        store = SQLiteStore(db_path)
+        engine = get_cached_engine(store)
+        config = HybridConfig()
 
-    # First call (cache miss - don't measure)
-    retriever1 = get_cached_retriever(store, engine, None, config)
+        # First call (cache miss - don't measure)
+        retriever1 = get_cached_retriever(store, engine, None, config)
 
-    # Measure cache hit overhead
-    start = time.perf_counter()
-    retriever2 = get_cached_retriever(store, engine, None, config)
-    elapsed_ms = (time.perf_counter() - start) * 1000
+        # Measure cache hit overhead over 100 iterations
+        lookup_times = []
+        for _ in range(100):
+            start = time.perf_counter()
+            retriever = get_cached_retriever(store, engine, None, config)
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            lookup_times.append(elapsed_ms)
+            # Verify same instance (cache hit)
+            assert id(retriever) == id(retriever1), "Should be cache hit"
 
-    # Verify same instance
-    assert id(retriever1) == id(retriever2), "Should be cache hit"
+        # Calculate average
+        avg_lookup_ms = statistics.mean(lookup_times)
 
-    # Verify overhead is <10ms
-    assert elapsed_ms < 10.0, f"Cache hit overhead should be <10ms, got {elapsed_ms:.2f}ms"
+        # Verify overhead is <10ms per lookup
+        assert avg_lookup_ms < 10.0, (
+            f"Cache lookup overhead should be <10ms per lookup, "
+            f"got {avg_lookup_ms:.2f}ms (min={min(lookup_times):.2f}ms, "
+            f"max={max(lookup_times):.2f}ms)"
+        )
 
 
-def test_engine_cache_overhead_under_5ms():
-    """Test that engine cache lookup overhead is <5ms.
+@pytest.mark.performance
+def test_thread_contention_overhead():
+    """Test that lock contention overhead is <5ms vs single-threaded.
 
-    Task 6.2: Measure get_cached_engine() overhead for cache hit.
+    Task 6.2: Measure lock contention with 5 concurrent threads, verify <5ms overhead
+    vs single-threaded.
+    PRD Ref: NFR1.2, Section 8.3 PT1
     """
-    from aurora_core.activation.engine import _engine_cache, get_cached_engine
+    from aurora_context_code.semantic.hybrid_retriever import (
+        HybridConfig,
+        clear_retriever_cache,
+        get_cached_retriever,
+    )
+    from aurora_core.activation.engine import get_cached_engine
     from aurora_core.store import SQLiteStore
 
-    # Clear cache
-    _engine_cache.clear()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = os.path.join(tmpdir, "test_contention.db")
+        store = SQLiteStore(db_path)
+        engine = get_cached_engine(store)
+        config = HybridConfig()
 
-    # Create store
-    db_path = "/tmp/perf_test_engine.db"
-    store = SQLiteStore(db_path)
+        # Warmup - populate cache
+        clear_retriever_cache()
+        _ = get_cached_retriever(store, engine, None, config)
 
-    # First call (cache miss - don't measure)
-    engine1 = get_cached_engine(store)
+        # Measure single-threaded performance (100 lookups)
+        start_single = time.perf_counter()
+        for _ in range(100):
+            get_cached_retriever(store, engine, None, config)
+        single_thread_time_ms = (time.perf_counter() - start_single) * 1000
 
-    # Measure cache hit overhead
-    start = time.perf_counter()
-    engine2 = get_cached_engine(store)
-    elapsed_ms = (time.perf_counter() - start) * 1000
+        # Measure multi-threaded performance (5 threads, 20 lookups each = 100 total)
+        thread_times = []
+        barrier = threading.Barrier(5)
 
-    # Verify same instance
-    assert id(engine1) == id(engine2), "Should be cache hit"
+        def thread_worker():
+            barrier.wait()  # Synchronize start for maximum contention
+            times = []
+            for _ in range(20):
+                start = time.perf_counter()
+                get_cached_retriever(store, engine, None, config)
+                elapsed_ms = (time.perf_counter() - start) * 1000
+                times.append(elapsed_ms)
+            return times
 
-    # Verify overhead is <5ms
-    assert elapsed_ms < 5.0, f"Cache hit overhead should be <5ms, got {elapsed_ms:.2f}ms"
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(thread_worker) for _ in range(5)]
+            for future in concurrent.futures.as_completed(futures):
+                thread_times.extend(future.result())
+
+        # Calculate multi-threaded total time (wall clock time matters for contention)
+        multi_thread_avg_ms = statistics.mean(thread_times)
+        single_thread_avg_ms = single_thread_time_ms / 100
+
+        # Calculate overhead
+        overhead_ms = multi_thread_avg_ms - single_thread_avg_ms
+
+        # Verify overhead is <5ms
+        assert overhead_ms < 5.0, (
+            f"Thread contention overhead should be <5ms vs single-threaded, "
+            f"got {overhead_ms:.2f}ms (single={single_thread_avg_ms:.2f}ms, "
+            f"multi={multi_thread_avg_ms:.2f}ms)"
+        )
 
 
 def test_query_cache_overhead_under_1ms():
@@ -109,10 +161,12 @@ def test_query_cache_overhead_under_1ms():
     assert elapsed_ms < 1.0, f"Query cache hit overhead should be <1ms, got {elapsed_ms:.3f}ms"
 
 
-def test_memory_overhead_under_50mb():
+@pytest.mark.performance
+def test_cache_memory_overhead():
     """Test that total cache memory overhead is <50MB.
 
-    Task 6.4: Create caches, measure memory usage using cache size APIs.
+    Task 6.3: Create 10 retrievers + 100 cached embeddings, measure memory usage via tracemalloc, verify <50MB.
+    PRD Ref: NFR1.3, Section 8.3 PT1
     """
     from aurora_context_code.semantic.hybrid_retriever import (
         HybridConfig,

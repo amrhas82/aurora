@@ -211,14 +211,15 @@
     - verify: `pytest tests/unit/ -k "none" -v`
   - [x] 4.3 Verify: `make type-check` - zero errors in context-code, soar, core
 
-- [ ] 5.0 Identify top 10 complex functions (C90 > 15)
-  - [ ] 5.1 Generate complexity report for all packages
+- [x] 5.0 Identify top 10 complex functions (C90 > 15)
+  - [x] 5.1 Generate complexity report for all packages
     - tdd: no
     - verify: `ruff check packages/ --select C90 | grep "C901" | wc -l`
-  - [ ] 5.2 Extract and document top 10 functions by complexity
+    - result: 84 complex functions found
+  - [x] 5.2 Extract and document top 10 functions by complexity
     - tdd: no
     - verify: `ruff check packages/ --select C90 | grep "C901" | sort -k3 -n -r | head -10 > complex_functions.txt && cat complex_functions.txt`
-  - [ ] 5.3 Verify headless_command is in top 10 (expected C90=53)
+  - [x] 5.3 Verify headless_command is in top 10 (expected C90=53)
     - tdd: no
     - verify: `grep "headless_command" complex_functions.txt`
 

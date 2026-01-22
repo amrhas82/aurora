@@ -86,14 +86,15 @@ class MemoryRetriever:
 
         if self._retriever is None:
             from aurora_context_code.semantic.hybrid_retriever import get_cached_retriever
-            from aurora_core.activation.engine import ActivationEngine
+            from aurora_core.activation.engine import get_cached_engine
 
-            activation_engine = ActivationEngine()
+            # Use cached engine for performance (tasks/aur-mem-search Epic 1 Task 2.0)
+            activation_engine = get_cached_engine(self._store)
 
             # Try to get embedding provider from background loader or create new one
             embedding_provider = self._get_embedding_provider()
 
-            # Use cached retriever for performance (tasks/aur-mem-search Epic 1)
+            # Use cached retriever for performance (tasks/aur-mem-search Epic 1 Task 1.0)
             self._retriever = get_cached_retriever(
                 self._store,
                 activation_engine,

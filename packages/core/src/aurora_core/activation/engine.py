@@ -20,6 +20,8 @@ Reference:
     Oxford University Press.
 """
 
+import logging
+import threading
 from datetime import datetime, timezone
 from typing import Any
 
@@ -29,6 +31,13 @@ from aurora_core.activation.base_level import AccessHistoryEntry, BaseLevelActiv
 from aurora_core.activation.context_boost import ContextBoost, ContextBoostConfig
 from aurora_core.activation.decay import DecayCalculator, DecayConfig
 from aurora_core.activation.spreading import RelationshipGraph, SpreadingActivation, SpreadingConfig
+
+logger = logging.getLogger(__name__)
+
+
+# Module-level cache for ActivationEngine instances (singleton per db_path)
+_engine_cache: dict[str, Any] = {}
+_engine_cache_lock = threading.Lock()
 
 
 class ActivationConfig(BaseModel):
@@ -419,10 +428,44 @@ CONTEXT_FOCUSED_CONFIG = ActivationConfig(
 )
 
 
+def get_cached_engine(store: Any, config: ActivationConfig | None = None) -> ActivationEngine:
+    """Get or create cached ActivationEngine instance.
+
+    Returns cached engine if one exists for the given db_path (singleton pattern),
+    otherwise creates a new one and caches it. Thread-safe.
+
+    Args:
+        store: Storage backend (must have db_path attribute)
+        config: Activation configuration (optional, uses default if not provided)
+
+    Returns:
+        Cached or new ActivationEngine instance (singleton per db_path)
+
+    """
+    # Get db_path from store
+    db_path = getattr(store, "db_path", ":memory:")
+
+    with _engine_cache_lock:
+        # Check cache
+        if db_path in _engine_cache:
+            logger.debug(f"Reusing cached ActivationEngine for db_path={db_path}")
+            return _engine_cache[db_path]
+
+        # Cache miss - create new engine
+        logger.debug(f"Creating new ActivationEngine for db_path={db_path}")
+        engine = ActivationEngine(config=config)
+
+        # Cache it
+        _engine_cache[db_path] = engine
+
+        return engine
+
+
 __all__ = [
     "ActivationConfig",
     "ActivationComponents",
     "ActivationEngine",
+    "get_cached_engine",
     "DEFAULT_CONFIG",
     "AGGRESSIVE_CONFIG",
     "CONSERVATIVE_CONFIG",

@@ -169,57 +169,57 @@ aur mem search "test query" --limit 10
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_cache.py -v`
     - **Details**: All 5 unit tests (same_db_config, different_db, different_config, hit_rate_stats, thread_safety) must pass
 
-- [ ] 2.0 ActivationEngine Instance Caching (~120 LOC)
-  - [ ] 2.1 Write test: test_engine_cache_same_db
+- [x] 2.0 ActivationEngine Instance Caching (~120 LOC)
+  - [x] 2.1 Write test: test_engine_cache_same_db
     - tdd: yes
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py::test_engine_cache_same_db -v`
     - **Details**: Create two ActivationEngine instances with same db_path, verify same object returned (singleton pattern)
     - **PRD Ref**: FR2.1, Section 8.1 UT2
-  - [ ] 2.2 Write test: test_engine_cache_different_db
+  - [x] 2.2 Write test: test_engine_cache_different_db
     - tdd: yes
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py::test_engine_cache_different_db -v`
     - **Details**: Create two engines with different db_path, verify different instances returned
     - **PRD Ref**: FR2.1, Section 8.1 UT2
-  - [ ] 2.3 Write test: test_engine_cache_memory_db
+  - [x] 2.3 Write test: test_engine_cache_memory_db
     - tdd: yes
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py::test_engine_cache_memory_db -v`
     - **Details**: Create engine with `:memory:` db_path, verify it caches correctly (singleton per `:memory:`)
     - **PRD Ref**: FR2.1, Section 6.1 TC3
-  - [ ] 2.4 Write test: test_engine_cache_thread_safety
+  - [x] 2.4 Write test: test_engine_cache_thread_safety
     - tdd: yes
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py::test_engine_cache_thread_safety -v`
     - **Details**: Launch 5 threads creating engine concurrently, verify all get same instance and no race conditions
     - **PRD Ref**: FR2.3, NFR2.3, Section 8.1 UT2
-  - [ ] 2.5 Write test: test_engine_cache_lazy_initialization
+  - [x] 2.5 Write test: test_engine_cache_lazy_initialization
     - tdd: yes
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py::test_engine_cache_lazy_initialization -v`
     - **Details**: Verify engine is not created until first access (lazy init pattern)
     - **PRD Ref**: FR2.4, Section 8.1 UT2
-  - [ ] 2.6 Implement get_cached_engine() function
+  - [x] 2.6 Implement get_cached_engine() function
     - tdd: yes (tests written above)
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py -v`
     - **Details**: Add module-level cache dict keyed by db_path, lock, get_cached_engine(store, config=None) returns singleton per db_path
     - **PRD Ref**: FR2.1-FR2.4, Section 7.2
     - **Location**: `packages/core/src/aurora_core/activation/engine.py` (add at module level, before ActivationEngine class)
-  - [ ] 2.7 Add thread-safe singleton access
+  - [x] 2.7 Add thread-safe singleton access
     - tdd: yes (covered by test_engine_cache_thread_safety)
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py::test_engine_cache_thread_safety -v`
     - **Details**: Wrap cache lookup/creation in `with _engine_cache_lock:` block
     - **PRD Ref**: FR2.3, NFR2.3, Section 7.2
     - **Location**: Inside get_cached_engine() function
-  - [ ] 2.8 Add DEBUG logging for cache hits/misses
+  - [x] 2.8 Add DEBUG logging for cache hits/misses
     - tdd: no (manual verification via log inspection)
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py -v -s | grep "Reusing cached ActivationEngine"`
     - **Details**: Log "Creating new ActivationEngine for {db_path}" on miss, "Reusing cached ActivationEngine for {db_path}" on hit
     - **PRD Ref**: NFR3.1, Section 7.2
     - **Location**: Inside get_cached_engine() function
-  - [ ] 2.9 Update MemoryRetriever to use get_cached_engine()
+  - [x] 2.9 Update MemoryRetriever to use get_cached_engine()
     - tdd: yes (integration test in Task 5.1)
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_end_to_end_cache_hit -v`
     - **Details**: Replace `ActivationEngine()` call in _get_retriever() with `get_cached_engine(self._store)`
     - **PRD Ref**: FR2.1-FR2.4, Section 6.5.2
     - **Location**: `packages/cli/src/aurora_cli/memory/retrieval.py` line 92
-  - [ ] 2.10 Verify: All ActivationEngine cache unit tests pass
+  - [x] 2.10 Verify: All ActivationEngine cache unit tests pass
     - tdd: no
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py -v`
     - **Details**: All 5 unit tests (same_db, different_db, memory_db, thread_safety, lazy_initialization) must pass

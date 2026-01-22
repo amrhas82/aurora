@@ -20,7 +20,6 @@ from aurora_cli.health_checks import (
     ToolIntegrationChecks,
 )
 
-
 __all__ = ["doctor_command"]
 
 logger = logging.getLogger(__name__)
@@ -201,6 +200,87 @@ def _display_summary(pass_count: int, warning_count: int, fail_count: int) -> No
     console.print(f"  {summary}")
 
 
+def _collect_issues(
+    checks_list: list[object],
+) -> tuple[list[dict], list[dict]]:
+    """Collect fixable and manual issues from health check instances.
+
+    Args:
+        checks_list: List of health check instances to collect issues from
+
+    Returns:
+        Tuple of (fixable_issues, manual_issues) lists
+
+    """
+    fixable_issues: list[dict] = []
+    manual_issues: list[dict] = []
+
+    for checks in checks_list:
+        if hasattr(checks, "get_fixable_issues"):
+            fixable_issues.extend(checks.get_fixable_issues())
+        if hasattr(checks, "get_manual_issues"):
+            manual_issues.extend(checks.get_manual_issues())
+
+    return fixable_issues, manual_issues
+
+
+def _display_fixable_issues(issues: list[dict]) -> None:
+    """Display fixable issues list.
+
+    Args:
+        issues: List of fixable issue dictionaries with 'name' key
+
+    """
+    if not issues:
+        return
+
+    console.print(f"[bold]Fixable issues ({len(issues)}):[/]")
+    for issue in issues:
+        console.print(f"  - {issue['name']}")
+    console.print()
+
+
+def _display_manual_issues(issues: list[dict]) -> None:
+    """Display manual issues list with solutions.
+
+    Args:
+        issues: List of manual issue dictionaries with 'name' and 'solution' keys
+
+    """
+    if not issues:
+        return
+
+    console.print(f"[bold]Manual fixes needed ({len(issues)}):[/]")
+    for issue in issues:
+        console.print(f"  - {issue['name']}")
+        console.print(f"    Solution: {issue['solution']}")
+    console.print()
+
+
+def _apply_fixes(issues: list[dict]) -> int:
+    """Apply fixes for all fixable issues.
+
+    Args:
+        issues: List of issue dictionaries with 'name' and 'fix_func' keys
+
+    Returns:
+        Count of successfully fixed issues
+
+    """
+    fixed_count = 0
+    for issue in issues:
+        try:
+            console.print(f"  Fixing [yellow]{issue['name']}[/]...", end=" ")
+            issue["fix_func"]()
+            console.print("[green]OK[/]")
+            fixed_count += 1
+        except Exception as e:
+            console.print(f"[red]FAILED[/] ({e})")
+            logger.error(f"Failed to fix {issue['name']}: {e}", exc_info=True)
+
+    return fixed_count
+
+
 def _handle_auto_fix(
     core_checks: CoreSystemChecks,
     code_checks: CodeAnalysisChecks,
@@ -210,6 +290,9 @@ def _handle_auto_fix(
     mcp_checks: MCPFunctionalChecks,
 ) -> None:
     """Handle auto-fix functionality.
+
+    Orchestrates the collection, display, and application of fixes for
+    health check issues. Uses extracted helpers to reduce complexity.
 
     Args:
         core_checks: Core system health checks instance
@@ -224,50 +307,21 @@ def _handle_auto_fix(
     console.print("[bold cyan]Analyzing fixable issues...[/]")
     console.print()
 
-    # Collect fixable and manual issues from all check categories
-    fixable_issues = []
-    manual_issues = []
+    # Collect issues from all check categories
+    checks_list = [core_checks, code_checks, search_checks, config_checks, tool_checks, mcp_checks]
+    fixable_issues, manual_issues = _collect_issues(checks_list)
 
-    for checks in [core_checks, code_checks, search_checks, config_checks, tool_checks, mcp_checks]:
-        if hasattr(checks, "get_fixable_issues"):
-            fixable_issues.extend(checks.get_fixable_issues())
-        if hasattr(checks, "get_manual_issues"):
-            manual_issues.extend(checks.get_manual_issues())
+    # Display issues
+    _display_fixable_issues(fixable_issues)
+    _display_manual_issues(manual_issues)
 
-    # Display fixable issues
+    # Prompt and apply fixes if there are fixable issues
     if fixable_issues:
-        console.print(f"[bold]Fixable issues ({len(fixable_issues)}):[/]")
-        for issue in fixable_issues:
-            console.print(f"  • {issue['name']}")
-        console.print()
-
-    # Display manual issues
-    if manual_issues:
-        console.print(f"[bold]Manual fixes needed ({len(manual_issues)}):[/]")
-        for issue in manual_issues:
-            console.print(f"  • {issue['name']}")
-            console.print(f"    Solution: {issue['solution']}")
-        console.print()
-
-    # Prompt user for confirmation if there are fixable issues
-    if fixable_issues:
-        if click.confirm(
-            f"Fix {len(fixable_issues)} issue{'s' if len(fixable_issues) != 1 else ''} automatically?",
-        ):
+        plural = "s" if len(fixable_issues) != 1 else ""
+        if click.confirm(f"Fix {len(fixable_issues)} issue{plural} automatically?"):
             console.print()
             console.print("[bold cyan]Applying fixes...[/]")
-
-            fixed_count = 0
-            for issue in fixable_issues:
-                try:
-                    console.print(f"  Fixing [yellow]{issue['name']}[/]...", end=" ")
-                    issue["fix_func"]()
-                    console.print("[green]✓[/]")
-                    fixed_count += 1
-                except Exception as e:
-                    console.print(f"[red]✗[/] ({e})")
-                    logger.error(f"Failed to fix {issue['name']}: {e}", exc_info=True)
-
+            fixed_count = _apply_fixes(fixable_issues)
             console.print()
             console.print(f"[bold]Fixed {fixed_count} of {len(fixable_issues)} issues[/]")
         else:

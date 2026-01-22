@@ -19,8 +19,82 @@ from pydantic import ValidationError
 
 from aurora_cli.agent_discovery.models import AgentInfo
 
-
 logger = logging.getLogger(__name__)
+
+
+# Field aliases for backward compatibility
+_FIELD_ALIASES = {
+    "name": "id",  # name -> id
+    "description": "goal",  # description -> goal
+    "title": "role",  # title -> role (alternative)
+}
+
+
+def _validate_path(path: Path) -> Path | None:
+    """Validate and resolve a file path.
+
+    Args:
+        path: Path to validate
+
+    Returns:
+        Resolved Path if valid, None otherwise
+
+    """
+    resolved = Path(path).expanduser().resolve()
+
+    if not resolved.exists():
+        logger.warning("Agent file not found: %s", path)
+        return None
+
+    if not resolved.is_file():
+        logger.warning("Path is not a file: %s", path)
+        return None
+
+    return resolved
+
+
+def _apply_field_aliases(metadata: dict[str, Any]) -> None:
+    """Apply field aliases to metadata for backward compatibility.
+
+    Modifies metadata in place to map alternative field names to canonical names.
+    Also derives role from id if role is missing.
+
+    Args:
+        metadata: Metadata dictionary to modify
+
+    """
+    # Map alternative field names to canonical names
+    for old_name, new_name in _FIELD_ALIASES.items():
+        if old_name in metadata and new_name not in metadata:
+            metadata[new_name] = metadata[old_name]
+
+    # Derive role from id if missing
+    if "role" not in metadata and "id" in metadata:
+        metadata["role"] = metadata["id"].replace("-", " ").title()
+
+
+def _format_validation_errors(errors: list[dict[str, Any]]) -> str:
+    """Format Pydantic validation errors into a readable string.
+
+    Args:
+        errors: List of error dictionaries from ValidationError.errors()
+
+    Returns:
+        Formatted error string
+
+    """
+    missing_fields = [err["loc"][0] for err in errors if err["type"] == "missing"]
+    invalid_fields = [(err["loc"][0], err["msg"]) for err in errors if err["type"] != "missing"]
+
+    error_details = []
+    if missing_fields:
+        error_details.append(
+            f"missing required fields: {', '.join(str(f) for f in missing_fields)}",
+        )
+    for field, msg in invalid_fields:
+        error_details.append(f"invalid '{field}': {msg}")
+
+    return "; ".join(error_details) if error_details else "validation failed"
 
 
 class AgentParser:
@@ -53,7 +127,8 @@ class AgentParser:
 
         Extracts YAML frontmatter from the markdown file, validates against
         AgentInfo schema, and returns the validated model. On any error,
-        logs a detailed warning and returns None.
+        logs a detailed warning and returns None. Uses extracted helper
+        functions for reduced complexity.
 
         Args:
             path: Path to the agent markdown file
@@ -68,23 +143,9 @@ class AgentParser:
             ...     print(agent.role)
 
         """
-        # Resolve and expand path
-        resolved_path = Path(path).expanduser().resolve()
-
-        # Check file exists
-        if not resolved_path.exists():
-            logger.warning(
-                "Agent file not found: %s",
-                path,
-            )
-            return None
-
-        # Check it's a file
-        if not resolved_path.is_file():
-            logger.warning(
-                "Path is not a file: %s",
-                path,
-            )
+        # Validate path
+        resolved_path = _validate_path(path)
+        if resolved_path is None:
             return None
 
         # Read and parse frontmatter
@@ -107,56 +168,20 @@ class AgentParser:
             )
             return None
 
-        # Add source_file to metadata
+        # Prepare metadata
         metadata = dict(post.metadata)
         metadata["source_file"] = str(resolved_path)
-
-        # Map alternative field names to canonical names
-        # Supports both new format (id/role/goal) and existing format (name/description)
-        field_aliases = {
-            "name": "id",  # name -> id
-            "description": "goal",  # description -> goal
-            "title": "role",  # title -> role (alternative)
-        }
-        for old_name, new_name in field_aliases.items():
-            if old_name in metadata and new_name not in metadata:
-                metadata[new_name] = metadata[old_name]
-
-        # If role is missing, derive from id (capitalize, replace hyphens)
-        if "role" not in metadata and "id" in metadata:
-            metadata["role"] = metadata["id"].replace("-", " ").title()
+        _apply_field_aliases(metadata)
 
         # Validate with Pydantic
         try:
             agent = AgentInfo.model_validate(metadata)
-            logger.debug(
-                "Successfully parsed agent %s from %s",
-                agent.id,
-                path,
-            )
+            logger.debug("Successfully parsed agent %s from %s", agent.id, path)
             return agent
 
         except ValidationError as e:
-            # Extract missing/invalid fields for clear error message
-            errors = e.errors()
-            missing_fields = [err["loc"][0] for err in errors if err["type"] == "missing"]
-            invalid_fields = [
-                (err["loc"][0], err["msg"]) for err in errors if err["type"] != "missing"
-            ]
-
-            error_details = []
-            if missing_fields:
-                error_details.append(
-                    f"missing required fields: {', '.join(str(f) for f in missing_fields)}",
-                )
-            for field, msg in invalid_fields:
-                error_details.append(f"invalid '{field}': {msg}")
-
-            logger.warning(
-                "Validation failed for %s - %s",
-                path,
-                "; ".join(error_details) if error_details else str(e),
-            )
+            error_msg = _format_validation_errors(e.errors())
+            logger.warning("Validation failed for %s - %s", path, error_msg)
             return None
 
     def parse_content(self, content: str, source_file: str | None = None) -> AgentInfo | None:

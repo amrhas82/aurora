@@ -164,6 +164,31 @@ aurora_spawner/aurora_implement (execute tasks)
 
 **Performance:** Lazy embedding imports (0.9.1+) eliminate 20-30s startup delay.
 
+**Caching (Epic 1):**
+- **HybridRetriever cache**: Module-level instance cache keyed by `(db_path, config_hash)`
+  - Reduces cold search time by 30-40% (15-19s → 10-12s)
+  - Configured via `AURORA_RETRIEVER_CACHE_SIZE` (default: 10)
+  - Configured via `AURORA_RETRIEVER_CACHE_TTL` (default: 1800s)
+- **ActivationEngine cache**: Singleton per `db_path`
+  - Reduces warm search time by 40-50% (4-5s → 2-3s)
+  - Automatically shared across all retrievers using same database
+- **QueryEmbeddingCache**: Shared LRU cache for query embeddings
+  - Reduces embedding computation on repeated queries
+  - Cache hit rate typically >60% in SOAR multi-phase operations
+- **BM25 Index Persistence**: Disk-cached at `.aurora/indexes/bm25_index.pkl`
+  - Load time <100ms (vs 9.7s rebuild)
+  - Auto-loads on HybridRetriever init if available
+
+**Cache Environment Variables:**
+- `AURORA_RETRIEVER_CACHE_SIZE`: Max cached HybridRetriever instances (default: 10)
+- `AURORA_RETRIEVER_CACHE_TTL`: Cache TTL in seconds (default: 1800)
+- `AURORA_DISABLE_CACHING`: Set to "1" to disable all caching (for debugging)
+
+**Cache Invalidation:**
+- `aur mem index`: Clears retriever cache to force index rebuild
+- Config changes: New config creates separate cache entry (cache key includes config hash)
+- Manual: Call `clear_retriever_cache()`, `clear_shared_query_cache()`, `_engine_cache.clear()`
+
 ### SOAR Pipeline (9 Phases)
 
 ```

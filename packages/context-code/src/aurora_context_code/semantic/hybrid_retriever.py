@@ -242,6 +242,64 @@ class QueryEmbeddingCache:
         return len(self._cache)
 
 
+# Module-level shared query embedding cache
+_shared_query_cache: QueryEmbeddingCache | None = None
+_shared_query_cache_lock = threading.Lock()
+
+
+def get_shared_query_cache(capacity: int = 100, ttl_seconds: int = 1800) -> QueryEmbeddingCache:
+    """Get or create shared QueryEmbeddingCache instance.
+
+    Returns a singleton QueryEmbeddingCache that is shared across all
+    HybridRetriever instances. This allows query embeddings to be reused
+    even when different retrievers are created (e.g., in SOAR phases).
+
+    Note: The first call to this function sets the capacity and TTL.
+    Subsequent calls with different parameters will return the existing cache
+    with its original settings (capacity/TTL cannot be changed after creation).
+
+    Args:
+        capacity: Maximum cached embeddings (default 100)
+        ttl_seconds: TTL in seconds (default 1800 = 30 min)
+
+    Returns:
+        Shared QueryEmbeddingCache singleton
+
+    """
+    global _shared_query_cache
+
+    with _shared_query_cache_lock:
+        if _shared_query_cache is None:
+            logger.debug(
+                f"Creating shared QueryEmbeddingCache " f"(capacity={capacity}, ttl={ttl_seconds}s)"
+            )
+            _shared_query_cache = QueryEmbeddingCache(capacity=capacity, ttl_seconds=ttl_seconds)
+        elif (
+            _shared_query_cache.capacity != capacity
+            or _shared_query_cache.ttl_seconds != ttl_seconds
+        ):
+            # Warn if requesting different settings than existing cache
+            logger.debug(
+                f"Shared QueryEmbeddingCache already exists "
+                f"(capacity={_shared_query_cache.capacity}, "
+                f"ttl={_shared_query_cache.ttl_seconds}s), "
+                f"ignoring requested capacity={capacity}, ttl={ttl_seconds}s"
+            )
+        return _shared_query_cache
+
+
+def clear_shared_query_cache() -> None:
+    """Clear the shared QueryEmbeddingCache singleton.
+
+    This is primarily for testing purposes, to reset the cache between tests.
+    """
+    global _shared_query_cache
+
+    with _shared_query_cache_lock:
+        _shared_query_cache = None
+        logger.debug("Cleared shared QueryEmbeddingCache")
+
+
 def _compute_config_hash(config: "HybridConfig") -> str:
     """Compute MD5 hash of config for cache key.
 
@@ -470,14 +528,14 @@ class HybridRetriever:
         if self.config.enable_bm25_persistence and self.config.bm25_weight > 0:
             self._try_load_bm25_index()
 
-        # Query embedding cache
+        # Query embedding cache (shared across all retrievers - Task 4.0)
         if self.config.enable_query_cache:
-            self._query_cache = QueryEmbeddingCache(
+            self._query_cache = get_shared_query_cache(
                 capacity=self.config.query_cache_size,
                 ttl_seconds=self.config.query_cache_ttl_seconds,
             )
             logger.debug(
-                f"Query cache enabled: size={self.config.query_cache_size}, "
+                f"Using shared query cache: size={self.config.query_cache_size}, "
                 f"ttl={self.config.query_cache_ttl_seconds}s",
             )
         else:

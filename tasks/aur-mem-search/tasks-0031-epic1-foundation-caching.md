@@ -273,57 +273,57 @@ aur mem search "test query" --limit 10
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py -v`
     - **Details**: All 5 unit tests (saves_on_build, loads_from_disk, corrupted_fallback, missing_rebuilds, path_resolution) must pass
 
-- [ ] 4.0 Shared QueryEmbeddingCache (~100 LOC)
-  - [ ] 4.1 Write test: test_query_cache_shared_across_retrievers
+- [x] 4.0 Shared QueryEmbeddingCache (~100 LOC)
+  - [x] 4.1 Write test: test_query_cache_shared_across_retrievers
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_shared_across_retrievers -v`
     - **Details**: Cache embedding in retriever A with query "test", create retriever B, verify retriever B hits cache for same query (check cache stats)
     - **PRD Ref**: FR4.1-FR4.2, Section 8.1 UT4
-  - [ ] 4.2 Write test: test_query_cache_lru_eviction
+  - [x] 4.2 Write test: test_query_cache_lru_eviction
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_lru_eviction -v`
     - **Details**: Create cache with capacity=3, add 4 queries, verify oldest evicted (LRU works across retrievers)
     - **PRD Ref**: FR4.4, Section 8.1 UT4
-  - [ ] 4.3 Write test: test_query_cache_ttl_expiration
+  - [x] 4.3 Write test: test_query_cache_ttl_expiration
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_ttl_expiration -v`
     - **Details**: Create cache with ttl=1s, add query, sleep 2s, verify cache miss on next access (TTL works)
     - **PRD Ref**: FR4.4, Section 8.1 UT4
-  - [ ] 4.4 Write test: test_query_cache_thread_safety
+  - [x] 4.4 Write test: test_query_cache_thread_safety
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_thread_safety -v`
     - **Details**: Launch 5 threads accessing shared cache concurrently, verify no race conditions
     - **PRD Ref**: FR4.3, NFR2.3, Section 8.1 UT4
-  - [ ] 4.5 Write test: test_query_cache_stats_aggregation
+  - [x] 4.5 Write test: test_query_cache_stats_aggregation
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_stats_aggregation -v`
     - **Details**: Verify cache stats aggregate across all retrievers (2 retrievers with 1 miss + 1 hit each = 50% hit rate)
     - **PRD Ref**: FR4.5, NFR3.3, Section 8.1 UT4
-  - [ ] 4.6 Implement get_shared_query_cache() function
+  - [x] 4.6 Implement get_shared_query_cache() function
     - tdd: yes (tests written above)
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py -v`
     - **Details**: Add module-level _shared_query_cache variable, lock, get_shared_query_cache(capacity, ttl) returns singleton
     - **PRD Ref**: FR4.1-FR4.5, Section 7.4
     - **Location**: `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` (add at module level, before QueryEmbeddingCache class around line 120)
-  - [ ] 4.7 Add thread-safe cache access
+  - [x] 4.7 Add thread-safe cache access
     - tdd: yes (covered by test_query_cache_thread_safety)
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_thread_safety -v`
     - **Details**: Wrap cache creation in `with _query_cache_lock:` block, ensure QueryEmbeddingCache methods are thread-safe
     - **PRD Ref**: FR4.3, NFR2.3, Section 7.4
     - **Location**: Inside get_shared_query_cache() function
-  - [ ] 4.8 Update HybridRetriever.__init__ to use shared cache
+  - [x] 4.8 Update HybridRetriever.__init__ to use shared cache
     - tdd: yes (covered by test_query_cache_shared_across_retrievers)
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_shared_across_retrievers -v`
     - **Details**: Replace instance-level QueryEmbeddingCache creation with call to get_shared_query_cache()
     - **PRD Ref**: FR4.1-FR4.2, Section 7.4
     - **Location**: `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` in __init__ (around lines 290-300)
-  - [ ] 4.9 Preserve existing cache statistics API
+  - [x] 4.9 Preserve existing cache statistics API
     - tdd: yes (covered by test_query_cache_stats_aggregation)
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py::test_query_cache_stats_aggregation -v`
     - **Details**: Ensure HybridRetriever.get_cache_stats() continues to work, now returns shared cache stats
     - **PRD Ref**: FR4.5, NFR3.3, Section 7.4
     - **Location**: Verify existing get_cache_stats() method in HybridRetriever
-  - [ ] 4.10 Verify: All shared QueryEmbeddingCache unit tests pass
+  - [x] 4.10 Verify: All shared QueryEmbeddingCache unit tests pass
     - tdd: no
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py -v`
     - **Details**: All 5 unit tests (shared_across_retrievers, lru_eviction, ttl_expiration, thread_safety, stats_aggregation) must pass

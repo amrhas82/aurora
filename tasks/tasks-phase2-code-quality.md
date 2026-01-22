@@ -127,29 +127,29 @@
     - tdd: no
     - verify: `cat phase2a_baseline_tests.txt | grep "passed"`
 
-- [ ] 1.0 Fix type errors in packages/context-code (10 errors)
-  - [ ] 1.1 Add test for typescript.py None handling before fixing
+- [x] 1.0 Fix type errors in packages/context-code (10 errors)
+  - [x] 1.1 Add test for typescript.py None handling before fixing
     - tdd: yes
     - verify: `pytest tests/unit/context_code/test_typescript_parser.py::test_parse_handles_none_parser -v`
-  - [ ] 1.2 Fix typescript.py:94 - Add None check before .parse() call
+  - [x] 1.2 Fix typescript.py:94 - Add None check before .parse() call
     - tdd: yes
     - verify: `mypy packages/context-code/src/aurora_context_code/languages/typescript.py --strict`
-  - [ ] 1.3 Add test for embedding_provider.py None handling before fixing
+  - [x] 1.3 Add test for embedding_provider.py None handling before fixing
     - tdd: yes
     - verify: `pytest tests/unit/context_code/test_embedding_provider.py::test_handles_none_provider -v`
-  - [ ] 1.4 Fix embedding_provider.py:252 - Add None check before function call
+  - [x] 1.4 Fix embedding_provider.py:252 - Add None check before function call
     - tdd: yes
     - verify: `mypy packages/context-code/src/aurora_context_code/semantic/embedding_provider.py --strict`
-  - [ ] 1.5 Fix hybrid_retriever.py:493,610 - Add type parameters to dict (dict[str, Any])
+  - [x] 1.5 Fix hybrid_retriever.py:493,610 - Add type parameters to dict (dict[str, Any])
     - tdd: no
     - verify: `mypy packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py --strict`
-  - [ ] 1.6 Fix __init__.py:20 - Add missing type annotations
+  - [x] 1.6 Fix __init__.py:20 - Add missing type annotations
     - tdd: no
     - verify: `mypy packages/context-code/src/aurora_context_code/__init__.py --strict`
-  - [ ] 1.7 Run all context-code tests to ensure no regressions
+  - [x] 1.7 Run all context-code tests to ensure no regressions
     - tdd: no
     - verify: `pytest tests/unit/context_code/ -v`
-  - [ ] 1.8 Verify: `mypy packages/context-code/src --strict` - zero errors
+  - [x] 1.8 Verify: `mypy packages/context-code/src --strict` - zero errors
 
 - [ ] 2.0 Fix type errors in packages/soar (13 errors)
   - [ ] 2.1 Add test for assess.py type consistency before fixing

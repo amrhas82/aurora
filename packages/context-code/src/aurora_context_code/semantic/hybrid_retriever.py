@@ -36,7 +36,8 @@ logger = logging.getLogger(__name__)
 
 
 # Module-level cache for HybridRetriever instances
-_retriever_cache: dict[tuple[str, str], Any] = {}
+# Cache stores (HybridRetriever, timestamp) tuples keyed by (db_path, config_hash)
+_retriever_cache: dict[tuple[str, str], tuple["HybridRetriever", float]] = {}
 _retriever_cache_lock = threading.Lock()
 _retriever_cache_stats = {"hits": 0, "misses": 0}
 
@@ -508,6 +509,9 @@ class HybridRetriever:
             If neither is provided, uses default HybridConfig values (tri-hybrid: 30/40/30).
 
         """
+        # Type annotations for instance variables
+        self._query_cache: QueryEmbeddingCache | None
+
         self.store = store
         self.activation_engine = activation_engine
         self.embedding_provider = embedding_provider
@@ -722,7 +726,7 @@ class HybridRetriever:
         # ========== BATCH FETCH ACCESS STATS (N+1 QUERY OPTIMIZATION) ==========
         # Pre-fetch access stats for all result chunks in a single query
         chunk_ids = [r["chunk"].id for r in results]
-        access_stats_cache: dict[str, dict] = {}
+        access_stats_cache: dict[str, dict[str, Any]] = {}
         if hasattr(self.store, "get_access_stats_batch"):
             try:
                 access_stats_cache = self.store.get_access_stats_batch(chunk_ids)
@@ -843,7 +847,7 @@ class HybridRetriever:
     def _extract_chunk_content_metadata(
         self,
         chunk: Any,
-        access_stats_cache: dict[str, dict] | None = None,
+        access_stats_cache: dict[str, dict[str, Any]] | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Extract content and metadata from chunk.
 

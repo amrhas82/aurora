@@ -10,8 +10,25 @@ Functions:
     cosine_similarity: Calculate cosine similarity between two vectors
 """
 
+from typing import Any, Protocol, cast
+
 import numpy as np
 import numpy.typing as npt
+
+
+class _SentenceTransformerProtocol(Protocol):
+    """Protocol for SentenceTransformer model interface used by EmbeddingProvider."""
+
+    def encode(
+        self,
+        sentences: str | list[str],
+        batch_size: int = ...,
+        convert_to_numpy: bool = ...,
+        normalize_embeddings: bool = ...,
+        show_progress_bar: bool = ...,
+    ) -> Any: ...
+
+    def get_sentence_embedding_dimension(self) -> int: ...
 
 
 # Lazy-loaded dependencies - only imported when actually needed
@@ -193,7 +210,7 @@ class EmbeddingProvider:
         self._device_hint = device
 
         # Lazy-loaded model (initialized to None, loaded on first use)
-        self._model: object | None = None
+        self._model: _SentenceTransformerProtocol | None = None
         self._device: str | None = None
 
         # Set embedding dimension from known values (avoids loading model)
@@ -224,7 +241,7 @@ class EmbeddingProvider:
         self._ensure_model_loaded()
         return self._embedding_dim  # type: ignore[return-value]
 
-    def _ensure_model_loaded(self) -> object:
+    def _ensure_model_loaded(self) -> _SentenceTransformerProtocol:
         """Load the model if not already loaded (lazy initialization).
 
         Returns:
@@ -255,7 +272,13 @@ class EmbeddingProvider:
 
             try:
                 # Use the lazily-imported SentenceTransformer class
-                self._model = _SentenceTransformer(self.model_name, device=self.device)
+                if _SentenceTransformer is None:
+                    raise RuntimeError(
+                        "SentenceTransformer not loaded. "
+                        "Install with: pip install aurora-context-code[ml]"
+                    )
+                model = _SentenceTransformer(self.model_name, device=self.device)
+                self._model = cast(_SentenceTransformerProtocol, model)
                 # Update embedding dimension from the actual model
                 self._embedding_dim = self._model.get_sentence_embedding_dimension()
             finally:
@@ -263,6 +286,8 @@ class EmbeddingProvider:
                 for logger_name, level in original_levels.items():
                     logging.getLogger(logger_name).setLevel(level)
 
+        # At this point, self._model is guaranteed to be loaded
+        assert self._model is not None
         return self._model
 
     def is_model_loaded(self) -> bool:

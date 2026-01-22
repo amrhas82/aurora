@@ -12,7 +12,6 @@ from pathlib import Path
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
 
-
 # Try to import tree-sitter, fall back to text chunking if unavailable
 TREE_SITTER_AVAILABLE = True
 try:
@@ -91,6 +90,8 @@ class TypeScriptParser(CodeParser):
 
             # Use TSX parser for .tsx files, regular parser for .ts
             parser = self.tsx_parser if file_path.suffix == ".tsx" else self.parser
+            if parser is None:
+                return self._get_fallback_chunks(file_path, source_code)
             tree = parser.parse(bytes(source_code, "utf-8"))
 
             if tree.root_node.has_error:

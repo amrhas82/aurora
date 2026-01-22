@@ -12,12 +12,14 @@ Import them explicitly when needed:
     from aurora_context_code.semantic import EmbeddingProvider
 """
 
+from typing import Any
+
 __version__ = "0.1.0"
 
 
 # Lazy imports for semantic components to avoid 20+ second torch import on package load.
 # These are only loaded when actually accessed, not at import time.
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     """Lazy import semantic components only when accessed."""
     if name in ("EmbeddingProvider", "HybridConfig", "HybridRetriever", "cosine_similarity"):
         from aurora_context_code.semantic import (

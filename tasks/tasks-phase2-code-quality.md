@@ -152,37 +152,39 @@
   - [x] 1.8 Verify: `mypy packages/context-code/src --strict` - zero errors
 
 - [ ] 2.0 Fix type errors in packages/soar (13 errors)
-  - [ ] 2.1 Add test for assess.py type consistency before fixing
+  - [x] 2.1 Add test for assess.py type consistency before fixing
     - tdd: yes
     - verify: `pytest tests/unit/soar/test_assess_types.py::test_complexity_score_type -v`
-  - [ ] 2.2 Fix assess.py:415 - Cast float to int or change target type for complexity scoring
+  - [x] 2.2 Fix assess.py:415 - Cast float to int or change target type for complexity scoring
     - tdd: yes
     - verify: `mypy packages/soar/src/aurora_soar/phases/assess.py --strict | grep -c "line 415" || echo "0"`
-  - [ ] 2.3 Fix assess.py:429 - Validate string value or use proper Literal type for assessment levels
+  - [x] 2.3 Fix assess.py:429 - Validate string value or use proper Literal type for assessment levels
     - tdd: yes
     - verify: `mypy packages/soar/src/aurora_soar/phases/assess.py --strict | grep -c "line 429" || echo "0"`
-  - [ ] 2.4 Fix assess.py:55,57,871 - Add type parameters: dict[str, Any]
+  - [x] 2.4 Fix assess.py:55,57,871 - Add type parameters: dict[str, Any]
     - tdd: no
     - verify: `mypy packages/soar/src/aurora_soar/phases/assess.py --strict`
-  - [ ] 2.5 Add test for retrieve.py Store compatibility before fixing
+  - [x] 2.5 Add test for retrieve.py Store compatibility before fixing
     - tdd: yes
     - verify: `pytest tests/unit/soar/test_retrieve_types.py::test_store_compatibility -v`
-  - [ ] 2.6 Fix retrieve.py:126 - Accept base Store type or cast properly for type compatibility
+  - [x] 2.6 Fix retrieve.py:126 - Accept base Store type or cast properly for type compatibility
     - tdd: yes
     - verify: `mypy packages/soar/src/aurora_soar/phases/retrieve.py --strict`
-  - [ ] 2.7 Fix collect.py:35,46 - Add type parameters: dict[str, Any]
+  - [x] 2.7 Fix collect.py:35,46 - Add type parameters: dict[str, Any]
     - tdd: no
     - verify: `mypy packages/soar/src/aurora_soar/phases/collect.py --strict | grep -c "line 35\|line 46" || echo "0"`
-  - [ ] 2.8 Fix collect.py:94 - Add type annotations to _get_agent_matcher
+  - [x] 2.8 Fix collect.py:94 - Add type annotations to _get_agent_matcher
     - tdd: no
     - verify: `mypy packages/soar/src/aurora_soar/phases/collect.py --strict`
   - [ ] 2.9 Fix orchestrator.py:209,220,234,1618 - Add type annotations to helper methods
     - tdd: no
     - verify: `mypy packages/soar/src/aurora_soar/orchestrator.py --strict`
-  - [ ] 2.10 Run all soar tests to ensure no regressions
+    - note: BLOCKED - requires aurora_spawner py.typed marker
+  - [x] 2.10 Run all soar tests to ensure no regressions
     - tdd: no
     - verify: `pytest tests/unit/soar/ tests/integration/soar/ -v`
   - [ ] 2.11 Verify: `mypy packages/soar/src --strict` - zero errors
+    - note: BLOCKED - orchestrator.py depends on untyped aurora_spawner
 
 - [ ] 3.0 Fix type errors in packages/core (remaining errors)
   - [ ] 3.1 Add test for Store base class compatibility before fixing

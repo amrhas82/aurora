@@ -17,11 +17,11 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING, Any
-
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
+    from aurora_core.store.sqlite import SQLiteStore
 
 
 __all__ = ["retrieve_context"]
@@ -125,7 +125,10 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
         # Use MemoryRetriever with HybridRetriever for query-based retrieval
         from aurora_cli.memory.retrieval import MemoryRetriever
 
-        retriever = MemoryRetriever(store=store)
+        # Cast Store to SQLiteStore as MemoryRetriever expects that specific type
+        # The Store interface is compatible, but mypy needs the explicit cast
+        sqlite_store = cast("SQLiteStore", store)
+        retriever = MemoryRetriever(store=sqlite_store)
 
         # Check if memory is indexed
         if not retriever.has_indexed_memory():

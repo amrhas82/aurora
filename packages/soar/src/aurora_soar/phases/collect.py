@@ -25,14 +25,13 @@ from aurora_spawner import (
     spawn_with_retry_and_fallback,
 )
 
-
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
 
 logger = logging.getLogger(__name__)
 
 
-def topological_sort(subgoals: list[dict]) -> list[list[dict]]:
+def topological_sort(subgoals: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
     """Group subgoals into dependency waves using Kahn's algorithm.
 
     Args:
@@ -43,9 +42,9 @@ def topological_sort(subgoals: list[dict]) -> list[list[dict]]:
 
     """
     # Build in-degree map and dependency graph
-    in_degree = {}
-    graph = {}
-    subgoal_map = {}
+    in_degree: dict[int, int] = {}
+    graph: dict[int, list[int]] = {}
+    subgoal_map: dict[int, dict[str, Any]] = {}
 
     for sg in subgoals:
         idx = sg["subgoal_index"]
@@ -92,7 +91,7 @@ def topological_sort(subgoals: list[dict]) -> list[list[dict]]:
     return waves
 
 
-def _get_agent_matcher():
+def _get_agent_matcher() -> Any:
     """Lazy import of AgentMatcher to avoid circular imports."""
     try:
         from aurora_cli.planning.agents import AgentMatcher
@@ -116,11 +115,11 @@ SPINNER_CHARS = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 
 async def _spawn_with_spinner(
     task: SpawnTask,
-    progress_cb: Callable,
+    progress_cb: Callable[..., Any],
     agent_idx: int,
     total_agents: int,
     agent_id: str,
-    on_progress: Callable | None,
+    on_progress: Callable[..., Any] | None,
     max_retries: int = 2,
     fallback_to_llm: bool = True,
 ) -> SpawnResult:

@@ -18,6 +18,7 @@ from rich.table import Table
 from aurora_cli.config import Config
 from aurora_cli.templates.headless import SCRATCHPAD_TEMPLATE
 
+
 console = Console()
 
 

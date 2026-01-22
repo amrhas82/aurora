@@ -25,6 +25,7 @@ from aurora_spawner import (
     spawn_with_retry_and_fallback,
 )
 
+
 if TYPE_CHECKING:
     from aurora_soar.agent_registry import AgentInfo
 
@@ -80,6 +81,12 @@ def topological_sort(subgoals: list[dict]) -> list[list[dict]]:
             for neighbor in graph[idx]:
                 if in_degree[neighbor] > 0:
                     in_degree[neighbor] -= 1
+
+    # DEBUG: Log topological sort result
+    logger.debug(f"Topological sort complete: {len(waves)} waves")
+    for i, wave in enumerate(waves, 1):
+        wave_indices = [sg["subgoal_index"] for sg in wave]
+        logger.debug(f"  Wave {i}: subgoals {wave_indices}")
 
     return waves
 
@@ -290,7 +297,9 @@ async def execute_agents(
 
     # Execute waves sequentially
     for wave_num, wave in enumerate(waves, 1):
-        logger.info(f"Wave {wave_num}/{len(waves)} ({len(wave)} subgoals)...")
+        wave_msg = f"Wave {wave_num}/{len(waves)} ({len(wave)} subgoals)..."
+        logger.info(wave_msg)
+        print(f"\n  {wave_msg}", file=sys.stderr, flush=True)  # Force visible output
 
         # Build SpawnTask list for this wave with context injection
         spawn_tasks: list[SpawnTask] = []
@@ -329,6 +338,12 @@ async def execute_agents(
 
                     modified_prompt = f"{original_prompt}\n\nPrevious context ({len(successful_deps)}/{len(deps)} dependencies):\n{accumulated}{warning}"
                     sg["has_partial_context"] = len(failed_deps) > 0
+
+                    # DEBUG: Log context assembly
+                    logger.debug(
+                        f"Subgoal {subgoal_idx}: assembled context from {len(successful_deps)} successful "
+                        f"+ {len(failed_deps)} failed dependencies ({len(accumulated)} chars)"
+                    )
                 else:
                     modified_prompt = original_prompt
             else:
@@ -361,8 +376,8 @@ Please complete this task directly without additional questions or preamble. Pro
                 logger.info(f"Ad-hoc spawning agent '{agent.id}' for subgoal {subgoal_idx}")
                 spawn_agent = None  # Direct LLM call for ad-hoc
             else:
-                # Regular agent: use modified prompt with context
-                prompt = _build_agent_prompt(sg, context) if not deps else modified_prompt
+                # Regular agent: use modified prompt (already includes context if deps exist)
+                prompt = modified_prompt
                 spawn_agent = agent.id
 
             spawn_tasks.append(
@@ -403,6 +418,13 @@ Please complete this task directly without additional questions or preamble. Pro
 
             # Store result for context passing to dependent subgoals
             outputs[subgoal_idx] = result
+
+            # DEBUG: Log spawn result details
+            logger.debug(
+                f"Subgoal {subgoal_idx} result: success={result.success}, "
+                f"exit_code={result.exit_code}, output_len={len(result.output) if result.output else 0}, "
+                f"fallback={getattr(result, 'fallback', False)}"
+            )
 
             if not result.success:
                 failed_subgoals.add(subgoal_idx)
@@ -453,6 +475,21 @@ Please complete this task directly without additional questions or preamble. Pro
                     )
                 )
 
+        # Log wave completion with emoji markers
+        wave_success_count = sum(1 for r in results if r.success)
+        wave_fail_count = sum(1 for r in results if not r.success)
+        wave_partial_count = sum(1 for m in task_metadata if m["subgoal"].get("has_partial_context", False))
+
+        markers = []
+        if wave_success_count > 0:
+            markers.append(f"✓ {wave_success_count}")
+        if wave_fail_count > 0:
+            markers.append(f"✗ {wave_fail_count}")
+        if wave_partial_count > 0:
+            markers.append(f"⚠ {wave_partial_count}")
+
+        logger.info(f"Wave {wave_num}/{len(waves)} complete: {' '.join(markers)}")
+
     # Build execution metadata
     execution_metadata = {
         "total_duration_ms": int((time.time() - start_time) * 1000),
@@ -467,10 +504,14 @@ Please complete this task directly without additional questions or preamble. Pro
         "spawn_count": sum(1 for m in task_metadata if m["is_spawn"]),
     }
 
+    # Calculate final summary counts
+    total_subgoals = len(agent_outputs)
+    succeeded = sum(1 for o in agent_outputs if o.success)
+    failed = execution_metadata['failed_subgoals']
+    partial = sum(1 for o in agent_outputs if o.execution_metadata.get("partial_context", False))
+
     logger.info(
-        f"Agent execution complete: {len(agent_outputs)} subgoals, "
-        f"{execution_metadata['failed_subgoals']} failed, "
-        f"{execution_metadata['fallback_count']} used fallback"
+        f"EXECUTION COMPLETE: {succeeded}/{total_subgoals} succeeded, {failed} failed, {partial} partial"
     )
 
     return CollectResult(

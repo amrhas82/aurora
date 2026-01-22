@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 import pytest
 from click.testing import CliRunner
 
+
 # Import will fail until we create goals.py
 try:
     from aurora_cli.commands.goals import goals_command

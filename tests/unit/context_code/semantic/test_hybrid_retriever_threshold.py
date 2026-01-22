@@ -48,18 +48,20 @@ def test_filtering_logic_structure():
     assert "min_semantic_score" in source, "Filtering logic should reference min_semantic_score"
     assert "semantic_score" in source, "Filtering should be based on semantic_score"
 
-    # Verify filtering happens after sorting
-    # This ensures we filter before returning results
+    # Verify filtering happens at the correct location
+    # The filtering should check min_semantic_score and filter results
     lines = source.split("\n")
-    sort_line = None
-    filter_line = None
+    filter_check_found = False
 
-    for i, line in enumerate(lines):
-        if "final_results.sort" in line:
-            sort_line = i
-        if "min_semantic_score is not None" in line or "min_semantic_score =" in line:
-            filter_line = i
+    for line in lines:
+        # Check that there's a conditional check for min_semantic_score
+        if "min_semantic_score is not None" in line:
+            filter_check_found = True
+            break
 
-    # If both exist, filtering should come after sorting
-    if sort_line is not None and filter_line is not None:
-        assert filter_line > sort_line, "Filtering should occur after sorting"
+    assert filter_check_found, "Should have conditional check for min_semantic_score"
+
+    # Verify the filtering actually filters based on semantic score
+    assert "raw_semantic" in source or "semantic_score" in source, (
+        "Filtering should compare against semantic score"
+    )

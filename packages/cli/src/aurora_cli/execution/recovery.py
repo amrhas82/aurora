@@ -7,6 +7,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
 
+
 if TYPE_CHECKING:
     from aurora_cli.policies.models import RecoveryConfig
 

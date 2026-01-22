@@ -61,6 +61,7 @@ from aurora_cli.tool_providers.output_handler import (
 )
 from aurora_cli.tool_providers.registry import ToolProviderRegistry
 
+
 __all__ = [
     # Base classes
     "ToolProvider",

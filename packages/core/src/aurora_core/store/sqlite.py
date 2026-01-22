@@ -30,6 +30,7 @@ from aurora_core.store.connection_pool import get_connection_pool
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -490,12 +491,16 @@ class SQLiteStore(Store):
         except sqlite3.Error as e:
             raise StorageError("Failed to get chunk count", details=str(e))
 
-    def retrieve_by_activation(self, min_activation: float, limit: int) -> list["Chunk"]:
+    def retrieve_by_activation(
+        self, min_activation: float, limit: int, include_embeddings: bool = True
+    ) -> list["Chunk"]:
         """Retrieve chunks by activation threshold.
 
         Args:
             min_activation: Minimum activation score (can be negative in ACT-R)
             limit: Maximum number of chunks to return
+            include_embeddings: Whether to include embedding vectors (default True).
+                Set to False for faster retrieval when embeddings aren't needed (e.g., BM25 filtering).
 
         Returns:
             List of chunks ordered by activation (highest first)
@@ -510,18 +515,35 @@ class SQLiteStore(Store):
             # Use -float('inf') if min_activation is 0.0 to get all chunks
             actual_min = min_activation if min_activation != 0.0 else -float("inf")
 
-            cursor = conn.execute(
-                """
-                SELECT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at,
-                       a.base_level AS activation
-                FROM chunks c
-                JOIN activations a ON c.id = a.chunk_id
-                WHERE a.base_level >= ?
-                ORDER BY a.base_level DESC
-                LIMIT ?
-                """,
-                (actual_min, limit),
-            )
+            # Optimize query by excluding embeddings when not needed
+            # Each embedding is ~1.5KB, so this saves significant I/O for large result sets
+            if include_embeddings:
+                cursor = conn.execute(
+                    """
+                    SELECT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at,
+                           a.base_level AS activation
+                    FROM chunks c
+                    JOIN activations a ON c.id = a.chunk_id
+                    WHERE a.base_level >= ?
+                    ORDER BY a.base_level DESC
+                    LIMIT ?
+                    """,
+                    (actual_min, limit),
+                )
+            else:
+                # Exclude embeddings for faster retrieval (BM25-only filtering)
+                cursor = conn.execute(
+                    """
+                    SELECT c.id, c.type, c.content, c.metadata, NULL as embeddings, c.created_at, c.updated_at,
+                           a.base_level AS activation
+                    FROM chunks c
+                    JOIN activations a ON c.id = a.chunk_id
+                    WHERE a.base_level >= ?
+                    ORDER BY a.base_level DESC
+                    LIMIT ?
+                    """,
+                    (actual_min, limit),
+                )
 
             chunks = []
             for row in cursor:
@@ -538,6 +560,44 @@ class SQLiteStore(Store):
 
         except sqlite3.Error as e:
             raise StorageError("Failed to retrieve chunks by activation", details=str(e))
+
+    def fetch_embeddings_for_chunks(self, chunk_ids: list[ChunkID]) -> dict[ChunkID, bytes]:
+        """Fetch embeddings only for specified chunks.
+
+        This is used for two-phase retrieval optimization:
+        1. First retrieve chunks without embeddings (fast)
+        2. After BM25 filtering, fetch embeddings only for top candidates
+
+        Args:
+            chunk_ids: List of chunk IDs to fetch embeddings for
+
+        Returns:
+            Dictionary mapping chunk_id to embedding bytes
+
+        Raises:
+            StorageError: If storage operation fails
+        """
+        if not chunk_ids:
+            return {}
+
+        conn = self._get_connection()
+        try:
+            # Use parameterized query with proper placeholder count
+            placeholders = ",".join("?" * len(chunk_ids))
+            cursor = conn.execute(
+                f"""
+                SELECT id, embeddings
+                FROM chunks
+                WHERE id IN ({placeholders})
+                AND embeddings IS NOT NULL
+                """,
+                chunk_ids,
+            )
+
+            return {row["id"]: row["embeddings"] for row in cursor if row["embeddings"]}
+
+        except sqlite3.Error as e:
+            raise StorageError("Failed to fetch embeddings", details=str(e))
 
     def add_relationship(
         self, from_id: ChunkID, to_id: ChunkID, rel_type: str, weight: float = 1.0
@@ -839,6 +899,58 @@ class SQLiteStore(Store):
             raise StorageError(
                 f"Failed to retrieve access stats for chunk: {chunk_id}", details=str(e)
             )
+
+    def get_access_stats_batch(
+        self, chunk_ids: list[ChunkID]
+    ) -> dict[ChunkID, dict[str, Any]]:
+        """Get access statistics for multiple chunks in a single query.
+
+        This is an optimized batch method that avoids N+1 query issues.
+        Uses a single SQL query with IN clause instead of multiple queries.
+
+        Args:
+            chunk_ids: List of chunk IDs to get statistics for
+
+        Returns:
+            Dictionary mapping chunk_id to stats dictionary
+
+        Raises:
+            StorageError: If storage operation fails
+        """
+        if not chunk_ids:
+            return {}
+
+        conn = self._get_connection()
+        results: dict[ChunkID, dict[str, Any]] = {}
+
+        try:
+            # Use parameterized query with proper placeholder count
+            placeholders = ",".join("?" * len(chunk_ids))
+            cursor = conn.execute(
+                f"""SELECT
+                       c.id,
+                       c.created_at,
+                       c.first_access,
+                       c.last_access,
+                       COALESCE(a.access_count, 0) as access_count
+                   FROM chunks c
+                   LEFT JOIN activations a ON c.id = a.chunk_id
+                   WHERE c.id IN ({placeholders})""",
+                chunk_ids,
+            )
+
+            for row in cursor:
+                results[row["id"]] = {
+                    "access_count": row["access_count"],
+                    "last_access": row["last_access"],
+                    "first_access": row["first_access"],
+                    "created_at": row["created_at"],
+                }
+
+            return results
+
+        except sqlite3.Error as e:
+            raise StorageError("Failed to retrieve batch access stats", details=str(e))
 
     def close(self) -> None:
         """Close database connection and cleanup.

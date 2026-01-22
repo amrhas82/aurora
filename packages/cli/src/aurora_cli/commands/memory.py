@@ -31,6 +31,7 @@ from aurora_cli.errors import handle_errors
 from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
 
+
 __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
 
 logger = logging.getLogger(__name__)

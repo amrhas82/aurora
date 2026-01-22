@@ -13,6 +13,7 @@ from pathlib import Path
 import click
 from rich.console import Console
 
+
 __all__ = ["version_command"]
 
 console = Console()

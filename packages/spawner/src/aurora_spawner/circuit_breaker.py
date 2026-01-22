@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +71,7 @@ class CircuitBreaker:
         failure_threshold: int = 2,
         reset_timeout: float = 120.0,
         failure_window: float = 300.0,
-        fast_fail_threshold: int = 1,
+        fast_fail_threshold: int = 2,  # Increased from 1 to 2 (requires 3 failures)
         adhoc_failure_threshold: int = 4,
         adhoc_fast_fail_window: float = 30.0,
     ):
@@ -80,7 +81,7 @@ class CircuitBreaker:
             failure_threshold: Number of failures to open circuit
             reset_timeout: Seconds before trying half-open state
             failure_window: Time window for counting recent failures (seconds)
-            fast_fail_threshold: Consecutive failures to trigger immediate open
+            fast_fail_threshold: Consecutive failures to trigger immediate open (default: 2)
             adhoc_failure_threshold: Higher threshold for adhoc agents (default: 4)
             adhoc_fast_fail_window: Longer window for adhoc fast-fail detection (default: 30s)
         """
@@ -94,6 +95,16 @@ class CircuitBreaker:
         self._failure_history: dict[str, list[float]] = {}  # agent_id -> timestamps
         self._adhoc_agents: set[str] = set()  # Track which agents are adhoc
         self._failure_types: dict[str, list[str]] = {}  # agent_id -> failure types
+
+        # Permanent error types that should trigger fast-fail
+        # These errors won't be fixed by retrying - agent/config is broken
+        self._permanent_error_types = {
+            "auth_error",       # Invalid API key, unauthorized
+            "forbidden",        # 403 - insufficient permissions
+            "invalid_model",    # Model identifier doesn't exist
+            "invalid_request",  # 400 - malformed request
+            "not_found",        # 404 - endpoint/resource doesn't exist
+        }
 
     def _get_circuit(self, agent_id: str) -> AgentCircuit:
         """Get or create circuit for agent."""
@@ -191,7 +202,17 @@ class CircuitBreaker:
             )
             fast_fail = False
 
-        # Fast-fail logic: detect rapid consecutive failures
+        # Only fast-fail on PERMANENT errors (auth, invalid model, etc.)
+        # Transient errors (timeouts, 500s) should allow retries
+        is_permanent_error = failure_type in self._permanent_error_types
+        if not is_permanent_error and failure_type not in [None, "inference"]:
+            logger.debug(
+                f"Agent '{agent_id}' transient failure (type: {failure_type}) - "
+                f"allowing retries (no fast-fail)"
+            )
+            fast_fail = False
+
+        # Fast-fail logic: detect rapid consecutive failures WITH permanent errors
         if fast_fail and recent_failures >= self.fast_fail_threshold:
             # Check failure velocity - if multiple failures in short time, open immediately
             if len(self._failure_history[agent_id]) >= 2:

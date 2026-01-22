@@ -16,6 +16,7 @@ from typing import Any
 
 from aurora_soar.phases.assess import assess_complexity
 
+
 __all__ = ["AutoEscalationHandler", "EscalationConfig", "EscalationResult"]
 
 logger = logging.getLogger(__name__)

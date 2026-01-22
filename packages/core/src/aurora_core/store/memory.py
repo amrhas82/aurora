@@ -14,6 +14,7 @@ from aurora_core.exceptions import ChunkNotFoundError, StorageError, ValidationE
 from aurora_core.store.base import Store
 from aurora_core.types import ChunkID
 
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -365,6 +366,55 @@ class MemoryStore(Store):
             "first_access": None,
             "created_at": chunk.metadata.get("created_at") if hasattr(chunk, "metadata") else None,
         }
+
+    def get_access_stats_batch(
+        self, chunk_ids: list[ChunkID]
+    ) -> dict[ChunkID, dict[str, Any]]:
+        """Get access statistics for multiple chunks.
+
+        This is an optimized batch method that retrieves stats for
+        multiple chunks in a single pass.
+
+        Args:
+            chunk_ids: List of chunk IDs to get statistics for
+
+        Returns:
+            Dictionary mapping chunk_id to stats dictionary
+
+        Raises:
+            StorageError: If store is closed
+        """
+        self._check_closed()
+
+        results: dict[ChunkID, dict[str, Any]] = {}
+        for chunk_id in chunk_ids:
+            chunk_id_str = str(chunk_id)
+            if chunk_id_str not in self._chunks:
+                continue  # Skip missing chunks silently
+
+            chunk = self._chunks[chunk_id_str]
+
+            if chunk_id_str in self._activations:
+                activation = self._activations[chunk_id_str]
+                results[chunk_id] = {
+                    "access_count": activation["access_count"],
+                    "last_access": activation["last_access"],
+                    "first_access": activation["first_access"],
+                    "created_at": (
+                        chunk.metadata.get("created_at") if hasattr(chunk, "metadata") else None
+                    ),
+                }
+            else:
+                results[chunk_id] = {
+                    "access_count": 0,
+                    "last_access": None,
+                    "first_access": None,
+                    "created_at": (
+                        chunk.metadata.get("created_at") if hasattr(chunk, "metadata") else None
+                    ),
+                }
+
+        return results
 
     def close(self) -> None:
         """Close the store and mark it as closed.

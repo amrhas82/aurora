@@ -45,6 +45,7 @@ from aurora_context_code.semantic.model_utils import (
     is_model_cached,
 )
 
+
 __all__ = [
     "EmbeddingProvider",
     "cosine_similarity",

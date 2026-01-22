@@ -19,6 +19,7 @@ from rich.panel import Panel
 
 from aurora_soar.phases.assess import assess_complexity
 
+
 console = Console()
 logger = logging.getLogger(__name__)
 

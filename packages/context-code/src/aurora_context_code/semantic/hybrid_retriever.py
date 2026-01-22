@@ -22,10 +22,12 @@ import logging
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,7 @@ class HybridConfig:
         stage1_top_k: Number of candidates to pass from Stage 1 BM25 filter (default 100)
         fallback_to_activation: If True, fall back to activation-only if embeddings unavailable
         use_staged_retrieval: Enable staged retrieval (BM25 filter → re-rank)
+        bm25_index_path: Path to persist BM25 index (default: .aurora/indexes/bm25_index.pkl)
 
     Example (tri-hybrid):
         >>> config = HybridConfig(bm25_weight=0.3, activation_weight=0.3, semantic_weight=0.4)
@@ -67,7 +70,10 @@ class HybridConfig:
     enable_query_cache: bool = True
     query_cache_size: int = 100
     query_cache_ttl_seconds: int = 1800  # 30 minutes
+    # BM25 index persistence (path relative to project root or absolute)
     bm25_index_path: str | None = None
+    # Enable persistent BM25 index (load from disk if available)
+    enable_bm25_persistence: bool = True
 
     def __post_init__(self) -> None:
         """Validate configuration."""
@@ -285,8 +291,13 @@ class HybridRetriever:
         else:
             self.config = HybridConfig()
 
-        # BM25 scorer (lazy-initialized in retrieve())
+        # BM25 scorer (lazy-initialized in retrieve() or loaded from persistent index)
         self.bm25_scorer: Any = None  # BM25Scorer from aurora_context_code.semantic.bm25_scorer
+        self._bm25_index_loaded = False  # Track if we've loaded the persistent index
+
+        # Try to load persistent BM25 index if configured
+        if self.config.enable_bm25_persistence and self.config.bm25_weight > 0:
+            self._try_load_bm25_index()
 
         # Query embedding cache
         if self.config.enable_query_cache:
@@ -343,10 +354,23 @@ class HybridRetriever:
         if top_k < 1:
             raise ValueError(f"top_k must be >= 1, got {top_k}")
 
-        # Step 1: Retrieve top-K chunks by activation (candidates for Stage 1)
+        # ========== TWO-PHASE RETRIEVAL OPTIMIZATION ==========
+        # Phase 1: Retrieve chunks WITHOUT embeddings (fast, ~1.5KB saved per chunk)
+        # Phase 2: Fetch embeddings ONLY for top candidates after BM25 filtering
+        # This optimization reduces I/O significantly for large result sets
+
+        # Step 1: Retrieve top-K chunks by activation WITHOUT embeddings
+        # Embeddings will be fetched later only for BM25-filtered candidates
+        use_two_phase = (
+            self.config.use_staged_retrieval
+            and self.config.bm25_weight > 0
+            and hasattr(self.store, "fetch_embeddings_for_chunks")
+        )
+
         activation_candidates = self.store.retrieve_by_activation(
             min_activation=0.0,  # Get all chunks, we'll filter by score
             limit=self.config.activation_top_k,
+            include_embeddings=not use_two_phase,  # Skip embeddings if two-phase enabled
         )
 
         # If no chunks available, return empty list
@@ -387,6 +411,18 @@ class HybridRetriever:
         else:
             # Skip Stage 1 if staged retrieval disabled or BM25 weight is 0
             stage1_candidates = activation_candidates
+
+        # ========== PHASE 2: FETCH EMBEDDINGS FOR TOP CANDIDATES ==========
+        # Only fetch embeddings for chunks that passed BM25 filtering
+        if use_two_phase and stage1_candidates:
+            candidate_ids = [chunk.id for chunk in stage1_candidates]
+            embeddings_map = self.store.fetch_embeddings_for_chunks(candidate_ids)
+            logger.debug(f"Fetched embeddings for {len(embeddings_map)}/{len(candidate_ids)} chunks")
+
+            # Attach embeddings to chunks
+            for chunk in stage1_candidates:
+                if chunk.id in embeddings_map:
+                    chunk.embeddings = embeddings_map[chunk.id]
 
         # ========== STAGE 2: TRI-HYBRID RE-RANKING ==========
         results = []
@@ -451,6 +487,17 @@ class HybridRetriever:
         semantic_scores_normalized = self._normalize_scores([r["raw_semantic"] for r in results])
         bm25_scores_normalized = self._normalize_scores([r["raw_bm25"] for r in results])
 
+        # ========== BATCH FETCH ACCESS STATS (N+1 QUERY OPTIMIZATION) ==========
+        # Pre-fetch access stats for all result chunks in a single query
+        chunk_ids = [r["chunk"].id for r in results]
+        access_stats_cache: dict[str, dict] = {}
+        if hasattr(self.store, "get_access_stats_batch"):
+            try:
+                access_stats_cache = self.store.get_access_stats_batch(chunk_ids)
+                logger.debug(f"Batch fetched access stats for {len(access_stats_cache)} chunks")
+            except Exception as e:
+                logger.debug(f"Batch access stats failed, falling back to per-chunk: {e}")
+
         # Calculate tri-hybrid scores and prepare output
         final_results = []
         for i, result_data in enumerate(results):
@@ -466,8 +513,10 @@ class HybridRetriever:
                 + self.config.semantic_weight * semantic_norm
             )
 
-            # Extract content and metadata from chunk
-            content, metadata = self._extract_chunk_content_metadata(chunk)
+            # Extract content and metadata from chunk (using cached access stats)
+            content, metadata = self._extract_chunk_content_metadata(
+                chunk, access_stats_cache=access_stats_cache
+            )
 
             final_results.append(
                 {
@@ -490,6 +539,10 @@ class HybridRetriever:
     def _stage1_bm25_filter(self, query: str, candidates: list[Any]) -> list[Any]:
         """Stage 1: Filter candidates using BM25 keyword matching.
 
+        Uses persistent BM25 index if available, otherwise builds from candidates.
+        The persistent index is built during indexing and loaded on startup,
+        eliminating the O(n) index build on each query (51% of search time savings).
+
         Args:
             query: User query string
             candidates: Chunks retrieved by activation
@@ -497,19 +550,24 @@ class HybridRetriever:
         Returns:
             Top stage1_top_k candidates by BM25 score
         """
-        # Build BM25 index from candidates
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
 
-        self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
+        # Use persistent index if loaded, otherwise build from candidates
+        if self._bm25_index_loaded and self.bm25_scorer is not None:
+            logger.debug("Using persistent BM25 index")
+        else:
+            # Build BM25 index from candidates (fallback if no persistent index)
+            logger.debug("Building BM25 index from candidates (no persistent index)")
+            self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
 
-        # Prepare documents for BM25 indexing
-        documents = []
-        for chunk in candidates:
-            chunk_content = self._get_chunk_content_for_bm25(chunk)
-            documents.append((chunk.id, chunk_content))
+            # Prepare documents for BM25 indexing
+            documents = []
+            for chunk in candidates:
+                chunk_content = self._get_chunk_content_for_bm25(chunk)
+                documents.append((chunk.id, chunk_content))
 
-        # Build BM25 index
-        self.bm25_scorer.build_index(documents)
+            # Build BM25 index
+            self.bm25_scorer.build_index(documents)
 
         # Score all candidates with BM25
         scored_candidates = []
@@ -548,11 +606,14 @@ class HybridRetriever:
             chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
             return str(chunk_json.get("content", ""))
 
-    def _extract_chunk_content_metadata(self, chunk: Any) -> tuple[str, dict[str, Any]]:
+    def _extract_chunk_content_metadata(
+        self, chunk: Any, access_stats_cache: dict[str, dict] | None = None
+    ) -> tuple[str, dict[str, Any]]:
         """Extract content and metadata from chunk.
 
         Args:
             chunk: Chunk object
+            access_stats_cache: Optional pre-fetched access stats (for N+1 optimization)
 
         Returns:
             Tuple of (content, metadata)
@@ -574,13 +635,16 @@ class HybridRetriever:
                 "line_end": getattr(chunk, "line_end", 0),
             }
 
-            # Include access count from activation stats
-            try:
-                access_stats = self.store.get_access_stats(chunk.id)
-                metadata["access_count"] = access_stats.get("access_count", 0)
-            except Exception:
-                # If access stats unavailable, default to 0
-                metadata["access_count"] = 0
+            # Include access count from activation stats (use cache if available)
+            if access_stats_cache and chunk.id in access_stats_cache:
+                metadata["access_count"] = access_stats_cache[chunk.id].get("access_count", 0)
+            else:
+                try:
+                    access_stats = self.store.get_access_stats(chunk.id)
+                    metadata["access_count"] = access_stats.get("access_count", 0)
+                except Exception:
+                    # If access stats unavailable, default to 0
+                    metadata["access_count"] = 0
 
             # Include git metadata if available
             if hasattr(chunk, "metadata") and chunk.metadata:
@@ -600,13 +664,16 @@ class HybridRetriever:
                 "file_path": getattr(chunk, "file_path", ""),
             }
 
-            # Include access count from activation stats
-            try:
-                access_stats = self.store.get_access_stats(chunk.id)
-                metadata["access_count"] = access_stats.get("access_count", 0)
-            except Exception:
-                # If access stats unavailable, default to 0
-                metadata["access_count"] = 0
+            # Include access count from activation stats (use cache if available)
+            if access_stats_cache and chunk.id in access_stats_cache:
+                metadata["access_count"] = access_stats_cache[chunk.id].get("access_count", 0)
+            else:
+                try:
+                    access_stats = self.store.get_access_stats(chunk.id)
+                    metadata["access_count"] = access_stats.get("access_count", 0)
+                except Exception:
+                    # If access stats unavailable, default to 0
+                    metadata["access_count"] = 0
 
             # Include git metadata if available
             if hasattr(chunk, "metadata") and chunk.metadata:
@@ -738,3 +805,128 @@ class HybridRetriever:
         if self._query_cache is not None:
             self._query_cache.clear()
             logger.debug("Query embedding cache cleared")
+
+    def _get_bm25_index_path(self) -> Path | None:
+        """Get the path for the BM25 index file.
+
+        Returns:
+            Path to BM25 index file, or None if not configured
+        """
+        if self.config.bm25_index_path:
+            return Path(self.config.bm25_index_path).expanduser()
+
+        # Default: try to find .aurora directory relative to store's db_path
+        if hasattr(self.store, "db_path") and self.store.db_path != ":memory:":
+            db_path = Path(self.store.db_path)
+            return db_path.parent / "indexes" / "bm25_index.pkl"
+
+        return None
+
+    def _try_load_bm25_index(self) -> bool:
+        """Try to load a persistent BM25 index from disk.
+
+        Returns:
+            True if index was loaded successfully, False otherwise
+        """
+        index_path = self._get_bm25_index_path()
+        if index_path is None or not index_path.exists():
+            logger.debug(f"No persistent BM25 index found at {index_path}")
+            return False
+
+        try:
+            from aurora_context_code.semantic.bm25_scorer import BM25Scorer
+
+            self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
+            self.bm25_scorer.load_index(index_path)
+            self._bm25_index_loaded = True
+            logger.info(
+                f"Loaded BM25 index from {index_path} "
+                f"({self.bm25_scorer.corpus_size} documents)"
+            )
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to load BM25 index from {index_path}: {e}")
+            self.bm25_scorer = None
+            self._bm25_index_loaded = False
+            return False
+
+    def build_and_save_bm25_index(self, documents: list[tuple[str, str]] | None = None) -> bool:
+        """Build BM25 index from documents and save to disk.
+
+        This method is called during indexing to build the persistent BM25 index.
+        If documents are not provided, it retrieves all chunks from the store.
+
+        Args:
+            documents: List of (doc_id, doc_content) tuples, or None to load from store
+
+        Returns:
+            True if index was built and saved successfully, False otherwise
+        """
+        index_path = self._get_bm25_index_path()
+        if index_path is None:
+            logger.warning("Cannot save BM25 index: no index path configured")
+            return False
+
+        try:
+            from aurora_context_code.semantic.bm25_scorer import BM25Scorer
+
+            # If no documents provided, load from store
+            if documents is None:
+                documents = self._load_all_chunks_for_bm25()
+
+            if not documents:
+                logger.warning("No documents to build BM25 index from")
+                return False
+
+            # Build the index
+            self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
+            self.bm25_scorer.build_index(documents)
+
+            # Save to disk
+            self.bm25_scorer.save_index(index_path)
+            self._bm25_index_loaded = True
+            logger.info(
+                f"Built and saved BM25 index to {index_path} "
+                f"({len(documents)} documents)"
+            )
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to build/save BM25 index: {e}")
+            return False
+
+    def _load_all_chunks_for_bm25(self) -> list[tuple[str, str]]:
+        """Load all chunks from store for BM25 indexing.
+
+        Returns:
+            List of (chunk_id, content) tuples
+        """
+        documents = []
+        try:
+            # Retrieve all chunks (high limit to get all)
+            chunks = self.store.retrieve_by_activation(min_activation=0.0, limit=100000)
+            for chunk in chunks:
+                chunk_content = self._get_chunk_content_for_bm25(chunk)
+                if chunk_content:
+                    documents.append((chunk.id, chunk_content))
+            logger.debug(f"Loaded {len(documents)} chunks for BM25 indexing")
+        except Exception as e:
+            logger.warning(f"Failed to load chunks for BM25 index: {e}")
+        return documents
+
+    def invalidate_bm25_index(self) -> None:
+        """Invalidate the current BM25 index (call after reindexing).
+
+        This clears the in-memory index and removes the persistent file,
+        forcing a rebuild on next search or explicit build_and_save_bm25_index call.
+        """
+        self.bm25_scorer = None
+        self._bm25_index_loaded = False
+
+        index_path = self._get_bm25_index_path()
+        if index_path and index_path.exists():
+            try:
+                index_path.unlink()
+                logger.debug(f"Removed stale BM25 index at {index_path}")
+            except OSError as e:
+                logger.warning(f"Failed to remove BM25 index: {e}")

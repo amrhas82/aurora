@@ -25,6 +25,7 @@ from aurora_cli.commands.soar import soar_command
 from aurora_cli.commands.spawn import spawn_command
 from aurora_cli.commands.version import version_command
 
+
 __all__ = ["cli"]
 
 console = Console()

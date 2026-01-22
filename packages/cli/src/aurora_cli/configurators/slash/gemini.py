@@ -7,6 +7,7 @@ using TOML format (extends TomlSlashCommandConfigurator).
 from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
+
 # File paths for each command (TOML format)
 FILE_PATHS: dict[str, str] = {
     "search": ".gemini/commands/aurora/search.toml",

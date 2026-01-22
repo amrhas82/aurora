@@ -32,6 +32,7 @@ import pytest
 
 from aurora_mcp.tools import AuroraMCPTools
 
+
 # Check if fastmcp is available (required for MCP server tests)
 HAS_FASTMCP = False
 try:

@@ -37,6 +37,7 @@ from aurora_cli.configurators.slash.roocode import RooCodeSlashCommandConfigurat
 from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurator
 from aurora_cli.configurators.slash.windsurf import WindsurfSlashCommandConfigurator
 
+
 __all__ = [
     # Base classes and constants
     "ALL_COMMANDS",

@@ -25,6 +25,7 @@ from aurora_cli.commands.headless import (
 )
 from aurora_cli.concurrent_executor import AggregatedResult, AggregationStrategy, ToolResult
 
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

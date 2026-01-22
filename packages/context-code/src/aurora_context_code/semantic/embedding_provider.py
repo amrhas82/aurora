@@ -13,6 +13,7 @@ Functions:
 import numpy as np
 import numpy.typing as npt
 
+
 # Lazy-loaded dependencies - only imported when actually needed
 # This avoids 20+ second startup delay from torch/sentence_transformers
 _torch = None

@@ -11,6 +11,7 @@ from datetime import datetime
 # Forward reference to avoid circular imports - Chunk will be defined in chunks module
 from typing import TYPE_CHECKING, Any, Optional
 
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -204,6 +205,39 @@ class Store(ABC):
             ChunkNotFoundError: If chunk_id does not exist
         """
         pass
+
+    def get_access_stats_batch(self, chunk_ids: list[ChunkID]) -> dict[ChunkID, dict[str, Any]]:
+        """Get access statistics for multiple chunks in a single query.
+
+        This is an optimized batch method that avoids N+1 query issues when
+        retrieving stats for multiple chunks.
+
+        Args:
+            chunk_ids: List of chunk IDs to get statistics for
+
+        Returns:
+            Dictionary mapping chunk_id to stats dictionary:
+                - access_count: Total number of accesses
+                - last_access: Timestamp of most recent access
+                - first_access: Timestamp of first access
+                - created_at: Timestamp of chunk creation
+
+        Note:
+            - Missing chunks are silently omitted from results
+            - Default implementation falls back to individual queries
+
+        Raises:
+            StorageError: If storage operation fails
+        """
+        # Default implementation - subclasses should override for efficiency
+        results: dict[ChunkID, dict[str, Any]] = {}
+        for chunk_id in chunk_ids:
+            try:
+                results[chunk_id] = self.get_access_stats(chunk_id)
+            except Exception:
+                # Skip missing chunks
+                pass
+        return results
 
     @abstractmethod
     def close(self) -> None:

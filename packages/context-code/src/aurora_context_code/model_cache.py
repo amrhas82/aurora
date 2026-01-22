@@ -19,6 +19,7 @@ Usage:
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     pass  # Keep this empty - no heavy imports even for type checking
 

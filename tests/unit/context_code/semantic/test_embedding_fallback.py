@@ -28,6 +28,7 @@ from aurora_context_code.semantic.embedding_provider import (
 )
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
+
 # Mark all tests as requiring ML dependencies
 pytestmark = [
     pytest.mark.ml,

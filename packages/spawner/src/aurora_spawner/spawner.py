@@ -21,6 +21,7 @@ from aurora_spawner.models import SpawnResult, SpawnTask
 from aurora_spawner.observability import FailureReason, get_health_monitor
 from aurora_spawner.timeout_policy import SpawnPolicy
 
+
 logger = logging.getLogger(__name__)
 
 # Default timeout for backwards compatibility
@@ -1418,15 +1419,47 @@ async def spawn_with_retry_and_fallback(
             elif "crash" in reason_lower:
                 failure_type = "crash"
         elif result.error:
-            # Check error message for rate limit errors first
+            # Check error message - distinguish permanent vs transient errors
             error_lower = result.error.lower()
+
+            # Rate limits - don't trigger circuit breaker (quota issue, not agent issue)
             if any(
                 x in error_lower
                 for x in ["rate limit", "429", "quota exceeded", "too many requests"]
             ):
                 error_type = "rate_limit"
                 failure_type = "rate_limit"
-            elif any(x in error_lower for x in ["api", "connection", "json", "parse", "model"]):
+
+            # Permanent errors - should trigger fast-fail (config/agent broken)
+            elif any(x in error_lower for x in ["unauthorized", "401", "invalid api key", "authentication failed"]):
+                error_type = "api_error"
+                failure_type = "auth_error"
+            elif any(x in error_lower for x in ["forbidden", "403", "insufficient permissions"]):
+                error_type = "api_error"
+                failure_type = "forbidden"
+            elif any(x in error_lower for x in ["invalid model", "model identifier", "model not found", "model not available"]):
+                error_type = "api_error"
+                failure_type = "invalid_model"
+            elif any(x in error_lower for x in ["400", "bad request", "invalid request", "malformed"]):
+                error_type = "api_error"
+                failure_type = "invalid_request"
+            elif any(x in error_lower for x in ["404", "not found", "endpoint not found"]):
+                error_type = "api_error"
+                failure_type = "not_found"
+
+            # Transient errors - allow retries (temporary issues)
+            elif any(x in error_lower for x in ["500", "502", "503", "504", "internal server error", "bad gateway", "service unavailable"]):
+                error_type = "api_error"
+                failure_type = "transient_error"
+            elif any(x in error_lower for x in ["connection", "econnreset", "network", "timeout"]):
+                error_type = "api_error"
+                failure_type = "transient_error"
+            elif any(x in error_lower for x in ["json", "parse"]):
+                error_type = "api_error"
+                failure_type = "transient_error"
+
+            # Generic API/inference errors - treat as transient unless proven permanent
+            elif any(x in error_lower for x in ["api", "inference"]):
                 failure_type = "inference"
 
         # Check if should retry

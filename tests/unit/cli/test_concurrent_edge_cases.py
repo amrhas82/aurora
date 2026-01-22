@@ -31,9 +31,9 @@ from aurora_cli.concurrent_executor import (
     ToolResult,
 )
 from aurora_cli.tool_providers import ToolProviderRegistry
-from aurora_cli.tool_providers.base import ToolProvider
+from aurora_cli.tool_providers.base import ToolProvider, ToolStatus
 from aurora_cli.tool_providers.base import ToolResult as ProviderResult
-from aurora_cli.tool_providers.base import ToolStatus
+
 
 # ---------------------------------------------------------------------------
 # Fixtures

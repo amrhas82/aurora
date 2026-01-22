@@ -17,10 +17,13 @@ Performance Targets:
 - Cache lookup: <1ms for hot cache, <5ms for persistent
 """
 
+import json
+import sqlite3
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from aurora_core.types import ChunkID
@@ -196,6 +199,179 @@ class LRUCache:
         return [(key, entry.value) for key, entry in self.cache.items()]
 
 
+class PersistentCache:
+    """SQLite-backed persistent cache for chunk data.
+
+    This cache provides disk-backed storage that survives process restarts.
+    It's useful for large codebases where hot cache evictions would otherwise
+    require expensive database queries.
+
+    The cache stores serialized chunk data with access statistics for
+    intelligent warm-up on process start.
+    """
+
+    def __init__(self, cache_path: str | Path, max_entries: int = 10000):
+        """Initialize the persistent cache.
+
+        Args:
+            cache_path: Path to SQLite cache file
+            max_entries: Maximum number of entries to store (default 10000)
+        """
+        self.cache_path = Path(cache_path).expanduser()
+        self.max_entries = max_entries
+        self._conn: sqlite3.Connection | None = None
+        self._init_schema()
+
+    def _get_connection(self) -> sqlite3.Connection:
+        """Get or create SQLite connection."""
+        if self._conn is None:
+            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+            self._conn = sqlite3.connect(str(self.cache_path), timeout=5.0)
+            self._conn.row_factory = sqlite3.Row
+            # Enable WAL mode for better concurrent access
+            self._conn.execute("PRAGMA journal_mode=WAL")
+        return self._conn
+
+    def _init_schema(self) -> None:
+        """Initialize cache database schema."""
+        conn = self._get_connection()
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS chunk_cache (
+                chunk_id TEXT PRIMARY KEY,
+                data TEXT NOT NULL,
+                access_count INTEGER DEFAULT 0,
+                last_access REAL NOT NULL,
+                created_at REAL NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_cache_access
+            ON chunk_cache(access_count DESC, last_access DESC)
+        """)
+        conn.commit()
+
+    def get(self, chunk_id: ChunkID) -> Any | None:
+        """Get chunk from persistent cache.
+
+        Args:
+            chunk_id: Chunk identifier
+
+        Returns:
+            Cached chunk data if found, None otherwise
+        """
+        conn = self._get_connection()
+        try:
+            cursor = conn.execute(
+                "SELECT data FROM chunk_cache WHERE chunk_id = ?",
+                (chunk_id,)
+            )
+            row = cursor.fetchone()
+            if row is None:
+                return None
+
+            # Update access stats
+            now = time.time()
+            conn.execute(
+                "UPDATE chunk_cache SET access_count = access_count + 1, last_access = ? WHERE chunk_id = ?",
+                (now, chunk_id)
+            )
+            conn.commit()
+
+            return json.loads(row["data"])
+        except (sqlite3.Error, json.JSONDecodeError):
+            return None
+
+    def set(self, chunk_id: ChunkID, data: Any) -> None:
+        """Store chunk in persistent cache.
+
+        Args:
+            chunk_id: Chunk identifier
+            data: Chunk data to cache (must be JSON-serializable)
+        """
+        conn = self._get_connection()
+        try:
+            now = time.time()
+            serialized = json.dumps(data)
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO chunk_cache
+                (chunk_id, data, access_count, last_access, created_at)
+                VALUES (?, ?, COALESCE((SELECT access_count FROM chunk_cache WHERE chunk_id = ?), 0) + 1, ?, ?)
+                """,
+                (chunk_id, serialized, chunk_id, now, now)
+            )
+            conn.commit()
+
+            # Prune if over max entries (keep most accessed)
+            cursor = conn.execute("SELECT COUNT(*) FROM chunk_cache")
+            count = cursor.fetchone()[0]
+            if count > self.max_entries:
+                # Delete least accessed entries
+                delete_count = count - self.max_entries
+                conn.execute(
+                    """
+                    DELETE FROM chunk_cache WHERE chunk_id IN (
+                        SELECT chunk_id FROM chunk_cache
+                        ORDER BY access_count ASC, last_access ASC
+                        LIMIT ?
+                    )
+                    """,
+                    (delete_count,)
+                )
+                conn.commit()
+
+        except (sqlite3.Error, TypeError):
+            pass  # Silently fail on cache errors
+
+    def get_hot_entries(self, limit: int = 100) -> list[tuple[ChunkID, Any]]:
+        """Get most accessed entries for hot cache warm-up.
+
+        Args:
+            limit: Maximum entries to return
+
+        Returns:
+            List of (chunk_id, data) tuples ordered by access frequency
+        """
+        conn = self._get_connection()
+        try:
+            cursor = conn.execute(
+                """
+                SELECT chunk_id, data FROM chunk_cache
+                ORDER BY access_count DESC, last_access DESC
+                LIMIT ?
+                """,
+                (limit,)
+            )
+            return [(row["chunk_id"], json.loads(row["data"])) for row in cursor]
+        except (sqlite3.Error, json.JSONDecodeError):
+            return []
+
+    def clear(self) -> None:
+        """Clear all entries from persistent cache."""
+        conn = self._get_connection()
+        try:
+            conn.execute("DELETE FROM chunk_cache")
+            conn.commit()
+        except sqlite3.Error:
+            pass
+
+    def size(self) -> int:
+        """Get current cache size."""
+        conn = self._get_connection()
+        try:
+            cursor = conn.execute("SELECT COUNT(*) FROM chunk_cache")
+            row = cursor.fetchone()
+            return int(row[0]) if row else 0
+        except sqlite3.Error:
+            return 0
+
+    def close(self) -> None:
+        """Close database connection."""
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+
 class CacheManager:
     """Multi-tier cache manager for optimizing retrieval performance.
 
@@ -239,6 +415,9 @@ class CacheManager:
         hot_cache_size: int = 1000,
         activation_ttl_seconds: int = 600,
         enable_persistent_cache: bool = False,
+        persistent_cache_path: str | Path | None = None,
+        persistent_cache_max_entries: int = 10000,
+        warm_hot_cache: bool = True,
     ):
         """Initialize the cache manager.
 
@@ -246,10 +425,13 @@ class CacheManager:
             hot_cache_size: Maximum items in hot cache (default 1000)
             activation_ttl_seconds: TTL for activation scores in seconds (default 600)
             enable_persistent_cache: Enable SQLite persistent cache (default False)
+            persistent_cache_path: Path to persistent cache file (default: ~/.aurora/cache/chunks.db)
+            persistent_cache_max_entries: Maximum entries in persistent cache (default 10000)
+            warm_hot_cache: Pre-warm hot cache from persistent cache on startup (default True)
 
         Notes:
-            - Persistent cache is disabled by default for simplicity
-            - Can be enabled for production deployments with large codebases
+            - Persistent cache provides disk-backed storage that survives restarts
+            - When enabled, hot cache is pre-warmed with most accessed entries
         """
         self.hot_cache = LRUCache(capacity=hot_cache_size)
         self.activation_cache: dict[ChunkID, CacheEntry] = {}
@@ -257,8 +439,18 @@ class CacheManager:
         self.enable_persistent = enable_persistent_cache
         self.stats = CacheStats()
 
-        # Persistent cache would be initialized here if enabled
-        # For now, we'll keep it simple and only use hot + activation caches
+        # Initialize persistent cache if enabled
+        self._persistent_cache: PersistentCache | None = None
+        if enable_persistent_cache:
+            cache_path = persistent_cache_path or Path("~/.aurora/cache/chunks.db")
+            self._persistent_cache = PersistentCache(
+                cache_path=cache_path,
+                max_entries=persistent_cache_max_entries
+            )
+
+            # Warm hot cache from persistent cache
+            if warm_hot_cache:
+                self._warm_hot_cache_from_persistent(limit=hot_cache_size // 2)
 
     def get_chunk(self, chunk_id: ChunkID) -> Any | None:
         """Get chunk from cache (hot → persistent → miss).
@@ -286,13 +478,12 @@ class CacheManager:
         self.stats.hot_misses += 1
 
         # Tier 2: Persistent cache (if enabled)
-        if self.enable_persistent:
-            # TODO: Implement persistent cache lookup
-            # chunk = self.persistent_cache.get(chunk_id)
-            # if chunk is not None:
-            #     self.stats.persistent_hits += 1
-            #     self._promote_to_hot(chunk_id, chunk)
-            #     return chunk
+        if self.enable_persistent and self._persistent_cache is not None:
+            chunk = self._persistent_cache.get(chunk_id)
+            if chunk is not None:
+                self.stats.persistent_hits += 1
+                self._promote_to_hot(chunk_id, chunk)
+                return chunk
             self.stats.persistent_misses += 1
 
         return None
@@ -310,9 +501,26 @@ class CacheManager:
             self.stats.evictions += 1
 
         # Set in persistent cache (if enabled)
-        if self.enable_persistent:
-            # TODO: Implement persistent cache storage
-            pass
+        if self.enable_persistent and self._persistent_cache is not None:
+            self._persistent_cache.set(chunk_id, chunk_data)
+
+    def _warm_hot_cache_from_persistent(self, limit: int = 500) -> int:
+        """Pre-warm hot cache with most accessed entries from persistent cache.
+
+        Args:
+            limit: Maximum entries to load
+
+        Returns:
+            Number of entries loaded
+        """
+        if self._persistent_cache is None:
+            return 0
+
+        entries = self._persistent_cache.get_hot_entries(limit=limit)
+        for chunk_id, data in entries:
+            self.hot_cache.set(chunk_id, data)
+
+        return len(entries)
 
     def get_activation(
         self, chunk_id: ChunkID, current_time: datetime | None = None
@@ -445,4 +653,5 @@ __all__ = [
     "CacheStats",
     "CacheEntry",
     "LRUCache",
+    "PersistentCache",
 ]

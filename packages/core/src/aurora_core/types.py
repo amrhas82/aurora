@@ -7,6 +7,7 @@ framework for consistency and type safety.
 from datetime import datetime
 from typing import Any, NewType
 
+
 # Type aliases for improved readability and type safety
 ChunkID = NewType("ChunkID", str)
 """Unique identifier for a chunk. Format: <type>_<hash> (e.g., 'code_abc123')"""

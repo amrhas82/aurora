@@ -30,6 +30,7 @@ import pytest
 
 from .conftest import run_cli_command
 
+
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 

@@ -86,6 +86,25 @@ class ConnectionPool:
             # Enable foreign keys
             conn.execute("PRAGMA foreign_keys=ON")
 
+            # ========== QUERY OPTIMIZATION PRAGMAS ==========
+            # These settings improve query performance for read-heavy workloads
+
+            # Synchronous=NORMAL: Good balance between safety and speed
+            # FULL is safest but slower, OFF is fastest but risky
+            conn.execute("PRAGMA synchronous=NORMAL")
+
+            # Cache size: Increase page cache (default is ~2MB, we use ~8MB)
+            # Negative value = KB instead of pages
+            conn.execute("PRAGMA cache_size=-8000")
+
+            # Memory-mapped I/O: Enable for faster reads (256MB max)
+            # This allows SQLite to bypass the filesystem cache
+            if db_path != ":memory:":
+                conn.execute("PRAGMA mmap_size=268435456")
+
+            # Temp store: Keep temp tables in memory for faster joins
+            conn.execute("PRAGMA temp_store=MEMORY")
+
             return conn, True
 
         except sqlite3.Error as e:

@@ -52,6 +52,7 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
+
 if TYPE_CHECKING:
     from typing import Any
 

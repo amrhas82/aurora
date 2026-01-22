@@ -9,6 +9,7 @@ from aurora_core.store.migrations import Migration, MigrationManager, get_migrat
 from aurora_core.store.schema import SCHEMA_VERSION, get_init_statements
 from aurora_core.store.sqlite import SQLiteStore
 
+
 __all__ = [
     "Store",
     "SQLiteStore",

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
+
 __all__ = [
     "verify_lite",
 ]
@@ -64,6 +65,9 @@ def verify_lite(
     for i, subgoal in enumerate(subgoals):
         # Use subgoal_index if provided, otherwise fall back to loop index
         subgoal_index = subgoal.get("subgoal_index", i)
+
+        # Ensure subgoal_index is set on the dict for downstream phases
+        subgoal["subgoal_index"] = subgoal_index
 
         # Validate required fields
         if "description" not in subgoal:
@@ -162,6 +166,14 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
     graph: dict[int, list[int]] = {}
     for subgoal in subgoals:
         subgoal_index = subgoal.get("subgoal_index")
+
+        # Validate subgoal has valid index
+        if subgoal_index is None:
+            issues.append(
+                f"Subgoal is missing 'subgoal_index' field (found: {subgoal.get('task', 'unknown task')})"
+            )
+            continue
+
         depends_on = subgoal.get("depends_on", [])
         graph[subgoal_index] = depends_on
 

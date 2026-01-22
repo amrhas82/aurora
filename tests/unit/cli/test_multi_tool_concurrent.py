@@ -31,6 +31,7 @@ from aurora_cli.concurrent_executor import (
 )
 from aurora_cli.tool_providers import ToolProviderRegistry
 
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

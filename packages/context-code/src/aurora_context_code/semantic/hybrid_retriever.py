@@ -21,6 +21,7 @@ import hashlib
 import json
 import logging
 import os
+import pickle
 import threading
 import time
 from collections import OrderedDict
@@ -1014,7 +1015,8 @@ class HybridRetriever:
         """
         index_path = self._get_bm25_index_path()
         if index_path is None or not index_path.exists():
-            logger.debug(f"No persistent BM25 index found at {index_path}")
+            # Changed from DEBUG to INFO for better visibility (Task 3.6)
+            logger.info(f"No persistent BM25 index found at {index_path}")
             return False
 
         try:
@@ -1023,13 +1025,36 @@ class HybridRetriever:
             self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
             self.bm25_scorer.load_index(index_path)
             self._bm25_index_loaded = True
+
+            # Enhanced logging with corpus size and file size (Task 3.6)
+            file_size_mb = index_path.stat().st_size / (1024 * 1024)
+            corpus_size = self.bm25_scorer.corpus_size
+
+            # Validate loaded index has documents (Task 3.7)
+            if corpus_size == 0:
+                logger.warning(
+                    f"✗ Loaded BM25 index from {index_path} but corpus_size is 0 (empty index)"
+                )
+                self.bm25_scorer = None
+                self._bm25_index_loaded = False
+                return False
+
             logger.info(
-                f"Loaded BM25 index from {index_path} "
-                f"({self.bm25_scorer.corpus_size} documents)",
+                f"✓ Loaded BM25 index from {index_path} "
+                f"({corpus_size} documents, {file_size_mb:.2f} MB)"
             )
             return True
+        except (pickle.UnpicklingError, ModuleNotFoundError, EOFError) as e:
+            # Improved error handling for pickle format mismatches (Task 3.8)
+            error_type = type(e).__name__
+            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
+            self.bm25_scorer = None
+            self._bm25_index_loaded = False
+            return False
         except Exception as e:
-            logger.warning(f"Failed to load BM25 index from {index_path}: {e}")
+            # Catch-all for other errors
+            error_type = type(e).__name__
+            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
             self.bm25_scorer = None
             self._bm25_index_loaded = False
             return False

@@ -224,51 +224,51 @@ aur mem search "test query" --limit 10
     - verify: `pytest tests/unit/core/activation/test_engine_cache.py -v`
     - **Details**: All 5 unit tests (same_db, different_db, memory_db, thread_safety, lazy_initialization) must pass
 
-- [ ] 3.0 BM25 Index Persistence Validation (~80 LOC)
-  - [ ] 3.1 Write test: test_bm25_index_saves_on_build
+- [x] 3.0 BM25 Index Persistence Validation (~80 LOC)
+  - [x] 3.1 Write test: test_bm25_index_saves_on_build
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py::test_bm25_index_saves_on_build -v`
     - **Details**: Build index with 100 chunks, verify `.aurora/indexes/bm25_index.pkl` file exists and has size >0
     - **PRD Ref**: FR3.1-FR3.2, Section 8.1 UT3
-  - [ ] 3.2 Write test: test_bm25_index_loads_from_disk
+  - [x] 3.2 Write test: test_bm25_index_loads_from_disk
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py::test_bm25_index_loads_from_disk -v`
     - **Details**: Save index with 100 docs, create new HybridRetriever, verify _bm25_index_loaded=True and corpus_size=100
     - **PRD Ref**: FR3.1-FR3.2, Section 8.1 UT3
-  - [ ] 3.3 Write test: test_bm25_index_corrupted_fallback
+  - [x] 3.3 Write test: test_bm25_index_corrupted_fallback
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py::test_bm25_index_corrupted_fallback -v`
     - **Details**: Write garbage bytes to index file, create retriever, verify WARNING logged and index rebuilds (no crash)
     - **PRD Ref**: FR3.4, NFR2.2, Section 8.1 UT3
-  - [ ] 3.4 Write test: test_bm25_index_missing_rebuilds
+  - [x] 3.4 Write test: test_bm25_index_missing_rebuilds
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py::test_bm25_index_missing_rebuilds -v`
     - **Details**: Delete index file, create retriever, verify INFO logged "No persistent BM25 index found" and index rebuilds on first search
     - **PRD Ref**: FR3.1, Section 8.1 UT3
-  - [ ] 3.5 Write test: test_bm25_path_resolution_absolute_vs_relative
+  - [x] 3.5 Write test: test_bm25_path_resolution_absolute_vs_relative
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py::test_bm25_path_resolution_absolute_vs_relative -v`
     - **Details**: Test _get_bm25_index_path() returns correct path for both relative and absolute db_path
     - **PRD Ref**: FR3.3, Section 6.5.3
-  - [ ] 3.6 Enhance _try_load_bm25_index() logging
+  - [x] 3.6 Enhance _try_load_bm25_index() logging
     - tdd: yes (covered by tests above)
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py -v -s | grep "Loaded BM25 index"`
     - **Details**: Change DEBUG to INFO for "No persistent BM25 index found", add ✓/✗ symbols, log corpus_size and file size on success
     - **PRD Ref**: FR3.5, NFR3.2, Section 7.3
     - **Location**: `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` lines 847-874
-  - [ ] 3.7 Add validation for loaded index corpus_size
+  - [x] 3.7 Add validation for loaded index corpus_size
     - tdd: yes (covered by test_bm25_index_loads_from_disk)
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py::test_bm25_index_loads_from_disk -v`
     - **Details**: After load_index(), verify self.bm25_scorer.corpus_size > 0, log corpus_size in success message
     - **PRD Ref**: FR3.2, Section 7.3
     - **Location**: Inside _try_load_bm25_index() after load_index() call
-  - [ ] 3.8 Improve error handling for pickle format mismatches
+  - [x] 3.8 Improve error handling for pickle format mismatches
     - tdd: yes (covered by test_bm25_index_corrupted_fallback)
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py::test_bm25_index_corrupted_fallback -v`
     - **Details**: Catch specific pickle exceptions (UnpicklingError, ModuleNotFoundError), log type(e).__name__ in WARNING message
     - **PRD Ref**: FR3.2, FR3.4, Section 7.3
     - **Location**: Inside _try_load_bm25_index() except block
-  - [ ] 3.9 Verify: All BM25 persistence unit tests pass
+  - [x] 3.9 Verify: All BM25 persistence unit tests pass
     - tdd: no
     - verify: `pytest tests/unit/context_code/semantic/test_bm25_persistence.py -v`
     - **Details**: All 5 unit tests (saves_on_build, loads_from_disk, corrupted_fallback, missing_rebuilds, path_resolution) must pass

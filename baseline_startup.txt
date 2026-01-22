@@ -1,0 +1,215 @@
+pytest tests/performance/test_soar_startup_performance.py -v --benchmark-only --benchmark-verbose
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /home/hamr/PycharmProjects/aurora
+configfile: pytest.ini
+plugins: cov-7.0.0, asyncio-1.3.0, anyio-4.12.0, benchmark-5.2.3, typeguard-4.4.4
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 19 items
+
+tests/performance/test_soar_startup_performance.py::TestSOARCommandStartup::test_soar_help_response_time SKIPPED [  5%]
+tests/performance/test_soar_startup_performance.py::TestSOARCommandStartup::test_critical_imports_fast SKIPPED [ 10%]
+tests/performance/test_soar_startup_performance.py::TestSOARCommandStartup::test_no_heavy_imports_at_module_level SKIPPED [ 15%]
+tests/performance/test_soar_startup_performance.py::TestConfigurationLoading::test_config_load_time SKIPPED [ 21%]
+tests/performance/test_soar_startup_performance.py::TestStoreInitialization::test_sqlite_store_init_fast SKIPPED [ 26%]
+tests/performance/test_soar_startup_performance.py::TestStoreInitialization::test_store_has_memory_check_fast SKIPPED [ 31%]
+tests/performance/test_soar_startup_performance.py::TestAgentDiscovery::test_agent_registry_init_fast SKIPPED [ 36%]
+tests/performance/test_soar_startup_performance.py::TestAgentDiscovery::test_agent_manifest_loading_fast SKIPPED [ 42%]
+tests/performance/test_soar_startup_performance.py::TestOrchestratorInitialization::test_orchestrator_init_without_llm SKIPPED [ 47%]
+tests/performance/test_soar_startup_performance.py::TestBackgroundModelLoading::test_background_loading_starts_quickly SKIPPED [ 52%]
+tests/performance/test_soar_startup_performance.py::TestBackgroundModelLoading::test_model_cache_check_lightweight SKIPPED [ 57%]
+tests/performance/test_soar_startup_performance.py::TestEndToEndStartup::test_soar_command_startup_to_llm_call SKIPPED [ 63%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_import_time SKIPPED [ 68%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_config_time SKIPPED [ 73%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_store_init_time SKIPPED [ 78%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_registry_init_time SKIPPED [ 84%]
+tests/performance/test_soar_startup_performance.py::TestStartupOptimizations::test_lazy_imports_working SKIPPED [ 89%]
+tests/performance/test_soar_startup_performance.py::TestStartupOptimizations::test_background_loading_exists SKIPPED [ 94%]
+tests/performance/test_soar_startup_performance.py::TestProgressiveStartup::test_phase_callback_fires_early SKIPPED [100%]/home/hamr/.local/lib/python3.10/site-packages/coverage/control.py:946: CoverageWarning: No data was collected. (no-data-collected); see https://coverage.readthedocs.io/en/7.11.0/messages.html#warning-no-data-collected
+  self._warn("No data was collected.", slug="no-data-collected")
+/home/hamr/.local/lib/python3.10/site-packages/pytest_cov/plugin.py:363: CovReportWarning: Failed to generate report: No data to report.
+
+  warnings.warn(CovReportWarning(message), stacklevel=1)
+
+WARNING: Failed to generate report: No data to report.
+
+
+
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.12-final-0 _______________
+
+=========================== short test summary info ============================
+SKIPPED [19] tests/performance/test_soar_startup_performance.py: Skipping non-benchmark (--benchmark-only active).
+============================= 19 skipped in 0.48s ==============================
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /home/hamr/PycharmProjects/aurora
+configfile: pytest.ini
+plugins: cov-7.0.0, asyncio-1.3.0, anyio-4.12.0, benchmark-5.2.3, typeguard-4.4.4
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_import_time FAILED [ 25%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_config_time PASSED [ 50%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_store_init_time PASSED [ 75%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_registry_init_time PASSED [100%]
+
+=================================== FAILURES ===================================
+_________________ TestRegressionGuards.test_guard_import_time __________________
+
+self = <tests.performance.test_soar_startup_performance.TestRegressionGuards object at 0x7433725c5ed0>
+
+    def test_guard_import_time(self):
+        """REGRESSION GUARD: Critical imports must complete in <2s."""
+        import sys
+    
+        modules_to_clear = [
+            k
+            for k in list(sys.modules.keys())
+            if "aurora_soar" in k or "aurora_cli.commands.soar" in k
+        ]
+        for mod in modules_to_clear:
+            del sys.modules[mod]
+    
+        start = time.time()
+        from aurora_cli.commands.soar import soar_command  # noqa: F401
+    
+        elapsed = time.time() - start
+    
+>       assert elapsed < self.MAX_IMPORT_TIME, (
+            f"REGRESSION: Import time {elapsed:.3f}s exceeds {self.MAX_IMPORT_TIME}s. "
+            "Check for new heavy imports at module level."
+        )
+E       AssertionError: REGRESSION: Import time 2.211s exceeds 2.0s. Check for new heavy imports at module level.
+E       assert 2.2109408378601074 < 2.0
+E        +  where 2.0 = <tests.performance.test_soar_startup_performance.TestRegressionGuards object at 0x7433725c5ed0>.MAX_IMPORT_TIME
+
+tests/performance/test_soar_startup_performance.py:400: AssertionError
+=============================== warnings summary ===============================
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_registry_init_time
+  /home/hamr/PycharmProjects/aurora/tests/performance/test_soar_startup_performance.py:440: DeprecationWarning: AgentRegistry is deprecated. Use aurora_cli.agent_discovery.ManifestManager instead.
+    AgentRegistry()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.12-final-0 _______________
+
+Name                                                                  Stmts   Miss   Cover   Missing
+----------------------------------------------------------------------------------------------------
+packages/cli/src/aurora_cli/agent_discovery/manifest.py                 110     91  17.27%   69-70, 94-157, 177-207, 225-248, 270-302, 333-346, 370-381
+packages/cli/src/aurora_cli/agent_discovery/models.py                    97     44  54.64%   139-151, 167-198, 214-221, 295, 299-303, 314, 325, 338-344, 352, 370-377
+packages/cli/src/aurora_cli/agent_discovery/parser.py                    82     69  15.85%   47, 69-157, 185-223, 243-252
+packages/cli/src/aurora_cli/agent_discovery/scanner.py                   57     42  26.32%   28-30, 68-71, 80, 98-109, 133-156, 174-187, 203-209
+packages/cli/src/aurora_cli/commands/goals.py                           152    122  19.74%   67-86, 199-394
+packages/cli/src/aurora_cli/commands/headless.py                        539    494   8.35%   26-35, 43-53, 61-73, 288-518, 549-696, 719-814, 823-890, 895-934, 939-957, 962-973, 978-983, 1001-1047, 1069-1166
+packages/cli/src/aurora_cli/commands/init.py                            488    463   5.12%   37, 57-77, 90-99, 122-181, 203-275, 307-448, 468-534, 543-546, 565-665, 716-1009
+packages/cli/src/aurora_cli/commands/init_helpers.py                    395    360   8.86%   34-35, 46-55, 67-68, 80-105, 117-118, 134-135, 154-198, 216-229, 250-324, 335-386, 400-410, 426-548, 563-649, 671-710, 728-757, 771-848, 864-890, 904-922, 937-945, 957-958, 985-1034, 1046-1048, 1071-1119
+packages/cli/src/aurora_cli/commands/memory.py                          650    579  10.92%   47-60, 79, 90-92, 96-100, 129-245, 262-312, 376-390, 489-610, 639-659, 686-840, 859-1006, 1015-1031, 1043-1050, 1063-1065, 1088-1101, 1134-1280, 1308-1353, 1365-1405, 1430-1437, 1465-1495, 1504-1512, 1521-1540, 1552-1582
+packages/cli/src/aurora_cli/commands/plan.py                            202    154  23.76%   73, 159-231, 271-285, 334-392, 440-490, 521-546
+packages/cli/src/aurora_cli/commands/soar.py                            285    251  11.93%   86-109, 123-184, 205-220, 229-232, 245-249, 259-379, 392-403, 499-689
+packages/cli/src/aurora_cli/commands/spawn.py                           142    114  19.72%   134-241, 257-274, 305-350, 377-416, 432
+packages/cli/src/aurora_cli/config.py                                   251    144  42.63%   33-34, 66-72, 77-80, 87, 91-96, 102, 106, 109, 113, 116-120, 124, 129-134, 137-142, 147-156, 185-187, 191-198, 213-221, 233-286, 296-297, 303-309, 314-315, 320-323, 328-329, 334-335, 363, 365, 367, 369, 373, 377, 382, 386, 392, 396, 400, 404, 408, 412, 418, 422, 426, 430, 434, 438, 442, 446, 450, 454, 458, 462, 466, 471-472, 476, 479, 482, 485, 488, 492-494
+packages/cli/src/aurora_cli/configurators/agents.py                      11      3  72.73%   18, 23, 34
+packages/cli/src/aurora_cli/configurators/ampcode.py                     11      3  72.73%   17, 22, 34
+packages/cli/src/aurora_cli/configurators/base.py                        35     20  42.86%   36, 53, 73, 98-101, 126-150
+packages/cli/src/aurora_cli/configurators/claude.py                      14      4  71.43%   20, 25, 36, 55
+packages/cli/src/aurora_cli/configurators/claude_commands.py             41     28  31.71%   29, 34, 39, 57-73, 93-118, 126
+packages/cli/src/aurora_cli/configurators/droid.py                       11      3  72.73%   17, 22, 34
+packages/cli/src/aurora_cli/configurators/opencode.py                    11      3  72.73%   17, 22, 34
+packages/cli/src/aurora_cli/configurators/registry.py                    33     14  57.58%   23-34, 43-45, 57-58, 67-68, 77-78
+packages/cli/src/aurora_cli/configurators/slash/amazon_q.py              20      7  65.00%   80, 85, 96, 107, 118, 129-136
+packages/cli/src/aurora_cli/configurators/slash/antigravity.py           20      7  65.00%   38, 43, 54, 65-66, 77, 88
+packages/cli/src/aurora_cli/configurators/slash/auggie.py                20      7  65.00%   68, 73, 84, 95, 106, 117-124
+packages/cli/src/aurora_cli/configurators/slash/base.py                  62     43  30.65%   58, 72, 87-118, 132-142, 192, 204-205, 217-232
+packages/cli/src/aurora_cli/configurators/slash/claude.py                20      7  65.00%   63, 68, 79, 90, 101, 112-119
+packages/cli/src/aurora_cli/configurators/slash/cline.py                 21      8  61.90%   39, 44, 55, 71-73, 84, 95
+packages/cli/src/aurora_cli/configurators/slash/codebuddy.py             20      7  65.00%   63, 68, 79, 90, 101, 112-119
+packages/cli/src/aurora_cli/configurators/slash/codex.py                 62     43  30.65%   70, 75, 86-93, 107, 121, 132, 143-150, 164-166, 181-209, 223-235
+packages/cli/src/aurora_cli/configurators/slash/costrict.py              20      7  65.00%   68, 73, 84, 95, 106, 117-124
+packages/cli/src/aurora_cli/configurators/slash/crush.py                 20      7  65.00%   63, 68, 79, 90, 101, 112-119
+packages/cli/src/aurora_cli/configurators/slash/cursor.py                20      7  65.00%   69, 74, 85, 96, 107, 118-125
+packages/cli/src/aurora_cli/configurators/slash/factory.py               18      6  66.67%   69, 74, 85, 96, 109-110
+packages/cli/src/aurora_cli/configurators/slash/gemini.py                17      5  70.59%   40, 45, 56, 67, 78
+packages/cli/src/aurora_cli/configurators/slash/github_copilot.py        20      7  65.00%   59, 64, 75, 86, 97, 108-115
+packages/cli/src/aurora_cli/configurators/slash/iflow.py                 20      7  65.00%   68, 73, 84, 95, 106, 117-124
+packages/cli/src/aurora_cli/configurators/slash/kilocode.py              19      7  63.16%   30, 35, 46, 59, 70, 81-88
+packages/cli/src/aurora_cli/configurators/slash/opencode.py              20      7  65.00%   75, 80, 91, 102, 113, 124-131
+packages/cli/src/aurora_cli/configurators/slash/qoder.py                 20      7  65.00%   63, 68, 79, 90, 101, 112-119
+packages/cli/src/aurora_cli/configurators/slash/qwen.py                  17      5  70.59%   39, 44, 55, 66, 77
+packages/cli/src/aurora_cli/configurators/slash/registry.py              56     38  32.14%   22-76, 88-89, 101-103, 112-113, 122-123, 131-132, 144
+packages/cli/src/aurora_cli/configurators/slash/roocode.py               21      8  61.90%   39, 44, 55, 71-73, 84, 95
+packages/cli/src/aurora_cli/configurators/slash/toml_base.py             33     25  24.24%   41, 67-84, 96-100, 122-137
+packages/cli/src/aurora_cli/configurators/slash/windsurf.py              20      7  65.00%   40, 45, 56, 69-70, 84, 95
+packages/cli/src/aurora_cli/errors.py                                   199    149  25.13%   70-78, 91, 100, 113-183, 203-291, 313-386, 414-457, 480-538, 563-567, 599-601, 634-637, 665-779
+packages/cli/src/aurora_cli/ignore_patterns.py                           46     38  17.39%   38-53, 67-78, 97-119
+packages/cli/src/aurora_cli/llm/cli_pipe_client.py                      101     81  19.80%   53-61, 69-75, 84-91, 122-227, 264-281, 294, 299
+packages/cli/src/aurora_cli/memory_manager.py                           634    541  14.67%   58-67, 82-123, 283-296, 304-312, 352-889, 911-977, 988-1025, 1038-1056, 1068-1071, 1083-1104, 1115-1128, 1136-1148, 1156-1171, 1179-1201, 1209-1219, 1238-1289, 1297-1298, 1306-1307, 1315-1327, 1335-1339, 1347-1376, 1384-1415, 1424-1432, 1446-1480, 1488-1498, 1517-1532, 1558-1616
+packages/cli/src/aurora_cli/planning/core.py                            671    624   7.00%   49-51, 63, 85-131, 158-222, 238-240, 252-258, 268-270, 287-299, 313-335, 347-357, 379-455, 476-553, 576-659, 678-755, 767-771, 785-794, 806-839, 863-892, 913-988, 1000-1033, 1045, 1081-1102, 1132-1184, 1214-1384, 1423-1716, 1741-1759, 1764, 1797, 1823, 1849, 1889, 1915, 1977-2091
+packages/cli/src/aurora_cli/planning/errors.py                           24      8  66.67%   90-97, 117
+packages/cli/src/aurora_cli/planning/models.py                          331    199  39.88%   157-166, 182-188, 203-222, 332-340, 349-359, 371-400, 408, 420, 469-471, 480-485, 490, 543-551, 609-612, 629-635, 721-724, 738-933
+packages/cli/src/aurora_cli/planning/renderer.py                         70     53  24.29%   19-21, 38-39, 51-61, 66, 81-86, 98-180, 201-251
+packages/cli/src/aurora_cli/planning/results.py                          52      2  96.15%   166-167
+packages/cli/src/aurora_cli/templates/agents.py                           3      1  66.67%   281
+packages/cli/src/aurora_cli/templates/claude.py                           3      1  66.67%   31
+packages/cli/src/aurora_cli/templates/commands.py                         9      2  77.78%   19, 28
+packages/cli/src/aurora_cli/templates/project.py                          3      1  66.67%   46
+packages/cli/src/aurora_cli/templates/slash_commands.py                  14      3  78.57%   300-303
+packages/context-code/src/aurora_context_code/__init__.py                 7      4  42.86%   22-37
+packages/context-code/src/aurora_context_code/git.py                    149    130  12.75%   57-74, 81-97, 112-155, 185-223, 252-287, 291-293, 307-318, 333-358, 394-426
+packages/context-code/src/aurora_context_code/parser.py                   7      1  85.71%   37
+packages/context-code/src/aurora_context_code/registry.py                66     50  24.24%   31-32, 43-50, 61, 74-80, 88, 99-103, 107-108, 129-136, 145-175
+packages/core/src/aurora_core/budget/tracker.py                         158    102  35.44%   36-38, 95, 100-102, 106, 110, 150-169, 173, 177-204, 211-221, 225-247, 258, 276-277, 297-301, 321-360, 382-398, 406, 423-426, 434-437, 447-450, 454-456, 464, 472, 504-517
+packages/core/src/aurora_core/chunks/base.py                             16      8  50.00%   30-33, 75-77, 81
+packages/core/src/aurora_core/chunks/code_chunk.py                      100     75  25.00%   83-100, 111-127, 159-211, 231-265
+packages/core/src/aurora_core/chunks/reasoning_chunk.py                  55     36  34.55%   62-74, 82, 114-138, 150-180
+packages/core/src/aurora_core/exceptions.py                              44     24  45.45%   22-24, 27-29, 97-99, 127-139, 160-162, 191-194
+packages/core/src/aurora_core/logging/conversation_logger.py            165    141  14.55%   22-33, 63-67, 89-120, 124-127, 140-187, 200-212, 223-237, 259-369, 377-399
+packages/core/src/aurora_core/metrics/query_metrics.py                  102     70  31.37%   68-71, 75-113, 144-180, 191-296, 307-335
+packages/core/src/aurora_core/paths.py                                   20     12  40.00%   36-41, 54, 63, 72, 85, 98-100, 109
+packages/core/src/aurora_core/store/base.py                               9      2  77.78%   242-243
+packages/core/src/aurora_core/store/connection_pool.py                   85     69  18.82%   29-32, 56-92, 101-120, 128-148, 164-169, 178-179
+packages/core/src/aurora_core/store/memory.py                           126    104  17.46%   41-46, 50-51, 58-60, 75-94, 108-109, 122-138, 153-165, 185-206, 222-248, 264-285, 307-325, 344-362, 378-382, 386, 390
+packages/core/src/aurora_core/store/migrations.py                       103     72  30.10%   46-51, 101-149, 157-165, 184-192, 203-204, 218-249, 263-278, 295-307, 320
+packages/core/src/aurora_core/store/schema.py                            19      2  89.47%   122, 131
+packages/core/src/aurora_core/store/sqlite.py                           306    259  15.36%   84-103, 116-131, 148-195, 208-221, 239-253, 269-317, 331-352, 366-406, 421-439, 455-471, 485-491, 506-540, 560-582, 600-642, 662-738, 758-787, 811-839, 850-854, 870-898, 919-936
+packages/implement/src/implement/executor.py                             50     30  40.00%   50, 62-89, 102, 118-144, 161-168, 177-195
+packages/implement/src/implement/models.py                               14      2  85.71%   38, 60
+packages/implement/src/implement/parser.py                               32     23  28.12%   48-87
+packages/reasoning/src/aurora_reasoning/llm_client.py                   175    131  25.14%   134-160, 187-205, 211-214, 249-276, 306-323, 337, 342, 369-387, 391-394, 429-461, 491-512, 526, 531, 555-567, 571-574, 609-652, 682-699, 713, 718
+packages/reasoning/src/aurora_reasoning/prompts/__init__.py              23     16  30.43%   24-25, 63-71, 85-94
+packages/reasoning/src/aurora_reasoning/prompts/verify_synthesis.py      20     11  45.00%   16, 20, 51-72, 76
+packages/reasoning/src/aurora_reasoning/synthesize.py                   129    113  12.40%   40-45, 49, 59, 98-214, 243-289, 294, 320-341, 356-390, 407-415, 431-445
+packages/soar/src/aurora_soar/agent_registry.py                         108     72  33.33%   52-59, 101-105, 116, 124, 135, 146, 161, 172-196, 204-209, 218-224, 232-264, 271-280, 288, 306-310
+packages/soar/src/aurora_soar/discovery_adapter.py                       37     24  35.14%   36, 51-55, 79-85, 116-132, 150-159, 172
+packages/soar/src/aurora_soar/orchestrator.py                           617    573   7.13%   112-151, 158-206, 214-217, 228-231, 239-242, 256-262, 308-626, 634-641, 650-654, 658-678, 695-713, 717-738, 755-786, 810-915, 923-946, 970-985, 1000-1036, 1051-1187, 1202-1228, 1243-1270, 1285-1323, 1335-1358, 1378-1395, 1414-1469, 1527-1569, 1594-1615, 1627-1687, 1705-1758, 1778-1804, 1815-1890
+packages/soar/src/aurora_soar/phases/assess.py                          372    318  14.52%   57, 66, 339, 350-427, 449-513, 517-562, 566-659, 663-699, 703-735, 739-776, 780-802, 806-829, 833-868, 872-897, 956-975, 1005-1063, 1102-1109
+packages/soar/src/aurora_soar/phases/collect.py                         286    257  10.14%   44-84, 89-95, 120-150, 178-185, 189, 218-221, 225, 268-476, 503-579, 601-628, 659-726, 758-760, 799-861, 885-914, 926-933
+packages/soar/src/aurora_soar/phases/decompose.py                       103     90  12.62%   36-39, 43, 65-66, 103-149, 169-189, 204-272, 281
+packages/soar/src/aurora_soar/phases/record.py                           71     46  35.21%   54, 84-88, 92, 119-177, 212-297
+packages/soar/src/aurora_soar/phases/respond.py                         170    150  11.76%   26-37, 62-63, 67, 88-116, 131-134, 152-210, 228-339, 351-363
+packages/soar/src/aurora_soar/phases/retrieve.py                         62     52  16.13%   57-90, 114-202
+packages/soar/src/aurora_soar/phases/synthesize.py                       53     40  24.53%   43-47, 51, 62, 97-177
+packages/soar/src/aurora_soar/phases/verify.py                           83     78   6.02%   45-144, 159-208
+packages/spawner/src/aurora_spawner/circuit_breaker.py                  155    123  20.65%   87-96, 100-102, 118-123, 131-132, 147-220, 228-236, 247-248, 263-294, 302-304, 308-309, 320-335, 346-365, 386, 403-405
+packages/spawner/src/aurora_spawner/early_detection.py                  165    120  27.27%   91-95, 99-109, 116-131, 144-155, 170-184, 192-193, 204-212, 216-226, 230-240, 249-269, 291-313, 323-344, 358-360, 375-385
+packages/spawner/src/aurora_spawner/heartbeat.py                        112     71  36.61%   42, 46, 70-77, 94-121, 129-130, 138-139, 147-148, 156-159, 167-170, 181-191, 218-222, 230-249, 260-275, 287, 300
+packages/spawner/src/aurora_spawner/models.py                            25      2  92.00%   19, 45
+packages/spawner/src/aurora_spawner/observability.py                    330    238  27.88%   119-133, 137-148, 152-158, 174-189, 201-211, 219-221, 225-231, 235-245, 256-292, 315-355, 372-379, 391-408, 418-446, 467-547, 557-572, 590-594, 611, 628-630, 638, 646-659, 680-689, 697-730, 759-761, 777-780, 795-890
+packages/spawner/src/aurora_spawner/recovery.py                         354    193  45.48%   99-112, 127, 131, 142-156, 160-162, 166-169, 177-182, 187, 192, 197-205, 209, 264-266, 271-275, 293-303, 314, 326, 334, 343, 351-361, 373, 450-459, 470, 484-486, 530-550, 561-570, 581-590, 601-608, 612, 636-642, 652-654, 660-661, 726-733, 744, 757-774, 798-807, 812, 825, 838, 847, 856, 879-892, 903-904, 915, 919, 952-964, 1003-1017, 1028-1030, 1047, 1073-1075, 1080-1083, 1087
+packages/spawner/src/aurora_spawner/spawner.py                          611    592   3.11%   64-477, 503-541, 591-660, 702-846, 863-893, 945-1255, 1288-1480
+packages/spawner/src/aurora_spawner/timeout_policy.py                   135     62  54.07%   74-99, 111-124, 159-166, 179-190, 202-203, 251-267, 297, 324, 351, 374, 400, 420, 454-468, 472
+----------------------------------------------------------------------------------------------------
+TOTAL                                                                 12304   9575  22.18%
+
+21 files skipped due to complete coverage.
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+=========================== short test summary info ============================
+FAILED tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_import_time - AssertionError: REGRESSION: Import time 2.211s exceeds 2.0s. Check for new heavy imports at module level.
+assert 2.2109408378601074 < 2.0
+ +  where 2.0 = <tests.performance.test_soar_startup_performance.TestRegressionGuards object at 0x7433725c5ed0>.MAX_IMPORT_TIME
+=================== 1 failed, 3 passed, 1 warning in 31.49s ====================

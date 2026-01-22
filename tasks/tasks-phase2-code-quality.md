@@ -202,14 +202,14 @@
     - verify: `pytest tests/unit/core/ tests/integration/core/ -v`
   - [x] 3.5 Verify: `mypy packages/core/src --strict` - zero errors
 
-- [ ] 4.0 Verify Phase 2A type error fixes complete
-  - [ ] 4.1 Run full type check across all packages
+- [x] 4.0 Verify Phase 2A type error fixes complete
+  - [x] 4.1 Run full type check across all packages
     - tdd: no
     - verify: `make type-check`
-  - [ ] 4.2 Verify all new None-handling tests pass
+  - [x] 4.2 Verify all new None-handling tests pass
     - tdd: no
     - verify: `pytest tests/unit/ -k "none" -v`
-  - [ ] 4.3 Verify: `make type-check` - zero errors in context-code, soar, core
+  - [x] 4.3 Verify: `make type-check` - zero errors in context-code, soar, core
 
 - [ ] 5.0 Identify top 10 complex functions (C90 > 15)
   - [ ] 5.1 Generate complexity report for all packages

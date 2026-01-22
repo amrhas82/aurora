@@ -17,7 +17,6 @@ from rich.table import Table
 from aurora_cli.config import Config
 from aurora_cli.templates.headless import SCRATCHPAD_TEMPLATE
 
-
 console = Console()
 
 
@@ -71,6 +70,275 @@ def _parse_tool_env_callback(ctx, param, value):
                 key, val = env_pair.split("=", 1)
                 result[tool][key.strip()] = val.strip()
     return result
+
+
+# ============================================================================
+# Extracted helper functions to reduce headless_command complexity (Task 6.0)
+# ============================================================================
+
+
+def _apply_config_defaults(
+    config: "Config",
+    tools: tuple[str, ...] | None,
+    max_iter: int | None,
+    strategy: str | None,
+    parallel: bool | None,
+    timeout: int | None,
+    budget: float | None,
+    time_limit: int | None,
+) -> dict[str, Any]:
+    """Apply config defaults to CLI arguments.
+
+    Args:
+        config: Config object with headless settings
+        tools: CLI-provided tools tuple or None
+        max_iter: CLI-provided max iterations or None
+        strategy: CLI-provided strategy or None
+        parallel: CLI-provided parallel flag or None
+        timeout: CLI-provided timeout or None
+        budget: CLI-provided budget or None
+        time_limit: CLI-provided time limit or None
+
+    Returns:
+        Dict with resolved values for all settings
+    """
+    return {
+        "tools_list": list(tools) if tools else config.headless_tools,
+        "max_iter": max_iter if max_iter is not None else config.headless_max_iterations,
+        "strategy": strategy if strategy is not None else config.headless_strategy,
+        "parallel": parallel if parallel is not None else config.headless_parallel,
+        "timeout": timeout if timeout is not None else config.headless_timeout,
+        "budget": budget if budget is not None else config.headless_budget,
+        "time_limit": time_limit if time_limit is not None else config.headless_time_limit,
+        "tool_configs": config.headless_tool_configs,
+        "routing_rules": config.headless_routing_rules,
+    }
+
+
+def _apply_cli_tool_overrides(
+    tools_list: list[str],
+    model: str | None,
+    tool_flags: dict[str, list[str]],
+    tool_env: dict[str, dict[str, str]],
+    max_retries: int | None,
+    retry_delay: float | None,
+) -> dict[str, dict[str, Any]]:
+    """Apply CLI-level per-tool configuration overrides.
+
+    Args:
+        tools_list: List of tool names
+        model: Model to apply (for claude)
+        tool_flags: Per-tool extra flags
+        tool_env: Per-tool environment variables
+        max_retries: Retry count to apply to all tools
+        retry_delay: Retry delay to apply to all tools
+
+    Returns:
+        Dict mapping tool names to their override configurations
+    """
+    cli_tool_overrides: dict[str, dict[str, Any]] = {}
+
+    # Handle --model flag (applies to claude)
+    if model:
+        for tool_name in tools_list:
+            if tool_name not in cli_tool_overrides:
+                cli_tool_overrides[tool_name] = {}
+            if tool_name == "claude":
+                cli_tool_overrides[tool_name]["extra_flags"] = ["--model", model]
+
+    # Handle --tool-flags overrides
+    if tool_flags:
+        for tool_name, flags in tool_flags.items():
+            if tool_name == "_all":
+                for t in tools_list:
+                    if t not in cli_tool_overrides:
+                        cli_tool_overrides[t] = {}
+                    cli_tool_overrides[t]["extra_flags"] = (
+                        cli_tool_overrides[t].get("extra_flags", []) + flags
+                    )
+            elif tool_name in tools_list:
+                if tool_name not in cli_tool_overrides:
+                    cli_tool_overrides[tool_name] = {}
+                cli_tool_overrides[tool_name]["extra_flags"] = (
+                    cli_tool_overrides[tool_name].get("extra_flags", []) + flags
+                )
+
+    # Handle --tool-env overrides
+    if tool_env:
+        for tool_name, env_vars in tool_env.items():
+            if tool_name in tools_list:
+                if tool_name not in cli_tool_overrides:
+                    cli_tool_overrides[tool_name] = {}
+                cli_tool_overrides[tool_name]["env"] = env_vars
+
+    # Handle retry settings
+    if max_retries is not None or retry_delay is not None:
+        for tool_name in tools_list:
+            if tool_name not in cli_tool_overrides:
+                cli_tool_overrides[tool_name] = {}
+            if max_retries is not None:
+                cli_tool_overrides[tool_name]["max_retries"] = max_retries
+            if retry_delay is not None:
+                cli_tool_overrides[tool_name]["retry_delay"] = retry_delay
+
+    return cli_tool_overrides
+
+
+def _validate_headless_params(
+    max_retries: int | None,
+    retry_delay: float | None,
+    budget: float | None,
+    time_limit: int | None,
+    timeout: int | None,
+) -> list[str]:
+    """Validate headless command parameters.
+
+    Args:
+        max_retries: Max retry count
+        retry_delay: Delay between retries
+        budget: Budget limit
+        time_limit: Time limit in seconds
+        timeout: Per-iteration timeout
+
+    Returns:
+        List of error messages (empty if all valid)
+    """
+    errors = []
+    if max_retries is not None and max_retries < 0:
+        errors.append("--max-retries must be >= 0")
+    if retry_delay is not None and retry_delay < 0:
+        errors.append("--retry-delay must be >= 0")
+    if budget is not None and budget <= 0:
+        errors.append("--budget must be > 0")
+    if time_limit is not None and time_limit <= 0:
+        errors.append("--time-limit must be > 0")
+    if timeout is not None and timeout <= 0:
+        errors.append("--timeout must be > 0")
+    return errors
+
+
+def _resolve_prompt(
+    use_stdin: bool,
+    prompt_path: Path | None,
+) -> tuple[str, str]:
+    """Resolve prompt from stdin or file.
+
+    Args:
+        use_stdin: Whether to read from stdin
+        prompt_path: Path to prompt file (used if not stdin)
+
+    Returns:
+        Tuple of (prompt_content, source_description)
+
+    Raises:
+        ValueError: If stdin is TTY or empty
+        FileNotFoundError: If prompt file doesn't exist
+    """
+    import sys
+
+    if use_stdin:
+        if sys.stdin.isatty():
+            raise ValueError("--stdin specified but no input piped")
+        prompt = sys.stdin.read().strip()
+        if not prompt:
+            raise ValueError("Empty prompt from stdin")
+        return prompt, "stdin"
+    else:
+        if prompt_path is None:
+            prompt_path = Path.cwd() / ".aurora" / "headless" / "prompt.md"
+        if not prompt_path.exists():
+            raise FileNotFoundError(f"Prompt not found: {prompt_path}")
+        return prompt_path.read_text(encoding="utf-8"), str(prompt_path)
+
+
+def _check_tools_exist(tools_list: list[str]) -> list[str]:
+    """Check that all tools exist in PATH.
+
+    Args:
+        tools_list: List of tool names to check
+
+    Returns:
+        List of missing tool names (empty if all exist)
+    """
+    return [t for t in tools_list if not shutil.which(t)]
+
+
+def _check_git_safety(allow_main: bool) -> str | None:
+    """Check git branch safety.
+
+    Args:
+        allow_main: Whether to allow main/master branches
+
+    Returns:
+        Error message if on protected branch, None if safe
+    """
+    if allow_main:
+        return None
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        )
+        branch = result.stdout.strip()
+        if branch in ["main", "master"]:
+            return "Cannot run on main/master branch. Use --allow-main to override."
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        pass  # Not a git repo, continue
+    return None
+
+
+def _display_headless_config(
+    tools_list: list[str],
+    max_iter: int,
+    is_multi_tool: bool,
+    parallel: bool,
+    strategy: str,
+    model: str | None,
+    prompt_source: str,
+    scratchpad: Path,
+    budget: float | None,
+    time_limit: int | None,
+    test_cmd: str | None,
+    tool_flags: dict[str, list[str]],
+) -> None:
+    """Display headless execution configuration to console.
+
+    Args:
+        tools_list: List of tool names
+        max_iter: Maximum iterations
+        is_multi_tool: Whether multiple tools are configured
+        parallel: Whether parallel execution is enabled
+        strategy: Aggregation strategy
+        model: Model override (if any)
+        prompt_source: Source of the prompt (stdin or file path)
+        scratchpad: Path to scratchpad file
+        budget: Budget limit (if any)
+        time_limit: Time limit in seconds (if any)
+        test_cmd: Test backpressure command (if any)
+        tool_flags: Per-tool flag overrides
+    """
+    tools_display = ", ".join(tools_list)
+    mode_display = "parallel" if (is_multi_tool and parallel) else "sequential"
+    console.print(f"[bold]Headless execution[/]: {tools_display} (max {max_iter} iterations)")
+    if is_multi_tool:
+        console.print(f"[dim]Mode: {mode_display}, Strategy: {strategy}[/]")
+    if model:
+        console.print(f"[dim]Model: {model}[/]")
+    console.print(f"[dim]Prompt: {prompt_source}[/]")
+    console.print(f"[dim]Scratchpad: {scratchpad}[/]")
+    if budget is not None:
+        console.print(f"[dim]Budget: ${budget:.2f}[/]")
+    if time_limit is not None:
+        console.print(f"[dim]Time limit: {time_limit}s[/]")
+    if test_cmd:
+        console.print(f"[dim]Backpressure: {test_cmd}[/]")
+    if tool_flags:
+        console.print(f"[dim]Tool flags: {tool_flags}[/]")
+    console.print()
 
 
 @click.command(name="headless")
@@ -289,8 +557,27 @@ def headless_command(
         _list_available_tools()
         return
 
-    # Load config and apply defaults (Config class wraps dict with attribute access)
+    # Load config and apply defaults
     config = Config()
+    defaults = _apply_config_defaults(
+        config=config,
+        tools=tools,
+        max_iter=max_iter,
+        strategy=strategy,
+        parallel=parallel,
+        timeout=timeout,
+        budget=budget,
+        time_limit=time_limit,
+    )
+    tools_list = defaults["tools_list"]
+    max_iter = defaults["max_iter"]
+    strategy = defaults["strategy"]
+    parallel = defaults["parallel"]
+    timeout = defaults["timeout"]
+    budget = defaults["budget"]
+    time_limit = defaults["time_limit"]
+    tool_configs = defaults["tool_configs"]
+    routing_rules = defaults["routing_rules"]
 
     # Load tool configurations from config into the registry
     from aurora_cli.tool_providers import ToolProviderRegistry
@@ -299,80 +586,30 @@ def headless_command(
     if config.headless_tool_configs:
         registry.load_from_config(config.headless_tool_configs)
 
-    # Apply defaults from config, then override with CLI flags if provided
-    tools_list = list(tools) if tools else config.headless_tools
-    max_iter = max_iter if max_iter is not None else config.headless_max_iterations
-    strategy = strategy if strategy is not None else config.headless_strategy
-    parallel = parallel if parallel is not None else config.headless_parallel
-    timeout = timeout if timeout is not None else config.headless_timeout
-    budget = budget if budget is not None else config.headless_budget
-    time_limit = time_limit if time_limit is not None else config.headless_time_limit
-    tool_configs = config.headless_tool_configs
-    routing_rules = config.headless_routing_rules
-
     # Apply CLI-level per-tool configurations
-    cli_tool_overrides: dict[str, dict[str, Any]] = {}
+    cli_tool_overrides = _apply_cli_tool_overrides(
+        tools_list=tools_list,
+        model=model,
+        tool_flags=tool_flags,
+        tool_env=tool_env,
+        max_retries=max_retries,
+        retry_delay=retry_delay,
+    )
 
-    # Handle --model flag (applies to all tools that support it)
-    if model:
-        for tool_name in tools_list:
-            if tool_name not in cli_tool_overrides:
-                cli_tool_overrides[tool_name] = {}
-            # Add model flag to tool's flags
-            if tool_name == "claude":
-                cli_tool_overrides[tool_name]["extra_flags"] = ["--model", model]
-
-    # Handle --tool-flags overrides
-    if tool_flags:
-        for tool_name, flags in tool_flags.items():
-            if tool_name == "_all":
-                # Apply to all tools
-                for t in tools_list:
-                    if t not in cli_tool_overrides:
-                        cli_tool_overrides[t] = {}
-                    cli_tool_overrides[t]["extra_flags"] = (
-                        cli_tool_overrides[t].get("extra_flags", []) + flags
-                    )
-            elif tool_name in tools_list:
-                if tool_name not in cli_tool_overrides:
-                    cli_tool_overrides[tool_name] = {}
-                cli_tool_overrides[tool_name]["extra_flags"] = (
-                    cli_tool_overrides[tool_name].get("extra_flags", []) + flags
-                )
-
-    # Handle --tool-env overrides
-    if tool_env:
-        for tool_name, env_vars in tool_env.items():
-            if tool_name in tools_list:
-                if tool_name not in cli_tool_overrides:
-                    cli_tool_overrides[tool_name] = {}
-                cli_tool_overrides[tool_name]["env"] = env_vars
-
-    # Handle retry settings
-    if max_retries is not None or retry_delay is not None:
-        for tool_name in tools_list:
-            if tool_name not in cli_tool_overrides:
-                cli_tool_overrides[tool_name] = {}
-            if max_retries is not None:
-                cli_tool_overrides[tool_name]["max_retries"] = max_retries
-            if retry_delay is not None:
-                cli_tool_overrides[tool_name]["retry_delay"] = retry_delay
-
-    # Validate combined parameters
-    if max_retries is not None and max_retries < 0:
-        console.print("[red]Error: --max-retries must be >= 0[/]")
-        raise click.Abort()
-    if retry_delay is not None and retry_delay < 0:
-        console.print("[red]Error: --retry-delay must be >= 0[/]")
-        raise click.Abort()
-    if budget is not None and budget <= 0:
-        console.print("[red]Error: --budget must be > 0[/]")
-        raise click.Abort()
-    if time_limit is not None and time_limit <= 0:
-        console.print("[red]Error: --time-limit must be > 0[/]")
-        raise click.Abort()
-    if timeout is not None and timeout <= 0:
-        console.print("[red]Error: --timeout must be > 0[/]")
+    # Validate parameters
+    quiet_mode = output_format == "quiet"
+    json_mode = output_format == "json"
+    validation_errors = _validate_headless_params(
+        max_retries=max_retries,
+        retry_delay=retry_delay,
+        budget=budget,
+        time_limit=time_limit,
+        timeout=timeout,
+    )
+    if validation_errors:
+        if not quiet_mode:
+            for error in validation_errors:
+                console.print(f"[red]Error: {error}[/]")
         raise click.Abort()
 
     # Apply CLI overrides to registry
@@ -382,8 +619,6 @@ def headless_command(
         registry.configure(tool_name, existing_config)
 
     is_multi_tool = len(tools_list) > 1
-    quiet_mode = output_format == "quiet"
-    json_mode = output_format == "json"
 
     # Handle --show-config
     if show_config:
@@ -407,96 +642,59 @@ def headless_command(
         )
         return
 
-    # 1. Resolve paths
-    scratchpad = Path.cwd() / ".aurora" / "headless" / "scratchpad.md"
-
-    # 2. Read prompt from stdin or file
-    if use_stdin:
-        import sys
-
-        if sys.stdin.isatty():
-            if not quiet_mode:
-                console.print("[red]Error: --stdin specified but no input piped[/]")
+    # Resolve prompt from stdin or file
+    try:
+        prompt, prompt_source = _resolve_prompt(use_stdin=use_stdin, prompt_path=prompt_path)
+    except ValueError as e:
+        if not quiet_mode:
+            console.print(f"[red]Error: {e}[/]")
+            if "stdin" in str(e).lower():
                 console.print("[dim]Usage: echo 'your prompt' | aur headless --stdin[/]")
-            raise click.Abort()
-        prompt = sys.stdin.read().strip()
-        if not prompt:
-            if not quiet_mode:
-                console.print("[red]Error: Empty prompt from stdin[/]")
-            raise click.Abort()
-        prompt_path = None  # Signal that we're using stdin
-    else:
-        if prompt_path is None:
-            prompt_path = Path.cwd() / ".aurora" / "headless" / "prompt.md"
+        raise click.Abort()
+    except FileNotFoundError as e:
+        if not quiet_mode:
+            console.print(f"[red]Error: {e}[/]")
+            console.print("[dim]Create a prompt file with your goal, or use -p to specify one.[/]")
+        raise click.Abort()
 
-        # Validate prompt exists
-        if not prompt_path.exists():
-            if not quiet_mode:
-                console.print(f"[red]Error: Prompt not found: {prompt_path}[/]")
-                console.print(
-                    "[dim]Create a prompt file with your goal, or use -p to specify one.[/]",
-                )
-            raise click.Abort()
-        prompt = prompt_path.read_text(encoding="utf-8")
-
-    # 3. Check all tools exist
-    missing_tools = [t for t in tools_list if not shutil.which(t)]
+    # Check all tools exist
+    missing_tools = _check_tools_exist(tools_list)
     if missing_tools:
         if not quiet_mode:
             console.print(f"[red]Error: Tools not found in PATH: {', '.join(missing_tools)}[/]")
         raise click.Abort()
 
-    # 4. Git safety check
-    if not allow_main:
-        try:
-            result = subprocess.run(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=5,
-            )
-            branch = result.stdout.strip()
-            if branch in ["main", "master"]:
-                if not quiet_mode:
-                    console.print("[red]Error: Cannot run on main/master branch[/]")
-                    console.print(
-                        "[dim]Use --allow-main to override, or create a feature branch first.[/]",
-                    )
-                raise click.Abort()
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-            pass  # Not a git repo, continue
+    # Git safety check
+    git_error = _check_git_safety(allow_main=allow_main)
+    if git_error:
+        if not quiet_mode:
+            console.print(f"[red]Error: {git_error}[/]")
+        raise click.Abort()
 
-    # 5. Initialize scratchpad (only if it doesn't exist)
+    # Initialize scratchpad
+    scratchpad = Path.cwd() / ".aurora" / "headless" / "scratchpad.md"
     scratchpad.parent.mkdir(parents=True, exist_ok=True)
     if not scratchpad.exists():
         scratchpad.write_text(SCRATCHPAD_TEMPLATE, encoding="utf-8")
 
-    # Note: prompt was already read in step 2 (from stdin or file)
-
-    # 6. Display configuration (unless quiet/json mode)
+    # Display configuration (unless quiet/json mode)
     if not quiet_mode and not json_mode:
-        tools_display = ", ".join(tools_list)
-        mode_display = "parallel" if (is_multi_tool and parallel) else "sequential"
-        console.print(f"[bold]Headless execution[/]: {tools_display} (max {max_iter} iterations)")
-        if is_multi_tool:
-            console.print(f"[dim]Mode: {mode_display}, Strategy: {strategy}[/]")
-        if model:
-            console.print(f"[dim]Model: {model}[/]")
-        prompt_source = "stdin" if use_stdin else str(prompt_path)
-        console.print(f"[dim]Prompt: {prompt_source}[/]")
-        console.print(f"[dim]Scratchpad: {scratchpad}[/]")
-        if budget is not None:
-            console.print(f"[dim]Budget: ${budget:.2f}[/]")
-        if time_limit is not None:
-            console.print(f"[dim]Time limit: {time_limit}s[/]")
-        if test_cmd:
-            console.print(f"[dim]Backpressure: {test_cmd}[/]")
-        if tool_flags:
-            console.print(f"[dim]Tool flags: {tool_flags}[/]")
-        console.print()
+        _display_headless_config(
+            tools_list=tools_list,
+            max_iter=max_iter,
+            is_multi_tool=is_multi_tool,
+            parallel=parallel,
+            strategy=strategy,
+            model=model,
+            prompt_source=prompt_source,
+            scratchpad=scratchpad,
+            budget=budget,
+            time_limit=time_limit,
+            test_cmd=test_cmd,
+            tool_flags=tool_flags,
+        )
 
-    # 7. Main execution loop
+    # Main execution loop
     if is_multi_tool and parallel:
         # Multi-tool concurrent execution
         asyncio.run(

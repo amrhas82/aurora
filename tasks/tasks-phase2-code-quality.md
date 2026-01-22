@@ -246,26 +246,29 @@
   - [x] 6.7 Verify: headless_command C90 ≤ 20 and all tests pass (39 tests pass)
     - note: Further reduction below 15 would require significant restructuring
 
-- [ ] 7.0 Refactor goals_command (C90=26 → ≤15)
-  - [ ] 7.1 Add integration test for goals_command current behavior
+- [x] 7.0 Refactor goals_command (C90=26 → ≤15)
+  - [x] 7.1 Add integration test for goals_command current behavior
     - tdd: yes
     - verify: `pytest tests/integration/cli/test_goals_integration.py -v`
-  - [ ] 7.2 Extract planning logic into _generate_goals_plan function
+  - [x] 7.2 Extract planning logic into _generate_goals_plan function
     - tdd: yes
-    - verify: `pytest tests/unit/cli/commands/test_goals_refactored.py::test_generate_goals_plan -v`
-  - [ ] 7.3 Extract SOAR pipeline invocation into _invoke_soar_pipeline function
+    - verify: `pytest tests/unit/cli/commands/test_goals_refactored.py::TestGenerateGoalsPlan -v`
+  - [x] 7.3 Extract SOAR pipeline invocation into _invoke_soar_pipeline function
     - tdd: yes
-    - verify: `pytest tests/unit/cli/commands/test_goals_refactored.py::test_invoke_soar_pipeline -v`
-  - [ ] 7.4 Simplify error handling paths using extracted functions
+    - verify: `pytest tests/unit/cli/commands/test_goals_refactored.py::TestInvokeSoarPipeline -v`
+    - note: Combined with _generate_goals_plan as single wrapper is sufficient
+  - [x] 7.4 Simplify error handling paths using extracted functions
     - tdd: yes
-    - verify: `pytest tests/unit/cli/commands/test_goals_refactored.py::test_error_handling -v`
-  - [ ] 7.5 Refactor goals_command to use extracted functions (thin orchestrator)
+    - verify: `pytest tests/unit/cli/commands/test_goals_refactored.py::TestErrorHandling -v`
+  - [x] 7.5 Refactor goals_command to use extracted functions (thin orchestrator)
     - tdd: yes
-    - verify: `ruff check packages/cli/src/aurora_cli/commands/goals.py --select C90 | grep "goals_command"`
-  - [ ] 7.6 Update docstrings for goals_command and extracted functions
+    - verify: `ruff check packages/cli/src/aurora_cli/commands/goals.py --select C90`
+    - result: C90 now passes (was 26, now below threshold 10)
+  - [x] 7.6 Update docstrings for goals_command and extracted functions
     - tdd: no
     - verify: `grep -A 5 "def goals_command" packages/cli/src/aurora_cli/commands/goals.py`
-  - [ ] 7.7 Verify: goals_command C90 ≤ 15 and all tests pass
+  - [x] 7.7 Verify: goals_command C90 ≤ 15 and all tests pass
+    - result: All 29 tests pass (20 unit + 9 integration)
 
 - [ ] 8.0 Refactor remaining top 8 complex functions (functions 3-10)
   - [ ] 8.1 Refactor _handle_auto_fix in doctor.py (C90=12 → ≤10)

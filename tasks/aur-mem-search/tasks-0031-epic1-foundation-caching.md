@@ -329,37 +329,37 @@ aur mem search "test query" --limit 10
     - **Details**: All 5 unit tests (shared_across_retrievers, lru_eviction, ttl_expiration, thread_safety, stats_aggregation) must pass
 
 - [ ] 5.0 Integration Testing (~150 LOC)
-  - [ ] 5.1 Write test: test_end_to_end_cache_hit
+  - [x] 5.1 Write test: test_end_to_end_cache_hit
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_end_to_end_cache_hit -v`
     - **Details**: Run search twice with same query, verify second search reuses cached HybridRetriever and ActivationEngine (check cache stats)
     - **PRD Ref**: Section 8.2 IT1, IT2
-  - [ ] 5.2 Write test: test_search_result_equivalence
+  - [x] 5.2 Write test: test_search_result_equivalence
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_search_result_equivalence -v`
     - **Details**: Run search without cache (clear cache), save results; run with cache, verify results identical (chunk_ids, scores match exactly)
     - **PRD Ref**: NFR4.1, Section 8.2 IT1
-  - [ ] 5.3 Write test: test_bm25_persistence_across_sessions
+  - [x] 5.3 Write test: test_bm25_persistence_across_sessions
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_bm25_persistence_across_sessions -v`
     - **Details**: Index 500 chunks, save BM25 index, restart process (clear Python cache), run search, verify "✓ Loaded BM25 index" in logs and search <3s
     - **PRD Ref**: FR3.1-FR3.5, Section 8.2 IT4
-  - [ ] 5.4 Write test: test_soar_multi_phase_embedding_cache
+  - [x] 5.4 Write test: test_soar_multi_phase_embedding_cache
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_soar_multi_phase_embedding_cache -v`
     - **Details**: Simulate SOAR phases 2, 5, 8 with same query, verify embedding cache hit on phases 5 and 8 (2/3 hit rate)
     - **PRD Ref**: FR4.1-FR4.2, Section 8.2 IT3
-  - [ ] 5.5 Write test: test_concurrent_searches_thread_safety
+  - [x] 5.5 Write test: test_concurrent_searches_thread_safety
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_concurrent_searches_thread_safety -v`
     - **Details**: Launch 10 concurrent searches with same query, verify no crashes, cache hit rate >80% (9/10 cache hits)
     - **PRD Ref**: NFR2.3, Section 8.3 PT3
-  - [ ] 5.6 Write test: test_cache_failure_graceful_degradation
+  - [x] 5.6 Write test: test_cache_failure_graceful_degradation
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_cache_failure_graceful_degradation -v`
     - **Details**: Inject cache error (mock lock failure), verify search continues with uncached behavior (no crash)
     - **PRD Ref**: NFR2.1, Section 8.2
-  - [ ] 5.7 Verify: All integration tests pass
+  - [x] 5.7 Verify: All integration tests pass
     - tdd: no
     - verify: `pytest tests/integration/test_memory_search_caching.py -v`
     - **Details**: All 6 integration tests (end_to_end_cache_hit, search_result_equivalence, bm25_persistence, soar_multi_phase, concurrent_searches, cache_failure) must pass

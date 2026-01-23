@@ -803,6 +803,7 @@ class SOAROrchestrator:
                 complexity=complexity,
                 llm_client=self.reasoning_llm,
                 available_agents=available_agents,
+                retry_feedback=_retry_feedback,
             )
             result = phase_result.to_dict()
             # Add convenience fields for E2E tests

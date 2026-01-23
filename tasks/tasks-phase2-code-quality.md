@@ -416,10 +416,10 @@
     - tdd: no
     - verify: `ruff check packages/ tests/ --select ARG005 | wc -l`
     - result: ✅ Reduced from 59 to 0 violations (100% complete). All lambda arguments fixed in test_orchestrator.py, query_executor.py, test_memory_manager.py
-  - [ ] 13.5 Fix ARG004 issues (1 static method argument)
+  - [x] 13.5 Fix ARG004 issues (1 static method argument)
     - tdd: no
     - verify: `ruff check packages/ tests/ --select ARG004 | wc -l`
-    - note: Only 1 violation - quick fix
+    - result: ✅ Fixed 1 violation in packages/cli/src/aurora_cli/errors.py handle_budget_error method
   - [ ] 13.6 Update docstrings for all functions with changed signatures
     - tdd: no
     - verify: `git diff feature/phase2b-cleanup main -- "*.py" | grep "def " | wc -l`

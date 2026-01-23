@@ -16,7 +16,7 @@ class VerifyAdversarialPromptTemplate(PromptTemplate):
     def __init__(self) -> None:
         super().__init__(name="verify_adversarial", version="1.0")
 
-    def build_system_prompt(self, **kwargs: Any) -> str:
+    def build_system_prompt(self, **_kwargs: Any) -> str:
         """Build system prompt for adversarial verification."""
         return """You are a RED TEAM adversarial verifier for query decompositions.
 
@@ -74,7 +74,7 @@ You MUST respond with valid JSON only. Use this exact format:
   "suggestions": ["specific", "fixes", "to", "apply"]
 }"""
 
-    def build_user_prompt(self, **kwargs: Any) -> str:
+    def build_user_prompt(self, **_kwargs: Any) -> str:
         """Build user prompt for adversarial verification.
 
         Args:
@@ -87,10 +87,10 @@ You MUST respond with valid JSON only. Use this exact format:
             User prompt string
 
         """
-        query = kwargs.get("query", "")
-        decomposition = kwargs.get("decomposition", {})
-        context_summary = kwargs.get("context_summary")
-        available_agents = kwargs.get("available_agents", [])
+        query = _kwargs.get("query", "")
+        decomposition = _kwargs.get("decomposition", {})
+        context_summary = _kwargs.get("context_summary")
+        available_agents = _kwargs.get("available_agents", [])
 
         prompt_parts = [
             f"Original Query: {query}",

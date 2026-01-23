@@ -1,0 +1,1259 @@
+ruff check packages/ tests/
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/agent_discovery/parser.py:11:1
+   |
+ 9 |   """
+10 |
+11 | / from __future__ import annotations
+12 | |
+13 | | import logging
+14 | | from pathlib import Path
+15 | | from typing import Any
+16 | |
+17 | | import frontmatter
+18 | | from pydantic import ValidationError
+19 | |
+20 | | from aurora_cli.agent_discovery.models import AgentInfo
+   | |_______________________________________________________^
+21 |
+22 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/commands/agents.py:17:1
+   |
+15 |   """
+16 |
+17 | / from __future__ import annotations
+18 | |
+19 | | import logging
+20 | | import time
+21 | | from difflib import SequenceMatcher
+22 | | from pathlib import Path
+23 | | from typing import TYPE_CHECKING
+24 | |
+25 | | import click
+26 | | from rich.console import Console
+27 | | from rich.panel import Panel
+28 | | from rich.progress import Progress, SpinnerColumn, TextColumn
+29 | | from rich.table import Table
+30 | |
+31 | | from aurora_cli.agent_discovery import (
+32 | |     AgentCategory,
+33 | |     AgentInfo,
+34 | |     AgentManifest,
+35 | |     AgentScanner,
+36 | |     ManifestManager,
+37 | | )
+38 | | from aurora_cli.config import Config
+39 | | from aurora_cli.errors import handle_errors
+   | |___________________________________________^
+40 |
+41 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/commands/doctor.py:6:1
+   |
+ 4 |   """
+ 5 |
+ 6 | / from __future__ import annotations
+ 7 | |
+ 8 | | import logging
+ 9 | |
+10 | | import click
+11 | | from rich.console import Console
+12 | |
+13 | | from aurora_cli.config import Config
+14 | | from aurora_cli.health_checks import (
+15 | |     CodeAnalysisChecks,
+16 | |     ConfigurationChecks,
+17 | |     CoreSystemChecks,
+18 | |     MCPFunctionalChecks,
+19 | |     SearchRetrievalChecks,
+20 | |     ToolIntegrationChecks,
+21 | | )
+   | |_^
+22 |
+23 |   __all__ = ["doctor_command"]
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/commands/goals.py:34:1
+   |
+32 |   """
+33 |
+34 | / from __future__ import annotations
+35 | |
+36 | | import logging
+37 | | import os
+38 | | import shutil
+39 | | import subprocess
+40 | | from pathlib import Path
+41 | | from typing import TYPE_CHECKING
+42 | |
+43 | | import click
+44 | | from rich.console import Console
+45 | |
+46 | | from aurora_cli.config import Config
+47 | | from aurora_cli.errors import handle_errors
+48 | | from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+49 | | from aurora_cli.planning.core import create_plan
+   | |________________________________________________^
+50 |
+51 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/commands/headless.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import asyncio
+ 8 | | import shutil
+ 9 | | import subprocess
+10 | | from pathlib import Path
+11 | | from typing import Any
+12 | |
+13 | | import click
+14 | | from rich.console import Console
+15 | | from rich.table import Table
+16 | |
+17 | | from aurora_cli.config import Config
+18 | | from aurora_cli.templates.headless import SCRATCHPAD_TEMPLATE
+   | |_____________________________________________________________^
+19 |
+20 |   console = Console()
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/commands/init_helpers.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import json
+ 8 | | from datetime import datetime
+ 9 | | from pathlib import Path
+10 | | from typing import List  # noqa: F401
+11 | |
+12 | | import click
+13 | | import questionary
+14 | | from rich.console import Console
+15 | |
+16 | | from aurora_cli.configurators import ToolRegistry
+17 | | from aurora_cli.configurators.slash import SlashCommandRegistry
+18 | | from aurora_cli.templates.headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
+   | |______________________________________________________________________________^
+19 |
+20 |   console = Console()
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/commands/memory.py:14:1
+   |
+12 |   """
+13 |
+14 | / from __future__ import annotations
+15 | |
+16 | | import json
+17 | | import logging
+18 | | from pathlib import Path
+19 | | from typing import Any
+20 | |
+21 | | import click
+22 | | from rich.console import Console
+23 | | from rich.live import Live
+24 | | from rich.panel import Panel
+25 | | from rich.syntax import Syntax
+26 | | from rich.table import Table
+27 | | from rich.text import Text
+28 | |
+29 | | from aurora_cli.config import Config
+30 | | from aurora_cli.errors import handle_errors
+31 | | from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
+32 | | from aurora_core.metrics.query_metrics import QueryMetrics
+   | |__________________________________________________________^
+33 |
+34 |   __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/commands/query.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | import json
+10 | | import logging
+11 | | import sys
+12 | | import time
+13 | | from datetime import datetime
+14 | | from pathlib import Path
+15 | |
+16 | | import click
+17 | | from rich.console import Console
+18 | | from rich.panel import Panel
+19 | |
+20 | | from aurora_soar.phases.assess import assess_complexity
+   | |_______________________________________________________^
+21 |
+22 |   console = Console()
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/concurrent_executor.py:18:1
+   |
+16 |   """
+17 |
+18 | / from __future__ import annotations
+19 | |
+20 | | import asyncio
+21 | | import difflib
+22 | | import logging
+23 | | import re
+24 | | import shutil
+25 | | import time
+26 | | from dataclasses import dataclass, field
+27 | | from enum import Enum
+28 | | from pathlib import Path
+29 | | from typing import TYPE_CHECKING, Any, Callable
+   | |_______________________________________________^
+30 |
+31 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/configurators/mcp/claude.py:10:1
+   |
+ 8 |   """
+ 9 |
+10 | / import json
+11 | | from pathlib import Path
+12 | | from typing import Any
+13 | |
+14 | | from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator
+   | |___________________________________________________________________________^
+15 |
+16 |   # Aurora MCP tool permissions for Claude Code
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/configurators/slash/base.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from abc import ABC, abstractmethod
+ 8 | | from dataclasses import dataclass
+ 9 | | from pathlib import Path
+   | |________________________^
+10 |
+11 |   # Aurora managed block markers
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/configurators/slash/codex.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import os
+ 8 | | from pathlib import Path
+ 9 | |
+10 | | from aurora_cli.configurators.slash.base import AURORA_MARKERS, SlashCommandConfigurator
+11 | | from aurora_cli.templates.slash_commands import get_command_body
+   | |________________________________________________________________^
+12 |
+13 |   # Relative paths (used for get_relative_path, but actual files go to global dir)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/configurators/slash/kilocode.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from aurora_cli.configurators.slash.base import SlashCommandConfigurator
+ 8 | | from aurora_cli.templates.slash_commands import get_command_body
+   | |________________________________________________________________^
+ 9 |
+10 |   # File paths for each command
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/errors.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import functools
+ 8 | | import os
+ 9 | | import sys
+10 | | import traceback
+11 | | from collections.abc import Callable
+12 | | from pathlib import Path
+13 | | from typing import Any, TypeVar
+14 | |
+15 | | import click
+16 | | from rich.console import Console
+   | |________________________________^
+17 |
+18 |   F = TypeVar("F", bound=Callable[..., Any])
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/escalation.py:11:1
+   |
+ 9 |   """
+10 |
+11 | / from __future__ import annotations
+12 | |
+13 | | import logging
+14 | | from dataclasses import dataclass
+15 | | from typing import Any
+16 | |
+17 | | from aurora_soar.phases.assess import assess_complexity
+   | |_______________________________________________________^
+18 |
+19 |   __all__ = ["AutoEscalationHandler", "EscalationConfig", "EscalationResult"]
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/llm/cli_pipe_client.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | import json
+10 | | import shutil
+11 | | import subprocess
+12 | | import threading
+13 | | import time
+14 | | from pathlib import Path
+15 | | from typing import Any
+16 | |
+17 | | from rich.console import Console
+18 | |
+19 | | from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
+   | |______________________________________________________________________________________^
+20 |
+21 |   # Console for spinner output
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/memory/retrieval.py:13:1
+   |
+11 |   """
+12 |
+13 | / from __future__ import annotations
+14 | |
+15 | | import logging
+16 | | import time
+17 | | from pathlib import Path
+18 | | from typing import TYPE_CHECKING, Any
+19 | |
+20 | | from aurora_core.chunks import CodeChunk
+   | |________________________________________^
+21 |
+22 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/memory_manager.py:17:1
+   |
+15 |   """
+16 |
+17 | / from __future__ import annotations
+18 | |
+19 | | import hashlib
+20 | | import json
+21 | | import logging
+22 | | import os
+23 | | import sqlite3
+24 | | import threading
+25 | | import time
+26 | | from collections.abc import Callable
+27 | | from concurrent.futures import ThreadPoolExecutor, as_completed
+28 | | from dataclasses import dataclass, field
+29 | | from datetime import datetime, timezone
+30 | | from pathlib import Path
+31 | | from queue import Empty, Queue
+32 | | from typing import TYPE_CHECKING, Any
+33 | |
+34 | | from aurora_cli.config import Config
+35 | | from aurora_cli.errors import ErrorHandler, MemoryStoreError
+36 | | from aurora_cli.ignore_patterns import load_ignore_patterns, should_ignore
+37 | | from aurora_context_code.git import GitSignalExtractor
+38 | | from aurora_context_code.registry import ParserRegistry, get_global_registry
+39 | | from aurora_core.chunks import Chunk
+40 | | from aurora_core.store import SQLiteStore
+41 | | from aurora_core.types import ChunkID
+   | |_____________________________________^
+42 |
+43 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/planning/core.py:13:1
+   |
+11 |   """
+12 |
+13 | / from __future__ import annotations
+14 | |
+15 | | import logging
+16 | | import os
+17 | | import re
+18 | | import shutil
+19 | | from datetime import datetime
+20 | | from pathlib import Path
+21 | | from typing import TYPE_CHECKING, Any
+22 | |
+23 | | from aurora_cli.planning.errors import VALIDATION_MESSAGES
+24 | | from aurora_cli.planning.models import (
+25 | |     AgentGap,
+26 | |     Complexity,
+27 | |     Goals,
+28 | |     Plan,
+29 | |     PlanManifest,
+30 | |     PlanStatus,
+31 | |     Subgoal,
+32 | | )
+33 | | from aurora_cli.planning.results import (
+34 | |     ArchiveResult,
+35 | |     InitResult,
+36 | |     ListResult,
+37 | |     PlanResult,
+38 | |     PlanSummary,
+39 | |     ShowResult,
+40 | | )
+   | |_^
+41 |
+42 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/planning/decompose.py:12:1
+   |
+10 |   """
+11 |
+12 | / from __future__ import annotations
+13 | |
+14 | | import logging
+15 | | from pathlib import Path
+16 | | from typing import Any
+17 | |
+18 | | from aurora_cli.planning.agents import AgentRecommender
+19 | | from aurora_cli.planning.cache import PlanDecompositionCache
+20 | | from aurora_cli.planning.memory import FilePathResolver
+21 | | from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
+   | |____________________________________________________________________________________^
+22 |
+23 |   # Try to import MemoryRetriever for context loading
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/planning/schemas/base.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | from typing import TYPE_CHECKING, Annotated, Any
+10 | |
+11 | | from pydantic import BaseModel, BeforeValidator, Field
+   | |______________________________________________________^
+12 |
+13 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/policies/engine.py:3:1
+   |
+ 1 |   """Policies engine for unified policy enforcement."""
+ 2 |
+ 3 | / from __future__ import annotations
+ 4 | |
+ 5 | | import logging
+ 6 | | from pathlib import Path
+ 7 | |
+ 8 | | import yaml
+ 9 | |
+10 | | from aurora_cli.policies.defaults import get_default_policies_yaml
+11 | | from aurora_cli.policies.models import (
+12 | |     AnomalyConfig,
+13 | |     BudgetConfig,
+14 | |     DestructiveConfig,
+15 | |     Operation,
+16 | |     OperationType,
+17 | |     PoliciesConfig,
+18 | |     PolicyAction,
+19 | |     PolicyResult,
+20 | |     RecoveryConfig,
+21 | |     SafetyConfig,
+22 | | )
+23 | | from aurora_core.paths import get_aurora_dir
+   | |____________________________________________^
+24 |
+25 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/src/aurora_cli/query_executor.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | import logging
+10 | | import random
+11 | | import time
+12 | | from pathlib import Path
+13 | | from typing import TYPE_CHECKING, Any
+14 | |
+15 | | from aurora_cli.errors import APIError, ErrorHandler
+16 | | from aurora_core.budget.tracker import BudgetExceededError, CostTracker
+17 | | from aurora_reasoning.llm_client import AnthropicClient, LLMClient
+   | |__________________________________________________________________^
+18 |
+19 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/cli/tests/test_commands/test_goals.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | import json
+10 | | from unittest.mock import Mock, patch
+11 | |
+12 | | import pytest
+13 | | from click.testing import CliRunner
+   | |___________________________________^
+14 |
+15 |   # Import will fail until we create goals.py
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/context-code/src/aurora_context_code/__init__.py:15:1
+   |
+13 | """
+14 |
+15 | from typing import Any
+   | ^^^^^^^^^^^^^^^^^^^^^^
+16 |
+17 | __version__ = "0.1.0"
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/context-code/src/aurora_context_code/git.py:27:1
+   |
+25 |   """
+26 |
+27 | / import logging
+28 | | import math
+29 | | import os
+30 | | import re
+31 | | import subprocess
+32 | | from datetime import datetime, timezone
+33 | | from pathlib import Path
+   | |________________________^
+34 |
+35 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/context-code/src/aurora_context_code/knowledge_parser.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import logging
+ 8 | | import re
+ 9 | | from dataclasses import dataclass, field
+10 | | from pathlib import Path
+11 | | from typing import Any
+   | |______________________^
+12 |
+13 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/context-code/src/aurora_context_code/languages/python.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import hashlib
+ 8 | | import logging
+ 9 | | import os
+10 | | from pathlib import Path
+11 | |
+12 | | from aurora_context_code.parser import CodeParser
+13 | | from aurora_core.chunks.code_chunk import CodeChunk
+   | |___________________________________________________^
+14 |
+15 |   # Try to import tree-sitter, fall back to text chunking if unavailable
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/context-code/src/aurora_context_code/languages/typescript.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import hashlib
+ 8 | | import logging
+ 9 | | import os
+10 | | from pathlib import Path
+11 | |
+12 | | from aurora_context_code.parser import CodeParser
+13 | | from aurora_core.chunks.code_chunk import CodeChunk
+   | |___________________________________________________^
+14 |
+15 |   # Try to import tree-sitter, fall back to text chunking if unavailable
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/context-code/src/aurora_context_code/semantic/bm25_scorer.py:24:1
+   |
+22 |   """
+23 |
+24 | / import logging
+25 | | import math
+26 | | import pickle
+27 | | import re
+28 | | from collections import Counter, defaultdict
+29 | | from pathlib import Path
+   | |________________________^
+30 |
+31 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py:20:1
+   |
+18 |   """
+19 |
+20 | / import hashlib
+21 | | import json
+22 | | import logging
+23 | | import os
+24 | | import pickle
+25 | | import threading
+26 | | import time
+27 | | from collections import OrderedDict
+28 | | from dataclasses import dataclass
+29 | | from pathlib import Path
+30 | | from typing import Any
+31 | |
+32 | | import numpy as np
+33 | | import numpy.typing as npt
+   | |__________________________^
+34 |
+35 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/core/src/aurora_core/activation/engine.py:23:1
+   |
+21 |   """
+22 |
+23 | / import logging
+24 | | import threading
+25 | | from datetime import datetime, timezone
+26 | | from typing import Any
+27 | |
+28 | | from pydantic import BaseModel, ConfigDict, Field
+29 | |
+30 | | from aurora_core.activation.base_level import AccessHistoryEntry, BaseLevelActivation, BLAConfig
+31 | | from aurora_core.activation.context_boost import ContextBoost, ContextBoostConfig
+32 | | from aurora_core.activation.decay import DecayCalculator, DecayConfig
+33 | | from aurora_core.activation.spreading import RelationshipGraph, SpreadingActivation, SpreadingConfig
+   | |____________________________________________________________________________________________________^
+34 |
+35 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/soar/src/aurora_soar/orchestrator.py:31:1
+   |
+29 |   """
+30 |
+31 | / from __future__ import annotations
+32 | |
+33 | | import asyncio
+34 | | import logging
+35 | | import time
+36 | | from typing import TYPE_CHECKING, Any, Callable, cast
+37 | |
+38 | | from aurora_core.budget import CostTracker
+39 | | from aurora_core.exceptions import BudgetExceededError
+40 | | from aurora_core.logging import ConversationLogger
+41 | | from aurora_core.metrics.query_metrics import QueryMetrics
+42 | | from aurora_soar import discovery_adapter
+43 | | from aurora_soar.phases import (
+44 | |     assess,
+45 | |     collect,
+46 | |     decompose,
+47 | |     record,
+48 | |     respond,
+49 | |     retrieve,
+50 | |     synthesize,
+51 | |     verify,
+52 | | )
+53 | | from aurora_soar.phases.respond import Verbosity
+   | |________________________________________________^
+54 |
+55 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/soar/src/aurora_soar/phases/assess.py:15:1
+   |
+13 |   """
+14 |
+15 | / from __future__ import annotations
+16 | |
+17 | | import json
+18 | | import logging
+19 | | import re
+20 | | from dataclasses import dataclass, field
+21 | | from enum import IntEnum
+22 | | from typing import TYPE_CHECKING, Any, Literal
+   | |______________________________________________^
+23 |
+24 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/soar/src/aurora_soar/phases/collect.py:11:1
+   |
+ 9 |   """
+10 |
+11 | / from __future__ import annotations
+12 | |
+13 | | import asyncio
+14 | | import logging
+15 | | import sys
+16 | | import time
+17 | | from typing import TYPE_CHECKING, Any, Callable
+18 | |
+19 | | from aurora_spawner import (
+20 | |     SpawnResult,
+21 | |     SpawnTask,
+22 | |     spawn,
+23 | |     spawn_parallel,
+24 | |     spawn_parallel_tracked,
+25 | |     spawn_with_retry_and_fallback,
+26 | | )
+   | |_^
+27 |
+28 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/soar/src/aurora_soar/phases/respond.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | import json
+10 | | from dataclasses import asdict, is_dataclass
+11 | | from enum import Enum
+12 | | from typing import TYPE_CHECKING, Any, cast
+   | |___________________________________________^
+13 |
+14 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/soar/src/aurora_soar/phases/retrieve.py:16:1
+   |
+14 |   """
+15 |
+16 | / from __future__ import annotations
+17 | |
+18 | | import logging
+19 | | import time
+20 | | from typing import TYPE_CHECKING, Any, cast
+   | |___________________________________________^
+21 |
+22 |   if TYPE_CHECKING:
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/soar/src/aurora_soar/phases/verify.py:10:1
+   |
+ 8 |   """
+ 9 |
+10 | / from __future__ import annotations
+11 | |
+12 | | from typing import Any
+   | |______________________^
+13 |
+14 |   __all__ = [
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> packages/soar/tests/test_orchestrator.py:3:1
+  |
+1 |   """Tests for SOAR orchestrator."""
+2 |
+3 | / from unittest.mock import AsyncMock, MagicMock
+4 | |
+5 | | import pytest
+6 | |
+7 | | from aurora_soar.orchestrator import SOAROrchestrator
+  | |_____________________________________________________^
+8 |
+9 |   # ============================================================================
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/spawner/src/aurora_spawner/recovery.py:20:1
+   |
+18 |   """
+19 |
+20 | / import logging
+21 | | import time
+22 | | from dataclasses import dataclass, field
+23 | | from enum import Enum
+24 | | from typing import Any, Callable
+   | |________________________________^
+25 |
+26 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/spawner/src/aurora_spawner/timeout_policy.py:10:1
+   |
+ 8 |   """
+ 9 |
+10 | / import logging
+11 | | from dataclasses import dataclass, field
+12 | | from enum import Enum
+13 | | from typing import Any, Callable
+   | |________________________________^
+14 |
+15 |   logger = logging.getLogger(__name__)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> packages/testing/src/aurora_testing/mocks.py:9:1
+   |
+ 7 |   """
+ 8 |
+ 9 | / from collections.abc import Callable
+10 | | from dataclasses import dataclass, field
+11 | | from datetime import datetime
+12 | | from pathlib import Path
+13 | | from typing import Any
+14 | |
+15 | | from aurora_core.chunks.base import Chunk
+   | |_________________________________________^
+16 |
+17 |   # ============================================================================
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/archive/performance/test_hybrid_retrieval_precision.py:21:1
+   |
+19 |   """
+20 |
+21 | / from datetime import datetime, timedelta, timezone
+22 | | from typing import Any
+23 | |
+24 | | import numpy as np
+25 | | import pytest
+26 | |
+27 | | from aurora_context_code.semantic.embedding_provider import (
+28 | |     HAS_SENTENCE_TRANSFORMERS,
+29 | |     EmbeddingProvider,
+30 | | )
+31 | | from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+32 | | from aurora_core.activation.base_level import AccessHistoryEntry
+33 | | from aurora_core.activation.engine import ActivationConfig
+   | |__________________________________________________________^
+34 |
+35 |   # Mark all tests as requiring ML dependencies
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/archive/performance/test_soar_benchmarks.py:10:1
+   |
+ 8 |   """
+ 9 |
+10 | / import time
+11 | |
+12 | | import pytest
+13 | |
+14 | | from aurora_core.budget import CostTracker
+15 | | from aurora_core.chunks import CodeChunk
+16 | | from aurora_core.config.loader import Config
+17 | | from aurora_core.store.memory import MemoryStore
+18 | | from aurora_reasoning.llm_client import LLMClient
+19 | | from aurora_soar import AgentInfo, AgentRegistry
+20 | | from aurora_soar.orchestrator import SOAROrchestrator
+   | |_____________________________________________________^
+21 |
+22 |   # Performance targets from PRD
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/e2e/test_e2e_complexity_assessment.py:24:1
+   |
+22 |   """
+23 |
+24 | / import json
+25 | | import os
+26 | | import re
+27 | | import tempfile
+28 | | from collections.abc import Generator
+29 | | from pathlib import Path
+30 | |
+31 | | import pytest
+32 | |
+33 | | from .conftest import run_cli_command
+   | |_____________________________________^
+34 |
+35 |   # Mark all tests in this file as E2E tests
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/integration/cli/test_doctor_mcp_checks.py:9:1
+   |
+ 7 |   """
+ 8 |
+ 9 | / import json
+10 | | import shutil
+11 | | import sqlite3
+12 | | from unittest.mock import MagicMock, patch
+13 | |
+14 | | import pytest
+15 | | from click.testing import CliRunner
+16 | |
+17 | | from aurora_cli.commands.doctor import doctor_command
+18 | | from aurora_cli.config import Config
+   | |____________________________________^
+19 |
+20 |   # Skip all tests in this file - MCP functionality is dormant (PRD-0024)
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/integration/cli/test_headless_multi_tool.py:10:1
+   |
+ 8 |   """
+ 9 |
+10 | / import asyncio
+11 | | from unittest.mock import MagicMock, Mock, patch
+12 | |
+13 | | import pytest
+14 | | from click.testing import CliRunner
+15 | |
+16 | | from aurora_cli.commands.headless import (
+17 | |     _check_final_state,
+18 | |     _display_multi_tool_results,
+19 | |     _parse_tools_callback,
+20 | |     _run_backpressure,
+21 | |     _run_multi_tool_loop,
+22 | |     headless_command,
+23 | | )
+24 | | from aurora_cli.concurrent_executor import AggregatedResult, AggregationStrategy, ToolResult
+   | |____________________________________________________________________________________________^
+25 |
+26 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/integration/test_integration_git_signal_extraction.py:33:1
+   |
+31 |   """
+32 |
+33 | / import subprocess
+34 | | import time
+35 | |
+36 | | import pytest
+   | |_____________^
+37 |
+38 |   # GitSignalExtractor will be created in task 4.1
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/integration/test_semantic_retrieval.py:20:1
+   |
+18 |   """
+19 |
+20 | / from datetime import datetime, timedelta, timezone
+21 | | from typing import Any
+22 | |
+23 | | import numpy as np
+24 | | import pytest
+25 | |
+26 | | from aurora_context_code.semantic.embedding_provider import (
+27 | |     HAS_SENTENCE_TRANSFORMERS,
+28 | |     EmbeddingProvider,
+29 | | )
+30 | | from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+31 | | from aurora_core.activation.base_level import AccessHistoryEntry
+32 | | from aurora_core.activation.engine import ActivationConfig
+   | |__________________________________________________________^
+33 |
+34 |   # Mark all tests as requiring ML dependencies
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/performance/test_concurrent_execution_benchmarks.py:11:1
+   |
+ 9 |   """
+10 |
+11 | / import asyncio
+12 | | import gc
+13 | | import time
+14 | | from unittest.mock import patch
+15 | |
+16 | | import pytest
+17 | |
+18 | | from aurora_cli.concurrent_executor import AggregationStrategy, ConcurrentToolExecutor, ToolResult
+19 | | from aurora_cli.tool_providers import ToolProviderRegistry
+   | |__________________________________________________________^
+20 |
+21 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/cli/test_concurrent_edge_cases.py:12:1
+   |
+10 |   """
+11 |
+12 | / import asyncio
+13 | | import gc
+14 | | import weakref
+15 | | from unittest.mock import patch
+16 | |
+17 | | import pytest
+18 | |
+19 | | from aurora_cli.concurrent_executor import (
+20 | |     AggregatedResult,
+21 | |     AggregationStrategy,
+22 | |     ConcurrentToolExecutor,
+23 | |     ConflictDetector,
+24 | |     ConflictResolver,
+25 | |     ConflictSeverity,
+26 | |     ToolConfig,
+27 | |     ToolResult,
+28 | | )
+29 | | from aurora_cli.tool_providers import ToolProviderRegistry
+   | |__________________________________________________________^
+30 |
+31 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/cli/test_concurrent_executor.py:12:1
+   |
+10 |   """
+11 |
+12 | / import asyncio
+13 | | from unittest.mock import AsyncMock, MagicMock, patch
+14 | |
+15 | | import pytest
+16 | |
+17 | | from aurora_cli.concurrent_executor import (
+18 | |     AggregatedResult,
+19 | |     AggregationStrategy,
+20 | |     ConcurrentToolExecutor,
+21 | |     ConflictDetector,
+22 | |     ConflictResolver,
+23 | |     ConflictSeverity,
+24 | |     ToolConfig,
+25 | |     ToolResult,
+26 | |     run_concurrent,
+27 | | )
+28 | | from aurora_cli.tool_providers import ToolProviderRegistry
+   | |__________________________________________________________^
+29 |
+30 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/cli/test_conflict_detection_resolution.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import pytest
+ 8 | |
+ 9 | | from aurora_cli.concurrent_executor import (
+10 | |     ConflictDetector,
+11 | |     ConflictInfo,
+12 | |     ConflictResolver,
+13 | |     ConflictSeverity,
+14 | |     ToolResult,
+15 | | )
+   | |_^
+16 |
+17 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/cli/test_resource_isolation.py:11:1
+   |
+ 9 |   """
+10 |
+11 | / import asyncio
+12 | | import os
+13 | | import tempfile
+14 | | import threading
+15 | | from pathlib import Path
+16 | | from unittest.mock import patch
+17 | |
+18 | | import pytest
+19 | |
+20 | | from aurora_cli.resource_isolation import (
+21 | |     ExecutionContext,
+22 | |     FileLockManager,
+23 | |     IsolationConfig,
+24 | |     IsolationLevel,
+25 | |     ResourceIsolationManager,
+26 | |     ResourceLimits,
+27 | |     create_isolation_manager,
+28 | |     with_isolation,
+29 | | )
+   | |_^
+30 |
+31 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/cli/test_tool_orchestrator.py:10:1
+   |
+ 8 |   """
+ 9 |
+10 | / from pathlib import Path
+11 | | from unittest.mock import MagicMock
+12 | |
+13 | | import pytest
+14 | | from rich.console import Console
+15 | |
+16 | | from aurora_cli.tool_providers.base import ToolProvider, ToolResult, ToolStatus
+17 | | from aurora_cli.tool_providers.orchestrator import (
+18 | |     ExecutionStrategy,
+19 | |     OrchestratorResult,
+20 | |     ToolOrchestrator,
+21 | | )
+   | |_^
+22 |
+23 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/cli/test_tool_providers.py:13:1
+   |
+11 |   """
+12 |
+13 | / import subprocess
+14 | | from pathlib import Path
+15 | | from unittest.mock import Mock, patch
+16 | |
+17 | | import pytest
+18 | |
+19 | | from aurora_cli.tool_providers import (
+20 | |     CapabilityRouter,
+21 | |     ClaudeToolProvider,
+22 | |     CodexToolProvider,
+23 | |     CursorToolProvider,
+24 | |     GeminiToolProvider,
+25 | |     GenericToolProvider,
+26 | |     InputMethod,
+27 | |     OpenCodeToolProvider,
+28 | |     OutputFormat,
+29 | |     OutputNormalizer,
+30 | |     ToolAdapter,
+31 | |     ToolCapabilities,
+32 | |     ToolProvider,
+33 | |     ToolProviderRegistry,
+34 | |     ToolResult,
+35 | |     ToolStatus,
+36 | | )
+   | |_^
+37 |
+38 |   # ---------------------------------------------------------------------------
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/spawner/test_recovery_scenarios.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / import asyncio
+ 8 | | import time
+ 9 | | from unittest.mock import patch
+10 | |
+11 | | import pytest
+12 | |
+13 | | from aurora_spawner import SpawnResult, SpawnTask, spawn_parallel_with_recovery
+14 | | from aurora_spawner.circuit_breaker import CircuitBreaker
+15 | | from aurora_spawner.spawner import spawn_with_retry_and_fallback
+16 | | from aurora_spawner.timeout_policy import RetryPolicy, RetryStrategy, SpawnPolicy, TimeoutMode
+   | |______________________________________________________________________________________________^
+17 |
+18 |   # =============================================================================
+   |
+help: Organize imports
+
+Found 57 errors.
+[*] 57 fixable with the `--fix` option.
+make: *** [Makefile:71: lint] Error 1

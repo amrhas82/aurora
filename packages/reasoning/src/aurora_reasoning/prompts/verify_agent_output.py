@@ -15,7 +15,7 @@ class VerifyAgentOutputPromptTemplate(PromptTemplate):
     def __init__(self) -> None:
         super().__init__(name="verify_agent_output", version="1.0")
 
-    def build_system_prompt(self, **kwargs: Any) -> str:
+    def build_system_prompt(self, **_kwargs: Any) -> str:
         """Build system prompt for agent output verification."""
         return """You are a quality verifier for agent execution outputs.
 
@@ -38,7 +38,7 @@ You MUST respond with valid JSON only. Use this exact format:
   "confidence": 0.0-1.0
 }"""
 
-    def build_user_prompt(self, **kwargs: Any) -> str:
+    def build_user_prompt(self, **_kwargs: Any) -> str:
         """Build user prompt for agent output verification.
 
         Args:
@@ -49,8 +49,8 @@ You MUST respond with valid JSON only. Use this exact format:
             User prompt string
 
         """
-        subgoal = kwargs.get("subgoal", "")
-        agent_output = kwargs.get("agent_output", {})
+        subgoal = _kwargs.get("subgoal", "")
+        agent_output = _kwargs.get("agent_output", {})
 
         prompt_parts = [
             f"Subgoal: {subgoal}",

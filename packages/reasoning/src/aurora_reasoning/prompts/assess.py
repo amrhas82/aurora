@@ -16,7 +16,7 @@ class AssessPromptTemplate(PromptTemplate):
     def __init__(self) -> None:
         super().__init__(name="assess", version="1.0")
 
-    def build_system_prompt(self, **kwargs: Any) -> str:
+    def build_system_prompt(self, **_kwargs: Any) -> str:
         """Build system prompt for complexity assessment."""
         return """You are a query complexity analyzer for a code reasoning system.
 
@@ -40,7 +40,7 @@ You MUST respond with valid JSON only. Use this exact format:
   "reasoning": "Brief explanation of your classification"
 }"""
 
-    def build_user_prompt(self, **kwargs: Any) -> str:
+    def build_user_prompt(self, **_kwargs: Any) -> str:
         """Build user prompt for complexity assessment.
 
         Args:
@@ -51,8 +51,8 @@ You MUST respond with valid JSON only. Use this exact format:
             User prompt string
 
         """
-        query = kwargs.get("query", "")
-        keyword_result = kwargs.get("keyword_result")
+        query = _kwargs.get("query", "")
+        keyword_result = _kwargs.get("keyword_result")
 
         prompt_parts = [f"Query to assess: {query}"]
 

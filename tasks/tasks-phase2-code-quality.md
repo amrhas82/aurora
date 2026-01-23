@@ -358,30 +358,38 @@
   - note: **📋 See WORKFLOW_AFTER_BASELINE.md for complete workflow**
   - note: **🔍 Run ./analyze_baseline.sh FIRST (new requirement)**
   - note: **🚀 Run ./execute_task12.sh ONLY if analysis clears**
-  - [ ] 12.1 Generate full report of commented code blocks
+  - [x] 12.1 Generate full report of commented code blocks
     - tdd: no
     - verify: `ruff check packages/ tests/ --select ERA001 > commented_code_report.txt && wc -l commented_code_report.txt`
-  - [ ] 12.2 Review doctor.py:114-117 MCP checks for valuable context
+    - result: ✅ 79 violations documented
+  - [x] 12.2 Review doctor.py:114-117 MCP checks for valuable context
     - tdd: no
     - verify: `grep -A 5 "line 114" commented_code_report.txt`
-  - [ ] 12.3 Create GitHub issue for MCP feature if context is valuable
+    - result: ✅ MCP deprecated, safe to remove
+  - [x] 12.3 Create GitHub issue for MCP feature if context is valuable
     - tdd: no
     - verify: `gh issue list --search "MCP checks" | wc -l`
-  - [ ] 12.4 Delete all commented code blocks in packages/cli
+    - result: ✅ Not needed
+  - [x] 12.4 Delete all commented code blocks in packages/cli
     - tdd: no
     - verify: `ruff check packages/cli/ --select ERA001 | wc -l`
-  - [ ] 12.5 Delete all commented code blocks in packages/soar
+    - result: ✅ Removed (commit 7811cbd)
+  - [x] 12.5 Delete all commented code blocks in packages/soar
     - tdd: no
     - verify: `ruff check packages/soar/ --select ERA001 | wc -l`
-  - [ ] 12.6 Delete all commented code blocks in packages/context-code
+    - result: ✅ Removed (commit 7811cbd)
+  - [x] 12.6 Delete all commented code blocks in packages/context-code
     - tdd: no
     - verify: `ruff check packages/context-code/ --select ERA001 | wc -l`
-  - [ ] 12.7 Delete all commented code blocks in remaining packages
+    - result: ✅ Removed (commit 7811cbd)
+  - [x] 12.7 Delete all commented code blocks in remaining packages
     - tdd: no
     - verify: `ruff check packages/ --select ERA001 | wc -l`
-  - [ ] 12.8 Delete all commented code blocks in tests/
+    - result: ✅ Removed (commit 7811cbd)
+  - [x] 12.8 Delete all commented code blocks in tests/
     - tdd: no
     - verify: `ruff check tests/ --select ERA001 | wc -l`
+    - result: ✅ Removed (commit 7811cbd)
   - [x] 12.9 Run full test suite to ensure no functionality lost
     - tdd: no
     - verify: `make test`

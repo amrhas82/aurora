@@ -38,7 +38,6 @@ from aurora_cli.agent_discovery import (
 from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 
-
 if TYPE_CHECKING:
     pass
 
@@ -142,6 +141,132 @@ def agents_group() -> None:
     """
 
 
+def _get_project_manifest(
+    project_path: Path,
+) -> tuple[AgentManifest, str] | None:
+    """Get manifest for project-configured tools only.
+
+    Args:
+        project_path: Path to the project directory
+
+    Returns:
+        Tuple of (manifest, tool_context) if successful, None if no tools configured
+
+    """
+    from aurora_cli.commands.init_helpers import get_configured_tool_ids
+    from aurora_cli.configurators.slash.paths import get_tool_paths
+
+    configured_tool_ids = get_configured_tool_ids(project_path)
+
+    if not configured_tool_ids:
+        console.print(
+            "\n[yellow]No tools configured in this project.[/]\n"
+            "Run [cyan]aur init[/] to configure tools and discover agents.\n"
+            "\n[dim]Tip: Use [cyan]aur agents list --all[/] to see all agents.[/]",
+        )
+        return None
+
+    # Get agent paths for configured tools
+    selected_agent_paths = []
+    for tool_id in configured_tool_ids:
+        tool_paths = get_tool_paths(tool_id)
+        if tool_paths and tool_paths.agents:
+            selected_agent_paths.append(tool_paths.agents)
+
+    if not selected_agent_paths:
+        console.print(
+            "\n[yellow]No agent directories found for configured tools.[/]\n"
+            "Run [cyan]aur init[/] and select option [4] to refresh agent discovery.",
+        )
+        return None
+
+    # Create scanner with project-specific paths
+    scanner = AgentScanner(selected_agent_paths)
+    manager = ManifestManager(scanner=scanner)
+    manifest = manager.generate()
+    tool_context = ", ".join(configured_tool_ids)
+
+    return manifest, tool_context
+
+
+def _display_empty_manifest_message(show_all: bool, tool_context: str) -> None:
+    """Display message when no agents are found.
+
+    Args:
+        show_all: Whether --all flag was used
+        tool_context: Description of tools being searched
+
+    """
+    if show_all:
+        console.print(
+            "\n[yellow]No agents found.[/]\n"
+            "Add agent files to tool-specific directories like ~/.claude/agents/",
+        )
+    else:
+        console.print(
+            f"\n[yellow]No agents found for configured tools ({tool_context}).[/]\n"
+            "Add agent files to the appropriate directories or use [cyan]--all[/] to search everywhere.",
+        )
+
+
+def _filter_and_display_agents(
+    manifest: AgentManifest,
+    category: str | None,
+    output_format: str,
+) -> bool:
+    """Filter agents by category and display them.
+
+    Args:
+        manifest: Agent manifest to filter and display
+        category: Category filter (None for all)
+        output_format: Output format ('rich', 'simple', 'plan')
+
+    Returns:
+        True if agents were displayed, False if category was empty
+
+    """
+    if category:
+        cat_enum = AgentCategory(category)
+        agents = manifest.get_agents_by_category(cat_enum)
+
+        if not agents:
+            console.print(f"\n[yellow]No agents found in category '{category}'[/]\n")
+            return False
+
+        _display_agents_list(
+            {cat_enum: agents},
+            output_format,
+            total=len(agents),
+        )
+    else:
+        # Group all agents by category
+        agents_by_category = {cat: manifest.get_agents_by_category(cat) for cat in AgentCategory}
+
+        _display_agents_list(
+            agents_by_category,
+            output_format,
+            total=manifest.stats.total,
+        )
+
+    return True
+
+
+def _display_options_hint(show_all: bool) -> None:
+    """Display available command options hint.
+
+    Args:
+        show_all: Whether --all flag was used
+
+    """
+    console.print()
+    console.print("[dim]Options:[/]")
+    console.print("[dim]  aur agents search <keyword>    Search agents by keyword[/]")
+    console.print("[dim]  aur agents show <agent-id>     Show agent details[/]")
+    if not show_all:
+        console.print("[dim]  aur agents list --all          Show agents from all tools[/]")
+    console.print("[dim]  aur init -> option [4]          Refresh agent discovery[/]")
+
+
 @agents_group.command(name="list")
 @click.option(
     "--category",
@@ -171,7 +296,8 @@ def list_command(category: str | None, output_format: str, show_all: bool) -> No
     r"""List discovered agents for configured tools.
 
     By default, shows agents only from tools configured in the current project.
-    Use --all to show agents from all discovery paths.
+    Use --all to show agents from all discovery paths. Uses extracted helper
+    functions to reduce complexity.
 
     \b
     Examples:
@@ -190,100 +316,35 @@ def list_command(category: str | None, output_format: str, show_all: bool) -> No
         # Simple output (no Rich formatting)
         aur agents list --format simple
     """
-    from pathlib import Path
-
-    from aurora_cli.commands.init_helpers import get_configured_tool_ids
-    from aurora_cli.configurators.slash.paths import get_tool_paths
-
     start_time = time.time()
     project_path = Path.cwd()
 
-    # Determine which agent paths to use
+    # Get manifest based on scope
     if show_all:
-        # Use all configured discovery paths
         manifest = get_manifest()
         tool_context = "all tools"
     else:
-        # Project-scoped: only configured tools
-        configured_tool_ids = get_configured_tool_ids(project_path)
-
-        if not configured_tool_ids:
-            console.print(
-                "\n[yellow]No tools configured in this project.[/]\n"
-                "Run [cyan]aur init[/] to configure tools and discover agents.\n"
-                "\n[dim]Tip: Use [cyan]aur agents list --all[/] to see all agents.[/]",
-            )
+        result = _get_project_manifest(project_path)
+        if result is None:
             return
+        manifest, tool_context = result
 
-        # Get agent paths for configured tools
-        selected_agent_paths = []
-        for tool_id in configured_tool_ids:
-            tool_paths = get_tool_paths(tool_id)
-            if tool_paths and tool_paths.agents:
-                selected_agent_paths.append(tool_paths.agents)
-
-        if not selected_agent_paths:
-            console.print(
-                "\n[yellow]No agent directories found for configured tools.[/]\n"
-                "Run [cyan]aur init[/] and select option [4] to refresh agent discovery.",
-            )
-            return
-
-        # Create scanner with project-specific paths
-        scanner = AgentScanner(selected_agent_paths)
-        manager = ManifestManager(scanner=scanner)
-        manifest = manager.generate()
-        tool_context = ", ".join(configured_tool_ids)
-
+    # Handle empty manifest
     if manifest.stats.total == 0:
-        if show_all:
-            console.print(
-                "\n[yellow]No agents found.[/]\n"
-                "Add agent files to tool-specific directories like ~/.claude/agents/",
-            )
-        else:
-            console.print(
-                f"\n[yellow]No agents found for configured tools ({tool_context}).[/]\n"
-                "Add agent files to the appropriate directories or use [cyan]--all[/] to search everywhere.",
-            )
+        _display_empty_manifest_message(show_all, tool_context)
         return
 
-    # Filter by category if specified
-    if category:
-        cat_enum = AgentCategory(category)
-        agents = manifest.get_agents_by_category(cat_enum)
+    # Filter and display agents
+    if not _filter_and_display_agents(manifest, category, output_format):
+        return
 
-        if not agents:
-            console.print(f"\n[yellow]No agents found in category '{category}'[/]\n")
-            return
-
-        _display_agents_list(
-            {cat_enum: agents},
-            output_format,
-            total=len(agents),
-        )
-    else:
-        # Group all agents by category
-        agents_by_category = {cat: manifest.get_agents_by_category(cat) for cat in AgentCategory}
-
-        _display_agents_list(
-            agents_by_category,
-            output_format,
-            total=manifest.stats.total,
-        )
-
+    # Show timing info for slow operations
     elapsed = time.time() - start_time
     if elapsed > 0.5:
         console.print(f"\n[dim]Completed in {elapsed:.2f}s[/]")
 
     # Show available options hint
-    console.print()
-    console.print("[dim]Options:[/]")
-    console.print("[dim]  aur agents search <keyword>    Search agents by keyword[/]")
-    console.print("[dim]  aur agents show <agent-id>     Show agent details[/]")
-    if not show_all:
-        console.print("[dim]  aur agents list --all          Show agents from all tools[/]")
-    console.print("[dim]  aur init → option [4]          Refresh agent discovery[/]")
+    _display_options_hint(show_all)
 
 
 @agents_group.command(name="search")

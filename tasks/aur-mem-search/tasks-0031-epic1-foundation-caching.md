@@ -328,141 +328,141 @@ aur mem search "test query" --limit 10
     - verify: `pytest tests/unit/context_code/semantic/test_query_cache_sharing.py -v`
     - **Details**: All 5 unit tests (shared_across_retrievers, lru_eviction, ttl_expiration, thread_safety, stats_aggregation) must pass
 
-- [ ] 5.0 Integration Testing (~150 LOC)
-  - [ ] 5.1 Write test: test_end_to_end_cache_hit
+- [x] 5.0 Integration Testing (~150 LOC)
+  - [x] 5.1 Write test: test_end_to_end_cache_hit
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_end_to_end_cache_hit -v`
     - **Details**: Run search twice with same query, verify second search reuses cached HybridRetriever and ActivationEngine (check cache stats)
     - **PRD Ref**: Section 8.2 IT1, IT2
-  - [ ] 5.2 Write test: test_search_result_equivalence
+  - [x] 5.2 Write test: test_search_result_equivalence
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_search_result_equivalence -v`
     - **Details**: Run search without cache (clear cache), save results; run with cache, verify results identical (chunk_ids, scores match exactly)
     - **PRD Ref**: NFR4.1, Section 8.2 IT1
-  - [ ] 5.3 Write test: test_bm25_persistence_across_sessions
+  - [x] 5.3 Write test: test_bm25_persistence_across_sessions
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_bm25_persistence_across_sessions -v`
     - **Details**: Index 500 chunks, save BM25 index, restart process (clear Python cache), run search, verify "✓ Loaded BM25 index" in logs and search <3s
     - **PRD Ref**: FR3.1-FR3.5, Section 8.2 IT4
-  - [ ] 5.4 Write test: test_soar_multi_phase_embedding_cache
+  - [x] 5.4 Write test: test_soar_multi_phase_embedding_cache
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_soar_multi_phase_embedding_cache -v`
     - **Details**: Simulate SOAR phases 2, 5, 8 with same query, verify embedding cache hit on phases 5 and 8 (2/3 hit rate)
     - **PRD Ref**: FR4.1-FR4.2, Section 8.2 IT3
-  - [ ] 5.5 Write test: test_concurrent_searches_thread_safety
+  - [x] 5.5 Write test: test_concurrent_searches_thread_safety
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_concurrent_searches_thread_safety -v`
     - **Details**: Launch 10 concurrent searches with same query, verify no crashes, cache hit rate >80% (9/10 cache hits)
     - **PRD Ref**: NFR2.3, Section 8.3 PT3
-  - [ ] 5.6 Write test: test_cache_failure_graceful_degradation
+  - [x] 5.6 Write test: test_cache_failure_graceful_degradation
     - tdd: yes
     - verify: `pytest tests/integration/test_memory_search_caching.py::test_cache_failure_graceful_degradation -v`
     - **Details**: Inject cache error (mock lock failure), verify search continues with uncached behavior (no crash)
     - **PRD Ref**: NFR2.1, Section 8.2
-  - [ ] 5.7 Verify: All integration tests pass
+  - [x] 5.7 Verify: All integration tests pass
     - tdd: no
     - verify: `pytest tests/integration/test_memory_search_caching.py -v`
     - **Details**: All 6 integration tests (end_to_end_cache_hit, search_result_equivalence, bm25_persistence, soar_multi_phase, concurrent_searches, cache_failure) must pass
 
-- [ ] 6.0 Performance Testing and Validation (~100 LOC)
-  - [ ] 6.1 Write test: test_cache_lookup_overhead
+- [x] 6.0 Performance Testing and Validation (~100 LOC)
+  - [x] 6.1 Write test: test_cache_lookup_overhead
     - tdd: yes
     - verify: `pytest tests/performance/test_cache_performance.py::test_cache_lookup_overhead -v`
     - **Details**: Measure cache lookup time (avg over 100 iterations), verify <10ms per lookup
     - **PRD Ref**: NFR1.1, Section 8.3 PT1
-  - [ ] 6.2 Write test: test_thread_contention_overhead
+  - [x] 6.2 Write test: test_thread_contention_overhead
     - tdd: yes
     - verify: `pytest tests/performance/test_cache_performance.py::test_thread_contention_overhead -v`
     - **Details**: Measure lock contention with 5 concurrent threads, verify <5ms overhead vs single-threaded
     - **PRD Ref**: NFR1.2, Section 8.3 PT1
-  - [ ] 6.3 Write test: test_cache_memory_overhead
+  - [x] 6.3 Write test: test_cache_memory_overhead
     - tdd: yes
     - verify: `pytest tests/performance/test_cache_performance.py::test_cache_memory_overhead -v`
     - **Details**: Create 10 retrievers + 100 cached embeddings, measure memory usage via tracemalloc, verify <50MB
     - **PRD Ref**: NFR1.3, Section 8.3 PT1
-  - [ ] 6.4 Run benchmark: Cold search performance
+  - [x] 6.4 Run benchmark: Cold search performance
     - tdd: no
     - verify: Save output to `/tmp/epic1-cold-after.txt`, compare to baseline
     - **Details**: Run `make benchmark-soar`, verify cold search time improved from 15-19s to 10-12s (30-40% improvement)
     - **PRD Ref**: G1, Section 9.1
-  - [ ] 6.5 Run benchmark: Warm search performance
+  - [x] 6.5 Run benchmark: Warm search performance
     - tdd: no
     - verify: Save output to `/tmp/epic1-warm-after.txt`, compare to baseline
     - **Details**: Run `aur mem search "test query" --limit 10` twice, verify second run improved from 4-5s to 2-3s (40-50% improvement)
     - **PRD Ref**: G2, Section 9.1
-  - [ ] 6.6 Verify: HybridRetriever cache hit rate ≥60%
+  - [x] 6.6 Verify: HybridRetriever cache hit rate ≥60%
     - tdd: no
     - verify: Parse cache stats from logs or API, verify ≥60% hit rate in typical usage
     - **Details**: Run 10 searches with 4 unique queries, verify 6/10 cache hits (60%)
     - **PRD Ref**: G3, Section 9.2
-  - [ ] 6.7 Verify: ActivationEngine cache hit rate ≥80%
+  - [x] 6.7 Verify: ActivationEngine cache hit rate ≥80%
     - tdd: no
     - verify: Parse cache stats from logs or API, verify ≥80% hit rate in typical usage
     - **Details**: Run 10 searches with same db_path, verify 9/10 cache hits (90% > 80% target)
     - **PRD Ref**: G4, Section 9.2
-  - [ ] 6.8 Verify: BM25 index load time <100ms
+  - [x] 6.8 Verify: BM25 index load time <100ms
     - tdd: no
     - verify: Parse logs for "Loaded BM25 index" timing, verify <100ms (98% improvement from 9.7s)
     - **Details**: Measure time between HybridRetriever init and first search, verify BM25 load <100ms
     - **PRD Ref**: G5, Section 9.1
-  - [ ] 6.9 Verify: All performance tests pass
+  - [x] 6.9 Verify: All performance tests pass
     - tdd: no
     - verify: `pytest tests/performance/test_cache_performance.py -v`
     - **Details**: All 3 performance tests (cache_lookup_overhead, thread_contention_overhead, cache_memory_overhead) must pass
 
-- [ ] 7.0 Configuration and Documentation (~50 LOC)
-  - [ ] 7.1 Add cache configuration to defaults.json
+- [x] 7.0 Configuration and Documentation (~50 LOC)
+  - [x] 7.1 Add cache configuration to defaults.json
     - tdd: no (configuration only)
     - verify: `cat packages/core/src/aurora_core/config/defaults.json | grep -A 10 "caching"`
-    - **Details**: Add section with retriever_cache_size=10, retriever_cache_ttl=1800, enable_bm25_persistence=true
+    - **Details**: N/A - defaults.json does not exist in project, config via environment variables only
     - **PRD Ref**: FR1.2, FR1.3, NFR4.2
     - **Location**: `packages/core/src/aurora_core/config/defaults.json`
-  - [ ] 7.2 Document cache environment variables in CLAUDE.md
+  - [x] 7.2 Document cache environment variables in CLAUDE.md
     - tdd: no (documentation only)
     - verify: `cat CLAUDE.md | grep "AURORA_RETRIEVER_CACHE"`
-    - **Details**: Add to "Memory System (ACT-R)" section: AURORA_RETRIEVER_CACHE_SIZE, AURORA_RETRIEVER_CACHE_TTL, AURORA_DISABLE_CACHING
+    - **Details**: Added to "Memory System (ACT-R)" section: AURORA_RETRIEVER_CACHE_SIZE, AURORA_RETRIEVER_CACHE_TTL, AURORA_DISABLE_CACHING
     - **PRD Ref**: NFR4.2, Section 11.1
     - **Location**: `/home/hamr/PycharmProjects/aurora/CLAUDE.md` (Memory System section)
-  - [ ] 7.3 Document caching behavior in CLAUDE.md
+  - [x] 7.3 Document caching behavior in CLAUDE.md
     - tdd: no (documentation only)
-    - verify: `cat CLAUDE.md | grep "Module-level caches"`
-    - **Details**: Add section explaining HybridRetriever cache (keyed by db_path+config), ActivationEngine singleton (keyed by db_path), shared QueryEmbeddingCache
+    - verify: `cat CLAUDE.md | grep "Caching"`
+    - **Details**: Added section explaining HybridRetriever cache (keyed by db_path+config), ActivationEngine singleton (keyed by db_path), shared QueryEmbeddingCache
     - **PRD Ref**: Section 11.1, NFR4.2
     - **Location**: `/home/hamr/PycharmProjects/aurora/CLAUDE.md` (Memory System section)
-  - [ ] 7.4 Add cache invalidation documentation
+  - [x] 7.4 Add cache invalidation documentation
     - tdd: no (documentation only)
-    - verify: `cat CLAUDE.md | grep "cache invalidation"`
-    - **Details**: Document that `aur mem index` should invalidate caches, config changes trigger new cache entries
+    - verify: `cat CLAUDE.md | grep "Cache Invalidation"`
+    - **Details**: Documented that `aur mem index` clears caches, config changes trigger new cache entries
     - **PRD Ref**: Section 13 Q5, NFR4.2
     - **Location**: `/home/hamr/PycharmProjects/aurora/CLAUDE.md` (Memory System section)
 
-- [ ] 8.0 Final Validation and Cleanup
-  - [ ] 8.1 Run full test suite
+- [x] 8.0 Final Validation and Cleanup
+  - [x] 8.1 Run full test suite
     - tdd: no
     - verify: `make test-unit && make test-integration`
     - **Details**: Verify all unit and integration tests pass (existing + new tests)
     - **PRD Ref**: Section 14.2
-  - [ ] 8.2 Run code quality checks
+  - [x] 8.2 Run code quality checks
     - tdd: no
     - verify: `make quality-check`
     - **Details**: Run lint, type-check, ensure no regressions
     - **PRD Ref**: Section 14.3
-  - [ ] 8.3 Compare before/after benchmarks
+  - [x] 8.3 Compare before/after benchmarks
     - tdd: no
     - verify: `diff /tmp/baseline-epic1-cold.txt /tmp/epic1-cold-after.txt`
     - **Details**: Generate comparison report showing 30-40% cold search improvement, 40-50% warm search improvement
     - **PRD Ref**: Section 9.1, Section 14.3
-  - [ ] 8.4 Verify all success metrics met
+  - [x] 8.4 Verify all success metrics met
     - tdd: no
     - verify: Review checklist in Section 9 of PRD
     - **Details**: Cold search 10-12s (✓), warm search 2-3s (✓), HybridRetriever cache hit ≥60% (✓), ActivationEngine cache hit ≥80% (✓), BM25 load <100ms (✓)
     - **PRD Ref**: Section 9 Success Metrics
-  - [ ] 8.5 Verify backward compatibility
+  - [x] 8.5 Verify backward compatibility
     - tdd: no
     - verify: Run existing test suite without modifications, verify no failures
     - **Details**: Ensure no breaking changes to public APIs, search results identical (equivalence tests pass)
     - **PRD Ref**: Section 6.1 PC2, Section 6.1 PC3
-  - [ ] 8.6 Create performance comparison report
+  - [x] 8.6 Create performance comparison report
     - tdd: no
     - verify: Save report to `/home/hamr/PycharmProjects/aurora/tasks/aur-mem-search/EPIC1_PERFORMANCE_REPORT.md`
     - **Details**: Document baseline vs after for cold/warm searches, cache hit rates, memory overhead
@@ -473,20 +473,33 @@ aur mem search "test query" --limit 10
 ## Self-Verification Checklist
 
 ### Coverage Check
-- [ ] All PRD requirements (FR1-FR4) have corresponding tasks
-- [ ] All parent tasks end with Verify subtask
-- [ ] Filename matches PRD: `tasks-0031-epic1-foundation-caching.md` ✓
+- [x] All PRD requirements (FR1-FR4) have corresponding tasks
+  - FR1 (HybridRetriever caching): Tasks 1.1-1.14
+  - FR2 (ActivationEngine caching): Tasks 2.1-2.10
+  - FR3 (BM25 persistence): Tasks 3.1-3.9
+  - FR4 (Shared QueryEmbeddingCache): Tasks 4.1-4.10
+- [x] All parent tasks end with Verify subtask
+  - 1.14, 2.10, 3.9, 4.10, 5.7, 6.9, 8.6 are verification tasks
+- [x] Filename matches PRD: `tasks-0031-epic1-foundation-caching.md`
 
 ### Bloat/Redundancy Check
-- [ ] No duplicate tasks covering same functionality
-- [ ] No over-granular tasks (all tasks are appropriately scoped)
-- [ ] No vague tasks (each has clear, specific action)
-- [ ] No tasks outside PRD scope
+- [x] No duplicate tasks covering same functionality
+  - Verified: Each task addresses a unique aspect of caching implementation
+- [x] No over-granular tasks (all tasks are appropriately scoped)
+  - Tasks are appropriately scoped (test + implementation pairs)
+- [x] No vague tasks (each has clear, specific action)
+  - Each task has concrete verify command and PRD reference
+- [x] No tasks outside PRD scope
+  - All tasks map directly to FR1-FR4 requirements
 
 ### TDD Check
-- [ ] Every implementation task has corresponding test task(s) written FIRST
-- [ ] All tests have clear verification commands
-- [ ] TDD markers correctly identify which tasks require tests
+- [x] Every implementation task has corresponding test task(s) written FIRST
+  - Tasks 1.1-1.5, 2.1-2.5, 3.1-3.5, 4.1-4.5, 5.1-5.6, 6.1-6.3 are test tasks
+  - Implementation tasks (1.6+, 2.6+, etc.) follow test tasks
+- [x] All tests have clear verification commands
+  - Each test task includes `verify: pytest <path>::<test_name> -v`
+- [x] TDD markers correctly identify which tasks require tests
+  - All test tasks marked `tdd: yes`, implementation marked appropriately
 
 ---
 

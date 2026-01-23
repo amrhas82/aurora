@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Literal
 
-
 if TYPE_CHECKING:
     from aurora_reasoning.llm_client import LLMClient
 
@@ -52,9 +51,9 @@ class AssessmentResult:
     score: int
     confidence: float  # 0.0-1.0
     signals: list[str] = field(default_factory=list)
-    breakdown: dict = field(default_factory=dict)
+    breakdown: dict[str, int | float] = field(default_factory=dict)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "level": self.level,
             "score": self.score,
@@ -372,8 +371,8 @@ class ComplexityAssessor:
             )
 
         # Calculate all dimension scores
-        breakdown = {}
-        signals = []
+        breakdown: dict[str, int | float] = {}
+        signals: list[str] = []
 
         # 1. Lexical metrics
         lexical_score, lexical_signals = self._score_lexical(prompt)
@@ -419,6 +418,7 @@ class ComplexityAssessor:
         breakdown["multiplier"] = multiplier
 
         # Determine level
+        level: Literal["simple", "medium", "complex", "critical"]
         if final_score <= self.SIMPLE_THRESHOLD:
             level = "simple"
         elif final_score <= self.MEDIUM_THRESHOLD:
@@ -877,20 +877,23 @@ class ComplexityAssessor:
 
         return max(0.7, min(1.5, multiplier))
 
-    def _calculate_confidence(self, breakdown: dict, signals: list[str], level: str) -> float:
+    def _calculate_confidence(
+        self, breakdown: dict[str, int | float], signals: list[str], level: str
+    ) -> float:
         """Calculate confidence in the classification."""
         total = sum(v for k, v in breakdown.items() if k != "multiplier")
 
         # Distance from thresholds
+        max_distance: float
         if level == "simple":
             distance = self.SIMPLE_THRESHOLD - total
-            max_distance = self.SIMPLE_THRESHOLD
+            max_distance = float(self.SIMPLE_THRESHOLD)
         elif level == "medium":
             distance = min(total - self.SIMPLE_THRESHOLD, self.MEDIUM_THRESHOLD - total)
             max_distance = (self.MEDIUM_THRESHOLD - self.SIMPLE_THRESHOLD) / 2
         else:
             distance = total - self.MEDIUM_THRESHOLD
-            max_distance = 30
+            max_distance = 30.0
 
         # Base confidence from distance
         base_confidence = min(0.5 + (distance / max_distance) * 0.4, 0.9)

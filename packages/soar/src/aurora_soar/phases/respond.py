@@ -9,8 +9,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, is_dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any
-
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from aurora_soar.phases.record import RecordResult
@@ -360,11 +359,11 @@ def _extract_subgoal_breakdown(phase_metadata: dict[str, Any]) -> list[dict[str,
     # Try to get from phase4_verify (primary)
     phase4 = phases.get("phase4_verify", {})
     if isinstance(phase4, dict) and "subgoals_detailed" in phase4:
-        return phase4["subgoals_detailed"]
+        return cast(list[dict[str, Any]], phase4["subgoals_detailed"])
 
     # Try to get from phase4_verify_retry (fallback)
     phase4_retry = phases.get("phase4_verify_retry", {})
     if isinstance(phase4_retry, dict) and "subgoals_detailed" in phase4_retry:
-        return phase4_retry["subgoals_detailed"]
+        return cast(list[dict[str, Any]], phase4_retry["subgoals_detailed"])
 
     return []

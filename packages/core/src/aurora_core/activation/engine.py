@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 # Module-level cache for ActivationEngine instances (singleton per db_path)
-_engine_cache: dict[str, Any] = {}
+_engine_cache: dict[str, "ActivationEngine"] = {}
 _engine_cache_lock = threading.Lock()
 
 

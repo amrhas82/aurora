@@ -178,7 +178,7 @@ class TestMemoryManager:
         mock_chunk.complexity_score = 0.1
         mock_parser.parse = MagicMock(return_value=[mock_chunk])
 
-        memory_manager.parser_registry.get_parser_for_file = lambda f: mock_parser
+        memory_manager.parser_registry.get_parser_for_file = lambda _: mock_parser
 
         # Index file
         stats = memory_manager.index_path(test_file)
@@ -252,7 +252,7 @@ class TestMemoryManager:
         mock_chunk.complexity_score = 0.1
         mock_parser.parse = MagicMock(return_value=[mock_chunk])
 
-        memory_manager.parser_registry.get_parser_for_file = lambda f: mock_parser
+        memory_manager.parser_registry.get_parser_for_file = lambda _: mock_parser
 
         # Mock progress callback
         progress_calls = []
@@ -294,7 +294,7 @@ class TestMemoryManager:
             return [mock_chunk]
 
         mock_parser.parse = mock_parse
-        memory_manager.parser_registry.get_parser_for_file = lambda f: mock_parser
+        memory_manager.parser_registry.get_parser_for_file = lambda _: mock_parser
 
         # Index directory
         stats = memory_manager.index_path(tmp_path)

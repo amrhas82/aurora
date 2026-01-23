@@ -1484,6 +1484,20 @@ def create_plan(
             )
             # Use SOAR's memory context (from phase 2 retrieve)
             memory_context = soar_memory_context or []
+
+            # Fallback if SOAR decomposition fails (returns empty subgoals)
+            if not subgoals:
+                logger.warning("SOAR decomposition returned empty subgoals, using fallback")
+                subgoals = [
+                    Subgoal(
+                        id="sg-1",
+                        title="Implement goal",
+                        description=goal,
+                        assigned_agent="@code-developer",
+                    ),
+                ]
+                file_resolutions = {}
+                decomposition_source = "heuristic_fallback"
         else:
             # Legacy PlanDecomposer (only used if explicitly disabled via config)
             from aurora_cli.planning.decompose import PlanDecomposer

@@ -246,9 +246,9 @@ class TestVerifyCommand:
     @patch("sys.exit")
     def test_verify_command_displays_checks(
         self,
-        mock_exit: Mock,
-        mock_import: Mock,
-        mock_which: Mock,
+        _mock_exit: Mock,
+        _mock_import: Mock,
+        _mock_which: Mock,
     ) -> None:
         """Test verify_command() displays installation checks."""
         runner = CliRunner()
@@ -263,9 +263,9 @@ class TestVerifyCommand:
     @patch("sys.exit")
     def test_verify_command_detects_missing_packages(
         self,
-        mock_exit: Mock,
+        _mock_exit: Mock,
         mock_import: Mock,
-        mock_which: Mock,
+        _mock_which: Mock,
     ) -> None:
         """Test verify_command() detects missing packages."""
 
@@ -292,8 +292,8 @@ class TestHelperFunctions:
     def test_is_memory_empty_with_empty_store(
         self,
         mock_retriever_class: Mock,
-        mock_engine: Mock,
-        mock_provider: Mock,
+        _mock_engine: Mock,
+        _mock_provider: Mock,
     ) -> None:
         """Test _is_memory_empty() returns True for empty store."""
         # Mock the retriever to return no results
@@ -312,8 +312,8 @@ class TestHelperFunctions:
     def test_is_memory_empty_with_populated_store(
         self,
         mock_retriever_class: Mock,
-        mock_engine: Mock,
-        mock_provider: Mock,
+        _mock_engine: Mock,
+        _mock_provider: Mock,
     ) -> None:
         """Test _is_memory_empty() returns False for populated store."""
         # Mock the retriever to return results
@@ -330,7 +330,7 @@ class TestHelperFunctions:
         "aurora_context_code.semantic.hybrid_retriever.HybridRetriever",
         side_effect=Exception("Test error"),
     )
-    def test_is_memory_empty_handles_exceptions(self, mock_retriever: Mock) -> None:
+    def test_is_memory_empty_handles_exceptions(self, _mock_retriever: Mock) -> None:
         """Test _is_memory_empty() returns True on exceptions."""
         mock_store = Mock()
         result = _is_memory_empty(mock_store)
@@ -339,7 +339,7 @@ class TestHelperFunctions:
         assert result is True
 
     @patch("click.prompt", return_value="Y")
-    def test_prompt_auto_index_accepts_yes(self, mock_prompt: Mock) -> None:
+    def test_prompt_auto_index_accepts_yes(self, _mock_prompt: Mock) -> None:
         """Test _prompt_auto_index() returns True when user accepts."""
         from rich.console import Console
 
@@ -349,7 +349,7 @@ class TestHelperFunctions:
         assert result is True
 
     @patch("click.prompt", return_value="n")
-    def test_prompt_auto_index_declines_no(self, mock_prompt: Mock) -> None:
+    def test_prompt_auto_index_declines_no(self, _mock_prompt: Mock) -> None:
         """Test _prompt_auto_index() returns False when user declines."""
         from rich.console import Console
 
@@ -362,7 +362,7 @@ class TestHelperFunctions:
     @patch("aurora_core.store.SQLiteStore")
     def test_execute_dry_run_displays_configuration(
         self,
-        mock_store: Mock,
+        _mock_store: Mock,
         mock_handler_class: Mock,
     ) -> None:
         """Test _execute_dry_run() displays dry-run configuration."""
@@ -428,7 +428,7 @@ class TestHelperFunctions:
     def test_perform_auto_index_indexes_directory(
         self,
         mock_manager_class: Mock,
-        tmp_path: Path,
+        _tmp_path: Path,
     ) -> None:
         """Test _perform_auto_index() performs indexing with progress."""
         # Mock MemoryManager

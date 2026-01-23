@@ -302,7 +302,6 @@ class TestACTRFormula:
         ]
         activation = bla.calculate(history, now)
 
-        # Expected: ln(86400^-0.5 + 864000^-0.5)
         t1 = 86400  # 1 day in seconds
         t2 = 864000  # 10 days in seconds
         power_sum = math.pow(t1, -0.5) + math.pow(t2, -0.5)

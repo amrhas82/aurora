@@ -28,10 +28,9 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
-
 if TYPE_CHECKING:
     from aurora_cli.file_change_aggregator import AggregationResult as FileAggregationResult
-    from aurora_cli.file_change_aggregator import FileChangeAggregator
+    from aurora_cli.file_change_aggregator import FileChangeAggregator  # noqa: F401
     from aurora_cli.tool_providers.base import ToolProvider
 
 logger = logging.getLogger(__name__)
@@ -435,7 +434,7 @@ class ConcurrentToolExecutor:
         # File change aggregator (created lazily if tracking enabled)
         self._file_aggregator: FileChangeAggregator | None = None
         if self.track_file_changes:
-            from aurora_cli.file_change_aggregator import FileChangeAggregator
+            from aurora_cli.file_change_aggregator import FileChangeAggregator  # noqa: F811
 
             self._file_aggregator = FileChangeAggregator(working_dir=self.working_dir)
 
@@ -765,7 +764,7 @@ class ConcurrentToolExecutor:
                 # OpenCode uses stdin
                 cmd = [tool.name]
             else:
-                # Default: tool -p
+                # Default case with pipe mode
                 cmd = [tool.name, "-p"]
 
         # Prepare subprocess kwargs

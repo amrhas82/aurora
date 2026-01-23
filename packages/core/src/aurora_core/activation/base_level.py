@@ -145,7 +145,7 @@ class BaseLevelActivation:
             # Add power law term: t^(-d)
             power_law_sum += math.pow(time_delta, -decay_rate)
 
-        # BLA = ln(sum)
+        # Calculate BLA as natural log of sum
         bla = math.log(power_law_sum) if power_law_sum > 0 else self.config.default_activation
 
         # Clamp to minimum activation

@@ -28,7 +28,6 @@ from aurora_cli.resource_isolation import (
     with_isolation,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -58,7 +57,6 @@ def isolation_manager(isolation_config):
 
 
 # ---------------------------------------------------------------------------
-# Test: IsolationConfig
 # ---------------------------------------------------------------------------
 
 
@@ -100,7 +98,6 @@ class TestIsolationConfig:
 
 
 # ---------------------------------------------------------------------------
-# Test: ExecutionContext
 # ---------------------------------------------------------------------------
 
 
@@ -190,7 +187,6 @@ class TestExecutionContext:
 
 
 # ---------------------------------------------------------------------------
-# Test: FileLockManager
 # ---------------------------------------------------------------------------
 
 
@@ -268,7 +264,6 @@ class TestFileLockManager:
 
 
 # ---------------------------------------------------------------------------
-# Test: ResourceIsolationManager
 # ---------------------------------------------------------------------------
 
 
@@ -513,10 +508,7 @@ class TestConcurrentExecutorIntegration:
     @pytest.mark.asyncio
     async def test_executor_with_isolation(self):
         """Test executor uses isolation when configured."""
-        from aurora_cli.concurrent_executor import (
-            AggregationStrategy,
-            ConcurrentToolExecutor,
-        )
+        from aurora_cli.concurrent_executor import AggregationStrategy, ConcurrentToolExecutor
         from aurora_cli.tool_providers import ToolProviderRegistry
 
         # Reset and mock registry

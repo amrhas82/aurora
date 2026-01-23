@@ -28,7 +28,6 @@ from aurora_cli.concurrent_executor import (
 )
 from aurora_cli.tool_providers import ToolProviderRegistry
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -505,7 +504,6 @@ class TestResourceManagement:
 
         # Executor should be garbage collected
         # Note: This might not always work due to async internals
-        # assert executor_ref() is None
 
     @pytest.mark.asyncio
     async def test_task_cleanup_on_cancellation(self, mock_registry, mock_which):

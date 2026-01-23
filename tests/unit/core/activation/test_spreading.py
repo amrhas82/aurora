@@ -697,7 +697,6 @@ class TestACTRSpreadingFormula:
 
         # Path 1: a->b->d = 0.9 × 0.7^2 = 0.441
         # Path 2: a->c->d = 0.8 × 0.7^2 = 0.392
-        # Total: 0.441 + 0.392 = 0.833
         path1 = 0.9 * (0.7**2)
         path2 = 0.8 * (0.7**2)
         expected = path1 + path2

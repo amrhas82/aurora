@@ -6,7 +6,6 @@ import pytest
 
 from aurora_soar.orchestrator import SOAROrchestrator
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -436,9 +435,6 @@ class TestOrchestratorSimplified:
         # Execute query
         orchestrator.execute("test query")
 
-        # This will fail until progress callback is wired
-        # assert len(progress_messages) > 0
-
     def test_lightweight_record_used(self, orchestrator, monkeypatch):
         """Test that record_pattern_lightweight is called instead of record_pattern.
 
@@ -572,11 +568,6 @@ class TestOrchestratorSimplified:
 
         # Execute query
         orchestrator.execute("test query")
-
-        # This will fail until orchestrator is updated to pass agent_assignments
-        # assert len(collect_calls) > 0
-        # assert "agent_assignments" in collect_calls[0]
-        # assert isinstance(collect_calls[0]["agent_assignments"], list)
 
     def test_simple_query_bypasses_decompose(self, orchestrator, monkeypatch):
         """Test that SIMPLE queries bypass decomposition phase.

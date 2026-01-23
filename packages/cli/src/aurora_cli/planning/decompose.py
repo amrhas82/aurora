@@ -20,7 +20,6 @@ from aurora_cli.planning.cache import PlanDecompositionCache
 from aurora_cli.planning.memory import FilePathResolver
 from aurora_cli.planning.models import AgentGap, Complexity, FileResolution, Subgoal
 
-
 # Try to import MemoryRetriever for context loading
 try:
     from aurora_cli.memory.retrieval import MemoryRetriever
@@ -629,7 +628,6 @@ class PlanDecomposer:
         # Simple heuristic: create 2-4 subgoals based on common patterns
         subgoals = []
 
-        # Always: Plan and design
         subgoals.append(
             Subgoal(
                 id="sg-1",
@@ -641,7 +639,6 @@ class PlanDecomposer:
             ),
         )
 
-        # Always: Implementation
         subgoals.append(
             Subgoal(
                 id="sg-2",
@@ -653,7 +650,6 @@ class PlanDecomposer:
             ),
         )
 
-        # Always: Testing
         subgoals.append(
             Subgoal(
                 id="sg-3",

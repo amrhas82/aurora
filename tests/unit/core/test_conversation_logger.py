@@ -132,7 +132,6 @@ class TestConversationLogger:
         query = "Parse JSON files"
         filename = logger._generate_filename(query)
 
-        # Format: keyword1-keyword2-YYYY-MM-DD.md
         pattern = r"^[a-z0-9]+-[a-z0-9]+-\d{4}-\d{2}-\d{2}\.md$"
         assert re.match(pattern, filename)
 

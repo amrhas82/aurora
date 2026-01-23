@@ -35,7 +35,6 @@ import time
 
 import pytest
 
-
 # GitSignalExtractor will be created in task 4.1
 # For now, this will fail with ImportError
 try:
@@ -400,11 +399,7 @@ class TestGitMetadataStorage:
         # Actual metadata storage happens in memory_manager.index_file() (task 4.3)
 
         # Expected metadata format:
-        # {
-        #     "git_hash": "abc123...",
-        #     "last_modified": 1234567890,  # Unix timestamp
         #     "commit_count": 1
-        # }
 
         assert True, "Metadata storage will be verified in E2E tests"
 
@@ -418,8 +413,6 @@ class TestGitMetadataStorage:
         # Used to initialize access_count in activations table
 
         # Expected usage in memory_manager.index_file():
-        # chunk.metadata["commit_count"] = len(commit_times)
-        # store.initialize_activation(chunk_id, base_level=bla, access_count=len(commit_times))
 
         assert True, "commit_count storage will be verified in E2E tests"
 
@@ -450,9 +443,7 @@ class TestBLACalculationFormula:
         # t1 = 86400 seconds (1 day)
         # t2 = 604800 seconds (7 days)
         # t3 = 2592000 seconds (30 days)
-        # d = 0.5
         #
-        # sum = (86400)^(-0.5) + (604800)^(-0.5) + (2592000)^(-0.5)
         #     ≈ 0.00340 + 0.00129 + 0.00062
         #     ≈ 0.00531
         # B = ln(0.00531) ≈ -5.24
@@ -463,9 +454,6 @@ class TestBLACalculationFormula:
         expected_bla = math.log(sum_term)
 
         # When GitSignalExtractor is implemented, verify:
-        # extractor = GitSignalExtractor()
-        # actual_bla = extractor.calculate_bla(commit_times, decay=0.5)
-        # assert abs(actual_bla - expected_bla) < 0.01
 
         assert expected_bla < 0, "BLA with recent accesses should be negative (ln of small number)"
 

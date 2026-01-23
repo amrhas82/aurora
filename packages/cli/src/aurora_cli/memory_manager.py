@@ -40,7 +40,6 @@ from aurora_core.chunks import Chunk
 from aurora_core.store import SQLiteStore
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_context_code.semantic import EmbeddingProvider
     from aurora_core.store.base import Store
@@ -617,7 +616,6 @@ class MemoryManager:
 
                 batch_len = len(pending_chunks)
 
-                # Phase: Embedding
                 report_progress(
                     IndexProgress(
                         "embedding",
@@ -633,7 +631,6 @@ class MemoryManager:
                 # Batch embed all chunks at once
                 embeddings = self.embedding_provider.embed_batch(texts, batch_size=batch_size)
 
-                # Phase: Storing
                 report_progress(
                     IndexProgress(
                         "storing",

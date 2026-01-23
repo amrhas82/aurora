@@ -19,7 +19,6 @@ from aurora_reasoning.llm_client import LLMClient
 from aurora_soar import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 
-
 # Performance targets from PRD
 SIMPLE_QUERY_TARGET_S = 2.0
 COMPLEX_QUERY_TARGET_S = 10.0
@@ -49,7 +48,6 @@ class MockLLMClientFast(LLMClient):
 
         # Debug: print first 200 chars to see what we're matching
         # if "verify" in combined or "validate" in combined:
-        #     print(f"DEBUG VERIFY: keywords in combined...")
 
         # Order matters - check more specific patterns first
         # Check synthesis verification BEFORE decomposition verification

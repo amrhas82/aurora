@@ -631,7 +631,7 @@ class Validator:
     def _apply_capability_rules(
         self,
         capability: ParsedCapability,
-        content: str,
+        _content: str,
     ) -> list[ValidationIssue]:
         """Apply additional validation rules to capability.
 
@@ -682,7 +682,7 @@ class Validator:
 
         return issues
 
-    def _apply_plan_rules(self, plan: ParsedPlan, content: str) -> list[ValidationIssue]:
+    def _apply_plan_rules(self, plan: ParsedPlan, _content: str) -> list[ValidationIssue]:
         """Apply additional validation rules to plan.
 
         Args:
@@ -724,7 +724,7 @@ class Validator:
 
         return issues
 
-    def _enrich_top_level_error(self, item_id: str, base_message: str) -> str:
+    def _enrich_top_level_error(self, _item_id: str, base_message: str) -> str:
         """Enrich error message with guidance.
 
         Args:

@@ -229,7 +229,7 @@ class TestIndexCommand:
     def test_index_command_handles_memory_store_error(
         self,
         mock_store_class: Mock,
-        mock_manager_class: Mock,
+        _mock_manager_class: Mock,
         tmp_path: Path,
     ) -> None:
         """Test index_command() handles MemoryStoreError gracefully."""
@@ -252,7 +252,7 @@ class TestIndexCommand:
         self,
         mock_error_handler_class: Mock,
         mock_store_class: Mock,
-        mock_manager_class: Mock,
+        _mock_manager_class: Mock,
         tmp_path: Path,
     ) -> None:
         """Test index_command() handles unexpected exceptions with ErrorHandler."""
@@ -543,7 +543,7 @@ class TestSearchCommand:
     def test_search_command_handles_memory_store_error(
         self,
         mock_store_class: Mock,
-        mock_manager_class: Mock,
+        _mock_manager_class: Mock,
         tmp_path: Path,
     ) -> None:
         """Test search_command() handles MemoryStoreError gracefully."""
@@ -701,7 +701,7 @@ class TestStatsCommand:
     def test_stats_command_handles_memory_store_error(
         self,
         mock_store_class: Mock,
-        mock_manager_class: Mock,
+        _mock_manager_class: Mock,
         tmp_path: Path,
     ) -> None:
         """Test stats_command() handles MemoryStoreError gracefully."""

@@ -430,7 +430,7 @@ class TestSearch:
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_with_no_results(
         self,
-        mock_activation_class: Mock,
+        _mock_activation_class: Mock,
         mock_retriever_class: Mock,
     ) -> None:
         """Test search() with no matching results."""
@@ -453,7 +453,7 @@ class TestSearch:
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_handles_missing_metadata(
         self,
-        mock_activation_class: Mock,
+        _mock_activation_class: Mock,
         mock_retriever_class: Mock,
     ) -> None:
         """Test search() handles results with missing metadata gracefully."""
@@ -487,7 +487,7 @@ class TestSearch:
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_propagates_memory_store_error(
         self,
-        mock_activation_class: Mock,
+        _mock_activation_class: Mock,
         mock_retriever_class: Mock,
     ) -> None:
         """Test search() propagates MemoryStoreError."""
@@ -509,7 +509,7 @@ class TestSearch:
     @patch("aurora_core.activation.ActivationEngine")
     def test_search_wraps_generic_errors(
         self,
-        mock_activation_class: Mock,
+        _mock_activation_class: Mock,
         mock_retriever_class: Mock,
     ) -> None:
         """Test search() wraps generic errors in MemoryStoreError."""

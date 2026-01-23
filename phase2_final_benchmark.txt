@@ -1,0 +1,115 @@
+pytest tests/performance/ -m performance --benchmark-only --benchmark-verbose
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /home/hamr/PycharmProjects/aurora
+configfile: pytest.ini
+plugins: cov-7.0.0, asyncio-1.3.0, anyio-4.12.0, benchmark-5.2.3, typeguard-4.4.4
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 186 items / 49 deselected / 137 selected
+
+tests/performance/test_cache_performance.py::test_cache_lookup_overhead SKIPPED [  0%]
+tests/performance/test_cache_performance.py::test_thread_contention_overhead SKIPPED [  1%]
+tests/performance/test_cache_performance.py::test_cache_memory_overhead SKIPPED [  2%]
+tests/performance/test_cache_performance.py::test_cache_warmup_benchmark SKIPPED [  2%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestThroughputBenchmarks::test_single_tool_throughput SKIPPED [  3%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestThroughputBenchmarks::test_multi_tool_throughput SKIPPED [  4%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestThroughputBenchmarks::test_concurrent_execution_throughput SKIPPED [  5%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestLatencyBenchmarks::test_execution_overhead SKIPPED [  5%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestLatencyBenchmarks::test_strategy_comparison_latency SKIPPED [  6%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestScalability::test_scale_with_tool_count SKIPPED [  7%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestScalability::test_scale_with_output_size SKIPPED [  8%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestMemoryUsage::test_memory_stable_under_load SKIPPED [  8%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestMemoryUsage::test_large_result_handling SKIPPED [  9%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestStressScenarios::test_rapid_fire_executions SKIPPED [ 10%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestStressScenarios::test_mixed_success_failure_storm SKIPPED [ 10%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestStressScenarios::test_concurrent_burst SKIPPED [ 11%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestResourceCleanup::test_task_cleanup_after_cancellation SKIPPED [ 12%]
+tests/performance/test_concurrent_execution_benchmarks.py::TestResourceCleanup::test_exception_cleanup SKIPPED [ 13%]
+tests/performance/test_goals_startup_performance.py::TestEmbeddingProviderStartup::test_embedding_provider_lazy_loading SKIPPED [ 13%]
+tests/performance/test_goals_startup_performance.py::TestEmbeddingProviderStartup::test_embedding_dim_without_model_load SKIPPED [ 14%]
+tests/performance/test_goals_startup_performance.py::TestEmbeddingProviderStartup::test_model_cache_check_performance SKIPPED [ 15%]
+tests/performance/test_goals_startup_performance.py::TestMemoryRetrieverStartup::test_retriever_lazy_initialization SKIPPED [ 16%]
+tests/performance/test_goals_startup_performance.py::TestMemoryRetrieverStartup::test_retriever_bm25_only_fallback_fast SKIPPED [ 16%]
+tests/performance/test_goals_startup_performance.py::TestGoalsCommandStartup::test_config_loading_fast SKIPPED [ 17%]
+tests/performance/test_goals_startup_performance.py::TestGoalsCommandStartup::test_plan_id_generation_fast SKIPPED [ 18%]
+tests/performance/test_goals_startup_performance.py::TestGoalsCommandStartup::test_goal_validation_fast SKIPPED [ 18%]
+tests/performance/test_goals_startup_performance.py::TestGoalsCommandStartup::test_complexity_assessment_fast SKIPPED [ 19%]
+tests/performance/test_goals_startup_performance.py::TestMemorySearchStartup::test_store_initialization_fast SKIPPED [ 20%]
+tests/performance/test_goals_startup_performance.py::TestMemorySearchStartup::test_agent_registry_discovery_fast SKIPPED [ 21%]
+tests/performance/test_goals_startup_performance.py::TestStartupTimeThresholds::test_imports_fast SKIPPED [ 21%]
+tests/performance/test_goals_startup_performance.py::TestStartupTimeThresholds::test_no_model_loading_on_import SKIPPED [ 22%]
+tests/performance/test_goals_startup_performance.py::TestRegressionGuards::test_setup_time_before_llm_call SKIPPED [ 23%]
+tests/performance/test_goals_startup_performance.py::TestRegressionGuards::test_no_model_download_attempt_when_cached SKIPPED [ 24%]
+tests/performance/test_goals_startup_performance.py::TestCLIStartupTime::test_goals_help_fast SKIPPED [ 24%]
+tests/performance/test_goals_startup_performance.py::TestCLIStartupTime::test_goals_validation_error_fast SKIPPED [ 25%]
+tests/performance/test_goals_startup_performance.py::TestCLIStartupTime::test_goals_cli_setup_without_llm SKIPPED [ 26%]
+tests/performance/test_goals_startup_performance.py::TestBackgroundPreloading::test_preload_model_method_exists SKIPPED [ 27%]
+tests/performance/test_goals_startup_performance.py::TestBackgroundPreloading::test_is_model_loaded_property SKIPPED [ 27%]
+tests/performance/test_goals_startup_performance.py::TestBackgroundPreloading::test_background_preload_thread_safe SKIPPED [ 28%]
+tests/performance/test_goals_startup_performance.py::TestModelLoadingTiming::test_cached_model_load_time SKIPPED [ 29%]
+tests/performance/test_goals_startup_performance.py::TestModelLoadingTiming::test_known_models_have_cached_dimensions SKIPPED [ 29%]
+tests/performance/test_goals_startup_performance.py::TestGranularRegressionGuards::test_aurora_cli_import_time SKIPPED [ 30%]
+tests/performance/test_goals_startup_performance.py::TestGranularRegressionGuards::test_config_instantiation_guard SKIPPED [ 31%]
+tests/performance/test_goals_startup_performance.py::TestGranularRegressionGuards::test_goal_validation_guard SKIPPED [ 32%]
+tests/performance/test_goals_startup_performance.py::TestGranularRegressionGuards::test_plan_id_generation_guard SKIPPED [ 32%]
+tests/performance/test_goals_startup_performance.py::TestGranularRegressionGuards::test_model_cache_check_guard SKIPPED [ 33%]
+tests/performance/test_goals_startup_performance.py::TestStartupPathOptimizations::test_no_embedding_import_on_goals_help SKIPPED [ 34%]
+tests/performance/test_goals_startup_performance.py::TestStartupPathOptimizations::test_has_indexed_memory_avoids_model_load SKIPPED [ 35%]
+tests/performance/test_goals_startup_performance.py::TestStartupPathOptimizations::test_hf_hub_offline_prevents_network SKIPPED [ 35%]
+tests/performance/test_indexing_benchmarks.py::TestIndexingThroughput::test_benchmark_small_codebase
+Computing precision for time.perf_counter ... 177.01ns.
+
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 23.66s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 14.28s.
+PASSED [ 36%]
+tests/performance/test_indexing_benchmarks.py::TestIndexingThroughput::test_benchmark_medium_codebase
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 10.86s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 51.68s.
+PASSED [ 37%]
+tests/performance/test_indexing_benchmarks.py::TestIndexingThroughput::test_benchmark_large_codebase
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 26.58s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 130.49s.
+PASSED [ 37%]
+tests/performance/test_indexing_benchmarks.py::TestBatchSizeImpact::test_benchmark_batch_size_8
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 5.15s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 23.68s.
+PASSED [ 38%]
+tests/performance/test_indexing_benchmarks.py::TestBatchSizeImpact::test_benchmark_batch_size_32
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 3.51s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 18.35s.
+PASSED [ 39%]
+tests/performance/test_indexing_benchmarks.py::TestBatchSizeImpact::test_benchmark_batch_size_64
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 3.84s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 17.71s.
+PASSED [ 40%]
+tests/performance/test_indexing_benchmarks.py::TestBatchSizeImpact::test_benchmark_batch_size_128
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 4.25s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 20.51s.
+PASSED [ 40%]
+tests/performance/test_indexing_benchmarks.py::TestPhaseTimingBreakdown::test_phase_timing_breakdown SKIPPED [ 41%]
+tests/performance/test_indexing_benchmarks.py::TestConcurrentIndexing::test_sequential_indexing
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+    Measured 1 iterations: 7.22s.
+  Running 5 rounds x 1 iterations ...
+  Ran for 34.70s.
+PASSED [ 42%]
+tests/performance/test_indexing_benchmarks.py::TestMemoryUsage::test_memory_baseline SKIPPED [ 43%]
+tests/performance/test_indexing_benchmarks.py::TestRealWorldCodebase::test_index_aurora_cli
+  Calibrating to target round 5.00us; will estimate when reaching 2.50us (using: time.perf_counter, precision: 177.01ns).
+make: *** [Makefile:83: benchmark] Terminated

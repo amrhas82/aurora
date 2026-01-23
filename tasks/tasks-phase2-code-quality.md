@@ -338,9 +338,10 @@
   - [ ] 11.1 Create and checkout branch `feature/phase2b-cleanup` from main
     - tdd: no
     - verify: `git branch --show-current`
-  - [ ] 11.2 Capture baseline performance benchmarks for Phase 2B
+  - [x] 11.2 Capture baseline performance benchmarks for Phase 2B
     - tdd: no
     - verify: `make benchmark-startup > phase2b_baseline_perf.txt && cat phase2b_baseline_perf.txt | grep "MAX_TOTAL_STARTUP_TIME"`
+    - result: ✅ Baseline captured in phase2b_baseline_perf.txt
   - [x] 11.3 Capture baseline test results for Phase 2B
     - tdd: no
     - verify: `make test > phase2b_baseline_tests.txt && cat phase2b_baseline_tests.txt | grep "passed"`

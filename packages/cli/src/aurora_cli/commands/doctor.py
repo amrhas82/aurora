@@ -106,15 +106,9 @@ def doctor_command(fix: bool) -> None:
         _display_results(tool_results)
         console.print()
 
-        # MCP Functional checks - DEPRECATED (commented out)
+        # MCP Functional checks - DEPRECATED
         # MCP tools have been deprecated in favor of slash commands
         # Use: /aur:search, /aur:get, aur soar "question"
-        # Uncomment below to re-enable MCP checks if needed
-        # console.print("[bold]MCP FUNCTIONAL[/]")
-        # mcp_results = mcp_checks.run_checks()
-        # all_results.extend(mcp_results)
-        # _display_results(mcp_results)
-        # console.print()
 
         # Calculate summary
         pass_count = sum(1 for r in all_results if r[0] == "pass")

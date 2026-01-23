@@ -129,7 +129,7 @@ class HybridRetriever:
         self,
         query: str,
         top_k: int = 10,
-        context_keywords: list[str] | None = None,
+        _context_keywords: list[str] | None = None,
         min_semantic_score: float | None = None,
     ) -> list[dict[str, Any]]:
         """Retrieve chunks using hybrid scoring.

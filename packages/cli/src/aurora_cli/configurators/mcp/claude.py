@@ -13,7 +13,6 @@ from typing import Any
 
 from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator
 
-
 # Aurora MCP tool permissions for Claude Code
 # Deprecated tools removed (aurora_query, aurora_search, aurora_get) per PRD-0024
 # Use slash commands (/aur:search, /aur:get) or CLI commands (aur soar) instead
@@ -52,7 +51,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
         """Claude MCP config is user-level (global)."""
         return True
 
-    def get_config_path(self, project_path: Path) -> Path:
+    def get_config_path(self, _project_path: Path) -> Path:
         """Get Claude MCP config path.
 
         Args:
@@ -132,7 +131,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
             },
         }
 
-    def configure_permissions(self, project_path: Path) -> ConfigResult:
+    def configure_permissions(self, _project_path: Path) -> ConfigResult:
         """Configure Claude permissions to allow Aurora MCP tools.
 
         Updates ~/.claude/settings.local.json to add Aurora tool permissions.

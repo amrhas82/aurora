@@ -66,7 +66,7 @@ class CursorToolProvider(ToolProvider):
         """Check if cursor CLI is installed."""
         return shutil.which("cursor") is not None
 
-    def build_command(self, context: str) -> list[str]:
+    def build_command(self, _context: str) -> list[str]:
         """Build Cursor CLI command."""
         return ["cursor"] + self.default_flags
 

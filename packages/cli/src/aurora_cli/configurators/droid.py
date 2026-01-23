@@ -21,7 +21,7 @@ class DroidConfigurator(BaseConfigurator):
         """Name of configuration file."""
         return "DROID.md"
 
-    async def get_template_content(self, aurora_dir: str) -> str:
+    async def get_template_content(self, _aurora_dir: str) -> str:
         """Get Droid template content.
 
         Args:

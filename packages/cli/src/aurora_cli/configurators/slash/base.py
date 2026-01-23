@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
-
 # Aurora managed block markers
 AURORA_MARKERS = {
     "start": "<!-- AURORA:START -->",
@@ -77,7 +76,7 @@ class SlashCommandConfigurator(ABC):
             for cmd_id in ALL_COMMANDS
         ]
 
-    def generate_all(self, project_path: str, aurora_dir: str) -> list[str]:
+    def generate_all(self, project_path: str, _aurora_dir: str) -> list[str]:
         """Generate or update all slash command files.
 
         Args:
@@ -121,7 +120,7 @@ class SlashCommandConfigurator(ABC):
 
         return created_or_updated
 
-    def update_existing(self, project_path: str, aurora_dir: str) -> list[str]:
+    def update_existing(self, project_path: str, _aurora_dir: str) -> list[str]:
         """Update existing slash command files only.
 
         Does not create new files.
@@ -185,7 +184,7 @@ class SlashCommandConfigurator(ABC):
         """
         ...
 
-    def get_description(self, command_id: str) -> str | None:
+    def get_description(self, _command_id: str) -> str | None:
         """Get a brief description for a slash command.
 
         This is shown as the first line after frontmatter, before Aurora markers.

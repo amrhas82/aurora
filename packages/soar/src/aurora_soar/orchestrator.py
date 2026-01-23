@@ -275,7 +275,7 @@ class SOAROrchestrator:
         self,
         query: str,
         verbosity: str = "NORMAL",
-        max_cost_usd: float | None = None,
+        _max_cost_usd: float | None = None,
         context_files: list[str] | None = None,
         stop_after_verify: bool = False,
     ) -> dict[str, Any]:
@@ -778,7 +778,7 @@ class SOAROrchestrator:
         query: str,
         context: dict[str, Any],
         complexity: str,
-        retry_feedback: str | None = None,
+        _retry_feedback: str | None = None,
     ) -> dict[str, Any]:
         """Execute Phase 3: Query Decomposition.
 
@@ -1239,7 +1239,7 @@ class SOAROrchestrator:
 
     def _handle_verification_failure(
         self,
-        query: str,
+        _query: str,
         verification: dict[str, Any],
         verbosity: str,
     ) -> dict[str, Any]:
@@ -1284,7 +1284,7 @@ class SOAROrchestrator:
 
     def _handle_decomposition_failure(
         self,
-        query: str,
+        _query: str,
         decomposition_result: dict[str, Any],
         verbosity: str,
     ) -> dict[str, Any]:
@@ -1330,7 +1330,7 @@ class SOAROrchestrator:
 
     def _handle_critical_failure(
         self,
-        query: str,
+        _query: str,
         error_msg: str,
         verbosity: str,
     ) -> dict[str, Any]:

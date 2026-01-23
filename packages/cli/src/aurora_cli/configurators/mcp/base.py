@@ -287,7 +287,7 @@ class MCPConfigurator(ABC):
                 warnings=warnings,
             )
 
-    def configure_permissions(self, project_path: Path) -> ConfigResult | None:
+    def configure_permissions(self, _project_path: Path) -> ConfigResult | None:
         """Configure additional permissions if needed.
 
         Some tools (like Claude) require separate permission configuration.

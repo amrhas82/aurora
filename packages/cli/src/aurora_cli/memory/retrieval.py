@@ -314,7 +314,7 @@ class MemoryRetriever:
         self,
         query: str,
         limit: int = 20,
-        mode: str = "hybrid",
+        _mode: str = "hybrid",
         min_semantic_score: float | None = None,
         wait_for_model: bool = True,
     ) -> list[CodeChunk]:

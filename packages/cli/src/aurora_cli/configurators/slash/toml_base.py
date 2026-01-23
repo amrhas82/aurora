@@ -26,7 +26,7 @@ class TomlSlashCommandConfigurator(SlashCommandConfigurator):
         \"\"\"
     """
 
-    def get_frontmatter(self, command_id: str) -> str | None:
+    def get_frontmatter(self, _command_id: str) -> str | None:
         """Return None since TOML format doesn't use separate frontmatter.
 
         TOML embeds all metadata in its structure, so there's no separate
@@ -56,7 +56,7 @@ class TomlSlashCommandConfigurator(SlashCommandConfigurator):
         """
         ...
 
-    def generate_all(self, project_path: str, aurora_dir: str) -> list[str]:
+    def generate_all(self, project_path: str, _aurora_dir: str) -> list[str]:
         """Generate or update all slash command files in TOML format.
 
         Args:

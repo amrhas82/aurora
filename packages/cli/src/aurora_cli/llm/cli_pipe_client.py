@@ -18,7 +18,6 @@ from rich.console import Console
 
 from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
 
-
 # Console for spinner output
 _console = Console()
 
@@ -99,12 +98,12 @@ class CLIPipeLLMClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: str | None = None,
-        max_tokens: int = 4096,
-        temperature: float = 0.7,
+        _model: str | None = None,
+        _max_tokens: int = 4096,
+        _temperature: float = 0.7,
         system: str | None = None,
         phase_name: str = "unknown",
-        **kwargs: Any,
+        **_kwargs: Any,
     ) -> LLMResponse:
         """Generate text completion by piping to CLI tool.
 

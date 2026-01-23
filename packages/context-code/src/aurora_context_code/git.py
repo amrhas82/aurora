@@ -156,7 +156,7 @@ class GitSignalExtractor:
             logger.warning(f"Error getting blame for {file_path}: {e}")
             return {}
 
-    def _parse_full_file_blame(self, output: str, repo_root: Path) -> dict[int, tuple[str, int]]:
+    def _parse_full_file_blame(self, output: str, _repo_root: Path) -> dict[int, tuple[str, int]]:
         r"""Parse git blame --line-porcelain output for entire file.
 
         The format repeats for each line:

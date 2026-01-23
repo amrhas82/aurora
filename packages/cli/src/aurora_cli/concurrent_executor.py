@@ -600,7 +600,7 @@ class ConcurrentToolExecutor:
         self,
         tool: ToolConfig,
         prompt: str,
-        cancel_event: asyncio.Event | None = None,
+        _cancel_event: asyncio.Event | None = None,
         context: Any = None,
     ) -> ToolResult:
         """Internal tool execution logic.
@@ -650,7 +650,7 @@ class ConcurrentToolExecutor:
         prompt: str,
         start_time: float,
         working_dir: Path | None = None,
-        env: dict[str, str] | None = None,
+        _env: dict[str, str] | None = None,
     ) -> ToolResult:
         """Execute using a registered tool provider with retry support.
 

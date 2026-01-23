@@ -220,7 +220,7 @@ class PoliciesEngine:
             reason="Operation allowed",
         )
 
-    def check_budget(self, estimated_cost: float) -> PolicyResult:
+    def check_budget(self, _estimated_cost: float) -> PolicyResult:
         """Check if cost is within budget.
 
         Args:

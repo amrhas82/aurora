@@ -21,7 +21,7 @@ class OpenCodeConfigurator(BaseConfigurator):
         """Name of configuration file."""
         return "OPENCODE.md"
 
-    async def get_template_content(self, aurora_dir: str) -> str:
+    async def get_template_content(self, _aurora_dir: str) -> str:
         """Get OpenCode template content.
 
         Args:

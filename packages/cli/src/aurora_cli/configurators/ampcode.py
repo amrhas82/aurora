@@ -21,7 +21,7 @@ class AmpCodeConfigurator(BaseConfigurator):
         """Name of configuration file."""
         return "AMPCODE.md"
 
-    async def get_template_content(self, aurora_dir: str) -> str:
+    async def get_template_content(self, _aurora_dir: str) -> str:
         """Get AmpCode template content.
 
         Args:

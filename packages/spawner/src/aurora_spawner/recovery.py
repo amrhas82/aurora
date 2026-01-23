@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -323,7 +322,7 @@ class RecoveryStateMachine:
         """
         return self._task_states.get(task_id)
 
-    def check_circuit_breaker(self, task_id: str, agent_id: str) -> tuple[bool, str | None]:
+    def check_circuit_breaker(self, _task_id: str, agent_id: str) -> tuple[bool, str | None]:
         """Check if circuit breaker allows execution.
 
         Args:

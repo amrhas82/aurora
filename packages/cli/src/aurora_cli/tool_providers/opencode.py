@@ -76,7 +76,7 @@ class OpenCodeToolProvider(ToolProvider):
         """Check if opencode CLI is installed."""
         return shutil.which("opencode") is not None
 
-    def build_command(self, context: str) -> list[str]:
+    def build_command(self, _context: str) -> list[str]:
         """Build OpenCode CLI command.
 
         OpenCode accepts input via stdin, so command is just the binary plus flags.

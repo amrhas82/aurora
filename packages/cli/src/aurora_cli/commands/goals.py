@@ -524,7 +524,7 @@ def goals_command(
     json_output = _display_goals_results(
         result=result,
         output_format=output_format,
-        verbose=verbose,
+        _verbose=verbose,
         yes=skip_confirm,
     )
 

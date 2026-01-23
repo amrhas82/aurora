@@ -334,7 +334,7 @@
   - [x] 10.5 Verify: Phase 2A PR merged to main
     - result: ✅ PR #4 merged (commit cceaf4b)
 
-- [ ] 11.0 Create feature branch for Phase 2B
+- [x] 11.0 Create feature branch for Phase 2B
   - [x] 11.1 Create and checkout branch `feature/phase2b-cleanup` from main
     - tdd: no
     - verify: `git branch --show-current`
@@ -354,7 +354,7 @@
     - result: ✅ ZERO Task 12 files have failures, safe to proceed
     - note: See BASELINE_FAILURE_ANALYSIS.md for full analysis
 
-- [ ] 12.0 Remove commented code (79 issues)
+- [x] 12.0 Remove commented code (79 issues)
   - note: **📋 See WORKFLOW_AFTER_BASELINE.md for complete workflow**
   - note: **🔍 Run ./analyze_baseline.sh FIRST (new requirement)**
   - note: **🚀 Run ./execute_task12.sh ONLY if analysis clears**

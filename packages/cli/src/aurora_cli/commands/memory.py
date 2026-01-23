@@ -31,7 +31,6 @@ from aurora_cli.errors import handle_errors
 from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
 
-
 __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
 
 logger = logging.getLogger(__name__)
@@ -339,7 +338,7 @@ def display_indexing_summary(
 @click.pass_context
 @handle_errors
 def index_command(
-    ctx: click.Context,
+    _ctx: click.Context,
     path: Path,
     db_path: Path | None,
     force: bool,
@@ -451,7 +450,7 @@ def index_command(
 @click.pass_context
 @handle_errors
 def search_command(
-    ctx: click.Context,
+    _ctx: click.Context,
     query: str,
     limit: int,
     output_format: str,
@@ -629,7 +628,7 @@ def search_command(
 )
 @click.pass_context
 @handle_errors
-def get_command(ctx: click.Context, index: int, output_format: str) -> None:
+def get_command(_ctx: click.Context, index: int, output_format: str) -> None:
     r"""Retrieve full content of a search result by index.
 
     INDEX is the 1-based result number from the last search.
@@ -676,7 +675,7 @@ def get_command(ctx: click.Context, index: int, output_format: str) -> None:
 )
 @click.pass_context
 @handle_errors
-def stats_command(ctx: click.Context, db_path: Path | None) -> None:
+def stats_command(_ctx: click.Context, db_path: Path | None) -> None:
     r"""Display memory store statistics.
 
     Shows information about indexed chunks, files, languages, and database size.
@@ -854,7 +853,7 @@ def _display_rich_results(
     results: list[SearchResult],
     query: str,
     show_content: bool,
-    config: Config,
+    _config: Config,
     show_scores: bool = False,
 ) -> None:
     """Display search results with rich formatting.
@@ -863,7 +862,7 @@ def _display_rich_results(
         results: List of SearchResult objects
         query: Original search query
         show_content: Whether to show content preview
-        config: Configuration object with threshold settings
+        _config: Configuration object with threshold settings (reserved for future use)
         show_scores: Whether to show detailed score breakdown
 
     """
@@ -1118,7 +1117,7 @@ def _get_type_abbreviation(element_type: str) -> str:
 
 def _format_score_box(
     result: SearchResult,
-    rank: int,
+    _rank: int,
     query: str = "",
     terminal_width: int = 78,
 ) -> Text:
@@ -1132,7 +1131,7 @@ def _format_score_box(
 
     Args:
         result: SearchResult object with scores and metadata
-        rank: Result rank (1-based)
+        _rank: Result rank (1-based, reserved for future use)
         query: Search query text for explanation generation
         terminal_width: Terminal width for box sizing (default 78)
 
@@ -1299,7 +1298,7 @@ def _format_score_box(
     return text
 
 
-def _explain_bm25_score(query: str, chunk_content: str, bm25_score: float) -> str:
+def _explain_bm25_score(query: str, chunk_content: str, _bm25_score: float) -> str:
     """Generate human-readable explanation for BM25 score.
 
     Analyzes query term matching to produce explanations like:
@@ -1311,7 +1310,7 @@ def _explain_bm25_score(query: str, chunk_content: str, bm25_score: float) -> st
     Args:
         query: Search query text
         chunk_content: Content of chunk that was scored
-        bm25_score: BM25 score value (unused but included for consistency)
+        _bm25_score: BM25 score value (unused but included for consistency)
 
     Returns:
         Human-readable explanation string (may be empty if no match)
@@ -1450,7 +1449,7 @@ def _explain_semantic_score(semantic_score: float) -> str:
     return "low conceptual relevance"
 
 
-def _explain_activation_score(metadata: dict[str, Any], activation_score: float) -> str:
+def _explain_activation_score(metadata: dict[str, Any], _activation_score: float) -> str:
     """Generate human-readable explanation for activation score.
 
     Combines access frequency, git commit history, and recency information
@@ -1461,7 +1460,7 @@ def _explain_activation_score(metadata: dict[str, Any], activation_score: float)
             - access_count: Number of times accessed (required, defaults to 0)
             - commit_count: Number of git commits (optional)
             - last_modified: Timestamp of last modification (optional)
-        activation_score: Activation score value (unused but included for consistency)
+        _activation_score: Activation score value (unused but included for consistency)
 
     Returns:
         Explanation string (e.g., "accessed 3x, 23 commits, last used 2 days ago")

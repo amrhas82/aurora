@@ -17,7 +17,6 @@ from aurora_cli.configurators import ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.templates.headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
 
-
 console = Console()
 
 AURORA_DIR_NAME = ".aurora"
@@ -1070,7 +1069,7 @@ def get_mcp_capable_from_selection(tool_ids: list[str]) -> list[str]:
     return [tid for tid in tool_ids if MCPConfigRegistry.supports_mcp(tid)]
 
 
-def _validate_mcp_config(config_path: Path, project_path: Path) -> tuple[bool, list[str]]:
+def _validate_mcp_config(config_path: Path, _project_path: Path) -> tuple[bool, list[str]]:
     """Validate MCP configuration file with soft failures.
 
     Performs validation checks:
@@ -1083,7 +1082,7 @@ def _validate_mcp_config(config_path: Path, project_path: Path) -> tuple[bool, l
 
     Args:
         config_path: Path to MCP configuration file
-        project_path: Path to project root
+        _project_path: Path to project root (reserved for future use)
 
     Returns:
         Tuple of (success: bool, warnings: list[str])

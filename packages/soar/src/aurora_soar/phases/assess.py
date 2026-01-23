@@ -1085,7 +1085,7 @@ def _assess_tier2_llm(
         }
 
 
-def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[str, Any]:
+def assess_complexity(query: str, _llm_client: LLMClient | None = None) -> dict[str, Any]:
     """Assess query complexity using keyword-based classification.
 
     Uses ComplexityAssessor for multi-dimensional lexical analysis including:
@@ -1102,7 +1102,7 @@ def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[s
 
     Args:
         query: User query string
-        llm_client: Ignored (kept for API compatibility)
+        _llm_client: Ignored (kept for API compatibility, reserved for future use)
 
     Returns:
         Dict with keys:

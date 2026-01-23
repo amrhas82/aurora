@@ -1,0 +1,2 @@
+mypy -p aurora_core -p aurora_context_code -p aurora_soar
+Success: no issues found in 73 source files

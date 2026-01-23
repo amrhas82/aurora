@@ -10,19 +10,18 @@ from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-
 if TYPE_CHECKING:
     pass
 
 from aurora_cli.planning.validation.constants import VALIDATION_MESSAGES
 
 
-def validate_non_empty_string(v: str, field_name: str, error_msg: str) -> str:
+def validate_non_empty_string(v: str, _field_name: str, error_msg: str) -> str:
     """Validate that a string is not empty.
 
     Args:
         v: String value to validate
-        field_name: Name of the field being validated
+        _field_name: Name of the field being validated (reserved for future use)
         error_msg: Error message to raise if validation fails
 
     Returns:

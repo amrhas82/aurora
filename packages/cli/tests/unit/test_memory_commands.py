@@ -168,7 +168,7 @@ class TestIndexCommand:
         mock_manager_class.return_value = mock_manager
 
         # Capture progress callback and simulate updates
-        def capture_callback(path, progress_callback=None):
+        def capture_callback(_path, progress_callback=None):
             if progress_callback:
                 # Simulate progress updates
                 progress_callback(0, 10)

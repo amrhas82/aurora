@@ -524,7 +524,7 @@ class TestMigrationErrorConditions:
         # This test is platform-dependent, so we'll mock the error
         conn = sqlite3.connect(":memory:")
 
-        def permission_error_migration(connection: sqlite3.Connection) -> None:
+        def permission_error_migration(_connection: sqlite3.Connection) -> None:
             # Simulate permission error
             raise sqlite3.OperationalError("attempt to write a readonly database")
 
@@ -546,7 +546,7 @@ class TestMigrationErrorConditions:
         """Test migration handles disk full error."""
         conn = sqlite3.connect(":memory:")
 
-        def disk_full_migration(connection: sqlite3.Connection) -> None:
+        def disk_full_migration(_connection: sqlite3.Connection) -> None:
             # Simulate disk full error
             raise sqlite3.OperationalError("database or disk is full")
 
@@ -614,7 +614,7 @@ class TestMigrationManager:
         applied_migrations = []
 
         def track_migration(version: int):
-            def migration_fn(connection: sqlite3.Connection) -> None:
+            def migration_fn(_connection: sqlite3.Connection) -> None:
                 applied_migrations.append(version)
 
             return migration_fn

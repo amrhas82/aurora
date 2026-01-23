@@ -201,7 +201,7 @@ class TestOrchestratorSimplified:
         phase_calls = []
 
         def track_phase(phase_name):
-            def wrapper(*args, **kwargs):
+            def wrapper(*_args, **_kwargs):
                 phase_calls.append(phase_name)
                 # Return minimal mock objects based on phase
                 if phase_name == "assess":
@@ -238,7 +238,7 @@ class TestOrchestratorSimplified:
         # Mock verify_lite to track verify phase
         from aurora_soar.phases import verify
 
-        def mock_verify_lite(*args, **kwargs):
+        def mock_verify_lite(*_args, **_kwargs):
             phase_calls.append("verify")
             return (True, [], [])  # passed, agent_assignments, issues
 
@@ -323,11 +323,11 @@ class TestOrchestratorSimplified:
         decompose_calls = []
         verify_calls = []
 
-        def mock_decompose(query, context, complexity, retry_feedback=None):
+        def mock_decompose(_query, _context, _complexity, retry_feedback=None):
             decompose_calls.append({"retry_feedback": retry_feedback})
             return {"decomposition": {"subgoals": []}}
 
-        def mock_verify_lite(decomposition, available_agents):
+        def mock_verify_lite(_decomposition, _available_agents):
             verify_calls.append(True)
             if len(verify_calls) == 1:
                 # First call fails
@@ -380,7 +380,9 @@ class TestOrchestratorSimplified:
 
         progress_messages = []
 
-        def mock_execute_agents(agent_assignments, subgoals, context, on_progress=None, **kwargs):
+        def mock_execute_agents(
+            _agent_assignments, _subgoals, _context, on_progress=None, **_kwargs
+        ):
             """Mock execute_agents that calls progress callback."""
             if on_progress:
                 on_progress("[Agent 1/2] test-agent: Starting...")
@@ -443,7 +445,7 @@ class TestOrchestratorSimplified:
         """
         record_lightweight_called = []
 
-        def mock_record_lightweight(store, query, synthesis_result, log_path):
+        def mock_record_lightweight(_store, query, _synthesis_result, log_path):
             record_lightweight_called.append((query, log_path))
             from aurora_soar.phases.record import RecordResult
 
@@ -487,7 +489,7 @@ class TestOrchestratorSimplified:
         )
 
         # Mock _phase7_record to call our lightweight version
-        def mock_phase7_record(query, synthesis_result, log_path):
+        def mock_phase7_record(query, synthesis_result, _log_path):
             """Mock that calls the actual record_pattern_lightweight."""
             import tempfile
 
@@ -520,7 +522,7 @@ class TestOrchestratorSimplified:
 
         collect_calls = []
 
-        def mock_execute_agents(agent_assignments, subgoals, context, **kwargs):
+        def mock_execute_agents(agent_assignments, subgoals, _context, **_kwargs):
             collect_calls.append({"agent_assignments": agent_assignments, "subgoals": subgoals})
             from aurora_soar.phases.collect import CollectResult
 
@@ -578,7 +580,7 @@ class TestOrchestratorSimplified:
         phase_calls = []
 
         def track_phase(phase_name):
-            def wrapper(*args, **kwargs):
+            def wrapper(*_args, **_kwargs):
                 phase_calls.append(phase_name)
                 if phase_name == "assess":
                     return {"complexity": "SIMPLE"}

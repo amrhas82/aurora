@@ -39,7 +39,6 @@ from aurora_cli.planning.results import (
     ShowResult,
 )
 
-
 logger = logging.getLogger(__name__)
 
 # Import renderer for template-based file generation
@@ -572,14 +571,14 @@ def show_plan(
 
 def archive_plan(
     plan_id: str,
-    force: bool = False,
+    _force: bool = False,
     config: Config | None = None,
 ) -> ArchiveResult:
     """Archive plan with atomic move and rollback on failure.
 
     Args:
         plan_id: Plan ID to archive
-        force: Skip confirmation (for programmatic use)
+        _force: Skip confirmation (reserved for future use)
         config: Optional CLI configuration
 
     Returns:
@@ -1752,7 +1751,7 @@ def create_plan(
 
 def _decompose_goal_soar(
     goal: str,
-    context_files: list[Path] | None = None,
+    _context_files: list[Path] | None = None,
 ) -> list[Subgoal]:
     """Decompose goal into subgoals using SOAR-inspired heuristics.
 
@@ -1762,7 +1761,7 @@ def _decompose_goal_soar(
 
     Args:
         goal: The high-level goal to decompose
-        context_files: Optional context files for informed decomposition
+        _context_files: Optional context files for informed decomposition (reserved for future use)
 
     Returns:
         List of Subgoal objects

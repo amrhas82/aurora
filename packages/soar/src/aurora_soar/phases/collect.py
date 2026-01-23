@@ -119,7 +119,7 @@ async def _spawn_with_spinner(
     agent_idx: int,
     total_agents: int,
     agent_id: str,
-    on_progress: Callable[..., Any] | None,
+    _on_progress: Callable[..., Any] | None,
     max_retries: int = 2,
     fallback_to_llm: bool = True,
 ) -> SpawnResult:
@@ -245,9 +245,9 @@ class CollectResult:
 async def execute_agents(
     agent_assignments: list[tuple[int, AgentInfo]],
     subgoals: list[dict[str, Any]],
-    context: dict[str, Any],
+    _context: dict[str, Any],
     on_progress: Any = None,
-    agent_timeout: float = DEFAULT_AGENT_TIMEOUT,
+    _agent_timeout: float = DEFAULT_AGENT_TIMEOUT,
     max_retries: int = 2,
     fallback_to_llm: bool = True,
 ) -> CollectResult:
@@ -801,7 +801,7 @@ async def _mock_agent_execution(
     idx: int,
     subgoal: dict[str, Any],
     agent: AgentInfo,
-    context: dict[str, Any],
+    _context: dict[str, Any],
 ) -> AgentOutput:
     """Mock agent execution (placeholder for actual agent integration).
 

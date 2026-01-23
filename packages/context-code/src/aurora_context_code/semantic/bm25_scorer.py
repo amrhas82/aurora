@@ -28,7 +28,6 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -356,13 +355,13 @@ class BM25Scorer:
         )
 
 
-def calculate_idf(term: str, corpus_size: int, term_doc_count: int) -> float:
+def calculate_idf(_term: str, corpus_size: int, term_doc_count: int) -> float:
     """Calculate IDF (Inverse Document Frequency) for a term.
 
     IDF formula: log((N - n(t) + 0.5) / (n(t) + 0.5) + 1)
 
     Args:
-        term: The term to calculate IDF for
+        _term: The term to calculate IDF for (reserved for future term-specific logic)
         corpus_size: Total number of documents (N)
         term_doc_count: Number of documents containing the term (n(t))
 

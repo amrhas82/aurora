@@ -1,0 +1,349 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-8.4.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /home/hamr/PycharmProjects/aurora
+configfile: pytest.ini
+plugins: cov-7.0.0, asyncio-1.3.0, anyio-4.12.0, benchmark-5.2.3, typeguard-4.4.4
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 19 items
+
+tests/performance/test_soar_startup_performance.py::TestSOARCommandStartup::test_soar_help_response_time PASSED [  5%]
+tests/performance/test_soar_startup_performance.py::TestSOARCommandStartup::test_critical_imports_fast PASSED [ 10%]
+tests/performance/test_soar_startup_performance.py::TestSOARCommandStartup::test_no_heavy_imports_at_module_level PASSED [ 15%]
+tests/performance/test_soar_startup_performance.py::TestConfigurationLoading::test_config_load_time PASSED [ 21%]
+tests/performance/test_soar_startup_performance.py::TestStoreInitialization::test_sqlite_store_init_fast PASSED [ 26%]
+tests/performance/test_soar_startup_performance.py::TestStoreInitialization::test_store_has_memory_check_fast FAILED [ 31%]
+tests/performance/test_soar_startup_performance.py::TestAgentDiscovery::test_agent_registry_init_fast PASSED [ 36%]
+tests/performance/test_soar_startup_performance.py::TestAgentDiscovery::test_agent_manifest_loading_fast PASSED [ 42%]
+tests/performance/test_soar_startup_performance.py::TestOrchestratorInitialization::test_orchestrator_init_without_llm PASSED [ 47%]
+tests/performance/test_soar_startup_performance.py::TestBackgroundModelLoading::test_background_loading_starts_quickly PASSED [ 52%]
+tests/performance/test_soar_startup_performance.py::TestBackgroundModelLoading::test_model_cache_check_lightweight PASSED [ 57%]
+tests/performance/test_soar_startup_performance.py::TestEndToEndStartup::test_soar_command_startup_to_llm_call FAILED [ 63%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_import_time PASSED [ 68%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_config_time PASSED [ 73%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_store_init_time PASSED [ 78%]
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_registry_init_time PASSED [ 84%]
+tests/performance/test_soar_startup_performance.py::TestStartupOptimizations::test_lazy_imports_working PASSED [ 89%]
+tests/performance/test_soar_startup_performance.py::TestStartupOptimizations::test_background_loading_exists PASSED [ 94%]
+tests/performance/test_soar_startup_performance.py::TestProgressiveStartup::test_phase_callback_fires_early FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ TestStoreInitialization.test_store_has_memory_check_fast ___________
+
+self = <tests.performance.test_soar_startup_performance.TestStoreInitialization object at 0x783e9668ea10>
+temp_aurora_project = PosixPath('/tmp/tmpvqety6ce')
+
+    def test_store_has_memory_check_fast(self, temp_aurora_project: Path):
+        """Verify checking for indexed memory is fast (<50ms)."""
+        from aurora_core.store.sqlite import SQLiteStore
+
+        db_path = temp_aurora_project / ".aurora" / "memory.db"
+        store = SQLiteStore(str(db_path))
+
+        start = time.time()
+>       has_memory = store.count() > 0
+E       AttributeError: 'SQLiteStore' object has no attribute 'count'
+
+tests/performance/test_soar_startup_performance.py:181: AttributeError
+__________ TestEndToEndStartup.test_soar_command_startup_to_llm_call ___________
+
+self = <tests.performance.test_soar_startup_performance.TestEndToEndStartup object at 0x783e9668f340>
+temp_aurora_project = PosixPath('/tmp/tmp7nt1m_45')
+
+    def test_soar_command_startup_to_llm_call(self, temp_aurora_project: Path):
+        """Benchmark full startup time from command invocation to LLM call (<3s).
+
+        This is the most important metric - time until the user sees progress.
+        """
+        from click.testing import CliRunner
+
+        from aurora_cli.commands.soar import soar_command
+
+        runner = CliRunner()
+
+        # Track when LLM client is created (indicates startup complete)
+        llm_client_created_at = None
+        original_init = None
+
+        def mock_llm_init(self, *args, **kwargs):
+            nonlocal llm_client_created_at
+            llm_client_created_at = time.time()
+            # Don't actually initialize (would require real tool)
+            self.tool = "mock"
+            self.model = "sonnet"
+
+        try:
+            from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+
+            original_init = CLIPipeLLMClient.__init__
+            CLIPipeLLMClient.__init__ = mock_llm_init
+        except ImportError:
+            pytest.skip("CLIPipeLLMClient not available")
+
+        try:
+            os.chdir(temp_aurora_project)
+
+            with patch("shutil.which", return_value="/usr/bin/mock"):
+>               with patch("aurora_cli.commands.soar.SOAROrchestrator") as mock_orch:
+
+/home/hamr/PycharmProjects/aurora/tests/performance/test_soar_startup_performance.py:348:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.10/unittest/mock.py:1447: in __enter__
+    original, local = self.get_original()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x783e954d4eb0>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+
+        original = DEFAULT
+        local = False
+
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <module 'aurora_cli.commands.soar' from '/home/hamr/PycharmProjects/aurora/src/aurora_cli/commands/soar.py'> does not have the attribute 'SOAROrchestrator'
+
+/usr/lib/python3.10/unittest/mock.py:1420: AttributeError
+____________ TestProgressiveStartup.test_phase_callback_fires_early ____________
+
+self = <tests.performance.test_soar_startup_performance.TestProgressiveStartup object at 0x783e966c4160>
+temp_aurora_project = PosixPath('/tmp/tmpjnx7eqzf')
+
+    def test_phase_callback_fires_early(self, temp_aurora_project: Path):
+        """Verify phase callbacks fire early to show progress."""
+        from aurora_cli.config import Config
+        from aurora_core.store.sqlite import SQLiteStore
+        from aurora_soar.agent_registry import AgentRegistry
+        from aurora_soar.orchestrator import SOAROrchestrator
+
+        db_path = temp_aurora_project / ".aurora" / "memory.db"
+        store = SQLiteStore(str(db_path))
+        registry = AgentRegistry()
+        config = Config()
+
+        # Track callback timing
+        callbacks_received = []
+
+        def test_callback(phase_name: str, status: str, result: dict):
+            callbacks_received.append({"phase": phase_name, "status": status, "time": time.time()})
+
+        mock_llm = MagicMock()
+        mock_llm.generate.return_value = MagicMock(content='{"subgoals": [], "warnings": []}')
+
+>       orchestrator = SOAROrchestrator(
+            store=store,
+            agent_registry=registry,
+            config=config,
+            reasoning_llm=mock_llm,
+            solving_llm=mock_llm,
+            phase_callback=test_callback,
+        )
+
+/home/hamr/PycharmProjects/aurora/tests/performance/test_soar_startup_performance.py:499:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/home/hamr/PycharmProjects/aurora/src/aurora_soar/orchestrator.py:134: in __init__
+    conversation_logger = ConversationLogger(enabled=logging_enabled)
+/home/hamr/PycharmProjects/aurora/src/aurora_core/logging/conversation_logger.py:66: in __init__
+    base_path = get_conversations_dir()
+/home/hamr/PycharmProjects/aurora/src/aurora_core/paths.py:76: in get_conversations_dir
+    return get_logs_dir() / "conversations"
+/home/hamr/PycharmProjects/aurora/src/aurora_core/paths.py:66: in get_logs_dir
+    return get_aurora_dir() / "logs"
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def get_aurora_dir() -> Path:
+        """Get the project-local .aurora directory (strict mode).
+
+        Resolution:
+        - If ./.aurora exists → use project-local
+        - Otherwise → raise error (user must run 'aur init' first)
+
+        Returns:
+            Path to .aurora directory
+
+        Raises:
+            RuntimeError: If .aurora directory doesn't exist in current project
+
+        Example:
+            # In /home/user/myproject with .aurora/ folder
+            >>> get_aurora_dir()
+            Path('/home/user/myproject/.aurora')
+
+            # In /tmp with no .aurora/ folder
+            >>> get_aurora_dir()
+            RuntimeError: Project not initialized...
+
+        """
+        # Check for project-local .aurora
+        project_aurora = Path.cwd() / ".aurora"
+        if project_aurora.exists() and project_aurora.is_dir():
+            return project_aurora
+
+        # Fail with helpful error message
+>       raise RuntimeError(
+            "Project not initialized. Run 'aur init' first to create .aurora directory.\n"
+            f"Current directory: {Path.cwd()}\n"
+            "This ensures all project artifacts are stored locally, not globally.",
+        )
+E       RuntimeError: Project not initialized. Run 'aur init' first to create .aurora directory.
+E       Current directory: /
+E       This ensures all project artifacts are stored locally, not globally.
+
+/home/hamr/PycharmProjects/aurora/src/aurora_core/paths.py:42: RuntimeError
+=============================== warnings summary ===============================
+tests/performance/test_soar_startup_performance.py::TestAgentDiscovery::test_agent_registry_init_fast
+  /home/hamr/PycharmProjects/aurora/tests/performance/test_soar_startup_performance.py:200: DeprecationWarning: AgentRegistry is deprecated. Use aurora_cli.agent_discovery.ManifestManager instead.
+    registry = AgentRegistry()
+
+tests/performance/test_soar_startup_performance.py::TestOrchestratorInitialization::test_orchestrator_init_without_llm
+  /home/hamr/PycharmProjects/aurora/tests/performance/test_soar_startup_performance.py:245: DeprecationWarning: AgentRegistry is deprecated. Use aurora_cli.agent_discovery.ManifestManager instead.
+    registry = AgentRegistry()
+
+tests/performance/test_soar_startup_performance.py::TestRegressionGuards::test_guard_registry_init_time
+  /home/hamr/PycharmProjects/aurora/tests/performance/test_soar_startup_performance.py:441: DeprecationWarning: AgentRegistry is deprecated. Use aurora_cli.agent_discovery.ManifestManager instead.
+    AgentRegistry()
+
+tests/performance/test_soar_startup_performance.py::TestProgressiveStartup::test_phase_callback_fires_early
+  /home/hamr/PycharmProjects/aurora/tests/performance/test_soar_startup_performance.py:487: DeprecationWarning: AgentRegistry is deprecated. Use aurora_cli.agent_discovery.ManifestManager instead.
+    registry = AgentRegistry()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.10.12-final-0 _______________
+
+Name                                                                           Stmts   Miss   Cover   Missing
+-------------------------------------------------------------------------------------------------------------
+packages/cli/src/aurora_cli/agent_discovery/manifest.py                          110     47  57.27%   99, 123-124, 207-212, 231-254, 285-309, 345-349, 379-390
+packages/cli/src/aurora_cli/agent_discovery/models.py                             97     30  69.07%   147, 169-200, 217-224, 308, 320, 332, 347, 380-387
+packages/cli/src/aurora_cli/agent_discovery/parser.py                             90     52  42.22%   46-47, 50-51, 86-97, 149, 154-161, 165-169, 182-185, 214-252, 273-282
+packages/cli/src/aurora_cli/agent_discovery/scanner.py                            57     19  66.67%   30-32, 73, 85, 141-142, 145-146, 160-163, 185-189, 212-218
+packages/cli/src/aurora_cli/commands/agents.py                                   269    206  23.42%   62-70, 105-107, 156-189, 200-206, 228-251, 261-267, 319-347, 380-411, 436-454, 469-508, 525-563, 574-625, 644-686, 703-714, 728-730
+packages/cli/src/aurora_cli/commands/goals.py                                    192    152  20.83%   71-90, 125-140, 152-154, 163-175, 197, 224-292, 304-322, 334-359, 466-532, 542-545, 563-565, 574-579
+packages/cli/src/aurora_cli/commands/headless.py                                 562    511   9.07%   25-34, 42-52, 60-72, 105, 139-184, 206-217, 237-251, 263, 275-291, 324-341, 556-716, 747-894, 917-1012, 1021-1088, 1093-1132, 1137-1155, 1160-1171, 1176-1181, 1199-1245, 1267-1369
+packages/cli/src/aurora_cli/commands/init.py                                     488    463   5.12%   39, 60-80, 94-103, 127-185, 208-280, 313-454, 475-542, 552-555, 575-675, 726-1023
+packages/cli/src/aurora_cli/commands/init_helpers.py                             395    360   8.86%   36-37, 49-58, 71-72, 85-110, 123-124, 141-142, 162-206, 225-238, 260-334, 346-397, 412-422, 439-561, 577-663, 686-725, 744-773, 788-865, 882-907, 922-940, 956-964, 977-978, 1006-1055, 1068-1070, 1094-1142
+packages/cli/src/aurora_cli/commands/memory.py                                   649    578  10.94%   48-61, 90-92, 96-100, 130-246, 264-314, 382-396, 495-618, 647-667, 694-850, 870-1017, 1027-1043, 1056-1063, 1077-1079, 1103-1116, 1153-1299, 1328-1371, 1384-1418, 1444-1450, 1479-1509, 1519-1527, 1537-1556, 1569-1599
+packages/cli/src/aurora_cli/commands/plan.py                                     201    153  23.88%   159-231, 271-285, 334-392, 440-490, 521-546
+packages/cli/src/aurora_cli/commands/soar.py                                     284    243  14.44%   99-100, 106-111, 126-187, 209-224, 234-237, 251-255, 266-386, 400-411, 507-696
+packages/cli/src/aurora_cli/commands/spawn.py                                    142    114  19.72%   137-244, 261-278, 310-355, 383-422, 439
+packages/cli/src/aurora_cli/config.py                                            251    122  51.39%   34-35, 80, 88, 92-97, 103, 107, 110, 114, 117-121, 125, 130-135, 138-143, 148-157, 189, 197-200, 216-224, 237-290, 300-301, 307-313, 318-319, 324-327, 338-339, 368, 370, 372, 374, 378, 387, 391, 398, 402, 406, 410, 418, 425, 429, 433, 437, 441, 445, 449, 453, 457, 461, 465, 469, 483, 486, 489, 492, 499-501
+packages/cli/src/aurora_cli/configurators/agents.py                               11      3  72.73%   18, 23, 35
+packages/cli/src/aurora_cli/configurators/ampcode.py                              11      3  72.73%   17, 22, 35
+packages/cli/src/aurora_cli/configurators/base.py                                 34     19  44.12%   38, 74, 101-104, 130-153
+packages/cli/src/aurora_cli/configurators/claude.py                               14      4  71.43%   20, 25, 37, 57
+packages/cli/src/aurora_cli/configurators/claude_commands.py                      41     28  31.71%   29, 34, 39, 58-74, 95-120, 129
+packages/cli/src/aurora_cli/configurators/droid.py                                11      3  72.73%   17, 22, 35
+packages/cli/src/aurora_cli/configurators/opencode.py                             11      3  72.73%   17, 22, 35
+packages/cli/src/aurora_cli/configurators/registry.py                             33     14  57.58%   23-34, 44-46, 59-60, 70-71, 81-82
+packages/cli/src/aurora_cli/configurators/slash/amazon_q.py                       20      7  65.00%   81, 86, 98, 110, 122, 134-141
+packages/cli/src/aurora_cli/configurators/slash/antigravity.py                    20      7  65.00%   39, 44, 56, 68-69, 81, 93
+packages/cli/src/aurora_cli/configurators/slash/auggie.py                         20      7  65.00%   69, 74, 86, 98, 110, 122-129
+packages/cli/src/aurora_cli/configurators/slash/base.py                           62     43  30.65%   60, 75, 91-122, 137-147, 201, 214-215, 228-243
+packages/cli/src/aurora_cli/configurators/slash/claude.py                         20      7  65.00%   64, 69, 81, 93, 105, 117-124
+packages/cli/src/aurora_cli/configurators/slash/cline.py                          21      8  61.90%   40, 45, 57, 74-76, 88, 100
+packages/cli/src/aurora_cli/configurators/slash/codebuddy.py                      20      7  65.00%   64, 69, 81, 93, 105, 117-124
+packages/cli/src/aurora_cli/configurators/slash/codex.py                          62     43  30.65%   71, 76, 88-95, 110, 125, 137, 149-156, 171-173, 189-217, 232-244
+packages/cli/src/aurora_cli/configurators/slash/costrict.py                       20      7  65.00%   69, 74, 86, 98, 110, 122-129
+packages/cli/src/aurora_cli/configurators/slash/crush.py                          20      7  65.00%   64, 69, 81, 93, 105, 117-124
+packages/cli/src/aurora_cli/configurators/slash/cursor.py                         20      7  65.00%   70, 75, 87, 99, 111, 123-130
+packages/cli/src/aurora_cli/configurators/slash/factory.py                        18      6  66.67%   70, 75, 87, 99, 113-114
+packages/cli/src/aurora_cli/configurators/slash/gemini.py                         17      5  70.59%   41, 46, 58, 70, 82
+packages/cli/src/aurora_cli/configurators/slash/github_copilot.py                 20      7  65.00%   60, 65, 77, 89, 101, 113-120
+packages/cli/src/aurora_cli/configurators/slash/iflow.py                          20      7  65.00%   69, 74, 86, 98, 110, 122-129
+packages/cli/src/aurora_cli/configurators/slash/kilocode.py                       19      7  63.16%   31, 36, 48, 62, 74, 86-93
+packages/cli/src/aurora_cli/configurators/slash/opencode.py                       20      7  65.00%   76, 81, 93, 105, 117, 129-136
+packages/cli/src/aurora_cli/configurators/slash/qoder.py                          20      7  65.00%   64, 69, 81, 93, 105, 117-124
+packages/cli/src/aurora_cli/configurators/slash/qwen.py                           17      5  70.59%   40, 45, 57, 69, 81
+packages/cli/src/aurora_cli/configurators/slash/registry.py                       56     38  32.14%   22-76, 89-90, 103-105, 115-116, 126-127, 135-136, 149
+packages/cli/src/aurora_cli/configurators/slash/roocode.py                        21      8  61.90%   40, 45, 57, 74-76, 88, 100
+packages/cli/src/aurora_cli/configurators/slash/toml_base.py                      33     25  24.24%   42, 70-87, 100-104, 127-142
+packages/cli/src/aurora_cli/configurators/slash/windsurf.py                       20      7  65.00%   41, 46, 58, 72-73, 88, 100
+packages/cli/src/aurora_cli/errors.py                                            194    149  23.20%   62-70, 84, 94, 108-178, 199-287, 310-383, 412-455, 479-537, 563-567, 603-605, 639-642, 671-789
+packages/cli/src/aurora_cli/ignore_patterns.py                                    46     38  17.39%   40-55, 70-81, 101-123
+packages/cli/src/aurora_cli/llm/cli_pipe_client.py                               101     81  19.80%   56-64, 73-79, 89-96, 128-233, 271-288, 302, 307
+packages/cli/src/aurora_cli/memory_manager.py                                    697    592  15.06%   68-73, 94-98, 102-104, 108-124, 140-149, 158-161, 174-183, 199-240, 406-419, 427-435, 476-1037, 1063-1125, 1137-1174, 1188-1206, 1219-1222, 1235-1256, 1268-1281, 1290-1302, 1311-1326, 1335-1357, 1366-1376, 1396-1447, 1456-1457, 1466-1467, 1476-1488, 1497-1501, 1510-1539, 1548-1579, 1589-1597, 1614-1648, 1657-1667, 1687-1702, 1729-1787, 1799-1821
+packages/cli/src/aurora_cli/planning/core.py                                     670    623   7.01%   50-52, 65, 88-134, 162-226, 243-245, 258-264, 275-277, 295-307, 322-344, 357-367, 390-466, 488-565, 589-672, 692-769, 782-786, 801-809, 822-855, 880-909, 931-1008, 1021-1054, 1067, 1104-1125, 1156-1208, 1240-1410, 1450-1745, 1771-1789, 1794, 1827, 1853, 1879, 1919, 1945, 2008-2122
+packages/cli/src/aurora_cli/planning/errors.py                                    19      8  57.89%   93-100, 122
+packages/cli/src/aurora_cli/planning/models.py                                   331    199  39.88%   159-168, 185-191, 207-226, 338-346, 356-366, 379-408, 417, 430, 481-483, 493-498, 503, 558-566, 626-629, 647-653, 741-744, 758-953
+packages/cli/src/aurora_cli/planning/renderer.py                                  70     53  24.29%   20-22, 40-41, 54-64, 69, 85-90, 103-185, 207-257
+packages/cli/src/aurora_cli/planning/results.py                                   52      2  96.15%   174-175
+packages/cli/src/aurora_cli/templates/agents.py                                    3      1  66.67%   282
+packages/cli/src/aurora_cli/templates/claude.py                                    3      1  66.67%   32
+packages/cli/src/aurora_cli/templates/commands.py                                  9      2  77.78%   20, 30
+packages/cli/src/aurora_cli/templates/project.py                                   3      1  66.67%   47
+packages/cli/src/aurora_cli/templates/slash_commands.py                           14      3  78.57%   301-304
+packages/context-code/src/aurora_context_code/__init__.py                          8      4  50.00%   24-39
+packages/context-code/src/aurora_context_code/git.py                             149    130  12.75%   59-76, 83-99, 115-158, 189-227, 260-295, 299-301, 316-327, 343-368, 408-440
+packages/context-code/src/aurora_context_code/model_cache.py                      36     11  69.44%   51, 55, 63-68, 97-100
+packages/context-code/src/aurora_context_code/parser.py                            7      1  85.71%   39
+packages/context-code/src/aurora_context_code/registry.py                         66     50  24.24%   33-34, 46-53, 65, 79-85, 94, 106-110, 114-115, 137-144, 154-184
+packages/context-code/src/aurora_context_code/semantic/__init__.py                 4      3  25.00%   41-50
+packages/context-code/src/aurora_context_code/semantic/embedding_provider.py     132    130   1.52%   16-489
+packages/core/src/aurora_core/budget/tracker.py                                  156     81  48.08%   35-37, 94, 99-101, 105, 109, 152, 154, 186-187, 200-205, 212-222, 226-248, 260, 279-280, 301-305, 328-367, 390-406, 415, 433-436, 445-448, 459-462, 466-468, 477, 486, 519-532
+packages/core/src/aurora_core/chunks/base.py                                      16      8  50.00%   31-34, 76-78, 82
+packages/core/src/aurora_core/chunks/code_chunk.py                               100     75  25.00%   85-102, 114-130, 163-215, 236-270
+packages/core/src/aurora_core/chunks/reasoning_chunk.py                           55     36  34.55%   64-76, 85, 118-142, 155-185
+packages/core/src/aurora_core/exceptions.py                                       40     24  40.00%   23-25, 28-30, 95-97, 127-139, 162-164, 195-198
+packages/core/src/aurora_core/logging/conversation_logger.py                     165    137  16.97%   22-33, 92-123, 127-130, 144-191, 205-217, 229-243, 266-376, 385-407
+packages/core/src/aurora_core/metrics/query_metrics.py                           102     59  42.16%   114-115, 147-183, 195-300, 312-340
+packages/core/src/aurora_core/paths.py                                            20      5  75.00%   90, 104-106, 116
+packages/core/src/aurora_core/store/base.py                                       17      9  47.06%   243-250, 287-288
+packages/core/src/aurora_core/store/connection_pool.py                            87     74  14.94%   27-30, 55-110, 120-139, 148-168, 185-190, 200-201
+packages/core/src/aurora_core/store/memory.py                                    139    116  16.55%   42-47, 51-52, 59-61, 77-96, 111-112, 126-142, 158-170, 195-216, 233-259, 279-300, 325-343, 363-381, 407-437, 449-453, 457, 461
+packages/core/src/aurora_core/store/migrations.py                                103     72  30.10%   48-53, 104-152, 160-168, 189-197, 209-210, 225-256, 271-286, 306-318, 332
+packages/core/src/aurora_core/store/schema.py                                     19      2  89.47%   123, 133
+packages/core/src/aurora_core/store/sqlite.py                                    331    282  14.80%   90-109, 123-138, 156-202, 216-229, 248-262, 279-327, 342-363, 378-418, 435-453, 471-487, 502-508, 531-582, 601-621, 646-669, 689-731, 755-836, 859-889, 915-943, 967-1000, 1010-1014, 1031-1059, 1081-1098
+packages/implement/src/implement/executor.py                                      50     30  40.00%   52, 65-92, 106, 123-149, 167-174, 184-202
+packages/implement/src/implement/models.py                                        14      2  85.71%   40, 63
+packages/implement/src/implement/parser.py                                        32     23  28.12%   51-90
+packages/reasoning/src/aurora_reasoning/llm_client.py                            175    131  25.14%   134-160, 188-206, 212-215, 251-278, 309-326, 341, 346, 374-392, 396-399, 435-467, 498-519, 534, 539, 564-576, 580-583, 619-662, 693-710, 725, 730
+packages/reasoning/src/aurora_reasoning/prompts/__init__.py                       23     16  30.43%   25-26, 68-76, 91-100
+packages/reasoning/src/aurora_reasoning/prompts/verify_synthesis.py               20     11  45.00%   16, 20, 52-73, 77
+packages/reasoning/src/aurora_reasoning/synthesize.py                            129    113  12.40%   42-47, 51, 61, 101-217, 247-293, 298, 324-345, 361-395, 413-421, 438-452
+packages/soar/src/aurora_soar/agent_registry.py                                  108     72  33.33%   54-61, 105-109, 121, 130, 142, 154, 170, 182-206, 214-219, 229-235, 244-276, 283-292, 301, 320-324
+packages/soar/src/aurora_soar/discovery_adapter.py                                37     24  35.14%   37, 53-57, 82-88, 120-136, 155-164, 178
+packages/soar/src/aurora_soar/orchestrator.py                                    625    540  13.60%   123, 187, 206, 215-219, 231-235, 244-248, 266-272, 319-656, 665-671, 681-685, 689-711, 731-749, 753-774, 792-823, 848-953, 966-989, 1014-1029, 1044-1083, 1102-1238, 1257-1283, 1302-1329, 1348-1386, 1399-1422, 1443-1460, 1480-1535, 1594-1636, 1662-1683, 1696-1756, 1775-1828, 1849-1875, 1887-1962
+packages/soar/src/aurora_soar/phases/assess.py                                   372    318  14.52%   57, 66, 339, 351-432, 455-519, 523-568, 572-667, 671-708, 712-744, 748-785, 789-812, 816-839, 843-878, 884-910, 970-989, 1020-1078, 1118-1125
+packages/soar/src/aurora_soar/phases/collect.py                                  309    280   9.39%   45-91, 96-102, 127-160, 189-196, 200, 230-233, 237, 281-525, 553-629, 652-679, 711-792, 825-827, 867-929, 954-983, 996-1003
+packages/soar/src/aurora_soar/phases/decompose.py                                103     90  12.62%   38-41, 45, 68-69, 107-153, 174-194, 210-278, 287
+packages/soar/src/aurora_soar/phases/record.py                                    71     46  35.21%   56, 87-91, 95, 123-181, 217-302
+packages/soar/src/aurora_soar/phases/respond.py                                  170    150  11.76%   26-37, 63-64, 68, 90-118, 134-137, 156-214, 233-344, 357-369
+packages/soar/src/aurora_soar/phases/retrieve.py                                  63     53  15.87%   59-92, 117-208
+packages/soar/src/aurora_soar/phases/synthesize.py                                53     40  24.53%   45-49, 53, 64, 100-180
+packages/soar/src/aurora_soar/phases/verify.py                                    87     82   5.75%   46-148, 164-221
+packages/spawner/src/aurora_spawner/circuit_breaker.py                           160    128  20.00%   90-103, 113-115, 132-137, 146-147, 166-249, 258-266, 278-279, 295-325, 334-336, 340-341, 353-368, 380-399, 421, 439-441
+packages/spawner/src/aurora_spawner/early_detection.py                           165    112  32.12%   103-113, 120-135, 149-160, 176-190, 199-200, 212-220, 224-234, 238-248, 258-278, 301-323, 334-355, 370-372, 390-395
+packages/spawner/src/aurora_spawner/heartbeat.py                                 112     71  36.61%   42, 46, 71-78, 96-123, 132-133, 142-143, 152-153, 162-165, 174-177, 189-199, 227-231, 240-259, 271-286, 299, 313
+packages/spawner/src/aurora_spawner/models.py                                     25      2  92.00%   19, 45
+packages/spawner/src/aurora_spawner/observability.py                             330    224  32.12%   139-152, 156-162, 179-194, 210-220, 229-231, 235-241, 245-255, 268-304, 331-371, 389-396, 412-429, 440-468, 490-570, 581-596, 615-619, 637, 655-657, 666, 675-688, 712-721, 730-763, 812-815, 831-925
+packages/spawner/src/aurora_spawner/recovery.py                                  354    193  45.48%   104-117, 132, 136, 148-162, 166-168, 172-175, 184-188, 193, 198, 203-211, 215, 272-274, 279-283, 302-312, 324, 337, 346, 356, 365-375, 387, 466-475, 487, 502-504, 550-570, 582-591, 603-612, 624-631, 635, 659-665, 675-677, 683-684, 749-756, 768, 782-799, 824-833, 838, 851, 864, 873, 882, 906-919, 931-932, 944, 948, 982-994, 1034-1048, 1060-1062, 1079, 1105-1107, 1112-1115, 1119
+packages/spawner/src/aurora_spawner/spawner.py                                   635    616   2.99%   66-486, 513-551, 602-671, 714-857, 878-908, 961-1271, 1305-1554
+packages/spawner/src/aurora_spawner/timeout_policy.py                            135     62  54.07%   77-102, 115-128, 163-170, 184-195, 208-209, 262-278, 308, 335, 362, 385, 411, 431, 466-480, 484
+-------------------------------------------------------------------------------------------------------------
+TOTAL                                                                          12972   9897  23.70%
+
+21 files skipped due to complete coverage.
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+=========================== short test summary info ============================
+FAILED tests/performance/test_soar_startup_performance.py::TestStoreInitialization::test_store_has_memory_check_fast - AttributeError: 'SQLiteStore' object has no attribute 'count'
+FAILED tests/performance/test_soar_startup_performance.py::TestEndToEndStartup::test_soar_command_startup_to_llm_call - AttributeError: <module 'aurora_cli.commands.soar' from '/home/hamr/PycharmProjects/aurora/src/aurora_cli/commands/soar.py'> does not have the attribute 'SOAROrchestrator'
+FAILED tests/performance/test_soar_startup_performance.py::TestProgressiveStartup::test_phase_callback_fires_early - RuntimeError: Project not initialized. Run 'aur init' first to create .aurora directory.
+Current directory: /
+This ensures all project artifacts are stored locally, not globally.
+================== 3 failed, 16 passed, 4 warnings in 44.70s ===================

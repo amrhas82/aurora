@@ -154,11 +154,11 @@ def _validate_goals_requirements(tool: str) -> str | None:
     return None
 
 
-def _ensure_aurora_initialized(verbose: bool = False) -> None:
+def _ensure_aurora_initialized(_verbose: bool = False) -> None:
     """Ensure .aurora directory exists, creating it if needed.
 
     Args:
-        verbose: Whether to print verbose output
+        _verbose: Whether to print verbose output (reserved for future use)
     """
     aurora_dir = Path.cwd() / ".aurora"
     if aurora_dir.exists():
@@ -207,7 +207,7 @@ def _generate_goals_plan(
 def _display_goals_results(
     result: PlanResult,
     output_format: str,
-    verbose: bool,
+    _verbose: bool,
     yes: bool,
 ) -> str | None:
     """Display goals results in the specified format.
@@ -215,7 +215,7 @@ def _display_goals_results(
     Args:
         result: PlanResult from create_plan
         output_format: "json" or "rich"
-        verbose: Whether to show verbose output
+        _verbose: Whether to show verbose output (reserved for future use)
         yes: Whether --yes flag was passed (skip editor prompt)
 
     Returns:

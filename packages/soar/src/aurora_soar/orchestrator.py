@@ -468,7 +468,7 @@ class SOAROrchestrator:
                     query,
                     phase2_result,
                     phase1_result["complexity"],
-                    retry_feedback=retry_feedback,
+                    _retry_feedback=retry_feedback,
                 )
                 self._phase_metadata["phase3_decompose_retry"] = phase3_result
 
@@ -690,7 +690,7 @@ class SOAROrchestrator:
         self._invoke_callback("assess", "before", {})
         start_time = time.time()
         try:
-            result = assess.assess_complexity(query, llm_client=self.reasoning_llm)
+            result = assess.assess_complexity(query, _llm_client=self.reasoning_llm)
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             self._invoke_callback(
@@ -876,9 +876,9 @@ class SOAROrchestrator:
                 collect.execute_agents(
                     agent_assignments=agent_assignments,
                     subgoals=subgoals,
-                    context=context,
+                    _context=context,
                     on_progress=on_progress,
-                    agent_timeout=agent_timeout,
+                    _agent_timeout=agent_timeout,
                     max_retries=max_retries,
                     fallback_to_llm=fallback_to_llm,
                 ),

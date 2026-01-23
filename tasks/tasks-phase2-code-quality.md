@@ -344,8 +344,17 @@
   - [ ] 11.3 Capture baseline test results for Phase 2B
     - tdd: no
     - verify: `make test > phase2b_baseline_tests.txt && cat phase2b_baseline_tests.txt | grep "passed"`
+    - result: Running (started 08:53, 95% complete at 15:38, ETA ~15:50)
+    - note: ⚠️ MUST analyze baseline before proceeding!
+  - [ ] 11.4 Analyze baseline results and check for conflicts
+    - tdd: no
+    - verify: `./analyze_baseline.sh`
+    - note: ⚠️ NEW STEP - Checks if Task 12 files have failing tests
 
 - [ ] 12.0 Remove commented code (79 issues)
+  - note: **📋 See WORKFLOW_AFTER_BASELINE.md for complete workflow**
+  - note: **🔍 Run ./analyze_baseline.sh FIRST (new requirement)**
+  - note: **🚀 Run ./execute_task12.sh ONLY if analysis clears**
   - [ ] 12.1 Generate full report of commented code blocks
     - tdd: no
     - verify: `ruff check packages/ tests/ --select ERA001 > commented_code_report.txt && wc -l commented_code_report.txt`
@@ -376,9 +385,12 @@
   - [ ] 12.10 Verify: `ruff check packages/ tests/ --select ERA001` - zero violations
 
 - [ ] 13.0 Fix unused arguments (264 issues)
-  - [ ] 13.1 Generate full report categorized by ARG type
+  - note: **See TASK_13_UNUSED_ARGS_ANALYSIS.md for strategy and risk assessment**
+  - note: **266 violations: 102 ARG001 + 104 ARG002 (HIGH RISK) + 59 ARG005 + 1 ARG004**
+  - [x] 13.1 Generate full report categorized by ARG type
     - tdd: no
     - verify: `ruff check packages/ tests/ --select ARG > unused_args_report.txt && cat unused_args_report.txt | wc -l`
+    - result: ✅ Report generated: 266 violations (102/104/59/1)
   - [ ] 13.2 Fix ARG001 issues (100 function arguments) - Phase 1
     - tdd: no
     - verify: `ruff check packages/ tests/ --select ARG001 | wc -l`

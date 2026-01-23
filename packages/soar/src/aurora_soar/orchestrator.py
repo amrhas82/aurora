@@ -205,7 +205,7 @@ class SOAROrchestrator:
         else:
             logger.debug("Early detection disabled")
 
-    def _list_agents(self) -> list["AgentInfo"]:
+    def _list_agents(self) -> list[AgentInfo]:
         """List all available agents using registry or discovery adapter.
 
         Returns:
@@ -218,7 +218,7 @@ class SOAROrchestrator:
             return []
         return self.agent_registry.list_all()
 
-    def _get_agent(self, agent_id: str) -> "AgentInfo | None":
+    def _get_agent(self, agent_id: str) -> AgentInfo | None:
         """Get agent by ID using registry or discovery adapter.
 
         Args:
@@ -234,7 +234,7 @@ class SOAROrchestrator:
             return None
         return self.agent_registry.get(agent_id)
 
-    def _get_or_create_fallback_agent(self) -> "AgentInfo":
+    def _get_or_create_fallback_agent(self) -> AgentInfo:
         """Get or create a fallback agent when no suitable agent is found.
 
         Returns:

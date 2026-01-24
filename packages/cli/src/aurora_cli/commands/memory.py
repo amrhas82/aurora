@@ -491,18 +491,8 @@ def search_command(
         aur mem search "authentication" --show-scores
     """
     # Start background model loading immediately (before any other work)
+    # This gives the model a head start while we do other initialization
     _start_background_model_loading()
-
-    # Show loading status if embedding model is not ready
-    try:
-        from aurora_context_code.model_cache import is_model_cached_fast
-        from aurora_context_code.semantic.model_utils import BackgroundModelLoader
-
-        loader = BackgroundModelLoader.get_instance()
-        if is_model_cached_fast() and loader.is_loading() and not loader.is_loaded():
-            console.print("[dim]⏳ Loading embedding model in background...[/]")
-    except ImportError:
-        pass  # ML dependencies not available, BM25-only mode
 
     # Load configuration
     config = Config()
@@ -544,21 +534,13 @@ def search_command(
     store = SQLiteStore(str(db_path_resolved))
     retriever = MemoryRetriever(store=store, config=config)
 
-    # Perform fast search - returns immediately, uses BM25-only if model still loading
-    raw_results, is_full_hybrid = retriever.retrieve_fast(
+    # Perform hybrid search - waits for embedding model if loading
+    raw_results = retriever.retrieve(
         query,
         limit=limit,
         min_semantic_score=min_score,
+        wait_for_model=True,  # Wait for embeddings, fall back to BM25 only if unavailable
     )
-
-    # Show search mode indicator
-    if not is_full_hybrid and retriever.is_embedding_model_loading():
-        console.print(
-            "[yellow]⚡ Fast mode (BM25+activation) - embedding model loading in background[/]",
-        )
-    elif not is_full_hybrid:
-        # Model not available at all (not installed or not cached)
-        console.print("[dim]Using BM25+activation search (semantic embeddings unavailable)[/]")
 
     # Convert to SearchResult objects for display compatibility
     results = []

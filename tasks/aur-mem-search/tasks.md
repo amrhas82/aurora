@@ -244,7 +244,7 @@
     - tdd: no
     - verify: `make quality-check && make coverage`
 
-- [ ] 5.0 Final Verification and Merge
+- [x] 5.0 Final Verification and Merge
   - [x] 5.1 Run complete test suite
     - Unit tests: `make test-unit`
     - Integration tests: `make test-integration`
@@ -259,13 +259,13 @@
     - Fallback quality: ~85% ✓
     - tdd: no
     - verify: Manual performance validation
-  - [ ] 5.3 Create git commit
+  - [x] 5.3 Create git commit
     - Stage changes: `git add packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py tests/ docs/`
     - Commit message: "feat: add lazy BM25 loading and dual-hybrid fallback (Epic 2)"
     - Body: "- Lazy BM25 index loading: 150-250ms → <50ms creation time\n- Dual-hybrid fallback: 60% → 85% quality when embeddings unavailable\n- Thread-safe lazy loading with double-checked locking\n- Weight normalization for BM25+Activation dual-hybrid mode\n- Comprehensive unit and performance tests\n- Documentation updates"
     - tdd: no
     - verify: `git log -1 --stat`
-  - [ ] 5.4 Merge to main
+  - [x] 5.4 Merge to main
     - Create PR if workflow requires
     - Merge feature branch to main: `git checkout main && git merge feature/epic2-lazy-loading-fallback`
     - Push to remote: `git push origin main`

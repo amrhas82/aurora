@@ -245,14 +245,14 @@
     - verify: `make quality-check && make coverage`
 
 - [ ] 5.0 Final Verification and Merge
-  - [ ] 5.1 Run complete test suite
+  - [x] 5.1 Run complete test suite
     - Unit tests: `make test-unit`
     - Integration tests: `make test-integration`
     - Performance tests: `make test-performance`
     - Verify: 100% pass rate, no regressions
     - tdd: no
     - verify: `make test`
-  - [ ] 5.2 Verify performance targets met
+  - [x] 5.2 Verify performance targets met
     - HybridRetriever creation: <50ms ✓
     - Fallback search: <1s ✓
     - Tri-hybrid search: no regression (10-12s) ✓

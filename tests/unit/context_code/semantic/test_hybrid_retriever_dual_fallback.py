@@ -183,7 +183,7 @@ def test_fallback_logs_warning(tmp_path, caplog):
     retriever = HybridRetriever(store, engine, embedding_provider=None, config=config)
 
     # Call retrieve() with WARNING logging enabled
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.WARNING, logger="aurora_context_code.semantic.hybrid_retriever"):
         results = retriever.retrieve("test query", top_k=5)
 
     # Verify WARNING log was emitted
@@ -225,7 +225,7 @@ def test_fallback_handles_edge_case_zero_weights(tmp_path, caplog):
     retriever = HybridRetriever(store, engine, embedding_provider=None, config=config)
 
     # Call retrieve() with WARNING logging enabled
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.WARNING, logger="aurora_context_code.semantic.hybrid_retriever"):
         results = retriever.retrieve("test query", top_k=5)
 
     # Verify results returned (edge case handled gracefully)

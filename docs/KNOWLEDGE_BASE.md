@@ -23,6 +23,8 @@ Memory search profiling, cache hit/miss patterns, optimization roadmap.
 - `docs/analysis/MEMORY_SEARCH_QUICK_REF.md` - Quick reference for memory search performance
 - `docs/analysis/CACHE_HIT_MISS_ANALYSIS.md` - Comprehensive cache behavior analysis (3 layers, patterns)
 - `docs/analysis/CACHE_QUICK_REF.md` - Quick reference for cache hit/miss patterns
+- `docs/analysis/FALLBACK_QUALITY_ANALYSIS.md` - Epic 2 qualitative validation (100% overlap, 10 test queries)
+- `docs/analysis/EPIC2_PERFORMANCE_RESULTS.md` - Epic 2 performance metrics (lazy loading, dual-hybrid fallback)
 
 ## CLI Commands
 All aur commands: init, mem, soar, goals, spawn, agents, doctor, headless, budget.

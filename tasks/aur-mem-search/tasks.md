@@ -207,7 +207,7 @@
     - verify: Manual checklist verification
 
 - [ ] 4.0 Documentation & Review
-  - [ ] 4.1 Update docstrings in hybrid_retriever.py
+  - [x] 4.1 Update docstrings in hybrid_retriever.py
     - Update class docstring to mention lazy loading
     - Update `__init__()` docstring: BM25 loaded on first `retrieve()`
     - Update `_stage1_bm25_filter()` docstring: mention lazy loading logic
@@ -215,14 +215,14 @@
     - Location: `/home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py:1,498,776,930`
     - tdd: no
     - verify: `grep -A5 "def __init__" /home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py | head -20`
-  - [ ] 4.2 Update CLAUDE.md performance section
+  - [x] 4.2 Update CLAUDE.md performance section
     - Update "Performance Optimization Rules" with lazy loading pattern
     - Update "Memory System" section with fallback mode description
     - Update benchmarks: Creation <50ms, Fallback quality 85%
     - Location: `/home/hamr/PycharmProjects/aurora/CLAUDE.md`
     - tdd: no
     - verify: `grep -n "Lazy BM25" /home/hamr/PycharmProjects/aurora/CLAUDE.md`
-  - [ ] 4.3 Update MEMORY_SEARCH_OPTIMIZATION_PLAN.md
+  - [x] 4.3 Update MEMORY_SEARCH_OPTIMIZATION_PLAN.md
     - Mark Epic 2 tasks as COMPLETED
     - Update roadmap with Epic 3 status (pre-tokenization, etc.)
     - Add performance results summary

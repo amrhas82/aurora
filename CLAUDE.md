@@ -177,7 +177,25 @@ aurora_spawner/aurora_implement (execute tasks)
   - Cache hit rate typically >60% in SOAR multi-phase operations
 - **BM25 Index Persistence**: Disk-cached at `.aurora/indexes/bm25_index.pkl`
   - Load time <100ms (vs 9.7s rebuild)
-  - Auto-loads on HybridRetriever init if available
+  - Lazily loaded on first retrieve() call (Epic 2)
+
+**Lazy Loading (Epic 2):**
+- **BM25 Index**: Deferred from __init__() to first retrieve() call
+  - Creation time: 150-250ms → 0.0ms (99.9% improvement)
+  - Thread-safe double-checked locking ensures single load
+  - No impact on search performance (index loaded once and reused)
+
+**Fallback Modes (Epic 2):**
+- **Tri-hybrid (default)**: BM25 + Activation + Semantic (95% quality)
+- **Dual-hybrid (fallback)**: BM25 + Activation when embeddings unavailable (85-100% quality)
+- **Activation-only (legacy)**: Access patterns only (~60% quality, deprecated)
+
+Dual-hybrid fallback automatically triggers when:
+- Embedding model not installed (`pip install sentence-transformers`)
+- `AURORA_EMBEDDING_PROVIDER=none` set
+- Embedding generation fails
+
+Quality testing showed 100% overlap between tri-hybrid and dual-hybrid on Aurora codebase.
 
 **Cache Environment Variables:**
 - `AURORA_RETRIEVER_CACHE_SIZE`: Max cached HybridRetriever instances (default: 10)
@@ -347,7 +365,7 @@ cat .cursor/commands/aurora-search.md
 cat .gemini/commands/aurora/search.toml
 ```
 
-### Performance Optimization Rules (0.9.1+)
+### Performance Optimization Rules (0.9.1+ / Epic 2)
 
 1. **Lazy imports for ML dependencies:**
    ```python
@@ -361,11 +379,31 @@ cat .gemini/commands/aurora/search.toml
    model = SentenceTransformer(...)
    ```
 
-2. **Connection pooling** for SQLite (automatic in 0.9.1+)
+2. **Lazy BM25 index loading (Epic 2):**
+   ```python
+   # Good (lazy) - defer expensive operations until first use
+   def __init__(self):
+       self._bm25_index_loaded = False
+       self._bm25_lock = threading.Lock()
+       # Don't load index here
 
-3. **Deferred schema initialization** (automatic in 0.9.1+)
+   def retrieve(self, query):
+       if not self._bm25_index_loaded:
+           with self._bm25_lock:
+               if not self._bm25_index_loaded:  # Double-check
+                   self._load_bm25_index()
+       # Use index
 
-4. **Regression guards** in `tests/performance/test_soar_startup_performance.py`:
+   # Bad (eager) - loads immediately in __init__()
+   def __init__(self):
+       self._load_bm25_index()  # 150-250ms delay
+   ```
+
+3. **Connection pooling** for SQLite (automatic in 0.9.1+)
+
+4. **Deferred schema initialization** (automatic in 0.9.1+)
+
+5. **Regression guards** in `tests/performance/test_soar_startup_performance.py`:
    - `MAX_IMPORT_TIME = 2.0s`
    - `MAX_CONFIG_TIME = 0.5s`
    - `MAX_STORE_INIT_TIME = 0.1s`

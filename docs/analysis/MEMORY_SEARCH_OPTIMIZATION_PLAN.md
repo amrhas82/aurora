@@ -15,6 +15,36 @@ Profiling reveals that **BM25 tokenization** is the primary optimization target,
 
 ---
 
+## Completed Optimizations
+
+### ✅ Epic 2: Lazy Loading + Dual-Hybrid Fallback (COMPLETED 2026-01-25)
+
+**Branch**: `feature/epic2-lazy-loading-fallback`
+**PRD**: `tasks/aur-mem-search/0032-prd-epic2-lazy-loading-fallback.md`
+
+**Results**:
+- **HybridRetriever creation time**: 150-250ms → 0.0ms (99.9% improvement) ✓
+- **Fallback search quality**: 60% → 100% (exceeds 85% target) ✓
+- **Fallback search speed**: 2-3s → 1.6s (20-47% improvement)
+
+**Features Delivered**:
+1. **Lazy BM25 Index Loading**: Deferred BM25 index loading from `__init__()` to first `retrieve()` call using thread-safe double-checked locking
+2. **Dual-Hybrid Fallback**: BM25+Activation fallback when embeddings unavailable (replacing activation-only)
+
+**Quality Validation**:
+- Tested with 10 queries on Aurora codebase
+- 100% overlap between tri-hybrid and dual-hybrid results
+- See `docs/analysis/FALLBACK_QUALITY_ANALYSIS.md` for details
+
+**Performance Validation**:
+- Creation time: 0.0ms average (target <50ms exceeded)
+- Fallback search: 1.6s (significant improvement over 2-3s baseline)
+- See `docs/analysis/EPIC2_PERFORMANCE_RESULTS.md` for details
+
+**Commits**: 3de5ec0 (lazy loading), f58b1cb (dual-hybrid fallback), 527e6a7 (validation)
+
+---
+
 ## Performance Bottleneck Summary
 
 ```
@@ -28,13 +58,15 @@ Profiling reveals that **BM25 tokenization** is the primary optimization target,
 │   ├─ BM25 build index          │ 703ms   │ 3.5%   │ P2         │
 │   ├─ BM25 scoring              │ 468ms   │ 2.3%   │ P2         │
 │   └─ Other                     │ ~0s     │ 0%     │            │
-│ BM25 index load                │ 405ms   │ 2.0%   │ P1 🔶      │
+│ BM25 index load (init)         │ 405ms   │ 2.0%   │ ✅ DONE    │
 │ Database queries               │ 263ms   │ 1.3%   │ ✅ Fast    │
 │ Imports                        │ 280ms   │ 1.4%   │ ✅ Fast    │
 │ Other                          │ ~100ms  │ 0.5%   │ ✅ Fast    │
 └────────────────────────────────┴─────────┴────────┴────────────┘
 TOTAL:                             20.4s     100%
 ```
+
+**Note**: BM25 index load is now lazy (deferred to first `retrieve()` call), eliminating the 405ms init cost.
 
 ---
 

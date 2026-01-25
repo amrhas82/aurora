@@ -171,8 +171,8 @@
     - tdd: no
     - verify: `make test-unit && make test-integration`
 
-- [ ] 3.0 Qualitative Validation
-  - [ ] 3.1 Run manual testing with 10 queries
+- [x] 3.0 Qualitative Validation
+  - [x] 3.1 Run manual testing with 10 queries
     - Index Aurora codebase: `aur mem index .`
     - Test queries (10): SoarOrchestrator, memory search caching, BM25 scoring, etc. (see PRD lines 850-861)
     - For each query: run tri-hybrid (normal) and dual-hybrid (AURORA_EMBEDDING_PROVIDER=none)
@@ -181,7 +181,7 @@
     - Expected: 70-90% overlap (7-9 matching results)
     - tdd: no
     - verify: Manual testing complete, results documented
-  - [ ] 3.2 Document results in FALLBACK_QUALITY_ANALYSIS.md
+  - [x] 3.2 Document results in FALLBACK_QUALITY_ANALYSIS.md
     - File: `/home/hamr/PycharmProjects/aurora/docs/analysis/FALLBACK_QUALITY_ANALYSIS.md`
     - Table: Query | Tri-Hybrid Results | Dual-Hybrid Results | Overlap %
     - Summary: Average overlap, quality assessment, edge cases
@@ -189,14 +189,14 @@
     - Lines: ~50-100
     - tdd: no
     - verify: `cat /home/hamr/PycharmProjects/aurora/docs/analysis/FALLBACK_QUALITY_ANALYSIS.md`
-  - [ ] 3.3 Run performance benchmarks (before/after)
+  - [x] 3.3 Run performance benchmarks (before/after)
     - Benchmark retriever creation time: `python -c "..." ` (see PRD lines 907-930)
     - Benchmark fallback search speed: `AURORA_EMBEDDING_PROVIDER=none python -c "..."` (see PRD lines 933-964)
     - Document results: Creation time <50ms? Fallback search <1s?
     - Compare to baselines (PRD Section 7.1)
     - tdd: no
     - verify: Performance benchmarks meet targets
-  - [ ] 3.4 Verify: All success metrics met
+  - [x] 3.4 Verify: All success metrics met
     - AC-F1.1: Creation time <50ms ✓
     - AC-F1.4: Thread-safety guaranteed ✓
     - AC-F2.2: BM25+Activation scores present ✓

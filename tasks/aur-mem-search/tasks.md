@@ -112,22 +112,22 @@
     - tdd: no
     - verify: `make test-unit && make test-integration`
 
-- [ ] 2.0 Implement Feature 2: BM25+Activation Dual-Hybrid Fallback
-  - [ ] 2.1 Rename _fallback_to_activation_only() to _fallback_to_dual_hybrid()
+- [x] 2.0 Implement Feature 2: BM25+Activation Dual-Hybrid Fallback
+  - [x] 2.1 Rename _fallback_to_activation_only() to _fallback_to_dual_hybrid()
     - Rename method at line 930
     - Update call sites: line 628, line 639
     - Update docstring to reflect dual-hybrid functionality
     - Location: `/home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py:930,628,639`
     - tdd: no
     - verify: `grep -n "_fallback_to_dual_hybrid" /home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py`
-  - [ ] 2.2 Implement BM25 filter in fallback method
+  - [x] 2.2 Implement BM25 filter in fallback method
     - Add `self._stage1_bm25_filter(query, activation_candidates)` call
     - Process stage1 candidates for BM25 scores
     - Code block: ~10 lines
     - Location: `/home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py:935-945`
     - tdd: yes
     - verify: `python -c "from aurora_context_code.semantic.hybrid_retriever import HybridRetriever; print('BM25 filter added')"`
-  - [ ] 2.3 Implement weight normalization logic
+  - [x] 2.3 Implement weight normalization logic
     - Redistribute semantic_weight to bm25 and activation proportionally
     - Formula: `bm25_dual = bm25_weight / (bm25_weight + activation_weight)`
     - Handle edge case: both weights are 0 (fallback to activation-only)
@@ -135,7 +135,7 @@
     - Location: `/home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py:945-955`
     - tdd: yes
     - verify: `python -c "from aurora_context_code.semantic.hybrid_retriever import HybridRetriever; print('Weight normalization added')"`
-  - [ ] 2.4 Implement dual-hybrid scoring calculation
+  - [x] 2.4 Implement dual-hybrid scoring calculation
     - Calculate normalized BM25 and activation scores
     - Combine with dual-hybrid weights
     - Return results in tri-hybrid format (semantic_score=0.0)
@@ -143,28 +143,28 @@
     - Location: `/home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py:955-980`
     - tdd: yes
     - verify: `python -c "from aurora_context_code.semantic.hybrid_retriever import HybridRetriever; print('Dual-hybrid scoring added')"`
-  - [ ] 2.5 Add WARNING logging with instructions
+  - [x] 2.5 Add WARNING logging with instructions
     - Log at WARNING level when fallback triggered
     - Message: "Embedding model unavailable - using BM25+Activation fallback (estimated 85% quality vs 95% tri-hybrid)"
     - Include instructions: "To restore full quality, check: pip install sentence-transformers"
     - Location: `/home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py:932-935`
     - tdd: no
     - verify: `grep -n "BM25+Activation fallback" /home/hamr/PycharmProjects/aurora/packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py`
-  - [ ] 2.6 Create unit tests for dual-hybrid fallback
+  - [x] 2.6 Create unit tests for dual-hybrid fallback
     - File: `/home/hamr/PycharmProjects/aurora/tests/unit/context_code/semantic/test_hybrid_retriever_dual_fallback.py`
     - Test cases (5): triggered when no provider, triggered when embed fails, weights normalized, WARNING logged, edge case zero weights
     - Use `caplog` fixture for log assertions
     - Lines: ~150
     - tdd: yes
     - verify: `pytest tests/unit/context_code/semantic/test_hybrid_retriever_dual_fallback.py -v`
-  - [ ] 2.7 Create performance test for fallback speed <1s
+  - [x] 2.7 Create performance test for fallback speed <1s
     - File: `/home/hamr/PycharmProjects/aurora/tests/performance/test_hybrid_retriever_dual_fallback.py`
     - Test cases (2): fallback completes <1s, faster than activation-only
     - Use warm search (BM25 index already loaded)
     - Lines: ~60
     - tdd: yes
     - verify: `pytest tests/performance/test_hybrid_retriever_dual_fallback.py -v -m performance`
-  - [ ] 2.8 Verify: Run full test suite - no regressions
+  - [x] 2.8 Verify: Run full test suite - no regressions
     - Run unit tests, integration tests, and performance tests
     - Ensure all existing `test_hybrid_retriever_*.py` tests pass
     - Check fallback is triggered correctly

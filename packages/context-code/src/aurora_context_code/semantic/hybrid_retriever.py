@@ -619,10 +619,10 @@ class HybridRetriever:
 
         # Generate embedding if not cached
         if query_embedding is None:
-            # If no embedding provider, fall back to activation+BM25 only
+            # If no embedding provider, fall back to BM25+Activation dual-hybrid
             if self.embedding_provider is None:
-                logger.debug("No embedding provider - using activation+BM25 only")
-                return self._fallback_to_activation_only(activation_candidates, top_k)
+                logger.debug("No embedding provider - using BM25+Activation fallback")
+                return self._fallback_to_dual_hybrid(activation_candidates, query, top_k)
 
             try:
                 query_embedding = self.embedding_provider.embed_query(query)
@@ -631,9 +631,9 @@ class HybridRetriever:
                     self._query_cache.set(query, query_embedding)
                     logger.debug(f"Cached embedding for: {query[:50]}...")
             except Exception as e:
-                # If embedding fails and fallback is enabled, use activation-only
+                # If embedding fails and fallback is enabled, use BM25+Activation dual-hybrid
                 if self.config.fallback_to_activation:
-                    return self._fallback_to_activation_only(activation_candidates, top_k)
+                    return self._fallback_to_dual_hybrid(activation_candidates, query, top_k)
                 raise ValueError(f"Failed to generate query embedding: {e}") from e
 
         # ========== STAGE 1: BM25 FILTERING ==========
@@ -931,33 +931,111 @@ class HybridRetriever:
 
         return content, metadata
 
-    def _fallback_to_activation_only(self, chunks: list[Any], top_k: int) -> list[dict[str, Any]]:
-        """Fallback to activation-only retrieval when embeddings unavailable.
+    def _fallback_to_dual_hybrid(
+        self, activation_candidates: list[Any], query: str, top_k: int
+    ) -> list[dict[str, Any]]:
+        """Fallback to BM25+Activation dual-hybrid when embeddings unavailable.
+
+        This fallback provides better search quality (~85%) than activation-only (~60%)
+        by leveraging keyword matching (BM25) alongside access patterns (activation).
 
         Args:
-            chunks: Chunks retrieved by activation
+            activation_candidates: Chunks retrieved by activation
+            query: User query string
             top_k: Number of results to return
 
         Returns:
-            List of results with activation scores only (tri-hybrid format)
+            List of results with BM25+Activation dual-hybrid scores (semantic=0)
 
         """
+        logger.warning(
+            "Embedding model unavailable - using BM25+Activation fallback "
+            "(estimated 85% quality vs 95% tri-hybrid). "
+            "To restore full quality, check: pip install sentence-transformers"
+        )
+
+        # Run Stage 1 BM25 filter to get keyword scores
+        stage1_candidates = self._stage1_bm25_filter(query, activation_candidates)
+
+        # Normalize weights (redistribute semantic_weight to bm25 and activation)
+        total_weight = self.config.bm25_weight + self.config.activation_weight
+        if total_weight < 1e-6:
+            # Edge case: both weights are 0, fall back to activation-only
+            logger.warning("Both BM25 and activation weights are 0 - using activation-only")
+            bm25_dual = 0.0
+            activation_dual = 1.0
+        else:
+            bm25_dual = self.config.bm25_weight / total_weight
+            activation_dual = self.config.activation_weight / total_weight
+
+        # Build results with dual-hybrid scoring
         results = []
-        for chunk in chunks[:top_k]:
+        for chunk in stage1_candidates:
             activation_score = getattr(chunk, "activation", 0.0)
-            content, metadata = self._extract_chunk_content_metadata(chunk)
+
+            # Get BM25 score (already calculated in _stage1_bm25_filter)
+            if self.config.bm25_weight > 0 and self.bm25_scorer is not None:
+                chunk_content = self._get_chunk_content_for_bm25(chunk)
+                bm25_score = self.bm25_scorer.score(query, chunk_content)
+            else:
+                bm25_score = 0.0
+
             results.append(
+                {
+                    "chunk": chunk,
+                    "raw_activation": activation_score,
+                    "raw_semantic": 0.0,  # No embeddings available
+                    "raw_bm25": bm25_score,
+                }
+            )
+
+        # Normalize scores independently
+        activation_scores_normalized = self._normalize_scores(
+            [r["raw_activation"] for r in results]
+        )
+        bm25_scores_normalized = self._normalize_scores([r["raw_bm25"] for r in results])
+
+        # Batch fetch access stats (N+1 query optimization)
+        chunk_ids = [r["chunk"].id for r in results]
+        access_stats_cache: dict[str, dict[str, Any]] = {}
+        if hasattr(self.store, "get_access_stats_batch"):
+            try:
+                access_stats_cache = self.store.get_access_stats_batch(chunk_ids)
+            except Exception as e:
+                logger.debug(f"Batch access stats failed: {e}")
+
+        # Calculate dual-hybrid scores
+        final_results = []
+        for i, result_data in enumerate(results):
+            chunk = result_data["chunk"]
+            activation_norm = activation_scores_normalized[i]
+            bm25_norm = bm25_scores_normalized[i]
+
+            # Dual-hybrid scoring: weighted BM25 + activation (no semantic)
+            hybrid_score = bm25_dual * bm25_norm + activation_dual * activation_norm
+
+            content, metadata = self._extract_chunk_content_metadata(
+                chunk,
+                access_stats_cache=access_stats_cache,
+            )
+
+            final_results.append(
                 {
                     "chunk_id": chunk.id,
                     "content": content,
-                    "bm25_score": 0.0,
-                    "activation_score": activation_score,
-                    "semantic_score": 0.0,
-                    "hybrid_score": activation_score,  # Pure activation
+                    "bm25_score": bm25_norm,
+                    "activation_score": activation_norm,
+                    "semantic_score": 0.0,  # Embeddings unavailable
+                    "hybrid_score": hybrid_score,
                     "metadata": metadata,
-                },
+                }
             )
-        return results
+
+        # Sort by hybrid score (descending)
+        final_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
+
+        # Return top K results
+        return final_results[:top_k]
 
     def _normalize_scores(self, scores: list[float]) -> list[float]:
         """Normalize scores to [0, 1] range using min-max scaling.

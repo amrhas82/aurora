@@ -34,6 +34,29 @@ class MockStore:
             chunks.append(chunk)
         return chunks
 
+    def retrieve_by_activation(self, min_activation=0.0, limit=100, include_embeddings=True):
+        """Retrieve chunks by activation (for lazy loading trigger)."""
+        chunks = []
+        for i in range(min(limit, 10)):  # Return up to 10 mock chunks
+            chunk = Mock()
+            chunk.id = f"chunk_{i}"
+            chunk.activation = 0.5
+            chunk.type = "code"
+            chunk.name = f"test_chunk_{i}"
+            chunk.file_path = f"/test/path_{i}.py"
+            chunk.line_start = i * 10
+            chunk.line_end = (i * 10) + 5
+            chunk.signature = f"def test_func_{i}():"
+            chunk.docstring = f"Test function {i}"
+            chunk.embeddings = None  # No embeddings for BM25-only test
+            chunk.metadata = {}  # Empty metadata dict (not Mock)
+            chunks.append(chunk)
+        return chunks
+
+    def fetch_embeddings_for_chunks(self, chunk_ids):
+        """Fetch embeddings for specific chunks (two-phase optimization)."""
+        return {}  # No embeddings in this mock
+
 
 class MockActivationEngine:
     """Mock activation engine."""
@@ -83,9 +106,10 @@ def test_bm25_index_saves_on_build(tmp_path):
 
 
 def test_bm25_index_loads_from_disk(tmp_path):
-    """Test that BM25 index loads from disk on retriever creation.
+    """Test that BM25 index loads from disk on first retrieve() call (lazy loading).
 
-    Task 3.2: Save index with 100 docs, create new retriever, verify loaded.
+    Task 3.2: Save index with 100 docs, create new retriever, verify loaded on first use.
+    Epic 2 Update: BM25 index now loads lazily on first retrieve() call, not in __init__().
     """
     from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
@@ -107,12 +131,19 @@ def test_bm25_index_loads_from_disk(tmp_path):
     documents = [(f"doc_{i}", f"content {i}") for i in range(100)]
     retriever1.build_and_save_bm25_index(documents)
 
-    # Create new retriever (should load from disk)
+    # Create new retriever (lazy loading - index NOT loaded yet)
     retriever2 = HybridRetriever(store, engine, provider, config=config)
 
-    # Verify index was loaded
-    assert retriever2._bm25_index_loaded, "Index should be loaded from disk"
-    assert retriever2.bm25_scorer is not None, "BM25 scorer should be initialized"
+    # Verify index NOT loaded yet (lazy loading)
+    assert not retriever2._bm25_index_loaded, "Index should NOT be loaded yet (lazy loading)"
+    assert retriever2.bm25_scorer is None, "BM25 scorer should be None before first retrieve()"
+
+    # Trigger lazy loading by calling retrieve()
+    results = retriever2.retrieve("test query", top_k=5)
+
+    # Verify index was loaded on first retrieve()
+    assert retriever2._bm25_index_loaded, "Index should be loaded after first retrieve()"
+    assert retriever2.bm25_scorer is not None, "BM25 scorer should be initialized after retrieve()"
     assert retriever2.bm25_scorer.corpus_size == 100, "Corpus size should be 100"
 
 

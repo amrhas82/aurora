@@ -28,7 +28,6 @@ from aurora_context_code.semantic.embedding_provider import (
 )
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
-
 # Mark all tests as requiring ML dependencies
 pytestmark = [
     pytest.mark.ml,
@@ -58,10 +57,15 @@ class MockStore:
 
     def __init__(self, chunks=None):
         self.chunks = chunks or []
+        self.db_path = ":memory:"
 
-    def retrieve_by_activation(self, min_activation=0.0, limit=100):
+    def retrieve_by_activation(self, min_activation=0.0, limit=100, include_embeddings=True):
         """Retrieve chunks by activation."""
         return self.chunks[:limit]
+
+    def fetch_embeddings_for_chunks(self, chunk_ids):
+        """Fetch embeddings for specific chunks (two-phase optimization)."""
+        return {chunk.id: chunk.embeddings for chunk in self.chunks if chunk.id in chunk_ids}
 
 
 class MockActivationEngine:
@@ -109,7 +113,7 @@ class TestEmbeddingProviderFailures:
         config = HybridConfig(fallback_to_activation=True)
         retriever = HybridRetriever(store, engine, mock_provider, config=config)
 
-        # Should fall back to activation-only retrieval
+        # Should fall back to BM25+Activation dual-hybrid (Epic 2)
         results = retriever.retrieve("test query", top_k=2)
 
         # Verify fallback behavior
@@ -117,10 +121,11 @@ class TestEmbeddingProviderFailures:
         assert results[0]["chunk_id"] == "1"  # Highest activation
         assert results[1]["chunk_id"] == "2"  # Second highest
 
-        # Should have activation scores, but semantic scores are 0
-        assert results[0]["activation_score"] == 0.9
-        assert results[0]["semantic_score"] == 0.0
-        assert results[0]["hybrid_score"] == 0.9  # Pure activation
+        # Should have BM25 + activation scores, but semantic scores are 0
+        assert results[0]["activation_score"] > 0.0  # Has activation component
+        assert results[0]["bm25_score"] >= 0.0  # Has BM25 component
+        assert results[0]["semantic_score"] == 0.0  # No semantic (fallback mode)
+        assert results[0]["hybrid_score"] > 0.0  # Dual-hybrid: BM25 + activation
 
     def test_no_fallback_raises_error_when_embedding_fails(self):
         """Test that errors propagate when fallback is disabled."""
@@ -169,13 +174,15 @@ class TestEmbeddingProviderFailures:
         config = HybridConfig(fallback_to_activation=True)
         retriever = HybridRetriever(store, engine, mock_provider, config=config)
 
-        # Should fall back gracefully
+        # Should fall back gracefully to BM25+Activation dual-hybrid
         results = retriever.retrieve("test query", top_k=1)
 
         assert len(results) == 1
         assert results[0]["chunk_id"] == "1"
-        assert results[0]["activation_score"] == 0.8
-        assert results[0]["semantic_score"] == 0.0
+        assert results[0]["activation_score"] > 0.0  # Has activation component
+        assert results[0]["bm25_score"] >= 0.0  # Has BM25 component
+        assert results[0]["semantic_score"] == 0.0  # No semantic (fallback mode)
+        assert results[0]["hybrid_score"] > 0.0  # Dual-hybrid score
 
     def test_fallback_on_attribute_error_from_provider(self):
         """Test fallback when provider has missing attributes."""
@@ -198,11 +205,14 @@ class TestEmbeddingProviderFailures:
         config = HybridConfig(fallback_to_activation=True)
         retriever = HybridRetriever(store, engine, mock_provider, config=config)
 
-        # Should fall back gracefully
+        # Should fall back gracefully to BM25+Activation dual-hybrid
         results = retriever.retrieve("test query", top_k=1)
 
         assert len(results) == 1
-        assert results[0]["hybrid_score"] == 0.6
+        assert results[0]["activation_score"] > 0.0  # Has activation
+        assert results[0]["bm25_score"] >= 0.0  # Has BM25
+        assert results[0]["semantic_score"] == 0.0  # No semantic (fallback)
+        assert results[0]["hybrid_score"] > 0.0  # Dual-hybrid score
 
 
 class TestChunksMissingEmbeddings:

@@ -527,10 +527,7 @@ class HybridRetriever:
         # BM25 scorer (lazy-initialized in retrieve() or loaded from persistent index)
         self.bm25_scorer: Any = None  # BM25Scorer from aurora_context_code.semantic.bm25_scorer
         self._bm25_index_loaded = False  # Track if we've loaded the persistent index
-
-        # Try to load persistent BM25 index if configured
-        if self.config.enable_bm25_persistence and self.config.bm25_weight > 0:
-            self._try_load_bm25_index()
+        self._bm25_lock = threading.Lock()  # Thread-safety for lazy loading
 
         # Query embedding cache (shared across all retrievers - Task 4.0)
         if self.config.enable_query_cache:
@@ -777,7 +774,7 @@ class HybridRetriever:
         """Stage 1: Filter candidates using BM25 keyword matching.
 
         Uses persistent BM25 index if available, otherwise builds from candidates.
-        The persistent index is built during indexing and loaded on startup,
+        The persistent index is built during indexing and loaded on first retrieve(),
         eliminating the O(n) index build on each query (51% of search time savings).
 
         Args:
@@ -789,6 +786,13 @@ class HybridRetriever:
 
         """
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
+
+        # Lazy load BM25 index on first retrieve() call (thread-safe)
+        if not self._bm25_index_loaded and self.config.enable_bm25_persistence:
+            with self._bm25_lock:
+                # Double-check pattern (another thread may have loaded while we waited)
+                if not self._bm25_index_loaded:
+                    self._try_load_bm25_index()
 
         # Use persistent index if loaded, otherwise build from candidates
         if self._bm25_index_loaded and self.bm25_scorer is not None:

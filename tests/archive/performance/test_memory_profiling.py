@@ -11,7 +11,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Add packages to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages" / "core" / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages" / "context-code" / "src"))

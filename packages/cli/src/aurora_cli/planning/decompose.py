@@ -470,6 +470,78 @@ class PlanDecomposer:
             logger.warning(f"Failed to load agent manifest: {e}")
             return None
 
+    def _resolve_source_file(self, sg_dict: dict, context: dict[str, Any]) -> str | None:
+        """Extract and resolve source_file from LLM response.
+
+        Attempts to match file references in the subgoal with actual files from context.
+        Applies to both code files and markdown files (kb chunks).
+
+        Args:
+            sg_dict: Subgoal dictionary from LLM response
+            context: Context dictionary with code_chunks and kb_chunks
+
+        Returns:
+            Resolved file path if found and valid, None otherwise
+
+        """
+        # Get source_file from LLM response (may be None)
+        llm_source_file = sg_dict.get("source_file")
+        if not llm_source_file:
+            return None
+
+        # Build set of all file paths from context (both code and kb chunks)
+        context_files = set()
+
+        # Extract from code chunks
+        code_chunks = context.get("code_chunks", [])
+        for chunk in code_chunks:
+            if hasattr(chunk, "file_path"):
+                context_files.add(chunk.file_path)
+            elif isinstance(chunk, dict):
+                metadata = chunk.get("metadata", {})
+                if metadata and "file_path" in metadata:
+                    context_files.add(metadata["file_path"])
+                elif "file_path" in chunk:
+                    context_files.add(chunk["file_path"])
+
+        # Extract from kb chunks (markdown documentation)
+        kb_chunks = context.get("kb_chunks", [])
+        for chunk in kb_chunks:
+            if hasattr(chunk, "file_path"):
+                context_files.add(chunk.file_path)
+            elif isinstance(chunk, dict):
+                metadata = chunk.get("metadata", {})
+                if metadata and "file_path" in metadata:
+                    context_files.add(metadata["file_path"])
+                elif "file_path" in chunk:
+                    context_files.add(chunk["file_path"])
+
+        # Try exact match first
+        if llm_source_file in context_files:
+            return llm_source_file
+
+        # Try matching by basename
+        llm_basename = llm_source_file.split("/")[-1]
+        for file_path in context_files:
+            if file_path.endswith(llm_basename):
+                logger.debug(f"Matched basename '{llm_basename}' to {file_path}")
+                return file_path
+
+        # Try matching by short path (last 2 segments)
+        if "/" in llm_source_file:
+            llm_short = "/".join(llm_source_file.split("/")[-2:])
+            for file_path in context_files:
+                if file_path.endswith(llm_short):
+                    logger.debug(f"Matched short path '{llm_short}' to {file_path}")
+                    return file_path
+
+        # No match found - likely hallucination
+        logger.warning(
+            f"LLM referenced file '{llm_source_file}' not found in context. "
+            f"Available files: {list(context_files)[:5]}..."
+        )
+        return None
+
     def _call_soar(
         self,
         goal: str,
@@ -566,6 +638,9 @@ class PlanDecomposer:
                             dep_str = f"sg-{dep_str}"
                     dependencies.append(dep_str)
 
+                # Extract and resolve source_file from LLM response
+                source_file = self._resolve_source_file(sg_dict, context)
+
                 subgoal = Subgoal(
                     id=sg_dict.get("id", f"sg-{idx}"),
                     title=title,
@@ -573,6 +648,7 @@ class PlanDecomposer:
                     ideal_agent=ideal_agent,
                     ideal_agent_desc=ideal_agent_desc,
                     assigned_agent=agent,
+                    source_file=source_file,
                     dependencies=dependencies,
                 )
                 subgoals.append(subgoal)

@@ -16,7 +16,6 @@ from aurora_core.store.memory import MemoryStore
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
 
-
 # Performance targets from PRD
 WRITE_TARGET_MS = 50
 READ_TARGET_MS = 50

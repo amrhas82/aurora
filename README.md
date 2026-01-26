@@ -226,20 +226,35 @@ aur headless prompt.md
 
 ## Planning Workflow
 
-OpenSpec-based flow from goal to implementation:
+3 simple steps from goal to implementation.
+
+**Code-aware planning:** `aur goals` searches your indexed codebase and maps each subgoal to relevant source files (`source_file`). This context flows through `/aur:plan` → `/aur:implement`, making implementation more accurate.
+
+> **Quick prototype?** Skip `aur goals` and run `/aur:plan` directly - the agent will search on the fly (less structured).
 
 ```
-Terminal                    Slash Command            Slash Command
-┌─────────────────┐        ┌─────────────────┐      ┌─────────────────┐
-│   aur goals     │   ->   │  /aur:plan      │  ->  │  /aur:implement │
-│   "Add feature" │        │  goals.json     │      │                 │
-└─────────────────┘        └─────────────────┘      └─────────────────┘
-        │                          │                        │
-        v                          v                        v
-   goals.json               PRD + tasks.md            Implemented
-   - agent assignments      - file hints              - validation
-   - capability gaps
+Setup (once)             Step 1: Decompose        Step 2: Plan             Step 3: Implement
+Terminal                 Terminal                 Slash Command            Slash Command
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐      ┌─────────────────┐
+│   aur init      │     │   aur goals     │ ->  │   /aur:plan     │  ->  │  /aur:implement │
+│   aur mem index │     │   "Add feature" │     │   [plan-id]     │      │   [plan-id]     │
+└─────────────────┘     └─────────────────┘     └─────────────────┘      └─────────────────┘
+        │                       │                       │                        │
+        v                       v                       v                        v
+   .aurora/                goals.json              5 artifacts:            Code changes
+   - project.md            - subgoals              - plan.md               - validated
+   - memory.db             - agents                - prd.md                - tested
+                           - source files          - design.md
+                                                   - agents.json
+                                                   - tasks.md
+                                                        │
+                                                 ┌──────┴──────┐
+                                                 │ /aur:tasks  │  <- Optional: regenerate
+                                                 │ [plan-id]   │     tasks after PRD edits
+                                                 └─────────────┘
 ```
+
+See [3 Simple Steps Guide](docs/guides/3-SIMPLE-STEPS.md) for detailed walkthrough.
 
 ---
 
@@ -249,9 +264,10 @@ Terminal                    Slash Command            Slash Command
 # Install
 pip install aurora-actr
 
-# Initialize project
+# Initialize project (once per project)
 cd your-project/
-aur init
+aur init                        # Creates .aurora/project.md
+# Edit .aurora/project.md to describe your project
 
 # Index codebase for memory
 aur mem index .
@@ -260,8 +276,8 @@ aur mem index .
 aur goals "Add user authentication"
 
 # In your CLI tool (Claude Code, Cursor, etc.):
-/aur:plan goals.json
-/aur:implement
+/aur:plan add-user-authentication
+/aur:implement add-user-authentication
 ```
 
 ---
@@ -280,9 +296,10 @@ aur goals "Add user authentication"
 | `aur headless prompt.md` | Terminal | Unattended execution |
 | `/aur:search "query"` | Slash | Search indexed memory |
 | `/aur:get N` | Slash | Read chunk from search |
-| `/aur:plan goals.json` | Slash | Generate PRD + tasks |
-| `/aur:implement` | Slash | Execute plan |
-| `/aur:archive plan-id` | Slash | Archive completed plan |
+| `/aur:plan [plan-id]` | Slash | Generate plan artifacts |
+| `/aur:tasks [plan-id]` | Slash | Regenerate tasks from PRD |
+| `/aur:implement [plan-id]` | Slash | Execute plan |
+| `/aur:archive [plan-id]` | Slash | Archive completed plan |
 
 ---
 

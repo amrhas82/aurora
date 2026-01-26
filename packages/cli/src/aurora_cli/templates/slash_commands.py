@@ -157,18 +157,25 @@ PLAN_GUARDRAILS = f"""{BASE_GUARDRAILS}
 - Do not write any code during the planning stage. Only create design documents (plan.md, tasks.md, design.md, and spec deltas). Implementation happens in the implement stage after approval."""
 
 PLAN_STEPS = """**Steps**
-1. Review `.aurora/project.md`, run `aur plan list` and `aur plan list --specs`, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the plan in current behaviour; note any gaps that require clarification.
-   - **If input is a `goals.json` file**: Read it and populate the Goals Context table with subgoals, agents, files, and dependencies.
-   - **If input is a prompt**: Run `aur agents list` to see available agents. Assign agents to tasks as you plan.
-2. Choose a unique verb-led `plan-id` and scaffold `plan.md`, `tasks.md`, and `design.md` (when needed) under `.aurora/plans/active/<id>/`.
+1. Review `.aurora/project.md`, run `aur plan list` to see existing plans, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the plan in current behaviour; note any gaps that require clarification.
+   - **If input is a `goals.json` file (recommended for code-aware planning)**: Read it and populate the Goals Context table with subgoals, agents, files, and dependencies. Goals.json provides code-aware context including source_file mappings for each subgoal.
+   - **If input is a prompt (valid but less structured)**: Continue with prompt-based planning. Run `aur agents list` to see available agents. Assign agents to tasks as you plan. Note: Agent searches will happen on-the-fly during implementation rather than upfront.
+   - Both paths are valid; goals.json is recommended for production work as it grounds planning in actual codebase structure.
+2. Choose a unique verb-led `plan-id` and generate artifacts in this order under `.aurora/plans/active/<id>/`:
+   - First: `plan.md` (overview and strategy)
+   - Second: `prd.md` (detailed product requirements)
+   - Third: `design.md` (when needed - technical architecture)
+   - Fourth: `agents.json` (agent assignments)
+   - Last: `tasks.md` (depends on PRD content, generated after all other artifacts)
+   Note: tasks.md is generated last because it needs complete PRD details to create accurate task breakdowns.
 3. Map the change into concrete capabilities or requirements, breaking multi-scope efforts into distinct spec deltas with clear relationships and sequencing.
 4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
 5. Draft spec deltas in `.aurora/plans/active/<id>/specs/<capability>/spec.md` (one folder per capability) using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement and cross-reference related capabilities when relevant.
 6. Draft `tasks.md` with `<!-- @agent: @name -->` comment after each parent task. Agent assignment priority: goals.json > agent registry match > LLM inference.
-7. Validate with `aur plan validate <id> --strict` and resolve every issue before sharing the plan."""
+7. Review plan with `aur plan view <id>` and ensure all tasks are well-defined before sharing the plan."""
 
 PLAN_REFERENCES = """**Reference**
-- Use `aur plan show <id> --json --deltas-only` or `aur plan show <spec> --type spec` to inspect details when validation fails.
+- Use `aur plan view <id> --format json` to inspect plan details in JSON format.
 - Search existing requirements with `rg -n "Requirement:|Scenario:" .aurora/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so plans align with current implementation realities.
 
@@ -222,14 +229,107 @@ PLAN_REFERENCES = """**Reference**
 1. [Question] - **Recommendation**: [answer]
 ```
 
-**tasks.md Template** (with @agent per task):
+**tasks.md Template** (with @agent per task and TDD hints):
 ```markdown
 ## Phase N: [Name]
 - [ ] N.1 Task description
   <!-- @agent: @code-developer -->
+  - tdd: yes|no
+  - verify: `command to verify`
   - Details
   - **Validation**: How to verify
-```"""
+
+**TDD Detection Guidelines:**
+- tdd: yes - For models, API endpoints, bug fixes, business logic, data transformations
+- tdd: no - For docs, config files, migrations, pure refactors (no behavior change)
+- Default: When unsure, use tdd: yes
+```
+
+**agents.json Template** (plan metadata with subgoals):
+```json
+{
+  "plan_id": "unique-plan-identifier",
+  "goal": "Original goal statement describing what needs to be achieved",
+  "status": "active",
+  "complexity": "moderate",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Brief subgoal title",
+      "description": "Detailed subgoal description explaining what needs to be done",
+      "agent_id": "@code-developer",
+      "status": "pending",
+      "dependencies": []
+    }
+  ]
+}
+```
+
+**agents.json Schema:**
+- **plan_id** (required): Unique identifier for the plan
+- **goal** (required): Original goal statement (10-500 chars)
+- **status** (required): One of: active, completed, archived, failed
+- **complexity** (optional): One of: simple, moderate, complex
+- **created_at** (required): ISO 8601 timestamp (UTC)
+- **updated_at** (required): ISO 8601 timestamp (UTC)
+- **subgoals** (required): Array of subgoal objects (1-20 items)
+  - **id**: Subgoal identifier (format: sg-N)
+  - **title**: Brief subgoal title (5-100 chars, imperative form)
+  - **description**: Detailed description (10-500 chars)
+  - **agent_id**: Recommended agent (format: @agent-name)
+  - **status**: One of: pending, in_progress, completed, blocked
+  - **dependencies**: Array of subgoal IDs that must complete first
+
+**Full schema reference:** `packages/planning/src/aurora_planning/schemas/agents.schema.json`
+"""
+
+# /aur:tasks - Regenerate tasks.md from PRD (carve-out from /aur:plan)
+TASKS_GUARDRAILS = f"""{BASE_GUARDRAILS}
+- Only regenerate tasks.md. Do not modify plan.md, prd.md, design.md, or agents.json.
+- Read prd.md to understand requirements. Read agents.json for agent assignments. Read goals.json for source_file mappings if available."""
+
+TASKS_STEPS = """**Steps**
+1. Read `.aurora/plans/active/<plan-id>/prd.md` to understand requirements
+2. Read `.aurora/plans/active/<plan-id>/agents.json` for agent assignments
+3. Read `.aurora/plans/active/<plan-id>/goals.json` (if exists) for source_file mappings
+4. Generate tasks.md with:
+   - Task breakdown matching PRD requirements
+   - Agent assignments from agents.json (use `<!-- @agent: @name -->` comment after each parent task)
+   - TDD hints (tdd: yes|no, verify: command) matching format below
+   - Validation steps per task
+5. Save updated tasks.md (replaces existing)"""
+
+TASKS_REFERENCES = """**tasks.md Template** (with @agent per task and TDD hints):
+```markdown
+## Phase N: [Name]
+- [ ] N.1 Task description
+  <!-- @agent: @code-developer -->
+  - tdd: yes|no
+  - verify: `command to verify`
+  - Details
+  - **Validation**: How to verify
+
+**TDD Detection Guidelines:**
+- tdd: yes - For models, API endpoints, bug fixes, business logic, data transformations
+- tdd: no - For docs, config files, migrations, pure refactors (no behavior change)
+- Default: When unsure, use tdd: yes
+```
+
+**Purpose**
+Regenerate tasks.md after user edits PRD. The PRD is the source of truth for requirements; tasks.md must always reflect current PRD state.
+
+**When to use**
+- After editing prd.md to add/remove requirements
+- After changing requirement scope or acceptance criteria
+- When task breakdown no longer matches PRD structure"""
+
+TASKS_TEMPLATE = f"""{TASKS_GUARDRAILS}
+
+{TASKS_STEPS}
+
+{TASKS_REFERENCES}"""
 
 PLAN_TEMPLATE = f"""{PLAN_GUARDRAILS}
 
@@ -280,6 +380,7 @@ COMMAND_TEMPLATES: dict[str, str] = {
     "search": SEARCH_TEMPLATE,
     "get": GET_TEMPLATE,
     "plan": PLAN_TEMPLATE,
+    "tasks": TASKS_TEMPLATE,
     "implement": IMPLEMENT_TEMPLATE,
     "archive": ARCHIVE_TEMPLATE,
 }

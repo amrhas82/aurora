@@ -203,4 +203,4 @@ def test_perf_fallback_faster_than_activation_only(tmp_path):
 
     print(f"  Activation-only: {activation_avg:.2f}s")
     print(f"  Dual-hybrid: {dual_avg:.2f}s")
-    print(f"  Note: In production, BM25 pre-filtering provides larger speedups with real datasets")
+    print("  Note: In production, BM25 pre-filtering provides larger speedups with real datasets")

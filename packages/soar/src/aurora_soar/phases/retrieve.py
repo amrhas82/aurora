@@ -132,7 +132,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
 
         # Check if memory is indexed
         if not retriever.has_indexed_memory():
-            logger.warning("No indexed memory found, returning empty context")
+            logger.warning("No memory index. Run 'aur mem index .' if in wrong directory")
             elapsed_ms = (time.time() - start_time) * 1000
             return {
                 "code_chunks": [],

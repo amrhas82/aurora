@@ -7,7 +7,6 @@ import pytest
 from aurora_soar.phases.collect import AgentOutput, CollectResult, execute_agents
 from aurora_spawner.models import SpawnResult, SpawnTask
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

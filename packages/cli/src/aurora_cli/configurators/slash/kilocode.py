@@ -12,6 +12,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".kilocode/workflows/aurora-search.md",
     "get": ".kilocode/workflows/aurora-get.md",
     "plan": ".kilocode/workflows/aurora-plan.md",
+    "tasks": ".kilocode/workflows/aurora-tasks.md",
     "implement": ".kilocode/workflows/aurora-implement.md",
     "archive": ".kilocode/workflows/aurora-archive.md",
 }
@@ -46,7 +47,7 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
         """
         return FILE_PATHS[command_id]
 
-    def get_frontmatter(self, _command_id: str) -> str | None:
+    def get_frontmatter(self, command_id: str) -> str | None:
         """Get frontmatter for a slash command file.
 
         Kilo Code does not use frontmatter.
@@ -86,6 +87,7 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

@@ -16,7 +16,7 @@ import logging
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -99,19 +99,6 @@ def validate_plan_structure(plan_dir: Path, plan_id: str) -> tuple[list[str], li
         file_path = plan_dir / filename
         if not file_path.exists():
             errors.append(f"Missing required file: {filename} ({description})")
-
-    # Check optional capability spec files
-    optional_files = [
-        (f"specs/{plan_id}-planning.md", "Planning capability spec"),
-        (f"specs/{plan_id}-commands.md", "Commands capability spec"),
-        (f"specs/{plan_id}-validation.md", "Validation capability spec"),
-        (f"specs/{plan_id}-schemas.md", "Schemas capability spec"),
-    ]
-
-    for filename, description in optional_files:
-        file_path = plan_dir / filename
-        if not file_path.exists():
-            warnings.append(f"Missing optional file: {filename} ({description})")
 
     # Validate agents.json if it exists
     agents_json = plan_dir / "agents.json"
@@ -240,7 +227,7 @@ def _get_plans_dir(config: Config | None = None) -> Path:
 
     """
     if config is not None and hasattr(config, "get_plans_path"):
-        return Path(config.get_plans_path()).expanduser().resolve()
+        return Path(config.get_plans_path()).expanduser().resolve()  # type: ignore[attr-defined]
     return get_default_plans_path()
 
 
@@ -272,7 +259,7 @@ def _save_manifest(plans_dir: Path, manifest: PlanManifest) -> None:
 
     """
     manifest_path = plans_dir / "manifest.json"
-    manifest.updated_at = datetime.utcnow()
+    manifest.updated_at = datetime.now(timezone.utc)
     manifest_path.write_text(manifest.model_dump_json(indent=2))
 
 
@@ -539,26 +526,12 @@ def show_plan(
             error=VALIDATION_MESSAGES["PLAN_FILE_CORRUPT"].format(file=str(agents_json)),
         )
 
-    # Check file status (all 8 files)
+    # Check file status (base files only)
     files_status = {
-        # Base files
         "plan.md": (plan_dir / "plan.md").exists(),
         "prd.md": (plan_dir / "prd.md").exists(),
         "tasks.md": (plan_dir / "tasks.md").exists(),
         "agents.json": True,
-        # Capability specs
-        f"specs/{plan.plan_id}-planning.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-planning.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-commands.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-commands.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-validation.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-validation.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-schemas.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-schemas.md"
-        ).exists(),
     }
 
     return ShowResult(
@@ -640,7 +613,7 @@ def archive_plan(
     try:
         # Update plan metadata
         plan.status = PlanStatus.ARCHIVED
-        plan.archived_at = datetime.utcnow()
+        plan.archived_at = datetime.now(timezone.utc)
         plan.duration_days = (plan.archived_at - plan.created_at).days
 
         # Write updated agents.json
@@ -677,29 +650,17 @@ def archive_plan(
 def _generate_plan_id(goal: str, plans_dir: Path) -> str:
     """Generate a unique plan ID from goal.
 
-    Format: NNNN-slug where NNNN is sequential number and slug
-    is derived from goal (lowercase, hyphenated, truncated).
+    Format: slug derived from goal (lowercase, hyphenated, truncated).
+    If slug already exists, it will be overwritten (re-running same goal = replace failed attempt).
 
     Args:
         goal: The plan goal text
         plans_dir: Plans directory to check for existing IDs
 
     Returns:
-        Unique plan ID string
+        Plan ID string (slug only, no number prefix)
 
     """
-    existing_ids = _get_existing_plan_ids(plans_dir)
-
-    # Find next number
-    max_num = 0
-    for plan_id in existing_ids:
-        match = re.match(r"^(\d+)-", plan_id)
-        if match:
-            num = int(match.group(1))
-            max_num = max(max_num, num)
-
-    next_num = max_num + 1
-
     # Generate slug from goal - extract 3-4 meaningful words
     words = goal.lower()
     words = re.sub(r"[^a-z0-9\s]", "", words)  # Remove special chars
@@ -765,7 +726,7 @@ def _generate_plan_id(goal: str, plans_dir: Path) -> str:
     if not slug:
         slug = "plan"
 
-    return f"{next_num:04d}-{slug}"
+    return slug
 
 
 def _validate_goal(goal: str) -> tuple[bool, str | None]:
@@ -863,7 +824,7 @@ def _write_goals_only(
     """Write only goals.json to disk (for aur goals command).
 
     Per PRD-0026, aur goals creates ONLY goals.json. The /plan skill
-    will later read this and generate prd.md, tasks.md, and specs/.
+    will later read this and generate prd.md, design.md, and tasks.md.
 
     Args:
         plan: Plan object with subgoals and agent assignments
@@ -909,14 +870,16 @@ def _write_goals_only(
 
 
 def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
-    """Write all 8 plan files to disk using templates with atomic operation.
+    """Write all plan files to disk using templates with atomic operation.
 
     Generates files in a temporary directory first, then atomically moves
     them to the final location. This ensures users never see partial plans.
 
-    Generates:
-    - 4 base files: plan.md, prd.md, tasks.md, agents.json
-    - 4 capability specs: specs/{plan-id}-{planning,commands,validation,schemas}.md
+    Generates 4 base files:
+    - plan.md: Overview and subgoal breakdown
+    - prd.md: Product requirements document
+    - tasks.md: Implementation task list
+    - agents.json: Machine-readable plan data
 
     Args:
         plan: Plan to write
@@ -1180,6 +1143,9 @@ def generate_goals_json(
             # Convert enum to string if needed
             match_quality = match_quality.value
 
+        # Get source_file (may be None for legacy decompositions)
+        source_file = getattr(sg, "source_file", None) or None
+
         subgoal_objects.append(
             SubgoalData(
                 id=sg.id,
@@ -1189,6 +1155,7 @@ def generate_goals_json(
                 ideal_agent_desc=ideal_agent_desc,
                 agent=sg.assigned_agent,
                 match_quality=match_quality,
+                source_file=source_file,
                 dependencies=clean_deps,
             ),
         )
@@ -1197,7 +1164,7 @@ def generate_goals_json(
     goals = Goals(
         id=plan_id,
         title=goal,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         status="ready_for_planning",
         memory_context=memory_objects,
         subgoals=subgoal_objects,
@@ -1336,7 +1303,7 @@ def _decompose_with_soar(
     if config:
         # Extract relevant config as dict
         if hasattr(config, "to_dict"):
-            config_dict = config.to_dict()
+            config_dict = config.to_dict()  # type: ignore[attr-defined]
         elif hasattr(config, "__dict__"):
             config_dict = {k: v for k, v in vars(config).items() if not k.startswith("_")}
 
@@ -1732,7 +1699,7 @@ def create_plan(
     try:
         if goals_only:
             # aur goals: Only create directory and goals.json (per PRD-0026)
-            # /plan skill will later add prd.md, tasks.md, specs/
+            # /plan skill will later add plan.md, prd.md, design.md, tasks.md
             _write_goals_only(plan, plan_path, memory_context or [], agent_gaps=agent_gaps)
         else:
             # Full plan creation (for /plan skill or legacy mode)

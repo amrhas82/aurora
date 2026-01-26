@@ -19,7 +19,6 @@ from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
 
-
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 
 

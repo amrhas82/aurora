@@ -208,7 +208,18 @@ class CLIPipeLLMClient(LLMClient):
             self._write_state(phase_name, "failed")
             # Include both stderr and stdout in error message for debugging
             error_details = result.stderr or result.stdout or "(no output)"
-            error_msg = f"Tool {self._tool} failed with exit code {result.returncode}: {error_details[:500]}"
+            # Extract just the essential error info (e.g., "API Error: 400 Invalid model")
+            if "API Error" in error_details:
+                # Shorten API errors - extract just the key info
+                parts = error_details.split(":")
+                if len(parts) >= 2:
+                    error_msg = f"Tool {self._tool} failed: {':'.join(parts[-2:]).strip()[:200]}"
+                else:
+                    error_msg = f"Tool {self._tool} failed: {error_details[:200]}"
+            else:
+                error_msg = (
+                    f"Tool {self._tool} failed (exit {result.returncode}): {error_details[:200]}"
+                )
             raise RuntimeError(error_msg)
 
         content = result.stdout

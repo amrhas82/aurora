@@ -7,12 +7,12 @@ Uses TOML format instead of markdown.
 from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
     "search": 'Search indexed code ["query" --limit N --type X]',
     "get": "Retrieve last search result [N]",
     "plan": "Create implementation plan [goal | goals.json]",
+    "tasks": "Regenerate tasks from PRD [plan-id]",
     "implement": "Execute plan tasks [plan-id]",
     "archive": "Archive completed plan [plan-id]",
 }
@@ -22,6 +22,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".qwen/commands/aurora-search.toml",
     "get": ".qwen/commands/aurora-get.toml",
     "plan": ".qwen/commands/aurora-plan.toml",
+    "tasks": ".qwen/commands/aurora/tasks.toml",
     "implement": ".qwen/commands/aurora-implement.toml",
     "archive": ".qwen/commands/aurora-archive.toml",
 }

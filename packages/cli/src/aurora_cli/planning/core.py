@@ -1464,7 +1464,7 @@ def create_plan(
                     ),
                 ]
                 file_resolutions = {}
-                decomposition_source = "heuristic_fallback"
+                decomposition_source = "heuristic"
         else:
             # Legacy PlanDecomposer (only used if explicitly disabled via config)
             from aurora_cli.planning.decompose import PlanDecomposer

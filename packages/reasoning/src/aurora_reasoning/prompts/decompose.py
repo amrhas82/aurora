@@ -187,6 +187,7 @@ You MUST respond with valid JSON only. Use this exact schema:
       "ideal_agent_desc": "Brief description of ideal agent capabilities",
       "assigned_agent": "best-available-agent",
       "match_quality": "excellent | acceptable | insufficient",
+      "source_file": "path/to/relevant/file.py",  // optional: primary source file for this subgoal
       "is_critical": true/false,
       "depends_on": [0, 1]  // indices of prerequisite subgoals
     }}

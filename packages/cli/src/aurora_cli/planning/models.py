@@ -88,6 +88,7 @@ class Subgoal(BaseModel):
         ideal_agent_desc: Description of ideal agent's capabilities
         assigned_agent: Best AVAILABLE agent ID in '@agent-id' format
         match_quality: How well assigned agent matches task requirements
+        source_file: Primary source file for this subgoal (optional)
         dependencies: List of subgoal IDs this depends on
 
     """
@@ -132,6 +133,11 @@ class Subgoal(BaseModel):
     match_quality: MatchQuality = Field(
         default=MatchQuality.EXCELLENT,
         description="How well the assigned agent matches the task requirements",
+    )
+    source_file: str | None = Field(
+        default=None,
+        description="Primary source file for this subgoal",
+        examples=["packages/cli/src/aurora_cli/planning/core.py", "docs/guides/COMMANDS.md"],
     )
     dependencies: list[str] = Field(
         default_factory=list,
@@ -322,7 +328,7 @@ class Plan(BaseModel):
     @field_validator("plan_id")
     @classmethod
     def validate_plan_id(cls, v: str) -> str:
-        """Validate plan ID is in 'NNNN-slug' format.
+        """Validate plan ID is in 'slug' or 'NNNN-slug' format (backward compatible).
 
         Args:
             v: The plan ID to validate
@@ -338,10 +344,12 @@ class Plan(BaseModel):
         if not v:
             return v
 
-        pattern = r"^\d{4}-[a-z0-9-]+$"
-        if not re.match(pattern, v):
+        # Accept slug-only format (new) or numbered format (backward compatible)
+        slug_pattern = r"^[a-z0-9-]+$"
+        numbered_pattern = r"^\d{4}-[a-z0-9-]+$"
+        if not (re.match(slug_pattern, v) or re.match(numbered_pattern, v)):
             raise ValueError(
-                f"Plan ID must be 'NNNN-slug' format (e.g., '0001-oauth-auth'). Got: {v}",
+                f"Plan ID must be 'slug' or 'NNNN-slug' format (e.g., 'oauth-auth' or '0001-oauth-auth'). Got: {v}",
             )
         return v
 
@@ -1002,6 +1010,7 @@ class SubgoalData(BaseModel):
         ideal_agent_desc: Description of ideal agent's capabilities
         agent: Best AVAILABLE agent ID with @ prefix (assigned_agent)
         match_quality: How well agent matches task (excellent/acceptable/insufficient)
+        source_file: Primary source file for this subgoal (optional)
         dependencies: List of dependent subgoal IDs
 
     """
@@ -1050,6 +1059,11 @@ class SubgoalData(BaseModel):
         description="How well the assigned agent matches the task",
         examples=["excellent", "acceptable", "insufficient"],
     )
+    source_file: str | None = Field(
+        default=None,
+        description="Primary source file for this subgoal",
+        examples=["packages/cli/src/aurora_cli/planning/core.py", "docs/guides/COMMANDS.md"],
+    )
     dependencies: list[str] = Field(
         default_factory=list,
         description="List of dependent subgoal IDs",
@@ -1080,9 +1094,9 @@ class Goals(BaseModel):
 
     id: str = Field(
         ...,
-        description="Plan ID in NNNN-slug format",
-        pattern=r"^\d{4}-[a-z0-9-]+$",
-        examples=["0001-add-oauth2", "0042-refactor-api"],
+        description="Plan ID in slug or NNNN-slug format (backward compatible)",
+        pattern=r"^([a-z0-9-]+|\d{4}-[a-z0-9-]+)$",
+        examples=["add-oauth2", "refactor-api", "0001-add-oauth2", "0042-refactor-api"],
     )
     title: str = Field(
         ...,

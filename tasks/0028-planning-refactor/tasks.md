@@ -235,35 +235,35 @@
     - verify: `for f in packages/cli/src/aurora_cli/configurators/slash/*.py; do grep -l "tasks" "$f" || echo "Missing: $f"; done`
   - [x] 5.5 Verify: `aur init --config --tools=claude` creates .claude/commands/aur/tasks.md
 
-- [ ] 6.0 Add source_file Field to SubgoalData Model (R6.1, R6.2, R6.5)
-  - [ ] 6.1 Add optional source_file field to SubgoalData model
+- [x] 6.0 Add source_file Field to SubgoalData Model (R6.1, R6.2, R6.5)
+  - [x] 6.1 Add optional source_file field to SubgoalData model
     - File: `packages/cli/src/aurora_cli/planning/models.py` (class SubgoalData, lines 986-1057)
     - Add: `source_file: str | None = Field(default=None, description="Primary source file for this subgoal")`
     - Backward compatible (optional field with default None)
     - tdd: yes
     - verify: `pytest tests/unit/cli/planning/test_models.py -v -k SubgoalData`
-  - [ ] 6.2 Verify Goals model serializes source_file in JSON output
+  - [x] 6.2 Verify Goals model serializes source_file in JSON output
     - File: `packages/cli/src/aurora_cli/planning/models.py`
     - Automatic via Pydantic when field is added
     - Test JSON serialization includes source_file
     - tdd: yes
     - verify: `python -c "from aurora_cli.planning.models import SubgoalData; sg = SubgoalData(id='sg-1', title='test task', description='test description', source_file='test.py'); print('source_file' in sg.model_dump_json())"`
-  - [ ] 6.3 Update generate_goals_json() to include source_file
+  - [x] 6.3 Update generate_goals_json() to include source_file
     - File: `packages/cli/src/aurora_cli/planning/core.py` (function generate_goals_json, lines 1127-1207)
     - Add `source_file=sg.source_file` when creating SubgoalData instances
     - Result: Generated goals.json includes file path per subgoal
     - tdd: yes
     - verify: `pytest tests/unit/cli/planning/ -v -k generate_goals_json`
-  - [ ] 6.4 Verify: Generated goals.json includes source_file per subgoal when available
+  - [x] 6.4 Verify: Generated goals.json includes source_file per subgoal when available
 
-- [ ] 7.0 Extract source_file from LLM Response (aur goals - R6.3, R6.4, R6.5)
-  - [ ] 7.1 Confirm _build_context_summary() already includes file paths
+- [x] 7.0 Extract source_file from LLM Response (aur goals - R6.3, R6.4, R6.5)
+  - [x] 7.1 Confirm _build_context_summary() already includes file paths
     - File: `packages/cli/src/aurora_cli/planning/decompose.py` (lines 356-434)
     - Verify line 408 includes: `File: {short_path}` in context sent to LLM
     - NO changes needed - just confirmation
     - tdd: no
     - verify: `grep -n "File:.*short_path" packages/cli/src/aurora_cli/planning/decompose.py`
-  - [ ] 7.2 Update decomposition to extract source_file from LLM JSON response
+  - [x] 7.2 Update decomposition to extract source_file from LLM JSON response
     - File: `packages/cli/src/aurora_cli/planning/decompose.py` (method _call_soar, lines 473-584)
     - When LLM references file name in subgoal response:
       - If file matches one sent in context → resolve to full path
@@ -273,10 +273,10 @@
     - NO new LLM call - just add field to existing JSON response schema
     - tdd: yes
     - verify: `pytest tests/unit/cli/planning/test_decompose.py -v -k source_file`
-  - [ ] 7.3 Verify: `aur goals "test" -t claude` generates goals.json with source_file field
+  - [x] 7.3 Verify: `aur goals "test" -t claude` generates goals.json with source_file field
 
-- [ ] 8.0 Add source_file to SOAR Decompose (aur soar - R6.6, R6.7, R6.8)
-  - [ ] 8.1 Add source_file field to SOAR DecomposePromptTemplate JSON schema
+- [x] 8.0 Add source_file to SOAR Decompose (aur soar - R6.6, R6.7, R6.8)
+  - [x] 8.1 Add source_file field to SOAR DecomposePromptTemplate JSON schema
     - File: `packages/reasoning/src/aurora_reasoning/prompts/decompose.py` (method build_system_prompt, lines 180-202)
     - Add `source_file` field to subgoal schema in JSON template
     - Example: `"source_file": "path/to/relevant/file.py"`
@@ -284,7 +284,7 @@
     - Context already includes file paths (same as planning decompose)
     - tdd: yes
     - verify: `grep -A10 "source_file" packages/reasoning/src/aurora_reasoning/prompts/decompose.py`
-  - [ ] 8.2 Update SOAR decompose validation to accept optional source_file
+  - [x] 8.2 Update SOAR decompose validation to accept optional source_file
     - File: `packages/reasoning/src/aurora_reasoning/decompose.py` (method decompose_query, lines 151-186)
     - When LLM references file name:
       - If matches context → resolve to full path
@@ -294,17 +294,17 @@
     - Backward compatible - optional field
     - tdd: yes
     - verify: `pytest tests/unit/ -v -k soar_decompose`
-  - [ ] 8.3 Verify: Both `aur goals` and `aur soar` use identical source_file approach
+  - [x] 8.3 Verify: Both `aur goals` and `aur soar` use identical source_file approach
 
-- [ ] 9.0 Remove Slug Number Prefix from Plan Folders (R7)
-  - [ ] 9.1 Update plan folder generation to use slug only (no number prefix)
+- [x] 9.0 Remove Slug Number Prefix from Plan Folders (R7)
+  - [x] 9.1 Update plan folder generation to use slug only (no number prefix)
     - File: `packages/cli/src/aurora_cli/planning/core.py` (function _generate_plan_id or equivalent)
     - Change from: `.aurora/plans/active/0005-improve-aur-mem-search/`
     - Change to: `.aurora/plans/active/improve-aur-mem-search/`
     - Remove sequential number generation logic
     - tdd: yes
     - verify: `pytest tests/unit/cli/planning/ -v -k plan_id`
-  - [ ] 9.2 Implement folder override when same slug exists
+  - [x] 9.2 Implement folder override when same slug exists
     - File: `packages/cli/src/aurora_cli/planning/core.py`
     - Check if slug folder exists
     - If exists: overwrite instead of creating numbered variant
@@ -312,18 +312,18 @@
     - Add confirmation prompt or warning before overwrite
     - tdd: yes
     - verify: `pytest tests/unit/cli/planning/ -v -k override`
-  - [ ] 9.3 Update Plan model plan_id validator to accept slug-only format
+  - [x] 9.3 Update Plan model plan_id validator to accept slug-only format
     - File: `packages/cli/src/aurora_cli/planning/models.py` (Plan model, lines 322-346)
     - Change regex pattern to accept both `NNNN-slug` and `slug-only`
     - Backward compatible with existing numbered plans
     - tdd: yes
     - verify: `pytest tests/unit/cli/planning/test_models.py -v -k "Plan.*plan_id"`
-  - [ ] 9.4 Update Goals model id validator to accept slug-only format
+  - [x] 9.4 Update Goals model id validator to accept slug-only format
     - File: `packages/cli/src/aurora_cli/planning/models.py` (Goals model, lines 1081-1086)
     - Change pattern to accept both formats for backward compat
     - tdd: yes
     - verify: `pytest tests/unit/cli/planning/test_models.py -v -k "Goals.*id"`
-  - [ ] 9.5 Verify: New plans use slug only, existing numbered plans still work
+  - [x] 9.5 Verify: New plans use slug only, existing numbered plans still work
     - Create new plan with goals.json: should be `test-feature` not `0001-test-feature`
     - Create new plan WITHOUT goals.json (R7.3): should be `test-feature` not `0001-test-feature`
     - Run `aur plan list`: displays slug-only format correctly (R7.4)

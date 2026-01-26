@@ -252,13 +252,13 @@ class TestPlanModel:
         """Rejects invalid plan ID format."""
         with pytest.raises(ValidationError) as exc_info:
             Plan(
-                plan_id="oauth-auth",  # Missing NNNN prefix
+                plan_id="OAuth_Auth",  # Invalid characters (uppercase, underscore)
                 goal="Implement OAuth2 authentication with JWT",
                 subgoals=valid_subgoals,
             )
 
         error_msg = str(exc_info.value)
-        assert "NNNN-slug" in error_msg or "oauth-auth" in error_msg
+        assert "slug" in error_msg.lower() or "OAuth_Auth" in error_msg
 
     def test_goal_too_short(self, valid_subgoals: list[Subgoal]) -> None:
         """Rejects goal shorter than 10 chars."""

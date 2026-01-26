@@ -650,29 +650,17 @@ def archive_plan(
 def _generate_plan_id(goal: str, plans_dir: Path) -> str:
     """Generate a unique plan ID from goal.
 
-    Format: NNNN-slug where NNNN is sequential number and slug
-    is derived from goal (lowercase, hyphenated, truncated).
+    Format: slug derived from goal (lowercase, hyphenated, truncated).
+    If slug already exists, it will be overwritten (re-running same goal = replace failed attempt).
 
     Args:
         goal: The plan goal text
         plans_dir: Plans directory to check for existing IDs
 
     Returns:
-        Unique plan ID string
+        Plan ID string (slug only, no number prefix)
 
     """
-    existing_ids = _get_existing_plan_ids(plans_dir)
-
-    # Find next number
-    max_num = 0
-    for plan_id in existing_ids:
-        match = re.match(r"^(\d+)-", plan_id)
-        if match:
-            num = int(match.group(1))
-            max_num = max(max_num, num)
-
-    next_num = max_num + 1
-
     # Generate slug from goal - extract 3-4 meaningful words
     words = goal.lower()
     words = re.sub(r"[^a-z0-9\s]", "", words)  # Remove special chars
@@ -738,7 +726,7 @@ def _generate_plan_id(goal: str, plans_dir: Path) -> str:
     if not slug:
         slug = "plan"
 
-    return f"{next_num:04d}-{slug}"
+    return slug
 
 
 def _validate_goal(goal: str) -> tuple[bool, str | None]:
@@ -1155,6 +1143,9 @@ def generate_goals_json(
             # Convert enum to string if needed
             match_quality = match_quality.value
 
+        # Get source_file (may be None for legacy decompositions)
+        source_file = getattr(sg, "source_file", None) or None
+
         subgoal_objects.append(
             SubgoalData(
                 id=sg.id,
@@ -1164,6 +1155,7 @@ def generate_goals_json(
                 ideal_agent_desc=ideal_agent_desc,
                 agent=sg.assigned_agent,
                 match_quality=match_quality,
+                source_file=source_file,
                 dependencies=clean_deps,
             ),
         )

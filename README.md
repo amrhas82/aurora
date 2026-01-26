@@ -33,11 +33,13 @@ Planning & Multi-Agent Orchestration
 - **Headless Mode** - Isolated branch execution with max retries
 
 ```bash
-# PyPI (recommended)
+# New installation
 pip install aurora-actr
 
-# Upgrade to latest
+# Upgrading from older version (0.9.x → 0.10.0)?
+# Use --upgrade flag to pull latest release
 pip install --upgrade aurora-actr
+aur --version  # Should show 0.10.0
 
 # From source (development)
 git clone https://github.com/amrhas82/aurora.git
@@ -269,7 +271,7 @@ See [3 Simple Steps Guide](docs/guides/3-SIMPLE-STEPS.md) for detailed walkthrou
 ## Quick Start
 
 ```bash
-# Install
+# Install (or upgrade with --upgrade flag)
 pip install aurora-actr
 
 # Initialize project (once per project)

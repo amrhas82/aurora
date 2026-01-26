@@ -7,7 +7,7 @@ serialization, and error message verification.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -422,8 +422,8 @@ class TestPlanModel:
 
     def test_archived_plan_has_timestamps(self, valid_subgoals: list[Subgoal]) -> None:
         """Archived plan can have archived_at and duration_days."""
-        created = datetime.utcnow() - timedelta(days=5)
-        archived = datetime.utcnow()
+        created = datetime.now(timezone.utc) - timedelta(days=5)
+        archived = datetime.now(timezone.utc)
 
         plan = Plan(
             plan_id="0001-archived-test",

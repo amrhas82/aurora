@@ -6,7 +6,7 @@ InitResult, PlanResult, ListResult, ShowResult, ArchiveResult, PlanSummary.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -247,6 +247,7 @@ class TestShowResult:
         )
 
         assert result.success is True
+        assert result.files_status is not None
         assert result.files_status["plan.md"] is True
         assert result.files_status["prd.md"] is False
 
@@ -278,7 +279,7 @@ class TestArchiveResult:
         """ArchiveResult includes computed duration."""
         # Set archive metadata
         sample_plan.status = PlanStatus.ARCHIVED
-        sample_plan.archived_at = datetime.utcnow()
+        sample_plan.archived_at = datetime.now(timezone.utc)
         sample_plan.duration_days = 5
 
         result = ArchiveResult(

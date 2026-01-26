@@ -17,7 +17,7 @@ Models:
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -275,7 +275,7 @@ class Plan(BaseModel):
         description="Natural language goal description",
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc),
         description="UTC timestamp when plan was created",
     )
     status: PlanStatus = Field(
@@ -463,7 +463,7 @@ class PlanManifest(BaseModel):
         description="Manifest schema version",
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.utcnow(),
+        default_factory=lambda: datetime.now(timezone.utc),
         description="When manifest was last updated",
     )
     active_plans: list[str] = Field(
@@ -488,7 +488,7 @@ class PlanManifest(BaseModel):
         """
         if plan_id not in self.active_plans:
             self.active_plans.append(plan_id)
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def archive_plan(self, plan_id: str, archived_id: str | None = None) -> None:
         """Move a plan from active to archived.
@@ -503,7 +503,7 @@ class PlanManifest(BaseModel):
         archived_name = archived_id or plan_id
         if archived_name not in self.archived_plans:
             self.archived_plans.append(archived_name)
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     @property
     def total_plans(self) -> int:

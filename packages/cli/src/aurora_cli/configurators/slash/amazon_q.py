@@ -7,7 +7,6 @@ Uses $ARGUMENTS placeholder and <UserRequest> tags for argument handling.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command - includes $ARGUMENTS and <UserRequest> tags
 FRONTMATTER: dict[str, str] = {
     "search": """---
@@ -37,6 +36,15 @@ The user has requested the following plan. Use the aurora instructions to create
 <UserRequest>
   $ARGUMENTS
 </UserRequest>""",
+    "tasks": """---
+description: Regenerate tasks from PRD [plan-id]
+---
+
+The user wants to regenerate tasks from the PRD. Use the aurora instructions to regenerate tasks.
+
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>""",
     "implement": """---
 description: Execute plan tasks [plan-id]
 ---
@@ -62,6 +70,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".amazonq/prompts/aurora-search.md",
     "get": ".amazonq/prompts/aurora-get.md",
     "plan": ".amazonq/prompts/aurora-plan.md",
+    "tasks": ".amazonq/prompts/aurora-tasks.md",
     "implement": ".amazonq/prompts/aurora-implement.md",
     "archive": ".amazonq/prompts/aurora-archive.md",
 }
@@ -135,6 +144,7 @@ class AmazonQSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

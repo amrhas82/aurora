@@ -7,12 +7,12 @@ with aurora-{command}.md naming pattern.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "search": ".cursor/commands/aurora-search.md",
     "get": ".cursor/commands/aurora-get.md",
     "plan": ".cursor/commands/aurora-plan.md",
+    "tasks": ".cursor/commands/aurora-tasks.md",
     "implement": ".cursor/commands/aurora-implement.md",
     "archive": ".cursor/commands/aurora-archive.md",
 }
@@ -37,6 +37,13 @@ tags: [aurora, search, memory]
 name: Aurora: Plan
 id: /aurora-plan
 description: Create implementation plan [goal | goals.json]
+category: Aurora
+tags: [aurora, planning]
+---""",
+    "tasks": """---
+name: Aurora: Tasks
+id: /aurora-tasks
+description: Regenerate tasks from PRD [plan-id]
 category: Aurora
 tags: [aurora, planning]
 ---""",
@@ -124,6 +131,7 @@ class CursorSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

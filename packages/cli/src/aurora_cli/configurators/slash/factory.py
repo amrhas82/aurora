@@ -7,7 +7,6 @@ Includes argument-hint in frontmatter and $ARGUMENTS in body.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
     "search": """---
@@ -28,6 +27,13 @@ tags: [aurora, search, memory]
 name: Aurora: Plan
 description: Create implementation plan with agent delegation [goal]
 argument-hint: request or feature description
+category: Aurora
+tags: [aurora, planning]
+---""",
+    "tasks": """---
+name: Aurora: Tasks
+description: Regenerate tasks from PRD [plan-id]
+argument-hint: plan ID to regenerate tasks for
 category: Aurora
 tags: [aurora, planning]
 ---""",
@@ -52,6 +58,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".factory/commands/aurora-search.md",
     "get": ".factory/commands/aurora-get.md",
     "plan": ".factory/commands/aurora-plan.md",
+    "tasks": ".factory/commands/aurora-tasks.md",
     "implement": ".factory/commands/aurora-implement.md",
     "archive": ".factory/commands/aurora-archive.md",
 }

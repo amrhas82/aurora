@@ -7,7 +7,6 @@ Uses $ARGUMENTS placeholder and <UserRequest> tags for argument handling.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command - includes $ARGUMENTS and <UserRequest> tags
 FRONTMATTER: dict[str, str] = {
     "search": """---
@@ -30,6 +29,14 @@ The user wants to retrieve a specific chunk. Use the aurora instructions to get 
 description: Create implementation plan [goal | goals.json]
 ---
 The user has requested the following plan. Use the aurora instructions to create their plan.
+<UserRequest>
+  $ARGUMENTS
+</UserRequest>
+""",
+    "tasks": """---
+description: Regenerate tasks from PRD [plan-id]
+---
+The user wants to regenerate tasks from the PRD. Use the aurora instructions to regenerate tasks.
 <UserRequest>
   $ARGUMENTS
 </UserRequest>
@@ -57,6 +64,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".opencode/command/aurora-search.md",
     "get": ".opencode/command/aurora-get.md",
     "plan": ".opencode/command/aurora-plan.md",
+    "tasks": ".opencode/command/aurora-tasks.md",
     "implement": ".opencode/command/aurora-implement.md",
     "archive": ".opencode/command/aurora-archive.md",
 }
@@ -130,6 +138,7 @@ class OpenCodeSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

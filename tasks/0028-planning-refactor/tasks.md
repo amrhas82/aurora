@@ -202,8 +202,8 @@
     - verify: `grep "agents.schema.json" packages/cli/src/aurora_cli/templates/slash_commands.py`
   - [x] 4.3 Verify: agents.json template matches actual schema file structure
 
-- [ ] 5.0 Create New /aur:tasks Skill (Carve-out from /aur:plan - R5)
-  - [ ] 5.1 Create TASKS_TEMPLATE by extracting tasks.md instructions from PLAN_TEMPLATE
+- [x] 5.0 Create New /aur:tasks Skill (Carve-out from /aur:plan - R5)
+  - [x] 5.1 Create TASKS_TEMPLATE by extracting tasks.md instructions from PLAN_TEMPLATE
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py`
     - Extract tasks.md generation instructions from PLAN_TEMPLATE
     - NO new code - same exact instructions, just isolated
@@ -213,12 +213,12 @@
     - Include same TDD hints and format as /aur:plan uses
     - tdd: no
     - verify: `grep -A50 "TASKS_TEMPLATE" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 5.2 Add "tasks" to COMMAND_TEMPLATES dict
+  - [x] 5.2 Add "tasks" to COMMAND_TEMPLATES dict
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~279)
     - Add `"tasks": TASKS_TEMPLATE` entry
     - tdd: yes
     - verify: `python -c "from aurora_cli.templates.slash_commands import COMMAND_TEMPLATES; assert 'tasks' in COMMAND_TEMPLATES"`
-  - [ ] 5.3 Add "tasks" to ALL_COMMANDS list in base.py
+  - [x] 5.3 Add "tasks" to ALL_COMMANDS list in base.py
     - File: `packages/cli/src/aurora_cli/configurators/slash/base.py` (line ~34)
     - Update ALL_COMMANDS from 5 to 6 commands
     - Change: `["search", "get", "plan", "implement", "archive"]` → add "tasks"
@@ -226,14 +226,14 @@
     - If configurators don't use ALL_COMMANDS, this constant may just be for reference
     - tdd: yes
     - verify: `python -c "from aurora_cli.configurators.slash.base import ALL_COMMANDS; assert 'tasks' in ALL_COMMANDS; assert len(ALL_COMMANDS) == 6"`
-  - [ ] 5.4 Update all 20 configurators to generate /aur:tasks command
+  - [x] 5.4 Update all 20 configurators to generate /aur:tasks command
     - Update get_relative_path() in each configurator to handle "tasks" command
     - Update get_description() to include "tasks": "Regenerate tasks from PRD [plan-id]"
     - Files: All 20 configurators in `packages/cli/src/aurora_cli/configurators/slash/`
     - Pattern: Follow same structure as other commands (search, get, plan, etc.)
     - tdd: yes
     - verify: `for f in packages/cli/src/aurora_cli/configurators/slash/*.py; do grep -l "tasks" "$f" || echo "Missing: $f"; done`
-  - [ ] 5.5 Verify: `aur init --config --tools=claude` creates .claude/commands/aur/tasks.md
+  - [x] 5.5 Verify: `aur init --config --tools=claude` creates .claude/commands/aur/tasks.md
 
 - [ ] 6.0 Add source_file Field to SubgoalData Model (R6.1, R6.2, R6.5)
   - [ ] 6.1 Add optional source_file field to SubgoalData model

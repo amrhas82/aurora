@@ -7,12 +7,12 @@ with aurora-{command}.md naming and special auto_execution_mode: 3 frontmatter.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "search": ".windsurf/workflows/aurora-search.md",
     "get": ".windsurf/workflows/aurora-get.md",
     "plan": ".windsurf/workflows/aurora-plan.md",
+    "tasks": ".windsurf/workflows/aurora-tasks.md",
     "implement": ".windsurf/workflows/aurora-implement.md",
     "archive": ".windsurf/workflows/aurora-archive.md",
 }
@@ -22,6 +22,7 @@ DESCRIPTIONS: dict[str, str] = {
     "search": 'Search indexed code ["query" --limit N --type X]',
     "get": "Retrieve last search result [N]",
     "plan": "Create implementation plan [goal | goals.json]",
+    "tasks": "Regenerate tasks from PRD [plan-id]",
     "implement": "Execute plan tasks [plan-id]",
     "archive": "Archive completed plan [plan-id]",
 }

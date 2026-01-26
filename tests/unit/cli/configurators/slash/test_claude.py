@@ -172,7 +172,7 @@ class TestClaudeSlashCommandConfiguratorGenerateAll:
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 5
+        assert len(created) == 6
 
     def test_generate_all_creates_files_in_claude_directory(self, tmp_path: Path):
         """Test generate_all creates files in .claude/commands/aur/ directory."""
@@ -388,7 +388,7 @@ class TestClaudeSlashCommandConfiguratorTargets:
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 5
+        assert len(targets) == 6
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

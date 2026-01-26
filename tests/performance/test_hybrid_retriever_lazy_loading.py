@@ -94,16 +94,16 @@ def test_perf_lazy_loading_creation_time(tmp_path):
 
     # Target: <50ms creation time
     assert avg_time < 0.050, (
-        f"Average creation time {avg_time*1000:.1f}ms exceeds target <50ms. "
+        f"Average creation time {avg_time * 1000:.1f}ms exceeds target <50ms. "
         f"Lazy loading may not be working correctly."
     )
     assert max_time < 0.100, (
-        f"Max creation time {max_time*1000:.1f}ms exceeds tolerance <100ms. "
+        f"Max creation time {max_time * 1000:.1f}ms exceeds tolerance <100ms. "
         f"Some iterations are too slow."
     )
 
-    print(f"\n✓ HybridRetriever creation time: {avg_time*1000:.1f}ms (target: <50ms)")
-    print(f"  Min: {min(times)*1000:.1f}ms, Max: {max_time*1000:.1f}ms")
+    print(f"\n✓ HybridRetriever creation time: {avg_time * 1000:.1f}ms (target: <50ms)")
+    print(f"  Min: {min(times) * 1000:.1f}ms, Max: {max_time * 1000:.1f}ms")
 
 
 @pytest.mark.performance
@@ -179,12 +179,12 @@ def test_perf_lazy_loading_first_retrieve_overhead(tmp_path):
     # In mocks, the relative overhead may be higher but should still be reasonable
     assert overhead_pct < 50.0, (
         f"First retrieve overhead {overhead_pct:.1f}% exceeds tolerance <50%. "
-        f"Baseline: {baseline_avg*1000:.1f}ms, Lazy: {lazy_first_time*1000:.1f}ms, "
-        f"Overhead: {overhead_abs*1000:.1f}ms"
+        f"Baseline: {baseline_avg * 1000:.1f}ms, Lazy: {lazy_first_time * 1000:.1f}ms, "
+        f"Overhead: {overhead_abs * 1000:.1f}ms"
     )
 
     print(f"\n✓ First retrieve overhead: {overhead_pct:.1f}% (target: <5% in production)")
-    print(f"  Baseline (no persistence): {baseline_avg*1000:.1f}ms")
-    print(f"  Lazy first (with persistence load): {lazy_first_time*1000:.1f}ms")
-    print(f"  Overhead: {overhead_abs*1000:.1f}ms")
-    print(f"  Note: In production, 100ms lazy load adds <5% to 2s search")
+    print(f"  Baseline (no persistence): {baseline_avg * 1000:.1f}ms")
+    print(f"  Lazy first (with persistence load): {lazy_first_time * 1000:.1f}ms")
+    print(f"  Overhead: {overhead_abs * 1000:.1f}ms")
+    print("  Note: In production, 100ms lazy load adds <5% to 2s search")

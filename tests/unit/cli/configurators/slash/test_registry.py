@@ -4,7 +4,6 @@ import pytest
 
 from aurora_cli.configurators.slash.registry import SlashCommandRegistry
 
-
 # All 20 expected tool IDs
 ALL_TOOL_IDS = [
     "amazon-q",

@@ -344,38 +344,38 @@
     - verify: `grep "agent_exists" packages/cli/src/aurora_cli/commands/plan.py`
   - [ ] 10.3 Verify: `aur plan view <id>` works without AttributeError
 
-- [ ] 11.0 Update 3-SIMPLE-STEPS.md Documentation (R9.1)
-  - [ ] 11.1 Review existing 3-SIMPLE-STEPS.md structure
+- [x] 11.0 Update 3-SIMPLE-STEPS.md Documentation (R9.1)
+  - [x] 11.1 Review existing 3-SIMPLE-STEPS.md structure
     - File: `docs/guides/3-SIMPLE-STEPS.md` (already exists)
     - Review current sections and flow diagram
     - Identify what needs updating vs what's already correct
     - tdd: no
     - verify: `cat docs/guides/3-SIMPLE-STEPS.md | head -150`
-  - [ ] 11.2 Update "Why This Flow?" section
+  - [x] 11.2 Update "Why This Flow?" section
     - Add emphasis on goals.json as recommended but optional
     - Clarify code-aware (with goals.json) vs non-code-aware (skip goals) paths
     - Update table with source_file mapping info
     - tdd: no
     - verify: `grep -A15 "Why This Flow" docs/guides/3-SIMPLE-STEPS.md`
-  - [ ] 11.3 Update Step 1 output example to show source_file
+  - [x] 11.3 Update Step 1 output example to show source_file
     - Update example output to show `Source: <file>` per subgoal
     - Already exists in current guide, verify accuracy
     - tdd: no
     - verify: `grep -A30 "Step 1:" docs/guides/3-SIMPLE-STEPS.md`
-  - [ ] 11.4 Update Step 2 artifacts list (5 files, no specs)
+  - [x] 11.4 Update Step 2 artifacts list (5 files, no specs)
     - Change from 8 files to 5 files
     - Remove specs/ from directory structure
     - Keep: plan.md, prd.md, design.md, agents.json, tasks.md
     - tdd: no
     - verify: `grep -A15 "Artifacts generated" docs/guides/3-SIMPLE-STEPS.md`
-  - [ ] 11.5 Verify Step 2.5 references /aur:tasks skill correctly
+  - [x] 11.5 Verify Step 2.5 references /aur:tasks skill correctly
     - Already exists, verify it matches new TASKS_TEMPLATE behavior
     - tdd: no
     - verify: `grep -A10 "Step 2.5" docs/guides/3-SIMPLE-STEPS.md`
-  - [ ] 11.6 Verify: 3-SIMPLE-STEPS.md reflects all changes
+  - [x] 11.6 Verify: 3-SIMPLE-STEPS.md reflects all changes
 
-- [ ] 12.0 Update README.md Planning Workflow Section (R9.2, R9.3)
-  - [ ] 12.1 Update Memory-Aware Planning section diagram
+- [x] 12.0 Update README.md Planning Workflow Section (R9.2, R9.3)
+  - [x] 12.1 Update Memory-Aware Planning section diagram
     - File: `README.md` (Memory-Aware Planning section)
     - Add "Setup (once)" mention with `aur init` and `project.md`
     - Update to show 3 steps with /aur:tasks as optional
@@ -383,32 +383,32 @@
     - Note that skipping `aur goals` is valid but less structured
     - tdd: no
     - verify: `grep -A50 "Memory-Aware Planning" README.md`
-  - [ ] 12.2 Add link to 3-SIMPLE-STEPS.md guide
+  - [x] 12.2 Add link to 3-SIMPLE-STEPS.md guide
     - File: `README.md`
     - Add prominent link to detailed planning guide
     - Place after planning workflow overview
     - tdd: no
     - verify: `grep "3-SIMPLE-STEPS" README.md`
-  - [ ] 12.3 Update Commands Reference if it exists to include /aur:tasks
+  - [x] 12.3 Update Commands Reference if it exists to include /aur:tasks
     - File: `README.md`
     - If Commands Reference table exists, add `/aur:tasks [plan-id]` with description "Regenerate tasks from PRD"
     - If no table, skip (may be in COMMANDS.md instead)
     - tdd: no
     - verify: `grep -A5 "Commands Reference\|/aur:tasks" README.md`
-  - [ ] 12.4 Verify: README Planning Workflow accurate and links to detailed guide
+  - [x] 12.4 Verify: README Planning Workflow accurate and links to detailed guide
 
-- [ ] 13.0 Final Integration Testing and Verification
-  - [ ] 13.1 Run full test suite
+- [x] 13.0 Final Integration Testing and Verification
+  - [x] 13.1 Run full test suite
     - Run `make test` to ensure no regressions
     - All unit and integration tests must pass
     - tdd: no
     - verify: `make test`
-  - [ ] 13.2 Run linting and formatting
+  - [x] 13.2 Run linting and formatting
     - Run `make lint` to check code quality
     - Run `make format` to auto-fix issues
     - tdd: no
     - verify: `make lint && make format`
-  - [ ] 13.3 Test full workflow: aur goals → /aur:plan → /aur:tasks
+  - [x] 13.3 Test full workflow: aur goals → /aur:plan → /aur:tasks
     - Create test plan with `aur goals "test planning refactor workflow" -t claude`
     - Verify goals.json created with source_file field
     - Verify plan folder is slug-only (no number prefix)
@@ -419,19 +419,19 @@
     - Verify tasks.md regenerated with TDD hints
     - tdd: no
     - verify: `ls .aurora/plans/active/<plan-id>/`
-  - [ ] 13.4 Test configurator generation with multiple tools
+  - [x] 13.4 Test configurator generation with multiple tools
     - Run `aur init --config --tools=claude,cursor,gemini`
     - Verify /aur:tasks command created for each tool
     - Verify no references to non-existent commands in generated files
     - tdd: no
     - verify: `find .claude .cursor .gemini -name "*tasks*"`
-  - [ ] 13.5 Test backward compatibility
+  - [x] 13.5 Test backward compatibility
     - Test numbered plan folders still work: `aur plan view 0001-old-plan`
     - Test goals.json without source_file still works
     - Test SOAR decompose without source_file still works
     - tdd: no
     - verify: `aur plan list`
-  - [ ] 13.6 Run all PRD acceptance criteria checks
+  - [x] 13.6 Run all PRD acceptance criteria checks
     - `grep -r "aur plan validate" packages/` returns no results
     - `grep -r "plan list --specs" packages/` returns no results
     - `grep -r "show.*--deltas-only" packages/cli/` returns no results
@@ -447,4 +447,4 @@
     - PLAN_STEPS emphasizes goals.json as recommended
     - tdd: no
     - verify: Run all grep commands and tests listed above
-  - [ ] 13.7 Verify: All 9 PRD requirements (R1-R9) implemented and working
+  - [x] 13.7 Verify: All 9 PRD requirements (R1-R9) implemented and working

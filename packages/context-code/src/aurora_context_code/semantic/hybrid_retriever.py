@@ -274,7 +274,7 @@ def get_shared_query_cache(capacity: int = 100, ttl_seconds: int = 1800) -> Quer
     with _shared_query_cache_lock:
         if _shared_query_cache is None:
             logger.debug(
-                f"Creating shared QueryEmbeddingCache " f"(capacity={capacity}, ttl={ttl_seconds}s)"
+                f"Creating shared QueryEmbeddingCache (capacity={capacity}, ttl={ttl_seconds}s)"
             )
             _shared_query_cache = QueryEmbeddingCache(capacity=capacity, ttl_seconds=ttl_seconds)
         elif (
@@ -389,8 +389,7 @@ def get_cached_retriever(
         # Cache miss - create new retriever
         _retriever_cache_stats["misses"] += 1
         logger.debug(
-            f"Creating new HybridRetriever for db_path={db_path} "
-            f"(hit_rate={_get_hit_rate():.1%})",
+            f"Creating new HybridRetriever for db_path={db_path} (hit_rate={_get_hit_rate():.1%})",
         )
 
         # Apply LRU eviction if at capacity
@@ -1257,7 +1256,7 @@ class HybridRetriever:
             self.bm25_scorer.save_index(index_path)
             self._bm25_index_loaded = True
             logger.info(
-                f"Built and saved BM25 index to {index_path} " f"({len(documents)} documents)",
+                f"Built and saved BM25 index to {index_path} ({len(documents)} documents)",
             )
             return True
 

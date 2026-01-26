@@ -41,7 +41,6 @@ from aurora_context_code.semantic.embedding_provider import (
     EmbeddingProvider,
 )
 
-
 # Mark all tests as requiring ML dependencies
 pytestmark = [
     pytest.mark.ml,

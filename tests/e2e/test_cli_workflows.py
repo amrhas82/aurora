@@ -22,7 +22,6 @@ from typing import Any
 
 import pytest
 
-
 pytestmark = pytest.mark.ml
 
 

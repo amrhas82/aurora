@@ -187,20 +187,20 @@
     - verify: `grep -A20 "tasks.md Template" packages/cli/src/aurora_cli/templates/slash_commands.py`
   - [x] 3.4 Verify: Generated plans include TDD hints in tasks.md format
 
-- [ ] 4.0 Add agents.json Schema Documentation to Templates (R4)
-  - [ ] 4.1 Add agents.json schema reference to PLAN_REFERENCES
+- [x] 4.0 Add agents.json Schema Documentation to Templates (R4)
+  - [x] 4.1 Add agents.json schema reference to PLAN_REFERENCES
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_REFERENCES)
     - Add agents.json template with required fields
     - Include: plan_id, goal, status, created_at, updated_at, subgoals[]
     - Each subgoal: id, title, description, agent_id, status, dependencies[]
     - tdd: no
     - verify: `grep -A25 "agents.json" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 4.2 Add reference to existing schema file
+  - [x] 4.2 Add reference to existing schema file
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py`
     - Reference `packages/planning/src/aurora_planning/schemas/agents.schema.json`
     - tdd: no
     - verify: `grep "agents.schema.json" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 4.3 Verify: agents.json template matches actual schema file structure
+  - [x] 4.3 Verify: agents.json template matches actual schema file structure
 
 - [ ] 5.0 Create New /aur:tasks Skill (Carve-out from /aur:plan - R5)
   - [ ] 5.1 Create TASKS_TEMPLATE by extracting tasks.md instructions from PLAN_TEMPLATE

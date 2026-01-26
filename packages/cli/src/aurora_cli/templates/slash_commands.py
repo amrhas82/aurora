@@ -243,7 +243,47 @@ PLAN_REFERENCES = """**Reference**
 - tdd: yes - For models, API endpoints, bug fixes, business logic, data transformations
 - tdd: no - For docs, config files, migrations, pure refactors (no behavior change)
 - Default: When unsure, use tdd: yes
-```"""
+```
+
+**agents.json Template** (plan metadata with subgoals):
+```json
+{
+  "plan_id": "unique-plan-identifier",
+  "goal": "Original goal statement describing what needs to be achieved",
+  "status": "active",
+  "complexity": "moderate",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "subgoals": [
+    {
+      "id": "sg-1",
+      "title": "Brief subgoal title",
+      "description": "Detailed subgoal description explaining what needs to be done",
+      "agent_id": "@code-developer",
+      "status": "pending",
+      "dependencies": []
+    }
+  ]
+}
+```
+
+**agents.json Schema:**
+- **plan_id** (required): Unique identifier for the plan
+- **goal** (required): Original goal statement (10-500 chars)
+- **status** (required): One of: active, completed, archived, failed
+- **complexity** (optional): One of: simple, moderate, complex
+- **created_at** (required): ISO 8601 timestamp (UTC)
+- **updated_at** (required): ISO 8601 timestamp (UTC)
+- **subgoals** (required): Array of subgoal objects (1-20 items)
+  - **id**: Subgoal identifier (format: sg-N)
+  - **title**: Brief subgoal title (5-100 chars, imperative form)
+  - **description**: Detailed description (10-500 chars)
+  - **agent_id**: Recommended agent (format: @agent-name)
+  - **status**: One of: pending, in_progress, completed, blocked
+  - **dependencies**: Array of subgoal IDs that must complete first
+
+**Full schema reference:** `packages/planning/src/aurora_planning/schemas/agents.schema.json`
+"""
 
 PLAN_TEMPLATE = f"""{PLAN_GUARDRAILS}
 

@@ -33,10 +33,13 @@ Planning & Multi-Agent Orchestration
 - **Headless Mode** - Isolated branch execution with max retries
 
 ```bash
-# PyPI
+# PyPI (recommended)
 pip install aurora-actr
 
-# From source
+# Upgrade to latest
+pip install --upgrade aurora-actr
+
+# From source (development)
 git clone https://github.com/amrhas82/aurora.git
 cd aurora && ./install.sh
 ```
@@ -237,12 +240,14 @@ Setup (once)             Step 1: Decompose        Step 2: Plan             Step 
 Terminal                 Terminal                 Slash Command            Slash Command
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐      ┌─────────────────┐
 │   aur init      │     │   aur goals     │ ->  │   /aur:plan     │  ->  │  /aur:implement │
-│   aur mem index │     │   "Add feature" │     │   [plan-id]     │      │   [plan-id]     │
+│   Complete      │     │   "Add feature" │     │   [plan-id]     │      │   [plan-id]     │
+│   project.md*   │     │                 │     │                 │      │                 │
+│   aur mem index │     │                 │     │                 │      │                 │
 └─────────────────┘     └─────────────────┘     └─────────────────┘      └─────────────────┘
         │                       │                       │                        │
         v                       v                       v                        v
    .aurora/                goals.json              5 artifacts:            Code changes
-   - project.md            - subgoals              - plan.md               - validated
+   - project.md*           - subgoals              - plan.md               - validated
    - memory.db             - agents                - prd.md                - tested
                            - source files          - design.md
                                                    - agents.json
@@ -252,6 +257,9 @@ Terminal                 Terminal                 Slash Command            Slash
                                                  │ /aur:tasks  │  <- Optional: regenerate
                                                  │ [plan-id]   │     tasks after PRD edits
                                                  └─────────────┘
+
+* Ask your agent to complete project.md: "Please fill out .aurora/project.md with our
+  architecture, conventions, and key patterns." This improves planning accuracy.
 ```
 
 See [3 Simple Steps Guide](docs/guides/3-SIMPLE-STEPS.md) for detailed walkthrough.
@@ -267,7 +275,10 @@ pip install aurora-actr
 # Initialize project (once per project)
 cd your-project/
 aur init                        # Creates .aurora/project.md
-# Edit .aurora/project.md to describe your project
+
+# IMPORTANT: Complete .aurora/project.md manually
+# Ask your agent: "Please complete the project.md with our architecture and conventions"
+# This context improves planning accuracy
 
 # Index codebase for memory
 aur mem index .

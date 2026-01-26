@@ -152,8 +152,8 @@
     - `grep -r "plan list --specs" packages/` returns no results
     - `grep -r "deltas-only" packages/cli/` returns no results
 
-- [ ] 3.0 Update Artifact Generation Order and Add TDD Hints (R3)
-  - [ ] 3.1 Update PLAN_STEPS Step 1 to emphasize goals.json as recommended
+- [x] 3.0 Update Artifact Generation Order and Add TDD Hints (R3)
+  - [x] 3.1 Update PLAN_STEPS Step 1 to emphasize goals.json as recommended
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_STEPS, line ~160)
     - Clarify goals.json is recommended (code-aware) but optional
     - If goals.json exists: use for subgoals, agents, source_file mappings
@@ -161,13 +161,13 @@
     - Both paths are valid, goals.json recommended for production work
     - tdd: no
     - verify: `grep -A10 "Review.*project.md" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 3.2 Update PLAN_STEPS Step 2 to specify artifact order
+  - [x] 3.2 Update PLAN_STEPS Step 2 to specify artifact order
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_STEPS, line ~163)
     - Specify explicit order: plan.md, prd.md, design.md, agents.json, tasks.md
     - Add note that tasks.md depends on PRD content and is generated LAST
     - tdd: no
     - verify: `grep -A5 "Choose a unique" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 3.3 Add TDD hints to tasks.md template in PLAN_REFERENCES
+  - [x] 3.3 Add TDD hints to tasks.md template in PLAN_REFERENCES
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_REFERENCES, line ~225)
     - Update tasks.md template format to include:
       ```markdown
@@ -185,7 +185,7 @@
     - Match 2-generate-tasks agent pattern
     - tdd: no
     - verify: `grep -A20 "tasks.md Template" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 3.4 Verify: Generated plans include TDD hints in tasks.md format
+  - [x] 3.4 Verify: Generated plans include TDD hints in tasks.md format
 
 - [ ] 4.0 Add agents.json Schema Documentation to Templates (R4)
   - [ ] 4.1 Add agents.json schema reference to PLAN_REFERENCES

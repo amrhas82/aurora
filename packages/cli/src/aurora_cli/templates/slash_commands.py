@@ -158,9 +158,16 @@ PLAN_GUARDRAILS = f"""{BASE_GUARDRAILS}
 
 PLAN_STEPS = """**Steps**
 1. Review `.aurora/project.md`, run `aur plan list` to see existing plans, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the plan in current behaviour; note any gaps that require clarification.
-   - **If input is a `goals.json` file**: Read it and populate the Goals Context table with subgoals, agents, files, and dependencies.
-   - **If input is a prompt**: Run `aur agents list` to see available agents. Assign agents to tasks as you plan.
-2. Choose a unique verb-led `plan-id` and scaffold `plan.md`, `tasks.md`, and `design.md` (when needed) under `.aurora/plans/active/<id>/`.
+   - **If input is a `goals.json` file (recommended for code-aware planning)**: Read it and populate the Goals Context table with subgoals, agents, files, and dependencies. Goals.json provides code-aware context including source_file mappings for each subgoal.
+   - **If input is a prompt (valid but less structured)**: Continue with prompt-based planning. Run `aur agents list` to see available agents. Assign agents to tasks as you plan. Note: Agent searches will happen on-the-fly during implementation rather than upfront.
+   - Both paths are valid; goals.json is recommended for production work as it grounds planning in actual codebase structure.
+2. Choose a unique verb-led `plan-id` and generate artifacts in this order under `.aurora/plans/active/<id>/`:
+   - First: `plan.md` (overview and strategy)
+   - Second: `prd.md` (detailed product requirements)
+   - Third: `design.md` (when needed - technical architecture)
+   - Fourth: `agents.json` (agent assignments)
+   - Last: `tasks.md` (depends on PRD content, generated after all other artifacts)
+   Note: tasks.md is generated last because it needs complete PRD details to create accurate task breakdowns.
 3. Map the change into concrete capabilities or requirements, breaking multi-scope efforts into distinct spec deltas with clear relationships and sequencing.
 4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
 5. Draft spec deltas in `.aurora/plans/active/<id>/specs/<capability>/spec.md` (one folder per capability) using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement and cross-reference related capabilities when relevant.
@@ -222,13 +229,20 @@ PLAN_REFERENCES = """**Reference**
 1. [Question] - **Recommendation**: [answer]
 ```
 
-**tasks.md Template** (with @agent per task):
+**tasks.md Template** (with @agent per task and TDD hints):
 ```markdown
 ## Phase N: [Name]
 - [ ] N.1 Task description
   <!-- @agent: @code-developer -->
+  - tdd: yes|no
+  - verify: `command to verify`
   - Details
   - **Validation**: How to verify
+
+**TDD Detection Guidelines:**
+- tdd: yes - For models, API endpoints, bug fixes, business logic, data transformations
+- tdd: no - For docs, config files, migrations, pure refactors (no behavior change)
+- Default: When unsure, use tdd: yes
 ```"""
 
 PLAN_TEMPLATE = f"""{PLAN_GUARDRAILS}

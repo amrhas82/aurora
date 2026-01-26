@@ -157,7 +157,7 @@ PLAN_GUARDRAILS = f"""{BASE_GUARDRAILS}
 - Do not write any code during the planning stage. Only create design documents (plan.md, tasks.md, design.md, and spec deltas). Implementation happens in the implement stage after approval."""
 
 PLAN_STEPS = """**Steps**
-1. Review `.aurora/project.md`, run `aur plan list` and `aur plan list --specs`, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the plan in current behaviour; note any gaps that require clarification.
+1. Review `.aurora/project.md`, run `aur plan list` to see existing plans, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the plan in current behaviour; note any gaps that require clarification.
    - **If input is a `goals.json` file**: Read it and populate the Goals Context table with subgoals, agents, files, and dependencies.
    - **If input is a prompt**: Run `aur agents list` to see available agents. Assign agents to tasks as you plan.
 2. Choose a unique verb-led `plan-id` and scaffold `plan.md`, `tasks.md`, and `design.md` (when needed) under `.aurora/plans/active/<id>/`.
@@ -165,10 +165,10 @@ PLAN_STEPS = """**Steps**
 4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
 5. Draft spec deltas in `.aurora/plans/active/<id>/specs/<capability>/spec.md` (one folder per capability) using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement and cross-reference related capabilities when relevant.
 6. Draft `tasks.md` with `<!-- @agent: @name -->` comment after each parent task. Agent assignment priority: goals.json > agent registry match > LLM inference.
-7. Validate with `aur plan validate <id> --strict` and resolve every issue before sharing the plan."""
+7. Review plan with `aur plan view <id>` and ensure all tasks are well-defined before sharing the plan."""
 
 PLAN_REFERENCES = """**Reference**
-- Use `aur plan show <id> --json --deltas-only` or `aur plan show <spec> --type spec` to inspect details when validation fails.
+- Use `aur plan view <id> --format json` to inspect plan details in JSON format.
 - Search existing requirements with `rg -n "Requirement:|Scenario:" .aurora/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so plans align with current implementation realities.
 

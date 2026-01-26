@@ -52,13 +52,13 @@ Creates, validates, and tracks implementation plans.
 aur plan list
 
 # Show plan details
-aur plan show <plan-id>
+aur plan view <plan-id>
 
 # Create new plan
 aur plan create "Add user authentication"
 
-# Validate plan structure
-aur plan validate <plan-id>
+# Archive completed plan
+aur plan archive <plan-id>
 ```
 
 **Plan structure:**

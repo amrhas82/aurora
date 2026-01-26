@@ -129,25 +129,25 @@
     - verify: `pytest tests/unit/cli/planning/ -v -k show_plan`
   - [x] 1.6 Verify: `grep -r "specs/" packages/cli/src/aurora_cli/planning/ packages/cli/src/aurora_cli/commands/plan.py` - only comments/docs remain
 
-- [ ] 2.0 Fix Non-Existent Command References in Templates (R2)
-  - [ ] 2.1 Remove `aur plan validate` reference from PLAN_STEPS
+- [x] 2.0 Fix Non-Existent Command References in Templates (R2)
+  - [x] 2.1 Remove `aur plan validate` reference from PLAN_STEPS
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~168)
     - Remove step 7 referencing `aur plan validate <id> --strict`
     - Replace with `aur plan view <id>` for verification
     - tdd: no
     - verify: `grep -n "validate.*--strict" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 2.2 Remove `aur plan list --specs` reference from PLAN_STEPS
+  - [x] 2.2 Remove `aur plan list --specs` reference from PLAN_STEPS
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~160)
     - Remove `--specs` flag reference
     - Use `aur plan list` only
     - tdd: no
     - verify: `grep -n "list.*--specs" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 2.3 Remove `aur plan show --json --deltas-only` reference from PLAN_REFERENCES
+  - [x] 2.3 Remove `aur plan show --json --deltas-only` reference from PLAN_REFERENCES
     - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~171)
     - Replace with `aur plan view <id> --format json`
     - tdd: no
     - verify: `grep -n "deltas-only\|show.*--json" packages/cli/src/aurora_cli/templates/slash_commands.py`
-  - [ ] 2.4 Verify: All broken command references removed
+  - [x] 2.4 Verify: All broken command references removed
     - `grep -r "aur plan validate" packages/` returns no results
     - `grep -r "plan list --specs" packages/` returns no results
     - `grep -r "deltas-only" packages/cli/` returns no results

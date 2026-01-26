@@ -25,7 +25,6 @@ from aurora_cli.commands.soar import soar_command
 from aurora_cli.commands.spawn import spawn_command
 from aurora_cli.commands.version import version_command
 
-
 __all__ = ["cli"]
 
 console = Console()
@@ -74,7 +73,7 @@ def _show_first_run_welcome_if_needed() -> None:
     default=None,
     help="Run headless mode with specified prompt file (shorthand for 'aur headless <file>')",
 )
-@click.version_option(version="0.9.4")
+@click.version_option(version="0.10.0")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -> None:
     r"""AURORA: Adaptive Unified Reasoning and Orchestration Architecture.

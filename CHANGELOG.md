@@ -7,35 +7,188 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-01-26
+
+### Added
+
+**Epic 1: Memory Search Performance (Foundation Caching)**
+- Module-level HybridRetriever instance caching with LRU policy
+  - Cache keyed by `(db_path, config_hash)` with configurable size (default: 10)
+  - Reduces cold search time by 30-40% (15-19s → 10-12s)
+  - Configurable via `AURORA_RETRIEVER_CACHE_SIZE` and `AURORA_RETRIEVER_CACHE_TTL`
+- ActivationEngine singleton caching per database path
+  - Reduces warm search time by 40-50% (4-5s → 2-3s)
+  - Automatically shared across all retrievers using same database
+- Shared QueryEmbeddingCache with LRU policy
+  - Cache hit rate typically >60% in SOAR multi-phase operations
+  - Reduces embedding computation on repeated queries
+- Enhanced BM25 index persistence validation
+  - Disk-cached at `.aurora/indexes/bm25_index.pkl`
+  - Load time <100ms (vs 9.7s rebuild)
+- Cache invalidation support via `aur mem index` and config changes
+- Comprehensive caching guide in documentation
+
+**Epic 2: Lazy BM25 Loading + Dual-Hybrid Fallback**
+- Lazy BM25 index loading deferred to first retrieve() call
+  - Creation time: 150-250ms → 0.0ms (99.9% improvement)
+  - Thread-safe double-checked locking ensures single load
+  - No impact on search performance (index loaded once and reused)
+- Dual-hybrid fallback mode (BM25 + Activation) when embeddings unavailable
+  - Automatically triggers when embedding model not installed or `AURORA_EMBEDDING_PROVIDER=none`
+  - Quality testing showed 85-100% overlap with tri-hybrid (BM25 + Activation + Semantic)
+  - Graceful degradation from tri-hybrid → dual-hybrid → activation-only
+- Performance benchmarks and qualitative validation
+
+**Planning System Refactor (Complete R1-R9)**
+- New `/aur:tasks` slash command for regenerating tasks from PRD
+  - Available in all 20 tool configurators (6 commands total: search, get, plan, tasks, implement, archive)
+  - Reads prd.md, goals.json, agents.json and regenerates tasks.md
+  - Includes same TDD hints and format as /aur:plan
+- `source_file` field added to Subgoal and SubgoalData models
+  - Tracks primary source file for each subgoal
+  - Extracted from LLM responses with validation
+  - Supports both code files and markdown documentation
+  - Backward compatible (optional field, defaults to None)
+  - Integrated into both `aur goals` and `aur soar` decomposition
+- agents.json schema documentation in PLAN_REFERENCES
+  - Complete template with required and optional fields
+  - Reference to official schema file
+- TDD hints in tasks.md template
+  - Format: `tdd: yes|no` and `verify: command`
+  - Guidelines for when to use TDD (models, APIs, bugs) vs when to skip (docs, config)
+  - Matches 2-generate-tasks agent pattern
+- 3-SIMPLE-STEPS.md comprehensive planning guide created
+  - Step-by-step workflow documentation
+  - Code-aware (with goals.json) vs prompt-based planning paths
+  - Artifact generation order and dependencies
+
+**Task Execution Improvements**
+- Wave-based execution with context passing for dependent tasks
+- Topological sorting for dependency-aware parallel execution
+- Invalid dependency reference validation
+
+### Changed
+
+**Planning System**
+- Plan folders now use slug-only format (e.g., `improve-search` instead of `0001-improve-search`)
+  - Backward compatible: numbered plans (NNNN-slug) still work
+  - Folder override: Re-running same goal replaces previous attempt
+  - Plan ID validators accept both formats
+- Artifact generation order now explicitly documented
+  - Order: plan.md → prd.md → design.md → agents.json → tasks.md
+  - tasks.md generated LAST as it depends on PRD content
+- Plan templates emphasize goals.json as recommended but optional
+  - Code-aware planning (with goals.json) preferred for production
+  - Prompt-based planning (skip goals.json) valid for simpler workflows
+
+**Code Quality**
+- Applied 4,425 safe formatting fixes across codebase
+- Replaced all `datetime.utcnow()` with `datetime.now(timezone.utc)` (Python 3.12+ compatibility)
+- Fixed all ARG001-ARG005 ruff violations (104 unused argument fixes)
+- Prefixed unused parameters with underscore for clarity
+
+### Fixed
+
+**Planning System**
+- Fixed `aur plan view` schema mismatch
+  - Changed `sg.recommended_agent` → `sg.assigned_agent`
+  - Removed non-existent `sg.agent_exists` checks
+  - Added ideal_agent gap detection
+- Removed non-existent command references from templates
+  - Removed `aur plan validate` references
+  - Removed `--specs` flag from `aur plan list`
+  - Replaced `show --json --deltas-only` with `view --format json`
+- Fixed configurator method signature incompatibilities (codex.py, kilocode.py)
+
+**Memory Search**
+- Fixed embedding model wait logic in mem search
+  - Changed from BM25-only fallback to proper embedding wait
+- Fixed dual-hybrid fallback test configuration (caplog logger)
+
+**SOAR & Spawner**
+- Fixed fallback when SOAR decomposition returns empty subgoals
+- Fixed retry_feedback parameter passing to decompose_query
+- Fixed _verbose parameter name in _display_goals_results call
+- Corrected parameter names in function calls (Phase 2B Task 15.1)
+
+**Type Checking & Linting**
+- Resolved all Pyright type-checking errors
+  - Fixed Config attribute access with type: ignore comments
+  - Fixed Subgoal model attribute references
+  - Fixed method signatures to match base classes
+- Fixed datetime deprecation warnings throughout codebase
+- Removed 12 unused test variables in collect tests
+- Removed commented code in packages/cli
+
 ### Removed
 
-**Slash Commands:**
+**Slash Commands**
 - Removed `aur:checkpoint` slash command from all tool configurations
-  - All 20 tool configurators now generate 5 commands instead of 6 (search, get, plan, implement, archive)
+  - All 20 tool configurators now generate 6 commands: search, get, plan, tasks, implement, archive
   - Removed checkpoint template from `templates/slash_commands.py`
   - Removed checkpoint command from `templates/commands.py`
-  - Breaking change: Tools configured with `aur init --tools` will no longer generate checkpoint.md files
   - Existing `.aurora/checkpoints/` directories are preserved (not deleted)
   - Config keys related to checkpoints are silently ignored for backward compatibility
 
-**CLI Implementation:**
+**CLI Implementation**
 - Removed checkpoint-related CLI options from `aur spawn` command
   - Removed `--resume`, `--list-checkpoints`, `--clean-checkpoints`, `--no-checkpoint` flags
   - Deleted `packages/cli/src/aurora_cli/planning/checkpoint.py`
   - Deleted `packages/cli/src/aurora_cli/execution/checkpoint.py`
   - Removed checkpoint helper functions from `spawn_helpers.py`
 
-**Documentation:**
-- Updated all documentation to reflect 5-command structure
-  - CLAUDE.md, README.md, TOOLS_GUIDE.md, CONFIG_REFERENCE.md
-  - Removed checkpoint references from implement command descriptions
-  - Updated command count references from 6 to 5
+**Planning System**
+- Removed spec generation from planning system
+  - Plan creation now generates 5 files instead of 8 (plan.md, prd.md, design.md, agents.json, tasks.md)
+  - Removed 4 capability spec files: planning, commands, validation, schemas specs
+  - Updated all references from "8 files" to "5 files"
+  - Removed spec validation from validate_plan_structure()
+  - Removed spec entries from show_plan() file status
 
-**Tests:**
-- Removed checkpoint-specific test files
-  - `tests/unit/cli/planning/test_checkpoint.py`
-  - `tests/unit/cli/execution/test_checkpoint.py`
-  - `tests/integration/test_spawn_checkpoints.py`
+### Performance
+
+**Startup Improvements**
+- Lazy BM25 index loading: 99.9% improvement (150-250ms → 0ms)
+- Module-level retriever caching: 30-40% faster cold searches (15-19s → 10-12s)
+- Activation engine singleton: 40-50% faster warm searches (4-5s → 2-3s)
+- BM25 index persistence: <100ms load vs 9.7s rebuild
+- Query embedding caching: >60% cache hit rate in multi-phase operations
+
+**Memory Efficiency**
+- Thread-safe double-checked locking for lazy initialization
+- LRU caching prevents unbounded memory growth
+- Shared instances reduce memory footprint
+
+### Documentation
+
+**New Guides**
+- Created `docs/guides/3-SIMPLE-STEPS.md` - Comprehensive planning workflow guide
+- Added Epic 1 caching guide with configuration examples
+- Added Epic 2 documentation (lazy loading + dual-hybrid fallback)
+- Added comprehensive Phase 2 lessons learned
+
+**Updated References**
+- Updated PLAN_REFERENCES with agents.json schema and examples
+- Updated PLAN_STEPS with artifact generation order
+- Updated README.md with real command output examples
+- Updated CODE_QUALITY_REPORT with Phase 2A and 2B results
+- Updated all documentation to reflect 6-command structure (tasks added)
+- Removed checkpoint references from all documentation
+- Removed spec file references from all documentation
+
+### Testing
+
+**New Tests**
+- Added performance tests for caching (Epic 1 Task 6.0)
+- Added integration tests for memory search caching (Epic 1 Task 5.0)
+- Added wave execution and performance regression tests
+- Added 18 planning system tests for spec removal and enhancements
+- Added dual-hybrid fallback tests
+
+**Test Improvements**
+- Fixed test fixtures to use assigned_agent instead of recommended_agent
+- Added None checks for optional fields in ShowResult tests
+- Configured proper caplog logging for pytest
 
 ## [0.9.4] - 2026-01-19
 

@@ -824,7 +824,7 @@ def _write_goals_only(
     """Write only goals.json to disk (for aur goals command).
 
     Per PRD-0026, aur goals creates ONLY goals.json. The /plan skill
-    will later read this and generate prd.md, tasks.md, and specs/.
+    will later read this and generate prd.md, design.md, and tasks.md.
 
     Args:
         plan: Plan object with subgoals and agent assignments
@@ -1699,7 +1699,7 @@ def create_plan(
     try:
         if goals_only:
             # aur goals: Only create directory and goals.json (per PRD-0026)
-            # /plan skill will later add prd.md, tasks.md, specs/
+            # /plan skill will later add plan.md, prd.md, design.md, tasks.md
             _write_goals_only(plan, plan_path, memory_context or [], agent_gaps=agent_gaps)
         else:
             # Full plan creation (for /plan skill or legacy mode)

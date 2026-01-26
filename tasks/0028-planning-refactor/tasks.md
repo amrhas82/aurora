@@ -329,20 +329,23 @@
     - Run `aur plan list`: displays slug-only format correctly (R7.4)
     - Existing plan: `aur plan view 0005-old-plan` still works (backward compat)
 
-- [ ] 10.0 Fix aur plan view Schema Mismatch (R8)
-  - [ ] 10.1 Fix view_command to use correct Subgoal attribute names
+- [x] 10.0 Fix aur plan view Schema Mismatch (R8)
+  - [x] 10.1 Fix view_command to use correct Subgoal attribute names
     - File: `packages/cli/src/aurora_cli/commands/plan.py` (lines 469-479)
-    - Change: `sg.recommended_agent` → `sg.agent` (or `sg.assigned_agent` if that's the field name)
+    - Change: `sg.recommended_agent` → `sg.assigned_agent` (correct field name)
     - Change: `sg.agent_exists` → remove check (doesn't exist on Subgoal model)
+    - Completed in commit d65579e (bugfix round)
     - tdd: yes
     - verify: `pytest tests/unit/cli/commands/ -v -k view`
-  - [ ] 10.2 Simplify Subgoal display to show agent without existence check
+  - [x] 10.2 Simplify Subgoal display to show agent without existence check
     - File: `packages/cli/src/aurora_cli/commands/plan.py`
-    - Remove agent_exists check entirely (simpler approach)
-    - Just show the assigned agent from model
+    - Removed agent_exists check entirely (simpler approach)
+    - Shows assigned_agent from model with optional ideal_agent gap detection
+    - Completed in commit d65579e (bugfix round)
     - tdd: yes
     - verify: `grep "agent_exists" packages/cli/src/aurora_cli/commands/plan.py`
-  - [ ] 10.3 Verify: `aur plan view <id>` works without AttributeError
+  - [x] 10.3 Verify: `aur plan view <id>` works without AttributeError
+    - Verified: All tests passing, no AttributeError on Subgoal attributes
 
 - [x] 11.0 Update 3-SIMPLE-STEPS.md Documentation (R9.1)
   - [x] 11.1 Review existing 3-SIMPLE-STEPS.md structure

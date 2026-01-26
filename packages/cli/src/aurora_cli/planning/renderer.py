@@ -7,7 +7,7 @@ all 8 plan files from templates.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -103,7 +103,9 @@ class TemplateRenderer:
 
         # Build ISO 8601 timestamps for JSON
         created_iso = (
-            plan.created_at.isoformat() if plan.created_at else datetime.utcnow().isoformat()
+            plan.created_at.isoformat()
+            if plan.created_at
+            else datetime.now(timezone.utc).isoformat()
         )
 
         # Build subgoals with enhanced agent capability context

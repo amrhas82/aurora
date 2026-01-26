@@ -203,8 +203,7 @@ def create_command(
 
     console.print("\n[bold]Subgoals:[/]")
     for i, sg in enumerate(plan.subgoals, 1):
-        agent_status = "[green][/]" if sg.agent_exists else "[yellow]NOT FOUND[/]"
-        console.print(f"  {i}. {sg.title} ({sg.recommended_agent} {agent_status})")
+        console.print(f"  {i}. {sg.title} ({sg.assigned_agent})")
         if sg.dependencies:
             console.print(f"     [dim]Depends on: {', '.join(sg.dependencies)}[/]")
 
@@ -461,16 +460,14 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
     console.print("-" * 60)
 
     for i, sg in enumerate(plan.subgoals, 1):
-        status = "[green][/]" if sg.agent_exists else "[yellow]NOT FOUND[/]"
-        console.print(f"\n{i}. {sg.title} ({sg.recommended_agent} {status})")
+        console.print(f"\n{i}. {sg.title} ({sg.assigned_agent})")
         console.print(f"   {sg.description}")
         deps = ", ".join(sg.dependencies) if sg.dependencies else "None"
         console.print(f"   [dim]Dependencies: {deps}[/]")
 
-        if not sg.agent_exists:
-            console.print("\n   [yellow]Agent Gap Detected:[/]")
-            console.print(f"   - Missing: {sg.recommended_agent}")
-            console.print("   - Fallback: Use @market-researcher or @code-developer")
+        # Show ideal agent if different from assigned (gap detection)
+        if hasattr(sg, "ideal_agent") and sg.ideal_agent and sg.ideal_agent != sg.assigned_agent:
+            console.print(f"   [yellow]Ideal agent: {sg.ideal_agent}[/]")
 
     if result.files_status:
         console.print("\n[bold]Files:[/]")

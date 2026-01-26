@@ -16,7 +16,7 @@ import logging
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -227,7 +227,7 @@ def _get_plans_dir(config: Config | None = None) -> Path:
 
     """
     if config is not None and hasattr(config, "get_plans_path"):
-        return Path(config.get_plans_path()).expanduser().resolve()
+        return Path(config.get_plans_path()).expanduser().resolve()  # type: ignore[attr-defined]
     return get_default_plans_path()
 
 
@@ -259,7 +259,7 @@ def _save_manifest(plans_dir: Path, manifest: PlanManifest) -> None:
 
     """
     manifest_path = plans_dir / "manifest.json"
-    manifest.updated_at = datetime.utcnow()
+    manifest.updated_at = datetime.now(timezone.utc)
     manifest_path.write_text(manifest.model_dump_json(indent=2))
 
 
@@ -613,7 +613,7 @@ def archive_plan(
     try:
         # Update plan metadata
         plan.status = PlanStatus.ARCHIVED
-        plan.archived_at = datetime.utcnow()
+        plan.archived_at = datetime.now(timezone.utc)
         plan.duration_days = (plan.archived_at - plan.created_at).days
 
         # Write updated agents.json
@@ -1172,7 +1172,7 @@ def generate_goals_json(
     goals = Goals(
         id=plan_id,
         title=goal,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         status="ready_for_planning",
         memory_context=memory_objects,
         subgoals=subgoal_objects,
@@ -1311,7 +1311,7 @@ def _decompose_with_soar(
     if config:
         # Extract relevant config as dict
         if hasattr(config, "to_dict"):
-            config_dict = config.to_dict()
+            config_dict = config.to_dict()  # type: ignore[attr-defined]
         elif hasattr(config, "__dict__"):
             config_dict = {k: v for k, v in vars(config).items() if not k.startswith("_")}
 

@@ -4,8 +4,6 @@ This module provides template content for .claude/commands/aur/*.md files.
 These commands provide convenient Claude Code slash command integrations.
 """
 
-from typing import Dict  # noqa: F401
-
 
 def get_command_template(command_name: str) -> str | None:
     """Get the template for a specific command.

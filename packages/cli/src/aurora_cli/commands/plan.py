@@ -35,7 +35,6 @@ from aurora_cli.planning.core import (
     show_plan,
 )
 
-
 if TYPE_CHECKING:
     pass
 
@@ -214,15 +213,10 @@ def create_command(
         for warning in result.warnings:
             console.print(f"  - {warning}")
 
-    console.print("\n[bold]Files created (8 total):[/]")
+    console.print("\n[bold]Files created (4 total):[/]")
     # Base files
     for fname in ["plan.md", "prd.md", "tasks.md", "agents.json"]:
         console.print(f"  [green][/] {fname}")
-    # Capability specs
-    console.print(f"  [green][/] specs/{plan.plan_id}-planning.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-commands.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-validation.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-schemas.md")
 
     console.print("\n[bold]Next steps:[/]")
     console.print(f"1. Review plan:    aur plan view {plan.plan_id}")
@@ -538,9 +532,8 @@ def archive_command(plan_id: str, yes: bool) -> None:
     console.print(f"\n[bold green]Plan archived: {result.plan.plan_id}[/]")
     console.print(f"\nArchived to: {result.target_dir}/")
     console.print(f"Duration: {result.duration_days} days")
-    console.print("\nFiles archived (8 total):")
+    console.print("\nFiles archived (4 total):")
     for fname in ["plan.md", "prd.md", "tasks.md", "agents.json"]:
         console.print(f"  [green][/] {fname}")
-    console.print("  [green][/] specs/ (4 capability specs)")
 
     console.print("\nView archived plans: aur plan list --archived")

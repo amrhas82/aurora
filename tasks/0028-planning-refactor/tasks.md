@@ -1,0 +1,450 @@
+# Task List: Aurora Planning System Refactor
+
+## Relevant Files
+
+### Core Planning Files
+- `packages/cli/src/aurora_cli/planning/core.py` - Plan generation, file writing, validation (R1, R6, R7)
+- `packages/cli/src/aurora_cli/planning/core.py:_write_plan_files()` - Spec generation removal (lines 911-1007)
+- `packages/cli/src/aurora_cli/planning/core.py:validate_plan_structure()` - Spec validation removal (lines 67-133)
+- `packages/cli/src/aurora_cli/planning/core.py:show_plan()` - Spec status removal (lines 543-562)
+- `packages/cli/src/aurora_cli/planning/core.py:generate_goals_json()` - Add source_file support (lines 1127-1207)
+- `packages/cli/src/aurora_cli/planning/models.py` - SubgoalData, Goals, Plan models (R6, R7)
+- `packages/cli/src/aurora_cli/planning/models.py:SubgoalData` - Add source_file field (lines 986-1057)
+- `packages/cli/src/aurora_cli/planning/decompose.py` - Goal decomposition with source_file extraction (R6)
+- `packages/cli/src/aurora_cli/planning/decompose.py:_call_soar()` - Extract source_file (lines 473-584)
+- `packages/cli/src/aurora_cli/planning/decompose.py:_build_context_summary()` - Already includes file paths (lines 356-434)
+- `packages/cli/src/aurora_cli/commands/plan.py` - CLI commands (view, list, create, archive) (R1, R8)
+- `packages/cli/src/aurora_cli/commands/plan.py:view_command()` - Fix AttributeError (lines 469-479)
+
+### Template and Configuration Files
+- `packages/cli/src/aurora_cli/templates/slash_commands.py` - Slash command templates (R2, R3, R4, R5)
+- `packages/cli/src/aurora_cli/templates/slash_commands.py:PLAN_STEPS` - Fix command refs, add TDD hints (lines 159-168)
+- `packages/cli/src/aurora_cli/templates/slash_commands.py:PLAN_REFERENCES` - Add agents.json schema (lines 170-232)
+- `packages/cli/src/aurora_cli/templates/slash_commands.py:COMMAND_TEMPLATES` - Add "tasks" entry (line ~279)
+- `packages/cli/src/aurora_cli/configurators/slash/base.py` - ALL_COMMANDS list (R5)
+- `packages/cli/src/aurora_cli/configurators/slash/base.py:ALL_COMMANDS` - Add "tasks" (line ~34)
+
+### All 20 Configurators (R5 - add /aur:tasks)
+- `packages/cli/src/aurora_cli/configurators/slash/claude.py`
+- `packages/cli/src/aurora_cli/configurators/slash/cursor.py`
+- `packages/cli/src/aurora_cli/configurators/slash/gemini.py`
+- `packages/cli/src/aurora_cli/configurators/slash/cline.py`
+- `packages/cli/src/aurora_cli/configurators/slash/windsurf.py`
+- `packages/cli/src/aurora_cli/configurators/slash/roocode.py`
+- `packages/cli/src/aurora_cli/configurators/slash/github_copilot.py`
+- `packages/cli/src/aurora_cli/configurators/slash/opencode.py`
+- `packages/cli/src/aurora_cli/configurators/slash/codex.py`
+- `packages/cli/src/aurora_cli/configurators/slash/qoder.py`
+- `packages/cli/src/aurora_cli/configurators/slash/qwen.py`
+- `packages/cli/src/aurora_cli/configurators/slash/kilocode.py`
+- `packages/cli/src/aurora_cli/configurators/slash/codebuddy.py`
+- `packages/cli/src/aurora_cli/configurators/slash/auggie.py`
+- `packages/cli/src/aurora_cli/configurators/slash/crush.py`
+- `packages/cli/src/aurora_cli/configurators/slash/iflow.py`
+- `packages/cli/src/aurora_cli/configurators/slash/costrict.py`
+- `packages/cli/src/aurora_cli/configurators/slash/antigravity.py`
+- `packages/cli/src/aurora_cli/configurators/slash/amazon_q.py`
+- `packages/cli/src/aurora_cli/configurators/slash/factory.py`
+
+### SOAR Reasoning Files (R6 - add source_file)
+- `packages/reasoning/src/aurora_reasoning/prompts/decompose.py` - SOAR decompose prompt with JSON schema
+- `packages/reasoning/src/aurora_reasoning/prompts/decompose.py:build_system_prompt()` - Add source_file to schema (lines 180-202)
+- `packages/reasoning/src/aurora_reasoning/decompose.py` - SOAR decompose validation
+- `packages/reasoning/src/aurora_reasoning/decompose.py:decompose_query()` - Accept optional source_file (lines 151-186)
+
+### Documentation Files (R9)
+- `docs/guides/3-SIMPLE-STEPS.md` - User-facing workflow guide (exists, needs update)
+- `README.md` - Project README with planning workflow section
+
+### Test Files
+- `tests/unit/cli/planning/test_decompose.py` - Decomposition tests
+- `tests/unit/cli/planning/test_enhanced_generation.py` - Plan generation tests
+- `tests/unit/cli/planning/test_models.py` - Model tests (SubgoalData, Goals, Plan)
+- `tests/unit/cli/planning/test_core.py` - Core planning tests
+- `tests/unit/cli/commands/test_plan.py` - Plan CLI command tests
+- `tests/unit/cli/configurators/slash/test_*.py` - Configurator tests
+- `tests/unit/reasoning/test_decompose.py` - SOAR decompose tests
+
+### Notes
+
+**Testing Framework**: Aurora uses pytest with markers:
+- `@pytest.mark.unit` - Unit tests (~30s)
+- `@pytest.mark.integration` - Integration tests
+- TDD approach: Write test first, watch it fail, implement minimal code
+
+**Key Patterns**:
+- **Fine-tune existing templates, NOT rewrites** - All changes are refinements
+- **Additive, not destructive** - New fields only, maintain backward compatibility
+- **20 tool compatibility** - All configurators must support new /aur:tasks command
+- **source_file is optional** - Backward compatible with existing goals.json files
+- **NO new LLM calls** - source_file added to existing JSON response schema
+- **TDD hints** - Match 2-generate-tasks agent pattern (tdd: yes|no, verify: command)
+- **Plan folders** - Use slug only, remove number prefix (0005-slug → slug)
+
+**Critical Compatibility**:
+- SubgoalData.source_file is optional (default=None)
+- SOAR decompose accepts optional source_file without error
+- Goals.json without source_file continues to work
+- Existing numbered plan folders continue to work (backward compat in validators)
+
+## Tasks
+
+- [x] 0.0 Create feature branch
+  - [x] 0.1 Create and checkout branch `feature/planning-refactor`
+    - tdd: no
+    - verify: `git branch --show-current`
+
+- [x] 1.0 Remove Spec Generation (Cleanup Dead Code - R1)
+  - [x] 1.1 Remove spec file generation from _write_plan_files()
+    - File: `packages/cli/src/aurora_cli/planning/core.py` (lines 911-1007)
+    - Remove spec file generation logic from atomic file write
+    - Update docstring from "8 files" to "5 files"
+    - Update comment from "4 capability specs" to reference base files only
+    - Keep template rendering path, remove spec generation from it
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/test_enhanced_generation.py -v -k write_plan_files`
+  - [x] 1.2 Remove spec validation from validate_plan_structure()
+    - File: `packages/cli/src/aurora_cli/planning/core.py` (lines 67-133)
+    - Remove `optional_files` list and validation for `specs/{plan-id}-*.md`
+    - Keep validation for 5 base files: plan.md, prd.md, design.md, tasks.md, agents.json
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/ -v -k validate`
+  - [x] 1.3 Remove spec references from CLI output in plan.py create_command
+    - File: `packages/cli/src/aurora_cli/commands/plan.py` (lines 217-225)
+    - Update "8 files" to "5 files"
+    - Remove spec file listings from output
+    - tdd: no
+    - verify: `grep -n "Files created\|8 files" packages/cli/src/aurora_cli/commands/plan.py`
+  - [x] 1.4 Remove spec references from CLI output in plan.py archive_command
+    - File: `packages/cli/src/aurora_cli/commands/plan.py` (lines 541-544)
+    - Remove spec file references from archive output
+    - Update file count if mentioned
+    - tdd: no
+    - verify: `grep -n "specs\|8 files" packages/cli/src/aurora_cli/commands/plan.py`
+  - [x] 1.5 Remove spec entries from show_plan() file status
+    - File: `packages/cli/src/aurora_cli/planning/core.py` (lines 543-562)
+    - Remove spec entries from `files_status` dict
+    - Keep only 5 base files
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/ -v -k show_plan`
+  - [x] 1.6 Verify: `grep -r "specs/" packages/cli/src/aurora_cli/planning/ packages/cli/src/aurora_cli/commands/plan.py` - only comments/docs remain
+
+- [ ] 2.0 Fix Non-Existent Command References in Templates (R2)
+  - [ ] 2.1 Remove `aur plan validate` reference from PLAN_STEPS
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~168)
+    - Remove step 7 referencing `aur plan validate <id> --strict`
+    - Replace with `aur plan view <id>` for verification
+    - tdd: no
+    - verify: `grep -n "validate.*--strict" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 2.2 Remove `aur plan list --specs` reference from PLAN_STEPS
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~160)
+    - Remove `--specs` flag reference
+    - Use `aur plan list` only
+    - tdd: no
+    - verify: `grep -n "list.*--specs" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 2.3 Remove `aur plan show --json --deltas-only` reference from PLAN_REFERENCES
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~171)
+    - Replace with `aur plan view <id> --format json`
+    - tdd: no
+    - verify: `grep -n "deltas-only\|show.*--json" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 2.4 Verify: All broken command references removed
+    - `grep -r "aur plan validate" packages/` returns no results
+    - `grep -r "plan list --specs" packages/` returns no results
+    - `grep -r "deltas-only" packages/cli/` returns no results
+
+- [ ] 3.0 Update Artifact Generation Order and Add TDD Hints (R3)
+  - [ ] 3.1 Update PLAN_STEPS Step 1 to emphasize goals.json as recommended
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_STEPS, line ~160)
+    - Clarify goals.json is recommended (code-aware) but optional
+    - If goals.json exists: use for subgoals, agents, source_file mappings
+    - If no goals.json: continue with prompt-based planning (less structured, agent searches on the fly)
+    - Both paths are valid, goals.json recommended for production work
+    - tdd: no
+    - verify: `grep -A10 "Review.*project.md" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 3.2 Update PLAN_STEPS Step 2 to specify artifact order
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_STEPS, line ~163)
+    - Specify explicit order: plan.md, prd.md, design.md, agents.json, tasks.md
+    - Add note that tasks.md depends on PRD content and is generated LAST
+    - tdd: no
+    - verify: `grep -A5 "Choose a unique" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 3.3 Add TDD hints to tasks.md template in PLAN_REFERENCES
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_REFERENCES, line ~225)
+    - Update tasks.md template format to include:
+      ```markdown
+      ## Phase N: [Name]
+      - [ ] N.1 Task description
+        <!-- @agent: @code-developer -->
+        - tdd: yes|no
+        - verify: `command to verify`
+        - **Validation**: How to verify
+      ```
+    - Include TDD Detection guidance:
+      - `tdd: yes` for: models, API endpoints, bug fixes, business logic
+      - `tdd: no` for: docs, config, migrations, refactors (no behavior change)
+      - Default: when unsure, use `tdd: yes`
+    - Match 2-generate-tasks agent pattern
+    - tdd: no
+    - verify: `grep -A20 "tasks.md Template" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 3.4 Verify: Generated plans include TDD hints in tasks.md format
+
+- [ ] 4.0 Add agents.json Schema Documentation to Templates (R4)
+  - [ ] 4.1 Add agents.json schema reference to PLAN_REFERENCES
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (PLAN_REFERENCES)
+    - Add agents.json template with required fields
+    - Include: plan_id, goal, status, created_at, updated_at, subgoals[]
+    - Each subgoal: id, title, description, agent_id, status, dependencies[]
+    - tdd: no
+    - verify: `grep -A25 "agents.json" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 4.2 Add reference to existing schema file
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py`
+    - Reference `packages/planning/src/aurora_planning/schemas/agents.schema.json`
+    - tdd: no
+    - verify: `grep "agents.schema.json" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 4.3 Verify: agents.json template matches actual schema file structure
+
+- [ ] 5.0 Create New /aur:tasks Skill (Carve-out from /aur:plan - R5)
+  - [ ] 5.1 Create TASKS_TEMPLATE by extracting tasks.md instructions from PLAN_TEMPLATE
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py`
+    - Extract tasks.md generation instructions from PLAN_TEMPLATE
+    - NO new code - same exact instructions, just isolated
+    - Purpose: Regenerate tasks.md from prd.md after user edits PRD
+    - Reads: prd.md, goals.json, agents.json from plan directory
+    - Outputs: tasks.md (replaces existing)
+    - Include same TDD hints and format as /aur:plan uses
+    - tdd: no
+    - verify: `grep -A50 "TASKS_TEMPLATE" packages/cli/src/aurora_cli/templates/slash_commands.py`
+  - [ ] 5.2 Add "tasks" to COMMAND_TEMPLATES dict
+    - File: `packages/cli/src/aurora_cli/templates/slash_commands.py` (line ~279)
+    - Add `"tasks": TASKS_TEMPLATE` entry
+    - tdd: yes
+    - verify: `python -c "from aurora_cli.templates.slash_commands import COMMAND_TEMPLATES; assert 'tasks' in COMMAND_TEMPLATES"`
+  - [ ] 5.3 Add "tasks" to ALL_COMMANDS list in base.py
+    - File: `packages/cli/src/aurora_cli/configurators/slash/base.py` (line ~34)
+    - Update ALL_COMMANDS from 5 to 6 commands
+    - Change: `["search", "get", "plan", "implement", "archive"]` → add "tasks"
+    - Note: Verify if configurators actually use ALL_COMMANDS or define commands independently
+    - If configurators don't use ALL_COMMANDS, this constant may just be for reference
+    - tdd: yes
+    - verify: `python -c "from aurora_cli.configurators.slash.base import ALL_COMMANDS; assert 'tasks' in ALL_COMMANDS; assert len(ALL_COMMANDS) == 6"`
+  - [ ] 5.4 Update all 20 configurators to generate /aur:tasks command
+    - Update get_relative_path() in each configurator to handle "tasks" command
+    - Update get_description() to include "tasks": "Regenerate tasks from PRD [plan-id]"
+    - Files: All 20 configurators in `packages/cli/src/aurora_cli/configurators/slash/`
+    - Pattern: Follow same structure as other commands (search, get, plan, etc.)
+    - tdd: yes
+    - verify: `for f in packages/cli/src/aurora_cli/configurators/slash/*.py; do grep -l "tasks" "$f" || echo "Missing: $f"; done`
+  - [ ] 5.5 Verify: `aur init --config --tools=claude` creates .claude/commands/aur/tasks.md
+
+- [ ] 6.0 Add source_file Field to SubgoalData Model (R6.1, R6.2, R6.5)
+  - [ ] 6.1 Add optional source_file field to SubgoalData model
+    - File: `packages/cli/src/aurora_cli/planning/models.py` (class SubgoalData, lines 986-1057)
+    - Add: `source_file: str | None = Field(default=None, description="Primary source file for this subgoal")`
+    - Backward compatible (optional field with default None)
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/test_models.py -v -k SubgoalData`
+  - [ ] 6.2 Verify Goals model serializes source_file in JSON output
+    - File: `packages/cli/src/aurora_cli/planning/models.py`
+    - Automatic via Pydantic when field is added
+    - Test JSON serialization includes source_file
+    - tdd: yes
+    - verify: `python -c "from aurora_cli.planning.models import SubgoalData; sg = SubgoalData(id='sg-1', title='test task', description='test description', source_file='test.py'); print('source_file' in sg.model_dump_json())"`
+  - [ ] 6.3 Update generate_goals_json() to include source_file
+    - File: `packages/cli/src/aurora_cli/planning/core.py` (function generate_goals_json, lines 1127-1207)
+    - Add `source_file=sg.source_file` when creating SubgoalData instances
+    - Result: Generated goals.json includes file path per subgoal
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/ -v -k generate_goals_json`
+  - [ ] 6.4 Verify: Generated goals.json includes source_file per subgoal when available
+
+- [ ] 7.0 Extract source_file from LLM Response (aur goals - R6.3, R6.4, R6.5)
+  - [ ] 7.1 Confirm _build_context_summary() already includes file paths
+    - File: `packages/cli/src/aurora_cli/planning/decompose.py` (lines 356-434)
+    - Verify line 408 includes: `File: {short_path}` in context sent to LLM
+    - NO changes needed - just confirmation
+    - tdd: no
+    - verify: `grep -n "File:.*short_path" packages/cli/src/aurora_cli/planning/decompose.py`
+  - [ ] 7.2 Update decomposition to extract source_file from LLM JSON response
+    - File: `packages/cli/src/aurora_cli/planning/decompose.py` (method _call_soar, lines 473-584)
+    - When LLM references file name in subgoal response:
+      - If file matches one sent in context → resolve to full path
+      - If file doesn't match → `source_file: null` + warn (hallucination)
+      - If LLM doesn't reference file → `source_file: null`
+    - Applies to both code files AND markdown files (kb chunks)
+    - NO new LLM call - just add field to existing JSON response schema
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/test_decompose.py -v -k source_file`
+  - [ ] 7.3 Verify: `aur goals "test" -t claude` generates goals.json with source_file field
+
+- [ ] 8.0 Add source_file to SOAR Decompose (aur soar - R6.6, R6.7, R6.8)
+  - [ ] 8.1 Add source_file field to SOAR DecomposePromptTemplate JSON schema
+    - File: `packages/reasoning/src/aurora_reasoning/prompts/decompose.py` (method build_system_prompt, lines 180-202)
+    - Add `source_file` field to subgoal schema in JSON template
+    - Example: `"source_file": "path/to/relevant/file.py"`
+    - NO new LLM call - just add field to existing JSON response schema
+    - Context already includes file paths (same as planning decompose)
+    - tdd: yes
+    - verify: `grep -A10 "source_file" packages/reasoning/src/aurora_reasoning/prompts/decompose.py`
+  - [ ] 8.2 Update SOAR decompose validation to accept optional source_file
+    - File: `packages/reasoning/src/aurora_reasoning/decompose.py` (method decompose_query, lines 151-186)
+    - When LLM references file name:
+      - If matches context → resolve to full path
+      - If doesn't match → `source_file: null` + warn
+      - If no reference → `source_file: null`
+    - Same pattern as ideal_agent/ideal_agent_desc (null when no gap)
+    - Backward compatible - optional field
+    - tdd: yes
+    - verify: `pytest tests/unit/ -v -k soar_decompose`
+  - [ ] 8.3 Verify: Both `aur goals` and `aur soar` use identical source_file approach
+
+- [ ] 9.0 Remove Slug Number Prefix from Plan Folders (R7)
+  - [ ] 9.1 Update plan folder generation to use slug only (no number prefix)
+    - File: `packages/cli/src/aurora_cli/planning/core.py` (function _generate_plan_id or equivalent)
+    - Change from: `.aurora/plans/active/0005-improve-aur-mem-search/`
+    - Change to: `.aurora/plans/active/improve-aur-mem-search/`
+    - Remove sequential number generation logic
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/ -v -k plan_id`
+  - [ ] 9.2 Implement folder override when same slug exists
+    - File: `packages/cli/src/aurora_cli/planning/core.py`
+    - Check if slug folder exists
+    - If exists: overwrite instead of creating numbered variant
+    - Rationale: Re-running same goal = previous failed, should replace
+    - Add confirmation prompt or warning before overwrite
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/ -v -k override`
+  - [ ] 9.3 Update Plan model plan_id validator to accept slug-only format
+    - File: `packages/cli/src/aurora_cli/planning/models.py` (Plan model, lines 322-346)
+    - Change regex pattern to accept both `NNNN-slug` and `slug-only`
+    - Backward compatible with existing numbered plans
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/test_models.py -v -k "Plan.*plan_id"`
+  - [ ] 9.4 Update Goals model id validator to accept slug-only format
+    - File: `packages/cli/src/aurora_cli/planning/models.py` (Goals model, lines 1081-1086)
+    - Change pattern to accept both formats for backward compat
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/planning/test_models.py -v -k "Goals.*id"`
+  - [ ] 9.5 Verify: New plans use slug only, existing numbered plans still work
+    - Create new plan with goals.json: should be `test-feature` not `0001-test-feature`
+    - Create new plan WITHOUT goals.json (R7.3): should be `test-feature` not `0001-test-feature`
+    - Run `aur plan list`: displays slug-only format correctly (R7.4)
+    - Existing plan: `aur plan view 0005-old-plan` still works (backward compat)
+
+- [ ] 10.0 Fix aur plan view Schema Mismatch (R8)
+  - [ ] 10.1 Fix view_command to use correct Subgoal attribute names
+    - File: `packages/cli/src/aurora_cli/commands/plan.py` (lines 469-479)
+    - Change: `sg.recommended_agent` → `sg.agent` (or `sg.assigned_agent` if that's the field name)
+    - Change: `sg.agent_exists` → remove check (doesn't exist on Subgoal model)
+    - tdd: yes
+    - verify: `pytest tests/unit/cli/commands/ -v -k view`
+  - [ ] 10.2 Simplify Subgoal display to show agent without existence check
+    - File: `packages/cli/src/aurora_cli/commands/plan.py`
+    - Remove agent_exists check entirely (simpler approach)
+    - Just show the assigned agent from model
+    - tdd: yes
+    - verify: `grep "agent_exists" packages/cli/src/aurora_cli/commands/plan.py`
+  - [ ] 10.3 Verify: `aur plan view <id>` works without AttributeError
+
+- [ ] 11.0 Update 3-SIMPLE-STEPS.md Documentation (R9.1)
+  - [ ] 11.1 Review existing 3-SIMPLE-STEPS.md structure
+    - File: `docs/guides/3-SIMPLE-STEPS.md` (already exists)
+    - Review current sections and flow diagram
+    - Identify what needs updating vs what's already correct
+    - tdd: no
+    - verify: `cat docs/guides/3-SIMPLE-STEPS.md | head -150`
+  - [ ] 11.2 Update "Why This Flow?" section
+    - Add emphasis on goals.json as recommended but optional
+    - Clarify code-aware (with goals.json) vs non-code-aware (skip goals) paths
+    - Update table with source_file mapping info
+    - tdd: no
+    - verify: `grep -A15 "Why This Flow" docs/guides/3-SIMPLE-STEPS.md`
+  - [ ] 11.3 Update Step 1 output example to show source_file
+    - Update example output to show `Source: <file>` per subgoal
+    - Already exists in current guide, verify accuracy
+    - tdd: no
+    - verify: `grep -A30 "Step 1:" docs/guides/3-SIMPLE-STEPS.md`
+  - [ ] 11.4 Update Step 2 artifacts list (5 files, no specs)
+    - Change from 8 files to 5 files
+    - Remove specs/ from directory structure
+    - Keep: plan.md, prd.md, design.md, agents.json, tasks.md
+    - tdd: no
+    - verify: `grep -A15 "Artifacts generated" docs/guides/3-SIMPLE-STEPS.md`
+  - [ ] 11.5 Verify Step 2.5 references /aur:tasks skill correctly
+    - Already exists, verify it matches new TASKS_TEMPLATE behavior
+    - tdd: no
+    - verify: `grep -A10 "Step 2.5" docs/guides/3-SIMPLE-STEPS.md`
+  - [ ] 11.6 Verify: 3-SIMPLE-STEPS.md reflects all changes
+
+- [ ] 12.0 Update README.md Planning Workflow Section (R9.2, R9.3)
+  - [ ] 12.1 Update Memory-Aware Planning section diagram
+    - File: `README.md` (Memory-Aware Planning section)
+    - Add "Setup (once)" mention with `aur init` and `project.md`
+    - Update to show 3 steps with /aur:tasks as optional
+    - Emphasize `aur goals` as code-aware (searches codebase, maps source_file)
+    - Note that skipping `aur goals` is valid but less structured
+    - tdd: no
+    - verify: `grep -A50 "Memory-Aware Planning" README.md`
+  - [ ] 12.2 Add link to 3-SIMPLE-STEPS.md guide
+    - File: `README.md`
+    - Add prominent link to detailed planning guide
+    - Place after planning workflow overview
+    - tdd: no
+    - verify: `grep "3-SIMPLE-STEPS" README.md`
+  - [ ] 12.3 Update Commands Reference if it exists to include /aur:tasks
+    - File: `README.md`
+    - If Commands Reference table exists, add `/aur:tasks [plan-id]` with description "Regenerate tasks from PRD"
+    - If no table, skip (may be in COMMANDS.md instead)
+    - tdd: no
+    - verify: `grep -A5 "Commands Reference\|/aur:tasks" README.md`
+  - [ ] 12.4 Verify: README Planning Workflow accurate and links to detailed guide
+
+- [ ] 13.0 Final Integration Testing and Verification
+  - [ ] 13.1 Run full test suite
+    - Run `make test` to ensure no regressions
+    - All unit and integration tests must pass
+    - tdd: no
+    - verify: `make test`
+  - [ ] 13.2 Run linting and formatting
+    - Run `make lint` to check code quality
+    - Run `make format` to auto-fix issues
+    - tdd: no
+    - verify: `make lint && make format`
+  - [ ] 13.3 Test full workflow: aur goals → /aur:plan → /aur:tasks
+    - Create test plan with `aur goals "test planning refactor workflow" -t claude`
+    - Verify goals.json created with source_file field
+    - Verify plan folder is slug-only (no number prefix)
+    - Run `/aur:plan <plan-id>` in AI tool
+    - Verify 5 files created (no specs/)
+    - Edit prd.md
+    - Run `/aur:tasks <plan-id>` in AI tool
+    - Verify tasks.md regenerated with TDD hints
+    - tdd: no
+    - verify: `ls .aurora/plans/active/<plan-id>/`
+  - [ ] 13.4 Test configurator generation with multiple tools
+    - Run `aur init --config --tools=claude,cursor,gemini`
+    - Verify /aur:tasks command created for each tool
+    - Verify no references to non-existent commands in generated files
+    - tdd: no
+    - verify: `find .claude .cursor .gemini -name "*tasks*"`
+  - [ ] 13.5 Test backward compatibility
+    - Test numbered plan folders still work: `aur plan view 0001-old-plan`
+    - Test goals.json without source_file still works
+    - Test SOAR decompose without source_file still works
+    - tdd: no
+    - verify: `aur plan list`
+  - [ ] 13.6 Run all PRD acceptance criteria checks
+    - `grep -r "aur plan validate" packages/` returns no results
+    - `grep -r "plan list --specs" packages/` returns no results
+    - `grep -r "show.*--deltas-only" packages/cli/` returns no results
+    - `COMMAND_TEMPLATES` contains "plan" and "tasks"
+    - `aur plan create "test"` creates 5 files (no specs/)
+    - `aur plan view <id>` works without AttributeError
+    - SubgoalData has source_file field
+    - SOAR DecomposePromptTemplate includes source_file
+    - Running `aur init --config` creates aur:plan and aur:tasks
+    - New plan folders use slug only (no number prefix)
+    - Re-running `aur goals` with same query overwrites folder
+    - tasks.md template includes tdd/verify fields
+    - PLAN_STEPS emphasizes goals.json as recommended
+    - tdd: no
+    - verify: Run all grep commands and tests listed above
+  - [ ] 13.7 Verify: All 9 PRD requirements (R1-R9) implemented and working

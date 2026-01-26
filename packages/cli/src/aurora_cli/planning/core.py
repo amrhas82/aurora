@@ -100,19 +100,6 @@ def validate_plan_structure(plan_dir: Path, plan_id: str) -> tuple[list[str], li
         if not file_path.exists():
             errors.append(f"Missing required file: {filename} ({description})")
 
-    # Check optional capability spec files
-    optional_files = [
-        (f"specs/{plan_id}-planning.md", "Planning capability spec"),
-        (f"specs/{plan_id}-commands.md", "Commands capability spec"),
-        (f"specs/{plan_id}-validation.md", "Validation capability spec"),
-        (f"specs/{plan_id}-schemas.md", "Schemas capability spec"),
-    ]
-
-    for filename, description in optional_files:
-        file_path = plan_dir / filename
-        if not file_path.exists():
-            warnings.append(f"Missing optional file: {filename} ({description})")
-
     # Validate agents.json if it exists
     agents_json = plan_dir / "agents.json"
     if agents_json.exists():
@@ -539,26 +526,12 @@ def show_plan(
             error=VALIDATION_MESSAGES["PLAN_FILE_CORRUPT"].format(file=str(agents_json)),
         )
 
-    # Check file status (all 8 files)
+    # Check file status (base files only)
     files_status = {
-        # Base files
         "plan.md": (plan_dir / "plan.md").exists(),
         "prd.md": (plan_dir / "prd.md").exists(),
         "tasks.md": (plan_dir / "tasks.md").exists(),
         "agents.json": True,
-        # Capability specs
-        f"specs/{plan.plan_id}-planning.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-planning.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-commands.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-commands.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-validation.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-validation.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-schemas.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-schemas.md"
-        ).exists(),
     }
 
     return ShowResult(
@@ -909,14 +882,16 @@ def _write_goals_only(
 
 
 def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
-    """Write all 8 plan files to disk using templates with atomic operation.
+    """Write all plan files to disk using templates with atomic operation.
 
     Generates files in a temporary directory first, then atomically moves
     them to the final location. This ensures users never see partial plans.
 
-    Generates:
-    - 4 base files: plan.md, prd.md, tasks.md, agents.json
-    - 4 capability specs: specs/{plan-id}-{planning,commands,validation,schemas}.md
+    Generates 4 base files:
+    - plan.md: Overview and subgoal breakdown
+    - prd.md: Product requirements document
+    - tasks.md: Implementation task list
+    - agents.json: Machine-readable plan data
 
     Args:
         plan: Plan to write

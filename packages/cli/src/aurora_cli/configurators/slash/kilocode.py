@@ -47,7 +47,7 @@ class KiloCodeSlashCommandConfigurator(SlashCommandConfigurator):
         """
         return FILE_PATHS[command_id]
 
-    def get_frontmatter(self, _command_id: str) -> str | None:
+    def get_frontmatter(self, command_id: str) -> str | None:
         """Get frontmatter for a slash command file.
 
         Kilo Code does not use frontmatter.

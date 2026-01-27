@@ -1116,6 +1116,7 @@ class SOAROrchestrator:
 
         # Only log+index successful runs (confidence >= 0.5)
         # Failed runs pollute retrieval with error logs
+        log_path = None
         if synthesis_result.confidence >= 0.5:
             execution_summary = {
                 "duration_ms": metadata.get("total_duration_ms", 0),
@@ -1143,7 +1144,14 @@ class SOAROrchestrator:
             )
 
         self._invoke_callback("respond", "after", {"formatted": True})
-        return response.to_dict()
+
+        # Build result with log path in metadata
+        result = response.to_dict()
+        if "metadata" not in result:
+            result["metadata"] = {}
+        if log_path:
+            result["metadata"]["log_path"] = str(log_path)
+        return result
 
     def _execute_simple_path(
         self,

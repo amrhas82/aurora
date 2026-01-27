@@ -106,11 +106,13 @@ class ExamplesLoader:
         all_examples = self.load_examples(filename)
 
         # Determine how many examples to return
+        # Note: Reduced from 4/6 to 2/3 to avoid exceeding context limits
+        # when piping to CLI tools (claude, cursor, etc.)
         example_counts = {
             Complexity.SIMPLE: 0,
-            Complexity.MEDIUM: 2,
-            Complexity.COMPLEX: 4,
-            Complexity.CRITICAL: 6,
+            Complexity.MEDIUM: 1,
+            Complexity.COMPLEX: 2,
+            Complexity.CRITICAL: 3,
         }
 
         count = example_counts[complexity]

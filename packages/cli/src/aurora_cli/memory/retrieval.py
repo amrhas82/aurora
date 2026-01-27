@@ -317,6 +317,7 @@ class MemoryRetriever:
         _mode: str = "hybrid",
         min_semantic_score: float | None = None,
         wait_for_model: bool = True,
+        chunk_type: str | None = None,
     ) -> list[CodeChunk]:
         """Retrieve relevant code chunks for a query.
 
@@ -356,6 +357,7 @@ class MemoryRetriever:
                 query,
                 top_k=limit,
                 min_semantic_score=threshold,
+                chunk_type=chunk_type,
             )
 
             elapsed = time.time() - start_time

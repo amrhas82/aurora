@@ -145,60 +145,57 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
                 "budget_used": 0,
             }
 
-        # Retrieve chunks using hybrid retrieval (BM25 + semantic + activation)
-        # Use lower threshold to get more candidates for complex queries
+        # Type-aware retrieval: query code and KB separately to ensure both are represented
+        # This prevents natural language queries from returning only KB/logs
+        CODE_SLOTS = 7
+        KB_SLOTS = budget - CODE_SLOTS  # e.g., 15 - 7 = 8 for COMPLEX
         min_score = 0.3 if complexity in ("COMPLEX", "CRITICAL") else 0.5
-        retrieved_chunks = retriever.retrieve(
+
+        # Retrieve code chunks (type='code')
+        code_results = retriever.retrieve(
             query,
-            limit=budget,
+            limit=CODE_SLOTS,
             min_semantic_score=min_score,
+            chunk_type="code",
         )
 
-        # Separate chunks by type
-        code_chunks = []
-        reasoning_chunks = []
+        # Retrieve KB chunks (type='kb')
+        kb_results = retriever.retrieve(
+            query,
+            limit=KB_SLOTS,
+            min_semantic_score=min_score,
+            chunk_type="kb",
+        )
 
-        for chunk in retrieved_chunks:
-            # Get chunk type from metadata if available, otherwise use class name
-            if hasattr(chunk, "metadata") and isinstance(chunk.metadata, dict):
-                chunk_type = chunk.metadata.get("chunk_type", chunk.__class__.__name__)
-            else:
-                chunk_type = chunk.__class__.__name__
+        # Combine: code first, then kb
+        code_chunks = list(code_results) + list(kb_results)
+        reasoning_chunks: list = []  # TODO: retrieve reasoning chunks if needed
 
-            if "Code" in chunk_type:
-                code_chunks.append(chunk)
-            elif "Reasoning" in chunk_type:
-                reasoning_chunks.append(chunk)
-            else:
-                # Unknown type, put in code_chunks by default
-                code_chunks.append(chunk)
+        logger.info(f"Type-aware retrieval: {len(code_results)} code + {len(kb_results)} kb")
 
-        # Count high-quality chunks (those with good scores)
+        # Count high-quality chunks (score >= 0.6)
         high_quality_count = sum(
-            1
-            for chunk in retrieved_chunks
-            if getattr(chunk, "score", getattr(chunk, "hybrid_score", 0.0)) >= 0.6
+            1 for c in code_results if getattr(c, "hybrid_score", getattr(c, "score", 0.0)) >= 0.6
         )
 
         elapsed_ms = (time.time() - start_time) * 1000
-        total_retrieved = len(retrieved_chunks)
+        total_selected = len(code_chunks) + len(reasoning_chunks)
 
         logger.info(
-            f"Retrieved {total_retrieved} chunks "
-            f"(code={len(code_chunks)}, reasoning={len(reasoning_chunks)}, "
-            f"high_quality={high_quality_count}) "
+            f"Retrieved {total_selected} chunks "
+            f"(code={len(code_results)}, kb={len(kb_results)}, reasoning={len(reasoning_chunks)}) "
             f"in {elapsed_ms:.1f}ms",
         )
 
         return {
             "code_chunks": code_chunks,
             "reasoning_chunks": reasoning_chunks,
-            "total_retrieved": total_retrieved,
-            "chunks_retrieved": total_retrieved,  # For CLI display
+            "total_retrieved": total_selected,
+            "chunks_retrieved": total_selected,  # For CLI display
             "high_quality_count": high_quality_count,
             "retrieval_time_ms": elapsed_ms,
             "budget": budget,
-            "budget_used": total_retrieved,
+            "budget_used": total_selected,
         }
 
     except Exception as e:

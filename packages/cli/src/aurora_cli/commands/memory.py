@@ -535,9 +535,12 @@ def search_command(
     retriever = MemoryRetriever(store=store, config=config)
 
     # Perform hybrid search - waits for embedding model if loading
+    # If type filter is specified, retrieve 3x limit to ensure enough results after filtering
+    # This fixes the bug where filtering happened after limit, returning 0 results
+    retrieve_limit = limit * 3 if chunk_type else limit
     raw_results = retriever.retrieve(
         query,
-        limit=limit,
+        limit=retrieve_limit,
         min_semantic_score=min_score,
         wait_for_model=True,  # Wait for embeddings, fall back to BM25 only if unavailable
     )
@@ -584,10 +587,19 @@ def search_command(
 
     # Filter by chunk type if specified
     if chunk_type:
+        unfiltered_count = len(results)
         results = [r for r in results if r.metadata.get("type") == chunk_type]
         if not results:
-            console.print(f"\n[yellow]No results found with type='{chunk_type}'[/]\n")
+            console.print(f"\n[yellow]No results found with type='{chunk_type}'[/]")
+            console.print("\n[dim]Suggestions:[/]")
+            if unfiltered_count > 0:
+                console.print(f"  • Found {unfiltered_count} results without type filter")
+                console.print("  • Try removing --type to see all results")
+            console.print("  • Try a different search query")
+            console.print("  • Re-index if data is stale: [cyan]aur mem index .[/]\n")
             return
+        # Trim to requested limit after filtering
+        results = results[:limit]
 
     # Display results
     if output_format == "json":
@@ -982,6 +994,16 @@ def _display_rich_results(
     console.print("  --type TYPE      Filter: function, class, method, kb, code")
     console.print("  --min-score 0.5  Higher relevance threshold")
     console.print()
+
+    # Check for misclassified markdown files (should be type='kb', not type='code')
+    # This can happen if the database was indexed before the fix was applied
+    misclassified = [
+        r for r in results if r.file_path.endswith(".md") and r.metadata.get("type") == "code"
+    ]
+    if misclassified:
+        console.print(f"[yellow]⚠ Found {len(misclassified)} markdown file(s) with type='code'[/]")
+        console.print("[dim]This may cause incorrect filtering with --type.[/]")
+        console.print("[dim]Fix by re-indexing:[/] [cyan]aur mem index .[/]\n")
 
     # Show detailed score breakdown if requested
     if show_scores:

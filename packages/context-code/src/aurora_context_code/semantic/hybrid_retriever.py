@@ -91,6 +91,9 @@ class HybridConfig:
     bm25_index_path: str | None = None
     # Enable persistent BM25 index (load from disk if available)
     enable_bm25_persistence: bool = True
+    # Code-first ordering: boost score for code type chunks (0.0-0.5, default 0.0)
+    # Disabled by default - type-aware retrieval handles code/kb separation
+    code_type_boost: float = 0.0
 
     def __post_init__(self) -> None:
         """Validate configuration."""
@@ -117,6 +120,10 @@ class HybridConfig:
         if self.query_cache_ttl_seconds < 0:
             raise ValueError(
                 f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}",
+            )
+        if not (0.0 <= self.code_type_boost <= 0.5):
+            raise ValueError(
+                f"code_type_boost must be in [0, 0.5], got {self.code_type_boost}",
             )
 
 
@@ -554,6 +561,7 @@ class HybridRetriever:
         top_k: int = 10,
         _context_keywords: list[str] | None = None,
         min_semantic_score: float | None = None,
+        chunk_type: str | None = None,
     ) -> list[dict[str, Any]]:
         """Retrieve chunks using tri-hybrid scoring with staged architecture.
 
@@ -562,6 +570,7 @@ class HybridRetriever:
             top_k: Number of results to return
             context_keywords: Optional keywords for context boost (not yet implemented)
             min_semantic_score: Minimum semantic score threshold (0.0-1.0). Results below this will be filtered out.
+            chunk_type: Optional filter by chunk type ('code' or 'kb').
 
         Returns:
             List of dicts with keys:
@@ -608,6 +617,7 @@ class HybridRetriever:
             min_activation=0.0,  # Get all chunks, we'll filter by score
             limit=self.config.activation_top_k,
             include_embeddings=not use_two_phase,  # Skip embeddings if two-phase enabled
+            chunk_type=chunk_type,  # Optional filter by type ('code' or 'kb')
         )
 
         # If no chunks available, return empty list
@@ -751,6 +761,14 @@ class HybridRetriever:
                 + self.config.activation_weight * activation_norm
                 + self.config.semantic_weight * semantic_norm
             )
+
+            # Apply code-first ordering boost for code type chunks
+            # This ensures code results rank higher than KB/markdown in search results
+            chunk_type = getattr(chunk, "type", "unknown")
+            if chunk_type == "code" and self.config.code_type_boost > 0:
+                hybrid_score += self.config.code_type_boost
+                # Clamp to [0, 1] range to satisfy validation constraints
+                hybrid_score = min(hybrid_score, 1.0)
 
             # Extract content and metadata from chunk (using cached access stats)
             content, metadata = self._extract_chunk_content_metadata(
@@ -1029,6 +1047,13 @@ class HybridRetriever:
 
             # Dual-hybrid scoring: weighted BM25 + activation (no semantic)
             hybrid_score = bm25_dual * bm25_norm + activation_dual * activation_norm
+
+            # Apply code-first ordering boost for code type chunks
+            chunk_type = getattr(chunk, "type", "unknown")
+            if chunk_type == "code" and self.config.code_type_boost > 0:
+                hybrid_score += self.config.code_type_boost
+                # Clamp to [0, 1] range to satisfy validation constraints
+                hybrid_score = min(hybrid_score, 1.0)
 
             content, metadata = self._extract_chunk_content_metadata(
                 chunk,

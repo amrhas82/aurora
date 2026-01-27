@@ -9,7 +9,6 @@ from __future__ import annotations
 import hashlib
 from typing import TYPE_CHECKING, Any
 
-
 if TYPE_CHECKING:
     from aurora_reasoning import LLMClient
     from aurora_reasoning.decompose import DecompositionResult
@@ -210,12 +209,38 @@ def _build_context_summary(context: dict[str, Any]) -> str:
     code_chunks = context.get("code_chunks", [])
     reasoning_chunks = context.get("reasoning_chunks", [])
 
+    # Filter out conversation log chunks to prevent failed SOAR runs from polluting context
+    def _get_chunk_path(chunk: Any) -> str:
+        if hasattr(chunk, "file_path"):
+            return chunk.file_path or ""
+        if isinstance(chunk, dict):
+            return chunk.get("file_path") or chunk.get("metadata", {}).get("file_path", "")
+        return ""
+
+    code_chunks = [c for c in code_chunks if "/logs/conversations/" not in _get_chunk_path(c)]
+
     summary_parts = []
 
     if code_chunks:
         # Read actual code for top 7 chunks, docstrings for rest
         TOP_N_WITH_CODE = 7
         MAX_CHUNKS = 12
+
+        # List available file paths for source_file matching
+        file_paths = []
+        for chunk in code_chunks[:MAX_CHUNKS]:
+            if hasattr(chunk, "file_path"):
+                file_paths.append(chunk.file_path)
+            elif isinstance(chunk, dict):
+                fp = chunk.get("metadata", {}).get("file_path") or chunk.get("file_path", "")
+                if fp:
+                    file_paths.append(fp)
+        unique_files = list(dict.fromkeys(file_paths))  # Preserve order, remove dups
+        if unique_files:
+            summary_parts.append("## Available Source Files (use for source_file field)\n")
+            for fp in unique_files[:10]:
+                summary_parts.append(f"- {fp}")
+            summary_parts.append("")
 
         summary_parts.append(f"## Relevant Code ({len(code_chunks)} elements found)\n")
 

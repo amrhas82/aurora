@@ -174,6 +174,7 @@ For each subgoal, specify:
 5. MATCH QUALITY - how well the assigned agent fits this task
 6. Whether the subgoal is critical to the overall query
 7. Dependencies on other subgoals (by index)
+8. SOURCE FILE - match the subgoal to a relevant file path from the provided context
 
 {agents_text}
 
@@ -187,7 +188,7 @@ You MUST respond with valid JSON only. Use this exact schema:
       "ideal_agent_desc": "Brief description of ideal agent capabilities",
       "assigned_agent": "best-available-agent",
       "match_quality": "excellent | acceptable | insufficient",
-      "source_file": "path/to/relevant/file.py",  // optional: primary source file for this subgoal
+      "source_file": "path/to/relevant/file.py",  // REQUIRED: pick from "Available Source Files" section
       "is_critical": true/false,
       "depends_on": [0, 1]  // indices of prerequisite subgoals
     }}

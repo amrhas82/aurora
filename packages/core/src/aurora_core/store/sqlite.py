@@ -30,7 +30,6 @@ from aurora_core.store.connection_pool import get_connection_pool
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -512,6 +511,7 @@ class SQLiteStore(Store):
         min_activation: float,
         limit: int,
         include_embeddings: bool = True,
+        chunk_type: str | None = None,
     ) -> list["Chunk"]:
         """Retrieve chunks by activation threshold.
 
@@ -520,6 +520,7 @@ class SQLiteStore(Store):
             limit: Maximum number of chunks to return
             include_embeddings: Whether to include embedding vectors (default True).
                 Set to False for faster retrieval when embeddings aren't needed (e.g., BM25 filtering).
+            chunk_type: Optional filter by chunk type ('code' or 'kb').
 
         Returns:
             List of chunks ordered by activation (highest first)
@@ -535,34 +536,42 @@ class SQLiteStore(Store):
             # Use -float('inf') if min_activation is 0.0 to get all chunks
             actual_min = min_activation if min_activation != 0.0 else -float("inf")
 
+            # Build WHERE clause
+            where_clause = "a.base_level >= ?"
+            params: list = [actual_min]
+            if chunk_type:
+                where_clause += " AND c.type = ?"
+                params.append(chunk_type)
+            params.append(limit)
+
             # Optimize query by excluding embeddings when not needed
             # Each embedding is ~1.5KB, so this saves significant I/O for large result sets
             if include_embeddings:
                 cursor = conn.execute(
-                    """
+                    f"""
                     SELECT c.id, c.type, c.content, c.metadata, c.embeddings, c.created_at, c.updated_at,
                            a.base_level AS activation
                     FROM chunks c
                     JOIN activations a ON c.id = a.chunk_id
-                    WHERE a.base_level >= ?
+                    WHERE {where_clause}
                     ORDER BY a.base_level DESC
                     LIMIT ?
                     """,
-                    (actual_min, limit),
+                    params,
                 )
             else:
                 # Exclude embeddings for faster retrieval (BM25-only filtering)
                 cursor = conn.execute(
-                    """
+                    f"""
                     SELECT c.id, c.type, c.content, c.metadata, NULL as embeddings, c.created_at, c.updated_at,
                            a.base_level AS activation
                     FROM chunks c
                     JOIN activations a ON c.id = a.chunk_id
-                    WHERE a.base_level >= ?
+                    WHERE {where_clause}
                     ORDER BY a.base_level DESC
                     LIMIT ?
                     """,
-                    (actual_min, limit),
+                    params,
                 )
 
             chunks = []

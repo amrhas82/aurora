@@ -1179,6 +1179,7 @@ def _decompose_with_soar(
     config: Config | None = None,
     context_files: list[str] | None = None,
     show_phases: bool = True,
+    no_cache: bool = False,
 ) -> tuple[list[Subgoal], dict, str, list[tuple[str, float]]]:
     """Decompose goal using SOAROrchestrator with mature 3-tier agent matching.
 
@@ -1193,12 +1194,13 @@ def _decompose_with_soar(
         config: Optional CLI configuration
         context_files: Optional list of context file paths
         show_phases: If True (default), display phase progress to terminal
+        no_cache: If True, skip cache and force fresh decomposition
 
     Returns:
         Tuple of:
         - subgoals: List of Subgoal objects with agent assignments
         - file_resolutions: Dict mapping subgoal_id to resolved files
-        - decomposition_source: String indicating source ("soar_llm")
+        - decomposition_source: String indicating source ("soar" or "cached")
         - memory_context: List of (file_path, score) tuples
 
     """
@@ -1254,6 +1256,7 @@ def _decompose_with_soar(
             elif phase_name == "retrieve":
                 chunks = result.get("chunks_retrieved", 0)
                 console.print(f"  [cyan]Matched: {chunks} chunks from memory[/]")
+                # Cache hit indicator will be shown after execute() returns
             elif phase_name == "decompose":
                 count = result.get("subgoal_count", 0)
                 console.print(f"  [cyan]Identified: {count} subgoals[/]")
@@ -1317,12 +1320,49 @@ def _decompose_with_soar(
         phase_callback=phase_callback if show_phases else None,
     )
 
+    # If no_cache, delete matching goals.json to force fresh decomposition
+    if no_cache:
+        from pathlib import Path
+
+        aurora_dir = Path.cwd() / ".aurora" / "plans" / "active"
+        if aurora_dir.exists():
+            query_normalized = " ".join(goal.lower().split())
+            for plan_dir in aurora_dir.iterdir():
+                if not plan_dir.is_dir():
+                    continue
+                goals_file = plan_dir / "goals.json"
+                if goals_file.exists():
+                    try:
+                        import json
+
+                        goals_data = json.loads(goals_file.read_text(encoding="utf-8"))
+                        title = goals_data.get("title", "")
+                        title_normalized = " ".join(title.lower().split())
+                        if title_normalized == query_normalized:
+                            # Remove the entire plan directory to force fresh
+                            import shutil
+
+                            shutil.rmtree(plan_dir)
+                            if show_phases:
+                                console.print(f"  [yellow]Cleared cached plan: {plan_dir.name}[/]")
+                    except Exception:
+                        pass  # Ignore errors, just skip
+
     # Execute phases 1-4 only
     result = orchestrator.execute(
         query=goal,
         context_files=context_files,
         stop_after_verify=True,
     )
+
+    # Check for cache hit and display indicator
+    metadata = result.get("metadata", {})
+    is_cache_hit = metadata.get("cache_hit", False) or metadata.get("cache_source")
+    if is_cache_hit and show_phases:
+        console.print(
+            "  [green]✓ Using cached decomposition[/] "
+            "[dim](use --no-cache for fresh analysis)[/]"
+        )
 
     # Map result to Subgoal objects
     # Note: Pydantic validators handle coercion (adding '@' to agents, 'sg-' to IDs)
@@ -1364,16 +1404,37 @@ def _decompose_with_soar(
                 agent_info.get("ideal_agent_desc", ""),
             ),
             match_quality=match_quality,
+            source_file=sg_data.get("source_file"),
         )
         subgoals.append(subgoal)
 
     # Extract memory context
     memory_context = result.get("memory_context", [])
 
+    # Post-process: match subgoals to source files from memory_context
+    # if LLM didn't provide source_file, try to match based on keywords
+    if memory_context:
+        file_paths = [fp for fp, _ in memory_context]
+        for sg in subgoals:
+            if not sg.source_file:
+                # Try to match file based on keywords in description
+                desc_lower = sg.description.lower()
+                for fp in file_paths:
+                    # Extract filename without extension
+                    fname = fp.split("/")[-1].replace(".py", "").replace(".md", "")
+                    fname_parts = fname.replace("_", " ").replace("-", " ").lower().split()
+                    # Check if any file keyword appears in description
+                    if any(part in desc_lower for part in fname_parts if len(part) > 3):
+                        sg.source_file = fp
+                        break
+
     # File resolutions (not yet populated by SOAR, could be added later)
     file_resolutions: dict = {}
 
-    return subgoals, file_resolutions, "soar_llm", memory_context
+    # Determine decomposition source
+    decomposition_source = "cached" if is_cache_hit else "soar"
+
+    return subgoals, file_resolutions, decomposition_source, memory_context
 
 
 def create_plan(
@@ -1385,6 +1446,7 @@ def create_plan(
     non_interactive: bool = False,
     goals_only: bool = False,
     use_soar_decomposition: bool = True,
+    no_cache: bool = False,
 ) -> PlanResult:
     """Create a new plan with SOAR-based goal decomposition.
 
@@ -1403,6 +1465,7 @@ def create_plan(
         use_soar_decomposition: If True (default), use SOAROrchestrator phases 1-4
             for mature 3-tier agent matching (excellent/acceptable/spawned).
             If False, use legacy PlanDecomposer.
+        no_cache: If True, skip cache and force fresh decomposition.
 
     Returns:
         PlanResult with plan details or error message
@@ -1447,6 +1510,7 @@ def create_plan(
                     goal=goal,
                     config=config,
                     context_files=[str(f) for f in context_files] if context_files else None,
+                    no_cache=no_cache,
                 )
             )
             # Use SOAR's memory context (from phase 2 retrieve)

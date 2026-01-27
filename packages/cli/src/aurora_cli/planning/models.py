@@ -746,7 +746,7 @@ class DecompositionSummary(BaseModel):
             ValueError: If source is not a recognized value
 
         """
-        valid_sources = {"soar", "soar_llm", "heuristic"}
+        valid_sources = {"soar", "soar_llm", "heuristic", "cached"}
         if v not in valid_sources:
             raise ValueError(f"decomposition_source must be one of {valid_sources}. Got: {v}")
         return v
@@ -867,7 +867,12 @@ class DecompositionSummary(BaseModel):
                 if self.decomposition_source.startswith("soar")
                 else self.decomposition_source
             )
-            source_color = "green" if source_display == "soar" else "yellow"
+            if source_display == "soar":
+                source_color = "green"
+            elif source_display == "cached":
+                source_color = "cyan"
+            else:
+                source_color = "yellow"
             summary.append(
                 f"[bold cyan]Source:[/bold cyan] [{source_color}]{source_display}[/{source_color}]",
             )

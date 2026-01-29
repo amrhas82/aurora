@@ -175,8 +175,22 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
             )
             continue
 
+        # Normalize dependencies: convert "sg-N" strings to 0-indexed integers
         depends_on = subgoal.get("depends_on", [])
-        graph[subgoal_index] = depends_on
+        normalized_deps = []
+        for dep in depends_on:
+            if isinstance(dep, int):
+                normalized_deps.append(dep)
+            elif isinstance(dep, str) and dep.startswith("sg-"):
+                try:
+                    # Convert "sg-1" to 0 (1-indexed to 0-indexed)
+                    dep_num = int(dep[3:]) - 1
+                    normalized_deps.append(dep_num)
+                except (ValueError, IndexError):
+                    # Invalid format, keep as-is and let validation catch it
+                    pass
+
+        graph[subgoal_index] = normalized_deps
 
     # Validate that all dependency references exist
     valid_indices = set(graph.keys())

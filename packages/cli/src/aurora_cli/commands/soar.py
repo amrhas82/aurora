@@ -274,7 +274,14 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
     elif phase_num == 3:
         # Decompose phase
         count = result.get("subgoal_count", 0)
-        console.print(f"  [cyan]✓ {count} subgoals identified[/]")
+        is_cached = result.get("cached", False)
+        if is_cached:
+            console.print(
+                f"  [green]✓ Using cached decomposition ({count} subgoals)[/] "
+                "[dim](use --no-cache for fresh)[/]"
+            )
+        else:
+            console.print(f"  [cyan]✓ {count} subgoals identified[/]")
     elif phase_num == 4:
         # Verify phase (now includes agent assignment)
         verdict = result.get("verdict", "UNKNOWN")

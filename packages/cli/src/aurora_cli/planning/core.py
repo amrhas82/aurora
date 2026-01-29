@@ -1180,7 +1180,7 @@ def _decompose_with_soar(
     context_files: list[str] | None = None,
     show_phases: bool = True,
     no_cache: bool = False,
-) -> tuple[list[Subgoal], dict, str, list[tuple[str, float]]]:
+) -> tuple[list[Subgoal], dict, str, list[tuple[str, float]], str]:
     """Decompose goal using SOAROrchestrator with mature 3-tier agent matching.
 
     This uses the full SOAR pipeline (phases 1-4) for decomposition:
@@ -1202,6 +1202,7 @@ def _decompose_with_soar(
         - file_resolutions: Dict mapping subgoal_id to resolved files
         - decomposition_source: String indicating source ("soar" or "cached")
         - memory_context: List of (file_path, score) tuples
+        - complexity: Complexity assessment from SOAR Phase 1 (SIMPLE/MEDIUM/COMPLEX)
 
     """
 
@@ -1373,7 +1374,10 @@ def _decompose_with_soar(
         error_details = f": {', '.join(issues)}" if issues else ""
         logger.error(f"SOAR verification failed{error_details}")
         # Return empty subgoals to trigger error handling in create_plan
-        return [], {}, "failed", []
+        return [], {}, "failed", [], "UNKNOWN"
+
+    # Extract SOAR's complexity assessment from Phase 1
+    soar_complexity = result.get("complexity", "MEDIUM")
 
     # Map result to Subgoal objects
     # Note: Pydantic validators handle coercion (adding '@' to agents, 'sg-' to IDs)
@@ -1445,7 +1449,7 @@ def _decompose_with_soar(
     # Determine decomposition source
     decomposition_source = "cached" if is_cache_hit else "soar"
 
-    return subgoals, file_resolutions, decomposition_source, memory_context
+    return subgoals, file_resolutions, decomposition_source, memory_context, soar_complexity
 
 
 def create_plan(
@@ -1517,7 +1521,7 @@ def create_plan(
             # Use mature SOAROrchestrator with 3-tier agent matching
             # SOAR phase 2 handles memory retrieval with proper background loading
             try:
-                subgoals, file_resolutions, decomposition_source, soar_memory_context = (
+                subgoals, file_resolutions, decomposition_source, soar_memory_context, soar_complexity = (
                     _decompose_with_soar(
                         goal=goal,
                         config=config,
@@ -1527,6 +1531,10 @@ def create_plan(
                 )
                 # Use SOAR's memory context (from phase 2 retrieve)
                 memory_context = soar_memory_context or []
+
+                # Use SOAR's complexity assessment instead of reassessing locally
+                # This ensures consistency with Phase 1 display
+                complexity = Complexity(soar_complexity.upper())
 
                 # Check if SOAR decomposition failed (returns empty subgoals)
                 # This happens when verification fails (e.g., circular dependencies)
@@ -1595,8 +1603,12 @@ def create_plan(
 
         memory_context = search_memory_for_goal(goal, config=config, limit=10, threshold=0.3)
 
-    # Reassess complexity now that we have actual subgoals
-    complexity = _assess_complexity(goal, subgoals)
+    # Note: For SOAR path, complexity is set from SOAR's Phase 1 assessment above.
+    # For non-SOAR paths, complexity was assessed earlier (line 1508) and may be
+    # reassessed here based on actual subgoals if needed.
+    if not use_soar_decomposition or not auto_decompose:
+        # Reassess complexity for non-SOAR paths based on actual subgoals
+        complexity = _assess_complexity(goal, subgoals)
 
     # Sanitize dependencies - remove self-references that break validation
     for sg in subgoals:

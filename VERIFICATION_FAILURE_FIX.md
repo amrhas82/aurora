@@ -149,8 +149,29 @@ When you see a verification failure:
 - `packages/soar/src/aurora_soar/orchestrator.py` - Verification logic
 - `packages/cli/src/aurora_cli/execution/review.py` - "Save goals?" prompt logic
 
-## Commit Message
+## Additional Fix: Complexity Assessment Consistency
 
+### Issue
+Even when verification succeeds, there was a mismatch between the complexity shown in Phase 1 and the final summary:
+- Phase 1: "Complexity: MEDIUM" (from SOAR assess)
+- Final summary: "Complexity: COMPLEX" (reassessed based on subgoal count)
+
+### Root Cause
+`create_plan()` was reassessing complexity after SOAR decomposition using a simple heuristic (count subgoals/dependencies), which conflicted with SOAR's Phase 1 sophisticated analysis.
+
+### Fix
+- Modified `_decompose_with_soar()` to return SOAR's Phase 1 complexity assessment
+- Updated `create_plan()` to use SOAR's complexity directly instead of reassessing
+- Removed local reassessment for SOAR path (kept for legacy non-SOAR paths)
+
+### Result
+The complexity displayed in Phase 1 now matches the final summary, ensuring consistent UX throughout the planning flow.
+
+---
+
+## Commit Messages
+
+### Commit 1: Verification Failure Fix
 ```
 fix: fail explicitly when SOAR verification fails instead of degrading to fallback
 
@@ -171,6 +192,31 @@ Fixes three issues reported in user feedback:
 1. Should not offer save goals after failure
 2. Complexity inconsistency (MEDIUM vs SIMPLE)
 3. Should fail explicitly instead of degrading silently
+```
+
+### Commit 2: Complexity Consistency Fix
+```
+fix: use SOAR Phase 1 complexity assessment instead of reassessing locally
+
+The SOAR orchestrator assesses complexity in Phase 1 (assess), but
+create_plan() was reassessing it based on the number of subgoals after
+decomposition. This caused inconsistency:
+
+Before:
+- Phase 1 display: "Complexity: MEDIUM"
+- Final summary: "Complexity: COMPLEX" (reassessed based on 8 subgoals ≥ 5)
+
+The local reassessment used a simple heuristic (count subgoals/dependencies)
+which often conflicted with SOAR's more sophisticated analysis of query
+complexity.
+
+Changes:
+- _decompose_with_soar() now returns the complexity from SOAR Phase 1
+- create_plan() uses SOAR's complexity directly instead of reassessing
+- Removed reassessment for SOAR path (kept for legacy non-SOAR paths)
+
+Now the complexity shown in Phase 1 matches the final summary, ensuring
+consistent UX.
 ```
 
 ## Verification

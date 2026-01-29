@@ -109,7 +109,10 @@ def decompose_query(
     prompt_template = DecomposePromptTemplate()
 
     # Create prompt with examples
-    system_prompt = prompt_template.build_system_prompt(available_agents=available_agents or [])
+    system_prompt = prompt_template.build_system_prompt(
+        available_agents=available_agents or [],
+        complexity=complexity.value,  # Pass complexity to enable subgoal limits
+    )
     user_prompt = prompt_template.build_user_prompt(
         query=query,
         context_summary=context_summary,

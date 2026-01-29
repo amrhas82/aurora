@@ -120,6 +120,7 @@ class DecomposePromptTemplate(PromptTemplate):
     def build_system_prompt(self, **kwargs: Any) -> str:
         """Build system prompt for query decomposition with agent capabilities."""
         available_agents = kwargs.get("available_agents", [])
+        complexity = kwargs.get("complexity", "MEDIUM")
 
         if available_agents:
             # Build detailed agent capability text
@@ -161,7 +162,32 @@ For ideal_agent: specify the ideal agent name for the task (any domain)
 For assigned_agent: use 'master' as fallback for all subgoals
 For match_quality: use 'insufficient' when master is not ideal"""
 
+        # Complexity-based subgoal limits and execution preferences
+        SUBGOAL_LIMITS = {"MEDIUM": 2, "COMPLEX": 5, "CRITICAL": 8}
+        EXEC_PREFERENCE = {
+            "MEDIUM": "sequential - one subgoal builds on previous findings",
+            "COMPLEX": "mixed - parallel for independent domains, sequential for dependent work",
+            "CRITICAL": "parallel where possible - maximize agent utilization",
+        }
+
+        max_subgoals = SUBGOAL_LIMITS.get(complexity, 2)
+        exec_pref = EXEC_PREFERENCE.get(complexity, "sequential")
+
+        guidelines = f"""
+COMPLEXITY: {complexity}
+MAX SUBGOALS: {max_subgoals}
+EXECUTION: Prefer {exec_pref}
+
+RULES:
+• Do not exceed {max_subgoals} subgoals
+• Research queries (how/why/what): ONE comprehensive subgoal preferred
+• Same-agent + no dependencies → merge into one subgoal
+• Subgoals = independent work, not phases of same task
+"""
+
         return f"""You are a query decomposition expert for a code reasoning system.
+
+{guidelines}
 
 Your task is to break down complex queries into concrete, actionable subgoals that can be
 executed by specialized agents.

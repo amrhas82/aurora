@@ -1248,12 +1248,8 @@ def _decompose_with_soar(
                 console.print(
                     f"\n[green][LLM -> {tool}][/] Phase {phase_num}: {phase_name.title()}",
                 )
-            # Check if this is a cached decomposition
-            is_cached = result.get("cached", False) if phase_name == "decompose" else False
-            if is_cached:
-                console.print(f"  Loading cached decomposition...")
-            else:
-                console.print(f"  {description}")
+            # Don't show "Loading cached..." here - will show after with full details
+            console.print(f"  {description}")
         else:  # status == "after"
             # Print phase result
             if phase_name == "assess":
@@ -1265,14 +1261,8 @@ def _decompose_with_soar(
                 # Cache hit indicator will be shown after execute() returns
             elif phase_name == "decompose":
                 count = result.get("subgoal_count", 0)
-                is_cached = result.get("cached", False)
-                if is_cached:
-                    console.print(
-                        f"  [green]✓ Using cached decomposition ({count} subgoals)[/] "
-                        "[dim](use --no-cache for fresh)[/]"
-                    )
-                else:
-                    console.print(f"  [cyan]Identified: {count} subgoals[/]")
+                # Don't show cache status here - consolidated message shown after execute()
+                console.print(f"  [cyan]{'Loaded' if result.get('cached') else 'Identified'}: {count} subgoals[/]")
             elif phase_name == "verify":
                 agents = result.get("agents_assigned", 0)
                 console.print(f"  [cyan]Assigned: {agents} agents[/]")
@@ -1368,13 +1358,26 @@ def _decompose_with_soar(
         stop_after_verify=True,
     )
 
-    # Check for cache hit and display indicator
+    # Check for cache hit and display indicator (consolidated single message)
     metadata = result.get("metadata", {})
-    is_cache_hit = metadata.get("cache_hit", False) or metadata.get("cache_source")
+    cache_source = metadata.get("cache_source")
+    is_cache_hit = metadata.get("cache_hit", False) or cache_source
     if is_cache_hit and show_phases:
+        # Determine cache source type
+        if cache_source:
+            cache_source_str = str(cache_source)
+            if "goals.json" in cache_source_str:
+                source_type = "goals.json"
+            elif "/logs/conversations/" in cache_source_str:
+                source_type = "previous SOAR conversation"
+            else:
+                source_type = "cache"
+        else:
+            source_type = "memory"
+
         console.print(
-            "  [green]✓ Using cached decomposition[/] "
-            "[dim](use --no-cache for fresh analysis)[/]"
+            f"  [green]✓ Using cached decomposition from {source_type}[/] "
+            "[dim](use --no-cache for fresh)[/]"
         )
 
     # Check for verification failure in phase metadata

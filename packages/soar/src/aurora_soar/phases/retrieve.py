@@ -147,8 +147,14 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
 
         # Type-aware retrieval: query code and KB separately to ensure both are represented
         # This prevents natural language queries from returning only KB/logs
-        CODE_SLOTS = 7
-        KB_SLOTS = budget - CODE_SLOTS  # e.g., 15 - 7 = 8 for COMPLEX
+        CODE_SLOT_BUDGETS = {
+            "SIMPLE": 3,
+            "MEDIUM": 5,
+            "COMPLEX": 7,
+            "CRITICAL": 10,
+        }
+        CODE_SLOTS = CODE_SLOT_BUDGETS.get(complexity, 5)
+        KB_SLOTS = max(0, budget - CODE_SLOTS)  # e.g., 15 - 7 = 8 for COMPLEX
         min_score = 0.3 if complexity in ("COMPLEX", "CRITICAL") else 0.5
 
         # Retrieve code chunks (type='code')

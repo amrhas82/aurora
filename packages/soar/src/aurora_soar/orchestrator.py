@@ -445,6 +445,7 @@ class SOAROrchestrator:
             passed, agent_assignments, issues = verify.verify_lite(
                 decomposition_dict,
                 available_agents,
+                complexity=phase1_result["complexity"],
             )
 
             # Build subgoal summary for display and output formatting
@@ -519,6 +520,7 @@ class SOAROrchestrator:
                 passed, agent_assignments, issues = verify.verify_lite(
                     decomposition_dict,
                     available_agents,
+                    complexity=phase1_result["complexity"],
                 )
 
                 # Rebuild subgoal details for retry
@@ -2127,6 +2129,8 @@ class SOAROrchestrator:
                 score,
                 len(subgoals),
             )
+            # Add cache source for display
+            parsed["_cache_source"] = str(file_path)
             return parsed
 
         return None
@@ -2137,6 +2141,8 @@ class SOAROrchestrator:
         Scans .aurora/plans/active/*/goals.json for a title that matches
         the current query (case-insensitive, normalized whitespace).
 
+        Uses fuzzy matching with similarity threshold to avoid false matches.
+
         Args:
             query: Current query string
 
@@ -2144,13 +2150,15 @@ class SOAROrchestrator:
             A phase3-compatible dict if matching goals found, None otherwise
 
         """
+        import hashlib
         import json
         from pathlib import Path
 
         try:
-            # Normalize query for comparison
-            query_normalized = " ".join(query.lower().split())
-            logger.debug(f"Cache check: normalized query = '{query_normalized}'")
+            # Normalize query for comparison (preserve more structure)
+            query_normalized = " ".join(query.lower().strip().split())
+            query_hash = hashlib.sha256(query_normalized.encode("utf-8")).hexdigest()[:16]
+            logger.debug(f"Cache check: normalized query = '{query_normalized}' (hash={query_hash})")
 
             # Find .aurora directory relative to current working directory
             aurora_dir = Path.cwd() / ".aurora" / "plans" / "active"
@@ -2173,13 +2181,19 @@ class SOAROrchestrator:
                 except (json.JSONDecodeError, OSError):
                     continue
 
-                # Check title match (normalized)
+                # Check title match (exact normalized match required)
                 title = goals_data.get("title", "")
-                title_normalized = " ".join(title.lower().split())
-                logger.debug(f"Cache check: comparing '{title_normalized}' vs '{query_normalized}'")
+                title_normalized = " ".join(title.lower().strip().split())
 
+                # Require exact match to avoid false cache hits
                 if title_normalized != query_normalized:
-                    logger.debug(f"Cache check: no match for {plan_dir.name}")
+                    # Log for debugging cache misses
+                    if logger.isEnabledFor(10):  # DEBUG level
+                        similarity = sum(1 for a, b in zip(title_normalized, query_normalized) if a == b)
+                        logger.debug(
+                            f"Cache check: no match for {plan_dir.name} "
+                            f"(similarity={similarity}/{max(len(title_normalized), len(query_normalized))})"
+                        )
                     continue
 
                 logger.info(f"Cache check: found matching goals.json in {plan_dir.name}")

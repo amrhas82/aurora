@@ -111,8 +111,8 @@ class ExamplesLoader:
         example_counts = {
             Complexity.SIMPLE: 0,
             Complexity.MEDIUM: 1,
-            Complexity.COMPLEX: 2,
-            Complexity.CRITICAL: 3,
+            Complexity.COMPLEX: 1,  # was 2
+            Complexity.CRITICAL: 2,  # was 3
         }
 
         count = example_counts[complexity]

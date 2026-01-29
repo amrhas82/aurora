@@ -2150,11 +2150,15 @@ class SOAROrchestrator:
         try:
             # Normalize query for comparison
             query_normalized = " ".join(query.lower().split())
+            logger.debug(f"Cache check: normalized query = '{query_normalized}'")
 
             # Find .aurora directory relative to current working directory
             aurora_dir = Path.cwd() / ".aurora" / "plans" / "active"
             if not aurora_dir.exists():
+                logger.debug(f"Cache check: aurora_dir does not exist: {aurora_dir}")
                 return None
+
+            logger.debug(f"Cache check: scanning {aurora_dir}")
 
             for plan_dir in aurora_dir.iterdir():
                 if not plan_dir.is_dir():
@@ -2172,9 +2176,13 @@ class SOAROrchestrator:
                 # Check title match (normalized)
                 title = goals_data.get("title", "")
                 title_normalized = " ".join(title.lower().split())
+                logger.debug(f"Cache check: comparing '{title_normalized}' vs '{query_normalized}'")
 
                 if title_normalized != query_normalized:
+                    logger.debug(f"Cache check: no match for {plan_dir.name}")
                     continue
+
+                logger.info(f"Cache check: found matching goals.json in {plan_dir.name}")
 
                 # Found matching goals - convert to phase3 format
                 subgoals = goals_data.get("subgoals", [])

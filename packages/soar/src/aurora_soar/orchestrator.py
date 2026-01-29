@@ -393,13 +393,13 @@ class SOAROrchestrator:
                 # Trigger phase callback to show cached decomposition in UX
                 decomposition = phase3_result.get("decomposition", phase3_result)
                 subgoal_count = len(decomposition.get("subgoals", []))
-                if self._phase_callback:
-                    self._phase_callback(
+                if self.phase_callback:
+                    self.phase_callback(
                         "decompose",
                         "before",
                         {"query": query, "cached": True},
                     )
-                    self._phase_callback(
+                    self.phase_callback(
                         "decompose",
                         "after",
                         {

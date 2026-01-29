@@ -6,8 +6,10 @@ Also provides BackgroundModelLoader for non-blocking model initialization.
 
 import logging
 import os
+import sys
 import threading
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -24,6 +26,67 @@ DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # HuggingFace cache directory
 HF_CACHE_DIR = Path.home() / ".cache" / "huggingface" / "hub"
+
+
+# =============================================================================
+# Exceptions
+# =============================================================================
+
+
+class MLDependencyError(Exception):
+    """Raised when ML dependencies are missing or model download failed."""
+
+    pass
+
+
+# =============================================================================
+# Helper functions
+# =============================================================================
+
+
+@contextmanager
+def _suppress_model_loading_output():
+    """Suppress verbose model loading messages from HuggingFace/PyTorch.
+
+    Adjusts logging levels and environment variables to hide:
+    - Noisy "Loading weights: X%" progress messages (logging)
+    - tqdm progress bars from HuggingFace Hub (stdout/stderr)
+
+    NOTE: Sets environment variables temporarily to suppress tqdm output
+    without redirecting stdout/stderr (which could break module imports).
+    """
+    # Save original logging levels
+    original_log_level = logging.getLogger("transformers").level
+    original_hf_log_level = logging.getLogger("huggingface_hub").level
+
+    # Save original environment variables
+    original_env = {
+        "HF_HUB_DISABLE_PROGRESS_BARS": os.environ.get("HF_HUB_DISABLE_PROGRESS_BARS"),
+        "TRANSFORMERS_VERBOSITY": os.environ.get("TRANSFORMERS_VERBOSITY"),
+    }
+
+    try:
+        # Suppress transformers and huggingface_hub logging
+        logging.getLogger("transformers").setLevel(logging.ERROR)
+        logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+
+        # Suppress tqdm progress bars from HuggingFace Hub
+        os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+        os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+
+        yield
+
+    finally:
+        # Restore original logging levels
+        logging.getLogger("transformers").setLevel(original_log_level)
+        logging.getLogger("huggingface_hub").setLevel(original_hf_log_level)
+
+        # Restore original environment variables
+        for key, value in original_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
 
 
 # =============================================================================
@@ -135,6 +198,106 @@ def get_model_size_mb(model_name: str = DEFAULT_MODEL) -> int:
     return known_sizes.get(model_name, 0)
 
 
+def validate_ml_ready(
+    model_name: str = DEFAULT_MODEL,
+    console: "Console | None" = None,
+) -> None:
+    """Validate ML dependencies and download model if needed.
+
+    This function performs fail-fast validation BEFORE any file processing
+    begins, ensuring that ML dependencies are available and the embedding
+    model is downloaded.
+
+    Args:
+        model_name: HuggingFace model identifier
+        console: Rich Console for progress output (optional)
+
+    Raises:
+        MLDependencyError: If sentence-transformers is not installed or model
+            download fails. The error message includes actionable instructions.
+
+    """
+    # 1. Check sentence-transformers installed
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError as e:
+        raise MLDependencyError(
+            "sentence-transformers package not installed.\n\n"
+            "[bold]Solution:[/]\n"
+            "  1. Install the package:\n"
+            "     [cyan]pip install sentence-transformers[/]\n"
+            "  2. Or reinstall aurora-context-code:\n"
+            "     [cyan]pip install -e packages/context-code[/]\n\n"
+            f"[dim]Error: {e}[/]"
+        ) from e
+
+    # 2. Check if model is already cached
+    if is_model_cached(model_name):
+        logger.debug("Model %s already cached and ready", model_name)
+        return
+
+    # 3. Attempt download with progress
+    model_size = get_model_size_mb(model_name)
+
+    if console:
+        from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+
+        size_info = f" (~{model_size}MB)" if model_size else ""
+        console.print(f"\n[cyan]Downloading embedding model[/]: {model_name}{size_info}")
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            console=console,
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Downloading model...", total=None)
+
+            try:
+                # This will download if not cached (suppress verbose output)
+                with _suppress_model_loading_output():
+                    SentenceTransformer(model_name)
+                progress.update(task, description="[green]Download complete!")
+                logger.info("Model %s downloaded successfully", model_name)
+                return
+            except Exception as e:
+                progress.update(task, description=f"[red]Download failed: {e}")
+                logger.error("Failed to download model %s: %s", model_name, e)
+                # 4. Raise MLDependencyError if download fails
+                raise MLDependencyError(
+                    f"Failed to download embedding model: {model_name}\n\n"
+                    "[bold]Solution:[/]\n"
+                    "  1. Check internet connection\n"
+                    "  2. Retry: [cyan]aur doctor --fix-ml[/]\n"
+                    "  3. Manual download:\n"
+                    "     [cyan]python -c 'from sentence_transformers import SentenceTransformer; "
+                    f"SentenceTransformer(\"{model_name}\")\'[/]\n\n"
+                    f"[dim]Error: {e}[/]"
+                ) from e
+    else:
+        # No progress display - just download
+        print(f"Downloading embedding model: {model_name}")
+
+        try:
+            with _suppress_model_loading_output():
+                SentenceTransformer(model_name)
+            logger.info("Model %s downloaded successfully", model_name)
+            return
+        except Exception as e:
+            logger.error("Failed to download model %s: %s", model_name, e)
+            raise MLDependencyError(
+                f"Failed to download embedding model: {model_name}\n\n"
+                "[bold]Solution:[/]\n"
+                "  1. Check internet connection\n"
+                "  2. Retry: [cyan]aur doctor --fix-ml[/]\n"
+                "  3. Manual download:\n"
+                "     [cyan]python -c 'from sentence_transformers import SentenceTransformer; "
+                f"SentenceTransformer(\"{model_name}\")\'[/]\n\n"
+                f"[dim]Error: {e}[/]"
+            ) from e
+
+
 def ensure_model_downloaded(
     model_name: str = DEFAULT_MODEL,
     show_progress: bool = True,
@@ -183,8 +346,9 @@ def ensure_model_downloaded(
             task = progress.add_task("Downloading model...", total=None)
 
             try:
-                # This will download if not cached
-                SentenceTransformer(model_name)
+                # This will download if not cached (suppress verbose output)
+                with _suppress_model_loading_output():
+                    SentenceTransformer(model_name)
                 progress.update(task, description="[green]Download complete!")
                 return True
             except Exception as e:
@@ -197,7 +361,8 @@ def ensure_model_downloaded(
             print(f"Downloading embedding model: {model_name}")
 
         try:
-            SentenceTransformer(model_name)
+            with _suppress_model_loading_output():
+                SentenceTransformer(model_name)
             return True
         except Exception as e:
             logger.error("Failed to download model %s: %s", model_name, e)
@@ -307,10 +472,12 @@ class BackgroundModelLoader:
                 os.environ["HF_HUB_OFFLINE"] = "1"
 
             # Import and create provider (this loads the model)
-            from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
+            # Suppress verbose loading messages
+            with _suppress_model_loading_output():
+                from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
 
-            provider = EmbeddingProvider(model_name=self._model_name)
-            provider.preload_model()  # Force model to load now
+                provider = EmbeddingProvider(model_name=self._model_name)
+                provider.preload_model()  # Force model to load now
 
             with self._lock:
                 self._provider = provider

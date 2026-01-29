@@ -136,35 +136,23 @@ def run_indexing(
 
     db_path_str = config.get_db_path()
 
+    # FAIL-FAST: Validate ML dependencies BEFORE any file processing
+    # This ensures we don't waste time indexing files only to fail later
+    from aurora_context_code.semantic.model_utils import MLDependencyError, validate_ml_ready
+
+    try:
+        out.print("[dim]Checking ML dependencies...[/]")
+        validate_ml_ready(model_name=config.embedding_model, console=out)
+        out.print("[green]✓[/] ML dependencies ready\n")
+    except MLDependencyError as e:
+        out.print(f"[bold red]ML Setup Required[/]\n{e}\n")
+        raise click.Abort()
+
     # Initialize memory manager with config
     if show_db_path:
         out.print(f"[dim]Using database: {db_path_str}[/]")
 
     manager = MemoryManager(config=config)
-
-    # Ensure embedding model is downloaded before indexing
-    # This prevents HuggingFace download interrupting the indexing progress
-    try:
-        from aurora_context_code.semantic.model_utils import (
-            ensure_model_downloaded,
-            is_model_cached,
-        )
-
-        model_name = config.embedding_model
-        if not is_model_cached(model_name):
-            out.print("[cyan]Embedding model not cached, downloading...[/]")
-            if not ensure_model_downloaded(model_name, show_progress=True, console=out):
-                out.print(
-                    "[yellow]Warning: Failed to download embedding model. "
-                    "Semantic search will be unavailable (BM25-only mode).[/]",
-                )
-        else:
-            out.print(f"[dim]Embedding model: {model_name} (cached)[/]")
-    except ImportError:
-        out.print(
-            "[yellow]Warning: sentence-transformers not installed. "
-            "Semantic search will be unavailable.[/]",
-        )
 
     # Suppress parse warnings during indexing for cleaner progress output
     # Warnings are counted via filter and displayed in the final summary
@@ -866,7 +854,7 @@ def _display_rich_results(
             "All results were below the semantic threshold.\n"
             "Try:\n"
             "  - Broadening your search query\n"
-            "  - Lowering the threshold with --min-score 0.2\n"
+            '  - Lowering the threshold with aur mem search "query" --min-score 0.2\n'
             "  - Checking if the codebase has been indexed",
         )
         return

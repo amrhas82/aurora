@@ -1248,7 +1248,12 @@ def _decompose_with_soar(
                 console.print(
                     f"\n[green][LLM -> {tool}][/] Phase {phase_num}: {phase_name.title()}",
                 )
-            console.print(f"  {description}")
+            # Check if this is a cached decomposition
+            is_cached = result.get("cached", False) if phase_name == "decompose" else False
+            if is_cached:
+                console.print(f"  Loading cached decomposition...")
+            else:
+                console.print(f"  {description}")
         else:  # status == "after"
             # Print phase result
             if phase_name == "assess":
@@ -1260,7 +1265,14 @@ def _decompose_with_soar(
                 # Cache hit indicator will be shown after execute() returns
             elif phase_name == "decompose":
                 count = result.get("subgoal_count", 0)
-                console.print(f"  [cyan]Identified: {count} subgoals[/]")
+                is_cached = result.get("cached", False)
+                if is_cached:
+                    console.print(
+                        f"  [green]✓ Using cached decomposition ({count} subgoals)[/] "
+                        "[dim](use --no-cache for fresh)[/]"
+                    )
+                else:
+                    console.print(f"  [cyan]Identified: {count} subgoals[/]")
             elif phase_name == "verify":
                 agents = result.get("agents_assigned", 0)
                 console.print(f"  [cyan]Assigned: {agents} agents[/]")

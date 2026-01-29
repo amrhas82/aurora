@@ -390,6 +390,25 @@ class SOAROrchestrator:
                 phase3_result = cache_hit
                 self._phase_metadata["phase3_decompose"] = phase3_result
 
+                # Trigger phase callback to show cached decomposition in UX
+                decomposition = phase3_result.get("decomposition", phase3_result)
+                subgoal_count = len(decomposition.get("subgoals", []))
+                if self._phase_callback:
+                    self._phase_callback(
+                        "decompose",
+                        "before",
+                        {"query": query, "cached": True},
+                    )
+                    self._phase_callback(
+                        "decompose",
+                        "after",
+                        {
+                            "subgoal_count": subgoal_count,
+                            "cached": True,
+                            "cache_source": phase3_result.get("_cache_source", "unknown"),
+                        },
+                    )
+
                 # For goals-only mode with cache hit, return directly without re-verifying
                 # (cached decomposition was already verified when first saved)
                 if stop_after_verify and cache_hit.get("_cache_source"):

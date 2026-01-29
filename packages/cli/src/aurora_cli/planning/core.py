@@ -1534,7 +1534,17 @@ def create_plan(
 
                 # Use SOAR's complexity assessment instead of reassessing locally
                 # This ensures consistency with Phase 1 display
-                complexity = Complexity(soar_complexity.upper())
+                # Map SOAR complexity values to CLI Complexity enum
+                complexity_map = {
+                    "SIMPLE": Complexity.SIMPLE,
+                    "MEDIUM": Complexity.MODERATE,  # SOAR uses MEDIUM, CLI uses MODERATE
+                    "COMPLEX": Complexity.COMPLEX,
+                    "CRITICAL": Complexity.COMPLEX,  # Map CRITICAL to COMPLEX
+                }
+                complexity = complexity_map.get(
+                    soar_complexity.upper(),
+                    Complexity.MODERATE,  # Default to MODERATE if unknown
+                )
 
                 # Check if SOAR decomposition failed (returns empty subgoals)
                 # This happens when verification fails (e.g., circular dependencies)

@@ -28,13 +28,14 @@ console = Console()
 
 @click.command(name="doctor")
 @click.option("--fix", is_flag=True, help="Automatically fix issues where possible")
-def doctor_command(fix: bool) -> None:
+@click.option("--fix-ml", is_flag=True, help="Download embedding model and verify ML setup")
+def doctor_command(fix: bool, fix_ml: bool) -> None:
     r"""Run health checks and diagnostics.
 
     Checks the health of your AURORA installation across six categories:
     - Core System: CLI version, database, API keys, permissions
     - Code Analysis: tree-sitter parser, index age, chunk quality
-    - Search & Retrieval: vector store, Git BLA, cache size
+    - Search & Retrieval: vector store, Git BLA, cache size, embeddings
     - Configuration: config file, Git repo, MCP server
     - Tool Integration: slash commands, MCP servers
     - MCP Functional: MCP config validation, SOAR phases, memory database
@@ -53,7 +54,16 @@ def doctor_command(fix: bool) -> None:
         \b
         # Run health checks with auto-repair
         aur doctor --fix
+
+        \b
+        # Download embedding model and verify ML setup
+        aur doctor --fix-ml
     """
+    # Handle --fix-ml flag first (standalone operation)
+    if fix_ml:
+        _handle_fix_ml()
+        return
+
     try:
         # Load configuration (using Config class for backward compat)
         config = Config()
@@ -320,6 +330,72 @@ def _handle_auto_fix(
             console.print(f"[bold]Fixed {fixed_count} of {len(fixable_issues)} issues[/]")
         else:
             console.print("Skipping automatic fixes.")
+
+
+def _handle_fix_ml() -> None:
+    """Download embedding model and verify ML setup.
+
+    This function:
+    1. Checks if sentence-transformers is installed
+    2. Checks if embedding model is already cached
+    3. Downloads the model if not cached
+    4. Provides clear feedback and next steps
+
+    """
+    console.print("\n[bold cyan]ML Setup: Embedding Model Download[/]\n")
+
+    # 1. Check sentence-transformers installed
+    try:
+        import sentence_transformers  # noqa: F401
+    except ImportError:
+        console.print("[bold red]Error:[/] sentence-transformers package not installed\n")
+        console.print("[bold]Solution:[/]")
+        console.print("  1. Install the package:")
+        console.print("     [cyan]pip install sentence-transformers[/]")
+        console.print("  2. Or reinstall aurora-context-code:")
+        console.print("     [cyan]pip install -e packages/context-code[/]\n")
+        raise click.Abort()
+
+    console.print("[green]✓[/] sentence-transformers is installed")
+
+    # 2. Check if model is already cached
+    from aurora_context_code.semantic.model_utils import (
+        DEFAULT_MODEL,
+        get_model_cache_path,
+        is_model_cached,
+    )
+
+    model_name = DEFAULT_MODEL
+    cache_path = get_model_cache_path(model_name)
+
+    if is_model_cached(model_name):
+        console.print(f"[green]✓[/] Embedding model already cached at:")
+        console.print(f"    [dim]{cache_path}[/]\n")
+        console.print("[bold green]ML setup complete![/] You can now:")
+        console.print("  • Index your codebase: [cyan]aur mem index .[/]")
+        console.print("  • Initialize projects: [cyan]aur init[/]")
+        console.print("  • Run SOAR queries: [cyan]aur soar \"your question\"[/]\n")
+        return
+
+    # 3. Download the model with progress
+    console.print(f"[yellow]Embedding model not cached[/]")
+    console.print(f"[dim]Model: {model_name}[/]")
+    console.print(f"[dim]Cache: {cache_path}[/]\n")
+
+    from aurora_context_code.semantic.model_utils import MLDependencyError, validate_ml_ready
+
+    try:
+        validate_ml_ready(model_name=model_name, console=console)
+        console.print("\n[bold green]✓ ML setup complete![/]\n")
+        console.print("[bold]Next steps:[/]")
+        console.print("  • Index your codebase: [cyan]aur mem index .[/]")
+        console.print("  • Initialize projects: [cyan]aur init[/]")
+        console.print("  • Run SOAR queries: [cyan]aur soar \"your question\"[/]\n")
+    except MLDependencyError as e:
+        console.print(f"\n[bold red]✗ Model download failed[/]\n")
+        console.print(str(e))
+        console.print()
+        raise click.Abort()
 
 
 if __name__ == "__main__":

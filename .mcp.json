@@ -1,12 +1,3 @@
 {
-  "mcpServers": {
-    "aurora": {
-      "type": "stdio",
-      "command": "python3",
-      "args": ["-m", "aurora_mcp.server"],
-      "env": {
-        "PYTHONPATH": "/home/hamr/PycharmProjects/aurora/src:/home/hamr/PycharmProjects/aurora/packages/cli/src:/home/hamr/PycharmProjects/aurora/packages/core/src:/home/hamr/PycharmProjects/aurora/packages/context-code/src"
-      }
-    }
-  }
+  "mcpServers": {}
 }

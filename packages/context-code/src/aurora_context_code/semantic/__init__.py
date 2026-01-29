@@ -55,8 +55,10 @@ from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRe
 from aurora_context_code.semantic.model_utils import (
     DEFAULT_MODEL,
     BackgroundModelLoader,
+    MLDependencyError,
     ensure_model_downloaded,
     is_model_cached,
+    validate_ml_ready,
 )
 from aurora_context_code.semantic.optimized_loader import (
     LoadingStrategy,
@@ -78,12 +80,15 @@ __all__ = [
     # Data classes
     "ModelMetadata",
     "ResourceProfile",
+    # Exceptions
+    "MLDependencyError",
     # Functions
     "cosine_similarity",
     "ensure_model_downloaded",
     "get_embedding_provider",
     "is_model_cached",
     "preload_embeddings",
+    "validate_ml_ready",
     # Constants
     "DEFAULT_MODEL",
 ]

@@ -55,6 +55,27 @@ else
     echo "✓ Installed (wheel mode)"
 fi
 
+echo ""
+echo "Installing ML dependencies (CPU-only)..."
+
+# Install PyTorch CPU version (avoids 3GB GPU bloat)
+if pip show torch >/dev/null 2>&1; then
+    echo "✓ PyTorch already installed"
+else
+    echo "Installing PyTorch (CPU version, ~190MB)..."
+    pip install torch --index-url https://download.pytorch.org/whl/cpu
+fi
+
+# Install sentence-transformers
+if pip show sentence-transformers >/dev/null 2>&1; then
+    echo "✓ sentence-transformers already installed"
+else
+    echo "Installing sentence-transformers..."
+    pip install sentence-transformers
+fi
+
+echo "✓ ML dependencies installed"
+
 # Verify installation
 echo ""
 echo "Installed packages:"

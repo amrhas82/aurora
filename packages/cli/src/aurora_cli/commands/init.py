@@ -156,6 +156,7 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
         config = Config(db_path=str(db_path))
 
         # Use shared indexing function from memory.py
+        # (ML validation happens inside run_indexing)
         stats, total_warnings = run_indexing(
             path=project_path,
             config=config,

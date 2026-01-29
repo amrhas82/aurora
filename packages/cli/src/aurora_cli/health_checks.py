@@ -331,6 +331,9 @@ class SearchRetrievalChecks:
         # Check vector store / embeddings
         results.append(self._check_vector_store())
 
+        # Check embedding model availability
+        results.append(self._check_embedding_model())
+
         # Check Git BLA availability
         results.append(self._check_git_bla())
 
@@ -351,6 +354,57 @@ class SearchRetrievalChecks:
             return ("pass", "Vector store available", {"path": str(db_path)})
         except Exception as e:
             return ("fail", f"Vector store check failed: {e}", {})
+
+    def _check_embedding_model(self) -> HealthCheckResult:
+        """Check if embedding model is downloaded and accessible.
+
+        Returns:
+            HealthCheckResult indicating model availability status
+
+        """
+        try:
+            # Check if sentence-transformers is installed
+            try:
+                import sentence_transformers  # noqa: F401
+            except ImportError:
+                return (
+                    "fail",
+                    "sentence-transformers not installed",
+                    {
+                        "solution": "Run: pip install sentence-transformers",
+                        "or": "aur doctor --fix-ml",
+                    },
+                )
+
+            # Check if model is cached
+            from aurora_context_code.semantic.model_utils import (
+                DEFAULT_MODEL,
+                get_model_cache_path,
+                is_model_cached,
+            )
+
+            model_name = DEFAULT_MODEL
+            cache_path = get_model_cache_path(model_name)
+
+            if is_model_cached(model_name):
+                return (
+                    "pass",
+                    f"Embedding model cached",
+                    {"model": model_name, "path": str(cache_path)},
+                )
+
+            return (
+                "warning",
+                "Embedding model not downloaded",
+                {
+                    "model": model_name,
+                    "path": str(cache_path),
+                    "solution": "Run: aur doctor --fix-ml",
+                },
+            )
+
+        except Exception as e:
+            return ("fail", f"Embedding model check failed: {e}", {})
 
     def _check_git_bla(self) -> HealthCheckResult:
         """Check if Git BLA (Bayesian Lifetime Activation) is available."""
@@ -434,6 +488,32 @@ class SearchRetrievalChecks:
 
         """
         issues = []
+
+        # Check sentence-transformers availability
+        try:
+            import sentence_transformers  # noqa: F401
+        except ImportError:
+            issues.append(
+                {
+                    "name": "sentence-transformers not installed",
+                    "solution": "Run: pip install sentence-transformers or aur doctor --fix-ml",
+                },
+            )
+
+        # Check embedding model availability
+        try:
+            from aurora_context_code.semantic.model_utils import DEFAULT_MODEL, is_model_cached
+
+            if not is_model_cached(DEFAULT_MODEL):
+                issues.append(
+                    {
+                        "name": "Embedding model not downloaded",
+                        "solution": f"Run: aur doctor --fix-ml (downloads {DEFAULT_MODEL})",
+                    },
+                )
+        except Exception:
+            # If check fails, skip (likely sentence-transformers not installed)
+            pass
 
         # Check Git availability
         try:

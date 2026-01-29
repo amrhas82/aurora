@@ -182,11 +182,24 @@ def _format_normal(
         lines.append("SUBGOAL BREAKDOWN:")
         for sg in subgoal_breakdown:
             critical_marker = " [CRITICAL]" if sg.get("is_critical") else ""
-            deps = (
-                f" (depends on: {', '.join(str(d + 1) for d in sg.get('depends_on', []))})"
-                if sg.get("depends_on")
-                else ""
-            )
+            # Handle both int (0-indexed) and string ("sg-1") dependency formats
+            deps_list = sg.get("depends_on", [])
+            if deps_list:
+                formatted_deps = []
+                for d in deps_list:
+                    if isinstance(d, int):
+                        formatted_deps.append(str(d + 1))  # Convert 0-indexed to 1-indexed
+                    elif isinstance(d, str):
+                        # Extract number from "sg-N" format or use as-is
+                        if d.startswith("sg-"):
+                            formatted_deps.append(d[3:])  # Extract N from "sg-N"
+                        else:
+                            formatted_deps.append(d)
+                    else:
+                        formatted_deps.append(str(d))
+                deps = f" (depends on: {', '.join(formatted_deps)})"
+            else:
+                deps = ""
             lines.append(f"  {sg['index']}. {sg['description'][:70]}{critical_marker}")
             lines.append(f"     Agent: {sg['agent']}{deps}")
 

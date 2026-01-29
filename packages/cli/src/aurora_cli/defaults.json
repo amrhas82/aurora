@@ -55,12 +55,7 @@
     "tracker_path": "~/.aurora/budget_tracker.json"
   },
   "agents": {
-    "discovery_paths": [
-      "~/.claude/agents",
-      "~/.config/ampcode/agents",
-      "~/.config/droid/agent",
-      "~/.config/opencode/agent"
-    ],
+    "discovery_paths": [],
     "manifest_path": "./.aurora/cache/agent_manifest.json",
     "refresh_interval_days": 1,
     "fallback_mode": "llm_only"

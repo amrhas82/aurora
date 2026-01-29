@@ -1364,6 +1364,17 @@ def _decompose_with_soar(
             "[dim](use --no-cache for fresh analysis)[/]"
         )
 
+    # Check for verification failure in phase metadata
+    phases_metadata = metadata.get("phases", {})
+    if "verification_failure" in phases_metadata:
+        verification_error = phases_metadata["verification_failure"]
+        feedback = verification_error.get("feedback", "Unknown verification error")
+        issues = verification_error.get("issues", [])
+        error_details = f": {', '.join(issues)}" if issues else ""
+        logger.error(f"SOAR verification failed{error_details}")
+        # Return empty subgoals to trigger error handling in create_plan
+        return [], {}, "failed", []
+
     # Map result to Subgoal objects
     # Note: Pydantic validators handle coercion (adding '@' to agents, 'sg-' to IDs)
     subgoals = []
@@ -1505,30 +1516,36 @@ def create_plan(
         if use_soar_decomposition:
             # Use mature SOAROrchestrator with 3-tier agent matching
             # SOAR phase 2 handles memory retrieval with proper background loading
-            subgoals, file_resolutions, decomposition_source, soar_memory_context = (
-                _decompose_with_soar(
-                    goal=goal,
-                    config=config,
-                    context_files=[str(f) for f in context_files] if context_files else None,
-                    no_cache=no_cache,
+            try:
+                subgoals, file_resolutions, decomposition_source, soar_memory_context = (
+                    _decompose_with_soar(
+                        goal=goal,
+                        config=config,
+                        context_files=[str(f) for f in context_files] if context_files else None,
+                        no_cache=no_cache,
+                    )
                 )
-            )
-            # Use SOAR's memory context (from phase 2 retrieve)
-            memory_context = soar_memory_context or []
+                # Use SOAR's memory context (from phase 2 retrieve)
+                memory_context = soar_memory_context or []
 
-            # Fallback if SOAR decomposition fails (returns empty subgoals)
-            if not subgoals:
-                logger.warning("SOAR decomposition returned empty subgoals, using fallback")
-                subgoals = [
-                    Subgoal(
-                        id="sg-1",
-                        title="Implement goal",
-                        description=goal,
-                        assigned_agent="@code-developer",
-                    ),
-                ]
-                file_resolutions = {}
-                decomposition_source = "heuristic"
+                # Check if SOAR decomposition failed (returns empty subgoals)
+                # This happens when verification fails (e.g., circular dependencies)
+                if not subgoals:
+                    logger.error("SOAR decomposition failed - returning error instead of fallback")
+                    return PlanResult(
+                        success=False,
+                        error=(
+                            "Failed to decompose goal: verification failed after retry. "
+                            "This may be due to circular dependencies or invalid decomposition. "
+                            "Please rephrase your goal or try a simpler approach."
+                        ),
+                    )
+            except Exception as e:
+                logger.error("SOAR decomposition raised exception: %s", e)
+                return PlanResult(
+                    success=False,
+                    error=f"Failed to decompose goal: {e}",
+                )
         else:
             # Legacy PlanDecomposer (only used if explicitly disabled via config)
             from aurora_cli.planning.decompose import PlanDecomposer

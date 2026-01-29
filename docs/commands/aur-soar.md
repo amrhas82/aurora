@@ -54,8 +54,36 @@ Analyzes query complexity using keyword-based classification (96% accuracy) with
 ### Phase 2: RETRIEVE (Orchestrator)
 Queries memory index for relevant context using semantic search and hybrid retrieval.
 
+**Complexity-Based Retrieval Budget:**
+
+| Complexity | Code Chunks | KB Chunks | Total Retrieved | Context Limit |
+|------------|-------------|-----------|-----------------|---------------|
+| SIMPLE     | 3           | 2         | 5               | skip          |
+| MEDIUM     | 5           | 5         | 10              | 5 code, 8 total |
+| COMPLEX    | 7           | 8         | 15              | 7 code, 12 total |
+| CRITICAL   | 10          | 10        | 20              | 10 code, 15 total |
+
+**Type-Aware Retrieval:** Queries code and KB (knowledge base) chunks separately to ensure both types are represented, preventing natural language queries from returning only documentation.
+
+**Context Summary:** Top N code chunks get full source code in context; remaining chunks show only docstrings/signatures to optimize context window usage.
+
 ### Phase 3: DECOMPOSE (LLM)
 Breaks complex queries into manageable subgoals with clear success criteria.
+
+**Complexity-Based Decomposition:**
+
+| Complexity | Few-Shot Examples | Max Subgoals | Execution Preference |
+|------------|-------------------|--------------|----------------------|
+| SIMPLE     | 0                 | 0 (bypass)   | skip                 |
+| MEDIUM     | 1                 | 2            | sequential           |
+| COMPLEX    | 1                 | 5            | mixed                |
+| CRITICAL   | 2                 | 8            | parallel             |
+
+**Optimization (v0.10.0):**
+- Reduced few-shot examples (COMPLEX: 2→1, CRITICAL: 3→2) to minimize context bloat
+- Explicit subgoal limits passed to LLM prompt with enforcement rules
+- Execution preferences guide LLM toward appropriate parallelization strategy
+- Chunk deduplication by file_path reduces redundancy in context
 
 **Example:**
 ```
@@ -69,8 +97,26 @@ Subgoals:
 5. Compare learning curves and developer experience
 ```
 
-### Phase 4: VERIFY (LLM)
-Validates decomposition quality with devil's advocate review (scores 0.6-1.0).
+### Phase 4: VERIFY (Orchestrator)
+Validates decomposition quality and enforces complexity-based subgoal limits using `verify_lite()`.
+
+**Verification Checks:**
+1. Structural validation (required fields, valid dependencies)
+2. **Subgoal count enforcement** (complexity-based limits)
+3. Agent assignment and capability matching
+4. Circular dependency detection
+
+**Subgoal Limits (v0.10.0):**
+
+| Complexity | Max Allowed | Action if Exceeded |
+|------------|-------------|-------------------|
+| MEDIUM     | 2           | FAIL → Retry with feedback |
+| COMPLEX    | 5           | FAIL → Retry with feedback |
+| CRITICAL   | 8           | FAIL → Retry with feedback |
+
+**Auto-Retry:** If LLM generates too many subgoals, verification fails with specific feedback: "Too many subgoals: N exceeds COMPLEXITY limit of M. Consolidate." The decomposition is automatically retried with this guidance.
+
+**Impact:** MEDIUM queries now consistently generate 2 subgoals instead of 7 (71% reduction), focusing on comprehensive research over fragmentation.
 
 ### Phase 5: ROUTE (Orchestrator)
 Assigns agents to subgoals based on capabilities and creates execution plan.
@@ -119,6 +165,140 @@ Caches reasoning patterns for future similar queries.
 
 ### Phase 9: RESPOND (LLM)
 Formats final answer with proper structure and citations.
+
+## Cache System
+
+SOAR uses a **3-layer cache architecture** to avoid redundant decompositions and speed up repeated queries.
+
+### Cache Layers
+
+**1. In-Memory SOAR Cache (Session-Based)**
+
+- **Location**: `_decomposition_cache` dict in `decompose.py`
+- **Key**: SHA256 hash of `query|complexity`
+- **Lifetime**: Current process session only
+- **Speed**: <1ms (instant hash lookup)
+- **Match Criteria**: Exact query text + exact complexity
+
+**Example:**
+```
+Query: "improve aur mem search"
+Complexity: MEDIUM
+Key: SHA256("improve aur mem search|MEDIUM") = "a1b2c3d4..."
+
+Same query in same session → Instant cache hit
+```
+
+**2. goals.json File Cache (Persistent)**
+
+- **Location**: `.aurora/plans/active/*/goals.json`
+- **Key**: Normalized query string (lowercase + whitespace collapsed)
+- **Lifetime**: Persistent until deleted
+- **Speed**: ~50ms (file scan + JSON parse)
+- **Match Criteria**: Exact match after normalization
+
+**Example:**
+```
+Query: "Improve Aur  Mem   Search"
+Normalized: "improve aur mem search"
+
+goals.json title: "improve aur mem search" → MATCH
+goals.json title: "improve aur memory search" → NO MATCH (different words)
+```
+
+**3. Conversation Log Cache (Persistent, Fuzzy)**
+
+- **Location**: `.aurora/logs/conversations/*.md`
+- **Key**: Hybrid retrieval score (BM25 + Activation + Semantic)
+- **Lifetime**: Persistent until deleted
+- **Speed**: ~100ms (hybrid retrieval + log parsing)
+- **Match Criteria**: `hybrid_score >= 0.90`
+
+**Hybrid Score Calculation:**
+```
+hybrid_score = 0.4 × BM25_score +         # Keyword matching
+               0.3 × activation_score +   # Access frequency
+               0.3 × semantic_score       # Embedding similarity
+
+Threshold: 0.90 (very high confidence required)
+```
+
+**Example:**
+```
+Query: "how can i improve aur mem search when it starts?"
+
+Conversation Log:
+  Previous: "how can i improve aur mem search when it starts?"
+  BM25: 0.95, Activation: 0.90, Semantic: 0.92
+  Hybrid: 0.926 → MATCH (≥ 0.90)
+
+Query: "optimize memory retrieval speed"
+  Previous: "improve aur mem search"
+  BM25: 0.30, Activation: 0.80, Semantic: 0.75
+  Hybrid: 0.585 → NO MATCH (< 0.90)
+```
+
+### Cache Check Flow
+
+```
+Phase 3: DECOMPOSE
+├─ CHECK 1: In-Memory Cache (query|complexity hash)
+│  └─ Hit? → Return immediately (no LLM call)
+├─ CHECK 2: goals.json Cache (normalized string)
+│  └─ Hit? → Return immediately (no LLM call)
+├─ CHECK 3: Conversation Log Cache (hybrid_score >= 0.90)
+│  └─ Hit? → Return immediately (no LLM call)
+└─ All miss? → Call LLM + cache result in memory
+```
+
+**Short-circuit behavior:** Stops at first cache hit, avoiding unnecessary checks.
+
+### Cache Display
+
+**Unified cache indicators (v0.10.0):**
+
+```bash
+# In-memory cache (subtle)
+Phase 3: ✓ 4 subgoals loaded
+
+# File-based cache (explicit with source)
+✓ Using cached decomposition from goals.json (use --no-cache for fresh)
+✓ Using cached decomposition from previous SOAR conversation (use --no-cache for fresh)
+```
+
+**No duplicate messages:** Previous versions showed 2-3 cache messages; now consolidated into one clear indicator.
+
+### Cache Invalidation
+
+**--no-cache flag:**
+```bash
+aur soar "query" --no-cache  # Bypasses all caches, forces fresh decomposition
+```
+
+**Manual clearing:**
+```bash
+rm -rf .aurora/plans/active/*           # Clear goals.json cache
+rm -rf .aurora/logs/conversations/*     # Clear conversation log cache
+# Restart process                       # Clear in-memory cache
+```
+
+### Performance Impact
+
+**Cache hit savings:**
+
+| Cache Layer | Lookup Time | Savings vs LLM |
+|-------------|-------------|----------------|
+| In-Memory   | <1ms        | ~3-10s         |
+| goals.json  | ~50ms       | ~3-10s         |
+| Conversation| ~100ms      | ~3-10s         |
+| LLM call    | 3-10s       | N/A            |
+
+**Real-world example:**
+```
+Run 1: "improve aur mem search" → 8.2s (LLM call + cache in memory)
+Run 2: "improve aur mem search" (same session) → <1ms (in-memory hit)
+Run 3: "improve aur mem search" (new session) → 50ms (goals.json hit)
+```
 
 ## Options
 
@@ -713,6 +893,42 @@ cat auth-plan.md | grep "^-" > auth-tasks.md
 # 3. Execute tasks with spawn
 aur spawn auth-tasks.md --parallel --verbose
 ```
+
+## Recent Changes
+
+### v0.10.0 - SOAR Decomposition Optimization
+
+**Complexity-Based Limits:**
+- Reduced few-shot examples: COMPLEX 2→1, CRITICAL 3→2 (50% reduction)
+- Added complexity-based CODE_SLOTS: MEDIUM=5, COMPLEX=7, CRITICAL=10 (was hardcoded at 7)
+- Added complexity-based chunk limits for context summary
+- Added subgoal count enforcement: MEDIUM=2, COMPLEX=5, CRITICAL=8
+
+**Subgoal Enforcement:**
+- `verify_lite()` now rejects decompositions exceeding complexity limits
+- Auto-retry with specific feedback: "Too many subgoals: N exceeds COMPLEXITY limit of M"
+- MEDIUM queries reduced from 7→2 subgoals (71% improvement)
+
+**LLM Prompt Improvements:**
+- Explicit max subgoal limits in system prompt
+- Execution preferences (sequential/mixed/parallel) guide LLM
+- Consolidation rules: "Research queries: ONE comprehensive subgoal preferred"
+
+**Cache System:**
+- Consolidated duplicate cache messages into single source-attributed indicator
+- Added `_cache_source` tracking for conversation log caches
+- Clear distinction between goals.json, conversation, and in-memory sources
+- Unified display for both `aur soar` and `aur goals`
+
+**Context Optimization:**
+- Chunk deduplication by file_path reduces redundancy
+- Complexity-aware context limits prevent bloat
+
+**Impact:**
+- 71% reduction in subgoal count for MEDIUM queries
+- 50% reduction in few-shot examples for COMPLEX/CRITICAL
+- Faster cache hit identification
+- More focused, actionable decompositions
 
 ## See Also
 

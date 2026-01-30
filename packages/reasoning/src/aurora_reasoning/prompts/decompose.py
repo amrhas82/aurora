@@ -163,7 +163,8 @@ For assigned_agent: use 'master' as fallback for all subgoals
 For match_quality: use 'insufficient' when master is not ideal"""
 
         # Complexity-based subgoal limits and execution preferences
-        SUBGOAL_LIMITS = {"MEDIUM": 2, "COMPLEX": 5, "CRITICAL": 8}
+        # 2-4-6: progressive scaling, forces prioritization over sprawl
+        SUBGOAL_LIMITS = {"MEDIUM": 2, "COMPLEX": 4, "CRITICAL": 6}
         EXEC_PREFERENCE = {
             "MEDIUM": "sequential - one subgoal builds on previous findings",
             "COMPLEX": "mixed - parallel for independent domains, sequential for dependent work",

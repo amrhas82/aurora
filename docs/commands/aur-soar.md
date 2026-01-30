@@ -76,8 +76,8 @@ Breaks complex queries into manageable subgoals with clear success criteria.
 |------------|-------------------|--------------|----------------------|
 | SIMPLE     | 0                 | 0 (bypass)   | skip                 |
 | MEDIUM     | 1                 | 2            | sequential           |
-| COMPLEX    | 1                 | 5            | mixed                |
-| CRITICAL   | 2                 | 8            | parallel             |
+| COMPLEX    | 1                 | 4            | mixed                |
+| CRITICAL   | 2                 | 6            | parallel             |
 
 **Optimization (v0.10.0):**
 - Reduced few-shot examples (COMPLEX: 2→1, CRITICAL: 3→2) to minimize context bloat
@@ -111,8 +111,8 @@ Validates decomposition quality and enforces complexity-based subgoal limits usi
 | Complexity | Max Allowed | Action if Exceeded |
 |------------|-------------|-------------------|
 | MEDIUM     | 2           | FAIL → Retry with feedback |
-| COMPLEX    | 5           | FAIL → Retry with feedback |
-| CRITICAL   | 8           | FAIL → Retry with feedback |
+| COMPLEX    | 4           | FAIL → Retry with feedback |
+| CRITICAL   | 6           | FAIL → Retry with feedback |
 
 **Auto-Retry:** If LLM generates too many subgoals, verification fails with specific feedback: "Too many subgoals: N exceeds COMPLEXITY limit of M. Consolidate." The decomposition is automatically retried with this guidance.
 
@@ -902,7 +902,7 @@ aur spawn auth-tasks.md --parallel --verbose
 - Reduced few-shot examples: COMPLEX 2→1, CRITICAL 3→2 (50% reduction)
 - Added complexity-based CODE_SLOTS: MEDIUM=5, COMPLEX=7, CRITICAL=10 (was hardcoded at 7)
 - Added complexity-based chunk limits for context summary
-- Added subgoal count enforcement: MEDIUM=2, COMPLEX=5, CRITICAL=8
+- Added subgoal count enforcement: MEDIUM=2, COMPLEX=4, CRITICAL=6
 
 **Subgoal Enforcement:**
 - `verify_lite()` now rejects decompositions exceeding complexity limits

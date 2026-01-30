@@ -364,8 +364,8 @@ Uses LLM to break down the goal with complexity-aware constraints.
 |------------|-------------------|--------------|----------------------|
 | SIMPLE     | 0                 | 0 (bypass)   | skip                 |
 | MEDIUM     | 1                 | 2            | sequential           |
-| COMPLEX    | 1                 | 5            | mixed                |
-| CRITICAL   | 2                 | 8            | parallel             |
+| COMPLEX    | 1                 | 4            | mixed                |
+| CRITICAL   | 2                 | 6            | parallel             |
 
 **Optimization:**
 - Reduced few-shot examples (50% reduction for COMPLEX/CRITICAL)
@@ -390,8 +390,8 @@ Validates decomposition quality using `verify_lite()` with complexity-based enfo
 | Complexity | Max Allowed | Action if Exceeded |
 |------------|-------------|-------------------|
 | MEDIUM     | 2           | FAIL → Retry with feedback |
-| COMPLEX    | 5           | FAIL → Retry with feedback |
-| CRITICAL   | 8           | FAIL → Retry with feedback |
+| COMPLEX    | 4           | FAIL → Retry with feedback |
+| CRITICAL   | 6           | FAIL → Retry with feedback |
 
 **Auto-Retry:** Verification failures trigger automatic retry with specific feedback to guide LLM toward consolidation.
 
@@ -599,7 +599,7 @@ Time includes:
 
 **Subgoal Enforcement:**
 - `verify_lite()` enforces complexity-based subgoal limits
-- MEDIUM=2, COMPLEX=5, CRITICAL=8 max subgoals
+- MEDIUM=2, COMPLEX=4, CRITICAL=6 max subgoals
 - Auto-retry with feedback when limits exceeded
 - **Result**: MEDIUM goals now generate 2 subgoals instead of 7 (71% reduction)
 

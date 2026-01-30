@@ -10,6 +10,96 @@
 
 ---
 
+## Document Memory: PDF/DOCX Indexing
+
+**Goal:** Make documents (PDFs, Word docs, markdown) accessible to AI chat agents via Aurora's memory system.
+
+**CLI Interface:**
+```bash
+aur mem index /path/to/docs --type doc
+aur mem index report.pdf --type doc
+aur mem index ./manuals/ --type doc  # batch
+```
+
+**Architecture:** Fork early (parse), merge late (store/search)
+
+```
+Code Path                     Doc Path
+─────────                     ────────
+tree-sitter (cAST)            pymupdf / python-docx
+   ↓                              ↓
+AST → functions/classes       TOC/headers → sections
+   ↓                              ↓
+git blame/history             (skip - binary files)
+   ↓                              ↓
+CodeChunk                     DocChunk
+   └──────────────┬───────────────┘
+                  ▼
+            SQLiteStore
+                  ↓
+          HybridRetriever (BM25 + ACT-R + semantic)
+```
+
+**Section Detection Strategy (Tiered):**
+
+1. **Tier 1 - Explicit Structure (Best)**
+   - PDF: TOC metadata (many PDFs have it embedded)
+   - DOCX: Heading styles (Word's Heading 1/2/3)
+   - Markdown: `#`, `##`, `###`
+
+2. **Tier 2 - Inferred Structure (Fallback)**
+   - PDF: Font size jumps, bold lines, numbered patterns (`1.0`, `1.1.2`)
+   - DOCX: Font formatting if no heading styles used
+
+3. **Tier 3 - Paragraph-Based (Last Resort)**
+   - No structure detected → chunk by paragraph clusters
+   - Use 10-20% overlap to preserve context at edges
+
+**Chunk Model:**
+```python
+DocChunk(
+    chunk_id="...",
+    file_path="report.pdf",
+    element_type="section",  # or "paragraph", "table"
+    name="2.1 Installation Requirements",
+    section_path=["Chapter 2", "2.1 Installation Requirements"],
+    page_start=12,
+    page_end=14,
+    content="...",
+    parent_chunk_id="...",  # hierarchy reference
+)
+```
+
+**What docs reuse:**
+- ✅ Same chunking infrastructure
+- ✅ ACT-R activation/decay curves
+- ✅ Hybrid retrieval (BM25 + activation + semantic)
+- ✅ `section_path` metadata (like code has `class.method`)
+
+**What docs skip:**
+- ❌ tree-sitter / cAST
+- ❌ git blame/history (binary files don't diff)
+
+**Module Location:**
+```
+packages/context-doc/
+  src/aurora_context_doc/
+    parser/
+      pdf.py      # PyMuPDF (fast, good TOC access)
+      docx.py     # python-docx
+    chunker.py    # section-aware splitting
+    indexer.py    # orchestrates parse → chunk → store
+```
+
+**Libraries:**
+- PDF: `pymupdf` (fast, good TOC) or `pdfplumber` (better tables)
+- DOCX: `python-docx`
+
+**Effort:** Medium (~300-400 LOC for core, more for edge cases)
+
+**Status:** Proposed
+
+---
 
 ## Ideas to Steal: subtask
 
@@ -68,4 +158,4 @@
 
 ---
 
-**Last Updated:** January 21, 2026
+**Last Updated:** January 30, 2026

@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-01-30
+
+### Added
+
+**SOAR Pipeline Enhancements:**
+- Vague word detection in complexity assessment
+  - Detects ambiguous terms: "it", "this", "that", "something", "stuff", "thing", etc.
+  - Increases complexity score for queries needing clarification
+- Complexity-based subgoal limits (2-4-6 by complexity tier)
+  - SIMPLE: max 2 subgoals
+  - MEDIUM/MODERATE: max 4 subgoals
+  - COMPLEX/CRITICAL: max 6 subgoals
+  - Reduces over-decomposition and improves response times
+- `log_path` field in aur soar response metadata
+  - Returns path to SOAR reasoning log for debugging
+- SOAR cache circuit breaker and failed log cleanup
+  - Prevents repeated cache failures from blocking queries
+  - Automatic cleanup of corrupted cache entries
+
+### Fixed
+
+**SOAR Pipeline:**
+- Normalize dependency format in collect phase (sg-N → int conversion)
+- Handle both int and string dependency formats in Phase 8 respond
+- Display Phase 3 when using cached decomposition for better UX
+- Show cached decomposition indicator in aur soar Phase 3
+- Correct phase_callback attribute name (removed underscore prefix)
+- Add SOAR complexity value mapping (MEDIUM → MODERATE for consistency)
+- Use SOAR Phase 1 complexity assessment instead of reassessing locally
+- Fail explicitly when SOAR verification fails instead of degrading to fallback
+- Normalize dependency format in verify_lite (sg-N → int)
+
+**Agent Discovery:**
+- Enable agent discovery for all 20 tools via dynamic path resolution
+- Fixed agent path resolution for tools outside standard directories
+
+**Memory Search:**
+- Improve search UX with better help message and silent model loading
+- Suppress verbose embedding model loading messages
+
+**Goals Command:**
+- Resolve aur goals failures (examples file path + enum value)
+
+**CI/CD:**
+- Add timeouts to CI workflow to prevent runaway jobs
+
+### Changed
+
+**Documentation:**
+- Update subgoal limits to 2-4-6 in aur-soar and aur-goals command docs
+- Update aur-soar and aur-goals with v0.10.0 optimization details
+- Clarify upgrade path from 0.9.x to 0.10.0 in README
+- Add pip uninstall command to README
+
+**Code Organization:**
+- Organize documentation and scripts into proper directories
+- ML dependency improvements and cleanup
+
 ## [0.10.0] - 2026-01-26
 
 ### Added

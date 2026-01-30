@@ -27,7 +27,9 @@ sed -i "s/@click.version_option(version=\".*\"/@click.version_option(version=\"$
 rm -rf dist/ build/ src/*.egg-info
 python3 -m build
 
-# Upload
+# Upload to PyPI (using pass for credentials)
+export TWINE_USERNAME=__token__
+export TWINE_PASSWORD=$(pass amr/pypi_api)
 python3 -m twine upload dist/*
 
 # Git

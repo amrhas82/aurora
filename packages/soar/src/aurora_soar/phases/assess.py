@@ -311,6 +311,27 @@ class ComplexityAssessor:
         "schema",
     }
 
+    # Vague/unspecific words - indicate user doesn't know precise target (reduce score)
+    VAGUE_WORDS = {
+        "something",
+        "somehow",
+        "maybe",
+        "general",
+        "generally",
+        "overall",
+        "around",
+        "stuff",
+        "things",
+        "better",
+        "faster",
+        "slower",
+        "worse",
+        "some",
+        "any",
+        "whatever",
+        "somewhere",
+    }
+
     # Question type patterns
     SIMPLE_QUESTION_PATTERNS = [
         r"^what is\b",
@@ -580,6 +601,12 @@ class ComplexityAssessor:
         if simple_matches:
             score -= min(len(simple_matches) * 3, 10)
             signals.append(f"simple_verbs:{list(simple_matches)[:3]}")
+
+        # Vague words (reduce score - user doesn't know precise target)
+        vague_matches = words & self.VAGUE_WORDS
+        if vague_matches:
+            score -= min(len(vague_matches) * 5, 15)
+            signals.append(f"vague_words:{list(vague_matches)[:3]}")
 
         # Detect trivial edit patterns
         trivial_edit_patterns = [

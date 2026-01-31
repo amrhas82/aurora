@@ -19,7 +19,7 @@ class TestDocChunkCreation:
             updated_at=datetime.now(timezone.utc),
         )
 
-        assert chunk.chunk_id == "doc-1"
+        assert chunk.id == "doc-1"
         assert chunk.type == "doc"
         assert chunk.file_path == "/path/to/manual.pdf"
         assert chunk.page_start == 0
@@ -50,7 +50,7 @@ class TestDocChunkCreation:
             updated_at=timestamp,
         )
 
-        assert chunk.chunk_id == "doc-2"
+        assert chunk.id == "doc-2"
         assert chunk.type == "doc"
         assert chunk.file_path == "/path/to/manual.pdf"
         assert chunk.page_start == 5
@@ -260,7 +260,7 @@ class TestDocChunkSerialization:
         restored_chunk = DocChunk.from_json(json_data)
 
         # Verify all fields match
-        assert restored_chunk.chunk_id == original_chunk.chunk_id
+        assert restored_chunk.id == original_chunk.id
         assert restored_chunk.type == original_chunk.type
         assert restored_chunk.file_path == original_chunk.file_path
         assert restored_chunk.page_start == original_chunk.page_start

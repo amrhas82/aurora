@@ -81,11 +81,94 @@ class DocChunk(Chunk):
     document_type: str = "pdf"  # "pdf" | "docx" | "markdown"
     embeddings: bytes | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
-    def __post_init__(self) -> None:
-        """Validate DocChunk fields after initialization."""
-        super().__post_init__()
+    def __init__(
+        self,
+        chunk_id: str,
+        file_path: str,
+        page_start: int = 0,
+        page_end: int = 0,
+        element_type: str = "section",
+        name: str = "",
+        content: str = "",
+        parent_chunk_id: str | None = None,
+        section_path: list[str] | None = None,
+        section_level: int = 0,
+        document_type: str = "pdf",
+        embeddings: bytes | None = None,
+        metadata: dict[str, Any] | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+    ):
+        """Initialize a DocChunk.
 
+        Args:
+            chunk_id: Unique identifier for this chunk
+            file_path: Absolute path to document file
+            page_start: First page number (1-indexed, 0 for non-paginated)
+            page_end: Last page number
+            element_type: Type of element ("toc_entry", "section", "paragraph", "table")
+            name: Section title
+            content: Section body text
+            parent_chunk_id: ID of parent chunk (None for root)
+            section_path: Pre-computed breadcrumb list
+            section_level: Heading depth (1-5)
+            document_type: Document format ("pdf", "docx", "markdown")
+            embeddings: Optional semantic embeddings
+            metadata: Additional metadata
+            created_at: Creation timestamp
+            updated_at: Last update timestamp
+
+        Raises:
+            ValueError: If validation fails
+
+        """
+        # Initialize base class
+        super().__init__(chunk_id=chunk_id, chunk_type="doc")
+
+        # Set fields
+        self.file_path = file_path
+        self.page_start = page_start
+        self.page_end = page_end
+        self.element_type = element_type
+        self.name = name
+        self.content = content
+        self.parent_chunk_id = parent_chunk_id
+        self.section_path = section_path if section_path is not None else []
+        self.section_level = section_level
+        self.document_type = document_type
+        self.embeddings = embeddings
+        self.metadata = metadata if metadata is not None else {}
+
+        # Override timestamps if provided
+        if created_at is not None:
+            self.created_at = created_at
+        if updated_at is not None:
+            self.updated_at = updated_at
+
+        # Validate on construction
+        self.validate()
+
+    def validate(self) -> bool:
+        """Validate DocChunk structure and data.
+
+        Validation rules:
+        - element_type must be one of: toc_entry, section, paragraph, table
+        - document_type must be one of: pdf, docx, markdown
+        - page_start must be >= 0
+        - page_end must be >= 0
+        - page_start must be <= page_end (if page_end > 0)
+        - section_level must be >= 0
+
+        Returns:
+            True if valid
+
+        Raises:
+            ValueError: If validation fails with descriptive message
+
+        """
         # Validate element_type
         valid_types = {"toc_entry", "section", "paragraph", "table"}
         if self.element_type not in valid_types:
@@ -114,11 +197,7 @@ class DocChunk(Chunk):
         if self.section_level < 0:
             raise ValueError(f"section_level must be >= 0, got {self.section_level}")
 
-        # Ensure type is "doc"
-        if not hasattr(self, "type"):
-            object.__setattr__(self, "type", "doc")
-        elif self.type != "doc":
-            raise ValueError(f"DocChunk must have type='doc', got '{self.type}'")
+        return True
 
     def to_json(self) -> dict[str, Any]:
         """Convert DocChunk to JSON-serializable dictionary.
@@ -128,7 +207,7 @@ class DocChunk(Chunk):
 
         """
         return {
-            "chunk_id": self.chunk_id,
+            "chunk_id": self.id,
             "type": self.type,
             "file_path": self.file_path,
             "page_start": self.page_start,
@@ -206,7 +285,7 @@ class DocChunk(Chunk):
         """Return string representation of DocChunk."""
         breadcrumb = self.get_breadcrumb()
         return (
-            f"DocChunk(id={self.chunk_id!r}, "
+            f"DocChunk(id={self.id!r}, "
             f"type={self.element_type!r}, "
             f"path={breadcrumb!r}, "
             f"pages={self.page_start}-{self.page_end})"

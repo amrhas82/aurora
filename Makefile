@@ -23,6 +23,7 @@ help:
 install:
 	pip install -e packages/core
 	pip install -e packages/context-code
+	pip install -e packages/context-doc
 	pip install -e packages/soar
 	pip install -e packages/reasoning
 	pip install -e packages/planning
@@ -35,6 +36,7 @@ install:
 install-dev:
 	pip install -e "packages/core[dev]"
 	pip install -e "packages/context-code[dev]"
+	pip install -e "packages/context-doc[dev]"
 	pip install -e "packages/soar[dev]"
 	pip install -e "packages/reasoning[dev]"
 	pip install -e "packages/planning[dev]"

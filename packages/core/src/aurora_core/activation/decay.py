@@ -21,6 +21,8 @@ The log10 relationship means:
 Type-Specific Decay (v0.11.0+):
     Different chunk types decay at different rates to model cognitive behavior:
     - kb (knowledge): 0.05 (stable "background radiation", rarely forgotten)
+    - doc (document): 0.02 (very sticky, manuals/specs/PDFs)
+    - toc_entry: 0.01 (stickiest, structural TOC anchors)
     - class: 0.20 (structural, more stable than functions)
     - function: 0.40 (behavioral, volatile)
     - code: 0.40 (default for unspecified code)
@@ -58,6 +60,9 @@ DECAY_BY_TYPE: dict[str, float] = {
     "method": 0.40,    # Methods: same as functions
     "code": 0.40,      # Generic code: default volatile
     "soar": 0.30,      # Reasoning traces: moderate stability
+    "doc": 0.02,       # Documents: very sticky (manuals, specs, PDFs)
+    "document": 0.02,  # Alias for doc
+    "toc_entry": 0.01, # TOC entries: stickiest (structural anchors)
 }
 
 # Churn factor coefficient: how much commit_count affects decay

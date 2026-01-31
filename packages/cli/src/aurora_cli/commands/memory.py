@@ -324,6 +324,14 @@ def display_indexing_summary(
     default=None,
     help="Max parallel workers for parsing (default: auto, min(8, cpu_count))",
 )
+@click.option(
+    "--type",
+    "-t",
+    "content_type",
+    type=click.Choice(["code", "doc"], case_sensitive=False),
+    default="code",
+    help="Content type to index: 'code' (Python files) or 'doc' (PDF/DOCX documents)",
+)
 @click.pass_context
 @handle_errors
 def index_command(
@@ -332,11 +340,17 @@ def index_command(
     db_path: Path | None,
     force: bool,
     workers: int | None,
+    content_type: str,
 ) -> None:
-    r"""Index code files into memory store.
+    r"""Index code or document files into memory store.
 
     PATH is the directory or file to index. Defaults to current directory.
-    Recursively scans for Python files and extracts functions, classes, and docstrings.
+
+    By default (--type code): Recursively scans for Python files and extracts
+    functions, classes, and docstrings.
+
+    With --type doc: Indexes PDF and DOCX documents with hierarchical structure
+    extraction (TOC, sections, paragraphs).
 
     \b
     Performance optimizations:
@@ -346,8 +360,16 @@ def index_command(
 
     \b
     Examples:
-        # Index current directory (incremental by default)
+        # Index Python code (default)
         aur mem index
+
+        \b
+        # Index PDF/DOCX documents
+        aur mem index /path/to/docs --type doc
+
+        \b
+        # Index specific PDF file
+        aur mem index manual.pdf --type doc
 
         \b
         # Force full reindex (ignore file modification times)
@@ -356,11 +378,6 @@ def index_command(
         \b
         # Limit parallel workers (default: auto)
         aur mem index --workers 4
-
-        \b
-        # Index specific directory or file
-        aur mem index /path/to/project
-        aur mem index src/main.py
 
         \b
         # Use custom database path
@@ -373,15 +390,54 @@ def index_command(
     if db_path:
         config.db_path = str(db_path)
 
-    # Use shared indexing function
-    stats, total_warnings = run_indexing(path, config=config, force=force, max_workers=workers)
+    # Route to appropriate indexer based on content type
+    if content_type == "doc":
+        # Document indexing (PDF, DOCX)
+        from aurora_context_doc import DocumentIndexer
+        from aurora_core.store import SQLiteStore
 
-    # Determine log path for display
-    db_path_resolved = Path(config.get_db_path())
-    log_path = db_path_resolved.parent / "logs" / "index.log"
+        out = Console()
+        out.print(f"\n[bold blue]Indexing documents from:[/] {path}")
 
-    # Display summary
-    display_indexing_summary(stats, total_warnings, log_path=log_path)
+        # Initialize store and indexer
+        store = SQLiteStore(config.get_db_path())
+        indexer = DocumentIndexer(store)
+
+        try:
+            # Index file or directory
+            if path.is_file():
+                chunk_count = indexer.index_file(path)
+                out.print(f"[green]✓[/] Indexed {chunk_count} chunks from {path.name}")
+            else:
+                chunk_count = indexer.index_directory(path, recursive=True)
+                out.print(
+                    f"[green]✓[/] Indexed {chunk_count} total chunks from directory"
+                )
+
+        except ImportError as e:
+            out.print(f"[red]✗ Error:[/] {e}")
+            out.print(
+                "\n[yellow]Tip:[/] Install document parsing support with:\n"
+                "  pip install aurora-context-doc[all]"
+            )
+            return
+
+        except Exception as e:
+            out.print(f"[red]✗ Indexing failed:[/] {e}")
+            return
+
+    else:
+        # Code indexing (Python files)
+        stats, total_warnings = run_indexing(
+            path, config=config, force=force, max_workers=workers
+        )
+
+        # Determine log path for display
+        db_path_resolved = Path(config.get_db_path())
+        log_path = db_path_resolved.parent / "logs" / "index.log"
+
+        # Display summary
+        display_indexing_summary(stats, total_warnings, log_path=log_path)
 
 
 @memory_group.command(name="search")

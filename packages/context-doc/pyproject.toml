@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aurora-context-doc"
+version = "0.10.3"
+description = "Document parsing and indexing for Aurora (PDF, DOCX, Markdown)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Aurora Contributors", email = "info@aurora-project.org"},
+]
+keywords = [
+    "aurora",
+    "document",
+    "pdf",
+    "docx",
+    "parsing",
+    "indexing",
+    "memory",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "aurora-core>=0.10.0",
+]
+
+[project.optional-dependencies]
+pdf = [
+    "pymupdf>=1.24.0",
+]
+docx = [
+    "python-docx>=1.1.0",
+]
+all = [
+    "pymupdf>=1.24.0",
+    "python-docx>=1.1.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/aurora-org/aurora"
+Documentation = "https://aurora-project.org/docs"
+Repository = "https://github.com/aurora-org/aurora"
+Issues = "https://github.com/aurora-org/aurora/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aurora_context_doc"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+]
+ignore = [
+    "E501", # line too long (handled by formatter)
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = true

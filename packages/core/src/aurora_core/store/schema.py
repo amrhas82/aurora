@@ -6,7 +6,7 @@ storage implementations.
 """
 
 # Schema version for migration tracking
-SCHEMA_VERSION = 4  # Incremented for file_index table (incremental indexing)
+SCHEMA_VERSION = 5  # Incremented for doc_hierarchy table (document indexing)
 
 # SQL statements for creating tables and indexes
 CREATE_CHUNKS_TABLE = """
@@ -85,6 +85,31 @@ CREATE_FILE_INDEX_HASH = """
 CREATE INDEX IF NOT EXISTS idx_file_index_hash ON file_index(content_hash);
 """
 
+# Document hierarchy table for PDF/DOCX indexing (v5+)
+CREATE_DOC_HIERARCHY_TABLE = """
+CREATE TABLE IF NOT EXISTS doc_hierarchy (
+    chunk_id TEXT PRIMARY KEY,            -- FK to chunks.id
+    parent_chunk_id TEXT,                 -- FK to parent chunk (NULL for top-level)
+    section_path JSON,                    -- Pre-computed breadcrumb list ["Ch 2", "2.1 Install"]
+    section_level INTEGER DEFAULT 0,      -- Heading depth (1-5)
+    document_type TEXT NOT NULL,          -- "pdf" | "docx" | "markdown"
+    FOREIGN KEY (chunk_id) REFERENCES chunks(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_chunk_id) REFERENCES chunks(id) ON DELETE SET NULL
+);
+"""
+
+CREATE_DOC_HIERARCHY_PARENT_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_doc_parent ON doc_hierarchy(parent_chunk_id);
+"""
+
+CREATE_DOC_HIERARCHY_LEVEL_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_doc_level ON doc_hierarchy(section_level);
+"""
+
+CREATE_DOC_HIERARCHY_TYPE_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_doc_type ON doc_hierarchy(document_type);
+"""
+
 # Schema version tracking table
 CREATE_SCHEMA_VERSION_TABLE = """
 CREATE TABLE IF NOT EXISTS schema_version (
@@ -106,6 +131,10 @@ INIT_SCHEMA = [
     CREATE_RELATIONSHIPS_TO_INDEX,
     CREATE_FILE_INDEX_TABLE,
     CREATE_FILE_INDEX_HASH,
+    CREATE_DOC_HIERARCHY_TABLE,
+    CREATE_DOC_HIERARCHY_PARENT_INDEX,
+    CREATE_DOC_HIERARCHY_LEVEL_INDEX,
+    CREATE_DOC_HIERARCHY_TYPE_INDEX,
     CREATE_SCHEMA_VERSION_TABLE,
 ]
 
@@ -139,6 +168,7 @@ __all__ = [
     "CREATE_ACTIVATIONS_TABLE",
     "CREATE_RELATIONSHIPS_TABLE",
     "CREATE_FILE_INDEX_TABLE",
+    "CREATE_DOC_HIERARCHY_TABLE",
     "INIT_SCHEMA",
     "get_schema_version_insert",
     "get_init_statements",

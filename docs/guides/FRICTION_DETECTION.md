@@ -46,23 +46,14 @@ scripts/
 ## Quick Start
 
 ```bash
-# CLI command (recommended)
-aur friction run ~/.claude/projects/-home-hamr-PycharmProjects-aurora/
+# Run friction analysis
+aur friction ~/.claude/projects/-home-hamr-PycharmProjects-aurora/
 
-# Or standalone script
-python scripts/friction.py ~/.claude/projects/-home-hamr-PycharmProjects-aurora/
+# Show signal weights
+aur friction config
 ```
 
-This runs friction analysis and antigen extraction in sequence, then tells you where to find results.
-
-### CLI Commands
-
-| Command | Description |
-|---------|-------------|
-| `aur friction run <path>` | Full pipeline (analyze + extract) |
-| `aur friction analyze <path>` | Analyze sessions only |
-| `aur friction extract <path>` | Extract antigens (requires analyze first) |
-| `aur friction config` | Show signal weights and thresholds |
+This analyzes sessions and extracts antigens, then tells you where to find results.
 
 ---
 
@@ -263,24 +254,15 @@ An **antigen** is a learned failure pattern with a prevention instruction. Like 
 
 ```bash
 # Step 1: Run the pipeline
-python scripts/friction.py ~/.claude/projects/-home-hamr-PycharmProjects-aurora/
+aur friction ~/.claude/projects/-home-hamr-PycharmProjects-aurora/
 
 # Step 2: Review what went wrong
 cat .aurora/friction/antigen_review.md
 
-# Step 3: Generate CLAUDE.md rules (pick one method)
-
-# Method A: Ask Claude directly
-cat .aurora/friction/antigen_review.md | claude "Based on these failure patterns, write specific CLAUDE.md rules to prevent them. Keep rules short and actionable."
-
-# Method B: Manual review
-# Read antigen_review.md, identify top 3 patterns, write rules yourself
-
-# Method C: Interactive
-claude "Read .aurora/friction/antigen_review.md and suggest 3-5 CLAUDE.md rules"
+# Step 3: Generate CLAUDE.md rules
+cat .aurora/friction/antigen_review.md | claude "write CLAUDE.md rules to prevent these patterns"
 
 # Step 4: Add rules to CLAUDE.md (top of file for visibility)
-# Edit CLAUDE.md, add rules under a "## Learned Rules" section
 ```
 
 ### Example: From Pattern to Rule
@@ -378,7 +360,45 @@ instruction: |
 
 **PRE injection only** - Add rules to CLAUDE.md before sessions.
 
-Other modes (DURING injection, RETRIEVAL matching) are deferred until the basic workflow proves valuable.
+### Generated Rules (added to CLAUDE.md)
+
+From analysis of 49 candidates across 13 BAD sessions:
+
+```markdown
+## Learned Rules (from friction analysis)
+
+### 1. Verify Bash exit codes before claiming success
+After ANY Bash command:
+- Exit code 0 = success. Anything else = failure.
+- If exit code != 0, report the error clearly. Do not minimize or claim partial success.
+- If running tests, "PASSED" or "ok" must appear in output AND exit code must be 0.
+- Never say "done" or "complete" after a failed command.
+
+### 2. Stop after 2 consecutive failures
+After 2 consecutive Bash:error results:
+- STOP attempting the same approach.
+- Read and analyze the actual error output.
+- If timeout (exit 124) or killed (exit 137), the command is too heavy - simplify.
+- Ask the user for guidance rather than retry blindly.
+
+### 3. After Edit, verify before moving on
+After editing code:
+- Run the relevant test or linter.
+- Wait for completion and check exit code.
+- Only proceed if verification passes.
+
+### 4. "Implement the plan" requires incremental verification
+When given a multi-step plan:
+- Implement ONE step at a time.
+- Verify each step before proceeding to the next.
+- If a step fails, stop and report - don't cascade into more failures.
+
+### 5. When user asks "test it" or "did you test it"
+- Run the actual test command.
+- Wait for full output.
+- Report exact results: pass count, fail count, exit code.
+- If tests fail, show which tests failed and why.
+```
 
 ---
 
@@ -408,7 +428,9 @@ Other modes (DURING injection, RETRIEVAL matching) are deferred until the basic 
 - [x] Per-project breakdown
 - [x] Antigen extraction script (`antigen_extract.py`)
 - [x] Combined pipeline script (`friction.py`)
+- [x] CLI command (`aur friction`)
 - [x] Pattern-to-rule workflow documented
+- [x] Generated rules added to CLAUDE.md
 - [ ] Validate rule effectiveness over time
 
 ---

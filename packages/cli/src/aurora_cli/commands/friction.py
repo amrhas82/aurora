@@ -44,74 +44,36 @@ def _load_script_module(script_name: str):
     return module
 
 
-@click.group("friction")
-def friction_group() -> None:
-    """Analyze session friction and extract failure patterns."""
-    pass
+@click.group("friction", invoke_without_command=True)
+@click.argument("sessions_dir", type=click.Path(exists=True, path_type=Path), required=False)
+@click.pass_context
+def friction_group(ctx: click.Context, sessions_dir: Path | None) -> None:
+    """Analyze session friction and extract failure patterns.
 
+    \b
+    Usage:
+        aur friction <sessions-dir>    Run full analysis pipeline
+        aur friction config            Show signal weights
 
-@friction_group.command("analyze")
-@click.argument("sessions_dir", type=click.Path(exists=True, path_type=Path))
-def analyze_command(sessions_dir: Path) -> None:
-    """Analyze friction in Claude Code sessions.
-
-    SESSIONS_DIR: Path to Claude sessions directory
-    (e.g., ~/.claude/projects/-home-user-myproject/)
+    \b
+    Example:
+        aur friction ~/.claude/projects/-home-user-myproject/
     """
-    original_argv = sys.argv
-    sys.argv = ["friction_analyze", str(sessions_dir)]
+    if ctx.invoked_subcommand is None:
+        if sessions_dir is None:
+            click.echo(ctx.get_help())
+            return
 
-    try:
-        module = _load_script_module("friction_analyze")
-        result = module.main()
-        sys.exit(result)
-    finally:
-        sys.argv = original_argv
+        # Run full pipeline
+        original_argv = sys.argv
+        sys.argv = ["friction", str(sessions_dir)]
 
-
-@friction_group.command("extract")
-@click.argument("sessions_dir", type=click.Path(exists=True, path_type=Path))
-def extract_command(sessions_dir: Path) -> None:
-    """Extract antigen candidates from BAD sessions.
-
-    SESSIONS_DIR: Path to Claude sessions directory.
-    Requires 'aur friction analyze' to be run first.
-    """
-    original_argv = sys.argv
-    sys.argv = ["antigen_extract", str(sessions_dir)]
-
-    try:
-        module = _load_script_module("antigen_extract")
-        result = module.main()
-        sys.exit(result)
-    finally:
-        sys.argv = original_argv
-
-
-@friction_group.command("run")
-@click.argument("sessions_dir", type=click.Path(exists=True, path_type=Path))
-def run_command(sessions_dir: Path) -> None:
-    """Run full friction pipeline (analyze + extract).
-
-    SESSIONS_DIR: Path to Claude sessions directory
-    (e.g., ~/.claude/projects/-home-user-myproject/)
-
-    Outputs to .aurora/friction/:
-    - friction_analysis.json
-    - friction_summary.json
-    - friction_raw.jsonl
-    - antigen_candidates.json
-    - antigen_review.md
-    """
-    original_argv = sys.argv
-    sys.argv = ["friction", str(sessions_dir)]
-
-    try:
-        module = _load_script_module("friction")
-        result = module.main()
-        sys.exit(result)
-    finally:
-        sys.argv = original_argv
+        try:
+            module = _load_script_module("friction")
+            result = module.main()
+            sys.exit(result)
+        finally:
+            sys.argv = original_argv
 
 
 @friction_group.command("config")

@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 <!-- AURORA:START -->
 # Aurora Instructions
 
@@ -23,561 +21,127 @@ Keep this managed block so 'aur init --config' can refresh the instructions.
 
 ---
 
+## Learned Rules (from friction analysis)
+
+### 1. Verify Bash exit codes before claiming success
+After ANY Bash command:
+- Exit code 0 = success. Anything else = failure.
+- If exit code != 0, report the error clearly. Do not minimize or claim partial success.
+- If running tests, "PASSED" or "ok" must appear in output AND exit code must be 0.
+- Never say "done" or "complete" after a failed command.
+
+### 2. Stop after 2 consecutive failures
+After 2 consecutive Bash:error results:
+- STOP attempting the same approach.
+- Read and analyze the actual error output.
+- If timeout (exit 124) or killed (exit 137), the command is too heavy - simplify.
+- Ask the user for guidance rather than retry blindly.
+
+### 3. After Edit, verify before moving on
+After editing code:
+- Run the relevant test or linter.
+- Wait for completion and check exit code.
+- Only proceed if verification passes.
+
+### 4. "Implement the plan" requires incremental verification
+When given a multi-step plan:
+- Implement ONE step at a time.
+- Verify each step before proceeding to the next.
+- If a step fails, stop and report - don't cascade into more failures.
+
+### 5. When user asks "test it" or "did you test it"
+- Run the actual test command.
+- Wait for full output.
+- Report exact results: pass count, fail count, exit code.
+- If tests fail, show which tests failed and why.
+
+---
+
 ## Overview
 
-Aurora is a memory-first planning and multi-agent orchestration framework combining ACT-R cognitive memory, SOAR 9-phase reasoning, and CLI-agnostic agent execution. Python 3.10+ monorepo with 9 packages.
+Aurora is a memory-first planning and multi-agent orchestration framework combining ACT-R cognitive memory, SOAR 9-phase reasoning, and CLI-agnostic agent execution. Python 3.10+ monorepo with 10 packages.
 
----
+## Commands
 
-## Development Commands
+| Task | Command |
+|------|---------|
+| Install (dev) | `make install-dev` |
+| Test all | `make test` |
+| Test unit | `pytest tests/unit/ -v` |
+| Lint + format | `make format` |
+| Type check | `make type-check` |
+| Quality check | `make quality-check` |
+| Benchmark | `make benchmark-soar` |
 
-### Setup & Installation
-```bash
-# Install all packages in editable mode
-make install            # Production dependencies only
-make install-dev        # Includes pytest, ruff, mypy, etc.
-./install.sh            # Alternative: shell script that does make install
-
-# Clean build artifacts
-make clean
-```
-
-### Testing
-```bash
-# Run all tests
-make test
-
-# Run specific test suites
-make test-unit          # Unit tests only (~30s)
-make test-integration   # Integration tests
-make test-performance   # Performance benchmarks
-
-# Run single test file
-pytest tests/unit/core/test_store.py -v
-
-# Run single test function
-pytest tests/unit/core/test_store.py::test_save_chunk -v
-
-# Run with coverage
-make coverage           # Generates HTML report, opens in browser
-```
-
-### Code Quality
-```bash
-# Run linter
-make lint               # ruff check
-
-# Auto-fix issues and format
-make format             # ruff check --fix + ruff format
-
-# Type checking
-make type-check         # mypy on core packages
-
-# All quality checks (lint + type + test)
-make quality-check
-```
-
-### Performance Benchmarks
-```bash
-# SOAR startup benchmarks only (~30s)
-make benchmark-soar
-
-# All startup benchmarks (~2min)
-make benchmark-startup
-
-# Full benchmark suite (~5min)
-make benchmark
-
-# Manual benchmark script
-python3 benchmark_startup.py
-```
-
-### Release
-```bash
-# Bump version
-./scripts/bump-version.sh 0.9.2
-
-# Release to PyPI (requires PyPI credentials)
-./scripts/release.sh 0.9.2
-```
-
----
-
-## Architecture
-
-### Package Structure (9 packages)
+## Package Structure
 
 ```
 packages/
-  core/         aurora_core        Pydantic models, SQLite store, config
-  context-code/ aurora_context_code Tree-sitter parsing, BM25, embeddings
-  reasoning/    aurora_reasoning   LLM clients (Anthropic, OpenAI, Ollama)
-  soar/         aurora_soar        9-phase orchestration pipeline
-  planning/     aurora_planning    OpenSpec-inspired plan generation
-  spawner/      aurora_spawner     Parallel task execution
-  implement/    aurora_implement   Sequential task execution
-  cli/          aurora_cli         Click-based CLI (aur command)
-  testing/      aurora_testing     Test utilities and fixtures
+  core/         Models, SQLite store, config
+  context-code/ Tree-sitter parsing, BM25, embeddings
+  context-doc/  PDF/DOCX parsing, hierarchical sections
+  reasoning/    LLM clients (Anthropic, OpenAI, Ollama)
+  soar/         9-phase orchestration pipeline
+  planning/     Plan generation
+  spawner/      Parallel task execution
+  implement/    Sequential task execution
+  cli/          Click CLI (aur command)
+  testing/      Test utilities
 ```
 
-**Critical Patterns:**
-- All packages use `hatchling` build system
-- Install order matters: core → context-code → reasoning → soar → planning → spawner → implement → cli → testing
-- Each package is independently installable but depends on previous packages
+Install order matters: core -> context-code -> reasoning -> soar -> planning -> spawner -> implement -> cli -> testing
 
-### Data Flow
+## Critical Patterns
 
-```
-aur command (aurora_cli)
-    ↓
-aurora_context_code (index/search memory)
-    ↓
-aurora_soar (9-phase pipeline)
-    ↓
-aurora_planning (generate PRD/tasks)
-    ↓
-aurora_spawner/aurora_implement (execute tasks)
-```
-
-### Configuration Resolution (Multi-Tier)
-
-**Order of precedence** (highest to lowest):
-1. CLI flags: `--tool cursor --model opus`
-2. Environment variables: `AURORA_GOALS_TOOL=cursor`
-3. Project config: `.aurora/config.json`
-4. Global config: `~/.aurora/config.json`
+**Config Resolution** (highest to lowest):
+1. CLI flags (`--tool cursor`)
+2. Environment variables (`AURORA_GOALS_TOOL`)
+3. Project config (`.aurora/config.json`)
+4. Global config (`~/.aurora/config.json`)
 5. Built-in defaults
 
-**Critical:** Database is always **project-local** at `.aurora/memory.db`, not global.
+**Memory System:**
+- Hybrid retrieval: BM25 (40%) + ACT-R activation (30%) + semantic (30%)
+- Chunk types: `code`, `doc`, `kb`, `soar`
+- Database always project-local at `.aurora/memory.db`
 
-### Memory System (ACT-R)
+**SOAR Pipeline:** ASSESS -> RETRIEVE -> DECOMPOSE -> VERIFY -> ROUTE -> COLLECT -> SYNTHESIZE -> RECORD -> RESPOND
 
-**Hybrid Retrieval** (3 components):
-1. **BM25** (keyword search) - 40% weight
-2. **ACT-R Activation** (access patterns) - 30% weight
-3. **Semantic similarity** (optional embeddings) - 30% weight
+**Lazy Loading:** ML imports are deferred to first use. BM25 index loads on first retrieve() call.
 
-**Chunk Types:**
-- `code` - Functions, classes (tree-sitter parsed)
-- `kb` - Markdown documentation
-- `soar` - Cached reasoning traces
+## Key Entry Points
 
-**Performance:** Lazy embedding imports (0.9.1+) eliminate 20-30s startup delay.
+| Area | File |
+|------|------|
+| CLI commands | `packages/cli/src/aurora_cli/commands/` |
+| Memory store | `packages/core/src/aurora_core/store/sqlite.py` |
+| SOAR orchestrator | `packages/soar/src/aurora_soar/orchestrator.py` |
+| Spawner | `packages/spawner/src/aurora_spawner/spawner.py` |
+| Code indexer | `packages/context-code/src/aurora_context_code/indexer.py` |
+| Doc indexer | `packages/context-doc/src/aurora_context_doc/indexer.py` |
+| Slash commands | `packages/cli/src/aurora_cli/templates/slash_commands.py` |
 
-**Caching (Epic 1):**
-- **HybridRetriever cache**: Module-level instance cache keyed by `(db_path, config_hash)`
-  - Reduces cold search time by 30-40% (15-19s → 10-12s)
-  - Configured via `AURORA_RETRIEVER_CACHE_SIZE` (default: 10)
-  - Configured via `AURORA_RETRIEVER_CACHE_TTL` (default: 1800s)
-- **ActivationEngine cache**: Singleton per `db_path`
-  - Reduces warm search time by 40-50% (4-5s → 2-3s)
-  - Automatically shared across all retrievers using same database
-- **QueryEmbeddingCache**: Shared LRU cache for query embeddings
-  - Reduces embedding computation on repeated queries
-  - Cache hit rate typically >60% in SOAR multi-phase operations
-- **BM25 Index Persistence**: Disk-cached at `.aurora/indexes/bm25_index.pkl`
-  - Load time <100ms (vs 9.7s rebuild)
-  - Lazily loaded on first retrieve() call (Epic 2)
+## Testing
 
-**Lazy Loading (Epic 2):**
-- **BM25 Index**: Deferred from __init__() to first retrieve() call
-  - Creation time: 150-250ms → 0.0ms (99.9% improvement)
-  - Thread-safe double-checked locking ensures single load
-  - No impact on search performance (index loaded once and reused)
-
-**Fallback Modes (Epic 2):**
-- **Tri-hybrid (default)**: BM25 + Activation + Semantic (95% quality)
-- **Dual-hybrid (fallback)**: BM25 + Activation when embeddings unavailable (85-100% quality)
-- **Activation-only (legacy)**: Access patterns only (~60% quality, deprecated)
-
-Dual-hybrid fallback automatically triggers when:
-- Embedding model not installed (`pip install sentence-transformers`)
-- `AURORA_EMBEDDING_PROVIDER=none` set
-- Embedding generation fails
-
-Quality testing showed 100% overlap between tri-hybrid and dual-hybrid on Aurora codebase.
-
-**Cache Environment Variables:**
-- `AURORA_RETRIEVER_CACHE_SIZE`: Max cached HybridRetriever instances (default: 10)
-- `AURORA_RETRIEVER_CACHE_TTL`: Cache TTL in seconds (default: 1800)
-- `AURORA_DISABLE_CACHING`: Set to "1" to disable all caching (for debugging)
-
-**Cache Invalidation:**
-- `aur mem index`: Clears retriever cache to force index rebuild
-- Config changes: New config creates separate cache entry (cache key includes config hash)
-- Manual: Call `clear_retriever_cache()`, `clear_shared_query_cache()`, `_engine_cache.clear()`
-
-### SOAR Pipeline (9 Phases)
-
-```
-1. ASSESS     -> Complexity scoring (SIMPLE/MEDIUM/COMPLEX/CRITICAL)
-2. RETRIEVE   -> Memory search for context
-3. DECOMPOSE  -> Break into sub-questions
-4. VERIFY     -> Validate decomposition quality
-5. ROUTE      -> Assign agents to sub-questions
-6. COLLECT    -> Execute agents in parallel (spawn_parallel)
-7. SYNTHESIZE -> Combine results
-8. RECORD     -> Store reasoning trace
-9. RESPOND    -> Format final answer
-```
-
-**Critical:** Complexity score determines routing:
-- ≤11: Single-step, no spawning
-- 12-28: Multi-step, some spawning
-- ≥29: Full decomposition, parallel research
-
-### Spawner System
-
-**spawn_parallel_tracked()** is the unified spawning function (as of 0.9.0):
-- Stagger delays (5s between agent starts)
-- Per-task heartbeat monitoring
-- Global timeout calculation
-- Circuit breaker pre-checks
-- Retry with exponential backoff + LLM fallback
-
-**Both `aur spawn` and SOAR collect phase use this function.**
-
-### CLI Tool Integration (CLIPipeLLMClient)
-
-Works with 20+ tools via pipe interface:
-```python
-# Tool resolution order:
-1. CLI flag (--tool cursor)
-2. Env var (AURORA_SPAWN_TOOL)
-3. Config file (spawn.default_tool)
-4. Default ("claude")
-```
-
-**Critical:** All tools must support `-p` flag for non-interactive mode and read prompt from stdin.
-
-### Configurator System (Slash Commands)
-
-**Single Source of Truth:** `packages/cli/src/aurora_cli/templates/slash_commands.py`
-
-All 20 tools use same template bodies via `get_command_body(command_id)`.
-
-**5 commands generated:**
-- `search`, `get`, `plan`, `implement`, `archive`
-
-**Managed Block System:**
-```markdown
-<!-- AURORA:START -->
-[Template content - managed by Aurora]
-<!-- AURORA:END -->
-
-User content here (preserved across updates)
-```
-
-**Formats:**
-- **Markdown** (14 tools): YAML frontmatter + body
-- **TOML** (6 tools): `description` + `prompt` fields
-
----
-
-## Critical Files & Locations
-
-### Package Entry Points
-- CLI commands: `packages/cli/src/aurora_cli/commands/`
-- Memory store: `packages/core/src/aurora_core/store/sqlite.py`
-- SOAR orchestrator: `packages/soar/src/aurora_soar/orchestrator.py`
-- Spawner: `packages/spawner/src/aurora_spawner/spawner.py`
-- Code indexer: `packages/context-code/src/aurora_context_code/indexer.py`
-
-### Configuration
-- Template source: `packages/cli/src/aurora_cli/templates/slash_commands.py`
-- Tool registry: `packages/cli/src/aurora_cli/configurators/slash/registry.py`
-- Config schema: `packages/core/src/aurora_core/config/defaults.json`
-
-### Tests
-- Unit tests: `tests/unit/` (markers: `@pytest.mark.unit`)
-- Integration: `tests/integration/` (markers: `@pytest.mark.integration`)
-- Performance: `tests/performance/` (markers: `@pytest.mark.performance`)
-- ML tests: Use marker `@pytest.mark.ml` (requires torch/sentence-transformers)
-
-### Project-Local Files (Created by `aur init`)
-```
-.aurora/
-  memory.db       # SQLite database (project-specific)
-  config.json     # Project configuration
-  plans/          # Generated plans (goals.json, tasks.md, prd.md)
-  agents/         # Optional project-specific agents
-```
-
-### Global Files
-```
-~/.aurora/
-  config.json            # Global configuration
-  budget_tracker.json    # Token usage tracking
-  agents/                # Optional global agents
-  soar/                  # SOAR reasoning logs
-```
-
----
-
-## Development Patterns
-
-### Adding a New CLI Command
-
-1. Create command file: `packages/cli/src/aurora_cli/commands/mycommand.py`
-2. Use Click decorators:
-```python
-import click
-from aurora_cli.main import cli
-
-@cli.command("mycommand")
-@click.argument("arg")
-@click.option("--flag", default="value")
-def mycommand(arg: str, flag: str) -> None:
-    """Command description."""
-    # Implementation
-```
-3. Add to `packages/cli/src/aurora_cli/main.py` imports
-4. Add tests: `tests/unit/cli/commands/test_mycommand.py`
-
-### Adding a New Tool Configurator
-
-1. Create configurator: `packages/cli/src/aurora_cli/configurators/slash/newtool.py`
-2. Choose base class:
-   - `SlashCommandConfigurator` (Markdown format)
-   - `TomlSlashCommandConfigurator` (TOML format)
-3. Implement required methods:
-   - `tool_id` (string identifier)
-   - `is_available` (detection logic)
-   - `get_relative_path()` (file paths for 5 commands)
-   - `get_frontmatter()` or `get_description()`
-   - `get_body()` (uses `get_command_body()` from templates)
-4. Register in `packages/cli/src/aurora_cli/configurators/slash/registry.py`
-5. Add tests: `tests/unit/cli/configurators/slash/test_newtool.py`
-
-### Modifying Command Templates
-
-**Location:** `packages/cli/src/aurora_cli/templates/slash_commands.py`
-
-**Impact:** All 20 tools use these templates.
-
-**Testing after changes:**
 ```bash
-./install.sh
-cd /tmp/test-project
-aur init --config --tools=claude,cursor,gemini
-cat .claude/commands/aur/search.md
-cat .cursor/commands/aurora-search.md
-cat .gemini/commands/aurora/search.toml
-```
-
-### Performance Optimization Rules (0.9.1+ / Epic 2)
-
-1. **Lazy imports for ML dependencies:**
-   ```python
-   # Good (lazy)
-   def get_embeddings():
-       from sentence_transformers import SentenceTransformer
-       return SentenceTransformer(...)
-
-   # Bad (eager)
-   from sentence_transformers import SentenceTransformer
-   model = SentenceTransformer(...)
-   ```
-
-2. **Lazy BM25 index loading (Epic 2):**
-   ```python
-   # Good (lazy) - defer expensive operations until first use
-   def __init__(self):
-       self._bm25_index_loaded = False
-       self._bm25_lock = threading.Lock()
-       # Don't load index here
-
-   def retrieve(self, query):
-       if not self._bm25_index_loaded:
-           with self._bm25_lock:
-               if not self._bm25_index_loaded:  # Double-check
-                   self._load_bm25_index()
-       # Use index
-
-   # Bad (eager) - loads immediately in __init__()
-   def __init__(self):
-       self._load_bm25_index()  # 150-250ms delay
-   ```
-
-3. **Connection pooling** for SQLite (automatic in 0.9.1+)
-
-4. **Deferred schema initialization** (automatic in 0.9.1+)
-
-5. **Regression guards** in `tests/performance/test_soar_startup_performance.py`:
-   - `MAX_IMPORT_TIME = 2.0s`
-   - `MAX_CONFIG_TIME = 0.5s`
-   - `MAX_STORE_INIT_TIME = 0.1s`
-   - `MAX_TOTAL_STARTUP_TIME = 3.0s`
-
-### Testing Patterns
-
-**Unit test example:**
-```python
-import pytest
-from aurora_core.models import CodeChunk
-
-@pytest.mark.unit
-def test_chunk_creation():
-    chunk = CodeChunk(
-        chunk_id="test-1",
-        file_path="test.py",
-        element_type="function",
-        name="test_func",
-        line_start=1,
-        line_end=10,
-        signature="def test_func():",
-        language="python"
-    )
-    assert chunk.chunk_id == "test-1"
-```
-
-**Integration test example:**
-```python
-import pytest
-from aurora_core.store import SQLiteStore
-
-@pytest.mark.integration
-def test_store_integration(tmp_path):
-    db_path = tmp_path / "test.db"
-    store = SQLiteStore(str(db_path))
-    # Test with real database
-```
-
-**Performance test example:**
-```python
-import pytest
-import time
-
-@pytest.mark.performance
-def test_startup_speed():
-    start = time.time()
-    # Operation to benchmark
-    elapsed = time.time() - start
-    assert elapsed < 3.0, f"Too slow: {elapsed}s"
-```
-
-### Git Commit Conventions
-
-**Never add Claude as co-author.** Use default git settings only.
-
-**Commit message format:**
-```
-type: brief description
-
-Longer description if needed.
-- Bullet points for details
-- Multiple changes
-
-Fixes #123
-```
-
-**Types:** `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `chore`
-
----
-
-## Common Tasks
-
-### Running a Specific Test
-```bash
-# Single file
+# Single test file
 pytest tests/unit/core/test_store.py -v
 
-# Single test
+# Single test function
 pytest tests/unit/core/test_store.py::test_save_chunk -v
 
-# By marker
-pytest -m unit -v
-pytest -m "unit and not ml" -v
+# With output
+pytest tests/unit/core/test_store.py -vv -s
 ```
 
-### Debugging Failed Tests
-```bash
-# Verbose output
-pytest tests/unit/core/test_store.py -vv
+Markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.performance`, `@pytest.mark.ml`
 
-# Show print statements
-pytest tests/unit/core/test_store.py -s
+## Git Conventions
 
-# Drop into debugger on failure
-pytest tests/unit/core/test_store.py --pdb
-```
+Never add Claude as co-author. Use default git settings only.
 
-### Benchmarking Changes
-```bash
-# Before changes
-make benchmark-soar > before.txt
+Commit format: `type: description` where type is feat, fix, docs, refactor, perf, test, chore
 
-# After changes
-make benchmark-soar > after.txt
+## Documentation Index
 
-# Compare
-diff before.txt after.txt
-```
-
-### Testing Tool Configurators
-```bash
-# Generate commands
-cd /tmp/test-project
-aur init --tools=claude
-
-# Verify files created
-ls .claude/commands/aur/
-
-# Check content
-cat .claude/commands/aur/search.md
-
-# Test update (preserves user content)
-aur init --config --tools=claude
-```
-
-### Local Development Workflow
-```bash
-# 1. Install editable
-./install.sh
-
-# 2. Make changes
-
-# 3. Run quality checks
-make quality-check
-
-# 4. Test in real project
-cd /tmp/test-project
-aur init
-aur mem index .
-aur mem search "test query"
-```
-
----
-
-## Documentation
-
-**Index:** `docs/KNOWLEDGE_BASE.md` (quick reference to all docs)
-
-**Key Guides:**
-- `docs/guides/COMMANDS.md` - Full CLI reference
-- `docs/guides/TOOLS_GUIDE.md` - Architecture, workflows, configurators
-- `docs/guides/FLOWS.md` - Workflow patterns
-- `docs/PERFORMANCE_TESTING.md` - Performance benchmarking
-- `docs/PERFORMANCE_QUICK_REF.md` - Quick perf reference
-
-**Reference:**
-- `docs/reference/CONFIG_REFERENCE.md` - Configuration options
-- `docs/reference/SOAR_ARCHITECTURE.md` - SOAR pipeline internals
-- `docs/reference/API_CONTRACTS_v1.0.md` - Public API contracts
-- `docs/reference/AGENT_INTEGRATION.md` - Agent system
-
----
-
-## Global Agent System
-
-**Location:** `~/.claude/CLAUDE.md` (user's personal global instructions)
-
-**When processing requests:**
-- Orchestrator-first routing for complex requests
-- Check for agent mentions: `@agent-id` or `As agent-id, ...`
-- Skills invocable via `/skill-name`
-
-**Agent Registry:**
-- Global: `~/.aurora/agents/`
-- Project: `.aurora/agents/`
-- Package: `packages/cli/src/aurora_cli/agents/`
+See `docs/KNOWLEDGE_BASE.md` for detailed documentation pointers.

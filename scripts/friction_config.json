@@ -1,0 +1,43 @@
+{
+  "weights": {
+    "exit_error": 1,
+    "exit_success": 0,
+    "user_curse": 5,
+    "user_negation": 0.5,
+    "user_intervention": 10,
+    "tool_loop": 6,
+    "false_success": 8,
+    "request_interrupted": 4,
+    "long_silence": 0.5,
+    "repeated_question": 1,
+    "compaction": 0.5,
+    "interrupt_cascade": 7,
+    "rapid_exit": 6,
+    "no_resolution": 8,
+    "session_abandoned": 10
+  },
+  "thresholds": {
+    "friction_peak": 15,
+    "intervention_predictability": 0.50,
+    "signal_noise_ratio": 1.5,
+    "long_silence_minutes": 10
+  },
+  "notes": {
+    "model": "Threshold monitor - friction accumulates, no subtraction",
+    "exit_error": "Single error = noise (+1)",
+    "exit_success": "Zero weight - tracked as momentum only",
+    "user_intervention": "Gold signal - user gave up (/stash)",
+    "user_curse": "Reliable frustration indicator",
+    "false_success": "Trust violation - LLM claimed success but failed",
+    "tool_loop": "Agent stuck - same tool 3x",
+    "user_negation": "Low weight - still noisy after filtering",
+    "request_interrupted": "User hit Ctrl+C / Escape - impatience signal",
+    "long_silence": "User walked away >10 min - disengagement",
+    "repeated_question": "User asked same thing twice - confusion/frustration",
+    "compaction": "Context overflow - memory loss indicator",
+    "interrupt_cascade": "Multiple ESC/Ctrl+C within 60s - escalating frustration",
+    "rapid_exit": "Quick quit (<3 turns) after error - immediate rejection",
+    "no_resolution": "Errors without success - unresolved session",
+    "session_abandoned": "High friction at end, no clean exit - gave up silently"
+  }
+}

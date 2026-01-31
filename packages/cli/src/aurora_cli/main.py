@@ -15,6 +15,7 @@ from rich.console import Console
 from aurora_cli.commands.agents import agents_group
 from aurora_cli.commands.budget import budget_group
 from aurora_cli.commands.doctor import doctor_command
+from aurora_cli.commands.friction import friction_group
 from aurora_cli.commands.goals import goals_command
 from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
@@ -74,7 +75,7 @@ def _show_first_run_welcome_if_needed() -> None:
     default=None,
     help="Run headless mode with specified prompt file (shorthand for 'aur headless <file>')",
 )
-@click.version_option(version="0.10.2")
+@click.version_option(version="0.11.0")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -> None:
     r"""AURORA: Adaptive Unified Reasoning and Orchestration Architecture.
@@ -139,6 +140,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
 cli.add_command(agents_group)
 cli.add_command(budget_group)
 cli.add_command(doctor_command)
+cli.add_command(friction_group)
 cli.add_command(goals_command)
 cli.add_command(headless_command)
 cli.add_command(init_command)

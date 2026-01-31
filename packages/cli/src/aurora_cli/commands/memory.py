@@ -1002,7 +1002,7 @@ def _display_rich_results(
         terminal_width = console.width if hasattr(console, "width") and console.width > 0 else 80
 
         for i, result in enumerate(results, 1):
-            box = _format_score_box(result, rank=i, query=query, terminal_width=terminal_width)
+            box = _format_score_box(result, _rank=i, query=query, terminal_width=terminal_width)
             console.print(box)
             # Add spacing between boxes (empty line)
             if i < len(results):

@@ -45,7 +45,7 @@ def test_format_box_header():
 
     result = MockResult()
 
-    box_text = _format_score_box(result, rank=1, terminal_width=78)
+    box_text = _format_score_box(result, _rank=1, terminal_width=78)
 
     # Verify box structure
     assert isinstance(box_text, Text)
@@ -82,7 +82,7 @@ def test_format_box_scores():
 
     result = MockResult()
 
-    box_text = _format_score_box(result, rank=1)
+    box_text = _format_score_box(result, _rank=1)
     box_str = str(box_text)
 
     # Verify score lines
@@ -116,7 +116,7 @@ def test_format_box_footer():
 
     result = MockResult()
 
-    box_text = _format_score_box(result, rank=1, terminal_width=78)
+    box_text = _format_score_box(result, _rank=1, terminal_width=78)
     box_str = str(box_text)
 
     # Verify footer
@@ -155,7 +155,7 @@ def test_format_box_git_metadata():
 
     result = MockResult()
 
-    box_text = _format_score_box(result, rank=1)
+    box_text = _format_score_box(result, _rank=1)
     box_str = str(box_text)
 
     # Verify git metadata
@@ -185,7 +185,7 @@ def test_format_box_width_adjustment():
 
     result = MockResult()
 
-    box_text = _format_score_box(result, rank=1, terminal_width=78)
+    box_text = _format_score_box(result, _rank=1, terminal_width=78)
     box_str = str(box_text)
 
     # Verify truncation indicators
@@ -222,7 +222,7 @@ def test_format_box_empty_git_metadata():
 
     result = MockResult()
 
-    box_text = _format_score_box(result, rank=1)
+    box_text = _format_score_box(result, _rank=1)
     box_str = str(box_text)
 
     # Git line should be omitted when no metadata available
@@ -250,7 +250,7 @@ def test_format_box_returns_rich_text():
 
     result = MockResult()
 
-    box_text = _format_score_box(result, rank=1)
+    box_text = _format_score_box(result, _rank=1)
 
     # Verify it's a Rich Text object
     assert isinstance(box_text, Text)

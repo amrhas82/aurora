@@ -66,6 +66,7 @@ class HybridConfig:
         fallback_to_activation: If True, fall back to activation-only if embeddings unavailable
         use_staged_retrieval: Enable staged retrieval (BM25 filter → re-rank)
         bm25_index_path: Path to persist BM25 index (default: .aurora/indexes/bm25_index.pkl)
+        mmr_lambda: MMR diversity parameter (0.0=pure diversity, 1.0=pure relevance, default 0.5)
 
     Example (tri-hybrid):
         >>> config = HybridConfig(bm25_weight=0.3, activation_weight=0.3, semantic_weight=0.4)
@@ -74,6 +75,9 @@ class HybridConfig:
     Example (dual-hybrid, legacy):
         >>> config = HybridConfig(bm25_weight=0.0, activation_weight=0.6, semantic_weight=0.4)
         >>> retriever = HybridRetriever(store, engine, provider, config)
+
+    Example (with diversity):
+        >>> results = retriever.retrieve("auth", top_k=10, diverse=True, mmr_lambda=0.7)
 
     """
 
@@ -95,6 +99,9 @@ class HybridConfig:
     # Code-first ordering: boost score for code type chunks (0.0-0.5, default 0.0)
     # Disabled by default - type-aware retrieval handles code/kb separation
     code_type_boost: float = 0.0
+    # MMR (Maximal Marginal Relevance) configuration
+    # Default lambda=0.5 balances relevance and diversity
+    mmr_lambda: float = 0.5
 
     def __post_init__(self) -> None:
         """Validate configuration."""
@@ -125,6 +132,10 @@ class HybridConfig:
         if not (0.0 <= self.code_type_boost <= 0.5):
             raise ValueError(
                 f"code_type_boost must be in [0, 0.5], got {self.code_type_boost}",
+            )
+        if not (0.0 <= self.mmr_lambda <= 1.0):
+            raise ValueError(
+                f"mmr_lambda must be in [0, 1], got {self.mmr_lambda}",
             )
 
 
@@ -563,6 +574,8 @@ class HybridRetriever:
         _context_keywords: list[str] | None = None,
         min_semantic_score: float | None = None,
         chunk_type: str | None = None,
+        diverse: bool = False,
+        mmr_lambda: float | None = None,
     ) -> list[dict[str, Any]]:
         """Retrieve chunks using tri-hybrid scoring with staged architecture.
 
@@ -572,6 +585,8 @@ class HybridRetriever:
             context_keywords: Optional keywords for context boost (not yet implemented)
             min_semantic_score: Minimum semantic score threshold (0.0-1.0). Results below this will be filtered out.
             chunk_type: Optional filter by chunk type ('code' or 'kb').
+            diverse: If True, apply MMR reranking for diverse results (default False)
+            mmr_lambda: MMR diversity parameter (0.0=diversity, 1.0=relevance). Defaults to config.mmr_lambda
 
         Returns:
             List of dicts with keys:
@@ -593,6 +608,10 @@ class HybridRetriever:
             ...     print(f"  BM25: {result['bm25_score']:.3f}")
             ...     print(f"  Semantic: {result['semantic_score']:.3f}")
             ...     print(f"  Activation: {result['activation_score']:.3f}")
+
+        Example (with diversity):
+            >>> # Get diverse results covering different aspects of auth
+            >>> results = retriever.retrieve("authentication", top_k=10, diverse=True)
 
         """
         # Validate inputs
@@ -792,8 +811,132 @@ class HybridRetriever:
         # Sort by hybrid score (descending)
         final_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
 
+        # Apply MMR reranking for diversity if requested
+        if diverse and len(final_results) > 1:
+            lambda_val = mmr_lambda if mmr_lambda is not None else self.config.mmr_lambda
+            final_results = self._apply_mmr_reranking(
+                results=final_results,
+                stage1_candidates=stage1_candidates,
+                top_k=top_k,
+                mmr_lambda=lambda_val,
+            )
+            return final_results
+
         # Return top K results
         return final_results[:top_k]
+
+    def _apply_mmr_reranking(
+        self,
+        results: list[dict[str, Any]],
+        stage1_candidates: list[Any],
+        top_k: int,
+        mmr_lambda: float,
+    ) -> list[dict[str, Any]]:
+        """Apply Maximal Marginal Relevance reranking for diverse results.
+
+        MMR balances relevance and diversity by penalizing candidates that are
+        too similar to already-selected results. This prevents the "echo chamber"
+        effect where all results are about the same aspect of a topic.
+
+        Formula:
+            MMR(d) = λ × relevance(d) - (1-λ) × max_similarity(d, selected)
+
+        Where:
+            - λ=1.0: Pure relevance (no diversity)
+            - λ=0.5: Balanced (default)
+            - λ=0.0: Pure diversity (least similar to selected)
+
+        Args:
+            results: Sorted list of result dicts (by hybrid_score descending)
+            stage1_candidates: Original chunk objects (for embedding access)
+            top_k: Number of results to return
+            mmr_lambda: Balance parameter (0.0=diversity, 1.0=relevance)
+
+        Returns:
+            Reranked list of results with diverse coverage
+
+        """
+        if len(results) <= 1:
+            return results[:top_k]
+
+        # Build chunk_id -> embedding lookup from stage1_candidates
+        embedding_map: dict[str, npt.NDArray[np.float32] | None] = {}
+        for chunk in stage1_candidates:
+            chunk_embedding = getattr(chunk, "embeddings", None)
+            if chunk_embedding is not None:
+                if isinstance(chunk_embedding, bytes):
+                    chunk_embedding = np.frombuffer(chunk_embedding, dtype=np.float32)
+                embedding_map[chunk.id] = chunk_embedding
+            else:
+                embedding_map[chunk.id] = None
+
+        # Initialize with top result (always selected first)
+        selected: list[dict[str, Any]] = [results[0]]
+        remaining = list(results[1:])
+
+        while len(selected) < top_k and remaining:
+            best_mmr_score = -float("inf")
+            best_idx = 0
+
+            for i, candidate in enumerate(remaining):
+                # Relevance component: normalized hybrid score
+                relevance = candidate["hybrid_score"]
+
+                # Diversity component: 1 - max similarity to selected results
+                candidate_embedding = embedding_map.get(candidate["chunk_id"])
+                if candidate_embedding is None:
+                    # No embedding, fall back to pure relevance
+                    diversity = 0.0
+                else:
+                    max_similarity = 0.0
+                    for selected_result in selected:
+                        selected_embedding = embedding_map.get(selected_result["chunk_id"])
+                        if selected_embedding is not None:
+                            # Cosine similarity between candidate and selected
+                            similarity = self._cosine_similarity(
+                                candidate_embedding, selected_embedding
+                            )
+                            # Normalize from [-1, 1] to [0, 1]
+                            similarity = (similarity + 1.0) / 2.0
+                            max_similarity = max(max_similarity, similarity)
+                    diversity = 1.0 - max_similarity
+
+                # MMR score: balance relevance and diversity
+                mmr_score = mmr_lambda * relevance + (1.0 - mmr_lambda) * diversity
+
+                if mmr_score > best_mmr_score:
+                    best_mmr_score = mmr_score
+                    best_idx = i
+
+            # Add best candidate to selected
+            selected.append(remaining.pop(best_idx))
+
+        logger.debug(
+            f"MMR reranking: selected {len(selected)} diverse results "
+            f"(lambda={mmr_lambda:.2f})"
+        )
+        return selected
+
+    def _cosine_similarity(
+        self,
+        vec1: npt.NDArray[np.float32],
+        vec2: npt.NDArray[np.float32],
+    ) -> float:
+        """Calculate cosine similarity between two vectors.
+
+        Args:
+            vec1: First vector
+            vec2: Second vector
+
+        Returns:
+            Cosine similarity in range [-1, 1]
+
+        """
+        norm1 = np.linalg.norm(vec1)
+        norm2 = np.linalg.norm(vec2)
+        if norm1 < 1e-9 or norm2 < 1e-9:
+            return 0.0
+        return float(np.dot(vec1, vec2) / (norm1 * norm2))
 
     def _stage1_bm25_filter(self, query: str, candidates: list[Any]) -> list[Any]:
         """Stage 1: Filter candidates using BM25 keyword matching with lazy loading (Epic 2).

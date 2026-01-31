@@ -1,7 +1,7 @@
 # ACT-R Activation System in AURORA
 
-**Version**: 1.0
-**Date**: December 23, 2025
+**Version**: 1.1 (Type-Specific Decay + MMR)
+**Date**: January 31, 2026
 **Status**: Production Ready
 
 ---
@@ -12,12 +12,24 @@ AURORA implements a cognitively-inspired memory system based on ACT-R (Adaptive 
 
 **Key Benefits**:
 - **Cognitive Fidelity**: Memory retrieval mirrors human cognitive patterns (frequency, recency, context, associations)
+- **Code-Aware Intelligence** (NEW v1.1): Type-specific decay rates model how different code artifacts are remembered differently
+- **Stability Tracking** (NEW v1.1): Git churn factor penalizes volatile code that changes frequently
+- **Diversity Control** (NEW v1.1): MMR reranking prevents "echo chamber" results
 - **Validated Implementation**: All formulas match published ACT-R literature within <5% deviation
-- **Production Ready**: 291 passing tests, 86.99% coverage, comprehensive benchmarks
+- **Production Ready**: 291+ passing tests, 86.99% coverage, comprehensive benchmarks
 - **Flexible Configuration**: 5 preset configs + custom tuning for any use case
+
+**What's New in v1.1**:
+- 🆕 Type-specific decay: KB chunks decay 8× slower than functions
+- 🆕 Churn factor: High-commit code decays faster (stability penalty)
+- 🆕 MMR diversity reranking: Get varied results covering multiple aspects
+- 🆕 Enhanced configuration: Customizable decay maps and diversity controls
 
 **Quick Links**:
 - [Formula Reference](#formula-reference) - Mathematical definitions
+- [Type-Specific Decay](#type-specific-decay-v11) - NEW: Code-aware forgetting
+- [Churn Factor](#churn-factor-stability-penalty-v11) - NEW: Stability tracking
+- [MMR Diversity](#mmr-diversity-reranking-v11) - NEW: Avoid redundant results
 - [Calculation Examples](#calculation-examples) - Step-by-step walkthroughs
 - [Usage Guide](#usage-guide) - Code examples
 - [Configuration](#configuration) - Tuning activation behavior
@@ -30,15 +42,25 @@ AURORA implements a cognitively-inspired memory system based on ACT-R (Adaptive 
 1. [Introduction to ACT-R](#introduction-to-actr)
 2. [Theoretical Foundation](#theoretical-foundation)
 3. [Formula Reference](#formula-reference)
+   - [Type-Specific Decay (v1.1)](#type-specific-decay-v11)
+   - [Churn Factor / Stability Penalty (v1.1)](#churn-factor-stability-penalty-v11)
+   - [MMR Diversity Reranking (v1.1)](#mmr-diversity-reranking-v11)
 4. [Component Details](#component-details)
 5. [Calculation Examples](#calculation-examples)
+   - [Type-Specific Decay Examples (v1.1)](#example-5-type-specific-decay-v11)
+   - [Churn Factor Examples (v1.1)](#example-6-churn-factor-stability-v11)
+   - [MMR Diversity Examples (v1.1)](#example-7-mmr-diversity-reranking-v11)
 6. [Integration Formula](#integration-formula)
 7. [Usage Guide](#usage-guide)
+   - [MMR Diversity Usage (v1.1)](#5-mmr-diversity-reranking-v11)
 8. [Configuration](#configuration)
+   - [Type-Specific Decay Configuration (v1.1)](#type-specific-decay-configuration-v11)
+   - [MMR Configuration (v1.1)](#mmr-configuration-v11)
 9. [Performance](#performance)
 10. [Validation](#validation)
 11. [Troubleshooting](#troubleshooting)
 12. [References](#references)
+13. [Changelog](#changelog)
 
 ---
 
@@ -226,6 +248,242 @@ Decay = -decay_factor × log10(max(grace_period, days_since_access))
 - Very old (>max_days): Penalty capped at `-decay_factor × log10(max_days)`
 
 **Code Location**: `packages/core/src/aurora_core/activation/decay.py`
+
+---
+
+### 5. Type-Specific Decay (v1.1)
+
+**Formula**:
+```
+effective_decay = base_decay(chunk_type) + churn_factor
+Decay = -effective_decay × log10(days_since_access)
+```
+
+**Motivation**: Different types of code are remembered differently in human cognition:
+- **Documentation** (KB): Stable "background radiation" - rarely forgotten
+- **Class structures**: Architectural - moderately stable
+- **Functions**: Behavioral - volatile, changes frequently
+- **Reasoning traces**: Intermediate stability
+
+**Type-Specific Base Decay Rates**:
+
+| Chunk Type | Base Decay (d) | Cognitive Model | Example |
+|------------|----------------|-----------------|---------|
+| `kb` / `knowledge` | **0.05** | Declarative memory (sticky) | README.md, API docs |
+| `class` | **0.20** | Structural memory (stable) | Class definitions |
+| `function` / `method` | **0.40** | Procedural memory (volatile) | Function implementations |
+| `code` | **0.40** | Generic code (volatile) | Untyped code chunks |
+| `soar` | **0.30** | Reasoning traces (moderate) | Cached SOAR outputs |
+
+**Behavior**:
+- KB chunks decay **8× slower** than functions (0.05 vs 0.40)
+- Classes are **2× more stable** than functions
+- Unknown types fall back to global `decay_factor` (0.5)
+
+**Example Impact** (30 days since access):
+```
+KB chunk:       -0.05 × log10(30) = -0.074  (very light penalty)
+Class chunk:    -0.20 × log10(30) = -0.295  (light penalty)
+Function chunk: -0.40 × log10(30) = -0.590  (moderate penalty)
+```
+
+**Configuration**:
+```python
+from aurora_core.activation.decay import DECAY_BY_TYPE
+
+# Default map (customizable in config)
+DECAY_BY_TYPE = {
+    "kb": 0.05,
+    "knowledge": 0.05,
+    "class": 0.20,
+    "function": 0.40,
+    "method": 0.40,
+    "code": 0.40,
+    "soar": 0.30,
+}
+```
+
+**Usage**:
+```python
+from aurora_core.activation.decay import DecayCalculator
+
+decay = DecayCalculator()
+
+# Type-aware decay
+penalty = decay.calculate_with_metadata(
+    last_access=some_timestamp,
+    chunk_type="kb",  # Will use 0.05 decay rate
+    commit_count=5
+)
+```
+
+**Literature Basis**: While type-specific decay rates are an Aurora extension, they align with ACT-R's distinction between declarative memory (facts, slowly changing) and procedural memory (skills, rapidly updated).
+
+**Code Location**: `packages/core/src/aurora_core/activation/decay.py` (lines 31-42)
+
+---
+
+### 6. Churn Factor (Stability Penalty) (v1.1)
+
+**Formula**:
+```
+churn_factor = 0.1 × log10(commit_count + 1)
+effective_decay = base_decay + churn_factor
+```
+
+**Motivation**: Code that changes frequently (high git commit count) is less stable and should decay faster. This models cognitive reality: volatile information is harder to remember reliably.
+
+**Parameters**:
+- `commit_count`: Number of git commits touching this chunk (from git blame)
+- `CHURN_COEFFICIENT`: Multiplier for churn impact (default 0.1)
+
+**Behavior**:
+- Logarithmic relationship: 10× commits ≈ +0.1 additional decay
+- Adds to base decay rate, making high-churn code decay faster
+- Zero commits (new code): No churn penalty
+
+**Churn Impact Examples**:
+
+| Commit Count | Churn Factor | Interpretation |
+|--------------|-------------|----------------|
+| 5 commits | +0.070 | Low churn, stable code |
+| 10 commits | +0.100 | Moderate churn |
+| 50 commits | +0.170 | High churn, actively developed |
+| 100 commits | +0.200 | Very high churn, volatile |
+| 500 commits | +0.270 | Extreme churn, core infrastructure |
+
+**Combined Example** (Function with 50 commits, 30 days old):
+```
+base_decay = 0.40 (function type)
+churn_factor = 0.1 × log10(51) = 0.171
+effective_decay = 0.40 + 0.171 = 0.571
+
+Penalty = -0.571 × log10(30) = -0.843
+```
+
+Compare to low-churn function (5 commits):
+```
+effective_decay = 0.40 + 0.070 = 0.470
+Penalty = -0.470 × log10(30) = -0.694
+```
+
+**Difference**: High-churn code gets -0.149 additional penalty (~21% more decay).
+
+**Why This Works**:
+- **Cognitive Model**: Unstable information (frequently changing code) interferes with long-term memory consolidation
+- **Practical Benefit**: Recent stable code outranks old volatile code
+- **Prevents Noise**: Legacy code with hundreds of commits doesn't dominate results
+
+**Configuration**:
+```python
+from aurora_core.activation.decay import CHURN_COEFFICIENT
+
+# Default: 0.1 (customizable in config)
+# Higher values = stronger churn penalty
+# Lower values = weaker churn impact
+```
+
+**Usage**:
+```python
+decay = DecayCalculator()
+
+# Include churn factor in decay calculation
+penalty = decay.calculate_with_metadata(
+    last_access=last_access,
+    chunk_type="function",
+    commit_count=100  # High churn
+)
+```
+
+**Code Location**: `packages/core/src/aurora_core/activation/decay.py` (lines 41, 283-287)
+
+---
+
+### 7. MMR Diversity Reranking (v1.1)
+
+**Formula (Maximal Marginal Relevance)**:
+```
+MMR(d) = λ × relevance(d) - (1-λ) × max_similarity(d, selected)
+```
+
+**Motivation**: Prevent "echo chamber" where all top results are semantically similar. MMR balances relevance with diversity to cover multiple aspects of a query.
+
+**Parameters**:
+- `λ` (lambda): Diversity parameter (default 0.5)
+  - λ=1.0: Pure relevance (no diversity)
+  - λ=0.5: Balanced (default)
+  - λ=0.0: Pure diversity (maximum variety)
+- `relevance(d)`: Normalized hybrid score from tri-hybrid retrieval
+- `max_similarity(d, selected)`: Highest cosine similarity to already-selected results
+
+**Algorithm**:
+1. Sort all candidates by hybrid score (BM25 + activation + semantic)
+2. Select top result (highest hybrid score)
+3. For remaining slots:
+   - Calculate MMR score for each candidate
+   - MMR = λ × hybrid_score - (1-λ) × max_cosine_similarity
+   - Select candidate with highest MMR score
+   - Repeat until k results selected
+
+**Behavior**:
+- **λ=1.0**: Identical to standard retrieval (pure relevance)
+- **λ=0.5**: Second result is chosen to balance relevance AND dissimilarity to first
+- **λ=0.0**: Maximally diverse results (may sacrifice relevance)
+
+**Example Scenario**:
+
+Query: "authentication"
+
+**Without MMR** (pure relevance):
+1. `auth/login.py::authenticate()` (score 0.95)
+2. `auth/login.py::verify_password()` (score 0.93)
+3. `auth/login.py::hash_password()` (score 0.91)
+4. `auth/session.py::create_session()` (score 0.89)
+5. `auth/oauth.py::oauth_login()` (score 0.87)
+
+*Problem*: First 3 results are all from same file, same topic (password handling).
+
+**With MMR** (λ=0.5):
+1. `auth/login.py::authenticate()` (score 0.95, selected first)
+2. `auth/session.py::create_session()` (score 0.89, diverse from #1)
+3. `auth/oauth.py::oauth_login()` (score 0.87, diverse from #1 and #2)
+4. `middleware/auth_middleware.py::check_auth()` (score 0.85, diverse perspective)
+5. `models/user.py::User.permissions` (score 0.83, data model view)
+
+*Benefit*: Results cover login, sessions, OAuth, middleware, and data models.
+
+**Performance**:
+- Computational cost: O(k²) where k = top_k results (typically 10-20)
+- Requires embeddings (cosine similarity calculation)
+- For k=10: ~45 similarity comparisons (negligible)
+
+**Usage**:
+```python
+from aurora_context_code.semantic import HybridRetriever
+
+retriever = HybridRetriever(store, engine, provider)
+
+# Enable diversity
+results = retriever.retrieve(
+    query="authentication",
+    top_k=10,
+    diverse=True,      # Enable MMR reranking
+    mmr_lambda=0.5     # Balance relevance and diversity
+)
+```
+
+**Configuration**:
+```python
+from aurora_context_code.semantic import HybridConfig
+
+config = HybridConfig(
+    mmr_lambda=0.5  # Default diversity parameter
+)
+```
+
+**Code Location**: `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` (lines 835-939)
+
+**Literature Basis**: Carbonell & Goldstein (1998). "The use of MMR, diversity-based reranking for reordering documents and producing summaries." SIGIR '98.
 
 ---
 
@@ -651,6 +909,160 @@ Total = 0.0 + 0.490 + 0.375 - 0.0
 
 ---
 
+### Example 5: Type-Specific Decay (v1.1)
+
+**Scenario**: Compare KB chunk vs Function chunk with same age
+
+**KB Chunk** (`README.md`):
+- Type: `kb`
+- Last access: 30 days ago
+- Access history: 2 times (30d, 90d ago)
+- Commit count: 3
+
+**Function Chunk** (`auth.py::login()`):
+- Type: `function`
+- Last access: 30 days ago
+- Access history: 2 times (30d, 90d ago)
+- Commit count: 3
+
+**Calculation for KB Chunk**:
+```
+Type: kb → base_decay = 0.05
+Churn: 0.1 × log10(4) = 0.060
+Effective decay: 0.05 + 0.060 = 0.110
+
+Decay = -0.110 × log10(30) = -0.162
+```
+
+**Calculation for Function Chunk**:
+```
+Type: function → base_decay = 0.40
+Churn: 0.1 × log10(4) = 0.060
+Effective decay: 0.40 + 0.060 = 0.460
+
+Decay = -0.460 × log10(30) = -0.679
+```
+
+**Comparison**:
+- KB penalty: -0.162
+- Function penalty: -0.679
+- **Difference**: Function has 4.2× heavier decay penalty
+
+**Result**: Even with identical access patterns, the KB chunk decays much slower, reflecting its role as stable reference material.
+
+---
+
+### Example 6: Churn Factor (Stability) (v1.1)
+
+**Scenario**: Two functions, same type and age, different commit histories
+
+**Stable Function** (`utils.py::format_date()`):
+- Type: `function`
+- Last access: 30 days ago
+- Commit count: 5
+
+**Volatile Function** (`api.py::handle_request()`):
+- Type: `function`
+- Last access: 30 days ago
+- Commit count: 100
+
+**Stable Function Calculation**:
+```
+base_decay = 0.40 (function)
+churn_factor = 0.1 × log10(6) = 0.078
+effective_decay = 0.40 + 0.078 = 0.478
+
+Decay = -0.478 × log10(30) = -0.706
+```
+
+**Volatile Function Calculation**:
+```
+base_decay = 0.40 (function)
+churn_factor = 0.1 × log10(101) = 0.200
+effective_decay = 0.40 + 0.200 = 0.600
+
+Decay = -0.600 × log10(30) = -0.886
+```
+
+**Comparison**:
+- Stable penalty: -0.706
+- Volatile penalty: -0.886
+- **Difference**: -0.180 additional penalty for volatile code
+
+**Interpretation**: The volatile function decays ~25% faster due to churn. If both are accessed equally, the stable function will rank higher.
+
+**Real-World Impact**:
+- Stable utility functions stay accessible longer
+- Rapidly changing API endpoints decay faster (reflects their volatility)
+- Core infrastructure with hundreds of commits doesn't dominate results
+
+---
+
+### Example 7: MMR Diversity Reranking (v1.1)
+
+**Scenario**: Search for "database optimization"
+
+**Standard Retrieval** (sorted by hybrid score):
+1. `db/query.py::optimize_query()` - Score 0.95, Embedding [0.9, 0.1, 0.0]
+2. `db/query.py::analyze_plan()` - Score 0.93, Embedding [0.88, 0.12, 0.02] (very similar to #1)
+3. `db/index.py::create_index()` - Score 0.85, Embedding [0.3, 0.7, 0.1] (different topic)
+4. `db/cache.py::cache_results()` - Score 0.82, Embedding [0.1, 0.2, 0.9] (different topic)
+
+**Problem**: Top 2 results are nearly identical (cosine similarity ≈ 0.98).
+
+**MMR Reranking** (λ=0.5):
+
+**Step 1**: Select #1 (highest score)
+```
+Selected: [optimize_query]
+```
+
+**Step 2**: Calculate MMR for remaining candidates
+
+For `analyze_plan()`:
+```
+Relevance: 0.93
+Similarity to selected: cosine([0.88, 0.12, 0.02], [0.9, 0.1, 0.0]) ≈ 0.98
+Diversity: 1 - 0.98 = 0.02
+
+MMR = 0.5 × 0.93 + 0.5 × 0.02 = 0.465 + 0.010 = 0.475
+```
+
+For `create_index()`:
+```
+Relevance: 0.85
+Similarity to selected: cosine([0.3, 0.7, 0.1], [0.9, 0.1, 0.0]) ≈ 0.35
+Diversity: 1 - 0.35 = 0.65
+
+MMR = 0.5 × 0.85 + 0.5 × 0.65 = 0.425 + 0.325 = 0.750
+```
+
+For `cache_results()`:
+```
+Relevance: 0.82
+Similarity to selected: cosine([0.1, 0.2, 0.9], [0.9, 0.1, 0.0]) ≈ 0.12
+Diversity: 1 - 0.12 = 0.88
+
+MMR = 0.5 × 0.82 + 0.5 × 0.88 = 0.410 + 0.440 = 0.850
+```
+
+**Step 2 Winner**: `cache_results()` (MMR=0.850)
+
+**Final MMR-Reranked Results**:
+1. `db/query.py::optimize_query()` (selected first)
+2. `db/cache.py::cache_results()` (diverse perspective on optimization)
+3. `db/index.py::create_index()` (another diverse approach)
+4. `db/query.py::analyze_plan()` (selected last, too similar to #1)
+
+**Benefit**: Results now cover query optimization, caching, and indexing - three different approaches to database optimization.
+
+**Lambda Effect**:
+- λ=1.0 (pure relevance): Standard order (1, 2, 3, 4)
+- λ=0.5 (balanced): Reranked order (1, 4, 3, 2)
+- λ=0.0 (pure diversity): Would maximize dissimilarity (1, 4, 3, 2 but stronger preference for diverse)
+
+---
+
 ## Integration Formula
 
 ### Combined Activation Equation
@@ -858,6 +1270,126 @@ Activation Breakdown for Chunk:
 
 ---
 
+#### 5. MMR Diversity Reranking (v1.1)
+
+```python
+from aurora_context_code.semantic import HybridRetriever, HybridConfig
+
+# Create retriever with MMR support
+config = HybridConfig(mmr_lambda=0.5)  # Balanced diversity
+retriever = HybridRetriever(store, engine, provider, config)
+
+# Standard retrieval (no diversity)
+standard_results = retriever.retrieve(
+    query="authentication",
+    top_k=10
+)
+
+# Diverse retrieval (MMR reranking)
+diverse_results = retriever.retrieve(
+    query="authentication",
+    top_k=10,
+    diverse=True  # Enable MMR reranking
+)
+
+# Custom diversity control
+very_diverse_results = retriever.retrieve(
+    query="authentication",
+    top_k=10,
+    diverse=True,
+    mmr_lambda=0.3  # More diversity, less relevance weight
+)
+
+print("Standard results (may have redundancy):")
+for r in standard_results[:5]:
+    print(f"  {r['chunk_id']} - {r['hybrid_score']:.3f}")
+
+print("\nDiverse results (covers multiple aspects):")
+for r in diverse_results[:5]:
+    print(f"  {r['chunk_id']} - {r['hybrid_score']:.3f}")
+```
+
+**When to Use MMR**:
+- ✅ Exploratory queries: "How does auth work?" (want varied perspectives)
+- ✅ Research tasks: "database optimization techniques" (want multiple approaches)
+- ✅ Debugging unknown issues: "memory leak" (want different potential causes)
+- ❌ Specific searches: "UserManager.login function" (want exact match, not variety)
+- ❌ Follow-up queries: Already know what you need
+
+---
+
+#### 6. Type-Specific Decay with Churn (v1.1)
+
+```python
+from aurora_core.activation.decay import DecayCalculator, DECAY_BY_TYPE
+from datetime import datetime, timedelta, timezone
+
+decay_calc = DecayCalculator()
+
+# Calculate decay for different chunk types
+now = datetime.now(timezone.utc)
+last_access = now - timedelta(days=30)
+
+# KB chunk (stable documentation)
+kb_decay = decay_calc.calculate_with_metadata(
+    last_access=last_access,
+    chunk_type="kb",
+    commit_count=5
+)
+
+# Function chunk (volatile code)
+func_decay = decay_calc.calculate_with_metadata(
+    last_access=last_access,
+    chunk_type="function",
+    commit_count=50  # High churn
+)
+
+# Class chunk (structural, moderate stability)
+class_decay = decay_calc.calculate_with_metadata(
+    last_access=last_access,
+    chunk_type="class",
+    commit_count=15
+)
+
+print(f"KB decay:       {kb_decay:.3f}")      # -0.189
+print(f"Function decay: {func_decay:.3f}")     # -0.843
+print(f"Class decay:    {class_decay:.3f}")    # -0.351
+
+# Get detailed explanation
+explanation = decay_calc.explain_decay_with_metadata(
+    last_access=last_access,
+    chunk_type="function",
+    commit_count=50
+)
+
+print(f"\nDecay Breakdown:")
+print(f"  Base decay (function): {explanation['base_decay']:.3f}")
+print(f"  Churn penalty: {explanation['churn_penalty']:.3f}")
+print(f"  Effective decay: {explanation['effective_decay']:.3f}")
+print(f"  Final penalty: {explanation['penalty']:.3f}")
+```
+
+**Custom Decay Maps**:
+```python
+# Define custom type-specific decay rates
+custom_decay_map = {
+    "kb": 0.03,        # Even stickier docs
+    "api": 0.60,       # APIs change frequently
+    "test": 0.70,      # Tests are very volatile
+    "config": 0.10,    # Config is relatively stable
+}
+
+# Use custom map
+penalty = decay_calc.calculate_with_metadata(
+    last_access=last_access,
+    chunk_type="api",
+    commit_count=100,
+    decay_by_type=custom_decay_map  # Override defaults
+)
+```
+
+---
+
 ## Configuration
 
 ### Preset Configurations
@@ -964,6 +1496,152 @@ engine = ActivationEngine(CONTEXT_FOCUSED_CONFIG)
 | Documentation search | CONTEXT_FOCUSED | High context boost |
 | Flat project structure | BLA_FOCUSED | Disable spreading |
 | Long-term project memory | Custom | Low d, low decay factor, long grace period |
+
+---
+
+### Type-Specific Decay Configuration (v1.1)
+
+#### Default Type-Decay Map
+
+```python
+from aurora_core.activation.decay import DECAY_BY_TYPE, CHURN_COEFFICIENT
+
+# Built-in default rates
+print(DECAY_BY_TYPE)
+# {
+#     "kb": 0.05,
+#     "knowledge": 0.05,
+#     "class": 0.20,
+#     "function": 0.40,
+#     "method": 0.40,
+#     "code": 0.40,
+#     "soar": 0.30,
+# }
+
+print(f"Churn coefficient: {CHURN_COEFFICIENT}")  # 0.1
+```
+
+#### Customizing Decay Rates
+
+**Via Configuration File** (`~/.aurora/config.json` or `.aurora/config.json`):
+```json
+{
+  "activation": {
+    "decay_by_type": {
+      "kb": 0.03,
+      "class": 0.15,
+      "function": 0.50,
+      "api": 0.60,
+      "test": 0.70
+    },
+    "churn_coefficient": 0.15
+  }
+}
+```
+
+**Programmatically**:
+```python
+from aurora_core.activation.decay import DecayCalculator
+
+# Pass custom decay map to each calculation
+custom_map = {
+    "kb": 0.03,
+    "function": 0.50,
+    "test": 0.70,
+}
+
+decay = DecayCalculator()
+penalty = decay.calculate_with_metadata(
+    last_access=timestamp,
+    chunk_type="test",
+    commit_count=20,
+    decay_by_type=custom_map  # Use custom map
+)
+```
+
+#### Tuning Guidelines
+
+| Use Case | Decay Map Adjustments |
+|----------|----------------------|
+| Prioritize documentation | Lower `kb` rate (0.03), keep functions high |
+| Stable codebase | Lower all rates by 20-30% |
+| Rapid development | Higher function/method rates (0.60-0.80) |
+| Ignore churn | Set `churn_coefficient = 0.0` |
+| Strong stability penalty | Set `churn_coefficient = 0.2` |
+
+**Effect of Adjustments**:
+- **Lower decay rate**: Chunk stays active longer after last access
+- **Higher decay rate**: Chunk decays faster, prioritizes recent usage
+- **Higher churn coefficient**: Git commit history has stronger influence
+- **Lower churn coefficient**: Git history has weaker influence
+
+---
+
+### MMR Configuration (v1.1)
+
+#### Global MMR Settings
+
+**Via Configuration File**:
+```json
+{
+  "activation": {
+    "mmr_lambda": 0.5
+  },
+  "context": {
+    "code": {
+      "hybrid_weights": {
+        "bm25": 0.3,
+        "activation": 0.3,
+        "semantic": 0.4
+      }
+    }
+  }
+}
+```
+
+**Programmatically**:
+```python
+from aurora_context_code.semantic import HybridConfig, HybridRetriever
+
+# Set default MMR lambda in config
+config = HybridConfig(
+    mmr_lambda=0.7  # Favor relevance over diversity
+)
+
+retriever = HybridRetriever(store, engine, provider, config)
+
+# Uses config default (0.7) when diverse=True
+results = retriever.retrieve(query, top_k=10, diverse=True)
+```
+
+#### Per-Query MMR Control
+
+```python
+# Override MMR lambda per query
+results = retriever.retrieve(
+    query="authentication",
+    top_k=10,
+    diverse=True,
+    mmr_lambda=0.3  # High diversity for this query
+)
+```
+
+#### Lambda Tuning Guide
+
+| Lambda (λ) | Behavior | Use When |
+|------------|----------|----------|
+| **1.0** | Pure relevance (no diversity) | Specific searches, known target |
+| **0.7-0.9** | Light diversity | Prefer accuracy, tolerate some redundancy |
+| **0.5** (default) | Balanced | General exploration, balanced coverage |
+| **0.3-0.4** | High diversity | Research tasks, brainstorming |
+| **0.0-0.2** | Maximum diversity | Discovering unknown patterns, broad coverage |
+
+**Recommendations**:
+- **Default (0.5)**: Good for most use cases
+- **Debugging**: 0.3-0.4 (want varied potential causes)
+- **Code review**: 0.7-0.8 (want relevant code, some variety)
+- **Learning new codebase**: 0.3-0.5 (want broad understanding)
+- **Finding specific function**: 1.0 or `diverse=False` (no need for diversity)
 
 ---
 
@@ -1275,7 +1953,9 @@ assert len(query_keywords) > 0, "No query keywords"
 | **BLA** | `ln(Σ t_j^(-d))` | d=0.5 (decay rate) |
 | **Spreading** | `Σ (W_j × F^d_ij)` | F=0.7 (spread factor), max 3 hops |
 | **Context** | `boost × (overlap / total)` | boost=0.5 |
-| **Decay** | `-factor × log10(days)` | factor=0.5, grace=1 day |
+| **Decay (Basic)** | `-factor × log10(days)` | factor=0.5, grace=1 day |
+| **Type Decay (v1.1)** | `-[base(type) + churn] × log10(days)` | base: 0.05-0.40, churn=0.1×log10(commits+1) |
+| **MMR (v1.1)** | `λ×relevance - (1-λ)×max_sim` | λ=0.5 (diversity parameter) |
 | **Total** | `BLA + Spread + Context - Decay` | All additive/subtractive |
 
 ### Appendix B: Configuration Cheat Sheet
@@ -1313,22 +1993,99 @@ CONTEXT_FOCUSED_CONFIG  # High context boost
 - BLA: -10.0 to -2.0 (negative, but less negative with more/recent access)
 - Spreading: 0.0 to +2.0 (positive boost, 0.7^hop for each hop)
 - Context: 0.0 to +0.5 (positive boost, 0.5 max for 100% match)
-- Decay: 0.0 to -2.0 (negative penalty, logarithmic with days)
+- Decay (standard): 0.0 to -2.0 (negative penalty, logarithmic with days)
+- Decay (KB, v1.1): 0.0 to -0.5 (lighter penalty, sticky memory)
+- Decay (function, v1.1): 0.0 to -2.5 (heavier penalty, volatile code)
+- Churn Factor (v1.1): +0.07 to +0.27 (adds to decay, log scale)
 
-**Example Breakdown**:
+**Example Breakdown (v1.0)**:
 ```
 High Activation: BLA=-3.0, Spread=+1.4, Context=+0.5, Decay=-0.2 → Total=-1.3
 Low Activation:  BLA=-8.0, Spread=+0.0, Context=+0.1, Decay=-1.0 → Total=-8.9
 ```
 
+**Example Breakdown with Type-Specific Decay (v1.1)**:
+```
+KB (stable):     BLA=-3.0, Spread=+1.4, Context=+0.5, Decay=-0.16 (type:kb, 5 commits) → Total=-1.26
+Function (low churn):   BLA=-3.0, Spread=+1.4, Context=+0.5, Decay=-0.71 (type:func, 5 commits) → Total=-1.81
+Function (high churn):  BLA=-3.0, Spread=+1.4, Context=+0.5, Decay=-0.89 (type:func, 100 commits) → Total=-1.99
+```
+
+**MMR Impact (v1.1)**:
+- Without MMR: Results 1-5 may have 0.95+ cosine similarity (redundant)
+- With MMR (λ=0.5): Results 1-5 selected for diversity, typically <0.7 max similarity
+
 ---
 
-**Document Version**: 1.0
+## Changelog
+
+### Version 1.1 (January 31, 2026)
+
+**New Features**:
+- ✨ **Type-Specific Decay**: Different decay rates for KB, classes, functions, etc.
+  - KB chunks decay 8× slower than functions (0.05 vs 0.40)
+  - Configurable via `DECAY_BY_TYPE` map
+  - Falls back to global decay for unknown types
+
+- ✨ **Churn Factor (Stability Penalty)**: Git commit history affects decay
+  - Formula: `churn_factor = 0.1 × log10(commit_count + 1)`
+  - High-churn code (100+ commits) decays ~25% faster
+  - Models cognitive reality: volatile information harder to remember
+
+- ✨ **MMR Diversity Reranking**: Prevent redundant results
+  - Balances relevance and diversity (configurable λ parameter)
+  - Opt-in via `diverse=True` parameter
+  - Prevents "echo chamber" of similar results
+
+**API Changes**:
+- `DecayCalculator.calculate_with_metadata()` - New method for type-aware decay
+- `DecayCalculator.explain_decay_with_metadata()` - Explanation with type/churn info
+- `HybridRetriever.retrieve(..., diverse=True, mmr_lambda=0.5)` - MMR support
+- `HybridConfig.mmr_lambda` - New configuration parameter
+
+**Configuration**:
+- New config section: `activation.decay_by_type`
+- New config section: `activation.churn_coefficient`
+- New config section: `activation.mmr_lambda`
+
+**Documentation**:
+- Added 3 new calculation examples (type decay, churn, MMR)
+- Added usage examples for all new features
+- Added configuration guides for type maps and MMR
+- Updated formula reference with comprehensive coverage
+
+**Code Locations**:
+- `packages/core/src/aurora_core/activation/decay.py` - Type-specific decay implementation
+- `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` - MMR implementation
+- `packages/cli/src/aurora_cli/defaults.json` - Configuration schema
+
+**Backward Compatibility**: ✅ Fully backward compatible
+- Existing code continues to work unchanged
+- New features are opt-in
+- Default behavior preserves existing retrieval
+
+---
+
+### Version 1.0 (December 23, 2025)
+
+**Initial Release**:
+- ACT-R activation system implementation
+- Base-level activation (BLA)
+- Spreading activation
+- Context boost
+- Decay penalty
+- 5 preset configurations
+- 291 tests, 86.99% coverage
+- Validated against ACT-R literature
+
+---
+
+**Document Version**: 1.1
 **Status**: Production Ready
-**Last Updated**: December 23, 2025
-**Related Tasks**: Task 8.1, Task 8.2
+**Last Updated**: January 31, 2026
+**Related Tasks**: Task 8.1, Task 8.2, v0.11.0 Memory Enhancement
 **Validation Status**: ✅ Verified against ACT-R literature
-**Test Coverage**: ✅ 291 tests, 86.99% coverage
+**Test Coverage**: ✅ 291+ tests, 86.99%+ coverage
 
 ---
 

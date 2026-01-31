@@ -30,6 +30,19 @@
       }
     }
   },
+  "activation": {
+    "decay_by_type": {
+      "kb": 0.05,
+      "knowledge": 0.05,
+      "class": 0.20,
+      "function": 0.40,
+      "method": 0.40,
+      "code": 0.40,
+      "soar": 0.30
+    },
+    "churn_coefficient": 0.1,
+    "mmr_lambda": 0.5
+  },
   "search": {
     "min_semantic_score": 0.70,
     "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"

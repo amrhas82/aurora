@@ -18,6 +18,23 @@ The log10 relationship means:
     - 100 days ago: -0.5 × 2 = -1.0
     - 1000 days ago: capped at 90 days
 
+Type-Specific Decay (v0.11.0+):
+    Different chunk types decay at different rates to model cognitive behavior:
+    - kb (knowledge): 0.05 (stable "background radiation", rarely forgotten)
+    - class: 0.20 (structural, more stable than functions)
+    - function: 0.40 (behavioral, volatile)
+    - code: 0.40 (default for unspecified code)
+    - soar: 0.30 (reasoning traces, moderate stability)
+
+Churn Factor (Stability Penalty):
+    High-churn code (many git commits) decays faster because it's less stable:
+    effective_decay = base_decay + 0.1 × log10(commit_count + 1)
+
+    This means:
+    - 5 commits: +0.07 additional decay
+    - 50 commits: +0.17 additional decay
+    - 100 commits: +0.20 additional decay
+
 Reference:
     Anderson, J. R., & Schooler, L. J. (1991). Reflections of the environment
     in memory. Psychological Science, 2(6), 396-408.
@@ -28,6 +45,24 @@ from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
+
+
+# Default decay rates by chunk type (ACT-R cognitive modeling)
+# Lower values = "stickier" memories (slower forgetting)
+# Higher values = more volatile (faster forgetting)
+DECAY_BY_TYPE: dict[str, float] = {
+    "kb": 0.05,        # Knowledge base: stable "background radiation"
+    "knowledge": 0.05, # Alias for kb
+    "class": 0.20,     # Classes: structural, stable
+    "function": 0.40,  # Functions: behavioral, volatile
+    "method": 0.40,    # Methods: same as functions
+    "code": 0.40,      # Generic code: default volatile
+    "soar": 0.30,      # Reasoning traces: moderate stability
+}
+
+# Churn factor coefficient: how much commit_count affects decay
+# Formula: churn_penalty = CHURN_COEFFICIENT × log10(commit_count + 1)
+CHURN_COEFFICIENT: float = 0.1
 
 
 class DecayConfig(BaseModel):
@@ -160,6 +195,171 @@ class DecayCalculator:
 
         # Clamp to minimum penalty
         return max(penalty, self.config.min_penalty)
+
+    def calculate_with_metadata(
+        self,
+        last_access: datetime,
+        chunk_type: str | None = None,
+        commit_count: int = 0,
+        current_time: datetime | None = None,
+        decay_by_type: dict[str, float] | None = None,
+    ) -> float:
+        """Calculate decay penalty with type-specific rates and churn factor.
+
+        This method extends the base decay calculation with:
+        1. Type-specific decay rates (KB decays slower than code)
+        2. Churn factor (high-commit code decays faster)
+
+        The effective decay formula is:
+            effective_d = base_d(type) + 0.1 × log10(commit_count + 1)
+            penalty = -effective_d × log10(days_since_access)
+
+        Args:
+            last_access: Timestamp of last access
+            chunk_type: Chunk type ('kb', 'code', 'function', 'class', 'soar')
+            commit_count: Number of git commits touching this chunk (0 = no churn penalty)
+            current_time: Current time for calculation (defaults to now)
+            decay_by_type: Optional custom decay rates (overrides module defaults)
+
+        Returns:
+            Decay penalty (non-positive value, 0.0 to min_penalty)
+
+        Examples:
+            >>> from datetime import datetime, timedelta, timezone
+            >>> decay = DecayCalculator()
+            >>>
+            >>> # KB chunks decay slowly (sticky)
+            >>> last_access = datetime.now(timezone.utc) - timedelta(days=30)
+            >>> kb_penalty = decay.calculate_with_metadata(last_access, chunk_type='kb')
+            >>> code_penalty = decay.calculate_with_metadata(last_access, chunk_type='function')
+            >>> print(f"KB: {kb_penalty:.3f}, Code: {code_penalty:.3f}")
+            KB: -0.074, Code: -0.590
+            >>>
+            >>> # High-churn code decays even faster
+            >>> churn_penalty = decay.calculate_with_metadata(
+            ...     last_access, chunk_type='function', commit_count=100
+            ... )
+            >>> print(f"High churn: {churn_penalty:.3f}")
+            High churn: -0.885
+
+        """
+        if current_time is None:
+            current_time = datetime.now(timezone.utc)
+        elif current_time.tzinfo is None:
+            current_time = current_time.replace(tzinfo=timezone.utc)
+
+        # Ensure last_access is timezone-aware
+        if last_access.tzinfo is None:
+            last_access = last_access.replace(tzinfo=timezone.utc)
+
+        # Calculate time since access
+        time_delta = current_time - last_access
+        hours_since_access = time_delta.total_seconds() / 3600.0
+
+        # Apply grace period (no decay for very recent accesses)
+        if hours_since_access <= self.config.grace_period_hours:
+            return 0.0
+
+        # Convert to days
+        days_since_access = hours_since_access / 24.0
+
+        # Cap at maximum days
+        days_since_access = min(days_since_access, self.config.max_days)
+
+        # Get type-specific decay rate (fall back to config default)
+        type_decay_map = decay_by_type or DECAY_BY_TYPE
+        base_decay = type_decay_map.get(
+            chunk_type.lower() if chunk_type else "",
+            self.config.decay_factor,  # Fall back to global default
+        )
+
+        # Add churn factor: high-commit code decays faster
+        # Formula: churn_penalty = 0.1 × log10(commit_count + 1)
+        # This gives:
+        #   - 5 commits: +0.078
+        #   - 50 commits: +0.170
+        #   - 100 commits: +0.200
+        churn_penalty = CHURN_COEFFICIENT * math.log10(max(1, commit_count + 1))
+        effective_decay = base_decay + churn_penalty
+
+        # Calculate decay penalty: -effective_decay × log10(days)
+        penalty = -effective_decay * math.log10(max(1.0, days_since_access))
+
+        # Clamp to minimum penalty
+        return max(penalty, self.config.min_penalty)
+
+    def explain_decay_with_metadata(
+        self,
+        last_access: datetime,
+        chunk_type: str | None = None,
+        commit_count: int = 0,
+        current_time: datetime | None = None,
+        decay_by_type: dict[str, float] | None = None,
+    ) -> dict[str, Any]:
+        """Explain decay calculation with type and churn factors.
+
+        Args:
+            last_access: Timestamp of last access
+            chunk_type: Chunk type for type-specific decay
+            commit_count: Number of git commits (for churn penalty)
+            current_time: Current time for calculation (defaults to now)
+            decay_by_type: Optional custom decay rates
+
+        Returns:
+            Dictionary with explanation:
+                - penalty: Final decay penalty value
+                - base_decay: Type-specific base decay rate
+                - churn_penalty: Additional decay from commit count
+                - effective_decay: Combined decay rate
+                - days_since_access: Days since last access
+                - chunk_type: Type used for lookup
+                - commit_count: Commit count used
+                - formula: Formula used for calculation
+
+        """
+        if current_time is None:
+            current_time = datetime.now(timezone.utc)
+        elif current_time.tzinfo is None:
+            current_time = current_time.replace(tzinfo=timezone.utc)
+
+        if last_access.tzinfo is None:
+            last_access = last_access.replace(tzinfo=timezone.utc)
+
+        time_delta = current_time - last_access
+        hours_since_access = time_delta.total_seconds() / 3600.0
+        days_since_access = hours_since_access / 24.0
+
+        grace_period_applied = hours_since_access <= self.config.grace_period_hours
+        capped_at_max = days_since_access > self.config.max_days
+
+        # Get type-specific decay
+        type_decay_map = decay_by_type or DECAY_BY_TYPE
+        base_decay = type_decay_map.get(
+            chunk_type.lower() if chunk_type else "",
+            self.config.decay_factor,
+        )
+
+        # Calculate churn penalty
+        churn_penalty = CHURN_COEFFICIENT * math.log10(max(1, commit_count + 1))
+        effective_decay = base_decay + churn_penalty
+
+        penalty = self.calculate_with_metadata(
+            last_access, chunk_type, commit_count, current_time, decay_by_type
+        )
+
+        return {
+            "penalty": penalty,
+            "base_decay": base_decay,
+            "churn_penalty": churn_penalty,
+            "effective_decay": effective_decay,
+            "days_since_access": days_since_access,
+            "hours_since_access": hours_since_access,
+            "chunk_type": chunk_type or "unknown",
+            "commit_count": commit_count,
+            "grace_period_applied": grace_period_applied,
+            "capped_at_max": capped_at_max,
+            "formula": f"-{effective_decay:.3f} × log10({min(days_since_access, self.config.max_days):.2f})",
+        }
 
     def calculate_from_hours(self, hours_since_access: float) -> float:
         """Calculate decay penalty from hours since access.
@@ -324,4 +524,6 @@ __all__ = [
     "AGGRESSIVE_DECAY",
     "MODERATE_DECAY",
     "GENTLE_DECAY",
+    "DECAY_BY_TYPE",
+    "CHURN_COEFFICIENT",
 ]

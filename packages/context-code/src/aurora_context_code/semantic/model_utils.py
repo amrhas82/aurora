@@ -55,6 +55,8 @@ def _suppress_model_loading_output() -> Generator[None, None, None]:
     NOTE: Sets environment variables temporarily to suppress tqdm output
     without redirecting stdout/stderr (which could break module imports).
     """
+    import warnings
+
     # Save original logging levels
     original_log_level = logging.getLogger("transformers").level
     original_hf_log_level = logging.getLogger("huggingface_hub").level
@@ -63,20 +65,51 @@ def _suppress_model_loading_output() -> Generator[None, None, None]:
     original_env = {
         "HF_HUB_DISABLE_PROGRESS_BARS": os.environ.get("HF_HUB_DISABLE_PROGRESS_BARS"),
         "TRANSFORMERS_VERBOSITY": os.environ.get("TRANSFORMERS_VERBOSITY"),
+        "TRANSFORMERS_NO_ADVISORY_WARNINGS": os.environ.get("TRANSFORMERS_NO_ADVISORY_WARNINGS"),
     }
+
+    # Suppress warnings from transformers/safetensors
+    original_filters = list(warnings.filters)
 
     try:
         # Suppress transformers and huggingface_hub logging
         logging.getLogger("transformers").setLevel(logging.ERROR)
         logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+        logging.getLogger("safetensors").setLevel(logging.ERROR)
 
-        # Suppress tqdm progress bars from HuggingFace Hub
+        # Suppress tqdm progress bars from HuggingFace Hub and model loading
         os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
         os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+        os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
+
+        # Suppress all warnings during model loading
+        warnings.filterwarnings("ignore")
+
+        # Try to disable tqdm if already imported
+        original_tqdm_disable = None
+        try:
+            import tqdm.std  # type: ignore[import-untyped]
+
+            original_tqdm_disable = tqdm.std.tqdm.disable
+            tqdm.std.tqdm.disable = True
+        except (ImportError, AttributeError):
+            pass
 
         yield
 
     finally:
+        # Restore tqdm if we disabled it
+        if original_tqdm_disable is not None:
+            try:
+                import tqdm.std
+
+                tqdm.std.tqdm.disable = original_tqdm_disable
+            except (ImportError, AttributeError):
+                pass
+
+        # Restore warnings filters
+        warnings.filters = original_filters
+
         # Restore original logging levels
         logging.getLogger("transformers").setLevel(original_log_level)
         logging.getLogger("huggingface_hub").setLevel(original_hf_log_level)

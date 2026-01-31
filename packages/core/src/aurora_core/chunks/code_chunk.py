@@ -129,7 +129,7 @@ class CodeChunk(Chunk):
 
         return {
             "id": self.id,
-            "type": "code",
+            "type": self.type,
             "content": {
                 "file": self.file_path,
                 "function": self.name,

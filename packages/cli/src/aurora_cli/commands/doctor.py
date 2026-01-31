@@ -20,6 +20,7 @@ from aurora_cli.health_checks import (
     ToolIntegrationChecks,
 )
 
+
 __all__ = ["doctor_command"]
 
 logger = logging.getLogger(__name__)
@@ -369,7 +370,7 @@ def _handle_fix_ml() -> None:
     cache_path = get_model_cache_path(model_name)
 
     if is_model_cached(model_name):
-        console.print(f"[green]✓[/] Embedding model already cached at:")
+        console.print("[green]✓[/] Embedding model already cached at:")
         console.print(f"    [dim]{cache_path}[/]\n")
         console.print("[bold green]ML setup complete![/] You can now:")
         console.print("  • Index your codebase: [cyan]aur mem index .[/]")
@@ -378,7 +379,7 @@ def _handle_fix_ml() -> None:
         return
 
     # 3. Download the model with progress
-    console.print(f"[yellow]Embedding model not cached[/]")
+    console.print("[yellow]Embedding model not cached[/]")
     console.print(f"[dim]Model: {model_name}[/]")
     console.print(f"[dim]Cache: {cache_path}[/]\n")
 
@@ -392,7 +393,7 @@ def _handle_fix_ml() -> None:
         console.print("  • Initialize projects: [cyan]aur init[/]")
         console.print("  • Run SOAR queries: [cyan]aur soar \"your question\"[/]\n")
     except MLDependencyError as e:
-        console.print(f"\n[bold red]✗ Model download failed[/]\n")
+        console.print("\n[bold red]✗ Model download failed[/]\n")
         console.print(str(e))
         console.print()
         raise click.Abort()

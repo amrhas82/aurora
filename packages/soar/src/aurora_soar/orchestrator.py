@@ -52,6 +52,7 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
+
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_reasoning.llm_client import LLMClient
@@ -866,7 +867,9 @@ class SOAROrchestrator:
             )
             result = phase_result.to_dict()
             # Add convenience fields for E2E tests
-            result["subgoals_total"] = len(result["decomposition"]["subgoals"])
+            decomposition = result.get("decomposition", {})
+            if isinstance(decomposition, dict):
+                result["subgoals_total"] = len(decomposition.get("subgoals", []))
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             self._invoke_callback("decompose", "after", {"subgoal_count": result["subgoals_total"]})
@@ -2303,7 +2306,7 @@ class SOAROrchestrator:
 
             # Extract phase3 decomposition from metadata
             phases = metadata.get("phases", {})
-            phase3 = phases.get("phase3_decompose")
+            phase3: dict[str, Any] | None = phases.get("phase3_decompose")
             if phase3 is None:
                 return None
 

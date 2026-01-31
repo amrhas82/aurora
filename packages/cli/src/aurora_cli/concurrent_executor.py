@@ -28,6 +28,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
+
 if TYPE_CHECKING:
     from aurora_cli.file_change_aggregator import AggregationResult as FileAggregationResult
     from aurora_cli.file_change_aggregator import FileChangeAggregator  # noqa: F401

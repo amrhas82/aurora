@@ -22,6 +22,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+
 # Test markers
 pytestmark = [pytest.mark.performance]
 

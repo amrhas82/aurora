@@ -21,6 +21,7 @@ from unittest.mock import patch
 
 from aurora_mcp.tools import AuroraMCPTools
 
+
 # ==============================================================================
 # Task 1.4: API Key and Budget Tests (TDD)
 # ==============================================================================

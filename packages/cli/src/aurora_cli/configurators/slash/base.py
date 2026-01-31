@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
+
 # Aurora managed block markers
 AURORA_MARKERS = {
     "start": "<!-- AURORA:START -->",

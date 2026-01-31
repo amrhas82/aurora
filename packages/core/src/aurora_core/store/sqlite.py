@@ -30,6 +30,7 @@ from aurora_core.store.connection_pool import get_connection_pool
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
 
@@ -538,7 +539,7 @@ class SQLiteStore(Store):
 
             # Build WHERE clause
             where_clause = "a.base_level >= ?"
-            params: list = [actual_min]
+            params: list[Any] = [actual_min]
             if chunk_type:
                 where_clause += " AND c.type = ?"
                 params.append(chunk_type)

@@ -17,6 +17,7 @@ from aurora_cli.configurators import ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.templates.headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
 
+
 console = Console()
 
 AURORA_DIR_NAME = ".aurora"

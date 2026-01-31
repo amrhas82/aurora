@@ -23,6 +23,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
+
 if TYPE_CHECKING:
     from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
 
@@ -251,7 +252,7 @@ class OptimizedEmbeddingLoader:
         self.resource_profile = ResourceProfile.detect()
 
         # State tracking
-        self._provider: "EmbeddingProvider | None" = None
+        self._provider: EmbeddingProvider | None = None
         self._thread: threading.Thread | None = None
         self._loading = False
         self._loaded = False

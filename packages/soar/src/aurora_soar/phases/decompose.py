@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from aurora_reasoning import LLMClient
     from aurora_reasoning.decompose import DecompositionResult
@@ -215,7 +216,11 @@ def _build_context_summary(context: dict[str, Any], complexity: str = "MEDIUM") 
         if hasattr(chunk, "file_path"):
             return chunk.file_path or ""
         if isinstance(chunk, dict):
-            return chunk.get("file_path") or chunk.get("metadata", {}).get("file_path", "")
+            file_path = chunk.get("file_path")
+            if file_path:
+                return str(file_path)
+            metadata_path = chunk.get("metadata", {}).get("file_path", "")
+            return str(metadata_path) if metadata_path else ""
         return ""
 
     code_chunks = [c for c in code_chunks if "/logs/conversations/" not in _get_chunk_path(c)]

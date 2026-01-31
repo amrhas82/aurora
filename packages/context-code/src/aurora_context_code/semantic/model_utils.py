@@ -11,7 +11,7 @@ import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class MLDependencyError(Exception):
 
 
 @contextmanager
-def _suppress_model_loading_output():
+def _suppress_model_loading_output() -> Generator[None, None, None]:
     """Suppress verbose model loading messages from HuggingFace/PyTorch.
 
     Adjusts logging levels and environment variables to hide:

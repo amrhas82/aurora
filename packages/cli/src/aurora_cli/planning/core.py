@@ -39,6 +39,7 @@ from aurora_cli.planning.results import (
     ShowResult,
 )
 
+
 logger = logging.getLogger(__name__)
 
 # Import renderer for template-based file generation
@@ -1384,7 +1385,7 @@ def _decompose_with_soar(
     phases_metadata = metadata.get("phases", {})
     if "verification_failure" in phases_metadata:
         verification_error = phases_metadata["verification_failure"]
-        feedback = verification_error.get("feedback", "Unknown verification error")
+        _feedback = verification_error.get("feedback", "Unknown verification error")
         issues = verification_error.get("issues", [])
         error_details = f": {', '.join(issues)}" if issues else ""
         logger.error(f"SOAR verification failed{error_details}")

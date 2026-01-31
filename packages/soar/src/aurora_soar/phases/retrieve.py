@@ -19,6 +19,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any, cast
 
+
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_core.store.sqlite import SQLiteStore
@@ -175,7 +176,7 @@ def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any
 
         # Combine: code first, then kb
         code_chunks = list(code_results) + list(kb_results)
-        reasoning_chunks: list = []  # TODO: retrieve reasoning chunks if needed
+        reasoning_chunks: list[Any] = []  # TODO: retrieve reasoning chunks if needed
 
         logger.info(f"Type-aware retrieval: {len(code_results)} code + {len(kb_results)} kb")
 

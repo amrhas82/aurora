@@ -389,7 +389,7 @@ class SearchRetrievalChecks:
             if is_model_cached(model_name):
                 return (
                     "pass",
-                    f"Embedding model cached",
+                    "Embedding model cached",
                     {"model": model_name, "path": str(cache_path)},
                 )
 

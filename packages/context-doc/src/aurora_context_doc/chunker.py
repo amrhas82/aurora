@@ -57,7 +57,7 @@ class DocumentChunker:
 
             # Create new chunk with same metadata
             new_chunk = DocChunk(
-                chunk_id=f"{chunk.chunk_id}-part{part_num}",
+                chunk_id=f"{chunk.id}-part{part_num}",
                 file_path=chunk.file_path,
                 page_start=chunk.page_start,
                 page_end=chunk.page_end,

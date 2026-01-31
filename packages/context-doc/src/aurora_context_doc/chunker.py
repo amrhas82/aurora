@@ -74,8 +74,16 @@ class DocumentChunker:
 
             chunks.append(new_chunk)
 
-            # Move start forward (with overlap)
-            start = end - self.overlap
+            # If we've reached the end, we're done
+            if end >= len(content):
+                break
+
+            # Move start forward (with overlap), ensuring forward progress
+            next_start = end - self.overlap
+            if next_start <= start:
+                # Prevent infinite loop - move forward by at least 1 char
+                next_start = start + 1
+            start = next_start
             part_num += 1
 
         return chunks

@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from aurora_core.chunks import DocChunk
 from aurora_core.store import Store
+
 from aurora_context_doc.chunker import DocumentChunker
 from aurora_context_doc.parser.base import DocumentParser
 
@@ -128,7 +128,7 @@ class DocumentIndexer:
                 saved_count += 1
 
             except Exception as e:
-                logger.error(f"Failed to save chunk {chunk.chunk_id}: {e}")
+                logger.error(f"Failed to save chunk {chunk.id}: {e}")
 
         logger.info(f"Indexed {saved_count} chunks from {file_path}")
         return saved_count

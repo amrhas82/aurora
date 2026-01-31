@@ -304,12 +304,14 @@ aur goals "Add user authentication"
 |---------|------|-------------|
 | `aur init` | Terminal | Initialize Aurora in project |
 | `aur doctor` | Terminal | Check installation and dependencies |
-| `aur mem index .` | Terminal | Index codebase |
+| `aur mem index .` | Terminal | Index code/docs (supports PDF, DOCX, MD) |
 | `aur mem search "query"` | Terminal | Search memory |
 | `aur goals "goal"` | Terminal | Memory-aware planning |
 | `aur soar "question"` | Terminal | Memory-aware research |
 | `aur spawn tasks.md` | Terminal | Execute with safeguards |
 | `aur headless prompt.md` | Terminal | Unattended execution |
+| `aur friction <sessions-dir>` | Terminal | Analyze session friction, extract failure patterns |
+| `aur friction config` | Terminal | Show friction signal weights |
 | `/aur:search "query"` | Slash | Search indexed memory |
 | `/aur:get N` | Slash | Read chunk from search |
 | `/aur:plan [plan-id]` | Slash | Generate plan artifacts |

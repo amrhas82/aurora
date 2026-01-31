@@ -33,6 +33,7 @@ from aurora_core.types import ChunkID
 
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
+    from aurora_core.chunks.doc_chunk import DocChunk
 
 
 class SQLiteStore(Store):
@@ -375,12 +376,12 @@ class SQLiteStore(Store):
             StorageError: If deserialization fails
 
         """
-        from aurora_core.chunks import CodeChunk, ReasoningChunk
+        from aurora_core.chunks import CodeChunk, DocChunk, ReasoningChunk
 
         try:
             # Parse JSON fields
             content = json.loads(row_data["content"])
-            metadata = json.loads(row_data["metadata"])
+            metadata = json.loads(row_data["metadata"]) if row_data["metadata"] else {}
 
             # Reconstruct full JSON structure for from_json()
             full_data = {
@@ -398,6 +399,9 @@ class SQLiteStore(Store):
                 chunk = CodeChunk.from_json(full_data)
             elif chunk_type == "reasoning":
                 chunk = ReasoningChunk.from_json(full_data)
+            elif chunk_type == "doc":
+                # Document chunks (PDF, DOCX, etc.)
+                chunk = DocChunk.from_json(full_data)
             else:
                 # Skip truly unknown chunk types gracefully
                 import logging
@@ -1048,7 +1052,7 @@ class SQLiteStore(Store):
                     VALUES (?, ?, ?, ?, ?)
                     """,
                     (
-                        chunk.chunk_id,
+                        chunk.id,
                         chunk.parent_chunk_id,
                         json.dumps(chunk.section_path),
                         chunk.section_level,
@@ -1059,7 +1063,7 @@ class SQLiteStore(Store):
 
             except sqlite3.Error as e:
                 raise StorageError(
-                    f"Failed to save doc hierarchy for chunk: {chunk.chunk_id}",
+                    f"Failed to save doc hierarchy for chunk: {chunk.id}",
                     details=str(e),
                 )
 

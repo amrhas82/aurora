@@ -5,6 +5,7 @@ document sections with parent-child relationships and pre-computed breadcrumbs.
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any
 
 from aurora_core.chunks.base import Chunk
@@ -203,26 +204,35 @@ class DocChunk(Chunk):
         """Convert DocChunk to JSON-serializable dictionary.
 
         Returns:
-            Dictionary with all chunk fields
+            Dictionary with all chunk fields, structured for SQLiteStore.
+            The "content" key contains a nested dict (like CodeChunk).
 
         """
-        return {
-            "chunk_id": self.id,
-            "type": self.type,
-            "file_path": self.file_path,
-            "page_start": self.page_start,
-            "page_end": self.page_end,
-            "element_type": self.element_type,
-            "name": self.name,
-            "content": self.content,
-            "parent_chunk_id": self.parent_chunk_id,
-            "section_path": self.section_path,
-            "section_level": self.section_level,
-            "document_type": self.document_type,
-            "embeddings": self.embeddings.hex() if self.embeddings else None,
-            "metadata": self.metadata,
+        # Build metadata dict
+        metadata_dict = {
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+        # Merge custom metadata
+        if self.metadata:
+            metadata_dict.update(self.metadata)
+
+        return {
+            "id": self.id,
+            "type": self.type,
+            "content": {
+                "file_path": self.file_path,
+                "page_start": self.page_start,
+                "page_end": self.page_end,
+                "element_type": self.element_type,
+                "name": self.name,
+                "text": self.content,  # Renamed to avoid confusion with outer structure
+                "parent_chunk_id": self.parent_chunk_id,
+                "section_path": self.section_path,
+                "section_level": self.section_level,
+                "document_type": self.document_type,
+            },
+            "metadata": metadata_dict,
         }
 
     @classmethod
@@ -230,7 +240,7 @@ class DocChunk(Chunk):
         """Create DocChunk from JSON dictionary.
 
         Args:
-            data: Dictionary with chunk fields
+            data: Dictionary with chunk fields (supports both nested and flat formats)
 
         Returns:
             DocChunk instance
@@ -238,34 +248,63 @@ class DocChunk(Chunk):
         """
         from datetime import datetime
 
-        # Convert embeddings from hex string to bytes
-        embeddings = None
-        if data.get("embeddings"):
-            embeddings = bytes.fromhex(data["embeddings"])
+        # Handle nested format (from to_json) or flat format (legacy)
+        content = data.get("content", {})
+        metadata = data.get("metadata", {})
 
-        # Convert timestamps
+        # If content is a dict, extract from nested structure
+        if isinstance(content, dict):
+            file_path = content.get("file_path", data.get("file_path", ""))
+            page_start = content.get("page_start", data.get("page_start", 0))
+            page_end = content.get("page_end", data.get("page_end", 0))
+            element_type = content.get("element_type", data.get("element_type", "section"))
+            name = content.get("name", data.get("name", ""))
+            text = content.get("text", data.get("content", ""))  # "text" in new format
+            parent_chunk_id = content.get("parent_chunk_id", data.get("parent_chunk_id"))
+            section_path = content.get("section_path", data.get("section_path", []))
+            section_level = content.get("section_level", data.get("section_level", 0))
+            document_type = content.get("document_type", data.get("document_type", "pdf"))
+        else:
+            # Flat format (legacy)
+            file_path = data.get("file_path", "")
+            page_start = data.get("page_start", 0)
+            page_end = data.get("page_end", 0)
+            element_type = data.get("element_type", "section")
+            name = data.get("name", "")
+            text = content if isinstance(content, str) else ""
+            parent_chunk_id = data.get("parent_chunk_id")
+            section_path = data.get("section_path", [])
+            section_level = data.get("section_level", 0)
+            document_type = data.get("document_type", "pdf")
+
+        # Convert timestamps from metadata or top-level
         created_at = None
-        if data.get("created_at"):
-            created_at = datetime.fromisoformat(data["created_at"])
+        created_at_str = metadata.get("created_at") or data.get("created_at")
+        if created_at_str:
+            created_at = datetime.fromisoformat(created_at_str)
 
         updated_at = None
-        if data.get("updated_at"):
-            updated_at = datetime.fromisoformat(data["updated_at"])
+        updated_at_str = metadata.get("updated_at") or data.get("updated_at")
+        if updated_at_str:
+            updated_at = datetime.fromisoformat(updated_at_str)
+
+        # Get chunk_id from either "id" (new format) or "chunk_id" (legacy)
+        chunk_id = data.get("id") or data.get("chunk_id", "")
 
         return cls(
-            chunk_id=data["chunk_id"],
-            file_path=data["file_path"],
-            page_start=data.get("page_start", 0),
-            page_end=data.get("page_end", 0),
-            element_type=data.get("element_type", "section"),
-            name=data.get("name", ""),
-            content=data.get("content", ""),
-            parent_chunk_id=data.get("parent_chunk_id"),
-            section_path=data.get("section_path", []),
-            section_level=data.get("section_level", 0),
-            document_type=data.get("document_type", "pdf"),
-            embeddings=embeddings,
-            metadata=data.get("metadata", {}),
+            chunk_id=chunk_id,
+            file_path=file_path,
+            page_start=page_start,
+            page_end=page_end,
+            element_type=element_type,
+            name=name,
+            content=text,
+            parent_chunk_id=parent_chunk_id,
+            section_path=section_path,
+            section_level=section_level,
+            document_type=document_type,
+            embeddings=None,  # Embeddings stored separately in DB
+            metadata=metadata,
             created_at=created_at,
             updated_at=updated_at,
         )

@@ -3,8 +3,13 @@
 Quick index to detailed documentation for AI assistants and developers.
 
 ## Architecture
-9-package monorepo: cli, core, context-code, soar, reasoning, planning, spawner, implement, testing. ACT-R memory + SOAR pipeline + multi-agent orchestration.
+10-package monorepo: cli, core, context-code, context-doc, soar, reasoning, planning, spawner, implement, testing. ACT-R memory + SOAR pipeline + multi-agent orchestration.
 - `docs/architecture.md`
+
+## Document Indexing (context-doc)
+PDF/DOCX parsing with hierarchical section extraction, TOC support, and page references. Uses DocChunk type.
+- `packages/context-doc/src/aurora_context_doc/indexer.py` - Main indexer
+- `packages/context-doc/src/aurora_context_doc/parser/` - PDF and DOCX parsers
 
 ## Development
 Setup, testing (84%+ coverage), code style (ruff, mypy), CI/CD workflow.

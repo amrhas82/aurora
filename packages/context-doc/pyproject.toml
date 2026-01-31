@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "aurora-core>=0.10.0",
+    "aurora-core>=0.6.0",
 ]
 
 [project.optional-dependencies]

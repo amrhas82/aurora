@@ -26,10 +26,19 @@ def derive_session_name(session_file, metadata):
     """Derive a human-readable session name from path and metadata."""
     # Get project name from parent directory
     parent = session_file.parent.name
-    # Convert -home-hamr-PycharmProjects-aurora to aurora
+
+    # Extract project name from Claude Code directory format
+    # Format: -home-user-path-to-project-name or just project-name
     if parent.startswith('-'):
-        parts = parent.split('-')
-        project = parts[-1] if parts else parent
+        # Look for common path prefixes to strip
+        for prefix in ['-home-hamr-PycharmProjects-', '-home-hamr-Documents-PycharmProjects-',
+                       '-home-hamr-', '-home-', '-']:
+            if parent.startswith(prefix):
+                project = parent[len(prefix):]
+                break
+        else:
+            # Fallback: just remove leading dash
+            project = parent[1:]
     else:
         project = parent
 
@@ -771,6 +780,253 @@ def print_table(headers, rows, col_widths=None):
 
     print(f'└{"┴".join("─" * w for w in col_widths)}┘')
 
+
+def generate_detailed_report(output_dir, analyses, summary, config, signal_counts, multi_project):
+    """Generate detailed markdown report with all tables."""
+    report = []
+
+    report.append('# Friction Analysis - Detailed Report\n\n')
+    report.append(f'**Generated:** {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}\n\n')
+    report.append(f'**Sessions Analyzed:** {len(analyses)}\n')
+    report.append(f'**Interactive Sessions:** {summary["overall"]["interactive_sessions"]} (multi-turn conversations)\n')
+    report.append(f'**BAD Sessions:** {summary["overall"]["bad_sessions"]} ({summary["overall"]["bad_rate"]*100:.0f}% of interactive)\n\n')
+
+    # Add glossary
+    report.append('## Glossary\n\n')
+    report.append('**Interactive Session:** A conversation with >1 turn (multi-turn dialogue). Single-turn sessions are filtered from BAD rate calculation.\n\n')
+    report.append('**BAD Session:** User gave up via `/stash`, `/exit`, or silent abandonment (high friction with no resolution).\n\n')
+    report.append('**Friction:** Cumulative weight of negative signals. Higher friction = more user frustration.\n\n')
+    report.append('**Peak Friction:** Maximum friction reached during a session.\n\n')
+    report.append('---\n\n')
+
+    # Add executive summary
+    report.append('## Executive Summary\n\n')
+    bad_rate = summary["overall"]["bad_rate"]
+    overall = summary["overall"]
+
+    if bad_rate > 0.5:
+        report.append(f'⚠️  **CRITICAL**: {bad_rate*100:.0f}% of interactive sessions end in failure. ')
+    elif bad_rate > 0.3:
+        report.append(f'🟡 **WARNING**: {bad_rate*100:.0f}% of interactive sessions end in failure. ')
+    else:
+        report.append(f'✅ **HEALTHY**: {bad_rate*100:.0f}% of interactive sessions end in failure. ')
+
+    report.append(f'Average session: {overall["avg_turns"]:.1f} turns, {overall["avg_friction"]:.1f} friction, {overall["avg_duration_min"]:.0f} min.\n\n')
+
+    # Top issues
+    top_signals = signal_counts.most_common(3)
+    report.append('**Top Issues:**\n')
+    for sig, count in top_signals:
+        weight = config['weights'].get(sig, 0)
+        total = count * weight
+        report.append(f'- **{sig}** ({count} occurrences, {total:.0f} total friction)\n')
+    report.append('\n')
+
+    report.append('---\n\n')
+
+    # Weight system explanation
+    report.append('## Friction Weight System\n\n')
+    report.append('Each signal has a weight representing its severity. Friction accumulates as signals occur.\n\n')
+    report.append('| Weight | Severity | Meaning |\n')
+    report.append('|--------|----------|----------|\n')
+    report.append('| +10 | CRITICAL | User gave up (intervention, abandonment) |\n')
+    report.append('| +8 | SEVERE | LLM false claims or no progress (false_success, no_resolution) |\n')
+    report.append('| +7 | HIGH | User frustration (interrupt_cascade) |\n')
+    report.append('| +6 | MEDIUM | Stuck patterns (tool_loop, rapid_exit) |\n')
+    report.append('| +4-5 | LOW-MEDIUM | User signals (request_interrupted, user_curse) |\n')
+    report.append('| +1 | MINOR | Technical issues (exit_error, repeated_question) |\n')
+    report.append('| +0.5 | NOISE | Context signals (compaction, long_silence, user_negation) |\n\n')
+
+    report.append('---\n\n')
+
+    # Signal breakdown
+    report.append('## Signal Breakdown\n\n')
+    report.append('| Signal | Count | Weight | Total Friction | What It Means |\n')
+    report.append('|--------|-------|--------|----------------|---------------|\n')
+
+    signal_meanings = {
+        'exit_error': 'Command failed (exit code != 0)',
+        'compaction': 'Context overflow, conversation summarized',
+        'repeated_question': 'User asked same question twice',
+        'request_interrupted': 'User hit Ctrl+C or ESC',
+        'long_silence': 'User paused >10 min',
+        'user_negation': '"no", "didn\'t work", "still broken"',
+        'false_success': 'LLM claimed success after error',
+        'user_intervention': 'User gave up (/stash, /exit)',
+        'interrupt_cascade': '2+ interrupts within 60s',
+        'session_abandoned': 'High friction, no resolution',
+        'no_resolution': 'Errors without subsequent success',
+        'exit_success': 'Command succeeded (exit code 0)',
+        'tool_loop': 'Same tool called 3+ times',
+        'rapid_exit': '<3 turns, ends with error/interrupt',
+        'user_curse': 'User frustration (profanity)'
+    }
+
+    for sig_type, count in signal_counts.most_common():
+        weight = config['weights'].get(sig_type, 0)
+        total = count * weight
+        meaning = signal_meanings.get(sig_type, 'Unknown signal')
+        report.append(f'| {sig_type} | {count} | {weight:+.1f} | {total:.1f} | {meaning} |\n')
+    report.append('\n')
+
+    # Pattern analysis
+    report.append('## Pattern Analysis\n\n')
+
+    # Analyze common failure patterns
+    false_success_count = signal_counts.get('false_success', 0)
+    exit_error_count = signal_counts.get('exit_error', 0)
+    interrupt_count = signal_counts.get('request_interrupted', 0)
+    intervention_count = signal_counts.get('user_intervention', 0)
+
+    report.append('### Common Failure Patterns\n\n')
+
+    if false_success_count > 0:
+        report.append(f'**False Success Loop** ({false_success_count} occurrences): LLM claims task is complete after command fails. ')
+        report.append('This indicates the LLM is not checking exit codes properly.\n\n')
+
+    if exit_error_count > 50:
+        report.append(f'**High Error Rate** ({exit_error_count} errors): Many commands are failing. ')
+        report.append('This suggests either environment issues or LLM choosing wrong approaches.\n\n')
+
+    if interrupt_count > 20:
+        report.append(f'**User Interruptions** ({interrupt_count} interrupts): Users frequently canceling operations. ')
+        report.append('Commands may be too slow, stuck, or heading in wrong direction.\n\n')
+
+    if intervention_count > 0:
+        intervention_rate = intervention_count / summary["overall"]["interactive_sessions"]
+        report.append(f'**Abandonment Rate** ({intervention_rate*100:.0f}%): {intervention_count}/{summary["overall"]["interactive_sessions"]} interactive sessions ended with user giving up. ')
+        if intervention_rate > 0.3:
+            report.append('This is CRITICAL - users are frequently giving up.\n\n')
+        else:
+            report.append('This is acceptable for complex tasks.\n\n')
+
+    # Why different friction levels
+    report.append('### Friction Level Breakdown\n\n')
+    low_friction = [a for a in analyses if 0 < a['friction_summary']['peak'] < 15]
+    medium_friction = [a for a in analyses if 15 <= a['friction_summary']['peak'] < 50]
+    high_friction = [a for a in analyses if a['friction_summary']['peak'] >= 50]
+
+    report.append(f'**Low Friction (0-15):** {len(low_friction)} sessions - Normal operation, minor errors quickly resolved\n\n')
+    report.append(f'**Medium Friction (15-50):** {len(medium_friction)} sessions - Some struggles, multiple retries, but eventually successful\n\n')
+    report.append(f'**High Friction (50+):** {len(high_friction)} sessions - Severe issues, user frustration, likely gave up\n\n')
+
+    report.append('---\n\n')
+
+    # High-friction sessions
+    report.append('## Top Friction Sessions\n\n')
+    high_friction = sorted(analyses, key=lambda x: x['friction_summary']['peak'], reverse=True)[:20]
+    high_friction = [a for a in high_friction if a['friction_summary']['peak'] > 0]
+
+    if multi_project:
+        report.append('| Project | Session | Quality | Peak | Turns | Duration | Top Signals |\n')
+        report.append('|---------|---------|---------|------|-------|----------|-------------|\n')
+    else:
+        report.append('| Session | Quality | Peak | Turns | Duration | Top Signals |\n')
+        report.append('|---------|---------|------|-------|----------|-------------|\n')
+
+    for a in high_friction:
+        full_sid = a['session_id']
+        project = full_sid.split('/')[0] if '/' in full_sid else '?'
+        sid = full_sid.split('/')[-1] if '/' in full_sid else full_sid
+        peak = a['friction_summary']['peak']
+        turns = a['session_metadata'].get('turn_count', 0)
+        dur = a['session_metadata'].get('duration_min', 0)
+        dur_str = format_duration(dur) if dur else '-'
+        quality = a.get('quality', '?')
+
+        # Top signals
+        top_sigs = []
+        for source, data in a['by_source'].items():
+            for sig_type, sig_data in data['signals'].items():
+                if sig_data['count'] > 0:
+                    short_name = sig_type.replace('user_', '').replace('exit_', '')
+                    top_sigs.append(f"{short_name}:{sig_data['count']}")
+        sigs_str = ', '.join(top_sigs[:3]) if top_sigs else '-'
+
+        if multi_project:
+            report.append(f'| {project} | {sid} | {quality} | {peak} | {turns} | {dur_str} | {sigs_str} |\n')
+        else:
+            report.append(f'| {sid} | {quality} | {peak} | {turns} | {dur_str} | {sigs_str} |\n')
+    report.append('\n')
+
+    # Session quality breakdown
+    report.append('## Session Quality Breakdown\n\n')
+    quality_counts = Counter(a.get('quality', 'UNKNOWN') for a in analyses)
+    quality_order = ['BAD', 'FRICTION', 'ROUGH', 'OK', 'ONE-SHOT']
+    quality_desc = {
+        'BAD': 'user gave up (/stash)',
+        'FRICTION': 'curse or false_success',
+        'ROUGH': 'high friction but completed',
+        'OK': 'no significant friction',
+        'ONE-SHOT': 'single turn (filtered)'
+    }
+
+    report.append('| Quality | Count | Description |\n')
+    report.append('|---------|-------|-------------|\n')
+    for q in quality_order:
+        count = quality_counts.get(q, 0)
+        desc = quality_desc.get(q, '')
+        if count > 0:
+            report.append(f'| {q} | {count} | {desc} |\n')
+    report.append('\n')
+
+    # Per-project stats
+    if 'by_project' in summary and summary['by_project']:
+        report.append('## Per-Project Statistics\n\n')
+        report.append('| Project | Interactive | BAD | BAD % | Avg Friction | Avg Turns | Avg Duration |\n')
+        report.append('|---------|-------------|-----|-------|--------------|-----------|-------------|\n')
+        for proj, stats in sorted(summary['by_project'].items()):
+            bad_rate_pct = f"{stats['bad_rate']*100:.0f}%" if stats['interactive_sessions'] > 0 else '-'
+            dur = stats.get('avg_duration_min', 0)
+            dur_str = format_duration(int(dur)) if dur else '-'
+            report.append(f'| {proj} | {stats["interactive_sessions"]} | {stats["bad_sessions"]} | {bad_rate_pct} | {stats["avg_friction"]:.1f} | {stats["avg_turns"]:.1f} | {dur_str} |\n')
+        report.append('\n')
+
+    # Recommendations
+    report.append('## Recommendations\n\n')
+
+    recommendations = []
+
+    if false_success_count > 10:
+        recommendations.append('**High Priority:** Add CLAUDE.md rule to verify exit codes before claiming success')
+
+    if interrupt_count > 20:
+        recommendations.append('**High Priority:** Commands timing out or stuck - review for heavy operations that need optimization')
+
+    if signal_counts.get('tool_loop', 0) > 3:
+        recommendations.append('**Medium Priority:** Add CLAUDE.md rule to detect and break out of tool loops')
+
+    if intervention_count / summary["overall"]["interactive_sessions"] > 0.4:
+        recommendations.append('**Critical:** >40% abandonment rate - major UX issues, review antigens for patterns')
+
+    if signal_counts.get('repeated_question', 0) > 20:
+        recommendations.append('**Medium Priority:** Many repeated questions - LLM not understanding user intent or context issues')
+
+    if recommendations:
+        for i, rec in enumerate(recommendations, 1):
+            report.append(f'{i}. {rec}\n\n')
+    else:
+        report.append('No critical issues detected. Continue monitoring.\n\n')
+
+    report.append('---\n\n')
+
+    # Daily trend
+    if 'daily_stats' in summary and summary['daily_stats']:
+        report.append('## Daily Trend (Last 14 Days)\n\n')
+        report.append('| Date | Interactive | BAD | Rate | Trend |\n')
+        report.append('|------|-------------|-----|------|-------|\n')
+        for day in summary['daily_stats'][-14:]:
+            bad_rate = day['bad_rate'] if day['interactive'] > 0 else 0
+            bad_rate_pct = f"{bad_rate*100:.0f}%" if day['interactive'] > 0 else '-'
+            bar_len = int(bad_rate * 10)
+            bar = '█' * bar_len + '░' * (10 - bar_len)
+            report.append(f'| {day["date"]} | {day["interactive"]} | {day["bad"]} | {bad_rate_pct} | {bar} |\n')
+        report.append('\n')
+
+    # Write report
+    with open(output_dir / 'report.md', 'w') as f:
+        f.write(''.join(report))
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -779,12 +1035,29 @@ def main():
     input_path = Path(sys.argv[1])
     config = load_config()
 
-    # Find sessions
+    # Find sessions - check for multi-project directory first
     if input_path.is_file():
         session_files = [input_path]
     else:
+        # Try direct session files first
         session_files = [f for f in input_path.glob('*.jsonl')
                         if 'sessions-index' not in f.name]
+
+        # If no direct session files, check if this is a parent directory with project subdirs
+        if not session_files:
+            project_dirs = [d for d in input_path.iterdir()
+                          if d.is_dir() and not d.name.startswith('.')]
+
+            # Check if subdirectories have session files
+            for proj_dir in project_dirs:
+                proj_sessions = list(proj_dir.glob('*.jsonl'))
+                if proj_sessions:
+                    # Found sessions in subdirectory - collect all from all projects
+                    session_files = []
+                    for pd in project_dirs:
+                        session_files.extend([f for f in pd.glob('*.jsonl')
+                                            if 'sessions-index' not in f.name])
+                    break
 
     if not session_files:
         print(f'No sessions found in {input_path}')
@@ -798,6 +1071,13 @@ def main():
     analyses = []
     all_signals = []
     errors = []
+
+    # Detect if analyzing multiple projects
+    project_parents = set(sf.parent.name for sf in session_files)
+    multi_project = len(project_parents) > 1
+
+    if multi_project:
+        print(f'Found sessions from {len(project_parents)} projects\n')
 
     for session_file in session_files:
         try:
@@ -834,213 +1114,118 @@ def main():
     with open(output_dir / 'friction_summary.json', 'w') as f:
         json.dump(summary, f, indent=2)
 
-    # === ENHANCED OUTPUT ===
+    # === CONCISE TERMINAL OUTPUT ===
 
-    # 1. Summary box
     print()
+    print('=' * 60)
+    print('FRICTION ANALYSIS')
+    print('=' * 60)
+    print()
+
     agg = summary['aggregate_by_source']
     corr = summary['correlations']
+    overall = summary['overall']
 
-    summary_lines = [
-        f'Sessions analyzed:     {summary["sessions_analyzed"]}',
-        f'High friction (>=10):  {corr["high_friction_sessions"]}',
-        f'With interventions:    {corr["intervention_sessions"]}',
-        '',
-    ]
+    # Summary line
+    interactive = overall['interactive_sessions']
+    bad_count = overall['bad_sessions']
+    bad_rate = overall['bad_rate']
 
-    # Signal counts by source
-    for source in ['user', 'tool', 'llm']:
-        if source in agg:
-            count = sum(agg[source]['top_signals'].values())
-            friction = agg[source]['total_friction']
-            summary_lines.append(f'{source.upper()} signals: {count:3d} (friction: {friction:+.0f})')
-        else:
-            summary_lines.append(f'{source.upper()} signals:   0')
+    projects_count = len(summary.get('by_project', {}))
+    print(f"Analyzed: {len(analyses)} sessions ({interactive} interactive*) from {projects_count} project{'s' if projects_count != 1 else ''}")
+    print(f"  *interactive = multi-turn conversations (>1 turn)")
 
-    print_box('Friction Analysis Summary', summary_lines)
+    # BAD rate with emoji
+    emoji = '🔴' if bad_rate > 0.5 else '🟡' if bad_rate > 0.3 else '✅'
+    print(f"BAD Rate: {bad_rate*100:.0f}% ({bad_count}/{interactive} interactive) {emoji}")
+    print()
 
-    # 2. Signal breakdown table
-    print('\n Signal Breakdown')
-    signal_rows = []
+    # Top signals (condensed - top 5)
     signal_counts = Counter()
     for source_data in agg.values():
         for sig_type, count in source_data['top_signals'].items():
             signal_counts[sig_type] += count
 
     if signal_counts:
-        for sig_type, count in signal_counts.most_common():
+        print('Top Signals:')
+        for sig_type, count in signal_counts.most_common(5):
             weight = config['weights'].get(sig_type, 0)
-            weight_str = f'{weight:+.1f}' if isinstance(weight, float) and weight != int(weight) else f'{int(weight):+d}'
-            signal_rows.append([sig_type, count, weight_str, count * weight])
+            total_friction = count * weight
+            print(f'  {sig_type:20s} {count:3d}   ({total_friction:+.0f} friction)')
+        print()
 
-        print_table(['Signal', 'Count', 'Weight', 'Total'],
-                   signal_rows, [20, 8, 8, 8])
-    else:
-        print('  (no signals detected)')
-
-    # 3. High-friction sessions (top 10)
-    high_friction = sorted(analyses,
-                           key=lambda x: x['friction_summary']['peak'],
-                           reverse=True)[:10]
-    high_friction = [a for a in high_friction if a['friction_summary']['peak'] > 0]
-
-    if high_friction:
-        print('\n Top Friction Sessions')
-        session_rows = []
-        for a in high_friction:
-            # Session name is now like "aurora/0131-1430-2b80385d"
-            sid = a['session_id']
-            # Show just date-id part if project prefix is long
-            if '/' in sid:
-                sid = sid.split('/')[-1]
-            peak = a['friction_summary']['peak']
-            turns = a['session_metadata'].get('turn_count', 0)
-            dur = a['session_metadata'].get('duration_min', 0)
-            dur_str = format_duration(dur) if dur else '-'
-
-            # Get top signals for this session
-            top_sigs = []
-            for source, data in a['by_source'].items():
-                for sig_type, sig_data in data['signals'].items():
-                    if sig_data['count'] > 0:
-                        # Shorten signal names
-                        short_name = sig_type.replace('user_', '').replace('exit_', '')
-                        top_sigs.append(f"{short_name}:{sig_data['count']}")
-
-            sigs_str = ', '.join(top_sigs[:2]) if top_sigs else '-'
-            if len(sigs_str) > 16:
-                sigs_str = sigs_str[:13] + '...'
-            quality = a.get('quality', '?')
-            session_rows.append([sid, quality, peak, turns, sigs_str])
-
-        print_table(['Session', 'Quality', 'Peak', 'Turns', 'Signals'],
-                   session_rows, [18, 9, 6, 7, 18])
-
-    # 4. Session breakdown by turn count
-    one_shot = [a for a in analyses if a['session_metadata'].get('turn_count', 0) <= 1]
-    interactive = [a for a in analyses if a['session_metadata'].get('turn_count', 0) > 1]
-    zero_friction = [a for a in analyses if a['friction_summary']['peak'] == 0]
-    low_friction = [a for a in analyses
-                    if 0 < a['friction_summary']['peak'] < config['thresholds']['friction_peak']]
-
-    # Quality breakdown
-    quality_counts = Counter(a.get('quality', 'UNKNOWN') for a in analyses)
-
-    print(f'\n Session Quality')
-    quality_order = ['BAD', 'FRICTION', 'ROUGH', 'OK', 'ONE-SHOT']
-    quality_desc = {
-        'BAD': 'user gave up (/stash)',
-        'FRICTION': 'curse or false_success',
-        'ROUGH': 'high friction but completed',
-        'OK': 'no significant friction',
-        'ONE-SHOT': 'single turn (filtered)'
-    }
-    for q in quality_order:
-        count = quality_counts.get(q, 0)
-        desc = quality_desc.get(q, '')
-        if count > 0:
-            print(f'  {q:10s} {count:3d}  ({desc})')
-
-    print(f'\n Session Breakdown')
-    print(f'  One-shot (≤1 turn):  {len(one_shot):3d}  (user_negation filtered)')
-    print(f'  Interactive (>1):    {len(interactive):3d}')
-    print(f'  Zero friction:       {len(zero_friction):3d}')
-    print(f'  Low friction (<{config["thresholds"]["friction_peak"]}):  {len(low_friction):3d}')
-
-    # 5. Per-project stats
+    # Per-project stats with median
     if 'by_project' in summary and summary['by_project']:
-        print('\n Per-Project Averages')
-        proj_rows = []
+        print('Per-Project:')
         for proj, stats in sorted(summary['by_project'].items()):
-            bad_rate_pct = f"{stats['bad_rate']*100:.0f}%" if stats['interactive_sessions'] > 0 else '-'
-            proj_rows.append([
-                proj[:12],
-                stats['interactive_sessions'],
-                stats['bad_sessions'],
-                bad_rate_pct,
-                stats['avg_friction'],
-                stats['avg_turns']
-            ])
-        print_table(
-            ['Project', 'Interact', 'BAD', 'BAD%', 'AvgFric', 'AvgTurn'],
-            proj_rows,
-            [14, 9, 5, 6, 8, 8]
-        )
+            bad_rate = stats['bad_rate']
+            emoji = '🔴' if bad_rate > 0.5 else '🟡' if bad_rate > 0.3 else '✅'
+            bad_pct = f"{bad_rate*100:.0f}%" if stats['interactive_sessions'] > 0 else '-'
 
-    # 6. Overall averages
-    if 'overall' in summary:
-        overall = summary['overall']
-        print('\n Overall Averages')
-        bad_rate_pct = f"{overall['bad_rate']*100:.0f}%" if overall['interactive_sessions'] > 0 else '-'
-        print(f'  Interactive sessions: {overall["interactive_sessions"]}')
-        print(f'  BAD sessions:         {overall["bad_sessions"]} ({bad_rate_pct} of interactive)')
-        print(f'  Avg friction/session: {overall["avg_friction"]}')
-        print(f'  Avg turns/session:    {overall["avg_turns"]}')
-        print(f'  Avg duration/session: {overall["avg_duration_min"]} min')
+            # Calculate median friction for this project
+            proj_sessions = [a for a in analyses if a['session_id'].startswith(f"{proj}/")]
+            interactive_sessions = [a for a in proj_sessions if a['session_metadata'].get('turn_count', 0) > 1]
+            if interactive_sessions:
+                frictions = sorted([a['friction_summary']['peak'] for a in interactive_sessions])
+                median = frictions[len(frictions)//2]
+                print(f'  {proj:12s} {bad_pct:>4s} BAD ({stats["bad_sessions"]}/{stats["interactive_sessions"]})  median: {median:.1f}  {emoji}')
+            else:
+                print(f'  {proj:12s} {bad_pct:>4s} BAD ({stats["bad_sessions"]}/{stats["interactive_sessions"]})  {emoji}')
+        print()
 
-    # 7. Daily trend
+    # Best and worst sessions
+    if summary.get('best_session') and summary.get('worst_session'):
+        ws = summary['worst_session']
+        bs = summary['best_session']
+        print('Session Extremes:')
+
+        ws_id = ws['session_id'] if multi_project else ws['session_id'].split('/')[-1]
+        print(f'  WORST: {ws_id}  peak={ws["peak_friction"]:.0f}  turns={ws["turns"]}')
+
+        bs_id = bs['session_id'] if multi_project else bs['session_id'].split('/')[-1]
+        print(f'  BEST:  {bs_id}  peak={bs["peak_friction"]:.0f}  turns={bs["turns"]}')
+        print()
+
+    # Last 2 weeks trend
     if 'daily_stats' in summary and summary['daily_stats']:
-        print('\n Daily Trend')
-        daily_rows = []
-        for day in summary['daily_stats'][-7:]:  # Last 7 days
-            bad_rate_pct = f"{day['bad_rate']*100:.0f}%" if day['interactive'] > 0 else '-'
-            # Visual bar for BAD rate
-            bar_len = int(day['bad_rate'] * 10) if day['interactive'] > 0 else 0
+        print('Last 2 Weeks:')
+        for day in summary['daily_stats'][-14:]:
+            if day['interactive'] == 0:
+                continue
+            bad_rate = day['bad_rate']
+            bar_len = int(bad_rate * 10)
             bar = '█' * bar_len + '░' * (10 - bar_len)
-            daily_rows.append([
-                day['date'][5:],  # MM-DD
-                day['interactive'],
-                day['bad'],
-                bad_rate_pct,
-                bar
-            ])
-        print_table(
-            ['Date', 'Inter', 'BAD', 'Rate', 'Trend'],
-            daily_rows,
-            [7, 6, 5, 6, 12]
-        )
+            print(f'  {day["date"]}  {day["interactive"]:2d} sessions  {day["bad"]:2d} BAD  {bar}  {bad_rate*100:.0f}%')
+        print()
 
-    # 8. Best and worst sessions
-    if summary.get('best_session') or summary.get('worst_session'):
-        print('\n Session Extremes')
-        if summary.get('worst_session'):
-            ws = summary['worst_session']
-            sid = ws['session_id'].split('/')[-1] if '/' in ws['session_id'] else ws['session_id']
-            print(f'  WORST: {sid}  peak={ws["peak_friction"]}  turns={ws["turns"]}  quality={ws["quality"]}')
-        if summary.get('best_session'):
-            bs = summary['best_session']
-            sid = bs['session_id'].split('/')[-1] if '/' in bs['session_id'] else bs['session_id']
-            print(f'  BEST:  {sid}  peak={bs["peak_friction"]}  turns={bs["turns"]}  quality={bs["quality"]}')
-
-    # 7. Verdict box
+    # Verdict
     verdict = summary['verdict']
     status_emoji = {'USEFUL': '✓', 'INCONCLUSIVE': '?', 'BLOAT': '✗'}
     status = verdict['status']
+    print(f"Verdict: {status_emoji.get(status, '?')} {status}")
 
-    verdict_lines = [
-        f'Status: {status_emoji.get(status, "?")} {status}',
-        '',
-    ]
-    for reason in verdict['reasons']:
-        verdict_lines.append(reason)
-
-    if verdict['recommended_actions']:
-        verdict_lines.append('')
-        verdict_lines.append('Recommendations:')
-        for action in verdict['recommended_actions']:
-            verdict_lines.append(f'  - {action}')
-
+    predictability = corr.get('intervention_predictability', 0)
+    snr = summary.get('signal_noise_ratio', 0)
+    print(f'  Intervention predictability: {predictability:.0%}')
+    if 'signal_noise_ratio' in summary:
+        print(f'  Signal/noise ratio: {snr:.1f}')
     print()
-    print_box('Verdict', verdict_lines)
 
-    # 6. Output location
-    print(f'\n Output: .aurora/friction/')
-    print(f'   friction_raw.jsonl      ({len(all_signals)} signals)')
-    print(f'   friction_analysis.json  ({len(analyses)} sessions)')
-    print(f'   friction_summary.json')
+    # Generate detailed report
+    generate_detailed_report(output_dir, analyses, summary, config, signal_counts, multi_project)
+
+    # Output files
+    print('Outputs:')
+    print(f'  📊 .aurora/friction/report.md (detailed analysis)')
+    print(f'  📋 .aurora/friction/antigen_review.md (failure patterns)')
+    print(f'  📁 .aurora/friction/*.json (raw data: {len(all_signals)} signals, {len(analyses)} sessions)')
+    print()
+
+    print('Next: Review .aurora/friction/report.md')
+    print('=' * 60)
 
     if errors:
-        print(f'\n {len(errors)} sessions failed to parse')
+        print(f'\n⚠  {len(errors)} sessions failed to parse')
 
     return 0 if status == 'USEFUL' else 1
 

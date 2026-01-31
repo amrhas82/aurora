@@ -22,14 +22,33 @@ def find_session_file(sessions_dir, session_id):
     """Find the JSONL file for a session ID."""
     # session_id format: "project/MMDD-HHMM-shortid"
     if '/' in session_id:
+        project_name = session_id.split('/')[0]
         short_id = session_id.split('/')[-1].split('-')[-1]
     else:
+        project_name = None
         short_id = session_id
 
-    # Search for matching file
-    for f in Path(sessions_dir).glob('*.jsonl'):
+    sessions_path = Path(sessions_dir)
+
+    # First try direct search in sessions_dir
+    for f in sessions_path.glob('*.jsonl'):
         if short_id in f.name:
             return f
+
+    # If not found and we have a project name, search in subdirectories
+    if project_name:
+        # Look for project directory (might have full path prefix like -home-hamr-...)
+        for subdir in sessions_path.iterdir():
+            if subdir.is_dir() and subdir.name.endswith(project_name):
+                for f in subdir.glob('*.jsonl'):
+                    if short_id in f.name:
+                        return f
+
+    # Fallback: recursive search in all subdirectories
+    for f in sessions_path.glob('**/*.jsonl'):
+        if short_id in f.name and 'sessions-index' not in f.name:
+            return f
+
     return None
 
 
@@ -274,41 +293,35 @@ def main():
         print('No BAD sessions found. Nothing to extract.')
         return 0
 
-    print(f'Found {len(bad_sessions)} BAD sessions\n')
-    print('=' * 70)
+    print(f'Extracting antigens from {len(bad_sessions)} BAD sessions...\n')
 
-    # Extract antigens
+    # Extract antigens (quiet mode)
     all_candidates = []
+    failed = []
 
     for analysis in sorted(bad_sessions, key=lambda x: x.get('friction_summary', {}).get('peak', 0), reverse=True):
         session_id = analysis['session_id']
         session_file = find_session_file(sessions_dir, session_id)
 
         if not session_file:
-            print(f'Warning: Could not find session file for {session_id}')
+            failed.append(session_id)
             continue
 
         candidates = analyze_bad_session(session_file, analysis, signals)
         all_candidates.extend(candidates)
 
-        # Print summary
-        print(f'\n SESSION: {session_id}')
-        print(f'   Peak friction: {analysis.get("friction_summary", {}).get("peak", 0)}')
-        print(f'   Turns: {analysis.get("session_metadata", {}).get("turn_count", 0)}')
-        print(f'   Anchors found: {len(candidates)}')
+    # Summarize patterns
+    pattern_counts = defaultdict(int)
+    for c in all_candidates:
+        pattern_counts[c['anchor_signal']] += 1
 
-        for i, c in enumerate(candidates):
-            print(f'\n   Anchor {i+1}: {c["anchor_signal"]}')
-            if c['files']:
-                print(f'   Files: {", ".join(c["files"][:5])}')
-            if c['tool_sequence']:
-                print(f'   Tools: {" → ".join(c["tool_sequence"][:8])}')
-            if c['errors']:
-                print(f'   Error: {c["errors"][0][:60]}...' if len(c["errors"][0]) > 60 else f'   Error: {c["errors"][0]}')
-            if c['keywords']:
-                print(f'   Keywords: {", ".join(c["keywords"][:8])}')
+    print(f'✓ Extracted {len(all_candidates)} antigen candidates')
+    for pattern, count in sorted(pattern_counts.items(), key=lambda x: -x[1])[:5]:
+        print(f'  - {count} {pattern} patterns')
 
-    print('\n' + '=' * 70)
+    if failed:
+        print(f'\n⚠  Could not find session files for {len(failed)} sessions')
+    print()
 
     # Save candidates
     output_dir = Path('.aurora/friction')
@@ -364,13 +377,7 @@ def main():
             f.write('```\n\n')
             f.write('---\n\n')
 
-    print(f'\n Output:')
-    print(f'   {output_file} ({len(all_candidates)} candidates)')
-    print(f'   {review_file} (for human review)')
-    print(f'\n Next steps:')
-    print(f'   1. Review {review_file}')
-    print(f'   2. Generate CLAUDE.md rules from patterns')
-    print(f'   3. Add rules to top of CLAUDE.md')
+    print(f'Output: .aurora/friction/antigen_review.md\n')
 
     return 0
 

@@ -23,37 +23,28 @@ Keep this managed block so 'aur init --config' can refresh the instructions.
 
 ## Learned Rules (from friction analysis)
 
-### 1. Verify Bash exit codes before claiming success
-After ANY Bash command:
+### 1. Exit Codes and Error Handling
+After ANY command:
 - Exit code 0 = success. Anything else = failure.
-- If exit code != 0, report the error clearly. Do not minimize or claim partial success.
-- If running tests, "PASSED" or "ok" must appear in output AND exit code must be 0.
 - Never say "done" or "complete" after a failed command.
+- After 2 consecutive errors, STOP and ask for guidance (don't retry blindly).
+- After Edit, verify before moving on (run tests/linter, check exit code).
+- After Read:error or Grep:error, stop and report (don't cascade failures).
 
-### 2. Stop after 2 consecutive failures
-After 2 consecutive Bash:error results:
-- STOP attempting the same approach.
-- Read and analyze the actual error output.
-- If timeout (exit 124) or killed (exit 137), the command is too heavy - simplify.
-- Ask the user for guidance rather than retry blindly.
-
-### 3. After Edit, verify before moving on
-After editing code:
-- Run the relevant test or linter.
-- Wait for completion and check exit code.
-- Only proceed if verification passes.
-
-### 4. "Implement the plan" requires incremental verification
-When given a multi-step plan:
-- Implement ONE step at a time.
-- Verify each step before proceeding to the next.
-- If a step fails, stop and report - don't cascade into more failures.
-
-### 5. When user asks "test it" or "did you test it"
-- Run the actual test command.
-- Wait for full output.
-- Report exact results: pass count, fail count, exit code.
+### 2. Testing and Verification
+- Implement incrementally: ONE step at a time, verify each before proceeding.
+- When user asks "test it" or "did you test it", run actual tests and report exact results (pass count, fail count, exit code).
 - If tests fail, show which tests failed and why.
+
+### 3. Detect Stuck Patterns
+- If calling the same tool 3+ times with no progress, STOP.
+- Analyze why the approach isn't working and try a different tool or ask user.
+
+### 4. Resource Limits
+- After user interrupt (Ctrl+C/ESC), acknowledge immediately and ask before resuming.
+- After timeout (exit 124) or kill (exit 137), the operation is too expensive:
+  - Use simpler alternatives (Glob instead of find, targeted Grep).
+  - Break into smaller chunks or ask if full scan is necessary.
 
 ---
 

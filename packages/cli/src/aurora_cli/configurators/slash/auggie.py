@@ -6,7 +6,6 @@ Configures slash commands for Auggie AI in .augment/commands/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
     "search": """---
@@ -27,6 +26,12 @@ tags: [aurora, search, memory]
 name: Aurora: Plan
 description: Create implementation plan [goal | goals.json]
 argument-hint: request or feature description
+category: Aurora
+tags: [aurora, planning]
+---""",
+    "tasks": """---
+name: Aurora: Tasks
+description: Regenerate tasks from PRD [plan-id]
 category: Aurora
 tags: [aurora, planning]
 ---""",
@@ -51,6 +56,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".augment/commands/aurora-search.md",
     "get": ".augment/commands/aurora-get.md",
     "plan": ".augment/commands/aurora-plan.md",
+    "tasks": ".augment/commands/aurora-tasks.md",
     "implement": ".augment/commands/aurora-implement.md",
     "archive": ".augment/commands/aurora-archive.md",
 }
@@ -123,6 +129,7 @@ class AuggieSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

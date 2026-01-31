@@ -14,7 +14,6 @@ from typing import Any
 
 from aurora_core.chunks.base import Chunk
 
-
 # ============================================================================
 # Mock LLM
 # ============================================================================
@@ -142,7 +141,7 @@ class MockLLM:
         prompt: str,
         temperature: float = 0.7,
         max_tokens: int | None = None,
-        **kwargs: Any,
+        **_kwargs: Any,
     ) -> MockLLMResponse:
         """Generate completion for prompt.
 

@@ -289,7 +289,6 @@ class TestBackupDatabase:
         backup_path = backup_database(str(db_path))
 
         # Extract timestamp from filename
-        # Format: original.db.bak.YYYYMMDD_HHMMSS
         parts = backup_path.split(".bak.")
         assert len(parts) == 2
         timestamp = parts[1]

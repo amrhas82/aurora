@@ -16,7 +16,7 @@ import logging
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -38,7 +38,6 @@ from aurora_cli.planning.results import (
     PlanSummary,
     ShowResult,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -100,19 +99,6 @@ def validate_plan_structure(plan_dir: Path, plan_id: str) -> tuple[list[str], li
         file_path = plan_dir / filename
         if not file_path.exists():
             errors.append(f"Missing required file: {filename} ({description})")
-
-    # Check optional capability spec files
-    optional_files = [
-        (f"specs/{plan_id}-planning.md", "Planning capability spec"),
-        (f"specs/{plan_id}-commands.md", "Commands capability spec"),
-        (f"specs/{plan_id}-validation.md", "Validation capability spec"),
-        (f"specs/{plan_id}-schemas.md", "Schemas capability spec"),
-    ]
-
-    for filename, description in optional_files:
-        file_path = plan_dir / filename
-        if not file_path.exists():
-            warnings.append(f"Missing optional file: {filename} ({description})")
 
     # Validate agents.json if it exists
     agents_json = plan_dir / "agents.json"
@@ -241,7 +227,7 @@ def _get_plans_dir(config: Config | None = None) -> Path:
 
     """
     if config is not None and hasattr(config, "get_plans_path"):
-        return Path(config.get_plans_path()).expanduser().resolve()
+        return Path(config.get_plans_path()).expanduser().resolve()  # type: ignore[attr-defined]
     return get_default_plans_path()
 
 
@@ -273,7 +259,7 @@ def _save_manifest(plans_dir: Path, manifest: PlanManifest) -> None:
 
     """
     manifest_path = plans_dir / "manifest.json"
-    manifest.updated_at = datetime.utcnow()
+    manifest.updated_at = datetime.now(timezone.utc)
     manifest_path.write_text(manifest.model_dump_json(indent=2))
 
 
@@ -540,26 +526,12 @@ def show_plan(
             error=VALIDATION_MESSAGES["PLAN_FILE_CORRUPT"].format(file=str(agents_json)),
         )
 
-    # Check file status (all 8 files)
+    # Check file status (base files only)
     files_status = {
-        # Base files
         "plan.md": (plan_dir / "plan.md").exists(),
         "prd.md": (plan_dir / "prd.md").exists(),
         "tasks.md": (plan_dir / "tasks.md").exists(),
         "agents.json": True,
-        # Capability specs
-        f"specs/{plan.plan_id}-planning.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-planning.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-commands.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-commands.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-validation.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-validation.md"
-        ).exists(),
-        f"specs/{plan.plan_id}-schemas.md": (
-            plan_dir / "specs" / f"{plan.plan_id}-schemas.md"
-        ).exists(),
     }
 
     return ShowResult(
@@ -572,14 +544,14 @@ def show_plan(
 
 def archive_plan(
     plan_id: str,
-    force: bool = False,
+    _force: bool = False,
     config: Config | None = None,
 ) -> ArchiveResult:
     """Archive plan with atomic move and rollback on failure.
 
     Args:
         plan_id: Plan ID to archive
-        force: Skip confirmation (for programmatic use)
+        _force: Skip confirmation (reserved for future use)
         config: Optional CLI configuration
 
     Returns:
@@ -641,7 +613,7 @@ def archive_plan(
     try:
         # Update plan metadata
         plan.status = PlanStatus.ARCHIVED
-        plan.archived_at = datetime.utcnow()
+        plan.archived_at = datetime.now(timezone.utc)
         plan.duration_days = (plan.archived_at - plan.created_at).days
 
         # Write updated agents.json
@@ -678,29 +650,17 @@ def archive_plan(
 def _generate_plan_id(goal: str, plans_dir: Path) -> str:
     """Generate a unique plan ID from goal.
 
-    Format: NNNN-slug where NNNN is sequential number and slug
-    is derived from goal (lowercase, hyphenated, truncated).
+    Format: slug derived from goal (lowercase, hyphenated, truncated).
+    If slug already exists, it will be overwritten (re-running same goal = replace failed attempt).
 
     Args:
         goal: The plan goal text
         plans_dir: Plans directory to check for existing IDs
 
     Returns:
-        Unique plan ID string
+        Plan ID string (slug only, no number prefix)
 
     """
-    existing_ids = _get_existing_plan_ids(plans_dir)
-
-    # Find next number
-    max_num = 0
-    for plan_id in existing_ids:
-        match = re.match(r"^(\d+)-", plan_id)
-        if match:
-            num = int(match.group(1))
-            max_num = max(max_num, num)
-
-    next_num = max_num + 1
-
     # Generate slug from goal - extract 3-4 meaningful words
     words = goal.lower()
     words = re.sub(r"[^a-z0-9\s]", "", words)  # Remove special chars
@@ -766,7 +726,7 @@ def _generate_plan_id(goal: str, plans_dir: Path) -> str:
     if not slug:
         slug = "plan"
 
-    return f"{next_num:04d}-{slug}"
+    return slug
 
 
 def _validate_goal(goal: str) -> tuple[bool, str | None]:
@@ -864,7 +824,7 @@ def _write_goals_only(
     """Write only goals.json to disk (for aur goals command).
 
     Per PRD-0026, aur goals creates ONLY goals.json. The /plan skill
-    will later read this and generate prd.md, tasks.md, and specs/.
+    will later read this and generate prd.md, design.md, and tasks.md.
 
     Args:
         plan: Plan object with subgoals and agent assignments
@@ -910,14 +870,16 @@ def _write_goals_only(
 
 
 def _write_plan_files(plan: Plan, plan_dir: Path) -> None:
-    """Write all 8 plan files to disk using templates with atomic operation.
+    """Write all plan files to disk using templates with atomic operation.
 
     Generates files in a temporary directory first, then atomically moves
     them to the final location. This ensures users never see partial plans.
 
-    Generates:
-    - 4 base files: plan.md, prd.md, tasks.md, agents.json
-    - 4 capability specs: specs/{plan-id}-{planning,commands,validation,schemas}.md
+    Generates 4 base files:
+    - plan.md: Overview and subgoal breakdown
+    - prd.md: Product requirements document
+    - tasks.md: Implementation task list
+    - agents.json: Machine-readable plan data
 
     Args:
         plan: Plan to write
@@ -1181,6 +1143,9 @@ def generate_goals_json(
             # Convert enum to string if needed
             match_quality = match_quality.value
 
+        # Get source_file (may be None for legacy decompositions)
+        source_file = getattr(sg, "source_file", None) or None
+
         subgoal_objects.append(
             SubgoalData(
                 id=sg.id,
@@ -1190,6 +1155,7 @@ def generate_goals_json(
                 ideal_agent_desc=ideal_agent_desc,
                 agent=sg.assigned_agent,
                 match_quality=match_quality,
+                source_file=source_file,
                 dependencies=clean_deps,
             ),
         )
@@ -1198,7 +1164,7 @@ def generate_goals_json(
     goals = Goals(
         id=plan_id,
         title=goal,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         status="ready_for_planning",
         memory_context=memory_objects,
         subgoals=subgoal_objects,
@@ -1213,7 +1179,8 @@ def _decompose_with_soar(
     config: Config | None = None,
     context_files: list[str] | None = None,
     show_phases: bool = True,
-) -> tuple[list[Subgoal], dict, str, list[tuple[str, float]]]:
+    no_cache: bool = False,
+) -> tuple[list[Subgoal], dict, str, list[tuple[str, float]], str]:
     """Decompose goal using SOAROrchestrator with mature 3-tier agent matching.
 
     This uses the full SOAR pipeline (phases 1-4) for decomposition:
@@ -1227,13 +1194,15 @@ def _decompose_with_soar(
         config: Optional CLI configuration
         context_files: Optional list of context file paths
         show_phases: If True (default), display phase progress to terminal
+        no_cache: If True, skip cache and force fresh decomposition
 
     Returns:
         Tuple of:
         - subgoals: List of Subgoal objects with agent assignments
         - file_resolutions: Dict mapping subgoal_id to resolved files
-        - decomposition_source: String indicating source ("soar_llm")
+        - decomposition_source: String indicating source ("soar" or "cached")
         - memory_context: List of (file_path, score) tuples
+        - complexity: Complexity assessment from SOAR Phase 1 (SIMPLE/MEDIUM/COMPLEX)
 
     """
 
@@ -1279,6 +1248,7 @@ def _decompose_with_soar(
                 console.print(
                     f"\n[green][LLM -> {tool}][/] Phase {phase_num}: {phase_name.title()}",
                 )
+            # Don't show "Loading cached..." here - will show after with full details
             console.print(f"  {description}")
         else:  # status == "after"
             # Print phase result
@@ -1288,9 +1258,11 @@ def _decompose_with_soar(
             elif phase_name == "retrieve":
                 chunks = result.get("chunks_retrieved", 0)
                 console.print(f"  [cyan]Matched: {chunks} chunks from memory[/]")
+                # Cache hit indicator will be shown after execute() returns
             elif phase_name == "decompose":
                 count = result.get("subgoal_count", 0)
-                console.print(f"  [cyan]Identified: {count} subgoals[/]")
+                # Don't show cache status here - consolidated message shown after execute()
+                console.print(f"  [cyan]{'Loaded' if result.get('cached') else 'Identified'}: {count} subgoals[/]")
             elif phase_name == "verify":
                 agents = result.get("agents_assigned", 0)
                 console.print(f"  [cyan]Assigned: {agents} agents[/]")
@@ -1337,7 +1309,7 @@ def _decompose_with_soar(
     if config:
         # Extract relevant config as dict
         if hasattr(config, "to_dict"):
-            config_dict = config.to_dict()
+            config_dict = config.to_dict()  # type: ignore[attr-defined]
         elif hasattr(config, "__dict__"):
             config_dict = {k: v for k, v in vars(config).items() if not k.startswith("_")}
 
@@ -1351,12 +1323,76 @@ def _decompose_with_soar(
         phase_callback=phase_callback if show_phases else None,
     )
 
+    # If no_cache, delete matching goals.json to force fresh decomposition
+    if no_cache:
+        from pathlib import Path
+
+        aurora_dir = Path.cwd() / ".aurora" / "plans" / "active"
+        if aurora_dir.exists():
+            query_normalized = " ".join(goal.lower().split())
+            for plan_dir in aurora_dir.iterdir():
+                if not plan_dir.is_dir():
+                    continue
+                goals_file = plan_dir / "goals.json"
+                if goals_file.exists():
+                    try:
+                        import json
+
+                        goals_data = json.loads(goals_file.read_text(encoding="utf-8"))
+                        title = goals_data.get("title", "")
+                        title_normalized = " ".join(title.lower().split())
+                        if title_normalized == query_normalized:
+                            # Remove the entire plan directory to force fresh
+                            import shutil
+
+                            shutil.rmtree(plan_dir)
+                            if show_phases:
+                                console.print(f"  [yellow]Cleared cached plan: {plan_dir.name}[/]")
+                    except Exception:
+                        pass  # Ignore errors, just skip
+
     # Execute phases 1-4 only
     result = orchestrator.execute(
         query=goal,
         context_files=context_files,
         stop_after_verify=True,
     )
+
+    # Check for cache hit and display indicator (consolidated single message)
+    metadata = result.get("metadata", {})
+    cache_source = metadata.get("cache_source")
+    is_cache_hit = metadata.get("cache_hit", False) or cache_source
+    if is_cache_hit and show_phases:
+        # Determine cache source type
+        if cache_source:
+            cache_source_str = str(cache_source)
+            if "goals.json" in cache_source_str:
+                source_type = "goals.json"
+            elif "/logs/conversations/" in cache_source_str:
+                source_type = "previous SOAR conversation"
+            else:
+                source_type = "cache"
+        else:
+            source_type = "memory"
+
+        console.print(
+            f"  [green]✓ Using cached decomposition from {source_type}[/] "
+            "[dim](use --no-cache for fresh)[/]"
+        )
+
+    # Check for verification failure in phase metadata
+    phases_metadata = metadata.get("phases", {})
+    if "verification_failure" in phases_metadata:
+        verification_error = phases_metadata["verification_failure"]
+        feedback = verification_error.get("feedback", "Unknown verification error")
+        issues = verification_error.get("issues", [])
+        error_details = f": {', '.join(issues)}" if issues else ""
+        logger.error(f"SOAR verification failed{error_details}")
+        # Return empty subgoals to trigger error handling in create_plan
+        return [], {}, "failed", [], "UNKNOWN"
+
+    # Extract SOAR's complexity assessment from Phase 1
+    soar_complexity = result.get("complexity", "MEDIUM")
 
     # Map result to Subgoal objects
     # Note: Pydantic validators handle coercion (adding '@' to agents, 'sg-' to IDs)
@@ -1398,16 +1434,37 @@ def _decompose_with_soar(
                 agent_info.get("ideal_agent_desc", ""),
             ),
             match_quality=match_quality,
+            source_file=sg_data.get("source_file"),
         )
         subgoals.append(subgoal)
 
     # Extract memory context
     memory_context = result.get("memory_context", [])
 
+    # Post-process: match subgoals to source files from memory_context
+    # if LLM didn't provide source_file, try to match based on keywords
+    if memory_context:
+        file_paths = [fp for fp, _ in memory_context]
+        for sg in subgoals:
+            if not sg.source_file:
+                # Try to match file based on keywords in description
+                desc_lower = sg.description.lower()
+                for fp in file_paths:
+                    # Extract filename without extension
+                    fname = fp.split("/")[-1].replace(".py", "").replace(".md", "")
+                    fname_parts = fname.replace("_", " ").replace("-", " ").lower().split()
+                    # Check if any file keyword appears in description
+                    if any(part in desc_lower for part in fname_parts if len(part) > 3):
+                        sg.source_file = fp
+                        break
+
     # File resolutions (not yet populated by SOAR, could be added later)
     file_resolutions: dict = {}
 
-    return subgoals, file_resolutions, "soar_llm", memory_context
+    # Determine decomposition source
+    decomposition_source = "cached" if is_cache_hit else "soar"
+
+    return subgoals, file_resolutions, decomposition_source, memory_context, soar_complexity
 
 
 def create_plan(
@@ -1419,6 +1476,7 @@ def create_plan(
     non_interactive: bool = False,
     goals_only: bool = False,
     use_soar_decomposition: bool = True,
+    no_cache: bool = False,
 ) -> PlanResult:
     """Create a new plan with SOAR-based goal decomposition.
 
@@ -1437,6 +1495,7 @@ def create_plan(
         use_soar_decomposition: If True (default), use SOAROrchestrator phases 1-4
             for mature 3-tier agent matching (excellent/acceptable/spawned).
             If False, use legacy PlanDecomposer.
+        no_cache: If True, skip cache and force fresh decomposition.
 
     Returns:
         PlanResult with plan details or error message
@@ -1476,15 +1535,50 @@ def create_plan(
         if use_soar_decomposition:
             # Use mature SOAROrchestrator with 3-tier agent matching
             # SOAR phase 2 handles memory retrieval with proper background loading
-            subgoals, file_resolutions, decomposition_source, soar_memory_context = (
-                _decompose_with_soar(
-                    goal=goal,
-                    config=config,
-                    context_files=[str(f) for f in context_files] if context_files else None,
+            try:
+                subgoals, file_resolutions, decomposition_source, soar_memory_context, soar_complexity = (
+                    _decompose_with_soar(
+                        goal=goal,
+                        config=config,
+                        context_files=[str(f) for f in context_files] if context_files else None,
+                        no_cache=no_cache,
+                    )
                 )
-            )
-            # Use SOAR's memory context (from phase 2 retrieve)
-            memory_context = soar_memory_context or []
+                # Use SOAR's memory context (from phase 2 retrieve)
+                memory_context = soar_memory_context or []
+
+                # Use SOAR's complexity assessment instead of reassessing locally
+                # This ensures consistency with Phase 1 display
+                # Map SOAR complexity values to CLI Complexity enum
+                complexity_map = {
+                    "SIMPLE": Complexity.SIMPLE,
+                    "MEDIUM": Complexity.MODERATE,  # SOAR uses MEDIUM, CLI uses MODERATE
+                    "COMPLEX": Complexity.COMPLEX,
+                    "CRITICAL": Complexity.COMPLEX,  # Map CRITICAL to COMPLEX
+                }
+                complexity = complexity_map.get(
+                    soar_complexity.upper(),
+                    Complexity.MODERATE,  # Default to MODERATE if unknown
+                )
+
+                # Check if SOAR decomposition failed (returns empty subgoals)
+                # This happens when verification fails (e.g., circular dependencies)
+                if not subgoals:
+                    logger.error("SOAR decomposition failed - returning error instead of fallback")
+                    return PlanResult(
+                        success=False,
+                        error=(
+                            "Failed to decompose goal: verification failed after retry. "
+                            "This may be due to circular dependencies or invalid decomposition. "
+                            "Please rephrase your goal or try a simpler approach."
+                        ),
+                    )
+            except Exception as e:
+                logger.error("SOAR decomposition raised exception: %s", e)
+                return PlanResult(
+                    success=False,
+                    error=f"Failed to decompose goal: {e}",
+                )
         else:
             # Legacy PlanDecomposer (only used if explicitly disabled via config)
             from aurora_cli.planning.decompose import PlanDecomposer
@@ -1534,8 +1628,12 @@ def create_plan(
 
         memory_context = search_memory_for_goal(goal, config=config, limit=10, threshold=0.3)
 
-    # Reassess complexity now that we have actual subgoals
-    complexity = _assess_complexity(goal, subgoals)
+    # Note: For SOAR path, complexity is set from SOAR's Phase 1 assessment above.
+    # For non-SOAR paths, complexity was assessed earlier (line 1508) and may be
+    # reassessed here based on actual subgoals if needed.
+    if not use_soar_decomposition or not auto_decompose:
+        # Reassess complexity for non-SOAR paths based on actual subgoals
+        complexity = _assess_complexity(goal, subgoals)
 
     # Sanitize dependencies - remove self-references that break validation
     for sg in subgoals:
@@ -1719,7 +1817,7 @@ def create_plan(
     try:
         if goals_only:
             # aur goals: Only create directory and goals.json (per PRD-0026)
-            # /plan skill will later add prd.md, tasks.md, specs/
+            # /plan skill will later add plan.md, prd.md, design.md, tasks.md
             _write_goals_only(plan, plan_path, memory_context or [], agent_gaps=agent_gaps)
         else:
             # Full plan creation (for /plan skill or legacy mode)
@@ -1752,7 +1850,7 @@ def create_plan(
 
 def _decompose_goal_soar(
     goal: str,
-    context_files: list[Path] | None = None,
+    _context_files: list[Path] | None = None,
 ) -> list[Subgoal]:
     """Decompose goal into subgoals using SOAR-inspired heuristics.
 
@@ -1762,7 +1860,7 @@ def _decompose_goal_soar(
 
     Args:
         goal: The high-level goal to decompose
-        context_files: Optional context files for informed decomposition
+        _context_files: Optional context files for informed decomposition (reserved for future use)
 
     Returns:
         List of Subgoal objects

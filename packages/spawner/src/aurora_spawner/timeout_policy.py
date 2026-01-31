@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -169,11 +168,11 @@ class TimeoutPolicy:
             return self.initial_timeout
         return self.timeout
 
-    def should_extend(self, elapsed: float, last_activity: float, current_timeout: float) -> bool:
+    def should_extend(self, _elapsed: float, last_activity: float, current_timeout: float) -> bool:
         """Check if timeout should be extended.
 
         Args:
-            elapsed: Total elapsed time since spawn start
+            _elapsed: Total elapsed time since spawn start (reserved for future policy logic)
             last_activity: Time since last activity (stdout/stderr)
             current_timeout: Current timeout value
 
@@ -244,16 +243,16 @@ class TerminationPolicy:
         self,
         stdout: str,
         stderr: str,
-        elapsed: float,
-        last_activity: float,
+        _elapsed: float,
+        _last_activity: float,
     ) -> tuple[bool, str]:
         """Check if process should be terminated early.
 
         Args:
             stdout: Current stdout content
             stderr: Current stderr content
-            elapsed: Total elapsed time
-            last_activity: Time since last activity
+            _elapsed: Total elapsed time (reserved for future termination logic)
+            _last_activity: Time since last activity (reserved for future termination logic)
 
         Returns:
             Tuple of (should_terminate, reason)

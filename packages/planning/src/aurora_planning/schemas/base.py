@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 from aurora_planning.validators.constants import VALIDATION_MESSAGES
 
 
-def validate_non_empty_string(v: str, field_name: str, error_msg: str) -> str:
+def validate_non_empty_string(v: str, _field_name: str, error_msg: str) -> str:
     """Validate that a string is not empty."""
     if not v or len(v.strip()) == 0:
         raise ValueError(error_msg)

@@ -7,12 +7,12 @@ Uses markdown heading format for frontmatter instead of YAML.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
     "search": 'Search indexed code ["query" --limit N --type X]',
     "get": "Retrieve last search result [N]",
     "plan": "Create implementation plan [goal | goals.json]",
+    "tasks": "Regenerate tasks from PRD [plan-id]",
     "implement": "Execute plan tasks [plan-id]",
     "archive": "Archive completed plan [plan-id]",
 }
@@ -22,6 +22,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".clinerules/workflows/aurora-search.md",
     "get": ".clinerules/workflows/aurora-get.md",
     "plan": ".clinerules/workflows/aurora-plan.md",
+    "tasks": ".clinerules/workflows/aurora-tasks.md",
     "implement": ".clinerules/workflows/aurora-implement.md",
     "archive": ".clinerules/workflows/aurora-archive.md",
 }

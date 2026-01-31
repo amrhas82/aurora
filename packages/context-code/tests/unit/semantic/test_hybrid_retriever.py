@@ -35,7 +35,7 @@ class MockStore:
     def __init__(self, chunks=None):
         self.chunks = chunks or []
 
-    def retrieve_by_activation(self, min_activation=0.0, limit=100):
+    def retrieve_by_activation(self, _min_activation=0.0, limit=100):
         """Retrieve chunks by activation."""
         return self.chunks[:limit]
 

@@ -755,7 +755,7 @@ class TestCallLLMWithRetry:
     def test_call_llm_with_retry_logs_retry_attempts_when_verbose(
         self,
         mock_logger: Mock,
-        mock_sleep: Mock,
+        _mock_sleep: Mock,
     ) -> None:
         """Test _call_llm_with_retry() logs retry attempts with verbose=True."""
         mock_llm = Mock()

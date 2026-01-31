@@ -7,12 +7,12 @@ using TOML format (extends TomlSlashCommandConfigurator).
 from aurora_cli.configurators.slash.toml_base import TomlSlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command (TOML format)
 FILE_PATHS: dict[str, str] = {
     "search": ".gemini/commands/aurora/search.toml",
     "get": ".gemini/commands/aurora/get.toml",
     "plan": ".gemini/commands/aurora/plan.toml",
+    "tasks": ".gemini/commands/aurora/tasks.toml",
     "implement": ".gemini/commands/aurora/implement.toml",
     "archive": ".gemini/commands/aurora/archive.toml",
 }
@@ -23,6 +23,7 @@ DESCRIPTIONS: dict[str, str] = {
     "search": "Search indexed code [query --limit N --type X]",
     "get": "Retrieve last search result [N]",
     "plan": "Create implementation plan [goal | goals.json]",
+    "tasks": "Regenerate tasks from PRD [plan-id]",
     "implement": "Execute plan tasks [plan-id]",
     "archive": "Archive completed plan [plan-id]",
 }

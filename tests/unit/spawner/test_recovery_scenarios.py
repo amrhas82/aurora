@@ -13,13 +13,7 @@ import pytest
 from aurora_spawner import SpawnResult, SpawnTask, spawn_parallel_with_recovery
 from aurora_spawner.circuit_breaker import CircuitBreaker
 from aurora_spawner.spawner import spawn_with_retry_and_fallback
-from aurora_spawner.timeout_policy import (
-    RetryPolicy,
-    RetryStrategy,
-    SpawnPolicy,
-    TimeoutMode,
-)
-
+from aurora_spawner.timeout_policy import RetryPolicy, RetryStrategy, SpawnPolicy, TimeoutMode
 
 # =============================================================================
 # PARTIAL FAILURE RECOVERY TESTS
@@ -1800,7 +1794,6 @@ class TestRecoveryMetrics:
         metrics.record_attempt("agent-1", success=True, recovery_time=1.0)
         metrics.record_attempt("agent-1", success=True, recovery_time=3.0)
 
-        # Average: (1.0 + 3.0) / 2 = 2.0
         assert metrics.avg_recovery_time("agent-1") == 2.0
 
     def test_to_dict(self):

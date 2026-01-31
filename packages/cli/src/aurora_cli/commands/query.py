@@ -19,7 +19,6 @@ from rich.panel import Panel
 
 from aurora_soar.phases.assess import assess_complexity
 
-
 console = Console()
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ def query_command(
         raise click.Abort()
 
 
-def _run_interactive(query_text: str, verbose: bool) -> None:
+def _run_interactive(query_text: str, _verbose: bool) -> None:
     """Run blocking interactive SOAR - reads stdin at each reasoning phase."""
     import os
 
@@ -278,7 +277,7 @@ def _run_interactive(query_text: str, verbose: bool) -> None:
     logger.info(f"SOAR query completed: {session_id}")
 
 
-def _run_single_shot(query_text: str, verbose: bool) -> None:
+def _run_single_shot(query_text: str, _verbose: bool) -> None:
     """Run single-shot mode - outputs phases 1-2 + guidance."""
     import os
 

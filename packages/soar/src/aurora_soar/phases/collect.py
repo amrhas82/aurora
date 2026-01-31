@@ -31,6 +31,49 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _normalize_dependency(dep: int | str) -> int | None:
+    """Normalize a dependency to 0-indexed integer.
+
+    Handles both formats:
+    - Integer: 0, 1, 2 (already 0-indexed) → returned as-is
+    - String: "sg-1", "sg-2" (1-indexed) → converted to 0, 1
+
+    Args:
+        dep: Dependency in either format
+
+    Returns:
+        0-indexed integer, or None if invalid format
+
+    """
+    if isinstance(dep, int):
+        return dep
+    elif isinstance(dep, str) and dep.startswith("sg-"):
+        try:
+            # Convert "sg-1" to 0 (1-indexed to 0-indexed)
+            return int(dep[3:]) - 1
+        except (ValueError, IndexError):
+            return None
+    return None
+
+
+def _normalize_dependencies(deps: list[int | str]) -> list[int]:
+    """Normalize a list of dependencies to 0-indexed integers.
+
+    Args:
+        deps: List of dependencies in mixed formats
+
+    Returns:
+        List of 0-indexed integers (invalid entries filtered out)
+
+    """
+    normalized = []
+    for dep in deps:
+        norm = _normalize_dependency(dep)
+        if norm is not None:
+            normalized.append(norm)
+    return normalized
+
+
 def topological_sort(subgoals: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
     """Group subgoals into dependency waves using Kahn's algorithm.
 
@@ -55,7 +98,9 @@ def topological_sort(subgoals: list[dict[str, Any]]) -> list[list[dict[str, Any]
     # Build graph and count in-degrees
     for sg in subgoals:
         idx = sg["subgoal_index"]
-        deps = sg.get("depends_on", [])
+        raw_deps = sg.get("depends_on", [])
+        # Normalize dependencies: handle both int (0) and string ("sg-1") formats
+        deps = _normalize_dependencies(raw_deps)
         in_degree[idx] = len(deps)
         for dep in deps:
             if dep in graph:
@@ -119,7 +164,7 @@ async def _spawn_with_spinner(
     agent_idx: int,
     total_agents: int,
     agent_id: str,
-    on_progress: Callable[..., Any] | None,
+    _on_progress: Callable[..., Any] | None,
     max_retries: int = 2,
     fallback_to_llm: bool = True,
 ) -> SpawnResult:
@@ -245,9 +290,9 @@ class CollectResult:
 async def execute_agents(
     agent_assignments: list[tuple[int, AgentInfo]],
     subgoals: list[dict[str, Any]],
-    context: dict[str, Any],
+    _context: dict[str, Any],
     on_progress: Any = None,
-    agent_timeout: float = DEFAULT_AGENT_TIMEOUT,
+    _agent_timeout: float = DEFAULT_AGENT_TIMEOUT,
     max_retries: int = 2,
     fallback_to_llm: bool = True,
 ) -> CollectResult:
@@ -319,7 +364,9 @@ async def execute_agents(
                 continue
 
             # Inject previous outputs for dependencies
-            deps = sg.get("depends_on", [])
+            raw_deps = sg.get("depends_on", [])
+            # Normalize dependencies: handle both int (0) and string ("sg-1") formats
+            deps = _normalize_dependencies(raw_deps)
             original_prompt = sg.get("prompt") or sg.get("description", "")
 
             if deps:
@@ -801,7 +848,7 @@ async def _mock_agent_execution(
     idx: int,
     subgoal: dict[str, Any],
     agent: AgentInfo,
-    context: dict[str, Any],
+    _context: dict[str, Any],
 ) -> AgentOutput:
     """Mock agent execution (placeholder for actual agent integration).
 

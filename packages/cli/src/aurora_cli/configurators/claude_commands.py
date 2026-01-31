@@ -41,7 +41,7 @@ class ClaudeCommandsConfigurator:
     async def configure(
         self,
         project_path: Path,
-        aurora_dir: str,
+        _aurora_dir: str,
     ) -> list[str]:
         """Configure Claude Code slash commands.
 

@@ -311,6 +311,27 @@ class ComplexityAssessor:
         "schema",
     }
 
+    # Vague/unspecific words - indicate user doesn't know precise target (reduce score)
+    VAGUE_WORDS = {
+        "something",
+        "somehow",
+        "maybe",
+        "general",
+        "generally",
+        "overall",
+        "around",
+        "stuff",
+        "things",
+        "better",
+        "faster",
+        "slower",
+        "worse",
+        "some",
+        "any",
+        "whatever",
+        "somewhere",
+    }
+
     # Question type patterns
     SIMPLE_QUESTION_PATTERNS = [
         r"^what is\b",
@@ -580,6 +601,12 @@ class ComplexityAssessor:
         if simple_matches:
             score -= min(len(simple_matches) * 3, 10)
             signals.append(f"simple_verbs:{list(simple_matches)[:3]}")
+
+        # Vague words (reduce score - user doesn't know precise target)
+        vague_matches = words & self.VAGUE_WORDS
+        if vague_matches:
+            score -= min(len(vague_matches) * 5, 15)
+            signals.append(f"vague_words:{list(vague_matches)[:3]}")
 
         # Detect trivial edit patterns
         trivial_edit_patterns = [
@@ -1085,7 +1112,7 @@ def _assess_tier2_llm(
         }
 
 
-def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[str, Any]:
+def assess_complexity(query: str, _llm_client: LLMClient | None = None) -> dict[str, Any]:
     """Assess query complexity using keyword-based classification.
 
     Uses ComplexityAssessor for multi-dimensional lexical analysis including:
@@ -1102,7 +1129,7 @@ def assess_complexity(query: str, llm_client: LLMClient | None = None) -> dict[s
 
     Args:
         query: User query string
-        llm_client: Ignored (kept for API compatibility)
+        _llm_client: Ignored (kept for API compatibility, reserved for future use)
 
     Returns:
         Dict with keys:

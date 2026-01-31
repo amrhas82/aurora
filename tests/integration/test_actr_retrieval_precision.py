@@ -66,7 +66,6 @@ def create_test_dataset(now: datetime):
         - graph: RelationshipGraph for spreading activation
     """
     # Define chunks with keywords and access patterns
-    # Format: (id, keywords, access_pattern)
     chunk_specs = [
         # Highly relevant to "database query" - frequently accessed
         ("db_query_exec", {"database", "query", "execute", "sql"}, "frequent"),

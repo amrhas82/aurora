@@ -12,7 +12,6 @@ from unittest.mock import Mock, patch
 import pytest
 from click.testing import CliRunner
 
-
 # Import will fail until we create goals.py
 try:
     from aurora_cli.commands.goals import goals_command
@@ -145,7 +144,7 @@ class TestToolResolution:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_tool_cli_flag_overrides_env(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -189,7 +188,7 @@ class TestToolResolution:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/cursor")
     def test_tool_env_overrides_default(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -236,7 +235,7 @@ class TestModelResolution:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_model_cli_flag_overrides_env(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -279,7 +278,7 @@ class TestModelResolution:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_model_env_overrides_default(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -322,7 +321,7 @@ class TestInvalidTool:
 
     @pytest.mark.skipif(goals_command is None, reason="goals.py not created yet")
     @patch("aurora_cli.commands.goals.shutil.which", return_value=None)
-    def test_invalid_tool_shows_error(self, mock_which, cli_runner, temp_aurora_dir, monkeypatch):
+    def test_invalid_tool_shows_error(self, _mock_which, cli_runner, temp_aurora_dir, monkeypatch):
         """Test that using a non-existent tool shows helpful error."""
         monkeypatch.chdir(temp_aurora_dir.parent)
 
@@ -345,13 +344,13 @@ class TestMemorySearchDisplay:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_shows_searching_memory_message(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
         temp_aurora_dir,
         monkeypatch,
-        capsys,
+        _capsys,
     ):
         """Test shows 'Searching memory...' progress message."""
         monkeypatch.chdir(temp_aurora_dir.parent)
@@ -407,7 +406,7 @@ class TestMemorySearchDisplay:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_displays_found_files_with_scores(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -469,7 +468,7 @@ class TestMemorySearchDisplay:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_handles_empty_memory_results(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -529,7 +528,7 @@ class TestMemorySearchDisplay:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_verbose_shows_detailed_memory_search(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -593,7 +592,7 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_displays_plan_summary_before_confirmation(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -653,7 +652,7 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_opens_goals_json_in_editor(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         mock_subprocess,
@@ -718,7 +717,7 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_waits_for_user_confirmation(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -777,7 +776,7 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_yes_flag_skips_confirmation(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -836,7 +835,7 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_can_abort_before_saving(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -899,7 +898,7 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_creates_goals_json_file(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,
@@ -967,7 +966,7 @@ class TestUserReviewFlow:
     @patch("aurora_cli.commands.goals.shutil.which", return_value="/usr/bin/claude")
     def test_shows_next_steps_message(
         self,
-        mock_which,
+        _mock_which,
         mock_create_plan,
         mock_client,
         cli_runner,

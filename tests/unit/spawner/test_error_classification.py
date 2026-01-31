@@ -10,7 +10,6 @@ This classification feeds into the circuit breaker's smart fast-fail logic.
 
 import pytest
 
-
 # We'll test the classification logic by mocking SpawnResult with various error messages
 
 
@@ -43,7 +42,10 @@ class TestPermanentErrorClassification:
             # Simulate classification logic
             error_lower = error_msg.lower()
 
-            if any(x in error_lower for x in ["unauthorized", "401", "invalid api key", "authentication failed"]):
+            if any(
+                x in error_lower
+                for x in ["unauthorized", "401", "invalid api key", "authentication failed"]
+            ):
                 failure_type = "auth_error"
             else:
                 failure_type = None
@@ -81,7 +83,15 @@ class TestPermanentErrorClassification:
         for error_msg in error_messages:
             error_lower = error_msg.lower()
 
-            if any(x in error_lower for x in ["invalid model", "model identifier", "model not found", "model not available"]):
+            if any(
+                x in error_lower
+                for x in [
+                    "invalid model",
+                    "model identifier",
+                    "model not found",
+                    "model not available",
+                ]
+            ):
                 failure_type = "invalid_model"
             else:
                 failure_type = None
@@ -100,7 +110,9 @@ class TestPermanentErrorClassification:
         for error_msg in error_messages:
             error_lower = error_msg.lower()
 
-            if any(x in error_lower for x in ["400", "bad request", "invalid request", "malformed"]):
+            if any(
+                x in error_lower for x in ["400", "bad request", "invalid request", "malformed"]
+            ):
                 failure_type = "invalid_request"
             else:
                 failure_type = None
@@ -141,7 +153,18 @@ class TestTransientErrorClassification:
         for error_msg in error_messages:
             error_lower = error_msg.lower()
 
-            if any(x in error_lower for x in ["500", "502", "503", "504", "internal server error", "bad gateway", "service unavailable"]):
+            if any(
+                x in error_lower
+                for x in [
+                    "500",
+                    "502",
+                    "503",
+                    "504",
+                    "internal server error",
+                    "bad gateway",
+                    "service unavailable",
+                ]
+            ):
                 failure_type = "transient_error"
             else:
                 failure_type = None
@@ -201,7 +224,10 @@ class TestRateLimitClassification:
         for error_msg in error_messages:
             error_lower = error_msg.lower()
 
-            if any(x in error_lower for x in ["rate limit", "429", "quota exceeded", "too many requests"]):
+            if any(
+                x in error_lower
+                for x in ["rate limit", "429", "quota exceeded", "too many requests"]
+            ):
                 failure_type = "rate_limit"
             else:
                 failure_type = None
@@ -218,7 +244,9 @@ class TestClassificationPriority:
         error_lower = error_msg.lower()
 
         # Check rate limit first (as in actual code)
-        if any(x in error_lower for x in ["rate limit", "429", "quota exceeded", "too many requests"]):
+        if any(
+            x in error_lower for x in ["rate limit", "429", "quota exceeded", "too many requests"]
+        ):
             failure_type = "rate_limit"
         elif any(x in error_lower for x in ["connection", "econnreset", "network"]):
             failure_type = "transient_error"
@@ -397,21 +425,40 @@ class TestClassificationCompleteness:
         failure_type = None
 
         # Rate limits first
-        if any(x in error_lower for x in ["rate limit", "429", "quota exceeded", "too many requests"]):
+        if any(
+            x in error_lower for x in ["rate limit", "429", "quota exceeded", "too many requests"]
+        ):
             failure_type = "rate_limit"
         # Permanent errors
-        elif any(x in error_lower for x in ["unauthorized", "401", "invalid api key", "authentication failed"]):
+        elif any(
+            x in error_lower
+            for x in ["unauthorized", "401", "invalid api key", "authentication failed"]
+        ):
             failure_type = "auth_error"
         elif any(x in error_lower for x in ["forbidden", "403", "insufficient permissions"]):
             failure_type = "forbidden"
-        elif any(x in error_lower for x in ["invalid model", "model identifier", "model not found", "model not available"]):
+        elif any(
+            x in error_lower
+            for x in ["invalid model", "model identifier", "model not found", "model not available"]
+        ):
             failure_type = "invalid_model"
         elif any(x in error_lower for x in ["400", "bad request", "invalid request", "malformed"]):
             failure_type = "invalid_request"
         elif any(x in error_lower for x in ["404", "not found", "endpoint not found"]):
             failure_type = "not_found"
         # Transient errors
-        elif any(x in error_lower for x in ["500", "502", "503", "504", "internal server error", "bad gateway", "service unavailable"]):
+        elif any(
+            x in error_lower
+            for x in [
+                "500",
+                "502",
+                "503",
+                "504",
+                "internal server error",
+                "bad gateway",
+                "service unavailable",
+            ]
+        ):
             failure_type = "transient_error"
         elif any(x in error_lower for x in ["connection", "econnreset", "network", "timeout"]):
             failure_type = "transient_error"
@@ -421,4 +468,6 @@ class TestClassificationCompleteness:
         elif any(x in error_lower for x in ["api", "inference"]):
             failure_type = "inference"
 
-        assert failure_type == expected_type, f"Expected {expected_type}, got {failure_type} for: {error_msg}"
+        assert (
+            failure_type == expected_type
+        ), f"Expected {expected_type}, got {failure_type} for: {error_msg}"

@@ -17,7 +17,6 @@ from click.testing import CliRunner
 from aurora_cli.commands.doctor import doctor_command
 from aurora_cli.config import Config
 
-
 # Skip all tests in this file - MCP functionality is dormant (PRD-0024)
 pytestmark = pytest.mark.skip(reason="MCP functionality dormant - tests deprecated (PRD-0024)")
 
@@ -201,7 +200,6 @@ class TestDoctorMCPChecksIntegration:
                 # Only provide 2 of 3 required methods
                 mock_tools_class.aurora_query = MagicMock()
                 mock_tools_class.aurora_search = MagicMock()
-                # Missing: aurora_get
 
                 mock_module.AuroraMCPTools = mock_tools_class
 

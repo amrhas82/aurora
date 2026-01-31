@@ -137,6 +137,11 @@ class SOAROrchestrator:
         # Initialize query metrics tracker (Task 4.5.3)
         self.query_metrics = QueryMetrics()
 
+        # Initialize LLM circuit breaker for decompose phase
+        from aurora_spawner.circuit_breaker import get_circuit_breaker
+
+        self._llm_circuit_breaker = get_circuit_breaker()
+
         # Configure health monitoring (combined proactive + early detection)
         self._configure_health_monitoring()
 
@@ -275,7 +280,7 @@ class SOAROrchestrator:
         self,
         query: str,
         verbosity: str = "NORMAL",
-        max_cost_usd: float | None = None,
+        _max_cost_usd: float | None = None,
         context_files: list[str] | None = None,
         stop_after_verify: bool = False,
     ) -> dict[str, Any]:
@@ -377,13 +382,50 @@ class SOAROrchestrator:
                 logger.info("SIMPLE query detected, bypassing decomposition")
                 return self._execute_simple_path(query, phase2_result, verbosity)
 
-            # Phase 3: Decompose query
-            phase3_result = self._phase3_decompose(
-                query,
-                phase2_result,
-                phase1_result["complexity"],
-            )
-            self._phase_metadata["phase3_decompose"] = phase3_result
+            # Check SOAR cache for a previous successful decomposition
+            cache_hit = self._check_soar_cache_hit(phase2_result)
+            if cache_hit is not None:
+                logger.info("SOAR cache hit: reusing previous decomposition")
+                self._phase_metadata["cache_hit"] = True
+                phase3_result = cache_hit
+                self._phase_metadata["phase3_decompose"] = phase3_result
+
+                # Trigger phase callback to show cached decomposition in UX
+                decomposition = phase3_result.get("decomposition", phase3_result)
+                subgoal_count = len(decomposition.get("subgoals", []))
+                if self.phase_callback:
+                    self.phase_callback(
+                        "decompose",
+                        "before",
+                        {"query": query, "cached": True},
+                    )
+                    self.phase_callback(
+                        "decompose",
+                        "after",
+                        {
+                            "subgoal_count": subgoal_count,
+                            "cached": True,
+                            "cache_source": phase3_result.get("_cache_source", "unknown"),
+                        },
+                    )
+
+                # For goals-only mode with cache hit, return directly without re-verifying
+                # (cached decomposition was already verified when first saved)
+                if stop_after_verify and cache_hit.get("_cache_source"):
+                    return self._build_cached_verify_result(
+                        query=query,
+                        complexity=phase1_result["complexity"],
+                        context=phase2_result,
+                        cache_hit=cache_hit,
+                    )
+            else:
+                # Phase 3: Decompose query
+                phase3_result = self._phase3_decompose(
+                    query,
+                    phase2_result,
+                    phase1_result["complexity"],
+                )
+                self._phase_metadata["phase3_decompose"] = phase3_result
 
             # Check if Phase 3 failed before proceeding
             if phase3_result.get("_error") is not None:
@@ -403,6 +445,7 @@ class SOAROrchestrator:
             passed, agent_assignments, issues = verify.verify_lite(
                 decomposition_dict,
                 available_agents,
+                complexity=phase1_result["complexity"],
             )
 
             # Build subgoal summary for display and output formatting
@@ -468,7 +511,7 @@ class SOAROrchestrator:
                     query,
                     phase2_result,
                     phase1_result["complexity"],
-                    retry_feedback=retry_feedback,
+                    _retry_feedback=retry_feedback,
                 )
                 self._phase_metadata["phase3_decompose_retry"] = phase3_result
 
@@ -477,6 +520,7 @@ class SOAROrchestrator:
                 passed, agent_assignments, issues = verify.verify_lite(
                     decomposition_dict,
                     available_agents,
+                    complexity=phase1_result["complexity"],
                 )
 
                 # Rebuild subgoal details for retry
@@ -690,7 +734,7 @@ class SOAROrchestrator:
         self._invoke_callback("assess", "before", {})
         start_time = time.time()
         try:
-            result = assess.assess_complexity(query, llm_client=self.reasoning_llm)
+            result = assess.assess_complexity(query, _llm_client=self.reasoning_llm)
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             self._invoke_callback(
@@ -778,7 +822,7 @@ class SOAROrchestrator:
         query: str,
         context: dict[str, Any],
         complexity: str,
-        retry_feedback: str | None = None,
+        _retry_feedback: str | None = None,
     ) -> dict[str, Any]:
         """Execute Phase 3: Query Decomposition.
 
@@ -792,6 +836,21 @@ class SOAROrchestrator:
         logger.info("Phase 3: Decomposing query")
         self._invoke_callback("decompose", "before", {})
         start_time = time.time()
+
+        # Check circuit breaker before making LLM call
+        agent_key = f"decompose:{getattr(self.reasoning_llm, '_tool', 'unknown')}"
+        skip, reason = self._llm_circuit_breaker.should_skip(agent_key)
+        if skip:
+            logger.warning(f"Phase 3 skipped by circuit breaker: {reason}")
+            result = {
+                "goal": query,
+                "subgoals": [],
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": f"Circuit breaker: {reason}",
+            }
+            self._invoke_callback("decompose", "after", {"subgoal_count": 0, "error": reason})
+            return result
+
         try:
             # Get available agents from registry or discovery
             agents = self._list_agents()
@@ -803,6 +862,7 @@ class SOAROrchestrator:
                 complexity=complexity,
                 llm_client=self.reasoning_llm,
                 available_agents=available_agents,
+                retry_feedback=_retry_feedback,
             )
             result = phase_result.to_dict()
             # Add convenience fields for E2E tests
@@ -810,6 +870,23 @@ class SOAROrchestrator:
             result["_timing_ms"] = (time.time() - start_time) * 1000
             result["_error"] = None
             self._invoke_callback("decompose", "after", {"subgoal_count": result["subgoals_total"]})
+
+            # Record success to close circuit if it was half-open
+            self._llm_circuit_breaker.record_success(agent_key)
+
+            return result
+        except RuntimeError as e:
+            # Classify error and record in circuit breaker
+            failure_type = self._classify_api_error(str(e))
+            self._llm_circuit_breaker.record_failure(agent_key, failure_type=failure_type)
+            logger.error(f"Phase 3 failed (type={failure_type}): {e}")
+            result = {
+                "goal": query,
+                "subgoals": [],
+                "_timing_ms": (time.time() - start_time) * 1000,
+                "_error": str(e),
+            }
+            self._invoke_callback("decompose", "after", {"subgoal_count": 0, "error": str(e)})
             return result
         except Exception as e:
             logger.error(f"Phase 3 failed: {e}")
@@ -876,9 +953,9 @@ class SOAROrchestrator:
                 collect.execute_agents(
                     agent_assignments=agent_assignments,
                     subgoals=subgoals,
-                    context=context,
+                    _context=context,
                     on_progress=on_progress,
-                    agent_timeout=agent_timeout,
+                    _agent_timeout=agent_timeout,
                     max_retries=max_retries,
                     fallback_to_llm=fallback_to_llm,
                 ),
@@ -1058,29 +1135,44 @@ class SOAROrchestrator:
             Verbosity(verbosity.lower()),
         )
 
-        # Log conversation (async, non-blocking)
-        execution_summary = {
-            "duration_ms": metadata.get("total_duration_ms", 0),
-            "overall_score": synthesis_result.confidence,
-            "cached": record_result.cached,
-            "cost_usd": metadata.get("total_cost_usd", 0.0),
-            "tokens_used": metadata.get("tokens_used", {}),
-        }
+        # Only log+index successful runs (confidence >= 0.5)
+        # Failed runs pollute retrieval with error logs
+        log_path = None
+        if synthesis_result.confidence >= 0.5:
+            execution_summary = {
+                "duration_ms": metadata.get("total_duration_ms", 0),
+                "overall_score": synthesis_result.confidence,
+                "cached": record_result.cached,
+                "cost_usd": metadata.get("total_cost_usd", 0.0),
+                "tokens_used": metadata.get("tokens_used", {}),
+            }
 
-        log_path = self.conversation_logger.log_interaction(
-            query=self._query,
-            query_id=self._query_id,
-            phase_data=metadata.get("phases", {}),
-            execution_summary=execution_summary,
-            metadata=metadata,
-        )
+            log_path = self.conversation_logger.log_interaction(
+                query=self._query,
+                query_id=self._query_id,
+                phase_data=metadata.get("phases", {}),
+                execution_summary=execution_summary,
+                metadata=metadata,
+            )
 
-        # Auto-index the conversation log as knowledge chunk
-        if log_path and self.store:
-            self._index_conversation_log(log_path)
+            # Auto-index the conversation log as knowledge chunk
+            if log_path and self.store:
+                self._index_conversation_log(log_path)
+        else:
+            logger.info(
+                "Skipping conversation log (confidence=%.2f < 0.5)",
+                synthesis_result.confidence,
+            )
 
         self._invoke_callback("respond", "after", {"formatted": True})
-        return response.to_dict()
+
+        # Build result with log path in metadata
+        result = response.to_dict()
+        if "metadata" not in result:
+            result["metadata"] = {}
+        if log_path:
+            result["metadata"]["log_path"] = str(log_path)
+        return result
 
     def _execute_simple_path(
         self,
@@ -1239,7 +1331,7 @@ class SOAROrchestrator:
 
     def _handle_verification_failure(
         self,
-        query: str,
+        _query: str,
         verification: dict[str, Any],
         verbosity: str,
     ) -> dict[str, Any]:
@@ -1284,7 +1376,7 @@ class SOAROrchestrator:
 
     def _handle_decomposition_failure(
         self,
-        query: str,
+        _query: str,
         decomposition_result: dict[str, Any],
         verbosity: str,
     ) -> dict[str, Any]:
@@ -1330,7 +1422,7 @@ class SOAROrchestrator:
 
     def _handle_critical_failure(
         self,
-        query: str,
+        _query: str,
         error_msg: str,
         verbosity: str,
     ) -> dict[str, Any]:
@@ -1652,6 +1744,104 @@ class SOAROrchestrator:
             },
         }
 
+    def _build_cached_verify_result(
+        self,
+        query: str,
+        complexity: str,
+        context: dict[str, Any],
+        cache_hit: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Build result for goals-only mode from a cache hit (goals.json).
+
+        This skips re-verification since the cached decomposition was already
+        verified when first saved to goals.json.
+
+        Args:
+            query: Original user query
+            complexity: Assessed complexity (SIMPLE, MEDIUM, COMPLEX)
+            context: Retrieved context from phase 2
+            cache_hit: Cached phase3 result from goals.json
+
+        Returns:
+            Dict with decomposition results ready for goals.json output
+
+        """
+        elapsed_time = time.time() - self._start_time
+        decomposition = cache_hit.get("decomposition", {})
+        subgoals = decomposition.get("subgoals", [])
+
+        # Build subgoal details from cached data
+        subgoal_details = []
+        agent_assignments = []
+        for idx, sg in enumerate(subgoals):
+            agent_id = sg.get("assigned_agent") or sg.get("agent") or "@code-developer"
+            # Use `or ""` pattern to handle None values (`.get()` returns None if key exists with None value)
+            ideal_agent = sg.get("ideal_agent") or ""
+            ideal_agent_desc = sg.get("ideal_agent_desc") or ""
+            match_quality = sg.get("match_quality") or "excellent"
+            subgoal_details.append(
+                {
+                    "index": idx + 1,
+                    "description": sg.get("description") or "",
+                    "agent": agent_id,
+                    "is_critical": sg.get("is_critical", True),
+                    "depends_on": sg.get("depends_on") or [],
+                    "is_spawn": False,
+                    "match_quality": match_quality,
+                    "ideal_agent": ideal_agent,
+                    "ideal_agent_desc": ideal_agent_desc,
+                }
+            )
+            agent_assignments.append(
+                {
+                    "index": idx,
+                    "agent_id": agent_id,
+                    "match_quality": match_quality,
+                    "is_spawn": False,
+                    "ideal_agent": ideal_agent,
+                    "ideal_agent_desc": ideal_agent_desc,
+                }
+            )
+
+        # Extract memory context from phase 2
+        memory_context = []
+        code_chunks = context.get("code_chunks", [])
+        for chunk in code_chunks[:10]:
+            if hasattr(chunk, "file_path"):
+                file_path = chunk.file_path
+                score = getattr(chunk, "activation", 0.5)
+            elif isinstance(chunk, dict):
+                file_path = chunk.get("file_path") or chunk.get("metadata", {}).get("file_path", "")
+                score = (
+                    chunk.get("hybrid_score")
+                    or chunk.get("activation_score")
+                    or chunk.get("activation", 0.5)
+                )
+            else:
+                continue
+            if file_path:
+                memory_context.append((file_path, score))
+
+        return {
+            "decomposition": decomposition,
+            "agent_assignments": agent_assignments,
+            "subgoals_detailed": subgoal_details,
+            "complexity": complexity,
+            "context": context,
+            "memory_context": memory_context,
+            "issues": [],
+            "metadata": {
+                "query_id": self._query_id,
+                "query": query,
+                "total_duration_ms": elapsed_time * 1000,
+                "total_cost_usd": self._total_cost,
+                "tokens_used": self._token_usage,
+                "phases": self._phase_metadata,
+                "stop_after_verify": True,
+                "cache_source": cache_hit.get("_cache_source", ""),
+            },
+        }
+
     def _build_metadata(self) -> dict[str, Any]:
         """Build aggregated metadata from all phases.
 
@@ -1876,6 +2066,293 @@ class SOAROrchestrator:
             "Circuit breaker failures recorded. "
             "Agents will be retried after reset timeout (typically 120s).",
         )
+
+    def _check_soar_cache_hit(self, phase2_result: dict[str, Any]) -> dict[str, Any] | None:
+        """Check for cached decomposition from conversation logs or existing goals.json.
+
+        Checks two sources:
+        1. Active goals.json files in .aurora/plans/active/ with matching title
+        2. Conversation log chunks with hybrid_score >= 0.90
+
+        Args:
+            phase2_result: Result from phase 2 (retrieve)
+
+        Returns:
+            A phase3-compatible dict if cache hit found, None otherwise
+
+        """
+        # First, check active goals.json files for exact/near-exact title match
+        goals_hit = self._check_goals_json_cache(self._query)
+        if goals_hit is not None:
+            return goals_hit
+
+        # Then check conversation logs from phase 2 retrieval
+        code_chunks = phase2_result.get("code_chunks", [])
+
+        for chunk in code_chunks:
+            # Get file path from chunk
+            if hasattr(chunk, "file_path"):
+                file_path = chunk.file_path or ""
+                score = getattr(chunk, "activation", 0.0)
+            elif isinstance(chunk, dict):
+                file_path = chunk.get("file_path") or chunk.get("metadata", {}).get("file_path", "")
+                score = (
+                    chunk.get("hybrid_score")
+                    or chunk.get("activation_score")
+                    or chunk.get("activation", 0.0)
+                )
+            else:
+                continue
+
+            # Only consider conversation logs with high relevance
+            if "/logs/conversations/" not in file_path:
+                continue
+            if score < 0.90:
+                continue
+
+            # Try to parse the log for cached decomposition
+            parsed = self._parse_soar_log(file_path)
+            if parsed is None:
+                continue
+
+            # Validate: must have non-empty subgoals and no error
+            decomposition = parsed.get("decomposition", {})
+            subgoals = decomposition.get("subgoals", [])
+            if not subgoals:
+                continue
+            if parsed.get("_error") is not None:
+                continue
+
+            logger.info(
+                "Cache hit from %s (score=%.3f, %d subgoals)",
+                file_path,
+                score,
+                len(subgoals),
+            )
+            # Add cache source for display
+            parsed["_cache_source"] = str(file_path)
+            return parsed
+
+        return None
+
+    def _check_goals_json_cache(self, query: str) -> dict[str, Any] | None:
+        """Check active goals.json files for a matching title.
+
+        Scans .aurora/plans/active/*/goals.json for a title that matches
+        the current query (case-insensitive, normalized whitespace).
+
+        Uses fuzzy matching with similarity threshold to avoid false matches.
+
+        Args:
+            query: Current query string
+
+        Returns:
+            A phase3-compatible dict if matching goals found, None otherwise
+
+        """
+        import hashlib
+        import json
+        from pathlib import Path
+
+        try:
+            # Normalize query for comparison (preserve more structure)
+            query_normalized = " ".join(query.lower().strip().split())
+            query_hash = hashlib.sha256(query_normalized.encode("utf-8")).hexdigest()[:16]
+            logger.debug(f"Cache check: normalized query = '{query_normalized}' (hash={query_hash})")
+
+            # Find .aurora directory relative to current working directory
+            aurora_dir = Path.cwd() / ".aurora" / "plans" / "active"
+            if not aurora_dir.exists():
+                logger.debug(f"Cache check: aurora_dir does not exist: {aurora_dir}")
+                return None
+
+            logger.debug(f"Cache check: scanning {aurora_dir}")
+
+            for plan_dir in aurora_dir.iterdir():
+                if not plan_dir.is_dir():
+                    continue
+
+                goals_file = plan_dir / "goals.json"
+                if not goals_file.exists():
+                    continue
+
+                try:
+                    goals_data = json.loads(goals_file.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    continue
+
+                # Check title match (exact normalized match required)
+                title = goals_data.get("title", "")
+                title_normalized = " ".join(title.lower().strip().split())
+
+                # Require exact match to avoid false cache hits
+                if title_normalized != query_normalized:
+                    # Log for debugging cache misses
+                    if logger.isEnabledFor(10):  # DEBUG level
+                        similarity = sum(1 for a, b in zip(title_normalized, query_normalized) if a == b)
+                        logger.debug(
+                            f"Cache check: no match for {plan_dir.name} "
+                            f"(similarity={similarity}/{max(len(title_normalized), len(query_normalized))})"
+                        )
+                    continue
+
+                logger.info(f"Cache check: found matching goals.json in {plan_dir.name}")
+
+                # Found matching goals - convert to phase3 format
+                subgoals = goals_data.get("subgoals", [])
+                if not subgoals:
+                    continue
+
+                # Convert goals.json subgoals to phase3 decomposition format
+                phase3_subgoals = []
+                for sg in subgoals:
+                    # Map goals.json fields to verify_lite expected fields
+                    # goals.json: agent → assigned_agent, ideal_agent → suggested_agent
+                    # Use `or ""` pattern to handle None values
+                    phase3_subgoals.append(
+                        {
+                            "id": sg.get("id") or "",
+                            "description": sg.get("description") or sg.get("title") or "",
+                            "depends_on": sg.get("dependencies") or [],
+                            "is_critical": sg.get("is_critical", True),
+                            # verify_lite checks for these fields
+                            "assigned_agent": sg.get("agent") or "",
+                            "suggested_agent": sg.get("ideal_agent") or "",
+                            # Additional context
+                            "ideal_agent": sg.get("ideal_agent") or "",
+                            "ideal_agent_desc": sg.get("ideal_agent_desc") or "",
+                            "source_file": sg.get("source_file") or "",
+                            "match_quality": sg.get("match_quality") or "excellent",
+                        }
+                    )
+
+                logger.info(
+                    "Cache hit from goals.json: %s (%d subgoals)",
+                    goals_file,
+                    len(phase3_subgoals),
+                )
+
+                return {
+                    "goal": title,
+                    "decomposition": {
+                        "goal": title,
+                        "subgoals": phase3_subgoals,
+                    },
+                    "subgoals_total": len(phase3_subgoals),
+                    "_timing_ms": 0,
+                    "_error": None,
+                    "_cache_source": str(goals_file),
+                }
+
+        except Exception as e:
+            logger.debug(f"Failed to check goals.json cache: {e}")
+
+        return None
+
+    @staticmethod
+    def _parse_soar_log(log_path: str) -> dict[str, Any] | None:
+        """Parse a SOAR conversation log and extract the decomposition result.
+
+        Reads the markdown log file and looks for a JSON metadata block
+        containing the phase 3 decomposition.
+
+        Args:
+            log_path: Path to the conversation log markdown file
+
+        Returns:
+            A phase3-compatible dict if decomposition found, None otherwise
+
+        """
+        import json
+        from pathlib import Path
+
+        try:
+            path = Path(log_path)
+            if not path.exists():
+                return None
+
+            content = path.read_text(encoding="utf-8", errors="ignore")
+
+            # Look for ## Metadata section with JSON code block
+            in_metadata = False
+            json_lines: list[str] = []
+            in_json_block = False
+
+            for line in content.split("\n"):
+                if line.strip().startswith("## Metadata"):
+                    in_metadata = True
+                    continue
+                if in_metadata:
+                    if line.strip().startswith("```json"):
+                        in_json_block = True
+                        continue
+                    if in_json_block:
+                        if line.strip() == "```":
+                            break
+                        json_lines.append(line)
+                    # Stop if we hit another H2
+                    if line.strip().startswith("## ") and not line.strip().startswith(
+                        "## Metadata"
+                    ):
+                        break
+
+            if not json_lines:
+                return None
+
+            metadata = json.loads("\n".join(json_lines))
+
+            # Extract phase3 decomposition from metadata
+            phases = metadata.get("phases", {})
+            phase3 = phases.get("phase3_decompose")
+            if phase3 is None:
+                return None
+
+            return phase3
+
+        except Exception as e:
+            logger.debug(f"Failed to parse SOAR log {log_path}: {e}")
+            return None
+
+    @staticmethod
+    def _classify_api_error(error_msg: str) -> str:
+        """Classify an API error message into a circuit breaker failure type.
+
+        Args:
+            error_msg: Error message string from the API call
+
+        Returns:
+            Failure type string for the circuit breaker
+
+        """
+        msg = error_msg.lower()
+
+        # Permanent errors (will trigger fast-fail in circuit breaker)
+        if "api error: model:" in msg or "invalid model" in msg or "model not found" in msg:
+            return "invalid_model"
+        if "unauthorized" in msg or "api key" in msg or "401" in msg:
+            return "auth_error"
+        if "forbidden" in msg or "403" in msg:
+            return "forbidden"
+        if "invalid request" in msg or "400" in msg or "bad request" in msg:
+            return "invalid_request"
+
+        # Transient errors (allow retries)
+        # Includes quota exhaustion (e.g., "You're out of extra usage")
+        if (
+            "rate limit" in msg
+            or "429" in msg
+            or "too many requests" in msg
+            or "out of" in msg
+            and "usage" in msg
+            or "quota" in msg
+        ):
+            return "rate_limit"
+        if "timeout" in msg or "timed out" in msg:
+            return "timeout"
+        if "500" in msg or "internal server error" in msg or "server error" in msg:
+            return "server_error"
+
+        return "unknown"
 
     def _index_conversation_log(self, log_path: Any) -> None:
         """Index conversation log as knowledge chunk for future retrieval.

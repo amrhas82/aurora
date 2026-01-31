@@ -22,7 +22,6 @@ from aurora_cli.policies.models import (
 )
 from aurora_core.paths import get_aurora_dir
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -215,13 +214,13 @@ class PoliciesEngine:
                 reason=f"TRUNCATE detected: {operation.target}",
             )
 
-        # Default: allow
+        # Default case: allow operation
         return PolicyResult(
             action=PolicyAction.ALLOW,
             reason="Operation allowed",
         )
 
-    def check_budget(self, estimated_cost: float) -> PolicyResult:
+    def check_budget(self, _estimated_cost: float) -> PolicyResult:
         """Check if cost is within budget.
 
         Args:

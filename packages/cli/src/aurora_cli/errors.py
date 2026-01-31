@@ -15,7 +15,6 @@ from typing import Any, TypeVar
 import click
 from rich.console import Console
 
-
 F = TypeVar("F", bound=Callable[..., Any])
 
 # Exit code constants
@@ -583,7 +582,7 @@ class ErrorHandler:
 
     @staticmethod
     def handle_budget_error(
-        error: Exception,
+        _error: Exception,
         spent: float = 0.0,
         limit: float = 0.0,
         operation: str = "query execution",
@@ -591,7 +590,7 @@ class ErrorHandler:
         """Handle and format budget errors with spending details.
 
         Args:
-            error: The budget exception
+            _error: The budget exception (reserved for future error-specific handling)
             spent: Current spending amount
             limit: Budget limit
             operation: What operation was being attempted

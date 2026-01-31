@@ -6,12 +6,12 @@ Configures slash commands for Claude Code in .claude/commands/aur/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "search": ".claude/commands/aur/search.md",
     "get": ".claude/commands/aur/get.md",
     "plan": ".claude/commands/aur/plan.md",
+    "tasks": ".claude/commands/aur/tasks.md",
     "implement": ".claude/commands/aur/implement.md",
     "archive": ".claude/commands/aur/archive.md",
 }
@@ -33,6 +33,12 @@ tags: [aurora, search, memory]
     "plan": """---
 name: Aurora: Plan
 description: Create implementation plan with agent delegation [goal | goals.json]
+category: Aurora
+tags: [aurora, planning]
+---""",
+    "tasks": """---
+name: Aurora: Tasks
+description: Regenerate tasks from PRD [plan-id]
 category: Aurora
 tags: [aurora, planning]
 ---""",
@@ -118,6 +124,7 @@ class ClaudeSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

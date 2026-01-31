@@ -12,6 +12,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v3
@@ -42,7 +43,8 @@ jobs:
 
       - name: Run tests with coverage (excluding ML and real API tests)
         run: |
-          pytest -m "not ml and not real_api" --cov=packages --cov-report=xml --cov-report=term -v
+          pip install pytest-timeout
+          pytest -m "not ml and not real_api" --timeout=60 --cov=packages --cov-report=xml --cov-report=term -v
         continue-on-error: false
 
       - name: Run startup performance benchmarks

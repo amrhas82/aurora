@@ -314,9 +314,10 @@ class MemoryRetriever:
         self,
         query: str,
         limit: int = 20,
-        mode: str = "hybrid",
+        _mode: str = "hybrid",
         min_semantic_score: float | None = None,
         wait_for_model: bool = True,
+        chunk_type: str | None = None,
     ) -> list[CodeChunk]:
         """Retrieve relevant code chunks for a query.
 
@@ -356,6 +357,7 @@ class MemoryRetriever:
                 query,
                 top_k=limit,
                 min_semantic_score=threshold,
+                chunk_type=chunk_type,
             )
 
             elapsed = time.time() - start_time
@@ -376,7 +378,14 @@ class MemoryRetriever:
             return results
 
         except Exception as e:
+            import traceback
+            full_trace = traceback.format_exc()
             logger.error("Retrieval failed: %s", e)
+            logger.error("Full traceback:\n%s", full_trace)
+            # Also print to stderr for debugging
+            import sys
+            print(f"\nDEBUG ERROR: {type(e).__name__}: {e}", file=sys.stderr)
+            print(full_trace, file=sys.stderr)
             return []
 
     def retrieve_fast(

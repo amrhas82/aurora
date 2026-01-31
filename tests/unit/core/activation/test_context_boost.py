@@ -554,8 +554,6 @@ class TestRealWorldScenarios:
         score = boost.calculate_from_text(query_text, chunk_text)
 
         # Should find good overlap in technical terms
-        # Query: {parse, json, api, response}
-        # Chunk: {json, parser, api, responses}
         # Matches: json, api (2 out of 4 = 50%)
         # Note: "parser" != "parse", "responses" != "response" after stemming
         assert score > 0.2  # Expect reasonable boost

@@ -6,7 +6,6 @@ import pytest
 
 from aurora_soar.orchestrator import SOAROrchestrator
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -202,7 +201,7 @@ class TestOrchestratorSimplified:
         phase_calls = []
 
         def track_phase(phase_name):
-            def wrapper(*args, **kwargs):
+            def wrapper(*_args, **_kwargs):
                 phase_calls.append(phase_name)
                 # Return minimal mock objects based on phase
                 if phase_name == "assess":
@@ -239,7 +238,7 @@ class TestOrchestratorSimplified:
         # Mock verify_lite to track verify phase
         from aurora_soar.phases import verify
 
-        def mock_verify_lite(*args, **kwargs):
+        def mock_verify_lite(*_args, **_kwargs):
             phase_calls.append("verify")
             return (True, [], [])  # passed, agent_assignments, issues
 
@@ -251,7 +250,7 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(
             orchestrator,
             "_phase8_respond",
-            lambda *args, **kwargs: {"answer": "test", "metadata": {}},
+            lambda *_args, **_kwargs: {"answer": "test", "metadata": {}},
         )
 
         # Execute query
@@ -283,29 +282,29 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(verify, "verify_lite", mock_verify_lite)
 
         # Mock other phases minimally
-        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
-        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
+        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda _: {"complexity": "MEDIUM"})
+        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda _q, _c: {"code_chunks": []})
         monkeypatch.setattr(
             orchestrator,
             "_phase3_decompose",
-            lambda q, ctx, c: {"decomposition": {"subgoals": []}},
+            lambda _q, _ctx, _c: {"decomposition": {"subgoals": []}},
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase5_collect",
-            lambda *args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
+            lambda *_args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase6_synthesize",
-            lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
+            lambda *_args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase7_record",
-            lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
+            lambda *_args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *_args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")
@@ -324,11 +323,11 @@ class TestOrchestratorSimplified:
         decompose_calls = []
         verify_calls = []
 
-        def mock_decompose(query, context, complexity, retry_feedback=None):
+        def mock_decompose(_query, _context, _complexity, retry_feedback=None):
             decompose_calls.append({"retry_feedback": retry_feedback})
             return {"decomposition": {"subgoals": []}}
 
-        def mock_verify_lite(decomposition, available_agents):
+        def mock_verify_lite(_decomposition, _available_agents):
             verify_calls.append(True)
             if len(verify_calls) == 1:
                 # First call fails
@@ -340,26 +339,26 @@ class TestOrchestratorSimplified:
             # Second call passes
             return (True, [], [])  # passed=True, agent_assignments=[], issues=[]
 
-        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
-        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
+        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda _: {"complexity": "MEDIUM"})
+        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda _q, _c: {"code_chunks": []})
         monkeypatch.setattr(orchestrator, "_phase3_decompose", mock_decompose)
         monkeypatch.setattr(verify, "verify_lite", mock_verify_lite)
         monkeypatch.setattr(
             orchestrator,
             "_phase5_collect",
-            lambda *args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
+            lambda *_args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase6_synthesize",
-            lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
+            lambda *_args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase7_record",
-            lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
+            lambda *_args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *_args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")
@@ -381,7 +380,9 @@ class TestOrchestratorSimplified:
 
         progress_messages = []
 
-        def mock_execute_agents(agent_assignments, subgoals, context, on_progress=None, **kwargs):
+        def mock_execute_agents(
+            _agent_assignments, _subgoals, _context, on_progress=None, **_kwargs
+        ):
             """Mock execute_agents that calls progress callback."""
             if on_progress:
                 on_progress("[Agent 1/2] test-agent: Starting...")
@@ -395,18 +396,18 @@ class TestOrchestratorSimplified:
             progress_messages.append(msg)
 
         # Mock phases
-        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
-        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
+        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda _: {"complexity": "MEDIUM"})
+        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda _q, _c: {"code_chunks": []})
         monkeypatch.setattr(
             orchestrator,
             "_phase3_decompose",
-            lambda q, ctx, c: {"decomposition": {"subgoals": []}},
+            lambda _q, _ctx, _c: {"decomposition": {"subgoals": []}},
         )
         # Mock verify_lite instead of _phase4_verify (which no longer exists)
         monkeypatch.setattr(
             verify,
             "verify_lite",
-            lambda decomposition, available_agents: (
+            lambda _decomposition, _available_agents: (
                 True,
                 [],
                 [],
@@ -421,23 +422,20 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(
             orchestrator,
             "_phase6_synthesize",
-            lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
+            lambda *_args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase7_record",
-            lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
+            lambda *_args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *_args: {"answer": "test"})
 
         # TODO: Once orchestrator has _get_progress_callback(), wire it here
         # For now, test will fail (RED phase) until implementation
 
         # Execute query
         orchestrator.execute("test query")
-
-        # This will fail until progress callback is wired
-        # assert len(progress_messages) > 0
 
     def test_lightweight_record_used(self, orchestrator, monkeypatch):
         """Test that record_pattern_lightweight is called instead of record_pattern.
@@ -447,7 +445,7 @@ class TestOrchestratorSimplified:
         """
         record_lightweight_called = []
 
-        def mock_record_lightweight(store, query, synthesis_result, log_path):
+        def mock_record_lightweight(_store, query, _synthesis_result, log_path):
             record_lightweight_called.append((query, log_path))
             from aurora_soar.phases.record import RecordResult
 
@@ -459,12 +457,12 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(record, "record_pattern_lightweight", mock_record_lightweight)
 
         # Mock phases (support retry_feedback parameter in decompose)
-        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
-        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
+        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda _: {"complexity": "MEDIUM"})
+        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda _q, _c: {"code_chunks": []})
         monkeypatch.setattr(
             orchestrator,
             "_phase3_decompose",
-            lambda q, ctx, c, retry_feedback=None: {
+            lambda _q, _ctx, _c, _retry_feedback=None: {
                 "decomposition": {"subgoals": [{"goal": "test"}]},
             },
         )
@@ -473,16 +471,16 @@ class TestOrchestratorSimplified:
         # Mock verify_lite directly
         from aurora_soar.phases import verify
 
-        monkeypatch.setattr(verify, "verify_lite", lambda *args, **kwargs: (True, [], []))
+        monkeypatch.setattr(verify, "verify_lite", lambda *_args, **_kwargs: (True, [], []))
         monkeypatch.setattr(
             orchestrator,
             "_phase5_collect",
-            lambda *args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
+            lambda *_args: MagicMock(agent_outputs=[], execution_metadata={}, fallback_agents=[]),
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase6_synthesize",
-            lambda *args: MagicMock(
+            lambda *_args: MagicMock(
                 answer="test",
                 confidence=0.9,
                 summary="test",
@@ -491,7 +489,7 @@ class TestOrchestratorSimplified:
         )
 
         # Mock _phase7_record to call our lightweight version
-        def mock_phase7_record(query, synthesis_result, log_path):
+        def mock_phase7_record(query, synthesis_result, _log_path):
             """Mock that calls the actual record_pattern_lightweight."""
             import tempfile
 
@@ -506,7 +504,7 @@ class TestOrchestratorSimplified:
             return result
 
         monkeypatch.setattr(orchestrator, "_phase7_record", mock_phase7_record)
-        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *_args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")
@@ -524,19 +522,19 @@ class TestOrchestratorSimplified:
 
         collect_calls = []
 
-        def mock_execute_agents(agent_assignments, subgoals, context, **kwargs):
+        def mock_execute_agents(agent_assignments, subgoals, _context, **_kwargs):
             collect_calls.append({"agent_assignments": agent_assignments, "subgoals": subgoals})
             from aurora_soar.phases.collect import CollectResult
 
             return CollectResult([], {}, [], [])
 
         # Mock phases
-        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda q: {"complexity": "MEDIUM"})
-        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda q, c: {"code_chunks": []})
+        monkeypatch.setattr(orchestrator, "_phase1_assess", lambda _: {"complexity": "MEDIUM"})
+        monkeypatch.setattr(orchestrator, "_phase2_retrieve", lambda _q, _c: {"code_chunks": []})
         monkeypatch.setattr(
             orchestrator,
             "_phase3_decompose",
-            lambda q, ctx, c: {"decomposition": {"subgoals": [{"goal": "test"}]}},
+            lambda _q, _ctx, _c: {"decomposition": {"subgoals": [{"goal": "test"}]}},
         )
 
         # Return agent_assignments in verify result
@@ -546,7 +544,7 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(
             verify,
             "verify_lite",
-            lambda decomposition, available_agents: (
+            lambda _decomposition, _available_agents: (
                 True,  # passed
                 [(0, test_agent)],  # agent_assignments
                 [],  # issues
@@ -561,22 +559,17 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(
             orchestrator,
             "_phase6_synthesize",
-            lambda *args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
+            lambda *_args: MagicMock(answer="test", confidence=0.9, to_dict=lambda: {}),
         )
         monkeypatch.setattr(
             orchestrator,
             "_phase7_record",
-            lambda *args: MagicMock(cached=False, to_dict=lambda: {}),
+            lambda *_args: MagicMock(cached=False, to_dict=lambda: {}),
         )
-        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *args: {"answer": "test"})
+        monkeypatch.setattr(orchestrator, "_phase8_respond", lambda *_args: {"answer": "test"})
 
         # Execute query
         orchestrator.execute("test query")
-
-        # This will fail until orchestrator is updated to pass agent_assignments
-        # assert len(collect_calls) > 0
-        # assert "agent_assignments" in collect_calls[0]
-        # assert isinstance(collect_calls[0]["agent_assignments"], list)
 
     def test_simple_query_bypasses_decompose(self, orchestrator, monkeypatch):
         """Test that SIMPLE queries bypass decomposition phase.
@@ -587,7 +580,7 @@ class TestOrchestratorSimplified:
         phase_calls = []
 
         def track_phase(phase_name):
-            def wrapper(*args, **kwargs):
+            def wrapper(*_args, **_kwargs):
                 phase_calls.append(phase_name)
                 if phase_name == "assess":
                     return {"complexity": "SIMPLE"}
@@ -604,7 +597,7 @@ class TestOrchestratorSimplified:
         monkeypatch.setattr(
             orchestrator,
             "_execute_simple_path",
-            lambda *args, **kwargs: {"answer": "simple answer", "metadata": {}},
+            lambda *_args, **_kwargs: {"answer": "simple answer", "metadata": {}},
         )
 
         # Execute query

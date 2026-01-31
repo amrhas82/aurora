@@ -10,12 +10,12 @@ from pathlib import Path
 from aurora_cli.configurators.slash.base import AURORA_MARKERS, SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Relative paths (used for get_relative_path, but actual files go to global dir)
 FILE_PATHS: dict[str, str] = {
     "search": ".codex/prompts/aurora-search.md",
     "get": ".codex/prompts/aurora-get.md",
     "plan": ".codex/prompts/aurora-plan.md",
+    "tasks": ".codex/prompts/aurora-tasks.md",
     "implement": ".codex/prompts/aurora-implement.md",
     "archive": ".codex/prompts/aurora-archive.md",
 }
@@ -37,6 +37,12 @@ $ARGUMENTS""",
     "plan": """---
 description: Create implementation plan [goal | goals.json]
 argument-hint: request or feature description
+---
+
+$ARGUMENTS""",
+    "tasks": """---
+description: Regenerate tasks from PRD [plan-id]
+argument-hint: plan ID to regenerate tasks for
 ---
 
 $ARGUMENTS""",
@@ -150,6 +156,7 @@ class CodexSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

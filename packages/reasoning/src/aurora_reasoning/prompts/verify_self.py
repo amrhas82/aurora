@@ -16,7 +16,7 @@ class VerifySelfPromptTemplate(PromptTemplate):
     def __init__(self) -> None:
         super().__init__(name="verify_self", version="1.0")
 
-    def build_system_prompt(self, **kwargs: Any) -> str:
+    def build_system_prompt(self, **_kwargs: Any) -> str:
         """Build system prompt for self-verification."""
         return """You are a quality assurance verifier for query decompositions.
 
@@ -62,7 +62,7 @@ You MUST respond with valid JSON only. Use this exact format:
   "suggestions": ["list", "of", "improvement", "suggestions"]
 }"""
 
-    def build_user_prompt(self, **kwargs: Any) -> str:
+    def build_user_prompt(self, **_kwargs: Any) -> str:
         """Build user prompt for self-verification.
 
         Args:
@@ -74,9 +74,9 @@ You MUST respond with valid JSON only. Use this exact format:
             User prompt string
 
         """
-        query = kwargs.get("query", "")
-        decomposition = kwargs.get("decomposition", {})
-        context_summary = kwargs.get("context_summary")
+        query = _kwargs.get("query", "")
+        decomposition = _kwargs.get("decomposition", {})
+        context_summary = _kwargs.get("context_summary")
 
         prompt_parts = [
             f"Original Query: {query}",

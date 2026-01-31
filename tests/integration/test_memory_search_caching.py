@@ -276,11 +276,17 @@ def test_bm25_persistence_integration(tmp_path):
     # Clear retriever cache to force new retriever creation
     clear_retriever_cache()
 
-    # Create new retriever (should load index from disk)
+    # Create new retriever (should load index from disk on first retrieve)
     retriever2 = HybridRetriever(store, engine, None, config=config)
 
-    # Verify index was loaded
-    assert retriever2._bm25_index_loaded, "BM25 index should be loaded from disk"
+    # Verify index NOT loaded yet (lazy loading)
+    assert not retriever2._bm25_index_loaded, "BM25 index should NOT be loaded yet (lazy loading)"
+
+    # Trigger lazy load by performing a search
+    results = retriever2.retrieve("test query", top_k=10)
+
+    # Verify index was loaded after first retrieve
+    assert retriever2._bm25_index_loaded, "BM25 index should be loaded after first retrieve"
     assert retriever2.bm25_scorer is not None, "BM25 scorer should be initialized"
     assert retriever2.bm25_scorer.corpus_size == 50, "Corpus size should match"
 

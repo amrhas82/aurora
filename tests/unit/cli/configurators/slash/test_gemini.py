@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Python 3.11+ has tomllib built-in, but Python 3.10 needs tomli
 try:
     import tomllib
@@ -157,7 +156,7 @@ class TestGeminiSlashCommandConfiguratorGenerateAll:
         created = config.generate_all(str(tmp_path), ".aurora")
 
         assert len(created) == len(ALL_COMMANDS)
-        assert len(created) == 5
+        assert len(created) == 6
 
     def test_generate_all_creates_toml_files(self, tmp_path: Path):
         """Test generate_all creates .toml files."""
@@ -342,7 +341,7 @@ class TestGeminiSlashCommandConfiguratorTargets:
         targets = config.get_targets()
 
         assert len(targets) == len(ALL_COMMANDS)
-        assert len(targets) == 5
+        assert len(targets) == 6
 
     def test_get_targets_returns_slash_command_targets(self):
         """Test get_targets returns SlashCommandTarget objects."""

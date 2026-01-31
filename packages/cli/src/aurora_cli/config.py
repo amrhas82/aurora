@@ -411,7 +411,17 @@ class Config:
 
     @property
     def agents_discovery_paths(self) -> list[str]:
-        return self._data.get("agents", {}).get("discovery_paths", [])
+        """Get agent discovery paths, falling back to all tools from registry.
+
+        Returns paths from config if specified, otherwise returns all 20 tool
+        paths from the centralized paths.py registry.
+        """
+        paths = self._data.get("agents", {}).get("discovery_paths", [])
+        if not paths:
+            # Default to all tool paths from registry
+            from aurora_cli.configurators.slash.paths import get_all_agent_paths
+            paths = get_all_agent_paths()
+        return paths
 
     @property
     def agents_manifest_path(self) -> str:

@@ -119,7 +119,6 @@ class TestBaseLevelActivationLiterature:
         ), f"Expected BLA={expected:.3f} for 3 accesses, got {activation:.3f}"
 
         # Verify intermediate calculations
-        # Calculated: t1^-0.5 + t2^-0.5 + t3^-0.5
         #   = 3600^-0.5 + 86400^-0.5 + 604800^-0.5
         #   = 0.01667 + 0.00340 + 0.00129 = 0.02135
         assert sum_powers == pytest.approx(

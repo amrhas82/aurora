@@ -16,6 +16,16 @@ Startup benchmarks, regression guards, profiling guide. Target: <3s for `aur soa
 - `docs/PERFORMANCE_QUICK_REF.md` (quick reference)
 - `tests/performance/README.md` (test suite docs)
 
+## Performance Analysis
+Memory search profiling, cache hit/miss patterns, optimization roadmap.
+- `docs/analysis/MEMORY_SEARCH_PERFORMANCE_PROFILE.md` - Detailed profiling of `aur mem search` (20.4s breakdown)
+- `docs/analysis/MEMORY_SEARCH_OPTIMIZATION_PLAN.md` - Optimization roadmap (pre-tokenization, BM25, query cache)
+- `docs/analysis/MEMORY_SEARCH_QUICK_REF.md` - Quick reference for memory search performance
+- `docs/analysis/CACHE_HIT_MISS_ANALYSIS.md` - Comprehensive cache behavior analysis (3 layers, patterns)
+- `docs/analysis/CACHE_QUICK_REF.md` - Quick reference for cache hit/miss patterns
+- `docs/analysis/FALLBACK_QUALITY_ANALYSIS.md` - Epic 2 qualitative validation (100% overlap, 10 test queries)
+- `docs/analysis/EPIC2_PERFORMANCE_RESULTS.md` - Epic 2 performance metrics (lazy loading, dual-hybrid fallback)
+
 ## CLI Commands
 All aur commands: init, mem, soar, goals, spawn, agents, doctor, headless, budget.
 - `docs/guides/COMMANDS.md`

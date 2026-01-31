@@ -16,7 +16,6 @@ from aurora_cli.errors import APIError, ErrorHandler
 from aurora_core.budget.tracker import BudgetExceededError, CostTracker
 from aurora_reasoning.llm_client import AnthropicClient, LLMClient
 
-
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_soar.orchestrator import SOAROrchestrator
@@ -532,7 +531,7 @@ class QueryExecutor:
             "collect": lambda d: f"Executed {d.get('executions', 0)} agents",
             "synthesize": lambda d: f"Synthesized from {d.get('sources', 0)} sources",
             "record": lambda d: f"Cached {d.get('patterns_cached', 0)} patterns",
-            "respond": lambda d: "Formatted response",
+            "respond": lambda _: "Formatted response",
         }
 
         summary_fn = summaries.get(phase_name)

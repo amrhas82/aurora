@@ -18,7 +18,6 @@ from rich.console import Console
 
 from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
 
-
 # Console for spinner output
 _console = Console()
 
@@ -99,12 +98,12 @@ class CLIPipeLLMClient(LLMClient):
         self,
         prompt: str,
         *,
-        model: str | None = None,
-        max_tokens: int = 4096,
-        temperature: float = 0.7,
+        _model: str | None = None,
+        _max_tokens: int = 4096,
+        _temperature: float = 0.7,
         system: str | None = None,
         phase_name: str = "unknown",
-        **kwargs: Any,
+        **_kwargs: Any,
     ) -> LLMResponse:
         """Generate text completion by piping to CLI tool.
 
@@ -209,7 +208,52 @@ class CLIPipeLLMClient(LLMClient):
             self._write_state(phase_name, "failed")
             # Include both stderr and stdout in error message for debugging
             error_details = result.stderr or result.stdout or "(no output)"
-            error_msg = f"Tool {self._tool} failed with exit code {result.returncode}: {error_details[:500]}"
+
+            # Write debug info for troubleshooting intermittent errors
+            debug_file = soar_dir / "error_debug.json"
+            debug_data = {
+                "returncode": result.returncode,
+                "stderr": result.stderr,
+                "stdout": result.stdout[:1000] if result.stdout else None,
+                "phase": phase_name,
+            }
+            debug_file.write_text(json.dumps(debug_data, indent=2))
+
+            # Try to extract error from JSON response (Claude API returns JSON errors)
+            error_msg = None
+            try:
+                # First try: parse entire output as JSON (may be multi-line)
+                # Find the first { and last } to extract JSON object
+                first_brace = error_details.find("{")
+                last_brace = error_details.rfind("}")
+                if first_brace != -1 and last_brace > first_brace:
+                    json_str = error_details[first_brace : last_brace + 1]
+                    error_json = json.loads(json_str)
+                    # Handle different JSON error formats
+                    if "error" in error_json:
+                        err = error_json["error"]
+                        if isinstance(err, dict):
+                            error_msg = f"Tool {self._tool} API error: {err.get('message', err.get('type', str(err)))}"
+                        else:
+                            error_msg = f"Tool {self._tool} API error: {err}"
+                    elif "message" in error_json:
+                        error_msg = f"Tool {self._tool} error: {error_json['message']}"
+            except (json.JSONDecodeError, KeyError, TypeError):
+                pass  # Fall back to text extraction
+
+            if error_msg is None:
+                # Fall back to text-based extraction
+                if "API Error" in error_details:
+                    # Shorten API errors - extract just the key info
+                    parts = error_details.split(":")
+                    if len(parts) >= 2:
+                        error_msg = (
+                            f"Tool {self._tool} failed: {':'.join(parts[-2:]).strip()[:200]}"
+                        )
+                    else:
+                        error_msg = f"Tool {self._tool} failed: {error_details[:200]}"
+                else:
+                    error_msg = f"Tool {self._tool} failed (exit {result.returncode}): {error_details[:200]}"
             raise RuntimeError(error_msg)
 
         content = result.stdout

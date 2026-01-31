@@ -10,7 +10,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -132,8 +131,7 @@ class KnowledgeParser:
         """
         chunks = []
 
-        # Split by ## headers (but not # single header)
-        # Pattern: Match ## at start of line followed by space and title
+        # Split by level-2 headers (##), excluding single # headers
         section_pattern = r"^## (.+)$"
         sections = re.split(section_pattern, content, flags=re.MULTILINE)
 

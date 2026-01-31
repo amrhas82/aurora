@@ -34,7 +34,7 @@ class ContinueMCPConfigurator(MCPConfigurator):
         """Continue config is user-level (global)."""
         return True
 
-    def get_config_path(self, project_path: Path) -> Path:
+    def get_config_path(self, _project_path: Path) -> Path:
         """Get Continue config path.
 
         Args:

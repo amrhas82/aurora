@@ -6,7 +6,6 @@ Configures slash commands for CodeBuddy AI in .codebuddy/commands/aurora/ direct
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
     "search": """---
@@ -24,6 +23,12 @@ tags: [aurora, search, memory]
     "plan": """---
 name: Aurora: Plan
 description: Create implementation plan [goal | goals.json]
+category: Aurora
+tags: [aurora, planning]
+---""",
+    "tasks": """---
+name: Aurora: Tasks
+description: Regenerate tasks from PRD [plan-id]
 category: Aurora
 tags: [aurora, planning]
 ---""",
@@ -46,6 +51,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".codebuddy/commands/aurora/search.md",
     "get": ".codebuddy/commands/aurora/get.md",
     "plan": ".codebuddy/commands/aurora/plan.md",
+    "tasks": ".codebuddy/commands/aurora-tasks.md",
     "implement": ".codebuddy/commands/aurora/implement.md",
     "archive": ".codebuddy/commands/aurora/archive.md",
 }
@@ -118,6 +124,7 @@ class CodeBuddySlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

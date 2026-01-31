@@ -12,7 +12,6 @@ from pathlib import Path
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
 
-
 # Try to import tree-sitter, fall back to text chunking if unavailable
 TREE_SITTER_AVAILABLE = True
 try:
@@ -566,14 +565,12 @@ class PythonParser(CodeParser):
 
         # Find import_statement and import_from_statement nodes
         for node in self._find_nodes_by_type(root_node, "import_statement"):
-            # import foo, bar
             for child in node.children:
                 if child.type == "dotted_name":
                     name = source_code[child.start_byte : child.end_byte]
                     imports.add(name.split(".")[0])  # Add base module name
 
         for node in self._find_nodes_by_type(root_node, "import_from_statement"):
-            # from foo import bar, baz
             for child in node.children:
                 if child.type == "dotted_name":
                     # Module being imported from
@@ -593,9 +590,9 @@ class PythonParser(CodeParser):
 
     def _identify_dependencies(
         self,
-        chunk: CodeChunk,
-        imports: set[str],
-        all_chunks: list[CodeChunk],
+        _chunk: CodeChunk,
+        _imports: set[str],
+        _all_chunks: list[CodeChunk],
     ) -> list[str]:
         """Identify dependencies for a code chunk.
 
@@ -607,9 +604,9 @@ class PythonParser(CodeParser):
         tracking variable assignments.
 
         Args:
-            chunk: The chunk to analyze
-            imports: Set of imported names
-            all_chunks: All chunks extracted from the file
+            _chunk: The chunk to analyze (reserved for future implementation)
+            _imports: Set of imported names (reserved for future implementation)
+            _all_chunks: All chunks extracted from the file (reserved for future implementation)
 
         Returns:
             List of chunk IDs this chunk depends on

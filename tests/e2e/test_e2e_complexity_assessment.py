@@ -32,7 +32,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = pytest.mark.e2e
 
@@ -392,7 +391,6 @@ class TestComplexityAssessment:
         - Simple lookups → SIMPLE
         """
         test_cases = [
-            # (query, expected_min_complexity, reason)
             (
                 "research agentic AI market? who are top players? what features?",
                 "MEDIUM",

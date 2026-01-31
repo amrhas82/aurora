@@ -24,11 +24,11 @@ class ClaudeConfigurator(BaseConfigurator):
         """Name of configuration file."""
         return "CLAUDE.md"
 
-    async def get_template_content(self, aurora_dir: str) -> str:
+    async def get_template_content(self, _aurora_dir: str) -> str:
         """Get Claude Code template content.
 
         Args:
-            aurora_dir: Name of Aurora directory
+            _aurora_dir: Name of Aurora directory (not used by this implementation)
 
         Returns:
             Template content for CLAUDE.md (stub referencing AGENTS.md)

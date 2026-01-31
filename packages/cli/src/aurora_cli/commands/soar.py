@@ -274,7 +274,8 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
     elif phase_num == 3:
         # Decompose phase
         count = result.get("subgoal_count", 0)
-        console.print(f"  [cyan]✓ {count} subgoals identified[/]")
+        # Don't show in-memory cache status here - file cache will be shown later if applicable
+        console.print(f"  [cyan]✓ {count} subgoals {'loaded' if result.get('cached') else 'identified'}[/]")
     elif phase_num == 4:
         # Verify phase (now includes agent assignment)
         verdict = result.get("verdict", "UNKNOWN")
@@ -636,6 +637,24 @@ def soar_command(
 
             console.print(traceback.format_exc())
         raise SystemExit(1)
+
+    # Check for file-based cache hit (goals.json or conversation log)
+    metadata = result.get("metadata", {})
+    cache_source = metadata.get("cache_source")
+    if cache_source:
+        # Determine cache source type
+        cache_source_str = str(cache_source)
+        if "goals.json" in cache_source_str:
+            source_type = "goals.json"
+        elif "/logs/conversations/" in cache_source_str:
+            source_type = "previous SOAR conversation"
+        else:
+            source_type = "cache"
+
+        console.print(
+            f"  [green]✓ Using cached decomposition from {source_type}[/] "
+            "[dim](use --no-cache for fresh)[/]"
+        )
 
     # Display final answer
     elapsed_time = time.time() - start_time

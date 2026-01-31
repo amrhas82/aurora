@@ -263,6 +263,7 @@ class EmbeddingProvider:
                 "huggingface_hub.utils._http",
                 "huggingface_hub.file_download",
                 "sentence_transformers.SentenceTransformer",
+                "transformers",
             ]
             original_levels = {}
             for logger_name in hf_loggers:
@@ -271,16 +272,23 @@ class EmbeddingProvider:
                 hf_logger.setLevel(logging.ERROR)
 
             try:
+                # Import suppression helper
+                from aurora_context_code.semantic.model_utils import (
+                    _suppress_model_loading_output,
+                )
+
                 # Use the lazily-imported SentenceTransformer class
-                if _SentenceTransformer is None:
-                    raise RuntimeError(
-                        "SentenceTransformer not loaded. "
-                        "Install with: pip install aurora-context-code[ml]"
-                    )
-                model = _SentenceTransformer(self.model_name, device=self.device)
-                self._model = cast(_SentenceTransformerProtocol, model)
-                # Update embedding dimension from the actual model
-                self._embedding_dim = self._model.get_sentence_embedding_dimension()
+                # Suppress verbose "Loading weights" progress bars
+                with _suppress_model_loading_output():
+                    if _SentenceTransformer is None:
+                        raise RuntimeError(
+                            "SentenceTransformer not loaded. "
+                            "Install with: pip install aurora-context-code[ml]"
+                        )
+                    model = _SentenceTransformer(self.model_name, device=self.device)
+                    self._model = cast(_SentenceTransformerProtocol, model)
+                    # Update embedding dimension from the actual model
+                    self._embedding_dim = self._model.get_sentence_embedding_dimension()
             finally:
                 # Restore original logging levels
                 for logger_name, level in original_levels.items():

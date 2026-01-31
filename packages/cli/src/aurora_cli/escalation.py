@@ -16,7 +16,6 @@ from typing import Any
 
 from aurora_soar.phases.assess import assess_complexity
 
-
 __all__ = ["AutoEscalationHandler", "EscalationConfig", "EscalationResult"]
 
 logger = logging.getLogger(__name__)
@@ -171,8 +170,7 @@ class AutoEscalationHandler:
         reasoning = assessment["reasoning"]
         score = assessment.get("score", self._complexity_to_score(complexity))
 
-        # Make escalation decision based on threshold
-        # SIMPLE (0.0-0.3), MEDIUM (0.3-0.6), COMPLEX (0.6-0.9), CRITICAL (0.9-1.0)
+        # Make escalation decision based on threshold (score ranges 0.0-1.0)
         use_aurora = score >= self.config.threshold
 
         # Log decision

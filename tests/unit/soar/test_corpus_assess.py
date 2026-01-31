@@ -8,7 +8,6 @@ Each entry contains:
 - notes: Why this classification is expected
 """
 
-# Format: (prompt, expected_level, category, notes)
 TEST_CORPUS = [
     # ==================== SIMPLE PROMPTS ====================
     # Simple - Lookup/Display

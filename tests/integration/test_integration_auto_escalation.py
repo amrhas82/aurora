@@ -368,8 +368,6 @@ class TestEscalationLogging:
                 # (This requires logging to be implemented)
 
                 # ASSERTION: Log should mention escalation
-                # log_messages = [record.message for record in caplog.records]
-                # escalation_logged = any("escalat" in msg.lower() for msg in log_messages)
 
                 # For now, this documents expected behavior
                 assert True, "Escalation logging will be verified in implementation"
@@ -380,8 +378,6 @@ class TestEscalationLogging:
         This test documents expected logging behavior.
         """
         # Expected log format:
-        # "Complexity assessment: MEDIUM (confidence: 0.45)"
-        # "Low confidence (<0.6), escalating to SOAR in non-interactive mode"
 
         assert True, "Confidence logging will be verified in implementation"
 

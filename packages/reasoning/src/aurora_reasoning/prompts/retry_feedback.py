@@ -15,7 +15,7 @@ class RetryFeedbackPromptTemplate(PromptTemplate):
     def __init__(self) -> None:
         super().__init__(name="retry_feedback", version="1.0")
 
-    def build_system_prompt(self, **kwargs: Any) -> str:
+    def build_system_prompt(self, **_kwargs: Any) -> str:
         """Build system prompt for retry feedback generation."""
         return """You are a feedback generator for retry attempts.
 
@@ -32,7 +32,7 @@ Keep feedback concise but specific. Avoid vague statements.
 
 Respond in plain text (NOT JSON) with a structured feedback message."""
 
-    def build_user_prompt(self, **kwargs: Any) -> str:
+    def build_user_prompt(self, **_kwargs: Any) -> str:
         """Build user prompt for retry feedback generation.
 
         Args:
@@ -43,8 +43,8 @@ Respond in plain text (NOT JSON) with a structured feedback message."""
             User prompt string
 
         """
-        verification_result = kwargs.get("verification_result", {})
-        attempt_number = kwargs.get("attempt_number", 1)
+        verification_result = _kwargs.get("verification_result", {})
+        attempt_number = _kwargs.get("attempt_number", 1)
 
         prompt_parts = [
             f"Verification Result (Attempt {attempt_number}):\n{json.dumps(verification_result, indent=2)}",

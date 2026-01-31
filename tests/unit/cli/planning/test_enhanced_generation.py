@@ -374,3 +374,87 @@ class TestBuildContextEnhanced:
         assert "plan_id" in context
         assert "subgoals" in context
         assert len(context["subgoals"]) == 3
+
+
+class TestSpecGenerationRemoval:
+    """Test that spec generation has been removed (Task 1.1 - R1)."""
+
+    def test_write_plan_files_creates_only_base_files_no_specs(
+        self, sample_plan_with_files, tmp_path
+    ):
+        """Test _write_plan_files creates only base files (4), no specs."""
+        from aurora_cli.planning.renderer import render_plan_files
+
+        # Render plan files
+        created_files = render_plan_files(sample_plan_with_files, tmp_path)
+
+        # Should create 4 base files (design.md is optional, not generated currently)
+        assert len(created_files) == 4, f"Expected 4 base files, got {len(created_files)}"
+
+        # Check that base files exist
+        assert (tmp_path / "plan.md").exists()
+        assert (tmp_path / "prd.md").exists()
+        assert (tmp_path / "tasks.md").exists()
+        assert (tmp_path / "agents.json").exists()
+
+        # Verify NO specs directory created
+        specs_dir = tmp_path / "specs"
+        assert not specs_dir.exists(), "specs/ directory should not be created"
+
+        # Verify no spec files in created_files list
+        spec_files = [f for f in created_files if "specs/" in str(f) or "/specs/" in str(f)]
+        assert len(spec_files) == 0, f"Found spec files: {spec_files}"
+
+
+class TestSpecValidationRemoval:
+    """Test that spec validation has been removed (Task 1.2 - R1)."""
+
+    def test_validate_plan_structure_no_spec_warnings(self, sample_plan_with_files, tmp_path):
+        """Test validate_plan_structure does not warn about missing spec files."""
+        from aurora_cli.planning.core import validate_plan_structure
+        from aurora_cli.planning.renderer import render_plan_files
+
+        # Create a valid plan
+        plan_dir = tmp_path / "test-plan"
+        plan_dir.mkdir()
+        render_plan_files(sample_plan_with_files, plan_dir)
+
+        # Validate plan structure
+        errors, warnings = validate_plan_structure(plan_dir, sample_plan_with_files.plan_id)
+
+        # NOTE: There may be agents.json validation errors due to pre-existing
+        # match_quality enum serialization issue, but that's not what we're testing here
+
+        # Should have NO warnings about missing spec files
+        spec_warnings = [w for w in warnings if "spec" in w.lower()]
+        assert len(spec_warnings) == 0, f"Found spec warnings: {spec_warnings}"
+
+        # Should not warn about specs/ directory
+        specs_warnings = [w for w in warnings if "specs/" in w]
+        assert len(specs_warnings) == 0, f"Found specs/ warnings: {specs_warnings}"
+
+    def test_validate_plan_structure_accepts_base_files_only(
+        self, sample_plan_with_files, tmp_path
+    ):
+        """Test validate_plan_structure accepts plans with only base files."""
+        from aurora_cli.planning.core import validate_plan_structure
+
+        # Create plan directory with only base files
+        plan_dir = tmp_path / "test-plan"
+        plan_dir.mkdir()
+
+        # Create 4 base files
+        (plan_dir / "plan.md").write_text("# Plan\n")
+        (plan_dir / "prd.md").write_text("# PRD\n")
+        (plan_dir / "tasks.md").write_text("# Tasks\n")
+        (plan_dir / "agents.json").write_text(sample_plan_with_files.model_dump_json(indent=2))
+
+        # Validate - should pass with no spec-related warnings
+        errors, warnings = validate_plan_structure(plan_dir, sample_plan_with_files.plan_id)
+
+        # Should have no errors
+        assert len(errors) == 0, f"Unexpected errors: {errors}"
+
+        # Should have no warnings about specs
+        spec_warnings = [w for w in warnings if "spec" in w.lower() or "specs/" in w]
+        assert len(spec_warnings) == 0, f"Should not warn about specs: {spec_warnings}"

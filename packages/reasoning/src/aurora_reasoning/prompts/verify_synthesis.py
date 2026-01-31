@@ -15,7 +15,7 @@ class VerifySynthesisPromptTemplate(PromptTemplate):
     def __init__(self) -> None:
         super().__init__(name="verify_synthesis", version="1.0")
 
-    def build_system_prompt(self, **kwargs: Any) -> str:
+    def build_system_prompt(self, **_kwargs: Any) -> str:
         """Build system prompt for synthesis verification."""
         return """You are a quality verifier for synthesized responses.
 
@@ -37,7 +37,7 @@ You MUST respond with valid JSON only. Use this exact format:
   "suggestions": ["list", "of", "improvements"]
 }"""
 
-    def build_user_prompt(self, **kwargs: Any) -> str:
+    def build_user_prompt(self, **_kwargs: Any) -> str:
         """Build user prompt for synthesis verification.
 
         Args:
@@ -49,9 +49,9 @@ You MUST respond with valid JSON only. Use this exact format:
             User prompt string
 
         """
-        query = kwargs.get("query", "")
-        synthesis_answer = kwargs.get("synthesis_answer", "")
-        agent_outputs = kwargs.get("agent_outputs", [])
+        query = _kwargs.get("query", "")
+        synthesis_answer = _kwargs.get("synthesis_answer", "")
+        agent_outputs = _kwargs.get("agent_outputs", [])
 
         prompt_parts = [
             f"Original Query: {query}",

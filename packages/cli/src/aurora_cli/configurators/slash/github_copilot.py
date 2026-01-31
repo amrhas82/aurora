@@ -7,7 +7,6 @@ Files use .prompt.md extension and include $ARGUMENTS placeholder.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command - includes $ARGUMENTS placeholder
 FRONTMATTER: dict[str, str] = {
     "search": """---
@@ -22,6 +21,11 @@ description: Retrieve last search result [N]
 $ARGUMENTS""",
     "plan": """---
 description: Create implementation plan [goal | goals.json]
+---
+
+$ARGUMENTS""",
+    "tasks": """---
+description: Regenerate tasks from PRD [plan-id]
 ---
 
 $ARGUMENTS""",
@@ -42,6 +46,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".github/prompts/aurora-search.prompt.md",
     "get": ".github/prompts/aurora-get.prompt.md",
     "plan": ".github/prompts/aurora-plan.prompt.md",
+    "tasks": ".github/prompts/aurora-tasks.prompt.md",
     "implement": ".github/prompts/aurora-implement.prompt.md",
     "archive": ".github/prompts/aurora-archive.prompt.md",
 }
@@ -114,6 +119,7 @@ class GitHubCopilotSlashCommandConfigurator(SlashCommandConfigurator):
             "search": 'Search indexed code ["query" --limit N --type X]',
             "get": "Retrieve last search result [N]",
             "plan": "Create implementation plan [goal | goals.json]",
+            "tasks": "Regenerate tasks from PRD [plan-id]",
             "implement": "Execute plan tasks [plan-id]",
             "archive": "Archive completed plan [plan-id]",
         }

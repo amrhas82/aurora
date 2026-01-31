@@ -71,11 +71,6 @@ class TestCalculateOverallScore:
 
     def test_weighted_calculation(self):
         """Test weighted score calculation."""
-        # Completeness: 0.8 * 0.4 = 0.32
-        # Consistency: 0.6 * 0.2 = 0.12
-        # Groundedness: 0.9 * 0.2 = 0.18
-        # Routability: 0.7 * 0.2 = 0.14
-        # Total: 0.76
         score = _calculate_overall_score(0.8, 0.6, 0.9, 0.7)
         assert abs(score - 0.76) < 0.001
 

@@ -328,12 +328,7 @@ Configure agent discovery and caching.
 ```json
 {
   "agents": {
-    "discovery_paths": [
-      "~/.claude/agents",
-      "~/.config/ampcode/agents",
-      "~/.config/droid/agent",
-      "~/.config/opencode/agent"
-    ],
+    "discovery_paths": [],
     "manifest_path": "./.aurora/cache/agent_manifest.json",
     "refresh_interval_days": 1,
     "fallback_mode": "llm_only"
@@ -342,13 +337,30 @@ Configure agent discovery and caching.
 ```
 
 **Fields:**
-- `discovery_paths` - Where to find agent definitions
-- `manifest_path` - Cached agent registry
-- `refresh_interval_days` - How often to rescan
-- `fallback_mode` - What to do if no agents found
+- `discovery_paths` - Optional custom paths to agent directories. If empty/not specified, automatically uses all 20 tool paths from `paths.py` registry (recommended default)
+- `manifest_path` - Cached agent registry location
+- `refresh_interval_days` - How often to rescan agent directories
+- `fallback_mode` - Behavior when no agents found ("llm_only" or other)
 
 **Discovery:**
-Aurora searches for `agents.json` files in configured paths and caches the results.
+Aurora searches for agent `.md` files in directories for all 20 supported tools by default. Agent discovery works **without requiring tool configuration** - agents from any supported tool directory will be discovered automatically.
+
+**Default behavior (empty discovery_paths):**
+Automatically scans all 20 tool directories defined in `packages/cli/src/aurora_cli/configurators/slash/paths.py`:
+- `~/.claude/agents`, `~/.cursor/agents`, `~/.cline/agents`
+- `~/.windsurf/agents`, `~/.factory/droids`, `~/.codex/agents`
+- `~/.config/opencode/agent`, `~/.config/gemini-cli/agents`
+- And 12 more tool directories...
+
+**Custom paths:**
+```json
+{
+  "agents": {
+    "discovery_paths": ["~/.claude/agents", "~/my-custom-agents"]
+  }
+}
+```
+When specified, **only** the custom paths are used (default tool paths are not included).
 
 ---
 

@@ -31,7 +31,6 @@ from aurora_cli.errors import handle_errors
 from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
 
-
 __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
 
 logger = logging.getLogger(__name__)
@@ -137,35 +136,23 @@ def run_indexing(
 
     db_path_str = config.get_db_path()
 
+    # FAIL-FAST: Validate ML dependencies BEFORE any file processing
+    # This ensures we don't waste time indexing files only to fail later
+    from aurora_context_code.semantic.model_utils import MLDependencyError, validate_ml_ready
+
+    try:
+        out.print("[dim]Checking ML dependencies...[/]")
+        validate_ml_ready(model_name=config.embedding_model, console=out)
+        out.print("[green]✓[/] ML dependencies ready\n")
+    except MLDependencyError as e:
+        out.print(f"[bold red]ML Setup Required[/]\n{e}\n")
+        raise click.Abort()
+
     # Initialize memory manager with config
     if show_db_path:
         out.print(f"[dim]Using database: {db_path_str}[/]")
 
     manager = MemoryManager(config=config)
-
-    # Ensure embedding model is downloaded before indexing
-    # This prevents HuggingFace download interrupting the indexing progress
-    try:
-        from aurora_context_code.semantic.model_utils import (
-            ensure_model_downloaded,
-            is_model_cached,
-        )
-
-        model_name = config.embedding_model
-        if not is_model_cached(model_name):
-            out.print("[cyan]Embedding model not cached, downloading...[/]")
-            if not ensure_model_downloaded(model_name, show_progress=True, console=out):
-                out.print(
-                    "[yellow]Warning: Failed to download embedding model. "
-                    "Semantic search will be unavailable (BM25-only mode).[/]",
-                )
-        else:
-            out.print(f"[dim]Embedding model: {model_name} (cached)[/]")
-    except ImportError:
-        out.print(
-            "[yellow]Warning: sentence-transformers not installed. "
-            "Semantic search will be unavailable.[/]",
-        )
 
     # Suppress parse warnings during indexing for cleaner progress output
     # Warnings are counted via filter and displayed in the final summary
@@ -339,7 +326,7 @@ def display_indexing_summary(
 @click.pass_context
 @handle_errors
 def index_command(
-    ctx: click.Context,
+    _ctx: click.Context,
     path: Path,
     db_path: Path | None,
     force: bool,
@@ -451,7 +438,7 @@ def index_command(
 @click.pass_context
 @handle_errors
 def search_command(
-    ctx: click.Context,
+    _ctx: click.Context,
     query: str,
     limit: int,
     output_format: str,
@@ -492,18 +479,8 @@ def search_command(
         aur mem search "authentication" --show-scores
     """
     # Start background model loading immediately (before any other work)
+    # This gives the model a head start while we do other initialization
     _start_background_model_loading()
-
-    # Show loading status if embedding model is not ready
-    try:
-        from aurora_context_code.model_cache import is_model_cached_fast
-        from aurora_context_code.semantic.model_utils import BackgroundModelLoader
-
-        loader = BackgroundModelLoader.get_instance()
-        if is_model_cached_fast() and loader.is_loading() and not loader.is_loaded():
-            console.print("[dim]⏳ Loading embedding model in background...[/]")
-    except ImportError:
-        pass  # ML dependencies not available, BM25-only mode
 
     # Load configuration
     config = Config()
@@ -545,21 +522,16 @@ def search_command(
     store = SQLiteStore(str(db_path_resolved))
     retriever = MemoryRetriever(store=store, config=config)
 
-    # Perform fast search - returns immediately, uses BM25-only if model still loading
-    raw_results, is_full_hybrid = retriever.retrieve_fast(
+    # Perform hybrid search - waits for embedding model if loading
+    # If type filter is specified, retrieve 3x limit to ensure enough results after filtering
+    # This fixes the bug where filtering happened after limit, returning 0 results
+    retrieve_limit = limit * 3 if chunk_type else limit
+    raw_results = retriever.retrieve(
         query,
-        limit=limit,
+        limit=retrieve_limit,
         min_semantic_score=min_score,
+        wait_for_model=True,  # Wait for embeddings, fall back to BM25 only if unavailable
     )
-
-    # Show search mode indicator
-    if not is_full_hybrid and retriever.is_embedding_model_loading():
-        console.print(
-            "[yellow]⚡ Fast mode (BM25+activation) - embedding model loading in background[/]",
-        )
-    elif not is_full_hybrid:
-        # Model not available at all (not installed or not cached)
-        console.print("[dim]Using BM25+activation search (semantic embeddings unavailable)[/]")
 
     # Convert to SearchResult objects for display compatibility
     results = []
@@ -603,10 +575,19 @@ def search_command(
 
     # Filter by chunk type if specified
     if chunk_type:
+        unfiltered_count = len(results)
         results = [r for r in results if r.metadata.get("type") == chunk_type]
         if not results:
-            console.print(f"\n[yellow]No results found with type='{chunk_type}'[/]\n")
+            console.print(f"\n[yellow]No results found with type='{chunk_type}'[/]")
+            console.print("\n[dim]Suggestions:[/]")
+            if unfiltered_count > 0:
+                console.print(f"  • Found {unfiltered_count} results without type filter")
+                console.print("  • Try removing --type to see all results")
+            console.print("  • Try a different search query")
+            console.print("  • Re-index if data is stale: [cyan]aur mem index .[/]\n")
             return
+        # Trim to requested limit after filtering
+        results = results[:limit]
 
     # Display results
     if output_format == "json":
@@ -629,7 +610,7 @@ def search_command(
 )
 @click.pass_context
 @handle_errors
-def get_command(ctx: click.Context, index: int, output_format: str) -> None:
+def get_command(_ctx: click.Context, index: int, output_format: str) -> None:
     r"""Retrieve full content of a search result by index.
 
     INDEX is the 1-based result number from the last search.
@@ -676,7 +657,7 @@ def get_command(ctx: click.Context, index: int, output_format: str) -> None:
 )
 @click.pass_context
 @handle_errors
-def stats_command(ctx: click.Context, db_path: Path | None) -> None:
+def stats_command(_ctx: click.Context, db_path: Path | None) -> None:
     r"""Display memory store statistics.
 
     Shows information about indexed chunks, files, languages, and database size.
@@ -854,7 +835,7 @@ def _display_rich_results(
     results: list[SearchResult],
     query: str,
     show_content: bool,
-    config: Config,
+    _config: Config,
     show_scores: bool = False,
 ) -> None:
     """Display search results with rich formatting.
@@ -863,7 +844,7 @@ def _display_rich_results(
         results: List of SearchResult objects
         query: Original search query
         show_content: Whether to show content preview
-        config: Configuration object with threshold settings
+        _config: Configuration object with threshold settings (reserved for future use)
         show_scores: Whether to show detailed score breakdown
 
     """
@@ -873,7 +854,7 @@ def _display_rich_results(
             "All results were below the semantic threshold.\n"
             "Try:\n"
             "  - Broadening your search query\n"
-            "  - Lowering the threshold with --min-score 0.2\n"
+            '  - Lowering the threshold with aur mem search "query" --min-score 0.2\n'
             "  - Checking if the codebase has been indexed",
         )
         return
@@ -1002,6 +983,16 @@ def _display_rich_results(
     console.print("  --min-score 0.5  Higher relevance threshold")
     console.print()
 
+    # Check for misclassified markdown files (should be type='kb', not type='code')
+    # This can happen if the database was indexed before the fix was applied
+    misclassified = [
+        r for r in results if r.file_path.endswith(".md") and r.metadata.get("type") == "code"
+    ]
+    if misclassified:
+        console.print(f"[yellow]⚠ Found {len(misclassified)} markdown file(s) with type='code'[/]")
+        console.print("[dim]This may cause incorrect filtering with --type.[/]")
+        console.print("[dim]Fix by re-indexing:[/] [cyan]aur mem index .[/]\n")
+
     # Show detailed score breakdown if requested
     if show_scores:
         console.print("[bold cyan]Detailed Score Breakdown:[/]\n")
@@ -1118,7 +1109,7 @@ def _get_type_abbreviation(element_type: str) -> str:
 
 def _format_score_box(
     result: SearchResult,
-    rank: int,
+    _rank: int,
     query: str = "",
     terminal_width: int = 78,
 ) -> Text:
@@ -1132,7 +1123,7 @@ def _format_score_box(
 
     Args:
         result: SearchResult object with scores and metadata
-        rank: Result rank (1-based)
+        _rank: Result rank (1-based, reserved for future use)
         query: Search query text for explanation generation
         terminal_width: Terminal width for box sizing (default 78)
 
@@ -1299,7 +1290,7 @@ def _format_score_box(
     return text
 
 
-def _explain_bm25_score(query: str, chunk_content: str, bm25_score: float) -> str:
+def _explain_bm25_score(query: str, chunk_content: str, _bm25_score: float) -> str:
     """Generate human-readable explanation for BM25 score.
 
     Analyzes query term matching to produce explanations like:
@@ -1311,7 +1302,7 @@ def _explain_bm25_score(query: str, chunk_content: str, bm25_score: float) -> st
     Args:
         query: Search query text
         chunk_content: Content of chunk that was scored
-        bm25_score: BM25 score value (unused but included for consistency)
+        _bm25_score: BM25 score value (unused but included for consistency)
 
     Returns:
         Human-readable explanation string (may be empty if no match)
@@ -1450,7 +1441,7 @@ def _explain_semantic_score(semantic_score: float) -> str:
     return "low conceptual relevance"
 
 
-def _explain_activation_score(metadata: dict[str, Any], activation_score: float) -> str:
+def _explain_activation_score(metadata: dict[str, Any], _activation_score: float) -> str:
     """Generate human-readable explanation for activation score.
 
     Combines access frequency, git commit history, and recency information
@@ -1461,7 +1452,7 @@ def _explain_activation_score(metadata: dict[str, Any], activation_score: float)
             - access_count: Number of times accessed (required, defaults to 0)
             - commit_count: Number of git commits (optional)
             - last_modified: Timestamp of last modification (optional)
-        activation_score: Activation score value (unused but included for consistency)
+        _activation_score: Activation score value (unused but included for consistency)
 
     Returns:
         Explanation string (e.g., "accessed 3x, 23 commits, last used 2 days ago")

@@ -6,12 +6,12 @@ Configures slash commands for Antigravity AI in .agent/workflows/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Descriptions for each command
 DESCRIPTIONS: dict[str, str] = {
     "search": 'Search indexed code ["query" --limit N --type X]',
     "get": "Retrieve last search result [N]",
     "plan": "Create implementation plan [goal | goals.json]",
+    "tasks": "Regenerate tasks from PRD [plan-id]",
     "implement": "Execute plan tasks [plan-id]",
     "archive": "Archive completed plan [plan-id]",
 }
@@ -21,6 +21,7 @@ FILE_PATHS: dict[str, str] = {
     "search": ".agent/workflows/aurora-search.md",
     "get": ".agent/workflows/aurora-get.md",
     "plan": ".agent/workflows/aurora-plan.md",
+    "tasks": ".agent/workflows/aurora-tasks.md",
     "implement": ".agent/workflows/aurora-implement.md",
     "archive": ".agent/workflows/aurora-archive.md",
 }

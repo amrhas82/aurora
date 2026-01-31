@@ -32,7 +32,6 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -157,7 +156,7 @@ class GitSignalExtractor:
             logger.warning(f"Error getting blame for {file_path}: {e}")
             return {}
 
-    def _parse_full_file_blame(self, output: str, repo_root: Path) -> dict[int, tuple[str, int]]:
+    def _parse_full_file_blame(self, output: str, _repo_root: Path) -> dict[int, tuple[str, int]]:
         r"""Parse git blame --line-porcelain output for entire file.
 
         The format repeats for each line:
@@ -426,7 +425,7 @@ class GitSignalExtractor:
             # Add power law term: t^(-d)
             power_law_sum += math.pow(time_since, -decay)
 
-        # BLA = ln(sum)
+        # Calculate BLA as natural log of sum
         if power_law_sum > 0:
             bla = math.log(power_law_sum)
         else:

@@ -4,8 +4,6 @@ This module provides template content for .claude/commands/aur/*.md files.
 These commands provide convenient Claude Code slash command integrations.
 """
 
-from typing import Dict  # noqa: F401
-
 
 def get_command_template(command_name: str) -> str | None:
     """Get the template for a specific command.
@@ -52,13 +50,13 @@ Creates, validates, and tracks implementation plans.
 aur plan list
 
 # Show plan details
-aur plan show <plan-id>
+aur plan view <plan-id>
 
 # Create new plan
 aur plan create "Add user authentication"
 
-# Validate plan structure
-aur plan validate <plan-id>
+# Archive completed plan
+aur plan archive <plan-id>
 ```
 
 **Plan structure:**

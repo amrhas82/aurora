@@ -341,25 +341,59 @@ Uses SOAROrchestrator with `stop_after_verify=True`:
 
 ### 1. Memory Search (Phase 1-2)
 
-Searches indexed codebase for relevant context:
-- Extracts keywords from goal
-- Queries Aurora memory (ACT-R)
-- Returns top files with relevance scores
+Searches indexed codebase for relevant context using complexity-based retrieval budgets.
+
+**Complexity-Based Retrieval:**
+
+| Complexity | Code Chunks | KB Chunks | Total Retrieved | Context Limit |
+|------------|-------------|-----------|-----------------|---------------|
+| SIMPLE     | 3           | 2         | 5               | skip          |
+| MEDIUM     | 5           | 5         | 10              | 5 code, 8 total |
+| COMPLEX    | 7           | 8         | 15              | 7 code, 12 total |
+| CRITICAL   | 10          | 10        | 20              | 10 code, 15 total |
+
+**Type-Aware Retrieval:** Queries code and KB (knowledge base) chunks separately to ensure both types are represented.
 
 ### 2. Goal Decomposition (Phase 3)
 
-Uses LLM to break down the goal:
-- Analyzes goal and context
-- Creates 2-7 concrete subgoals
-- Identifies dependencies
-- Assigns subgoal IDs (sg-1, sg-2, etc.)
+Uses LLM to break down the goal with complexity-aware constraints.
+
+**Complexity-Based Decomposition (v0.10.0):**
+
+| Complexity | Few-Shot Examples | Max Subgoals | Execution Preference |
+|------------|-------------------|--------------|----------------------|
+| SIMPLE     | 0                 | 0 (bypass)   | skip                 |
+| MEDIUM     | 1                 | 2            | sequential           |
+| COMPLEX    | 1                 | 4            | mixed                |
+| CRITICAL   | 2                 | 6            | parallel             |
+
+**Optimization:**
+- Reduced few-shot examples (50% reduction for COMPLEX/CRITICAL)
+- Explicit subgoal limits in LLM prompt with enforcement rules
+- Execution preferences guide parallelization strategy
+- Chunk deduplication reduces context redundancy
+
+**Result:** MEDIUM goals now generate 2 focused subgoals instead of 7 (71% reduction).
 
 ### 3. Plan Verification (Phase 4)
 
-Validates the decomposition:
-- Checks subgoal completeness
-- Verifies dependencies are valid
-- Ensures coverage of original goal
+Validates decomposition quality using `verify_lite()` with complexity-based enforcement.
+
+**Verification Checks:**
+1. Structural validation (required fields, valid dependencies)
+2. **Subgoal count enforcement** - Rejects decompositions exceeding complexity limits
+3. Agent assignment and capability matching
+4. Circular dependency detection
+
+**Subgoal Limits:**
+
+| Complexity | Max Allowed | Action if Exceeded |
+|------------|-------------|-------------------|
+| MEDIUM     | 2           | FAIL → Retry with feedback |
+| COMPLEX    | 4           | FAIL → Retry with feedback |
+| CRITICAL   | 6           | FAIL → Retry with feedback |
+
+**Auto-Retry:** Verification failures trigger automatic retry with specific feedback to guide LLM toward consolidation.
 
 ### 4. Agent Matching (Phase 5)
 
@@ -384,6 +418,69 @@ Allows you to review and edit:
 - Can abort before saving
 
 Skip with `--yes` flag.
+
+## Cache System
+
+`aur goals` shares the same **3-layer cache architecture** as `aur soar` to avoid redundant decompositions.
+
+### Cache Layers
+
+**1. In-Memory SOAR Cache**
+- **Key**: SHA256(`query|complexity`)
+- **Lifetime**: Current session
+- **Speed**: <1ms
+
+**2. goals.json File Cache**
+- **Key**: Normalized query string (lowercase + whitespace collapsed)
+- **Lifetime**: Persistent
+- **Speed**: ~50ms
+- **Match**: Exact after normalization
+
+Example:
+```
+Query: "Implement OAuth2  Authentication"
+Normalized: "implement oauth2 authentication"
+
+goals.json title: "implement oauth2 authentication" → MATCH
+goals.json title: "implement oauth authentication" → NO MATCH
+```
+
+**3. Conversation Log Cache**
+- **Key**: Hybrid score (BM25 + Activation + Semantic)
+- **Threshold**: 0.90
+- **Lifetime**: Persistent
+- **Speed**: ~100ms
+- **Match**: Fuzzy semantic matching
+
+### Cache Display
+
+**v0.10.0 - Unified indicators:**
+```bash
+Phase 3: ✓ 2 subgoals loaded  # In-memory or file cache
+
+✓ Using cached decomposition from goals.json (use --no-cache for fresh)
+✓ Using cached decomposition from previous SOAR conversation (use --no-cache for fresh)
+```
+
+**No duplicate messages** - consolidated into single source-attributed indicator.
+
+### Cache Invalidation
+
+```bash
+# Force fresh decomposition
+aur goals "goal" --no-cache
+
+# Manual clearing
+rm -rf .aurora/plans/active/*           # Clear goals.json cache
+rm -rf .aurora/logs/conversations/*     # Clear conversation cache
+```
+
+### Performance Impact
+
+| Scenario | First Run | Cached Run | Savings |
+|----------|-----------|------------|---------|
+| MEDIUM goal | 8-12s | <1ms (in-memory) | ~8-12s |
+| COMPLEX goal | 15-25s | 50ms (goals.json) | ~15-25s |
 
 ## Agent Capabilities
 
@@ -491,9 +588,40 @@ Time includes:
 - `0`: Success
 - `1`: Error (validation, tool not found, etc.)
 
+## Recent Changes
+
+### v0.10.0 - Decomposition Optimization & Cache Improvements
+
+**Complexity-Based Configuration:**
+- Reduced few-shot examples: COMPLEX 2→1, CRITICAL 3→2 (50% reduction)
+- Complexity-based retrieval budgets: MEDIUM 5+5=10, COMPLEX 7+8=15, CRITICAL 10+10=20
+- Complexity-based context limits to optimize LLM context window usage
+
+**Subgoal Enforcement:**
+- `verify_lite()` enforces complexity-based subgoal limits
+- MEDIUM=2, COMPLEX=4, CRITICAL=6 max subgoals
+- Auto-retry with feedback when limits exceeded
+- **Result**: MEDIUM goals now generate 2 subgoals instead of 7 (71% reduction)
+
+**Cache System Improvements:**
+- 3-layer cache (in-memory, goals.json, conversation logs) now documented
+- Unified cache display with source attribution
+- No more duplicate cache messages
+- Clear indicators: "from goals.json" vs "from previous SOAR conversation"
+
+**Context Optimization:**
+- Chunk deduplication by file_path reduces redundancy
+- Explicit execution preferences in prompts (sequential/mixed/parallel)
+- Consolidation guidance for LLM
+
+**Shared Infrastructure:**
+- Same SOAROrchestrator as `aur soar` (phases 1-4)
+- Same cache layers and matching mechanisms
+- Consistent decomposition quality
+
 ## See Also
 
-- [aur soar Command](./aur-soar.md) - Full SOAR pipeline (shares phases 1-5 with aur goals)
+- [aur soar Command](./aur-soar.md) - Full SOAR pipeline (shares phases 1-4 with aur goals)
 - [aur spawn Command](./aur-spawn.md) - Parallel task execution (shares spawner with aur soar)
 - [Planning Flow Workflow](../workflows/planning-flow.md)
 - [Example goals.json Files](../../examples/goals/)

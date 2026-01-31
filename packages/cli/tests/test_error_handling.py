@@ -464,7 +464,7 @@ class TestDryRunMode:
 
     @patch("aurora_cli.main.AutoEscalationHandler")
     @patch("aurora_core.store.SQLiteStore")
-    def test_dry_run_shows_config(self, mock_store, mock_handler, capsys):
+    def test_dry_run_shows_config(self, _mock_store, mock_handler, _capsys):
         """Test dry-run mode displays configuration."""
         from click.testing import CliRunner
 

@@ -29,7 +29,6 @@ from typing import Any
 
 import pytest
 
-
 pytestmark = [pytest.mark.performance, pytest.mark.ml]
 
 

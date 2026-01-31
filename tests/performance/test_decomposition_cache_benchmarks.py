@@ -638,10 +638,8 @@ class TestCacheConcurrentAccess:
             goal, complexity = goals[idx]
 
             if counter["i"] % 10 == 0:
-                # 10% writes
                 memory_cache.set(goal, complexity, sample_subgoals, "heuristic")
             else:
-                # 90% reads
                 memory_cache.get(goal, complexity)
 
             counter["i"] += 1

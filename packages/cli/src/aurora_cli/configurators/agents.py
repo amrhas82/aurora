@@ -22,7 +22,7 @@ class AgentsStandardConfigurator(BaseConfigurator):
         """Name of configuration file."""
         return "AGENTS.md"
 
-    async def get_template_content(self, aurora_dir: str) -> str:
+    async def get_template_content(self, _aurora_dir: str) -> str:
         """Get universal AGENTS.md template content.
 
         Args:

@@ -7,12 +7,11 @@ all 8 plan files from templates.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
-
 
 # Import from the correct location - Plan model is in aurora_cli.planning.models
 try:
@@ -104,7 +103,9 @@ class TemplateRenderer:
 
         # Build ISO 8601 timestamps for JSON
         created_iso = (
-            plan.created_at.isoformat() if plan.created_at else datetime.utcnow().isoformat()
+            plan.created_at.isoformat()
+            if plan.created_at
+            else datetime.now(timezone.utc).isoformat()
         )
 
         # Build subgoals with enhanced agent capability context
@@ -190,7 +191,13 @@ def render_plan_files(
     output_dir: Path,
     template_dir: Path | None = None,
 ) -> list[Path]:
-    """Render all 8 plan files from templates.
+    """Render all plan files from templates.
+
+    Generates 4 base files:
+    - plan.md: Overview and subgoal breakdown
+    - prd.md: Product requirements document
+    - tasks.md: Implementation task list
+    - agents.json: Machine-readable plan data
 
     Args:
         plan: Plan to render
@@ -210,22 +217,12 @@ def render_plan_files(
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create specs subdirectory
-    specs_dir = output_dir / "specs"
-    specs_dir.mkdir(exist_ok=True)
-
-    # Define all 8 files to generate
+    # Define base files to generate
     file_templates = [
-        # Base files (4)
         ("plan.md.j2", "plan.md"),
         ("prd.md.j2", "prd.md"),
         ("tasks.md.j2", "tasks.md"),
         ("agents.json.j2", "agents.json"),
-        # Capability specs (4) - in specs/ subdirectory
-        ("planning.md.j2", f"specs/{context['plan_id']}-planning.md"),
-        ("commands.md.j2", f"specs/{context['plan_id']}-commands.md"),
-        ("validation.md.j2", f"specs/{context['plan_id']}-validation.md"),
-        ("schemas.md.j2", f"specs/{context['plan_id']}-schemas.md"),
     ]
 
     created_files = []

@@ -35,7 +35,6 @@ from aurora_cli.planning.core import (
     show_plan,
 )
 
-
 if TYPE_CHECKING:
     pass
 
@@ -204,8 +203,7 @@ def create_command(
 
     console.print("\n[bold]Subgoals:[/]")
     for i, sg in enumerate(plan.subgoals, 1):
-        agent_status = "[green][/]" if sg.agent_exists else "[yellow]NOT FOUND[/]"
-        console.print(f"  {i}. {sg.title} ({sg.recommended_agent} {agent_status})")
+        console.print(f"  {i}. {sg.title} ({sg.assigned_agent})")
         if sg.dependencies:
             console.print(f"     [dim]Depends on: {', '.join(sg.dependencies)}[/]")
 
@@ -214,15 +212,10 @@ def create_command(
         for warning in result.warnings:
             console.print(f"  - {warning}")
 
-    console.print("\n[bold]Files created (8 total):[/]")
+    console.print("\n[bold]Files created (4 total):[/]")
     # Base files
     for fname in ["plan.md", "prd.md", "tasks.md", "agents.json"]:
         console.print(f"  [green][/] {fname}")
-    # Capability specs
-    console.print(f"  [green][/] specs/{plan.plan_id}-planning.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-commands.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-validation.md")
-    console.print(f"  [green][/] specs/{plan.plan_id}-schemas.md")
 
     console.print("\n[bold]Next steps:[/]")
     console.print(f"1. Review plan:    aur plan view {plan.plan_id}")
@@ -467,16 +460,14 @@ def view_command(plan_id: str, archived: bool, output_format: str) -> None:
     console.print("-" * 60)
 
     for i, sg in enumerate(plan.subgoals, 1):
-        status = "[green][/]" if sg.agent_exists else "[yellow]NOT FOUND[/]"
-        console.print(f"\n{i}. {sg.title} ({sg.recommended_agent} {status})")
+        console.print(f"\n{i}. {sg.title} ({sg.assigned_agent})")
         console.print(f"   {sg.description}")
         deps = ", ".join(sg.dependencies) if sg.dependencies else "None"
         console.print(f"   [dim]Dependencies: {deps}[/]")
 
-        if not sg.agent_exists:
-            console.print("\n   [yellow]Agent Gap Detected:[/]")
-            console.print(f"   - Missing: {sg.recommended_agent}")
-            console.print("   - Fallback: Use @market-researcher or @code-developer")
+        # Show ideal agent if different from assigned (gap detection)
+        if hasattr(sg, "ideal_agent") and sg.ideal_agent and sg.ideal_agent != sg.assigned_agent:
+            console.print(f"   [yellow]Ideal agent: {sg.ideal_agent}[/]")
 
     if result.files_status:
         console.print("\n[bold]Files:[/]")
@@ -538,9 +529,8 @@ def archive_command(plan_id: str, yes: bool) -> None:
     console.print(f"\n[bold green]Plan archived: {result.plan.plan_id}[/]")
     console.print(f"\nArchived to: {result.target_dir}/")
     console.print(f"Duration: {result.duration_days} days")
-    console.print("\nFiles archived (8 total):")
+    console.print("\nFiles archived (4 total):")
     for fname in ["plan.md", "prd.md", "tasks.md", "agents.json"]:
         console.print(f"  [green][/] {fname}")
-    console.print("  [green][/] specs/ (4 capability specs)")
 
     console.print("\nView archived plans: aur plan list --archived")

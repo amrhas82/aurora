@@ -254,7 +254,7 @@ class TestLoadConfig:
         captured = capsys.readouterr()
         assert str(config_path) in captured.out
 
-    def test_load_config_env_overrides_file(self, tmp_path, monkeypatch, capsys):
+    def test_load_config_env_overrides_file(self, tmp_path, monkeypatch, _capsys):
         """Test that environment variables override file values."""
         # Create config file
         config_path = tmp_path / "aurora.config.json"
@@ -439,7 +439,7 @@ class TestLoadConfig:
         captured = capsys.readouterr()
         assert str(current_config_path) in captured.out
 
-    def test_load_config_partial_file(self, tmp_path, monkeypatch, capsys):
+    def test_load_config_partial_file(self, tmp_path, monkeypatch, _capsys):
         """Test loading config with partial file (missing keys use defaults)."""
         # Create config with only some values
         config_path = tmp_path / "aurora.config.json"

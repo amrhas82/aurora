@@ -20,7 +20,7 @@ from aurora_cli.templates.headless import SCRATCHPAD_TEMPLATE
 console = Console()
 
 
-def _parse_tools_callback(ctx, param, value):
+def _parse_tools_callback(_ctx, _param, value):
     """Parse comma-separated tools or return tuple as-is."""
     if not value:
         return None
@@ -34,7 +34,7 @@ def _parse_tools_callback(ctx, param, value):
     return tuple(result) if result else None
 
 
-def _parse_tool_flags_callback(ctx, param, value):
+def _parse_tool_flags_callback(_ctx, _param, value):
     """Parse tool:flags pairs into a dict.
 
     Format: --tool-flags "claude:--model opus" --tool-flags "opencode:--verbose"
@@ -52,7 +52,7 @@ def _parse_tool_flags_callback(ctx, param, value):
     return result
 
 
-def _parse_tool_env_callback(ctx, param, value):
+def _parse_tool_env_callback(_ctx, _param, value):
     """Parse tool:KEY=VALUE pairs into a dict.
 
     Format: --tool-env "claude:ANTHROPIC_MODEL=opus" --tool-env "opencode:DEBUG=1"

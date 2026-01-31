@@ -154,11 +154,11 @@ def _validate_goals_requirements(tool: str) -> str | None:
     return None
 
 
-def _ensure_aurora_initialized(verbose: bool = False) -> None:
+def _ensure_aurora_initialized(_verbose: bool = False) -> None:
     """Ensure .aurora directory exists, creating it if needed.
 
     Args:
-        verbose: Whether to print verbose output
+        _verbose: Whether to print verbose output (reserved for future use)
     """
     aurora_dir = Path.cwd() / ".aurora"
     if aurora_dir.exists():
@@ -181,6 +181,7 @@ def _generate_goals_plan(
     no_decompose: bool,
     config: Config,
     yes: bool,
+    no_cache: bool = False,
 ) -> PlanResult:
     """Generate a goals plan using the SOAR pipeline.
 
@@ -190,6 +191,7 @@ def _generate_goals_plan(
         no_decompose: If True, skip SOAR decomposition
         config: Aurora configuration object
         yes: Skip confirmation prompts if True
+        no_cache: If True, skip cache and force fresh decomposition
 
     Returns:
         PlanResult from create_plan with success status and plan data
@@ -201,13 +203,14 @@ def _generate_goals_plan(
         config=config,
         yes=yes,
         goals_only=True,  # aur goals creates ONLY goals.json per PRD-0026
+        no_cache=no_cache,
     )
 
 
 def _display_goals_results(
     result: PlanResult,
     output_format: str,
-    verbose: bool,
+    _verbose: bool,
     yes: bool,
 ) -> str | None:
     """Display goals results in the specified format.
@@ -215,7 +218,7 @@ def _display_goals_results(
     Args:
         result: PlanResult from create_plan
         output_format: "json" or "rich"
-        verbose: Whether to show verbose output
+        _verbose: Whether to show verbose output (reserved for future use)
         yes: Whether --yes flag was passed (skip editor prompt)
 
     Returns:
@@ -423,6 +426,12 @@ def _build_assignments_table(subgoals: list) -> Table:
     default=False,
     help="Non-interactive mode (alias for --yes)",
 )
+@click.option(
+    "--no-cache",
+    is_flag=True,
+    default=False,
+    help="Skip cache and force fresh decomposition",
+)
 @handle_errors
 def goals_command(
     goal: str,
@@ -435,6 +444,7 @@ def goals_command(
     no_auto_init: bool,
     yes: bool,
     non_interactive: bool,
+    no_cache: bool,
 ) -> None:
     r"""Create goals with decomposition and agent matching.
 
@@ -505,6 +515,7 @@ def goals_command(
         no_decompose=no_decompose,
         config=config,
         yes=skip_confirm,
+        no_cache=no_cache,
     )
 
     # Show agent matching results in verbose mode
@@ -524,7 +535,7 @@ def goals_command(
     json_output = _display_goals_results(
         result=result,
         output_format=output_format,
-        verbose=verbose,
+        _verbose=verbose,
         yes=skip_confirm,
     )
 

@@ -74,6 +74,9 @@ def start_background_loading(model_name: str = "all-MiniLM-L6-v2") -> bool:
     This function imports the heavy dependencies (torch, sentence-transformers)
     in a background thread so the main thread can continue immediately.
 
+    IMPORTANT: Imports semantic module in main thread FIRST to avoid race conditions
+    with Python's import system.
+
     Args:
         model_name: Model name for sentence-transformers
 
@@ -82,6 +85,14 @@ def start_background_loading(model_name: str = "all-MiniLM-L6-v2") -> bool:
 
     """
     import threading
+
+    # CRITICAL: Import the semantic module in main thread BEFORE starting background thread
+    # This prevents race conditions where background thread partially initializes the module
+    # while main thread tries to import from it (causes KeyError in sys.modules)
+    try:
+        import aurora_context_code.semantic  # noqa: F401 - ensures module is in sys.modules
+    except Exception:
+        return False  # Can't import - skip background loading
 
     def _load_in_background() -> None:
         """Background thread function that does the heavy importing."""

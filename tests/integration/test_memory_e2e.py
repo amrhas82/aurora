@@ -23,7 +23,6 @@ from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
 
-
 pytestmark = pytest.mark.ml  # All tests in this file require ML dependencies
 
 

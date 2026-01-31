@@ -19,6 +19,8 @@ __all__ = [
 def verify_lite(
     decomposition: dict[str, Any],
     available_agents: list[Any],
+    complexity: str = "MEDIUM",
+    **kwargs: Any,
 ) -> tuple[bool, list[tuple[int, Any]], list[str]]:
     """Lightweight verification that checks decomposition validity and assigns agents.
 
@@ -28,13 +30,16 @@ def verify_lite(
     Checks performed:
     1. Decomposition has "subgoals" key
     2. At least one subgoal exists
-    3. Each subgoal has required fields (description, suggested_agent)
-    4. All suggested agents exist in available_agents
-    5. No circular dependencies in subgoal dependency graph
+    3. Subgoal count doesn't exceed complexity limit
+    4. Each subgoal has required fields (description, suggested_agent)
+    5. All suggested agents exist in available_agents
+    6. No circular dependencies in subgoal dependency graph
 
     Args:
         decomposition: Decomposition dict with subgoals and execution strategy
         available_agents: List of AgentInfo objects from registry
+        complexity: Complexity level (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
+        **kwargs: Additional arguments (for extensibility)
 
     Returns:
         Tuple of (passed, agent_assignments, issues):
@@ -56,6 +61,16 @@ def verify_lite(
     # Check 2: At least one subgoal required
     if not subgoals or len(subgoals) == 0:
         issues.append("Decomposition must have at least one subgoal")
+        return (False, [], issues)
+
+    # Check 3: Enforce complexity-based subgoal limits
+    SUBGOAL_LIMITS = {"MEDIUM": 2, "COMPLEX": 5, "CRITICAL": 8}
+    max_allowed = SUBGOAL_LIMITS.get(complexity, 5)
+
+    if len(subgoals) > max_allowed:
+        issues.append(
+            f"Too many subgoals: {len(subgoals)} exceeds {complexity} limit of {max_allowed}. Consolidate."
+        )
         return (False, [], issues)
 
     # Build agent lookup map
@@ -175,8 +190,22 @@ def _check_circular_deps(subgoals: list[dict[str, Any]]) -> list[str]:
             )
             continue
 
+        # Normalize dependencies: convert "sg-N" strings to 0-indexed integers
         depends_on = subgoal.get("depends_on", [])
-        graph[subgoal_index] = depends_on
+        normalized_deps = []
+        for dep in depends_on:
+            if isinstance(dep, int):
+                normalized_deps.append(dep)
+            elif isinstance(dep, str) and dep.startswith("sg-"):
+                try:
+                    # Convert "sg-1" to 0 (1-indexed to 0-indexed)
+                    dep_num = int(dep[3:]) - 1
+                    normalized_deps.append(dep_num)
+                except (ValueError, IndexError):
+                    # Invalid format, keep as-is and let validation catch it
+                    pass
+
+        graph[subgoal_index] = normalized_deps
 
     # Validate that all dependency references exist
     valid_indices = set(graph.keys())

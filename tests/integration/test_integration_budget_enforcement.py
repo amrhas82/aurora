@@ -380,7 +380,6 @@ class TestBudgetEstimation:
         """
         # Rough estimation formula:
         # tokens ≈ prompt_length / 4
-        # cost = tokens * price_per_token
 
         short_prompt = "What is Python?"
         long_prompt = "Explain " + "in detail " * 100

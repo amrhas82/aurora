@@ -33,10 +33,18 @@ Planning & Multi-Agent Orchestration
 - **Headless Mode** - Isolated branch execution with max retries
 
 ```bash
-# PyPI
+# New installation
 pip install aurora-actr
 
-# From source
+# Upgrading from older version (0.9.x → 0.10.0)?
+# Use --upgrade flag to pull latest release
+pip install --upgrade aurora-actr
+aur --version  # Should show 0.10.0
+
+# Uninstall
+pip uninstall aurora-actr
+
+# From source (development)
 git clone https://github.com/amrhas82/aurora.git
 cd aurora && ./install.sh
 ```
@@ -226,32 +234,56 @@ aur headless prompt.md
 
 ## Planning Workflow
 
-OpenSpec-based flow from goal to implementation:
+3 simple steps from goal to implementation.
+
+**Code-aware planning:** `aur goals` searches your indexed codebase and maps each subgoal to relevant source files (`source_file`). This context flows through `/aur:plan` → `/aur:implement`, making implementation more accurate.
+
+> **Quick prototype?** Skip `aur goals` and run `/aur:plan` directly - the agent will search on the fly (less structured).
 
 ```
-Terminal                    Slash Command            Slash Command
-┌─────────────────┐        ┌─────────────────┐      ┌─────────────────┐
-│   aur goals     │   ->   │  /aur:plan      │  ->  │  /aur:implement │
-│   "Add feature" │        │  goals.json     │      │                 │
-└─────────────────┘        └─────────────────┘      └─────────────────┘
-        │                          │                        │
-        v                          v                        v
-   goals.json               PRD + tasks.md            Implemented
-   - agent assignments      - file hints              - validation
-   - capability gaps
+Setup (once)             Step 1: Decompose        Step 2: Plan             Step 3: Implement
+Terminal                 Terminal                 Slash Command            Slash Command
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐      ┌─────────────────┐
+│   aur init      │     │   aur goals     │ ->  │   /aur:plan     │  ->  │  /aur:implement │
+│   Complete      │     │   "Add feature" │     │   [plan-id]     │      │   [plan-id]     │
+│   project.md*   │     │                 │     │                 │      │                 │
+│   aur mem index │     │                 │     │                 │      │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘      └─────────────────┘
+        │                       │                       │                        │
+        v                       v                       v                        v
+   .aurora/                goals.json              5 artifacts:            Code changes
+   - project.md*           - subgoals              - plan.md               - validated
+   - memory.db             - agents                - prd.md                - tested
+                           - source files          - design.md
+                                                   - agents.json
+                                                   - tasks.md
+                                                        │
+                                                 ┌──────┴──────┐
+                                                 │ /aur:tasks  │  <- Optional: regenerate
+                                                 │ [plan-id]   │     tasks after PRD edits
+                                                 └─────────────┘
+
+* Ask your agent to complete project.md: "Please fill out .aurora/project.md with our
+  architecture, conventions, and key patterns." This improves planning accuracy.
 ```
+
+See [3 Simple Steps Guide](docs/guides/3-SIMPLE-STEPS.md) for detailed walkthrough.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install
+# Install (or upgrade with --upgrade flag)
 pip install aurora-actr
 
-# Initialize project
+# Initialize project (once per project)
 cd your-project/
-aur init
+aur init                        # Creates .aurora/project.md
+
+# IMPORTANT: Complete .aurora/project.md manually
+# Ask your agent: "Please complete the project.md with our architecture and conventions"
+# This context improves planning accuracy
 
 # Index codebase for memory
 aur mem index .
@@ -260,8 +292,8 @@ aur mem index .
 aur goals "Add user authentication"
 
 # In your CLI tool (Claude Code, Cursor, etc.):
-/aur:plan goals.json
-/aur:implement
+/aur:plan add-user-authentication
+/aur:implement add-user-authentication
 ```
 
 ---
@@ -280,9 +312,10 @@ aur goals "Add user authentication"
 | `aur headless prompt.md` | Terminal | Unattended execution |
 | `/aur:search "query"` | Slash | Search indexed memory |
 | `/aur:get N` | Slash | Read chunk from search |
-| `/aur:plan goals.json` | Slash | Generate PRD + tasks |
-| `/aur:implement` | Slash | Execute plan |
-| `/aur:archive plan-id` | Slash | Archive completed plan |
+| `/aur:plan [plan-id]` | Slash | Generate plan artifacts |
+| `/aur:tasks [plan-id]` | Slash | Regenerate tasks from PRD |
+| `/aur:implement [plan-id]` | Slash | Execute plan |
+| `/aur:archive [plan-id]` | Slash | Archive completed plan |
 
 ---
 

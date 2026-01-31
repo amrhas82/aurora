@@ -9,7 +9,6 @@ from __future__ import annotations
 import hashlib
 from typing import TYPE_CHECKING, Any
 
-
 if TYPE_CHECKING:
     from aurora_reasoning import LLMClient
     from aurora_reasoning.decompose import DecompositionResult
@@ -126,7 +125,7 @@ def decompose_query(
         )
 
     # Build context summary from retrieved chunks
-    context_summary = _build_context_summary(context)
+    context_summary = _build_context_summary(context, complexity)
 
     # Convert complexity string to enum
     try:
@@ -194,7 +193,7 @@ def _read_file_lines(file_path: str, line_start: int, line_end: int, max_lines: 
         return ""
 
 
-def _build_context_summary(context: dict[str, Any]) -> str:
+def _build_context_summary(context: dict[str, Any], complexity: str = "MEDIUM") -> str:
     """Build actionable context summary with actual code content.
 
     For top chunks, reads actual file content so the LLM can see real code.
@@ -202,6 +201,7 @@ def _build_context_summary(context: dict[str, Any]) -> str:
 
     Args:
         context: Context dict with code_chunks and reasoning_chunks
+        complexity: Complexity level (SIMPLE, MEDIUM, COMPLEX, CRITICAL)
 
     Returns:
         Summary string with actual code the LLM can use for decomposition.
@@ -210,12 +210,55 @@ def _build_context_summary(context: dict[str, Any]) -> str:
     code_chunks = context.get("code_chunks", [])
     reasoning_chunks = context.get("reasoning_chunks", [])
 
+    # Filter out conversation log chunks to prevent failed SOAR runs from polluting context
+    def _get_chunk_path(chunk: Any) -> str:
+        if hasattr(chunk, "file_path"):
+            return chunk.file_path or ""
+        if isinstance(chunk, dict):
+            return chunk.get("file_path") or chunk.get("metadata", {}).get("file_path", "")
+        return ""
+
+    code_chunks = [c for c in code_chunks if "/logs/conversations/" not in _get_chunk_path(c)]
+
+    # Deduplicate chunks by file_path to avoid redundancy
+    # Only dedupe chunks with valid file_path (non-empty)
+    seen_files = set()
+    deduped_chunks = []
+    for chunk in code_chunks:
+        fp = _get_chunk_path(chunk)
+        # Keep chunks without file_path, only dedupe those with valid paths
+        if not fp or fp not in seen_files:
+            if fp:  # Only track non-empty paths
+                seen_files.add(fp)
+            deduped_chunks.append(chunk)
+    code_chunks = deduped_chunks
+
     summary_parts = []
 
     if code_chunks:
-        # Read actual code for top 7 chunks, docstrings for rest
-        TOP_N_WITH_CODE = 7
-        MAX_CHUNKS = 12
+        # Complexity-based chunk limits
+        CHUNK_LIMITS = {
+            "MEDIUM": (5, 8),
+            "COMPLEX": (7, 12),
+            "CRITICAL": (10, 15),
+        }
+        TOP_N_WITH_CODE, MAX_CHUNKS = CHUNK_LIMITS.get(complexity, (5, 8))
+
+        # List available file paths for source_file matching
+        file_paths = []
+        for chunk in code_chunks[:MAX_CHUNKS]:
+            if hasattr(chunk, "file_path"):
+                file_paths.append(chunk.file_path)
+            elif isinstance(chunk, dict):
+                fp = chunk.get("metadata", {}).get("file_path") or chunk.get("file_path", "")
+                if fp:
+                    file_paths.append(fp)
+        unique_files = list(dict.fromkeys(file_paths))  # Preserve order, remove dups
+        if unique_files:
+            summary_parts.append("## Available Source Files (use for source_file field)\n")
+            for fp in unique_files[:10]:
+                summary_parts.append(f"- {fp}")
+            summary_parts.append("")
 
         summary_parts.append(f"## Relevant Code ({len(code_chunks)} elements found)\n")
 

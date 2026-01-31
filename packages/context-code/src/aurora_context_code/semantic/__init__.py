@@ -50,6 +50,21 @@ See Also:
 
 """
 
+# ruff: noqa: E402
+# Suppress verbose ML model loading output BEFORE any imports
+# These env vars must be set before transformers/tqdm are imported
+import logging  # noqa: I001
+import os
+
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
+# Also suppress logging for transformers/huggingface_hub early
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+logging.getLogger("safetensors").setLevel(logging.ERROR)
+
 from aurora_context_code.semantic.embedding_provider import EmbeddingProvider, cosine_similarity
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 from aurora_context_code.semantic.model_utils import (

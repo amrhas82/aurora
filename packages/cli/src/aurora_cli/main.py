@@ -31,7 +31,7 @@ __all__ = ["cli"]
 console = Console()
 logger = logging.getLogger(__name__)
 
-AURORA_VERSION = "0.12.1"
+AURORA_VERSION = "0.12.2"
 
 
 def _version_callback(ctx: click.Context, param: click.Parameter, value: bool) -> None:
@@ -117,33 +117,17 @@ def _show_first_run_welcome_if_needed() -> None:
 )
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool) -> None:
-    r"""AURORA: Adaptive Unified Reasoning and Orchestration Architecture.
-
-    A cognitive architecture framework for intelligent context management,
-    reasoning, and agent orchestration.
+    """AURORA: Memory-aware planning and multi-agent orchestration.
 
     \b
-    Common Commands:
-        aur init                              # Initialize configuration
-        aur doctor                            # Run health checks
-        aur --version                         # Show version info
-        aur mem index .                       # Index current directory
-        aur mem search "authentication"       # Search indexed code
+    Quick Start:
+      aur init            Initialize project
+      aur mem index .     Index codebase
+      aur goals "..."     Plan with memory context
+      aur doctor          Check health
 
     \b
-    Examples:
-        # Quick start
-        aur init
-        aur mem index packages/
-
-        \b
-        # Health checks and diagnostics
-        aur doctor                            # Check system health
-        aur doctor --fix                      # Auto-repair issues
-
-        \b
-        # Get help for any command
-        aur mem --help
+    Use 'aur <command> --help' for details on any command.
     """
     # Store debug flag in context for error handler
     ctx.ensure_object(dict)

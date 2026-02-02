@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-02-02
+
+### Changed
+
+- Simplified `aur --help` output (removed verbose examples, cleaner format)
+
 ## [0.12.1] - 2026-02-02
 
 ### Fixed

@@ -352,7 +352,7 @@ class InteractiveWizard:
         next_steps.extend(
             [
                 "[bold]2. Verify setup:[/]\n   [cyan]aur doctor[/]",
-                "[bold]3. Check version:[/]\n   [cyan]aur version[/]",
+                "[bold]3. Check version:[/]\n   [cyan]aur --version[/]",
                 "[bold]4. Start querying:[/]\n   [cyan]aur query 'your question'[/]",
             ],
         )

@@ -6,7 +6,6 @@ Validates that the CLI can:
 - Index code into memory with temporary databases
 - Search indexed code
 - Execute query commands with mock responses
-- Run headless mode in dry-run mode
 - Verify installation status
 - Handle error conditions (missing files, invalid paths)
 
@@ -164,30 +163,6 @@ def helper_function(name: str) -> str:
     files.append(file2)
 
     return files
-
-
-def create_test_prompt(test_dir: Path) -> Path:
-    """Create a test prompt file for headless mode."""
-    prompt_file = test_dir / "test_prompt.md"
-    prompt_file.write_text(
-        """## Goal
-Test the headless mode configuration and validation.
-
-## Success Criteria
-- Configuration is validated successfully
-- All parameters are parsed correctly
-- Dry-run mode works without errors
-
-## Constraints
-- Must run in dry-run mode (no actual execution)
-- Must not require API keys
-- Must not modify any files
-
-## Context
-This is a smoke test to validate headless mode setup.
-""",
-    )
-    return prompt_file
 
 
 def test_cli_help() -> bool:
@@ -383,74 +358,6 @@ def test_query_command() -> bool:
         return True
 
 
-def test_headless_dry_run() -> bool:
-    """Test: aur headless --dry-run mode."""
-    print_test("Headless mode with dry-run...")
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        test_dir = Path(tmpdir)
-        config_dir = test_dir / ".aurora"
-        config_dir.mkdir()
-
-        # Create test config
-        create_test_config(config_dir)
-
-        # Create test prompt file
-        prompt_file = create_test_prompt(test_dir)
-
-        # Set HOME to temporary directory
-        env = {"HOME": str(test_dir)}
-
-        # Test headless command in dry-run mode
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "headless", str(prompt_file), "--dry-run"],
-            env=env,
-        )
-
-        # Dry-run should succeed or give useful error
-        if exit_code == 0:
-            if "Configuration valid" in stdout or "Dry run" in stdout:
-                print_success("Headless dry-run validates configuration")
-                return True
-            print_warning("Dry-run succeeded but output unexpected")
-            return True
-        print_warning(f"Dry-run failed with exit code {exit_code}")
-        print_warning("This may be expected if headless dependencies are missing")
-        return True
-
-
-def test_headless_flag_syntax() -> bool:
-    """Test: aur --headless flag syntax."""
-    print_test("Headless flag syntax (--headless)...")
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        test_dir = Path(tmpdir)
-        config_dir = test_dir / ".aurora"
-        config_dir.mkdir()
-
-        # Create test config
-        create_test_config(config_dir)
-
-        # Create test prompt file
-        prompt_file = create_test_prompt(test_dir)
-
-        # Set HOME to temporary directory
-        env = {"HOME": str(test_dir)}
-
-        # Test --headless flag (both syntaxes should work)
-        exit_code, stdout, stderr = run_cli_command(
-            ["aur", "--headless", str(prompt_file)],
-            env=env,
-        )
-
-        # This will likely fail without full SOAR setup, but should parse args
-        if exit_code in [0, 1]:
-            print_success("Headless flag syntax accepted")
-            return True
-        print_warning(f"Headless flag failed with exit code {exit_code}")
-        return True
-
-
 def test_verify_command() -> bool:
     """Test: aur --verify installation verification."""
     print_test("Installation verification command...")
@@ -474,22 +381,7 @@ def test_error_conditions() -> bool:
     """Test: Error handling for common failure cases."""
     print_test("Error handling for common failures...")
 
-    # Test 1: Non-existent file
-    exit_code, stdout, stderr = run_cli_command(
-        ["aur", "headless", "/nonexistent/file.md", "--dry-run"],
-    )
-
-    if exit_code != 0:
-        combined_output = stdout + stderr
-        if "exist" in combined_output.lower() or "not found" in combined_output.lower():
-            print_success("Missing file error handled correctly")
-        else:
-            print_warning("Missing file error but unclear message")
-    else:
-        print_failure("Missing file should have caused error")
-        return False
-
-    # Test 2: Invalid command
+    # Test 1: Invalid command
     exit_code, stdout, stderr = run_cli_command(["aur", "invalid-command-xyz"])
 
     if exit_code != 0:
@@ -559,8 +451,6 @@ def run_smoke_tests() -> bool:
         ("Init command", test_init_command_with_config),
         ("Memory commands", test_memory_commands),
         ("Query command", test_query_command),
-        ("Headless dry-run", test_headless_dry_run),
-        ("Headless flag syntax", test_headless_flag_syntax),
         ("Verify command", test_verify_command),
         ("Error handling", test_error_conditions),
         ("Memory help", test_memory_help),

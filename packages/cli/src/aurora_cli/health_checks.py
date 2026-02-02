@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import importlib
 import importlib.metadata
-import json
 import os
 import subprocess
 from pathlib import Path

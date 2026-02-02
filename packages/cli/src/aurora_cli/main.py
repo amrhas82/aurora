@@ -1,7 +1,7 @@
 """AURORA CLI main entry point.
 
 This module provides the main command-line interface for AURORA,
-including memory commands, headless mode, and auto-escalation.
+including memory commands and auto-escalation.
 """
 
 from __future__ import annotations
@@ -19,7 +19,6 @@ from aurora_cli.commands.budget import budget_group
 from aurora_cli.commands.doctor import doctor_command
 from aurora_cli.commands.friction import friction_group
 from aurora_cli.commands.goals import goals_command
-from aurora_cli.commands.headless import headless_command
 from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
 from aurora_cli.commands.plan import plan_group
@@ -32,7 +31,7 @@ __all__ = ["cli"]
 console = Console()
 logger = logging.getLogger(__name__)
 
-AURORA_VERSION = "0.11.2"
+AURORA_VERSION = "0.12.0"
 
 
 def _version_callback(ctx: click.Context, param: click.Parameter, value: bool) -> None:
@@ -109,12 +108,6 @@ def _show_first_run_welcome_if_needed() -> None:
     help="Enable debug logging",
 )
 @click.option(
-    "--headless",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    default=None,
-    help="Run headless mode with specified prompt file (shorthand for 'aur headless <file>')",
-)
-@click.option(
     "--version",
     is_flag=True,
     callback=_version_callback,
@@ -123,7 +116,7 @@ def _show_first_run_welcome_if_needed() -> None:
     help="Show version info and exit.",
 )
 @click.pass_context
-def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -> None:
+def cli(ctx: click.Context, verbose: bool, debug: bool) -> None:
     r"""AURORA: Adaptive Unified Reasoning and Orchestration Architecture.
 
     A cognitive architecture framework for intelligent context management,
@@ -149,11 +142,6 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
         aur doctor --fix                      # Auto-repair issues
 
         \b
-        # Headless mode (both syntaxes work)
-        aur --headless prompt.md
-        aur headless prompt.md
-
-        \b
         # Get help for any command
         aur mem --help
     """
@@ -171,14 +159,8 @@ def cli(ctx: click.Context, verbose: bool, debug: bool, headless: Path | None) -
         logging.basicConfig(level=logging.WARNING)
 
     # Show first-run welcome message if this is the first time running
-    if ctx.invoked_subcommand is None and headless is None:
+    if ctx.invoked_subcommand is None:
         _show_first_run_welcome_if_needed()
-
-    # Handle --headless flag by invoking headless command
-    if headless is not None:
-        # Invoke the headless command with the provided file path
-        # This maps `aur --headless file.md` to `aur headless file.md`
-        ctx.invoke(headless_command, prompt_path=headless)
 
 
 # Register commands
@@ -187,7 +169,6 @@ cli.add_command(budget_group)
 cli.add_command(doctor_command)
 cli.add_command(friction_group)
 cli.add_command(goals_command)
-cli.add_command(headless_command)
 cli.add_command(init_command)
 cli.add_command(memory_group)
 cli.add_command(plan_group)

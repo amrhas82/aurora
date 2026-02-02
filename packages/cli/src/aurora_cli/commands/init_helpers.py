@@ -15,7 +15,6 @@ from rich.console import Console
 
 from aurora_cli.configurators import ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
-from aurora_cli.templates.headless import PROMPT_TEMPLATE, SCRATCHPAD_TEMPLATE
 
 
 console = Console()
@@ -240,7 +239,6 @@ def create_directory_structure(project_path: Path) -> None:
     - .aurora/plans/archive
     - .aurora/logs
     - .aurora/cache
-    - .aurora/headless
     - .aurora/config.json
 
     Note: Does NOT create config/tools (legacy directory removed in unified init)
@@ -260,9 +258,6 @@ def create_directory_structure(project_path: Path) -> None:
 
     # Create cache directory (NEW in unified init)
     (aurora_dir / "cache").mkdir(parents=True, exist_ok=True)
-
-    # Create headless directory for autonomous experiments
-    (aurora_dir / "headless").mkdir(parents=True, exist_ok=True)
 
     # Create default config.json
     config_path = aurora_dir / "config.json"
@@ -452,145 +447,6 @@ def create_agents_md(project_path: Path) -> None:
 
     # Write the full AGENTS.md template
     agents_md.write_text(get_agents_template(), encoding="utf-8")
-
-
-def create_headless_templates(project_path: Path) -> None:
-    """Create headless mode template files in .aurora/headless/.
-
-    Creates:
-    - prompt.md.template - Example prompt structure (from centralized template)
-    - scratchpad.md - Initial scratchpad state (from centralized template)
-    - README.md - Usage instructions for headless mode
-
-    Does NOT overwrite if files already exist.
-
-    Args:
-        project_path: Path to project root
-
-    """
-    aurora_dir = project_path / AURORA_DIR_NAME
-    headless_dir = aurora_dir / "headless"
-    headless_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create prompt template from centralized template
-    prompt_template_path = headless_dir / "prompt.md.template"
-    if not prompt_template_path.exists():
-        # Use centralized template but replace {goal} placeholder for user template
-        prompt_content = PROMPT_TEMPLATE.replace("{goal}", "[Describe what you want to achieve]")
-        # Add optional sections for user template
-        prompt_content += """
-# Success Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-# Constraints (Optional)
-- Constraint 1 (e.g., "Don't modify production code")
-- Constraint 2 (e.g., "Use existing test framework")
-
-# Context (Optional)
-Additional context about the task, relevant files, or background information...
-"""
-        prompt_template_path.write_text(prompt_content, encoding="utf-8")
-
-    # Create scratchpad from centralized template
-    scratchpad_path = headless_dir / "scratchpad.md"
-    if not scratchpad_path.exists():
-        scratchpad_path.write_text(SCRATCHPAD_TEMPLATE, encoding="utf-8")
-
-    # Create README
-    readme = headless_dir / "README.md"
-    if not readme.exists():
-        readme_content = """# Headless Mode
-
-Autonomous Claude execution loop - let Claude work on a goal until done.
-
-## Quick Start
-
-1. Copy the template to create your prompt:
-   ```bash
-   cp prompt.md.template prompt.md
-   ```
-
-2. Edit `prompt.md` with your goal
-
-3. Run headless mode:
-   ```bash
-   aur headless -t claude --max=10
-   ```
-
-## How It Works
-
-1. Claude reads your prompt (goal + instructions)
-2. Claude works autonomously, rewriting scratchpad.md with current state
-3. Loop checks for `STATUS: DONE` in scratchpad
-4. Exits early when done, or after max iterations
-
-## Commands
-
-```bash
-# Form 1: Default prompt (.aurora/headless/prompt.md)
-aur headless --max=10
-
-# Form 2: Custom prompt file
-aur headless -p my-task.md --max=10
-
-# Form 3: With test backpressure
-aur headless --test-cmd "pytest tests/" --max=15
-
-# Allow running on main branch (dangerous)
-aur headless --allow-main
-```
-
-## Files
-
-- `prompt.md.template` - Example prompt structure
-- `prompt.md` - Your task definition (copy from template)
-- `scratchpad.md` - Claude's state (rewritten each iteration)
-
-## Key Concepts
-
-### Scratchpad Rewrite (Not Append)
-Claude rewrites scratchpad.md each iteration with current state only.
-This keeps context bounded and prevents history accumulation.
-
-### STATUS: DONE
-When Claude completes the goal, it sets `STATUS: DONE` in scratchpad.
-The loop detects this and exits early.
-
-### Backpressure (Optional)
-Use `--test-cmd` to run tests after each iteration.
-If tests fail, Claude sees the failure next iteration.
-
-## Safety Features
-
-- **Git branch check**: Prevents running on main/master by default
-- **Max iterations**: Prevents runaway execution
-- **Scratchpad state**: Visible progress tracking
-
-## Scratchpad Format
-
-```markdown
-# Scratchpad
-
-## STATUS: IN_PROGRESS  (or DONE when complete)
-
-## Completed
-- Task 1
-- Task 2
-
-## Current Task
-Working on X...
-
-## Blockers
-(none)
-
-## Next Steps
-- Step 1
-- Step 2
-```
-"""
-        readme.write_text(readme_content, encoding="utf-8")
 
 
 async def prompt_tool_selection(configured_tools: dict[str, bool]) -> list[str]:

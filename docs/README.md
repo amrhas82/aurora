@@ -1,306 +1,218 @@
-# Aurora Documentation Index
+# Aurora Documentation
 
-Welcome to the Aurora documentation. This directory contains comprehensive documentation for the Aurora project, organized by topic and phase.
+Welcome to the Aurora documentation. Aurora is a memory-first planning and multi-agent orchestration framework for AI coding assistants.
 
-## Quick Navigation
+## Quick Start
 
-- [Architecture](#architecture) - System design and technical architecture
-- [Development](#development) - Developer guides and best practices
-- [Deployment](#deployment) - Production deployment and operations
-- [Guides](#guides) - User guides and troubleshooting
-- [Reports](#reports) - Quality, performance, security, and testing reports
-- [Phases](#phases) - Phase-specific documentation and retrospectives
-- [Tasks](#tasks) - Task completion reports and status tracking
-- [AGI Problem](#agi-problem) - Research and design documentation
-- [Examples](#examples) - Usage examples and code samples
+1. **[3 Simple Steps](04-process/getting-started/3-SIMPLE-STEPS.md)** - Get started in 5 minutes
+2. **[Quick Start Guide](04-process/getting-started/QUICK_START.md)** - Detailed setup instructions
+3. **[CLI Usage Guide](02-features/cli/CLI_USAGE_GUIDE.md)** - Complete CLI reference
 
 ---
 
-## Architecture
-
-Technical architecture, API contracts, and system design documentation.
-
-**Location:** `/docs/reference/`
-
-- [SOAR Architecture](./reference/SOAR_ARCHITECTURE.md) - Core SOAR-based cognitive architecture
-- [API Contracts v1.0](./reference/API_CONTRACTS_v1.0.md) - Public API specifications and contracts
-- [Agent Integration](./reference/AGENT_INTEGRATION.md) - Multi-agent integration patterns
-
----
-
-## Development
-
-Developer guides, code review checklists, and development best practices.
-
-**Location:** `/docs/development/`
-
-- [Testing Guide](./development/TESTING.md) - **NEW** - Comprehensive testing documentation
-- [Extension Guide](./development/EXTENSION_GUIDE.md) - How to extend Aurora with custom functionality
-- [Code Review Checklist](./development/CODE_REVIEW_CHECKLIST.md) - Quality gates and review criteria
-- [Prompt Engineering Guide](./development/PROMPT_ENGINEERING_GUIDE.md) - Best practices for prompt design
-- [Prompt Template Review](./development/PROMPT_TEMPLATE_REVIEW.md) - Analysis of prompt templates
-- [Phase 4 Migration Guide](./development/PHASE4_MIGRATION_GUIDE.md) - Migration guide for Phase 4 features
-
-### Examples
-- [Activation Usage](./examples/activation_usage.md) - How to use ACT-R activation mechanisms
-
----
-
-## Deployment
-
-Production deployment guides, operational procedures, and troubleshooting.
-
-**Location:** `/docs/deployment/`
-
-- [Production Deployment](./deployment/production-deployment.md) - Production deployment procedures
-- [Headless Mode](./deployment/headless-mode.md) - Running Aurora in headless mode
-- [Advanced Troubleshooting](./deployment/troubleshooting-advanced.md) - Advanced debugging techniques
-
----
-
-## Guides
-
-User guides, troubleshooting resources, and operational guidance.
-
-**Location:** `/docs/guides/`
-
-- [Troubleshooting](./guides/TROUBLESHOOTING.md) - Common issues and solutions
-- [Cost Tracking Guide](./guides/COST_TRACKING_GUIDE.md) - How to track and optimize LLM costs
-- [Performance Tuning](./guides/performance-tuning.md) - Performance optimization techniques
-
----
-
-## Reports
-
-### Quality Reports
-
-Code reviews, quality gates, acceptance testing, and delivery verification.
-
-**Location:** `/docs/reports/quality/`
-
-- [Code Review Report](./reports/quality/CODE_REVIEW_REPORT.md) - General code review findings
-- [Code Review Report Phase 3](./reports/quality/CODE_REVIEW_REPORT_v1.0.0-phase3.md) - Phase 3 code review
-- [Quality Gates Report](./reports/quality/QUALITY_GATES_REPORT.md) - Quality gate metrics and status
-- [Acceptance Test Report](./reports/quality/ACCEPTANCE_TEST_REPORT.md) - Acceptance testing results
-- [Delivery Checklist](./reports/quality/DELIVERY_CHECKLIST.md) - Pre-delivery verification checklist
-- [Verification Checkpoints](./reports/quality/VERIFICATION_CHECKPOINTS.md) - Quality verification checkpoints
-
-### Performance Reports
-
-Performance profiling, benchmarking, and optimization analysis.
-
-**Location:** `/docs/performance/`
-
-- [Memory Profiling Report](./performance/MEMORY_PROFILING_REPORT.md) - Memory usage analysis and optimization
-- [Performance Profiling Report](./performance/PERFORMANCE_PROFILING_REPORT.md) - Performance benchmarks
-- [Verification Calibration Report](./performance/VERIFICATION_CALIBRATION_REPORT.md) - Verification system calibration
-- [Embedding Benchmark Results](./performance/embedding-benchmark-results.md) - Embedding model benchmarks
-- [Hybrid Retrieval Precision Report](./performance/hybrid-retrieval-precision-report.md) - Retrieval accuracy metrics
-- [Live Data Validation Checklist](./performance/live-data-validation-checklist.md) - Production data validation
-
-### Security Reports
-
-Security audits, vulnerability assessments, and compliance.
-
-**Location:** `/docs/reports/security/`
-
-- [Security Audit Checklist](./reports/security/SECURITY_AUDIT_CHECKLIST.md) - Security review checklist
-- [Security Audit Report Phase 3](./reports/security/SECURITY_AUDIT_REPORT_v1.0.0-phase3.md) - Phase 3 security audit
-
-### Testing Reports
-
-Test coverage analysis, validation reports, and test documentation.
-
-**Location:** `/docs/reports/testing/`
-
-- [Coverage Analysis](./reports/testing/COVERAGE_ANALYSIS.md) - **NEW** - Comprehensive coverage metrics explanation
-- [ACT-R Formula Validation](./reports/testing/actr-formula-validation.md) - ACT-R formula correctness validation
-
----
-
-## Phases
-
-Phase-specific documentation, retrospectives, and migration guides organized by development phase.
-
-### Phase 1 - Foundation
-
-**Location:** `/docs/phases/phase1/`
-
-- [Phase 1 Archive](./phases/phase1/PHASE1_ARCHIVE.md) - Archived Phase 1 documentation
-- [Phase 1 Verification Report](./phases/phase1/PHASE1_VERIFICATION_REPORT.md) - Phase 1 completion verification
-- [Release Notes v1.0.0-phase1](./phases/phase1/RELEASE_NOTES_v1.0.0-phase1.md) - Phase 1 release notes
-
-### Phase 2 - Core Features
-
-**Location:** `/docs/phases/phase2/`
-
-- [Phase 2 Completion Summary](./phases/phase2/PHASE2_COMPLETION_SUMMARY.md) - Phase 2 completion report
-- [Phase 2 Quality Status](./phases/phase2/PHASE2_QUALITY_STATUS.md) - Quality metrics and status
-- [Phase 2 Contracts](./phases/phase2/PHASE2_CONTRACTS.md) - API contracts introduced in Phase 2
-- [Phase 2 Migration Guide](./phases/phase2/PHASE2_MIGRATION_GUIDE.md) - Migration from Phase 1 to Phase 2
-- [Release Notes v0.2.0](./phases/phase2/RELEASE_NOTES_v0.2.0.md) - Phase 2 release notes
-
-### Phase 3 - Production Readiness
-
-**Location:** `/docs/phases/phase3/`
-
-- [Phase 3 Readiness Checklist](./phases/phase3/PHASE3_READINESS_CHECKLIST.md) - Production readiness criteria
-- [Phase 3 Archive Manifest](./phases/phase3/PHASE3_ARCHIVE_MANIFEST.md) - Archived artifacts manifest
-- [Phase 3 Retrospective Template](./phases/phase3/PHASE3_RETROSPECTIVE_TEMPLATE.md) - Retrospective template
-- [Phase 3 Stakeholder Completion Report](./phases/phase3/PHASE3_STAKEHOLDER_COMPLETION_REPORT.md) - Executive summary
-- [Release Notes v1.0.0-phase3](./phases/phase3/RELEASE_NOTES_v1.0.0-phase3.md) - Phase 3 release notes
-- [Acceptance Tests Verification](./phases/phase3/phase3-acceptance-tests-verification.md) - Acceptance test results
-- [Delivery Verification Checklist](./phases/phase3/phase3-delivery-verification-checklist.md) - Delivery checklist
-- [Functional Requirements Verification](./phases/phase3/phase3-functional-requirements-verification.md) - Requirements traceability
-- [Performance Metrics Verification](./phases/phase3/phase3-performance-metrics-verification.md) - Performance validation
-- [Quality Gates Verification](./phases/phase3/phase3-quality-gates-verification.md) - Quality gate metrics
-
----
-
-## Tasks
-
-Task completion summaries, progress reports, and status tracking.
-
-**Location:** `/docs/tasks/`
-
-- [Task 1.18 Completion Summary](./tasks/TASK_1.18_COMPLETION_SUMMARY.md)
-- [Task 1.19 Completion Summary](./tasks/TASK_1.19_COMPLETION_SUMMARY.md)
-- [Task 2.18 Completion Summary](./tasks/TASK_2.18_COMPLETION_SUMMARY.md)
-- [Task 2.19 Completion Summary](./tasks/TASK_2.19_COMPLETION_SUMMARY.md)
-- [Task 4 Progress](./tasks/TASK_4_PROGRESS.md)
-- [Task 5 Completion Summary](./tasks/TASK_5_COMPLETION_SUMMARY.md)
-- [Task Completion Summary](./tasks/TASK_COMPLETION_SUMMARY.md) - General task completion template
-- [Task Status Report](./tasks/TASK_STATUS_REPORT.md) - Current task status
-
----
-
-## AGI Problem
-
-Research documentation, market analysis, and foundational design work for Aurora's cognitive architecture.
-
-**Location:** `/docs/agi-problem/`
-
-### Key Entry Points
-- [START HERE](./agi-problem/START-HERE.md) - Master navigation document
-- [Session Completion Summary](./agi-problem/SESSION-COMPLETION-SUMMARY.md) - Latest research session summary
-- [MD Index](./agi-problem/MD-INDEX.md) - Complete markdown file index
-
-### Aurora Documentation
-- [Aurora Framework PRD](./agi-problem/aurora/AURORA-Framework-PRD.md) - Product requirements
-- [Aurora Unified Specs](./agi-problem/aurora/AURORA_UNIFIED_SPECS_TRUTH.md) - Definitive specifications
-- [Aurora Executive Summary](./agi-problem/aurora/AURORA_EXECUTIVE_SUMMARY.md) - High-level overview
-
-### Research
-- [Core Research](./agi-problem/research/core-research/) - Fundamental architecture research
-- [Market Research](./agi-problem/research/market-research/) - Competitive analysis
-- [SOAR & ACT-R](./agi-problem/research/soar_act-r/) - Cognitive architecture research
-
-### Archive
-- [Archive](./agi-problem/archive/) - Historical documents and outdated approaches
-
----
-
-## Examples
-
-Code examples and usage demonstrations.
-
-**Location:** `/docs/examples/`
-
-- [Activation Usage](./examples/activation_usage.md) - ACT-R activation examples
-
----
-
-## Additional Resources
-
-### Package Documentation
-Each package has its own README with specific documentation:
-- [CLI Package](../packages/cli/README.md)
-- [Context-Code Package](../packages/context-code/README.md)
-- [Core Package](../packages/core/README.md)
-- [Reasoning Package](../packages/reasoning/README.md)
-- [SOAR Package](../packages/soar/README.md)
-- [Testing Package](../packages/testing/README.md)
-
-### Test Documentation
-- [Test Fixtures](../tests/fixtures/headless/README.md) - Headless mode test fixtures
-
-### Task Tracking
-- [Tasks Directory](../tasks/) - Active PRDs and task tracking documents
-
----
-
-## ACT-R Cognitive Model
-
-Core cognitive modeling documentation:
-
-**Location:** `/docs/`
-
-- [ACT-R Activation](./actr-activation.md) - ACT-R activation mechanisms explained
-
----
-
-## Document Organization
-
-All documentation follows this structure:
+## Documentation Structure
 
 ```
 docs/
-├── README.md (this file)
-├── architecture/          # System design
-├── development/          # Developer guides
-├── deployment/           # Operations
-├── guides/               # User guides
-├── reports/
-│   ├── quality/          # Quality reports
-│   ├── security/         # Security audits
-│   └── testing/          # Test reports
-├── performance/          # Performance analysis
-├── phases/
-│   ├── phase1/           # Foundation phase
-│   ├── phase2/           # Core features
-│   └── phase3/           # Production readiness
-├── tasks/                # Task tracking
-├── agi-problem/          # Research docs
-├── examples/             # Code examples
-└── actr-activation.md    # Core cognitive model
+├── 00-context/        # WHY - Vision, architecture, assumptions
+├── 01-product/        # WHAT - Product requirements
+├── 02-features/       # HOW - Feature documentation
+├── 03-logs/           # MEMORY - Implementation history
+└── 04-process/        # WORKFLOW - Development & usage guides
 ```
 
 ---
 
-## Getting Started
+## 00-context: Project Context
 
-### For Developers
-1. Start with [Architecture](#architecture) to understand the system
-2. Read [Development](#development) guides for best practices
-3. Review [Examples](#examples) for code samples
+Understanding Aurora's purpose and architecture.
 
-### For Operators
-1. Read [Deployment](#deployment) guides for production setup
-2. Review [Guides](#guides) for operational procedures
-3. Check [Troubleshooting](./guides/TROUBLESHOOTING.md) for common issues
-
-### For Researchers
-1. Start at [AGI Problem START HERE](./agi-problem/START-HERE.md)
-2. Review [Aurora Framework PRD](./agi-problem/aurora/AURORA-Framework-PRD.md)
-3. Explore [Research](./agi-problem/research/) documentation
-
-### For Project Managers
-1. Review [Phases](#phases) for project history
-2. Check [Reports](#reports) for quality metrics
-3. Review [Tasks](#tasks) for progress tracking
+| Document | Description |
+|----------|-------------|
+| [Vision](00-context/vision.md) | Purpose, goals, and boundaries |
+| [System State](00-context/system-state.md) | Current architecture and implementation |
+| [Assumptions](00-context/assumptions.md) | Constraints, decisions, and risks |
 
 ---
 
-## Contributing
+## 01-product: Product Requirements
 
-When adding new documentation:
-1. Place it in the appropriate subdirectory
-2. Update this index with a link
-3. Follow naming conventions (UPPERCASE for major docs, lowercase for guides)
-4. Include clear headers and navigation
+| Document | Description |
+|----------|-------------|
+| [PRD](01-product/prd.md) | Core features and requirements |
 
 ---
 
-**Last Updated:** December 24, 2025
-**Version:** 1.0.0
-**Maintainer:** Aurora Development Team
+## 02-features: Feature Documentation
+
+### CLI Commands
+
+| Document | Description |
+|----------|-------------|
+| [Commands Reference](02-features/cli/COMMANDS.md) | All `aur` commands |
+| [CLI Usage Guide](02-features/cli/CLI_USAGE_GUIDE.md) | Detailed CLI usage |
+| [aur goals](02-features/cli/aur-goals.md) | Goal decomposition command |
+| [aur soar](02-features/cli/aur-soar.md) | SOAR pipeline command |
+| [aur spawn](02-features/cli/aur-spawn.md) | Parallel execution command |
+
+### Memory System
+
+| Document | Description |
+|----------|-------------|
+| [ACT-R Activation](02-features/memory/ACTR_ACTIVATION.md) | Cognitive memory model |
+| [Caching Guide](02-features/memory/CACHING_GUIDE.md) | Cache configuration |
+| [ML Models](02-features/memory/ML_MODELS.md) | Embedding models |
+
+### SOAR Pipeline
+
+| Document | Description |
+|----------|-------------|
+| [SOAR Guide](02-features/soar/SOAR.md) | 9-phase pipeline usage |
+| [SOAR Architecture](02-features/soar/SOAR_ARCHITECTURE.md) | Technical architecture |
+
+### Agent System
+
+| Document | Description |
+|----------|-------------|
+| [Tools Guide](02-features/agents/TOOLS_GUIDE.md) | Supported CLI tools |
+| [Agent Integration](02-features/agents/AGENT_INTEGRATION.md) | Multi-agent patterns |
+
+### Other Features
+
+| Document | Description |
+|----------|-------------|
+| [Flows](02-features/FLOWS.md) | Workflow patterns |
+| [Cost Tracking](02-features/COST_TRACKING_GUIDE.md) | LLM cost monitoring |
+| [Early Detection](02-features/EARLY_DETECTION.md) | Issue detection |
+| [Friction Detection](02-features/FRICTION_DETECTION.md) | UX friction tracking |
+
+---
+
+## 03-logs: Implementation History
+
+| Document | Description |
+|----------|-------------|
+| [Implementation Log](03-logs/implementation-log.md) | Code change history |
+| [Decisions Log](03-logs/decisions-log.md) | Architectural decisions |
+| [Bug Log](03-logs/bug-log.md) | Bug tracking |
+| [Validation Log](03-logs/validation-log.md) | Post-release observations |
+| [Insights](03-logs/insights.md) | Learnings and patterns |
+
+---
+
+## 04-process: Development & Usage
+
+### Getting Started
+
+| Document | Description |
+|----------|-------------|
+| [3 Simple Steps](04-process/getting-started/3-SIMPLE-STEPS.md) | Quickest path to using Aurora |
+| [Quick Start](04-process/getting-started/QUICK_START.md) | Complete setup guide |
+| [Installation Verification](04-process/getting-started/INSTALLATION_VERIFICATION_GUIDE.md) | Verify your setup |
+| [ML Install](04-process/getting-started/ML_INSTALL.md) | Optional ML features |
+
+### Development
+
+| Document | Description |
+|----------|-------------|
+| [Development Guide](04-process/development/development.md) | Dev environment setup |
+| [Development Workflow](04-process/development/DEVELOPMENT-WORKFLOW.md) | Daily dev process |
+| [Testing Guide](04-process/development/TESTING_GUIDE.md) | Test organization |
+| [CLI Testing Guide](04-process/development/CLI_TESTING_GUIDE.md) | CLI-specific testing |
+| [Spawn Testing Guide](04-process/development/SPAWN_TESTING_GUIDE.md) | Spawn testing |
+| [Test Reference](04-process/development/TEST_REFERENCE.md) | Test patterns |
+| [Code Review Checklist](04-process/development/CODE_REVIEW_CHECKLIST.md) | Review criteria |
+| [Extension Guide](04-process/development/EXTENSION_GUIDE.md) | Adding custom features |
+| [Prompt Engineering](04-process/development/PROMPT_ENGINEERING_GUIDE.md) | LLM prompt design |
+| [Error Catalog](04-process/development/ERROR_CATALOG.md) | Error reference |
+| [Pre-Push Validation](04-process/development/PRE_PUSH_VALIDATION.md) | Pre-commit checks |
+| [Publishing](04-process/development/PUBLISHING.md) | Release process |
+
+### Migration
+
+| Document | Description |
+|----------|-------------|
+| [Migration Guide v0.3.0](04-process/development/MIGRATION_GUIDE_v0.3.0.md) | v0.3.0 upgrade |
+| [Phase 4 Migration](04-process/development/PHASE4_MIGRATION_GUIDE.md) | Phase 4 changes |
+
+### Troubleshooting
+
+| Document | Description |
+|----------|-------------|
+| [Troubleshooting](04-process/troubleshooting/TROUBLESHOOTING.md) | Common issues |
+| [CLI Troubleshooting](04-process/troubleshooting/CLI_TROUBLESHOOTING.md) | CLI-specific issues |
+
+### Reference
+
+| Document | Description |
+|----------|-------------|
+| [Config Reference](04-process/reference/CONFIG_REFERENCE.md) | Configuration options |
+| [API Contracts](04-process/reference/API_CONTRACTS_v1.0.md) | Public API specs |
+| [MCP Setup](04-process/reference/MCP_SETUP.md) | MCP integration |
+| [MCP Deprecation](04-process/reference/MCP_DEPRECATION.md) | MCP migration notes |
+| [Migration](04-process/reference/MIGRATION.md) | Version migration |
+
+### Performance
+
+| Document | Description |
+|----------|-------------|
+| [Performance Testing](04-process/PERFORMANCE_TESTING.md) | Benchmark guide |
+| [Performance Quick Ref](04-process/PERFORMANCE_QUICK_REF.md) | Quick reference |
+| [Performance Tuning](04-process/PERFORMANCE_TUNING.md) | Optimization guide |
+| [Release](04-process/RELEASE.md) | Release process |
+
+---
+
+## Package Documentation
+
+Each package has its own README:
+
+- [`packages/cli/README.md`](../packages/cli/README.md) - CLI commands
+- [`packages/core/README.md`](../packages/core/README.md) - Core models and store
+- [`packages/soar/README.md`](../packages/soar/README.md) - SOAR pipeline
+- [`packages/context-code/README.md`](../packages/context-code/README.md) - Code indexing
+- [`packages/context-doc/README.md`](../packages/context-doc/README.md) - Document parsing
+- [`packages/reasoning/README.md`](../packages/reasoning/README.md) - LLM clients
+- [`packages/planning/README.md`](../packages/planning/README.md) - Plan generation
+- [`packages/spawner/README.md`](../packages/spawner/README.md) - Parallel execution
+- [`packages/implement/README.md`](../packages/implement/README.md) - Sequential execution
+- [`packages/testing/README.md`](../packages/testing/README.md) - Test utilities
+
+---
+
+## Quick Reference
+
+### Common Commands
+
+```bash
+# Initialize project
+aur init
+
+# Index codebase
+aur mem index .
+
+# Search memory
+aur mem search "query"
+
+# Ask questions
+aur soar "how does X work?"
+
+# Plan goals
+aur goals "implement feature Y"
+
+# Check setup
+aur doctor
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `.aurora/config.json` | Project configuration |
+| `.aurora/memory.db` | Memory database |
+| `.aurora/plans/` | Generated plans |
+| `~/.aurora/config.json` | Global configuration |
+
+---
+
+**Last Updated**: February 2026

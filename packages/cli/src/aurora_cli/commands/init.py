@@ -14,7 +14,6 @@ from aurora_cli.commands.init_helpers import (
     configure_tools,
     create_agents_md,
     create_directory_structure,
-    create_headless_templates,
     create_project_md,
     detect_configured_tools,
     detect_git_repository,
@@ -266,17 +265,6 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
     else:
         create_agents_md(project_path)
         console.print("[green]✓[/] Created AGENTS.md with Aurora instructions")
-
-    # Create headless mode templates
-    headless_dir = aurora_dir / "headless"
-    headless_readme = headless_dir / "README.md"
-    headless_template = headless_dir / "prompt.md.template"
-
-    if headless_readme.exists() and headless_template.exists():
-        console.print("[green]✓[/] Headless templates already exist (preserved)")
-    else:
-        create_headless_templates(project_path)
-        console.print("[green]✓[/] Created headless mode templates")
 
     console.print()
     return git_initialized
@@ -1015,11 +1003,10 @@ def init_command(config: bool, tools: str | None) -> None:
     console.print('  1. [cyan]aur goals "Add feature"[/] - Decompose goals and match agents to tasks')
     console.print('  2. [cyan]aur soar research "topic"[/] - Deep research with memory-aware reasoning')
     console.print('  3. [cyan]aur mem search "keyword"[/] - Search your codebase')
-    console.print('  4. [cyan]aur headless "prompt"[/] - Ralph Wiggum headless mode with max retries')
     if agent_count > 0:
-        console.print("  5. [cyan]aur agents list[/] - View discovered agents")
+        console.print("  4. [cyan]aur agents list[/] - View discovered agents")
     else:
-        console.print("  5. [dim]Add agents to ~/.claude/agents/ to enable agent discovery[/]")
+        console.print("  4. [dim]Add agents to ~/.claude/agents/ to enable agent discovery[/]")
     console.print()
     console.print("[dim]Tip: Run [cyan]aur --help[/] to see all available commands[/]")
     console.print()

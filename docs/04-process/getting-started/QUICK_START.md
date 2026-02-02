@@ -1,0 +1,305 @@
+# AURORA CLI Quick Start Guide
+
+Get started with AURORA in 5 minutes. This guide walks you through installation, setup, and your first query.
+
+**Time Required**: 5 minutes
+**Prerequisites**: Python 3.10+, pip
+
+**Note:** This guide covers standalone CLI usage. For Claude Code CLI integration, see [MCP Setup Guide](../reference/MCP_SETUP.md).
+
+---
+
+## Step 1: Install (1 minute)
+
+```bash
+# Install AURORA CLI
+pip install -e packages/cli
+
+# Verify installation
+aur --version
+```
+
+**Expected Output**:
+```
+aurora, version 0.1.0
+```
+
+---
+
+## Step 2: Initialize Your Project (30 seconds)
+
+```bash
+# Navigate to your project
+cd /path/to/your/project
+
+# Initialize project (creates .aurora/ directory and database)
+aur init
+
+# Index Python files into project database
+aur mem index .
+```
+
+**What Happens**:
+- `aur init` creates `.aurora/` directory with project-local database
+- Recursively scans directory
+- Parses Python files
+- Extracts functions, classes, methods
+- Stores in `.aurora/memory.db` (project-specific)
+
+**Expected Output**:
+```
+Using database: ./.aurora/memory.db
+Indexing . ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%
+
+┌────────────────────────────────────────────────┐
+│ ✓ Indexing complete                            │
+│                                                │
+│ Files indexed:  47                             │
+│ Chunks created: 234                            │
+│ Duration:       3.42s                          │
+│ Errors:         0                              │
+└────────────────────────────────────────────────┘
+```
+
+---
+
+## Step 3: Query Your Codebase (30 seconds)
+
+```bash
+# Complex query using indexed codebase
+aur query "How does the authentication system work?"
+```
+
+**What Happens**:
+- AURORA assesses query complexity
+- Detects need for code context
+- Searches indexed memory
+- Retrieves relevant code chunks
+- Uses full SOAR pipeline
+- Returns comprehensive answer
+
+**Expected Output**:
+```
+→ Using AURORA (full pipeline)
+
+Response:
+┌──────────────────────────────────────────────────────────┐
+│ Based on your codebase, the authentication system uses:  │
+│                                                          │
+│ 1. JWT tokens (auth/tokens.py)                          │
+│ 2. Session middleware (middleware/auth.py)               │
+│ 3. User model (models/user.py)                          │
+│                                                          │
+│ Flow:                                                    │
+│ - Login: authenticate_user() validates credentials       │
+│ - Token: generate_jwt() creates signed token            │
+│ - Validation: AuthMiddleware.validate() checks token    │
+│ - Permissions: check_permission() enforces access        │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Next Steps
+
+### Try Different Query Modes
+
+**Force Direct LLM** (fastest):
+```bash
+aur query "Explain list comprehensions" --force-direct
+```
+
+**Force AURORA** (most comprehensive):
+```bash
+aur query "What is recursion?" --force-aurora --verbose
+```
+
+**Show Reasoning** (see decision process):
+```bash
+aur query "Design API endpoints" --show-reasoning
+```
+
+**Dry Run** (test without API calls):
+```bash
+aur query "test" --dry-run
+```
+
+### Search Your Codebase
+
+```bash
+# Search for specific functionality
+aur mem search "authentication"
+
+# View statistics
+aur mem stats
+
+# Search with more results
+aur mem search "database" --limit 10 --show-content
+```
+
+---
+
+## Common Workflows
+
+### Workflow 1: Understand Existing Code
+
+```bash
+# 1. Initialize and index codebase
+cd /path/to/project
+aur init                              # Create project database
+aur mem index .                       # Index codebase
+
+# 2. Ask about architecture
+aur query "Explain the overall architecture"
+
+# 3. Search for specific patterns
+aur mem search "database queries"
+
+# 4. Deep dive into components
+aur query "How does the caching layer work?"
+```
+
+### Workflow 2: Generate New Code
+
+```bash
+# 1. Describe what you need
+aur query "Create a REST API endpoint for user registration" --force-aurora
+
+# 2. Review response
+# (AURORA provides code with context from your project)
+
+# 3. Ask follow-ups
+aur query "Add input validation to the registration endpoint"
+```
+
+### Workflow 3: Debug Issues
+
+```bash
+# 1. Initialize project (if not done) and index recent changes
+cd /path/to/project
+aur init                              # Skip if already initialized
+aur mem index src/                    # Re-index recent changes
+
+# 2. Query about the bug
+aur query "Why is the login endpoint returning 401?"
+
+# 3. Get context-aware suggestions
+# (AURORA analyzes your auth code and suggests fixes)
+```
+
+---
+
+## Quick Reference
+
+### Essential Commands
+
+```bash
+# Setup
+aur init                              # Interactive setup
+
+# Queries
+aur query "your question"             # Basic query
+aur query "question" --verbose        # Show SOAR phases
+aur query "question" --dry-run        # Test without API calls
+
+# Memory
+aur mem index                         # Index current directory
+aur mem search "term"                 # Search memory
+aur mem stats                         # View statistics
+```
+
+### Configuration Files
+
+```bash
+~/.aurora/config.json                 # Global user config
+~/.aurora/budget_tracker.json         # Global budget tracker
+.aurora/config.json                   # Project config (created by aur init)
+.aurora/memory.db                     # Project memory database (created by aur init)
+```
+
+### Environment Variables
+
+```bash
+AURORA_ESCALATION_THRESHOLD           # Complexity threshold
+AURORA_LOGGING_LEVEL                  # Log verbosity
+```
+
+---
+
+## Troubleshooting Quick Fixes
+
+### "Database locked"
+
+```bash
+ps aux | grep aur
+kill <pid>
+rm aurora.db-wal aurora.db-shm
+```
+
+### "Rate limit exceeded"
+
+```bash
+# Wait 5 seconds (auto-retry enabled)
+# Or use direct mode:
+aur query "question" --force-direct
+```
+
+### "No results found" or "Database not found"
+
+```bash
+# Initialize project (if not done)
+cd /path/to/project
+aur init
+
+# Re-index
+aur mem index .
+
+# Verify
+aur mem stats
+```
+
+---
+
+## Learning Resources
+
+### Documentation
+
+- **Full CLI Guide**: [CLI_USAGE_GUIDE.md](CLI_USAGE_GUIDE.md)
+- **Error Reference**: [ERROR_CATALOG.md](ERROR_CATALOG.md)
+- **Troubleshooting**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- **Main README**: [../../README.md](../../README.md)
+
+### Examples
+
+See `packages/examples/` for:
+- Smoke tests showing API usage
+- Integration test examples
+- Common workflow patterns
+
+### Community
+
+- **GitHub**: https://github.com/aurora-project/aurora
+- **Issues**: https://github.com/aurora-project/aurora/issues
+- **Discussions**: https://github.com/aurora-project/aurora/discussions
+
+---
+
+## Tips for Success
+
+1. **Index before querying**: Better context = better answers
+2. **Use dry-run**: Test configuration without costs
+3. **Start simple**: Use `--force-direct` for quick questions
+4. **Use verbose**: Learn how AURORA reasons with `--verbose`
+5. **Check costs**: Use `--dry-run` to estimate expenses
+
+---
+
+**Congratulations!** You've completed the quick start guide.
+
+You can now:
+- ✓ Run queries against LLM
+- ✓ Index and search your codebase
+- ✓ Get context-aware answers
+- ✓ Understand escalation behavior
+
+**Next**: Explore the [CLI Usage Guide](CLI_USAGE_GUIDE.md) for advanced features.

@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-02-02
+
+### Removed
+
+**Headless Command (Complete Removal):**
+- `aur headless` command and all related code (~1,400 lines)
+- `packages/cli/src/aurora_cli/commands/headless.py`
+- `packages/cli/src/aurora_cli/templates/headless.py`
+- `packages/cli/src/aurora_cli/concurrent_executor.py`
+- 22+ headless test files
+
+**Tool Providers (Complete Removal):**
+- Entire `packages/cli/src/aurora_cli/tool_providers/` directory
+- Provider implementations: claude, cursor, codex, gemini, opencode, generic
+- Orchestrator and registry (~2,000 lines)
+
+**API Key References:**
+- Removed `ANTHROPIC_API_KEY` from all documentation
+- Removed API key troubleshooting sections
+- Removed API key configuration options
+
+**Documentation Cleanup (300+ files):**
+- Removed `docs/archive/` (~180 files)
+- Removed `docs/analysis/` (~10 files)
+- Removed `docs/arch/` (~3 files)
+- Removed `docs/commands/` (~4 files)
+- Removed `docs/development/` (~25 files)
+- Removed `docs/examples/` (~3 files)
+- Removed `docs/features/` (~2 files)
+- Removed `docs/fixes/` (~15 files)
+- Removed `docs/guides/` (~20 files)
+- Removed `docs/performance/` (~10 files)
+- Removed `docs/reference/` (~12 files)
+- Removed `docs/reports/` (~15 files)
+- Removed `docs/workflows/` (~2 files)
+
+### Added
+
+**New Documentation Structure:**
+- `docs/00-context/` - Architecture and context
+- `docs/01-product/` - Product documentation
+- `docs/02-features/` - Feature docs (cli/, agents/, soar/, memory/)
+- `docs/03-logs/` - Session logs
+- `docs/04-process/` - Process docs (getting-started/, troubleshooting/, reference/, development/)
+
+### Changed
+
+**CLAUDE.md:**
+- Reduced from ~150 lines to ~85 lines (43% reduction)
+- Removed verbose explanations
+- Condensed to essential commands and patterns
+
+**Init Command:**
+- Removed headless references from next steps
+- Updated help text
+
 ## [0.11.2] - 2026-02-02
 
 ### Removed

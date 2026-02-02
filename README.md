@@ -218,20 +218,6 @@ aur spawn tasks.md --verbose
 
 ---
 
-### Headless Mode (Terminal)
-
-`aur headless` - Ralph Wiggum mode:
-
-- Runs in isolated branch
-- Max retries on failure
-- Unattended execution
-
-```bash
-aur headless prompt.md
-```
-
----
-
 ## Planning Workflow
 
 3 simple steps from goal to implementation.
@@ -309,7 +295,6 @@ aur goals "Add user authentication"
 | `aur goals "goal"` | Terminal | Memory-aware planning |
 | `aur soar "question"` | Terminal | Memory-aware research |
 | `aur spawn tasks.md` | Terminal | Execute with safeguards |
-| `aur headless prompt.md` | Terminal | Unattended execution |
 | `aur friction <sessions-dir>` | Terminal | Analyze session friction, extract failure patterns |
 | `aur friction config` | Terminal | Show friction signal weights |
 | `/aur:search "query"` | Slash | Search indexed memory |

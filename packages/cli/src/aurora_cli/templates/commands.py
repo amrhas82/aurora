@@ -107,56 +107,8 @@ aur plan archive 0001-oauth -y
 <!-- AURORA:END -->
 """
 
-HEADLESS_COMMAND = """---
-name: Aurora: Headless
-description: Autonomous Claude execution loop
-category: Aurora
-tags: [aurora, headless, autonomous, loop]
----
-<!-- AURORA:START -->
-**What this does:**
-Run Claude autonomously in a loop until it achieves a goal or reaches max iterations.
-Claude manages its own state via a scratchpad file.
-
-**Setup:**
-```bash
-# Create prompt from template
-cp .aurora/headless/prompt.md.template .aurora/headless/prompt.md
-# Edit prompt.md with your goal
-```
-
-**Usage (3 forms):**
-```bash
-# Form 1: Default prompt (.aurora/headless/prompt.md)
-aur headless --max=10
-
-# Form 2: Custom prompt file
-aur headless -p my-task.md --max=10
-
-# Form 3: With test backpressure
-aur headless --test-cmd "pytest tests/" --max=15
-```
-
-**How it works:**
-1. Claude reads your prompt (goal + instructions)
-2. Claude works autonomously, rewriting `.aurora/headless/scratchpad.md`
-3. Loop checks for `STATUS: DONE` in scratchpad
-4. Exits early when done, or after max iterations
-
-**Key files:**
-- `.aurora/headless/prompt.md` - Your goal and instructions
-- `.aurora/headless/scratchpad.md` - Claude's state (rewritten each iteration)
-
-**Safety:**
-- Blocked on main/master branch by default (use `--allow-main` to override)
-- Max iterations prevent runaway execution
-<!-- AURORA:END -->
-"""
-
-
 # Dictionary of all command templates
 COMMAND_TEMPLATES: dict[str, str] = {
     "plan": PLAN_COMMAND,
     "archive": ARCHIVE_COMMAND,
-    "headless": HEADLESS_COMMAND,
 }

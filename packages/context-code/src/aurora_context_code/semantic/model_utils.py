@@ -6,7 +6,6 @@ Also provides BackgroundModelLoader for non-blocking model initialization.
 
 import logging
 import os
-import sys
 import threading
 import time
 from contextlib import contextmanager

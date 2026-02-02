@@ -19,7 +19,7 @@ The SOAR pipeline includes intelligent retrieval quality assessment in Phase 4 (
 ### Quality Levels
 
 - **NONE**: No indexed context available → proceeds with LLM general knowledge
-- **WEAK**: Low groundedness (<0.7) or few high-quality chunks (<3) → prompts user (CLI) or auto-continues (MCP/headless)
+- **WEAK**: Low groundedness (<0.7) or few high-quality chunks (<3) → prompts user (CLI) or auto-continues (MCP)
 - **GOOD**: High groundedness (≥0.7) and sufficient chunks (≥3) → proceeds automatically
 
 ### Interactive Mode Example (CLI)

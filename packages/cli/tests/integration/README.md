@@ -261,26 +261,6 @@ open htmlcov/index.html
 
 ---
 
-### Workflow 7: Headless Mode
-
-**File**: `test_workflows.py::test_headless_mode_execution`
-
-**Steps**:
-1. Create experiment prompt file
-2. Create git branch
-3. Run `aur headless experiment.md`
-4. Verify scratchpad created
-5. Verify iterations tracked
-6. Verify budget enforcement
-
-**Validates**:
-- Headless execution
-- Git safety checks
-- Budget tracking
-- Scratchpad logging
-
----
-
 ## Mocking Strategy
 
 ### When to Mock

@@ -120,43 +120,6 @@ def _apply_env_overrides(config: dict) -> None:
         else:
             raise ConfigurationError(f"AURORA_SOAR_MODEL must be 'sonnet' or 'opus', got '{val}'")
 
-    # Headless
-    if "AURORA_HEADLESS_TOOLS" in os.environ:
-        config.setdefault("headless", {})["tools"] = [
-            t.strip() for t in os.environ["AURORA_HEADLESS_TOOLS"].split(",") if t.strip()
-        ]
-
-    if "AURORA_HEADLESS_TIMEOUT" in os.environ:
-        try:
-            config.setdefault("headless", {})["timeout"] = int(
-                os.environ["AURORA_HEADLESS_TIMEOUT"],
-            )
-        except ValueError:
-            raise ConfigurationError("AURORA_HEADLESS_TIMEOUT must be an integer")
-
-    if "AURORA_HEADLESS_BUDGET" in os.environ:
-        try:
-            config.setdefault("headless", {})["budget"] = float(
-                os.environ["AURORA_HEADLESS_BUDGET"],
-            )
-        except ValueError:
-            raise ConfigurationError(
-                f"AURORA_HEADLESS_BUDGET must be a number, got '{os.environ['AURORA_HEADLESS_BUDGET']}'",
-            )
-
-    if "AURORA_HEADLESS_TIME_LIMIT" in os.environ:
-        try:
-            val = os.environ["AURORA_HEADLESS_TIME_LIMIT"]
-            # Must be integer (seconds), not float
-            if "." in val:
-                raise ConfigurationError(
-                    f"AURORA_HEADLESS_TIME_LIMIT must be an integer, got '{val}'",
-                )
-            config.setdefault("headless", {})["time_limit"] = int(val)
-        except ValueError:
-            raise ConfigurationError(
-                f"AURORA_HEADLESS_TIME_LIMIT must be an integer, got '{os.environ['AURORA_HEADLESS_TIME_LIMIT']}'",
-            )
 
 
 def load_config(path: str | Path | None = None) -> dict[str, Any]:
@@ -252,40 +215,10 @@ def validate_config(config: dict[str, Any]) -> list[str]:
     if level not in valid_levels:
         errors.append(f"logging.level must be one of {valid_levels}, got '{level}'")
 
-    # Headless strategy
-    strategy = config.get("headless", {}).get("strategy", "first_success")
-    valid_strategies = ["first_success", "all_complete", "voting", "best_score", "merge"]
-    if strategy not in valid_strategies:
-        errors.append(f"headless.strategy must be one of {valid_strategies}, got '{strategy}'")
-
     # Search score
     score = config.get("search", {}).get("min_semantic_score", 0.7)
     if not 0.0 <= score <= 1.0:
         errors.append(f"search.min_semantic_score must be 0.0-1.0, got {score}")
-
-    # Headless budget (must be positive if set)
-    budget = config.get("headless", {}).get("budget")
-    if budget is not None and budget <= 0:
-        errors.append(f"headless.budget must be positive, got {budget}")
-
-    # Headless time_limit (must be positive if set)
-    time_limit = config.get("headless", {}).get("time_limit")
-    if time_limit is not None and time_limit <= 0:
-        errors.append(f"headless.time_limit must be positive, got {time_limit}")
-
-    # Tool configs validation
-    tool_configs = config.get("headless", {}).get("tool_configs", {})
-    for tool_name, tool_config in tool_configs.items():
-        max_retries = tool_config.get("max_retries")
-        if max_retries is not None and max_retries < 0:
-            errors.append(
-                f"headless.tool_configs.{tool_name}.max_retries must be non-negative, got {max_retries}",
-            )
-        retry_delay = tool_config.get("retry_delay")
-        if retry_delay is not None and retry_delay < 0:
-            errors.append(
-                f"headless.tool_configs.{tool_name}.retry_delay must be non-negative, got {retry_delay}",
-            )
 
     return errors
 
@@ -366,12 +299,6 @@ class Config:
         # Apply legacy kwargs as overrides
         if "db_path" in kwargs:
             self._data.setdefault("storage", {})["path"] = kwargs["db_path"]
-        if "headless_budget" in kwargs:
-            self._data.setdefault("headless", {})["budget"] = kwargs["headless_budget"]
-        if "headless_time_limit" in kwargs:
-            self._data.setdefault("headless", {})["time_limit"] = kwargs["headless_time_limit"]
-        if "headless_tool_configs" in kwargs:
-            self._data.setdefault("headless", {})["tool_configs"] = kwargs["headless_tool_configs"]
 
     def __getitem__(self, key: str) -> Any:
         """Dict-style access: config["budget"]."""
@@ -404,10 +331,6 @@ class Config:
     @property
     def budget_tracker_path(self) -> str:
         return self._data.get("budget", {}).get("tracker_path", "~/.aurora/budget_tracker.json")
-
-    @property
-    def headless_tool_configs(self) -> dict:
-        return self._data.get("headless", {}).get("tool_configs", {})
 
     @property
     def agents_discovery_paths(self) -> list[str]:
@@ -446,38 +369,6 @@ class Config:
     @property
     def soar_default_model(self) -> str:
         return self._data.get("soar", {}).get("default_model", "sonnet")
-
-    @property
-    def headless_tools(self) -> list[str]:
-        return self._data.get("headless", {}).get("tools", ["claude"])
-
-    @property
-    def headless_strategy(self) -> str:
-        return self._data.get("headless", {}).get("strategy", "first_success")
-
-    @property
-    def headless_parallel(self) -> bool:
-        return self._data.get("headless", {}).get("parallel", True)
-
-    @property
-    def headless_max_iterations(self) -> int:
-        return self._data.get("headless", {}).get("max_iterations", 10)
-
-    @property
-    def headless_timeout(self) -> int:
-        return self._data.get("headless", {}).get("timeout", 600)
-
-    @property
-    def headless_budget(self) -> float | None:
-        return self._data.get("headless", {}).get("budget")
-
-    @property
-    def headless_time_limit(self) -> int | None:
-        return self._data.get("headless", {}).get("time_limit")
-
-    @property
-    def headless_routing_rules(self) -> list[dict]:
-        return self._data.get("headless", {}).get("routing_rules", [])
 
     @property
     def agents_auto_refresh(self) -> bool:

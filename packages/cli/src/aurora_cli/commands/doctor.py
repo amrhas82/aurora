@@ -39,7 +39,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
     - Code Analysis: tree-sitter parser, index age, chunk quality
     - Search & Retrieval: vector store, Git BLA, cache size, embeddings
     - Configuration: config file, Git repo
-    - Tool Integration: slash commands, MCP servers
+    - Tool Integration: CLI tools, slash commands
 
     \b
     Exit Codes:
@@ -66,6 +66,14 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         return
 
     try:
+        # Get Aurora version dynamically
+        import importlib.metadata
+
+        try:
+            aurora_version = importlib.metadata.version("aurora-actr")
+        except Exception:
+            aurora_version = "unknown"
+
         # Load configuration (using Config class for backward compat)
         config = Config()
 
@@ -78,50 +86,115 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         tool_checks = ToolIntegrationChecks(config)
 
         # Run all checks
-        console.print("\n[bold cyan]Running AURORA health checks...[/]\n")
+        console.print("\n[bold cyan]█████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗[/]")
+        console.print("[bold cyan]██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗[/]")
+        console.print("[bold cyan]███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║[/]")
+        console.print("[bold cyan]██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║[/]")
+        console.print("[bold cyan]██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║[/]")
+        console.print("[bold cyan]╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝[/]")
+        console.print(f"\n[bold cyan]Running AURORA v{aurora_version} health checks...[/]\n")
 
         all_results = []
 
-        # Installation checks
-        console.print("[bold]INSTALLATION[/]")
+        # Run all checks first to collect results
         install_results = install_checks.run_checks()
-        all_results.extend(install_results)
-        _display_results(install_results)
-        console.print()
-
-        # Core System checks
-        console.print("[bold]CORE SYSTEM[/]")
         core_results = core_checks.run_checks()
-        all_results.extend(core_results)
-        _display_results(core_results)
-        console.print()
-
-        # Code Analysis checks
-        console.print("[bold]CODE ANALYSIS[/]")
         code_results = code_checks.run_checks()
-        all_results.extend(code_results)
-        _display_results(code_results)
-        console.print()
-
-        # Search & Retrieval checks
-        console.print("[bold]SEARCH & RETRIEVAL[/]")
         search_results = search_checks.run_checks()
-        all_results.extend(search_results)
-        _display_results(search_results)
-        console.print()
-
-        # Configuration checks
-        console.print("[bold]CONFIGURATION[/]")
         config_results = config_checks.run_checks()
+        tool_results = tool_checks.run_checks()
+
+        all_results.extend(install_results)
+        all_results.extend(core_results)
+        all_results.extend(code_results)
+        all_results.extend(search_results)
         all_results.extend(config_results)
-        _display_results(config_results)
+        all_results.extend(tool_results)
+
+        # Check if project is initialized
+        from pathlib import Path
+
+        project_initialized = _is_project_initialized()
+        project_path = Path.cwd()
+
+        # ═══════════════════════════════════════════════════════════
+        # GLOBAL SECTION
+        # ═══════════════════════════════════════════════════════════
+        console.print("[bold cyan]GLOBAL[/] [dim](shared across all projects)[/]")
+
+        # Environment: Python + CLI tools
+        python_result = install_results[0] if install_results else ("skip", "Python", {})
+        cli_tools_result = tool_results[0] if tool_results else ("skip", "CLI tools", {})
+        _display_compact_line("Environment:", [python_result, cli_tools_result])
+
+        # ML: sentence-transformers + model cached
+        ml_results = []
+        for r in search_results:
+            if "sentence-transformers" in r[1]:
+                ml_results.append(r)
+            elif "ML model" in r[1] or "Embedding model" in r[1]:
+                ml_results.append(r)
+        if ml_results:
+            _display_compact_line("ML:", ml_results)
+
+        # Parsers: Tree-sitter
+        parser_results = [r for r in code_results if "Tree-sitter" in r[1] or "parser" in r[1].lower()]
+        if parser_results:
+            _display_compact_line("Parsers:", parser_results)
+
         console.print()
 
-        # Tool Integration checks
-        console.print("[bold]TOOL INTEGRATION[/]")
-        tool_results = tool_checks.run_checks()
-        all_results.extend(tool_results)
-        _display_results(tool_results)
+        # ═══════════════════════════════════════════════════════════
+        # PROJECT SECTION
+        # ═══════════════════════════════════════════════════════════
+        if project_initialized:
+            console.print(f"[bold cyan]PROJECT[/] [dim]{project_path}[/]")
+
+            # Packages: aurora_* versions
+            pkg_results = [r for r in install_results if "aurora" in r[1].lower() or "v0." in r[1]]
+            if pkg_results:
+                _display_compact_line("Packages:", pkg_results)
+
+            # Storage: Database + .aurora writable + cache
+            storage_results = []
+            for r in core_results:
+                if "Database" in r[1] or ".aurora" in r[1]:
+                    storage_results.append(r)
+            for r in search_results:
+                if "Cache:" in r[1] or "local" in r[1].lower():
+                    storage_results.append(r)
+            if storage_results:
+                _display_compact_line("Storage:", storage_results)
+
+            # Index: Vector store + age + Git BLA
+            index_results = []
+            for r in search_results:
+                if "Vector" in r[1] or "BLA" in r[1]:
+                    index_results.append(r)
+            for r in code_results:
+                if "Index" in r[1] or "days old" in r[1]:
+                    index_results.append(r)
+            if index_results:
+                _display_compact_line("Index:", index_results)
+
+            # Config: config file + git repo + slash commands
+            cfg_results = []
+            cfg_results.extend(config_results)
+            for r in tool_results:
+                if "Slash" in r[1] or "command" in r[1].lower():
+                    cfg_results.append(r)
+            if cfg_results:
+                _display_compact_line("Config:", cfg_results)
+
+        else:
+            # Project not initialized
+            console.print(f"[bold yellow]PROJECT[/] [dim]{project_path}[/]")
+            console.print("  [yellow]⚠[/] Project not initialized")
+            console.print()
+            console.print("  [dim]To initialize this project:[/]")
+            console.print("    [cyan]cd {path}[/]".format(path=project_path))
+            console.print("    [cyan]aur init[/]")
+
         console.print()
 
         # Calculate summary
@@ -176,12 +249,49 @@ def _display_results(results: list[tuple[str, str, dict]]) -> None:
         elif status == "warning":
             icon = "⚠"
             color = "yellow"
+        elif status == "skip":
+            icon = "⊘"
+            color = "dim"
         else:  # fail
             icon = "✗"
             color = "red"
 
         # Display result
         console.print(f"  [{color}]{icon}[/] {message}")
+
+
+def _format_check(status: str, message: str) -> str:
+    """Format a single check result for compact display."""
+    if status == "pass":
+        return f"[green]✓[/] {message}"
+    elif status == "warning":
+        return f"[yellow]⚠[/] {message}"
+    elif status == "skip":
+        return f"[dim]⊘ {message}[/]"
+    else:  # fail
+        return f"[red]✗[/] {message}"
+
+
+def _display_compact_line(label: str, results: list[tuple[str, str, dict]], width: int = 14) -> None:
+    """Display multiple check results on one compact line.
+
+    Args:
+        label: The subsection label (e.g., "Environment")
+        results: List of (status, message, details) tuples
+        width: Width for the label column
+
+    """
+    formatted = [_format_check(s, m) for s, m, _ in results]
+    line = " · ".join(formatted)
+    console.print(f"  [bold]{label:<{width}}[/] {line}")
+
+
+def _is_project_initialized() -> bool:
+    """Check if current directory has an initialized Aurora project."""
+    from pathlib import Path
+
+    aurora_dir = Path.cwd() / ".aurora"
+    return aurora_dir.exists() and (aurora_dir / "memory.db").exists()
 
 
 def _display_summary(pass_count: int, warning_count: int, fail_count: int) -> None:

@@ -86,7 +86,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         tool_checks = ToolIntegrationChecks(config)
 
         # Run all checks
-        console.print("\n[bold cyan]█████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗[/]")
+        console.print("\n[bold cyan] █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗[/]")
         console.print("[bold cyan]██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗[/]")
         console.print("[bold cyan]███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║[/]")
         console.print("[bold cyan]██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║[/]")

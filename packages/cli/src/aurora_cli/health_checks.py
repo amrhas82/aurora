@@ -432,26 +432,43 @@ class SearchRetrievalChecks:
             return ("fail", f"Git BLA check failed: {e}", {})
 
     def _check_cache_size(self) -> HealthCheckResult:
-        """Check cache directory size."""
+        """Check combined cache size (Aurora local + ML model)."""
         try:
-            cache_dir = Path.cwd() / ".aurora" / "cache"
-            if not cache_dir.exists():
-                return ("pass", "No cache directory", {"path": str(cache_dir)})
+            # Aurora local cache
+            aurora_cache = Path.cwd() / ".aurora" / "cache"
+            aurora_size = 0
+            if aurora_cache.exists():
+                aurora_size = sum(
+                    f.stat().st_size for f in aurora_cache.rglob("*") if f.is_file()
+                )
 
-            # Calculate total size
-            total_size = sum(f.stat().st_size for f in cache_dir.rglob("*") if f.is_file())
-            size_mb = total_size / (1024 * 1024)
+            # HuggingFace ML model cache
+            hf_cache = Path.home() / ".cache" / "huggingface" / "hub"
+            ml_size = 0
+            if hf_cache.exists():
+                ml_size = sum(f.stat().st_size for f in hf_cache.rglob("*") if f.is_file())
 
-            if size_mb > 500:
+            aurora_mb = aurora_size / (1024 * 1024)
+            ml_mb = ml_size / (1024 * 1024)
+            total_mb = aurora_mb + ml_mb
+
+            details = {
+                "aurora_cache_mb": round(aurora_mb, 1),
+                "ml_model_mb": round(ml_mb, 1),
+                "total_mb": round(total_mb, 1),
+            }
+
+            # Warn if total exceeds 2GB
+            if total_mb > 2000:
                 return (
                     "warning",
-                    f"Cache large ({size_mb:.1f} MB)",
-                    {"path": str(cache_dir), "size_mb": size_mb},
+                    f"Cache large: {aurora_mb:.0f} MB local + {ml_mb:.0f} MB ML = {total_mb:.0f} MB",
+                    details,
                 )
             return (
                 "pass",
-                f"Cache size OK ({size_mb:.1f} MB)",
-                {"path": str(cache_dir), "size_mb": size_mb},
+                f"Cache: {aurora_mb:.0f} MB local + {ml_mb:.0f} MB ML",
+                details,
             )
         except Exception as e:
             return ("fail", f"Cache size check failed: {e}", {})

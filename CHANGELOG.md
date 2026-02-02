@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-02-02
+
+### Fixed
+
+- Include `defaults.json` in package distribution (was missing from wheel)
+- Added `[tool.setuptools.package-data]` configuration for data files
+
+### Changed
+
+- README: Removed headless references, updated doc paths to new structure, updated version
+
 ## [0.12.0] - 2026-02-02
 
 ### Removed

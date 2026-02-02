@@ -273,7 +273,7 @@ def _format_check(status: str, message: str) -> str:
 
 
 def _display_compact_line(label: str, results: list[tuple[str, str, dict]], width: int = 14) -> None:
-    """Display multiple check results on one compact line.
+    """Display multiple check results, wrapping long lines with proper indentation.
 
     Args:
         label: The subsection label (e.g., "Environment")
@@ -281,9 +281,49 @@ def _display_compact_line(label: str, results: list[tuple[str, str, dict]], widt
         width: Width for the label column
 
     """
+    # Get terminal width, default to 100 if can't determine
+    try:
+        term_width = console.width or 100
+    except Exception:
+        term_width = 100
+
+    # Calculate indent for continuation lines (2 spaces + label width)
+    indent = "  " + " " * width
+
+    # Format all checks
     formatted = [_format_check(s, m) for s, m, _ in results]
-    line = " · ".join(formatted)
-    console.print(f"  [bold]{label:<{width}}[/] {line}")
+
+    # Build lines that fit within terminal width
+    # Account for indent, label, and some buffer for Rich markup
+    max_content_width = term_width - len(indent) - 10  # buffer for markup
+
+    lines = []
+    current_line = []
+    current_len = 0
+
+    for item in formatted:
+        # Estimate visible length (strip Rich markup approximation)
+        visible_len = len(item) - 15  # rough estimate for [green]✓[/] etc.
+        separator_len = 3 if current_line else 0  # " · "
+
+        if current_len + visible_len + separator_len > max_content_width and current_line:
+            # Start new line
+            lines.append(" · ".join(current_line))
+            current_line = [item]
+            current_len = visible_len
+        else:
+            current_line.append(item)
+            current_len += visible_len + separator_len
+
+    if current_line:
+        lines.append(" · ".join(current_line))
+
+    # Print first line with label
+    if lines:
+        console.print(f"  [bold]{label:<{width}}[/] {lines[0]}")
+        # Print continuation lines with indent
+        for line in lines[1:]:
+            console.print(f"{indent} {line}")
 
 
 def _is_project_initialized() -> bool:

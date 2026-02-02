@@ -38,7 +38,7 @@ pip install aurora-actr
 
 # Upgrading?
 pip install --upgrade aurora-actr
-aur --version  # Should show 0.12.1
+aur --version  # Should show 0.12.2
 
 # Uninstall
 pip uninstall aurora-actr

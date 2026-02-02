@@ -1015,7 +1015,7 @@ def init_command(config: bool, tools: str | None) -> None:
     console.print('  1. [cyan]aur goals "Add feature"[/] - Decompose goals and match agents to tasks')
     console.print('  2. [cyan]aur soar research "topic"[/] - Deep research with memory-aware reasoning')
     console.print('  3. [cyan]aur mem search "keyword"[/] - Search your codebase')
-    console.print('  4. [cyan]aur headless "prompt"[/] - Run in headless mode')
+    console.print('  4. [cyan]aur headless "prompt"[/] - Ralph Wiggum headless mode with max retries')
     if agent_count > 0:
         console.print("  5. [cyan]aur agents list[/] - View discovered agents")
     else:

@@ -30,16 +30,15 @@ Planning & Multi-Agent Orchestration
 - **Memory-Aware Planning** - Decompose goals, assign agents, detect capability gaps
 - **Memory-Aware Research** - Multi-agent orchestration with recovery and state
 - **Task Execution** - Stop gates for feature creep and dangerous commands
-- **Headless Mode** - Isolated branch execution with max retries
+- **Friction Analysis** - Detect stuck patterns and extract learned rules from sessions
 
 ```bash
 # New installation
 pip install aurora-actr
 
-# Upgrading from older version (0.9.x → 0.10.0)?
-# Use --upgrade flag to pull latest release
+# Upgrading?
 pip install --upgrade aurora-actr
-aur --version  # Should show 0.10.0
+aur --version  # Should show 0.12.1
 
 # Uninstall
 pip uninstall aurora-actr
@@ -253,7 +252,7 @@ Terminal                 Terminal                 Slash Command            Slash
   architecture, conventions, and key patterns." This improves planning accuracy.
 ```
 
-See [3 Simple Steps Guide](docs/guides/3-SIMPLE-STEPS.md) for detailed walkthrough.
+See [3 Simple Steps Guide](docs/04-process/getting-started/3-SIMPLE-STEPS.md) for detailed walkthrough.
 
 ---
 
@@ -318,9 +317,10 @@ aur init --tools=claude,cursor
 
 ## Documentation
 
-- [Commands Reference](docs/guides/COMMANDS.md)
-- [Tools Guide](docs/guides/TOOLS_GUIDE.md)
-- [Flows Guide](docs/guides/FLOWS.md)
+- [Commands Reference](docs/02-features/cli/COMMANDS.md)
+- [Tools Guide](docs/02-features/agents/TOOLS_GUIDE.md)
+- [Flows Guide](docs/02-features/FLOWS.md)
+- [Troubleshooting](docs/04-process/troubleshooting/TROUBLESHOOTING.md)
 
 ---
 

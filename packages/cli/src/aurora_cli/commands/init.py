@@ -246,6 +246,7 @@ def run_step_1_planning_setup(project_path: Path) -> bool:
     console.print("  • .aurora/plans/archive")
     console.print("  • .aurora/logs")
     console.print("  • .aurora/cache")
+    console.print("  • .aurora/config.json")
 
     # Create project.md with auto-detected metadata
     aurora_dir = project_path / ".aurora"

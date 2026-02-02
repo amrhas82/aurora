@@ -445,9 +445,9 @@ class TestVerificationCalibration:
         )
 
         min_score, max_score = test_case["expected_score_range"]
-        assert (
-            min_score <= result.overall_score <= max_score
-        ), f"Score {result['overall_score']} not in expected range {test_case['expected_score_range']}"
+        assert min_score <= result.overall_score <= max_score, (
+            f"Score {result['overall_score']} not in expected range {test_case['expected_score_range']}"
+        )
         assert result.verdict == test_case["expected_verdict"]
         assert result.overall_score >= 0.7  # PASS threshold
 
@@ -601,9 +601,9 @@ class TestVerificationCalibration:
             + 0.2 * result.routability
         )
 
-        assert (
-            abs(result.overall_score - expected_score) < 0.01
-        ), f"Score calculation mismatch: {result['overall_score']} != {expected_score}"
+        assert abs(result.overall_score - expected_score) < 0.01, (
+            f"Score calculation mismatch: {result['overall_score']} != {expected_score}"
+        )
 
     def test_verdict_thresholds(self):
         """Test that verdicts follow defined thresholds."""

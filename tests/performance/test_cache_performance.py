@@ -221,9 +221,9 @@ def test_cache_memory_overhead():
     query_cache_memory_mb = query_cache.size() * 1.5 / 1024  # 1.5KB per query
     total_memory_mb = retriever_memory_mb + query_cache_memory_mb
 
-    assert (
-        total_memory_mb < 50.0
-    ), f"Memory overhead should be <50MB, estimated {total_memory_mb:.2f}MB"
+    assert total_memory_mb < 50.0, (
+        f"Memory overhead should be <50MB, estimated {total_memory_mb:.2f}MB"
+    )
 
 
 @pytest.mark.performance

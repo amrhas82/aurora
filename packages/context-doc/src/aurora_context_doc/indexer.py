@@ -90,10 +90,7 @@ class DocumentIndexer:
         # Get parser
         parser = self._get_parser(file_path)
         if parser is None:
-            raise ValueError(
-                f"Unsupported file format: {file_path.suffix}. "
-                "Supported: .pdf, .docx"
-            )
+            raise ValueError(f"Unsupported file format: {file_path.suffix}. Supported: .pdf, .docx")
 
         logger.info(f"Indexing document: {file_path}")
 

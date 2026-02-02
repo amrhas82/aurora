@@ -275,7 +275,9 @@ def _print_phase_result(phase_num: int, result: dict[str, Any]) -> None:
         # Decompose phase
         count = result.get("subgoal_count", 0)
         # Don't show in-memory cache status here - file cache will be shown later if applicable
-        console.print(f"  [cyan]✓ {count} subgoals {'loaded' if result.get('cached') else 'identified'}[/]")
+        console.print(
+            f"  [cyan]✓ {count} subgoals {'loaded' if result.get('cached') else 'identified'}[/]"
+        )
     elif phase_num == 4:
         # Verify phase (now includes agent assignment)
         verdict = result.get("verdict", "UNKNOWN")

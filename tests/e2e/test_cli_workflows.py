@@ -236,9 +236,9 @@ class TestCLIMemSearch:
         # Now search for a function
         search_result = cli_runner("mem", "search", "hello_world")
 
-        assert (
-            search_result.returncode == 0
-        ), f"STDOUT: {search_result.stdout}\nSTDERR: {search_result.stderr}"
+        assert search_result.returncode == 0, (
+            f"STDOUT: {search_result.stdout}\nSTDERR: {search_result.stderr}"
+        )
         assert "hello_world" in search_result.stdout or "Hello" in search_result.stdout
 
     def test_search_with_no_results(self, cli_runner, temp_project_dir, temp_aurora_home):
@@ -273,41 +273,6 @@ class TestCLIMemSearch:
         # Should find both add and multiply functions
         # (specific ranking validation would require parsing output)
         assert "add" in result.stdout.lower() or "multiply" in result.stdout.lower()
-
-
-# ==============================================================================
-# Task 3.13: Test aur query (Real Safety Checks + Git Integration)
-# ==============================================================================
-
-
-class TestCLIQuery:
-    """Test 'aur query' command with real safety checks."""
-
-    @pytest.mark.skip(reason="Requires API key - will be tested in E2E with mocked LLM")
-    def test_query_requires_api_key(self, cli_runner, temp_project_dir, temp_aurora_home):
-        """Test that 'aur query' requires API key configuration."""
-        # Ensure no API key is set
-        env = os.environ.copy()
-        env.pop("ANTHROPIC_API_KEY", None)
-
-        result = cli_runner("query", "what does this code do?")
-
-        # Should fail or warn about missing API key
-        assert result.returncode != 0 or "API key" in result.stderr
-
-    def test_query_command_structure(self, cli_runner, temp_project_dir, temp_aurora_home):
-        """Test that 'aur query' command accepts valid structure."""
-        # This just validates command structure, not full execution
-        result = cli_runner("query", "--help")
-
-        assert result.returncode == 0
-        assert "query" in result.stdout.lower() or "usage" in result.stdout.lower()
-
-    @pytest.mark.skip(reason="Git safety checks require git repository setup")
-    def test_query_respects_git_safety_checks(self, cli_runner, temp_project_dir, temp_aurora_home):
-        """Test that 'aur query' respects git safety configuration."""
-        # This test would require setting up a git repository
-        # and configuring safety checks - deferred to E2E tests
 
 
 # ==============================================================================

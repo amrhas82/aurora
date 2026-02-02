@@ -280,9 +280,9 @@ class TestEmbeddingPerformance:
             print("  ✓ ACCEPTABLE (<300ms for very long text)")
 
         # Allow more time for very long text (near 512 token limit)
-        assert (
-            p95_time < 300
-        ), f"P95 time {p95_time:.2f}ms exceeds 300ms threshold for very long text"
+        assert p95_time < 300, (
+            f"P95 time {p95_time:.2f}ms exceeds 300ms threshold for very long text"
+        )
 
     # --- Query Embedding Performance Tests ---
 
@@ -352,9 +352,9 @@ class TestEmbeddingPerformance:
             print("  ✓ ACCEPTABLE (<100ms per chunk)")
 
         # Batch processing should be efficient
-        assert (
-            per_chunk_time < 150
-        ), f"Per-chunk time {per_chunk_time:.2f}ms exceeds 150ms batch threshold"
+        assert per_chunk_time < 150, (
+            f"Per-chunk time {per_chunk_time:.2f}ms exceeds 150ms batch threshold"
+        )
 
     def test_embed_batch_100_chunks_performance(self, provider, short_text):
         """Test batch embedding of 100 chunks."""
@@ -382,9 +382,9 @@ class TestEmbeddingPerformance:
             print("  ✓ ACCEPTABLE (<100ms per chunk)")
 
         # Note: Batch processing shows efficiency gains
-        assert (
-            per_chunk_time < 100
-        ), f"Per-chunk time {per_chunk_time:.2f}ms exceeds 100ms batch threshold"
+        assert per_chunk_time < 100, (
+            f"Per-chunk time {per_chunk_time:.2f}ms exceeds 100ms batch threshold"
+        )
 
     # --- Model Loading Performance Test ---
 
@@ -442,9 +442,9 @@ class TestEmbeddingPerformance:
         scaling_factor = times_by_size[80] / times_by_size[10]
         print(f"  - Scaling factor (80/10): {scaling_factor:.2f}x")
 
-        assert (
-            scaling_factor < 5
-        ), f"Scaling factor {scaling_factor:.2f}x indicates poor performance scaling"
+        assert scaling_factor < 5, (
+            f"Scaling factor {scaling_factor:.2f}x indicates poor performance scaling"
+        )
 
     # --- Concurrent Performance Test ---
 
@@ -471,9 +471,9 @@ class TestEmbeddingPerformance:
         print(f"  - Average per chunk: {avg_time_per_embedding:.2f}ms")
 
         # Verify performance doesn't degrade significantly under load
-        assert (
-            avg_time_per_embedding < 100
-        ), f"Concurrent performance degraded: {avg_time_per_embedding:.2f}ms per chunk"
+        assert avg_time_per_embedding < 100, (
+            f"Concurrent performance degraded: {avg_time_per_embedding:.2f}ms per chunk"
+        )
 
     # --- Memory Performance Test ---
 
@@ -497,9 +497,9 @@ class TestEmbeddingPerformance:
 
         # Verify reasonable memory usage
         expected_bytes = 100 * 384 * 4  # 100 embeddings × 384 dims × 4 bytes
-        assert (
-            total_bytes == expected_bytes
-        ), f"Memory usage {total_bytes} bytes != expected {expected_bytes} bytes"
+        assert total_bytes == expected_bytes, (
+            f"Memory usage {total_bytes} bytes != expected {expected_bytes} bytes"
+        )
 
 
 class TestEmbeddingConsistency:

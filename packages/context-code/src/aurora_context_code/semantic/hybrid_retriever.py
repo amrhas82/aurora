@@ -912,8 +912,7 @@ class HybridRetriever:
             selected.append(remaining.pop(best_idx))
 
         logger.debug(
-            f"MMR reranking: selected {len(selected)} diverse results "
-            f"(lambda={mmr_lambda:.2f})"
+            f"MMR reranking: selected {len(selected)} diverse results (lambda={mmr_lambda:.2f})"
         )
         return selected
 

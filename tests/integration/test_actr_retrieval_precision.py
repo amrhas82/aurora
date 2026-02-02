@@ -235,7 +235,9 @@ class TestActivationRetrievalPrecision:
             rel_level = (
                 "highly"
                 if r.chunk_id in highly_relevant_ids
-                else "yes" if r.chunk_id in relevant_ids else "no"
+                else "yes"
+                if r.chunk_id in relevant_ids
+                else "no"
             )
             print(f"  {i}. {r.chunk_id:20s} (act={r.activation:6.3f}) [relevant={rel_level}]")
         print(f"Precision@3: {p3:.1%}")

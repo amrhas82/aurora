@@ -14,7 +14,8 @@
     "interrupt_cascade": 7,
     "rapid_exit": 6,
     "no_resolution": 8,
-    "session_abandoned": 10
+    "session_abandoned": 10,
+    "sibling_tool_error": 0.5
   },
   "thresholds": {
     "friction_peak": 15,
@@ -38,6 +39,7 @@
     "interrupt_cascade": "Multiple ESC/Ctrl+C within 60s - escalating frustration",
     "rapid_exit": "Quick quit (<3 turns) after error - immediate rejection",
     "no_resolution": "Errors without success - unresolved session",
-    "session_abandoned": "High friction at end, no clean exit - gave up silently"
+    "session_abandoned": "High friction at end, no clean exit - gave up silently",
+    "sibling_tool_error": "SDK cascade - parallel tool batch canceled when one fails"
   }
 }

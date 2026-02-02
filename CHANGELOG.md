@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-02-02
+
+### Removed
+
+**CLI Cleanup - Deprecated Commands:**
+- `aur health` command (dead code, never registered)
+- `aur query` command (MCP-dependent, deprecated)
+- `aur plan init` and `aur plan create` subcommands (use `aur goals` instead)
+- `aur verify` command (merged into `aur doctor`)
+
+**MCP Deprecation:**
+- `MCPFunctionalChecks` class from health checks (~360 lines)
+- MCP configuration functions from init helpers
+- All MCP-related test files (~20 files, ~5,000 lines)
+
+### Added
+
+**Doctor Command Enhancements:**
+- New `InstallationChecks` class verifying:
+  - Python version (>= 3.10)
+  - Core package imports (aurora_core, aurora_context_code, aurora_soar, aurora_reasoning, aurora_cli)
+- Installation checks merged from removed `aur verify` command
+
+**Init Command Enhancements:**
+- `create_default_config()` function creates `.aurora/config.json` with sensible defaults
+- Config file created automatically during `aur init`
+
+### Changed
+
+**Spawn Command:**
+- `--verbose` is now the default (use `--quiet` or `-q` to suppress output)
+- Changed from `--verbose` flag to `--verbose/--quiet` boolean pair
+
+### Fixed
+
+**Test Suite:**
+- Fixed `Subgoal` model field mismatch in plan command tests (`recommended_agent` → `assigned_agent`)
+- Fixed timezone-naive vs timezone-aware datetime issues in archive tests
+- Removed broken MCP patches from init unified tests
+
 ## [0.10.1] - 2026-01-30
 
 ### Added

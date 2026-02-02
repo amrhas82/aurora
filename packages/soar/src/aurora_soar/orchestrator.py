@@ -2161,7 +2161,9 @@ class SOAROrchestrator:
             # Normalize query for comparison (preserve more structure)
             query_normalized = " ".join(query.lower().strip().split())
             query_hash = hashlib.sha256(query_normalized.encode("utf-8")).hexdigest()[:16]
-            logger.debug(f"Cache check: normalized query = '{query_normalized}' (hash={query_hash})")
+            logger.debug(
+                f"Cache check: normalized query = '{query_normalized}' (hash={query_hash})"
+            )
 
             # Find .aurora directory relative to current working directory
             aurora_dir = Path.cwd() / ".aurora" / "plans" / "active"
@@ -2192,7 +2194,9 @@ class SOAROrchestrator:
                 if title_normalized != query_normalized:
                     # Log for debugging cache misses
                     if logger.isEnabledFor(10):  # DEBUG level
-                        similarity = sum(1 for a, b in zip(title_normalized, query_normalized) if a == b)
+                        similarity = sum(
+                            1 for a, b in zip(title_normalized, query_normalized) if a == b
+                        )
                         logger.debug(
                             f"Cache check: no match for {plan_dir.name} "
                             f"(similarity={similarity}/{max(len(title_normalized), len(query_normalized))})"

@@ -288,9 +288,9 @@ class TestSlashCommandRegistryAvailability:
         """All 20 configurators should have is_available=True."""
         configurators = SlashCommandRegistry.get_all()
         for configurator in configurators:
-            assert (
-                configurator.is_available is True
-            ), f"Configurator '{configurator.tool_id}' should be available"
+            assert configurator.is_available is True, (
+                f"Configurator '{configurator.tool_id}' should be available"
+            )
 
 
 class TestSlashCommandRegistryClear:

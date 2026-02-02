@@ -554,18 +554,14 @@ class TestStep3ToolConfiguration:
                     return_value=(["Claude", "Cursor"], []),
                 ) as mock_configure:
                     with patch(
-                        "aurora_cli.commands.init.get_mcp_capable_from_selection",
-                        return_value=["claude", "cursor"],
+                        "aurora_cli.commands.init.configure_tools",
+                        new_callable=AsyncMock,
+                        return_value=([], []),
                     ):
-                        with patch(
-                            "aurora_cli.commands.init.configure_mcp_servers",
-                            new_callable=AsyncMock,
-                            return_value=([], [], [], []),
-                        ):
-                            run_step_3_tool_configuration(tmp_path)
+                        run_step_3_tool_configuration(tmp_path)
 
-                            # Should call configure_slash_commands with project_path and selected tools
-                            mock_configure.assert_called_once_with(tmp_path, selected_tools)
+                        # Should call configure_slash_commands with project_path and selected tools
+                        mock_configure.assert_called_once_with(tmp_path, selected_tools)
 
     def test_run_step_3_returns_created_and_updated_lists(self, tmp_path):
         """run_step_3_tool_configuration() should return tuple of (created, updated) tool names."""
@@ -592,21 +588,12 @@ class TestStep3ToolConfiguration:
                         new_callable=AsyncMock,
                         return_value=(slash_created, slash_updated),
                     ):
-                        with patch(
-                            "aurora_cli.commands.init.get_mcp_capable_from_selection",
-                            return_value=["claude", "cursor"],
-                        ):
-                            with patch(
-                                "aurora_cli.commands.init.configure_mcp_servers",
-                                new_callable=AsyncMock,
-                                return_value=([], [], [], []),
-                            ):
-                                result = run_step_3_tool_configuration(tmp_path)
+                        result = run_step_3_tool_configuration(tmp_path)
 
-                                # Should return merged results (order may vary due to set deduplication)
-                                created, updated = result
-                                assert set(created) == set(slash_created)
-                                assert set(updated) == set(slash_updated)
+                        # Should return merged results (order may vary due to set deduplication)
+                        created, updated, _agent_count, _tool_names = result
+                        assert set(created) == set(slash_created)
+                        assert set(updated) == set(slash_updated)
 
     def test_run_step_3_tracks_created_vs_updated(self, tmp_path):
         """run_step_3_tool_configuration() should distinguish between created and updated tools."""
@@ -634,20 +621,13 @@ class TestStep3ToolConfiguration:
                         new_callable=AsyncMock,
                         return_value=(["Cursor"], ["Claude"]),
                     ):
-                        with patch(
-                            "aurora_cli.commands.init.get_mcp_capable_from_selection",
-                            return_value=["claude", "cursor"],
-                        ):
-                            with patch(
-                                "aurora_cli.commands.init.configure_mcp_servers",
-                                new_callable=AsyncMock,
-                                return_value=([], [], [], []),
-                            ):
-                                created, updated = run_step_3_tool_configuration(tmp_path)
+                        created, updated, _agent_count, _tool_names = run_step_3_tool_configuration(
+                            tmp_path
+                        )
 
-                                # Should track separately
-                                assert len(created) == 1
-                                assert len(updated) == 1
+                        # Should track separately
+                        assert len(created) == 1
+                        assert len(updated) == 1
 
     def test_run_step_3_shows_success_message(self, tmp_path):
         """run_step_3_tool_configuration() should display success message with counts."""
@@ -720,23 +700,19 @@ class TestStep3ToolConfiguration:
                 return_value=["claude"],
             ):
                 with patch(
-                    "aurora_cli.commands.init.configure_slash_commands",
+                    "aurora_cli.commands.init.configure_tools",
                     new_callable=AsyncMock,
-                    return_value=([], ["Claude"]),
-                ) as mock_configure:
+                    return_value=([], []),
+                ):
                     with patch(
-                        "aurora_cli.commands.init.get_mcp_capable_from_selection",
-                        return_value=["claude"],
-                    ):
-                        with patch(
-                            "aurora_cli.commands.init.configure_mcp_servers",
-                            new_callable=AsyncMock,
-                            return_value=([], [], [], []),
-                        ):
-                            run_step_3_tool_configuration(tmp_path)
+                        "aurora_cli.commands.init.configure_slash_commands",
+                        new_callable=AsyncMock,
+                        return_value=([], ["Claude"]),
+                    ) as mock_configure:
+                        run_step_3_tool_configuration(tmp_path)
 
-                            # Should call configure_slash_commands (which handles marker preservation)
-                            mock_configure.assert_called_once()
+                        # Should call configure_slash_commands (which handles marker preservation)
+                        mock_configure.assert_called_once()
 
     def test_run_step_3_shows_step_header(self, tmp_path):
         """run_step_3_tool_configuration() should display 'Step 3/3' header."""

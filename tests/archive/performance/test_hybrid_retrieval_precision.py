@@ -491,9 +491,9 @@ class TestHybridRetrievalPrecisionBenchmark:
         print("=" * 60)
 
         # Verify hybrid improves over keyword-only
-        assert (
-            hybrid_precision > keyword_precision
-        ), f"Hybrid ({hybrid_precision:.2%}) should outperform keyword-only ({keyword_precision:.2%})"
+        assert hybrid_precision > keyword_precision, (
+            f"Hybrid ({hybrid_precision:.2%}) should outperform keyword-only ({keyword_precision:.2%})"
+        )
 
         # Verify improvement is meaningful (at least 5% absolute improvement)
         assert improvement >= 0.05, f"Expected ≥5% improvement, got {improvement:+.2%}"
@@ -561,14 +561,14 @@ class TestHybridRetrievalPrecisionBenchmark:
 
         # At least one query should achieve good precision
         good_precision_count = sum(1 for p in precisions if p >= 0.50)
-        assert (
-            good_precision_count >= 1
-        ), f"Expected ≥1 query to achieve ≥50% precision, got {good_precision_count}/{len(precisions)}"
+        assert good_precision_count >= 1, (
+            f"Expected ≥1 query to achieve ≥50% precision, got {good_precision_count}/{len(precisions)}"
+        )
 
         # System should be better than random (20%)
-        assert (
-            avg_precision > 0.20
-        ), f"Expected precision > 20% (better than random), got {avg_precision:.2%}"
+        assert avg_precision > 0.20, (
+            f"Expected precision > 20% (better than random), got {avg_precision:.2%}"
+        )
 
         print(f"\n✓ SUCCESS: Hybrid retrieval achieves {avg_precision:.2%} average precision")
         print(f"  {high_precision_count}/{len(precisions)} queries achieve ≥80% precision")

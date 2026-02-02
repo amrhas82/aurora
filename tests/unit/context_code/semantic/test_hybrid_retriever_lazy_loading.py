@@ -229,6 +229,6 @@ def test_lazy_loading_thread_safety(tmp_path):
         f"BM25 index should be loaded exactly once (got {load_count['count']} calls). "
         f"This indicates a thread-safety issue with lazy loading."
     )
-    assert (
-        retriever._bm25_index_loaded is True
-    ), "BM25 index should be loaded after concurrent calls"
+    assert retriever._bm25_index_loaded is True, (
+        "BM25 index should be loaded after concurrent calls"
+    )

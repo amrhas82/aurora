@@ -174,9 +174,9 @@ def greet(name: str) -> str:
     # Should have similar count to initial (updated, not accumulated)
     # Module1: 3 chunks (hello, goodbye, greet), Module2: 3 chunks (Calculator + 2 methods)
     # Total: ~6 chunks (allowing for variance in parsing)
-    assert (
-        total_chunks_after_update >= initial_chunk_count
-    ), f"Expected >= {initial_chunk_count} chunks, got {total_chunks_after_update}"
+    assert total_chunks_after_update >= initial_chunk_count, (
+        f"Expected >= {initial_chunk_count} chunks, got {total_chunks_after_update}"
+    )
 
 
 def test_memory_lifecycle_with_file_deletion(temp_memory_project, temp_db_path):
@@ -273,9 +273,9 @@ class DataProcessor:
     cursor = store._get_connection().cursor()
     cursor.execute("SELECT COUNT(*) FROM chunks")
     final_chunk_count = cursor.fetchone()[0]
-    assert (
-        final_chunk_count > initial_chunk_count
-    ), f"Should have more chunks after adding module3: {final_chunk_count} > {initial_chunk_count}"
+    assert final_chunk_count > initial_chunk_count, (
+        f"Should have more chunks after adding module3: {final_chunk_count} > {initial_chunk_count}"
+    )
     # Should have chunks from all 3 modules
     assert final_chunk_count == incremental_stats.chunks_created
 
@@ -287,9 +287,9 @@ class DataProcessor:
     cursor = store._get_connection().cursor()
     cursor.execute("SELECT COUNT(*) FROM chunks")
     total_chunks = cursor.fetchone()[0]
-    assert (
-        total_chunks == incremental_stats.chunks_created
-    ), f"DB count {total_chunks} should match stats {incremental_stats.chunks_created}"
+    assert total_chunks == incremental_stats.chunks_created, (
+        f"DB count {total_chunks} should match stats {incremental_stats.chunks_created}"
+    )
 
 
 def test_memory_lifecycle_concurrent_access(temp_memory_project, temp_db_path):

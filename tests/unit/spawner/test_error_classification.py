@@ -469,6 +469,6 @@ class TestClassificationCompleteness:
         elif any(x in error_lower for x in ["api", "inference"]):
             failure_type = "inference"
 
-        assert (
-            failure_type == expected_type
-        ), f"Expected {expected_type}, got {failure_type} for: {error_msg}"
+        assert failure_type == expected_type, (
+            f"Expected {expected_type}, got {failure_type} for: {error_msg}"
+        )

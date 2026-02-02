@@ -247,12 +247,12 @@ class TestExecuteAgentsWithRetry:
             await execute_agents(agent_assignments, subgoals, context, on_progress=on_progress)
 
             # Check format: [Agent X/Y] agent-id: Status
-            assert any(
-                "[Agent" in msg for msg in progress_calls
-            ), f"Expected '[Agent' in progress, got: {progress_calls}"
-            assert any(
-                "test-agent" in msg for msg in progress_calls
-            ), f"Expected 'test-agent' in progress, got: {progress_calls}"
+            assert any("[Agent" in msg for msg in progress_calls), (
+                f"Expected '[Agent' in progress, got: {progress_calls}"
+            )
+            assert any("test-agent" in msg for msg in progress_calls), (
+                f"Expected 'test-agent' in progress, got: {progress_calls}"
+            )
 
     @pytest.mark.asyncio
     async def test_calls_spawn_parallel_tracked(self):
@@ -666,9 +666,9 @@ async def test_collect_parallel_with_spawner():
 
         # Verify results maintain input order (sorted by subgoal_index)
         for i, output in enumerate(result.agent_outputs):
-            assert (
-                output.subgoal_index == i
-            ), f"Expected subgoal_index={i}, got {output.subgoal_index}"
+            assert output.subgoal_index == i, (
+                f"Expected subgoal_index={i}, got {output.subgoal_index}"
+            )
             assert output.agent_id == f"agent-{i}"
             assert output.success is True
 
@@ -1691,14 +1691,14 @@ class TestProgressDisplayAndLogging:
             debug_output = "\n".join([r.message for r in debug_logs])
 
             # Check for topological sort debug logs
-            assert (
-                "Topological sort complete" in debug_output or "wave" in debug_output.lower()
-            ), f"Expected topological sort details in DEBUG logs: {debug_output}"
+            assert "Topological sort complete" in debug_output or "wave" in debug_output.lower(), (
+                f"Expected topological sort details in DEBUG logs: {debug_output}"
+            )
 
             # Check for spawn result debug logs
-            assert (
-                "result:" in debug_output or "success=" in debug_output
-            ), f"Expected spawn result details in DEBUG logs: {debug_output}"
+            assert "result:" in debug_output or "success=" in debug_output, (
+                f"Expected spawn result details in DEBUG logs: {debug_output}"
+            )
 
             # Verify INFO logs still present
             info_logs = [r for r in caplog.records if r.levelno == logging.INFO]
@@ -1769,9 +1769,9 @@ class TestProgressDisplayAndLogging:
             log_output = "\n".join(log_messages)
 
             # Verify final summary appears
-            assert (
-                "EXECUTION COMPLETE" in log_output
-            ), f"Expected 'EXECUTION COMPLETE' in logs: {log_output}"
+            assert "EXECUTION COMPLETE" in log_output, (
+                f"Expected 'EXECUTION COMPLETE' in logs: {log_output}"
+            )
 
             # Verify summary has correct format (X/N succeeded, Y failed, Z partial)
             assert "succeeded" in log_output.lower() or "failed" in log_output.lower()
@@ -1880,9 +1880,9 @@ class TestProgressDisplayAndLogging:
 
             # Verify partial context marker in output (check agent_outputs metadata)
             sg3_output = [o for o in result.agent_outputs if o.subgoal_index == 3][0]
-            assert sg3_output.execution_metadata.get(
-                "partial_context", False
-            ), "Expected partial_context flag set"
+            assert sg3_output.execution_metadata.get("partial_context", False), (
+                "Expected partial_context flag set"
+            )
 
 
 class TestEndToEndIntegration:
@@ -2034,15 +2034,15 @@ class TestEndToEndIntegration:
 
             assert "Previous context" in prompt_b, "B should receive context from A"
             assert "Output from subgoal 1" in prompt_b, "B should have A's output"
-            assert (
-                "✓ [sg-1]:" in prompt_b or "[sg-1]:" in prompt_b
-            ), "B should have success marker for A"
+            assert "✓ [sg-1]:" in prompt_b or "[sg-1]:" in prompt_b, (
+                "B should have success marker for A"
+            )
 
             assert "Previous context" in prompt_c, "C should receive context from A"
             assert "Output from subgoal 1" in prompt_c, "C should have A's output"
-            assert (
-                "✓ [sg-1]:" in prompt_c or "[sg-1]:" in prompt_c
-            ), "C should have success marker for A"
+            assert "✓ [sg-1]:" in prompt_c or "[sg-1]:" in prompt_c, (
+                "C should have success marker for A"
+            )
 
             # Verify context passing: D should receive B and C's outputs
             assert 4 in captured_prompts, "Subgoal 4 (D) prompt not captured"
@@ -2053,7 +2053,7 @@ class TestEndToEndIntegration:
             assert "Output from subgoal 3" in prompt_d, "D should have C's output"
 
             # Verify all subgoals completed successfully
-            assert (
-                len(result.agent_outputs) == 4
-            ), f"Expected 4 outputs but got {len(result.agent_outputs)}"
+            assert len(result.agent_outputs) == 4, (
+                f"Expected 4 outputs but got {len(result.agent_outputs)}"
+            )
             assert all(o.success for o in result.agent_outputs), "All subgoals should succeed"

@@ -80,9 +80,9 @@ class TestStoragePerformance:
         result, elapsed_ms = write_chunk()
         print(f"\nMemoryStore write: {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < WRITE_TARGET_MS
-        ), f"MemoryStore write took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        assert elapsed_ms < WRITE_TARGET_MS, (
+            f"MemoryStore write took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        )
 
     def test_memory_store_read_performance(self, memory_store, sample_chunks):
         """Benchmark MemoryStore read performance."""
@@ -96,9 +96,9 @@ class TestStoragePerformance:
         result, elapsed_ms = read_chunk()
         print(f"\nMemoryStore read: {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < READ_TARGET_MS
-        ), f"MemoryStore read took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS}ms"
+        assert elapsed_ms < READ_TARGET_MS, (
+            f"MemoryStore read took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS}ms"
+        )
 
     def test_sqlite_store_write_performance(self, sqlite_store, sample_chunks):
         """Benchmark SQLiteStore write performance."""
@@ -111,9 +111,9 @@ class TestStoragePerformance:
         result, elapsed_ms = write_chunk()
         print(f"\nSQLiteStore write: {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < WRITE_TARGET_MS
-        ), f"SQLiteStore write took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        assert elapsed_ms < WRITE_TARGET_MS, (
+            f"SQLiteStore write took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        )
 
     def test_sqlite_store_read_performance(self, sqlite_store, sample_chunks):
         """Benchmark SQLiteStore read performance."""
@@ -127,9 +127,9 @@ class TestStoragePerformance:
         result, elapsed_ms = read_chunk()
         print(f"\nSQLiteStore read: {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < READ_TARGET_MS
-        ), f"SQLiteStore read took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS}ms"
+        assert elapsed_ms < READ_TARGET_MS, (
+            f"SQLiteStore read took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS}ms"
+        )
 
     def test_sqlite_cold_start_performance(self, tmp_path):
         """Benchmark SQLiteStore cold start (initialization) performance."""
@@ -144,9 +144,9 @@ class TestStoragePerformance:
 
         store.close()
 
-        assert (
-            elapsed_ms < COLD_START_TARGET_MS
-        ), f"SQLiteStore cold start took {elapsed_ms:.2f}ms, target is {COLD_START_TARGET_MS}ms"
+        assert elapsed_ms < COLD_START_TARGET_MS, (
+            f"SQLiteStore cold start took {elapsed_ms:.2f}ms, target is {COLD_START_TARGET_MS}ms"
+        )
 
     def test_bulk_write_performance(self, sqlite_store, sample_chunks):
         """Benchmark bulk write operations."""
@@ -161,9 +161,9 @@ class TestStoragePerformance:
 
         print(f"\nBulk write (10 chunks): {elapsed_ms:.2f}ms total, {avg_ms:.2f}ms avg")
 
-        assert (
-            avg_ms < WRITE_TARGET_MS
-        ), f"Average write time {avg_ms:.2f}ms exceeds target {WRITE_TARGET_MS}ms"
+        assert avg_ms < WRITE_TARGET_MS, (
+            f"Average write time {avg_ms:.2f}ms exceeds target {WRITE_TARGET_MS}ms"
+        )
 
     def test_bulk_read_performance(self, sqlite_store, sample_chunks):
         """Benchmark bulk read operations."""
@@ -183,9 +183,9 @@ class TestStoragePerformance:
 
         print(f"\nBulk read (10 chunks): {elapsed_ms:.2f}ms total, {avg_ms:.2f}ms avg")
 
-        assert (
-            avg_ms < READ_TARGET_MS
-        ), f"Average read time {avg_ms:.2f}ms exceeds target {READ_TARGET_MS}ms"
+        assert avg_ms < READ_TARGET_MS, (
+            f"Average read time {avg_ms:.2f}ms exceeds target {READ_TARGET_MS}ms"
+        )
 
     def test_activation_update_performance(self, sqlite_store, sample_chunks):
         """Benchmark activation update operations."""
@@ -199,9 +199,9 @@ class TestStoragePerformance:
         _, elapsed_ms = update_activation()
         print(f"\nActivation update: {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < WRITE_TARGET_MS
-        ), f"Activation update took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        assert elapsed_ms < WRITE_TARGET_MS, (
+            f"Activation update took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        )
 
     def test_retrieve_by_activation_performance(self, sqlite_store, sample_chunks):
         """Benchmark retrieve_by_activation query performance."""
@@ -217,9 +217,9 @@ class TestStoragePerformance:
         results, elapsed_ms = retrieve_by_activation()
         print(f"\nRetrieve by activation (20 chunks, limit 10): {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < READ_TARGET_MS
-        ), f"Retrieve by activation took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS}ms"
+        assert elapsed_ms < READ_TARGET_MS, (
+            f"Retrieve by activation took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS}ms"
+        )
 
     def test_add_relationship_performance(self, sqlite_store, sample_chunks):
         """Benchmark relationship creation performance."""
@@ -238,9 +238,9 @@ class TestStoragePerformance:
         _, elapsed_ms = add_relationship()
         print(f"\nAdd relationship: {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < WRITE_TARGET_MS
-        ), f"Add relationship took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        assert elapsed_ms < WRITE_TARGET_MS, (
+            f"Add relationship took {elapsed_ms:.2f}ms, target is {WRITE_TARGET_MS}ms"
+        )
 
     def test_get_related_chunks_performance(self, sqlite_store, sample_chunks):
         """Benchmark relationship traversal performance."""
@@ -263,9 +263,9 @@ class TestStoragePerformance:
         results, elapsed_ms = get_related_chunks()
         print(f"\nGet related chunks (depth=2, 10 chunks): {elapsed_ms:.2f}ms")
 
-        assert (
-            elapsed_ms < READ_TARGET_MS * 2
-        ), f"Get related chunks took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS * 2}ms"
+        assert elapsed_ms < READ_TARGET_MS * 2, (
+            f"Get related chunks took {elapsed_ms:.2f}ms, target is {READ_TARGET_MS * 2}ms"
+        )
 
     def test_concurrent_write_performance(self, sqlite_store, sample_chunks):
         """Benchmark concurrent write simulation (sequential in same thread)."""
@@ -283,9 +283,9 @@ class TestStoragePerformance:
 
         print(f"\nConcurrent writes (5 chunks): {elapsed_ms:.2f}ms total, {avg_ms:.2f}ms avg")
 
-        assert (
-            avg_ms < WRITE_TARGET_MS
-        ), f"Average concurrent write time {avg_ms:.2f}ms exceeds target {WRITE_TARGET_MS}ms"
+        assert avg_ms < WRITE_TARGET_MS, (
+            f"Average concurrent write time {avg_ms:.2f}ms exceeds target {WRITE_TARGET_MS}ms"
+        )
 
     @pytest.mark.skipif(True, reason="Large scale test - run manually")
     def test_large_scale_performance(self, tmp_path):

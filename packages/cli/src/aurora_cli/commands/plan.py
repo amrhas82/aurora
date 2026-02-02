@@ -2,13 +2,11 @@
 
 This module implements the 'aur plan' command group for managing
 development plans:
-- aur plan init: Initialize planning directory structure
 - aur plan list: List active or archived plans
 - aur plan view: Display plan details with file status
 - aur plan archive: Archive a completed plan
 
 Usage:
-    aur plan init [--path <dir>]
     aur plan list [--archived] [--all] [--format rich|json]
     aur plan view <plan_id> [--archived] [--format rich|json]
     aur plan archive <plan_id> [--yes]
@@ -18,7 +16,6 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import click
@@ -29,8 +26,6 @@ from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 from aurora_cli.planning.core import (
     archive_plan,
-    create_plan,
-    init_planning_directory,
     list_plans,
     show_plan,
 )
@@ -49,7 +44,7 @@ console = Console()
 def plan_group() -> None:
     r"""Plan management commands.
 
-    Create, list, view, and archive development plans.
+    List, view, and archive development plans.
 
     Plans use a four-file structure:
     - plan.md: Human-readable plan overview
@@ -59,224 +54,20 @@ def plan_group() -> None:
 
     \b
     Commands:
-        init     - Initialize planning directory
         list     - List active or archived plans
         view     - Display plan details
         archive  - Archive a completed plan
 
     \b
     Examples:
-        aur plan init                    # Initialize planning
         aur plan list                    # List active plans
         aur plan view 0001-oauth-auth    # View plan details
         aur plan archive 0001-oauth      # Archive completed plan
-    r"""
-
-
-@plan_group.command(name="create")
-@click.argument("goal")
-@click.option(
-    "--context",
-    "-c",
-    "context_files",
-    multiple=True,
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    help="Context files for informed decomposition. Can be used multiple times.",
-)
-@click.option(
-    "--no-decompose",
-    is_flag=True,
-    default=False,
-    help="Skip SOAR decomposition (create single-task plan)",
-)
-@click.option(
-    "--format",
-    "-f",
-    "output_format",
-    type=click.Choice(["rich", "json"]),
-    default="rich",
-    help="Output format (default: rich)",
-)
-@click.option(
-    "--no-auto-init",
-    is_flag=True,
-    default=False,
-    help="Disable automatic initialization if .aurora doesn't exist",
-)
-@click.option(
-    "--yes",
-    "-y",
-    is_flag=True,
-    default=False,
-    help="Skip confirmation prompt and proceed with plan generation",
-)
-@click.option(
-    "--non-interactive",
-    is_flag=True,
-    default=False,
-    help="Non-interactive mode (alias for --yes)",
-)
-@handle_errors
-def create_command(
-    goal: str,
-    context_files: tuple[Path, ...],
-    no_decompose: bool,
-    output_format: str,
-    no_auto_init: bool,
-    yes: bool,
-    non_interactive: bool,
-) -> None:
-    r"""Create a new plan with SOAR-based goal decomposition.
-
-    Analyzes the GOAL and decomposes it into subgoals with
-    recommended agents. Creates the four-file plan structure:
-    - plan.md: Human-readable plan overview
-    - prd.md: Product requirements document (template)
-    - tasks.md: Implementation task list
-    - agents.json: Machine-readable plan data
-
-    GOAL should be a clear description of what you want to achieve.
-    Minimum 10 characters, maximum 500 characters.
 
     \b
-    Examples:
-        # Create authentication plan
-        aur plan create "Implement OAuth2 authentication with JWT tokens"
-
-        \b
-        # Create with context files
-        aur plan create "Add caching layer" --context src/api.py --context src/config.py
-
-        \b
-        # Skip decomposition (single task)
-        aur plan create "Fix bug in login form" --no-decompose
-
-        \b
-        # JSON output
-        aur plan create "Add user dashboard" --format json
+    To create a new plan, use:
+        aur goals "Your goal description"
     r"""
-    # Load config to ensure project-local paths are used
-    config = Config()
-
-    # Auto-initialize if .aurora doesn't exist
-    if not no_auto_init:
-        aurora_dir = Path.cwd() / ".aurora"
-        if not aurora_dir.exists():
-            console.print("[dim]Initializing Aurora directory structure...[/]")
-            from aurora_cli.commands.init_helpers import create_directory_structure
-
-            try:
-                create_directory_structure(Path.cwd())
-                console.print("[green]✓[/] Aurora initialized\n")
-            except Exception as e:
-                console.print(f"[yellow]Warning: Could not initialize Aurora: {e}[/]")
-                console.print("[dim]Continuing with plan creation...[/]\n")
-
-    result = create_plan(
-        goal=goal,
-        context_files=list(context_files) if context_files else None,
-        auto_decompose=not no_decompose,
-        config=config,
-        yes=yes or non_interactive,
-    )
-
-    if not result.success:
-        console.print(f"[red]{result.error}[/]")
-        raise click.Abort()
-
-    plan = result.plan
-    if plan is None:
-        console.print("[red]Plan creation succeeded but plan data is missing[/]")
-        raise click.Abort()
-
-    if output_format == "json":
-        # Use print() not console.print() to avoid line wrapping
-        print(plan.model_dump_json(indent=2))
-        return
-
-    # Rich output
-    console.print(f"\n[bold green]Plan created: {plan.plan_id}[/]")
-    console.print("=" * 60)
-    console.print(f"Goal:        {plan.goal}")
-    console.print(f"Complexity:  {plan.complexity.value}")
-    console.print(f"Subgoals:    {len(plan.subgoals)}")
-    console.print(f"Location:    {result.plan_dir}/")
-
-    console.print("\n[bold]Subgoals:[/]")
-    for i, sg in enumerate(plan.subgoals, 1):
-        console.print(f"  {i}. {sg.title} ({sg.assigned_agent})")
-        if sg.dependencies:
-            console.print(f"     [dim]Depends on: {', '.join(sg.dependencies)}[/]")
-
-    if result.warnings:
-        console.print("\n[yellow]Warnings:[/]")
-        for warning in result.warnings:
-            console.print(f"  - {warning}")
-
-    console.print("\n[bold]Files created (4 total):[/]")
-    # Base files
-    for fname in ["plan.md", "prd.md", "tasks.md", "agents.json"]:
-        console.print(f"  [green][/] {fname}")
-
-    console.print("\n[bold]Next steps:[/]")
-    console.print(f"1. Review plan:    aur plan view {plan.plan_id}")
-    console.print(f"2. Edit PRD:       {result.plan_dir}/prd.md")
-    console.print("3. Start work:     Follow tasks.md checklist")
-    console.print(f"4. Archive:        aur plan archive {plan.plan_id}")
-
-
-@plan_group.command(name="init")
-@click.option(
-    "--path",
-    "-p",
-    type=click.Path(),
-    default=None,
-    help="Custom directory path (default: ~/.aurora/plans)",
-)
-@click.option(
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force reinitialize even if exists",
-)
-@handle_errors
-def init_command(path: str | None, force: bool) -> None:
-    r"""Initialize planning directory structure.
-
-    Creates the planning directory with:
-    - active/ - Directory for active plans
-    - archive/ - Directory for archived plans
-    - templates/ - Directory for custom templates
-    - manifest.json - Manifest for fast listing
-
-    \b
-    Examples:
-        # Initialize with default path
-        aur plan init
-
-        \b
-        # Initialize at custom path
-        aur plan init --path ~/my-project/.plans
-
-        \b
-        # Force reinitialize
-        aur plan init --force
-    r"""
-    result = init_planning_directory(
-        path=Path(path) if path else None,
-        force=force,
-    )
-
-    if result.warning:
-        console.print(f"[yellow]{result.warning}[/]")
-    elif result.error:
-        console.print(f"[red]{result.error}[/]")
-        raise click.Abort()
-    else:
-        console.print(f"[green]{result.message}[/]")
-        console.print(f"  - Active plans: {result.path}/active/")
-        console.print(f"  - Archived plans: {result.path}/archive/")
-        console.print('\n[bold]Ready to create plans with:[/] /aur:plan "goal"')
 
 
 @plan_group.command(name="list")

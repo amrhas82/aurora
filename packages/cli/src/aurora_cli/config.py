@@ -420,6 +420,7 @@ class Config:
         if not paths:
             # Default to all tool paths from registry
             from aurora_cli.configurators.slash.paths import get_all_agent_paths
+
             paths = get_all_agent_paths()
         return paths
 

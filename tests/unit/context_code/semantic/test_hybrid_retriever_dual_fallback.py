@@ -194,13 +194,13 @@ def test_fallback_logs_warning(tmp_path, caplog):
 
     # Verify log message contains key information
     combined_warnings = " ".join(warning_messages)
-    assert (
-        "BM25+Activation fallback" in combined_warnings
-    ), "Log should mention BM25+Activation fallback mode"
+    assert "BM25+Activation fallback" in combined_warnings, (
+        "Log should mention BM25+Activation fallback mode"
+    )
     assert "85%" in combined_warnings, "Log should mention estimated quality"
-    assert (
-        "pip install sentence-transformers" in combined_warnings
-    ), "Log should include recovery instructions"
+    assert "pip install sentence-transformers" in combined_warnings, (
+        "Log should include recovery instructions"
+    )
 
 
 def test_fallback_handles_edge_case_zero_weights(tmp_path, caplog):
@@ -236,9 +236,9 @@ def test_fallback_handles_edge_case_zero_weights(tmp_path, caplog):
         record.message for record in caplog.records if record.levelno == logging.WARNING
     ]
     combined_warnings = " ".join(warning_messages)
-    assert (
-        "Both BM25 and activation weights are 0" in combined_warnings
-    ), "Log should warn about zero weights edge case"
+    assert "Both BM25 and activation weights are 0" in combined_warnings, (
+        "Log should warn about zero weights edge case"
+    )
 
     # Verify hybrid score equals activation score (100% activation fallback)
     for result in results:
@@ -279,9 +279,9 @@ def test_fallback_returns_correct_result_format(tmp_path):
     }
 
     for result in results:
-        assert (
-            set(result.keys()) == required_keys
-        ), f"Result keys {set(result.keys())} do not match expected {required_keys}"
+        assert set(result.keys()) == required_keys, (
+            f"Result keys {set(result.keys())} do not match expected {required_keys}"
+        )
 
         # Verify score types and ranges
         assert isinstance(result["bm25_score"], (int, float))

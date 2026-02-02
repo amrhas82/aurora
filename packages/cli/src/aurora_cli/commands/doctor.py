@@ -15,7 +15,7 @@ from aurora_cli.health_checks import (
     CodeAnalysisChecks,
     ConfigurationChecks,
     CoreSystemChecks,
-    MCPFunctionalChecks,
+    InstallationChecks,
     SearchRetrievalChecks,
     ToolIntegrationChecks,
 )
@@ -34,12 +34,12 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
     r"""Run health checks and diagnostics.
 
     Checks the health of your AURORA installation across six categories:
+    - Installation: Python version, core packages
     - Core System: CLI version, database, API keys, permissions
     - Code Analysis: tree-sitter parser, index age, chunk quality
     - Search & Retrieval: vector store, Git BLA, cache size, embeddings
-    - Configuration: config file, Git repo, MCP server
+    - Configuration: config file, Git repo
     - Tool Integration: slash commands, MCP servers
-    - MCP Functional: MCP config validation, SOAR phases, memory database
 
     \b
     Exit Codes:
@@ -70,17 +70,24 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         config = Config()
 
         # Create health check instances
+        install_checks = InstallationChecks(config)
         core_checks = CoreSystemChecks(config)
         code_checks = CodeAnalysisChecks(config)
         search_checks = SearchRetrievalChecks(config)
         config_checks = ConfigurationChecks(config)
         tool_checks = ToolIntegrationChecks(config)
-        mcp_checks = MCPFunctionalChecks(config)
 
         # Run all checks
         console.print("\n[bold cyan]Running AURORA health checks...[/]\n")
 
         all_results = []
+
+        # Installation checks
+        console.print("[bold]INSTALLATION[/]")
+        install_results = install_checks.run_checks()
+        all_results.extend(install_results)
+        _display_results(install_results)
+        console.print()
 
         # Core System checks
         console.print("[bold]CORE SYSTEM[/]")
@@ -117,10 +124,6 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         _display_results(tool_results)
         console.print()
 
-        # MCP Functional checks - DEPRECATED
-        # MCP tools have been deprecated in favor of slash commands
-        # Use: /aur:search, /aur:get, aur soar "question"
-
         # Calculate summary
         pass_count = sum(1 for r in all_results if r[0] == "pass")
         warning_count = sum(1 for r in all_results if r[0] == "warning")
@@ -132,12 +135,12 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         # Handle --fix flag if requested
         if fix and (fail_count > 0 or warning_count > 0):
             _handle_auto_fix(
+                install_checks,
                 core_checks,
                 code_checks,
                 search_checks,
                 config_checks,
                 tool_checks,
-                mcp_checks,
             )
 
         # Determine exit code
@@ -287,12 +290,12 @@ def _apply_fixes(issues: list[dict]) -> int:
 
 
 def _handle_auto_fix(
+    install_checks: InstallationChecks,
     core_checks: CoreSystemChecks,
     code_checks: CodeAnalysisChecks,
     search_checks: SearchRetrievalChecks,
     config_checks: ConfigurationChecks,
     tool_checks: ToolIntegrationChecks,
-    mcp_checks: MCPFunctionalChecks,
 ) -> None:
     """Handle auto-fix functionality.
 
@@ -300,12 +303,12 @@ def _handle_auto_fix(
     health check issues. Uses extracted helpers to reduce complexity.
 
     Args:
+        install_checks: Installation health checks instance
         core_checks: Core system health checks instance
         code_checks: Code analysis health checks instance
         search_checks: Search & retrieval health checks instance
         config_checks: Configuration health checks instance
         tool_checks: Tool integration health checks instance
-        mcp_checks: MCP functional health checks instance
 
     """
     console.print()
@@ -313,7 +316,14 @@ def _handle_auto_fix(
     console.print()
 
     # Collect issues from all check categories
-    checks_list = [core_checks, code_checks, search_checks, config_checks, tool_checks, mcp_checks]
+    checks_list = [
+        install_checks,
+        core_checks,
+        code_checks,
+        search_checks,
+        config_checks,
+        tool_checks,
+    ]
     fixable_issues, manual_issues = _collect_issues(checks_list)
 
     # Display issues
@@ -375,7 +385,7 @@ def _handle_fix_ml() -> None:
         console.print("[bold green]ML setup complete![/] You can now:")
         console.print("  • Index your codebase: [cyan]aur mem index .[/]")
         console.print("  • Initialize projects: [cyan]aur init[/]")
-        console.print("  • Run SOAR queries: [cyan]aur soar \"your question\"[/]\n")
+        console.print('  • Run SOAR queries: [cyan]aur soar "your question"[/]\n')
         return
 
     # 3. Download the model with progress
@@ -391,7 +401,7 @@ def _handle_fix_ml() -> None:
         console.print("[bold]Next steps:[/]")
         console.print("  • Index your codebase: [cyan]aur mem index .[/]")
         console.print("  • Initialize projects: [cyan]aur init[/]")
-        console.print("  • Run SOAR queries: [cyan]aur soar \"your question\"[/]\n")
+        console.print('  • Run SOAR queries: [cyan]aur soar "your question"[/]\n')
     except MLDependencyError as e:
         console.print("\n[bold red]✗ Model download failed[/]\n")
         console.print(str(e))

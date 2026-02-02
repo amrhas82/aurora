@@ -124,9 +124,9 @@ class TestCursorSlashCommandConfiguratorFrontmatter:
             assert "---" in frontmatter, f"Frontmatter for {cmd_id} should have YAML delimiters"
             assert "name:" in frontmatter, f"Frontmatter for {cmd_id} should have name"
             assert "id:" in frontmatter, f"Frontmatter for {cmd_id} should have id"
-            assert (
-                "description:" in frontmatter
-            ), f"Frontmatter for {cmd_id} should have description"
+            assert "description:" in frontmatter, (
+                f"Frontmatter for {cmd_id} should have description"
+            )
 
     def test_frontmatter_includes_aurora_naming_pattern(self):
         """Test frontmatter uses /aurora-{command} naming pattern."""
@@ -135,9 +135,9 @@ class TestCursorSlashCommandConfiguratorFrontmatter:
         for cmd_id in ALL_COMMANDS:
             frontmatter = config.get_frontmatter(cmd_id)
             # The name field should include the /aurora-{command} pattern
-            assert (
-                f"/aurora-{cmd_id}" in frontmatter
-            ), f"Frontmatter for {cmd_id} should include /aurora-{cmd_id} naming pattern"
+            assert f"/aurora-{cmd_id}" in frontmatter, (
+                f"Frontmatter for {cmd_id} should include /aurora-{cmd_id} naming pattern"
+            )
 
 
 class TestCursorSlashCommandConfiguratorBody:

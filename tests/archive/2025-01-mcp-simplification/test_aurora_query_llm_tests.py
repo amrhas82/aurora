@@ -593,9 +593,9 @@ class TestProgressTracking:
                 response = json.loads(result)
 
                 for phase in response["phases"]:
-                    assert (
-                        phase["status"] == "completed"
-                    ), f"Expected 'completed' status, got '{phase['status']}'"
+                    assert phase["status"] == "completed", (
+                        f"Expected 'completed' status, got '{phase['status']}'"
+                    )
 
     def test_progress_not_included_for_direct_llm(self):
         """Direct LLM execution should not include SOAR phases."""

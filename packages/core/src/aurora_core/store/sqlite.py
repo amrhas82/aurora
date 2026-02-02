@@ -1119,14 +1119,10 @@ class SQLiteStore(Store):
                     embeddings=row["embeddings"],
                     metadata=json.loads(row["metadata"]) if row["metadata"] else {},
                     created_at=(
-                        datetime.fromisoformat(row["created_at"])
-                        if row["created_at"]
-                        else None
+                        datetime.fromisoformat(row["created_at"]) if row["created_at"] else None
                     ),
                     updated_at=(
-                        datetime.fromisoformat(row["updated_at"])
-                        if row["updated_at"]
-                        else None
+                        datetime.fromisoformat(row["updated_at"]) if row["updated_at"] else None
                     ),
                 )
                 children.append(chunk)
@@ -1208,9 +1204,7 @@ class SQLiteStore(Store):
                 # Parse parent chunk
                 content_data = json.loads(parent_row["content"])
                 section_path = (
-                    json.loads(parent_row["section_path"])
-                    if parent_row["section_path"]
-                    else []
+                    json.loads(parent_row["section_path"]) if parent_row["section_path"] else []
                 )
 
                 parent_chunk = DocChunk(

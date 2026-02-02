@@ -86,14 +86,10 @@ class PDFParser(DocumentParser):
             toc = doc.get_toc()
 
             if toc:
-                chunks.extend(
-                    self._parse_with_toc(doc, toc, file_path, timestamp)
-                )
+                chunks.extend(self._parse_with_toc(doc, toc, file_path, timestamp))
             else:
                 # Tier 2: Font size detection for inferred headings
-                chunks.extend(
-                    self._parse_with_font_detection(doc, file_path, timestamp)
-                )
+                chunks.extend(self._parse_with_font_detection(doc, file_path, timestamp))
 
         finally:
             doc.close()

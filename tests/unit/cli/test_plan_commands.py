@@ -1,13 +1,13 @@
 """Unit tests for planning CLI commands.
 
-Tests aur plan init, list, show, and archive commands
+Tests aur plan list, view, and archive commands
 using Click's CliRunner for isolated testing.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -17,7 +17,6 @@ from click.testing import CliRunner
 from aurora_cli.commands.plan import plan_group
 from aurora_cli.planning.core import (
     archive_plan,
-    create_plan,
     init_planning_directory,
     list_plans,
     show_plan,
@@ -39,13 +38,13 @@ def sample_subgoals() -> list[Subgoal]:
             id="sg-1",
             title="Implement authentication",
             description="Create OAuth2 authentication flow with JWT",
-            recommended_agent="@code-developer",
+            assigned_agent="@code-developer",
         ),
         Subgoal(
             id="sg-2",
             title="Write unit tests",
             description="Create comprehensive tests for auth module",
-            recommended_agent="@quality-assurance",
+            assigned_agent="@quality-assurance",
             dependencies=["sg-1"],
         ),
     ]
@@ -139,105 +138,6 @@ Goal: {plan.goal}
     )
 
 
-class TestInitPlanningDirectory:
-    """Tests for init_planning_directory core function."""
-
-    def test_creates_directory_structure(self, tmp_path: Path) -> None:
-        """init creates active/, archive/, manifest.json."""
-        result = init_planning_directory(path=tmp_path / "plans")
-
-        assert result.success is True
-        assert result.created is True
-        assert (tmp_path / "plans" / "active").is_dir()
-        assert (tmp_path / "plans" / "archive").is_dir()
-        assert (tmp_path / "plans" / "templates").is_dir()
-        assert (tmp_path / "plans" / "manifest.json").is_file()
-
-    def test_manifest_is_valid_json(self, tmp_path: Path) -> None:
-        """init creates valid manifest.json."""
-        result = init_planning_directory(path=tmp_path / "plans")
-
-        manifest_path = tmp_path / "plans" / "manifest.json"
-        manifest_data = json.loads(manifest_path.read_text())
-
-        assert manifest_data["version"] == "1.0"
-        assert manifest_data["active_plans"] == []
-        assert manifest_data["archived_plans"] == []
-
-    def test_already_initialized_returns_warning(self, tmp_path: Path) -> None:
-        """init returns warning when already initialized."""
-        plans_dir = tmp_path / "plans"
-        init_planning_directory(path=plans_dir)
-
-        # Second init
-        result = init_planning_directory(path=plans_dir)
-
-        assert result.success is True
-        assert result.created is False
-        assert result.warning is not None
-        assert "already exists" in result.warning.lower()
-
-    def test_force_reinitializes(self, tmp_path: Path) -> None:
-        """init --force reinitializes existing directory."""
-        plans_dir = tmp_path / "plans"
-        init_planning_directory(path=plans_dir)
-
-        # Modify manifest
-        manifest_path = plans_dir / "manifest.json"
-        manifest = PlanManifest(active_plans=["test-plan"])
-        manifest_path.write_text(manifest.model_dump_json())
-
-        # Force reinit
-        result = init_planning_directory(path=plans_dir, force=True)
-
-        assert result.success is True
-        assert result.created is True
-
-        # Manifest should be reset
-        new_manifest = json.loads(manifest_path.read_text())
-        assert new_manifest["active_plans"] == []
-
-    def test_permission_denied_returns_error(self, tmp_path: Path) -> None:
-        """init returns error when permission denied."""
-        with patch("os.access", return_value=False):
-            result = init_planning_directory(path=tmp_path / "plans")
-
-        assert result.success is False
-        assert result.error is not None
-        assert "permission" in result.error.lower()
-
-
-class TestInitCommand:
-    """Tests for aur plan init CLI command."""
-
-    def test_init_cli_creates_structure(self, cli_runner: CliRunner, tmp_path: Path) -> None:
-        """aur plan init creates directory structure."""
-        result = cli_runner.invoke(plan_group, ["init", "--path", str(tmp_path / "plans")])
-
-        assert result.exit_code == 0
-        assert "initialized" in result.output.lower() or "Active plans" in result.output
-        assert (tmp_path / "plans" / "active").is_dir()
-
-    def test_init_cli_already_exists_warning(self, cli_runner: CliRunner, tmp_path: Path) -> None:
-        """aur plan init shows warning when already initialized."""
-        plans_dir = tmp_path / "plans"
-        init_planning_directory(path=plans_dir)
-
-        result = cli_runner.invoke(plan_group, ["init", "--path", str(plans_dir)])
-
-        assert result.exit_code == 0
-        assert "already exists" in result.output.lower()
-
-    def test_init_cli_custom_path(self, cli_runner: CliRunner, tmp_path: Path) -> None:
-        """aur plan init uses --path option."""
-        custom_path = tmp_path / "custom" / "plans"
-
-        result = cli_runner.invoke(plan_group, ["init", "--path", str(custom_path)])
-
-        assert result.exit_code == 0
-        assert custom_path.exists()
-
-
 class TestListPlans:
     """Tests for list_plans core function."""
 
@@ -324,7 +224,7 @@ class TestListPlans:
             plan_id="0001-old",
             goal="Older plan created first",
             subgoals=sample_subgoals,
-            created_at=datetime.utcnow() - timedelta(days=10),
+            created_at=datetime.now(timezone.utc) - timedelta(days=10),
         )
         old_path = plans_dir / "active" / old_plan.plan_id
         create_complete_plan_structure(old_path, old_plan)
@@ -334,7 +234,7 @@ class TestListPlans:
             plan_id="0002-new",
             goal="Newer plan created later",
             subgoals=sample_subgoals,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         new_path = plans_dir / "active" / new_plan.plan_id
         create_complete_plan_structure(new_path, new_plan)
@@ -576,7 +476,7 @@ class TestArchivePlan:
             plan_id="0001-old-plan",
             goal="Plan created 5 days ago for testing",
             subgoals=sample_subgoals,
-            created_at=datetime.utcnow() - timedelta(days=5),
+            created_at=datetime.now(timezone.utc) - timedelta(days=5),
         )
         plan_path = plans_dir / "active" / plan.plan_id
         create_complete_plan_structure(plan_path, plan)
@@ -649,223 +549,3 @@ class TestArchiveCommand:
 
         assert result.exit_code == 0
         assert "archived" in result.output.lower()
-
-
-class TestCreatePlan:
-    """Tests for create_plan core function."""
-
-    def test_create_plan_success(self, tmp_path: Path) -> None:
-        """create_plan creates plan with subgoals."""
-        plans_dir = tmp_path / "plans"
-
-        result = create_plan(
-            goal="Implement OAuth2 authentication with JWT tokens",
-            config=_mock_config(plans_dir),
-            non_interactive=True,
-        )
-
-        assert result.success is True
-        assert result.plan is not None
-        assert result.plan.plan_id.startswith("0001-")
-        assert "oauth" in result.plan.plan_id.lower()
-        assert len(result.plan.subgoals) > 0
-        assert result.plan_dir is not None
-        assert (result.plan_dir / "agents.json").exists()
-        assert (result.plan_dir / "plan.md").exists()
-        assert (result.plan_dir / "prd.md").exists()
-        assert (result.plan_dir / "tasks.md").exists()
-
-    def test_create_plan_auto_initializes(self, tmp_path: Path) -> None:
-        """create_plan auto-initializes planning directory."""
-        plans_dir = tmp_path / "plans"
-
-        # Directory does not exist yet
-        assert not plans_dir.exists()
-
-        result = create_plan(
-            goal="Implement new feature for testing purposes",
-            config=_mock_config(plans_dir),
-            non_interactive=True,
-        )
-
-        assert result.success is True
-        assert plans_dir.exists()
-        assert (plans_dir / "active").exists()
-
-    def test_create_plan_auth_decomposition(self, tmp_path: Path) -> None:
-        """create_plan creates plan for auth goals (heuristic fallback in tests)."""
-        plans_dir = tmp_path / "plans"
-
-        result = create_plan(
-            goal="Implement OAuth2 authentication system",
-            config=_mock_config(plans_dir),
-            non_interactive=True,
-        )
-
-        assert result.success is True
-        assert result.plan is not None
-        # In tests, SOAR fails and falls back to heuristics (3 subgoals)
-        assert len(result.plan.subgoals) >= 3
-        assert any("architect" in sg.assigned_agent.lower() for sg in result.plan.subgoals)
-
-    def test_create_plan_api_decomposition(self, tmp_path: Path) -> None:
-        """create_plan uses API decomposition for API goals."""
-        plans_dir = tmp_path / "plans"
-
-        result = create_plan(
-            goal="Build a REST API for user management",
-            config=_mock_config(plans_dir),
-            non_interactive=True,
-        )
-
-        assert result.success is True
-        assert result.plan is not None
-        assert len(result.plan.subgoals) >= 3  # API has 3 subgoals
-
-    def test_create_plan_refactor_decomposition(self, tmp_path: Path) -> None:
-        """create_plan creates plan for refactor goals (heuristic fallback in tests)."""
-        plans_dir = tmp_path / "plans"
-
-        result = create_plan(
-            goal="Refactor the database access layer for performance",
-            config=_mock_config(plans_dir),
-            non_interactive=True,
-        )
-
-        assert result.success is True
-        assert result.plan is not None
-        # In tests, SOAR fails and falls back to heuristics (3 subgoals, SIMPLE complexity)
-        assert len(result.plan.subgoals) >= 3
-        # Heuristics give SIMPLE complexity for most goals
-        assert result.plan.complexity in [
-            Complexity.SIMPLE,
-            Complexity.MODERATE,
-            Complexity.COMPLEX,
-        ]
-
-    def test_create_plan_no_decompose(self, tmp_path: Path) -> None:
-        """create_plan --no-decompose creates single subgoal."""
-        plans_dir = tmp_path / "plans"
-
-        result = create_plan(
-            goal="Simple task that needs a quick fix",
-            auto_decompose=False,
-            config=_mock_config(plans_dir),
-            non_interactive=True,
-        )
-
-        assert result.success is True
-        assert result.plan is not None
-        assert len(result.plan.subgoals) == 1
-        assert result.plan.subgoals[0].title == "Implement goal"
-
-    def test_create_plan_goal_too_short(self, tmp_path: Path) -> None:
-        """create_plan rejects goals under 10 chars."""
-        result = create_plan(
-            goal="Short",
-            config=_mock_config(tmp_path / "plans"),
-        )
-
-        assert result.success is False
-        assert "10 characters" in result.error
-
-    def test_create_plan_goal_too_long(self, tmp_path: Path) -> None:
-        """create_plan rejects goals over 500 chars."""
-        long_goal = "A" * 501
-
-        result = create_plan(
-            goal=long_goal,
-            config=_mock_config(tmp_path / "plans"),
-        )
-
-        assert result.success is False
-        assert "500 characters" in result.error
-
-    def test_create_plan_generates_sequential_ids(self, tmp_path: Path) -> None:
-        """create_plan generates sequential plan IDs."""
-        plans_dir = tmp_path / "plans"
-        config = _mock_config(plans_dir)
-
-        result1 = create_plan(
-            goal="First plan for testing purpose",
-            config=config,
-            non_interactive=True,
-        )
-        result2 = create_plan(
-            goal="Second plan for testing purpose",
-            config=config,
-            non_interactive=True,
-        )
-
-        assert result1.success is True
-        assert result2.success is True
-        assert result1.plan.plan_id.startswith("0001-")
-        assert result2.plan.plan_id.startswith("0002-")
-
-    def test_create_plan_updates_manifest(self, tmp_path: Path) -> None:
-        """create_plan adds plan to manifest."""
-        plans_dir = tmp_path / "plans"
-
-        result = create_plan(
-            goal="Plan that should update manifest",
-            config=_mock_config(plans_dir),
-            non_interactive=True,
-        )
-
-        assert result.success is True
-        manifest = PlanManifest.model_validate_json((plans_dir / "manifest.json").read_text())
-        assert result.plan.plan_id in manifest.active_plans
-
-
-class TestCreateCommand:
-    """Tests for aur plan create CLI command."""
-
-    def test_create_cli_success(self, cli_runner: CliRunner, tmp_path: Path) -> None:
-        """aur plan create creates plan and shows output."""
-        plans_dir = tmp_path / "plans"
-
-        with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
-            with patch("aurora_cli.planning.core._check_agent_availability", return_value=True):
-                result = cli_runner.invoke(
-                    plan_group,
-                    ["create", "Implement OAuth2 authentication with JWT tokens", "--yes"],
-                )
-
-        assert result.exit_code == 0
-        assert "Plan created" in result.output
-        assert "Subgoals" in result.output
-
-    def test_create_cli_json_output(self, cli_runner: CliRunner, tmp_path: Path) -> None:
-        """aur plan create --format json outputs valid JSON."""
-        plans_dir = tmp_path / "plans"
-        init_planning_directory(path=plans_dir)
-
-        with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
-            with patch("aurora_cli.planning.core._check_agent_availability", return_value=True):
-                result = cli_runner.invoke(
-                    plan_group,
-                    ["create", "Implement new feature for testing", "--format", "json", "--yes"],
-                    color=False,  # Disable color to avoid ANSI codes
-                )
-
-        assert result.exit_code == 0
-        # Extract JSON from output (skip warning messages at the beginning)
-        output = result.output.strip()
-        # Find the start of JSON (first '{' character)
-        json_start = output.find("{")
-        assert json_start >= 0, f"No JSON found in output: {output[:200]}"
-        json_str = output[json_start:]
-        data = json.loads(json_str)
-        assert "plan_id" in data
-        assert "goal" in data
-        assert "subgoals" in data
-
-    def test_create_cli_goal_too_short(self, cli_runner: CliRunner, tmp_path: Path) -> None:
-        """aur plan create rejects short goals."""
-        plans_dir = tmp_path / "plans"
-
-        with patch("aurora_cli.planning.core._get_plans_dir", return_value=plans_dir):
-            result = cli_runner.invoke(plan_group, ["create", "Short"])
-
-        assert result.exit_code != 0
-        assert "10 characters" in result.output

@@ -445,9 +445,9 @@ class TestMemoryOverhead:
         memory_increase = current_memory - baseline_memory
 
         # Should be minimal overhead (< 20MB for 100 loaders, includes Python overhead)
-        assert (
-            memory_increase < 20.0
-        ), f"Memory overhead {memory_increase:.2f}MB for 100 loaders (should be <20MB)"
+        assert memory_increase < 20.0, (
+            f"Memory overhead {memory_increase:.2f}MB for 100 loaders (should be <20MB)"
+        )
 
     def test_resource_profile_memory_is_minimal(self):
         """Verify ResourceProfile detection has minimal memory impact."""
@@ -472,9 +472,9 @@ class TestMemoryOverhead:
         memory_increase = current_memory - baseline_memory
 
         # Should be minimal overhead (< 15MB for 100 profiles, includes psutil overhead)
-        assert (
-            memory_increase < 15.0
-        ), f"Memory overhead {memory_increase:.2f}MB for 100 profiles (should be <15MB)"
+        assert memory_increase < 15.0, (
+            f"Memory overhead {memory_increase:.2f}MB for 100 profiles (should be <15MB)"
+        )
 
 
 # ============================================================================

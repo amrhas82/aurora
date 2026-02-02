@@ -169,9 +169,9 @@ class TestPhaseCallbackInvocation:
                 pytest.fail("Callback exception should not propagate")
 
         # Warning should be logged
-        assert any(
-            "callback" in record.message.lower() for record in caplog.records
-        ), "Warning about callback failure should be logged"
+        assert any("callback" in record.message.lower() for record in caplog.records), (
+            "Warning about callback failure should be logged"
+        )
 
 
 class TestPhaseCallbackResultSummary:

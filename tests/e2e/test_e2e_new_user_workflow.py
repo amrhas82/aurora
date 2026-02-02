@@ -189,9 +189,9 @@ class TestNewUserWorkflowE2E:
         Verifies that a new user starts with no Aurora data in the project.
         """
         # Verify project .aurora directory does not exist yet (clean state)
-        assert (
-            not clean_aurora_home.exists()
-        ), "Project .aurora directory should not exist before init"
+        assert not clean_aurora_home.exists(), (
+            "Project .aurora directory should not exist before init"
+        )
 
     def test_1_1_2_aur_init_creates_planning_directory(
         self,
@@ -222,9 +222,9 @@ class TestNewUserWorkflowE2E:
         )
 
         # Verify command succeeded
-        assert (
-            result.returncode == 0
-        ), f"aur init failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        assert result.returncode == 0, (
+            f"aur init failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        )
 
         # Verify .aurora directory was created
         assert clean_aurora_home.exists(), f".aurora directory should exist at {clean_aurora_home}"
@@ -259,9 +259,9 @@ class TestNewUserWorkflowE2E:
         )
 
         # Verify command succeeded
-        assert (
-            result.returncode == 0
-        ), f"aur mem index failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        assert result.returncode == 0, (
+            f"aur mem index failed:\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        )
 
         # CRITICAL: Verify DB created at ./.aurora/memory.db (project-specific)
         expected_db = clean_aurora_home / "memory.db"
@@ -337,9 +337,9 @@ class TestNewUserWorkflowE2E:
 
         # Verify output shows correct chunk count
         output = stats_result.stdout.lower()
-        assert (
-            str(expected_count) in stats_result.stdout or "chunk" in output
-        ), f"Stats should show {expected_count} chunks, got:\n{stats_result.stdout}"
+        assert str(expected_count) in stats_result.stdout or "chunk" in output, (
+            f"Stats should show {expected_count} chunks, got:\n{stats_result.stdout}"
+        )
 
     def test_1_1_5_aur_mem_search_returns_results(
         self,
@@ -387,9 +387,9 @@ class TestNewUserWorkflowE2E:
 
         # Verify results were found
         output = search_result.stdout.lower()
-        assert (
-            "calculator" in output or "add" in output or "found" in output
-        ), f"Search should find calculator functions, got:\n{search_result.stdout}"
+        assert "calculator" in output or "add" in output or "found" in output, (
+            f"Search should find calculator functions, got:\n{search_result.stdout}"
+        )
 
     @pytest.mark.skip(reason="aur query requires real API interaction - no dry-run mode available")
     def test_1_1_6_aur_query_retrieves_from_indexed_data(

@@ -93,9 +93,9 @@ class TestMemSearchHelpStartup:
         elapsed = time.time() - start
 
         assert result.exit_code == 0
-        assert (
-            elapsed < 1.0
-        ), f"'aur mem --help' took {elapsed:.3f}s (target: <1.0s). Help should be instant."
+        assert elapsed < 1.0, (
+            f"'aur mem --help' took {elapsed:.3f}s (target: <1.0s). Help should be instant."
+        )
 
     def test_mem_search_help_response_time(self):
         """Verify 'aur mem search --help' responds quickly (<1s)."""
@@ -110,9 +110,9 @@ class TestMemSearchHelpStartup:
         elapsed = time.time() - start
 
         assert result.exit_code == 0
-        assert (
-            elapsed < 1.0
-        ), f"'aur mem search --help' took {elapsed:.3f}s (target: <1.0s). Help should be instant."
+        assert elapsed < 1.0, (
+            f"'aur mem search --help' took {elapsed:.3f}s (target: <1.0s). Help should be instant."
+        )
 
 
 class TestMemSearchImportPerformance:
@@ -192,9 +192,9 @@ class TestBackgroundModelLoading:
         heavy_deps = ["torch", "sentence_transformers"]
         for dep in heavy_deps:
             imported = [m for m in new_modules if dep in m.lower()]
-            assert (
-                not imported
-            ), f"Cache check imported {dep}: {imported}. Cache checking should be lightweight."
+            assert not imported, (
+                f"Cache check imported {dep}: {imported}. Cache checking should be lightweight."
+            )
 
     def test_start_background_loading_fast(self):
         """Verify start_background_loading returns immediately (<100ms)."""
@@ -277,9 +277,9 @@ class TestBM25OnlyFallback:
             results, is_hybrid = retriever.retrieve_fast("authentication", limit=5)
             elapsed = time.time() - start
 
-        assert (
-            elapsed < 2.0
-        ), f"BM25-only search took {elapsed:.3f}s (target: <2.0s). Fallback search should be fast."
+        assert elapsed < 2.0, (
+            f"BM25-only search took {elapsed:.3f}s (target: <2.0s). Fallback search should be fast."
+        )
 
         store.close()
 
@@ -667,9 +667,9 @@ class TestKnownModelDimensions:
 
         for model_name, expected_dim in expected_dims.items():
             actual_dim = EmbeddingProvider._KNOWN_EMBEDDING_DIMS.get(model_name)
-            assert (
-                actual_dim == expected_dim
-            ), f"Model '{model_name}' cached dim {actual_dim} != expected {expected_dim}"
+            assert actual_dim == expected_dim, (
+                f"Model '{model_name}' cached dim {actual_dim} != expected {expected_dim}"
+            )
 
 
 # Benchmark configuration

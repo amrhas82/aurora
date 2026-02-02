@@ -64,6 +64,10 @@ def derive_session_name(session_file, metadata):
 
     return f'{project}/{date_str}-{short_id}'
 
+def extract_tool_name_from_result(result: str) -> str:
+    """Extract tool name from formatted tool result (e.g., '● Bash(...)')."""
+    match = re.search(r'●\s+(\w+)\(', result)
+    return match.group(1) if match else 'unknown'
 
 def extract_signals(session_file):
     """Extract raw signals from session JSONL."""
@@ -152,8 +156,17 @@ def extract_signals(session_file):
         ts = event.get('timestamp', '')
 
         # Tool results (OBJECTIVE)
+        content = None
         if event.get('type') == 'user':
             content = event.get('message', {}).get('content', {})
+        elif event.get('type') == 'progress':
+            # Handle nested user messages in progress events (sub-agent execution)
+            data = event.get('data', {})
+            message = data.get('message', {})
+            if message.get('type') == 'user':
+                content = message.get('message', {}).get('content', {})
+
+        if content is not None:
 
             # Handle list of content blocks (Claude Code format)
             if isinstance(content, list):
@@ -168,6 +181,15 @@ def extract_signals(session_file):
                                 'source': 'user',
                                 'signal': 'request_interrupted',
                                 'details': result[:100]
+                            })
+                        # Check for sibling tool call errors (cascade from failed parallel execution)
+                        elif re.search(r'<tool_use_error>Sibling tool call errored</tool_use_error>', result, re.I):
+                            signals.append({
+                                'ts': ts,
+                                'source': 'system',
+                                'signal': 'sibling_tool_error',
+                                'details': result[:100],
+                                'tool_name': extract_tool_name_from_result(result)
                             })
                         # Match non-zero exit codes or Python tracebacks (excluding 137 which is interruption)
                         elif (re.search(r'Exit code [1-9]', result) and 'Exit code 137' not in result) or \
@@ -301,6 +323,68 @@ def extract_signals(session_file):
                             })
 
     # === POST-PROCESSING SIGNALS (session-level analysis) ===
+
+    # 0. Deduplicate sibling_tool_error batches (same timestamp = same parallel batch)
+    deduplicated_signals = []
+    sibling_batch_start = None
+    sibling_batch_count = 0
+    sibling_batch_tools = []
+
+    for sig in signals:
+        if sig['signal'] == 'sibling_tool_error':
+            current_ts = sig.get('ts')
+
+            # Start new batch or continue existing
+            if sibling_batch_start is None or current_ts != sibling_batch_start:
+                # Emit previous batch if exists
+                if sibling_batch_start is not None:
+                    deduplicated_signals.append({
+                        'ts': sibling_batch_start,
+                        'source': 'system',
+                        'signal': 'sibling_tool_error',
+                        'details': f'{sibling_batch_count} sibling errors in parallel batch',
+                        'batch_size': sibling_batch_count,
+                        'tools_affected': sibling_batch_tools
+                    })
+
+                # Start new batch
+                sibling_batch_start = current_ts
+                sibling_batch_count = 1
+                sibling_batch_tools = [sig.get('tool_name', 'unknown')]
+            else:
+                # Continue existing batch
+                sibling_batch_count += 1
+                sibling_batch_tools.append(sig.get('tool_name', 'unknown'))
+        else:
+            # Not a sibling error - emit any pending batch first
+            if sibling_batch_start is not None:
+                deduplicated_signals.append({
+                    'ts': sibling_batch_start,
+                    'source': 'system',
+                    'signal': 'sibling_tool_error',
+                    'details': f'{sibling_batch_count} sibling errors in parallel batch',
+                    'batch_size': sibling_batch_count,
+                    'tools_affected': sibling_batch_tools
+                })
+                sibling_batch_start = None
+                sibling_batch_count = 0
+                sibling_batch_tools = []
+
+            deduplicated_signals.append(sig)
+
+    # Emit final batch if any
+    if sibling_batch_start is not None:
+        deduplicated_signals.append({
+            'ts': sibling_batch_start,
+            'source': 'system',
+            'signal': 'sibling_tool_error',
+            'details': f'{sibling_batch_count} sibling errors in parallel batch',
+            'batch_size': sibling_batch_count,
+            'tools_affected': sibling_batch_tools
+        })
+
+    # Replace signals with deduplicated version
+    signals = deduplicated_signals
 
     # 1. interrupt_cascade: 2+ request_interrupted within 60s
     interrupt_times = []
@@ -859,7 +943,8 @@ def generate_detailed_report(output_dir, analyses, summary, config, signal_count
         'exit_success': 'Command succeeded (exit code 0)',
         'tool_loop': 'Same tool called 3+ times',
         'rapid_exit': '<3 turns, ends with error/interrupt',
-        'user_curse': 'User frustration (profanity)'
+        'user_curse': 'User frustration (profanity)',
+        'sibling_tool_error': 'Parallel tools canceled (SDK cascade)'
     }
 
     for sig_type, count in signal_counts.most_common():

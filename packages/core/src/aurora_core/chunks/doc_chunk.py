@@ -82,8 +82,9 @@ class DocChunk(Chunk):
     document_type: str = "pdf"  # "pdf" | "docx" | "markdown"
     embeddings: bytes | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    # These are always set by base class __init__, Optional in signature for override
+    created_at: datetime = field(default=None, repr=False)  # type: ignore[assignment]
+    updated_at: datetime = field(default=None, repr=False)  # type: ignore[assignment]
 
     def __init__(
         self,

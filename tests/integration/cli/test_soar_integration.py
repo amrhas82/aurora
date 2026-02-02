@@ -575,9 +575,9 @@ def test_soar_handles_subprocess_timeout(runner, tmp_path):
     # - An error message is shown, OR
     # - A final answer is displayed (partial results)
     output_lower = result.output.lower()
-    assert (
-        "timeout" in output_lower or "error" in output_lower or "final answer" in output_lower
-    ), f"Expected timeout/error message or final answer, got: {result.output}"
+    assert "timeout" in output_lower or "error" in output_lower or "final answer" in output_lower, (
+        f"Expected timeout/error message or final answer, got: {result.output}"
+    )
 
 
 # ==============================================================================

@@ -206,6 +206,32 @@ def detect_configured_slash_tools(project_path: Path) -> dict[str, bool]:
     return configured
 
 
+def create_default_config(project_path: Path) -> Path:
+    """Create project-level config.json with sensible defaults.
+
+    Creates .aurora/config.json with minimal project-local overrides.
+    Uses deep-merge with package defaults at runtime.
+
+    Args:
+        project_path: Path to project root
+
+    Returns:
+        Path to the created config file
+
+    """
+    from aurora_cli.config import save_config
+
+    config = {
+        "storage": {"path": ".aurora/memory.db"},
+        "planning": {"base_dir": ".aurora/plans"},
+        "logging": {"level": "INFO"},
+    }
+
+    config_path = project_path / AURORA_DIR_NAME / "config.json"
+    save_config(config, config_path)
+    return config_path
+
+
 def create_directory_structure(project_path: Path) -> None:
     """Create Aurora directory structure for unified init.
 
@@ -215,6 +241,7 @@ def create_directory_structure(project_path: Path) -> None:
     - .aurora/logs
     - .aurora/cache
     - .aurora/headless
+    - .aurora/config.json
 
     Note: Does NOT create config/tools (legacy directory removed in unified init)
 
@@ -236,6 +263,11 @@ def create_directory_structure(project_path: Path) -> None:
 
     # Create headless directory for autonomous experiments
     (aurora_dir / "headless").mkdir(parents=True, exist_ok=True)
+
+    # Create default config.json
+    config_path = aurora_dir / "config.json"
+    if not config_path.exists():
+        create_default_config(project_path)
 
     # Note: config/tools directory NOT created (removed in unified init)
 

@@ -232,9 +232,9 @@ class DatabaseConnection:
 
         # Verify total_files is consistent
         total_files = progress_calls[0][1]
-        assert all(
-            call[1] == total_files for call in progress_calls
-        ), "Total files should be consistent"
+        assert all(call[1] == total_files for call in progress_calls), (
+            "Total files should be consistent"
+        )
 
 
 class TestIndexVerifyFlow:

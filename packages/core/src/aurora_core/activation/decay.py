@@ -53,16 +53,16 @@ from pydantic import BaseModel, Field, field_validator
 # Lower values = "stickier" memories (slower forgetting)
 # Higher values = more volatile (faster forgetting)
 DECAY_BY_TYPE: dict[str, float] = {
-    "kb": 0.05,        # Knowledge base: stable "background radiation"
-    "knowledge": 0.05, # Alias for kb
-    "class": 0.20,     # Classes: structural, stable
+    "kb": 0.05,  # Knowledge base: stable "background radiation"
+    "knowledge": 0.05,  # Alias for kb
+    "class": 0.20,  # Classes: structural, stable
     "function": 0.40,  # Functions: behavioral, volatile
-    "method": 0.40,    # Methods: same as functions
-    "code": 0.40,      # Generic code: default volatile
-    "soar": 0.30,      # Reasoning traces: moderate stability
-    "doc": 0.02,       # Documents: very sticky (manuals, specs, PDFs)
+    "method": 0.40,  # Methods: same as functions
+    "code": 0.40,  # Generic code: default volatile
+    "soar": 0.30,  # Reasoning traces: moderate stability
+    "doc": 0.02,  # Documents: very sticky (manuals, specs, PDFs)
     "document": 0.02,  # Alias for doc
-    "toc_entry": 0.01, # TOC entries: stickiest (structural anchors)
+    "toc_entry": 0.01,  # TOC entries: stickiest (structural anchors)
 }
 
 # Churn factor coefficient: how much commit_count affects decay

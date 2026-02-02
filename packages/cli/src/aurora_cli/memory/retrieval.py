@@ -380,11 +380,13 @@ class MemoryRetriever:
 
         except Exception as e:
             import traceback
+
             full_trace = traceback.format_exc()
             logger.error("Retrieval failed: %s", e)
             logger.error("Full traceback:\n%s", full_trace)
             # Also print to stderr for debugging
             import sys
+
             print(f"\nDEBUG ERROR: {type(e).__name__}: {e}", file=sys.stderr)
             print(full_trace, file=sys.stderr)
             return []

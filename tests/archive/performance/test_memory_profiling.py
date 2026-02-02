@@ -290,9 +290,9 @@ class TestMemoryProfiling:
         leaked = after_close - baseline
         stored = with_store - baseline
 
-        assert (
-            leaked < stored * 0.3
-        ), f"Memory leak detected: {leaked:.2f} MB (stored {stored:.2f} MB)"
+        assert leaked < stored * 0.3, (
+            f"Memory leak detected: {leaked:.2f} MB (stored {stored:.2f} MB)"
+        )
         print(
             f"✓ Memory properly released on close (leaked {leaked:.2f} MB / {stored:.2f} MB = {leaked / stored * 100:.1f}%)",
         )

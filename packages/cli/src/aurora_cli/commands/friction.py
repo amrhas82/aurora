@@ -17,8 +17,8 @@ console = Console()
 
 def _get_scripts_dir() -> Path:
     """Find the scripts directory."""
-    # Try relative to this file (development)
-    dev_path = Path(__file__).parents[4] / "scripts"
+    # Try relative to this file (development) - resolve symlinks first
+    dev_path = Path(__file__).resolve().parents[5] / "scripts"
     if dev_path.exists():
         return dev_path
 

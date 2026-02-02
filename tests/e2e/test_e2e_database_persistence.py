@@ -208,9 +208,9 @@ class TestDatabasePersistence:
         db_chunk_count = cursor.fetchone()[0]
         conn.close()
 
-        assert (
-            db_chunk_count > 0
-        ), f"Database should have chunks after indexing, got {db_chunk_count}"
+        assert db_chunk_count > 0, (
+            f"Database should have chunks after indexing, got {db_chunk_count}"
+        )
 
         # Run stats and parse output
         stats_result = run_cli_command(
@@ -298,9 +298,9 @@ class TestDatabasePersistence:
 
         # Stats should show non-zero chunks
         stats_output = stats_result.stdout.lower()
-        assert (
-            "0" not in stats_output or "chunk" in stats_output
-        ), f"Stats should show persisted data:\n{stats_result.stdout}"
+        assert "0" not in stats_output or "chunk" in stats_output, (
+            f"Stats should show persisted data:\n{stats_result.stdout}"
+        )
 
         # Third command invocation - search
         search_result = run_cli_command(
@@ -313,9 +313,9 @@ class TestDatabasePersistence:
         )
 
         # Search should find results from persisted data
-        assert (
-            "main" in search_result.stdout.lower() or len(search_result.stdout) > 50
-        ), f"Search should find persisted data:\n{search_result.stdout}"
+        assert "main" in search_result.stdout.lower() or len(search_result.stdout) > 50, (
+            f"Search should find persisted data:\n{search_result.stdout}"
+        )
 
         # Verify DB still has same chunk count (data not lost)
         conn = sqlite3.connect(expected_db)
@@ -324,9 +324,9 @@ class TestDatabasePersistence:
         final_count = cursor.fetchone()[0]
         conn.close()
 
-        assert (
-            final_count == initial_count
-        ), f"Chunk count should persist: initial={initial_count}, final={final_count}"
+        assert final_count == initial_count, (
+            f"Chunk count should persist: initial={initial_count}, final={final_count}"
+        )
 
     def test_1_2_4_deleting_local_aurora_db_does_not_affect_operations(
         self,
@@ -467,9 +467,9 @@ class TestDatabasePersistence:
         # Check activations table exists and has data
         cursor.execute("SELECT COUNT(*) FROM activations")
         activation_count = cursor.fetchone()[0]
-        assert (
-            activation_count > 0
-        ), f"Should have activations in {expected_db}, got {activation_count}"
+        assert activation_count > 0, (
+            f"Should have activations in {expected_db}, got {activation_count}"
+        )
 
         conn.close()
 

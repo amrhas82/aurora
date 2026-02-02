@@ -368,9 +368,9 @@ class TestSemanticRetrievalIntegration:
 
         # Hybrid should be at least as good as the better of the two
         best_single_method = max(precision_activation, precision_semantic)
-        assert (
-            precision_hybrid >= best_single_method - 0.01
-        ), "Hybrid should not be worse than single methods"
+        assert precision_hybrid >= best_single_method - 0.01, (
+            "Hybrid should not be worse than single methods"
+        )
 
         # Hybrid should achieve target precision
         assert precision_hybrid >= 0.6, f"Hybrid precision {precision_hybrid:.2%} < 60% target"

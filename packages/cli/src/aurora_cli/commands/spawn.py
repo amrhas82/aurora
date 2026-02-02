@@ -59,10 +59,10 @@ logger = logging.getLogger(__name__)
     help="Force sequential execution (overrides --parallel)",
 )
 @click.option(
-    "--verbose",
-    "-v",
-    is_flag=True,
-    help="Show detailed output during execution",
+    "--verbose/--quiet",
+    "-v/-q",
+    default=True,
+    help="Show detailed output during execution (default: on)",
 )
 @click.option(
     "--dry-run",

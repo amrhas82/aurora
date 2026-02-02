@@ -305,7 +305,7 @@ def validate_ml_ready(
                     "  2. Retry: [cyan]aur doctor --fix-ml[/]\n"
                     "  3. Manual download:\n"
                     "     [cyan]python -c 'from sentence_transformers import SentenceTransformer; "
-                    f"SentenceTransformer(\"{model_name}\")\'[/]\n\n"
+                    f'SentenceTransformer("{model_name}")\'[/]\n\n'
                     f"[dim]Error: {e}[/]"
                 ) from e
     else:
@@ -326,7 +326,7 @@ def validate_ml_ready(
                 "  2. Retry: [cyan]aur doctor --fix-ml[/]\n"
                 "  3. Manual download:\n"
                 "     [cyan]python -c 'from sentence_transformers import SentenceTransformer; "
-                f"SentenceTransformer(\"{model_name}\")\'[/]\n\n"
+                f'SentenceTransformer("{model_name}")\'[/]\n\n'
                 f"[dim]Error: {e}[/]"
             ) from e
 

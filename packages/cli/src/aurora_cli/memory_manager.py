@@ -604,9 +604,9 @@ class MemoryManager:
                 git_extractor = None
 
             # Batch accumulator for embedding generation
-            pending_chunks: list[tuple[Any, str, float, int, str]] = (
-                []
-            )  # (chunk, content, bla, commit_count, file_path)
+            pending_chunks: list[
+                tuple[Any, str, float, int, str]
+            ] = []  # (chunk, content, bla, commit_count, file_path)
             total_chunks_processed = 0
 
             def flush_batch() -> None:

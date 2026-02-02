@@ -300,9 +300,9 @@ class TestMarkdownToolFrontmatter:
                 # Should have YAML delimiters (---) OR be a markdown header format
                 has_yaml = frontmatter.startswith("---")
                 has_markdown_header = frontmatter.startswith("#")
-                assert (
-                    has_yaml or has_markdown_header
-                ), f"Frontmatter for {tool_id}/{cmd_id} should have YAML delimiters or markdown header"
+                assert has_yaml or has_markdown_header, (
+                    f"Frontmatter for {tool_id}/{cmd_id} should have YAML delimiters or markdown header"
+                )
 
     @pytest.mark.parametrize(
         "tool_id,dir_pattern,file_pattern,frontmatter_fields",
@@ -399,12 +399,12 @@ class TestMarkdownToolGenerateAll:
             file_path = tmp_path / config.get_relative_path(cmd_id)
             content = file_path.read_text()
 
-            assert (
-                AURORA_MARKERS["start"] in content
-            ), f"File for {tool_id}/{cmd_id} should have start marker"
-            assert (
-                AURORA_MARKERS["end"] in content
-            ), f"File for {tool_id}/{cmd_id} should have end marker"
+            assert AURORA_MARKERS["start"] in content, (
+                f"File for {tool_id}/{cmd_id} should have start marker"
+            )
+            assert AURORA_MARKERS["end"] in content, (
+                f"File for {tool_id}/{cmd_id} should have end marker"
+            )
 
     @pytest.mark.parametrize(
         "tool_id,dir_pattern,file_pattern,frontmatter_fields",
@@ -432,9 +432,9 @@ class TestMarkdownToolGenerateAll:
             between_markers = content[start_idx:end_idx].strip()
             expected_body = get_command_body(cmd_id)
 
-            assert (
-                expected_body in between_markers or expected_body.strip() in between_markers
-            ), f"File for {tool_id}/{cmd_id} should have body between markers"
+            assert expected_body in between_markers or expected_body.strip() in between_markers, (
+                f"File for {tool_id}/{cmd_id} should have body between markers"
+            )
 
     @pytest.mark.parametrize(
         "tool_id,dir_pattern,file_pattern,frontmatter_fields",
@@ -1031,9 +1031,9 @@ class TestSpecialFrontmatterToolGenerateAll:
             file_path = tmp_path / config.get_relative_path(cmd_id)
             content = file_path.read_text()
 
-            assert (
-                AURORA_MARKERS["start"] in content
-            ), f"File for {tool_id}/{cmd_id} should have start marker"
-            assert (
-                AURORA_MARKERS["end"] in content
-            ), f"File for {tool_id}/{cmd_id} should have end marker"
+            assert AURORA_MARKERS["start"] in content, (
+                f"File for {tool_id}/{cmd_id} should have start marker"
+            )
+            assert AURORA_MARKERS["end"] in content, (
+                f"File for {tool_id}/{cmd_id} should have end marker"
+            )

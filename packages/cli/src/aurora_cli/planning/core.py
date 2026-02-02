@@ -1263,7 +1263,9 @@ def _decompose_with_soar(
             elif phase_name == "decompose":
                 count = result.get("subgoal_count", 0)
                 # Don't show cache status here - consolidated message shown after execute()
-                console.print(f"  [cyan]{'Loaded' if result.get('cached') else 'Identified'}: {count} subgoals[/]")
+                console.print(
+                    f"  [cyan]{'Loaded' if result.get('cached') else 'Identified'}: {count} subgoals[/]"
+                )
             elif phase_name == "verify":
                 agents = result.get("agents_assigned", 0)
                 console.print(f"  [cyan]Assigned: {agents} agents[/]")
@@ -1537,13 +1539,17 @@ def create_plan(
             # Use mature SOAROrchestrator with 3-tier agent matching
             # SOAR phase 2 handles memory retrieval with proper background loading
             try:
-                subgoals, file_resolutions, decomposition_source, soar_memory_context, soar_complexity = (
-                    _decompose_with_soar(
-                        goal=goal,
-                        config=config,
-                        context_files=[str(f) for f in context_files] if context_files else None,
-                        no_cache=no_cache,
-                    )
+                (
+                    subgoals,
+                    file_resolutions,
+                    decomposition_source,
+                    soar_memory_context,
+                    soar_complexity,
+                ) = _decompose_with_soar(
+                    goal=goal,
+                    config=config,
+                    context_files=[str(f) for f in context_files] if context_files else None,
+                    no_cache=no_cache,
                 )
                 # Use SOAR's memory context (from phase 2 retrieve)
                 memory_context = soar_memory_context or []

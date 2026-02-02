@@ -448,9 +448,9 @@ class TestDecayPenaltyLiterature:
         penalty_100d = decay.calculate(now - timedelta(days=100), now)
 
         # Verify logarithmic growth: penalty becomes more negative over time
-        assert (
-            penalty_1d > penalty_10d > penalty_100d
-        ), "Penalty should become more negative (lower) over time"
+        assert penalty_1d > penalty_10d > penalty_100d, (
+            "Penalty should become more negative (lower) over time"
+        )
 
         # Log10 scale: 10× time = +1.0 in log10
         # Penalty increment = -decay_factor × 1.0 = -0.5
@@ -560,9 +560,9 @@ class TestTotalActivationFormula:
         )
 
         # Verify low total activation
-        assert (
-            result.total < -5.0
-        ), "Old, distant, low-context chunk should have very low activation"
+        assert result.total < -5.0, (
+            "Old, distant, low-context chunk should have very low activation"
+        )
 
         # Verify BLA dominates (most negative)
         assert abs(result.bla) > abs(result.spreading + result.context_boost)
@@ -662,9 +662,9 @@ class TestACTRPrincipleValidation:
             last_access=now - timedelta(days=1),
         )
 
-        assert (
-            result_high.total > result_low.total
-        ), "More frequent access should result in higher activation"
+        assert result_high.total > result_low.total, (
+            "More frequent access should result in higher activation"
+        )
 
     def test_recency_principle(self):
         """ACT-R Principle: More recent use → Higher activation.
@@ -690,9 +690,9 @@ class TestACTRPrincipleValidation:
             last_access=now - timedelta(hours=1),
         )
 
-        assert (
-            result_recent.total > result_old.total
-        ), "More recent access should result in higher activation"
+        assert result_recent.total > result_old.total, (
+            "More recent access should result in higher activation"
+        )
 
     def test_context_principle(self):
         """ACT-R Principle: Contextually relevant items are more available.
@@ -720,9 +720,9 @@ class TestACTRPrincipleValidation:
             chunk_keywords={"database", "optimize", "performance"},  # Perfect match
         )
 
-        assert (
-            result_high_context.total > result_low_context.total
-        ), "Higher context match should result in higher activation"
+        assert result_high_context.total > result_low_context.total, (
+            "Higher context match should result in higher activation"
+        )
 
     def test_associative_principle(self):
         """ACT-R Principle: Associated items receive spreading activation.
@@ -749,9 +749,9 @@ class TestACTRPrincipleValidation:
             spreading_activation=0.7,  # 1 hop away
         )
 
-        assert (
-            result_with_spread.total > result_no_spread.total
-        ), "Associated chunks should receive spreading activation boost"
+        assert result_with_spread.total > result_no_spread.total, (
+            "Associated chunks should receive spreading activation boost"
+        )
 
         # Verify spread component contributed
         spread_contribution = result_with_spread.total - result_no_spread.total

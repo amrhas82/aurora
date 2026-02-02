@@ -349,9 +349,9 @@ class TestSearchAccuracy:
         assert result.returncode == 0, f"Indexing failed:\nstderr: {result.stderr}"
 
         # Verify indexed multiple files
-        assert (
-            "database.py" in result.stdout.lower() or "indexed" in result.stdout.lower()
-        ), f"Should have indexed files:\n{result.stdout}"
+        assert "database.py" in result.stdout.lower() or "indexed" in result.stdout.lower(), (
+            f"Should have indexed files:\n{result.stdout}"
+        )
 
     def test_1_3_2_different_queries_return_different_results(
         self,
@@ -466,9 +466,9 @@ class TestSearchAccuracy:
 
                     # At least some expected fields should be present
                     present_fields = set(first.keys()) & expected_fields
-                    assert (
-                        len(present_fields) > 0
-                    ), f"Result should have expected fields like {expected_fields}, got {first.keys()}"
+                    assert len(present_fields) > 0, (
+                        f"Result should have expected fields like {expected_fields}, got {first.keys()}"
+                    )
             except json.JSONDecodeError as e:
                 pytest.fail(f"JSON output is not parseable:\n{result.stdout}\nError: {e}")
         else:

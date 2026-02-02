@@ -410,9 +410,7 @@ def index_command(
                 out.print(f"[green]✓[/] Indexed {chunk_count} chunks from {path.name}")
             else:
                 chunk_count = indexer.index_directory(path, recursive=True)
-                out.print(
-                    f"[green]✓[/] Indexed {chunk_count} total chunks from directory"
-                )
+                out.print(f"[green]✓[/] Indexed {chunk_count} total chunks from directory")
 
         except ImportError as e:
             out.print(f"[red]✗ Error:[/] {e}")
@@ -428,9 +426,7 @@ def index_command(
 
     else:
         # Code indexing (Python files)
-        stats, total_warnings = run_indexing(
-            path, config=config, force=force, max_workers=workers
-        )
+        stats, total_warnings = run_indexing(path, config=config, force=force, max_workers=workers)
 
         # Determine log path for display
         db_path_resolved = Path(config.get_db_path())

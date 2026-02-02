@@ -4,9 +4,8 @@ This module implements health checks for:
 - Core System: CLI version, database, API keys, permissions
 - Code Analysis: tree-sitter parser, index age, chunk quality
 - Search & Retrieval: vector store, Git BLA, cache size, embeddings
-- Configuration: config file, Git repo, MCP server status
-- Tool Integration: slash commands, MCP servers
-- MCP Functional: MCP config validation, SOAR phases, memory database
+- Configuration: config file, Git repo
+- Tool Integration: CLI tools, slash commands
 """
 
 from __future__ import annotations
@@ -331,7 +330,10 @@ class SearchRetrievalChecks:
         # Check vector store / embeddings
         results.append(self._check_vector_store())
 
-        # Check embedding model availability
+        # Check sentence-transformers installed
+        results.append(self._check_sentence_transformers())
+
+        # Check embedding model cached
         results.append(self._check_embedding_model())
 
         # Check Git BLA availability
@@ -355,28 +357,31 @@ class SearchRetrievalChecks:
         except Exception as e:
             return ("fail", f"Vector store check failed: {e}", {})
 
-    def _check_embedding_model(self) -> HealthCheckResult:
-        """Check if embedding model is downloaded and accessible.
-
-        Returns:
-            HealthCheckResult indicating model availability status
-
-        """
+    def _check_sentence_transformers(self) -> HealthCheckResult:
+        """Check if sentence-transformers package is installed."""
         try:
-            # Check if sentence-transformers is installed
+            import sentence_transformers  # noqa: F401
+
+            return ("pass", "sentence-transformers installed", {})
+        except ImportError:
+            return (
+                "fail",
+                "sentence-transformers not installed",
+                {
+                    "solution": "Run: pip install sentence-transformers",
+                    "or": "aur doctor --fix-ml",
+                },
+            )
+
+    def _check_embedding_model(self) -> HealthCheckResult:
+        """Check if embedding model is downloaded and cached."""
+        try:
+            # Skip if sentence-transformers not installed
             try:
                 import sentence_transformers  # noqa: F401
             except ImportError:
-                return (
-                    "fail",
-                    "sentence-transformers not installed",
-                    {
-                        "solution": "Run: pip install sentence-transformers",
-                        "or": "aur doctor --fix-ml",
-                    },
-                )
+                return ("skip", "Embedding model (requires sentence-transformers)", {})
 
-            # Check if model is cached
             from aurora_context_code.semantic.model_utils import (
                 DEFAULT_MODEL,
                 get_model_cache_path,
@@ -573,12 +578,20 @@ class ConfigurationChecks:
     def _check_config_file(self) -> HealthCheckResult:
         """Check if config file exists and is valid."""
         try:
-            config_path = Path.home() / ".aurora" / "config.json"
-            if config_path.exists():
+            # Check project-local config first (created by aur init)
+            project_config_path = Path.cwd() / ".aurora" / "config.json"
+            if project_config_path.exists():
                 # Try to validate config
                 self.config.validate()
-                return ("pass", "Config file valid", {"path": str(config_path)})
-            return ("warning", "No config file (using defaults)", {"path": str(config_path)})
+                return ("pass", "Config file valid", {"path": str(project_config_path)})
+
+            # Fallback to global config
+            global_config_path = Path.home() / ".aurora" / "config.json"
+            if global_config_path.exists():
+                self.config.validate()
+                return ("pass", "Config file valid (global)", {"path": str(global_config_path)})
+
+            return ("warning", "No config file (using defaults)", {"path": str(project_config_path)})
         except Exception as e:
             return ("fail", f"Config validation failed: {e}", {})
 
@@ -650,9 +663,6 @@ class ToolIntegrationChecks:
         # Check slash command integration
         results.append(self._check_slash_commands())
 
-        # Check MCP server integration
-        results.append(self._check_mcp_servers())
-
         return results
 
     def _check_cli_tools(self) -> HealthCheckResult:
@@ -714,36 +724,6 @@ class ToolIntegrationChecks:
         except Exception as e:
             return ("fail", f"Slash command check failed: {e}", {})
 
-    def _check_mcp_servers(self) -> HealthCheckResult:
-        """Check MCP server configuration status."""
-        try:
-            from aurora_cli.commands.init_helpers import detect_configured_mcp_tools
-
-            project_path = Path.cwd()
-            configured_tools = detect_configured_mcp_tools(project_path)
-
-            # Check if any are configured
-            configured_count = sum(
-                1 for is_configured in configured_tools.values() if is_configured
-            )
-
-            if configured_count == 0:
-                return (
-                    "warning",
-                    "MCP servers not configured",
-                    {"configured": False, "count": 0},
-                )
-            configured_list = [
-                tool_id for tool_id, is_configured in configured_tools.items() if is_configured
-            ]
-            return (
-                "pass",
-                f"MCP servers configured ({', '.join(configured_list)})",
-                {"configured": True, "count": configured_count, "tools": configured_list},
-            )
-        except Exception as e:
-            return ("fail", f"MCP server check failed: {e}", {})
-
     def get_fixable_issues(self) -> list[dict[str, Any]]:
         """Get list of automatically fixable issues.
 
@@ -765,10 +745,7 @@ class ToolIntegrationChecks:
         issues = []
 
         try:
-            from aurora_cli.commands.init_helpers import (
-                detect_configured_mcp_tools,
-                detect_configured_slash_tools,
-            )
+            from aurora_cli.commands.init_helpers import detect_configured_slash_tools
 
             project_path = Path.cwd()
 
@@ -781,18 +758,6 @@ class ToolIntegrationChecks:
                     {
                         "name": "Slash commands not configured",
                         "solution": "Run 'aur init --config --tools=all' or specify tools like --tools=claude,cursor",
-                    },
-                )
-
-            # Check MCP servers
-            mcp_tools = detect_configured_mcp_tools(project_path)
-            mcp_configured = sum(1 for is_configured in mcp_tools.values() if is_configured)
-
-            if mcp_configured == 0:
-                issues.append(
-                    {
-                        "name": "MCP servers not configured",
-                        "solution": "Run 'aur init --config' to configure MCP servers",
                     },
                 )
 
@@ -857,7 +822,19 @@ class InstallationChecks:
         for pkg, desc in packages:
             try:
                 __import__(pkg)
-                results.append(("pass", f"{desc} ({pkg})", {"package": pkg}))
+                # Get package version
+                try:
+                    # Try standard package name first (aurora-actr)
+                    if pkg == "aurora_cli":
+                        version = importlib.metadata.version("aurora-actr")
+                    else:
+                        # Try package-specific version
+                        pkg_name = pkg.replace("_", "-")
+                        version = importlib.metadata.version(pkg_name)
+                    results.append(("pass", f"{desc} ({pkg}) v{version}", {"package": pkg, "version": version}))
+                except Exception:
+                    # If version not found, just show package without version
+                    results.append(("pass", f"{desc} ({pkg})", {"package": pkg}))
             except ImportError:
                 results.append(("fail", f"{desc} MISSING ({pkg})", {"package": pkg}))
         return results

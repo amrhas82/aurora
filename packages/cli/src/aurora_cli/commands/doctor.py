@@ -155,10 +155,10 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
             if pkg_results:
                 _display_compact_line("Packages:", pkg_results)
 
-            # Storage: Database + .aurora writable + cache
+            # Storage: DB + .aurora writable + cache
             storage_results = []
             for r in core_results:
-                if "Database" in r[1] or ".aurora" in r[1]:
+                if "DB" in r[1] or ".aurora" in r[1]:
                     storage_results.append(r)
             for r in search_results:
                 if "Cache:" in r[1] or "local" in r[1].lower():

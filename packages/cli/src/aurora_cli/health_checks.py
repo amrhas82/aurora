@@ -78,13 +78,13 @@ class CoreSystemChecks:
                 if size_mb > 100:
                     return (
                         "warning",
-                        f"Database large ({size_mb:.1f} MB)",
+                        f"DB large ({size_mb:.0f} MB)",
                         {"path": str(db_path), "size_mb": size_mb},
                     )
-                return ("pass", "Database exists", {"path": str(db_path), "size_mb": size_mb})
-            return ("warning", "Database not found", {"path": str(db_path)})
+                return ("pass", f"DB ({size_mb:.1f} MB)", {"path": str(db_path), "size_mb": size_mb})
+            return ("warning", "DB not found", {"path": str(db_path)})
         except Exception as e:
-            return ("fail", f"Database check failed: {e}", {})
+            return ("fail", f"DB check failed: {e}", {})
 
     def _check_permissions(self) -> HealthCheckResult:
         """Check .aurora directory permissions."""

@@ -298,12 +298,13 @@ Aurora implements SOAR (Search, Observe, Act, Record) query processing using **t
 
 The bash orchestration (`aur soar`) provides a simpler user experience for terminal users, while the Python orchestration (`SOAROrchestrator`) enables programmatic integration and testing.
 
-### MCP Tool Deprecation Context (PRD-0024)
+### MCP Tool Evolution (PRD-0024)
 
-During MCP tool deprecation, we removed 3 MCP tools:
-- `aurora_query` → replaced by `aur soar` terminal command
-- `aurora_search` → replaced by `/aur:search` slash command
-- `aurora_get` → replaced by `/aur:get` slash command
+Aurora now provides two MCP tools:
+- `lsp` - Dead code detection, impact analysis, pre-edit checks
+- `mem_search` - Search indexed code with LSP enrichment
+
+Old MCP tools (`aurora_query`, `aurora_search`, `aurora_get`) and slash commands (`/aur:search`, `/aur:get`) were removed. Use `aur soar` for research queries and `aur mem search` for code search.
 
 **Critical**: The phase handler files in `packages/soar/src/aurora_soar/phases/` were preserved because:
 1. They serve the Python `SOAROrchestrator` library use case
@@ -327,7 +328,7 @@ The bash orchestration (`aur soar`) and Python orchestration (`SOAROrchestrator`
 ### Related Documentation
 
 - **PRD-0024**: MCP Tool Deprecation and slash command migration
-- **MCP_DEPRECATION.md**: Rationale for deprecating MCP tools
+- **MCP.md**: MCP tool documentation (lsp, mem_search)
 - **MIGRATION.md**: User guide for migrating from MCP tools
 - **TESTING.md**: Test classification and phase handler testing strategy
 

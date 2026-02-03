@@ -12,7 +12,7 @@ High-level workflows for planning, research, and execution.
 | [Regular Plan](#2-regular-plan-flow) | `/aur:plan` -> `/aur:implement` | Direct planning when requirements are clear |
 | [Research](#3-research-flow) | `aur soar` | Answer questions with parallel agent research |
 | [Execution](#4-execution-flow) | `aur spawn` | Run tasks with safeguards |
-| [Memory Search](#5-memory-search-flow) | `/aur:search` -> `/aur:get` | Find and retrieve code chunks |
+| [Memory Search](#5-memory-search-flow) | `aur mem search` | Find code chunks with LSP enrichment |
 
 ---
 
@@ -381,16 +381,16 @@ Summary:
 
 ## 5. Memory Search Flow
 
-**Use when:** Finding code, exploring codebase, retrieving specific chunks.
+**Use when:** Finding code, exploring codebase, understanding usage patterns.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          MEMORY SEARCH FLOW                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  CLAUDE CODE                                                                 │
+│  TERMINAL                                                                    │
 │  ┌────────────────────────────────────────┐                                 │
-│  │  /aur:search "authentication handler"  │                                 │
+│  │  $ aur mem search "authentication"     │                                 │
 │  └────────────────────────────────────────┘                                 │
 │                        │                                                     │
 │                        v                                                     │
@@ -399,44 +399,26 @@ Summary:
 │  │                                        │                                 │
 │  │  40% BM25 keyword matching             │                                 │
 │  │  30% ACT-R activation (usage decay)    │                                 │
-│  │  30% Git recency signals               │                                 │
+│  │  30% Semantic similarity               │                                 │
 │  │                                        │                                 │
-│  │  (With ML: adds semantic similarity)   │                                 │
+│  │  + LSP Enrichment (usage counts)       │                                 │
 │  └────────────────────────────────────────┘                                 │
 │                        │                                                     │
 │                        v                                                     │
 │  ┌────────────────────────────────────────┐                                 │
-│  │  RESULTS                               │                                 │
+│  │  RESULTS WITH LSP DATA                 │                                 │
 │  │                                        │                                 │
-│  │  [1] src/auth/handler.py (0.92)        │                                 │
-│  │      def authenticate_user(...)        │                                 │
-│  │                                        │                                 │
-│  │  [2] src/auth/middleware.py (0.85)     │                                 │
-│  │      class AuthMiddleware(...)         │                                 │
-│  │                                        │                                 │
-│  │  [3] src/api/auth_routes.py (0.78)     │                                 │
-│  │      @router.post("/login")            │                                 │
+│  │  Type │ File          │ Name      │ Used by    │                         │
+│  │  ─────┼───────────────┼───────────┼────────────│                         │
+│  │  func │ handler.py    │ auth_user │ 12 files   │                         │
+│  │  class│ middleware.py │ AuthMW    │ 5 files    │                         │
+│  │  func │ routes.py     │ login     │ 3 files    │                         │
 │  └────────────────────────────────────────┘                                 │
 │                        │                                                     │
 │                        v                                                     │
 │  ┌────────────────────────────────────────┐                                 │
-│  │  /aur:get 1                            │                                 │
-│  │  (Retrieves full content of result 1)  │                                 │
-│  └────────────────────────────────────────┘                                 │
-│                        │                                                     │
-│                        v                                                     │
-│  ┌────────────────────────────────────────┐                                 │
-│  │  FULL CHUNK CONTENT                    │                                 │
-│  │                                        │                                 │
-│  │  File: src/auth/handler.py             │                                 │
-│  │  Lines: 45-78                          │                                 │
-│  │                                        │                                 │
-│  │  def authenticate_user(               │                                 │
-│  │      username: str,                    │                                 │
-│  │      password: str                     │                                 │
-│  │  ) -> Optional[User]:                  │                                 │
-│  │      """Authenticate user..."""        │                                 │
-│  │      ...                               │                                 │
+│  │  Use --show-content for previews       │                                 │
+│  │  Use --show-scores for score breakdown │                                 │
 │  └────────────────────────────────────────┘                                 │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -445,18 +427,17 @@ Summary:
 **Example session:**
 
 ```bash
-# Claude Code
-/aur:search "payment validation"
+# CLI - Search with LSP usage counts
+aur mem search "payment validation" --limit 5
 
-Results:
-  [1] src/payments/validator.py (0.94) - validate_payment_data()
-  [2] src/checkout/forms.py (0.82) - PaymentForm
-  [3] src/api/payment_routes.py (0.76) - @router.post("/pay")
+# With content preview
+aur mem search "payment validation" --show-content
 
-/aur:get 1
-
-# Returns full content of validate_payment_data() function
+# With detailed score breakdown
+aur mem search "payment validation" --show-scores
 ```
+
+**MCP Tool (in Claude):** The `mem_search` MCP tool provides the same functionality with LSP enrichment.
 
 ---
 
@@ -503,7 +484,7 @@ Results:
 │                                                                              │
 │  OPTIMUM PLAN: aur goals -> /aur:plan goals.json -> /aur:implement          │
 │  REGULAR PLAN: /aur:plan "prompt" -> /aur:implement                         │
-│  MEMORY SEARCH: /aur:search -> /aur:get                                     │
+│  MEMORY SEARCH: aur mem search "query"                                      │
 │  SOAR RESEARCH: aur soar "question"                                         │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -518,7 +499,7 @@ Results:
 | New feature with unclear scope | Optimum Plan | `aur goals` -> `/aur:plan` -> `/aur:implement` |
 | Simple, well-defined change | Regular Plan | `/aur:plan` -> `/aur:implement` |
 | "How does X work?" | Research | `aur soar "question"` |
-| "Where is the auth code?" | Memory Search | `/aur:search` -> `/aur:get` |
+| "Where is the auth code?" | Memory Search | `aur mem search "auth"` |
 | Run a task list | Execution | `aur spawn tasks.md` |
 | Save session for later | Checkpoint | `/aur:checkpoint` |
 

@@ -1082,23 +1082,22 @@ ls .newtool/commands/
 
 **Impact**: All 20 tools use these templates.
 
-**Example: Update `/aur:search` format**:
+**Example: Update slash command template**:
 
 ```python
 # Edit templates/slash_commands.py
 
-SEARCH_TEMPLATE = f"""{BASE_GUARDRAILS}
+PLAN_TEMPLATE = f"""{BASE_GUARDRAILS}
 
 **Usage**
-Run `aur mem search "<query>"` to search indexed code.
+Create an implementation plan for the given goal.
 
 **Output Format (MANDATORY - NEVER DEVIATE)**
 
-1. Execute `aur mem search` with parsed args
-2. Display the **FULL TABLE** - never collapse
-3. Create simplified table showing ALL results
-4. Add exactly 2 sentences of guidance
-5. Single line: `Next: /aur:get N`
+1. Analyze the goal and context
+2. Create structured plan with phases
+3. List specific files to modify
+4. Estimate complexity
 
 NO additional explanations."""
 ```
@@ -1228,10 +1227,10 @@ cat .gemini/commands/aurora/search.toml
 - [ ] Changed file paths? Test `aur init --tools=<tool>`
 
 **For template changes**:
-- [ ] Test search command: `/aur:search test limit 5`
-- [ ] Test get command: `/aur:get 1`
+- [ ] Test plan command: `/aur:plan "test goal"`
+- [ ] Test implement command: `/aur:implement`
 - [ ] Verify "MANDATORY" sections are clear
-- [ ] Check all 5 commands render correctly
+- [ ] Check all commands render correctly
 
 **For new tools**:
 - [ ] Tool added to `configurators/slash/registry.py`

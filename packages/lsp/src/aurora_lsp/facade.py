@@ -285,6 +285,115 @@ class AuroraLSP:
         )
 
     # =========================================================================
+    # Import Analysis
+    # =========================================================================
+
+    def get_imported_by(self, module_path: str | Path) -> dict:
+        """Find all files that import a given module.
+
+        Uses ripgrep for fast text search across the codebase.
+
+        Args:
+            module_path: Path to module file (e.g., "src/utils.py")
+
+        Returns:
+            Dict with:
+            - module: The queried module name
+            - imported_by: List of files that import this module
+            - import_count: Total number of importing files
+        """
+        import re
+        import subprocess
+
+        module_path = Path(module_path)
+        if not module_path.is_absolute():
+            module_path = self.workspace / module_path
+
+        # Extract module name from path
+        # "src/aurora_lsp/analysis.py" -> "aurora_lsp.analysis"
+        # "packages/lsp/src/aurora_lsp/facade.py" -> "aurora_lsp.facade"
+        if module_path.suffix == ".py":
+            parts = module_path.with_suffix("").parts
+            # Find "src" directory and take everything after it
+            # This handles both "src/pkg/module.py" and "packages/x/src/pkg/module.py"
+            module_name = None
+            for i, part in enumerate(parts):
+                if part == "src" and i + 1 < len(parts):
+                    # Take everything after "src/"
+                    remaining = parts[i + 1 :]
+                    if remaining:
+                        module_name = ".".join(remaining)
+                        break
+            if module_name is None:
+                # No "src" found - try to find package by looking for __init__.py
+                # Or fallback to filename
+                module_name = module_path.stem
+        else:
+            module_name = module_path.stem
+
+        # Also get just the module's last component for partial matching
+        module_base = module_name.split(".")[-1] if "." in module_name else module_name
+
+        # Build regex patterns to find imports
+        # Matches both top-level and indented (lazy) imports:
+        # - "from aurora_lsp.analysis import X"
+        # - "    from aurora_lsp.analysis import X"  (inside function)
+        patterns = [
+            f"^\\s*from {re.escape(module_name)} import",
+            f"^\\s*import {re.escape(module_name)}\\b",
+        ]
+
+        # Also match partial module path for flexibility
+        if "." in module_name:
+            # For "aurora_lsp.analysis", also match "from aurora_lsp import analysis"
+            parent = ".".join(module_name.split(".")[:-1])
+            patterns.append(f"^from {re.escape(parent)} import.*\\b{re.escape(module_base)}\\b")
+
+        combined_pattern = "|".join(f"({p})" for p in patterns)
+
+        try:
+            result = subprocess.run(
+                ["rg", "-l", "--type", "py", "-e", combined_pattern, str(self.workspace)],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+
+            importing_files = []
+            if result.returncode == 0 and result.stdout.strip():
+                for line in result.stdout.strip().split("\n"):
+                    file_path = Path(line)
+                    # Exclude the module itself
+                    if file_path.resolve() != module_path.resolve():
+                        # Make relative to workspace
+                        try:
+                            rel_path = file_path.relative_to(self.workspace)
+                            importing_files.append(str(rel_path))
+                        except ValueError:
+                            importing_files.append(str(file_path))
+
+            return {
+                "module": module_name,
+                "imported_by": sorted(importing_files),
+                "import_count": len(importing_files),
+            }
+
+        except subprocess.TimeoutExpired:
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "Search timed out",
+            }
+        except FileNotFoundError:
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "ripgrep not installed",
+            }
+
+    # =========================================================================
     # Utility Methods
     # =========================================================================
 

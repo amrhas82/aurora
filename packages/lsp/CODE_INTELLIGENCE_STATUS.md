@@ -9,9 +9,9 @@
 |----------|------|---------|---------|-------|
 | Reference Analysis | 4 | 1 | 1 | 6 |
 | Code Quality Markers | 4 | 0 | 2 | 6 |
-| File Relationships | 0 | 1 | 2 | 3 |
+| File Relationships | 1 | 1 | 1 | 3 |
 | Auto-Triggers | 0 | 0 | 1 | 1 |
-| **Total** | **8** | **2** | **6** | **16** |
+| **Total** | **9** | **2** | **5** | **16** |
 
 ---
 
@@ -59,7 +59,7 @@
 | Feature | Status | Implementation | Languages | Speed | Notes |
 |---------|--------|----------------|-----------|-------|-------|
 | **imports** (outgoing) | ⚠️ INDEXED | Tree-sitter `_extract_imports()` | Python only | <10ms/file | Not queryable via MCP |
-| **imported_by** (incoming) | ❌ MISSING | Would need reverse lookup | - | - | High value for refactoring |
+| **imported_by** (incoming) | ✅ LIVE | `lsp(action="imports")` via ripgrep | All languages | <1s | Query-time search |
 | **calls_files** | ❌ MISSING | Would derive from `calling` | - | - | Needs `calling` first |
 
 ---
@@ -336,7 +336,7 @@ Both fast and accurate modes miss:
 ### Medium Term (3-5 days each)
 1. Add JavaScript/TypeScript complexity (tree-sitter-typescript)
 2. Add JS/TS import filtering patterns
-3. Build `imported_by` reverse lookup
+3. ✅ ~~Build `imported_by` reverse lookup~~ DONE - `lsp(action="imports")`
 4. Add pre-edit hook for related files
 
 ### Long Term

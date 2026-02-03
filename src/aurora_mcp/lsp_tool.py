@@ -198,7 +198,7 @@ def _generate_code_quality_report(dead_code: list[dict], workspace: Path) -> str
 
 
 def lsp(
-    action: Literal["deadcode", "impact", "check"] = "check",
+    action: Literal["deadcode", "impact", "check", "imports"] = "check",
     path: str = "",
     line: int | None = None,
     accurate: bool = False,
@@ -209,6 +209,7 @@ def lsp(
     - "refactor", "change", "modify" a symbol → action="impact" (FAST - analyzes one symbol)
     - "dead code", "unused", "cleanup" → action="deadcode" (scans entire directory)
     - Before editing any function/class → action="check" (FAST - quick usage count)
+    - "who imports this?" → action="imports" (FAST - find all importers of a module)
 
     IMPORTANT: Do NOT use deadcode for refactoring. Use impact instead.
 
@@ -216,6 +217,7 @@ def lsp(
     - "check": Quick pre-edit usage count. Returns usages and risk level. Use BEFORE editing.
     - "impact": Full impact analysis for a symbol at path:line. Shows all callers, files affected.
     - "deadcode": Scan directory for ALL unused symbols. Has two modes (see below).
+    - "imports": Find all files that import a given module. Use for refactoring impact.
 
     DEADCODE MODES:
     - Fast (default): Batched ripgrep text search, ~2s, 85% accuracy, ALL languages
@@ -246,14 +248,14 @@ def lsp(
     - Import filters: packages/lsp/src/aurora_lsp/filters.py (Python only)
 
     Args:
-        action: "check" | "impact" | "deadcode" (default: check)
-        path: File path (required). For deadcode, can be a directory.
-        line: Line number (required for impact/check, 1-indexed)
+        action: "check" | "impact" | "deadcode" | "imports" (default: check)
+        path: File path (required). For deadcode, can be a directory. For imports, the module file.
+        line: Line number (required for impact/check, 1-indexed). Not used for deadcode/imports.
         accurate: For deadcode only. If True, use LSP references (95%+ accuracy, ~20s).
                  If False (default), use batched ripgrep (85% accuracy, ~2s).
 
     Returns:
-        JSON with usages, callers, risk level, files affected
+        JSON with usages, callers, risk level, files affected, or import information
     """
     workspace = Path.cwd()
     lsp_client = _get_lsp(workspace)
@@ -353,5 +355,14 @@ def lsp(
 
         return result
 
+    elif action == "imports":
+        # Find all files that import this module
+        if not path:
+            raise ValueError("path parameter required for imports action")
+
+        result = lsp_client.get_imported_by(path)
+        result["action"] = "imports"
+        return result
+
     else:
-        raise ValueError(f"Unknown action: {action}. Use: deadcode, impact, check")
+        raise ValueError(f"Unknown action: {action}. Use: deadcode, impact, check, imports")

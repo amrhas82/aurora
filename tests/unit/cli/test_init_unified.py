@@ -676,11 +676,13 @@ class TestStep3ToolConfiguration:
                     new_callable=AsyncMock,
                     return_value=([], []),
                 ):
-                    created, updated = run_step_3_tool_configuration(tmp_path)
+                    created, updated, agent_count, tool_names = run_step_3_tool_configuration(tmp_path)
 
                     # Should return empty lists
                     assert created == []
                     assert updated == []
+                    assert agent_count == 0
+                    assert tool_names == []
 
     def test_run_step_3_preserves_markers_on_update(self, tmp_path):
         """run_step_3_tool_configuration() should preserve custom content in marker blocks on update."""
@@ -760,7 +762,7 @@ class TestInitCommandMain:
                 with patch("aurora_cli.commands.init.run_step_2_memory_indexing") as mock_step2:
                     with patch(
                         "aurora_cli.commands.init.run_step_3_tool_configuration",
-                        return_value=([], []),
+                        return_value=([], [], 0, []),
                     ) as mock_step3:
                         result = runner.invoke(init_command, ["--config"])
 
@@ -812,7 +814,7 @@ class TestInitCommandMain:
                     ) as mock_step2:
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
-                            return_value=([], []),
+                            return_value=([], [], 0, []),
                         ) as mock_step3:
                             result = runner.invoke(init_command, [])
 
@@ -875,7 +877,7 @@ class TestInitCommandMain:
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
-                            return_value=([], []),
+                            return_value=([], [], 0, []),
                         ):
                             result = runner.invoke(init_command, [])
 
@@ -929,7 +931,7 @@ class TestInitCommandMain:
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
-                            return_value=([], []),
+                            return_value=([], [], 0, []),
                         ):
                             result = runner.invoke(init_command, [])
 

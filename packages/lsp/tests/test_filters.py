@@ -1,6 +1,7 @@
 """Tests for import filtering."""
 
 import pytest
+
 from aurora_lsp.filters import ImportFilter, get_filter_for_file
 
 

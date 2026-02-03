@@ -1,13 +1,15 @@
 """Claude Code MCP server configurator.
 
-Configures Aurora's MCP server for Claude Code CLI.
+Configures Aurora's MCP server for Claude Code CLI using `claude mcp add-json`.
 
-Configuration paths:
-- MCP server: ~/.claude/plugins/aurora/.mcp.json
+Configuration:
+- MCP server: Registered via `claude mcp add-json` command
 - Permissions: ~/.claude/settings.local.json
 """
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -30,11 +32,8 @@ AURORA_MCP_PERMISSIONS = [
 class ClaudeMCPConfigurator(MCPConfigurator):
     """MCP configurator for Claude Code CLI.
 
-    Claude Code uses a plugin-based MCP configuration:
-    - MCP config: ~/.claude/plugins/aurora/.mcp.json
-    - Permissions: ~/.claude/settings.local.json
-
-    This configurator handles both files.
+    Uses `claude mcp add-json` command to register Aurora MCP server.
+    Also configures permissions in ~/.claude/settings.local.json.
     """
 
     @property
@@ -53,43 +52,30 @@ class ClaudeMCPConfigurator(MCPConfigurator):
         return True
 
     def get_config_path(self, _project_path: Path) -> Path:
-        """Get Claude MCP config path.
+        """Get Claude config path (for compatibility).
 
-        Args:
-            project_path: Project path (not used for global config)
-
-        Returns:
-            Path to ~/.claude/plugins/aurora/.mcp.json
-
+        Note: Claude CLI manages its own config via `claude mcp` commands.
+        This returns ~/.claude.json for reference only.
         """
-        return Path.home() / ".claude" / "plugins" / "aurora" / ".mcp.json"
+        return Path.home() / ".claude.json"
 
     def get_permissions_path(self) -> Path:
-        """Get Claude permissions config path.
-
-        Returns:
-            Path to ~/.claude/settings.local.json
-
-        """
+        """Get Claude permissions config path."""
         return Path.home() / ".claude" / "settings.local.json"
 
-    def get_server_config(self, project_path: Path) -> dict[str, Any]:
-        """Get Aurora MCP server configuration for Claude.
+    def _get_server_json(self, project_path: Path) -> dict[str, Any]:
+        """Get Aurora MCP server configuration as JSON for claude mcp add-json.
 
         Args:
             project_path: Path to project root
 
         Returns:
-            Dictionary with Aurora server configuration
-
+            Server configuration dict (without mcpServers wrapper)
         """
         db_path = project_path / ".aurora" / "memory.db"
 
-        # Build PYTHONPATH for aurora packages
-        # Try to find aurora source directories
+        # Build PYTHONPATH for aurora packages (development mode)
         pythonpath_parts = []
-
-        # Check if we're in the aurora project directory
         aurora_src = project_path / "src"
         aurora_packages = project_path / "packages"
 
@@ -105,51 +91,34 @@ class ClaudeMCPConfigurator(MCPConfigurator):
         # Fallback: use aurora-mcp if no source found (installed package)
         if not pythonpath_parts:
             return {
-                "mcpServers": {
-                    "aurora": {
-                        "type": "stdio",
-                        "command": "aurora-mcp",
-                        "args": [],
-                        "env": {
-                            "AURORA_DB_PATH": str(db_path),
-                        },
-                    },
+                "command": "aurora-mcp",
+                "args": [],
+                "env": {
+                    "AURORA_DB_PATH": str(db_path),
                 },
             }
 
         # Use python with module path for development
         return {
-            "mcpServers": {
-                "aurora": {
-                    "type": "stdio",
-                    "command": "python3",
-                    "args": ["-m", "aurora_mcp.server"],
-                    "env": {
-                        "PYTHONPATH": ":".join(pythonpath_parts),
-                        "AURORA_DB_PATH": str(db_path),
-                    },
-                },
+            "command": "python3",
+            "args": ["-m", "aurora_mcp.server"],
+            "env": {
+                "PYTHONPATH": ":".join(pythonpath_parts),
+                "AURORA_DB_PATH": str(db_path),
             },
         }
 
+    def get_server_config(self, project_path: Path) -> dict[str, Any]:
+        """Get Aurora MCP server configuration (for base class compatibility)."""
+        return {"mcpServers": {"aurora": self._get_server_json(project_path)}}
+
     def configure_permissions(self, _project_path: Path) -> ConfigResult:
-        """Configure Claude permissions to allow Aurora MCP tools.
-
-        Updates ~/.claude/settings.local.json to add Aurora tool permissions.
-
-        Args:
-            project_path: Path to project root (not used for global config)
-
-        Returns:
-            ConfigResult with operation status
-
-        """
+        """Configure Claude permissions to allow Aurora MCP tools."""
         permissions_path = self.get_permissions_path()
         warnings: list[str] = []
         created = not permissions_path.exists()
 
         try:
-            # Load existing settings or start fresh
             existing_settings: dict[str, Any] = {}
             if permissions_path.exists():
                 try:
@@ -161,26 +130,19 @@ class ClaudeMCPConfigurator(MCPConfigurator):
                     permissions_path.rename(backup_path)
                     warnings.append(f"Created backup at {backup_path}")
 
-            # Ensure permissions structure exists
             if "permissions" not in existing_settings:
                 existing_settings["permissions"] = {}
             if "allow" not in existing_settings["permissions"]:
                 existing_settings["permissions"]["allow"] = []
 
-            # Get current allowed permissions
             current_allow = existing_settings["permissions"]["allow"]
-
-            # Add Aurora permissions if not already present
             added_count = 0
             for perm in AURORA_MCP_PERMISSIONS:
                 if perm not in current_allow:
                     current_allow.append(perm)
                     added_count += 1
 
-            # Ensure parent directory exists
             permissions_path.parent.mkdir(parents=True, exist_ok=True)
-
-            # Write updated settings
             permissions_path.write_text(
                 json.dumps(existing_settings, indent=2) + "\n",
                 encoding="utf-8",
@@ -190,7 +152,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
                 action = "Created" if created else "Updated"
                 message = f"{action} permissions ({added_count} Aurora tools added)"
             else:
-                message = "Permissions already configured (no changes needed)"
+                message = "Permissions already configured"
 
             return ConfigResult(
                 success=True,
@@ -210,72 +172,92 @@ class ClaudeMCPConfigurator(MCPConfigurator):
             )
 
     def configure(self, project_path: Path) -> ConfigResult:
-        """Configure Aurora MCP server and permissions for Claude.
-
-        Performs two operations:
-        1. Creates/updates ~/.claude/plugins/aurora/.mcp.json
-        2. Updates ~/.claude/settings.local.json with permissions
+        """Configure Aurora MCP server using `claude mcp add-json`.
 
         Args:
             project_path: Path to project root
 
         Returns:
-            ConfigResult with combined operation status
-
+            ConfigResult with operation status
         """
-        # First configure the MCP server
-        mcp_result = super().configure(project_path)
+        warnings: list[str] = []
+        config_path = self.get_config_path(project_path)
 
-        if not mcp_result.success:
-            return mcp_result
+        # Check if claude CLI is available
+        if not shutil.which("claude"):
+            return ConfigResult(
+                success=False,
+                created=False,
+                config_path=config_path,
+                message="Claude CLI not found in PATH",
+                warnings=["Install Claude Code CLI: https://claude.ai/download"],
+            )
 
-        # Then configure permissions
+        # Check if already configured
+        was_configured = self.is_configured(project_path)
+
+        # Remove existing aurora server if present (to update config)
+        if was_configured:
+            try:
+                subprocess.run(
+                    ["claude", "mcp", "remove", "aurora"],
+                    capture_output=True,
+                    text=True,
+                    check=False,  # Don't fail if not found
+                )
+            except Exception:
+                pass  # Ignore removal errors
+
+        # Get server config and add via claude mcp add-json
+        server_config = self._get_server_json(project_path)
+        server_json = json.dumps(server_config)
+
+        try:
+            result = subprocess.run(
+                ["claude", "mcp", "add-json", "aurora", server_json],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            if result.stderr and "error" in result.stderr.lower():
+                warnings.append(result.stderr.strip())
+        except subprocess.CalledProcessError as e:
+            return ConfigResult(
+                success=False,
+                created=False,
+                config_path=config_path,
+                message=f"Failed to add MCP server: {e.stderr or e.stdout}",
+                warnings=warnings,
+            )
+
+        # Configure permissions
         perm_result = self.configure_permissions(project_path)
 
-        # Combine results
-        if perm_result.success:
-            combined_message = f"{mcp_result.message}; {perm_result.message}"
-            combined_warnings = mcp_result.warnings + perm_result.warnings
-        else:
-            combined_message = f"{mcp_result.message}; WARNING: {perm_result.message}"
-            combined_warnings = mcp_result.warnings + perm_result.warnings
-            combined_warnings.append("Permissions may need manual configuration")
+        action = "Updated" if was_configured else "Added"
+        combined_message = f"{action} aurora MCP server; {perm_result.message}"
+        combined_warnings = warnings + perm_result.warnings
 
         return ConfigResult(
-            success=mcp_result.success,  # MCP config is required, permissions are nice-to-have
-            created=mcp_result.created,
-            config_path=mcp_result.config_path,
+            success=True,
+            created=not was_configured,
+            config_path=config_path,
             message=combined_message,
             warnings=combined_warnings,
         )
 
     def is_configured(self, project_path: Path) -> bool:
-        """Check if Aurora MCP is configured for Claude.
-
-        Checks both MCP config and permissions.
-
-        Args:
-            project_path: Path to project root
-
-        Returns:
-            True if both MCP config and basic permissions exist
-
-        """
-        # Check MCP config
-        if not super().is_configured(project_path):
-            return False
-
-        # Check permissions (at least one Aurora permission present)
-        permissions_path = self.get_permissions_path()
-        if not permissions_path.exists():
+        """Check if Aurora MCP is configured for Claude using `claude mcp get`."""
+        if not shutil.which("claude"):
             return False
 
         try:
-            content = permissions_path.read_text(encoding="utf-8")
-            settings = json.loads(content)
-            allowed = settings.get("permissions", {}).get("allow", [])
-
-            # Check if at least one Aurora permission is present
-            return any(perm in allowed for perm in AURORA_MCP_PERMISSIONS)
-        except (json.JSONDecodeError, OSError):
+            result = subprocess.run(
+                ["claude", "mcp", "get", "aurora"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            # If aurora server exists, the command succeeds
+            return result.returncode == 0 and "aurora" in result.stdout.lower()
+        except Exception:
             return False

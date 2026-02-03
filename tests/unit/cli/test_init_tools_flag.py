@@ -188,7 +188,7 @@ class TestToolsFlagIntegration:
                 ):
                     with patch(
                         "aurora_cli.commands.init.run_step_3_tool_configuration",
-                        return_value=([], []),
+                        return_value=([], [], 0, []),
                     ):
                         # Should accept --tools flag without error
                         result = runner.invoke(init_command, ["--tools=claude"])
@@ -218,7 +218,7 @@ class TestToolsFlagIntegration:
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
-                            return_value=(["all tools"], []),
+                            return_value=(["all tools"], [], 0, ["All Tools"]),
                         ) as mock_step3:
                             result = runner.invoke(init_command, ["--tools=all"])
 
@@ -244,7 +244,7 @@ class TestToolsFlagIntegration:
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
-                            return_value=([], []),
+                            return_value=([], [], 0, []),
                         ) as mock_step3:
                             result = runner.invoke(init_command, ["--tools=none"])
 
@@ -343,7 +343,7 @@ class TestToolsFlagIntegration:
                     ):
                         with patch(
                             "aurora_cli.commands.init.run_step_3_tool_configuration",
-                            return_value=(["Claude", "Cursor"], []),
+                            return_value=(["Claude", "Cursor"], [], 0, ["Claude", "Cursor"]),
                         ) as mock_step3:
                             result = runner.invoke(init_command, ["--tools=claude,cursor"])
 
@@ -365,7 +365,7 @@ class TestToolsFlagWithConfigOption:
 
             with patch(
                 "aurora_cli.commands.init.run_step_3_tool_configuration",
-                return_value=(["Claude"], []),
+                return_value=(["Claude"], [], 0, ["Claude"]),
             ) as mock_step3:
                 result = runner.invoke(init_command, ["--config", "--tools=claude"])
 
@@ -382,7 +382,7 @@ class TestToolsFlagWithConfigOption:
 
             with patch(
                 "aurora_cli.commands.init.run_step_3_tool_configuration",
-                return_value=([], []),
+                return_value=([], [], 0, []),
             ) as mock_step3:
                 result = runner.invoke(init_command, ["--config", "--tools=none"])
 

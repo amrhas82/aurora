@@ -88,10 +88,10 @@ def detect_configured_tools(project_path: Path) -> dict[str, bool]:
         tool_id = configurator.tool_id
 
         # Check if any slash command file exists for this tool
-        # We check the first command (search) as a representative
+        # We check the first command (plan) as a representative
         try:
-            search_path = configurator.get_relative_path("search")
-            slash_file = project_path / search_path
+            plan_path = configurator.get_relative_path("plan")
+            slash_file = project_path / plan_path
 
             is_configured = False
             if slash_file.exists():

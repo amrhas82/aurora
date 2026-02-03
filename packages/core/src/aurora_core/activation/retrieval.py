@@ -96,9 +96,6 @@ class RetrievalResult(BaseModel):
     )
     rank: int = Field(default=0, ge=0, description="Result rank (1-indexed)")
 
-    class Config:
-        frozen = False  # Allow rank updates
-
 
 class ActivationRetriever:
     """Retrieves chunks based on ACT-R activation scores.

@@ -33,7 +33,8 @@ class SlashCommandTarget:
 
 
 # All Aurora slash commands
-ALL_COMMANDS = ["search", "get", "plan", "tasks", "implement", "archive"]
+# NOTE: search and get removed - use MCP tools instead (mem_search, LSP tools)
+ALL_COMMANDS = ["plan", "tasks", "implement", "archive"]
 
 
 class SlashCommandConfigurator(ABC):

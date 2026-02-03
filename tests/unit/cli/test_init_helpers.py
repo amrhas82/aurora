@@ -87,16 +87,20 @@ class TestConfiguredToolsDetection:
 
         # Should return dict with all tools marked as not configured
         assert isinstance(result, dict)
-        # Should have entries for known tools
-        assert "claude-code" in result
-        assert result["claude-code"] is False
+        # Should have entries for known tools (uses SlashCommandRegistry IDs)
+        assert "claude" in result
+        assert result["claude"] is False
 
     def test_detect_configured_tools_detects_configured_tool(self, tmp_path):
         """detect_configured_tools() should detect tool with Aurora markers."""
-        # Create CLAUDE.md with Aurora markers
-        claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text(
-            """# Custom content
+        # Create Claude slash command file with Aurora markers
+        claude_dir = tmp_path / ".claude" / "commands" / "aur"
+        claude_dir.mkdir(parents=True)
+        plan_file = claude_dir / "plan.md"
+        plan_file.write_text(
+            """---
+name: Aurora Plan
+---
 
 <!-- AURORA:START -->
 # Aurora Configuration
@@ -109,19 +113,21 @@ More custom content
 
         result = detect_configured_tools(tmp_path)
 
-        # Should detect claude-code as configured
-        assert result.get("claude-code") is True
+        # Should detect claude as configured
+        assert result.get("claude") is True
 
     def test_detect_configured_tools_ignores_file_without_markers(self, tmp_path):
         """detect_configured_tools() should ignore files without Aurora markers."""
-        # Create CLAUDE.md without markers
-        claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text("# Just some content", encoding="utf-8")
+        # Create Claude slash command file without markers
+        claude_dir = tmp_path / ".claude" / "commands" / "aur"
+        claude_dir.mkdir(parents=True)
+        plan_file = claude_dir / "plan.md"
+        plan_file.write_text("# Just some content", encoding="utf-8")
 
         result = detect_configured_tools(tmp_path)
 
         # Should NOT detect as configured (no markers)
-        assert result.get("claude-code") is False
+        assert result.get("claude") is False
 
     def test_count_configured_tools_returns_zero_when_none_configured(self, tmp_path):
         """count_configured_tools() should return 0 when no tools configured."""
@@ -131,15 +137,17 @@ More custom content
 
     def test_count_configured_tools_counts_correctly(self, tmp_path):
         """count_configured_tools() should count tools with Aurora markers."""
-        # Create two configured tools
-        claude_md = tmp_path / "CLAUDE.md"
-        claude_md.write_text(
+        # Create two configured tools using slash command files
+        claude_dir = tmp_path / ".claude" / "commands" / "aur"
+        claude_dir.mkdir(parents=True)
+        (claude_dir / "plan.md").write_text(
             "<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->",
             encoding="utf-8",
         )
 
-        opencode_md = tmp_path / "OPENCODE.md"
-        opencode_md.write_text(
+        cursor_dir = tmp_path / ".cursor" / "commands"
+        cursor_dir.mkdir(parents=True)
+        (cursor_dir / "aurora-plan.md").write_text(
             "<!-- AURORA:START -->\nContent\n<!-- AURORA:END -->",
             encoding="utf-8",
         )

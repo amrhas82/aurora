@@ -96,9 +96,6 @@ class ActivationComponents(BaseModel):
     decay: float = Field(default=0.0, description="Decay penalty")
     total: float = Field(default=0.0, description="Total activation")
 
-    class Config:
-        frozen = False  # Allow updates
-
 
 class ActivationEngine:
     """Unified engine for calculating ACT-R activation.

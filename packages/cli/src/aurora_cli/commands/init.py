@@ -10,6 +10,7 @@ import click
 from rich.console import Console
 
 from aurora_cli.commands.init_helpers import (
+    configure_mcp_servers,
     configure_slash_commands,
     configure_tools,
     create_agents_md,
@@ -311,7 +312,7 @@ def run_step_3_tool_configuration(
             console.print(f"[dim]Using specified tools: {', '.join(tool_ids)}[/]")
         else:
             console.print("[yellow]⚠[/] No tools specified (--tools=none)")
-            return ([], [])
+            return ([], [], 0, [])
     else:
         # Interactive mode: prompt user for selection
         # Detect existing tool configurations
@@ -322,7 +323,7 @@ def run_step_3_tool_configuration(
 
     if not selected_tool_ids:
         console.print("[yellow]⚠[/] No tools selected")
-        return ([], [])
+        return ([], [], 0, [])
 
     # Configure root config files (e.g., CLAUDE.md, AGENTS.md stubs)
     console.print("\n[dim]Configuring tool instruction files...[/]")
@@ -336,7 +337,7 @@ def run_step_3_tool_configuration(
 
     # Configure MCP servers for tools that support MCP
     console.print("[dim]Configuring MCP servers...[/]")
-    mcp_created, mcp_updated, mcp_skipped = asyncio.run(
+    mcp_created, mcp_updated, mcp_skipped, mcp_warnings = asyncio.run(
         configure_mcp_servers(project_path, selected_tool_ids),
     )
 

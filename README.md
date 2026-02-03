@@ -66,18 +66,20 @@ cd aurora && ./install.sh
 # Terminal
 aur mem index .
 aur mem search "soar reasoning" --show-scores
+Searching memory from /project/.aurora/memory.db...
 Found 5 results for 'soar reasoning'
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━┓
-┃ File                       ┃ Type   ┃ Name             ┃ Lines   ┃ Comm… ┃ Modifi… ┃  Score ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━┩
-│ orchestrator.py            │ code   │ SOAROrchestrator │ 69-1884 │    30 │ recent  │  0.922 │
-│ TOKEN-PREDICTION-VS-AGENT… │ kb     │ Connection to    │ 1-40    │     2 │ recent  │  0.892 │
-│                            │        │ You...           │         │       │         │        │
-│ decompose.py               │ code   │ PlanDecomposer   │ 55-658  │    12 │ recent  │  0.755 │
-│ decompose.py               │ code   │ PlanDecomposer.… │ 460-566 │     5 │ recent  │  0.731 │
-│ test_agent_matching_quali… │ code   │ TestDecompositi… │ 663-707 │     2 │ recent  │  0.703 │
-└────────────────────────────┴────────┴──────────────────┴─────────┴───────┴─────────┴────────┘
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━┓
+┃ Type   ┃ File                   ┃ Name                 ┃ Lines      ┃ Used by        ┃   Score ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━┩
+│ code   │ test_orchestrator.py   │ TestOrchestratorSim… │ 192-614    │ 1 files(1)     │   0.701 │
+│ code   │ orchestrator.py        │ SOAROrchestrator     │ 68-2447    │ 19 files(43)   │   0.697 │
+│ code   │ soar.py                │ <chunk>              │ 477-717    │ 25 files(58)   │   0.538 │
+│ kb     │ friction-detection-an… │ Signal Weights       │ 1-8        │ -              │   0.464 │
+│        │                        │ (Final)              │            │                │         │
+│ kb     │ friction-analyzer-202… │ Next Steps (If       │ 1-51       │ -              │   0.464 │
+│        │                        │ Cont...              │            │                │         │
+└────────┴────────────────────────┴──────────────────────┴────────────┴────────────────┴─────────┘
 
 Average scores:
   Activation: 0.916
@@ -93,13 +95,14 @@ Refine your search:
 
 Detailed Score Breakdown:
 
-┌─ orchestrator.py | code | SOAROrchestrator (Lines 69-1884) ────────────────────────────────┐
-│ Final Score: 0.922                                                                         │
-│  ├─ BM25:       1.000 * (exact keyword match on 'reasoning', 'soar')                       │
-│  ├─ Semantic:   0.869 (high conceptual relevance)                                          │
-│  └─ Activation: 0.916 (accessed 31x, 30 commits, last used 19 minutes ago)                 │
-│ Git: 30 commits, last modified 1768838464                                                  │
-└────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ test_orchestrator.py | code | TestOrchestratorSimplified (Lines 192-614) ─────────────────────────┐
+│ Final Score: 0.701                                                                                 │
+│  ├─ BM25:       1.000 * (exact keyword match on 'orchestrator')                                    │
+│  ├─ Semantic:   1.000 (very high conceptual relevance)                                             │
+│  ├─ Activation: 0.003 (accessed 7x, 7 commits, last used 1 week ago)                               │
+│  ├─ Git:        7 commits, modified 10d ago, 1769186220                                            │
+│  └─ Used by:    1 files (test_orchestrator.py)                                                     │
+└────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 ```
 

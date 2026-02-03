@@ -1,13 +1,3 @@
 {
-  "mcpServers": {
-    "cclsp": {
-      "command": "npx",
-      "args": [
-        "cclsp"
-      ],
-      "env": {
-        "CCLSP_CONFIG_PATH": "/home/hamr/.claude/cclsp.json"
-      }
-    }
-  }
+  "mcpServers": {}
 }

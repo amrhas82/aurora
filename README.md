@@ -10,7 +10,8 @@
  ┳┳┓┏┓┳┳┓┏┓┳┓┓┏  ┏┓┓ ┏┏┓┳┓┏┓  ┏┓┳┓┏┓┳┳┓┏┓┓ ┏┏┓┳┓┓┏
  ┃┃┃┣ ┃┃┃┃┃┣┫┗┫━━┣┫┃┃┃┣┫┣┫┣ ━━┣ ┣┫┣┫┃┃┃┣ ┃┃┃┃┃┣┫┃┫
  ┛ ┗┗┛┛ ┗┗┛┛┗┗┛  ┛┗┗┻┛┛┗┛┗┗┛  ┻ ┛┗┛┗┛ ┗┗┛┗┻┛┗┛┛┗┛┗
-Planning & Multi-Agent Orchestration
+Aurora gives AI coding assistants persistent memory and code intelligence.
+Index once, search semantically, plan with context.
 </pre>
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -23,14 +24,14 @@ Planning & Multi-Agent Orchestration
 
 ## Summary
 
-### Aurora - Memory-aware Planning & Multi-Agent Orchestration Framework
+### Aurora - Memory & Code Intelligence for AI Assistants
 
-- **LLM-agnostic** - No API keys, works with 20+ CLI tools (Claude Code, Cursor, Aider, etc.)
-- **Smart Memory** - ACT-R activation decay, BM25, tree-sitter/cAST, git signals
-- **Memory-Aware Planning** - Decompose goals, assign agents, detect capability gaps
-- **Memory-Aware Research** - Multi-agent orchestration with recovery and state
-- **Task Execution** - Stop gates for feature creep and dangerous commands
-- **Friction Analysis** - Detect stuck patterns and extract learned rules from sessions
+- **Works everywhere** - No API keys needed. Works with Claude Code, Cursor, Aider, and 20+ tools
+- **Smart Memory** - Indexes your code and docs. Remembers what you accessed recently, ranks by relevance
+- **Code Intelligence** - Find unused code, check impact before refactoring, search with LSP context
+- **Planning** - Break goals into tasks, match to agents, detect capability gaps
+- **Execution** - Run task lists with guardrails against dangerous commands and scope creep
+- **Friction Analysis** - Extract learned rules from stuck patterns in past sessions
 
 ```bash
 # New installation
@@ -52,9 +53,9 @@ cd aurora && ./install.sh
 
 ## Core Features
 
-### Smart Memory (Slash Commands)
+### Smart Memory
 
-`aur:search` - Memory with activation decay from ACT-R. Indexes your code using:
+`aur mem search` - Memory with activation decay. Indexes your code using:
 
 - **BM25** - Keyword search
 - **Git signals** - Recent changes rank higher
@@ -100,34 +101,28 @@ Detailed Score Breakdown:
 │ Git: 30 commits, last modified 1768838464                                                  │
 └────────────────────────────────────────────────────────────────────────────────────────────┘
 
-# Slash command
-/aur:search "authentication"
-/aur:get 1  # Read chunk
 ```
 
 ---
 
-### MCP Tools (Code Intelligence)
+### MCP Tools
 
-Aurora provides Model Context Protocol (MCP) tools for AI coding assistants (Claude Desktop, Cursor, Cline, Continue):
+Aurora exposes these tools to AI assistants via Model Context Protocol:
 
-**lsp** - LSP-powered code intelligence:
-- `deadcode` - Find unused symbols, generate CODE_QUALITY_REPORT.md
-- `impact` - Analyze symbol usage, show callers and risk level (low/medium/high)
-- `check` - Quick usage check before editing
+| Tool | Purpose |
+|------|---------|
+| `lsp deadcode` | Find unused functions, classes, variables. Generates CODE_QUALITY_REPORT.md |
+| `lsp impact` | See all callers before changing a symbol. Shows risk level (low/medium/high) |
+| `lsp check` | Quick "is this used?" lookup before editing |
+| `mem_search` | Semantic search across indexed code. Returns snippets with LSP context (used_by, called_by) and git info |
 
-**mem_search** - Hybrid search with LSP enrichment:
-- BM25 (40%) + ACT-R activation (30%) + semantic embeddings (30%)
-- Returns code with metadata: used_by, called_by, calling, git info
-- Example: `mem_search("authentication")` finds login handlers with context
+**Supported:** Python, TypeScript, Java, Go, Rust, C/C++, and more (10+ languages via multilspy)
 
-**Supported Languages:** Python, JavaScript/TypeScript, Java, C/C++, C#, Go, Rust, Ruby, PHP, and more (10+ via multilspy).
-
-**Benefits:**
-- Dead code detection with automatic annotation
-- Impact analysis before refactoring
-- Context-aware code search (better than grep/rg)
-- Risk assessment (know what breaks if you change it)
+**When to use:**
+- Before editing: `lsp check` to see what depends on it
+- Before refactoring: `lsp impact` to assess risk
+- Finding code: `mem_search` instead of grep for semantic results
+- After changes: `lsp deadcode` to clean up orphaned code
 
 See [MCP Tools Documentation](docs/02-features/mcp/MCP.md) for details.
 
@@ -311,23 +306,36 @@ aur goals "Add user authentication"
 
 ## Commands Reference
 
-| Command | Type | Description |
-|---------|------|-------------|
-| `aur init` | Terminal | Initialize Aurora in project |
-| `aur doctor` | Terminal | Check installation and dependencies |
-| `aur mem index .` | Terminal | Index code/docs (supports PDF, DOCX, MD) |
-| `aur mem search "query"` | Terminal | Search memory |
-| `aur goals "goal"` | Terminal | Memory-aware planning |
-| `aur soar "question"` | Terminal | Memory-aware research |
-| `aur spawn tasks.md` | Terminal | Execute with safeguards |
-| `aur friction <sessions-dir>` | Terminal | Analyze session friction, extract failure patterns |
-| `aur friction config` | Terminal | Show friction signal weights |
-| `/aur:search "query"` | Slash | Search indexed memory |
-| `/aur:get N` | Slash | Read chunk from search |
-| `/aur:plan [plan-id]` | Slash | Generate plan artifacts |
-| `/aur:tasks [plan-id]` | Slash | Regenerate tasks from PRD |
-| `/aur:implement [plan-id]` | Slash | Execute plan |
-| `/aur:archive [plan-id]` | Slash | Archive completed plan |
+### Terminal
+
+| Command | Description |
+|---------|-------------|
+| `aur init` | Initialize Aurora in project |
+| `aur doctor` | Check installation and dependencies |
+| `aur mem index .` | Index code and docs |
+| `aur mem search "query"` | Search memory from terminal |
+| `aur goals "goal"` | Decompose goal, match agents, find gaps |
+| `aur soar "question"` | Multi-agent research with memory |
+| `aur spawn tasks.md` | Execute task list with guardrails |
+| `aur friction <dir>` | Analyze session friction patterns |
+
+### Slash Commands (in AI tools)
+
+| Command | Description |
+|---------|-------------|
+| `/aur:plan [id]` | Generate PRD, design, tasks from goal |
+| `/aur:tasks [id]` | Regenerate tasks after PRD edits |
+| `/aur:implement [id]` | Execute plan tasks sequentially |
+| `/aur:archive [id]` | Archive completed plan |
+
+### MCP Tools (for AI assistants)
+
+| Tool | Description |
+|------|-------------|
+| `lsp deadcode` | Find unused symbols, generate report |
+| `lsp impact` | Analyze callers and refactoring risk |
+| `lsp check` | Quick usage check before editing |
+| `mem_search` | Semantic search with LSP enrichment |
 
 ---
 

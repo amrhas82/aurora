@@ -1,342 +1,249 @@
 # Code Intelligence Status Report
 
-> Generated: 2024-02-03
-> Purpose: Track all code intelligence features, their implementation status, performance, and priority.
+> Last Updated: 2026-02-03
+> Purpose: Track all code intelligence features, implementation details, and language support.
 
 ## Executive Summary
 
-| Category | Live | POC | Missing | Total |
-|----------|------|-----|---------|-------|
-| Reference Analysis | 3 | 1 | 2 | 6 |
-| Code Quality Markers | 2 | 2 | 2 | 6 |
-| File Relationships | 0 | 0 | 3 | 3 |
+| Category | Live | Partial | Missing | Total |
+|----------|------|---------|---------|-------|
+| Reference Analysis | 4 | 1 | 1 | 6 |
+| Code Quality Markers | 3 | 0 | 3 | 6 |
+| File Relationships | 0 | 1 | 2 | 3 |
 | Auto-Triggers | 0 | 0 | 1 | 1 |
-| **Total** | **5** | **3** | **8** | **16** |
-
-> Last updated: 2026-02-03 - Added complexity (`c:95`) and risk (HIGH/MED/LOW) to mem_search
+| **Total** | **7** | **2** | **7** | **16** |
 
 ---
 
-## Feature Status Matrix
+## Language Support Matrix
 
-### Reference Analysis (Who uses what)
+| Feature | Python | JS/TS | Go | Rust | Java | Ruby |
+|---------|--------|-------|-----|------|------|------|
+| **LSP references** | ✅ Full | ⚠️ Via multilspy | ⚠️ Via multilspy | ⚠️ Via multilspy | ⚠️ Via multilspy | ⚠️ Via multilspy |
+| **Deadcode (fast)** | ✅ Full | ✅ ripgrep | ✅ ripgrep | ✅ ripgrep | ✅ ripgrep | ✅ ripgrep |
+| **Deadcode (accurate)** | ✅ Full | ⚠️ Untested | ⚠️ Untested | ⚠️ Untested | ⚠️ Untested | ⚠️ Untested |
+| **Complexity** | ✅ tree-sitter | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl |
+| **Import filtering** | ✅ Custom | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl |
+| **Risk calculation** | ✅ Full | ⚠️ No complexity | ⚠️ No complexity | ⚠️ No complexity | ⚠️ No complexity | ⚠️ No complexity |
 
-| Feature | Status | Tool | Speed | Accuracy | Priority | Notes |
-|---------|--------|------|-------|----------|----------|-------|
-| **used_by** (usage count) | ✅ LIVE | `mem_search` + LSP | ~1000ms/symbol | 90%+ | **HIGH** - Users check before refactoring | Returns "N files(M)" format |
-| **called_by** (incoming calls) | ✅ LIVE | `mem_search --enrich` + LSP | ~1500ms/symbol | 90%+ | **HIGH** - Critical for impact analysis | Functions that call this symbol |
-| **calling** (outgoing calls) | ❌ STUB | LSP `get_callees()` | - | 0% | **MEDIUM** - Useful for understanding flow | Returns `[]` - not implemented |
-| **references** (all usages) | ✅ LIVE | LSP `request_references` | ~800ms/symbol | 95%+ | **HIGH** - Core LSP feature | Raw list of all references |
-| **definition** (go to def) | ⚠️ LIVE (unused) | LSP `request_definition` | ~200ms | 95%+ | **LOW** - IDE feature, not MCP | Implemented but not exposed |
-| **hover** (type info) | ⚠️ LIVE (unused) | LSP `request_hover` | ~200ms | 90%+ | **LOW** - IDE feature, not MCP | Implemented but not exposed |
+**Legend:** ✅ Full support | ⚠️ Partial/Untested | ❌ Not implemented
+
+---
+
+## Feature Implementation Details
+
+### Reference Analysis
+
+| Feature | Status | Implementation | Languages | Speed | Notes |
+|---------|--------|----------------|-----------|-------|-------|
+| **used_by** (usage count) | ✅ LIVE | LSP `get_usage_summary()` via multilspy | Python (tested), others via multilspy | ~1000ms/symbol | Returns files + refs count |
+| **called_by** (incoming) | ✅ LIVE | LSP `get_callers()` + import filtering | Python only (filter) | ~1500ms/symbol | Filters import statements |
+| **calling** (outgoing) | ❌ STUB | Returns `[]` - needs tree-sitter AST | - | - | Would need per-language parsers |
+| **references** (raw) | ✅ LIVE | LSP `request_references()` | All via multilspy | ~800ms/symbol | Raw LSP, no filtering |
+| **definition** | ✅ LIVE (unused) | LSP `request_definition()` | All via multilspy | ~200ms | Not exposed via MCP |
+| **hover** | ✅ LIVE (unused) | LSP `request_hover()` | All via multilspy | ~200ms | Not exposed via MCP |
 
 ### Code Quality Markers
 
-| Feature | Status | Tool | Speed | Accuracy | Priority | Notes |
-|---------|--------|------|-------|----------|----------|-------|
-| **#DEADCODE** (fast) | ✅ LIVE | `lsp deadcode` + batched ripgrep | ~2s/dir | 85% | **HIGH** - Quick cleanup scan | Checks within-file usages |
-| **#DEADCODE** (accurate) | ✅ LIVE | `lsp deadcode --accurate` + LSP refs | ~20s/dir | 95%+ | **HIGH** - Before deletions | Slower but more reliable |
-| **#REFAC** (high usage) | ✅ LIVE | `lsp check/impact` | ~1000ms/symbol | 90%+ | **HIGH** - Shows refactoring risk | Returns risk: low/medium/high |
-| **#REFAC** | ✅ POC | `analysis_poc.py` + batched ripgrep | ~100ms/50 symbols | 90% | **HIGH** | Batch version, not merged |
-| **#UNUSED** (imports/vars) | ❌ MISSING | - | - | - | **MEDIUM** - Code hygiene | Tree-sitter can detect imports |
-| **#COMPLEX** | ✅ LIVE | Tree-sitter `_get_complexity` | <10ms/file | 95% | **MEDIUM** - Identifies risky code | Shown in mem_search as `c:95` |
-| **#TYPE** | ❌ MISSING | - | - | - | **LOW** - Needs per-language type checker | jedi-language-server doesn't provide diagnostics |
+| Feature | Status | Implementation | Languages | Speed | Notes |
+|---------|--------|----------------|-----------|-------|-------|
+| **#DEADCODE (fast)** | ✅ LIVE | Batched ripgrep + within-file check | All (text search) | ~2s/dir | 85% accuracy |
+| **#DEADCODE (accurate)** | ✅ LIVE | LSP references per symbol | Python (tested) | ~20s/dir | 95%+ accuracy |
+| **#REFAC** (high usage) | ✅ LIVE | Usage count > 10 = "high" risk | Python (tested) | ~1s/symbol | Part of `lsp impact` |
+| **#COMPLEX** | ✅ LIVE | Tree-sitter branch counting | **Python only** | <10ms/file | Shown as `c:95` |
+| **#UNUSED** (low usage) | ❌ MISSING | Would use usage count <= 2 | - | - | Easy to add |
+| **#TYPE** | ❌ MISSING | Would need type checker | - | - | Language-specific |
 
 ### File Relationships
 
-| Feature | Status | Tool | Speed | Accuracy | Priority | Notes |
-|---------|--------|------|-------|----------|----------|-------|
-| **imports** (what this file imports) | ✅ INDEXED | Tree-sitter `_extract_imports` | <10ms/file | 95% | **MEDIUM** | Extracted during indexing, not queryable via MCP |
-| **imported_by** (who imports this file) | ❌ MISSING | - | - | - | **HIGH** - Critical for understanding dependencies | Need reverse lookup of imports |
-| **calls_files** (files this calls into) | ❌ MISSING | - | - | - | **MEDIUM** | Derive from outgoing calls |
-| **called_by_files** (files that call this) | ⚠️ PARTIAL | LSP `get_callers` | ~1500ms | 85% | **HIGH** | Have callers, need to group by file |
-
-### Auto-Triggers (Proactive Intelligence)
-
-| Feature | Status | Tool | Speed | Accuracy | Priority | Notes |
-|---------|--------|------|-------|----------|----------|-------|
-| **pre-edit check** | ❌ MISSING | - | - | - | **HIGH** - Prevent breaking changes | Show related files before Claude edits |
+| Feature | Status | Implementation | Languages | Speed | Notes |
+|---------|--------|----------------|-----------|-------|-------|
+| **imports** (outgoing) | ⚠️ INDEXED | Tree-sitter `_extract_imports()` | Python only | <10ms/file | Not queryable via MCP |
+| **imported_by** (incoming) | ❌ MISSING | Would need reverse lookup | - | - | High value for refactoring |
+| **calls_files** | ❌ MISSING | Would derive from `calling` | - | - | Needs `calling` first |
 
 ---
 
-## Implementation Details
+## Implementation Stack
 
-### What's Actually Used by MCP Tools
+### Current Architecture
 
-#### `lsp` MCP Tool (src/aurora_mcp/lsp_tool.py)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         MCP Tools Layer                              │
+│  lsp_tool.py              mem_search_tool.py                        │
+│  - lsp(action, path)      - mem_search(query, limit)                │
+└─────────────────────────────┬───────────────────────────────────────┘
+                              │
+┌─────────────────────────────▼───────────────────────────────────────┐
+│                         Analysis Layer                               │
+│  aurora_lsp/analysis.py                                              │
+│  - CodeAnalyzer.find_dead_code(accurate=False)                       │
+│  - CodeAnalyzer.find_usages()                                        │
+│  - CodeAnalyzer.get_callers()                                        │
+│  - _batched_ripgrep_search()          ← Language-agnostic            │
+│  - _get_complexity()                  ← Python only (tree-sitter)    │
+└─────────────────────────────┬───────────────────────────────────────┘
+                              │
+┌─────────────────────────────▼───────────────────────────────────────┐
+│                         LSP Client Layer                             │
+│  aurora_lsp/client.py (multilspy wrapper)                            │
+│  - request_references()                                              │
+│  - request_document_symbols()                                        │
+│  - request_definition()                                              │
+│  Supported: Python, JS/TS, Go, Rust, Java, Ruby, C#, Dart, Kotlin   │
+└─────────────────────────────┬───────────────────────────────────────┘
+                              │
+┌─────────────────────────────▼───────────────────────────────────────┐
+│                      Language Servers (via multilspy)                │
+│  Python: jedi-language-server                                        │
+│  JS/TS: typescript-language-server                                   │
+│  Go: gopls                                                           │
+│  Rust: rust-analyzer                                                 │
+│  Java: jdtls                                                         │
+│  Ruby: solargraph                                                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-| Action | What It Does | LSP Methods Used | Performance |
-|--------|--------------|------------------|-------------|
-| `check` | Quick usage count before editing | `get_usage_summary()` | ~1000ms |
-| `impact` | Full analysis with callers | `get_usage_summary()` + `get_callers()` | ~2000ms |
-| `deadcode` | Find all unused symbols | `request_document_symbols()` + grep per symbol | ~3000ms/file (SLOW) |
+### Component Breakdown
 
-#### `mem_search` MCP Tool (src/aurora_mcp/mem_search_tool.py)
+| Component | Technology | Custom Code | Language Support |
+|-----------|------------|-------------|------------------|
+| **LSP client** | multilspy library | Thin wrapper | 10+ languages |
+| **Reference search** | LSP protocol | None | All via LSP |
+| **Import filtering** | Custom regex | `aurora_lsp/filters.py` | **Python only** |
+| **Deadcode (fast)** | ripgrep subprocess | `_batched_ripgrep_search()` | All languages |
+| **Deadcode (accurate)** | LSP references | `find_usages()` loop | Python (tested) |
+| **Complexity** | tree-sitter-python | `_get_complexity()` | **Python only** |
+| **Risk calculation** | Custom formula | `_calculate_risk()` | All (uses counts) |
+| **Entry point filter** | Custom patterns | `_is_entry_point_or_nested()` | **Python patterns** |
 
-| Field | What It Returns | Source | Performance |
-|-------|-----------------|--------|-------------|
-| `used_by` | "19f 43r c:95" (files, refs, complexity%) | LSP + Tree-sitter | ~1000ms/result |
-| `risk` | "HIGH" / "MED" / "LOW" / "-" | Calculated from files/refs/complexity | <1ms |
-| `called_by` | List of caller function names | LSP `get_callers()` | ~500ms/result (with enrich) |
-| `calling` | List of callee function names | LSP `get_callees()` | 0ms (returns `[]`) |
-| `git` | Relative time ("2d ago") | `last_modified` from index | <1ms |
+---
 
-**CLI Output Modes:**
-- Quick mode: `Type | File | Name | Lines | Risk | Git | Score`
-- Detailed mode (`--show-scores`): Box format with BM25/Semantic/Activation breakdown, Files list, full Used by
+## Scaling to Other Languages
 
-### What's Built But Not Exposed
+### What Would Be Needed
 
-#### Tree-sitter Parsers (packages/context-code)
+| Feature | Current (Python) | To Add Language X |
+|---------|------------------|-------------------|
+| **LSP references** | ✅ Works | ✅ Already works (multilspy) |
+| **Deadcode (fast)** | ✅ Works | ✅ Already works (ripgrep) |
+| **Deadcode (accurate)** | ✅ Works | ⚠️ Needs testing with language X server |
+| **Complexity** | tree-sitter-python | Need `tree-sitter-X` + parser code |
+| **Import filtering** | Python regex | Need language-specific patterns |
+| **Entry point filter** | Python patterns | Need language-specific patterns |
 
-| Parser | Languages | Features Extracted |
-|--------|-----------|-------------------|
-| `PythonParser` | .py, .pyi | functions, classes, methods, imports, complexity |
-| `TypeScriptParser` | .ts, .tsx | functions, classes, methods |
-| `JavaScriptParser` | .js, .jsx | functions, classes, methods |
-| `MarkdownParser` | .md | sections |
+### Effort Estimate Per Language
 
-#### PythonParser Capabilities (packages/context-code/src/aurora_context_code/languages/python.py)
+| Language | LSP | Deadcode | Complexity | Import Filter | Total |
+|----------|-----|----------|------------|---------------|-------|
+| JavaScript/TS | ✅ Ready | ✅ Ready | 2 days | 1 day | **3 days** |
+| Go | ✅ Ready | ✅ Ready | 2 days | 1 day | **3 days** |
+| Rust | ✅ Ready | ✅ Ready | 2 days | 1 day | **3 days** |
+| Java | ✅ Ready | ✅ Ready | 2 days | 2 days | **4 days** |
 
-| Method | Line | Status | Output |
-|--------|------|--------|--------|
-| `_extract_functions()` | 152 | ✅ Working | List of function chunks |
-| `_extract_classes_and_methods()` | 229 | ✅ Working | List of class/method chunks |
-| `_extract_imports()` | 554 | ✅ Working | Set of imported names |
-| `_calculate_complexity()` | 502 | ✅ Working | Normalized score 0.0-1.0 |
-| `_identify_dependencies()` | 592 | ❌ STUB | Returns `[]` |
+---
 
-### What's in POC (Not Merged)
+## MCP Tool Parameters
 
-#### analysis_poc.py (packages/lsp/src/aurora_lsp/analysis_poc.py)
+### `lsp` Tool
 
-| Feature | Function | Performance | Status |
-|---------|----------|-------------|--------|
-| Batched symbol search | `batched_ripgrep_search()` | 100ms/50 symbols | ✅ Working |
-| Fast dead code detection | `FastCodeAnalyzer.find_dead_code_fast()` | 2.3s total (vs 5s+ old) | ✅ Working |
-| Marker generation | `generate_inline_markers()` | <10ms | ✅ Working |
-| #DEADCODE marker | - | - | ✅ Working |
-| #REFAC marker | - | - | ✅ Working |
-| #UNUSED marker | - | - | ❌ Not implemented |
+```python
+lsp(
+    action: "check" | "impact" | "deadcode",
+    path: str,           # File or directory
+    line: int | None,    # Required for check/impact (1-indexed)
+    accurate: bool,      # For deadcode: True=LSP refs (slow), False=ripgrep (fast)
+)
+```
+
+| Action | What It Does | Languages | Speed |
+|--------|--------------|-----------|-------|
+| `check` | Quick usage count before editing | Python (tested) | ~1s |
+| `impact` | Full analysis with top callers | Python (tested) | ~2s |
+| `deadcode` | Find all unused symbols | All (fast), Python (accurate) | 2-20s |
+
+### `mem_search` Tool
+
+```python
+mem_search(
+    query: str,          # Search query
+    limit: int = 5,      # Max results
+    enrich: bool = False # Add callers/callees/git
+)
+```
+
+| Output Field | Source | Languages |
+|--------------|--------|-----------|
+| `type` | Indexed metadata | All |
+| `file` | Indexed metadata | All |
+| `name` | Indexed metadata | All |
+| `lines` | Indexed metadata | All |
+| `used_by` | LSP + tree-sitter | Python (full), others (no complexity) |
+| `risk` | Calculated | Python (full), others (partial) |
+| `score` | Hybrid retrieval | All |
 
 ---
 
 ## Performance Benchmarks
 
+### Deadcode Detection
+
+| Mode | Symbols | Time | Accuracy | Method |
+|------|---------|------|----------|--------|
+| Fast (default) | 50 | 2s | 85% | Batched ripgrep + within-file check |
+| Accurate | 50 | 20s | 95%+ | LSP references per symbol |
+
 ### Reference Counting
 
-| Approach | Symbols | Time | Per Symbol | Notes |
-|----------|---------|------|------------|-------|
-| LSP references (old) | 1 | ~1000ms | 1000ms | Accurate but slow |
-| Grep per symbol (old) | 50 | 2800ms | 56ms | O(n) subprocess calls |
-| Batched ripgrep (POC) | 50 | 113ms | 2.3ms | **24x faster** |
+| Approach | Symbols | Time | Per Symbol |
+|----------|---------|------|------------|
+| Ripgrep (batched) | 50 | 0.1s | 2ms |
+| LSP references | 50 | 15s | 300ms |
 
-### Document Symbols (LSP)
+### Complexity Calculation
 
-| Files | Time | Per File | Notes |
-|-------|------|----------|-------|
-| 7 | 2230ms | 318ms | Main bottleneck for deadcode |
-
-### Diagnostics (LSP)
-
-| Tool | Files | Time | Issues Found | Notes |
-|------|-------|------|--------------|-------|
-| jedi-language-server | 7 | 0ms | 0 | **Does not support diagnostics** |
-| ruff (external) | 7 | 22ms | 2 | Fast but single-language |
-| mypy (external) | 7 | ~5000ms | varies | Slow, full type checking |
+| Method | Files | Time | Per File |
+|--------|-------|------|----------|
+| Tree-sitter (Python) | 10 | 0.1s | 10ms |
 
 ---
 
-## Priority Ranking
+## Known Limitations
 
-### P0 - Critical (Users depend on these daily)
+### Python-Only Features
+1. **Complexity calculation** - Uses `tree-sitter-python`
+2. **Import filtering** - Python regex patterns (`from X import`, `import X`)
+3. **Entry point detection** - Python patterns (`main`, `pytest_*`, decorators)
 
-1. **used_by** - ✅ LIVE - Check before refactoring
-2. **called_by** - ✅ LIVE - Impact analysis
-3. **#DEADCODE** - ⚠️ LIVE but SLOW - Code cleanup
-4. **#REFAC** - ✅ LIVE - Refactoring risk
+### External Callers Not Detected
+Both fast and accurate modes miss:
+- MCP tool calls (`lsp_client.find_dead_code()`)
+- CLI entry points called via `python -m`
+- Framework callbacks (Flask routes, pytest fixtures)
 
-### P1 - High Value (Would significantly improve UX)
-
-5. **imported_by** - ❌ MISSING - Understanding dependencies
-6. **pre-edit check** - ❌ MISSING - Proactive safety
-7. **#DEADCODE (fast)** - ✅ POC - Merge batched ripgrep
-
-### P2 - Medium Value (Nice to have)
-
-8. **calling** (outgoing) - ❌ STUB - Code flow understanding
-9. **#UNUSED** - ❌ MISSING - Code hygiene
-10. **#COMPLEX** - ✅ LIVE - Risk identification (shown as `c:95` in mem_search)
-
-### P3 - Low Priority
-
-11. **#TYPE** - ❌ MISSING - Requires language-specific tools
-12. **definition** - ⚠️ LIVE (unused) - IDE feature
-13. **hover** - ⚠️ LIVE (unused) - IDE feature
+### LSP Limitations
+- `jedi-language-server` doesn't provide diagnostics (no linting)
+- Outgoing calls (`calling`) not supported without AST parsing
+- Some language servers (Ruby/solargraph) less reliable
 
 ---
 
-## Recommended Actions
+## Recommended Next Steps
 
-### Quick Wins (< 1 day each)
+### Quick Wins (1 day each)
+1. ✅ ~~Add `--accurate` flag to deadcode~~ DONE
+2. ✅ ~~Add complexity to mem_search output~~ DONE
+3. ✅ ~~Add risk calculation~~ DONE
+4. Add `#UNUSED` marker (usage <= 2)
 
-| Action | Effort | Impact | Status |
-|--------|--------|--------|--------|
-| Merge batched ripgrep POC into `lsp deadcode` | Low | High - 24x faster | ❌ TODO |
-| Expose `complexity_score` from indexed chunks | Low | Medium - #COMPLEX marker | ✅ DONE - shown as `c:95` |
-| Add `risk` calculation (files/refs/complexity) | Low | High - quick safety check | ✅ DONE - HIGH/MED/LOW |
-| Implement `_identify_dependencies()` in tree-sitter | Medium | Medium - enables `calling` | ❌ TODO |
+### Medium Term (3-5 days each)
+1. Add JavaScript/TypeScript complexity (tree-sitter-typescript)
+2. Add JS/TS import filtering patterns
+3. Build `imported_by` reverse lookup
+4. Add pre-edit hook for related files
 
-### Medium Term (1-3 days each)
-
-| Action | Effort | Impact | Ticket |
-|--------|--------|--------|--------|
-| Build `imported_by` reverse lookup | Medium | High - dependency analysis | - |
-| Add pre-edit hook for related files | Medium | High - proactive safety | - |
-| Implement #UNUSED via tree-sitter import/usage comparison | Medium | Medium - code hygiene | - |
-
-### Long Term (Research needed)
-
-| Action | Effort | Impact | Ticket |
-|--------|--------|--------|--------|
-| Multi-language type checking (#TYPE) | High | Low - complex problem | - |
-| LSP warm-up / persistent daemon | High | Medium - faster cold start | - |
-
----
-
-## Architecture Notes
-
-### Current Data Flow
-
-```
-User Query
-    │
-    ▼
-┌─────────────────┐
-│  MCP Tool       │  (lsp / mem_search)
-│  - lsp_tool.py  │
-│  - mem_search_  │
-│    tool.py      │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  LSP Facade     │  (packages/lsp/src/aurora_lsp/facade.py)
-│  - Sync wrapper │
-│  - get_usage_   │
-│    summary()    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  LSP Client     │  (packages/lsp/src/aurora_lsp/client.py)
-│  - Async        │
-│  - jedi-lang-   │
-│    server       │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Language       │  (jedi-language-server subprocess)
-│  Server         │
-│  - references   │
-│  - symbols      │
-│  - NO diagnostics│
-└─────────────────┘
-```
-
-### Tree-sitter Data Flow (Separate, during indexing)
-
-```
-aur index
-    │
-    ▼
-┌─────────────────┐
-│  ParserRegistry │  (packages/context-code)
-│  - PythonParser │
-│  - TSParser     │
-│  - JSParser     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  CodeChunk      │  Contains:
-│                 │  - name, signature
-│                 │  - complexity_score ← NOT USED
-│                 │  - dependencies ← EMPTY
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  SQLite DB      │  (.aurora/memory.db)
-│  - chunks table │
-└─────────────────┘
-```
-
-### Gap: Tree-sitter data partially used by MCP tools
-
-~~The `complexity_score` is calculated during indexing but not exposed.~~
-
-**FIXED (2026-02-03):** Complexity is now calculated on-the-fly via tree-sitter in `mem_search` and `_get_lsp_usage()`:
-- Shown as `c:95` in compact format
-- Shown as `complexity 95%` in detailed format
-- Used to calculate `risk` level (HIGH if complexity >= 60%)
-
-**Still missing:**
-1. `dependencies` from `_identify_dependencies()` - returns `[]`
-2. `imports` reverse lookup (`imported_by`)
-
----
-
-## Appendix: Test Commands
-
-```bash
-# Test mem_search MCP tool
-echo '{"query": "SOAROrchestrator", "limit": 3}' | python -c "
-import sys, json
-sys.path.insert(0, 'src')
-from aurora_mcp.mem_search_tool import mem_search
-result = mem_search(**json.load(sys.stdin))
-print(json.dumps(result, indent=2))
-"
-
-# Test lsp MCP tool
-python -c "
-import sys
-sys.path.insert(0, 'src')
-from aurora_mcp.lsp_tool import lsp
-result = lsp(action='check', path='packages/lsp/src/aurora_lsp/analysis.py', line=54)
-print(result)
-"
-
-# Test batched ripgrep POC
-python -m aurora_lsp.analysis_poc packages/lsp/src
-
-# Benchmark old vs new deadcode
-python -c "
-import asyncio, time, sys
-sys.path.insert(0, 'packages/lsp/src')
-from pathlib import Path
-from aurora_lsp.client import AuroraLSPClient
-from aurora_lsp.analysis import CodeAnalyzer
-from aurora_lsp.analysis_poc import FastCodeAnalyzer
-
-async def bench():
-    workspace = Path.cwd()
-    async with AuroraLSPClient(workspace) as client:
-        old = CodeAnalyzer(client, workspace)
-        new = FastCodeAnalyzer(client, workspace)
-
-        t1 = time.perf_counter()
-        await old.find_dead_code(workspace / 'packages/lsp/src')
-        old_time = time.perf_counter() - t1
-
-        t2 = time.perf_counter()
-        await new.find_dead_code_fast(workspace / 'packages/lsp/src')
-        new_time = time.perf_counter() - t2
-
-        print(f'Old: {old_time:.2f}s, New: {new_time:.2f}s, Speedup: {old_time/new_time:.1f}x')
-
-asyncio.run(bench())
-"
-```
+### Long Term
+1. Multi-language complexity support
+2. Type checking integration per language
+3. LSP warm-up / persistent daemon for faster cold start

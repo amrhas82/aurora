@@ -352,14 +352,41 @@ class CodeAnalyzer:
     ) -> list[dict]:
         """Find functions/classes with 0 usages (excluding imports).
 
+        TWO MODES:
+        - Fast (default): Batched ripgrep + within-file check
+          - Speed: ~2s for 50 symbols
+          - Accuracy: 85%
+          - Languages: ALL (text search)
+          - Use for: Daily dev, CI/CD, large codebases
+
+        - Accurate (accurate=True): LSP references per symbol
+          - Speed: ~20s for 50 symbols
+          - Accuracy: 95%+
+          - Languages: Python (tested), others via multilspy (untested)
+          - Use for: Before deleting code, before major refactor
+
+        LANGUAGE SUPPORT:
+        - Python: Full (LSP + import filtering + entry point detection)
+        - JS/TS/Go/Rust/Java: Partial (ripgrep works, LSP untested)
+
+        To scale to other languages (3-4 days each):
+        1. Already works: LSP refs (multilspy), ripgrep deadcode
+        2. Need to add: tree-sitter-{lang} complexity, import filter patterns
+
+        IMPLEMENTATION FILES:
+        - This file: packages/lsp/src/aurora_lsp/analysis.py
+        - Ripgrep search: _batched_ripgrep_search() in this file
+        - Import filters: packages/lsp/src/aurora_lsp/filters.py (Python only)
+        - LSP client: packages/lsp/src/aurora_lsp/client.py
+
         Args:
             path: Directory or file to analyze. Defaults to workspace.
             include_private: Whether to include private symbols (_name).
-            accurate: If True, use LSP references (95%+ accuracy, ~14x slower).
-                     If False, use batched ripgrep (80-85% accuracy, fast).
+            accurate: If True, use LSP references (95%+ accuracy, ~20s).
+                     If False (default), use batched ripgrep (85% accuracy, ~2s).
 
         Returns:
-            List of dead code items with file, line, name, kind.
+            List of dead code items with file, line, name, kind, imports.
         """
         # Phase 1: Collect ALL symbols from ALL files
         all_symbols: list[dict] = []  # {name, kind, line, file}

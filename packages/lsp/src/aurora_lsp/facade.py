@@ -163,11 +163,23 @@ class AuroraLSP:
     ) -> list[dict]:
         """Find functions/classes with 0 usages.
 
+        TWO MODES:
+        - Fast (default): ~2s, 85% accuracy, ALL languages (ripgrep)
+        - Accurate: ~20s, 95%+ accuracy, Python tested (LSP refs)
+
+        Use fast for daily dev/CI, accurate before deleting code.
+
+        LANGUAGE SUPPORT:
+        - Python: Full (LSP + filters)
+        - Others: Partial (ripgrep works, LSP untested)
+
+        Implementation: packages/lsp/src/aurora_lsp/analysis.py
+
         Args:
             path: Directory or file to analyze. Defaults to workspace.
             include_private: Whether to include private symbols (_name).
-            accurate: If True, use LSP references (95%+ accuracy, ~14x slower).
-                     If False, use batched ripgrep (80-85% accuracy, fast).
+            accurate: If True, use LSP references (95%+ accuracy, ~20s).
+                     If False (default), use batched ripgrep (85% accuracy, ~2s).
 
         Returns:
             List of dead code items, each with:

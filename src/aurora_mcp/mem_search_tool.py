@@ -383,6 +383,22 @@ def mem_search(query: str, limit: int = 5, enrich: bool = False) -> list[dict]:
 
     USE THIS FIRST before lsp tool - mem_search finds the file:line, then use lsp for deeper analysis.
 
+    LANGUAGE SUPPORT:
+    - Python: Full (LSP refs + tree-sitter complexity + risk calculation)
+    - JS/TS/Go/Rust/Java: Partial (LSP refs via multilspy, no complexity)
+
+    To scale to other languages (3-4 days each):
+    1. Already works: LSP references (multilspy), search/retrieval
+    2. Need to add: tree-sitter-{lang} complexity parser
+
+    IMPLEMENTATION FILES:
+    - MCP tool: src/aurora_mcp/mem_search_tool.py (this file)
+    - Complexity: _get_complexity() in this file (Python only, tree-sitter)
+    - Risk calc: _calculate_risk() in this file
+    - LSP usage: _get_usage_only() in this file → LSP facade
+    - Retrieval: packages/cli/src/aurora_cli/memory/retrieval.py
+    - LSP facade: packages/lsp/src/aurora_lsp/facade.py
+
     Args:
         query: Symbol name, function name, or description (e.g., "SOAROrchestrator", "handle errors")
         limit: Max results (default 5, increase for broader search)

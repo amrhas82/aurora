@@ -207,7 +207,7 @@ def lsp(
 
     WHEN TO USE EACH ACTION:
     - "refactor", "change", "modify" a symbol → action="impact" (FAST - analyzes one symbol)
-    - "dead code", "unused", "cleanup" → action="deadcode" (SLOW - scans entire file)
+    - "dead code", "unused", "cleanup" → action="deadcode" (scans entire directory)
     - Before editing any function/class → action="check" (FAST - quick usage count)
 
     IMPORTANT: Do NOT use deadcode for refactoring. Use impact instead.
@@ -215,23 +215,42 @@ def lsp(
     Actions:
     - "check": Quick pre-edit usage count. Returns usages and risk level. Use BEFORE editing.
     - "impact": Full impact analysis for a symbol at path:line. Shows all callers, files affected.
-    - "deadcode": Scan file for ALL unused symbols. SLOW - only use for cleanup tasks.
+    - "deadcode": Scan directory for ALL unused symbols. Has two modes (see below).
+
+    DEADCODE MODES:
+    - Fast (default): Batched ripgrep text search, ~2s, 85% accuracy, ALL languages
+    - Accurate (--accurate): LSP references per symbol, ~20s, 95%+ accuracy, Python tested
+
+    When to use each:
+    - Fast: Daily dev, CI/CD, large codebases, non-Python code
+    - Accurate: Before deleting code, before major refactor, need confidence
+
+    LANGUAGE SUPPORT:
+    - Python: Full support (LSP + tree-sitter complexity + import filtering)
+    - JS/TS/Go/Rust/Java: Partial (LSP refs via multilspy, ripgrep deadcode)
+
+    To scale to other languages (3-4 days each):
+    1. Already works: LSP references, ripgrep deadcode
+    2. Need to add: tree-sitter-{lang} parser, language-specific import filter patterns
 
     Risk levels:
     - low (0-2 usages): Safe to change
     - medium (3-10 usages): Review callers first
     - high (11+ usages): Careful refactoring needed
 
-    After analysis, add inline markers to source files:
-    - #DEADCODE: 0 usages - safe to remove
-    - #REFAC: High usage - careful refactoring needed
+    Implementation files:
+    - MCP tool: src/aurora_mcp/lsp_tool.py (this file)
+    - Analysis: packages/lsp/src/aurora_lsp/analysis.py (CodeAnalyzer)
+    - LSP client: packages/lsp/src/aurora_lsp/client.py (multilspy wrapper)
+    - Facade: packages/lsp/src/aurora_lsp/facade.py (sync API)
+    - Import filters: packages/lsp/src/aurora_lsp/filters.py (Python only)
 
     Args:
         action: "check" | "impact" | "deadcode" (default: check)
         path: File path (required). For deadcode, can be a directory.
         line: Line number (required for impact/check, 1-indexed)
-        accurate: For deadcode only. If True, use LSP references (95%+ accuracy, ~14x slower).
-                 If False, use batched ripgrep (80-85% accuracy, fast). Default: False.
+        accurate: For deadcode only. If True, use LSP references (95%+ accuracy, ~20s).
+                 If False (default), use batched ripgrep (85% accuracy, ~2s).
 
     Returns:
         JSON with usages, callers, risk level, files affected

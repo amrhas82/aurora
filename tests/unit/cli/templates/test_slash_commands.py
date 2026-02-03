@@ -6,9 +6,9 @@ from aurora_cli.templates.slash_commands import COMMAND_TEMPLATES, get_command_b
 
 
 def test_command_templates_count():
-    """Verify COMMAND_TEMPLATES has exactly 5 entries."""
-    assert len(COMMAND_TEMPLATES) == 5, (
-        f"Expected 5 commands, got {len(COMMAND_TEMPLATES)}: {list(COMMAND_TEMPLATES.keys())}"
+    """Verify COMMAND_TEMPLATES has exactly 4 entries."""
+    assert len(COMMAND_TEMPLATES) == 4, (
+        f"Expected 4 commands, got {len(COMMAND_TEMPLATES)}: {list(COMMAND_TEMPLATES.keys())}"
     )
 
 
@@ -25,7 +25,7 @@ def test_get_command_body_checkpoint_raises():
 
 def test_all_expected_commands_present():
     """Verify all expected commands are present."""
-    expected_commands = {"search", "get", "plan", "implement", "archive"}
+    expected_commands = {"plan", "tasks", "implement", "archive"}
     actual_commands = set(COMMAND_TEMPLATES.keys())
 
     assert actual_commands == expected_commands, (

@@ -216,25 +216,25 @@
     - tdd: no
     - verify: `pytest tests/unit/mcp/test_mem_search_tool.py -v`
 
-- [ ] 4.0 Remove deprecated slash commands
+- [x] 4.0 Remove deprecated slash commands
   <!-- @agent: @code-developer -->
-  - [ ] 4.1 Remove SEARCH_TEMPLATE from slash_commands.py
+  - [x] 4.1 Remove SEARCH_TEMPLATE from slash_commands.py
     - tdd: no
     - Delete `SEARCH_TEMPLATE` variable
     - Remove "search" entry from `COMMAND_TEMPLATES` dict
     - verify: `! grep -q "SEARCH_TEMPLATE" packages/cli/src/aurora_cli/templates/slash_commands.py` (exits 0 when not found)
-  - [ ] 4.2 Remove GET_TEMPLATE from slash_commands.py
+  - [x] 4.2 Remove GET_TEMPLATE from slash_commands.py
     - tdd: no
     - Delete `GET_TEMPLATE` variable
     - Remove "get" entry from `COMMAND_TEMPLATES` dict
     - verify: `! grep -q "GET_TEMPLATE" packages/cli/src/aurora_cli/templates/slash_commands.py` (exits 0 when not found)
-  - [ ] 4.3 Update test_slash_commands.py for 4 commands
+  - [x] 4.3 Update test_slash_commands.py for 4 commands
     - tdd: no
     - Change `test_command_templates_count` assertion from 5 to 4
     - Change `test_all_expected_commands_present` expected set to `{"plan", "tasks", "implement", "archive"}`
     - Remove any tests specific to search/get templates
     - verify: `pytest tests/unit/cli/templates/test_slash_commands.py -v`
-  - [ ] 4.4 Verify: COMMAND_TEMPLATES has exactly 4 entries
+  - [x] 4.4 Verify: COMMAND_TEMPLATES has exactly 4 entries
     - tdd: no
     - verify: `python -c "from aurora_cli.templates.slash_commands import COMMAND_TEMPLATES; assert len(COMMAND_TEMPLATES) == 4, f'Got {len(COMMAND_TEMPLATES)}'"` exits 0
 

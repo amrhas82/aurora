@@ -10,107 +10,9 @@ BASE_GUARDRAILS = """**Guardrails**
 - Keep changes tightly scoped to the requested outcome.
 - Refer to `.aurora/AGENTS.md` if you need additional Aurora conventions or clarifications."""
 
-# /aur:search - Search indexed code
-SEARCH_TEMPLATE = f"""{BASE_GUARDRAILS}
-
-**Usage**
-Run `aur mem search "<query>"` to search indexed code.
-
-**Argument Parsing**
-User can provide search terms with optional flags in natural order:
-- `/aur:search bm25 limit 5` → `aur mem search "bm25" --limit 5`
-- `/aur:search "exact phrase" type function` → `aur mem search "exact phrase" --type function`
-- `/aur:search authentication` → `aur mem search "authentication"`
-
-Parse intelligently: detect `limit N`, `type X` as flags, rest as query terms.
-
-**Examples**
-```bash
-# Basic search
-aur mem search "authentication handler"
-
-# Search with type filter
-aur mem search "validate" --type function
-
-# Search with more results
-aur mem search "config" --limit 20
-
-# Natural argument order
-aur mem search "bm25" --limit 5
-```
-
-**Reference**
-- Returns file paths and line numbers
-- Uses hybrid BM25 + embedding search
-- Shows match scores
-- Type filters: function, class, module
-
-**Output Format (MANDATORY - NEVER DEVIATE)**
-
-Every response MUST follow this exact structure:
-
-1. Execute `aur mem search` with parsed args
-2. Display the **FULL TABLE** - never collapse with "... +N lines"
-3. Create a simplified table showing ALL results (not just top 3):
-   ```
-   #  | File:Line           | Type | Name              | Score
-   ---|---------------------|------|-------------------|------
-   1  | memory.py:131       | code | MemoryManager     | 0.81
-   2  | tools.py:789        | code | _handle_record    | 0.79
-   3  | logs/query.md:1     | docs | Execution Summary | 0.58
-   ...
-   ```
-4. Add exactly 2 sentences of guidance on where to look:
-   - Sentence 1: Identify the most relevant result(s) and why
-   - Sentence 2: Suggest what other results might provide useful context
-5. Single line: `Next: /aur:get N`
-
-NO additional explanations or questions beyond these 2 sentences."""
-
-# /aur:get - Get chunk by index
-GET_TEMPLATE = f"""{BASE_GUARDRAILS}
-
-**Usage**
-Run `aur mem get <N>` to retrieve the full content of search result N from the last search.
-
-**Examples**
-```bash
-# Get first result from last search
-aur mem get 1
-
-# Get third result
-aur mem get 3
-```
-
-**Note:** The output includes detailed score breakdown (Hybrid, BM25, Semantic, Activation). For access count details, see the Activation score.
-
-**Workflow**
-1. Run `/aur:search <query>` to search
-2. Review the numbered results
-3. Run `/aur:get <N>` to see full content of result N
-
-**Output**
-- Full code content (not truncated)
-- File path and line numbers
-- Detailed score breakdown (Hybrid, BM25, Semantic, Activation)
-- Syntax highlighting
-
-**Notes**
-- Results cached for 10 minutes after search
-- Index is 1-based (first result = 1)
-- Returns error if no previous search or index out of range
-
-**Output Format (MANDATORY - NEVER DEVIATE)**
-
-Every response MUST follow this exact structure:
-
-1. Execute `aur mem get N`
-2. Display the content box
-3. One sentence: what this is and what it does (include file:line reference from the header)
-4. If not code implementation: note the file type (e.g., "log file", "docs", "config")
-5. Optional: If relevant to other search results, add: "See also: result #X (relationship)"
-
-NO additional explanations, suggestions, or questions."""
+# NOTE: search and get slash commands removed - use MCP tools instead:
+# - mem_search MCP tool for searching indexed code
+# - LSP tools for code intelligence
 
 # /aur:implement - Plan implementation
 IMPLEMENT_TEMPLATE = f"""{BASE_GUARDRAILS}
@@ -377,8 +279,6 @@ aur plan archive 0001 --no-validate      # Skip validation (with warning)
 
 # Command templates dictionary
 COMMAND_TEMPLATES: dict[str, str] = {
-    "search": SEARCH_TEMPLATE,
-    "get": GET_TEMPLATE,
     "plan": PLAN_TEMPLATE,
     "tasks": TASKS_TEMPLATE,
     "implement": IMPLEMENT_TEMPLATE,

@@ -131,7 +131,7 @@ class TestMemSearch:
         assert "calling" in result
         assert "git" in result
 
-    @patch("aurora_mcp.mem_search_tool._get_lsp")
+    @patch("aurora_mcp.mem_search_tool._get_git_info")
     @patch("aurora_mcp.mem_search_tool._get_lsp")
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")

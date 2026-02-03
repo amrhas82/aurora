@@ -275,10 +275,14 @@ def mem_search(query: str, limit: int = 5) -> list[dict]:
             "symbol": metadata.get("name", ""),
             "lines": metadata.get("lines", ""),
             "score": round(result.get("hybrid_score", 0.0), 3),
+            "metadata": metadata,  # Include metadata for LSP enrichment
         }
 
         # Enrich with LSP data (adds used_by, called_by, calling)
         enriched = _enrich_with_lsp(enriched, workspace)
+
+        # Remove metadata from final output (internal use only)
+        enriched.pop("metadata", None)
 
         # Add git info
         enriched["git"] = _get_git_info(enriched["file"], workspace)

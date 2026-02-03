@@ -182,14 +182,14 @@
     - tdd: no
     - verify: `pytest tests/unit/mcp/test_lsp_tool.py -v`
 
-- [ ] 3.0 Implement `mem_search` MCP tool
+- [x] 3.0 Implement `mem_search` MCP tool
   <!-- @agent: @code-developer -->
-  - [ ] 3.1 Create mem_search tool wrapper
+  - [x] 3.1 Create mem_search tool wrapper
     - tdd: yes
     - Add `mem_search_tool.py` to `src/aurora_mcp/`
     - Import existing memory search from `aurora_core.store`
     - verify: `pytest tests/unit/mcp/test_mem_search_tool.py::test_mem_search_initialization -v`
-  - [ ] 3.2 Implement search with LSP enrichment
+  - [x] 3.2 Implement search with LSP enrichment
     - tdd: yes
     - Call existing memory store search
     - For code results, enrich with LSP call relationship data:
@@ -199,20 +199,20 @@
     - Return `-` for non-code (kb) results
     - Match `aur mem search --show-scores` output completeness for call data
     - verify: `pytest tests/unit/mcp/test_mem_search_tool.py::test_mem_search_enrichment -v`
-  - [ ] 3.3 Add git info to search results
+  - [x] 3.3 Add git info to search results
     - tdd: yes
     - Include commit count and last modified time
     - Format as "N commits, Xh/Xd ago"
     - verify: `pytest tests/unit/mcp/test_mem_search_tool.py::test_mem_search_git_info -v`
-  - [ ] 3.4 Add MCP tool description for auto-invocation
+  - [x] 3.4 Add MCP tool description for auto-invocation
     - tdd: no
     - Triggers: "search code", "find symbols", "where is", "usage of"
     - verify: `grep -q "search indexed code" src/aurora_mcp/mem_search_tool.py`
-  - [ ] 3.5 Register `mem_search` tool in MCP server
+  - [x] 3.5 Register `mem_search` tool in MCP server
     - tdd: yes
     - Add tool registration in `server.py` `_register_tools()`
     - verify: `pytest tests/integration/mcp/test_mcp_server.py::test_mem_search_tool_registered -v`
-  - [ ] 3.6 Verify: `mem_search` tool unit tests pass
+  - [x] 3.6 Verify: `mem_search` tool unit tests pass
     - tdd: no
     - verify: `pytest tests/unit/mcp/test_mem_search_tool.py -v`
 

@@ -69,18 +69,15 @@ aur mem search "soar reasoning" --show-scores
 Searching memory from /project/.aurora/memory.db...
 Found 5 results for 'soar reasoning'
 
-┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━┓
-┃ Type   ┃ File                   ┃ Name                 ┃ Lines    ┃ Used by      ┃   Score ┃
-┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━┩
-│ code   │ test_orchestrator.py   │ TestOrchestratorSim… │ 192-614  │ 1 files(1)   │   0.701 │
-│ code   │ orchestrator.py        │ SOAROrchestrator     │ 68-2447  │ 19 files(43) │   0.697 │
-│ code   │ soar.py                │ <chunk>              │ 477-717  │ 25 files(58) │   0.538 │
-│ kb     │ friction-detection-an… │ Signal Weights       │ 1-8      │ -            │   0.464 │
-│        │                        │ (Final)              │          │              │         │
-│ kb     │ friction-analyzer-202… │ Next Steps (If       │ 1-51     │ -            │   0.464 │
-│        │                        │ Cont...              │          │              │         │
-└────────┴────────────────────────┴──────────────────────┴──────────┴──────────────┴─────────┘
-
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
+┃ Type   ┃ File                   ┃ Name                 ┃ Lines      ┃ Risk   ┃ Git      ┃   Score ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━┩
+│ code   │ core.py                │ generate_goals_json  │ 1091-1175  │ MED    │ 8d ago   │   0.619 │
+│ code   │ core.py                │ <chunk>              │ 1473-1855  │ -      │ 1d ago   │   0.589 │
+│ code   │ orchestrator.py        │ SOAROrchestrator._c… │ 2141-2257  │ HIGH   │ 1d ago   │   0.532 │
+│ code   │ test_goals_startup_pe… │ TestGoalsCommandSta… │ 190-273    │ LOW    │ 1d ago   │   0.517 │
+│ code   │ goals.py               │ <chunk>              │ 437-544    │ -      │ 7d ago   │   0.486 │
+└────────┴────────────────────────┴──────────────────────┴────────────┴────────┴──────────┴─────────┘
 Average scores:
   Activation: 0.916
   Semantic:   0.867
@@ -95,15 +92,15 @@ Refine your search:
 
 Detailed Score Breakdown:
 
-┌─ test_orchestrator.py | code | TestOrchestratorSimplified (Lines 192-614) ─────────────────┐
-│ Final Score: 0.701                                                                         │
-│  ├─ BM25:       1.000 * (exact keyword match on 'orchestrator')                            │
-│  ├─ Semantic:   1.000 (very high conceptual relevance)                                     │
-│  ├─ Activation: 0.003 (accessed 7x, 7 commits, last used 1 week ago)                       │
-│  ├─ Git:        7 commits, modified 10d ago, 1769186220                                    │
-│  └─ Used by:    1 files (test_orchestrator.py)                                             │
-└────────────────────────────────────────────────────────────────────────────────────────────┘
-
+┌─ core.py | code | generate_goals_json (Lines 1091-1175) ───────────────────────────────────────────┐
+│ Final Score: 0.619                                                                                 │
+│  ├─ BM25:       0.895 * (exact keyword match on 'goals')                                           │
+│  ├─ Semantic:   0.865 (high conceptual relevance)                                                  │
+│  ├─ Activation: 0.014 (accessed 7x, 7 commits, last used 1 week ago)                               │
+│  ├─ Git:        7 commits, modified 8d ago, 1769419365                                             │
+│  ├─ Files:      core.py, test_goals_json.py                                                        │
+│  └─ Used by:    2 files, 2 refs, complexity 44%, risk MED                                          │
+└────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

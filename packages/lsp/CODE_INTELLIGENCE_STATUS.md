@@ -111,12 +111,26 @@
 |-----------|------------|-------------|------------------|
 | **LSP client** | multilspy library | Thin wrapper | 10+ languages |
 | **Reference search** | LSP protocol | None | All via LSP |
-| **Import filtering** | Custom regex | `aurora_lsp/filters.py` | **Python only** |
+| **Import filtering** | Custom regex | `aurora_lsp/filters.py` | Multi-language patterns |
 | **Deadcode (fast)** | ripgrep subprocess | `_batched_ripgrep_search()` | All languages |
 | **Deadcode (accurate)** | LSP references | `find_usages()` loop | Python (tested) |
-| **Complexity** | tree-sitter-python | `_get_complexity()` | **Python only** |
+| **Complexity** | tree-sitter | `aurora_lsp/languages/` | **Python only** (config-based) |
 | **Risk calculation** | Custom formula | `_calculate_risk()` | All (uses counts) |
-| **Entry point filter** | Custom patterns | `_is_entry_point_or_nested()` | **Python patterns** |
+| **Entry point filter** | Config patterns | `aurora_lsp/languages/python.py` | **Python** (extensible) |
+
+### Language Abstraction Layer (NEW)
+
+```
+packages/lsp/src/aurora_lsp/languages/
+  __init__.py       # Registry: get_config(), is_entry_point(), etc.
+  base.py           # LanguageConfig dataclass
+  python.py         # Python config (entry points, branch types, patterns)
+```
+
+**To add a new language:**
+1. Create `languages/{lang}.py` with LanguageConfig
+2. Register in `languages/__init__.py`
+3. Add tree-sitter-{lang} dependency if complexity needed
 
 ---
 

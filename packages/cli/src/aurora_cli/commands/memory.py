@@ -28,6 +28,7 @@ from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
+from aurora_lsp.languages import get_complexity_branch_types, get_config
 
 
 __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
@@ -63,6 +64,8 @@ def _clean_symbol_name(name: str) -> str:
 def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
     """Calculate complexity for a code region using tree-sitter.
 
+    Uses language-specific branch types from aurora_lsp.languages module.
+
     Args:
         file_path: Path to source file
         line_start: Start line (1-indexed)
@@ -75,10 +78,15 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
 
     try:
         path = Path(file_path)
-        if not path.exists() or path.suffix != ".py":
+        if not path.exists():
             return -1
 
-        # Lazy init tree-sitter
+        # Get language config - only Python supported for now
+        config = get_config(file_path)
+        if config is None or config.tree_sitter_module is None:
+            return -1
+
+        # Lazy init tree-sitter (Python only for now)
         if _ts_parser is None:
             try:
                 import tree_sitter
@@ -112,19 +120,10 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
         if target_node is None:
             return -1
 
-        # Count branch points
-        branch_types = {
-            "if_statement",
-            "for_statement",
-            "while_statement",
-            "try_statement",
-            "with_statement",
-            "match_statement",
-            "elif_clause",
-            "except_clause",
-            "boolean_operator",
-            "conditional_expression",
-        }
+        # Get branch types from language config
+        branch_types = get_complexity_branch_types(file_path)
+        if not branch_types:
+            return -1
 
         branch_count = 0
 

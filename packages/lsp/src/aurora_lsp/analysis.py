@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from aurora_lsp.filters import ImportFilter, get_filter_for_file
+from aurora_lsp.languages import get_config, is_entry_point, is_nested_helper
 
 
 if TYPE_CHECKING:
@@ -163,30 +164,8 @@ class CodeAnalyzer:
         SymbolKind.ENUM,
     }
 
-    # Entry point names to exclude from dead code detection
-    # These are called externally (CLI, MCP, frameworks) not via Python imports
-    ENTRY_POINT_NAMES = {
-        "main",           # CLI entry points
-        "cli",            # Click CLI
-        "app",            # Flask/FastAPI
-        "run",            # Common runner
-        "setup",          # setuptools
-        "teardown",       # pytest fixtures
-        "pytest_*",       # pytest hooks (prefix)
-    }
-
-    # Names that indicate nested/local functions (commonly used patterns)
-    NESTED_FUNCTION_PATTERNS = {
-        "wrapper",        # Decorator wrappers
-        "inner",          # Inner functions
-        "helper",         # Local helpers
-        "callback",       # Callbacks
-        "handler",        # Event handlers
-        "on_",            # Event handlers (prefix)
-        "find_node",      # Tree traversal helpers
-        "count_",         # Counter helpers (prefix)
-        "process_",       # Processing helpers (prefix)
-    }
+    # Entry point and nested function patterns moved to aurora_lsp.languages.python
+    # Use is_entry_point() and is_nested_helper() from languages module
 
     def __init__(self, client: AuroraLSPClient, workspace: Path | str):
         """Initialize analyzer.
@@ -199,36 +178,30 @@ class CodeAnalyzer:
         self.workspace = Path(workspace).resolve()
         self._file_cache: dict[str, list[str]] = {}
 
-    def _is_entry_point_or_nested(self, name: str, line_content: str = "") -> bool:
+    def _is_entry_point_or_nested(
+        self, name: str, file_path: str | Path = "", line_content: str = ""
+    ) -> bool:
         """Check if a symbol is an entry point or nested function.
 
         These are excluded from dead code detection because they're called
         externally (CLI, MCP, frameworks) or are local to their parent function.
 
+        Uses language-specific patterns from aurora_lsp.languages module.
+
         Args:
             name: Symbol name
+            file_path: Path to file (for language detection)
             line_content: The line where the symbol is defined
 
         Returns:
             True if should be excluded from dead code detection
         """
-        # Check exact entry point names
-        if name in self.ENTRY_POINT_NAMES:
+        # Use language-specific config
+        if is_entry_point(file_path, name):
             return True
 
-        # Check prefix patterns for entry points (pytest_*)
-        for pattern in self.ENTRY_POINT_NAMES:
-            if pattern.endswith("*") and name.startswith(pattern[:-1]):
-                return True
-
-        # Check nested function patterns
-        if name in self.NESTED_FUNCTION_PATTERNS:
+        if is_nested_helper(file_path, name):
             return True
-
-        # Check prefix patterns for nested functions
-        for pattern in self.NESTED_FUNCTION_PATTERNS:
-            if pattern.endswith("_") and name.startswith(pattern):
-                return True
 
         # Check if decorated (decorators often indicate external entry points)
         # Look for @ on previous lines - simple heuristic
@@ -440,7 +413,7 @@ class CodeAnalyzer:
                     prev_line = ""
                     if sym_line > 0:
                         prev_line = await self._read_line(str(file_path), sym_line - 1)
-                    if self._is_entry_point_or_nested(name, prev_line):
+                    if self._is_entry_point_or_nested(name, file_path, prev_line):
                         continue
 
                     all_symbols.append({

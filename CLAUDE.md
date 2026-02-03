@@ -67,6 +67,31 @@ packages/
 
 **SOAR:** ASSESS > RETRIEVE > DECOMPOSE > VERIFY > ROUTE > COLLECT > SYNTHESIZE > RECORD > RESPOND
 
+## MCP Tools
+
+Aurora provides MCP tools for code intelligence and search:
+
+**lsp** - LSP code intelligence with 3 actions:
+- `deadcode` - Find unused symbols, generates CODE_QUALITY_REPORT.md
+- `impact` - Analyze symbol usage, show callers and risk level
+- `check` - Quick usage check before editing
+
+**mem_search** - Search indexed code with LSP enrichment:
+- Returns code snippets with metadata (type, symbol, lines)
+- Enriched with LSP context (used_by, called_by, calling)
+- Includes git info (last_modified, last_author)
+
+**When to use:**
+- Before edits: `lsp check` to see usage impact
+- Before refactoring: `lsp deadcode` or `lsp impact` to find all references
+- Code search: `mem_search` instead of grep/rg for semantic results
+- After large changes: `lsp deadcode` to find orphaned code
+
+**Automatic workflow:**
+1. Run `lsp deadcode` to generate CODE_QUALITY_REPORT.md
+2. Aurora automatically annotates source files with `# aurora:dead-code` comments
+3. Review report + annotations, then safely remove dead code
+
 ## Entry Points
 
 | Area | File |

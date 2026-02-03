@@ -310,7 +310,31 @@ python test_before_after.py
 - `multilspy>=0.0.15` - Microsoft's multi-language LSP client
 - Python 3.10+
 
+## MCP Integration
+
+Aurora-LSP is integrated into Aurora's MCP server as the `lsp` tool, providing code intelligence to AI coding assistants.
+
+**Available via MCP:**
+- Claude Desktop
+- Cursor
+- Cline (VS Code)
+- Continue (VS Code)
+
+**MCP Actions:**
+1. `lsp(action="deadcode")` - Find unused symbols, generate CODE_QUALITY_REPORT.md
+2. `lsp(action="impact", path="file.py", line=42)` - Analyze symbol usage and risk
+3. `lsp(action="check", path="file.py", line=42)` - Quick usage check
+
+**Benefits:**
+- Dead code detection with automatic annotation
+- Impact analysis before refactoring
+- Risk assessment (low/medium/high based on usage count)
+- Integrated with Aurora's hybrid search (mem_search tool)
+
+See [MCP Tools Documentation](../mcp/MCP.md) for complete MCP integration details.
+
 ## See Also
 
+- [MCP Tools](../mcp/MCP.md) - Aurora MCP integration
 - [multilspy](https://github.com/microsoft/multilspy) - Underlying LSP library
 - [LSP Specification](https://microsoft.github.io/language-server-protocol/) - Protocol reference

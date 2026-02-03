@@ -272,21 +272,21 @@
     - Show warning if LSP not available
     - verify: `aur doctor` runs without error
 
-- [ ] 7.0 Update documentation
+- [x] 7.0 Update documentation
   <!-- @agent: @code-developer -->
-  - [ ] 7.1 Update CLAUDE.md managed block with MCP guidance
+  - [x] 7.1 Update CLAUDE.md managed block with MCP guidance
     - tdd: no
     - Add section about `lsp` and `mem_search` MCP tools availability
     - Explain when Claude should use them (before edits, for searches, refactoring)
     - Document automatic annotation workflow
     - verify: `grep -q "mem_search" CLAUDE.md`
-  - [ ] 7.2 Update AGENTS.md with MCP tool documentation
+  - [x] 7.2 Update AGENTS.md with MCP tool documentation
     - tdd: no
     - Document available MCP tools and their actions
     - Provide natural language trigger examples
     - Document two-step workflow: report generation + automatic annotation
     - verify: `grep -q "lsp.*MCP" .aurora/AGENTS.md`
-  - [ ] 7.3 Create docs/02-features/mcp/MCP.md
+  - [x] 7.3 Create docs/02-features/mcp/MCP.md
     - tdd: no
     - Create directory if needed: `mkdir -p docs/02-features/mcp`
     - Document `lsp` and `mem_search` tools with examples
@@ -294,18 +294,18 @@
     - Document automatic inline annotation workflow
     - Reference LSP.md for LSP details
     - verify: `test -f docs/02-features/mcp/MCP.md`
-  - [ ] 7.4 Update README.md with MCP tools section
+  - [x] 7.4 Update README.md with MCP tools section
     - tdd: no
     - Add section about MCP tools availability
     - Explain LSP integration benefits
     - List supported languages (10 via multilspy)
     - verify: `grep -q "MCP" README.md`
-  - [ ] 7.5 Update LSP.md to reference MCP integration
+  - [x] 7.5 Update LSP.md to reference MCP integration
     - tdd: no
     - Add "MCP Integration" section
     - Link to new MCP.md
     - verify: `grep -q "MCP" docs/02-features/lsp/LSP.md`
-  - [ ] 7.6 Verify: all documentation files exist and have required content
+  - [x] 7.6 Verify: all documentation files exist and have required content
     - tdd: no
     - verify: `grep -l "lsp\|MCP" CLAUDE.md .aurora/AGENTS.md docs/02-features/mcp/MCP.md README.md docs/02-features/lsp/LSP.md | wc -l` equals 5
 

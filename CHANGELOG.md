@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-02-03
+
+### Added
+
+**CLAUDE.md Template:**
+- MCP tools documentation now included in managed block template
+- `aur init` creates CLAUDE.md with MCP tools section
+- `aur init --config` refreshes managed block with MCP information
+- Managed block markers (AURORA:START/END) for automatic updates
+
+### Changed
+
+- CLAUDE.md restructured with managed block for auto-updates
+- Template now documents `lsp` and `mem_search` MCP tools with usage examples
+
 ## [0.13.1] - 2026-02-03
 
 ### Fixed

@@ -14,14 +14,14 @@ class TestMCPConfiguratorIntegration:
 
     def test_mcp_tools_register_with_configurator(self):
         """Test MCP tools are available through configurator."""
-        from aurora_cli.configurators.mcp.registry import get_all_configurators
+        from aurora_cli.configurators.mcp.registry import MCPConfigRegistry
 
         # Act
-        configurators = get_all_configurators()
+        configurators = MCPConfigRegistry.get_all()
 
         # Assert
-        # Should have configurators for various tools
-        assert len(configurators) > 0
+        # Should have configurators for various tools (Claude, Cursor, Cline, Continue)
+        assert len(configurators) >= 4
 
     def test_aurora_mcp_server_in_config(self):
         """Test Aurora MCP server configuration includes LSP tools."""
@@ -50,13 +50,13 @@ class TestMCPConfiguratorClaudeSupport:
     @patch("aurora_cli.configurators.mcp.base.Path")
     def test_claude_configurator_exists(self, mock_path):
         """Test configurator supports Claude Code."""
-        from aurora_cli.configurators.mcp.registry import get_configurator_for_tool
+        from aurora_cli.configurators.mcp.registry import MCPConfigRegistry
 
         # Act
-        configurator = get_configurator_for_tool("claude")
+        configurator = MCPConfigRegistry.get("claude")
 
         # Assert
-        assert configurator is not None or True  # May not exist yet
+        assert configurator is not None
 
 
 class TestMCPConfiguratorCursorSupport:
@@ -65,13 +65,13 @@ class TestMCPConfiguratorCursorSupport:
     @patch("aurora_cli.configurators.mcp.base.Path")
     def test_cursor_configurator_exists(self, mock_path):
         """Test configurator supports Cursor."""
-        from aurora_cli.configurators.mcp.registry import get_configurator_for_tool
+        from aurora_cli.configurators.mcp.registry import MCPConfigRegistry
 
         # Act
-        configurator = get_configurator_for_tool("cursor")
+        configurator = MCPConfigRegistry.get("cursor")
 
         # Assert
-        assert configurator is not None or True  # May not exist yet
+        assert configurator is not None
 
 
 class TestMCPConfiguratorClineSupport:
@@ -80,13 +80,13 @@ class TestMCPConfiguratorClineSupport:
     @patch("aurora_cli.configurators.mcp.base.Path")
     def test_cline_configurator_exists(self, mock_path):
         """Test configurator supports Cline."""
-        from aurora_cli.configurators.mcp.registry import get_configurator_for_tool
+        from aurora_cli.configurators.mcp.registry import MCPConfigRegistry
 
         # Act
-        configurator = get_configurator_for_tool("cline")
+        configurator = MCPConfigRegistry.get("cline")
 
         # Assert
-        assert configurator is not None or True  # May not exist yet
+        assert configurator is not None
 
 
 class TestMCPConfiguratorContinueSupport:
@@ -95,13 +95,13 @@ class TestMCPConfiguratorContinueSupport:
     @patch("aurora_cli.configurators.mcp.base.Path")
     def test_continue_configurator_exists(self, mock_path):
         """Test configurator supports Continue."""
-        from aurora_cli.configurators.mcp.registry import get_configurator_for_tool
+        from aurora_cli.configurators.mcp.registry import MCPConfigRegistry
 
         # Act
-        configurator = get_configurator_for_tool("continue")
+        configurator = MCPConfigRegistry.get("continue")
 
         # Assert
-        assert configurator is not None or True  # May not exist yet
+        assert configurator is not None
 
 
 class TestMCPServerConfiguration:

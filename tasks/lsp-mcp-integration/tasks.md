@@ -119,7 +119,7 @@
     - tdd: no
     - verify: `pytest tests/unit/mcp/ tests/integration/mcp/ -v --collect-only` shows >10 tests
 
-- [ ] 2.0 Implement `lsp` MCP tool
+- [x] 2.0 Implement `lsp` MCP tool
   <!-- @agent: @code-developer -->
   - [x] 2.1 Create LSP tool wrapper in aurora_mcp
     - tdd: yes
@@ -173,7 +173,7 @@
     - Severity categories: CRITICAL, HIGH, MEDIUM, LOW
     - Format: summary counts, file:line references, symbol names, suggested actions
     - verify: `pytest tests/unit/mcp/test_lsp_tool.py::test_code_quality_report -v`
-  - [ ] 2.8 Integrate with MCP configurator infrastructure
+  - [x] 2.8 Integrate with MCP configurator infrastructure
     - tdd: yes
     - Wire new MCP tools with `configurators/mcp/base.py` and `registry.py`
     - Ensure tools are registered for Claude, Cursor, Cline, Continue

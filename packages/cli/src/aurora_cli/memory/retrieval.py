@@ -154,7 +154,13 @@ class MemoryRetriever:
                 )
                 return None
 
-            # Model is cached but wasn't pre-loaded - load now
+            # Model is cached but wasn't pre-loaded
+            if not wait_for_model:
+                # Non-blocking mode: don't load now, use BM25-only
+                logger.debug("Model cached but not loaded - using BM25-only (non-blocking)")
+                return None
+
+            # Blocking mode: load now
             import os
 
             os.environ["HF_HUB_OFFLINE"] = "1"

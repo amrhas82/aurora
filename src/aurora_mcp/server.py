@@ -53,13 +53,11 @@ class AuroraMCPServer:
 
         Active MCP tools:
         - lsp: Code intelligence (deadcode, impact, check)
-        - mem_search: Search indexed code with LSP enrichment
+        - mem_search: Search indexed code (fast by default, enrich=True for LSP data)
 
-        NOTE: aurora_search, aurora_get, and aurora_query have been deprecated.
-        Use slash commands instead:
-        - /aur:search <query> - Search indexed codebase
-        - /aur:get <N> - Get full content of result N
-        - aur soar "question" - Multi-turn SOAR query (terminal command)
+        CLI equivalents:
+        - aur mem search "query" - Search indexed codebase
+        - aur soar "question" - Multi-turn SOAR query
         """
         # Register LSP tool with readOnlyHint
         @self.mcp.tool(
@@ -73,11 +71,11 @@ class AuroraMCPServer:
         # Register mem_search tool
         @self.mcp.tool(
             name="mem_search",
-            description=mem_search_tool.__doc__ or "Search indexed code with LSP enrichment",
+            description=mem_search_tool.__doc__ or "Search indexed code",
         )
-        def mem_search(query: str, limit: int = 5) -> list[dict]:
-            """Search indexed code and knowledge base with LSP context."""
-            return mem_search_tool(query=query, limit=limit)
+        def mem_search(query: str, limit: int = 5, enrich: bool = False) -> list[dict]:
+            """Search indexed code and knowledge base."""
+            return mem_search_tool(query=query, limit=limit, enrich=enrich)
 
     def run(self) -> None:
         """Run the MCP server."""
@@ -96,7 +94,7 @@ class AuroraMCPServer:
                 },
                 {
                     "name": "mem_search",
-                    "description": "Search indexed code with LSP enrichment",
+                    "description": "Search indexed code (enrich=True for LSP data)",
                     "readOnlyHint": True,
                     "title": "Memory Search",
                 },
@@ -109,13 +107,10 @@ class AuroraMCPServer:
             print("\nMCP Tools:")
             print("  lsp - Code intelligence (deadcode, impact, check)")
             print("  mem_search - Search indexed code with LSP enrichment")
-            print("\nSlash commands (deprecated MCP tools):")
-            print("  /aur:search <query>  - Search indexed codebase")
-            print("  /aur:get <N>         - Get full content of result N")
-            print("\nCLI commands:")
-            print('  aur soar "question" - Multi-turn SOAR query')
-            print('  aur query "question" - Local context retrieval')
-            print("  aur mem stats        - Enhanced memory statistics")
+            print("\nCLI equivalents:")
+            print('  aur mem search "query" - Search indexed codebase')
+            print('  aur soar "question"    - Multi-turn SOAR query')
+            print("  aur mem stats          - Memory statistics")
             print("\n" + "=" * 50)
             print(f"Database: {self.db_path}")
             print(f"Config: {self.config_path}")

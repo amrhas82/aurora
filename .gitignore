@@ -97,3 +97,4 @@ MagicMock/
 test_plans/
 fixtures/
 /.aurora/
+CODE_QUALITY_REPORT.md

@@ -9,6 +9,7 @@ license = { text = "MIT" }
 dependencies = [
     "multilspy>=0.0.15",  # Microsoft's multi-language LSP client
     "mcp>=1.0.0",         # MCP server framework
+    "nest-asyncio>=1.5",  # Allow nested event loops (MCP compatibility)
 ]
 
 [project.optional-dependencies]

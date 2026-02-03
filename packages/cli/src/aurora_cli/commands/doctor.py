@@ -177,11 +177,11 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
             if index_results:
                 _display_compact_line("Index:", index_results)
 
-            # Config: config file + git repo + slash commands
+            # Config: config file + git repo + slash commands + MCP tools
             cfg_results = []
             cfg_results.extend(config_results)
             for r in tool_results:
-                if "Slash" in r[1] or "command" in r[1].lower():
+                if "Slash" in r[1] or "command" in r[1].lower() or "MCP" in r[1]:
                     cfg_results.append(r)
             if cfg_results:
                 _display_compact_line("Config:", cfg_results)
@@ -192,7 +192,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
             console.print("  [yellow]⚠[/] Project not initialized")
             console.print()
             console.print("  [dim]To initialize this project:[/]")
-            console.print("    [cyan]cd {path}[/]".format(path=project_path))
+            console.print(f"    [cyan]cd {project_path}[/]")
             console.print("    [cyan]aur init[/]")
 
         console.print()

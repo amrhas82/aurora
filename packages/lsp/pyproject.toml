@@ -1,0 +1,25 @@
+[project]
+name = "aurora-lsp"
+version = "0.1.0"
+description = "LSP integration for Aurora - code intelligence, dead code detection, and impact analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+dependencies = [
+    "multilspy>=0.0.15",  # Microsoft's multi-language LSP client
+    "mcp>=1.0.0",         # MCP server framework
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aurora_lsp"]

@@ -334,8 +334,11 @@ def run_step_3_tool_configuration(
         configure_slash_commands(project_path, selected_tool_ids),
     )
 
-    # MCP configuration is currently dormant - skip MCP setup
-    # TODO: Re-enable when MCP integration is ready
+    # Configure MCP servers for tools that support MCP
+    console.print("[dim]Configuring MCP servers...[/]")
+    mcp_created, mcp_updated, mcp_skipped = asyncio.run(
+        configure_mcp_servers(project_path, selected_tool_ids),
+    )
 
     # Show success message with clear breakdown of what was configured
     console.print()

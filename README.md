@@ -107,6 +107,32 @@ Detailed Score Breakdown:
 
 ---
 
+### MCP Tools (Code Intelligence)
+
+Aurora provides Model Context Protocol (MCP) tools for AI coding assistants (Claude Desktop, Cursor, Cline, Continue):
+
+**lsp** - LSP-powered code intelligence:
+- `deadcode` - Find unused symbols, generate CODE_QUALITY_REPORT.md
+- `impact` - Analyze symbol usage, show callers and risk level (low/medium/high)
+- `check` - Quick usage check before editing
+
+**mem_search** - Hybrid search with LSP enrichment:
+- BM25 (40%) + ACT-R activation (30%) + semantic embeddings (30%)
+- Returns code with metadata: used_by, called_by, calling, git info
+- Example: `mem_search("authentication")` finds login handlers with context
+
+**Supported Languages:** Python, JavaScript/TypeScript, Java, C/C++, C#, Go, Rust, Ruby, PHP, and more (10+ via multilspy).
+
+**Benefits:**
+- Dead code detection with automatic annotation
+- Impact analysis before refactoring
+- Context-aware code search (better than grep/rg)
+- Risk assessment (know what breaks if you change it)
+
+See [MCP Tools Documentation](docs/02-features/mcp/MCP.md) for details.
+
+---
+
 ### Memory-Aware Planning (Terminal)
 
 `aur goals` - Decomposes any goal into subgoals:

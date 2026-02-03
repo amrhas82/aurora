@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-02-03
+
+### Added
+
+**MCP Tools:**
+- `lsp` MCP tool with 3 actions (deadcode, impact, check)
+- `mem_search` MCP tool with LSP enrichment (used_by, called_by, calling)
+- CODE_QUALITY_REPORT.md generation with severity levels (CRITICAL, HIGH, MEDIUM, LOW)
+- MCP configurator integration for Claude, Cursor, Cline, Continue
+- `aurora-lsp` package as mandatory dependency (10 languages supported)
+- 36 comprehensive TDD tests for MCP tools
+
+**CLI Enhancements:**
+- `aur doctor` now shows MCP tools status
+- `aur init` configures MCP servers automatically
+
+**Documentation:**
+- docs/02-features/mcp/MCP.md - Complete MCP reference
+- docs/02-features/lsp/LSP.md - LSP integration guide
+- Updated CLAUDE.md with MCP tools section
+- Updated AGENTS.md with MCP tool documentation
+- Updated README.md with MCP overview
+
+### Removed
+
+**Deprecated Slash Commands:**
+- `/aur:search` - Replaced by `mem_search` MCP tool
+- `/aur:get` - Replaced by `mem_search` MCP tool
+
+### Changed
+
+- Slash commands reduced from 6 to 4 (plan, tasks, implement, archive)
+- Memory search now includes LSP relationship data and git metadata
+
 ## [0.12.2] - 2026-02-02
 
 ### Changed

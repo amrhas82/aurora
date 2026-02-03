@@ -31,7 +31,7 @@ __all__ = ["cli"]
 console = Console()
 logger = logging.getLogger(__name__)
 
-AURORA_VERSION = "0.12.2"
+AURORA_VERSION = "0.13.0"
 
 
 def _version_callback(ctx: click.Context, param: click.Parameter, value: bool) -> None:
